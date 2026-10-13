@@ -1,3 +1,8 @@
+#if ONLINE_DOWNLOAD
+using Siemens.Engineering.Compiler;
+using TiaMcp.Adapters.Native.Plc;
+using TiaMcp.Adapters.Native.Hmi;
+using TiaMcp.Adapters.Contracts;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -14,11 +19,11 @@ using Siemens.Engineering.SW;
 using TiaMcp.Adapters.Contracts.Candidates;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.Siemens.Services
+namespace TiaMcp.Adapters.Native.Online
 {
-    internal sealed partial class OnlineDownloadService
+    internal sealed partial class OnlineDownloadAdapter
     {
-        internal void FallbackUncertain() => ((Portal)_session).FallbackUncertain();
+        
         private readonly List<KeyValuePair<object, string>> fallbackIds = new List<KeyValuePair<object, string>>();
         private readonly string fallbackScope = Guid.NewGuid().ToString("N");
         private string FallbackId(object value)
@@ -43,7 +48,12 @@ namespace TiaMcpServer.Siemens.Services
                     {
                         string root = "download/" + Uri.EscapeDataString(mode.Name) + "/" + Uri.EscapeDataString(pc.Name) + "/" + pc.Number.ToString(CultureInfo.InvariantCulture) + "/" + Uri.EscapeDataString(target.Name);
                         rows.Add(new ExactRoute { Id = root + "/target", Configuration = target, TargetId = FallbackId(target) });
-                        foreach (var address in target.Addresses) rows.Add(new ExactRoute { Id = root + "/address/" + Uri.EscapeDataString(address.Address), Configuration = address, TargetId = FallbackId(address) });
+                        #if ONLINE_TARGET_ADDRESSES
+                        foreach (var address in target.Addresses)
+#else
+                        foreach (var address in OnlineRoutePrimitives.TargetAddresses(target))
+#endif
+                        rows.Add(new ExactRoute { Id = root + "/address/" + Uri.EscapeDataString(address.Address), Configuration = address, TargetId = FallbackId(address) });
                         foreach (var subnet in pc.Subnets)
                         {
                             string prefix = root + "/subnet/" + Uri.EscapeDataString(subnet.Name);
@@ -85,7 +95,7 @@ namespace TiaMcpServer.Siemens.Services
             Devices(project.Devices, ""); Groups(project.DeviceGroups, "", 0); Devices(project.UngroupedDevicesGroup.Devices, project.UngroupedDevicesGroup.Name);
             targets = online.OrderBy(p => p, StringComparer.Ordinal).ToArray(); return targets.Length > 0 ? "online" : missing || count == 0 ? "unavailable" : "offline";
         }
-        internal IFallbackAdapter FallbackAdapter(FallbackRequest request, string password, Portal portal, DocumentsService documents)
+        internal IFallbackAdapter FallbackAdapter(FallbackRequest request, string password, Func<SessionState> binding, Action uncertain, Func<FallbackRequest, FallbackNativeResult> otherOperation)
         {
             bool online = request.Entry == "DownloadPlc", folder = request.Entry == "DownloadPlcToFolder";
             ConnectionConfiguration? configuration = null; DownloadProvider? provider = null; RHDownloadProvider? rh = null;
@@ -106,7 +116,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (request.Entry == "ImportPlcBlockDocuments")
                 {
                     string path = request.Parameters["importPath"], name = request.Parameters["fileNameWithoutExtension"];
-                    if (!Path.IsPathRooted(path) || EngineeringGroupOperations.Parts(name).Length != 1 || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) CandidatePrimitives.Invalid("document-path");
+                    if (!Path.IsPathRooted(path) || PlcGroupOperations.Parts(name).Length != 1 || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) CandidatePrimitives.Invalid("document-path");
                     foreach (var f in Directory.GetFiles(path, name + ".*", SearchOption.TopDirectoryOnly).OrderBy(x => x, StringComparer.Ordinal))
                         rows.Add(Path.GetFullPath(f) + "|" + CandidatePrimitives.ByteHash(File.ReadAllBytes(f)));
                     if (rows.Count == 0) CandidatePrimitives.Fail("precondition", "document-inputs");
@@ -120,10 +130,10 @@ namespace TiaMcpServer.Siemens.Services
                 return string.Join("\n", rows);
             }
             var adapter = new FallbackDelegateAdapter { Writes = true, NeedsConfiguration = online, RequiresOffline = !online,
-                Before = () => portal.FallbackBinding(), Uncertain = portal.FallbackUncertain };
+                Before = () => binding(), Uncertain = uncertain };
             adapter.Read = () =>
             {
-                var binding = portal.FallbackBinding(); plc = _session.ExactPlcForEngineering(request.SoftwarePath, false);
+                var observedBinding = binding(); plc = _session.ExactPlcForEngineering(request.SoftwarePath, false);
                 var discovered = new List<FallbackRoute>(); string inventory = FallbackId(plc) + "|" + FileInventory();
                 if (online)
                 {
@@ -145,7 +155,7 @@ namespace TiaMcpServer.Siemens.Services
                 }
                 string offline = "not-applicable";
                 var onlineTargets = Array.Empty<string>(); if (!online) offline = FallbackOffline(out onlineTargets);
-                return new FallbackObservation { Binding = binding, TargetId = FallbackId(plc), OfflineState = offline, OfflineTargets = onlineTargets,
+                return new FallbackObservation { Binding = observedBinding, TargetId = FallbackId(plc), OfflineState = offline, OfflineTargets = onlineTargets,
                     Routes = discovered.OrderBy(r => r.Id, StringComparer.Ordinal).ToArray(), InventoryHash = CandidatePrimitives.ByteHash(Encoding.UTF8.GetBytes(inventory)) };
             };
             adapter.Configure = route =>
@@ -156,7 +166,7 @@ namespace TiaMcpServer.Siemens.Services
             };
             adapter.Operation = (r, evidence) =>
             {
-                portal.FallbackBinding();
+                binding();
                 if (online || folder)
                 {
                     bool Flag(string key) => r.Parameters.TryGetValue(key, out var value) && value == "true";
@@ -177,12 +187,18 @@ namespace TiaMcpServer.Siemens.Services
                         var directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(r.Parameters["destinationDirectory"]));
                         if (directory.Exists && directory.EnumerateFileSystemInfos().Any()) CandidatePrimitives.Fail("stale", "card-directory-changed");
                         evidence.WriteIssued = true; if (!directory.Exists) directory.Create();
-                        evidence.OperationIssued = true; result = provider!.Download(directory, pre); Returned(result); folderCompleted = true;
+                        evidence.OperationIssued = true; 
+#if ONLINE_FOLDER
+                        result = provider!.Download(directory, pre);
+#else
+                        throw new NotSupportedException("Folder download requires V19 or later.");
+#endif
+                        Returned(result); folderCompleted = true;
                     }
                     else
                     {
                         var selected = routes[r.Route]; string target = r.Parameters["rhTarget"];
-                        using var legitimation = AttachOnlineLegitimationHandler(configuration, password, new System.Text.Json.Nodes.JsonObject(), Flag("trustDeviceCertificate"));
+                        using var legitimation = AttachOnlineLegitimationHandler(configuration, password, new HmiObject(), Flag("trustDeviceCertificate"));
                         evidence.OperationIssued = true; evidence.WriteIssued = true;
                         result = target == "primary" ? rh!.DownloadToPrimary(selected.Configuration, pre, post, DownloadOptions.Software)
                             : target == "backup" ? rh!.DownloadToBackup(selected.Configuration, pre, post, DownloadOptions.Software)
@@ -192,21 +208,15 @@ namespace TiaMcpServer.Siemens.Services
                     var errors = new List<string>(); var warnings = new List<string>(); CollectDownloadMessages(result.Messages, errors, warnings);
                     evidence.NativeResult!.Messages = errors.Concat(warnings).ToArray(); return evidence.NativeResult;
                 }
-                return OnlineToolPolicy.WithOfflineRequirement(() =>
+                return OnlineOfflinePolicy.WithOfflineRequirement(() =>
                 {
                     evidence.OperationIssued = true; evidence.WriteIssued = true;
-                    if (r.Entry == "CompilePlcSoftware")
-                    {
-                        var result = _session.CompileSoftware(r.SoftwarePath, password);
-                        return new FallbackNativeResult { Success = result.ErrorCount == 0 && TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State), State = result.State.ToString(),
-                            Items = new[] { new Dictionary<string, string> { ["errorCount"] = result.ErrorCount.ToString(CultureInfo.InvariantCulture), ["warningCount"] = result.WarningCount.ToString(CultureInfo.InvariantCulture) } } };
-                    }
-                    bool ok = r.Entry == "ExportPlcBlockDocuments" ? documents.ExportAsDocuments(r.SoftwarePath, r.Parameters["blockPath"], r.Parameters["exportPath"], r.Parameters["preservePath"] == "true")
-                        : documents.ImportFromDocuments(r.SoftwarePath, r.Parameters["groupPath"], r.Parameters["importPath"], r.Parameters["fileNameWithoutExtension"], "None");
-                    return new FallbackNativeResult { Success = ok, State = ok ? "completed" : "failed" };
+                    return otherOperation(r);
                 }, () => FallbackOfflineState(r.SoftwarePath));
             };
             return adapter;
         }
     }
 }
+
+#endif

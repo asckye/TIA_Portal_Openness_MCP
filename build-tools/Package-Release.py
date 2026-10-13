@@ -273,6 +273,7 @@ def main():
     for key in ('14sp1', '15.1', '16', '17', '18', '19', '20', '21'):
         # The .NET 10 Foundation hosts take System.Text.Json, Encodings.Web and IO.Pipelines from the bundled shared framework.
         required += [f'runtime/v{key}/TiaMcp.WorkerChannel.dll']
+        required += [f'runtime/v{key}/worker/TiaMcp.PlcSimAdvanced.dll']
         required += [f'runtime/v{key}/worker/' + name for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll', 'Microsoft.Bcl.AsyncInterfaces.dll', 'System.Buffers.dll', 'System.Memory.dll', 'System.Numerics.Vectors.dll', 'System.Runtime.CompilerServices.Unsafe.dll', 'System.Threading.Tasks.Extensions.dll')]
     required += ['manifest/history/contracts-v3/README.md', 'manifest/history/contracts-v3/provenance.json']
     required += [f'{directory}/{category}/{key}.json'

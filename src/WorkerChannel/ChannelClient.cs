@@ -22,6 +22,7 @@ namespace TiaMcp.WorkerChannel
         public Exception? LastFault { get { lock (gate) return lastFault; } }
         public bool Poisoned { get { lock (gate) return poisoned || recoveryOnly; } }
         public bool CanDisconnect { get { lock (gate) return verified && !poisoned && !disposed && pending == null; } }
+        public bool CanCallIndependentRuntime { get { lock (gate) return profile != ChannelProfile.Studio && verified && !poisoned && !disposed && pending == null; } }
         public bool InFlight { get { lock (gate) return pending?.Dispatched == true && !pending.Replied; } }
         public bool OutcomeUnknown { get { lock (gate) return unknown; } }
         public long BindingEpoch { get { lock (gate) return epoch; } }
@@ -86,7 +87,7 @@ namespace TiaMcp.WorkerChannel
                 return response.ResultJson;
             }
             catch (ChannelFailureException ex) when (ex.Outcome != ChannelOutcome.Unknown) { throw; }
-            catch (ChannelFailureException) { throw; } // An answered unknown reply permits only an idle detach.
+            catch (ChannelFailureException) { throw; } // Project requests remain refused; detach and the independent simulator are available.
             catch (Exception ex) { throw Poison(ex); }
             finally { lock (gate) if (ReferenceEquals(pending, call)) pending = null; }
         }
@@ -173,7 +174,8 @@ namespace TiaMcp.WorkerChannel
 
         private void RequireUsable(string? method = null)
         {
-            if (poisoned || disposed || recoveryOnly && method != "adapter.Disconnect") throw new ChannelFaultException("Previous native request has an unknown outcome. Inspect TIA before a new explicit session; requests are never replayed.", unknown);
+            bool independentRuntime = profile != ChannelProfile.Studio && method == "adapter.runtime-channels.ExecutePlcSimAdvanced";
+            if (poisoned || disposed || recoveryOnly && method != "adapter.Disconnect" && !independentRuntime) throw new ChannelFaultException("Previous native request has an unknown outcome. Inspect TIA before a new explicit session; requests are never replayed.", unknown);
         }
 
         private ChannelFaultException Poison(Exception cause)

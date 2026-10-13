@@ -3,7 +3,11 @@ using System.Collections.Generic;
 
 namespace TiaMcp.Adapters.Contracts
 {
+#if TIA_PLCSIM_COMPONENT
+    internal static class LegacyResponseMetadata
+#else
     public static class LegacyResponseMetadata
+#endif
     {
         public static Dictionary<string, object?> Basic(DateTime? timestamp, bool success, string? rejection = null)
         {

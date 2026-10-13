@@ -167,6 +167,8 @@ namespace TiaMcp.WorkerChannel
             ["project-security.ExecuteSecurityDeep"] = "default",
             ["project-security.ExecuteDeviceUsers"] = "default",
             ["project-security.ExecuteHardwareSecurity"] = "default",
+            ["plc-online.ExecuteOnline"] = "transfer",
+            ["runtime-channels.ExecutePlcSimAdvanced"] = "transfer",
             ["version-control.ExecuteVersionControl"] = "default",
             ["version-control.ExecuteTeamcenter"] = "default",
         };
@@ -178,6 +180,9 @@ namespace TiaMcp.WorkerChannel
             var request = arguments["request"] as System.Text.Json.Nodes.JsonObject;
             if ((bool?)arguments["dryRun"] == true || (bool?)request?["DryRun"] == true || mode == "preview"
                 || mode == null && operation.EndsWith("Candidate", StringComparison.Ordinal)) return "default";
+            if (operation == "runtime-channels.ExecutePlcSimAdvanced")
+                return (bool?)request?["arguments"]?["dryRun"] == true
+                    || (string?)request?["operation"] is "ReadPlcSimAdvancedInstances" or "ReadPlcSimAdvancedTags" ? "default" : "transfer";
             if (operation == "SourceCandidate")
             {
                 var items = arguments["candidate"]?["Check"]?["Request"]?["Items"] as System.Text.Json.Nodes.JsonArray;
@@ -195,6 +200,7 @@ namespace TiaMcp.WorkerChannel
                     };
                 string name = (string?)request["Operation"] ?? operation;
                 string action = (string?)request["Action"] ?? "";
+                if (name == "GeneratePlcLoadableFile") return "transfer";
                 if (name == "CheckLibraryUpdates") return "default";
                 if (name == "SynchronizeLibrary" || name == "ManageLibraryType" && action is "updateLibrary" or "updateProject"
                     || name == "ManageLibraryTypeVersion" && action == "updateInstances") return "libraryUpdate";

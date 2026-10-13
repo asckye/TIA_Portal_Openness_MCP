@@ -1,0 +1,26 @@
+<Project>
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../FoundationHost/TiaMcp.EngineHost.Tests/TiaMcp.EngineHost.Tests.csproj"
+                      ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true"
+                      GlobalPropertiesToRemove="TargetFramework;TargetFrameworks;DefineConstants" />
+  </ItemGroup>
+  <Target Name="CopyHostDomainBuild" AfterTargets="Build">
+    <ItemGroup>
+      <HostDomainBuildReference Include="@(_MSBuildProjectReferenceExistent)" Condition="'%(Filename)' == 'TiaMcp.EngineHost.Tests'" />
+    </ItemGroup>
+    <MSBuild Projects="@(HostDomainBuildReference)" Targets="GetTargetPath"
+             Properties="%(HostDomainBuildReference.SetConfiguration);%(HostDomainBuildReference.SetPlatform);%(HostDomainBuildReference.SetTargetFramework)"
+             RemoveProperties="%(HostDomainBuildReference.GlobalPropertiesToRemove);$(_GlobalPropertiesToRemoveFromProjectReferences)">
+      <Output TaskParameter="TargetOutputs" ItemName="HostDomainBuildBinary" />
+    </MSBuild>
+    <Error Condition="'@(HostDomainBuildBinary->Count())' != '1' or !Exists('@(HostDomainBuildBinary)')" Text="The moved domain checks require the exact helper from this build: @(HostDomainBuildBinary)." />
+    <ItemGroup><HostDomainBuildPayload Include="%(HostDomainBuildBinary.RootDir)%(HostDomainBuildBinary.Directory)*" /></ItemGroup>
+    <Error Condition="'@(HostDomainBuildPayload->Count())' == '0'" Text="The exact host-domain helper build has no copyable payload." />
+    <Copy SourceFiles="@(HostDomainBuildPayload)" DestinationFolder="$(TargetDir)host-domain" SkipUnchangedFiles="true" />
+    <Error Condition="!Exists('$(TargetDir)host-domain/TiaMcp.EngineHost.Tests.dll')" Text="The exact host-domain helper was not copied to the caller's output." />
+    <GetFileHash Files="@(HostDomainBuildBinary)" Algorithm="SHA256">
+      <Output TaskParameter="Items" ItemName="HostDomainBuildHash" />
+    </GetFileHash>
+    <WriteLinesToFile File="$(TargetDir)host-domain/helper.sha256" Lines="@(HostDomainBuildHash->'%(FileHash)')" Overwrite="true" Encoding="UTF-8" />
+  </Target>
+</Project>

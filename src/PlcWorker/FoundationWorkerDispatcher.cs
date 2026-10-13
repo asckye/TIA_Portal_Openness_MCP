@@ -1,3 +1,4 @@
+extern alias plcsim;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -56,7 +57,7 @@ namespace TiaMcp.PlcWorker
             var modules = new List<WorkerOperationModule> { new WorkerOperationModule("", typeof(PlcFoundationEngine), names) };
             modules.Add(new WorkerOperationModule("plc-analysis", typeof(PlcFoundationEngine), new[] { "ExportBlockDocument" }));
             foreach (var family in PortedFamilies.All.Where(f => f.Available(releaseKey)))
-                modules.Add(new WorkerOperationModule(family.OperationPrefix, typeof(PlcFoundationEngine), WorkerOperations.FamilyNames(family.Name)));
+                modules.Add(new WorkerOperationModule(family.OperationPrefix, family.Name == "F04" ? typeof(plcsim::TiaMcp.PlcWorker.Runtime.PlcSimAdvancedAdapter) : typeof(PlcFoundationEngine), WorkerOperations.FamilyNames(family.Name)));
             methods = WorkerOperationModule.Register(modules);
         }
         internal ChannelBinding Observe()
@@ -71,6 +72,7 @@ namespace TiaMcp.PlcWorker
         }
         internal ChannelResponse Dispatch(ChannelRequest request)
         {
+            if (request.Method == PlcSimAdvancedWorkerModule.Operation) return PlcSimAdvancedWorkerModule.Dispatch(request);
             bool enteredOperation=false;
             bool readOnly=false;
             try
@@ -79,6 +81,9 @@ namespace TiaMcp.PlcWorker
                 readOnly=WorkerOperations.IsReadOnly(name);
                 if (!methods.TryGetValue(name, out var method)) throw new NotSupportedException("Unknown foundation operation: " + name);
                 var values = WorkerJson.ParseArguments(request.ArgumentsJson);
+                if (name == "plc-online.ExecuteOnline" && WorkerJson.Get(values, "request") is var online
+                    && online.ValueKind == JsonValueKind.Object)
+                    readOnly |= OnlineCapabilities.IsReadOnly(JsonSerializer.Deserialize<OnlineRequest>(online.GetRawText())!);
                 string actionName = WorkerJson.Get(values, "action").ValueKind == JsonValueKind.String ? WorkerJson.Get(values, "action").GetString()! : "";
                 string scope = WorkerJson.Get(values, "family").ValueKind == JsonValueKind.String ? WorkerJson.Get(values, "family").GetString()! : WorkerJson.Get(values, "kind").ValueKind == JsonValueKind.String ? WorkerJson.Get(values, "kind").GetString()! : "";
                 if (HardwareCapabilities.Unsupported(releaseKey, name, actionName, scope,

@@ -59,8 +59,7 @@ namespace TiaMcp.Logic.V4.Inputs
             return new NativeValuePolicy(InputSchema.Scalar(false), new InputBudget(), value =>
             {
                 var converted = PlcSimAdvancedLogic.ConvertValue(JsonNode.Parse(V4Json.Serialize(value)), primitiveType);
-                return !(converted is float f && (float.IsInfinity(f) || float.IsNaN(f)))
-                    && !(converted is double d && (double.IsInfinity(d) || double.IsNaN(d)));
+                return PlcSimAdvancedLogic.IsFiniteConvertedValue(converted);
             });
         }
     }

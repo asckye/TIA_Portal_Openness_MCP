@@ -80,7 +80,7 @@ public sealed class OperatorSessionTests
         await using var ai = await Peer.Ai(session); await using var separate = await Peer.Ai(other);
         using var registration = fixture.Register(); using var membership = registration.Register(session);
         await using var panel = await Peer.Operator(registration, session.SessionKey);
-        await panel.Tool("GetPlcBlockFingerprints", new() { ["fault"] = true }, false);
+        await panel.Tool("ListTestSuiteCases", new() { ["fault"] = true }, false);
         Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await ai.Tool("GetSessionState", ok: false))["error"]?["code"]);
         Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await panel.Tool("GetSessionState", ok: false))["error"]?["code"]);
         Assert.Equal("workbench", (string?)session.Snapshot()["endedBy"]); Assert.True((bool?)session.Snapshot()["sessionLocked"]);
@@ -101,18 +101,18 @@ public sealed class OperatorSessionTests
         using var registration = fixture.Register(); using var membership = registration.Register(session);
         await using var panel = await Peer.Operator(registration, session.SessionKey);
         await ai.Tool("GetSessionState");
-        var running = ai.Tool("GetPlcBlockFingerprints", new() { ["hang"] = true });
+        var running = ai.Tool("ListTestSuiteCases", new() { ["hang"] = true });
         await WaitUntilBusy(fixture);
         await panel.State(s => (string?)s["lane"]?["actor"] == "mcp");
         string? requestId = (string?)session.Snapshot()["lane"]?["requestId"];
         using var cancellation = new CancellationTokenSource();
         var request = new RequestContext<CallToolRequestParams>(System.Reflection.DispatchProxy.Create<IMcpServer, ServerProxy>())
-            { Params = new CallToolRequestParams { Name = "GetPlcBlockFingerprints", Arguments = new Dictionary<string, JsonElement>() } };
-        var queued = session.OperatorTools.Single(t => t.ProtocolTool.Name == "GetPlcBlockFingerprints").InvokeAsync(request, cancellation.Token);
+            { Params = new CallToolRequestParams { Name = "ListTestSuiteCases", Arguments = new Dictionary<string, JsonElement>() } };
+        var queued = session.OperatorTools.Single(t => t.ProtocolTool.Name == "ListTestSuiteCases").InvokeAsync(request, cancellation.Token);
         cancellation.Cancel();
         var cancelled = await queued;
         Assert.Equal("CANCELLED", (string?)cancelled.StructuredContent?["error"]?["code"]);
-        var ordered = panel.Tool("GetPlcBlockFingerprints");
+        var ordered = panel.Tool("ListTestSuiteCases");
         await Task.Delay(50); Assert.False(ordered.IsCompleted);
         var completed = await running; await ordered;
         Assert.Equal((string?)completed["meta"]?["requestId"], requestId);
@@ -148,9 +148,9 @@ public sealed class OperatorSessionTests
         using var registration = fixture.Register(); using var membership = registration.Register(session);
         await using var panel = await Peer.Operator(registration, session.SessionKey);
         await ai.Tool("GetSessionState");
-        var running = ai.Tool("GetPlcBlockFingerprints", new() { ["hang"] = true }, ok: false);
+        var running = ai.Tool("ListTestSuiteCases", new() { ["hang"] = true }, ok: false);
         await WaitUntilBusy(fixture);
-        var refused = ai.Tool("GetPlcBlockFingerprints", ok: false);
+        var refused = ai.Tool("ListTestSuiteCases", ok: false);
         await Task.Delay(100); Assert.False(refused.IsCompleted);
         await panel.Tool("DisconnectPortal");
         await running; await refused;
@@ -208,9 +208,9 @@ public sealed class OperatorSessionTests
             File.WriteAllText(catalog, new JsonObject { ["formatVersion"] = 1, ["release"] = release,
                 ["workerSha256"] = foundationhost::TiaMcp.FoundationHost.EngineWorkerClient.Hash(exe),
                 ["behaviorCapabilities"] = TiaMcp.Logic.V4.BehaviorCapabilities.Table(typeof(TiaMcp.Logic.V4.BehaviorCapabilities).Assembly, release),
-                ["tools"] = new JsonArray(new JsonObject { ["name"] = "GetPlcBlockFingerprints", ["description"] = "[L0][Diagnostics][READ] Offline fixture.",
+                ["tools"] = new JsonArray(new JsonObject { ["name"] = "ListTestSuiteCases", ["description"] = "[L0][Diagnostics][READ] Offline fixture.",
                     ["inputSchema"] = new JsonObject { ["type"] = "object", ["properties"] = properties, ["additionalProperties"] = false } }),
-                ["descriptors"] = new JsonArray(new JsonObject { ["name"] = "GetPlcBlockFingerprints", ["rawDescription"] = "", ["signature"] = "GetPlcBlockFingerprints()",
+                ["descriptors"] = new JsonArray(new JsonObject { ["name"] = "ListTestSuiteCases", ["rawDescription"] = "", ["signature"] = "ListTestSuiteCases()",
                     ["parameters"] = new JsonArray(properties.Select(p => (JsonNode)new JsonObject { ["name"] = p.Key, ["friendlyType"] = "boolean", ["clrType"] = "System.Boolean", ["required"] = false, ["description"] = "", ["synthesized"] = false, ["allowedValues"] = new JsonArray() }).ToArray()),
                     ["dryRun"] = new JsonObject { ["present"] = false, ["default"] = false }, ["execution"] = "worker" }),
                 ["liteTools"] = new JsonArray(), ["serverInstructions"] = "Offline operator fixture." }.ToJsonString());

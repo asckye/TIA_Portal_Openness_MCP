@@ -124,6 +124,11 @@ public sealed class ReadOnlySourceContracts
         var files = XDocument.Parse(Read("src/Adapters/build/Adapter.Sources.props")).Descendants("AdapterSource").Select(n => Path.GetFullPath(Path.Combine(Root, "src", n.Attribute("Include")!.Value.Replace("$(AdapterSourceRoot)/", "", StringComparison.Ordinal)))).ToList();
         foreach (var path in Directory.EnumerateFiles(Path.Combine(Root, "src/Shared/shared-native"), "*.props").Order(StringComparer.Ordinal))
             foreach (var node in XDocument.Load(path).Descendants("TiaSharedNativePrimitive")) files.Add(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(path)!, node.Attribute("Include")!.Value.Replace("$(MSBuildThisFileDirectory)", "", StringComparison.Ordinal))));
+        var simulation = Path.Combine(Root, "src/OnlineChannels/Simulation");
+        foreach (var node in XDocument.Load(Path.Combine(simulation, "TiaMcp.PlcSimAdvanced.csproj")).Descendants("Compile"))
+            if (node.Attribute("Include") is { } include && !include.Value.Contains("..", StringComparison.Ordinal))
+                files.Add(Path.GetFullPath(Path.Combine(simulation, include.Value)));
+        foreach (var path in Directory.EnumerateFiles(simulation, "*.cs")) Assert.Contains(Path.GetFullPath(path), files);
         Assert.Equal(files.Count, files.Distinct().Count()); foreach (var path in files) Assert.True(File.Exists(path), path);
         foreach (var folder in new[] { "Native", "Policy" }) foreach (var path in Directory.EnumerateFiles(Path.Combine(Root, "src/Adapters", folder), "*.cs", SearchOption.AllDirectories)) Assert.Contains(Path.GetFullPath(path), files);
         var code = string.Join("\n", files.Where(p => Path.GetFileName(p) != "OpennessAdapter.cs").Select(Repository.ReadSource));

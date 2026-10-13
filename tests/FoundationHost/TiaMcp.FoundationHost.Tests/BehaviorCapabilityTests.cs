@@ -88,7 +88,7 @@ public sealed class BehaviorCapabilityTests
             }
             if (release is "20" or "21") continue;
             bool hostPort = TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
-                && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name is "F01" or "F02" or "F03";
+                && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name is "F01" or "F02" or "F03" or "F04";
             var implementation = hostPort ? LegacyHostToolRegistry.Create(worker, release, false).Single(t => t.ProtocolTool.Name == name)
                 : TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(name)
                 ? PortedToolContract.Create(worker, release).Single(t => t.ProtocolTool.Name == name)

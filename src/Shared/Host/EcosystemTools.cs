@@ -72,6 +72,7 @@ namespace TiaMcpServer.ModelContextProtocol
             => OfflineToolExecution.RunOfflineAnalysisTool("GetOpennessGuidance", meta => { var result = EcosystemFiles.Guidance(EcosystemFiles.RepositoryRoot(), query, document, offset, limit); foreach (var item in result) meta[item.Key] = item.Value?.DeepClone(); return "Official Openness reference."; });
 #endif
 
+#if !TIA_ENGINE_PORTED
         [McpServerTool(Name = "RunPlcCompanionTool"), Description("[L2][Simulation][ONLINE-WRITE] Pinned MIT siemens-plc-tools companion: code (SCL lint/transpile/test/docs/diff/xref/drawio/PDF/parameters/trace), iol (XML/Excel import/export/compare/validate), net, sim (OPC UA/Modbus), sup and trace. mode catalog/help inspects commands without invoking callbacks; mode run needs dryRun=false. arguments is a string array, e.g. [\"code\",\"lint\",\"--help\"]. Use catalog for exact commands/options. Requires Python 3.12+ and dependencies installed with `tia install-plc-tools`; set TIA_MCP_PLC_TOOLS_PYTHON to its absolute python.exe. Run may write files, execute project tests/scripts, connect to equipment, or write PLC values depending on the selected command/config. It is not a sandbox. No automatic connection/download. Finite timeout kills the command tree; partial effects are possible. Long-running web/monitor commands end at timeout.")]
         public Task<CallToolResult> RunPlcCompanionToolV4(
             [Description("Existing absolute project directory used by the companion command.")] string workingDirectory,
@@ -108,5 +109,6 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (TiaOpenness.Shared.DataLocationIOException) { throw; }
             catch (Exception ex) { meta["error"] = ex.Message; return new ResponseMessage { Message = "Companion failed: " + ex.Message, Meta = meta }; }
         }
+#endif
     }
 }

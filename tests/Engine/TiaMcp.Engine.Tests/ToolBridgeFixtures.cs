@@ -244,7 +244,7 @@ namespace TiaMcp.Engine.Tests
         {
             Assert.Equal(new ToolCatalog(new[] {
                 typeof(ToolBridgeProbes), typeof(InstanceProbeTools), typeof(PlcOfflineTools), typeof(HmiOfflineTools), typeof(HostMetaTools), typeof(ExportTools), typeof(EngineeringDiagnosticsTools), typeof(HmiInspectionTools), typeof(MigrationReadTools),
-                typeof(RuntimeSettingsTools), typeof(OnlineDownloadTools), typeof(PlcSimAdvancedTools), typeof(RuntimeChannelTools), typeof(RuntimeTools), typeof(GraphicSelectionTools), typeof(GlobalScriptEditTools), typeof(ToolUsageTools),
+                typeof(RuntimeSettingsTools), typeof(OnlineDownloadTools), typeof(OnlineDataTools), typeof(NativeExchangeTools), typeof(PlcSimAdvancedTools), typeof(RuntimeChannelTools), typeof(RuntimeTools), typeof(GraphicSelectionTools), typeof(GlobalScriptEditTools), typeof(ToolUsageTools),
                 typeof(AddressesTools), typeof(HardwareNetworkTools), typeof(HardwareSecurityTools), typeof(HardwareServicesTools), typeof(HardwareServicesPortTools),
                 typeof(HardwareDevicesTools), typeof(ModulesTools), typeof(HardwareManagementTools), typeof(HardwareAmlTools), typeof(EcosystemTools), typeof(EngineeringAuditTools),
                 typeof(GitWorkflowTools), typeof(ImportStagingTools), typeof(ImportOrderTools), typeof(OfflineAnalysisTools), typeof(OfflineSuiteTools),

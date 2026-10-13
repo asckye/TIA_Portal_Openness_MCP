@@ -22,6 +22,7 @@ namespace TiaMcp.FoundationHost
         private readonly IReadOnlyDictionary<string, McpServerTool> shared;
         private readonly System.Collections.Concurrent.ConcurrentDictionary<Type, object> targets = new();
         internal void SetLocalTarget(Type type, object value) => targets[type] = value;
+        internal object LocalTarget(Type type) => targets.GetOrAdd(type, target => Activator.CreateInstance(target)!);
         internal WorkerToolInvoker(IToolCatalogView catalog, IEngineWorker worker, ImportStagingHostLifetime stagingLifetime,
             IReadOnlyList<McpServerTool>? sharedTools = null)
         {
@@ -31,7 +32,8 @@ namespace TiaMcp.FoundationHost
             local = new[] { typeof(McpServer), typeof(XmlBuilderTools), typeof(OfflineSuiteTools), typeof(TemplateTools),
                 typeof(ExportTools), typeof(ImportStagingTools), typeof(ImportOrderTools), typeof(ToolUsageTools),
                 typeof(EcosystemTools), typeof(V21EcosystemTools), typeof(EngineeringDiagnosticsTools), typeof(OfflineAnalysisTools),
-                typeof(HostMetaTools), typeof(PlcOfflineTools), typeof(HmiOfflineTools), typeof(PlcDocumentationTools), typeof(QualityAuditTools), typeof(GitWorkflowTools) }
+                typeof(HostMetaTools), typeof(PlcOfflineTools), typeof(HmiOfflineTools), typeof(PlcDocumentationTools), typeof(QualityAuditTools), typeof(GitWorkflowTools),
+                typeof(RuntimeTools), typeof(RuntimeChannelTools), typeof(PlcSimAdvancedTools) }
                 .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance))
                 .Where(m => m.GetCustomAttribute<McpServerToolAttribute>() != null)
                 .ToDictionary(m => m.GetCustomAttribute<McpServerToolAttribute>()!.Name ?? m.Name, StringComparer.Ordinal);
@@ -141,7 +143,7 @@ namespace TiaMcp.FoundationHost
             using var scope = preview ? McpServer.BeginReadOnlyApprovalPreview() : null;
             try
             {
-                object? result = method.Invoke(method.IsStatic ? null : targets.GetOrAdd(method.DeclaringType!, type => Activator.CreateInstance(type)!), values);
+                object? result = method.Invoke(method.IsStatic ? null : LocalTarget(method.DeclaringType!), values);
                 if (result is Task task) { task.GetAwaiter().GetResult(); result = task.GetType().GetProperty("Result")?.GetValue(task); }
                 return new ToolInvocationResult(McpServer.ToolResult(result), false);
             }

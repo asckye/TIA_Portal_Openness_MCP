@@ -41,8 +41,8 @@ public sealed class FoundationV4ContractsTests
     }
 
     [Theory]
-    [InlineData("14sp1", 248)] [InlineData("15.1", 277)] [InlineData("16", 299)]
-    [InlineData("17", 311)] [InlineData("18", 325)] [InlineData("19", 360)]
+    [InlineData("14sp1", 273)] [InlineData("15.1", 306)] [InlineData("16", 329)]
+    [InlineData("17", 341)] [InlineData("18", 356)] [InlineData("19", 393)]
     public async Task EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection(string release, int count)
     {
         var worker = new FakeWorker();
@@ -61,6 +61,25 @@ public sealed class FoundationV4ContractsTests
             Assert.Equal("not-started", (string?)result["meta"]!["execution"]);
             Assert.Equal(release, (string?)result["meta"]!["releaseKey"]);
             Assert.Equal(tool.ProtocolTool.Name, (string?)result["meta"]!["tool"]);
+        }
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("14sp1")] [InlineData("15.1")] [InlineData("16")]
+    [InlineData("17")] [InlineData("18")] [InlineData("19")]
+    public async Task RuntimeWorkerMoveRetainsNestedCallAdmissionEnvelope(string release)
+    {
+        var worker = new FakeWorker();
+        var bridge = Tool("CallTool", worker, release);
+        foreach (var name in new[] { "ListPlcSimAdvancedInstances", "ManagePlcSimAdvancedInstance", "GetPlcSimAdvancedTags", "WritePlcSimAdvancedTags", "RunPlcSimAdvancedTestScenario" })
+        {
+            var json = JsonSerializer.Serialize(new { name, arguments = new Dictionary<string, bool> { ["SnapshotReject"] = true, ["snapshotReject"] = true } });
+            var result = Body(await bridge.InvokeAsync(Request("CallTool", json)));
+            Assert.Equal("INVALID_ARGUMENT", (string?)result["error"]!["code"]);
+            Assert.Equal("arguments", (string?)result["error"]!["details"]!["parameter"]);
+            Assert.Equal("not-started", (string?)result["meta"]!["execution"]);
+            Assert.Equal("CallTool", (string?)result["meta"]!["tool"]);
         }
         Assert.Equal(0, worker.Calls);
     }

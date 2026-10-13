@@ -8,6 +8,11 @@ namespace TiaMcp.Adapters.Contracts
     // Availability never implies native acceptance; ported families remain current / NOT RUN.
     public static class PortedFamilies
     {
+        // F04 keeps its complete release roster; only its Framework API tools use a worker port.
+        public static string[] WorkerTools(Family family) => family.Name == "F04"
+            ? new[] { "ListPlcSimAdvancedInstances", "ManagePlcSimAdvancedInstance", "GetPlcSimAdvancedTags", "WritePlcSimAdvancedTags", "RunPlcSimAdvancedTestScenario" }
+            : family.Tools;
+
         public sealed class Family
         {
             public string Name { get; }
@@ -25,6 +30,8 @@ namespace TiaMcp.Adapters.Contracts
         }
 
         public static readonly IReadOnlyList<Family> All = new[] {
+            new Family("F04", "runtime-channels", new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }, new[] { "GetPlcLiveValuesOpcUa", "GetPlcLiveValuesS7", "GetPlcRunStateS7", "GetPlcSimAdvancedTags", "GetPlcWebDiagnostics", "GetPlcWebVars", "GetUnifiedRuntimeAlarms", "GetUnifiedRuntimeTags", "InvokeUnifiedOpenPipe", "ListPlcSimAdvancedInstances", "ManagePlcSimAdvancedInstance", "ProbeS7CpuIdentity", "RunPlcCompanionTool", "RunPlcSimAdvancedTestScenario", "SamplePlcLiveValuesS7", "SetPlcWebOperatingMode", "WritePlcSimAdvancedTags", "WritePlcWebVars", "WriteUnifiedRuntimeTags" }),
+            new Family("F22", "plc-online", new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }, new[] { "CheckDownloadReadiness", "CompareSoftwareToOnline", "ConnectOnlinePlc", "DisconnectOnlinePlc", "DisconnectOnlinePlcs", "DownloadPlc", "DownloadPlcToFolder", "GeneratePlcLoadableFile", "GetOnlineState", "GetPlcBlockFingerprints", "ListTransferRoutes", "ManagePlcDataBlockSnapshot", "ScanAccessibleDevices", "UploadDeviceParameters", "UploadStationFromPlc" }),
             // Foundation host builders emit V21 documents; older output is P8-40 work.
             new Family("F00", "foundation",
                 new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
@@ -104,6 +111,40 @@ namespace TiaMcp.Adapters.Contracts
         };
 
         public static readonly IReadOnlyDictionary<string, string[]> ToolReleases = new Dictionary<string, string[]>(StringComparer.Ordinal) {
+            ["GetPlcLiveValuesOpcUa"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["GetPlcLiveValuesS7"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["GetPlcRunStateS7"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["GetPlcSimAdvancedTags"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["GetPlcWebDiagnostics"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["GetPlcWebVars"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["GetUnifiedRuntimeAlarms"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["GetUnifiedRuntimeTags"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["InvokeUnifiedOpenPipe"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["ListPlcSimAdvancedInstances"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["ManagePlcSimAdvancedInstance"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["ProbeS7CpuIdentity"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["RunPlcCompanionTool"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["RunPlcSimAdvancedTestScenario"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["SamplePlcLiveValuesS7"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["SetPlcWebOperatingMode"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["WritePlcSimAdvancedTags"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["WritePlcWebVars"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["WriteUnifiedRuntimeTags"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["CheckDownloadReadiness"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
+            ["CompareSoftwareToOnline"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["ConnectOnlinePlc"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["DisconnectOnlinePlc"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["DisconnectOnlinePlcs"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["DownloadPlc"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
+            ["DownloadPlcToFolder"] = new[] { "19", "20", "21" },
+            ["GeneratePlcLoadableFile"] = new[] { "18", "19", "20", "21" },
+            ["GetOnlineState"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["GetPlcBlockFingerprints"] = new[] { "16", "17", "18", "19", "20", "21" },
+            ["ListTransferRoutes"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["ManagePlcDataBlockSnapshot"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
+            ["ScanAccessibleDevices"] = new[] { "19", "20", "21" },
+            ["UploadDeviceParameters"] = new[] { "21" },
+            ["UploadStationFromPlc"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
             ["CreateHardwareDevice"] = new[] { "18", "19", "20", "21" },
             ["SearchHardwareCatalog"] = new[] { "18", "19", "20", "21" },
             ["ExportPlcWatchTable"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },

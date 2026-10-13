@@ -3367,6 +3367,45 @@
         "entries": []
       },
       {
+        "family": "F04",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcLiveValuesOpcUa",
+          "GetPlcLiveValuesS7",
+          "GetPlcRunStateS7",
+          "GetPlcSimAdvancedTags",
+          "GetPlcWebDiagnostics",
+          "GetPlcWebVars",
+          "GetUnifiedRuntimeAlarms",
+          "GetUnifiedRuntimeTags",
+          "InvokeUnifiedOpenPipe",
+          "ListPlcSimAdvancedInstances",
+          "ManagePlcSimAdvancedInstance",
+          "ProbeS7CpuIdentity",
+          "RunPlcCompanionTool",
+          "RunPlcSimAdvancedTestScenario",
+          "SamplePlcLiveValuesS7",
+          "SetPlcWebOperatingMode",
+          "WritePlcSimAdvancedTags",
+          "WritePlcWebVars",
+          "WriteUnifiedRuntimeTags"
+        ]
+      },
+      {
+        "family": "F22",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompareSoftwareToOnline",
+          "ConnectOnlinePlc",
+          "DisconnectOnlinePlc",
+          "DisconnectOnlinePlcs",
+          "GetOnlineState",
+          "ListTransferRoutes"
+        ]
+      },
+      {
         "family": "F00",
         "state": "current",
         "l5": "NOT RUN",
@@ -3798,6 +3837,49 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": []
+      },
+      {
+        "family": "F04",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcLiveValuesOpcUa",
+          "GetPlcLiveValuesS7",
+          "GetPlcRunStateS7",
+          "GetPlcSimAdvancedTags",
+          "GetPlcWebDiagnostics",
+          "GetPlcWebVars",
+          "GetUnifiedRuntimeAlarms",
+          "GetUnifiedRuntimeTags",
+          "InvokeUnifiedOpenPipe",
+          "ListPlcSimAdvancedInstances",
+          "ManagePlcSimAdvancedInstance",
+          "ProbeS7CpuIdentity",
+          "RunPlcCompanionTool",
+          "RunPlcSimAdvancedTestScenario",
+          "SamplePlcLiveValuesS7",
+          "SetPlcWebOperatingMode",
+          "WritePlcSimAdvancedTags",
+          "WritePlcWebVars",
+          "WriteUnifiedRuntimeTags"
+        ]
+      },
+      {
+        "family": "F22",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CheckDownloadReadiness",
+          "CompareSoftwareToOnline",
+          "ConnectOnlinePlc",
+          "DisconnectOnlinePlc",
+          "DisconnectOnlinePlcs",
+          "DownloadPlc",
+          "GetOnlineState",
+          "ListTransferRoutes",
+          "ManagePlcDataBlockSnapshot",
+          "UploadStationFromPlc"
+        ]
       },
       {
         "family": "F00",
@@ -4269,6 +4351,50 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": []
+      },
+      {
+        "family": "F04",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcLiveValuesOpcUa",
+          "GetPlcLiveValuesS7",
+          "GetPlcRunStateS7",
+          "GetPlcSimAdvancedTags",
+          "GetPlcWebDiagnostics",
+          "GetPlcWebVars",
+          "GetUnifiedRuntimeAlarms",
+          "GetUnifiedRuntimeTags",
+          "InvokeUnifiedOpenPipe",
+          "ListPlcSimAdvancedInstances",
+          "ManagePlcSimAdvancedInstance",
+          "ProbeS7CpuIdentity",
+          "RunPlcCompanionTool",
+          "RunPlcSimAdvancedTestScenario",
+          "SamplePlcLiveValuesS7",
+          "SetPlcWebOperatingMode",
+          "WritePlcSimAdvancedTags",
+          "WritePlcWebVars",
+          "WriteUnifiedRuntimeTags"
+        ]
+      },
+      {
+        "family": "F22",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CheckDownloadReadiness",
+          "CompareSoftwareToOnline",
+          "ConnectOnlinePlc",
+          "DisconnectOnlinePlc",
+          "DisconnectOnlinePlcs",
+          "DownloadPlc",
+          "GetOnlineState",
+          "GetPlcBlockFingerprints",
+          "ListTransferRoutes",
+          "ManagePlcDataBlockSnapshot",
+          "UploadStationFromPlc"
+        ]
       },
       {
         "family": "F00",
@@ -4762,6 +4888,50 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": []
+      },
+      {
+        "family": "F04",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcLiveValuesOpcUa",
+          "GetPlcLiveValuesS7",
+          "GetPlcRunStateS7",
+          "GetPlcSimAdvancedTags",
+          "GetPlcWebDiagnostics",
+          "GetPlcWebVars",
+          "GetUnifiedRuntimeAlarms",
+          "GetUnifiedRuntimeTags",
+          "InvokeUnifiedOpenPipe",
+          "ListPlcSimAdvancedInstances",
+          "ManagePlcSimAdvancedInstance",
+          "ProbeS7CpuIdentity",
+          "RunPlcCompanionTool",
+          "RunPlcSimAdvancedTestScenario",
+          "SamplePlcLiveValuesS7",
+          "SetPlcWebOperatingMode",
+          "WritePlcSimAdvancedTags",
+          "WritePlcWebVars",
+          "WriteUnifiedRuntimeTags"
+        ]
+      },
+      {
+        "family": "F22",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CheckDownloadReadiness",
+          "CompareSoftwareToOnline",
+          "ConnectOnlinePlc",
+          "DisconnectOnlinePlc",
+          "DisconnectOnlinePlcs",
+          "DownloadPlc",
+          "GetOnlineState",
+          "GetPlcBlockFingerprints",
+          "ListTransferRoutes",
+          "ManagePlcDataBlockSnapshot",
+          "UploadStationFromPlc"
+        ]
       },
       {
         "family": "F00",
@@ -5269,6 +5439,51 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": []
+      },
+      {
+        "family": "F04",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcLiveValuesOpcUa",
+          "GetPlcLiveValuesS7",
+          "GetPlcRunStateS7",
+          "GetPlcSimAdvancedTags",
+          "GetPlcWebDiagnostics",
+          "GetPlcWebVars",
+          "GetUnifiedRuntimeAlarms",
+          "GetUnifiedRuntimeTags",
+          "InvokeUnifiedOpenPipe",
+          "ListPlcSimAdvancedInstances",
+          "ManagePlcSimAdvancedInstance",
+          "ProbeS7CpuIdentity",
+          "RunPlcCompanionTool",
+          "RunPlcSimAdvancedTestScenario",
+          "SamplePlcLiveValuesS7",
+          "SetPlcWebOperatingMode",
+          "WritePlcSimAdvancedTags",
+          "WritePlcWebVars",
+          "WriteUnifiedRuntimeTags"
+        ]
+      },
+      {
+        "family": "F22",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CheckDownloadReadiness",
+          "CompareSoftwareToOnline",
+          "ConnectOnlinePlc",
+          "DisconnectOnlinePlc",
+          "DisconnectOnlinePlcs",
+          "DownloadPlc",
+          "GeneratePlcLoadableFile",
+          "GetOnlineState",
+          "GetPlcBlockFingerprints",
+          "ListTransferRoutes",
+          "ManagePlcDataBlockSnapshot",
+          "UploadStationFromPlc"
+        ]
       },
       {
         "family": "F00",
@@ -5790,6 +6005,53 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": []
+      },
+      {
+        "family": "F04",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcLiveValuesOpcUa",
+          "GetPlcLiveValuesS7",
+          "GetPlcRunStateS7",
+          "GetPlcSimAdvancedTags",
+          "GetPlcWebDiagnostics",
+          "GetPlcWebVars",
+          "GetUnifiedRuntimeAlarms",
+          "GetUnifiedRuntimeTags",
+          "InvokeUnifiedOpenPipe",
+          "ListPlcSimAdvancedInstances",
+          "ManagePlcSimAdvancedInstance",
+          "ProbeS7CpuIdentity",
+          "RunPlcCompanionTool",
+          "RunPlcSimAdvancedTestScenario",
+          "SamplePlcLiveValuesS7",
+          "SetPlcWebOperatingMode",
+          "WritePlcSimAdvancedTags",
+          "WritePlcWebVars",
+          "WriteUnifiedRuntimeTags"
+        ]
+      },
+      {
+        "family": "F22",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CheckDownloadReadiness",
+          "CompareSoftwareToOnline",
+          "ConnectOnlinePlc",
+          "DisconnectOnlinePlc",
+          "DisconnectOnlinePlcs",
+          "DownloadPlc",
+          "DownloadPlcToFolder",
+          "GeneratePlcLoadableFile",
+          "GetOnlineState",
+          "GetPlcBlockFingerprints",
+          "ListTransferRoutes",
+          "ManagePlcDataBlockSnapshot",
+          "ScanAccessibleDevices",
+          "UploadStationFromPlc"
+        ]
       },
       {
         "family": "F00",

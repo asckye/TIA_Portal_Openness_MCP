@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="DefineConstants">
+  <Import Project="../../../Version.props" />
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyName>TiaMcp.PlcSimAdvanced</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DefineConstants>$(DefineConstants);TIA_PLCSIM_COMPONENT</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="PlcSimAdvancedAdapter.cs" />
+    <Compile Include="PlcSimAdvancedChannel.cs" />
+    <Compile Include="PlcSimAdvancedValueAdmission.cs" />
+    <Compile Include="../../Logic/ModelContextProtocol/ResponseMeta.cs" Link="Shared/ResponseMeta.cs" />
+    <Compile Include="../../Logic/ModelContextProtocol/ResponseClock.cs" Link="Shared/ResponseClock.cs" />
+    <Compile Include="../../Adapters.Contracts/LegacyResponseMetadata.cs" Link="Pure/LegacyResponseMetadata.cs" />
+    <Compile Include="../../Logic/Runtime/PlcSimAdvancedLogic.cs" Link="Pure/PlcSimAdvancedLogic.cs" />
+    <PackageReference Include="System.Text.Json" Version="10.0.0-preview.4.25258.110" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

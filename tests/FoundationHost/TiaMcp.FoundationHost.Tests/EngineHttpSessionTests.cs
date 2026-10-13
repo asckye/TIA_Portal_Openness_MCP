@@ -17,7 +17,7 @@ public sealed class EngineHttpSessionTests
         using var host = await Fixture.Start(release);
         using var a = new Session(host.Url); await a.Initialize();
         await a.Tool("ConnectPortal", new() { ["processId"] = 321 });
-        var unknown = await a.Tool("GetPlcBlockFingerprints", new() { ["fault"] = true }, ok: false);
+        var unknown = await a.Tool("ListTestSuiteCases", new() { ["fault"] = true }, ok: false);
         Assert.Equal("Fixture native outcome unknown.", (string?)unknown["error"]?["message"]);
         Assert.NotNull(unknown["data"]?["fixturePid"]);
         string prior = (string)unknown["meta"]!["requestId"]!;
@@ -66,9 +66,9 @@ public sealed class EngineHttpSessionTests
     {
         using var host = await Fixture.Start(release, shortTimeout: waitForTimeout); using var a = new Session(host.Url); await a.Initialize();
         await a.Tool("ConnectPortal", new() { ["processId"] = 323 });
-        int pid = (int)(await a.Tool("GetPlcBlockFingerprints"))["data"]!["fixturePid"]!;
+        int pid = (int)(await a.Tool("ListTestSuiteCases"))["data"]!["fixturePid"]!;
         using var worker = Process.GetProcessById(pid);
-        var running = a.Tool("GetPlcBlockFingerprints", new() { ["hang"] = true }, ok: false);
+        var running = a.Tool("ListTestSuiteCases", new() { ["hang"] = true }, ok: false);
         if (waitForTimeout) await running;
         else
         {
@@ -93,7 +93,7 @@ public sealed class EngineHttpSessionTests
     {
         using var host = await Fixture.Start(release, shortTimeout: true); using var a = new Session(host.Url); await a.Initialize();
         await a.Tool("ConnectPortal", new() { ["processId"] = 324 });
-        await a.Tool("GetPlcBlockFingerprints", new() { ["hang"] = true }, ok: false);
+        await a.Tool("ListTestSuiteCases", new() { ["hang"] = true }, ok: false);
         var restarted = await a.Tool("RestartOpennessWorker", new() { ["confirmRestart"] = true });
         Assert.Contains("\"requiresTiaRestart\":true", restarted["data"]!.ToJsonString());
         Assert.Contains("restart that TIA instance", restarted["data"]!.ToJsonString());
@@ -109,8 +109,8 @@ public sealed class EngineHttpSessionTests
         using var b = new Session(host.Url);
         await a.Initialize(); await b.Initialize();
         Assert.NotEqual(a.Id, b.Id);
-        int pidA = (int)(await a.Tool("GetPlcBlockFingerprints"))["data"]!["fixturePid"]!;
-        int pidB = (int)(await b.Tool("CallTool", new() { ["name"] = "GetPlcBlockFingerprints", ["arguments"] = new JsonObject() }))["data"]!["fixturePid"]!;
+        int pidA = (int)(await a.Tool("ListTestSuiteCases"))["data"]!["fixturePid"]!;
+        int pidB = (int)(await b.Tool("CallTool", new() { ["name"] = "ListTestSuiteCases", ["arguments"] = new JsonObject() }))["data"]!["fixturePid"]!;
         Assert.NotEqual(pidA, pidB);
         using var processA = Process.GetProcessById(pidA);
         using var processB = Process.GetProcessById(pidB);
@@ -125,7 +125,7 @@ public sealed class EngineHttpSessionTests
         var refused = await a.Tool("GetSessionState", ok: false);
         Assert.Equal("PRECONDITION_FAILED", (string?)refused["error"]?["code"]);
         await b.Tool("GetSessionState"); await b.Tool("ListPortalProcessProjects");
-        int currentB = (int)(await b.Tool("GetPlcBlockFingerprints"))["data"]!["fixturePid"]!;
+        int currentB = (int)(await b.Tool("ListTestSuiteCases"))["data"]!["fixturePid"]!;
         using var workerB = Process.GetProcessById(currentB);
         await a.End();
         Assert.True(processA.WaitForExit(5000));
@@ -142,9 +142,9 @@ public sealed class EngineHttpSessionTests
         using var host = await Fixture.Start(release);
         using var a = new Session(host.Url); using var b = new Session(host.Url);
         await a.Initialize(); await b.Initialize();
-        await a.Tool("GetPlcBlockFingerprints", new() { ["fault"] = true }, ok: false);
+        await a.Tool("ListTestSuiteCases", new() { ["fault"] = true }, ok: false);
         Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await a.Tool("GetSessionState", ok: false))["error"]?["code"]);
-        await b.Tool("GetSessionState"); await b.Tool("GetPlcBlockFingerprints");
+        await b.Tool("GetSessionState"); await b.Tool("ListTestSuiteCases");
         var stageArgs = new JsonObject { ["files"] = new JsonArray(new JsonObject { ["fileName"] = "fixture.scl", ["kind"] = "scl", ["content"] = "FUNCTION Fixture : Void\nBEGIN\nEND_FUNCTION" }), ["dryRun"] = false };
         await b.Tool("StageImportFiles", stageArgs, metadata: new JsonObject { ["tiaMcpStagingSession"] = "caller-peer-token", ["other"] = "kept" });
         var batches = (await a.Tool("ListStagedImportFiles"))["data"]!.ToJsonString();
@@ -187,7 +187,7 @@ public sealed class EngineHttpSessionTests
     {
         using var host = await Fixture.Start(release, gracefulShutdown: true);
         using var session = new Session(host.Url); await session.Initialize();
-        int pid = (int)(await session.Tool("GetPlcBlockFingerprints"))["data"]!["fixturePid"]!;
+        int pid = (int)(await session.Tool("ListTestSuiteCases"))["data"]!["fixturePid"]!;
         using var worker = Process.GetProcessById(pid);
         // Hold a POST body open: shutdown must cancel transport reads as well as session workers.
         using var upload = new TcpClient(); await upload.ConnectAsync("127.0.0.1", new Uri(host.Url).Port);
@@ -243,9 +243,9 @@ public sealed class EngineHttpSessionTests
             var tools = new JsonArray(); var descriptors = new JsonArray();
             // CallTool, GetOpennessWorkerStatus and RestartOpennessWorker are ported F01 declarations the host adds itself (P8-03a);
             // an engine catalog that still exports them is refused.
-            foreach (string name in new[] { "GetPlcBlockFingerprints" })
+            foreach (string name in new[] { "ListTestSuiteCases" })
             {
-                var properties = name == "GetPlcBlockFingerprints" ? new JsonObject { ["fault"] = new JsonObject { ["type"] = "boolean" }, ["hang"] = new JsonObject { ["type"] = "boolean" } }
+                var properties = name == "ListTestSuiteCases" ? new JsonObject { ["fault"] = new JsonObject { ["type"] = "boolean" }, ["hang"] = new JsonObject { ["type"] = "boolean" } }
                     : name == "RestartOpennessWorker" ? new JsonObject { ["confirmRestart"] = new JsonObject { ["type"] = "boolean" } }
                     : name == "CallTool" ? new JsonObject { ["name"] = new JsonObject { ["type"] = "string" }, ["arguments"] = new JsonObject { ["type"] = "object" } } : new JsonObject();
                 tools.Add(new JsonObject { ["name"] = name, ["description"] = "[L0][Diagnostics][READ] Offline session fixture.",
@@ -255,7 +255,7 @@ public sealed class EngineHttpSessionTests
                     ["clrType"] = p.Key == "arguments" ? typeof(TiaMcp.Logic.V4.Inputs.ToolArguments).FullName : p.Key == "name" ? "System.String" : "System.Boolean",
                     ["required"] = false, ["description"] = "", ["synthesized"] = false, ["allowedValues"] = new JsonArray() });
                 descriptors.Add(new JsonObject { ["name"] = name, ["rawDescription"] = "", ["signature"] = name + "()", ["parameters"] = parameters,
-                    ["dryRun"] = new JsonObject { ["present"] = false, ["default"] = false }, ["execution"] = name == "GetPlcBlockFingerprints" ? "worker" : "host" });
+                    ["dryRun"] = new JsonObject { ["present"] = false, ["default"] = false }, ["execution"] = name == "ListTestSuiteCases" ? "worker" : "host" });
             }
             string catalog = Path.Combine(directory, "catalog.json");
             File.WriteAllText(catalog, new JsonObject { ["formatVersion"] = 1, ["release"] = release,

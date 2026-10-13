@@ -5,7 +5,7 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 248,
+      "toolCount": 273,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -33,6 +33,7 @@
         "CloseProject",
         "ComparePlcBlockDocuments",
         "CompareProjects",
+        "CompareSoftwareToOnline",
         "CompileDevice",
         "CompileHmiDiagnostics",
         "CompilePlcDiagnostics",
@@ -40,6 +41,7 @@
         "ConfigureMotionHardwareConnection",
         "ConnectDeviceNodesToProfinetSubnet",
         "ConnectIsolatedPortal",
+        "ConnectOnlinePlc",
         "ConnectPortal",
         "CreateDevice",
         "CreateGsdDevice",
@@ -67,6 +69,8 @@
         "DescribePlcBlockLogic",
         "DescribeService",
         "DescribeStandardPackage",
+        "DisconnectOnlinePlc",
+        "DisconnectOnlinePlcs",
         "DisconnectPortal",
         "EnsureOpennessUserGroup",
         "EnsureSubnet",
@@ -110,6 +114,7 @@
         "GetMotionAxisConfiguration",
         "GetNativeInvocationLog",
         "GetObjectProperty",
+        "GetOnlineState",
         "GetOpennessCompatibility",
         "GetOpennessGuidance",
         "GetOpennessWorkerStatus",
@@ -117,8 +122,14 @@
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcBlockScopes",
+        "GetPlcLiveValuesOpcUa",
+        "GetPlcLiveValuesS7",
+        "GetPlcRunStateS7",
+        "GetPlcSimAdvancedTags",
         "GetPlcTagTableConstants",
         "GetPlcTypeInfo",
+        "GetPlcWebDiagnostics",
+        "GetPlcWebVars",
         "GetPortalConnectionReadiness",
         "GetPortalInfo",
         "GetProjectInfo",
@@ -130,6 +141,8 @@
         "GetSoftwareTree",
         "GetTechnologyObjectTree",
         "GetToolUsage",
+        "GetUnifiedRuntimeAlarms",
+        "GetUnifiedRuntimeTags",
         "GetV21EcosystemCatalog",
         "GetWorkbenchSelection",
         "GetWorkbenchState",
@@ -152,6 +165,7 @@
         "InstantiatePlcTemplates",
         "InvokeObject",
         "InvokeService",
+        "InvokeUnifiedOpenPipe",
         "ListClassicHmiFaceplates",
         "ListClassicHmiScripts",
         "ListDeviceItemChannels",
@@ -166,6 +180,7 @@
         "ListObjectChildren",
         "ListPlcBlocks",
         "ListPlcExternalSources",
+        "ListPlcSimAdvancedInstances",
         "ListPlcSystemConstants",
         "ListPlcSystemGroups",
         "ListPlcTagTables",
@@ -177,6 +192,7 @@
         "ListStandardPackages",
         "ListTechnologyObjects",
         "ListToolCategories",
+        "ListTransferRoutes",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
         "ManageClassicHmiScreenObject",
@@ -196,6 +212,7 @@
         "ManageMotionAxis",
         "ManagePlcExternalSources",
         "ManagePlcGitRepository",
+        "ManagePlcSimAdvancedInstance",
         "ManagePlcTagDefinition",
         "ManagePlcUserGroup",
         "ManagePortInterconnection",
@@ -219,6 +236,7 @@
         "ProbeGlobalLibrary",
         "ProbeHardwareHmiConnectionOwnerCandidates",
         "ProbeHardwareHmiConnectionWhitelistedServices",
+        "ProbeS7CpuIdentity",
         "PublishGenerationRecord",
         "RenderPlcBlock",
         "RenderPlcBlockDocument",
@@ -229,8 +247,11 @@
         "RunCapabilitySelfTest",
         "RunOfflineReleaseValidationSuite",
         "RunOnlineMonitoringSafetySelfTest",
+        "RunPlcCompanionTool",
+        "RunPlcSimAdvancedTestScenario",
         "RunReadOnlyToolBatch",
         "RunToolTransaction",
+        "SamplePlcLiveValuesS7",
         "SaveExportContent",
         "SaveProject",
         "ScanPlcSourceAnnotations",
@@ -241,6 +262,7 @@
         "SetDeviceItemChannel",
         "SetDeviceItemIoAddress",
         "SetPlcCpuSettings",
+        "SetPlcWebOperatingMode",
         "ShowObjectInEditor",
         "ShowWorkbenchAtlas",
         "ShowWorkbenchBlock",
@@ -254,12 +276,15 @@
         "ValidateAutomationContext",
         "ValidatePlcDocumentSchemas",
         "ValidateStandardPackage",
-        "WritePlcSclSourceFile"
+        "WritePlcSclSourceFile",
+        "WritePlcSimAdvancedTags",
+        "WritePlcWebVars",
+        "WriteUnifiedRuntimeTags"
       ]
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 277,
+      "toolCount": 306,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -281,6 +306,7 @@
         "BuildReleaseManifest",
         "BuildReleaseRunbook",
         "CallTool",
+        "CheckDownloadReadiness",
         "CheckLibraryUpdates",
         "CheckProductUpdate",
         "CleanupStagedImportFiles",
@@ -288,6 +314,7 @@
         "CloseProject",
         "ComparePlcBlockDocuments",
         "CompareProjects",
+        "CompareSoftwareToOnline",
         "CompileDevice",
         "CompileHmiDiagnostics",
         "CompilePlcDiagnostics",
@@ -295,6 +322,7 @@
         "ConfigureMotionHardwareConnection",
         "ConnectDeviceNodesToProfinetSubnet",
         "ConnectIsolatedPortal",
+        "ConnectOnlinePlc",
         "ConnectPortal",
         "CreateDevice",
         "CreateGsdDevice",
@@ -323,7 +351,10 @@
         "DescribePlcBlockLogic",
         "DescribeService",
         "DescribeStandardPackage",
+        "DisconnectOnlinePlc",
+        "DisconnectOnlinePlcs",
         "DisconnectPortal",
+        "DownloadPlc",
         "EnsureOpennessUserGroup",
         "EnsureSubnet",
         "ExchangeMotionCamData",
@@ -371,6 +402,7 @@
         "GetMotionAxisConfiguration",
         "GetNativeInvocationLog",
         "GetObjectProperty",
+        "GetOnlineState",
         "GetOpennessCompatibility",
         "GetOpennessGuidance",
         "GetOpennessWorkerStatus",
@@ -379,12 +411,18 @@
         "GetPlcBlockInfo",
         "GetPlcBlockScopes",
         "GetPlcChecksums",
+        "GetPlcLiveValuesOpcUa",
+        "GetPlcLiveValuesS7",
         "GetPlcObjectFingerprints",
         "GetPlcOpcUaConfiguration",
         "GetPlcPutGetAccess",
+        "GetPlcRunStateS7",
+        "GetPlcSimAdvancedTags",
         "GetPlcTagTableConstants",
         "GetPlcTypeInfo",
         "GetPlcWatchTableCurrentValuesReadOnly",
+        "GetPlcWebDiagnostics",
+        "GetPlcWebVars",
         "GetPortalConnectionReadiness",
         "GetPortalInfo",
         "GetProjectInfo",
@@ -397,6 +435,8 @@
         "GetSoftwareTree",
         "GetTechnologyObjectTree",
         "GetToolUsage",
+        "GetUnifiedRuntimeAlarms",
+        "GetUnifiedRuntimeTags",
         "GetV21EcosystemCatalog",
         "GetWorkbenchSelection",
         "GetWorkbenchState",
@@ -421,6 +461,7 @@
         "InstantiatePlcTemplates",
         "InvokeObject",
         "InvokeService",
+        "InvokeUnifiedOpenPipe",
         "ListClassicHmiFaceplates",
         "ListClassicHmiScripts",
         "ListDeviceItemChannels",
@@ -436,6 +477,7 @@
         "ListPlcBlocks",
         "ListPlcExternalSources",
         "ListPlcForceTables",
+        "ListPlcSimAdvancedInstances",
         "ListPlcSystemConstants",
         "ListPlcSystemGroups",
         "ListPlcTagTables",
@@ -449,6 +491,7 @@
         "ListTechnologyObjects",
         "ListToolCategories",
         "ListTransferAreas",
+        "ListTransferRoutes",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
         "ManageClassicHmiScreenObject",
@@ -468,9 +511,11 @@
         "ManageMotionAxis",
         "ManageOpcUaInterface",
         "ManagePlcBlockProtection",
+        "ManagePlcDataBlockSnapshot",
         "ManagePlcExternalSources",
         "ManagePlcGitRepository",
         "ManagePlcProtection",
+        "ManagePlcSimAdvancedInstance",
         "ManagePlcTableEntries",
         "ManagePlcTagDefinition",
         "ManagePlcUserGroup",
@@ -498,6 +543,7 @@
         "ProbeHardwareHmiConnectionOwnerCandidates",
         "ProbeHardwareHmiConnectionWhitelistedServices",
         "ProbePlcMonitorOnlineCapabilities",
+        "ProbeS7CpuIdentity",
         "PublishGenerationRecord",
         "RenderPlcBlock",
         "RenderPlcBlockDocument",
@@ -509,8 +555,11 @@
         "RunCapabilitySelfTest",
         "RunOfflineReleaseValidationSuite",
         "RunOnlineMonitoringSafetySelfTest",
+        "RunPlcCompanionTool",
+        "RunPlcSimAdvancedTestScenario",
         "RunReadOnlyToolBatch",
         "RunToolTransaction",
+        "SamplePlcLiveValuesS7",
         "SaveExportContent",
         "SaveProject",
         "SaveProjectCopy",
@@ -524,6 +573,7 @@
         "SetOpcUaInterfaceEnabled",
         "SetPlcCpuSettings",
         "SetPlcPutGetAccess",
+        "SetPlcWebOperatingMode",
         "ShowObjectInEditor",
         "ShowWorkbenchAtlas",
         "ShowWorkbenchBlock",
@@ -534,15 +584,19 @@
         "SynchronizeLibrary",
         "TraceTagCause",
         "TraceTagCauseLive",
+        "UploadStationFromPlc",
         "ValidateAutomationContext",
         "ValidatePlcDocumentSchemas",
         "ValidateStandardPackage",
-        "WritePlcSclSourceFile"
+        "WritePlcSclSourceFile",
+        "WritePlcSimAdvancedTags",
+        "WritePlcWebVars",
+        "WriteUnifiedRuntimeTags"
       ]
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 299,
+      "toolCount": 329,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -564,6 +618,7 @@
         "BuildReleaseManifest",
         "BuildReleaseRunbook",
         "CallTool",
+        "CheckDownloadReadiness",
         "CheckLibraryUpdates",
         "CheckProductUpdate",
         "CleanupStagedImportFiles",
@@ -571,6 +626,7 @@
         "CloseProject",
         "ComparePlcBlockDocuments",
         "CompareProjects",
+        "CompareSoftwareToOnline",
         "CompileDevice",
         "CompileHmiDiagnostics",
         "CompilePlcDiagnostics",
@@ -578,6 +634,7 @@
         "ConfigureMotionHardwareConnection",
         "ConnectDeviceNodesToProfinetSubnet",
         "ConnectIsolatedPortal",
+        "ConnectOnlinePlc",
         "ConnectPortal",
         "ConnectProjectToWorkspace",
         "CreateDevice",
@@ -608,7 +665,10 @@
         "DescribePlcBlockLogic",
         "DescribeService",
         "DescribeStandardPackage",
+        "DisconnectOnlinePlc",
+        "DisconnectOnlinePlcs",
         "DisconnectPortal",
+        "DownloadPlc",
         "EnsureOpennessUserGroup",
         "EnsureSubnet",
         "ExchangeMotionCamData",
@@ -660,20 +720,28 @@
         "GetMotionAxisConfiguration",
         "GetNativeInvocationLog",
         "GetObjectProperty",
+        "GetOnlineState",
         "GetOpennessCompatibility",
         "GetOpennessGuidance",
         "GetOpennessWorkerStatus",
         "GetPlcBlockEditCapabilities",
+        "GetPlcBlockFingerprints",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcBlockScopes",
         "GetPlcChecksums",
+        "GetPlcLiveValuesOpcUa",
+        "GetPlcLiveValuesS7",
         "GetPlcObjectFingerprints",
         "GetPlcOpcUaConfiguration",
         "GetPlcPutGetAccess",
+        "GetPlcRunStateS7",
+        "GetPlcSimAdvancedTags",
         "GetPlcTagTableConstants",
         "GetPlcTypeInfo",
         "GetPlcWatchTableCurrentValuesReadOnly",
+        "GetPlcWebDiagnostics",
+        "GetPlcWebVars",
         "GetPortalConnectionReadiness",
         "GetPortalInfo",
         "GetProjectInfo",
@@ -686,6 +754,8 @@
         "GetSoftwareTree",
         "GetTechnologyObjectTree",
         "GetToolUsage",
+        "GetUnifiedRuntimeAlarms",
+        "GetUnifiedRuntimeTags",
         "GetV21EcosystemCatalog",
         "GetVersionControlStatus",
         "GetWorkbenchSelection",
@@ -715,6 +785,7 @@
         "InstantiatePlcTemplates",
         "InvokeObject",
         "InvokeService",
+        "InvokeUnifiedOpenPipe",
         "ListClassicHmiFaceplates",
         "ListClassicHmiScripts",
         "ListDeviceItemChannels",
@@ -731,6 +802,7 @@
         "ListPlcBlocks",
         "ListPlcExternalSources",
         "ListPlcForceTables",
+        "ListPlcSimAdvancedInstances",
         "ListPlcSoftwareUnits",
         "ListPlcSystemConstants",
         "ListPlcSystemGroups",
@@ -745,6 +817,7 @@
         "ListTechnologyObjects",
         "ListToolCategories",
         "ListTransferAreas",
+        "ListTransferRoutes",
         "ListVersionControlWorkspaces",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
@@ -768,9 +841,11 @@
         "ManageOpcUaInterface",
         "ManagePlcBlockProtection",
         "ManagePlcCertificate",
+        "ManagePlcDataBlockSnapshot",
         "ManagePlcExternalSources",
         "ManagePlcGitRepository",
         "ManagePlcProtection",
+        "ManagePlcSimAdvancedInstance",
         "ManagePlcSoftwareUnit",
         "ManagePlcTableEntries",
         "ManagePlcTagDefinition",
@@ -801,6 +876,7 @@
         "ProbeHardwareHmiConnectionOwnerCandidates",
         "ProbeHardwareHmiConnectionWhitelistedServices",
         "ProbePlcMonitorOnlineCapabilities",
+        "ProbeS7CpuIdentity",
         "PublishGenerationRecord",
         "RenderPlcBlock",
         "RenderPlcBlockDocument",
@@ -812,8 +888,11 @@
         "RunCapabilitySelfTest",
         "RunOfflineReleaseValidationSuite",
         "RunOnlineMonitoringSafetySelfTest",
+        "RunPlcCompanionTool",
+        "RunPlcSimAdvancedTestScenario",
         "RunReadOnlyToolBatch",
         "RunToolTransaction",
+        "SamplePlcLiveValuesS7",
         "SaveExportContent",
         "SaveProject",
         "SaveProjectCopy",
@@ -828,6 +907,7 @@
         "SetPlcCpuSettings",
         "SetPlcPutGetAccess",
         "SetPlcUnitObjectAccess",
+        "SetPlcWebOperatingMode",
         "ShowObjectInEditor",
         "ShowWorkbenchAtlas",
         "ShowWorkbenchBlock",
@@ -839,15 +919,19 @@
         "SynchronizeVersionControlWorkspace",
         "TraceTagCause",
         "TraceTagCauseLive",
+        "UploadStationFromPlc",
         "ValidateAutomationContext",
         "ValidatePlcDocumentSchemas",
         "ValidateStandardPackage",
-        "WritePlcSclSourceFile"
+        "WritePlcSclSourceFile",
+        "WritePlcSimAdvancedTags",
+        "WritePlcWebVars",
+        "WriteUnifiedRuntimeTags"
       ]
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 311,
+      "toolCount": 341,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -869,6 +953,7 @@
         "BuildReleaseManifest",
         "BuildReleaseRunbook",
         "CallTool",
+        "CheckDownloadReadiness",
         "CheckLibraryUpdates",
         "CheckProductUpdate",
         "CleanupStagedImportFiles",
@@ -876,6 +961,7 @@
         "CloseProject",
         "ComparePlcBlockDocuments",
         "CompareProjects",
+        "CompareSoftwareToOnline",
         "CompileDevice",
         "CompileHmiDiagnostics",
         "CompilePlcDiagnostics",
@@ -883,6 +969,7 @@
         "ConfigureMotionHardwareConnection",
         "ConnectDeviceNodesToProfinetSubnet",
         "ConnectIsolatedPortal",
+        "ConnectOnlinePlc",
         "ConnectPortal",
         "ConnectProjectToWorkspace",
         "CreateDevice",
@@ -913,7 +1000,10 @@
         "DescribePlcBlockLogic",
         "DescribeService",
         "DescribeStandardPackage",
+        "DisconnectOnlinePlc",
+        "DisconnectOnlinePlcs",
         "DisconnectPortal",
+        "DownloadPlc",
         "EnsureOpennessUserGroup",
         "EnsureSubnet",
         "ExchangeMotionCamData",
@@ -969,20 +1059,28 @@
         "GetMotionAxisConfiguration",
         "GetNativeInvocationLog",
         "GetObjectProperty",
+        "GetOnlineState",
         "GetOpennessCompatibility",
         "GetOpennessGuidance",
         "GetOpennessWorkerStatus",
         "GetPlcBlockEditCapabilities",
+        "GetPlcBlockFingerprints",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcBlockScopes",
         "GetPlcChecksums",
+        "GetPlcLiveValuesOpcUa",
+        "GetPlcLiveValuesS7",
         "GetPlcObjectFingerprints",
         "GetPlcOpcUaConfiguration",
         "GetPlcPutGetAccess",
+        "GetPlcRunStateS7",
+        "GetPlcSimAdvancedTags",
         "GetPlcTagTableConstants",
         "GetPlcTypeInfo",
         "GetPlcWatchTableCurrentValuesReadOnly",
+        "GetPlcWebDiagnostics",
+        "GetPlcWebVars",
         "GetPortalConnectionReadiness",
         "GetPortalInfo",
         "GetProjectInfo",
@@ -996,6 +1094,8 @@
         "GetSoftwareTree",
         "GetTechnologyObjectTree",
         "GetToolUsage",
+        "GetUnifiedRuntimeAlarms",
+        "GetUnifiedRuntimeTags",
         "GetV21EcosystemCatalog",
         "GetVersionControlStatus",
         "GetWorkbenchSelection",
@@ -1026,6 +1126,7 @@
         "InstantiatePlcTemplates",
         "InvokeObject",
         "InvokeService",
+        "InvokeUnifiedOpenPipe",
         "ListClassicHmiFaceplates",
         "ListClassicHmiScripts",
         "ListDeviceItemChannels",
@@ -1042,6 +1143,7 @@
         "ListPlcBlocks",
         "ListPlcExternalSources",
         "ListPlcForceTables",
+        "ListPlcSimAdvancedInstances",
         "ListPlcSoftwareUnits",
         "ListPlcSystemConstants",
         "ListPlcSystemGroups",
@@ -1056,6 +1158,7 @@
         "ListTechnologyObjects",
         "ListToolCategories",
         "ListTransferAreas",
+        "ListTransferRoutes",
         "ListVersionControlWorkspaces",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
@@ -1080,9 +1183,11 @@
         "ManageOpcUaInterface",
         "ManagePlcBlockProtection",
         "ManagePlcCertificate",
+        "ManagePlcDataBlockSnapshot",
         "ManagePlcExternalSources",
         "ManagePlcGitRepository",
         "ManagePlcProtection",
+        "ManagePlcSimAdvancedInstance",
         "ManagePlcSoftwareUnit",
         "ManagePlcSupervision",
         "ManagePlcTableEntries",
@@ -1117,6 +1222,7 @@
         "ProbeHardwareHmiConnectionOwnerCandidates",
         "ProbeHardwareHmiConnectionWhitelistedServices",
         "ProbePlcMonitorOnlineCapabilities",
+        "ProbeS7CpuIdentity",
         "PublishGenerationRecord",
         "RenderPlcBlock",
         "RenderPlcBlockDocument",
@@ -1128,8 +1234,11 @@
         "RunCapabilitySelfTest",
         "RunOfflineReleaseValidationSuite",
         "RunOnlineMonitoringSafetySelfTest",
+        "RunPlcCompanionTool",
+        "RunPlcSimAdvancedTestScenario",
         "RunReadOnlyToolBatch",
         "RunToolTransaction",
+        "SamplePlcLiveValuesS7",
         "SaveExportContent",
         "SaveProject",
         "SaveProjectCopy",
@@ -1145,6 +1254,7 @@
         "SetPlcPutGetAccess",
         "SetPlcUnitObjectAccess",
         "SetPlcWatchTableModifyValue",
+        "SetPlcWebOperatingMode",
         "ShowObjectInEditor",
         "ShowWorkbenchAtlas",
         "ShowWorkbenchBlock",
@@ -1156,15 +1266,19 @@
         "SynchronizeVersionControlWorkspace",
         "TraceTagCause",
         "TraceTagCauseLive",
+        "UploadStationFromPlc",
         "ValidateAutomationContext",
         "ValidatePlcDocumentSchemas",
         "ValidateStandardPackage",
-        "WritePlcSclSourceFile"
+        "WritePlcSclSourceFile",
+        "WritePlcSimAdvancedTags",
+        "WritePlcWebVars",
+        "WriteUnifiedRuntimeTags"
       ]
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 325,
+      "toolCount": 356,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1187,6 +1301,7 @@
         "BuildReleaseManifest",
         "BuildReleaseRunbook",
         "CallTool",
+        "CheckDownloadReadiness",
         "CheckLibraryUpdates",
         "CheckProductUpdate",
         "CleanupStagedImportFiles",
@@ -1196,6 +1311,7 @@
         "CompareLibraryObjects",
         "ComparePlcBlockDocuments",
         "CompareProjects",
+        "CompareSoftwareToOnline",
         "CompileDevice",
         "CompileHmiDiagnostics",
         "CompilePlcDiagnostics",
@@ -1203,6 +1319,7 @@
         "ConfigureMotionHardwareConnection",
         "ConnectDeviceNodesToProfinetSubnet",
         "ConnectIsolatedPortal",
+        "ConnectOnlinePlc",
         "ConnectPortal",
         "ConnectProjectToWorkspace",
         "CreateDevice",
@@ -1235,7 +1352,10 @@
         "DescribePlcBlockLogic",
         "DescribeService",
         "DescribeStandardPackage",
+        "DisconnectOnlinePlc",
+        "DisconnectOnlinePlcs",
         "DisconnectPortal",
+        "DownloadPlc",
         "EnsureOpennessUserGroup",
         "EnsureSubnet",
         "ExchangeMotionCamData",
@@ -1269,6 +1389,7 @@
         "GenerateErrorReport",
         "GenerateOpcUaModelledInterface",
         "GeneratePlcDocumentation",
+        "GeneratePlcLoadableFile",
         "GeneratePlcSourceFromBlocks",
         "GetClassicHmiScreenTree",
         "GetDeviceAddressing",
@@ -1291,21 +1412,29 @@
         "GetMotionAxisConfiguration",
         "GetNativeInvocationLog",
         "GetObjectProperty",
+        "GetOnlineState",
         "GetOpennessCompatibility",
         "GetOpennessGuidance",
         "GetOpennessWorkerStatus",
         "GetPlcBlockEditCapabilities",
+        "GetPlcBlockFingerprints",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcBlockScopes",
         "GetPlcChecksums",
         "GetPlcCrossReferences",
+        "GetPlcLiveValuesOpcUa",
+        "GetPlcLiveValuesS7",
         "GetPlcObjectFingerprints",
         "GetPlcOpcUaConfiguration",
         "GetPlcPutGetAccess",
+        "GetPlcRunStateS7",
+        "GetPlcSimAdvancedTags",
         "GetPlcTagTableConstants",
         "GetPlcTypeInfo",
         "GetPlcWatchTableCurrentValuesReadOnly",
+        "GetPlcWebDiagnostics",
+        "GetPlcWebVars",
         "GetPortalConnectionReadiness",
         "GetPortalInfo",
         "GetProjectInfo",
@@ -1319,6 +1448,8 @@
         "GetSoftwareTree",
         "GetTechnologyObjectTree",
         "GetToolUsage",
+        "GetUnifiedRuntimeAlarms",
+        "GetUnifiedRuntimeTags",
         "GetV21EcosystemCatalog",
         "GetVersionControlStatus",
         "GetWorkbenchSelection",
@@ -1349,6 +1480,7 @@
         "InstantiatePlcTemplates",
         "InvokeObject",
         "InvokeService",
+        "InvokeUnifiedOpenPipe",
         "ListClassicHmiFaceplates",
         "ListClassicHmiScripts",
         "ListDeviceItemChannels",
@@ -1365,6 +1497,7 @@
         "ListPlcBlocks",
         "ListPlcExternalSources",
         "ListPlcForceTables",
+        "ListPlcSimAdvancedInstances",
         "ListPlcSoftwareUnits",
         "ListPlcSystemConstants",
         "ListPlcSystemGroups",
@@ -1379,6 +1512,7 @@
         "ListTechnologyObjects",
         "ListToolCategories",
         "ListTransferAreas",
+        "ListTransferRoutes",
         "ListVersionControlWorkspaces",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
@@ -1406,9 +1540,11 @@
         "ManagePlcAlarmTextList",
         "ManagePlcBlockProtection",
         "ManagePlcCertificate",
+        "ManagePlcDataBlockSnapshot",
         "ManagePlcExternalSources",
         "ManagePlcGitRepository",
         "ManagePlcProtection",
+        "ManagePlcSimAdvancedInstance",
         "ManagePlcSoftwareUnit",
         "ManagePlcSupervision",
         "ManagePlcTableEntries",
@@ -1446,6 +1582,7 @@
         "ProbeHardwareHmiConnectionOwnerCandidates",
         "ProbeHardwareHmiConnectionWhitelistedServices",
         "ProbePlcMonitorOnlineCapabilities",
+        "ProbeS7CpuIdentity",
         "PublishGenerationRecord",
         "RenderPlcBlock",
         "RenderPlcBlockDocument",
@@ -1457,8 +1594,11 @@
         "RunCapabilitySelfTest",
         "RunOfflineReleaseValidationSuite",
         "RunOnlineMonitoringSafetySelfTest",
+        "RunPlcCompanionTool",
+        "RunPlcSimAdvancedTestScenario",
         "RunReadOnlyToolBatch",
         "RunToolTransaction",
+        "SamplePlcLiveValuesS7",
         "SaveExportContent",
         "SaveProject",
         "SaveProjectCopy",
@@ -1476,6 +1616,7 @@
         "SetPlcPutGetAccess",
         "SetPlcUnitObjectAccess",
         "SetPlcWatchTableModifyValue",
+        "SetPlcWebOperatingMode",
         "ShowObjectInEditor",
         "ShowWorkbenchAtlas",
         "ShowWorkbenchBlock",
@@ -1487,15 +1628,19 @@
         "SynchronizeVersionControlWorkspace",
         "TraceTagCause",
         "TraceTagCauseLive",
+        "UploadStationFromPlc",
         "ValidateAutomationContext",
         "ValidatePlcDocumentSchemas",
         "ValidateStandardPackage",
-        "WritePlcSclSourceFile"
+        "WritePlcSclSourceFile",
+        "WritePlcSimAdvancedTags",
+        "WritePlcWebVars",
+        "WriteUnifiedRuntimeTags"
       ]
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 360,
+      "toolCount": 393,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1528,6 +1673,7 @@
         "BuildUnifiedHmiTemplateApplyDesignManifest",
         "BuildUnifiedHmiThemeDesign",
         "CallTool",
+        "CheckDownloadReadiness",
         "CheckLibraryUpdates",
         "CheckProductUpdate",
         "CleanupStagedImportFiles",
@@ -1537,6 +1683,7 @@
         "CompareLibraryObjects",
         "ComparePlcBlockDocuments",
         "CompareProjects",
+        "CompareSoftwareToOnline",
         "CompileDevice",
         "CompileHmiDiagnostics",
         "CompilePlcDiagnostics",
@@ -1544,6 +1691,7 @@
         "ConfigureMotionHardwareConnection",
         "ConnectDeviceNodesToProfinetSubnet",
         "ConnectIsolatedPortal",
+        "ConnectOnlinePlc",
         "ConnectPortal",
         "ConnectProjectToWorkspace",
         "CreateDevice",
@@ -1581,7 +1729,11 @@
         "DescribeStandardPackage",
         "DescribeUnifiedHmiButtonEventScript",
         "DescribeUnifiedScreenItemType",
+        "DisconnectOnlinePlc",
+        "DisconnectOnlinePlcs",
         "DisconnectPortal",
+        "DownloadPlc",
+        "DownloadPlcToFolder",
         "EnsureOpennessUserGroup",
         "EnsureSubnet",
         "EnsureUnifiedHmiButtonAction",
@@ -1623,6 +1775,7 @@
         "GenerateErrorReport",
         "GenerateOpcUaModelledInterface",
         "GeneratePlcDocumentation",
+        "GeneratePlcLoadableFile",
         "GeneratePlcSourceFromBlocks",
         "GetClassicHmiScreenTree",
         "GetDeviceAddressing",
@@ -1645,21 +1798,29 @@
         "GetMotionAxisConfiguration",
         "GetNativeInvocationLog",
         "GetObjectProperty",
+        "GetOnlineState",
         "GetOpennessCompatibility",
         "GetOpennessGuidance",
         "GetOpennessWorkerStatus",
         "GetPlcBlockEditCapabilities",
+        "GetPlcBlockFingerprints",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcBlockScopes",
         "GetPlcChecksums",
         "GetPlcCrossReferences",
+        "GetPlcLiveValuesOpcUa",
+        "GetPlcLiveValuesS7",
         "GetPlcObjectFingerprints",
         "GetPlcOpcUaConfiguration",
         "GetPlcPutGetAccess",
+        "GetPlcRunStateS7",
+        "GetPlcSimAdvancedTags",
         "GetPlcTagTableConstants",
         "GetPlcTypeInfo",
         "GetPlcWatchTableCurrentValuesReadOnly",
+        "GetPlcWebDiagnostics",
+        "GetPlcWebVars",
         "GetPortalConnectionReadiness",
         "GetPortalInfo",
         "GetProjectInfo",
@@ -1676,6 +1837,8 @@
         "GetUnifiedHmiButtonEvent",
         "GetUnifiedHmiDynamization",
         "GetUnifiedHmiTexts",
+        "GetUnifiedRuntimeAlarms",
+        "GetUnifiedRuntimeTags",
         "GetV21EcosystemCatalog",
         "GetVersionControlStatus",
         "GetWorkbenchSelection",
@@ -1707,6 +1870,7 @@
         "InstantiatePlcTemplates",
         "InvokeObject",
         "InvokeService",
+        "InvokeUnifiedOpenPipe",
         "ListClassicHmiFaceplates",
         "ListClassicHmiScripts",
         "ListDeviceItemChannels",
@@ -1723,6 +1887,7 @@
         "ListPlcBlocks",
         "ListPlcExternalSources",
         "ListPlcForceTables",
+        "ListPlcSimAdvancedInstances",
         "ListPlcSoftwareUnits",
         "ListPlcSystemConstants",
         "ListPlcSystemGroups",
@@ -1737,6 +1902,7 @@
         "ListTechnologyObjects",
         "ListToolCategories",
         "ListTransferAreas",
+        "ListTransferRoutes",
         "ListUnifiedHmiApiTypes",
         "ListVersionControlWorkspaces",
         "ManageClassicHmiCycle",
@@ -1765,9 +1931,11 @@
         "ManagePlcAlarmTextList",
         "ManagePlcBlockProtection",
         "ManagePlcCertificate",
+        "ManagePlcDataBlockSnapshot",
         "ManagePlcExternalSources",
         "ManagePlcGitRepository",
         "ManagePlcProtection",
+        "ManagePlcSimAdvancedInstance",
         "ManagePlcSoftwareUnit",
         "ManagePlcSupervision",
         "ManagePlcTableEntries",
@@ -1808,6 +1976,7 @@
         "ProbeHardwareHmiConnectionOwnerCandidates",
         "ProbeHardwareHmiConnectionWhitelistedServices",
         "ProbePlcMonitorOnlineCapabilities",
+        "ProbeS7CpuIdentity",
         "PublishGenerationRecord",
         "RenderPlcBlock",
         "RenderPlcBlockDocument",
@@ -1821,11 +1990,15 @@
         "RunHmiTemplatePlcSyncPrecheckSuite",
         "RunOfflineReleaseValidationSuite",
         "RunOnlineMonitoringSafetySelfTest",
+        "RunPlcCompanionTool",
+        "RunPlcSimAdvancedTestScenario",
         "RunReadOnlyToolBatch",
         "RunToolTransaction",
+        "SamplePlcLiveValuesS7",
         "SaveExportContent",
         "SaveProject",
         "SaveProjectCopy",
+        "ScanAccessibleDevices",
         "ScanPlcSourceAnnotations",
         "SearchHardwareCatalog",
         "SearchInstalledGsdDevices",
@@ -1840,6 +2013,7 @@
         "SetPlcPutGetAccess",
         "SetPlcUnitObjectAccess",
         "SetPlcWatchTableModifyValue",
+        "SetPlcWebOperatingMode",
         "SetUnifiedHmiButtonEventScriptCode",
         "SetUnifiedHmiRuntimeState",
         "ShowObjectInEditor",
@@ -1853,15 +2027,19 @@
         "SynchronizeVersionControlWorkspace",
         "TraceTagCause",
         "TraceTagCauseLive",
+        "UploadStationFromPlc",
         "ValidateAutomationContext",
         "ValidatePlcDocumentSchemas",
         "ValidateStandardPackage",
-        "WritePlcSclSourceFile"
+        "WritePlcSclSourceFile",
+        "WritePlcSimAdvancedTags",
+        "WritePlcWebVars",
+        "WriteUnifiedRuntimeTags"
       ]
     },
     "20": {
       "profile": "full-engine",
-      "toolCount": 503,
+      "toolCount": 502,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -2353,7 +2531,6 @@
         "TraceTagCause",
         "TraceTagCauseLive",
         "UpgradeSivarcDefinitions",
-        "UploadDeviceParameters",
         "UploadStationFromPlc",
         "ValidateAutomationContext",
         "ValidateClassicHmiMinimalPackageFiles",
@@ -2892,9 +3069,9 @@
     }
   },
   "groupCounts": {
-    "all-releases": 248,
-    "shared-subset": 255,
-    "release-only": 13
+    "all-releases": 273,
+    "shared-subset": 229,
+    "release-only": 14
   },
   "tools": [
     {
@@ -3408,6 +3585,11 @@
     {
       "name": "CheckDownloadReadiness",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -3544,10 +3726,16 @@
     {
       "name": "CompareSoftwareToOnline",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3667,10 +3855,16 @@
     {
       "name": "ConnectOnlinePlc",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -4202,19 +4396,31 @@
     {
       "name": "DisconnectOnlinePlc",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "DisconnectOnlinePlcs",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -4235,6 +4441,11 @@
     {
       "name": "DownloadPlc",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -4244,6 +4455,7 @@
     {
       "name": "DownloadPlcToFolder",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -4884,6 +5096,8 @@
     {
       "name": "GeneratePlcLoadableFile",
       "releases": [
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -5276,10 +5490,16 @@
     {
       "name": "GetOnlineState",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -5354,6 +5574,10 @@
     {
       "name": "GetPlcBlockFingerprints",
       "releases": [
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -5433,19 +5657,31 @@
     {
       "name": "GetPlcLiveValuesOpcUa",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "GetPlcLiveValuesS7",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -5493,19 +5729,31 @@
     {
       "name": "GetPlcRunStateS7",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "GetPlcSimAdvancedTags",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -5555,19 +5803,31 @@
     {
       "name": "GetPlcWebDiagnostics",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "GetPlcWebVars",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -5902,10 +6162,16 @@
     {
       "name": "GetUnifiedRuntimeAlarms",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -5920,10 +6186,16 @@
     {
       "name": "GetUnifiedRuntimeTags",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -6455,10 +6727,16 @@
     {
       "name": "InvokeUnifiedOpenPipe",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -6727,10 +7005,16 @@
     {
       "name": "ListPlcSimAdvancedInstances",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -6977,10 +7261,16 @@
     {
       "name": "ListTransferRoutes",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -7570,6 +7860,11 @@
     {
       "name": "ManagePlcDataBlockSnapshot",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7641,10 +7936,16 @@
     {
       "name": "ManagePlcSimAdvancedInstance",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -8412,10 +8713,16 @@
     {
       "name": "ProbeS7CpuIdentity",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -8641,19 +8948,31 @@
     {
       "name": "RunPlcCompanionTool",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "RunPlcSimAdvancedTestScenario",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -8698,10 +9017,16 @@
     {
       "name": "SamplePlcLiveValuesS7",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -8751,6 +9076,7 @@
     {
       "name": "ScanAccessibleDevices",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -8955,10 +9281,16 @@
     {
       "name": "SetPlcWebOperatingMode",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -9210,15 +9542,19 @@
     {
       "name": "UploadDeviceParameters",
       "releases": [
-        "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "release-only",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "UploadStationFromPlc",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -9324,28 +9660,46 @@
     {
       "name": "WritePlcSimAdvancedTags",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "WritePlcWebVars",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "WriteUnifiedRuntimeTags",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     }
   ]

@@ -237,6 +237,16 @@
 },
 {
 "tool": "UploadDeviceParameters",
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "ParameterUploadProvider exists only in V21; UploadDeviceParameters is absent from the V20 release catalog."
+},
+"21": {
+"applicable": true,
+"reason": "V21 provides ParameterUploadProvider; validate UploadDeviceParameters on V21."
+}
+},
 "args": {
 "devicePath": [
 "MCP_PLC"

@@ -21,9 +21,13 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class RuntimeTools
     {
-        private readonly IEngineeringSession _session;
+        private readonly Func<string, JsonObject> _putGet;
 
-        public RuntimeTools(IEngineeringSession session) => _session = session;
+        public RuntimeTools() : this(path => McpServer.ToolInvoker.Invoke("GetPlcPutGetAccess", new ToolArguments(JsonSerializer.SerializeToElement(new { devicePath = path })), false).Result.StructuredContent?["data"] as JsonObject ?? new JsonObject(), true) { }
+        internal RuntimeTools(Func<string, JsonObject> putGet, bool useCallback) => _putGet = putGet;
+#if !TIA_ENGINE_HOST
+        public RuntimeTools(IEngineeringSession session) : this(path => session.GetPutGetAccess(path), true) { }
+#endif
 
         internal static List<string> ParseItemSpecs(string itemsJson)
         {
@@ -130,7 +134,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     try
                     {
-                        var pg = _session.GetPutGetAccess(devicePath);
+                        var pg = _putGet(devicePath);
                         if ((pg["found"]?.GetValue<bool>() ?? false) && !(pg["enabled"]?.GetValue<bool>() ?? false))
                         {
                             return new ResponseJsonReport

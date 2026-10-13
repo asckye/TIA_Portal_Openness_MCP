@@ -93,12 +93,17 @@ internal static class DeveloperChecks
     {
         Reset();
         AddResolver(server, publicApiDirectory);
-        var portal = server.GetType("TiaMcpServer.Siemens.Portal", true)!;
-        var serviceType = server.GetType("TiaMcpServer.Siemens.Services.OnlineDownloadService", true)!;
-        var session = FormatterServices.GetUninitializedObject(portal);
-        var constructor = serviceType.GetConstructors(All).FirstOrDefault()
-            ?? throw new MissingMethodException(serviceType.FullName, ".ctor");
-        var service = constructor.Invoke(new[] { session });
+        string release = server.GetName().Name!.Split('.').Last().Substring(1);
+        var adapter = Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(server.Location)!,
+            "TiaMcp.Adapter." + release + ".dll"));
+        var serviceType = adapter.GetType("TiaMcp.Adapters.Native.Online.OnlineDownloadAdapter", true)!;
+        var sessionType = adapter.GetType("TiaMcp.Adapters.Native.Online.OnlineSession", true)!;
+        var requestType = Program.FindReferencedType(adapter, "TiaMcp.Adapters.Contracts.OnlineRequest");
+        // Route fakes use the session's pure reflection helpers only. No native
+        // session, project or callback is constructed by this fixture.
+        var session = sessionType.GetConstructors(All).Single().Invoke(new object?[] {
+            null, Activator.CreateInstance(requestType), null, null });
+        var service = serviceType.GetConstructors(All).Single().Invoke(new[] { session });
         var enumMethod = serviceType.GetMethod("EnumerateDownloadRoutes", All) ?? throw new MissingMethodException("EnumerateDownloadRoutes");
         var scoreMethod = serviceType.GetMethod("ScoreDownloadRoutes", All) ?? throw new MissingMethodException("ScoreDownloadRoutes");
         var selectMethod = serviceType.GetMethod("SelectDownloadRoute", All) ?? throw new MissingMethodException("SelectDownloadRoute");

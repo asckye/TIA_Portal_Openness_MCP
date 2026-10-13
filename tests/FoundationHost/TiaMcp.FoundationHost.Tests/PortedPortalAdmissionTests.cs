@@ -144,14 +144,27 @@ public sealed class PortedPortalAdmissionTests
         }
         Assert.True(worker.Calls <= (name == "SearchInstalledGsdDevices" ? 2 : 1), "A missing portal must not dispatch a native operation: " + name);
         Assert.Equal(name is "ConnectIsolatedPortal" or "EnsureOpennessUserGroup" or "GetPortalInfo" or "ValidateAutomationContext" ? 1 : 0, admissionWorker.GlobalOperations);
+        var simulation = PortedFamilies.All.Single(family => family.Name == "F04");
+        Assert.Equal(PortedFamilies.WorkerTools(simulation).Contains(name) ? 1 : 0, admissionWorker.SimulationOperations);
     }
 
     private sealed class PortalAdmissionWorker(IFoundationWorker worker, string tool) : IFoundationWorker
     {
         internal int GlobalOperations;
+        internal int SimulationOperations;
         public void Dispose() { }
         public async Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
         {
+            var simulation = PortedFamilies.All.Single(family => family.Name == "F04");
+            if (PortedFamilies.WorkerTools(simulation).Contains(tool))
+            {
+                Assert.Equal(simulation.OperationPrefix + "." + TiaMcp.PlcWorker.WorkerOperations.FamilyNames(simulation.Name).Single(), operation);
+                Assert.False(TiaMcp.PlcWorker.WorkerOperations.RequiresPortal(operation));
+                SimulationOperations++;
+                // This API is independent of TIA readiness. Refuse the synthetic
+                // call before native access, retaining the not-started boundary.
+                throw new NotSupportedException("Synthetic simulation API unavailable before native access.");
+            }
             string? expected = tool switch {
                 "ConnectIsolatedPortal" => "ConnectIsolatedPortal", "EnsureOpennessUserGroup" => "EnsureOpennessUserGroup",
                 "GetPortalInfo" => "ReadPortalInfo", "ValidateAutomationContext" => "ValidateAutomationContext", _ => null };
@@ -186,7 +199,7 @@ public sealed class PortedPortalAdmissionTests
     }
 
     public static IEnumerable<object[]> LaneCases =>
-        from name in PortedFamilies.All.Where(f => f.Name is "F33" or "F06" or "F23" or "F35" or "F07" or "F24" or "F25").SelectMany(f => f.Tools).Where(name => TiaMcpServer.ModelContextProtocol.ToolExecution.Table[name] != "host").Prepend("CreatePlcBlockGroup")
+        from name in PortedFamilies.All.Where(f => f.Name is "F04" or "F22" or "F33" or "F06" or "F23" or "F35" or "F07" or "F24" or "F25").SelectMany(f => f.Tools).Where(name => TiaMcpServer.ModelContextProtocol.ToolExecution.Table[name] != "host").Prepend("CreatePlcBlockGroup")
         from cancel in new[] { false, true }
         select new object[] { name, cancel };
 
@@ -200,22 +213,31 @@ public sealed class PortedPortalAdmissionTests
         using var held = await worker.Acquire(CancellationToken.None);
         using var cancellation = new CancellationTokenSource();
         var pending = enginehost::TiaMcpServer.Dispatch.ToolDispatchLanes.Acquire(name, cancellation.Token);
-        Assert.False(pending.IsCompleted);
-        Assert.Equal(2, worker.Acquires);
-        if (cancel)
+        try
         {
-            cancellation.Cancel();
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pending);
+            Assert.False(pending.IsCompleted);
+            Assert.Equal(2, worker.Acquires);
+            if (cancel)
+            {
+                cancellation.Cancel();
+                await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pending);
+            }
+            else
+            {
+                held.Dispose();
+                using var acquired = await pending.WaitAsync(TimeSpan.FromSeconds(2));
+                enginehost::TiaMcpServer.Dispatch.ToolDispatchLanes.Activate(acquired);
+                Assert.Equal(1, worker.Activations);
+            }
+            using var local = await enginehost::TiaMcpServer.Dispatch.ToolDispatchLanes.Acquire("BuildDeviceAmlDocument", CancellationToken.None);
+            Assert.Equal(2, worker.Acquires);
         }
-        else
+        finally
         {
-            held.Dispose();
-            using var acquired = await pending.WaitAsync(TimeSpan.FromSeconds(2));
-            enginehost::TiaMcpServer.Dispatch.ToolDispatchLanes.Activate(acquired);
-            Assert.Equal(1, worker.Activations);
+            // A wrong lane must fail the assertion without leaking a local slot
+            // and preventing the remaining checks from finishing.
+            if (pending.IsCompletedSuccessfully) pending.Result?.Dispose();
         }
-        using var local = await enginehost::TiaMcpServer.Dispatch.ToolDispatchLanes.Acquire("BuildDeviceAmlDocument", CancellationToken.None);
-        Assert.Equal(2, worker.Acquires);
     }
 
     private sealed class QueuedWorker : Engine.IEngineWorker
@@ -296,6 +318,9 @@ public sealed class PortedPortalAdmissionTests
         "ManageCommunicationConnection" => "{\"action\":\"delete\"}",
         "SynchronizeLibrary" => "{\"action\":\"updateLibrary\",\"selection\":[{\"folder\":\"\"}]}",
         "RunToolTransaction" => "{\"calls\":[{\"name\":\"CreatePlcTypeGroup\",\"arguments\":{\"softwarePath\":\"PLC\",\"groupPath\":\"Types\"}}],\"confirmChange\":true}",
+        "ManagePlcSimAdvancedInstance" => "{\"action\":\"stop\",\"confirmInstanceChange\":true}",
+        "WritePlcSimAdvancedTags" => "{\"values\":[{\"name\":\"Fixture\",\"value\":true}],\"confirmWrite\":true}",
+        "RunPlcSimAdvancedTestScenario" => "{\"scenario\":{\"instance\":\"Fixture\",\"mode\":\"default\",\"steps\":[{\"waitMs\":1}]},\"confirmRun\":true}",
         _ => "{}" })!.AsObject();
 
     private sealed class Catalog : Host.IToolCatalogView

@@ -15,6 +15,8 @@ public sealed class PlcWorkerRobustnessTests
 {
     private static readonly IReadOnlyDictionary<string, string> PlcCategories = new Dictionary<string, string>(StringComparer.Ordinal)
     {
+        ["plc-online.ExecuteOnline"] = "transfer",
+        ["runtime-channels.ExecutePlcSimAdvanced"] = "transfer",
         ["AddDeviceWithFallback"] = "default",
         ["Attach"] = "default",
         ["BindProject"] = "default",
@@ -195,6 +197,26 @@ public sealed class PlcWorkerRobustnessTests
         ["ManageUnifiedScreenItem"] = "default",
         ["SetUnifiedHmiButtonEventScriptCode"] = "default",
         ["SetUnifiedHmiRuntimeState"] = "default",
+        ["ListPlcSimAdvancedInstances"] = "default",
+        ["GetPlcSimAdvancedTags"] = "default",
+        ["ManagePlcSimAdvancedInstance"] = "transfer",
+        ["WritePlcSimAdvancedTags"] = "transfer",
+        ["RunPlcSimAdvancedTestScenario"] = "transfer",
+        ["CheckDownloadReadiness"] = "transfer",
+        ["CompareSoftwareToOnline"] = "default",
+        ["ConnectOnlinePlc"] = "default",
+        ["DisconnectOnlinePlc"] = "default",
+        ["DisconnectOnlinePlcs"] = "default",
+        ["DownloadPlc"] = "transfer",
+        ["DownloadPlcToFolder"] = "transfer",
+        ["GeneratePlcLoadableFile"] = "transfer",
+        ["GetOnlineState"] = "default",
+        ["GetPlcBlockFingerprints"] = "default",
+        ["ListTransferRoutes"] = "default",
+        ["ManagePlcDataBlockSnapshot"] = "default",
+        ["ScanAccessibleDevices"] = "default",
+        ["UploadDeviceParameters"] = "transfer",
+        ["UploadStationFromPlc"] = "transfer",
         ["ArchiveSavedProject"] = "archive",
         ["BuildProjectScaffold"] = "default",
         ["ConnectIsolatedPortal"] = "default",
@@ -433,7 +455,7 @@ public sealed class PlcWorkerRobustnessTests
         Assert.Equal(names, WorkerTimeoutPolicy.PlcFamilies.Keys.OrderBy(name => name));
         foreach (var pair in PlcCategories) Assert.Equal(pair.Value, WorkerTimeoutPolicy.PlcFamilies[pair.Key]);
         var ported = PortedFamilies.All.Where(family => Operations.FamilyNames(family.Name).Length != 0)
-            .SelectMany(family => family.Tools).Distinct(StringComparer.Ordinal).OrderBy(name => name);
+            .SelectMany(Operations.FamilyTools).Distinct(StringComparer.Ordinal).OrderBy(name => name);
         Assert.Equal(ported, PortedCategories.Keys.OrderBy(name => name));
     }
 
@@ -441,7 +463,7 @@ public sealed class PlcWorkerRobustnessTests
     {
         foreach (var pair in PlcCategories) yield return new object[] { pair.Key, pair.Value };
         foreach (var family in PortedFamilies.All.Where(family => Operations.FamilyNames(family.Name).Length != 0))
-            foreach (string tool in family.Tools)
+            foreach (string tool in Operations.FamilyTools(family))
                 yield return new object[] { family.OperationPrefix + "." + Operations.FamilyNames(family.Name)[0], PortedCategories[tool], tool };
     }
 
@@ -450,6 +472,9 @@ public sealed class PlcWorkerRobustnessTests
     {
         var args = new JsonObject { ["mode"] = "apply", ["dryRun"] = false };
         if (nested != null) args["request"] = new JsonObject { ["Operation"] = nested, ["DryRun"] = false };
+        if (operation == "runtime-channels.ExecutePlcSimAdvanced" && nested != null)
+            args["request"] = new JsonObject { ["operation"] = nested == "ListPlcSimAdvancedInstances" ? "ReadPlcSimAdvancedInstances"
+                : nested == "GetPlcSimAdvancedTags" ? "ReadPlcSimAdvancedTags" : nested, ["arguments"] = new JsonObject { ["dryRun"] = false } };
         if (operation == "SourceCandidate") args["candidate"] = new JsonObject { ["Check"] = new JsonObject {
             ["Request"] = new JsonObject { ["Items"] = new JsonArray(new JsonObject { ["Action"] = "generate" }) } } };
         Assert.Equal(expected, WorkerTimeoutPolicy.PlcFamily(operation, args));

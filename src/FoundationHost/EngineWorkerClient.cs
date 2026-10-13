@@ -109,12 +109,12 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
                 throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Disconnect ended this session. A subsequent explicit Attach requires a new host session; automatic restart is refused.", isArgument: false);
             }
             if (disconnecting) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Disconnect is ending this session; a new host session is required.", isArgument: false);
-            if (Poisoned) throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.Recovery);
+            if (Poisoned && !WorkerOperations.IsIndependentRuntime(operation)) throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.Recovery);
             if (!options.NativeEnabled) throw new InvalidOperationException("Native calls are disabled by --offline. Start a normal configured session to use Openness.");
             if (options.BundledWorker && WorkerOperations.RequiresPortal(operation) && !attachedProcessId.HasValue
                 && (bool?)status["session"]?["isConnected"] != true)
                 throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(TiaOpenness.Shared.SessionBehavior.PortalRequired, "session", false);
-            await Start(token).ConfigureAwait(false);
+            await Start(token, WorkerOperations.IsIndependentRuntime(operation)).ConfigureAwait(false);
             token.ThrowIfCancellationRequested();
             bool attach = operation == "Attach" || operation == "project-lifecycle.ConnectIsolatedPortal" || operation == WorkerOperations.SessionCandidate
                 && (string?)arguments["mode"] == "apply" && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach";
@@ -135,8 +135,8 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
             else if (attach && !foundationOutcome.Poisoned && result?["Attempt"]?["Issued"]?.GetValue<bool>() == true
                 && result?["Attempt"]?["Fault"] == null) attachedProcessId = (int?)arguments["candidate"]?["Check"]?["Request"]?["ProcessId"];
             if (operation == "Disconnect") disconnectAcknowledgement = DisconnectContract.Validate(result, true, attachedProcessId, true);
-            if (foundationOutcome.Poisoned) MarkUncertain();
-            if (!foundationOutcome.Poisoned) await ReadStatus(CancellationToken.None).ConfigureAwait(false);
+            if (foundationOutcome.Poisoned && !WorkerOperations.IsIndependentRuntime(operation)) MarkUncertain();
+            if (!foundationOutcome.Poisoned && !WorkerOperations.IsIndependentRuntime(operation)) await ReadStatus(CancellationToken.None).ConfigureAwait(false);
             if (token.IsCancellationRequested) TiaMcpServer.ModelContextProtocol.InvocationJournal.Write(correlation, operation, "RETURNED_AFTER_CANCELLATION");
             return result;
         }
@@ -251,13 +251,14 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
         public void Dispose() { if (Interlocked.Exchange(ref disposed, 1) == 0) { Held.Value = previous; Interlocked.Decrement(ref owner.active); HostSessionCall.LaneChanged(false); owner.serial.Release(); } }
     }
 
-    private async Task Start(CancellationToken token)
+    private async Task Start(CancellationToken token, bool independentRuntime = false)
     {
         ChannelClient current;
         lock (stateSync)
         {
             if (disconnecting) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Disconnect ended this session; a new host session is required.", isArgument: false);
-            if (Faulted) throw new ChannelFaultException("Engine worker generation is faulted; explicitly restart and rebind. Never replay the request.", false);
+            if (Faulted && !(independentRuntime && process is { HasExited: false } && channel?.CanCallIndependentRuntime == true))
+                throw new ChannelFaultException("Engine worker generation is faulted; explicitly restart and rebind. Never replay the request.", false);
             if (process == null)
             {
                 string worker = options.EngineWorkerExe!;
@@ -282,7 +283,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
             }
             current = channel!;
         }
-        await current.ConnectAsync(timeout, token).ConfigureAwait(false);
+        if (!independentRuntime || !current.CanCallIndependentRuntime) await current.ConnectAsync(timeout, token).ConfigureAwait(false);
     }
 
     // Caller owns Acquire across identity verification, input validation and dispatch.

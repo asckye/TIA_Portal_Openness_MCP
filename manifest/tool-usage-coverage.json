@@ -1,9 +1,9 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "25067aa61aaafbf3b45163c5f9ccecf89e71b55460e4cd8b278c97e8a7d4c217",
+  "catalogSha256": "b70fdc6393ce1efb74d13fb45739418b99a463c7eef91986603551ed27930f6d",
   "uniqueTools": 516,
   "documents": 89,
-  "versionToolPairs": 2839,
+  "versionToolPairs": 3016,
   "offlineCallExecutions": 79,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
@@ -48,11 +48,11 @@
   "releases": {
     "14sp1": {
       "releaseKey": "14sp1",
-      "registeredToolCount": 248,
-      "checkedToolCount": 248,
+      "registeredToolCount": 273,
+      "checkedToolCount": 273,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 143,
+      "operationExampleCount": 150,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -340,6 +340,18 @@
           "operations": []
         },
         {
+          "toolName": "CompareSoftwareToOnline",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "CompileDevice",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -431,6 +443,17 @@
         },
         {
           "toolName": "ConnectIsolatedPortal",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ConnectOnlinePlc",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -727,6 +750,30 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "DisconnectOnlinePlc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DisconnectOnlinePlcs",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
           "operations": []
         },
         {
@@ -1204,6 +1251,18 @@
           "operations": []
         },
         {
+          "toolName": "GetOnlineState",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GetOpennessCompatibility",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -1275,6 +1334,38 @@
           "operations": []
         },
         {
+          "toolName": "GetPlcLiveValuesOpcUa",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcLiveValuesS7",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcRunStateS7",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcSimAdvancedTags",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetPlcTagTableConstants",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -1293,6 +1384,22 @@
           "documents": [
             "guides/skills/plc-data-types/SKILL.md"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcWebDiagnostics",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcWebVars",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -1412,6 +1519,22 @@
         },
         {
           "toolName": "GetToolUsage",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedRuntimeAlarms",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedRuntimeTags",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -1643,6 +1766,14 @@
           "operations": []
         },
         {
+          "toolName": "InvokeUnifiedOpenPipe",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListClassicHmiFaceplates",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -1787,6 +1918,14 @@
           "operations": []
         },
         {
+          "toolName": "ListPlcSimAdvancedInstances",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListPlcSystemConstants",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -1897,6 +2036,18 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ListTransferRoutes",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
           "operations": []
         },
         {
@@ -2659,6 +2810,50 @@
           ]
         },
         {
+          "toolName": "ManagePlcSimAdvancedInstance",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "register",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "powerOn",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "run",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "stop",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "powerOff",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "memoryReset",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "unregister",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManagePlcTagDefinition",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -3011,6 +3206,14 @@
           "operations": []
         },
         {
+          "toolName": "ProbeS7CpuIdentity",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PublishGenerationRecord",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -3096,6 +3299,22 @@
           "operations": []
         },
         {
+          "toolName": "RunPlcCompanionTool",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RunPlcSimAdvancedTestScenario",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "RunReadOnlyToolBatch",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -3112,6 +3331,14 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "SamplePlcLiveValuesS7",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -3234,6 +3461,14 @@
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "SetPlcWebOperatingMode",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -3381,16 +3616,40 @@
             "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
+        },
+        {
+          "toolName": "WritePlcSimAdvancedTags",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "WritePlcWebVars",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "WriteUnifiedRuntimeTags",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
         }
       ]
     },
     "15.1": {
       "releaseKey": "15.1",
-      "registeredToolCount": 277,
-      "checkedToolCount": 277,
+      "registeredToolCount": 306,
+      "checkedToolCount": 306,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 174,
+      "operationExampleCount": 186,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -3622,6 +3881,18 @@
           "operations": []
         },
         {
+          "toolName": "CheckDownloadReadiness",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "CheckLibraryUpdates",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -3685,6 +3956,18 @@
           "documents": [
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CompareSoftwareToOnline",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
           ],
           "operations": []
         },
@@ -3780,6 +4063,17 @@
         },
         {
           "toolName": "ConnectIsolatedPortal",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ConnectOnlinePlc",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -4092,6 +4386,30 @@
           "operations": []
         },
         {
+          "toolName": "DisconnectOnlinePlc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DisconnectOnlinePlcs",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "DisconnectPortal",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -4099,6 +4417,18 @@
           "documents": [
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DownloadPlc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
           ],
           "operations": []
         },
@@ -4645,6 +4975,18 @@
           "operations": []
         },
         {
+          "toolName": "GetOnlineState",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GetOpennessCompatibility",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -4729,6 +5071,22 @@
           "operations": []
         },
         {
+          "toolName": "GetPlcLiveValuesOpcUa",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcLiveValuesS7",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetPlcObjectFingerprints",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -4764,6 +5122,22 @@
           "operations": []
         },
         {
+          "toolName": "GetPlcRunStateS7",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcSimAdvancedTags",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetPlcTagTableConstants",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -4786,6 +5160,22 @@
         },
         {
           "toolName": "GetPlcWatchTableCurrentValuesReadOnly",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcWebDiagnostics",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcWebVars",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -4920,6 +5310,22 @@
         },
         {
           "toolName": "GetToolUsage",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedRuntimeAlarms",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedRuntimeTags",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -5172,6 +5578,14 @@
           "operations": []
         },
         {
+          "toolName": "InvokeUnifiedOpenPipe",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListClassicHmiFaceplates",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -5328,6 +5742,14 @@
           "operations": []
         },
         {
+          "toolName": "ListPlcSimAdvancedInstances",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListPlcSystemConstants",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -5465,6 +5887,18 @@
             "guides/skills/devices-and-hardware/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ListTransferRoutes",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
           ],
           "operations": []
         },
@@ -6178,6 +6612,44 @@
           ]
         },
         {
+          "toolName": "ManagePlcDataBlockSnapshot",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createSnapshot",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "loadSnapshotAsActualValues",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "loadStartValuesAsActualValues",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "exportSnapshot",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManagePlcExternalSources",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -6335,6 +6807,50 @@
             },
             {
               "operation": "unprotectAllConfiguration",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcSimAdvancedInstance",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "register",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "powerOn",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "run",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "stop",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "powerOff",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "memoryReset",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "unregister",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -6794,6 +7310,14 @@
           "operations": []
         },
         {
+          "toolName": "ProbeS7CpuIdentity",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PublishGenerationRecord",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -6890,6 +7414,22 @@
           "operations": []
         },
         {
+          "toolName": "RunPlcCompanionTool",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RunPlcSimAdvancedTestScenario",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "RunReadOnlyToolBatch",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -6906,6 +7446,14 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "SamplePlcLiveValuesS7",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -7064,6 +7612,14 @@
           "operations": []
         },
         {
+          "toolName": "SetPlcWebOperatingMode",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ShowObjectInEditor",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -7173,6 +7729,18 @@
           "operations": []
         },
         {
+          "toolName": "UploadStationFromPlc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "ValidateAutomationContext",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -7208,16 +7776,40 @@
             "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
+        },
+        {
+          "toolName": "WritePlcSimAdvancedTags",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "WritePlcWebVars",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "WriteUnifiedRuntimeTags",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
         }
       ]
     },
     "16": {
       "releaseKey": "16",
-      "registeredToolCount": 299,
-      "checkedToolCount": 299,
+      "registeredToolCount": 329,
+      "checkedToolCount": 329,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 209,
+      "operationExampleCount": 221,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -7449,6 +8041,18 @@
           "operations": []
         },
         {
+          "toolName": "CheckDownloadReadiness",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "CheckLibraryUpdates",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -7512,6 +8116,18 @@
           "documents": [
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CompareSoftwareToOnline",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
           ],
           "operations": []
         },
@@ -7607,6 +8223,17 @@
         },
         {
           "toolName": "ConnectIsolatedPortal",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ConnectOnlinePlc",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -7935,6 +8562,30 @@
           "operations": []
         },
         {
+          "toolName": "DisconnectOnlinePlc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DisconnectOnlinePlcs",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "DisconnectPortal",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -7942,6 +8593,18 @@
           "documents": [
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DownloadPlc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
           ],
           "operations": []
         },
@@ -8543,6 +9206,18 @@
           "operations": []
         },
         {
+          "toolName": "GetOnlineState",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GetOpennessCompatibility",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -8572,6 +9247,18 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcBlockFingerprints",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
           "operations": []
         },
         {
@@ -8627,6 +9314,22 @@
           "operations": []
         },
         {
+          "toolName": "GetPlcLiveValuesOpcUa",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcLiveValuesS7",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetPlcObjectFingerprints",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -8662,6 +9365,22 @@
           "operations": []
         },
         {
+          "toolName": "GetPlcRunStateS7",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcSimAdvancedTags",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetPlcTagTableConstants",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -8684,6 +9403,22 @@
         },
         {
           "toolName": "GetPlcWatchTableCurrentValuesReadOnly",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcWebDiagnostics",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcWebVars",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -8818,6 +9553,22 @@
         },
         {
           "toolName": "GetToolUsage",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedRuntimeAlarms",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedRuntimeTags",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -9126,6 +9877,14 @@
           "operations": []
         },
         {
+          "toolName": "InvokeUnifiedOpenPipe",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListClassicHmiFaceplates",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -9297,6 +10056,14 @@
           "operations": []
         },
         {
+          "toolName": "ListPlcSimAdvancedInstances",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListPlcSoftwareUnits",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -9445,6 +10212,18 @@
             "guides/skills/devices-and-hardware/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ListTransferRoutes",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
           ],
           "operations": []
         },
@@ -10309,6 +11088,44 @@
           ]
         },
         {
+          "toolName": "ManagePlcDataBlockSnapshot",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createSnapshot",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "loadSnapshotAsActualValues",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "loadStartValuesAsActualValues",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "exportSnapshot",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManagePlcExternalSources",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -10466,6 +11283,50 @@
             },
             {
               "operation": "unprotectAllConfiguration",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcSimAdvancedInstance",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "register",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "powerOn",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "run",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "stop",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "powerOff",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "memoryReset",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "unregister",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -11029,6 +11890,14 @@
           "operations": []
         },
         {
+          "toolName": "ProbeS7CpuIdentity",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PublishGenerationRecord",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -11125,6 +11994,22 @@
           "operations": []
         },
         {
+          "toolName": "RunPlcCompanionTool",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RunPlcSimAdvancedTestScenario",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "RunReadOnlyToolBatch",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -11141,6 +12026,14 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "SamplePlcLiveValuesS7",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -11310,6 +12203,14 @@
           "operations": []
         },
         {
+          "toolName": "SetPlcWebOperatingMode",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ShowObjectInEditor",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -11427,6 +12328,18 @@
           "operations": []
         },
         {
+          "toolName": "UploadStationFromPlc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "ValidateAutomationContext",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -11462,16 +12375,40 @@
             "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
+        },
+        {
+          "toolName": "WritePlcSimAdvancedTags",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "WritePlcWebVars",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "WriteUnifiedRuntimeTags",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
         }
       ]
     },
     "17": {
       "releaseKey": "17",
-      "registeredToolCount": 311,
-      "checkedToolCount": 311,
+      "registeredToolCount": 341,
+      "checkedToolCount": 341,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 258,
+      "operationExampleCount": 270,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -11703,6 +12640,18 @@
           "operations": []
         },
         {
+          "toolName": "CheckDownloadReadiness",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "CheckLibraryUpdates",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -11766,6 +12715,18 @@
           "documents": [
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CompareSoftwareToOnline",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
           ],
           "operations": []
         },
@@ -11861,6 +12822,17 @@
         },
         {
           "toolName": "ConnectIsolatedPortal",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ConnectOnlinePlc",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -12189,6 +13161,30 @@
           "operations": []
         },
         {
+          "toolName": "DisconnectOnlinePlc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DisconnectOnlinePlcs",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "DisconnectPortal",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -12196,6 +13192,18 @@
           "documents": [
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DownloadPlc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
           ],
           "operations": []
         },
@@ -12875,6 +13883,18 @@
           "operations": []
         },
         {
+          "toolName": "GetOnlineState",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GetOpennessCompatibility",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -12904,6 +13924,18 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcBlockFingerprints",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
           "operations": []
         },
         {
@@ -12959,6 +13991,22 @@
           "operations": []
         },
         {
+          "toolName": "GetPlcLiveValuesOpcUa",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcLiveValuesS7",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetPlcObjectFingerprints",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -12994,6 +14042,22 @@
           "operations": []
         },
         {
+          "toolName": "GetPlcRunStateS7",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcSimAdvancedTags",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetPlcTagTableConstants",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -13016,6 +14080,22 @@
         },
         {
           "toolName": "GetPlcWatchTableCurrentValuesReadOnly",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcWebDiagnostics",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcWebVars",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -13161,6 +14241,22 @@
         },
         {
           "toolName": "GetToolUsage",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedRuntimeAlarms",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedRuntimeTags",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -13480,6 +14576,14 @@
           "operations": []
         },
         {
+          "toolName": "InvokeUnifiedOpenPipe",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListClassicHmiFaceplates",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -13651,6 +14755,14 @@
           "operations": []
         },
         {
+          "toolName": "ListPlcSimAdvancedInstances",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListPlcSoftwareUnits",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -13799,6 +14911,18 @@
             "guides/skills/devices-and-hardware/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ListTransferRoutes",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
           ],
           "operations": []
         },
@@ -14710,6 +15834,44 @@
           ]
         },
         {
+          "toolName": "ManagePlcDataBlockSnapshot",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createSnapshot",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "loadSnapshotAsActualValues",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "loadStartValuesAsActualValues",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "exportSnapshot",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManagePlcExternalSources",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -14867,6 +16029,50 @@
             },
             {
               "operation": "unprotectAllConfiguration",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcSimAdvancedInstance",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "register",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "powerOn",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "run",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "stop",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "powerOff",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "memoryReset",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "unregister",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -15662,6 +16868,14 @@
           "operations": []
         },
         {
+          "toolName": "ProbeS7CpuIdentity",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PublishGenerationRecord",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -15758,6 +16972,22 @@
           "operations": []
         },
         {
+          "toolName": "RunPlcCompanionTool",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RunPlcSimAdvancedTestScenario",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "RunReadOnlyToolBatch",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -15774,6 +17004,14 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "SamplePlcLiveValuesS7",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -15955,6 +17193,14 @@
           "operations": []
         },
         {
+          "toolName": "SetPlcWebOperatingMode",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ShowObjectInEditor",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -16072,6 +17318,18 @@
           "operations": []
         },
         {
+          "toolName": "UploadStationFromPlc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "ValidateAutomationContext",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -16107,16 +17365,40 @@
             "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
+        },
+        {
+          "toolName": "WritePlcSimAdvancedTags",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "WritePlcWebVars",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "WriteUnifiedRuntimeTags",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
         }
       ]
     },
     "18": {
       "releaseKey": "18",
-      "registeredToolCount": 325,
-      "checkedToolCount": 325,
+      "registeredToolCount": 356,
+      "checkedToolCount": 356,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 290,
+      "operationExampleCount": 302,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -16356,6 +17638,18 @@
           "operations": []
         },
         {
+          "toolName": "CheckDownloadReadiness",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "CheckLibraryUpdates",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -16445,6 +17739,18 @@
           "documents": [
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CompareSoftwareToOnline",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
           ],
           "operations": []
         },
@@ -16540,6 +17846,17 @@
         },
         {
           "toolName": "ConnectIsolatedPortal",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ConnectOnlinePlc",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -16896,6 +18213,30 @@
           "operations": []
         },
         {
+          "toolName": "DisconnectOnlinePlc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DisconnectOnlinePlcs",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "DisconnectPortal",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -16903,6 +18244,18 @@
           "documents": [
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DownloadPlc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
           ],
           "operations": []
         },
@@ -17324,6 +18677,19 @@
           "operations": []
         },
         {
+          "toolName": "GeneratePlcLoadableFile",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GeneratePlcSourceFromBlocks",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -17582,6 +18948,18 @@
           "operations": []
         },
         {
+          "toolName": "GetOnlineState",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GetOpennessCompatibility",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -17611,6 +18989,18 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcBlockFingerprints",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
           "operations": []
         },
         {
@@ -17679,6 +19069,22 @@
           "operations": []
         },
         {
+          "toolName": "GetPlcLiveValuesOpcUa",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcLiveValuesS7",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetPlcObjectFingerprints",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -17714,6 +19120,22 @@
           "operations": []
         },
         {
+          "toolName": "GetPlcRunStateS7",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcSimAdvancedTags",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetPlcTagTableConstants",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -17736,6 +19158,22 @@
         },
         {
           "toolName": "GetPlcWatchTableCurrentValuesReadOnly",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcWebDiagnostics",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcWebVars",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -17881,6 +19319,22 @@
         },
         {
           "toolName": "GetToolUsage",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedRuntimeAlarms",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedRuntimeTags",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -18200,6 +19654,14 @@
           "operations": []
         },
         {
+          "toolName": "InvokeUnifiedOpenPipe",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListClassicHmiFaceplates",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -18371,6 +19833,14 @@
           "operations": []
         },
         {
+          "toolName": "ListPlcSimAdvancedInstances",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListPlcSoftwareUnits",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -18519,6 +19989,18 @@
             "guides/skills/devices-and-hardware/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ListTransferRoutes",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
           ],
           "operations": []
         },
@@ -19539,6 +21021,44 @@
           ]
         },
         {
+          "toolName": "ManagePlcDataBlockSnapshot",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createSnapshot",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "loadSnapshotAsActualValues",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "loadStartValuesAsActualValues",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "exportSnapshot",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManagePlcExternalSources",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -19696,6 +21216,50 @@
             },
             {
               "operation": "unprotectAllConfiguration",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcSimAdvancedInstance",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "register",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "powerOn",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "run",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "stop",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "powerOff",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "memoryReset",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "unregister",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -20608,6 +22172,14 @@
           "operations": []
         },
         {
+          "toolName": "ProbeS7CpuIdentity",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PublishGenerationRecord",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -20704,6 +22276,22 @@
           "operations": []
         },
         {
+          "toolName": "RunPlcCompanionTool",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RunPlcSimAdvancedTestScenario",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "RunReadOnlyToolBatch",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -20720,6 +22308,14 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "SamplePlcLiveValuesS7",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -20928,6 +22524,14 @@
           "operations": []
         },
         {
+          "toolName": "SetPlcWebOperatingMode",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ShowObjectInEditor",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -21045,6 +22649,18 @@
           "operations": []
         },
         {
+          "toolName": "UploadStationFromPlc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "ValidateAutomationContext",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -21080,16 +22696,40 @@
             "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
+        },
+        {
+          "toolName": "WritePlcSimAdvancedTags",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "WritePlcWebVars",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "WriteUnifiedRuntimeTags",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
         }
       ]
     },
     "19": {
       "releaseKey": "19",
-      "registeredToolCount": 360,
-      "checkedToolCount": 360,
+      "registeredToolCount": 393,
+      "checkedToolCount": 393,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 306,
+      "operationExampleCount": 318,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -21410,6 +23050,18 @@
           "operations": []
         },
         {
+          "toolName": "CheckDownloadReadiness",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "CheckLibraryUpdates",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -21499,6 +23151,18 @@
           "documents": [
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CompareSoftwareToOnline",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
           ],
           "operations": []
         },
@@ -21594,6 +23258,17 @@
         },
         {
           "toolName": "ConnectIsolatedPortal",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ConnectOnlinePlc",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -21990,6 +23665,30 @@
           "operations": []
         },
         {
+          "toolName": "DisconnectOnlinePlc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DisconnectOnlinePlcs",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "DisconnectPortal",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -21997,6 +23696,30 @@
           "documents": [
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DownloadPlc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DownloadPlcToFolder",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
           ],
           "operations": []
         },
@@ -22482,6 +24205,19 @@
           "operations": []
         },
         {
+          "toolName": "GeneratePlcLoadableFile",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GeneratePlcSourceFromBlocks",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -22740,6 +24476,18 @@
           "operations": []
         },
         {
+          "toolName": "GetOnlineState",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GetOpennessCompatibility",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -22769,6 +24517,18 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcBlockFingerprints",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
           "operations": []
         },
         {
@@ -22837,6 +24597,22 @@
           "operations": []
         },
         {
+          "toolName": "GetPlcLiveValuesOpcUa",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcLiveValuesS7",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetPlcObjectFingerprints",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -22872,6 +24648,22 @@
           "operations": []
         },
         {
+          "toolName": "GetPlcRunStateS7",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcSimAdvancedTags",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetPlcTagTableConstants",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -22894,6 +24686,22 @@
         },
         {
           "toolName": "GetPlcWatchTableCurrentValuesReadOnly",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcWebDiagnostics",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcWebVars",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -23063,6 +24871,22 @@
         },
         {
           "toolName": "GetUnifiedHmiTexts",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedRuntimeAlarms",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedRuntimeTags",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -23390,6 +25214,14 @@
           "operations": []
         },
         {
+          "toolName": "InvokeUnifiedOpenPipe",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListClassicHmiFaceplates",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -23561,6 +25393,14 @@
           "operations": []
         },
         {
+          "toolName": "ListPlcSimAdvancedInstances",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListPlcSoftwareUnits",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -23709,6 +25549,18 @@
             "guides/skills/devices-and-hardware/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ListTransferRoutes",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
           ],
           "operations": []
         },
@@ -24737,6 +26589,44 @@
           ]
         },
         {
+          "toolName": "ManagePlcDataBlockSnapshot",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createSnapshot",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "loadSnapshotAsActualValues",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "loadStartValuesAsActualValues",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "exportSnapshot",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManagePlcExternalSources",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -24894,6 +26784,50 @@
             },
             {
               "operation": "unprotectAllConfiguration",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcSimAdvancedInstance",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "register",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "powerOn",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "run",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "stop",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "powerOff",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "memoryReset",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "unregister",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -25916,6 +27850,14 @@
           "operations": []
         },
         {
+          "toolName": "ProbeS7CpuIdentity",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PublishGenerationRecord",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -26028,6 +27970,22 @@
           "operations": []
         },
         {
+          "toolName": "RunPlcCompanionTool",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RunPlcSimAdvancedTestScenario",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "RunReadOnlyToolBatch",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -26044,6 +28002,14 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "SamplePlcLiveValuesS7",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -26073,6 +28039,18 @@
           "documents": [
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ScanAccessibleDevices",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
           ],
           "operations": []
         },
@@ -26252,6 +28230,14 @@
           "operations": []
         },
         {
+          "toolName": "SetPlcWebOperatingMode",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "SetUnifiedHmiButtonEventScriptCode",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -26385,6 +28371,18 @@
           "operations": []
         },
         {
+          "toolName": "UploadStationFromPlc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/online-and-download/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "ValidateAutomationContext",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -26420,13 +28418,37 @@
             "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
+        },
+        {
+          "toolName": "WritePlcSimAdvancedTags",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "WritePlcWebVars",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "WriteUnifiedRuntimeTags",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
         }
       ]
     },
     "20": {
       "releaseKey": "20",
-      "registeredToolCount": 503,
-      "checkedToolCount": 503,
+      "registeredToolCount": 502,
+      "checkedToolCount": 502,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 504,
@@ -34047,18 +36069,6 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "UploadDeviceParameters",
-          "usageProfile": "full-engine",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/online-and-download/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
-          ],
           "operations": []
         },
         {

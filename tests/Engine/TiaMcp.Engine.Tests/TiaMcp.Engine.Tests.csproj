@@ -175,7 +175,7 @@
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedScreenItemLogic.cs" Link="UnifiedScreenItemLogic.cs" />
     <Compile Include="../../../src/Engine/Siemens/Hmi/UnifiedExchangeLogic.cs" Link="UnifiedExchangeLogic.cs" />
     <Compile Include="../../../src/Engine/Siemens/MotionProDiagClassicHmiLogic.cs" Link="MotionProDiagClassicHmiLogic.cs" />
-    <Compile Include="../../../src/Engine/Runtime/PlcSimAdvancedChannel.cs" Link="PlcSimAdvancedChannel.cs" />
+    <Compile Include="../../../src/OnlineChannels/Simulation/PlcSimAdvancedChannel.cs" Link="PlcSimAdvancedChannel.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../../third_party/TiaGitAddIn.Core/TiaGitAddIn.Core.csproj" />
@@ -206,6 +206,9 @@
     <Compile Include="../../../src/Shared/SoftwareUnitDeepTools.cs" Link="SoftwareUnitDeepTools.cs" />
     <Compile Include="../../../src/Shared/PlcIntegrityTools.cs" Link="PlcIntegrityTools.cs" />
     <Compile Include="../../../src/Shared/MotionProDiagClassicHmiLogic.cs" Link="Shared/MotionProDiagClassicHmiLogic.cs" />
+    <Compile Include="../../../src/Shared/RuntimeWriteValidation.cs" Link="Shared/RuntimeWriteValidation.cs" />
+    <Compile Include="../../../src/Shared/PlcSimAdvancedTools.cs" Link="Shared/PlcSimAdvancedTools.cs" />
+    <Compile Include="../../../src/Shared/PlcSimAdvancedPortService.cs" Link="Shared/PlcSimAdvancedPortService.cs" />
     <Compile Include="../../../src/Shared/RuntimeToolContract.cs" Link="RuntimeToolContract.cs" />
     <Compile Include="../../../src/Shared/PlcWatchPortService.cs" Link="PlcWatchPortService.cs" />
     <Compile Include="../../../src/Shared/PlcCausalTraceTools.cs" Link="PlcCausalTraceTools.cs" />
@@ -239,10 +242,11 @@
     <Compile Include="../../../src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs" Link="ClassicHmiTemporaryImportPreflightSuite.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/OnlineDownloadTools.cs" Link="OnlineDownloadTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs" Link="PlcSimAdvancedTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/RuntimeChannelTools.cs" Link="RuntimeChannelTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/RuntimeTools.cs" Link="RuntimeTools.cs" />
+    <Compile Include="../../../src/Shared/OnlineDownloadTools.cs" Link="OnlineDownloadTools.cs" />
+    <Compile Include="../../../src/Shared/OnlineDataTools.cs" Link="OnlineDataTools.cs" />
+    <Compile Include="../../../src/Shared/NativeExchangeTools.cs" Link="NativeExchangeTools.cs" />
+    <Compile Include="../../../src/Shared/Host/RuntimeChannelTools.cs" Link="RuntimeChannelTools.cs" />
+    <Compile Include="../../../src/Shared/Host/RuntimeTools.cs" Link="RuntimeTools.cs" />
     <Compile Include="../../../src/OnlineChannels/S7LiveReader.cs" Link="S7LiveReader.cs" />
     <Compile Include="../../../src/OnlineChannels/OpcUaLiveReader.cs" Link="OpcUaLiveReader.cs" />
     <Compile Include="../../../src/OnlineChannels/S7WebApiChannel.cs" Link="S7WebApiChannel.cs" />
@@ -300,4 +304,5 @@
     <Compile Include="../../../src/Adapters/Native/Reflection/PropertyPathReader.cs" />
     <Compile Include="../../../src/Adapters/Native/Reflection/ReflectionSession.cs" />
   </ItemGroup>
+  <Import Project="../../Shared/HostDomainBuild.targets" />
 </Project>

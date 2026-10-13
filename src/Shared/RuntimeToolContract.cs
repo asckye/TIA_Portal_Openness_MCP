@@ -14,21 +14,8 @@ using TiaMcpServer.Runtime;
 namespace TiaMcpServer.ModelContextProtocol
 {
     // The group boundary retains domain evidence; messages never establish success.
-    internal static class RuntimeToolContract
+    internal static partial class RuntimeToolContract
     {
-        private sealed class InputFailureException : Exception
-        {
-            internal Error Error { get; }
-            internal InputFailureException(Error error) => Error = error;
-        }
-
-        internal static string Json<T>(T value, string parameter, InputContract<T> contract)
-        {
-            var result = contract.Validate(value, parameter);
-            if (result.Error != null) throw new InputFailureException(result.Error);
-            return V4Json.Serialize(result.Value);
-        }
-
         internal static string Names(string[] value, string parameter, bool optional, string[]? fallback = null)
         {
             var values = value ?? (optional ? fallback ?? Array.Empty<string>() : null!);
@@ -38,10 +25,6 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         internal static string Path(string[] value, string parameter, bool rootAllowed)
             => Json(value, parameter, PathValidator.Create(rootAllowed));
-        internal static string Writes(WriteValue[] value, string parameter, bool dryRun, bool confirmWrite,
-            Func<string, NativeValuePolicy>? targetValuePolicy = null)
-            => Json(value, parameter, WriteValueValidator.Create(NativeValueValidator.Scalar(), dryRun, confirmWrite,
-                targetValuePolicy: targetValuePolicy));
         internal static string Answers(AttributeMap<string> value)
             => Json(value ?? new AttributeMap<string>(new Dictionary<string, string>()), "promptAnswers", TextMapValidator.PromptAnswers());
         internal static string Domain<T>(T value, string parameter)

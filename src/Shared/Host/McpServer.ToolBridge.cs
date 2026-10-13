@@ -271,7 +271,8 @@ namespace TiaMcpServer.ModelContextProtocol
 #if TIA_ENGINE_HOST
             if (CatalogView.Find(name)?.Execution == "foundation" && (!TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(name)
                 || TiaMcp.Adapters.Contracts.PortedFamilies.UsesFoundationCandidate(name)
-                || !TiaMcp.Versioning.TiaVersionCatalog.Get(ReleaseKey).IsFullEngine))
+                || !TiaMcp.Versioning.TiaVersionCatalog.Get(ReleaseKey).IsFullEngine
+                    && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name != "F04"))
             {
                 var input = arguments ?? EmptyArguments();
                 var rejected = ToolInvoker.Bind(name, input, out _);

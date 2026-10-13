@@ -48,7 +48,7 @@ internal static partial class ReleaseCommands
             var destination = Path.GetFullPath(Path.Combine(snapshot, relative));
             if (!destination.StartsWith(snapshot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) throw new ReleaseException("Unsafe checkout source path: " + relative);
             var source = Path.Combine(original, relative);
-            if (!File.Exists(source)) { File.Delete(destination); continue; }
+            if (!File.Exists(source)) { if (File.Exists(destination)) File.Delete(destination); continue; }
             Directory.CreateDirectory(Path.GetDirectoryName(destination)!); File.Copy(source, destination, true);
         }
         var result = ProcessRunner.Run(Dotnet, [typeof(ReleaseCommands).Assembly.Location, "check-all", .. options.Arguments(), "-Worktree=" + snapshot,

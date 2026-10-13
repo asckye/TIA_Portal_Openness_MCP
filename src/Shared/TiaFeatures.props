@@ -8,6 +8,22 @@
     <DefineConstants Condition="$([System.String]::Copy('|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_ATTRIBUTE_DELEGATE</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Adapter'">
+    <DefineConstants>$(DefineConstants);TIA_NATIVE_ONLINE</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);ONLINE_FOLDER</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);ONLINE_BLOCK_INTERFACE</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);ONLINE_ADDRESSES</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);ONLINE_TARGET_ADDRESSES</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);ONLINE_LEGITIMATION</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);ONLINE_SELECTIVE_DELETE</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);ONLINE_DOWNLOAD_SENSITIVE</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);ONLINE_AUTHENTICATION</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);ONLINE_DOWNLOAD</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);ONLINE_FINGERPRINTS</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);ONLINE_TLS</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);ONLINE_LOADABLE</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);ONLINE_SCAN</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);ONLINE_RH</DefineConstants>
+    <DefineConstants Condition="'$(TiaReleaseKey)' == '21'">$(DefineConstants);ONLINE_ADDRESS_OVERLOAD;ONLINE_PASSWORD_SECURITY;ONLINE_PARAMETERS</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_EXCHANGE</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_MULTIUSER</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_MULTIUSER_MARKINGS</DefineConstants>
@@ -85,6 +101,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Adapter' and '$(TiaReleaseKey)' == '20'"><DefineConstants>$(DefineConstants);PLC_B5_V20_PLUS</DefineConstants></PropertyGroup>
   <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Adapter'">
+
     <DefineConstants Condition="'$(TiaReleaseKey)' == '19' Or '$(TiaReleaseKey)' == '20' Or '$(TiaReleaseKey)' == '21'">$(DefineConstants);HMI_UNIFIED</DefineConstants>
     <DefineConstants Condition="'$(TiaReleaseKey)' == '21'">$(DefineConstants);HMI_GRAPHICS_PROVIDER</DefineConstants>
   </PropertyGroup>

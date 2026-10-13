@@ -10,11 +10,17 @@ namespace TiaMcpServer.ModelContextProtocol
     internal static class PortedToolDeclarations
     {
         private static readonly IReadOnlyDictionary<string, Type[]> Types = new Dictionary<string, Type[]>(StringComparer.Ordinal) {
+#if TIA_ENGINE_PORTED
+            ["F04"] = new[] { typeof(PlcSimAdvancedTools) },
+#else
+            ["F04"] = new[] { typeof(RuntimeTools), typeof(RuntimeChannelTools), typeof(PlcSimAdvancedTools), typeof(EcosystemTools) },
+#endif
 #if !TIA_ENGINE_PORTED
             ["F01"] = new[] { typeof(McpServer), typeof(HostMetaTools), typeof(ExportTools), typeof(OfflineSuiteTools), typeof(EngineeringDiagnosticsTools), typeof(EcosystemTools), typeof(V21EcosystemTools) },
             ["F02"] = new[] { typeof(PlcOfflineTools), typeof(PlcDocumentationTools), typeof(OfflineAnalysisTools), typeof(TemplateTools), typeof(QualityAuditTools), typeof(EngineeringDiagnosticsTools), typeof(EcosystemTools), typeof(V21EcosystemTools) },
             ["F03"] = new[] { typeof(HmiOfflineTools), typeof(OfflineSuiteTools), typeof(XmlBuilderTools), typeof(V21EcosystemTools) },
 #endif
+            ["F22"] = new[] { typeof(OnlineDownloadTools), typeof(OnlineDataTools), typeof(NativeExchangeTools) },
             ["F05"] = new[] { typeof(ProjectLifecycleSessionTools), typeof(ProjectLifecycleProjectTools), typeof(ProjectLifecycleInspectionTools), typeof(ProjectLifecycleDeviceTools), typeof(ProjectLifecycleExchangeTools), typeof(ProjectSecurityTools) },
             ["F07"] = new[] { typeof(ProjectProtectionTools), typeof(ProjectUserManagementTools), typeof(CertificateManagementTools), typeof(SecurityDeepTools), typeof(HardwareSecurityTools), typeof(HardwareServicesTools) },
 #if TIA_ENGINE_PORTED

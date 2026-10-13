@@ -50,10 +50,12 @@
     <Compile Include="../Engine/ModelContextProtocol/CompilerDiagnostics.cs" Link="CompilerDiagnostics.cs" />
     <Compile Include="../Engine/ModelContextProtocol/Builders/PlcVerifiedImport.cs" Link="PlcVerifiedImport.cs" />
     <Compile Include="../Logic/ModelContextProtocol/Builders/PlcDocumentEditing.cs" Link="PlcDocumentEditing.cs" />
+    <ProjectReference Include="../OnlineChannels/Simulation/TiaMcp.PlcSimAdvanced.csproj" Aliases="plcsim" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <ProjectReference Include="../WorkerChannel/TiaMcp.WorkerChannel.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <ProjectReference Include="../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <Compile Include="$(WorkerSourceRoot)/Program.cs" Link="Program.cs" />
     <Compile Include="../Shared/SwallowedExceptions.cs" Link="Shared/SwallowedExceptions.cs" />
+    <Compile Include="$(WorkerSourceRoot)/PlcSimAdvancedWorkerModule.cs" Link="PlcSimAdvancedWorkerModule.cs" />
     <Compile Include="$(WorkerSourceRoot)/FoundationWorkerDispatcher.cs" Link="FoundationWorkerDispatcher.cs" />
     <Compile Include="$(WorkerSourceRoot)/FoundationProcessLease.cs" Link="FoundationProcessLease.cs" />
     <Compile Include="../Logic/Siemens/PortalProcessLease.cs" Link="Shared/PortalProcessLease.cs" />
@@ -81,8 +83,8 @@
     <Error Condition="'$(SelectedAdapterDirectory)' == '' or !Exists('$(SelectedAdapterProject)')" Text="Worker requires one of eight exact release adapters; original V14/V15 excluded. No default version is selected." />
     <Error Condition="'$(TargetFramework)' != '$(WorkerExpectedFramework)'" Text="Worker framework mismatch for $(TiaReleaseKey)." />
     <Error Condition="'$(PlatformTarget)' != 'x64' or '$(OutputType)' != 'Exe'" Text="The source-preview worker requires an x64 executable." />
-    <ItemGroup><WorkerAdapterReference Include="@(ProjectReference)" Condition="'%(ProjectReference.Identity)' != '../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj' and '%(ProjectReference.Identity)' != '../WorkerChannel/TiaMcp.WorkerChannel.csproj'" /></ItemGroup>
-    <Error Condition="'@(ProjectReference->Count())' != '3' or '@(WorkerAdapterReference->Count())' != '1' or '@(WorkerAdapterReference)' != '$(SelectedAdapterProject)'" Text="Worker must reference exactly one selected adapter, never the former Foundation or multiple adapters." />
+    <ItemGroup><WorkerAdapterReference Include="@(ProjectReference)" Condition="'%(ProjectReference.Identity)' != '../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj' and '%(ProjectReference.Identity)' != '../WorkerChannel/TiaMcp.WorkerChannel.csproj' and '%(ProjectReference.Identity)' != '../OnlineChannels/Simulation/TiaMcp.PlcSimAdvanced.csproj'" /></ItemGroup>
+    <Error Condition="'@(ProjectReference->Count())' != '4' or '@(WorkerAdapterReference->Count())' != '1' or '@(WorkerAdapterReference)' != '$(SelectedAdapterProject)'" Text="Worker must reference exactly one selected adapter, never the former Foundation or multiple adapters." />
     <Error Condition="'$(EnableDefaultCompileItems)' != 'false'" Text="Worker sources must use the explicit allowlist." />
   </Target>
 </Project>

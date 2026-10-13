@@ -157,6 +157,8 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 14sp1 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources, PlanPlcExternalSourceImport |
 | 14sp1 | P6-COMPILE | current | NOT RUN | CompileDevice, CompileHmiDiagnostics, CompilePlcDiagnostics, CompilePlcSoftware |
 | 14sp1 | P6-FALLBACK | current | NOT RUN | — |
+| 14sp1 | F04 | current | NOT RUN | GetPlcLiveValuesOpcUa, GetPlcLiveValuesS7, GetPlcRunStateS7, GetPlcSimAdvancedTags, GetPlcWebDiagnostics, GetPlcWebVars, GetUnifiedRuntimeAlarms, GetUnifiedRuntimeTags, InvokeUnifiedOpenPipe, ListPlcSimAdvancedInstances, ManagePlcSimAdvancedInstance, ProbeS7CpuIdentity, RunPlcCompanionTool, RunPlcSimAdvancedTestScenario, SamplePlcLiveValuesS7, SetPlcWebOperatingMode, WritePlcSimAdvancedTags, WritePlcWebVars, WriteUnifiedRuntimeTags |
+| 14sp1 | F22 | current | NOT RUN | CompareSoftwareToOnline, ConnectOnlinePlc, DisconnectOnlinePlc, DisconnectOnlinePlcs, GetOnlineState, ListTransferRoutes |
 | 14sp1 | F00 | current | NOT RUN | — |
 | 14sp1 | F05 | current | NOT RUN | ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, ValidateAutomationContext |
 | 14sp1 | F33 | current | NOT RUN | ManagePlcGitRepository |
@@ -190,6 +192,8 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 15.1 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources, PlanPlcExternalSourceImport |
 | 15.1 | P6-COMPILE | current | NOT RUN | CompileDevice, CompileHmiDiagnostics, CompilePlcDiagnostics, CompilePlcSoftware |
 | 15.1 | P6-FALLBACK | current | NOT RUN | — |
+| 15.1 | F04 | current | NOT RUN | GetPlcLiveValuesOpcUa, GetPlcLiveValuesS7, GetPlcRunStateS7, GetPlcSimAdvancedTags, GetPlcWebDiagnostics, GetPlcWebVars, GetUnifiedRuntimeAlarms, GetUnifiedRuntimeTags, InvokeUnifiedOpenPipe, ListPlcSimAdvancedInstances, ManagePlcSimAdvancedInstance, ProbeS7CpuIdentity, RunPlcCompanionTool, RunPlcSimAdvancedTestScenario, SamplePlcLiveValuesS7, SetPlcWebOperatingMode, WritePlcSimAdvancedTags, WritePlcWebVars, WriteUnifiedRuntimeTags |
+| 15.1 | F22 | current | NOT RUN | CheckDownloadReadiness, CompareSoftwareToOnline, ConnectOnlinePlc, DisconnectOnlinePlc, DisconnectOnlinePlcs, DownloadPlc, GetOnlineState, ListTransferRoutes, ManagePlcDataBlockSnapshot, UploadStationFromPlc |
 | 15.1 | F00 | current | NOT RUN | ExportPlcWatchTable |
 | 15.1 | F05 | current | NOT RUN | ArchiveSavedProject, ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, RetrieveProjectArchive, SaveProjectCopy, ValidateAutomationContext |
 | 15.1 | F07 | current | NOT RUN | GetPlcPutGetAccess, GetProjectProtection, ManagePlcProtection, SetPlcPutGetAccess |
@@ -224,6 +228,8 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 16 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources, PlanPlcExternalSourceImport |
 | 16 | P6-COMPILE | current | NOT RUN | CompileDevice, CompileHmiDiagnostics, CompilePlcDiagnostics, CompilePlcSoftware |
 | 16 | P6-FALLBACK | current | NOT RUN | — |
+| 16 | F04 | current | NOT RUN | GetPlcLiveValuesOpcUa, GetPlcLiveValuesS7, GetPlcRunStateS7, GetPlcSimAdvancedTags, GetPlcWebDiagnostics, GetPlcWebVars, GetUnifiedRuntimeAlarms, GetUnifiedRuntimeTags, InvokeUnifiedOpenPipe, ListPlcSimAdvancedInstances, ManagePlcSimAdvancedInstance, ProbeS7CpuIdentity, RunPlcCompanionTool, RunPlcSimAdvancedTestScenario, SamplePlcLiveValuesS7, SetPlcWebOperatingMode, WritePlcSimAdvancedTags, WritePlcWebVars, WriteUnifiedRuntimeTags |
+| 16 | F22 | current | NOT RUN | CheckDownloadReadiness, CompareSoftwareToOnline, ConnectOnlinePlc, DisconnectOnlinePlc, DisconnectOnlinePlcs, DownloadPlc, GetOnlineState, GetPlcBlockFingerprints, ListTransferRoutes, ManagePlcDataBlockSnapshot, UploadStationFromPlc |
 | 16 | F00 | current | NOT RUN | ExportPlcWatchTable |
 | 16 | F05 | current | NOT RUN | ArchiveSavedProject, ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, RetrieveProjectArchive, SaveProjectCopy, ValidateAutomationContext |
 | 16 | F07 | current | NOT RUN | GetPlcPutGetAccess, GetProjectProtection, ManageDeviceUsers, ManagePlcCertificate, ManagePlcProtection, ManageWatchForceTableWebAccess, SetPlcPutGetAccess |
@@ -258,6 +264,8 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 17 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources, PlanPlcExternalSourceImport |
 | 17 | P6-COMPILE | current | NOT RUN | CompileDevice, CompileHmiDiagnostics, CompilePlcDiagnostics, CompilePlcSoftware |
 | 17 | P6-FALLBACK | current | NOT RUN | — |
+| 17 | F04 | current | NOT RUN | GetPlcLiveValuesOpcUa, GetPlcLiveValuesS7, GetPlcRunStateS7, GetPlcSimAdvancedTags, GetPlcWebDiagnostics, GetPlcWebVars, GetUnifiedRuntimeAlarms, GetUnifiedRuntimeTags, InvokeUnifiedOpenPipe, ListPlcSimAdvancedInstances, ManagePlcSimAdvancedInstance, ProbeS7CpuIdentity, RunPlcCompanionTool, RunPlcSimAdvancedTestScenario, SamplePlcLiveValuesS7, SetPlcWebOperatingMode, WritePlcSimAdvancedTags, WritePlcWebVars, WriteUnifiedRuntimeTags |
+| 17 | F22 | current | NOT RUN | CheckDownloadReadiness, CompareSoftwareToOnline, ConnectOnlinePlc, DisconnectOnlinePlc, DisconnectOnlinePlcs, DownloadPlc, GetOnlineState, GetPlcBlockFingerprints, ListTransferRoutes, ManagePlcDataBlockSnapshot, UploadStationFromPlc |
 | 17 | F00 | current | NOT RUN | ExportPlcWatchTable |
 | 17 | F05 | current | NOT RUN | ArchiveSavedProject, ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, ManageMultiuserSession, RetrieveProjectArchive, SaveProjectCopy, ValidateAutomationContext |
 | 17 | F07 | current | NOT RUN | GetPlcPutGetAccess, GetProjectProtection, GetProjectUserManagement, ManageDeviceUsers, ManagePlcCertificate, ManagePlcProtection, ManageProjectUserManagement, ManageUmcUsers, ManageWatchForceTableWebAccess, SetPlcPutGetAccess |
@@ -292,6 +300,8 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 18 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources, PlanPlcExternalSourceImport |
 | 18 | P6-COMPILE | current | NOT RUN | CompileDevice, CompileHmiDiagnostics, CompilePlcDiagnostics, CompilePlcSoftware |
 | 18 | P6-FALLBACK | current | NOT RUN | — |
+| 18 | F04 | current | NOT RUN | GetPlcLiveValuesOpcUa, GetPlcLiveValuesS7, GetPlcRunStateS7, GetPlcSimAdvancedTags, GetPlcWebDiagnostics, GetPlcWebVars, GetUnifiedRuntimeAlarms, GetUnifiedRuntimeTags, InvokeUnifiedOpenPipe, ListPlcSimAdvancedInstances, ManagePlcSimAdvancedInstance, ProbeS7CpuIdentity, RunPlcCompanionTool, RunPlcSimAdvancedTestScenario, SamplePlcLiveValuesS7, SetPlcWebOperatingMode, WritePlcSimAdvancedTags, WritePlcWebVars, WriteUnifiedRuntimeTags |
+| 18 | F22 | current | NOT RUN | CheckDownloadReadiness, CompareSoftwareToOnline, ConnectOnlinePlc, DisconnectOnlinePlc, DisconnectOnlinePlcs, DownloadPlc, GeneratePlcLoadableFile, GetOnlineState, GetPlcBlockFingerprints, ListTransferRoutes, ManagePlcDataBlockSnapshot, UploadStationFromPlc |
 | 18 | F00 | current | NOT RUN | CreateHardwareDevice, ExportPlcWatchTable, SearchHardwareCatalog |
 | 18 | F05 | current | NOT RUN | ArchiveSavedProject, ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, ManageMultiuserSession, RetrieveProjectArchive, SaveProjectCopy, ValidateAutomationContext |
 | 18 | F07 | current | NOT RUN | GetPlcPutGetAccess, GetProjectProtection, GetProjectUserManagement, ManageDeviceUsers, ManagePasswordPolicy, ManagePlcCertificate, ManagePlcProtection, ManageProjectUserManagement, ManageUmcUsers, ManageWatchForceTableWebAccess, SetPlcPutGetAccess |
@@ -326,6 +336,8 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 19 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources, PlanPlcExternalSourceImport |
 | 19 | P6-COMPILE | current | NOT RUN | CompileDevice, CompileHmiDiagnostics, CompilePlcDiagnostics, CompilePlcSoftware |
 | 19 | P6-FALLBACK | current | NOT RUN | — |
+| 19 | F04 | current | NOT RUN | GetPlcLiveValuesOpcUa, GetPlcLiveValuesS7, GetPlcRunStateS7, GetPlcSimAdvancedTags, GetPlcWebDiagnostics, GetPlcWebVars, GetUnifiedRuntimeAlarms, GetUnifiedRuntimeTags, InvokeUnifiedOpenPipe, ListPlcSimAdvancedInstances, ManagePlcSimAdvancedInstance, ProbeS7CpuIdentity, RunPlcCompanionTool, RunPlcSimAdvancedTestScenario, SamplePlcLiveValuesS7, SetPlcWebOperatingMode, WritePlcSimAdvancedTags, WritePlcWebVars, WriteUnifiedRuntimeTags |
+| 19 | F22 | current | NOT RUN | CheckDownloadReadiness, CompareSoftwareToOnline, ConnectOnlinePlc, DisconnectOnlinePlc, DisconnectOnlinePlcs, DownloadPlc, DownloadPlcToFolder, GeneratePlcLoadableFile, GetOnlineState, GetPlcBlockFingerprints, ListTransferRoutes, ManagePlcDataBlockSnapshot, ScanAccessibleDevices, UploadStationFromPlc |
 | 19 | F00 | current | NOT RUN | CreateHardwareDevice, ExportPlcWatchTable, SearchHardwareCatalog |
 | 19 | F05 | current | NOT RUN | ArchiveSavedProject, ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, ManageMultiuserSession, RetrieveProjectArchive, SaveProjectCopy, ValidateAutomationContext |
 | 19 | F07 | current | NOT RUN | GetPlcPutGetAccess, GetProjectProtection, GetProjectUserManagement, ManageDeviceUsers, ManagePasswordPolicy, ManagePlcCertificate, ManagePlcProtection, ManageProjectUserManagement, ManageSyslogServers, ManageUmcUsers, ManageWatchForceTableWebAccess, SetPlcPutGetAccess |

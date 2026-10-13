@@ -228,12 +228,12 @@ internal sealed class FoundationV4Tool : McpServerTool
         }))
             result = new CallToolResult { IsError = result.IsError, StructuredContent = body,
                 Content = new[] { new TextContentBlock { Text = body!.ToJsonString() } } };
-        if ((string?)body?["meta"]?["outcome"] == "unknown" && inner is FoundationTool { IsNative: true } uncertain
+        if ((string?)body?["meta"]?["outcome"] == "unknown" && inner is FoundationTool { RequiresProjectSession: true } uncertain
             && (write || TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(tool.Name, null).Operation is "FILE" or "EXECUTE"))
             uncertain.MarkSessionUncertain();
         if ((string?)body?["meta"]?["outcome"] == "unknown")
         {
-            body = EnvelopeMutation.SessionReset(body!, inner is FoundationTool { SessionRequiresReset: true });
+            body = EnvelopeMutation.SessionReset(body!, inner is FoundationTool { RequiresProjectSession: true, SessionRequiresReset: true });
             result = new CallToolResult { IsError = result.IsError, StructuredContent = body,
                 Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
         }
@@ -281,7 +281,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                 return Recorded(fenced);
             if (inner is FoundationTool { Ported: true } ported && ported.RefusePortedCapability(args) is { } unavailable)
                 return Recorded(unavailable);
-            if (tool.Name != "DisconnectPortal" && inner is FoundationTool { IsNative: true, SessionRequiresReset: true })
+            if (tool.Name != "DisconnectPortal" && inner is FoundationTool { RequiresProjectSession: true, SessionRequiresReset: true })
                 return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                     HostBehavior.SessionReset(), true));
             if (tool.Name != "DisconnectPortal" && inner is FoundationTool { RequiresTia: true } nativeTool && (nativeTool.UsesProductionWorker || readinessForTest != null))
@@ -357,7 +357,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                 lane = await targetLaneTool.AcquireLane(cancellationToken);
                 targetLaneTool.ActivateLane(lane);
             }
-            if (tool.Name != "DisconnectPortal" && inner is FoundationTool { IsNative: true, SessionRequiresReset: true })
+            if (tool.Name != "DisconnectPortal" && inner is FoundationTool { RequiresProjectSession: true, SessionRequiresReset: true })
                 return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                     HostBehavior.SessionReset(), true));
             if (write && FoundationHostPorts.GenerationFence(tool.Name, JsonSerializer.Serialize(args), dispatched: true) is { } dispatchFenced)

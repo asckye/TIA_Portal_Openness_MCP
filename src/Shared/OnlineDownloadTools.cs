@@ -6,8 +6,6 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using ModelContextProtocol;
-using Siemens.Engineering.SW.Blocks;
-using Siemens.Engineering.SW;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;

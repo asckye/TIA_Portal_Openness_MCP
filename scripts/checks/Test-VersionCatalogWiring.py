@@ -53,7 +53,7 @@ class VersionCatalogWiring(unittest.TestCase):
     def test_version_exclusions_have_real_registered_names(self):
         policy = read(LOGIC / 'Siemens/ToolVersionPolicy.cs').split('internal static string ToolProblem', 1)[0]
         excluded = re.findall(r'\["([^"]+)"\]\s*=', policy)
-        self.assertEqual(len(excluded), 12)
+        self.assertEqual(len(excluded), 14)
         registered = set(re.findall(r'McpServerTool\(Name\s*=\s*"([^"]+)"', sources.all_text()))
         self.assertFalse(set(excluded) - registered)
         # Engine host checks compare with the engine's own roster; ToolProfiles is the FoundationHost product roster (P7-04).

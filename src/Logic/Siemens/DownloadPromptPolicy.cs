@@ -1,7 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+#if TIA_NATIVE_ONLINE
+using JsonObject = TiaMcp.Adapters.Native.Hmi.HmiObject;
+using JsonArray = TiaMcp.Adapters.Native.Hmi.HmiArray;
+using TiaMcp.Adapters.Native.Hmi;
+#else
 using System.Text.Json.Nodes;
+#endif
 
 namespace TiaMcpServer.Siemens
 {
@@ -41,6 +47,7 @@ namespace TiaMcpServer.Siemens
         internal static readonly string[] UserManagementModes = { "keep", "updateKeepPassword", "resetToProject" };
 
         /// <summary>解析 promptAnswersJson：{"ResetModule":"DeleteAll","OverwriteHmiData":true}。值为枚举名或布尔。</summary>
+#if !TIA_NATIVE_ONLINE
         internal static Dictionary<string, string> ParseExplicitAnswers(string? json)
         {
             var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -56,6 +63,7 @@ namespace TiaMcpServer.Siemens
             }
             return result;
         }
+#endif
 
         internal static string UserManagementSelection(string mode) => mode switch
         {
@@ -167,12 +175,20 @@ namespace TiaMcpServer.Siemens
             Answered.Add(row);
         }
 
+#if TIA_NATIVE_ONLINE
+        internal JsonObject Summary() => new JsonObject
+        {
+            ["promptsAnswered"] = new JsonArray(Answered.Select(x => x.DeepClone()).ToArray()),
+            ["promptsUnanswered"] = new JsonArray(Unanswered.Select(x => x.DeepClone()).ToArray())
+        };
+#else
         internal JsonObject Summary() => new JsonObject
         {
             ["promptsAnswered"] = new JsonArray(Answered.Select(x => (JsonNode)x.DeepClone()).ToArray()),
             ["promptsUnanswered"] = new JsonArray(Unanswered.Select(x => (JsonNode)x.DeepClone()).ToArray())
         };
 
+#endif
         internal string UnansweredSummary() => Unanswered.Count == 0 ? "" :
             " Unanswered download prompts: " + string.Join(", ", Unanswered.Select(x => x["prompt"]!.GetValue<string>())) + " (pass answers via promptAnswersJson or the password parameters).";
     }

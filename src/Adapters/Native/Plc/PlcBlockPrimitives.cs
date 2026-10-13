@@ -15,12 +15,8 @@ using Siemens.Engineering.SW.Types;
 using Siemens.Engineering.Safety;
 #endif
 #if STUDIO_VCI_MODERN || TIA_ENGINE_LOCAL_PRIMITIVES
-using Siemens.Engineering.Connection;
 using Siemens.Engineering.CrossReference;
-using Siemens.Engineering.FingerprintData;
 using Siemens.Engineering.Online;
-using Siemens.Engineering.Online.Configurations;
-using Siemens.Engineering.SW.Blocks.Interface;
 using Siemens.Engineering.SW.ExternalSources;
 using Siemens.Engineering.SW.WatchAndForceTables;
 #endif
@@ -123,23 +119,7 @@ namespace TiaMcp.Adapters.Native.Plc
         public static IEnumerable<char> InvalidPasswordCharacters(PlcBlockProtectionProvider value) => value.GetInvalidPasswordCharacters();
         public static void Protect(PlcBlockProtectionProvider value, SecureString password) => value.Protect(password);
         public static void Unprotect(PlcBlockProtectionProvider value, SecureString password) => value.Unprotect(password);
-        public static PlcBlockInterface Interface(DataBlock value) => value.Interface;
         public static OnlineState? StateOrNull(OnlineProvider value) => value?.State;
-        public static InterfaceSnapshot Snapshot(IEngineeringServiceProvider value) => value.GetService<InterfaceSnapshot>();
-        public static InterfaceSnapshot SnapshotOrNull(IEngineeringServiceProvider value) => value == null ? null : Snapshot(value);
-        public static void Export(InterfaceSnapshot value, FileInfo file, ExportOptions options) => value.Export(file, options);
-        public static ConnectionConfiguration Configuration(FingerprintDataProvider value) => value.Configuration;
-        public static string Address(ConfigurationAddress value) => value.Address;
-        public static OnlineConfigurationDelegate Handler(Action<OnlineConfiguration> handler) => new OnlineConfigurationDelegate(handler);
-        public static FingerprintDataResult Fingerprints(FingerprintDataProvider value, ConfigurationAddress address, OnlineConfigurationDelegate handler) => value.GetFingerprintData(address, handler);
-        public static FingerprintDataItemComposition Items(FingerprintDataResult value) => value.FingerprintDataItems;
-        public static string Identifier(FingerprintDataItem value) => value.FingerprintDataIdentifier;
-        public static string Value(FingerprintDataItem value) => value.FingerprintDataValue;
-        public static void Password(OnlinePasswordConfiguration value, SecureString password) => value.SetPassword(password);
-        public static TlsVerificationConfigurationSelection Selection(TlsVerificationConfiguration value) => value.CurrentSelection;
-        public static void Selection(TlsVerificationConfiguration value, TlsVerificationConfigurationSelection selection) => value.CurrentSelection = selection;
-        public static string PlcName(TlsVerificationConfiguration value) => value.PlcName;
-        public static string VerificationInfo(TlsVerificationConfiguration value) => value.VerificationInfo;
 
 #endif
     }

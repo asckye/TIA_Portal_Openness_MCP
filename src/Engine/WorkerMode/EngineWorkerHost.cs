@@ -13,6 +13,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
 using TiaMcp.Logic.V4;
 using TiaMcp.Logic.V4.Inputs;
@@ -94,6 +95,22 @@ namespace TiaMcpServer.Worker
             portal.EngineeringTransactionActive = () => foundation.HasEngineeringTransaction;
             portal.VersionControlFallback = request => foundation.VersionControlFallback(request, portal.FallbackBinding, portal.FallbackUncertain);
             foundation.AcquireEngineeringEditAccess = engineering.AcquireHmiEditAccess;
+            portal.OnlineFallbackOfflineState = foundation.OnlineFallbackOfflineState;
+            portal.OnlineFallback = (request, password) => foundation.OnlineFallback(request, password, portal.FallbackBinding, portal.FallbackUncertain, other =>
+            {
+                if (other.Entry == "CompilePlcSoftware")
+                {
+                    var result = engineering.CompileSoftware(other.SoftwarePath, password);
+                    return new TiaMcp.Adapters.Contracts.Candidates.FallbackNativeResult { Success = result.ErrorCount == 0 && TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State), State = result.State.ToString(), Items = new[] { new Dictionary<string, string> { ["errorCount"] = result.ErrorCount.ToString(System.Globalization.CultureInfo.InvariantCulture), ["warningCount"] = result.WarningCount.ToString(System.Globalization.CultureInfo.InvariantCulture) } } };
+                }
+                var documents = (TiaMcpServer.Siemens.Services.DocumentsService)EngineServices.Get(typeof(TiaMcpServer.Siemens.Services.DocumentsService));
+                bool ok = other.Entry == "ExportPlcBlockDocuments" ? documents.ExportAsDocuments(other.SoftwarePath, other.Parameters["blockPath"], other.Parameters["exportPath"], other.Parameters["preservePath"] == "true") : documents.ImportFromDocuments(other.SoftwarePath, other.Parameters["groupPath"], other.Parameters["importPath"], other.Parameters["fileNameWithoutExtension"], "None");
+                return new TiaMcp.Adapters.Contracts.Candidates.FallbackNativeResult { Success = ok, State = ok ? "completed" : "failed" };
+            });
+            foundation.OnlinePlcs = engineering.GetAllPlcSoftware;
+            foundation.OnlineLog = (level, error, message, values) => engineering.Logger?.Log(
+                level == 3 ? LogLevel.Error : level == 2 ? LogLevel.Warning : level == 1 ? LogLevel.Information : LogLevel.Debug,
+                error, message, values);
             foundation.EngineeringProjectMissing = engineering.IsProjectNull;
             foundation.ResolveEngineeringBlock = (software, block) => engineering.GetBlock(software, block);
             foundation.ResolveEngineeringDevice = path => engineering.GetDevice(path);
@@ -306,6 +323,7 @@ namespace TiaMcpServer.Worker
         private ChannelResponse DispatchFoundation(ChannelRequest request)
         {
             using var correlation = InvocationJournal.UseCorrelation(request.CorrelationId ?? InvocationJournal.CorrelationId);
+            if (request.Method == PlcSimAdvancedWorkerModule.Operation) return PlcSimAdvancedWorkerModule.Dispatch(request);
             if (foundationDispatch == null) return ChannelResponse.Error(new ChannelFailureException(
                 OpennessReadiness.Cause + " " + OpennessReadiness.FixEn, -32603, ChannelOutcome.RejectedBeforeNative));
             bool disconnect = request.Method == "adapter.Disconnect";

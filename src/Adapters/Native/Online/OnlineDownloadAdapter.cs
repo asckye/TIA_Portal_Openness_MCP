@@ -1,55 +1,42 @@
-using TiaMcp.Logic.V4;
-using Microsoft.Extensions.Logging;
-using Siemens.Engineering.Cax;
-using Siemens.Engineering.Compiler;
-using Siemens.Engineering.Connection;
-using Siemens.Engineering.Download.Configurations;
-using Siemens.Engineering.Download;
-using Siemens.Engineering.HW.Features;
-using Siemens.Engineering.HW.Utilities;
-using Siemens.Engineering.HW;
-using Siemens.Engineering.Hmi;
-using Siemens.Engineering.HmiUnified;
-using Siemens.Engineering.Multiuser;
-using Siemens.Engineering.Online.Configurations;
-using Siemens.Engineering.Online;
-using Siemens.Engineering.SW.Alarm;
-using Siemens.Engineering.SW.Blocks;
-using Siemens.Engineering.SW.OpcUa;
-using Siemens.Engineering.SW.Tags;
-using Siemens.Engineering.SW.Types;
-using Siemens.Engineering.SW;
-using Siemens.Engineering.Safety;
-using Siemens.Engineering.Upload.Configurations;
-using Siemens.Engineering.Upload;
-using Siemens.Engineering;
-using System.Collections.Generic;
+using System;
 using System.Collections;
-using System.Drawing;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security;
 using System.Net;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Security;
-using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
-using System.Text;
-using System.Xml.Linq;
-using System;
-using TiaMcpServer.ModelContextProtocol;
-using static TiaMcpServer.Siemens.EngineeringSessionHelpers;
-
-namespace TiaMcpServer.Siemens.Services
+using TiaMcp.Adapters.Contracts;
+using TiaMcp.Adapters.Native.Hmi;
+using TiaMcp.Adapters.Native.Plc;
+using TiaMcpServer.Siemens;
+using Siemens.Engineering;
+using Siemens.Engineering.Compiler;
+using Siemens.Engineering.Connection;
+using Siemens.Engineering.Online;
+#if ONLINE_LEGITIMATION
+using Siemens.Engineering.Online.Configurations;
+#endif
+using Siemens.Engineering.HW;
+using Siemens.Engineering.HW.Features;
+using Siemens.Engineering.SW;
+using Siemens.Engineering.SW.Blocks;
+#if ONLINE_DOWNLOAD
+using Siemens.Engineering.Download;
+using Siemens.Engineering.Download.Configurations;
+using Siemens.Engineering.Upload;
+using Siemens.Engineering.Upload.Configurations;
+#endif
+namespace TiaMcp.Adapters.Native.Online
 {
     // Historical native observations lack a recorded PLCSIM version/date; see docs/reference/real-machine-ledger.md.
-    internal sealed partial class OnlineDownloadService
+    internal sealed partial class OnlineDownloadAdapter
     {
-        private readonly IEngineeringSession _session;
+        private readonly OnlineSession _session;
 
-        public OnlineDownloadService(IEngineeringSession session) => _session = session;
+        public OnlineDownloadAdapter(OnlineSession session) => _session = session;
 
-        public ResponseOnlineState GetOnlineState(string softwarePath)
+        public OnlineStateResult GetOnlineState(string softwarePath)
         {
             // 未连接工程或路径无效时，在线状态未经测量，不能报告为 Offline。
             if (_session.IsProjectNull())
@@ -73,7 +60,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (provider == null)
                 {
                     // 缺少在线服务时状态未知，不能报告为已确认离线。
-                    return new ResponseOnlineState
+                    return new OnlineStateResult
                     {
                         State = "Unknown",
                         IsOnline = false,
@@ -88,7 +75,7 @@ namespace TiaMcpServer.Siemens.Services
                 bool isOnline = stateName == "Online";
                 bool isReachable = isOnline || stateName == "Protected";
 
-                return new ResponseOnlineState
+                return new OnlineStateResult
                 {
                     State = stateName,
                     IsOnline = isOnline,
@@ -98,16 +85,16 @@ namespace TiaMcpServer.Siemens.Services
             }
             catch (Exception ex)
             {
-                _session.Logger?.LogError(ex, "GetOnlineState failed for {SoftwarePath}", softwarePath);
-                return new ResponseOnlineState { State = "Unknown", IsOnline = false, IsReachable = false, Message = $"Error: {ex.Message}" };
+                _session.Log.Error(ex, "GetOnlineState failed for {SoftwarePath}", softwarePath);
+                return new OnlineStateResult { State = "Unknown", IsOnline = false, IsReachable = false, Message = $"Error: {ex.Message}" };
             }
         }
 
-        public ResponseOnlineState GoOnline(string softwarePath, string? ipAddress = null, string? password = null) => GoOnline(softwarePath, ipAddress, password, null, null, "", null);
+        public OnlineStateResult GoOnline(string softwarePath, string? ipAddress = null, string? password = null) => GoOnline(softwarePath, ipAddress, password, null, null, "", null);
 
-        public ResponseOnlineState GoOnline(string softwarePath, string? ipAddress, string? password, string? userName, string? userType, string rhTarget) => GoOnline(softwarePath, ipAddress, password, userName, userType, rhTarget, null);
+        public OnlineStateResult GoOnline(string softwarePath, string? ipAddress, string? password, string? userName, string? userType, string rhTarget) => GoOnline(softwarePath, ipAddress, password, userName, userType, rhTarget, null);
 
-        public ResponseOnlineState GoOnline(string softwarePath, string? ipAddress, string? password, string? userName, string? userType, string rhTarget, string? pgPcInterface) => GoOnline(softwarePath, ipAddress, password, userName, userType, rhTarget, pgPcInterface, true);
+        public OnlineStateResult GoOnline(string softwarePath, string? ipAddress, string? password, string? userName, string? userType, string rhTarget, string? pgPcInterface) => GoOnline(softwarePath, ipAddress, password, userName, userType, rhTarget, pgPcInterface, true);
 
         // userName/userType answer OnlineAuthenticationConfiguration (UMAC-protected PLCs); rhTarget primary|backup
         // goes online through RHOnlineProvider.GoOnlineToPrimary/Backup on R/H systems.
@@ -116,11 +103,11 @@ namespace TiaMcpServer.Siemens.Services
         // download (pgPcInterface + ipAddress -> ConnectionConfiguration.ApplyConfiguration) and an explicit address goes through
         // the official GoOnline(ConfigurationAddress) overload (V21; V20 applies the address and calls GoOnline()).
         // trustDeviceCertificate answers the TLS prompt of FW >= 2.9 CPUs (meta.tlsVerification records the decision).
-        public ResponseOnlineState GoOnline(string softwarePath, string? ipAddress, string? password, string? userName, string? userType, string rhTarget, string? pgPcInterface, bool trustDeviceCertificate)
+        public OnlineStateResult GoOnline(string softwarePath, string? ipAddress, string? password, string? userName, string? userType, string rhTarget, string? pgPcInterface, bool trustDeviceCertificate)
         {
-            EngineeringCredentialRules.ValidateOnlineCredentials(userName ?? "", password ?? "", userType ?? "");
-            rhTarget = EngineeringCredentialRules.ValidateRhTarget(rhTarget);
-            var meta = new JsonObject { ["trustDeviceCertificate"] = trustDeviceCertificate };
+            TiaMcp.Adapters.Contracts.EngineeringCredentialRules.ValidateOnlineCredentials(userName ?? "", password ?? "", userType ?? "");
+            rhTarget = TiaMcp.Adapters.Contracts.EngineeringCredentialRules.ValidateRhTarget(rhTarget);
+            var meta = new HmiObject { ["trustDeviceCertificate"] = trustDeviceCertificate };
             // 未连接工程或路径无效时，在线状态未经测量，不能报告为 Offline。
             if (_session.IsProjectNull())
             {
@@ -129,7 +116,7 @@ namespace TiaMcpServer.Siemens.Services
                     + "Call ConnectPortal + OpenProject (or AttachOpenProject) first.");
             }
 
-            var plcSoftware = _session.ResolvePlc(softwarePath, PlcAccess.Write);
+            var plcSoftware = _session.ResolvePlc(softwarePath, true);
             if (plcSoftware == null)
             {
                 throw new PortalException(PortalErrorCode.NotFound,
@@ -139,6 +126,7 @@ namespace TiaMcpServer.Siemens.Services
 
             try
             {
+#if ONLINE_RH
                 if (rhTarget.Length > 0)
                 {
                     RHOnlineProvider rh = _session.ResolvePlcService<RHOnlineProvider>(softwarePath, plcSoftware)
@@ -146,9 +134,9 @@ namespace TiaMcpServer.Siemens.Services
                     using var rhScope = AttachOnlineLegitimationHandler(rh.Configuration, password, userName, userType, meta, trustDeviceCertificate);
                     // ConfigurationAddress has no public constructor: the address object comes from the route tree (target interfaces).
                     ConfigurationAddress? rhAddress = string.IsNullOrWhiteSpace(ipAddress) ? null : FindConfigurationAddress(rh.Configuration, ipAddress!);
-                    if (!string.IsNullOrWhiteSpace(ipAddress) && rhAddress == null) _session.Logger?.LogWarning("ConnectOnlinePlc R/H: no ConfigurationAddress {Ip} in the route tree; using the configured address", ipAddress);
-#if TIA_V20
-                    if (rhAddress != null) _session.Logger?.LogWarning("ConnectOnlinePlc R/H: the V20 RHOnlineProvider has no address overload; using the configured address");
+                    if (!string.IsNullOrWhiteSpace(ipAddress) && rhAddress == null) _session.Log.Warning("ConnectOnlinePlc R/H: no ConfigurationAddress {Ip} in the route tree; using the configured address", ipAddress);
+#if !ONLINE_ADDRESS_OVERLOAD
+                    if (rhAddress != null) _session.Log.Warning("ConnectOnlinePlc R/H: the V20 RHOnlineProvider has no address overload; using the configured address");
                     OnlineState rhState = rhTarget == "primary" ? rh.GoOnlineToPrimary() : rh.GoOnlineToBackup();
 #else
                     OnlineState rhState = rhAddress == null
@@ -158,14 +146,15 @@ namespace TiaMcpServer.Siemens.Services
                     var rhName = rhState.ToString();
                     // envelope: legacy-single-verdict
                     meta["success"] = rhName == "Online";
-                    return new ResponseOnlineState { State = rhName, IsOnline = rhName == "Online", IsReachable = rhName == "Online" || rhName == "Protected",
+                    return new OnlineStateResult { State = rhName, IsOnline = rhName == "Online", IsReachable = rhName == "Online" || rhName == "Protected",
                         Message = BuildOnlineStateMessage(rhName, softwarePath) + $" (R/H {rhTarget}; primary={rh.PrimaryState}, backup={rh.BackupState})", Meta = meta };
                 }
+#endif
                 var provider = _session.ResolvePlcService<OnlineProvider>(softwarePath, plcSoftware);
                 if (provider == null)
                 {
                     // 缺少在线服务时状态未知，不能报告为已确认离线。
-                    return new ResponseOnlineState
+                    return new OnlineStateResult
                     {
                         State = "Unknown",
                         IsOnline = false,
@@ -185,7 +174,7 @@ namespace TiaMcpServer.Siemens.Services
                     if (selection.Error != null)
                     {
                         meta["success"] = false;
-                        return new ResponseOnlineState { State = "NotReachable", IsOnline = false, IsReachable = false, Message = "ConnectOnlinePlc not attempted: " + selection.Error, Meta = meta };
+                        return new OnlineStateResult { State = "NotReachable", IsOnline = false, IsReachable = false, Message = "ConnectOnlinePlc not attempted: " + selection.Error, Meta = meta };
                     }
                     address = selection.Address;
                     routeNote = " Route: " + selection.Description + ".";
@@ -193,7 +182,7 @@ namespace TiaMcpServer.Siemens.Services
                 }
 
                 OnlineState resultState;
-#if TIA_V20
+#if !ONLINE_ADDRESS_OVERLOAD
                 // V20 has GoOnline() only; the address (when any) was applied through ApplyConfiguration by the route selection.
                 resultState = provider.GoOnline();
 #else
@@ -203,7 +192,7 @@ namespace TiaMcpServer.Siemens.Services
                 var stateName = resultState.ToString();
                 bool isOnline = stateName == "Online";
                 meta["success"] = isOnline;
-                return new ResponseOnlineState
+                return new OnlineStateResult
                 {
                     State = stateName,
                     IsOnline = isOnline,
@@ -214,7 +203,7 @@ namespace TiaMcpServer.Siemens.Services
             }
             catch (Exception ex)
             {
-                _session.Logger?.LogError(ex, "GoOnline failed for {SoftwarePath}", softwarePath);
+                _session.Log.Error(ex, "GoOnline failed for {SoftwarePath}", softwarePath);
                 // Historical native observation: EngineeringTargetInvocationException carries only "Error when calling method 'GoOnline'" - the
                 // reason ("Incompatible" against a never-downloaded PLCSIM instance) sits in the inner chain; surface it and the state TIA holds.
                 var chain = new List<string>();
@@ -224,26 +213,34 @@ namespace TiaMcpServer.Siemens.Services
                 meta["success"] = false; meta["error"] = string.Join(" <- ", chain);
                 if (stateNow.Length > 0) meta["onlineStateAfter"] = stateNow;
                 var hint = stateNow == "Incompatible" ? " TIA reports the connection as Incompatible (device / firmware / program mismatch): download first (DownloadPlc), then go online." : "";
-                return new ResponseOnlineState { State = stateNow.Length > 0 && stateNow != "Online" ? stateNow : "NotReachable", IsOnline = false, IsReachable = stateNow == "Incompatible" || stateNow == "Protected", Message = $"GoOnline failed: {string.Join(" <- ", chain)}{hint}", Meta = meta };
+                return new OnlineStateResult { State = stateNow.Length > 0 && stateNow != "Online" ? stateNow : "NotReachable", IsOnline = false, IsReachable = stateNow == "Incompatible" || stateNow == "Protected", Message = $"GoOnline failed: {string.Join(" <- ", chain)}{hint}", Meta = meta };
             }
         }
 
         // Typed walk of Modes -> PcInterfaces -> TargetInterfaces -> Addresses for an exact IP (R/H online targets).
         private ConfigurationAddress? FindConfigurationAddress(ConnectionConfiguration configuration, string ipAddress)
         {
-            foreach (ConfigurationMode mode in EngineeringGroupOperations.Items(configuration.Modes).Cast<ConfigurationMode>())
-                foreach (ConfigurationPcInterface pcInterface in EngineeringGroupOperations.Items(mode.PcInterfaces).Cast<ConfigurationPcInterface>())
+            foreach (ConfigurationMode mode in PlcGroupOperations.Items(configuration.Modes).Cast<ConfigurationMode>())
+                foreach (ConfigurationPcInterface pcInterface in PlcGroupOperations.Items(mode.PcInterfaces).Cast<ConfigurationPcInterface>())
                 {
-                    foreach (ConfigurationTargetInterface target in EngineeringGroupOperations.Items(pcInterface.TargetInterfaces).Cast<ConfigurationTargetInterface>())
-                        foreach (ConfigurationAddress address in EngineeringGroupOperations.Items(target.Addresses).Cast<ConfigurationAddress>())
+                    foreach (ConfigurationTargetInterface target in PlcGroupOperations.Items(pcInterface.TargetInterfaces).Cast<ConfigurationTargetInterface>())
+#if ONLINE_TARGET_ADDRESSES
+                        foreach (ConfigurationAddress address in PlcGroupOperations.Items(target.Addresses).Cast<ConfigurationAddress>())
+#else
+                        foreach (ConfigurationAddress address in PlcGroupOperations.Items(OnlineRoutePrimitives.TargetAddresses(target)).Cast<ConfigurationAddress>())
+#endif
+#if ONLINE_ADDRESSES
                             if (string.Equals(address.Address, ipAddress, StringComparison.OrdinalIgnoreCase)) return address;
+#else
+                            if (string.Equals(OnlineRoutePrimitives.Address(address), ipAddress, StringComparison.OrdinalIgnoreCase)) return address;
+#endif
                     var viaSubnet = FindSubnetOrGatewayAddress(pcInterface, ipAddress, out _);
                     if (viaSubnet != null) return viaSubnet;
                 }
             return null;
         }
 
-        public ResponseMessage GoOffline(string softwarePath)
+        public HmiMessage GoOffline(string softwarePath)
         {
             // 未找到工程、PLC 或在线服务时，不能报告下线成功。
             if (_session.IsProjectNull())
@@ -253,7 +250,7 @@ namespace TiaMcpServer.Siemens.Services
                     + "Call ConnectPortal + OpenProject (or AttachOpenProject) first.");
             }
 
-            var plcSoftware = _session.ResolvePlc(softwarePath, PlcAccess.Write);
+            var plcSoftware = _session.ResolvePlc(softwarePath, true);
             if (plcSoftware == null)
             {
                 throw new PortalException(PortalErrorCode.NotFound,
@@ -273,12 +270,12 @@ namespace TiaMcpServer.Siemens.Services
                 }
 
                 provider.GoOffline();
-                return new ResponseMessage { Message = $"'{softwarePath}' is now offline.", Meta = ResponseMeta.Basic(true) };
+                return new HmiMessage { Message = $"'{softwarePath}' is now offline.", Meta = HmiMeta.Basic(true) };
             }
             catch (Exception ex)
             {
-                _session.Logger?.LogError(ex, "GoOffline failed for {SoftwarePath}", softwarePath);
-                return new ResponseMessage { Message = $"GoOffline error: {ex.Message}" };
+                _session.Log.Error(ex, "GoOffline failed for {SoftwarePath}", softwarePath);
+                return new HmiMessage { Message = $"GoOffline error: {ex.Message}" };
             }
         }
 
@@ -287,16 +284,16 @@ namespace TiaMcpServer.Siemens.Services
         // lock when GoOffline is called for a single softwarePath. This iterates all PLCs using
         // the same provider resolution as GoOffline, so the agent never has to ask the user to
         // toggle online/offline in the TIA UI. Returns per-PLC before/after state.
-        public JsonObject GoOfflineAll()
+        public HmiObject GoOfflineAll()
         {
-            var plcs = new JsonArray();
+            var plcs = new HmiArray();
             if (_session.IsProjectNull())
-                return new JsonObject { ["message"] = "No project open.", ["allOffline"] = false, ["v4Rejection"] = "PROJECT_NOT_BOUND", ["plcs"] = plcs };
+                return new HmiObject { ["message"] = "No project open.", ["allOffline"] = false, ["v4Rejection"] = "PROJECT_NOT_BOUND", ["plcs"] = plcs };
 
             bool allOffline = true;
             foreach (var plc in _session.GetAllPlcSoftware())
             {
-                var entry = new JsonObject { ["name"] = plc.Name };
+                var entry = new HmiObject { ["name"] = plc.Name };
                 try
                 {
                     var provider = _session.ResolvePlcService<OnlineProvider>(plc.Name, plc);
@@ -317,7 +314,7 @@ namespace TiaMcpServer.Siemens.Services
                 plcs.Add(entry);
             }
 
-            return new JsonObject
+            return new HmiObject
             {
                 ["message"] = $"DisconnectOnlinePlcs: {plcs.Count} PLC(s) processed; allOffline={allOffline}.",
                 ["allOffline"] = allOffline,
@@ -325,7 +322,7 @@ namespace TiaMcpServer.Siemens.Services
             };
         }
 
-        public ResponseCompare CompareSoftwareToOnline(string softwarePath, int maxDepth = 4, int maxEntries = 200)
+        public OnlineCompareResult CompareSoftwareToOnline(string softwarePath, int maxDepth = 4, int maxEntries = 200)
         {
             // 缺少工程或 PLC 时没有比对结果，不能解释为在线离线一致。
             if (_session.IsProjectNull())
@@ -357,18 +354,18 @@ namespace TiaMcpServer.Siemens.Services
 
                 var compareMethod = plcSoftware.GetType().GetMethod("CompareToOnline", Type.EmptyTypes);
                 if (compareMethod == null)
-                    return new ResponseCompare { Message = "CompareToOnline method not found on PlcSoftware (TIA Openness API mismatch)." };
+                    return new OnlineCompareResult { Message = "CompareToOnline method not found on PlcSoftware (TIA Openness API mismatch)." };
 
                 var result = compareMethod.Invoke(plcSoftware, null);
                 if (result == null)
-                    return new ResponseCompare { Message = "CompareToOnline returned null.", IsOnline = true };
+                    return new OnlineCompareResult { Message = "CompareToOnline returned null.", IsOnline = true };
 
                 var rootElement = result.GetType().GetProperty("RootElement")?.GetValue(result);
-                var entries = new List<CompareEntry>();
+                var entries = new List<OnlineCompareEntry>();
                 var summary = new Dictionary<string, int>();
                 bool truncated = WalkCompareTree(rootElement, "", 0, maxDepth, maxEntries, entries, summary);
 
-                return new ResponseCompare
+                return new OnlineCompareResult
                 {
                     Message = $"Compare complete: {entries.Count} differences" + (truncated ? " (truncated)." : "."),
                     IsOnline = true,
@@ -380,7 +377,7 @@ namespace TiaMcpServer.Siemens.Services
             // 比对失败必须抛出原生错误，不能返回空差异或声称在线。
             catch (TargetInvocationException tie) when (tie.InnerException != null)
             {
-                _session.Logger?.LogError(tie.InnerException, "CompareSoftwareToOnline failed for {SoftwarePath}", softwarePath);
+                _session.Log.Error(tie.InnerException, "CompareSoftwareToOnline failed for {SoftwarePath}", softwarePath);
                 throw new PortalException(PortalErrorCode.OpennessError,
                     $"CompareSoftwareToOnline failed for '{softwarePath}': {tie.InnerException.Message} "
                     + "NO comparison result is available — do not read this as 'offline and online are identical'. "
@@ -392,7 +389,7 @@ namespace TiaMcpServer.Siemens.Services
             }
             catch (Exception ex)
             {
-                _session.Logger?.LogError(ex, "CompareSoftwareToOnline failed for {SoftwarePath}", softwarePath);
+                _session.Log.Error(ex, "CompareSoftwareToOnline failed for {SoftwarePath}", softwarePath);
                 throw new PortalException(PortalErrorCode.OpennessError,
                     $"CompareSoftwareToOnline failed for '{softwarePath}': {ex.Message} "
                     + "NO comparison result is available — do not read this as 'identical'.", null, ex);
@@ -400,7 +397,7 @@ namespace TiaMcpServer.Siemens.Services
         }
 
         private static bool WalkCompareTree(object? element, string path, int depth, int maxDepth, int maxEntries,
-            List<CompareEntry> entries, Dictionary<string, int> summary)
+            List<OnlineCompareEntry> entries, Dictionary<string, int> summary)
         {
             if (element == null) return false;
             if (entries.Count >= maxEntries) return true;
@@ -428,7 +425,7 @@ namespace TiaMcpServer.Siemens.Services
                 && !status.EndsWith("Identical", StringComparison.Ordinal);
             if (depth > 0 && isDifference)
             {
-                entries.Add(new CompareEntry
+                entries.Add(new OnlineCompareEntry
                 {
                     Path = fullPath,
                     LeftName = leftName,
@@ -470,7 +467,8 @@ namespace TiaMcpServer.Siemens.Services
 
         #region download
 
-        public ResponseDownload DownloadToPlc(
+#if ONLINE_DOWNLOAD
+        public OnlineDownloadResult DownloadToPlc(
             string softwarePath,
             bool consistentBlocksOnly = true,
             bool keepActualValues = true,
@@ -487,15 +485,15 @@ namespace TiaMcpServer.Siemens.Services
             string rhTarget = "",
             bool trustDeviceCertificate = true)
         {
-            var legitimation = new JsonObject { ["trustDeviceCertificate"] = trustDeviceCertificate };   // TLS prompt record
-            _session.Logger?.LogInformation(
+            var legitimation = new HmiObject { ["trustDeviceCertificate"] = trustDeviceCertificate };   // TLS prompt record
+            _session.Log.Information(
                 "DownloadPlc: softwarePath={SoftwarePath} consistentOnly={C} keepDB={K} start={S} stop={T} hasPassword={P} pgPc={I} targetIp={A} userMgmt={U}",
                 softwarePath, consistentBlocksOnly, keepActualValues, startAfterDownload, stopBeforeDownload, !string.IsNullOrEmpty(password), pgPcInterface, targetIpAddress, userManagementMode);
-            try { rhTarget = EngineeringCredentialRules.ValidateRhTarget(rhTarget); }
-            catch (ArgumentException ex) { return new ResponseDownload { Ok = false, Message = ex.Message, Errors = new[] { ex.Message } }; }
+            try { rhTarget = TiaMcp.Adapters.Contracts.EngineeringCredentialRules.ValidateRhTarget(rhTarget); }
+            catch (ArgumentException ex) { return new OnlineDownloadResult { Ok = false, Message = ex.Message, Errors = new[] { ex.Message } }; }
 
             if (_session.IsProjectNull())
-                return new ResponseDownload { Ok = false, Message = "No project open.", Meta = new JsonObject { ["v4Rejection"] = "PROJECT_NOT_BOUND" } };
+                return new OnlineDownloadResult { Ok = false, Message = "No project open.", Meta = new HmiObject { ["v4Rejection"] = "PROJECT_NOT_BOUND" } };
 
             DownloadPromptPolicy promptPolicy;
             try
@@ -505,12 +503,12 @@ namespace TiaMcpServer.Siemens.Services
             }
             catch (ArgumentException ex)
             {
-                return new ResponseDownload { Ok = false, Message = "Invalid download prompt parameters: " + ex.Message, Errors = new[] { ex.Message } };
+                return new OnlineDownloadResult { Ok = false, Message = "Invalid download prompt parameters: " + ex.Message, Errors = new[] { ex.Message } };
             }
 
-            var plcSoftware = _session.ResolvePlc(softwarePath, PlcAccess.Write);
+            var plcSoftware = _session.ResolvePlc(softwarePath, true);
             if (plcSoftware == null)
-                return new ResponseDownload { Ok = false, Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix() };
+                return new OnlineDownloadResult { Ok = false, Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix() };
 
             // Declared outside the try so the catch can report which PG/PC route was used.
             DownloadRouteSelection? routeDiagnostics = null;
@@ -519,7 +517,7 @@ namespace TiaMcpServer.Siemens.Services
             {
                 var downloadProvider = _session.ResolvePlcService<DownloadProvider>(softwarePath, plcSoftware);
                 if (downloadProvider == null)
-                    return new ResponseDownload
+                    return new OnlineDownloadResult
                     {
                         Ok = false,
                         Message = "DownloadProvider service not available for this PLC. Ensure hardware configuration has network settings."
@@ -527,7 +525,7 @@ namespace TiaMcpServer.Siemens.Services
 
                 object? configuration = downloadProvider.Configuration;
                 if (configuration == null)
-                    return new ResponseDownload
+                    return new OnlineDownloadResult
                     {
                         Ok = false,
                         Message = "No connection configuration found. Configure the PLC's PROFINET/IP address in hardware configuration first."
@@ -544,7 +542,7 @@ namespace TiaMcpServer.Siemens.Services
                 // fall back to the raw configuration if no route is selectable.
                 routeDiagnostics = SelectDownloadRoute(configuration, pgPcInterface, targetIpAddress);
                 if (routeDiagnostics.Error != null)
-                    return new ResponseDownload
+                    return new OnlineDownloadResult
                     {
                         Ok = false,
                         Message = routeDiagnostics.Error,
@@ -552,8 +550,9 @@ namespace TiaMcpServer.Siemens.Services
                     };
 
                 object? downloadConfig = routeDiagnostics.Configuration ?? configuration;
-                _session.Logger?.LogInformation("DownloadPlc: PG/PC route = {Route}", routeDiagnostics.Description);
+                _session.Log.Information("DownloadPlc: PG/PC route = {Route}", routeDiagnostics.Description);
 
+#if ONLINE_TARGET_ADDRESSES
                 if (routeDiagnostics.Address != null && routeDiagnostics.AddressSource == "created" && rhTarget.Length == 0
                     && routeDiagnostics.Target is IConfiguration targetConfiguration)
                 {
@@ -562,7 +561,9 @@ namespace TiaMcpServer.Siemens.Services
                     DownloadResult createdResult = downloadProvider.Download(targetConfiguration, routeDiagnostics.Address, preDelegate, postDelegate, DownloadOptions.Software);
                     return BuildDownloadResponse(createdResult, softwarePath, routeDiagnostics, promptPolicy, legitimation);
                 }
+#endif
 
+#if ONLINE_RH
                 if (rhTarget.Length > 0)
                 {
                     // R/H systems download to one CPU at a time through RHDownloadProvider (typed overloads; no reflection).
@@ -576,6 +577,7 @@ namespace TiaMcpServer.Siemens.Services
                     rhResponse.Message = "[R/H " + rhTarget + "] " + rhResponse.Message;
                     return rhResponse;
                 }
+#endif
 
                 // Resolve the 4-arg overload Download(IConfiguration, pre, post, DownloadOptions)
                 // and invoke via reflection (the parameter is typed IConfiguration).
@@ -590,7 +592,7 @@ namespace TiaMcpServer.Siemens.Services
                     });
 
                 if (downloadMethod == null)
-                    return new ResponseDownload
+                    return new OnlineDownloadResult
                     {
                         Ok = false,
                         Message = "Download(IConfiguration,…) method not found on DownloadProvider. TIA Portal version mismatch?"
@@ -601,7 +603,7 @@ namespace TiaMcpServer.Siemens.Services
                     new object[] { downloadConfig!, preDelegate, postDelegate, DownloadOptions.Software });
 
                 if (rawResult is not DownloadResult result)
-                    return new ResponseDownload { Ok = false, Message = "Download returned an unexpected result type." };
+                    return new OnlineDownloadResult { Ok = false, Message = "Download returned an unexpected result type." };
 
                 return BuildDownloadResponse(result, softwarePath, routeDiagnostics, promptPolicy, legitimation);
             }
@@ -612,7 +614,7 @@ namespace TiaMcpServer.Siemens.Services
                 // actual reason (connection/route error, not-reachable CPU, etc.).
                 var real = ex is System.Reflection.TargetInvocationException tie && tie.InnerException != null
                     ? tie.InnerException : ex;
-                _session.Logger?.LogError(real, "DownloadPlc failed for {SoftwarePath}", softwarePath);
+                _session.Log.Error(real, "DownloadPlc failed for {SoftwarePath}", softwarePath);
 
                 // A connection failure is usually the wrong PG/PC adapter on a multi-NIC PC, so
                 // always show which route was used and what else was available (issue #14).
@@ -625,9 +627,9 @@ namespace TiaMcpServer.Siemens.Services
                           : string.Empty);
 
                 var failureMeta = promptPolicy.Summary();
-                foreach (var kv in legitimation) failureMeta[kv.Key] = kv.Value?.DeepClone();
+                foreach (var kv in legitimation) failureMeta[kv.Key] = kv.Value == null ? null : HmiValues.DeepClone(kv.Value);
                 failureMeta["success"] = false;
-                return new ResponseDownload
+                return new OnlineDownloadResult
                 {
                     Ok = false,
                     Message = $"Download failed: {real.Message}{routeHint}{promptPolicy.UnansweredSummary()}",
@@ -636,8 +638,10 @@ namespace TiaMcpServer.Siemens.Services
                 };
             }
         }
+#endif
 
-        private static DownloadPromptPolicy BuildDownloadPromptPolicy(bool consistentBlocksOnly, bool keepActualValues, bool startAfterDownload,
+#if ONLINE_DOWNLOAD
+        private DownloadPromptPolicy BuildDownloadPromptPolicy(bool consistentBlocksOnly, bool keepActualValues, bool startAfterDownload,
             bool stopBeforeDownload, string userManagementMode, string promptAnswersJson, string? moduleAccessPassword, string? blockBindingPassword, string? masterSecretPassword)
         {
             if (!DownloadPromptPolicy.UserManagementModes.Contains(userManagementMode))
@@ -648,12 +652,14 @@ namespace TiaMcpServer.Siemens.Services
                 StopBeforeDownload = stopBeforeDownload, UserManagementMode = userManagementMode,
                 ModuleAccessPassword = moduleAccessPassword, BlockBindingPassword = blockBindingPassword, MasterSecretPassword = masterSecretPassword
             };
-            foreach (var kv in DownloadPromptPolicy.ParseExplicitAnswers(promptAnswersJson)) policy.Explicit[kv.Key] = kv.Value;
+            foreach (var kv in _session.PromptAnswers(promptAnswersJson)) policy.Explicit[kv.Key] = kv.Value;
             return policy;
         }
+#endif
 
         // 每个提示对象按其真实形态应答：枚举型 CurrentSelection、布尔型 Checked 或 SetPassword(SecureString)。
         // 决策来自 DownloadPromptPolicy；无法应答的提示连同 TIA 的提示文本一起记录，永远不记录密码。
+#if ONLINE_DOWNLOAD
         private void ApplyDownloadPrompt(object config, DownloadPromptPolicy policy)
         {
             var type = config.GetType();
@@ -661,7 +667,7 @@ namespace TiaMcpServer.Siemens.Services
             string? message = null;
             // the official base classes carry the prompt text; the 43 concrete V21 prompt classes derive from them.
             try { message = config switch { DownloadConfiguration download => download.Message, UploadConfiguration upload => upload.Message, _ => type.GetProperty("Message")?.GetValue(config) as string }; } catch /* swallow(probe-optional): prompt text is diagnostic; a missing message must not prevent answering the prompt */ { }
-            _session.Logger?.LogDebug("ApplyDownloadPrompt: {TypeName}", typeName);
+            _session.Log.Debug("ApplyDownloadPrompt: {TypeName}", typeName);
             try
             {
                 var selection = type.GetProperty("CurrentSelection");
@@ -675,47 +681,62 @@ namespace TiaMcpServer.Siemens.Services
                 switch (answer.Kind)
                 {
                     case DownloadPromptPolicy.AnswerKind.Selection:
+                        #if ONLINE_SELECTIVE_DELETE
                         if (config is SelectiveDeleteDownload selectiveDelete) selectiveDelete.CurrentSelection = (SelectiveDeleteDataSelections)Enum.Parse(typeof(SelectiveDeleteDataSelections), answer.Value!, ignoreCase: true);
-                        else selection!.SetValue(config, Enum.Parse(selection.PropertyType, answer.Value!, ignoreCase: true));
+                        else
+#endif
+                        selection!.SetValue(config, Enum.Parse(selection.PropertyType, answer.Value!, ignoreCase: true));
                         break;
                     case DownloadPromptPolicy.AnswerKind.Checked:
                         // the Startdrive prompts are typed (V21 Siemens.Engineering.Startdrive.dll): the two upload checks derive from
                         // UploadConfiguration (not UploadCheckConfiguration; V21 only), the three download checks from DownloadCheckConfiguration.
-#if !TIA_V20
+#if ONLINE_PARAMETERS
                         if (config is OverrideTelegramMismatch telegramMismatch) telegramMismatch.Checked = answer.Value == "true";
                         else if (config is OverwriteOfflineConfiguration overwriteOffline) overwriteOffline.Checked = answer.Value == "true";
                         else
 #endif
                         if (config is StartDriveDownloadCheckConfiguration startdriveCheck) startdriveCheck.Checked = answer.Value == "true";
+#if ONLINE_DOWNLOAD_SENSITIVE
                         else if (config is AcceptDownloadOfUnencryptedSensitiveData unencrypted) unencrypted.Checked = answer.Value == "true";
                         else if (config is ReplaceDownloadedData replaceDownloaded) replaceDownloaded.Checked = answer.Value == "true";
+
+#endif
                         else if (config is DownloadCheckConfiguration check) check.Checked = answer.Value == "true";
                         else checkedProp!.SetValue(config, answer.Value == "true");
                         break;
                     case DownloadPromptPolicy.AnswerKind.Password:
+                    {
                         var secret = typeName switch
                         {
                             "BlockBindingPassword" => policy.BlockBindingPassword,
                             "PlcMasterSecretPassword" => policy.MasterSecretPassword,
                             _ => policy.ModuleAccessPassword
                         };
-                        var secure = new SecureString();
-                        foreach (var c in secret!) secure.AppendChar(c);
-                        secure.MakeReadOnly();
-                        if (config is DownloadPasswordConfiguration downloadPassword) { answer.Note = "secureCommunication=" + downloadPassword.IsSecureCommunication; downloadPassword.SetPassword(secure); }
-                        else if (config is UploadPasswordConfiguration uploadPassword) { answer.Note = "secureCommunication=" + uploadPassword.IsSecureCommunication; uploadPassword.SetPassword(secure); }
+                        using var secure = TiaMcp.Adapters.Contracts.EngineeringCredentialRules.ToSecureString(secret!);
+                        if (config is DownloadPasswordConfiguration downloadPassword) { 
+#if ONLINE_TLS
+                            answer.Note = "secureCommunication=" + downloadPassword.IsSecureCommunication;
+#endif
+                             downloadPassword.SetPassword(secure); }
+                        else if (config is UploadPasswordConfiguration uploadPassword) { 
+#if ONLINE_TLS
+                            answer.Note = "secureCommunication=" + uploadPassword.IsSecureCommunication;
+#endif
+                             uploadPassword.SetPassword(secure); }
                         else type.GetMethod("SetPassword", new[] { typeof(SecureString) })!.Invoke(config, new object[] { secure });
                         break;
+                    }
                 }
                 policy.Record(typeName, message, answer);
             }
             catch (Exception ex)
             {
                 var real = ex is TargetInvocationException tie && tie.InnerException != null ? tie.InnerException : ex;
-                _session.Logger?.LogWarning(real, "Download prompt {TypeName} could not be answered", typeName);
+                _session.Log.Warning(real, "Download prompt {TypeName} could not be answered", typeName);
                 policy.Record(typeName, message, new DownloadPromptPolicy.Answer { Kind = DownloadPromptPolicy.AnswerKind.Unanswered, Source = "unanswered", Note = "answer failed: " + real.Message });
             }
         }
+#endif
 
         // ---- PG/PC route selection (issue #14) --------------------------------------------------
         // V21: ConnectionConfiguration.ApplyConfiguration(ConfigurationTargetInterface) returns a
@@ -773,13 +794,21 @@ namespace TiaMcpServer.Siemens.Services
             if (pcInterface is not ConfigurationPcInterface typed) return null;
             try
             {
-                foreach (ConfigurationSubnet subnet in EngineeringGroupOperations.Items(typed.Subnets).Cast<ConfigurationSubnet>())
+                foreach (ConfigurationSubnet subnet in PlcGroupOperations.Items(typed.Subnets).Cast<ConfigurationSubnet>())
                 {
-                    foreach (ConfigurationAddress address in EngineeringGroupOperations.Items(subnet.Addresses).Cast<ConfigurationAddress>())
+                    foreach (ConfigurationAddress address in PlcGroupOperations.Items(subnet.Addresses).Cast<ConfigurationAddress>())
+#if ONLINE_ADDRESSES
                         if (string.Equals(address.Address, ipAddress, StringComparison.OrdinalIgnoreCase)) { source = "subnet " + subnet.Name; return address; }
-                    foreach (ConfigurationGateway gateway in EngineeringGroupOperations.Items(subnet.Gateways).Cast<ConfigurationGateway>())
-                        foreach (ConfigurationAddress address in EngineeringGroupOperations.Items(gateway.Addresses).Cast<ConfigurationAddress>())
+#else
+                        if (string.Equals(OnlineRoutePrimitives.Address(address), ipAddress, StringComparison.OrdinalIgnoreCase)) { source = "subnet " + subnet.Name; return address; }
+#endif
+                    foreach (ConfigurationGateway gateway in PlcGroupOperations.Items(subnet.Gateways).Cast<ConfigurationGateway>())
+                        foreach (ConfigurationAddress address in PlcGroupOperations.Items(gateway.Addresses).Cast<ConfigurationAddress>())
+#if ONLINE_ADDRESSES
                             if (string.Equals(address.Address, ipAddress, StringComparison.OrdinalIgnoreCase)) { source = "gateway " + gateway.Name + " of subnet " + subnet.Name; return address; }
+#else
+                            if (string.Equals(OnlineRoutePrimitives.Address(address), ipAddress, StringComparison.OrdinalIgnoreCase)) { source = "gateway " + gateway.Name + " of subnet " + subnet.Name; return address; }
+#endif
                 }
             }
             catch /* swallow(native-fallback): an unavailable subnet or gateway address leaves target-interface address creation available */ { }
@@ -790,6 +819,7 @@ namespace TiaMcpServer.Siemens.Services
         // composition refuses (the exception text is handed back for the error message).
         private static ConfigurationAddress? TryCreateTargetAddress(object? target, string ipAddress, out string error)
         {
+#if ONLINE_TARGET_ADDRESSES
             error = "";
             if (target is not ConfigurationTargetInterface typed) { error = "target interface is not a ConfigurationTargetInterface"; return null; }
             try
@@ -799,6 +829,11 @@ namespace TiaMcpServer.Siemens.Services
                 return typed.Addresses.Create(ipAddress);
             }
             catch (Exception ex) { error = ex.Message; return null; }
+        
+#else
+            error = "Target-interface address creation requires V17 or later.";
+            return null;
+#endif
         }
 
         private List<DownloadRoute> EnumerateDownloadRoutes(object? connectionConfiguration)
@@ -928,7 +963,11 @@ namespace TiaMcpServer.Siemens.Services
                         pool = byIp;
                         foreach (var route in pool)
                             foreach (var candidate in _session.EnumerateReflectedProperty(route.Target, "Addresses"))
+#if ONLINE_ADDRESSES
                                 if (selection.Address == null && candidate is ConfigurationAddress typed && string.Equals(typed.Address, targetIpAddress, StringComparison.OrdinalIgnoreCase))
+#else
+                                if (selection.Address == null && candidate is ConfigurationAddress typed && string.Equals(OnlineRoutePrimitives.Address(typed), targetIpAddress, StringComparison.OrdinalIgnoreCase))
+#endif
                                 { selection.Address = typed; selection.AddressSource = "targetInterface"; selection.Target = route.Target; }
                     }
                     else
@@ -983,7 +1022,11 @@ namespace TiaMcpServer.Siemens.Services
                     try { applied = typedConfiguration.ApplyConfiguration(selection.Address); } catch /* swallow(native-fallback): the selected address is still passed to the native operation when applying it is not confirmed */ { }
                     selection.Configuration = selection.Address;
                     var route = pool.OrderByDescending(r => r.Score).First();
+#if ONLINE_ADDRESSES
                     selection.Description = route.Describe() + " -> address " + selection.Address.Address + " (" + selection.AddressSource + (applied ? "" : "; not confirmed by ApplyConfiguration") + ")";
+#else
+                    selection.Description = route.Describe() + " -> address " + OnlineRoutePrimitives.Address(selection.Address) + " (" + selection.AddressSource + (applied ? "" : "; not confirmed by ApplyConfiguration") + ")";
+#endif
                     return selection;
                 }
 
@@ -1021,16 +1064,17 @@ namespace TiaMcpServer.Siemens.Services
             return selection;
         }
 
-        public ResponseCheckDownload CheckDownloadReadiness(string softwarePath)
+#if ONLINE_DOWNLOAD
+        public OnlineReadinessResult CheckDownloadReadiness(string softwarePath)
         {
             var issues = new List<string>();
 
             if (_session.IsProjectNull())
-                return new ResponseCheckDownload { Ready = false, Issues = new[] { "No project open." }, Meta = new JsonObject { ["v4Rejection"] = "PROJECT_NOT_BOUND" } };
+                return new OnlineReadinessResult { Ready = false, Issues = new[] { "No project open." }, Meta = new HmiObject { ["v4Rejection"] = "PROJECT_NOT_BOUND" } };
 
             var plcSoftware = _session.GetPlcSoftware(softwarePath);
             if (plcSoftware == null)
-                return new ResponseCheckDownload { Ready = false, Issues = new[] { $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix() } };
+                return new OnlineReadinessResult { Ready = false, Issues = new[] { $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix() } };
 
             bool hasProvider = false;
             bool hasConfig = false;
@@ -1062,16 +1106,16 @@ namespace TiaMcpServer.Siemens.Services
             try
             {
                 var consistency = _session.ReadPlcConsistency(softwarePath);
-                isConsistent = EngineeringAuditLogic.Consistency(consistency.Select(x => x.Consistent), true);
+                isConsistent = consistency.Any(x => x.Consistent == false) ? false : consistency.Count > 0 && consistency.All(x => x.Consistent == true) ? true : (bool?)null;
                 if (isConsistent == false) issues.Add("One or more root/unit blocks or types are inconsistent; compilation must be reviewed.");
                 if (isConsistent == null) issues.Add("Compile consistency is unknown (no complete block/type evidence).");
             }
             catch (Exception ex) when (_session.RecoverableAuditError(ex)) { issues.Add("Consistency read failed: " + ex.GetBaseException().Message); }
 
             ScoreDownloadRoutes(routes, null);
-            var routesJson = new JsonArray();
+            var routesJson = new HmiArray();
             foreach (var route in routes.OrderByDescending(r => r.Score))
-                routesJson.Add(new JsonObject
+                routesJson.Add(new HmiObject
                 {
                     ["mode"] = route.ModeName,
                     ["pgPcInterface"] = route.PcInterfaceName,
@@ -1082,8 +1126,8 @@ namespace TiaMcpServer.Siemens.Services
                     ["preferred"] = route.Score > 0
                 });
 
-            bool? ready = EngineeringAuditLogic.DownloadReady(hasProvider, hasConfig, isConsistent, issues.Count != 0);
-            return new ResponseCheckDownload
+            bool? ready = !hasProvider || !hasConfig || isConsistent == false || issues.Count != 0 ? false : (bool?)null;
+            return new OnlineReadinessResult
             {
                 Ready = ready,
                 HasDownloadProvider = hasProvider,
@@ -1092,12 +1136,12 @@ namespace TiaMcpServer.Siemens.Services
                 Message = ready == false ? $"PLC '{softwarePath}' has {issues.Count} readiness issue(s)."
                     : "Offline configuration checks passed; actual download readiness remains unknown.",
                 Issues = issues.Count > 0 ? issues.ToArray() : null,
-                Meta = new JsonObject
+                Meta = new HmiObject
                 {
                     ["success"] = true,   // the check itself ran; Ready carries the verdict
                     ["configurationReady"] = hasProvider && hasConfig,
                     ["consistencyScope"] = "root, software units and safety units: blocks and types",
-                    ["unchecked"] = new JsonArray("deviceReachability", "accessAuthorization", "hardwareConsistency", "downloadPrompts"),
+                    ["unchecked"] = new HmiArray("deviceReachability", "accessAuthorization", "hardwareConsistency", "downloadPrompts"),
                     ["downloadRouteCount"] = routes.Count,
                     // Ordered best-first — the same ranking DownloadToPlc applies. preferred=true
                     // means the PG/PC adapter shares an IPv4 /24 with the CPU it has to reach.
@@ -1106,13 +1150,15 @@ namespace TiaMcpServer.Siemens.Services
                 }
             };
         }
+#endif
 
-        private ResponseDownload BuildDownloadResponse(
+#if ONLINE_DOWNLOAD
+        private OnlineDownloadResult BuildDownloadResponse(
             DownloadResult result,
             string softwarePath,
             DownloadRouteSelection? route,
             DownloadPromptPolicy? prompts = null,
-            JsonObject? legitimation = null)
+            HmiObject? legitimation = null)
         {
             var errors = new List<string>();
             var warnings = new List<string>();
@@ -1122,7 +1168,7 @@ namespace TiaMcpServer.Siemens.Services
                    || result.State == DownloadResultState.Information
                    || result.State == DownloadResultState.Warning;
 
-            var meta = new JsonObject
+            var meta = new HmiObject
             {
                 ["softwarePath"] = softwarePath,
                 ["timestamp"] = DateTime.Now,
@@ -1135,13 +1181,13 @@ namespace TiaMcpServer.Siemens.Services
                 ["targetAddressSource"] = route?.AddressSource ?? string.Empty
             };
             if (prompts != null)
-                foreach (var kv in prompts.Summary()) meta[kv.Key] = kv.Value?.DeepClone();
+                foreach (var kv in prompts.Summary()) meta[kv.Key] = kv.Value == null ? null : HmiValues.DeepClone(kv.Value);
             if (legitimation != null)
-                foreach (var kv in legitimation) meta[kv.Key] = kv.Value?.DeepClone();
+                foreach (var kv in legitimation) meta[kv.Key] = kv.Value == null ? null : HmiValues.DeepClone(kv.Value);
             meta["success"] = ok;
-            NativeResultState.Record(meta, result.State, true, messages: new JsonArray(errors.Concat(warnings).Select(m => (JsonNode)JsonValue.Create(m)!).ToArray()));
+            PlcB5Result.Record(meta, result.State, true, messages: new HmiArray(errors.Concat(warnings).Select(m => (object)HmiScalar.Json(m)!).ToArray()));
 
-            return new ResponseDownload
+            return new OnlineDownloadResult
             {
                 Ok = ok,
                 Message = $"Download {result.State}: {result.ErrorCount} error(s), {result.WarningCount} warning(s)." + (prompts?.UnansweredSummary() ?? string.Empty),
@@ -1153,7 +1199,9 @@ namespace TiaMcpServer.Siemens.Services
                 Meta = meta
             };
         }
+#endif
 
+#if ONLINE_DOWNLOAD
         private static void CollectDownloadMessages(
             IEnumerable? messages,
             List<string> errors,
@@ -1199,6 +1247,7 @@ namespace TiaMcpServer.Siemens.Services
                 catch /* swallow(enumerate-optional): one unreadable result message must not discard the other download or upload diagnostics */ { }
             }
         }
+#endif
 
         #endregion
 
@@ -1228,8 +1277,8 @@ namespace TiaMcpServer.Siemens.Services
             return list;
         }
 
-        private static JsonArray DescribePcInterfaces(IEnumerable<PcInterfacePick> picks)
-            => new JsonArray(picks.Select(p => (JsonNode)new JsonObject { ["mode"] = p.ModeName, ["name"] = p.Name, ["number"] = p.Number, ["addresses"] = string.Join(", ", p.Addresses) }).ToArray());
+        private static HmiArray DescribePcInterfaces(IEnumerable<PcInterfacePick> picks)
+            => new HmiArray(picks.Select(p => (object)new HmiObject { ["mode"] = p.ModeName, ["name"] = p.Name, ["number"] = p.Number, ["addresses"] = string.Join(", ", p.Addresses) }).ToArray());
 
         // 精确按名称或编号选择 PG/PC 接口；只有一个时允许省略。绝不做子串猜测。
         private static PcInterfacePick PickPcInterface(List<PcInterfacePick> picks, string pgPcInterface)
@@ -1280,6 +1329,7 @@ namespace TiaMcpServer.Siemens.Services
         // StationUploadProvider), on the first subnet - through the official ConfigurationAddressComposition.Create.
         private static ConfigurationAddress? CreateScannedAddress(PcInterfacePick pick, string targetAddress, out string note)
         {
+#if ONLINE_SCAN
             note = "";
             if (pick.Interface is not ConfigurationPcInterface typed) { note = "PC interface is not typed"; return null; }
             var errors = new List<string>();
@@ -1290,12 +1340,12 @@ namespace TiaMcpServer.Siemens.Services
                 { note = "address not reported by the network scan on this PG/PC interface"; return null; }
             }
             catch (Exception ex) { note = "network scan failed: " + ex.Message; return null; }
-            foreach (ConfigurationTargetInterface target in EngineeringGroupOperations.Items(typed.TargetInterfaces).Cast<ConfigurationTargetInterface>())
+            foreach (ConfigurationTargetInterface target in PlcGroupOperations.Items(typed.TargetInterfaces).Cast<ConfigurationTargetInterface>())
             {
                 try { var created = target.Addresses.Find(targetAddress) ?? target.Addresses.Create(targetAddress); note = "created on target interface " + target.Name; return created; }
                 catch (Exception ex) { errors.Add(target.Name + ": " + ex.Message); }
             }
-            foreach (ConfigurationSubnet subnet in EngineeringGroupOperations.Items(typed.Subnets).Cast<ConfigurationSubnet>())
+            foreach (ConfigurationSubnet subnet in PlcGroupOperations.Items(typed.Subnets).Cast<ConfigurationSubnet>())
             {
                 try { var created = subnet.Addresses.Find(targetAddress) ?? subnet.Addresses.Create(targetAddress); note = "created on subnet " + subnet.Name; return created; }
                 catch (Exception ex) { errors.Add("subnet " + subnet.Name + ": " + ex.Message); }
@@ -1306,9 +1356,15 @@ namespace TiaMcpServer.Siemens.Services
             catch (Exception ex) { errors.Add("PC interface " + typed.Name + ": " + ex.Message); }
             note = errors.Count == 0 ? "no target interface, subnet or PC interface composition to create the address on" : string.Join("; ", errors);
             return null;
+        
+#else
+            note = "Accessible-device scanning requires V19 or later; use an existing configured route.";
+            return null;
+#endif
         }
 
-        private ConnectionConfiguration ResolveScanConfiguration(string softwarePath, JsonObject meta)
+#if ONLINE_DOWNLOAD
+        private ConnectionConfiguration ResolveScanConfiguration(string softwarePath, HmiObject meta)
         {
             if (!string.IsNullOrWhiteSpace(softwarePath))
             {
@@ -1321,26 +1377,30 @@ namespace TiaMcpServer.Siemens.Services
             meta["configurationSource"] = "StationUploadProvider";
             return upload.Configuration ?? throw new PortalException(PortalErrorCode.InvalidState, "StationUploadProvider has no connection configuration.");
         }
+#endif
 
-        public ResponseMessage ScanAccessibleDevices(string pgPcInterface = "", string softwarePath = "", int offset = 0, int limit = 100)
+#if ONLINE_SCAN
+        public HmiMessage ScanAccessibleDevices(string pgPcInterface = "", string softwarePath = "", int offset = 0, int limit = 100)
             => _session.RunHmiStepTool("ScanAccessibleDevices", meta => {
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset >= 0 and 1 <= limit <= 500 required.");
                 var configuration = ResolveScanConfiguration(softwarePath, meta);
                 var picks = EnumeratePcInterfaces(configuration);
                 meta["pgPcInterfaces"] = DescribePcInterfaces(picks);
                 var pick = PickPcInterface(picks, pgPcInterface);
-                meta["pgPcInterface"] = new JsonObject { ["mode"] = pick.ModeName, ["name"] = pick.Name, ["number"] = pick.Number };
+                meta["pgPcInterface"] = new HmiObject { ["mode"] = pick.ModeName, ["name"] = pick.Name, ["number"] = pick.Number };
                 if (pick.Interface is not ConfigurationPcInterface typed) throw new NotSupportedException("Selected PG/PC interface is not a ConfigurationPcInterface.");
                 var devices = typed.GetAccessibleDevices() ?? new List<ConfigurationAccessibleDevice>();
                 meta["apiCallSuccess"] = true;
-                var rows = devices.Select(d => (JsonNode)new JsonObject { ["name"] = d.Name, ["address"] = d.Address, ["macAddress"] = d.MACAddress, ["deviceSeries"] = d.DeviceSeries }).ToList();
+                var rows = devices.Select(d => (object)new HmiObject { ["name"] = d.Name, ["address"] = d.Address, ["macAddress"] = d.MACAddress, ["deviceSeries"] = d.DeviceSeries }).ToList();
                 meta["total"] = rows.Count; meta["offset"] = offset; meta["limit"] = limit;
-                meta["devices"] = new JsonArray(rows.Skip(offset).Take(limit).ToArray());
+                meta["devices"] = new HmiArray(rows.Skip(offset).Take(limit).ToArray());
                 meta["dataComplete"] = offset + limit >= rows.Count;
                 return rows.Count == 0 ? "Network scan returned no accessible devices on the selected PG/PC interface." : $"{rows.Count} accessible device(s) found by a live network scan; no project change.";
             });
+#endif
 
-        public ResponseMessage UploadStationFromPlc(string targetIpAddress, string pgPcInterface = "", string password = "", string promptAnswersJson = "{}", bool confirmUpload = false, bool dryRun = true)
+#if ONLINE_DOWNLOAD
+        public HmiMessage UploadStationFromPlc(string targetIpAddress, string pgPcInterface = "", string password = "", string promptAnswersJson = "{}", bool confirmUpload = false, bool dryRun = true)
             => _session.RunHmiStepTool("UploadStationFromPlc", meta => {
                 if (string.IsNullOrWhiteSpace(targetIpAddress)) throw new ArgumentException("targetIpAddress is required (exact address as listed by ScanAccessibleDevices).");
                 var policy = BuildDownloadPromptPolicy(true, true, false, false, "keep", promptAnswersJson, string.IsNullOrEmpty(password) ? null : password, null, null);
@@ -1349,7 +1409,7 @@ namespace TiaMcpServer.Siemens.Services
                 var pick = PickPcInterface(picks, pgPcInterface);
                 var seen = new List<string>();
                 var address = FindTargetAddress(pick, targetIpAddress, seen);
-                meta["pgPcInterface"] = new JsonObject { ["mode"] = pick.ModeName, ["name"] = pick.Name, ["number"] = pick.Number };
+                meta["pgPcInterface"] = new HmiObject { ["mode"] = pick.ModeName, ["name"] = pick.Name, ["number"] = pick.Number };
                 meta["knownTargetAddresses"] = string.Join(", ", seen.Distinct());
                 string addressSource = "route tree";
                 if (address == null) { address = CreateScannedAddress(pick, targetIpAddress, out addressSource); meta["addressCreation"] = addressSource; }
@@ -1362,7 +1422,11 @@ namespace TiaMcpServer.Siemens.Services
                             ? "'" + targetIpAddress + "' is a MAC address: ConfigurationAddressComposition.Create accepts IP addresses only, so pass the device's IP as listed by ScanAccessibleDevices (a PLC that shows only a MAC, e.g. a PLCSIM Advanced instance before its first download, has no IP yet - assign one by downloading first)."
                             : "Run ScanAccessibleDevices on the same interface first; only the exact IP address listed there is accepted."));
                 meta["targetAddressSource"] = addressSource;
+#if ONLINE_ADDRESSES
                 meta["targetAddress"] = address.Address; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["passwordProvided"] = !string.IsNullOrEmpty(password);
+#else
+                meta["targetAddress"] = OnlineRoutePrimitives.Address(address); meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["passwordProvided"] = !string.IsNullOrEmpty(password);
+#endif
                 meta["devicesBefore"] = _session.CurrentProject.Devices.Count;
                 if (dryRun) return "Station upload preview: provider, PG/PC interface and target address resolved (" + addressSource + "); " + (addressSource == "route tree" ? "no PLC contact" : "only a DCP network scan was sent") + ", no project change.";
                 if (!confirmUpload) throw new InvalidOperationException("Station upload adds a new device to the project from the live PLC; set confirmUpload=true to execute.");
@@ -1372,24 +1436,26 @@ namespace TiaMcpServer.Siemens.Services
                 UploadConfigurationDelegate handler = config => ApplyDownloadPrompt(config, policy);
                 var result = provider.StationUpload(address, handler);
                 meta["apiCallSuccess"] = true;
-                foreach (var kv in policy.Summary()) meta[kv.Key] = kv.Value?.DeepClone();
+                foreach (var kv in policy.Summary()) meta[kv.Key] = kv.Value == null ? null : HmiValues.DeepClone(kv.Value);
                 var errors = new List<string>(); var warnings = new List<string>();
                 CollectDownloadMessages(result?.Messages, errors, warnings);
                 meta["uploadState"] = result?.State.ToString(); meta["errorCount"] = result?.ErrorCount; meta["warningCount"] = result?.WarningCount;
-                meta["errors"] = new JsonArray(errors.Select(e => (JsonNode)e).ToArray()); meta["warnings"] = new JsonArray(warnings.Select(w => (JsonNode)w).ToArray());
+                meta["errors"] = new HmiArray(errors.Select(e => (object)e).ToArray()); meta["warnings"] = new HmiArray(warnings.Select(w => (object)w).ToArray());
                 var station = result?.UploadedStation;
-                NativeResultState.Record(meta, result?.State, true, messages: new JsonArray(errors.Concat(warnings).Select(m => (JsonNode)JsonValue.Create(m)!).ToArray()));
+                PlcB5Result.Record(meta, result?.State, true, messages: new HmiArray(errors.Concat(warnings).Select(m => (object)HmiScalar.Json(m)!).ToArray()));
                 meta["uploadedStation"] = station?.Name; meta["devicesAfter"] = _session.CurrentProject.Devices.Count;
                 bool ok = result != null && TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State) && station != null && _session.CurrentProject.Devices.Any(d => d.Name == station.Name);
                 meta["operationSuccess"] = ok; meta["dataComplete"] = false;
                 if (!ok) throw new InvalidOperationException("Station upload did not yield a verified device: " + (result?.State.ToString() ?? "no result") + policy.UnansweredSummary());
                 return $"Station uploaded as device '{station!.Name}' and verified in the project; not saved, compiled or downloaded." + policy.UnansweredSummary();
             });
+#endif
 
         private static bool LooksLikeMacAddress(string value)
             => System.Text.RegularExpressions.Regex.IsMatch((value ?? "").Trim(), "^([0-9A-Fa-f]{2}[-:]){5}[0-9A-Fa-f]{2}$");
 
-        public ResponseMessage UploadDeviceParameters(string devicePathJson, string itemPathJson, string targetIpAddress, string pgPcInterface = "", string password = "", string promptAnswersJson = "{}", bool confirmUpload = false, bool dryRun = true)
+#if ONLINE_PARAMETERS
+        public HmiMessage UploadDeviceParameters(string devicePathJson, string itemPathJson, string targetIpAddress, string pgPcInterface = "", string password = "", string promptAnswersJson = "{}", bool confirmUpload = false, bool dryRun = true)
             => _session.RunHmiStepTool("UploadDeviceParameters", meta => {
                 if (string.IsNullOrWhiteSpace(targetIpAddress)) throw new ArgumentException("targetIpAddress is required.");
                 var policy = BuildDownloadPromptPolicy(true, true, false, false, "keep", promptAnswersJson, string.IsNullOrEmpty(password) ? null : password, null, null);
@@ -1410,8 +1476,12 @@ namespace TiaMcpServer.Siemens.Services
                 foreach (var candidate in _session.EnumerateReflectedProperty(route.Target ?? route.Configuration, "Addresses"))
                     if (address == null && string.Equals(_session.ReadReflectedString(candidate, "Address"), targetIpAddress, StringComparison.OrdinalIgnoreCase) && candidate is ConfigurationAddress typed) address = typed;
                 if (address == null) throw new PortalException(PortalErrorCode.NotFound, "Exact target address not found on the selected route: " + route.Description);
+#if ONLINE_ADDRESSES
                 meta["route"] = route.Description; meta["targetAddress"] = address.Address; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["passwordProvided"] = !string.IsNullOrEmpty(password);
-                meta["before"] = EngineeringScalarProperties.Read(owner);
+#else
+                meta["route"] = route.Description; meta["targetAddress"] = OnlineRoutePrimitives.Address(address); meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["passwordProvided"] = !string.IsNullOrEmpty(password);
+#endif
+                meta["before"] = HmiScalar.Read(owner);
                 if (dryRun) return "Parameter upload preview: provider, route and address resolved; no PLC contact, no project change.";
                 if (!confirmUpload) throw new InvalidOperationException("Parameter upload overwrites offline hardware parameters from the live device; set confirmUpload=true to execute.");
                 using var access = _session.AcquireHmiEditAccess();
@@ -1422,12 +1492,14 @@ namespace TiaMcpServer.Siemens.Services
                 try { uploadMethod.Invoke(provider, new object[] { configuration, address, handler }); }
                 catch (System.Reflection.TargetInvocationException tie) when (tie.InnerException != null) { throw tie.InnerException; }
                 meta["apiCallSuccess"] = true;
-                foreach (var kv in policy.Summary()) meta[kv.Key] = kv.Value?.DeepClone();
-                meta["after"] = EngineeringScalarProperties.Read(owner); meta["dataComplete"] = false;
+                foreach (var kv in policy.Summary()) meta[kv.Key] = kv.Value == null ? null : HmiValues.DeepClone(kv.Value);
+                meta["after"] = HmiScalar.Read(owner); meta["dataComplete"] = false;
                 return "Parameter upload completed; compare before/after scalars for changes. Not saved, compiled or downloaded." + policy.UnansweredSummary();
             });
+#endif
 
-        public ResponseMessage DownloadPlcToFolder(string softwarePath, string destinationDirectory, string targetForSoftware = "CPU", bool overwriteOnMemoryCard = false,
+#if ONLINE_FOLDER
+        public HmiMessage DownloadPlcToFolder(string softwarePath, string destinationDirectory, string targetForSoftware = "CPU", bool overwriteOnMemoryCard = false,
             bool keepActualValues = true, string userManagementMode = "keep", string promptAnswersJson = "{}", bool confirmDownload = false, bool dryRun = true)
             => _session.RunHmiStepTool("DownloadPlcToFolder", meta => {
                 if (!new[] { "CPU", "PlcSimulationAdvanced" }.Contains(targetForSoftware)) throw new ArgumentException("targetForSoftware must be CPU or PlcSimulationAdvanced.");
@@ -1448,21 +1520,22 @@ namespace TiaMcpServer.Siemens.Services
                 DownloadConfigurationDelegate handler = config => ApplyDownloadPrompt(config, policy);
                 var result = provider.Download(directory, handler);
                 meta["apiCallSuccess"] = true;
-                foreach (var kv in policy.Summary()) meta[kv.Key] = kv.Value?.DeepClone();
+                foreach (var kv in policy.Summary()) meta[kv.Key] = kv.Value == null ? null : HmiValues.DeepClone(kv.Value);
                 var errors = new List<string>(); var warnings = new List<string>();
                 CollectDownloadMessages(result?.Messages, errors, warnings);
                 meta["downloadState"] = result?.State.ToString(); meta["errorCount"] = result?.ErrorCount; meta["warningCount"] = result?.WarningCount;
-                meta["errors"] = new JsonArray(errors.Select(e => (JsonNode)e).ToArray()); meta["warnings"] = new JsonArray(warnings.Select(w => (JsonNode)w).ToArray());
+                meta["errors"] = new HmiArray(errors.Select(e => (object)e).ToArray()); meta["warnings"] = new HmiArray(warnings.Select(w => (object)w).ToArray());
                 directory.Refresh();
                 var files = directory.Exists ? directory.GetFiles("*", SearchOption.AllDirectories) : Array.Empty<FileInfo>();
                 meta["filesWritten"] = files.Length; meta["bytesWritten"] = files.Sum(f => f.Length); meta["dataComplete"] = false;
-                NativeResultState.Record(meta, result?.State, false, messages: new JsonArray(errors.Concat(warnings).Select(m => (JsonNode)JsonValue.Create(m)!).ToArray()));
-                meta["targetFiles"] = new JsonArray(files.Select(f => (JsonNode)NativeResultState.FileRow(f.FullName)).ToArray());
+                PlcB5Result.Record(meta, result?.State, false, messages: new HmiArray(errors.Concat(warnings).Select(m => (object)HmiScalar.Json(m)!).ToArray()));
+                meta["targetFiles"] = new HmiArray(files.Select(f => (object)PlcB5Result.FileRow(f.FullName)).ToArray());
                 bool ok = result != null && TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State) && files.Length > 0;
                 meta["operationSuccess"] = ok;
                 if (!ok) throw new InvalidOperationException("Folder download did not produce a verified image: " + (result?.State.ToString() ?? "no result") + policy.UnansweredSummary());
                 return $"Memory-card image written: {files.Length} file(s) in {directory.FullName}. Content semantics not verified; no PLC contacted." + policy.UnansweredSummary();
             });
+#endif
 
         /// <summary>
         /// Subscribes the OnlineLegitimation handler of a ConnectionConfiguration for the duration of a GoOnline / Download /
@@ -1471,7 +1544,7 @@ namespace TiaMcpServer.Siemens.Services
         /// an IDisposable that unsubscribes when disposed; callers MUST dispose to avoid handler leaks. Returns null when the
         /// configuration object is not a ConnectionConfiguration (no event to hook).
         /// </summary>
-        private static IDisposable? AttachOnlineLegitimationHandler(object? configuration, string? password, JsonObject? meta, bool trustDeviceCertificate)
+        private static IDisposable? AttachOnlineLegitimationHandler(object? configuration, string? password, HmiObject? meta, bool trustDeviceCertificate)
             => AttachOnlineLegitimationHandler(configuration, password, null, null, meta, trustDeviceCertificate);
 
         // besides the legacy password prompt, UMAC-protected PLCs raise OnlineAuthenticationConfiguration (user name +
@@ -1479,8 +1552,9 @@ namespace TiaMcpServer.Siemens.Services
         // Subscribe even without a password so the TLS trust decision is answered and recorded.
         // Historical PLCSIM Advanced Softbus observation (version/date not recorded): an unanswered TLS prompt
         // refuses the first connection; see docs/reference/real-machine-ledger.md.
-        private static IDisposable? AttachOnlineLegitimationHandler(object? configuration, string? password, string? userName, string? userType, JsonObject? meta, bool trustDeviceCertificate)
+        private static IDisposable? AttachOnlineLegitimationHandler(object? configuration, string? password, string? userName, string? userType, HmiObject? meta, bool trustDeviceCertificate)
         {
+#if ONLINE_LEGITIMATION
             if (configuration is not ConnectionConfiguration conn)
                 return null;
 
@@ -1489,20 +1563,19 @@ namespace TiaMcpServer.Siemens.Services
             SecureString? secure = null;
             if (!string.IsNullOrEmpty(password))
             {
-                secure = new SecureString();
-                foreach (var c in password!) secure.AppendChar(c);
-                secure.MakeReadOnly();
+                secure = TiaMcp.Adapters.Contracts.EngineeringCredentialRules.ToSecureString(password!);
             }
 
             OnlineConfigurationDelegate handler = (cfg) =>
             {
+#if ONLINE_TLS
                 if (cfg is TlsVerificationConfiguration tls)
                 {
                     var before = tls.CurrentSelection.ToString();
-                    var apply = EngineeringCredentialRules.TlsSelectionToApply(trustDeviceCertificate, before);
+                    var apply = TiaMcp.Adapters.Contracts.EngineeringCredentialRules.TlsSelectionToApply(trustDeviceCertificate, before);
                     if (apply != null) tls.CurrentSelection = TlsVerificationConfigurationSelection.Trusted;
                     if (meta != null)
-                        meta["tlsVerification"] = new JsonObject
+                        meta["tlsVerification"] = new HmiObject
                         {
                             ["plcName"] = tls.PlcName, ["verificationInfo"] = tls.VerificationInfo,
                             ["selectionBefore"] = before, ["selectionAfter"] = tls.CurrentSelection.ToString(),
@@ -1510,30 +1583,39 @@ namespace TiaMcpServer.Siemens.Services
                             ["note"] = apply != null ? "Certificate trusted for this call on the caller's decision (trustDeviceCertificate=true); the same prompt TIA shows in the UI." : trustDeviceCertificate ? "Already trusted." : "Left untrusted (trustDeviceCertificate=false); TIA refuses the connection."
                         };
                 }
-                else if (secure == null) return;
+                else
+#endif
+                if (secure == null) return;
+
+#if ONLINE_AUTHENTICATION
                 else if (cfg is OnlineAuthenticationConfiguration auth)
                 {
                     OnlineCredentials credentials = auth.OnlineCredentials;
-                    var supported = new JsonArray();
+                    var supported = new HmiArray();
                     try { foreach (AuthenticationType type in auth.GetSupportedAuthenticationTypes()) supported.Add(type.CurrentUserType.ToString()); } catch { /* swallow(enumerate-optional): supported authentication types are diagnostic; credentials still answer the prompt */ }
                     if (!string.IsNullOrEmpty(userName)) credentials.Name = userName;
                     if (!string.IsNullOrEmpty(userType)) credentials.Type = (UserType)Enum.Parse(typeof(UserType), userType);
                     else if (!string.IsNullOrEmpty(userName)) credentials.Type = UserType.ProjectUser;
                     credentials.SetPassword(secure);
-                    if (meta != null) meta["onlineAuthentication"] = new JsonObject { ["isSecureCommunication"] = auth.IsSecureCommunication, ["supportedUserTypes"] = supported, ["userName"] = userName ?? "", ["userType"] = credentials.Type.ToString() };
+                    if (meta != null) meta["onlineAuthentication"] = new HmiObject { ["isSecureCommunication"] = auth.IsSecureCommunication, ["supportedUserTypes"] = supported, ["userName"] = userName ?? "", ["userType"] = credentials.Type.ToString() };
                 }
+#endif
                 else if (cfg is OnlinePasswordConfiguration pwdCfg)
                 {
                     pwdCfg.SetPassword(secure);
-#if TIA_V20
-                    if (meta != null) meta["onlinePassword"] = new JsonObject { ["answered"] = true };
+#if !ONLINE_PASSWORD_SECURITY
+                    if (meta != null) meta["onlinePassword"] = new HmiObject { ["answered"] = true };
 #else
-                    if (meta != null) meta["onlinePassword"] = new JsonObject { ["isSecureCommunication"] = pwdCfg.IsSecureCommunication };
+                    if (meta != null) meta["onlinePassword"] = new HmiObject { ["isSecureCommunication"] = pwdCfg.IsSecureCommunication };
 #endif
                 }
             };
             conn.OnlineLegitimation += handler;
             return new HandlerScope(() => { conn.OnlineLegitimation -= handler; secure?.Dispose(); });
+        
+#else
+            return null;
+#endif
         }
 
         private sealed class HandlerScope : IDisposable
@@ -1545,37 +1627,60 @@ namespace TiaMcpServer.Siemens.Services
 
 
         // ---- transfer routes and R/H providers --------------------------------------------------------------------------------
-        private static JsonArray AddressRows(ConfigurationAddressComposition addresses) => new JsonArray(EngineeringGroupOperations.Items(addresses).Cast<ConfigurationAddress>().Select(a => (JsonNode)new JsonObject { ["name"] = a.Name, ["address"] = a.Address }).ToArray());
+#if ONLINE_ADDRESSES
+        private static HmiArray AddressRows(IEnumerable<ConfigurationAddress> addresses) => new HmiArray(PlcGroupOperations.Items(addresses).Cast<ConfigurationAddress>().Select(a => (object)new HmiObject { ["name"] = a.Name, ["address"] = a.Address }).ToArray());
+#else
+        private static HmiArray AddressRows(IEnumerable<ConfigurationAddress> addresses) => new HmiArray(PlcGroupOperations.Items(addresses).Cast<ConfigurationAddress>().Select(a => (object)new HmiObject { ["name"] = a.Name, ["address"] = OnlineRoutePrimitives.Address(a) }).ToArray());
+#endif
 
-        public ResponseMessage ReadTransferRoutes(string softwarePath, int maxItems = 500)
+        public HmiMessage ReadTransferRoutes(string softwarePath, int maxItems = 500)
             => _session.RunHmiStepTool("ListTransferRoutes", meta => {
-                LibraryDeepLogic.ValidateBounds(1, maxItems);
+                if (maxItems < 1 || maxItems > 500) throw new ArgumentException("offset>=0, limit 1..500 required.");
                 var plc = _session.GetPlcSoftware(softwarePath) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact PLC software not found: " + softwarePath + _session.AvailablePlcPathsSuffix());
+#if ONLINE_DOWNLOAD
                 var download = _session.ResolvePlcService<DownloadProvider>(softwarePath, plc);
+#else
+                var download = _session.ResolvePlcService<OnlineProvider>(softwarePath, plc);
+#endif
                 meta["downloadProviderAvailable"] = download != null;
                 int items = 0; bool truncated = false;
                 if (download != null)
                 {
                     ConnectionConfiguration configuration = download.Configuration;
-                    var modes = new JsonArray(); meta["modes"] = modes;
-                    foreach (ConfigurationMode mode in EngineeringGroupOperations.Items(configuration.Modes).Cast<ConfigurationMode>())
+                    var modes = new HmiArray(); meta["modes"] = modes;
+                    foreach (ConfigurationMode mode in PlcGroupOperations.Items(configuration.Modes).Cast<ConfigurationMode>())
                     {
-                        var modeRow = new JsonObject { ["name"] = mode.Name }; var interfaces = new JsonArray(); modeRow["pcInterfaces"] = interfaces; modes.Add(modeRow);
-                        foreach (ConfigurationPcInterface pcInterface in EngineeringGroupOperations.Items(mode.PcInterfaces).Cast<ConfigurationPcInterface>())
+                        var modeRow = new HmiObject { ["name"] = mode.Name }; var interfaces = new HmiArray(); modeRow["pcInterfaces"] = interfaces; modes.Add(modeRow);
+                        foreach (ConfigurationPcInterface pcInterface in PlcGroupOperations.Items(mode.PcInterfaces).Cast<ConfigurationPcInterface>())
                         {
                             if (++items > maxItems) { truncated = true; break; }
-                            var row = new JsonObject { ["name"] = pcInterface.Name, ["number"] = pcInterface.Number };
-                            try { row["addresses"] = AddressRows(pcInterface.Addresses); } catch (Exception ex) { row["addressesError"] = ex.GetBaseException().Message; }
+                            var row = new HmiObject { ["name"] = pcInterface.Name, ["number"] = pcInterface.Number };
                             try
                             {
-                                row["subnets"] = new JsonArray(EngineeringGroupOperations.Items(pcInterface.Subnets).Cast<ConfigurationSubnet>().Select(s => (JsonNode)new JsonObject
+#if ONLINE_ADDRESSES
+                                row["addresses"] = AddressRows(pcInterface.Addresses);
+#else
+                                row["addresses"] = AddressRows(OnlineRoutePrimitives.PcAddresses(pcInterface));
+#endif
+                            }
+                            catch (Exception ex) { row["addressesError"] = ex.GetBaseException().Message; }
+                            try
+                            {
+                                row["subnets"] = new HmiArray(PlcGroupOperations.Items(pcInterface.Subnets).Cast<ConfigurationSubnet>().Select(s => (object)new HmiObject
                                 {
                                     ["name"] = s.Name, ["addresses"] = AddressRows(s.Addresses),
-                                    ["gateways"] = new JsonArray(EngineeringGroupOperations.Items(s.Gateways).Cast<ConfigurationGateway>().Select(g => (JsonNode)new JsonObject { ["name"] = g.Name, ["addresses"] = AddressRows(g.Addresses) }).ToArray())
+                                    ["gateways"] = new HmiArray(PlcGroupOperations.Items(s.Gateways).Cast<ConfigurationGateway>().Select(g => (object)new HmiObject { ["name"] = g.Name, ["addresses"] = AddressRows(g.Addresses) }).ToArray())
                                 }).ToArray());
                             }
                             catch (Exception ex) { row["subnetsError"] = ex.GetBaseException().Message; }
-                            try { row["targetInterfaces"] = new JsonArray(EngineeringGroupOperations.Items(pcInterface.TargetInterfaces).Cast<ConfigurationTargetInterface>().Select(t => (JsonNode)new JsonObject { ["name"] = t.Name, ["addresses"] = AddressRows(t.Addresses) }).ToArray()); }
+                try
+                {
+#if ONLINE_TARGET_ADDRESSES
+                    row["targetInterfaces"] = new HmiArray(PlcGroupOperations.Items(pcInterface.TargetInterfaces).Cast<ConfigurationTargetInterface>().Select(t => (object)new HmiObject { ["name"] = t.Name, ["addresses"] = AddressRows(t.Addresses) }).ToArray());
+#else
+                    row["targetInterfaces"] = new HmiArray(PlcGroupOperations.Items(pcInterface.TargetInterfaces).Cast<ConfigurationTargetInterface>().Select(t => (object)new HmiObject { ["name"] = t.Name, ["addresses"] = AddressRows(OnlineRoutePrimitives.TargetAddresses(t)) }).ToArray());
+#endif
+                }
                             catch (Exception ex) { row["targetInterfacesError"] = ex.GetBaseException().Message; }
                             interfaces.Add(row);
                         }
@@ -1583,9 +1688,13 @@ namespace TiaMcpServer.Siemens.Services
                     }
                 }
                 // R/H systems expose the redundant providers instead of / next to the standard ones; the CPU on the reference project is not R/H.
+#if ONLINE_RH
                 var rhDownload = _session.ResolvePlcService<RHDownloadProvider>(softwarePath, plc); meta["rhDownloadProviderAvailable"] = rhDownload != null;
                 var rhOnline = _session.ResolvePlcService<RHOnlineProvider>(softwarePath, plc); meta["rhOnlineProviderAvailable"] = rhOnline != null;
-                if (rhOnline != null) { try { meta["rhOnline"] = new JsonObject { ["primaryState"] = rhOnline.PrimaryState.ToString(), ["backupState"] = rhOnline.BackupState.ToString() }; } catch (Exception ex) { meta["rhOnlineError"] = ex.GetBaseException().Message; } }
+                if (rhOnline != null) { try { meta["rhOnline"] = new HmiObject { ["primaryState"] = rhOnline.PrimaryState.ToString(), ["backupState"] = rhOnline.BackupState.ToString() }; } catch (Exception ex) { meta["rhOnlineError"] = ex.GetBaseException().Message; } }
+#else
+                meta["rhDownloadProviderAvailable"] = false; meta["rhOnlineProviderAvailable"] = false;
+#endif
                 var onlineProvider = _session.ResolvePlcService<OnlineProvider>(softwarePath, plc); meta["onlineProviderAvailable"] = onlineProvider != null;
                 if (onlineProvider != null) { try { meta["onlineState"] = onlineProvider.State.ToString(); } catch (Exception ex) { meta["onlineStateError"] = ex.GetBaseException().Message; } }
                 meta["compileProviderNote"] = "Siemens.Engineering.Compiler.CompileProvider is internal in the V20/V21 PublicAPI (documented, not public); compilation goes through ICompilable.";

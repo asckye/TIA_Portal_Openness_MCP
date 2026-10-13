@@ -110,7 +110,9 @@ internal sealed partial class FoundationTool : McpServerTool
     private readonly TiaMcp.Logic.ModelContextProtocol.ImportStagingStore? stagingForTest;
     private readonly Tool tool;
     internal bool IsNative => definition.ResponseMember is not ("PlcRender" or "ImportStaging");
-    internal bool RequiresTia => IsNative && definition.ResponseMember != "RuntimeQuery"
+    internal bool RequiresProjectSession => IsNative && !(TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool.Name)
+        && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(tool.Name).Name == "F04");
+    internal bool RequiresTia => RequiresProjectSession && definition.ResponseMember != "RuntimeQuery"
         && !TiaMcpServer.ModelContextProtocol.ToolTaxonomy.IsSafeWithoutTia(tool.Name);
     internal bool UsesProductionWorker => worker is IFoundationSessionWorker { Bundled: true };
     internal string? ApprovalIdentity => (worker as IFoundationSessionWorker)?.ApprovalIdentity;

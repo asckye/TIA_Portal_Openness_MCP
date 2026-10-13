@@ -105,6 +105,17 @@ internal sealed class EngineSurface
         return execution.Contains(name) && (string)execution[name]! == "host";
     }
 
+    internal static string[] MigratedHostTools(Assembly engine)
+    {
+        var families = Program.FindReferencedType(engine, "TiaMcp.Adapters.Contracts.PortedFamilies");
+        var runtime = ((System.Collections.IEnumerable)families.GetField("All")!.GetValue(null)!).Cast<object>()
+            .Single(family => (string)family.GetType().GetProperty("Name")!.GetValue(family)! == "F04");
+        var tools = (string[])runtime.GetType().GetProperty("Tools")!.GetValue(runtime)!;
+        var workerTools = (string[])families.GetMethod("WorkerTools")!.Invoke(null, new[] { runtime })!;
+        return HostTools(engine).Concat(new[] { "ManagePlcGitRepository" })
+            .Concat(tools.Except(workerTools, StringComparer.Ordinal)).ToArray();
+    }
+
     internal static string[] PortedTools(Assembly engine, string release)
     {
         var families = Program.FindReferencedType(engine, "TiaMcp.Adapters.Contracts.PortedFamilies");

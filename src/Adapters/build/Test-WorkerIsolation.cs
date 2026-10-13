@@ -99,7 +99,8 @@ static bool HasSelectedReferences(string output, string adapterSuffix)
                 var identity = (item!["Identity"]?.GetValue<string>() ?? "").Replace('\\', '/');
                 return identity.EndsWith(adapterSuffix, StringComparison.Ordinal)
                     || identity.EndsWith("/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj", StringComparison.Ordinal)
-                    || identity.EndsWith("/WorkerChannel/TiaMcp.WorkerChannel.csproj", StringComparison.Ordinal);
+                    || identity.EndsWith("/WorkerChannel/TiaMcp.WorkerChannel.csproj", StringComparison.Ordinal)
+                    || identity.EndsWith("/OnlineChannels/Simulation/TiaMcp.PlcSimAdvanced.csproj", StringComparison.Ordinal);
             });
     }
     catch /* swallow(parse-fallback): invalid project-reference JSON means the worker is not selected. */ { return false; }

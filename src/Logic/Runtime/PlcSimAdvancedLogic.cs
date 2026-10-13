@@ -11,7 +11,11 @@ namespace TiaMcpServer.Runtime
     // Pure logic for the PLCSIM Advanced channel (no Siemens assembly, no I/O): API path probing order,
     // scenario parsing, value conversion per PLCSIM primitive type and comparison with tolerance.
     // Everything that touches Siemens.Simatic.Simulation.Runtime lives in PlcSimAdvancedChannel.
+#if TIA_PLCSIM_COMPONENT
+    internal static class PlcSimAdvancedLogic
+#else
     public static class PlcSimAdvancedLogic
+#endif
     {
         public const string ApiFileName = "Siemens.Simatic.Simulation.Runtime.Api.x64.dll";
         public const string ApiEnvironmentVariable = "PLCSIMADV_API_PATH";
@@ -189,6 +193,10 @@ namespace TiaMcpServer.Runtime
                 default: throw new ArgumentException("Unsupported PLCSIM primitive type '" + primitiveType + "' (structs/arrays must be written per element).");
             }
         }
+
+        public static bool IsFiniteConvertedValue(object value)
+            => !(value is float f && (float.IsInfinity(f) || float.IsNaN(f)))
+                && !(value is double d && (double.IsInfinity(d) || double.IsNaN(d)));
 
         private static long ParseLong(string text, string type)
         {

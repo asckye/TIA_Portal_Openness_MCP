@@ -3,10 +3,13 @@
   <PropertyGroup>
     <RootNamespace>TiaMcp.OnlineChannels</RootNamespace>
     <AssemblyName>TiaMcp.Runtime</AssemblyName>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFrameworks>net48;net10.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Simulation/**/*.cs" />
+  </ItemGroup>
   <ItemGroup>
     <!-- Preserve the engine dependency version when resolving the OPC UA client independently. -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0-preview.4.25258.110" />
@@ -15,7 +18,7 @@
     <PackageReference Include="Siemens.Simatic.S7.Webserver.API" Version="3.3.76" />
     <ProjectReference Include="../Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
   </ItemGroup>
-  <!-- The Siemens Web API client is a protocol library; Openness and PLCSIM stay in the woven engine. -->
+  <!-- The protocol clients run without Openness. The PLCSIM runtime loader belongs to the net48 worker. -->
   <Target Name="RejectEngineeringDependencies" BeforeTargets="CoreCompile" DependsOnTargets="ResolveReferences">
     <ItemGroup>
       <ForbiddenRuntimeReference Include="@(ReferencePath)" Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Filename)', '^(?i:Siemens\.Engineering|Siemens\.Simatic\.Simulation|TiaMcpServer|ModelContextProtocol)'))" />

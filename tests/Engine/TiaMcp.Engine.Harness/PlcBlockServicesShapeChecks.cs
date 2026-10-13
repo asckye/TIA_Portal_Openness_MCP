@@ -100,6 +100,7 @@ internal static class PlcBlockServicesShapeChecks
             "PLC block tools and service share the kernel session");
         var ported = EngineSurface.PortedTools(server, "21");
         var portService = server.GetType("TiaMcpServer.Siemens.Services.PlcOrganisationPortService", true)!;
+        var onlineService = server.GetType("TiaMcpServer.Siemens.Services.OnlineDownloadService", true)!;
         foreach (var name in new[] { "GetPlcBlockInfo", "ListPlcBlocks", "GetPlcBlockHierarchy", "ExportPlcBlock", "ImportPlcBlock",
             "ImportPlcBlocksFromDirectory", "ImportPlcProgramFromDirectory", "CompilePlcDiagnostics", "RepairAndReimportPlcBlock", "ExportPlcBlocks",
             "DescribePlcBlockLogic", "ManagePlcBlockProtection", "ManagePlcDataBlockSnapshot", "SetPlcProgram", "GetPlcBlockFingerprints",
@@ -109,7 +110,8 @@ internal static class PlcBlockServicesShapeChecks
         {
             var method = tools.Tool(name);
             if (ported.Contains(name)) {
-                check(!method.IsStatic && method.DeclaringType!.GetConstructors().Single().GetParameters().Single().ParameterType == portService,
+                var expectedService = new[] { "ManagePlcDataBlockSnapshot", "GetPlcBlockFingerprints" }.Contains(name) ? onlineService : portService;
+                check(!method.IsStatic && method.DeclaringType!.GetConstructors().Single().GetParameters().Single().ParameterType == expectedService,
                     name + " belongs to the shared Foundation tool and typed RPC service");
                 continue;
             }
@@ -120,7 +122,8 @@ internal static class PlcBlockServicesShapeChecks
             "DeletePlcType", "ManagePlcBlockProtection", "ManagePlcDataBlockSnapshot", "UpdatePlcProgram", "ReadPlcBlockFingerprints",
             "ImportPlcBlockVerified", "CreatePlcTypeGroup", "ManagePlcUserGroup", "EnsurePlcBlockGroup", "MoveBlockToGroup" })
         {
-            var owner = new[] { "ExportBlocks", "ExportBlocksToTemp", "ManagePlcDataBlockSnapshot", "ReadPlcBlockFingerprints" }.Contains(name) ? serviceType : portService;
+            var owner = new[] { "ManagePlcDataBlockSnapshot", "ReadPlcBlockFingerprints" }.Contains(name) ? onlineService
+                : new[] { "ExportBlocks", "ExportBlocksToTemp" }.Contains(name) ? serviceType : portService;
             check(tools.Method(name).DeclaringType == owner && ReferenceEquals(tools.Target(tools.Method(name)), engineProvider.GetService(owner)),
                 name + " belongs to its registered kernel service or typed Foundation port");
         }

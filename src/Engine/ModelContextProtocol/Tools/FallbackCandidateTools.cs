@@ -29,7 +29,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 result = FallbackSession.Result(McpServer.ReleaseKey, entry, Meta.Correlate(InvocationJournal.CorrelationId), null,
                     new Error("Fallback candidate is not selected.", new UnsupportedCapabilityDetails(McpServer.ReleaseKey, "P6-FALLBACK", "candidate")), Outcome.RejectedBeforeOperation, Execution.NotStarted);
             else result = portal.RunFallbackCandidate(request, () => entry.Contains("VersionControl") || entry == "ConnectProjectToWorkspace"
-                ? (portal.VersionControlFallback ?? throw new InvalidOperationException("VCI adapter binding unavailable."))(request) : download.FallbackAdapter(request, password, portal, documents), password, mode, confirm, hash, file);
+                ? (portal.VersionControlFallback ?? throw new InvalidOperationException("VCI adapter binding unavailable."))(request) : (portal.OnlineFallback ?? throw new InvalidOperationException("Online fallback adapter binding unavailable."))(request, password), password, mode, confirm, hash, file);
             var wire = McpResult.From(result);
             return new CallToolResult { IsError = wire.IsError, StructuredContent = JsonNode.Parse(wire.StructuredContent.GetRawText()), Content = new[] { new TextContentBlock { Text = wire.Content[0].Text } } };
         }

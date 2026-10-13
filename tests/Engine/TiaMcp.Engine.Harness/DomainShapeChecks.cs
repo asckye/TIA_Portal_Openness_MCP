@@ -16,7 +16,8 @@ internal static class DomainShapeChecks
         var provider = (IServiceProvider)server.GetType("TiaMcpServer.EngineServices", true)!.GetProperty("Provider", all)!.GetValue(null)!;
         var session = provider.GetService(contract);
         check(session != null && ReferenceEquals(session, provider.GetService(portal)), "Optional domains share the Portal singleton");
-        foreach (var domain in new[] { (Name: "Runtime", Count: 5), (Name: "PlcCausalTrace", Count: 2), (Name: "RuntimeChannel", Count: 8), (Name: "PlcSimAdvanced", Count: 5) })
+        RunHostDomains(check);
+        foreach (var domain in new[] { (Name: "PlcCausalTrace", Count: 2), (Name: "PlcSimAdvanced", Count: 5) })
         {
             var tools = server.GetType("TiaMcpServer.ModelContextProtocol." + domain.Name + "Tools", true)!;
             check(tools.IsSealed && !typeof(IDisposable).IsAssignableFrom(tools), domain.Name + " tools are sealed and non-disposable");
@@ -32,13 +33,12 @@ internal static class DomainShapeChecks
                 check(server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod(method.Name, all) == null,
                     method.Name + " has no CLI caller or static forwarder");
             }
-            if (domain.Name == "Runtime")
-                check(ReferenceEquals(tools.GetField("_session", all)!.GetValue(target), session), "Runtime project reads share the engineering session");
-            else if (domain.Name == "PlcCausalTrace")
+            if (domain.Name == "PlcCausalTrace")
                 check(tools.GetConstructors().Single().GetParameters().Single().ParameterType.Name == "PlcOrganisationPortService",
                     "Causal tracing uses the shared PLC organisation port");
             else
-                check(tools.GetConstructors().All(constructor => constructor.GetParameters().Length == 0), domain.Name + " needs no engineering session");
+                check(tools.GetFields(all).Single(field => field.Name == "_service").FieldType.Name == "PlcSimAdvancedPortService"
+                    && !tools.GetFields(all).Any(field => field.FieldType == contract), domain.Name + " uses its worker port and needs no engineering session");
         }
         foreach (var name in new[] { "GetPutGetAccess", "TraceTagCause", "TraceTagCauseLive" })
             check(contract.GetMethod(name) != null && surface.Method(name, all).DeclaringType == portal,
@@ -47,9 +47,15 @@ internal static class DomainShapeChecks
         foreach (var name in new[] { "S7LiveReader", "OpcUaLiveReader", "S7WebApiChannel", "UnifiedOpenPipeChannel" })
             check(server.GetType("TiaMcpServer.Runtime." + name) == null && runtime.GetType("TiaMcpServer.Runtime." + name) != null,
                 name + " belongs to the protocol assembly with its namespace preserved");
-        foreach (var name in new[] { "PlcSimAdvancedChannel", "EnvironmentDoctor" })
-            check(server.GetType("TiaMcpServer.Runtime." + name) != null && runtime.GetType("TiaMcpServer.Runtime." + name) == null,
-                name + " stays in the engine");
+        check(server.GetType("TiaMcpServer.Runtime.EnvironmentDoctor") != null && runtime.GetType("TiaMcpServer.Runtime.EnvironmentDoctor") == null,
+            "EnvironmentDoctor stays in the engine");
+        var simulationAssembly = Assembly.LoadFrom(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(server.Location)!, "TiaMcp.PlcSimAdvanced.dll"));
+        check(server.GetType("TiaMcpServer.Runtime.PlcSimAdvancedChannel") == null && runtime.GetType("TiaMcpServer.Runtime.PlcSimAdvancedChannel") == null
+            && simulationAssembly.GetType("TiaMcpServer.Runtime.PlcSimAdvancedChannel") != null,
+            "PlcSimAdvancedChannel belongs to the worker's net48 protocol assembly");
+        var simulation = simulationAssembly.GetType("TiaMcp.PlcWorker.Runtime.PlcSimAdvancedAdapter", true)!;
+        foreach (var member in new[] { "ReadPlcSimAdvancedInstances", "ManagePlcSimAdvancedInstance", "ReadPlcSimAdvancedTags", "WritePlcSimAdvancedTags", "RunPlcSimAdvancedTestScenario" })
+            check(simulation.GetMethod(member) != null, "net48 PLCSIM Advanced adapter retains " + member);
         check(!runtime.GetReferencedAssemblies().Any(reference => reference.Name!.StartsWith("Siemens.Engineering", StringComparison.Ordinal)
             || reference.Name.StartsWith("Siemens.Simatic.Simulation", StringComparison.Ordinal) || reference.Name.StartsWith("TiaMcp.Engine.", StringComparison.Ordinal)),
             "Runtime assembly has no engineering dependency");
@@ -161,8 +167,8 @@ internal static class DomainShapeChecks
                 check(method.DeclaringType == service && surface.Tool(name) == tool && !tool.IsStatic
                     && ReferenceEquals(target, surface.Target(method)) && ReferenceEquals(toolTarget, surface.Target(tool)),
                     domain.Name + " singleton ownership: " + name);
-                bool ported = domain.Name is "Library" or "VersionControl" or "Teamcenter";
-                check((ported ? service.GetField("call", all)!.GetValue(target) is Delegate
+                bool ported = domain.Name is "Library" or "VersionControl" or "Teamcenter" or "OnlineDownload";
+                check((ported ? service.GetField(domain.Name == "OnlineDownload" ? "_call" : "call", all)!.GetValue(target) is Delegate
                         && !service.GetFields(all).Any(f => f.FieldType == contract)
                         : ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session))
                     && ReferenceEquals(tools.GetFields(all).Single(field => field.FieldType == service).GetValue(toolTarget), target),
@@ -340,6 +346,32 @@ internal static class DomainShapeChecks
                 name + " resolves directly to the HMI exchange service without a kernel forwarder");
         check(surface.Property("LastImportNotes").DeclaringType!.Name == "HmiExchangeService"
             && portal.GetProperty("LastImportNotes", all) == null, "HMI import notes belong to the exchange service");
+    }
+
+    internal static void RunHostDomains(Action<bool, string> check, string mode = "--domain-shape")
+    {
+        string binary = System.IO.Path.Combine(AppContext.BaseDirectory, "host-domain", "TiaMcp.EngineHost.Tests.dll");
+        string expectedHash = System.IO.File.ReadAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "host-domain", "helper.sha256")).Trim();
+        using (var sha = System.Security.Cryptography.SHA256.Create())
+        using (var stream = System.IO.File.OpenRead(binary))
+            if (!string.Equals(BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", ""), expectedHash, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Moved host domain binary differs from this build's pinned helper.");
+        var start = new System.Diagnostics.ProcessStartInfo("dotnet", "\"" + binary + "\" " + mode) {
+            WorkingDirectory = System.IO.Path.GetDirectoryName(binary)!, UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true
+        };
+        using var process = System.Diagnostics.Process.Start(start)!;
+        var output = process.StandardOutput.ReadToEndAsync();
+        var errors = process.StandardError.ReadToEndAsync();
+        if (!process.WaitForExit(120000))
+            throw new TimeoutException("Moved host domain process did not complete within 120 seconds; PID " + process.Id + ".");
+        var lines = output.GetAwaiter().GetResult();
+        var receipt = lines.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+            .SingleOrDefault(line => line.StartsWith("HOST-DOMAIN:", StringComparison.Ordinal));
+        if (receipt == null) throw new InvalidOperationException("Moved host domain process produced no receipt; exit " + process.ExitCode + ": " + lines + errors.GetAwaiter().GetResult());
+        using var document = System.Text.Json.JsonDocument.Parse(receipt.Substring("HOST-DOMAIN:".Length));
+        check(document.RootElement.GetArrayLength() == (mode == "--domain-shape" ? 50 : 16), "Moved host domain receipt has the exact reviewed result count");
+        foreach (var result in document.RootElement.EnumerateArray()) check(result.GetProperty("ok").GetBoolean(), result.GetProperty("name").GetString()!);
+        check(process.ExitCode == 0, "Moved host domain process completed: " + errors.GetAwaiter().GetResult());
     }
 
     private static readonly Dictionary<short, OpCode> HmiOpCodes = typeof(OpCodes).GetFields(BindingFlags.Public | BindingFlags.Static)

@@ -41,6 +41,8 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static CallToolResult? SessionPrecheckRefusal(string name)
         {
             if (SessionBehavior.IsRecoveryTool(name) || ToolTaxonomy.DispatchesTargets(name)) return null;
+            if (TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
+                && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name == "F04") return null;
             if (!ToolTaxonomy.UsesOpennessLane(name)) return null;
             var key = CurrentApprovalSession();
             return SessionBehavior.RequiresReset(key != null && SessionFaults.GetValue(key, _ => new SessionFault()).Unknown, ToolTaxonomy.UsesOpennessLane(name))
@@ -57,9 +59,11 @@ namespace TiaMcpServer.ModelContextProtocol
             bool nativeIssued = nativeCallIssued || True((data?["evidence"] as JsonObject)?["nativeOutcomeUnknown"]) || True(data?["nativeIssued"]);
             bool mutation = write || ToolTaxonomy.OperationOf(name, null).Operation is "FILE" or "EXECUTE";
             var sessionKey = CurrentApprovalSession();
-            var key = ToolTaxonomy.UsesOpennessLane(name) && SessionBehavior.LocksSession(nativeIssued, true, mutation) ? sessionKey : null;
+            bool projectLane = ToolTaxonomy.UsesOpennessLane(name) && !(TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
+                && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name == "F04");
+            var key = projectLane && SessionBehavior.LocksSession(nativeIssued, true, mutation) ? sessionKey : null;
             if (key != null) SessionFaults.GetValue(key, _ => new SessionFault()).Unknown = true;
-            bool locked = ToolTaxonomy.UsesOpennessLane(name) && sessionKey != null
+            bool locked = projectLane && sessionKey != null
                 && SessionFaults.GetValue(sessionKey, _ => new SessionFault()).Unknown;
             var mapped = EnvelopeMutation.SessionReset(body!, locked);
             return new CallToolResult { IsError = result.IsError, StructuredContent = mapped,

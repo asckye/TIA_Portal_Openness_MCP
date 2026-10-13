@@ -157,7 +157,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         bool usableAtEntry = !outcome.Poisoned;
         try
         {
-            outcome.RequireUsable();
+            if (!WorkerOperations.IsIndependentRuntime(operation)) outcome.RequireUsable();
             token.ThrowIfCancellationRequested();
             if (disconnectAcknowledgement != null)
             {
@@ -205,7 +205,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                         new ChannelIdentity(releaseKey,workerHash,adapterHash,process.Id,nonce));
                 }
             }
-            await channel!.ConnectAsync(timeouts.For("status"),token);
+            if (!WorkerOperations.IsIndependentRuntime(operation) || !channel!.CanCallIndependentRuntime)
+                await channel!.ConnectAsync(timeouts.For("status"),token);
             token.ThrowIfCancellationRequested();
             if (disconnecting) throw new InvalidOperationException("Disconnect ended this session; a new host session is required.");
             activeRequestId = TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId;

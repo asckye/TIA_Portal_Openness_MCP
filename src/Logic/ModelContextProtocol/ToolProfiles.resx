@@ -404,6 +404,18 @@
     },
     {
       "releaseKey": "14sp1",
+      "family": "F04",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
+      "family": "F22",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
       "family": "F00",
       "state": "current",
       "l5": "NOT RUN"
@@ -549,6 +561,18 @@
     {
       "releaseKey": "14sp1",
       "family": "F19",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F04",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F22",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -710,6 +734,18 @@
     },
     {
       "releaseKey": "16",
+      "family": "F04",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
+      "family": "F22",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
       "family": "F00",
       "state": "current",
       "l5": "NOT RUN"
@@ -866,6 +902,18 @@
     },
     {
       "releaseKey": "17",
+      "family": "F04",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F22",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
       "family": "F00",
       "state": "current",
       "l5": "NOT RUN"
@@ -1022,6 +1070,18 @@
     },
     {
       "releaseKey": "18",
+      "family": "F04",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F22",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
       "family": "F00",
       "state": "current",
       "l5": "NOT RUN"
@@ -1173,6 +1233,18 @@
     {
       "releaseKey": "18",
       "family": "F19",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F04",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F22",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -5250,6 +5322,291 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "GetPlcLiveValuesOpcUa",
+      "family": "F04",
+      "example": {
+        "endpointUrl": "opc.tcp://192.0.2.10:4840",
+        "nodeIds": [
+          "ns=3;s=\"DB_Status\".\"Ready\""
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetPlcLiveValuesS7",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10",
+        "items": [
+          "DB1.DBX0.0:BOOL"
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetPlcRunStateS7",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetPlcSimAdvancedTags",
+      "family": "F04",
+      "example": {
+        "instanceName": "MCP_SIM",
+        "names": [
+          "MCP_SimDB.Cycles",
+          "MCP_SimDB.Running"
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetPlcWebDiagnostics",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetPlcWebVars",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;",
+        "vars": [
+          "\"DB_Status\".\"Ready\""
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetUnifiedRuntimeAlarms",
+      "family": "F04",
+      "example": {}
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetUnifiedRuntimeTags",
+      "family": "F04",
+      "example": {
+        "tags": [
+          "Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "InvokeUnifiedOpenPipe",
+      "family": "F04",
+      "example": {
+        "request": {
+          "message": "BrowseTags",
+          "params": {
+            "filter": "*Ready*",
+            "pageSize": 50
+          }
+        },
+        "confirmWrite": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ListPlcSimAdvancedInstances",
+      "family": "F04",
+      "example": {
+        "includeState": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManagePlcSimAdvancedInstance",
+      "family": "F04",
+      "example": {
+        "instanceName": "MCP_SIM",
+        "action": "register",
+        "cpuType": "&lt;CPU type supported by the installed PLCSIM API&gt;",
+        "communicationInterface": "Softbus",
+        "confirmInstanceChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ProbeS7CpuIdentity",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "RunPlcCompanionTool",
+      "family": "F04",
+      "example": {
+        "workingDirectory": "C:\\Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "RunPlcSimAdvancedTestScenario",
+      "family": "F04",
+      "example": {
+        "scenario": {
+          "instance": "MCP_SIM",
+          "mode": "default",
+          "steps": [
+            {
+              "write": {
+                "MCP_SimDB.Start": true
+              }
+            },
+            {
+              "waitMs": 300
+            },
+            {
+              "assert": {
+                "MCP_SimDB.Running": true
+              }
+            }
+          ]
+        },
+        "dryRun": true,
+        "confirmRun": false
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "SamplePlcLiveValuesS7",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10",
+        "items": [
+          "DB1.DBX0.0:BOOL"
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "SetPlcWebOperatingMode",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;",
+        "mode": "run",
+        "confirmModeChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "WritePlcSimAdvancedTags",
+      "family": "F04",
+      "example": {
+        "instanceName": "MCP_SIM",
+        "values": [
+          {
+            "name": "MCP_SimDB.Start",
+            "value": true
+          }
+        ],
+        "dryRun": true,
+        "confirmWrite": false
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "WritePlcWebVars",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;",
+        "writes": [
+          {
+            "name": "\"DB_Status\".\"Ready\"",
+            "value": true
+          }
+        ],
+        "confirmWrite": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "WriteUnifiedRuntimeTags",
+      "family": "F04",
+      "example": {
+        "writes": [
+          {
+            "name": "Ready",
+            "value": true
+          }
+        ],
+        "confirmWrite": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "CompareSoftwareToOnline",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "maxDepth": 4
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ConnectOnlinePlc",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "ipAddress": "192.168.0.3",
+        "pgPcInterface": "PLCSIM"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "DisconnectOnlinePlc",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "DisconnectOnlinePlcs",
+      "family": "F22",
+      "example": {}
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetOnlineState",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ListTransferRoutes",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "ConnectIsolatedPortal",
       "family": "F05",
       "example": {}
@@ -6984,6 +7341,332 @@
         "ioType": "Input",
         "startAddress": 1,
         "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetPlcLiveValuesOpcUa",
+      "family": "F04",
+      "example": {
+        "endpointUrl": "opc.tcp://192.0.2.10:4840",
+        "nodeIds": [
+          "ns=3;s=\"DB_Status\".\"Ready\""
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetPlcLiveValuesS7",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10",
+        "items": [
+          "DB1.DBX0.0:BOOL"
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetPlcRunStateS7",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetPlcSimAdvancedTags",
+      "family": "F04",
+      "example": {
+        "instanceName": "MCP_SIM",
+        "names": [
+          "MCP_SimDB.Cycles",
+          "MCP_SimDB.Running"
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetPlcWebDiagnostics",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetPlcWebVars",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;",
+        "vars": [
+          "\"DB_Status\".\"Ready\""
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetUnifiedRuntimeAlarms",
+      "family": "F04",
+      "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetUnifiedRuntimeTags",
+      "family": "F04",
+      "example": {
+        "tags": [
+          "Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "InvokeUnifiedOpenPipe",
+      "family": "F04",
+      "example": {
+        "request": {
+          "message": "BrowseTags",
+          "params": {
+            "filter": "*Ready*",
+            "pageSize": 50
+          }
+        },
+        "confirmWrite": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ListPlcSimAdvancedInstances",
+      "family": "F04",
+      "example": {
+        "includeState": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManagePlcSimAdvancedInstance",
+      "family": "F04",
+      "example": {
+        "instanceName": "MCP_SIM",
+        "action": "register",
+        "cpuType": "&lt;CPU type supported by the installed PLCSIM API&gt;",
+        "communicationInterface": "Softbus",
+        "confirmInstanceChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ProbeS7CpuIdentity",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "RunPlcCompanionTool",
+      "family": "F04",
+      "example": {
+        "workingDirectory": "C:\\Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "RunPlcSimAdvancedTestScenario",
+      "family": "F04",
+      "example": {
+        "scenario": {
+          "instance": "MCP_SIM",
+          "mode": "default",
+          "steps": [
+            {
+              "write": {
+                "MCP_SimDB.Start": true
+              }
+            },
+            {
+              "waitMs": 300
+            },
+            {
+              "assert": {
+                "MCP_SimDB.Running": true
+              }
+            }
+          ]
+        },
+        "dryRun": true,
+        "confirmRun": false
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "SamplePlcLiveValuesS7",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10",
+        "items": [
+          "DB1.DBX0.0:BOOL"
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "SetPlcWebOperatingMode",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;",
+        "mode": "run",
+        "confirmModeChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "WritePlcSimAdvancedTags",
+      "family": "F04",
+      "example": {
+        "instanceName": "MCP_SIM",
+        "values": [
+          {
+            "name": "MCP_SimDB.Start",
+            "value": true
+          }
+        ],
+        "dryRun": true,
+        "confirmWrite": false
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "WritePlcWebVars",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;",
+        "writes": [
+          {
+            "name": "\"DB_Status\".\"Ready\"",
+            "value": true
+          }
+        ],
+        "confirmWrite": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "WriteUnifiedRuntimeTags",
+      "family": "F04",
+      "example": {
+        "writes": [
+          {
+            "name": "Ready",
+            "value": true
+          }
+        ],
+        "confirmWrite": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "CheckDownloadReadiness",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "CompareSoftwareToOnline",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "maxDepth": 4
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ConnectOnlinePlc",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "ipAddress": "192.168.0.3",
+        "pgPcInterface": "PLCSIM"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "DisconnectOnlinePlc",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "DisconnectOnlinePlcs",
+      "family": "F22",
+      "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "DownloadPlc",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "pgPcInterface": "PLCSIM",
+        "targetIpAddress": "192.168.0.3"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetOnlineState",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ListTransferRoutes",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManagePlcDataBlockSnapshot",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "action": "read",
+        "confirmValueChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "UploadStationFromPlc",
+      "family": "F22",
+      "example": {
+        "targetIpAddress": "192.168.0.3",
+        "pgPcInterface": "PLCSIM",
+        "dryRun": true,
+        "confirmUpload": false
       }
     },
     {
@@ -9011,6 +9694,342 @@
         "ioType": "Input",
         "startAddress": 1,
         "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetPlcLiveValuesOpcUa",
+      "family": "F04",
+      "example": {
+        "endpointUrl": "opc.tcp://192.0.2.10:4840",
+        "nodeIds": [
+          "ns=3;s=\"DB_Status\".\"Ready\""
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetPlcLiveValuesS7",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10",
+        "items": [
+          "DB1.DBX0.0:BOOL"
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetPlcRunStateS7",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetPlcSimAdvancedTags",
+      "family": "F04",
+      "example": {
+        "instanceName": "MCP_SIM",
+        "names": [
+          "MCP_SimDB.Cycles",
+          "MCP_SimDB.Running"
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetPlcWebDiagnostics",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetPlcWebVars",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;",
+        "vars": [
+          "\"DB_Status\".\"Ready\""
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetUnifiedRuntimeAlarms",
+      "family": "F04",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetUnifiedRuntimeTags",
+      "family": "F04",
+      "example": {
+        "tags": [
+          "Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "InvokeUnifiedOpenPipe",
+      "family": "F04",
+      "example": {
+        "request": {
+          "message": "BrowseTags",
+          "params": {
+            "filter": "*Ready*",
+            "pageSize": 50
+          }
+        },
+        "confirmWrite": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ListPlcSimAdvancedInstances",
+      "family": "F04",
+      "example": {
+        "includeState": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManagePlcSimAdvancedInstance",
+      "family": "F04",
+      "example": {
+        "instanceName": "MCP_SIM",
+        "action": "register",
+        "cpuType": "&lt;CPU type supported by the installed PLCSIM API&gt;",
+        "communicationInterface": "Softbus",
+        "confirmInstanceChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ProbeS7CpuIdentity",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "RunPlcCompanionTool",
+      "family": "F04",
+      "example": {
+        "workingDirectory": "C:\\Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "RunPlcSimAdvancedTestScenario",
+      "family": "F04",
+      "example": {
+        "scenario": {
+          "instance": "MCP_SIM",
+          "mode": "default",
+          "steps": [
+            {
+              "write": {
+                "MCP_SimDB.Start": true
+              }
+            },
+            {
+              "waitMs": 300
+            },
+            {
+              "assert": {
+                "MCP_SimDB.Running": true
+              }
+            }
+          ]
+        },
+        "dryRun": true,
+        "confirmRun": false
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "SamplePlcLiveValuesS7",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10",
+        "items": [
+          "DB1.DBX0.0:BOOL"
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "SetPlcWebOperatingMode",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;",
+        "mode": "run",
+        "confirmModeChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "WritePlcSimAdvancedTags",
+      "family": "F04",
+      "example": {
+        "instanceName": "MCP_SIM",
+        "values": [
+          {
+            "name": "MCP_SimDB.Start",
+            "value": true
+          }
+        ],
+        "dryRun": true,
+        "confirmWrite": false
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "WritePlcWebVars",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;",
+        "writes": [
+          {
+            "name": "\"DB_Status\".\"Ready\"",
+            "value": true
+          }
+        ],
+        "confirmWrite": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "WriteUnifiedRuntimeTags",
+      "family": "F04",
+      "example": {
+        "writes": [
+          {
+            "name": "Ready",
+            "value": true
+          }
+        ],
+        "confirmWrite": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "CheckDownloadReadiness",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "CompareSoftwareToOnline",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "maxDepth": 4
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ConnectOnlinePlc",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "ipAddress": "192.168.0.3",
+        "pgPcInterface": "PLCSIM"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "DisconnectOnlinePlc",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "DisconnectOnlinePlcs",
+      "family": "F22",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "DownloadPlc",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "pgPcInterface": "PLCSIM",
+        "targetIpAddress": "192.168.0.3"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetOnlineState",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetPlcBlockFingerprints",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "targetIpAddress": "192.0.2.10",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ListTransferRoutes",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManagePlcDataBlockSnapshot",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "action": "read",
+        "confirmValueChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "UploadStationFromPlc",
+      "family": "F22",
+      "example": {
+        "targetIpAddress": "192.168.0.3",
+        "pgPcInterface": "PLCSIM",
+        "dryRun": true,
+        "confirmUpload": false
       }
     },
     {
@@ -11257,6 +12276,342 @@
         "ioType": "Input",
         "startAddress": 1,
         "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetPlcLiveValuesOpcUa",
+      "family": "F04",
+      "example": {
+        "endpointUrl": "opc.tcp://192.0.2.10:4840",
+        "nodeIds": [
+          "ns=3;s=\"DB_Status\".\"Ready\""
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetPlcLiveValuesS7",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10",
+        "items": [
+          "DB1.DBX0.0:BOOL"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetPlcRunStateS7",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetPlcSimAdvancedTags",
+      "family": "F04",
+      "example": {
+        "instanceName": "MCP_SIM",
+        "names": [
+          "MCP_SimDB.Cycles",
+          "MCP_SimDB.Running"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetPlcWebDiagnostics",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetPlcWebVars",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;",
+        "vars": [
+          "\"DB_Status\".\"Ready\""
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetUnifiedRuntimeAlarms",
+      "family": "F04",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetUnifiedRuntimeTags",
+      "family": "F04",
+      "example": {
+        "tags": [
+          "Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "InvokeUnifiedOpenPipe",
+      "family": "F04",
+      "example": {
+        "request": {
+          "message": "BrowseTags",
+          "params": {
+            "filter": "*Ready*",
+            "pageSize": 50
+          }
+        },
+        "confirmWrite": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ListPlcSimAdvancedInstances",
+      "family": "F04",
+      "example": {
+        "includeState": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManagePlcSimAdvancedInstance",
+      "family": "F04",
+      "example": {
+        "instanceName": "MCP_SIM",
+        "action": "register",
+        "cpuType": "&lt;CPU type supported by the installed PLCSIM API&gt;",
+        "communicationInterface": "Softbus",
+        "confirmInstanceChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ProbeS7CpuIdentity",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "RunPlcCompanionTool",
+      "family": "F04",
+      "example": {
+        "workingDirectory": "C:\\Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "RunPlcSimAdvancedTestScenario",
+      "family": "F04",
+      "example": {
+        "scenario": {
+          "instance": "MCP_SIM",
+          "mode": "default",
+          "steps": [
+            {
+              "write": {
+                "MCP_SimDB.Start": true
+              }
+            },
+            {
+              "waitMs": 300
+            },
+            {
+              "assert": {
+                "MCP_SimDB.Running": true
+              }
+            }
+          ]
+        },
+        "dryRun": true,
+        "confirmRun": false
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "SamplePlcLiveValuesS7",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10",
+        "items": [
+          "DB1.DBX0.0:BOOL"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "SetPlcWebOperatingMode",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;",
+        "mode": "run",
+        "confirmModeChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "WritePlcSimAdvancedTags",
+      "family": "F04",
+      "example": {
+        "instanceName": "MCP_SIM",
+        "values": [
+          {
+            "name": "MCP_SimDB.Start",
+            "value": true
+          }
+        ],
+        "dryRun": true,
+        "confirmWrite": false
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "WritePlcWebVars",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;",
+        "writes": [
+          {
+            "name": "\"DB_Status\".\"Ready\"",
+            "value": true
+          }
+        ],
+        "confirmWrite": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "WriteUnifiedRuntimeTags",
+      "family": "F04",
+      "example": {
+        "writes": [
+          {
+            "name": "Ready",
+            "value": true
+          }
+        ],
+        "confirmWrite": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "CheckDownloadReadiness",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "CompareSoftwareToOnline",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "maxDepth": 4
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ConnectOnlinePlc",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "ipAddress": "192.168.0.3",
+        "pgPcInterface": "PLCSIM"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "DisconnectOnlinePlc",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "DisconnectOnlinePlcs",
+      "family": "F22",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "DownloadPlc",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "pgPcInterface": "PLCSIM",
+        "targetIpAddress": "192.168.0.3"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetOnlineState",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetPlcBlockFingerprints",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "targetIpAddress": "192.0.2.10",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ListTransferRoutes",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManagePlcDataBlockSnapshot",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "action": "read",
+        "confirmValueChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "UploadStationFromPlc",
+      "family": "F22",
+      "example": {
+        "targetIpAddress": "192.168.0.3",
+        "pgPcInterface": "PLCSIM",
+        "dryRun": true,
+        "confirmUpload": false
       }
     },
     {
@@ -13624,6 +14979,357 @@
         "ioType": "Input",
         "startAddress": 1,
         "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetPlcLiveValuesOpcUa",
+      "family": "F04",
+      "example": {
+        "endpointUrl": "opc.tcp://192.0.2.10:4840",
+        "nodeIds": [
+          "ns=3;s=\"DB_Status\".\"Ready\""
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetPlcLiveValuesS7",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10",
+        "items": [
+          "DB1.DBX0.0:BOOL"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetPlcRunStateS7",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetPlcSimAdvancedTags",
+      "family": "F04",
+      "example": {
+        "instanceName": "MCP_SIM",
+        "names": [
+          "MCP_SimDB.Cycles",
+          "MCP_SimDB.Running"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetPlcWebDiagnostics",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetPlcWebVars",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;",
+        "vars": [
+          "\"DB_Status\".\"Ready\""
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetUnifiedRuntimeAlarms",
+      "family": "F04",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetUnifiedRuntimeTags",
+      "family": "F04",
+      "example": {
+        "tags": [
+          "Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "InvokeUnifiedOpenPipe",
+      "family": "F04",
+      "example": {
+        "request": {
+          "message": "BrowseTags",
+          "params": {
+            "filter": "*Ready*",
+            "pageSize": 50
+          }
+        },
+        "confirmWrite": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ListPlcSimAdvancedInstances",
+      "family": "F04",
+      "example": {
+        "includeState": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManagePlcSimAdvancedInstance",
+      "family": "F04",
+      "example": {
+        "instanceName": "MCP_SIM",
+        "action": "register",
+        "cpuType": "&lt;CPU type supported by the installed PLCSIM API&gt;",
+        "communicationInterface": "Softbus",
+        "confirmInstanceChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ProbeS7CpuIdentity",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "RunPlcCompanionTool",
+      "family": "F04",
+      "example": {
+        "workingDirectory": "C:\\Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "RunPlcSimAdvancedTestScenario",
+      "family": "F04",
+      "example": {
+        "scenario": {
+          "instance": "MCP_SIM",
+          "mode": "default",
+          "steps": [
+            {
+              "write": {
+                "MCP_SimDB.Start": true
+              }
+            },
+            {
+              "waitMs": 300
+            },
+            {
+              "assert": {
+                "MCP_SimDB.Running": true
+              }
+            }
+          ]
+        },
+        "dryRun": true,
+        "confirmRun": false
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "SamplePlcLiveValuesS7",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10",
+        "items": [
+          "DB1.DBX0.0:BOOL"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "SetPlcWebOperatingMode",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;",
+        "mode": "run",
+        "confirmModeChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "WritePlcSimAdvancedTags",
+      "family": "F04",
+      "example": {
+        "instanceName": "MCP_SIM",
+        "values": [
+          {
+            "name": "MCP_SimDB.Start",
+            "value": true
+          }
+        ],
+        "dryRun": true,
+        "confirmWrite": false
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "WritePlcWebVars",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;",
+        "writes": [
+          {
+            "name": "\"DB_Status\".\"Ready\"",
+            "value": true
+          }
+        ],
+        "confirmWrite": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "WriteUnifiedRuntimeTags",
+      "family": "F04",
+      "example": {
+        "writes": [
+          {
+            "name": "Ready",
+            "value": true
+          }
+        ],
+        "confirmWrite": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "CheckDownloadReadiness",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "CompareSoftwareToOnline",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "maxDepth": 4
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ConnectOnlinePlc",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "ipAddress": "192.168.0.3",
+        "pgPcInterface": "PLCSIM"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "DisconnectOnlinePlc",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "DisconnectOnlinePlcs",
+      "family": "F22",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "DownloadPlc",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "pgPcInterface": "PLCSIM",
+        "targetIpAddress": "192.168.0.3"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GeneratePlcLoadableFile",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectKind": "blocks",
+        "targetOption": "&lt;target option from the selected release&gt;",
+        "filePath": "&lt;new absolute output file for the selected TargetOption&gt;",
+        "dryRun": true,
+        "objectPaths": [
+          "Main"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetOnlineState",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetPlcBlockFingerprints",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "targetIpAddress": "192.0.2.10",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ListTransferRoutes",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManagePlcDataBlockSnapshot",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "action": "read",
+        "confirmValueChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "UploadStationFromPlc",
+      "family": "F22",
+      "example": {
+        "targetIpAddress": "192.168.0.3",
+        "pgPcInterface": "PLCSIM",
+        "dryRun": true,
+        "confirmUpload": false
       }
     },
     {
@@ -16151,6 +17857,377 @@
         "ioType": "Input",
         "startAddress": 1,
         "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetPlcLiveValuesOpcUa",
+      "family": "F04",
+      "example": {
+        "endpointUrl": "opc.tcp://192.0.2.10:4840",
+        "nodeIds": [
+          "ns=3;s=\"DB_Status\".\"Ready\""
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetPlcLiveValuesS7",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10",
+        "items": [
+          "DB1.DBX0.0:BOOL"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetPlcRunStateS7",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetPlcSimAdvancedTags",
+      "family": "F04",
+      "example": {
+        "instanceName": "MCP_SIM",
+        "names": [
+          "MCP_SimDB.Cycles",
+          "MCP_SimDB.Running"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetPlcWebDiagnostics",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetPlcWebVars",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;",
+        "vars": [
+          "\"DB_Status\".\"Ready\""
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetUnifiedRuntimeAlarms",
+      "family": "F04",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetUnifiedRuntimeTags",
+      "family": "F04",
+      "example": {
+        "tags": [
+          "Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "InvokeUnifiedOpenPipe",
+      "family": "F04",
+      "example": {
+        "request": {
+          "message": "BrowseTags",
+          "params": {
+            "filter": "*Ready*",
+            "pageSize": 50
+          }
+        },
+        "confirmWrite": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListPlcSimAdvancedInstances",
+      "family": "F04",
+      "example": {
+        "includeState": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManagePlcSimAdvancedInstance",
+      "family": "F04",
+      "example": {
+        "instanceName": "MCP_SIM",
+        "action": "register",
+        "cpuType": "&lt;CPU type supported by the installed PLCSIM API&gt;",
+        "communicationInterface": "Softbus",
+        "confirmInstanceChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ProbeS7CpuIdentity",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "RunPlcCompanionTool",
+      "family": "F04",
+      "example": {
+        "workingDirectory": "C:\\Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "RunPlcSimAdvancedTestScenario",
+      "family": "F04",
+      "example": {
+        "scenario": {
+          "instance": "MCP_SIM",
+          "mode": "default",
+          "steps": [
+            {
+              "write": {
+                "MCP_SimDB.Start": true
+              }
+            },
+            {
+              "waitMs": 300
+            },
+            {
+              "assert": {
+                "MCP_SimDB.Running": true
+              }
+            }
+          ]
+        },
+        "dryRun": true,
+        "confirmRun": false
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SamplePlcLiveValuesS7",
+      "family": "F04",
+      "example": {
+        "ip": "192.0.2.10",
+        "items": [
+          "DB1.DBX0.0:BOOL"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SetPlcWebOperatingMode",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;",
+        "mode": "run",
+        "confirmModeChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "WritePlcSimAdvancedTags",
+      "family": "F04",
+      "example": {
+        "instanceName": "MCP_SIM",
+        "values": [
+          {
+            "name": "MCP_SimDB.Start",
+            "value": true
+          }
+        ],
+        "dryRun": true,
+        "confirmWrite": false
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "WritePlcWebVars",
+      "family": "F04",
+      "example": {
+        "host": "192.0.2.10",
+        "username": "&lt;configured user&gt;",
+        "password": "&lt;password supplied for this target&gt;",
+        "writes": [
+          {
+            "name": "\"DB_Status\".\"Ready\"",
+            "value": true
+          }
+        ],
+        "confirmWrite": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "WriteUnifiedRuntimeTags",
+      "family": "F04",
+      "example": {
+        "writes": [
+          {
+            "name": "Ready",
+            "value": true
+          }
+        ],
+        "confirmWrite": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CheckDownloadReadiness",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CompareSoftwareToOnline",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "maxDepth": 4
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ConnectOnlinePlc",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "ipAddress": "192.168.0.3",
+        "pgPcInterface": "PLCSIM"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "DisconnectOnlinePlc",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "DisconnectOnlinePlcs",
+      "family": "F22",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "DownloadPlc",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "pgPcInterface": "PLCSIM",
+        "targetIpAddress": "192.168.0.3"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "DownloadPlcToFolder",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "destinationDirectory": "C:\\Examples\\restored",
+        "confirmDownload": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GeneratePlcLoadableFile",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectKind": "blocks",
+        "targetOption": "&lt;target option from the selected release&gt;",
+        "filePath": "&lt;new absolute output file for the selected TargetOption&gt;",
+        "dryRun": true,
+        "objectPaths": [
+          "Main"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetOnlineState",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetPlcBlockFingerprints",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "targetIpAddress": "192.0.2.10",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListTransferRoutes",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManagePlcDataBlockSnapshot",
+      "family": "F22",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "action": "read",
+        "confirmValueChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ScanAccessibleDevices",
+      "family": "F22",
+      "example": {
+        "pgPcInterface": "PLCSIM",
+        "limit": 20
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "UploadStationFromPlc",
+      "family": "F22",
+      "example": {
+        "targetIpAddress": "192.168.0.3",
+        "pgPcInterface": "PLCSIM",
+        "dryRun": true,
+        "confirmUpload": false
       }
     },
     {
@@ -27896,26 +29973,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "UploadDeviceParameters",
-        "currentName": "UploadDeviceParameters",
-        "sourceName": "UploadDeviceParameters",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "devicePath": [
-            "&lt;exact device name from GetProjectTree&gt;"
-          ],
-          "itemPath": [
-            "&lt;exact device item from GetProjectTree&gt;"
-          ],
-          "targetIpAddress": "192.0.2.10",
-          "confirmUpload": false,
-          "dryRun": true
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "UploadStationFromPlc",
         "currentName": "UploadStationFromPlc",
         "sourceName": "UploadStationFromPlc",
@@ -37723,6 +39780,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CompareSoftwareToOnline",
+        "currentName": "CompareSoftwareToOnline",
+        "sourceName": "CompareSoftwareToOnline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "maxDepth": 4
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CompileHmiDiagnostics",
         "currentName": "CompileHmiDiagnostics",
         "sourceName": "CompileAndDiagnoseHmi",
@@ -38745,6 +40815,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetOnlineState",
+        "currentName": "GetOnlineState",
+        "sourceName": "GetOnlineState",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcExternalSources",
         "currentName": "ListPlcExternalSources",
         "sourceName": "GetPlcExternalSources",
@@ -38753,6 +40835,18 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcRunStateS7",
+        "currentName": "GetPlcRunStateS7",
+        "sourceName": "GetPlcRunStateS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10"
         },
         "envelopeVersion": 4
       },
@@ -38878,6 +40972,42 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DisconnectOnlinePlc",
+        "currentName": "DisconnectOnlinePlc",
+        "sourceName": "GoOffline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DisconnectOnlinePlcs",
+        "currentName": "DisconnectOnlinePlcs",
+        "sourceName": "GoOfflineAll",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ConnectOnlinePlc",
+        "currentName": "ConnectOnlinePlc",
+        "sourceName": "GoOnline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "ipAddress": "192.168.0.3",
+          "pgPcInterface": "PLCSIM"
         },
         "envelopeVersion": 4
       },
@@ -40082,6 +42212,23 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManagePlcSimAdvancedInstance",
+        "currentName": "ManagePlcSimAdvancedInstance",
+        "sourceName": "ManagePlcSimAdvancedInstance",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "instanceName": "MCP_SIM",
+          "action": "register",
+          "cpuType": "&lt;CPU type supported by the installed PLCSIM API&gt;",
+          "communicationInterface": "Softbus",
+          "confirmInstanceChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePlcTagDefinition",
         "currentName": "ManagePlcTagDefinition",
         "sourceName": "ManagePlcTagDefinition",
@@ -41019,6 +43166,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ProbeS7CpuIdentity",
+        "currentName": "ProbeS7CpuIdentity",
+        "sourceName": "ProbeS7CpuIdentity",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "PublishGenerationRecord",
         "currentName": "PublishGenerationRecord",
         "sourceName": "PublishGenerationRecord",
@@ -41233,6 +43392,64 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcLiveValuesOpcUa",
+        "currentName": "GetPlcLiveValuesOpcUa",
+        "sourceName": "ReadPlcLiveValuesOpcUa",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "endpointUrl": "opc.tcp://192.0.2.10:4840",
+          "nodeIds": [
+            "ns=3;s=\"DB_Status\".\"Ready\""
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcLiveValuesS7",
+        "currentName": "GetPlcLiveValuesS7",
+        "sourceName": "ReadPlcLiveValuesS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10",
+          "items": [
+            "DB1.DBX0.0:BOOL"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListPlcSimAdvancedInstances",
+        "currentName": "ListPlcSimAdvancedInstances",
+        "sourceName": "ReadPlcSimAdvancedInstances",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "includeState": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcSimAdvancedTags",
+        "currentName": "GetPlcSimAdvancedTags",
+        "sourceName": "ReadPlcSimAdvancedTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "instanceName": "MCP_SIM",
+          "names": [
+            "MCP_SimDB.Cycles",
+            "MCP_SimDB.Running"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcSystemConstants",
         "currentName": "ListPlcSystemConstants",
         "sourceName": "ReadPlcSystemConstants",
@@ -41297,6 +43514,37 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcWebDiagnostics",
+        "currentName": "GetPlcWebDiagnostics",
+        "sourceName": "ReadPlcWebDiagnostics",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcWebVars",
+        "currentName": "GetPlcWebVars",
+        "sourceName": "ReadPlcWebVars",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;",
+          "vars": [
+            "\"DB_Status\".\"Ready\""
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPortalInfo",
         "currentName": "GetPortalInfo",
         "sourceName": "ReadPortalInfo",
@@ -41347,6 +43595,42 @@
                 "query": "threading"
               }
             }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListTransferRoutes",
+        "currentName": "ListTransferRoutes",
+        "sourceName": "ReadTransferRoutes",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedRuntimeAlarms",
+        "currentName": "GetUnifiedRuntimeAlarms",
+        "sourceName": "ReadUnifiedRuntimeAlarms",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedRuntimeTags",
+        "currentName": "GetUnifiedRuntimeTags",
+        "sourceName": "ReadUnifiedRuntimeTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "tags": [
+            "Ready"
           ]
         },
         "envelopeVersion": 4
@@ -41487,6 +43771,51 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunPlcCompanionTool",
+        "currentName": "RunPlcCompanionTool",
+        "sourceName": "RunPlcCompanionTool",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "workingDirectory": "C:\\Examples",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RunPlcSimAdvancedTestScenario",
+        "currentName": "RunPlcSimAdvancedTestScenario",
+        "sourceName": "RunPlcSimAdvancedTestScenario",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "scenario": {
+            "instance": "MCP_SIM",
+            "mode": "default",
+            "steps": [
+              {
+                "write": {
+                  "MCP_SimDB.Start": true
+                }
+              },
+              {
+                "waitMs": 300
+              },
+              {
+                "assert": {
+                  "MCP_SimDB.Running": true
+                }
+              }
+            ]
+          },
+          "dryRun": true,
+          "confirmRun": false
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RunToolTransaction",
         "currentName": "RunToolTransaction",
         "sourceName": "RunToolsInTransaction",
@@ -41505,6 +43834,21 @@
                 "groupPath": "Examples"
               }
             }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SamplePlcLiveValuesS7",
+        "currentName": "SamplePlcLiveValuesS7",
+        "sourceName": "SamplePlcLiveValuesS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10",
+          "items": [
+            "DB1.DBX0.0:BOOL"
           ]
         },
         "envelopeVersion": 4
@@ -41620,6 +43964,23 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetPlcWebOperatingMode",
+        "currentName": "SetPlcWebOperatingMode",
+        "sourceName": "SetPlcWebOperatingMode",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;",
+          "mode": "run",
+          "confirmModeChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ShowObjectInEditor",
         "currentName": "ShowObjectInEditor",
         "sourceName": "ShowObjectInEditor",
@@ -41694,6 +44055,26 @@
           "softwarePath": "PLC_1",
           "tag": "DB_Status.Ready",
           "ip": "192.0.2.10"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "InvokeUnifiedOpenPipe",
+        "currentName": "InvokeUnifiedOpenPipe",
+        "sourceName": "UnifiedOpenPipeRequest",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "request": {
+            "message": "BrowseTags",
+            "params": {
+              "filter": "*Ready*",
+              "pageSize": 50
+            }
+          },
+          "confirmWrite": false,
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -41790,6 +44171,67 @@
         "arguments": {
           "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
           "outputPath": "C:\\Temp\\FC_Add.scl"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WritePlcSimAdvancedTags",
+        "currentName": "WritePlcSimAdvancedTags",
+        "sourceName": "WritePlcSimAdvancedTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "instanceName": "MCP_SIM",
+          "values": [
+            {
+              "name": "MCP_SimDB.Start",
+              "value": true
+            }
+          ],
+          "dryRun": true,
+          "confirmWrite": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WritePlcWebVars",
+        "currentName": "WritePlcWebVars",
+        "sourceName": "WritePlcWebVars",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;",
+          "writes": [
+            {
+              "name": "\"DB_Status\".\"Ready\"",
+              "value": true
+            }
+          ],
+          "confirmWrite": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WriteUnifiedRuntimeTags",
+        "currentName": "WriteUnifiedRuntimeTags",
+        "sourceName": "WriteUnifiedRuntimeTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "writes": [
+            {
+              "name": "Ready",
+              "value": true
+            }
+          ],
+          "confirmWrite": false,
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -42185,6 +44627,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CheckDownloadReadiness",
+        "currentName": "CheckDownloadReadiness",
+        "sourceName": "CheckDownloadReadiness",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CheckProductUpdate",
         "currentName": "CheckProductUpdate",
         "sourceName": "CheckForUpdate",
@@ -42266,6 +44720,19 @@
           "kind": "software",
           "softwarePath": "PLC_1",
           "targetSoftwarePath": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CompareSoftwareToOnline",
+        "currentName": "CompareSoftwareToOnline",
+        "sourceName": "CompareSoftwareToOnline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "maxDepth": 4
         },
         "envelopeVersion": 4
       },
@@ -42762,6 +45229,20 @@
         ],
         "arguments": {
           "fix": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DownloadPlc",
+        "currentName": "DownloadPlc",
+        "sourceName": "DownloadToPlc",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "pgPcInterface": "PLCSIM",
+          "targetIpAddress": "192.168.0.3"
         },
         "envelopeVersion": 4
       },
@@ -43384,6 +45865,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetOnlineState",
+        "currentName": "GetOnlineState",
+        "sourceName": "GetOnlineState",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcOpcUaConfiguration",
         "currentName": "GetPlcOpcUaConfiguration",
         "sourceName": "GetOpcUaConfig",
@@ -43416,6 +45909,18 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcRunStateS7",
+        "currentName": "GetPlcRunStateS7",
+        "sourceName": "GetPlcRunStateS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10"
         },
         "envelopeVersion": 4
       },
@@ -43565,6 +46070,42 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DisconnectOnlinePlc",
+        "currentName": "DisconnectOnlinePlc",
+        "sourceName": "GoOffline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DisconnectOnlinePlcs",
+        "currentName": "DisconnectOnlinePlcs",
+        "sourceName": "GoOfflineAll",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ConnectOnlinePlc",
+        "currentName": "ConnectOnlinePlc",
+        "sourceName": "GoOnline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "ipAddress": "192.168.0.3",
+          "pgPcInterface": "PLCSIM"
         },
         "envelopeVersion": 4
       },
@@ -44796,6 +47337,22 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManagePlcDataBlockSnapshot",
+        "currentName": "ManagePlcDataBlockSnapshot",
+        "sourceName": "ManagePlcDataBlockSnapshot",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "action": "read",
+          "confirmValueChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePlcExternalSources",
         "currentName": "ManagePlcExternalSources",
         "sourceName": "ManagePlcExternalSources",
@@ -44839,6 +47396,23 @@
           ],
           "action": "read",
           "confirmChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcSimAdvancedInstance",
+        "currentName": "ManagePlcSimAdvancedInstance",
+        "sourceName": "ManagePlcSimAdvancedInstance",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "instanceName": "MCP_SIM",
+          "action": "register",
+          "cpuType": "&lt;CPU type supported by the installed PLCSIM API&gt;",
+          "communicationInterface": "Softbus",
+          "confirmInstanceChange": false,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -45848,6 +48422,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ProbeS7CpuIdentity",
+        "currentName": "ProbeS7CpuIdentity",
+        "sourceName": "ProbeS7CpuIdentity",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "PublishGenerationRecord",
         "currentName": "PublishGenerationRecord",
         "sourceName": "PublishGenerationRecord",
@@ -46074,6 +48660,36 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcLiveValuesOpcUa",
+        "currentName": "GetPlcLiveValuesOpcUa",
+        "sourceName": "ReadPlcLiveValuesOpcUa",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "endpointUrl": "opc.tcp://192.0.2.10:4840",
+          "nodeIds": [
+            "ns=3;s=\"DB_Status\".\"Ready\""
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcLiveValuesS7",
+        "currentName": "GetPlcLiveValuesS7",
+        "sourceName": "ReadPlcLiveValuesS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10",
+          "items": [
+            "DB1.DBX0.0:BOOL"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcObjectFingerprints",
         "currentName": "GetPlcObjectFingerprints",
         "sourceName": "ReadPlcObjectFingerprints",
@@ -46084,6 +48700,34 @@
           "softwarePath": "PLC_1",
           "objectKind": "block",
           "objectPath": "Main"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListPlcSimAdvancedInstances",
+        "currentName": "ListPlcSimAdvancedInstances",
+        "sourceName": "ReadPlcSimAdvancedInstances",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "includeState": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcSimAdvancedTags",
+        "currentName": "GetPlcSimAdvancedTags",
+        "sourceName": "ReadPlcSimAdvancedTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "instanceName": "MCP_SIM",
+          "names": [
+            "MCP_SimDB.Cycles",
+            "MCP_SimDB.Running"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -46165,6 +48809,37 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcWebDiagnostics",
+        "currentName": "GetPlcWebDiagnostics",
+        "sourceName": "ReadPlcWebDiagnostics",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcWebVars",
+        "currentName": "GetPlcWebVars",
+        "sourceName": "ReadPlcWebVars",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;",
+          "vars": [
+            "\"DB_Status\".\"Ready\""
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPortalInfo",
         "currentName": "GetPortalInfo",
         "sourceName": "ReadPortalInfo",
@@ -46242,6 +48917,42 @@
           ],
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListTransferRoutes",
+        "currentName": "ListTransferRoutes",
+        "sourceName": "ReadTransferRoutes",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedRuntimeAlarms",
+        "currentName": "GetUnifiedRuntimeAlarms",
+        "sourceName": "ReadUnifiedRuntimeAlarms",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedRuntimeTags",
+        "currentName": "GetUnifiedRuntimeTags",
+        "sourceName": "ReadUnifiedRuntimeTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "tags": [
+            "Ready"
           ]
         },
         "envelopeVersion": 4
@@ -46396,6 +49107,51 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunPlcCompanionTool",
+        "currentName": "RunPlcCompanionTool",
+        "sourceName": "RunPlcCompanionTool",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "workingDirectory": "C:\\Examples",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RunPlcSimAdvancedTestScenario",
+        "currentName": "RunPlcSimAdvancedTestScenario",
+        "sourceName": "RunPlcSimAdvancedTestScenario",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "scenario": {
+            "instance": "MCP_SIM",
+            "mode": "default",
+            "steps": [
+              {
+                "write": {
+                  "MCP_SimDB.Start": true
+                }
+              },
+              {
+                "waitMs": 300
+              },
+              {
+                "assert": {
+                  "MCP_SimDB.Running": true
+                }
+              }
+            ]
+          },
+          "dryRun": true,
+          "confirmRun": false
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RunToolTransaction",
         "currentName": "RunToolTransaction",
         "sourceName": "RunToolsInTransaction",
@@ -46414,6 +49170,21 @@
                 "groupPath": "Examples"
               }
             }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SamplePlcLiveValuesS7",
+        "currentName": "SamplePlcLiveValuesS7",
+        "sourceName": "SamplePlcLiveValuesS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10",
+          "items": [
+            "DB1.DBX0.0:BOOL"
           ]
         },
         "envelopeVersion": 4
@@ -46555,6 +49326,23 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetPlcWebOperatingMode",
+        "currentName": "SetPlcWebOperatingMode",
+        "sourceName": "SetPlcWebOperatingMode",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;",
+          "mode": "run",
+          "confirmModeChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SetPlcPutGetAccess",
         "currentName": "SetPlcPutGetAccess",
         "sourceName": "SetPutGetAccess",
@@ -46645,6 +49433,26 @@
         "envelopeVersion": 4
       },
       {
+        "name": "InvokeUnifiedOpenPipe",
+        "currentName": "InvokeUnifiedOpenPipe",
+        "sourceName": "UnifiedOpenPipeRequest",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "request": {
+            "message": "BrowseTags",
+            "params": {
+              "filter": "*Ready*",
+              "pageSize": 50
+            }
+          },
+          "confirmWrite": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SetDeviceAddress",
         "currentName": "SetDeviceAddress",
         "sourceName": "UpdateDeviceAddress",
@@ -46685,6 +49493,21 @@
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "UploadStationFromPlc",
+        "currentName": "UploadStationFromPlc",
+        "sourceName": "UploadStationFromPlc",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "targetIpAddress": "192.168.0.3",
+          "pgPcInterface": "PLCSIM",
+          "dryRun": true,
+          "confirmUpload": false
         },
         "envelopeVersion": 4
       },
@@ -46737,6 +49560,67 @@
         "arguments": {
           "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
           "outputPath": "C:\\Temp\\FC_Add.scl"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WritePlcSimAdvancedTags",
+        "currentName": "WritePlcSimAdvancedTags",
+        "sourceName": "WritePlcSimAdvancedTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "instanceName": "MCP_SIM",
+          "values": [
+            {
+              "name": "MCP_SimDB.Start",
+              "value": true
+            }
+          ],
+          "dryRun": true,
+          "confirmWrite": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WritePlcWebVars",
+        "currentName": "WritePlcWebVars",
+        "sourceName": "WritePlcWebVars",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;",
+          "writes": [
+            {
+              "name": "\"DB_Status\".\"Ready\"",
+              "value": true
+            }
+          ],
+          "confirmWrite": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WriteUnifiedRuntimeTags",
+        "currentName": "WriteUnifiedRuntimeTags",
+        "sourceName": "WriteUnifiedRuntimeTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "writes": [
+            {
+              "name": "Ready",
+              "value": true
+            }
+          ],
+          "confirmWrite": false,
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -47132,6 +50016,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CheckDownloadReadiness",
+        "currentName": "CheckDownloadReadiness",
+        "sourceName": "CheckDownloadReadiness",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CheckProductUpdate",
         "currentName": "CheckProductUpdate",
         "sourceName": "CheckForUpdate",
@@ -47213,6 +50109,19 @@
           "kind": "software",
           "softwarePath": "PLC_1",
           "targetSoftwarePath": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CompareSoftwareToOnline",
+        "currentName": "CompareSoftwareToOnline",
+        "sourceName": "CompareSoftwareToOnline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "maxDepth": 4
         },
         "envelopeVersion": 4
       },
@@ -47734,6 +50643,20 @@
         ],
         "arguments": {
           "fix": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DownloadPlc",
+        "currentName": "DownloadPlc",
+        "sourceName": "DownloadToPlc",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "pgPcInterface": "PLCSIM",
+          "targetIpAddress": "192.168.0.3"
         },
         "envelopeVersion": 4
       },
@@ -48414,6 +51337,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetOnlineState",
+        "currentName": "GetOnlineState",
+        "sourceName": "GetOnlineState",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcOpcUaConfiguration",
         "currentName": "GetPlcOpcUaConfiguration",
         "sourceName": "GetOpcUaConfig",
@@ -48446,6 +51381,18 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcRunStateS7",
+        "currentName": "GetPlcRunStateS7",
+        "sourceName": "GetPlcRunStateS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10"
         },
         "envelopeVersion": 4
       },
@@ -48616,6 +51563,42 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DisconnectOnlinePlc",
+        "currentName": "DisconnectOnlinePlc",
+        "sourceName": "GoOffline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DisconnectOnlinePlcs",
+        "currentName": "DisconnectOnlinePlcs",
+        "sourceName": "GoOfflineAll",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ConnectOnlinePlc",
+        "currentName": "ConnectOnlinePlc",
+        "sourceName": "GoOnline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "ipAddress": "192.168.0.3",
+          "pgPcInterface": "PLCSIM"
+        },
         "envelopeVersion": 4
       },
       {
@@ -49962,6 +52945,22 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManagePlcDataBlockSnapshot",
+        "currentName": "ManagePlcDataBlockSnapshot",
+        "sourceName": "ManagePlcDataBlockSnapshot",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "action": "read",
+          "confirmValueChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePlcExternalSources",
         "currentName": "ManagePlcExternalSources",
         "sourceName": "ManagePlcExternalSources",
@@ -50005,6 +53004,23 @@
           ],
           "action": "read",
           "confirmChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcSimAdvancedInstance",
+        "currentName": "ManagePlcSimAdvancedInstance",
+        "sourceName": "ManagePlcSimAdvancedInstance",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "instanceName": "MCP_SIM",
+          "action": "register",
+          "cpuType": "&lt;CPU type supported by the installed PLCSIM API&gt;",
+          "communicationInterface": "Softbus",
+          "confirmInstanceChange": false,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -51061,6 +54077,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ProbeS7CpuIdentity",
+        "currentName": "ProbeS7CpuIdentity",
+        "sourceName": "ProbeS7CpuIdentity",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "PublishGenerationRecord",
         "currentName": "PublishGenerationRecord",
         "sourceName": "PublishGenerationRecord",
@@ -51275,6 +54303,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcBlockFingerprints",
+        "currentName": "GetPlcBlockFingerprints",
+        "sourceName": "ReadPlcBlockFingerprints",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "targetIpAddress": "192.0.2.10",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcBlockScopes",
         "currentName": "GetPlcBlockScopes",
         "sourceName": "ReadPlcBlockScopes",
@@ -51299,6 +54341,36 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcLiveValuesOpcUa",
+        "currentName": "GetPlcLiveValuesOpcUa",
+        "sourceName": "ReadPlcLiveValuesOpcUa",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "endpointUrl": "opc.tcp://192.0.2.10:4840",
+          "nodeIds": [
+            "ns=3;s=\"DB_Status\".\"Ready\""
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcLiveValuesS7",
+        "currentName": "GetPlcLiveValuesS7",
+        "sourceName": "ReadPlcLiveValuesS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10",
+          "items": [
+            "DB1.DBX0.0:BOOL"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcObjectFingerprints",
         "currentName": "GetPlcObjectFingerprints",
         "sourceName": "ReadPlcObjectFingerprints",
@@ -51309,6 +54381,34 @@
           "softwarePath": "PLC_1",
           "objectKind": "block",
           "objectPath": "Main"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListPlcSimAdvancedInstances",
+        "currentName": "ListPlcSimAdvancedInstances",
+        "sourceName": "ReadPlcSimAdvancedInstances",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "includeState": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcSimAdvancedTags",
+        "currentName": "GetPlcSimAdvancedTags",
+        "sourceName": "ReadPlcSimAdvancedTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "instanceName": "MCP_SIM",
+          "names": [
+            "MCP_SimDB.Cycles",
+            "MCP_SimDB.Running"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -51402,6 +54502,37 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcWebDiagnostics",
+        "currentName": "GetPlcWebDiagnostics",
+        "sourceName": "ReadPlcWebDiagnostics",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcWebVars",
+        "currentName": "GetPlcWebVars",
+        "sourceName": "ReadPlcWebVars",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;",
+          "vars": [
+            "\"DB_Status\".\"Ready\""
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPortalInfo",
         "currentName": "GetPortalInfo",
         "sourceName": "ReadPortalInfo",
@@ -51479,6 +54610,42 @@
           ],
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListTransferRoutes",
+        "currentName": "ListTransferRoutes",
+        "sourceName": "ReadTransferRoutes",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedRuntimeAlarms",
+        "currentName": "GetUnifiedRuntimeAlarms",
+        "sourceName": "ReadUnifiedRuntimeAlarms",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedRuntimeTags",
+        "currentName": "GetUnifiedRuntimeTags",
+        "sourceName": "ReadUnifiedRuntimeTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "tags": [
+            "Ready"
           ]
         },
         "envelopeVersion": 4
@@ -51633,6 +54800,51 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunPlcCompanionTool",
+        "currentName": "RunPlcCompanionTool",
+        "sourceName": "RunPlcCompanionTool",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "workingDirectory": "C:\\Examples",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RunPlcSimAdvancedTestScenario",
+        "currentName": "RunPlcSimAdvancedTestScenario",
+        "sourceName": "RunPlcSimAdvancedTestScenario",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "scenario": {
+            "instance": "MCP_SIM",
+            "mode": "default",
+            "steps": [
+              {
+                "write": {
+                  "MCP_SimDB.Start": true
+                }
+              },
+              {
+                "waitMs": 300
+              },
+              {
+                "assert": {
+                  "MCP_SimDB.Running": true
+                }
+              }
+            ]
+          },
+          "dryRun": true,
+          "confirmRun": false
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RunToolTransaction",
         "currentName": "RunToolTransaction",
         "sourceName": "RunToolsInTransaction",
@@ -51651,6 +54863,21 @@
                 "groupPath": "Examples"
               }
             }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SamplePlcLiveValuesS7",
+        "currentName": "SamplePlcLiveValuesS7",
+        "sourceName": "SamplePlcLiveValuesS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10",
+          "items": [
+            "DB1.DBX0.0:BOOL"
           ]
         },
         "envelopeVersion": 4
@@ -51809,6 +55036,23 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetPlcWebOperatingMode",
+        "currentName": "SetPlcWebOperatingMode",
+        "sourceName": "SetPlcWebOperatingMode",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;",
+          "mode": "run",
+          "confirmModeChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SetPlcPutGetAccess",
         "currentName": "SetPlcPutGetAccess",
         "sourceName": "SetPutGetAccess",
@@ -51911,6 +55155,26 @@
         "envelopeVersion": 4
       },
       {
+        "name": "InvokeUnifiedOpenPipe",
+        "currentName": "InvokeUnifiedOpenPipe",
+        "sourceName": "UnifiedOpenPipeRequest",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "request": {
+            "message": "BrowseTags",
+            "params": {
+              "filter": "*Ready*",
+              "pageSize": 50
+            }
+          },
+          "confirmWrite": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SetDeviceAddress",
         "currentName": "SetDeviceAddress",
         "sourceName": "UpdateDeviceAddress",
@@ -51951,6 +55215,21 @@
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "UploadStationFromPlc",
+        "currentName": "UploadStationFromPlc",
+        "sourceName": "UploadStationFromPlc",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "targetIpAddress": "192.168.0.3",
+          "pgPcInterface": "PLCSIM",
+          "dryRun": true,
+          "confirmUpload": false
         },
         "envelopeVersion": 4
       },
@@ -52003,6 +55282,67 @@
         "arguments": {
           "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
           "outputPath": "C:\\Temp\\FC_Add.scl"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WritePlcSimAdvancedTags",
+        "currentName": "WritePlcSimAdvancedTags",
+        "sourceName": "WritePlcSimAdvancedTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "instanceName": "MCP_SIM",
+          "values": [
+            {
+              "name": "MCP_SimDB.Start",
+              "value": true
+            }
+          ],
+          "dryRun": true,
+          "confirmWrite": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WritePlcWebVars",
+        "currentName": "WritePlcWebVars",
+        "sourceName": "WritePlcWebVars",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;",
+          "writes": [
+            {
+              "name": "\"DB_Status\".\"Ready\"",
+              "value": true
+            }
+          ],
+          "confirmWrite": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WriteUnifiedRuntimeTags",
+        "currentName": "WriteUnifiedRuntimeTags",
+        "sourceName": "WriteUnifiedRuntimeTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "writes": [
+            {
+              "name": "Ready",
+              "value": true
+            }
+          ],
+          "confirmWrite": false,
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -52398,6 +55738,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CheckDownloadReadiness",
+        "currentName": "CheckDownloadReadiness",
+        "sourceName": "CheckDownloadReadiness",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CheckProductUpdate",
         "currentName": "CheckProductUpdate",
         "sourceName": "CheckForUpdate",
@@ -52479,6 +55831,19 @@
           "kind": "software",
           "softwarePath": "PLC_1",
           "targetSoftwarePath": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CompareSoftwareToOnline",
+        "currentName": "CompareSoftwareToOnline",
+        "sourceName": "CompareSoftwareToOnline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "maxDepth": 4
         },
         "envelopeVersion": 4
       },
@@ -53000,6 +56365,20 @@
         ],
         "arguments": {
           "fix": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DownloadPlc",
+        "currentName": "DownloadPlc",
+        "sourceName": "DownloadToPlc",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "pgPcInterface": "PLCSIM",
+          "targetIpAddress": "192.168.0.3"
         },
         "envelopeVersion": 4
       },
@@ -53738,6 +57117,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetOnlineState",
+        "currentName": "GetOnlineState",
+        "sourceName": "GetOnlineState",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcOpcUaConfiguration",
         "currentName": "GetPlcOpcUaConfiguration",
         "sourceName": "GetOpcUaConfig",
@@ -53770,6 +57161,18 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcRunStateS7",
+        "currentName": "GetPlcRunStateS7",
+        "sourceName": "GetPlcRunStateS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10"
         },
         "envelopeVersion": 4
       },
@@ -53940,6 +57343,42 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DisconnectOnlinePlc",
+        "currentName": "DisconnectOnlinePlc",
+        "sourceName": "GoOffline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DisconnectOnlinePlcs",
+        "currentName": "DisconnectOnlinePlcs",
+        "sourceName": "GoOfflineAll",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ConnectOnlinePlc",
+        "currentName": "ConnectOnlinePlc",
+        "sourceName": "GoOnline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "ipAddress": "192.168.0.3",
+          "pgPcInterface": "PLCSIM"
+        },
         "envelopeVersion": 4
       },
       {
@@ -55313,6 +58752,22 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManagePlcDataBlockSnapshot",
+        "currentName": "ManagePlcDataBlockSnapshot",
+        "sourceName": "ManagePlcDataBlockSnapshot",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "action": "read",
+          "confirmValueChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePlcExternalSources",
         "currentName": "ManagePlcExternalSources",
         "sourceName": "ManagePlcExternalSources",
@@ -55356,6 +58811,23 @@
           ],
           "action": "read",
           "confirmChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcSimAdvancedInstance",
+        "currentName": "ManagePlcSimAdvancedInstance",
+        "sourceName": "ManagePlcSimAdvancedInstance",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "instanceName": "MCP_SIM",
+          "action": "register",
+          "cpuType": "&lt;CPU type supported by the installed PLCSIM API&gt;",
+          "communicationInterface": "Softbus",
+          "confirmInstanceChange": false,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -56470,6 +59942,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ProbeS7CpuIdentity",
+        "currentName": "ProbeS7CpuIdentity",
+        "sourceName": "ProbeS7CpuIdentity",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "PublishGenerationRecord",
         "currentName": "PublishGenerationRecord",
         "sourceName": "PublishGenerationRecord",
@@ -56684,6 +60168,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcBlockFingerprints",
+        "currentName": "GetPlcBlockFingerprints",
+        "sourceName": "ReadPlcBlockFingerprints",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "targetIpAddress": "192.0.2.10",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcBlockScopes",
         "currentName": "GetPlcBlockScopes",
         "sourceName": "ReadPlcBlockScopes",
@@ -56708,6 +60206,36 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcLiveValuesOpcUa",
+        "currentName": "GetPlcLiveValuesOpcUa",
+        "sourceName": "ReadPlcLiveValuesOpcUa",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "endpointUrl": "opc.tcp://192.0.2.10:4840",
+          "nodeIds": [
+            "ns=3;s=\"DB_Status\".\"Ready\""
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcLiveValuesS7",
+        "currentName": "GetPlcLiveValuesS7",
+        "sourceName": "ReadPlcLiveValuesS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10",
+          "items": [
+            "DB1.DBX0.0:BOOL"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcObjectFingerprints",
         "currentName": "GetPlcObjectFingerprints",
         "sourceName": "ReadPlcObjectFingerprints",
@@ -56718,6 +60246,34 @@
           "softwarePath": "PLC_1",
           "objectKind": "block",
           "objectPath": "Main"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListPlcSimAdvancedInstances",
+        "currentName": "ListPlcSimAdvancedInstances",
+        "sourceName": "ReadPlcSimAdvancedInstances",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "includeState": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcSimAdvancedTags",
+        "currentName": "GetPlcSimAdvancedTags",
+        "sourceName": "ReadPlcSimAdvancedTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "instanceName": "MCP_SIM",
+          "names": [
+            "MCP_SimDB.Cycles",
+            "MCP_SimDB.Running"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -56811,6 +60367,37 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcWebDiagnostics",
+        "currentName": "GetPlcWebDiagnostics",
+        "sourceName": "ReadPlcWebDiagnostics",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcWebVars",
+        "currentName": "GetPlcWebVars",
+        "sourceName": "ReadPlcWebVars",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;",
+          "vars": [
+            "\"DB_Status\".\"Ready\""
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPortalInfo",
         "currentName": "GetPortalInfo",
         "sourceName": "ReadPortalInfo",
@@ -56898,6 +60485,42 @@
           ],
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListTransferRoutes",
+        "currentName": "ListTransferRoutes",
+        "sourceName": "ReadTransferRoutes",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedRuntimeAlarms",
+        "currentName": "GetUnifiedRuntimeAlarms",
+        "sourceName": "ReadUnifiedRuntimeAlarms",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedRuntimeTags",
+        "currentName": "GetUnifiedRuntimeTags",
+        "sourceName": "ReadUnifiedRuntimeTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "tags": [
+            "Ready"
           ]
         },
         "envelopeVersion": 4
@@ -57052,6 +60675,51 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunPlcCompanionTool",
+        "currentName": "RunPlcCompanionTool",
+        "sourceName": "RunPlcCompanionTool",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "workingDirectory": "C:\\Examples",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RunPlcSimAdvancedTestScenario",
+        "currentName": "RunPlcSimAdvancedTestScenario",
+        "sourceName": "RunPlcSimAdvancedTestScenario",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "scenario": {
+            "instance": "MCP_SIM",
+            "mode": "default",
+            "steps": [
+              {
+                "write": {
+                  "MCP_SimDB.Start": true
+                }
+              },
+              {
+                "waitMs": 300
+              },
+              {
+                "assert": {
+                  "MCP_SimDB.Running": true
+                }
+              }
+            ]
+          },
+          "dryRun": true,
+          "confirmRun": false
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RunToolTransaction",
         "currentName": "RunToolTransaction",
         "sourceName": "RunToolsInTransaction",
@@ -57070,6 +60738,21 @@
                 "groupPath": "Examples"
               }
             }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SamplePlcLiveValuesS7",
+        "currentName": "SamplePlcLiveValuesS7",
+        "sourceName": "SamplePlcLiveValuesS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10",
+          "items": [
+            "DB1.DBX0.0:BOOL"
           ]
         },
         "envelopeVersion": 4
@@ -57228,6 +60911,23 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetPlcWebOperatingMode",
+        "currentName": "SetPlcWebOperatingMode",
+        "sourceName": "SetPlcWebOperatingMode",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;",
+          "mode": "run",
+          "confirmModeChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SetPlcPutGetAccess",
         "currentName": "SetPlcPutGetAccess",
         "sourceName": "SetPutGetAccess",
@@ -57346,6 +61046,26 @@
         "envelopeVersion": 4
       },
       {
+        "name": "InvokeUnifiedOpenPipe",
+        "currentName": "InvokeUnifiedOpenPipe",
+        "sourceName": "UnifiedOpenPipeRequest",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "request": {
+            "message": "BrowseTags",
+            "params": {
+              "filter": "*Ready*",
+              "pageSize": 50
+            }
+          },
+          "confirmWrite": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SetDeviceAddress",
         "currentName": "SetDeviceAddress",
         "sourceName": "UpdateDeviceAddress",
@@ -57386,6 +61106,21 @@
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "UploadStationFromPlc",
+        "currentName": "UploadStationFromPlc",
+        "sourceName": "UploadStationFromPlc",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "targetIpAddress": "192.168.0.3",
+          "pgPcInterface": "PLCSIM",
+          "dryRun": true,
+          "confirmUpload": false
         },
         "envelopeVersion": 4
       },
@@ -57438,6 +61173,67 @@
         "arguments": {
           "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
           "outputPath": "C:\\Temp\\FC_Add.scl"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WritePlcSimAdvancedTags",
+        "currentName": "WritePlcSimAdvancedTags",
+        "sourceName": "WritePlcSimAdvancedTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "instanceName": "MCP_SIM",
+          "values": [
+            {
+              "name": "MCP_SimDB.Start",
+              "value": true
+            }
+          ],
+          "dryRun": true,
+          "confirmWrite": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WritePlcWebVars",
+        "currentName": "WritePlcWebVars",
+        "sourceName": "WritePlcWebVars",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;",
+          "writes": [
+            {
+              "name": "\"DB_Status\".\"Ready\"",
+              "value": true
+            }
+          ],
+          "confirmWrite": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WriteUnifiedRuntimeTags",
+        "currentName": "WriteUnifiedRuntimeTags",
+        "sourceName": "WriteUnifiedRuntimeTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "writes": [
+            {
+              "name": "Ready",
+              "value": true
+            }
+          ],
+          "confirmWrite": false,
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -57892,6 +61688,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CheckDownloadReadiness",
+        "currentName": "CheckDownloadReadiness",
+        "sourceName": "CheckDownloadReadiness",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CheckProductUpdate",
         "currentName": "CheckProductUpdate",
         "sourceName": "CheckForUpdate",
@@ -57997,6 +61805,19 @@
           "kind": "software",
           "softwarePath": "PLC_1",
           "targetSoftwarePath": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CompareSoftwareToOnline",
+        "currentName": "CompareSoftwareToOnline",
+        "sourceName": "CompareSoftwareToOnline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "maxDepth": 4
         },
         "envelopeVersion": 4
       },
@@ -58522,6 +62343,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "DownloadPlc",
+        "currentName": "DownloadPlc",
+        "sourceName": "DownloadToPlc",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "pgPcInterface": "PLCSIM",
+          "targetIpAddress": "192.168.0.3"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceAttributes",
         "currentName": "GetDeviceAttributes",
         "sourceName": "DumpDeviceAttributes",
@@ -59009,6 +62844,25 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GeneratePlcLoadableFile",
+        "currentName": "GeneratePlcLoadableFile",
+        "sourceName": "GeneratePlcLoadableFile",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectKind": "blocks",
+          "targetOption": "&lt;target option from the selected release&gt;",
+          "filePath": "&lt;new absolute output file for the selected TargetOption&gt;",
+          "dryRun": true,
+          "objectPaths": [
+            "Main"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GeneratePlcSourceFromBlocks",
         "currentName": "GeneratePlcSourceFromBlocks",
         "sourceName": "GeneratePlcSourceFromBlocks",
@@ -59271,6 +63125,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetOnlineState",
+        "currentName": "GetOnlineState",
+        "sourceName": "GetOnlineState",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcOpcUaConfiguration",
         "currentName": "GetPlcOpcUaConfiguration",
         "sourceName": "GetOpcUaConfig",
@@ -59303,6 +63169,18 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcRunStateS7",
+        "currentName": "GetPlcRunStateS7",
+        "sourceName": "GetPlcRunStateS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10"
         },
         "envelopeVersion": 4
       },
@@ -59473,6 +63351,42 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DisconnectOnlinePlc",
+        "currentName": "DisconnectOnlinePlc",
+        "sourceName": "GoOffline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DisconnectOnlinePlcs",
+        "currentName": "DisconnectOnlinePlcs",
+        "sourceName": "GoOfflineAll",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ConnectOnlinePlc",
+        "currentName": "ConnectOnlinePlc",
+        "sourceName": "GoOnline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "ipAddress": "192.168.0.3",
+          "pgPcInterface": "PLCSIM"
+        },
         "envelopeVersion": 4
       },
       {
@@ -60896,6 +64810,22 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManagePlcDataBlockSnapshot",
+        "currentName": "ManagePlcDataBlockSnapshot",
+        "sourceName": "ManagePlcDataBlockSnapshot",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "action": "read",
+          "confirmValueChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePlcExternalSources",
         "currentName": "ManagePlcExternalSources",
         "sourceName": "ManagePlcExternalSources",
@@ -60939,6 +64869,23 @@
           ],
           "action": "read",
           "confirmChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcSimAdvancedInstance",
+        "currentName": "ManagePlcSimAdvancedInstance",
+        "sourceName": "ManagePlcSimAdvancedInstance",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "instanceName": "MCP_SIM",
+          "action": "register",
+          "cpuType": "&lt;CPU type supported by the installed PLCSIM API&gt;",
+          "communicationInterface": "Softbus",
+          "confirmInstanceChange": false,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -62095,6 +66042,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ProbeS7CpuIdentity",
+        "currentName": "ProbeS7CpuIdentity",
+        "sourceName": "ProbeS7CpuIdentity",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "PublishGenerationRecord",
         "currentName": "PublishGenerationRecord",
         "sourceName": "PublishGenerationRecord",
@@ -62309,6 +66268,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcBlockFingerprints",
+        "currentName": "GetPlcBlockFingerprints",
+        "sourceName": "ReadPlcBlockFingerprints",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "targetIpAddress": "192.0.2.10",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcBlockScopes",
         "currentName": "GetPlcBlockScopes",
         "sourceName": "ReadPlcBlockScopes",
@@ -62333,6 +66306,36 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcLiveValuesOpcUa",
+        "currentName": "GetPlcLiveValuesOpcUa",
+        "sourceName": "ReadPlcLiveValuesOpcUa",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "endpointUrl": "opc.tcp://192.0.2.10:4840",
+          "nodeIds": [
+            "ns=3;s=\"DB_Status\".\"Ready\""
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcLiveValuesS7",
+        "currentName": "GetPlcLiveValuesS7",
+        "sourceName": "ReadPlcLiveValuesS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10",
+          "items": [
+            "DB1.DBX0.0:BOOL"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcObjectFingerprints",
         "currentName": "GetPlcObjectFingerprints",
         "sourceName": "ReadPlcObjectFingerprints",
@@ -62343,6 +66346,34 @@
           "softwarePath": "PLC_1",
           "objectKind": "block",
           "objectPath": "Main"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListPlcSimAdvancedInstances",
+        "currentName": "ListPlcSimAdvancedInstances",
+        "sourceName": "ReadPlcSimAdvancedInstances",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "includeState": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcSimAdvancedTags",
+        "currentName": "GetPlcSimAdvancedTags",
+        "sourceName": "ReadPlcSimAdvancedTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "instanceName": "MCP_SIM",
+          "names": [
+            "MCP_SimDB.Cycles",
+            "MCP_SimDB.Running"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -62436,6 +66467,37 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcWebDiagnostics",
+        "currentName": "GetPlcWebDiagnostics",
+        "sourceName": "ReadPlcWebDiagnostics",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcWebVars",
+        "currentName": "GetPlcWebVars",
+        "sourceName": "ReadPlcWebVars",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;",
+          "vars": [
+            "\"DB_Status\".\"Ready\""
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPortalInfo",
         "currentName": "GetPortalInfo",
         "sourceName": "ReadPortalInfo",
@@ -62523,6 +66585,42 @@
           ],
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListTransferRoutes",
+        "currentName": "ListTransferRoutes",
+        "sourceName": "ReadTransferRoutes",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedRuntimeAlarms",
+        "currentName": "GetUnifiedRuntimeAlarms",
+        "sourceName": "ReadUnifiedRuntimeAlarms",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedRuntimeTags",
+        "currentName": "GetUnifiedRuntimeTags",
+        "sourceName": "ReadUnifiedRuntimeTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "tags": [
+            "Ready"
           ]
         },
         "envelopeVersion": 4
@@ -62677,6 +66775,51 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunPlcCompanionTool",
+        "currentName": "RunPlcCompanionTool",
+        "sourceName": "RunPlcCompanionTool",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "workingDirectory": "C:\\Examples",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RunPlcSimAdvancedTestScenario",
+        "currentName": "RunPlcSimAdvancedTestScenario",
+        "sourceName": "RunPlcSimAdvancedTestScenario",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "scenario": {
+            "instance": "MCP_SIM",
+            "mode": "default",
+            "steps": [
+              {
+                "write": {
+                  "MCP_SimDB.Start": true
+                }
+              },
+              {
+                "waitMs": 300
+              },
+              {
+                "assert": {
+                  "MCP_SimDB.Running": true
+                }
+              }
+            ]
+          },
+          "dryRun": true,
+          "confirmRun": false
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RunToolTransaction",
         "currentName": "RunToolTransaction",
         "sourceName": "RunToolsInTransaction",
@@ -62695,6 +66838,21 @@
                 "groupPath": "Examples"
               }
             }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SamplePlcLiveValuesS7",
+        "currentName": "SamplePlcLiveValuesS7",
+        "sourceName": "SamplePlcLiveValuesS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10",
+          "items": [
+            "DB1.DBX0.0:BOOL"
           ]
         },
         "envelopeVersion": 4
@@ -62865,6 +67023,23 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetPlcWebOperatingMode",
+        "currentName": "SetPlcWebOperatingMode",
+        "sourceName": "SetPlcWebOperatingMode",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;",
+          "mode": "run",
+          "confirmModeChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SetPlcPutGetAccess",
         "currentName": "SetPlcPutGetAccess",
         "sourceName": "SetPutGetAccess",
@@ -62983,6 +67158,26 @@
         "envelopeVersion": 4
       },
       {
+        "name": "InvokeUnifiedOpenPipe",
+        "currentName": "InvokeUnifiedOpenPipe",
+        "sourceName": "UnifiedOpenPipeRequest",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "request": {
+            "message": "BrowseTags",
+            "params": {
+              "filter": "*Ready*",
+              "pageSize": 50
+            }
+          },
+          "confirmWrite": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SetDeviceAddress",
         "currentName": "SetDeviceAddress",
         "sourceName": "UpdateDeviceAddress",
@@ -63041,6 +67236,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "UploadStationFromPlc",
+        "currentName": "UploadStationFromPlc",
+        "sourceName": "UploadStationFromPlc",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "targetIpAddress": "192.168.0.3",
+          "pgPcInterface": "PLCSIM",
+          "dryRun": true,
+          "confirmUpload": false
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ValidateAutomationContext",
         "currentName": "ValidateAutomationContext",
         "sourceName": "ValidateAutomationContext",
@@ -63089,6 +67299,67 @@
         "arguments": {
           "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
           "outputPath": "C:\\Temp\\FC_Add.scl"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WritePlcSimAdvancedTags",
+        "currentName": "WritePlcSimAdvancedTags",
+        "sourceName": "WritePlcSimAdvancedTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "instanceName": "MCP_SIM",
+          "values": [
+            {
+              "name": "MCP_SimDB.Start",
+              "value": true
+            }
+          ],
+          "dryRun": true,
+          "confirmWrite": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WritePlcWebVars",
+        "currentName": "WritePlcWebVars",
+        "sourceName": "WritePlcWebVars",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;",
+          "writes": [
+            {
+              "name": "\"DB_Status\".\"Ready\"",
+              "value": true
+            }
+          ],
+          "confirmWrite": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WriteUnifiedRuntimeTags",
+        "currentName": "WriteUnifiedRuntimeTags",
+        "sourceName": "WriteUnifiedRuntimeTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "writes": [
+            {
+              "name": "Ready",
+              "value": true
+            }
+          ],
+          "confirmWrite": false,
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -63734,6 +68005,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CheckDownloadReadiness",
+        "currentName": "CheckDownloadReadiness",
+        "sourceName": "CheckDownloadReadiness",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CheckProductUpdate",
         "currentName": "CheckProductUpdate",
         "sourceName": "CheckForUpdate",
@@ -63839,6 +68122,19 @@
           "kind": "software",
           "softwarePath": "PLC_1",
           "targetSoftwarePath": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CompareSoftwareToOnline",
+        "currentName": "CompareSoftwareToOnline",
+        "sourceName": "CompareSoftwareToOnline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "maxDepth": 4
         },
         "envelopeVersion": 4
       },
@@ -64431,6 +68727,35 @@
         ],
         "arguments": {
           "fix": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DownloadPlcToFolder",
+        "currentName": "DownloadPlcToFolder",
+        "sourceName": "DownloadPlcToFolder",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "destinationDirectory": "C:\\Examples\\restored",
+          "confirmDownload": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DownloadPlc",
+        "currentName": "DownloadPlc",
+        "sourceName": "DownloadToPlc",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "pgPcInterface": "PLCSIM",
+          "targetIpAddress": "192.168.0.3"
         },
         "envelopeVersion": 4
       },
@@ -65047,6 +69372,25 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GeneratePlcLoadableFile",
+        "currentName": "GeneratePlcLoadableFile",
+        "sourceName": "GeneratePlcLoadableFile",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectKind": "blocks",
+          "targetOption": "&lt;target option from the selected release&gt;",
+          "filePath": "&lt;new absolute output file for the selected TargetOption&gt;",
+          "dryRun": true,
+          "objectPaths": [
+            "Main"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GeneratePlcSourceFromBlocks",
         "currentName": "GeneratePlcSourceFromBlocks",
         "sourceName": "GeneratePlcSourceFromBlocks",
@@ -65309,6 +69653,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetOnlineState",
+        "currentName": "GetOnlineState",
+        "sourceName": "GetOnlineState",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcOpcUaConfiguration",
         "currentName": "GetPlcOpcUaConfiguration",
         "sourceName": "GetOpcUaConfig",
@@ -65341,6 +69697,18 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcRunStateS7",
+        "currentName": "GetPlcRunStateS7",
+        "sourceName": "GetPlcRunStateS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10"
         },
         "envelopeVersion": 4
       },
@@ -65511,6 +69879,42 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DisconnectOnlinePlc",
+        "currentName": "DisconnectOnlinePlc",
+        "sourceName": "GoOffline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DisconnectOnlinePlcs",
+        "currentName": "DisconnectOnlinePlcs",
+        "sourceName": "GoOfflineAll",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ConnectOnlinePlc",
+        "currentName": "ConnectOnlinePlc",
+        "sourceName": "GoOnline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "ipAddress": "192.168.0.3",
+          "pgPcInterface": "PLCSIM"
+        },
         "envelopeVersion": 4
       },
       {
@@ -66959,6 +71363,22 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManagePlcDataBlockSnapshot",
+        "currentName": "ManagePlcDataBlockSnapshot",
+        "sourceName": "ManagePlcDataBlockSnapshot",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "action": "read",
+          "confirmValueChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePlcExternalSources",
         "currentName": "ManagePlcExternalSources",
         "sourceName": "ManagePlcExternalSources",
@@ -67002,6 +71422,23 @@
           ],
           "action": "read",
           "confirmChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcSimAdvancedInstance",
+        "currentName": "ManagePlcSimAdvancedInstance",
+        "sourceName": "ManagePlcSimAdvancedInstance",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "instanceName": "MCP_SIM",
+          "action": "register",
+          "cpuType": "&lt;CPU type supported by the installed PLCSIM API&gt;",
+          "communicationInterface": "Softbus",
+          "confirmInstanceChange": false,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -68205,6 +72642,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ProbeS7CpuIdentity",
+        "currentName": "ProbeS7CpuIdentity",
+        "sourceName": "ProbeS7CpuIdentity",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "PublishGenerationRecord",
         "currentName": "PublishGenerationRecord",
         "sourceName": "PublishGenerationRecord",
@@ -68419,6 +72868,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcBlockFingerprints",
+        "currentName": "GetPlcBlockFingerprints",
+        "sourceName": "ReadPlcBlockFingerprints",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "targetIpAddress": "192.0.2.10",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcBlockScopes",
         "currentName": "GetPlcBlockScopes",
         "sourceName": "ReadPlcBlockScopes",
@@ -68443,6 +72906,36 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcLiveValuesOpcUa",
+        "currentName": "GetPlcLiveValuesOpcUa",
+        "sourceName": "ReadPlcLiveValuesOpcUa",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "endpointUrl": "opc.tcp://192.0.2.10:4840",
+          "nodeIds": [
+            "ns=3;s=\"DB_Status\".\"Ready\""
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcLiveValuesS7",
+        "currentName": "GetPlcLiveValuesS7",
+        "sourceName": "ReadPlcLiveValuesS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10",
+          "items": [
+            "DB1.DBX0.0:BOOL"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcObjectFingerprints",
         "currentName": "GetPlcObjectFingerprints",
         "sourceName": "ReadPlcObjectFingerprints",
@@ -68453,6 +72946,34 @@
           "softwarePath": "PLC_1",
           "objectKind": "block",
           "objectPath": "Main"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListPlcSimAdvancedInstances",
+        "currentName": "ListPlcSimAdvancedInstances",
+        "sourceName": "ReadPlcSimAdvancedInstances",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "includeState": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcSimAdvancedTags",
+        "currentName": "GetPlcSimAdvancedTags",
+        "sourceName": "ReadPlcSimAdvancedTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "instanceName": "MCP_SIM",
+          "names": [
+            "MCP_SimDB.Cycles",
+            "MCP_SimDB.Running"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -68542,6 +73063,37 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "watchTableName": "Watch_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcWebDiagnostics",
+        "currentName": "GetPlcWebDiagnostics",
+        "sourceName": "ReadPlcWebDiagnostics",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcWebVars",
+        "currentName": "GetPlcWebVars",
+        "sourceName": "ReadPlcWebVars",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;",
+          "vars": [
+            "\"DB_Status\".\"Ready\""
+          ]
         },
         "envelopeVersion": 4
       },
@@ -68638,6 +73190,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ListTransferRoutes",
+        "currentName": "ListTransferRoutes",
+        "sourceName": "ReadTransferRoutes",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetUnifiedHmiButtonEvent",
         "currentName": "GetUnifiedHmiButtonEvent",
         "sourceName": "ReadUnifiedHmiButtonEvent",
@@ -68678,6 +73242,30 @@
           "hmiSoftwarePath": "HMI_RT_1",
           "screenName": "Overview",
           "itemName": "StatusText"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedRuntimeAlarms",
+        "currentName": "GetUnifiedRuntimeAlarms",
+        "sourceName": "ReadUnifiedRuntimeAlarms",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedRuntimeTags",
+        "currentName": "GetUnifiedRuntimeTags",
+        "sourceName": "ReadUnifiedRuntimeTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "tags": [
+            "Ready"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -68855,6 +73443,51 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunPlcCompanionTool",
+        "currentName": "RunPlcCompanionTool",
+        "sourceName": "RunPlcCompanionTool",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "workingDirectory": "C:\\Examples",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RunPlcSimAdvancedTestScenario",
+        "currentName": "RunPlcSimAdvancedTestScenario",
+        "sourceName": "RunPlcSimAdvancedTestScenario",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "scenario": {
+            "instance": "MCP_SIM",
+            "mode": "default",
+            "steps": [
+              {
+                "write": {
+                  "MCP_SimDB.Start": true
+                }
+              },
+              {
+                "waitMs": 300
+              },
+              {
+                "assert": {
+                  "MCP_SimDB.Running": true
+                }
+              }
+            ]
+          },
+          "dryRun": true,
+          "confirmRun": false
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RunToolTransaction",
         "currentName": "RunToolTransaction",
         "sourceName": "RunToolsInTransaction",
@@ -68873,6 +73506,21 @@
                 "groupPath": "Examples"
               }
             }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SamplePlcLiveValuesS7",
+        "currentName": "SamplePlcLiveValuesS7",
+        "sourceName": "SamplePlcLiveValuesS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "ip": "192.0.2.10",
+          "items": [
+            "DB1.DBX0.0:BOOL"
           ]
         },
         "envelopeVersion": 4
@@ -68912,6 +73560,19 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ScanAccessibleDevices",
+        "currentName": "ScanAccessibleDevices",
+        "sourceName": "ScanAccessibleDevices",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "pgPcInterface": "PLCSIM",
+          "limit": 20
         },
         "envelopeVersion": 4
       },
@@ -69038,6 +73699,23 @@
           "objectKind": "block",
           "objectPath": "FC_Ready",
           "access": "Published",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetPlcWebOperatingMode",
+        "currentName": "SetPlcWebOperatingMode",
+        "sourceName": "SetPlcWebOperatingMode",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;",
+          "mode": "run",
+          "confirmModeChange": false,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -69177,6 +73855,26 @@
         "envelopeVersion": 4
       },
       {
+        "name": "InvokeUnifiedOpenPipe",
+        "currentName": "InvokeUnifiedOpenPipe",
+        "sourceName": "UnifiedOpenPipeRequest",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "request": {
+            "message": "BrowseTags",
+            "params": {
+              "filter": "*Ready*",
+              "pageSize": 50
+            }
+          },
+          "confirmWrite": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SetDeviceAddress",
         "currentName": "SetDeviceAddress",
         "sourceName": "UpdateDeviceAddress",
@@ -69235,6 +73933,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "UploadStationFromPlc",
+        "currentName": "UploadStationFromPlc",
+        "sourceName": "UploadStationFromPlc",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "targetIpAddress": "192.168.0.3",
+          "pgPcInterface": "PLCSIM",
+          "dryRun": true,
+          "confirmUpload": false
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ValidateAutomationContext",
         "currentName": "ValidateAutomationContext",
         "sourceName": "ValidateAutomationContext",
@@ -69283,6 +73996,67 @@
         "arguments": {
           "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
           "outputPath": "C:\\Temp\\FC_Add.scl"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WritePlcSimAdvancedTags",
+        "currentName": "WritePlcSimAdvancedTags",
+        "sourceName": "WritePlcSimAdvancedTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "instanceName": "MCP_SIM",
+          "values": [
+            {
+              "name": "MCP_SimDB.Start",
+              "value": true
+            }
+          ],
+          "dryRun": true,
+          "confirmWrite": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WritePlcWebVars",
+        "currentName": "WritePlcWebVars",
+        "sourceName": "WritePlcWebVars",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "host": "192.0.2.10",
+          "username": "&lt;configured user&gt;",
+          "password": "&lt;password supplied for this target&gt;",
+          "writes": [
+            {
+              "name": "\"DB_Status\".\"Ready\"",
+              "value": true
+            }
+          ],
+          "confirmWrite": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WriteUnifiedRuntimeTags",
+        "currentName": "WriteUnifiedRuntimeTags",
+        "sourceName": "WriteUnifiedRuntimeTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "writes": [
+            {
+              "name": "Ready",
+              "value": true
+            }
+          ],
+          "confirmWrite": false,
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -76597,26 +81371,6 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "dryRun": true
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "UploadDeviceParameters",
-        "currentName": "UploadDeviceParameters",
-        "sourceName": "UploadDeviceParameters",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "devicePath": [
-            "&lt;exact device name from GetProjectTree&gt;"
-          ],
-          "itemPath": [
-            "&lt;exact device item from GetProjectTree&gt;"
-          ],
-          "targetIpAddress": "192.0.2.10",
-          "confirmUpload": false,
           "dryRun": true
         },
         "envelopeVersion": 4

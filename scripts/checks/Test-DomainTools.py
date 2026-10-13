@@ -1154,6 +1154,7 @@ PORTED_DOMAIN_TOOLS = {
         'PlcOrganisationTools': ('ListPlcSystemGroups',),
         'PlcReadModifyTools': ('ManagePlcExternalSources', 'GetPlcCrossReferences')},
     'PlcBlocks': {'PlcOfflineTools': ('AnalyzePlcReferences', 'PatchPlcBlockDocument'),
+        'OnlineDataTools': ('GetPlcBlockFingerprints', 'ManagePlcDataBlockSnapshot'),
         'PlcOrganisationTools': ('ManagePlcBlockProtection', 'DeletePlcBlock', 'DeletePlcTagTable', 'DeletePlcType',
             'CreatePlcTypeGroup', 'DeleteEmptyPlcBlockGroup', 'CreatePlcBlockGroup', 'MovePlcBlockToGroup', 'ManagePlcUserGroup'),
         'PlcReadModifyTools': ('SetPlcProgram', 'GetPlcBlockEditCapabilities', 'ImportPlcBlockVerified',

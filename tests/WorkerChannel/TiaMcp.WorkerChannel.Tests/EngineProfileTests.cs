@@ -8,6 +8,22 @@ namespace TiaMcp.WorkerChannel.Tests;
 public sealed class EngineProfileTests
 {
     [Fact]
+    public async Task Latched_engine_project_still_permits_the_independent_simulator()
+    {
+        using var input = new FeedStream(); using var output = new CaptureStream();
+        using var client = new ChannelClient(input, output, Identity, ChannelProfile.Engine);
+        input.Feed(Hello); await client.ConnectAsync(Budget);
+        var project = client.CallAsync("adapter.ProjectMutation", "{}", BindingChange.None, false, Budget);
+        input.Feed(Reply(payload: "\"error\":{\"code\":-32603,\"message\":\"unknown\",\"data\":{\"outcome\":\"Unknown\",\"evidence\":null}}"));
+        await Assert.ThrowsAsync<ChannelFailureException>(() => project);
+        Assert.True(client.Poisoned); Assert.True(client.CanCallIndependentRuntime);
+        var simulation = client.CallAsync("adapter.runtime-channels.ExecutePlcSimAdvanced", "{}", BindingChange.None, true, Budget);
+        input.Feed(Reply(2, payload: "\"result\":{\"simulator\":true}"));
+        Assert.Equal("{\"simulator\":true}", await simulation);
+        await Assert.ThrowsAsync<ChannelFaultException>(() => client.CallAsync("engine.invoke", "{}", BindingChange.None, false, Budget));
+        Assert.True(client.Poisoned); Assert.Equal(2, output.Writes.Count);
+    }
+    [Fact]
     public void Timeout_defaults_and_override_precedence_are_shared_by_all_worker_operations()
     {
         var policy = new WorkerTimeoutPolicy(7, "{\"default\":8,\"compile\":9,\"firstAttach\":10}", "{\"compile\":11}");

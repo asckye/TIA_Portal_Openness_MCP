@@ -26,7 +26,9 @@ internal static class PortedToolContract
     // V20/V21 B1 declarations belong to the full EngineHost catalog. The
     // bounded plc-foundation profile includes F18/F19/F20/F21 hardware ports.
     internal static IEnumerable<PortedFamilies.Family> Families(string release) =>
-        PortedFamilies.All.Where(family => (family.Name == "F05" || family.Name == "F07" || family.Name == "F33" || family.Name == "F24" || family.Name == "F25" || family.Name == "F26" || family.Name == "F10" || family.Name == "F14" || family.Name == "F15" || family.Name == "F23" || family.Name == "F06" || family.Name == "F35" || family.Name == "F08" || family.Name == "F09" || family.Name == "F11" || family.Name == "F12" || family.Name == "F13" || family.Name == "F16" || family.Name == "F17" || family.Name == "F18" || family.Name == "F19" || family.Name == "F20" || family.Name == "F21") && family.Available(release));
+        PortedFamilies.All.Where(family => (family.Name == "F04" || family.Name == "F22" || family.Name == "F05" || family.Name == "F07" || family.Name == "F33" || family.Name == "F24" || family.Name == "F25" || family.Name == "F26" || family.Name == "F10" || family.Name == "F14" || family.Name == "F15" || family.Name == "F23" || family.Name == "F06" || family.Name == "F35" || family.Name == "F08" || family.Name == "F09" || family.Name == "F11" || family.Name == "F12" || family.Name == "F13" || family.Name == "F16" || family.Name == "F17" || family.Name == "F18" || family.Name == "F19" || family.Name == "F20" || family.Name == "F21") && family.Available(release))
+            .Select(family => new PortedFamilies.Family(family.Name, family.OperationPrefix, family.Releases,
+                TiaMcp.PlcWorker.WorkerOperations.FamilyTools(family), family.Actions));
     internal static McpServerTool Wrap(FoundationTool tool)
     {
         string? candidate = tool.ProtocolTool.Name switch {
@@ -42,6 +44,8 @@ internal static class PortedToolContract
     // also part of the wiring. Pure builders do not read session state.
     internal static string[] WiredOperations(string tool) => tool switch
     {
+        "ListPlcSimAdvancedInstances" or "ManagePlcSimAdvancedInstance" or "GetPlcSimAdvancedTags" or "WritePlcSimAdvancedTags" or "RunPlcSimAdvancedTestScenario" => new[] { "runtime-channels.ExecutePlcSimAdvanced" },
+        "CheckDownloadReadiness" or "CompareSoftwareToOnline" or "ConnectOnlinePlc" or "DisconnectOnlinePlc" or "DisconnectOnlinePlcs" or "DownloadPlc" or "DownloadPlcToFolder" or "GeneratePlcLoadableFile" or "GetOnlineState" or "GetPlcBlockFingerprints" or "ListTransferRoutes" or "ManagePlcDataBlockSnapshot" or "ScanAccessibleDevices" or "UploadDeviceParameters" or "UploadStationFromPlc" => new[] { "plc-online.ExecuteOnline", "ReadState" },
         "ArchiveSavedProject" => new[] { "project-lifecycle.ArchiveSavedProject", "ReadState" },
         "BuildProjectScaffold" => new[] { "project-lifecycle.ExecuteProjectScaffoldPrimitive", "ReadState" },
         "ConnectIsolatedPortal" => new[] { "project-lifecycle.ConnectIsolatedPortal", "ReadState" },
@@ -127,7 +131,7 @@ internal static class PortedToolContract
         "CompileDevice" or "CompileHmiDiagnostics" => new[] { "plc-compile.ExecutePlcOrganisation", "ReadState" },
         "GetPlcBlockEditCapabilities" => new[] { "plc-analysis.ExportBlockDocument", "ReadState" },
         "GeneratePlcSourceFromBlocks" or "ManagePlcExternalSources" or "GetPlcCrossReferences" => new[] { "plc-sources.ExecutePlcOrganisation", "ReadState" },
-        _ when PortedFamilies.Contains(tool) && PortedFamilies.ForTool(tool).Name is "F01" or "F02" or "F03" => Array.Empty<string>(),
+        _ when PortedFamilies.Contains(tool) && PortedFamilies.ForTool(tool).Name is "F01" or "F02" or "F03" or "F04" => Array.Empty<string>(),
         _ => throw new NotSupportedException("Unregistered ported tool: " + tool)
     };
 
@@ -141,6 +145,7 @@ internal static class PortedToolContract
             // callbacks use the new document port.
             if (PortedFamilies.ForTool(name).Name == "F10" && FoundationTools.Definitions.Any(d =>
                 FoundationTools.Available(d, release) && FoundationV4Tool.Name(d.Name) == name)) continue;
+            if (PortedFamilies.ForTool(name).Name == "F04" && method.DeclaringType!.Name != "PlcSimAdvancedTools") continue;
             if (Families(release).Any(family => family.Tools.Contains(name, StringComparer.Ordinal))) yield return new FoundationTool(worker, release, method, name);
         }
     }
@@ -224,6 +229,11 @@ internal sealed partial class FoundationTool
                             && UnifiedHmiCapabilities.Unsupported(portedRelease!, tool.Name, actionName, type.GetString()!) != null)
                             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
         }
+        if (family.Name == "F22" && OnlineCapabilities.Unsupported(portedRelease!, new OnlineRequest {
+            Operation = tool.Name, Action = actionName, RhTarget = Text("rhTarget"), Password = Text("password"),
+            UserName = Text("userName"), UserType = Text("userType"), IpAddress = Text("ipAddress"),
+            TargetIpAddress = Text("targetIpAddress"), ObjectKind = Text("objectKind") }) != null)
+            return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
         if (family.Name == "F07" && SecurityCapabilities.Unsupported(portedRelease!, tool.Name, actionName,
             tool.Name == "ManageSyslogServers" ? (Text("scope").Length == 0 ? "project" : Text("scope")) : scope,
             Text("category"), Text("filePath")) != null)
@@ -308,6 +318,10 @@ internal sealed partial class FoundationTool
             "ProjectLifecycleDeviceTools" => new ProjectLifecycleDeviceTools(new ProjectLifecyclePortService(call, hasProject, identity)),
             "ProjectLifecycleExchangeTools" => new ProjectLifecycleExchangeTools(new ProjectLifecyclePortService(call, hasProject, identity)),
             "ProjectProtectionTools" => new ProjectProtectionTools(new ProjectProtectionPortService(call, hasProject)),
+            "PlcSimAdvancedTools" => new PlcSimAdvancedTools(new PlcSimAdvancedPortService(call)),
+            "OnlineDownloadTools" => new OnlineDownloadTools(new OnlineDownloadService(call, identity)),
+            "NativeExchangeTools" => new NativeExchangeTools(new OnlineDownloadService(call, identity)),
+            "OnlineDataTools" => new OnlineDataTools(new OnlineDownloadService(call, identity)),
             "VersionControlTools" => new VersionControlTools(new VersionControlPortService(call, identity)),
             "TeamcenterTools" => new TeamcenterTools(new TeamcenterPortService(call, identity)),
             "GitWorkflowTools" => new GitWorkflowTools(),

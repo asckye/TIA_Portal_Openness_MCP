@@ -18,6 +18,11 @@
     <DefaultItemExcludes>$(DefaultItemExcludes);obj\**;obj-v20\**;bin\**;bin-v20\**</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../Shared/OnlineDownloadTools.cs" />
+    <Compile Include="../Shared/OnlineDataTools.cs" />
+    <Compile Include="../Shared/NativeExchangeTools.cs" />
+    <Compile Include="../Shared/NativeExchangeService.cs" />
+    <Compile Include="../Shared/OnlineDownloadService.cs" />
     <Compile Include="../Shared/Host/ToolJsonArguments.cs" Link="Host/ToolJsonArguments.cs" />
     <Compile Include="../Shared/Host/EngineeringFileNames.cs" Link="Host/EngineeringFileNames.cs" />
     <Compile Include="../Shared/ProjectSecurityTools.cs" />
@@ -83,6 +88,7 @@
   <ItemGroup><Compile Include="../Shared/SwallowedExceptions.cs" Link="Shared/SwallowedExceptions.cs" /></ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../Adapters/V20/Adapter.20.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" AdditionalProperties="SiemensEngineeringDirectory=$(SiemensEngineeringDirectory)" />
+    <ProjectReference Include="../OnlineChannels/Simulation/TiaMcp.PlcSimAdvanced.csproj" Aliases="plcsim" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <ProjectReference Include="../OnlineChannels/TiaMcp.OnlineChannels.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
     <ProjectReference Include="../WorkerChannel/TiaMcp.WorkerChannel.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
     <ProjectReference Include="../Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
@@ -91,6 +97,7 @@
     <Compile Include="../Shared/CallJournalPayload.cs" Link="Journal/CallJournalPayload.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="../PlcWorker/PlcSimAdvancedWorkerModule.cs" Link="Worker/PlcSimAdvancedWorkerModule.cs" />
     <Compile Include="../PlcWorker/FoundationWorkerDispatcher.cs" Link="Worker/FoundationWorkerDispatcher.cs" />
     <Compile Include="../PlcWorker/PlcVerifiedImportBridge.cs" Link="Worker/PlcVerifiedImportBridge.cs" />
     <Compile Include="../PlcWorker/WorkerJson.cs" Link="Worker/WorkerJson.cs" />
@@ -116,6 +123,9 @@
     <Compile Include="../Shared/PlcOrganisationPortService.cs" Link="Shared/PlcOrganisationPortService.cs" />
     <Compile Include="../Shared/EngineeringToolContract.cs" Link="Shared/EngineeringToolContract.cs" />
     <Compile Include="../Shared/PlcIntegrityTools.cs" Link="Shared/PlcIntegrityTools.cs" />
+    <Compile Include="../Shared/RuntimeWriteValidation.cs" Link="Shared/RuntimeWriteValidation.cs" />
+    <Compile Include="../Shared/PlcSimAdvancedTools.cs" Link="Shared/PlcSimAdvancedTools.cs" />
+    <Compile Include="../Shared/PlcSimAdvancedPortService.cs" Link="Shared/PlcSimAdvancedPortService.cs" />
     <Compile Include="../Shared/RuntimeToolContract.cs" Link="Shared/RuntimeToolContract.cs" />
     <Compile Include="../Shared/PlcWatchPortService.cs" Link="Shared/PlcWatchPortService.cs" />
     <Compile Include="../Shared/PlcCausalTraceTools.cs" Link="Shared/PlcCausalTraceTools.cs" />

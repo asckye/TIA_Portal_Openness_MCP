@@ -18691,69 +18691,6 @@
         "typedParameters": {}
       },
       {
-        "name": "UploadDeviceParameters",
-        "parameters": {
-          "devicePath": {
-            "type": "string[]",
-            "default": null,
-            "description": "devicePath: structured string array input."
-          },
-          "itemPath": {
-            "type": "string[]",
-            "default": null,
-            "description": "itemPath: structured string array input."
-          },
-          "targetIpAddress": {
-            "type": "string",
-            "default": null,
-            "description": "targetIpAddress: IP address of the PLC as ScanAccessibleDevices lists it."
-          },
-          "pgPcInterface": {
-            "type": "string",
-            "default": "\"\"",
-            "value": ""
-          },
-          "password": {
-            "type": "string",
-            "default": "\"\"",
-            "value": ""
-          },
-          "promptAnswers": {
-            "type": "AttributeMap<string>",
-            "default": "null!",
-            "description": "promptAnswers: structured AttributeMap<string> input.",
-            "value": null
-          },
-          "confirmUpload": {
-            "type": "bool",
-            "default": "false",
-            "value": false
-          },
-          "dryRun": {
-            "type": "bool",
-            "default": "true",
-            "value": true
-          }
-        },
-        "arguments": {
-          "devicePath": [
-            "<exact device name from GetProjectTree>"
-          ],
-          "itemPath": [
-            "<exact device item from GetProjectTree>"
-          ],
-          "targetIpAddress": "192.0.2.10",
-          "confirmUpload": false,
-          "dryRun": true
-        },
-        "renamedFrom": [],
-        "typedParameters": {
-          "devicePathJson": "devicePath",
-          "itemPathJson": "itemPath",
-          "promptAnswersJson": "promptAnswers"
-        }
-      },
-      {
         "name": "UploadStationFromPlc",
         "parameters": {
           "targetIpAddress": {

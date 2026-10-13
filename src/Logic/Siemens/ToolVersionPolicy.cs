@@ -24,7 +24,8 @@ namespace TiaMcpServer.Siemens
                 ["ManageSivarcScreenLayout"] = "SiVArc LayoutData",
                 ["ManageClassicHmiGraphic"] = "GraphicsProvider",
                 ["BindUnifiedHmiButtonPressedTag"] = "HmiButton.PressedStateTags",
-                ["GetClassicHmiGlobalization"] = "GraphicsProvider"
+                ["GetClassicHmiGlobalization"] = "GraphicsProvider",
+                ["UploadDeviceParameters"] = "ParameterUploadProvider"
             };
 
         internal static string ToolProblem(string versionKey, string name)

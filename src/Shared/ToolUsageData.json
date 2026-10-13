@@ -41051,6 +41051,805 @@
           "pitfalls": [
             "Available on V19 or later only. Keep the existing approval, preview, confirmation and content-token rules; a sample does not prove the target exists."
           ]
+        },
+        "ProbeS7CpuIdentity": {
+          "arguments": {
+            "ip": "192.0.2.10"
+          },
+          "parameters": {
+            "rack": {
+              "exampleValue": 0
+            },
+            "slot": {
+              "exampleValue": 1
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "GetPlcLiveValuesS7": {
+          "arguments": {
+            "ip": "192.0.2.10",
+            "items": [
+              "DB1.DBX0.0:BOOL"
+            ]
+          },
+          "parameters": {
+            "rack": {
+              "exampleValue": 0
+            },
+            "slot": {
+              "exampleValue": 1
+            },
+            "expectModuleContains": {
+              "exampleValue": "<expectModuleContains from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "devicePath": {
+              "exampleValue": "PLC_1"
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "SamplePlcLiveValuesS7": {
+          "arguments": {
+            "ip": "192.0.2.10",
+            "items": [
+              "DB1.DBX0.0:BOOL"
+            ]
+          },
+          "parameters": {
+            "intervalMs": {
+              "exampleValue": 100
+            },
+            "durationMs": {
+              "exampleValue": 5000
+            },
+            "maxSamples": {
+              "exampleValue": 600
+            },
+            "rack": {
+              "exampleValue": 0
+            },
+            "slot": {
+              "exampleValue": 1
+            },
+            "expectModuleContains": {
+              "exampleValue": "<expectModuleContains from this operation's target or user input>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "GetPlcLiveValuesOpcUa": {
+          "arguments": {
+            "endpointUrl": "opc.tcp://192.0.2.10:4840",
+            "nodeIds": [
+              "ns=3;s=\"DB_Status\".\"Ready\""
+            ]
+          },
+          "parameters": {
+            "timeoutMs": {
+              "exampleValue": 5000
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "GetPlcRunStateS7": {
+          "arguments": {
+            "ip": "192.0.2.10"
+          },
+          "parameters": {
+            "rack": {
+              "exampleValue": 0
+            },
+            "slot": {
+              "exampleValue": 1
+            },
+            "maxDiagEntries": {
+              "exampleValue": 20
+            },
+            "expectModuleContains": {
+              "exampleValue": "<expectModuleContains from this operation's target or user input>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "GetPlcWebVars": {
+          "arguments": {
+            "host": "192.0.2.10",
+            "username": "<configured user>",
+            "password": "<password supplied for this target>",
+            "vars": [
+              "\"DB_Status\".\"Ready\""
+            ]
+          },
+          "parameters": {
+            "username": {
+              "requiresBinding": true
+            },
+            "password": {
+              "requiresBinding": true
+            },
+            "ignoreCertificateErrors": {
+              "exampleValue": false
+            },
+            "timeoutMs": {
+              "exampleValue": 5000
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "WritePlcWebVars": {
+          "arguments": {
+            "host": "192.0.2.10",
+            "username": "<configured user>",
+            "password": "<password supplied for this target>",
+            "writes": [
+              {
+                "name": "\"DB_Status\".\"Ready\"",
+                "value": true
+              }
+            ],
+            "confirmWrite": false,
+            "dryRun": true
+          },
+          "parameters": {
+            "username": {
+              "requiresBinding": true
+            },
+            "password": {
+              "requiresBinding": true
+            },
+            "ignoreCertificateErrors": {
+              "exampleValue": false
+            },
+            "timeoutMs": {
+              "exampleValue": 5000
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "GetPlcWebDiagnostics": {
+          "arguments": {
+            "host": "192.0.2.10",
+            "username": "<configured user>",
+            "password": "<password supplied for this target>"
+          },
+          "parameters": {
+            "username": {
+              "requiresBinding": true
+            },
+            "password": {
+              "requiresBinding": true
+            },
+            "ignoreCertificateErrors": {
+              "exampleValue": false
+            },
+            "timeoutMs": {
+              "exampleValue": 5000
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "SetPlcWebOperatingMode": {
+          "arguments": {
+            "host": "192.0.2.10",
+            "username": "<configured user>",
+            "password": "<password supplied for this target>",
+            "mode": "run",
+            "confirmModeChange": false,
+            "dryRun": true
+          },
+          "parameters": {
+            "username": {
+              "requiresBinding": true
+            },
+            "password": {
+              "requiresBinding": true
+            },
+            "ignoreCertificateErrors": {
+              "exampleValue": false
+            },
+            "timeoutMs": {
+              "exampleValue": 5000
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "GetUnifiedRuntimeTags": {
+          "arguments": {
+            "tags": [
+              "Ready"
+            ]
+          },
+          "parameters": {
+            "pipeName": {
+              "exampleValue": "\\\\.\\pipe\\HmiRuntime"
+            },
+            "timeoutMs": {
+              "exampleValue": 5000
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "WriteUnifiedRuntimeTags": {
+          "arguments": {
+            "writes": [
+              {
+                "name": "Ready",
+                "value": true
+              }
+            ],
+            "confirmWrite": false,
+            "dryRun": true
+          },
+          "parameters": {
+            "pipeName": {
+              "exampleValue": "\\\\.\\pipe\\HmiRuntime"
+            },
+            "timeoutMs": {
+              "exampleValue": 5000
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "GetUnifiedRuntimeAlarms": {
+          "arguments": {},
+          "parameters": {
+            "systemNames": {
+              "exampleValue": "<systemNamesJson from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "filter": {
+              "exampleValue": "<filter from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "languageId": {
+              "exampleValue": 1033
+            },
+            "pipeName": {
+              "exampleValue": "\\\\.\\pipe\\HmiRuntime"
+            },
+            "timeoutMs": {
+              "exampleValue": 5000
+            },
+            "maxAlarms": {
+              "exampleValue": 200
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "InvokeUnifiedOpenPipe": {
+          "arguments": {
+            "request": {
+              "message": "BrowseTags",
+              "params": {
+                "filter": "*Ready*",
+                "pageSize": 50
+              }
+            },
+            "confirmWrite": false,
+            "dryRun": true
+          },
+          "parameters": {
+            "pipeName": {
+              "exampleValue": "\\\\.\\pipe\\HmiRuntime"
+            },
+            "timeoutMs": {
+              "exampleValue": 5000
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "ListPlcSimAdvancedInstances": {
+          "arguments": {
+            "includeState": true
+          },
+          "parameters": {
+            "apiPath": {
+              "exampleValue": "<apiPath from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "memberFilter": {
+              "exampleValue": "<memberFilter from this operation's target or user input>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
+        },
+        "ManagePlcSimAdvancedInstance": {
+          "arguments": {
+            "instanceName": "MCP_SIM",
+            "action": "register",
+            "cpuType": "<CPU type supported by the installed PLCSIM API>",
+            "communicationInterface": "Softbus",
+            "confirmInstanceChange": false,
+            "dryRun": true
+          },
+          "parameters": {
+            "cpuType": {
+              "requiresBinding": true
+            },
+            "timeoutMs": {
+              "exampleValue": 60000
+            },
+            "apiPath": {
+              "exampleValue": "<apiPath from this operation's target or user input>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {
+            "register": {
+              "arguments": {}
+            },
+            "powerOn": {
+              "arguments": {
+                "action": "powerOn"
+              }
+            },
+            "run": {
+              "arguments": {
+                "action": "run"
+              }
+            },
+            "stop": {
+              "arguments": {
+                "action": "stop"
+              }
+            },
+            "powerOff": {
+              "arguments": {
+                "action": "powerOff"
+              }
+            },
+            "memoryReset": {
+              "arguments": {
+                "action": "memoryReset"
+              }
+            },
+            "unregister": {
+              "arguments": {
+                "action": "unregister"
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true,
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "GetPlcSimAdvancedTags": {
+          "arguments": {
+            "instanceName": "MCP_SIM",
+            "names": [
+              "MCP_SimDB.Cycles",
+              "MCP_SimDB.Running"
+            ]
+          },
+          "parameters": {
+            "areaFilter": {
+              "exampleValue": "<areaFilter from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "nameContains": {
+              "exampleValue": "<nameContains from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "offset": {
+              "exampleValue": 0
+            },
+            "limit": {
+              "exampleValue": 200
+            },
+            "apiPath": {
+              "exampleValue": "<apiPath from this operation's target or user input>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
+        },
+        "WritePlcSimAdvancedTags": {
+          "arguments": {
+            "instanceName": "MCP_SIM",
+            "values": [
+              {
+                "name": "MCP_SimDB.Start",
+                "value": true
+              }
+            ],
+            "dryRun": true,
+            "confirmWrite": false
+          },
+          "parameters": {
+            "apiPath": {
+              "exampleValue": "<apiPath from this operation's target or user input>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true,
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "RunPlcSimAdvancedTestScenario": {
+          "arguments": {
+            "scenario": {
+              "instance": "MCP_SIM",
+              "mode": "default",
+              "steps": [
+                {
+                  "write": {
+                    "MCP_SimDB.Start": true
+                  }
+                },
+                {
+                  "waitMs": 300
+                },
+                {
+                  "assert": {
+                    "MCP_SimDB.Running": true
+                  }
+                }
+              ]
+            },
+            "dryRun": true,
+            "confirmRun": false
+          },
+          "parameters": {
+            "apiPath": {
+              "exampleValue": "<apiPath from this operation's target or user input>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
+        },
+        "RunPlcCompanionTool": {
+          "arguments": {
+            "workingDirectory": "C:\\Examples",
+            "dryRun": true
+          },
+          "parameters": {
+            "mode": {
+              "exampleValue": "run"
+            },
+            "timeoutSeconds": {
+              "exampleValue": 60
+            },
+            "arguments": {
+              "exampleValue": [
+                "<exact companion CLI argument from user input>"
+              ],
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "GetOnlineState": {
+          "arguments": {
+            "softwarePath": "PLC_1"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
+        },
+        "ConnectOnlinePlc": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "ipAddress": "192.168.0.3",
+            "pgPcInterface": "PLCSIM"
+          },
+          "parameters": {
+            "password": {
+              "exampleValue": "<password supplied for this target>",
+              "requiresBinding": true
+            },
+            "userName": {
+              "exampleValue": "ExampleUser"
+            },
+            "userType": {
+              "exampleValue": "<userType from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "rhTarget": {
+              "exampleValue": "<rhTarget from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "trustDeviceCertificate": {
+              "exampleValue": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
+        },
+        "DisconnectOnlinePlc": {
+          "arguments": {
+            "softwarePath": "PLC_1"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
+        },
+        "DisconnectOnlinePlcs": {
+          "arguments": {},
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "CompareSoftwareToOnline": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "maxDepth": 4
+          },
+          "parameters": {
+            "maxEntries": {
+              "exampleValue": 200
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
+        },
+        "CheckDownloadReadiness": {
+          "arguments": {
+            "softwarePath": "PLC_1"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
+        },
+        "DownloadPlc": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "pgPcInterface": "PLCSIM",
+            "targetIpAddress": "192.168.0.3"
+          },
+          "parameters": {
+            "consistentBlocksOnly": {
+              "exampleValue": true
+            },
+            "keepActualValues": {
+              "exampleValue": true
+            },
+            "startAfterDownload": {
+              "exampleValue": true
+            },
+            "stopBeforeDownload": {
+              "exampleValue": true
+            },
+            "password": {
+              "exampleValue": "<password supplied for this target>",
+              "requiresBinding": true
+            },
+            "userManagementMode": {
+              "exampleValue": "keep"
+            },
+            "promptAnswers": {
+              "exampleValue": "<promptAnswersJson from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "moduleAccessPassword": {
+              "exampleValue": "<moduleAccessPassword from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "blockBindingPassword": {
+              "exampleValue": "<blockBindingPassword from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "masterSecretPassword": {
+              "exampleValue": "<masterSecretPassword from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "rhTarget": {
+              "exampleValue": "<rhTarget from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "trustDeviceCertificate": {
+              "exampleValue": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true,
+          "resultReading": [
+            "P6-35 behavior family P6-FALLBACK is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+          ],
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "ListTransferRoutes": {
+          "arguments": {
+            "softwarePath": "PLC_1"
+          },
+          "parameters": {
+            "maxItems": {
+              "exampleValue": 500
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
+        },
+        "ScanAccessibleDevices": {
+          "arguments": {
+            "pgPcInterface": "PLCSIM",
+            "limit": 20
+          },
+          "parameters": {
+            "softwarePath": {
+              "exampleValue": "PLC_1"
+            },
+            "offset": {
+              "exampleValue": 0
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
+        },
+        "UploadStationFromPlc": {
+          "arguments": {
+            "targetIpAddress": "192.168.0.3",
+            "pgPcInterface": "PLCSIM",
+            "dryRun": true,
+            "confirmUpload": false
+          },
+          "parameters": {
+            "password": {
+              "exampleValue": "<password supplied for this target>",
+              "requiresBinding": true
+            },
+            "promptAnswers": {
+              "exampleValue": "<promptAnswersJson from this operation's target or user input>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true,
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "DownloadPlcToFolder": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "destinationDirectory": "C:\\Examples\\restored",
+            "confirmDownload": false,
+            "dryRun": true
+          },
+          "parameters": {
+            "targetForSoftware": {
+              "exampleValue": "CPU"
+            },
+            "overwriteOnMemoryCard": {
+              "exampleValue": false
+            },
+            "keepActualValues": {
+              "exampleValue": true
+            },
+            "userManagementMode": {
+              "exampleValue": "keep"
+            },
+            "promptAnswers": {
+              "exampleValue": "<promptAnswersJson from this operation's target or user input>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "resultReading": [
+            "P6-35 behavior family P6-FALLBACK is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+          ]
+        },
+        "GeneratePlcLoadableFile": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "objectKind": "blocks",
+            "targetOption": "<target option from the selected release>",
+            "filePath": "<new absolute output file for the selected TargetOption>",
+            "dryRun": true,
+            "objectPaths": [
+              "Main"
+            ]
+          },
+          "parameters": {
+            "targetOption": {
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "GetPlcBlockFingerprints": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "targetIpAddress": "192.0.2.10",
+            "dryRun": true
+          },
+          "parameters": {
+            "pgPcInterface": {
+              "exampleValue": "<pgPcInterface from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "password": {
+              "exampleValue": "<password supplied for this target>",
+              "requiresBinding": true
+            },
+            "offset": {
+              "exampleValue": 0
+            },
+            "limit": {
+              "exampleValue": 100
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "ManagePlcDataBlockSnapshot": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "blockPath": "Main",
+            "action": "read",
+            "confirmValueChange": false,
+            "dryRun": true
+          },
+          "parameters": {
+            "filePath": {
+              "exampleValue": "C:\\Examples\\exports\\Main.xml"
+            }
+          },
+          "operations": {
+            "read": {
+              "arguments": {}
+            },
+            "createSnapshot": {
+              "arguments": {
+                "action": "createSnapshot"
+              }
+            },
+            "loadSnapshotAsActualValues": {
+              "arguments": {
+                "action": "loadSnapshotAsActualValues"
+              }
+            },
+            "loadStartValuesAsActualValues": {
+              "arguments": {
+                "action": "loadStartValuesAsActualValues"
+              }
+            },
+            "exportSnapshot": {
+              "arguments": {
+                "action": "exportSnapshot",
+                "filePath": "C:\\Examples\\exports\\Main.xml"
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         }
       },
       "full-engine": {
@@ -54473,12 +55272,14 @@
             "mode": {
               "exampleValue": "run"
             },
-            "arguments": {
-              "exampleValue": "<argumentsJson from this operation's target or user input>",
-              "requiresBinding": true
-            },
             "timeoutSeconds": {
               "exampleValue": 60
+            },
+            "arguments": {
+              "exampleValue": [
+                "<exact companion CLI argument from user input>"
+              ],
+              "requiresBinding": true
             }
           },
           "operations": {},

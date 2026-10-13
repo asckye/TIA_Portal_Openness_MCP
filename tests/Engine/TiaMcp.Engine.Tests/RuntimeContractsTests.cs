@@ -79,6 +79,9 @@ namespace TiaMcpServer.Siemens.Services
     internal sealed class OnlineDownloadService
     {
         internal int Calls;
+        public ResponseMessage ManagePlcDataBlockSnapshot(string softwarePath, string blockPath, string action, string filePath = "", bool confirmValueChange = false, bool dryRun = true) { Calls++; return new ResponseMessage { Meta = new JsonObject { ["success"] = true } }; }
+        public ResponseMessage ReadPlcBlockFingerprints(string softwarePath, string targetIpAddress, string pgPcInterface = "", string password = "", int offset = 0, int limit = 100, bool dryRun = true) { Calls++; return new ResponseMessage { Meta = new JsonObject { ["success"] = true } }; }
+        public ResponseMessage GeneratePlcLoadableFile(string softwarePath, string objectPathsJson, string objectKind, string targetOption, string filePath, bool dryRun = true) { Calls++; return new ResponseMessage { Meta = new JsonObject { ["success"] = true } }; }
         public ResponseOnlineState GetOnlineState(string softwarePath) { Calls++; return new ResponseOnlineState { Meta = new JsonObject { ["success"] = true } }; }
         public ResponseOnlineState GoOnline(string softwarePath, string ipAddress = "", string password = "", string userName = "", string userType = "", string rhTarget = "", string pgPcInterface = "", bool trustDeviceCertificate = true) { Calls++; return new ResponseOnlineState { Meta = new JsonObject { ["success"] = true } }; }
         public ResponseMessage GoOffline(string softwarePath) { Calls++; return new ResponseMessage { Meta = new JsonObject { ["success"] = true } }; }
@@ -214,16 +217,22 @@ namespace TiaMcp.Engine.Tests
         [InlineData("WritePlcSimAdvancedTags", "{\"instanceName\":\"unused\",\"values\":[{\"Name\":\"A\",\"value\":true}]}")]
         public async Task DirectBridgeAndBatchRejectTypedShapesBeforeDispatch(string name, string json)
         {
+            bool unsupported = name == "UploadDeviceParameters" && McpServer.ReleaseKey == "20";
+            if (unsupported) Assert.DoesNotContain("UploadDeviceParameters", catalog.All.Keys);
             var result = Body(McpServer.CallTool(name, new ToolArguments(JsonSerializer.Deserialize<JsonElement>(json))));
-            Assert.Equal("INVALID_ARGUMENT", (string?)result["error"]!["code"]);
+            Assert.Equal(unsupported ? "UNSUPPORTED_CAPABILITY" : "INVALID_ARGUMENT", (string?)result["error"]!["code"]);
+            if (unsupported) Assert.Equal("UploadDeviceParameters requires the V21 ParameterUploadProvider API; unavailable on V20.", (string?)result["error"]!["message"]);
             Assert.Equal("not-started", (string?)result["meta"]!["execution"]);
             var method = catalog.Methods.Single(p => p.Key == name).Value;
             var tool = McpServer.WithSchemaHints(ToolCatalog.CreateTool(method), name, method);
             var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ToolCatalogServerProxy>())
             { Params = new CallToolRequestParams { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json) } };
-            Assert.Equal("INVALID_ARGUMENT", (string?)Body(await tool.InvokeAsync(request))["error"]!["code"]);
+            var direct = Body(await tool.InvokeAsync(request));
+            Assert.Equal("INVALID_ARGUMENT", (string?)direct["error"]!["code"]);
+            Assert.Equal("not-started", (string?)direct["meta"]!["execution"]);
             var batch = Body(McpServer.ReadToolBatch(new[] { new ToolCall(name, new ToolArguments(JsonSerializer.Deserialize<JsonElement>(json))) }));
-            Assert.Equal("INVALID_ARGUMENT", (string?)batch["error"]!["code"]);
+            Assert.Equal(unsupported ? "UNSUPPORTED_CAPABILITY" : "INVALID_ARGUMENT", (string?)batch["error"]!["code"]);
+            if (unsupported) Assert.Equal("UploadDeviceParameters requires the V21 ParameterUploadProvider API; unavailable on V20.", (string?)batch["error"]!["message"]);
             Assert.Equal(0, service.Calls);
         }
 
@@ -233,6 +242,13 @@ namespace TiaMcp.Engine.Tests
             foreach (var entry in catalog.Methods)
             {
                 var body = Body(new ToolUsageTools().GetToolUsage(toolName: entry.Key));
+                if (entry.Key == "UploadDeviceParameters" && McpServer.ReleaseKey == "20")
+                {
+                    Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]!["code"]);
+                    Assert.Equal("Tool is not available in this release.", (string?)body["error"]!["message"]);
+                    Assert.Equal("not-started", (string?)body["meta"]!["execution"]);
+                    continue;
+                }
                 var arguments = JsonSerializer.SerializeToElement(body["data"]!["example"]!["request"]!["params"]!["arguments"]);
                 var error = McpServer.ValidateV4Arguments(entry.Value, arguments, McpServer.ToolInputSchema(entry.Key, entry.Value));
                 Assert.True(error == null, entry.Key + " " + arguments.GetRawText() + ": " + (error == null ? "" : V4Json.Serialize(error)));

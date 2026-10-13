@@ -1,5 +1,14 @@
 <Project>
   <ItemGroup>
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/OnlineDownloadTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/OnlineDataTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/NativeExchangeTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/OnlineDownloadService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/RuntimeTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/RuntimeChannelTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcSimAdvancedTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcSimAdvancedPortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/RuntimeWriteValidation.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ProjectSecurityTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ProjectLifecycleSessionTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ProjectLifecycleProjectTools.cs" />
@@ -74,7 +83,6 @@
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcIntegrityTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/RuntimeToolContract.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcWatchPortService.cs" />
-    <EngineHostSource Include="$(MSBuildThisFileDirectory)../OnlineChannels/S7LiveReader.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcCausalTraceTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcWatchTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/MotionProDiagClassicHmiLogic.cs" />

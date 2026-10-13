@@ -51,7 +51,8 @@ internal sealed class WorkerOutcomeState
     internal void AcceptResult(string operation,JsonObject arguments,JsonNode? result)
     {
         WorkerProtocol.ValidateExchangeResult(operation,arguments,result);
-        if (TiaMcp.PlcWorker.WorkerOperations.IsFamilyOperation(operation) && result is JsonObject reply
+        if (!TiaMcp.PlcWorker.WorkerOperations.IsIndependentRuntime(operation)
+            && TiaMcp.PlcWorker.WorkerOperations.IsFamilyOperation(operation) && result is JsonObject reply
             && reply["RequiresSessionReset"]?.GetValue<bool>() == true)
             Failed(true, new IOException("Hardware addressing outcome is unknown; inspect before a new explicit session."));
         if ((operation == TiaMcp.PlcWorker.WorkerOperations.DeviceCreationCandidate || operation == TiaMcp.PlcWorker.WorkerOperations.PlcImportCandidate || operation == TiaMcp.PlcWorker.WorkerOperations.PlcExportCandidate || operation == TiaMcp.PlcWorker.WorkerOperations.SessionCandidate || operation == TiaMcp.PlcWorker.WorkerOperations.SaveCloseCandidate || operation == TiaMcp.PlcWorker.WorkerOperations.SourceCandidate || operation == TiaMcp.PlcWorker.WorkerOperations.CompileCandidate) && result?["RequiresSessionReset"]?.GetValue<bool>() == true)

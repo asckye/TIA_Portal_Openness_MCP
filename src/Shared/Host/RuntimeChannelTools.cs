@@ -61,7 +61,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 string h; List<string> vars;
-                try { h = RuntimeChannelsLogic.NormalizeS7WebHost(host); vars = RuntimeChannelsLogic.ParseNameList(varsJson, "varsJson"); }
+                try { h = RuntimeChannelsLogic.NormalizeS7WebHost(host); vars = RuntimeChannelsLogic.ParseNameList(varsJson, nameof(varsJson)); }
                 catch (ArgumentException bad) { return RuntimeRefusal(bad.Message); }
                 if (string.IsNullOrWhiteSpace(username)) return RuntimeRefusal("username is empty; give the web server user name (e.g. 'Anonymous').");
 
@@ -123,7 +123,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 string h; List<RuntimeWriteItem> writes;
-                try { h = RuntimeChannelsLogic.NormalizeS7WebHost(host); writes = RuntimeChannelsLogic.ParseWriteList(writesJson, "writesJson"); }
+                try { h = RuntimeChannelsLogic.NormalizeS7WebHost(host); writes = RuntimeChannelsLogic.ParseWriteList(writesJson, nameof(writesJson)); }
                 catch (ArgumentException bad) { return RuntimeRefusal(bad.Message); }
                 if (string.IsNullOrWhiteSpace(username)) return RuntimeRefusal("username is empty; give the web server user name.");
                 if (!dryRun && !confirmWrite)
@@ -369,7 +369,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 List<string> tags;
-                try { tags = RuntimeChannelsLogic.ParseNameList(tagsJson, "tagsJson"); RuntimeChannelsLogic.ParsePipeName(pipeName); }
+                try { tags = RuntimeChannelsLogic.ParseNameList(tagsJson, nameof(tagsJson)); RuntimeChannelsLogic.ParsePipeName(pipeName); }
                 catch (ArgumentException bad) { return RuntimeRefusal(bad.Message); }
 
                 string cookie = RuntimeChannelsLogic.NewClientCookie("read");
@@ -422,7 +422,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 List<RuntimeWriteItem> writes;
-                try { writes = RuntimeChannelsLogic.ParseWriteList(writesJson, "writesJson"); RuntimeChannelsLogic.ParsePipeName(pipeName); }
+                try { writes = RuntimeChannelsLogic.ParseWriteList(writesJson, nameof(writesJson)); RuntimeChannelsLogic.ParsePipeName(pipeName); }
                 catch (ArgumentException bad) { return RuntimeRefusal(bad.Message); }
                 if (!dryRun && !confirmWrite)
                     return RuntimeRefusal($"Refused: writing {writes.Count} runtime tag(s) requires confirmWrite=true together with dryRun=false. Nothing was written.",
@@ -559,7 +559,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 List<string> systems;
                 try
                 {
-                    systems = string.IsNullOrWhiteSpace(systemNamesJson) || systemNamesJson.Trim() == "[]" ? new List<string>() : RuntimeChannelsLogic.ParseNameList(systemNamesJson, "systemNamesJson");
+                    systems = string.IsNullOrWhiteSpace(systemNamesJson) || systemNamesJson.Trim() == "[]" ? new List<string>() : RuntimeChannelsLogic.ParseNameList(systemNamesJson, nameof(systemNamesJson));
                     RuntimeChannelsLogic.ParsePipeName(pipeName);
                 }
                 catch (ArgumentException bad) { return RuntimeRefusal(bad.Message); }

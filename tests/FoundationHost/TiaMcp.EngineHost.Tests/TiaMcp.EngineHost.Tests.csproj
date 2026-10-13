@@ -3,7 +3,8 @@
   <PropertyGroup>
     <RootNamespace>TiaMcp.EngineHost.Tests</RootNamespace>
     <TargetFramework>net10.0</TargetFramework>
-    <GenerateProgramFile>true</GenerateProgramFile>
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <OutputType>Exe</OutputType>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>

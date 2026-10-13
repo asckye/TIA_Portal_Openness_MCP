@@ -27,7 +27,8 @@ namespace TiaMcpServer.Dispatch
             var execution = McpServer.CatalogView.Find(name, true)?.Execution;
             // Ported Foundation tools share the same worker and native journal lane.
             bool workerTool = execution == "worker" || execution == "foundation"
-                && TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(name) && ToolTaxonomy.MayCallOpenness(name);
+                && TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(name)
+                && (ToolTaxonomy.MayCallOpenness(name) || TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name == "F04");
             var gate = workerTool && ToolTaxonomy.UsesOpennessLane(name) ? Sessions.GetValue(session, _ => new SemaphoreSlim(1, 1)) : Local;
 #else
             var gate = ToolTaxonomy.UsesOpennessLane(name) ? Sessions.GetValue(session, _ => new SemaphoreSlim(1, 1)) : Local;

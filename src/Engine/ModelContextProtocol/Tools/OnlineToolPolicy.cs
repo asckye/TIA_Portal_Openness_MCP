@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using TiaMcpServer.Siemens.Services;
+using TiaMcpServer.Siemens;
 using TiaMcp.Adapters.Contracts.Candidates;
 using TiaMcp.Logic.V4;
 
@@ -38,16 +39,12 @@ namespace TiaMcpServer.ModelContextProtocol
             if (BehaviorCapabilities.Select(typeof(OnlineToolPolicy).Assembly, McpServer.ReleaseKey, "P6-FALLBACK") != BehaviorPolicy.SafeV4)
                 return WithAutoOffline(op);
             var service = (OnlineDownloadService)EngineServices.Get(typeof(OnlineDownloadService));
-            return WithOfflineRequirement(op, () => service.FallbackOfflineState(softwarePath), service.FallbackUncertain);
+            return WithOfflineRequirement(op, () => ((Portal)EngineServices.Get(typeof(Portal))).OnlineFallbackOfflineState!(softwarePath), ((Portal)EngineServices.Get(typeof(Portal))).FallbackUncertain);
         }
 
         internal static T WithOfflineRequirement<T>(Func<T> op, Func<string> state, Action? uncertain = null)
         {
-            string observed = state();
-            if (observed == "online") CandidatePrimitives.Fail("offline", "selected-PLC");
-            if (observed != "offline") CandidatePrimitives.Fail("precondition", "positive-offline-evidence");
-            try { return op(); }
-            catch { uncertain?.Invoke(); throw; }
+            return TiaMcp.Adapters.Contracts.OnlineOfflinePolicy.WithOfflineRequirement(op, state, uncertain);
         }
     }
 }

@@ -300,7 +300,9 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         internal static void ValidateRuntimeTool(string name, string? description, string? operation = null)
         {
-            if (ToolTaxonomy.UsesOpennessLane(name)) _ = Worker.Status(WorkerDispatchCancellation).GetAwaiter().GetResult();
+            if (ToolTaxonomy.UsesOpennessLane(name) && !(TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
+                && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name == "F04"))
+                _ = Worker.Status(WorkerDispatchCancellation).GetAwaiter().GetResult();
         }
         static partial void ReadSessionState(ref bool? connected, ref string? project)
         {

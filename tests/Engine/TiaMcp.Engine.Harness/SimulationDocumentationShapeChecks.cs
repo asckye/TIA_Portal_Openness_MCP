@@ -26,7 +26,7 @@ internal static class SimulationDocumentationShapeChecks
         foreach (var name in new[] { "ListPlcSimAdvancedInstances", "ManagePlcSimAdvancedInstance", "GetPlcSimAdvancedTags", "WritePlcSimAdvancedTags", "RunPlcSimAdvancedTestScenario" })
             check(Equals(Default(Tool(name), "apiPath"), ""), name + " auto-detects the API by default");
 
-        var channel = server.GetType("TiaMcpServer.Runtime.PlcSimAdvancedChannel", true)!;
+        var channel = Program.FindServerType(server, "TiaMcpServer.Runtime.PlcSimAdvancedChannel");
         foreach (var member in new[] { "Load", "ProbePaths", "RegisteredInstances", "OpenInterface", "Register", "Lifecycle", "SetOperatingMode", "RunToNextSyncPoint", "UpdateTagList", "Tags", "Read", "Write", "Dispose" })
             check(channel.GetMethod(member) != null, "PlcSimAdvancedChannel." + member);
         var logic = Program.FindServerType(server, "TiaMcpServer.Runtime.PlcSimAdvancedLogic");

@@ -169,7 +169,7 @@ internal static class SoftwareLookupRuntimeTests
     {
         var portal = EngineSurface.For(server);
         var kernel = portal.Method("ResolvePlc", BindingFlags.Instance | BindingFlags.NonPublic);
-        bool Calls(MethodInfo source, MethodInfo target, int? access = null)
+        bool Calls(MethodInfo source, MethodInfo target, int? access = null, bool forwardedAccess = false)
         {
             var il = source.GetMethodBody()!.GetILAsByteArray()!;
             for (int i = 0; i + 4 < il.Length; i++)
@@ -180,7 +180,8 @@ internal static class SoftwareLookupRuntimeTests
                 catch (ArgumentException) { continue; }
                 if (called?.Name == target.Name && called.DeclaringType?.FullName == target.DeclaringType?.FullName
                     && called.GetParameters().Select(p => p.ParameterType.FullName).SequenceEqual(target.GetParameters().Select(p => p.ParameterType.FullName))
-                    && (access == null || (i > 0 && il[i - 1] == 0x16 + access))) return true;
+                    && (access == null || (i > 0 && il[i - 1] == 0x16 + access))
+                    && (!forwardedAccess || (i > 0 && il[i - 1] == 0x04))) return true;
             }
             return false;
         }
@@ -213,14 +214,21 @@ internal static class SoftwareLookupRuntimeTests
         var sessionForwarder = sessionMap.TargetMethods[Array.IndexOf(sessionMap.InterfaceMethods, sessionResolver)];
         EngineSurface.CheckIl(check, Calls(sessionForwarder, kernel),
             "EXE session PLC resolver forwards to the same kernel", sessionForwarder, kernel);
+        var onlineAdapter = portal.Adapter.GetType("TiaMcp.Adapters.Native.Online.OnlineDownloadAdapter", true)!;
+        var onlineSession = portal.Adapter.GetType("TiaMcp.Adapters.Native.Online.OnlineSession", true)!;
+        var onlineResolver = onlineSession.GetMethod("ResolvePlc", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        EngineSurface.CheckIl(check, Calls(onlineResolver, nativeResolver, forwardedAccess: true),
+            "Online session forwards unchanged access intent to the same typed PLC kernel", onlineResolver, nativeResolver);
         foreach (var name in new[] { "ImportPlcTagTable", "ImportAlarmClasses", "SetOpcUaInterfaceEnabled", "DownloadToPlc", "GoOnline" })
         {
             var moved = name is "ImportAlarmClasses" or "SetOpcUaInterfaceEnabled";
+            var online = name is "DownloadToPlc" or "GoOnline";
             var writer = moved ? portal.Adapter.GetType("TiaMcp.Adapters.Native.Plc.PlcB5Adapter", true)!.GetMethod(name, BindingFlags.Public | BindingFlags.Instance)!
-                : name == "GoOnline"
-                ? portal.Method(name, new[] { typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(bool) })
+                : online ? name == "GoOnline"
+                    ? onlineAdapter.GetMethod(name, new[] { typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(bool) })!
+                    : onlineAdapter.GetMethod(name, BindingFlags.Public | BindingFlags.Instance)!
                 : portal.Method(name);
-            var resolver = moved ? nativeResolver : writer.DeclaringType == kernel.DeclaringType ? kernel : sessionResolver;
+            var resolver = moved ? nativeResolver : online ? onlineResolver : writer.DeclaringType == kernel.DeclaringType ? kernel : sessionResolver;
             EngineSurface.CheckIl(check, EngineSurface.MethodFamily(writer).Any(member => Calls(member, resolver, 1)), "Native write path records Write through same PLC kernel: " + name, writer, resolver);
         }
         EngineSurface.CheckIl(check, Calls(portal.Method("GetPlcSoftware"), kernel, 0), "EXE read path records Read through same PLC kernel", kernel);

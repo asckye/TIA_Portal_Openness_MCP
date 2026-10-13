@@ -1,28 +1,44 @@
-using ModelContextProtocol.Protocol;
-using TiaMcp.Logic.V4;
-using TiaMcp.Logic.V4.Inputs;
-using PlcSimScenario = TiaMcp.Logic.V4.Domain.PlcSimScenario;
-using ModelContextProtocol;
-using ModelContextProtocol.Server;
+using TiaMcpServer.ModelContextProtocol;
+using System.Text.Json;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading;
 using TiaMcpServer.Runtime;
 
-namespace TiaMcpServer.ModelContextProtocol
+namespace TiaMcp.PlcWorker.Runtime
 {
     // S7-PLCSIM Advanced channel (official .NET API, late-bound at run time; see PlcSimAdvancedChannel).
     // Closes the loop "download the memory-card image (DownloadPlcToFolder) -> boot a virtual CPU ->
     // write inputs, step cycles, assert outputs". Lifecycle changes, writes and scenarios are real
     // operations on the simulation: they default to preview and need an explicit confirm flag.
     // Nothing here saves, compiles or downloads a TIA project, and no physical PLC is involved.
-    [McpServerToolType]
-    internal sealed class PlcSimAdvancedTools
+    public sealed class PlcSimAdvancedReport
     {
+        public bool? Ok { get; set; }
+        public string? Message { get; set; }
+        public JsonObject? Data { get; set; }
+        public JsonObject? Meta { get; set; }
+    }
+
+    public sealed class PlcSimAdvancedAdapter
+    {
+        // Only these reviewed operations can cross this module boundary.
+        public JsonObject ExecutePlcSimAdvanced(JsonObject request)
+        {
+            var operation = (string?)request["operation"] ?? "";
+            if (!new[] { "ReadPlcSimAdvancedInstances", "ManagePlcSimAdvancedInstance", "ReadPlcSimAdvancedTags", "WritePlcSimAdvancedTags", "RunPlcSimAdvancedTestScenario" }.Contains(operation, StringComparer.Ordinal))
+                throw new ArgumentException("Unknown PLCSIM Advanced operation.");
+            var method = typeof(PlcSimAdvancedAdapter).GetMethod(operation)!;
+            var arguments = request["arguments"]!.AsObject();
+            var values = method.GetParameters().Select(parameter => arguments.TryGetPropertyValue(parameter.Name!, out var value)
+                ? value!.Deserialize(parameter.ParameterType) : parameter.DefaultValue).ToArray();
+            var result = method.Invoke(this, values);
+            return JsonSerializer.SerializeToNode(result)!.AsObject();
+        }
+
         private static JsonObject PlcSimSafety(bool changesInstance, bool writesValues) => new JsonObject
         {
             ["target"] = "S7-PLCSIM Advanced virtual controller (no physical PLC)",
@@ -31,9 +47,10 @@ namespace TiaMcpServer.ModelContextProtocol
             ["touchesTiaProject"] = false
         };
 
-        private static ResponseJsonReport RunPlcSimTool(string tool, bool? dryRun, Func<JsonObject, JsonObject, string> body)
+        private static PlcSimAdvancedReport RunPlcSimTool(string tool, bool? dryRun, Func<JsonObject, JsonObject, string> body)
         {
-            var meta = RuntimeChannelTools.RuntimeMeta(false, dryRun);
+            var meta = ResponseMeta.Basic(false);
+            if (dryRun != null) meta["dryRun"] = dryRun;
             meta["tool"] = tool;
             var data = new JsonObject();
             var sw = Stopwatch.StartNew();
@@ -44,7 +61,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 // envelope: legacy-plcsim-complete: Complete would replace the body's operationSuccess with the API verdict.
                 meta["success"] = true; meta["apiCallSuccess"] = true;
                 if (meta["operationSuccess"] == null) meta["operationSuccess"] = true;
-                return new ResponseJsonReport { Ok = meta["operationSuccess"]!.GetValue<bool>(), Message = message, Data = data, Meta = meta };
+                return new PlcSimAdvancedReport { Ok = meta["operationSuccess"]!.GetValue<bool>(), Message = message, Data = data, Meta = meta };
             }
             catch (Exception ex)
             {
@@ -53,22 +70,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 meta["success"] = false; meta["operationSuccess"] = false; meta["apiCallSuccess"] = false;
                 meta["status"] = cause is ArgumentException ? "InvalidParams" : cause is NotSupportedException ? "NotSupported" : cause is PlcSimApiUnavailableException ? "ApiNotFound" : "ReadOrWriteFailed";
                 meta["error"] = cause.Message;
-                return new ResponseJsonReport { Ok = false, Message = tool + " failed: " + cause.Message, Data = data, Meta = meta };
+                return new PlcSimAdvancedReport { Ok = false, Message = tool + " failed: " + cause.Message, Data = data, Meta = meta };
             }
             finally { meta["elapsedMs"] = sw.ElapsedMilliseconds; }
         }
 
-        [McpServerTool(Name = "ListPlcSimAdvancedInstances"), Description("[L2][Simulation][ONLINE] List the S7-PLCSIM Advanced instances registered on this machine through the official PLCSIM Advanced .NET API (Siemens.Simatic.Simulation.Runtime, located at run time: apiPath > env PLCSIMADV_API_PATH > newest folder under %ProgramFiles(x86)%\\Common Files\\Siemens\\PLCSIMADV\\API). Returns API path/version, the global network mode (SimulationRuntimeManager.NetworkMode on PLCSIM Advanced 6+: TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus) and per instance name, id and — when includeState=true — operating state (Off/Stop/Run/...), CPU type, communication interface and storage path. Read-only: registers nothing, changes no state. Fails with status ApiNotFound when PLCSIM Advanced is not installed; the API DLL is never shipped with this server.")]
-        public CallToolResult ReadPlcSimAdvancedInstancesV4(
-            [Description("includeState: true (default) opens an interface to each instance to read its operating state; false lists names/ids only.")] bool includeState = true,
-            [Description("apiPath: optional absolute path of Siemens.Simatic.Simulation.Runtime.Api.x64.dll or its folder; empty = auto-detect.")] string apiPath = "",
-            [Description("memberFilter: optional substring; when given (with includeState) every instance row also lists the API members of the instance object and its interfaces whose name contains it (e.g. 'CommunicationInterface'), and managerMembers lists the matching static members of SimulationRuntimeManager - a diagnostic for API differences between PLCSIM Advanced versions.")] string memberFilter = "")
-            => RuntimeToolContract.Run("ListPlcSimAdvancedInstances", true, false, () =>
-            {
-                return ReadPlcSimAdvancedInstances(includeState, apiPath, memberFilter);
-            });
-
-        public ResponseJsonReport ReadPlcSimAdvancedInstances(bool includeState = true, string apiPath = "", string memberFilter = "")
+        public PlcSimAdvancedReport ReadPlcSimAdvancedInstances(bool includeState = true, string apiPath = "", string memberFilter = "")
             => RunPlcSimTool("ListPlcSimAdvancedInstances", null, (data, meta) =>
             {
                 var api = PlcSimAdvancedChannel.Load(apiPath);
@@ -96,23 +103,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return items.Count + " PLCSIM Advanced instance(s) registered (API " + api.Version + ").";
             });
 
-        [McpServerTool(Name = "ManagePlcSimAdvancedInstance"), Description("[L2][Simulation][ONLINE-WRITE] Lifecycle of ONE S7-PLCSIM Advanced instance: action register (create/registers a new instance; optional cpuType e.g. CPU1500_Unspecified, CPU1516, CPU1518F), powerOn, run, stop, powerOff, memoryReset or unregister. communicationInterface=TCPIP on register / powerOn puts the instance on the 'Siemens PLCSIM Virtual Ethernet Adapter' (API default IP 192.168.0.1), so a TIA project whose PLC has that IP can DownloadPlc / ConnectOnlinePlc to it through that PG/PC interface - the safe target for the whole online family; Softbus selects the local PLCSIM access instead. On PLCSIM Advanced 6+ the per-instance property is read-only and the choice is the global SimulationRuntimeManager.NetworkMode (also accepted literally: TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus), which the API refuses while any instance is running - data.communicationInterfaceRoute shows the route and the mode before / after. Default dryRun=true only reports the current state and the planned action; the action runs only with dryRun=false AND confirmInstanceChange=true. powerOn boots the virtual CPU from its storage path (put the memory-card image there via DownloadPlcToFolder or download from TIA to the running instance); memoryReset wipes the loaded program. Returns state before/after. No physical PLC and no TIA project is touched. Native behaviorPolicy=current; V4 native acceptance is pending.")]
-        public CallToolResult ManagePlcSimAdvancedInstanceV4(
-            [Description("instanceName: PLCSIM Advanced instance name, e.g. 'PLC_1'.")] string instanceName,
-            [Description("action: register | powerOn | run | stop | powerOff | memoryReset | unregister.")] string action,
-            [Description("cpuType: only for register; ECPUType name such as CPU1500_Unspecified, CPU1511, CPU1516, CPU1518F; empty = API default.")] string cpuType = "",
-            [Description("timeoutMs: wait budget for powerOn/run/stop/powerOff/memoryReset (1000..600000).")] int timeoutMs = 60000,
-            [Description("confirmInstanceChange: must be true together with dryRun=false to execute the action.")] bool confirmInstanceChange = false,
-            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
-            [Description("apiPath: optional path of the PLCSIM Advanced API DLL or folder; empty = auto-detect.")] string apiPath = "",
-            [Description("communicationInterface: for register / powerOn only - TCPIP (reachable through the 'Siemens PLCSIM Virtual Ethernet Adapter' PG/PC interface at the instance IP, API default 192.168.0.1 - what DownloadPlc / ConnectOnlinePlc need), Softbus, or an ENetworkMode name (TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus) for PLCSIM Advanced 6+ where the choice is the global network mode; empty = leave the current setting.")] string communicationInterface = "")
-            => RuntimeToolContract.Run("ManagePlcSimAdvancedInstance", dryRun, true, () =>
-            {
-                RuntimeToolContract.Confirm(dryRun, confirmInstanceChange);
-                return ManagePlcSimAdvancedInstance(instanceName, action, cpuType, timeoutMs, confirmInstanceChange, dryRun, apiPath, communicationInterface);
-            });
-
-        public ResponseJsonReport ManagePlcSimAdvancedInstance(string instanceName, string action, string cpuType = "", int timeoutMs = 60000, bool confirmInstanceChange = false, bool dryRun = true, string apiPath = "", string communicationInterface = "")
+        public PlcSimAdvancedReport ManagePlcSimAdvancedInstance(string instanceName, string action, string cpuType = "", int timeoutMs = 60000, bool confirmInstanceChange = false, bool dryRun = true, string apiPath = "", string communicationInterface = "")
             => RunPlcSimTool("ManagePlcSimAdvancedInstance", dryRun, (data, meta) =>
             {
                 var name = PlcSimAdvancedLogic.RequireInstanceName(instanceName);
@@ -177,21 +168,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 catch (Exception) { PlcSimAdvancedChannel.Forget(name); throw; }
             });
 
-        [McpServerTool(Name = "GetPlcSimAdvancedTags"), Description("[L2][Simulation][ONLINE] Read from ONE S7-PLCSIM Advanced instance: with names (array of PLCSIM tag names, e.g. [\"\\\"Start\\\"\", \"\\\"DB_Motor\\\".Speed\", \"%I0.0\" is NOT supported — use symbolic names as PLCSIM lists them]) the current value and primitive type of each tag; without names the tag list of the instance (UpdateTagList + TagInfos) filtered by areaFilter (Input/Output/Marker/DataBlock/... or empty) and nameContains, paginated with offset/limit (max 500). Read-only; requires the instance to be powered on with a loaded program. Per-tag errors are reported in items[].error.")]
-        public CallToolResult ReadPlcSimAdvancedTagsV4(
-            [Description("instanceName: registered PLCSIM Advanced instance.")] string instanceName,
-            [Description("names: structured string array input.")] string[] names = null!,
-            [Description("areaFilter: for listing; EArea name such as Input, Output, Marker, DataBlock; empty = all.")] string areaFilter = "",
-            [Description("nameContains: for listing; case-insensitive substring filter on the tag name.")] string nameContains = "",
-            int offset = 0,
-            int limit = 200,
-            [Description("apiPath: optional path of the PLCSIM Advanced API DLL or folder; empty = auto-detect.")] string apiPath = "")
-            => RuntimeToolContract.Run("GetPlcSimAdvancedTags", true, false, () =>
-            {
-                return ReadPlcSimAdvancedTags(instanceName, (names == null || names.Length == 0 ? "" : RuntimeToolContract.Names(names, "names", true)), areaFilter, nameContains, offset, limit, apiPath);
-            });
-
-        public ResponseJsonReport ReadPlcSimAdvancedTags(string instanceName, string namesJson = "", string areaFilter = "", string nameContains = "", int offset = 0, int limit = 200, string apiPath = "")
+        public PlcSimAdvancedReport ReadPlcSimAdvancedTags(string instanceName, string namesJson = "", string areaFilter = "", string nameContains = "", int offset = 0, int limit = 200, string apiPath = "")
             => RunPlcSimTool("GetPlcSimAdvancedTags", null, (data, meta) =>
             {
                 var name = PlcSimAdvancedLogic.RequireInstanceName(instanceName);
@@ -240,20 +217,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 catch (Exception) { PlcSimAdvancedChannel.Forget(name); throw; }
             });
 
-        [McpServerTool(Name = "WritePlcSimAdvancedTags"), Description("[L2][Simulation][ONLINE-WRITE] Write values into ONE S7-PLCSIM Advanced instance (inputs, markers, DB elements) by symbolic name: values is an array of {name,value} objects. Each tag is read first to learn its primitive type; values are converted (Bool/Int8..Int64/UInt8..UInt64/Float/Double/Char/WChar; 16#hex accepted; structs must be written per element). Default dryRun=true reports current values and the conversion plan; writing needs dryRun=false AND confirmWrite=true. Per-tag errors in items[].error; readBack shows the value after the write. Virtual CPU only, no physical PLC, no TIA project. Native behaviorPolicy=current; V4 native acceptance is pending.")]
-        public CallToolResult WritePlcSimAdvancedTagsV4(
-            [Description("instanceName: registered, powered-on PLCSIM Advanced instance.")] string instanceName,
-            [Description("values: array of {name, value} writes; scalar values only, maximum 500.")] WriteValue[] values,
-            [Description("confirmWrite: must be true together with dryRun=false to write.")] bool confirmWrite = false,
-            [Description("dryRun: true (default) previews; false writes.")] bool dryRun = true,
-            [Description("apiPath: optional path of the PLCSIM Advanced API DLL or folder; empty = auto-detect.")] string apiPath = "")
-            => RuntimeToolContract.Run("WritePlcSimAdvancedTags", dryRun, true, () =>
-            {
-                RuntimeToolContract.Confirm(dryRun, confirmWrite);
-                return WritePlcSimAdvancedTags(instanceName, RuntimeToolContract.Writes(values, "values", dryRun, confirmWrite), confirmWrite, dryRun, apiPath);
-            });
-
-        public ResponseJsonReport WritePlcSimAdvancedTags(string instanceName, string valuesJson, bool confirmWrite = false, bool dryRun = true, string apiPath = "")
+        public PlcSimAdvancedReport WritePlcSimAdvancedTags(string instanceName, string valuesJson, bool confirmWrite = false, bool dryRun = true, string apiPath = "")
             => RunPlcSimTool("WritePlcSimAdvancedTags", dryRun, (data, meta) =>
             {
                 var name = PlcSimAdvancedLogic.RequireInstanceName(instanceName);
@@ -281,9 +245,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             var (type, current) = PlcSimAdvancedChannel.ReadWithRefresh(api, name, instance, kv.Key);
                             o["type"] = type; o["before"] = PlcSimAdvancedLogic.ToJson(current);
                             // The existing read supplies the target type; admission adds no native call.
-                            RuntimeToolContract.Writes(new[] { new WriteValue(kv.Key, V4Json.Deserialize<NativeValue>(kv.Value!.ToJsonString())) },
-                                "values", dryRun, confirmWrite, _ => NativeValueValidator.Simulation(type));
-                            var converted = PlcSimAdvancedLogic.ConvertValue(kv.Value, type);
+                            var converted = RuntimeToolContract.SimulationValue(kv.Value, type, dryRun, confirmWrite);
                             o["converted"] = PlcSimAdvancedLogic.ToJson(converted);
                             if (execute)
                             {
@@ -313,19 +275,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 catch (Exception) { PlcSimAdvancedChannel.Forget(name); throw; }
             });
 
-        [McpServerTool(Name = "RunPlcSimAdvancedTestScenario"), Description("[L2][Simulation][ONLINE-WRITE] Run an ordered PLCSIM Advanced scenario with instance, mode (singleStep or default), optional stopOnFailure and 1..500 write, waitMs or assert steps. Write/assert values are name-to-scalar maps; assertions may include tolerance and note. Default dryRun=true validates the plan only; execution requires dryRun=false and confirmRun=true. Returns step evidence and assertion counts. An unknown write stops execution without replay. Virtual CPU only. Native behaviorPolicy=current; V4 native acceptance is pending.")]
-        public CallToolResult RunPlcSimAdvancedTestScenarioV4(
-            [Description("scenario: object containing instance, mode and ordered write, waitMs or assert steps.")] PlcSimScenario scenario,
-            [Description("confirmRun: must be true together with dryRun=false to execute the steps.")] bool confirmRun = false,
-            [Description("dryRun: true (default) validates and plans only; false executes.")] bool dryRun = true,
-            [Description("apiPath: optional path of the PLCSIM Advanced API DLL or folder; empty = auto-detect.")] string apiPath = "")
-            => RuntimeToolContract.Run("RunPlcSimAdvancedTestScenario", dryRun, true, () =>
-            {
-                RuntimeToolContract.Confirm(dryRun, confirmRun);
-                return RunPlcSimAdvancedTestScenario(RuntimeToolContract.Domain(scenario, "scenario"), confirmRun, dryRun, apiPath);
-            });
-
-        public ResponseJsonReport RunPlcSimAdvancedTestScenario(string scenarioJson, bool confirmRun = false, bool dryRun = true, string apiPath = "")
+        public PlcSimAdvancedReport RunPlcSimAdvancedTestScenario(string scenarioJson, bool confirmRun = false, bool dryRun = true, string apiPath = "")
             => RunPlcSimTool("RunPlcSimAdvancedTestScenario", dryRun, (data, meta) =>
             {
                 var scenario = PlcSimAdvancedLogic.ParseScenario(scenarioJson);

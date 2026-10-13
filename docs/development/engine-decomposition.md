@@ -510,8 +510,8 @@ TiaMcp.Engine.Harness 保留全部既有断言，另检查两个领域的工具�
 `OnlineDownloadService` 与 `OnlineDownloadTools` 合并承载在线、下载及设备传输的 12 个工具，
 包括迁入的 `ListTransferRoutes`。
 原 `Portal.Online.cs`、`Portal.DeviceTransfer.cs` 与 `McpServer.DeviceTransfer.cs` 已删除；
-下载提示处理位于 [OnlineDownloadService](../../src/Engine/Siemens/Services/OnlineDownloadService.cs)，
-工具位于 [OnlineDownloadTools](../../src/Engine/ModelContextProtocol/Tools/OnlineDownloadTools.cs)。
+下载提示处理位于 [OnlineDownloadService](../../src/Adapters/Native/Online/OnlineDownloadAdapter.cs)，
+工具位于 [OnlineDownloadTools](../../src/Shared/OnlineDownloadTools.cs)。
 原 `McpServer.PlcSoftware.Online.cs` 的五个硬件工具已迁入 Addresses、Devices、HardwareNetwork、HardwareServices；
 跨领域的 `IsOnlineModeError`、
 `WithAutoOffline` 保持原入口，后者通过容器取得同一服务，保留下线后仅重试一次的行为。
@@ -695,18 +695,17 @@ CLI 直接解析 `UnifiedHmiTools` 调用以下 13 个入口：
 原生调用顺序、参数与线程归属保持不变；上述离线证明不替代真机验收。
 ### 运行时通道与实例工具（P3-16a）
 
-20 个工具分别迁入 [RuntimeTools](../../src/Engine/ModelContextProtocol/Tools/RuntimeTools.cs)（7）、
-[RuntimeChannelTools](../../src/Engine/ModelContextProtocol/Tools/RuntimeChannelTools.cs)（8）和
-[PlcSimAdvancedTools](../../src/Engine/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs)（5）。
-工具仍在引擎内，按约定注册为非 IDisposable 单例，方法签名、描述、响应及拒绝顺序保持原样。
-这 20 个工具没有 CLI 静态调用点，因此没有保留 McpServer 转发。
+18 个工具分别位于 [RuntimeTools](../../src/Shared/Host/RuntimeTools.cs)（5）、
+[RuntimeChannelTools](../../src/Shared/Host/RuntimeChannelTools.cs)（8）和
+[PlcSimAdvancedTools](../../src/Shared/PlcSimAdvancedTools.cs)（5）。
+RuntimeTools 和 RuntimeChannelTools 在 .NET 10 host 上执行；PLCSIM 的五个声明通过端口在 net48 worker 上执行。
+三个工具类按约定注册为非 IDisposable 单例，没有 CLI 静态调用点或 McpServer 转发。
 
-只有 RuntimeTools 注入 IEngineeringSession：`GetPlcLiveValuesS7` 的可选 PUT/GET 预检继续调用
-GetPutGetAccess；TraceTagCause、TraceTagCauseLive 继续调用内核的同名方法。接口新增这三个原实现的显式转发；
-工程读取、块导出、S7 读取的顺序、参数和线程归属不变。其他两个工具类没有会话依赖。
-RuntimeMeta 由 RuntimeChannelTools 保留为内部静态辅助，供 PLCSIM 执行器复用。
+RuntimeTools 通过同一会话的 dispatcher 回调完成 `GetPlcLiveValuesS7` 的可选 PUT/GET 预检。
+TraceTagCause、TraceTagCauseLive 留在工程域，继续使用 IEngineeringSession。工程读取、块导出和 S7 读取的顺序不变。
+PLCSIM 不需要 TIA 项目，不受项目会话故障锁影响；未知模拟器结果也不锁定 TIA 项目，写入和场景仍须审批。
 
-[TiaMcp.Runtime](../../src/OnlineChannels/TiaMcp.OnlineChannels.csproj) 为不织入的 net48 协议程序集，
+[TiaMcp.Runtime](../../src/OnlineChannels/TiaMcp.OnlineChannels.csproj) 为不织入的 net48/net10.0 协议程序集，
 保持 TiaMcpServer.Runtime 命名空间，引用原版本 Sharp7、Workstation.UaClient、官方 HTTP Web API 客户端及 Logic。
 官方 Siemens.Simatic.S7.Webserver.API 是协议客户端；此程序集不引用 Siemens.Engineering、PLCSIM 或引擎。
 独立还原时显式保持引擎已有的 DependencyInjection 版本，不引入新的依赖版本。

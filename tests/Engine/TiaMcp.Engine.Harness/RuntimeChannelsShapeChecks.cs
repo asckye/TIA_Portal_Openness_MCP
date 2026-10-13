@@ -83,19 +83,6 @@ internal static class RuntimeChannelsShapeChecks
         var handlerType = httpClientType.Assembly.GetType("System.Net.Http.HttpClientHandler");
         check(handlerType?.GetProperty("ServerCertificateCustomValidationCallback") != null, "HttpClientHandler.ServerCertificateCustomValidationCallback (per-handler certificate policy, net48)");
 
-        var tools = EngineSurface.For(server);
-        foreach (var name in new[] { "GetPlcWebVars", "GetPlcWebDiagnostics", "GetUnifiedRuntimeTags", "GetUnifiedRuntimeAlarms" })
-            check(tools.Tool(name) != null && tools.Tool(name)!.GetParameters().All(p => p.Name != "dryRun"), name + " exposed (read-only, no dryRun)");
-        foreach (var name in new[] { "WritePlcWebVars", "WriteUnifiedRuntimeTags", "InvokeUnifiedOpenPipe" })
-        {
-            var method = tools.Tool(name)!;
-            check(Equals(method.GetParameters().Single(p => p.Name == "dryRun").DefaultValue, true), name + " defaults to preview");
-            check(Equals(method.GetParameters().Single(p => p.Name == "confirmWrite").DefaultValue, false), name + " requires explicit confirmWrite");
-        }
-        var modeTool = tools.Tool("SetPlcWebOperatingMode")!;
-        check(Equals(modeTool.GetParameters().Single(p => p.Name == "dryRun").DefaultValue, true), "SetPlcWebOperatingMode defaults to preview");
-        check(Equals(modeTool.GetParameters().Single(p => p.Name == "confirmModeChange").DefaultValue, false), "SetPlcWebOperatingMode requires explicit confirmModeChange");
-        foreach (var name in new[] { "GetPlcWebVars", "WritePlcWebVars", "GetPlcWebDiagnostics", "SetPlcWebOperatingMode" })
-            check(Equals(tools.Tool(name)!.GetParameters().Single(p => p.Name == "ignoreCertificateErrors").DefaultValue, false), name + " validates certificates by default");
+        DomainShapeChecks.RunHostDomains(check, "--runtime-channel-shape");
     }
 }

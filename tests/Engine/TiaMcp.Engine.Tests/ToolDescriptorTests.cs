@@ -102,7 +102,7 @@ namespace TiaMcp.Engine.Tests
         public void ExecutionOwnershipIsExplicitAndDistinctFromReadiness()
         {
             Assert.Equal(496, ToolExecution.Table.Count);
-            Assert.Equal(81, ToolExecution.Table.Count(pair => pair.Value == "host"));
+            Assert.Equal(95, ToolExecution.Table.Count(pair => pair.Value == "host"));
             Assert.Equal("host", ToolExecution.Table["ManagePlcGitRepository"]);
             foreach (var name in new[] { "CallTool", "GetExportContent", "StageImportFiles", "RestartOpennessWorker", "BuildStructuredText", "RenderPlcBlock", "GetOpennessCompatibility", "GetEnvironmentDiagnostics", "CheckProductUpdate" })
                 Assert.Equal("host", ToolExecution.Table[name]);

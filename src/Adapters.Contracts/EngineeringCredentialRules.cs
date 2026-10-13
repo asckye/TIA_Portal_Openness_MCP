@@ -2,7 +2,7 @@ using System.Security;
 
 namespace TiaMcp.Adapters.Contracts;
 
-public static class EngineeringCredentialRules
+public static partial class EngineeringCredentialRules
 {
     public static SecureString ToSecureString(string password)
     {

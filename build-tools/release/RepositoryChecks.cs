@@ -168,7 +168,7 @@ internal static class RepositoryChecks
         foreach (var name in new[] { "NativeCallWeaver.dll", "NativeCallWeaver.deps.json", "NativeCallWeaver.runtimeconfig.json", "Mono.Cecil.dll" }) Required("runtime/verification/" + name, "packaged native verifier");
         string[] dependencies = ["TiaMcp.WorkerChannel.dll", "System.Text.Json.dll", "System.Text.Encodings.Web.dll", "System.IO.Pipelines.dll", "Microsoft.Bcl.AsyncInterfaces.dll", "System.Buffers.dll", "System.Memory.dll", "System.Numerics.Vectors.dll", "System.Runtime.CompilerServices.Unsafe.dll", "System.Threading.Tasks.Extensions.dll"];
         foreach (var release in TiaFeatures.Releases)
-        { Required($"runtime/v{release}/TiaMcp.WorkerChannel.dll", "worker channel host"); foreach (var name in dependencies) Required($"runtime/v{release}/worker/{name}", "worker channel dependency"); }
+        { Required($"runtime/v{release}/TiaMcp.WorkerChannel.dll", "worker channel host"); Required($"runtime/v{release}/worker/TiaMcp.PlcSimAdvanced.dll", "net48 simulation dependency"); foreach (var name in dependencies) Required($"runtime/v{release}/worker/{name}", "worker channel dependency"); }
         Required("runtime/studio/TiaMcp.WorkerChannel.dll", "Studio client channel");
         foreach (var name in dependencies) Required("runtime/studio/bridge/" + name, "Studio bridge channel dependency");
         foreach (var name in new[] { "manifest/history/contracts-v3/README.md", "manifest/history/contracts-v3/provenance.json" }.Concat(new[] { "manifest/history/contracts-v3", "manifest/contracts/v4" }.SelectMany(d => new[] { "baseline", "responses" }.SelectMany(c => TiaFeatures.Releases.Select(r => $"{d}/{c}/{r}.json"))))) Required(name, "contract snapshot");

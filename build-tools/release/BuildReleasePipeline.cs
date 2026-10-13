@@ -351,7 +351,7 @@ internal static partial class ReleaseCommands
                         (extension != ".exe" || name == $"TiaMcp.Engine.V{major}.exe") && (extension != ".config" || name == $"TiaMcp.Engine.V{major}.exe.config");
                 }).ToArray();
                 var names = payload.Select(Path.GetFileName).ToHashSet(StringComparer.OrdinalIgnoreCase);
-                foreach (var required in new[] { "TiaMcp.Runtime.dll", $"TiaMcp.Adapter.{major}.dll", "TiaMcp.Adapters.Contracts.dll" })
+                foreach (var required in new[] { "TiaMcp.Runtime.dll", "TiaMcp.PlcSimAdvanced.dll", $"TiaMcp.Adapter.{major}.dll", "TiaMcp.Adapters.Contracts.dll" })
                     if (!names.Contains(required)) throw new ReleaseException($"V{major} runtime dependency missing: {required}");
                 if (payload.Count(path => Path.GetFileName(path).StartsWith("TiaMcp.Adapter.", StringComparison.OrdinalIgnoreCase) && path.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) != 1)
                     throw new ReleaseException($"V{major} must ship exactly its own shared adapter");

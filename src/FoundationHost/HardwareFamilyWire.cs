@@ -15,6 +15,10 @@ internal static class HardwareFamilyWire
     {
         string name = operation[(operation.LastIndexOf('.') + 1)..];
         bool valid = name switch {
+            "ExecutePlcSimAdvanced" => reply is JsonObject simulation && Flag(simulation["Ok"])
+                && Text(simulation["Message"]) && simulation["Data"] is JsonObject
+                && simulation["Meta"] is JsonObject simulationMeta && Flag(simulationMeta["success"])
+                && !simulation.ContainsKey("RequiresSessionReset"),
             "HardwareDescribeDeviceAt" or "HardwareDescribeItemAt" => Description(reply),
             "HardwareDescribeDevices" => reply is JsonArray devices && devices.All(d => d != null && Description(d)),
             "HardwareReadItemTree" or "HardwareCreateDevice" or "HardwareProbeConnectDeviceNodesToSubnet" => Text(reply),
