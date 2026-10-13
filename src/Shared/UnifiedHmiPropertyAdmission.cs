@@ -82,7 +82,10 @@ namespace TiaMcp.Shared
         {
             ["code"] = "INVALID_ARGUMENT",
             ["message"] = "Input does not satisfy the declared contract.",
-            ["details"] = new Dictionary<string, object?> { ["parameter"] = "properties", ["allowedValues"] = Array.Empty<string>() }
+            ["details"] = new Dictionary<string, object?>
+            {
+                ["parameter"] = "properties", ["allowedValues"] = Array.Empty<string>(), ["parameters"] = new[] { "properties" }
+            }
         };
         private static Dictionary<string, object?> Limit(int limit, int actual) => new Dictionary<string, object?>
         {
