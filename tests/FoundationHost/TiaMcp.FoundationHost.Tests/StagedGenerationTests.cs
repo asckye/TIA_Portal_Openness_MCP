@@ -165,10 +165,14 @@ public sealed class StagedGenerationTests
         {
             var path = new DirectoryInfo(AppContext.BaseDirectory);
             while (path != null && !File.Exists(Path.Combine(path.FullName, "CLAUDE.md"))) path = path.Parent;
-            var baseline = JsonNode.Parse(File.ReadAllText(Path.Combine(path!.FullName, "manifest/contracts/v4/baseline", Release + ".json")))!;
-            var row = baseline["tools"]!.AsArray().SingleOrDefault(t => (string?)t!["name"] == name);
-            return row == null ? null : new Descriptor(name, "", new Tool { Name = name, InputSchema = JsonSerializer.SerializeToElement(row["inputSchema"]) }, null, "", Array.Empty<enginehost::TiaMcpServer.ModelContextProtocol.ToolParameterDescriptor>(), new(true, true), null, "foundation");
+            var schemas = BaselineSchemas(Path.Combine(path!.FullName, "manifest/contracts/v4/baseline", Release + ".json"));
+            return !schemas.TryGetValue(name, out var schema) ? null : new Descriptor(name, "", new Tool { Name = name, InputSchema = schema }, null, "", Array.Empty<enginehost::TiaMcpServer.ModelContextProtocol.ToolParameterDescriptor>(), new(true, true), null, "foundation");
         }
+        // Parse each 10-21 MB baseline once instead of on every step (same reason as GenerationExecutionTests.BaselineSchemas);
+        // duplicate tool names still fail.
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, IReadOnlyDictionary<string, JsonElement>> Schemas = new(StringComparer.OrdinalIgnoreCase);
+        private static IReadOnlyDictionary<string, JsonElement> BaselineSchemas(string path) => Schemas.GetOrAdd(path, file =>
+            JsonNode.Parse(File.ReadAllText(file))!["tools"]!.AsArray().ToDictionary(t => (string)t!["name"]!, t => JsonSerializer.SerializeToElement(t!["inputSchema"]), StringComparer.Ordinal));
         public void Dispose() { lifetime.Dispose(); if (Directory.Exists(Root)) Directory.Delete(Root, true); }
     }
     private sealed class Catalog : enginehost::TiaMcpServer.ModelContextProtocol.IToolCatalogView

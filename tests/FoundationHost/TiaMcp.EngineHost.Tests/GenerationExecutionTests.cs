@@ -103,12 +103,16 @@ public sealed class GenerationExecutionTests : IDisposable
         // This suite injects ordinary step outcomes; the staged suite drives the real source policies.
         if (name == "ImportPlcExternalSource" || name == "GenerateBlocksFromExternalSource") return null;
         if (missingTool && name == "CreatePlcTag") return null;
-        var baseline = JsonNode.Parse(File.ReadAllText(Path.Combine(repository, "manifest", "contracts", "v4", "baseline", EngineHostConfiguration.ReleaseKey + ".json")))!;
-        var row = baseline["tools"]!.AsArray().SingleOrDefault(t => (string?)t!["name"] == name);
-        if (row == null) return null;
-        var schema = JsonSerializer.SerializeToElement(row["inputSchema"]);
+        var schemas = BaselineSchemas(Path.Combine(repository, "manifest", "contracts", "v4", "baseline", EngineHostConfiguration.ReleaseKey + ".json"));
+        if (!schemas.TryGetValue(name, out var schema)) return null;
         return new ToolDescriptor(name, "", new Tool { Name = name, InputSchema = schema }, null, "", Array.Empty<ToolParameterDescriptor>(), new ToolDryRunDescriptor(true, true), null, "foundation");
     }
+    // The baselines are 10-21 MB. Parsing one on every plan and execution step allocated about 850 GB per shard run and drove
+    // thousands of background GCs, the load under which the test host crashed with an AccessViolationException (see
+    // bin-build/refactor/engine-host-av). Each file is parsed once; duplicate tool names still fail.
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, IReadOnlyDictionary<string, JsonElement>> Schemas = new(StringComparer.OrdinalIgnoreCase);
+    private static IReadOnlyDictionary<string, JsonElement> BaselineSchemas(string path) => Schemas.GetOrAdd(path, file =>
+        JsonNode.Parse(File.ReadAllText(file))!["tools"]!.AsArray().ToDictionary(t => (string)t!["name"]!, t => JsonSerializer.SerializeToElement(t!["inputSchema"]), StringComparer.Ordinal));
     private static CallToolResult Result(string name, JsonObject data, string completeness = "complete")
     {
         var result = McpServer.V4Result(name, data);
