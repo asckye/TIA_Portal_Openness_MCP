@@ -249,4 +249,34 @@
     <Compile Include="../Adapters/Native/Hmi/HmiEventAccess.cs" />
     <Compile Include="../Shared/UnifiedHmiManagedValues.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Shared/UnifiedObjectServicesTools.cs" />
+    <Compile Include="../Shared/UnifiedObjectServicesService.cs" />
+    <Compile Include="../Shared/UnifiedUiModelTools.cs" />
+    <Compile Include="../Shared/UnifiedUiModelService.cs" />
+    <Compile Include="../Shared/UnifiedEngineeringTools.cs" />
+    <Compile Include="../Shared/UnifiedEngineeringService.cs" />
+    <Compile Include="../Shared/UnifiedEventsTools.cs" />
+    <Compile Include="../Shared/UnifiedEventsService.cs" />
+    <Compile Include="../Shared/UnifiedExchangeTools.cs" />
+    <Compile Include="../Shared/UnifiedExchangeService.cs" />
+    <Compile Include="../Shared/GlobalScriptEditTools.cs" />
+    <Compile Include="../Shared/GlobalScriptEditService.cs" />
+    <Compile Include="../Shared/GraphicSelectionTools.cs" />
+    <Compile Include="../Shared/GraphicSelectionService.cs" />
+    <Compile Include="../Shared/RuntimeSettingsTools.cs" />
+    <Compile Include="../Shared/RuntimeSettingsService.cs" />
+    <Compile Include="../Shared/MigrationReadTools.cs" />
+    <Compile Include="../Shared/MigrationReadService.cs" />
+    <Compile Include="../Shared/UnifiedPortService.cs" />
+    <Compile Include="../Shared/UnifiedScriptFileCodec.cs" />
+    <Compile Include="../Shared/UnifiedDocumentCodec.cs" />
+    <Compile Include="../Shared/UnifiedWorkerCodecs.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Shared/MigrationPagesFacade.cs" />
+    <Compile Include="../Shared/MigrationReadFacade.cs" />
+    <Compile Include="../Shared/UnifiedScriptAccessFacade.cs" />
+  </ItemGroup>
+  <ItemGroup><Compile Include="../Shared/UnifiedGraphicComparison.cs" /></ItemGroup>
 </Project>

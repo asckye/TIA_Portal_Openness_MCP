@@ -434,6 +434,7 @@
       "ENGINEERING_COMPILATION_SERVICES",
       "ENGINEERING_CUSTOM_IDENTITY",
       "ENGINEERING_OBJECT_IDENTIFIER",
+      "HMI_CPM_PROVIDER",
       "HMI_GRAPHICS_PROVIDER",
       "HMI_UNIFIED",
       "LIBRARY_COMPARE",
@@ -639,6 +640,7 @@
     },
     "targetFramework": "net48",
     "defineConstants": [
+      "HMI_UNIFIED",
       "RELEASE",
       "TRACE"
     ]
@@ -650,6 +652,7 @@
     },
     "targetFramework": "net48",
     "defineConstants": [
+      "HMI_UNIFIED",
       "RELEASE",
       "TRACE"
     ]
@@ -661,6 +664,7 @@
     },
     "targetFramework": "net48",
     "defineConstants": [
+      "HMI_UNIFIED",
       "RELEASE",
       "TRACE"
     ]

@@ -174,6 +174,9 @@ namespace TiaMcp.Adapters
             lifecycle.Bound(full,false,session);
             hmiReadFault = null;
             _hmiTokenGeneration = Guid.NewGuid().ToString("N");
+#if HMI_UNIFIED
+            unifiedPages?.Dispose(); unifiedPages = null;
+#endif
             return Mutation("BindProject",false);
         }
         public PlcMutationResult OpenProject(string path, bool dryRun = true)

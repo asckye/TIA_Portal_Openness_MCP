@@ -8,6 +8,8 @@ Siemens PublicAPI（`Siemens.Engineering*.dll`）由用户本机已安装并取�
 
 ## 引擎依赖（`runtime/v20`、`runtime/v21`）
 
+F28 迁移后的 V19/V20/V21 PLC worker 也使用下表的 Esprima 3.0.5 和 YamlDotNet 13.7.1；其许可证、版权和原文与引擎中的同版本组件相同。
+
 | 程序集 | NuGet 包 / 版本 | 许可证 | 版权 | 原文 |
 |---|---|---|---|---|
 | `Esprima.dll` | Esprima 3.0.5 | BSD-3-Clause | Sebastien Ros | [Esprima-3.0.5.txt](Esprima-3.0.5.txt) |

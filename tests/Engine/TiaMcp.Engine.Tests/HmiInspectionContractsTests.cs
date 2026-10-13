@@ -41,7 +41,7 @@ namespace TiaMcp.Engine.Tests
                 .AddSingleton(new UnifiedObjectServicesTools(objects)).AddSingleton(new UnifiedEngineeringTools(engineering))
                 .AddSingleton(new ReflectionTools(reflection)).AddSingleton(new UnifiedEventsTools(new UnifiedEventsService()))
                 .AddSingleton(HmiToolFixture.HmiInspection).AddSingleton(new HmiInspectionPortTools(HmiToolFixture.HmiInspectionPort))
-                .AddSingleton(new MigrationReadTools(new MigrationReadService(branchSession)))
+                .AddSingleton(new MigrationReadTools(HmiToolFixture.CreateMigrationRead(branchSession)))
                 .AddSingleton(HmiToolFixture.GraphicSelection).AddSingleton(HmiToolFixture.GlobalScriptEdit).BuildServiceProvider());
         }
         public void Dispose() => ToolBridgeFixture.Configure();

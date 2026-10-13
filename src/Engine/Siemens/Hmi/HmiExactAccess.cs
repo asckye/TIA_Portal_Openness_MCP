@@ -13,7 +13,10 @@ namespace TiaMcpServer.Siemens
     {
         private static string tokenGeneration = Guid.NewGuid().ToString("N");
         // Both worker restart and explicit project rebinding invalidate old preview hashes.
-        internal static void InvalidateTokens() => tokenGeneration = Guid.NewGuid().ToString("N");
+        internal static void InvalidateTokens()
+        {
+            tokenGeneration = Guid.NewGuid().ToString("N");
+        }
         internal static object? Get(object value, string name)
             => Native(() => TiaMcp.Adapters.Native.Hmi.HmiAccessPrimitives.Get(value, name));
         internal static List<object> Items(object? value)

@@ -16447,6 +16447,1332 @@
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: V14 SP1/V15.1/V17-V20 only. The supplied V16 and V21 SDK copies omit SimotionProvider; installed SDK acceptance is pending."
+      },
+      "GetUnifiedObjectProperties": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1"
+        },
+        "parameters": {
+          "objectPath": {
+            "exampleValue": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
+            "meaning": "JSON string encoding property steps: [{property,name?}]. A property is followed directly; name selects an exact member of that collection. This differs from devicePathJson name arrays."
+          },
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "SetUnifiedObjectProperties": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "dryRun": true,
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ],
+          "properties": {
+            "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+          }
+        },
+        "parameters": {
+          "properties": {
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "SetUnifiedMultilingualProperty": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "property": "Text",
+          "culture": "zh-CN",
+          "rawText": "运行状态",
+          "dryRun": true,
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "ValidateUnifiedObject": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "GetUnifiedCrossReferences": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
+        },
+        "parameters": {
+          "filter": {
+            "exampleValue": "AllObjects"
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "ManageUnifiedLoggingTag": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "tagPath": [
+            {
+              "property": "TagTables",
+              "name": "ExampleTags"
+            },
+            {
+              "property": "Tags",
+              "name": "Ready"
+            }
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "parameters": {
+          "name": {
+            "exampleValue": "Example_1"
+          },
+          "properties": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
+            "requiresBinding": true
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "create": {
+            "arguments": {
+              "action": "create",
+              "name": "Ready"
+            }
+          },
+          "update": {
+            "arguments": {
+              "action": "update",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
+              "name": "Example_1"
+            }
+          },
+          "delete": {
+            "arguments": {
+              "action": "delete",
+              "name": "Example_1"
+            }
+          }
+        },
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "SetUnifiedLogDuration": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "durationPath": [
+            {
+              "property": "DataLogs",
+              "name": "ExampleLog"
+            },
+            {
+              "property": "LogDuration"
+            }
+          ],
+          "kind": "log",
+          "days": 1,
+          "hours": 1,
+          "minutes": 1,
+          "seconds": 1,
+          "hundredNanoseconds": 1,
+          "dryRun": true
+        },
+        "parameters": {
+          "durationPath": {
+            "exampleValue": [
+              {
+                "property": "DataLogs",
+                "name": "ExampleLog"
+              },
+              {
+                "property": "LogDuration"
+              }
+            ],
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "ManageUnifiedOpcUaAlarmType": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "name": "Example_1",
+          "nodeId": "ns=3;s=Status",
+          "connection": "PLC_Connection",
+          "dryRun": true,
+          "action": "create"
+        },
+        "parameters": {},
+        "operations": {
+          "create": {
+            "arguments": {}
+          },
+          "update": {
+            "arguments": {
+              "action": "update"
+            }
+          }
+        },
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "GetUnifiedPlantObject": {
+        "arguments": {},
+        "parameters": {
+          "plantPath": {
+            "exampleValue": "Plant_1"
+          },
+          "objectPath": {
+            "exampleValue": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
+            "meaning": "JSON string encoding property steps: [{property,name?}]. A property is followed directly; name selects an exact member of that collection. This differs from devicePathJson name arrays."
+          },
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "ManageUnifiedPlantNode": {
+        "arguments": {
+          "plantPath": "ExampleArea",
+          "action": "create",
+          "plantObjectType": "<existing plant object type from this project library>",
+          "dryRun": true
+        },
+        "parameters": {
+          "plantObjectType": {
+            "requiresBinding": true
+          },
+          "properties": {
+            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "requiresBinding": true
+          }
+        },
+        "operations": {
+          "create": {
+            "arguments": {}
+          },
+          "update": {
+            "arguments": {
+              "action": "update",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
+            }
+          },
+          "delete": {
+            "arguments": {
+              "action": "delete"
+            }
+          }
+        },
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "SetUnifiedPlantObject": {
+        "arguments": {
+          "plantPath": "Plant_1",
+          "dryRun": true,
+          "objectPath": [],
+          "properties": {
+            "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+          }
+        },
+        "parameters": {
+          "properties": {
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "GetUnifiedObjectEvents": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
+        },
+        "parameters": {
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "ManageUnifiedObjectParts": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ],
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "parameters": {
+          "collectionProperty": {
+            "exampleValue": "<collection returned by the corresponding read>",
+            "requiresBinding": true
+          },
+          "partName": {
+            "exampleValue": "Part_1"
+          },
+          "partIndex": {
+            "exampleValue": -1
+          },
+          "partKind": {
+            "exampleValue": "<partKind from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "properties": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
+            "requiresBinding": true
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "create": {
+            "arguments": {
+              "action": "create",
+              "collectionProperty": "<collection property returned by read>",
+              "partName": "Part_1"
+            }
+          },
+          "update": {
+            "arguments": {
+              "action": "update",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
+              "collectionProperty": "<collection property returned by read>",
+              "partName": "Part_1"
+            }
+          },
+          "delete": {
+            "arguments": {
+              "action": "delete",
+              "collectionProperty": "<collection property returned by read>",
+              "partName": "Part_1"
+            }
+          }
+        },
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "ManageUnifiedDynamization": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ],
+          "propertyName": "Visible",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "parameters": {
+          "dynamizationKind": {
+            "exampleValue": "<dynamizationKind from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "properties": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
+            "requiresBinding": true
+          },
+          "mappingEntries": {
+            "exampleValue": [],
+            "requiresBinding": true
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "create": {
+            "arguments": {
+              "action": "create",
+              "properties": {
+                "<writable property for the selected dynamizationKind>": "<typed value from read/self-description>"
+              }
+            }
+          },
+          "update": {
+            "arguments": {
+              "action": "update",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
+            }
+          },
+          "delete": {
+            "arguments": {
+              "action": "delete"
+            }
+          }
+        },
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "ManageUnifiedScreenLayout": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            }
+          ],
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "parameters": {
+          "name": {
+            "exampleValue": "Example_1"
+          },
+          "properties": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
+            "requiresBinding": true
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "create": {
+            "arguments": {
+              "action": "create",
+              "name": "Overview_2",
+              "objectPath": [
+                {
+                  "property": "ScreenFolder"
+                },
+                {
+                  "property": "Screens"
+                }
+              ]
+            }
+          },
+          "rename": {
+            "arguments": {
+              "action": "rename"
+            }
+          },
+          "update": {
+            "arguments": {
+              "action": "update",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
+              "name": "Example_1"
+            }
+          },
+          "resize": {
+            "arguments": {
+              "action": "resize"
+            }
+          },
+          "delete": {
+            "arguments": {
+              "action": "delete",
+              "name": "Example_1"
+            }
+          }
+        },
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "GetUnifiedAlarmCommon": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "category": "alarmClasses"
+        },
+        "parameters": {
+          "name": {
+            "exampleValue": "Example_1"
+          },
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "GetUnifiedAuditSettings": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "category": "auditTrails"
+        },
+        "parameters": {
+          "name": {
+            "exampleValue": "Example_1"
+          },
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "ListUnifiedEngineeringObjects": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "category": "alarmClasses"
+        },
+        "parameters": {
+          "name": {
+            "exampleValue": "Example_1"
+          },
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "ManageUnifiedEngineeringObject": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "category": "textLists",
+          "name": "Example_1",
+          "action": "create",
+          "dryRun": true
+        },
+        "parameters": {
+          "properties": {
+            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "requiresBinding": true
+          }
+        },
+        "operations": {
+          "create": {
+            "arguments": {}
+          },
+          "update": {
+            "arguments": {
+              "action": "update",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
+            }
+          },
+          "delete": {
+            "arguments": {
+              "action": "delete"
+            }
+          }
+        },
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "ManageUnifiedEvent": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "eventType": "Down",
+          "dryRun": true,
+          "action": "read",
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
+        },
+        "parameters": {
+          "propertyName": {
+            "exampleValue": "Visible"
+          },
+          "scriptProperties": {
+            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "requiresBinding": true
+          },
+          "previewToken": {
+            "exampleValue": "<previewToken from this operation's target or user input>",
+            "requiresBinding": true
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "create": {
+            "arguments": {
+              "action": "create"
+            }
+          },
+          "update": {
+            "arguments": {
+              "action": "update",
+              "scriptProperties": {
+                "<property from read event script>": "<typed edited value>"
+              }
+            }
+          },
+          "delete": {
+            "arguments": {
+              "action": "delete"
+            }
+          }
+        },
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "ExchangeUnifiedTags": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "action": "export",
+          "directory": "C:\\Examples\\exports",
+          "dryRun": true
+        },
+        "parameters": {
+          "tagTable": {
+            "exampleValue": "<tagTable from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "fileName": {
+            "exampleValue": "Status.js"
+          },
+          "expectedTagNames": {
+            "exampleValue": "<expectedTagNames from this operation's target or user input>",
+            "requiresBinding": true
+          }
+        },
+        "operations": {
+          "export": {
+            "arguments": {}
+          },
+          "import": {
+            "arguments": {
+              "action": "import"
+            }
+          }
+        },
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "ExchangeUnifiedScriptModules": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "action": "export",
+          "directory": "C:\\Examples\\exports",
+          "dryRun": true,
+          "moduleName": "Status",
+          "fileName": "Status.js"
+        },
+        "parameters": {},
+        "operations": {
+          "export": {
+            "arguments": {
+              "directory": "C:\\Examples\\scripts"
+            }
+          },
+          "import": {
+            "arguments": {
+              "action": "import",
+              "directory": "C:\\Examples\\scripts"
+            }
+          }
+        },
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "ImportUnifiedOpcUaAlarms": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "connectionName": "PLC_Connection",
+          "dryRun": true,
+          "action": "read"
+        },
+        "parameters": {
+          "xmlPath": {
+            "exampleValue": "<xmlPath from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "displayName": {
+            "exampleValue": "<displayName from this operation's target or user input>",
+            "requiresBinding": true
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "import": {
+            "arguments": {
+              "action": "import"
+            }
+          }
+        },
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "SetUnifiedGlobalScript": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "moduleName": "Status",
+          "scriptCode": "<complete scriptCode from GetUnifiedGlobalScript with the intended edit>",
+          "dryRun": true
+        },
+        "parameters": {
+          "scriptCode": {
+            "requiresBinding": true
+          },
+          "previewToken": {
+            "exampleValue": "<previewToken from this operation's target or user input>",
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "GetUnifiedGraphicSelection": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "screenPath": "Overview",
+          "itemNames": [
+            "StatusText"
+          ]
+        },
+        "parameters": {
+          "cursor": {
+            "exampleValue": "<cursor from the preceding read>",
+            "requiresBinding": true
+          },
+          "budgetMs": {
+            "exampleValue": 5000
+          },
+          "limit": {
+            "exampleValue": 20
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "CompareUnifiedGraphicSelections": {
+        "arguments": {
+          "beforePages": [
+            {
+              "pageIndex": 0,
+              "collectionId": "before-snapshot",
+              "scope": {
+                "tool": "ReadUnifiedGraphicSelection",
+                "softwarePath": "HMI_1",
+                "expectedProject": "ExampleProject",
+                "project": "ExampleProject",
+                "screenPath": "/Main",
+                "itemNames": [
+                  "A"
+                ]
+              },
+              "apiCallSuccess": true,
+              "traversalComplete": true,
+              "dataComplete": false,
+              "truncated": false,
+              "nextCursor": null,
+              "records": [
+                {
+                  "kind": "graphicObject",
+                  "name": "A",
+                  "path": "/Main/A",
+                  "type": "HmiButton",
+                  "status": "ok",
+                  "geometryComplete": true,
+                  "fields": {
+                    "Left": {
+                      "path": "/Main/A/Left",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 0
+                    },
+                    "Top": {
+                      "path": "/Main/A/Top",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 0
+                    },
+                    "Width": {
+                      "path": "/Main/A/Width",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 100
+                    },
+                    "Height": {
+                      "path": "/Main/A/Height",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 50
+                    }
+                  }
+                },
+                {
+                  "kind": "graphicSelectionSummary",
+                  "path": "/Main",
+                  "status": "unsupported",
+                  "expectedObjectCount": 1,
+                  "actualObjectCount": 1,
+                  "geometryComplete": true,
+                  "nativeGroupVerified": false,
+                  "nativeGroup": null,
+                  "nativeGroupBounds": null
+                }
+              ]
+            }
+          ],
+          "afterPages": [
+            {
+              "pageIndex": 0,
+              "collectionId": "after-snapshot",
+              "scope": {
+                "tool": "ReadUnifiedGraphicSelection",
+                "softwarePath": "HMI_1",
+                "expectedProject": "ExampleProject",
+                "project": "ExampleProject",
+                "screenPath": "/Main",
+                "itemNames": [
+                  "A"
+                ]
+              },
+              "apiCallSuccess": true,
+              "traversalComplete": true,
+              "dataComplete": false,
+              "truncated": false,
+              "nextCursor": null,
+              "records": [
+                {
+                  "kind": "graphicObject",
+                  "name": "A",
+                  "path": "/Main/A",
+                  "type": "HmiButton",
+                  "status": "ok",
+                  "geometryComplete": true,
+                  "fields": {
+                    "Left": {
+                      "path": "/Main/A/Left",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 0
+                    },
+                    "Top": {
+                      "path": "/Main/A/Top",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 0
+                    },
+                    "Width": {
+                      "path": "/Main/A/Width",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 100
+                    },
+                    "Height": {
+                      "path": "/Main/A/Height",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 50
+                    }
+                  }
+                },
+                {
+                  "kind": "graphicSelectionSummary",
+                  "path": "/Main",
+                  "status": "unsupported",
+                  "expectedObjectCount": 1,
+                  "actualObjectCount": 1,
+                  "geometryComplete": true,
+                  "nativeGroupVerified": false,
+                  "nativeGroup": null,
+                  "nativeGroupBounds": null
+                }
+              ]
+            }
+          ]
+        },
+        "parameters": {
+          "beforePages": {
+            "requiresBinding": true,
+            "meaning": "Replace this illustrative page with every complete data.page returned by GetUnifiedGraphicSelection, preserving pageIndex order and snapshot scope identity."
+          },
+          "afterPages": {
+            "requiresBinding": true,
+            "meaning": "Replace this illustrative page with every complete data.page returned by GetUnifiedGraphicSelection, preserving pageIndex order and snapshot scope identity."
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "GetUnifiedRuntimeSettings": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example"
+        },
+        "parameters": {
+          "fields": {
+            "exampleValue": "[\"StartScreen\",\"ScreenResolution\"]"
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "SetUnifiedRuntimeSettings": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "changes": {
+            "StartScreen": "/Main",
+            "ScreenResolution": "SR_1920X1080"
+          },
+          "dryRun": true
+        },
+        "parameters": {
+          "previewToken": {
+            "exampleValue": "<previewToken from this operation's target or user input>",
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "ListUnifiedGlobalScripts": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example"
+        },
+        "parameters": {
+          "cursor": {
+            "exampleValue": "<cursor from the preceding read>",
+            "requiresBinding": true
+          },
+          "budgetMs": {
+            "exampleValue": 5000
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "GetUnifiedGlobalScript": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "moduleName": "Status"
+        },
+        "parameters": {
+          "cursor": {
+            "exampleValue": "<cursor from the preceding read>",
+            "requiresBinding": true
+          },
+          "budgetMs": {
+            "exampleValue": 5000
+          },
+          "limit": {
+            "exampleValue": 50
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "ListUnifiedTagDefinitions": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example"
+        },
+        "parameters": {
+          "cursor": {
+            "exampleValue": "<cursor from the preceding read>",
+            "requiresBinding": true
+          },
+          "budgetMs": {
+            "exampleValue": 5000
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "GetUnifiedScreenBranch": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "screenPath": "/Overview"
+        },
+        "parameters": {
+          "itemName": {
+            "exampleValue": "StatusText"
+          },
+          "branch": {
+            "exampleValue": [
+              {
+                "property": "Interface"
+              },
+              {
+                "name": "Speed",
+                "key": "PropertyName"
+              },
+              {
+                "property": "Dynamizations"
+              }
+            ],
+            "requiresBinding": true
+          },
+          "cursor": {
+            "exampleValue": "<cursor from the preceding read>",
+            "requiresBinding": true
+          },
+          "budgetMs": {
+            "exampleValue": 5000
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "GetUnifiedLibraryType": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "typePath": "UDT_Status",
+          "version": "<version from target discovery>"
+        },
+        "parameters": {
+          "version": {
+            "requiresBinding": true
+          },
+          "cursor": {
+            "exampleValue": "<cursor from the preceding read>",
+            "requiresBinding": true
+          },
+          "budgetMs": {
+            "exampleValue": 5000
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "ListUnifiedLibraryFolderEntries": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example"
+        },
+        "parameters": {
+          "folderPath": {
+            "exampleValue": ""
+          },
+          "cursor": {
+            "exampleValue": "<cursor from the preceding read>",
+            "requiresBinding": true
+          },
+          "budgetMs": {
+            "exampleValue": 5000
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "GetUnifiedFaceplateInstance": {
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "screenPath": "Overview",
+          "itemName": "StatusText",
+          "typePath": "UDT_Status",
+          "version": "<version from target discovery>"
+        },
+        "parameters": {
+          "version": {
+            "requiresBinding": true
+          },
+          "cursor": {
+            "exampleValue": "<cursor from the preceding read>",
+            "requiresBinding": true
+          },
+          "budgetMs": {
+            "exampleValue": 5000
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
+      },
+      "ReleaseUnifiedReadCursor": {
+        "arguments": {
+          "cursor": "<cursor from the preceding read>"
+        },
+        "parameters": {
+          "cursor": {
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
+        "notes": [
+          "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+        ]
       }
     },
     "full-engine": {

@@ -24,7 +24,11 @@ internal static partial class Program
         Check(prepared > 1000, "Missing production native diagnostic wrappers");
         var pagesType = Server.GetType("TiaMcpServer.Siemens.MigrationPages", true)!;
         using (var pages = (IDisposable)Activator.CreateInstance(pagesType, All, null, new object?[] { null }, null)!)
-        { pagesType.GetMethod("Expire", All)!.Invoke(pages, null); }
+        {
+            var state = pagesType.GetField("state", All)!.GetValue(pages)!;
+            var nativePages = state.GetType().GetField("_pages", All)!.GetValue(state)!;
+            nativePages.GetType().GetMethod("Expire", All)!.Invoke(nativePages, null);
+        }
         Console.WriteLine("PASS native diagnostic wrappers preserve private-type access in timer cleanup");
         Console.WriteLine("COMPLETE: " + prepared + " native diagnostic wrappers JIT prepared; " + open + " open generic wrappers not prepared (generic patterns tested separately); no native call executed");
         int adapterChecks = 0;

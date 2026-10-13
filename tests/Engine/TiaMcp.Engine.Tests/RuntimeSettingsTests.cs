@@ -99,7 +99,7 @@ namespace TiaMcp.Engine.Tests
             check(Fails(() => Update(failing, "{\"StartScreen\":\"/New\"}", false, failingPreview["token"]!.ToString())) && failing.RuntimeSettings.Writes == 1, "fatal setter error is propagated without retry");
             var native = new global::Siemens.Engineering.HmiUnified.HmiSoftware();
             var session = new FakeHmiToolSession { FixtureRoot = native };
-            var portal = new RuntimeSettingsService(session);
+            var portal = HmiToolFixture.CreateRuntimeSettings(session);
             check(portal.ReadUnifiedRuntimeSettings("HMI", "Project_A").Meta!["success"]!.GetValue<bool>(), "dedicated read tool handles explicit Unified project scope");
             int resolutions = session.FixtureResolveCalls;
             check(!portal.UpdateUnifiedRuntimeSettings("HMI", "Wrong", "{\"BitSelection\":true}").Meta!["success"]!.GetValue<bool>() && session.FixtureResolveCalls == resolutions, "project mismatch stops before resolving HMI");

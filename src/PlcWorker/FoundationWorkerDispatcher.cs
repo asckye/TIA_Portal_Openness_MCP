@@ -35,6 +35,9 @@ namespace TiaMcp.PlcWorker
             engine.ValidatePlcVerifiedCandidate = PlcVerifiedImportBridge.Validate;
             engine.ExecutePlcVerifiedWorkflow = PlcVerifiedImportBridge.Execute;
             engine.CollectPlcCompilerEvidence = PlcVerifiedImportBridge.Compiler;
+#if HMI_UNIFIED
+            TiaMcpServer.Siemens.Services.UnifiedWorkerCodecs.Configure(engine);
+#endif
             // Only this application's typed facade is reflected; no arbitrary Siemens
             // type/member names or object handles are accepted on the wire.
             bool deviceCandidateEnabled = releaseKey == "19" && TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(policyAssembly, releaseKey, "P6-DEVICE");

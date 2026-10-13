@@ -30,7 +30,7 @@ internal static class UnifiedHmiDomainShapeChecks
             var toolTarget = provider.GetService(tools);
             check(target != null && toolTarget != null && ReferenceEquals(target, provider.GetService(service))
                 && ReferenceEquals(toolTarget, provider.GetService(tools)), domain.Name + " singleton registration");
-            bool ported = new[] { "UnifiedHmi", "UnifiedHmiGroups", "UnifiedScreenItems" }.Contains(domain.Name);
+            bool ported = new[] { "UnifiedHmi", "UnifiedHmiGroups", "UnifiedScreenItems", "UnifiedObjectServices", "UnifiedUiModel", "UnifiedEngineering", "UnifiedExchange", "UnifiedEvents" }.Contains(domain.Name);
             var bridge = server.GetType("TiaMcpServer.ModelContextProtocol.HardwareAddressWorkerBridge", true)!;
             check((ported ? service.BaseType!.GetField("_call", all)!.GetValue(target) is Delegate call
                     && Equals(call, bridge.GetField("Call", all)!.GetValue(null))

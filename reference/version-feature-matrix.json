@@ -6589,6 +6589,56 @@
         ]
       },
       {
+        "family": "F27",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetUnifiedAlarmCommon",
+          "GetUnifiedAuditSettings",
+          "GetUnifiedCrossReferences",
+          "GetUnifiedObjectEvents",
+          "GetUnifiedObjectProperties",
+          "GetUnifiedPlantObject",
+          "ListUnifiedEngineeringObjects",
+          "ManageUnifiedDynamization",
+          "ManageUnifiedEngineeringObject",
+          "ManageUnifiedEvent",
+          "ManageUnifiedLoggingTag",
+          "ManageUnifiedObjectParts",
+          "ManageUnifiedOpcUaAlarmType",
+          "ManageUnifiedPlantNode",
+          "ManageUnifiedScreenLayout",
+          "SetUnifiedLogDuration",
+          "SetUnifiedMultilingualProperty",
+          "SetUnifiedObjectProperties",
+          "SetUnifiedPlantObject",
+          "ValidateUnifiedObject"
+        ]
+      },
+      {
+        "family": "F28",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompareUnifiedGraphicSelections",
+          "ExchangeUnifiedScriptModules",
+          "ExchangeUnifiedTags",
+          "GetUnifiedFaceplateInstance",
+          "GetUnifiedGlobalScript",
+          "GetUnifiedGraphicSelection",
+          "GetUnifiedLibraryType",
+          "GetUnifiedRuntimeSettings",
+          "GetUnifiedScreenBranch",
+          "ImportUnifiedOpcUaAlarms",
+          "ListUnifiedGlobalScripts",
+          "ListUnifiedLibraryFolderEntries",
+          "ListUnifiedTagDefinitions",
+          "ReleaseUnifiedReadCursor",
+          "SetUnifiedGlobalScript",
+          "SetUnifiedRuntimeSettings"
+        ]
+      },
+      {
         "family": "F25",
         "state": "current",
         "l5": "NOT RUN",

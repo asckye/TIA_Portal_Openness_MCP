@@ -202,6 +202,24 @@ WORKBENCH_CALLS = {
 FOUNDATION_MARKERS.update({name: 'INVALID_ARGUMENT' for name in WORKBENCH_CALLS})
 
 
+UNIFIED_LIST_MUTATIONS = [
+    {'softwarePath': 'HMI_RT_1', 'category': 'textLists', 'listName': 'Fixture',
+     'action': action, 'dryRun': True}
+    for action in ('create', 'update', 'delete')
+]
+
+
+def unsupported_unified_list_mutations(call, registered):
+    if 'ManageUnifiedListEntries' not in registered:
+        return
+    for arguments in UNIFIED_LIST_MUTATIONS:
+        result = body(call('ManageUnifiedListEntries', arguments))
+        resources.require(result['error']['code'] == 'UNSUPPORTED_CAPABILITY'
+                          and result['meta']['outcome'] == 'rejected-before-operation'
+                          and result['meta']['execution'] == 'not-started',
+                          'Unified list mutation must be refused before native dispatch')
+
+
 def unavailable_workbench(call, registered):
     for name, arguments in WORKBENCH_CALLS.items():
         if name not in registered: continue
@@ -847,6 +865,7 @@ def capture_release(args, release, exe, public_api):
             decoded('PreviewToolCall', {'name': 'ListPlcBlocks', 'arguments': {}})
 
             unavailable_workbench(call, registered)
+            unsupported_unified_list_mutations(call, registered)
             for name, arguments, reason in PASSIVE_RESOURCE_CALLS:
                 result = decoded(name, arguments)
                 meta = result['meta']
@@ -953,6 +972,7 @@ def capture_release(args, release, exe, public_api):
                 if args.engine_host and not args.packaged_no_tia:
                     foundation_apply_refusal(body(bridge('CallTool', {'name': name, 'arguments': arguments})), 'CallTool -> ' + name)
                 else: session_write_refusal(body(bridge('CallTool', {'name': name, 'arguments': arguments})), 'CallTool -> ' + name, args.packaged_no_tia)
+            unsupported_unified_list_mutations(lambda name, arguments: bridge('CallTool', {'name': name, 'arguments': arguments}), registered)
             snapshot['coverage'].update(bridgeRejectedTools=sorted(registered - {'CallTool'}),
                 bridgeSelfGuardTools=['CallTool'], bridgeSkipped={},
                 liteAdvertisedTools=sorted(t['name'] for t in lite))
@@ -1914,6 +1934,10 @@ def verify_coverage(release, baseline, snapshot, lite):
         roster('liteAdvertisedTools', lite)
         for name in names:
             required_call('lite', 'CallTool', {'name': name, 'arguments': REJECT_ARGUMENTS})
+        if 'ManageUnifiedListEntries' in names:
+            for arguments in UNIFIED_LIST_MUTATIONS:
+                required_call('full', 'ManageUnifiedListEntries', arguments)
+                required_call('lite', 'CallTool', {'name': 'ManageUnifiedListEntries', 'arguments': arguments})
         if snapshot.get('captureMode') == 'packaged-no-tia':
             bootstrap = stored_v4_body('full', 'InitializeEnvironment', {})
             doctor = stored_v4_body('full', 'GetEnvironmentDiagnostics', {'fix': False})

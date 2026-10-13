@@ -199,7 +199,7 @@ public sealed class PortedPortalAdmissionTests
     }
 
     public static IEnumerable<object[]> LaneCases =>
-        from name in PortedFamilies.All.Where(f => f.Name is "F04" or "F22" or "F33" or "F06" or "F23" or "F35" or "F07" or "F24" or "F25" or "F29" or "F30" or "F31").SelectMany(f => f.Tools).Where(name => TiaMcpServer.ModelContextProtocol.ToolExecution.Table[name] != "host").Prepend("CreatePlcBlockGroup")
+        from name in PortedFamilies.All.Where(f => f.Name is "F04" or "F22" or "F33" or "F06" or "F23" or "F35" or "F07" or "F24" or "F25" or "F27" or "F28" or "F29" or "F30" or "F31").SelectMany(f => f.Tools).Where(name => TiaMcpServer.ModelContextProtocol.ToolExecution.Table[name] != "host").Prepend("CreatePlcBlockGroup")
         from cancel in new[] { false, true }
         select new object[] { name, cancel };
 
@@ -302,6 +302,7 @@ public sealed class PortedPortalAdmissionTests
     }
 
     private static JsonObject Overrides(string name) => JsonNode.Parse(name switch {
+        "CompareUnifiedGraphicSelections" => ComparisonArguments(),
         "BuildAndImportPlcArtifact" => "{\"kind\":\"tagtable\",\"spec\":{\"tableName\":\"Tags\",\"tags\":[{\"name\":\"Ready\",\"dataTypeName\":\"Bool\",\"logicalAddress\":\"%M0.0\"}]}}",
         "PlanHardwareNetworkConfiguration" => "{\"plan\":{\"operations\":[]}}",
         "BuildDeviceAmlDocument" => "{\"spec\":{\"projectName\":\"Fixture\",\"devices\":[{\"name\":\"Fixture\",\"typeIdentifier\":\"OrderNumber:6ES7211-1BE40-0XB0/V4.7\",\"deviceItems\":[]}]},\"outputPath\":\"fixture.aml\"}",
@@ -322,6 +323,13 @@ public sealed class PortedPortalAdmissionTests
         "WritePlcSimAdvancedTags" => "{\"values\":[{\"name\":\"Fixture\",\"value\":true}],\"confirmWrite\":true}",
         "RunPlcSimAdvancedTestScenario" => "{\"scenario\":{\"instance\":\"Fixture\",\"mode\":\"default\",\"steps\":[{\"waitMs\":1}]},\"confirmRun\":true}",
         _ => "{}" })!.AsObject();
+
+    private static string ComparisonArguments()
+    {
+        var root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(Path.GetDirectoryName(typeof(PortedPortalAdmissionTests).Assembly.Location)!);
+        var examples = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "reference/tool-examples/calls.json")))!;
+        return examples["profiles"]!["full-engine"]!["CompareUnifiedGraphicSelections"]!["arguments"]!.ToJsonString();
+    }
 
     private sealed class Catalog : Host.IToolCatalogView
     {

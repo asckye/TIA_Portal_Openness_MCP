@@ -28,7 +28,7 @@ internal static class PortedToolContract
     // V20/V21 B1 declarations belong to the full EngineHost catalog. The
     // bounded plc-foundation profile includes F18/F19/F20/F21 hardware ports.
     internal static IEnumerable<PortedFamilies.Family> Families(string release) =>
-        PortedFamilies.All.Where(family => (family.Name == "F04" || family.Name == "F22" || family.Name == "F29" || family.Name == "F30" || family.Name == "F31" || family.Name == "F32" || family.Name == "F34" || family.Name == "F05" || family.Name == "F07" || family.Name == "F33" || family.Name == "F24" || family.Name == "F25" || family.Name == "F26" || family.Name == "F10" || family.Name == "F14" || family.Name == "F15" || family.Name == "F23" || family.Name == "F06" || family.Name == "F35" || family.Name == "F08" || family.Name == "F09" || family.Name == "F11" || family.Name == "F12" || family.Name == "F13" || family.Name == "F16" || family.Name == "F17" || family.Name == "F18" || family.Name == "F19" || family.Name == "F20" || family.Name == "F21") && family.Available(release))
+        PortedFamilies.All.Where(family => (family.Name == "F04" || family.Name == "F22" || family.Name == "F29" || family.Name == "F30" || family.Name == "F31" || family.Name == "F32" || family.Name == "F34" || family.Name == "F05" || family.Name == "F07" || family.Name == "F33" || family.Name == "F24" || family.Name == "F25" || family.Name == "F26" || family.Name == "F27" || family.Name == "F28" || family.Name == "F10" || family.Name == "F14" || family.Name == "F15" || family.Name == "F23" || family.Name == "F06" || family.Name == "F35" || family.Name == "F08" || family.Name == "F09" || family.Name == "F11" || family.Name == "F12" || family.Name == "F13" || family.Name == "F16" || family.Name == "F17" || family.Name == "F18" || family.Name == "F19" || family.Name == "F20" || family.Name == "F21") && family.Available(release))
             .Select(family => new PortedFamilies.Family(family.Name, family.OperationPrefix, family.Releases,
                 TiaMcp.PlcWorker.WorkerOperations.FamilyTools(family), family.Actions));
     internal static McpServerTool Wrap(FoundationTool tool)
@@ -131,6 +131,10 @@ internal static class PortedToolContract
         "GetHmiProgramInfo" or "DescribeHmiSoftware" or "DescribeHmiScreen" or "DescribeHmiTagTable" or "DescribeHmiTag" or "DescribeHmiScreenItem" or "ListHmiScreens" or "ListHmiTagTables" or "ListHmiTags" or "ListHmiConnections" or "ExportHmiScreen" or "ExportHmiTagTable" or "ExportHmiConnection" or "ExportHmiProgram" or "ImportHmiScreen" or "ImportHmiTagTable" or "ImportHmiConnection" or "ImportHmiScreensFromDirectory" or "ImportHmiTagTablesFromDirectory" or "GetHmiScreenSnapshot" or "ListHmiScreenPaths" or "DeleteHmiTag" => new[] { "hmi-generic.ExecuteHmi", "ReadState" },
         "ApplyUnifiedHmiLayout" or "ApplyUnifiedHmiScreenDesign" or "ApplyUnifiedHmiTheme" or "BindUnifiedHmiButtonPressedTag" or "BindUnifiedHmiTagDynamization" or "DeleteEmptyUnifiedHmiScreenGroup" or "DeleteUnifiedHmiButtonEvent" or "DeleteUnifiedHmiDynamization" or "DescribeUnifiedHmiButtonEventScript" or "EnsureUnifiedHmiButtonAction" or "EnsureUnifiedHmiButtonEventHandler" or "EnsureUnifiedHmiConnection" or "EnsureUnifiedHmiDynamization" or "EnsureUnifiedHmiScreen" or "EnsureUnifiedHmiScreenItem" or "EnsureUnifiedHmiTag" or "EnsureUnifiedHmiTagTable" or "GetUnifiedHmiButtonEvent" or "GetUnifiedHmiDynamization" or "GetUnifiedHmiTexts" or "ManageUnifiedHmiGroup" or "ManageUnifiedScreenItem" or "SetUnifiedHmiButtonEventScriptCode" or "SetUnifiedHmiRuntimeState" => new[] { "hmi-unified.ExecuteUnifiedHmi", "ReadState" },
         "ListUnifiedHmiApiTypes" or "DescribeUnifiedScreenItemType" => new[] { "hmi-unified.ExecuteUnifiedHmiMetadata" },
+        "GetUnifiedObjectProperties" or "SetUnifiedObjectProperties" or "SetUnifiedMultilingualProperty" or "ValidateUnifiedObject" or "GetUnifiedCrossReferences" or "ExportUnifiedEngineeringList" or "ManageUnifiedLoggingTag" or "SetUnifiedLogDuration" or "ManageUnifiedOpcUaAlarmType" or "GetUnifiedPlantObject" or "ManageUnifiedPlantNode" or "SetUnifiedPlantObject" or "GetUnifiedObjectEvents" or "ManageUnifiedObjectParts" or "ManageUnifiedDynamization" or "ManageUnifiedScreenLayout" or "ManageUnifiedListEntries" or "GetUnifiedAlarmCommon" or "GetUnifiedAuditSettings" or "ImportUnifiedEngineeringList" or "ListUnifiedEngineeringObjects" or "ManageUnifiedEngineeringObject" or "ManageUnifiedEvent" => new[] { "hmi-unified-model.ExecuteUnified", "ReadState" },
+        "ExchangeUnifiedTags" or "ExchangeUnifiedScriptModules" or "ImportUnifiedOpcUaAlarms" or "SetUnifiedGlobalScript" or "GetUnifiedGraphicSelection" or "GetUnifiedRuntimeSettings" or "SetUnifiedRuntimeSettings" or "ListUnifiedGlobalScripts" or "GetUnifiedGlobalScript" or "ListUnifiedTagDefinitions" or "GetUnifiedScreenBranch" or "GetUnifiedLibraryType" or "ListUnifiedLibraryFolderEntries" or "GetUnifiedFaceplateInstance" => new[] { "hmi-unified-exchange.ExecuteUnified", "ReadState" },
+        "CompareUnifiedGraphicSelections" => Array.Empty<string>(),
+        "ReleaseUnifiedReadCursor" => new[] { "hmi-unified-exchange.ReleaseUnifiedReadCursor" },
         "GetClassicHmiScreenTree" or "ManageClassicHmiScreenObject" or "ManageClassicHmiFolder" or "ManageClassicHmiGraphic" or "ListClassicHmiScripts" or "ManageClassicHmiScript" or "ManageClassicHmiCycle" or "ManageClassicHmiTextGraphicList" or "GetClassicHmiGlobalization" or "ListClassicHmiFaceplates" => new[] { "hmi-classic.ExecuteHmi", "ReadState" },
         "DescribeObject" or "DescribeObjectProperty" or "DescribeService" or "GetObjectProperty" or "ListObjectChildren" or "InvokeObject" or "InvokeService" => new[] { "openness-reflection.ExecuteOpennessReflection", "ReadState" },
         "CreatePlcBlockGroup" or "CreatePlcTypeGroup" or "DeleteEmptyPlcBlockGroup" or "DeletePlcBlock" or "DeletePlcTagTable" or "DeletePlcType" or "ManagePlcBlockProtection" or "ManagePlcUserGroup" or "MovePlcBlockToGroup" or "ListPlcSystemGroups" => new[] { "plc-organisation.ExecutePlcOrganisation", "ReadState" },
@@ -192,14 +196,113 @@ internal sealed partial class FoundationTool
             // Invalid input still goes through the existing wrapper so its
             // behaviour disclosure and raw rejection payload remain unchanged.
             var input = JsonSerializer.SerializeToElement(arguments);
-            if (McpServer.ToolInvoker.ValidateArguments(owner.portedDescriptor!, input, ProtocolTool.InputSchema) == null
-                && owner.RefusePortedCapability(arguments) is { } refusal)
+            var validation = McpServer.ToolInvoker.ValidateArguments(owner.portedDescriptor!, input, ProtocolTool.InputSchema);
+            if (validation != null && PortedFamilies.ForTool(owner.tool.Name).Name is "F27" or "F28"
+                && UnifiedInputCodec.HasDuplicateKeys(input))
+            {
+                var rejected = McpServer.V4TargetReject(owner.tool.Name, validation, current: true);
+                McpServer.RecordAdmissionProjection(request, rejected);
+                return new ValueTask<CallToolResult>(rejected);
+            }
+            if (validation == null && owner.RefusePortedCapability(arguments) is { } refusal)
             {
                 McpServer.RecordAdmissionProjection(request, refusal);
                 return new ValueTask<CallToolResult>(refusal);
             }
             return inner.InvokeAsync(request, cancellationToken);
         }
+    }
+
+    private static readonly IReadOnlyDictionary<string, string> UnifiedParameters = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["softwarePath"] = nameof(UnifiedRequest.SoftwarePath),
+        ["objectPath"] = nameof(UnifiedRequest.ObjectPathJson),
+        ["offset"] = nameof(UnifiedRequest.Offset),
+        ["limit"] = nameof(UnifiedRequest.Limit),
+        ["properties"] = nameof(UnifiedRequest.PropertiesJson),
+        ["dryRun"] = nameof(UnifiedRequest.DryRun),
+        ["property"] = nameof(UnifiedRequest.Property),
+        ["culture"] = nameof(UnifiedRequest.Culture),
+        ["rawText"] = nameof(UnifiedRequest.RawText),
+        ["filter"] = nameof(UnifiedRequest.Filter),
+        ["category"] = nameof(UnifiedRequest.Category),
+        ["name"] = nameof(UnifiedRequest.Name),
+        ["destinationDirectory"] = nameof(UnifiedRequest.DestinationDirectory),
+        ["tagPath"] = nameof(UnifiedRequest.TagPathJson),
+        ["action"] = nameof(UnifiedRequest.Action),
+        ["durationPath"] = nameof(UnifiedRequest.DurationPathJson),
+        ["kind"] = nameof(UnifiedRequest.Kind),
+        ["days"] = nameof(UnifiedRequest.Days),
+        ["hours"] = nameof(UnifiedRequest.Hours),
+        ["minutes"] = nameof(UnifiedRequest.Minutes),
+        ["seconds"] = nameof(UnifiedRequest.Seconds),
+        ["hundredNanoseconds"] = nameof(UnifiedRequest.HundredNanoseconds),
+        ["nodeId"] = nameof(UnifiedRequest.NodeId),
+        ["connection"] = nameof(UnifiedRequest.Connection),
+        ["plantPath"] = nameof(UnifiedRequest.PlantPath),
+        ["plantObjectType"] = nameof(UnifiedRequest.PlantObjectType),
+        ["collectionProperty"] = nameof(UnifiedRequest.CollectionProperty),
+        ["partName"] = nameof(UnifiedRequest.PartName),
+        ["partIndex"] = nameof(UnifiedRequest.PartIndex),
+        ["partKind"] = nameof(UnifiedRequest.PartKind),
+        ["confirmDelete"] = nameof(UnifiedRequest.ConfirmDelete),
+        ["propertyName"] = nameof(UnifiedRequest.PropertyName),
+        ["dynamizationKind"] = nameof(UnifiedRequest.DynamizationKind),
+        ["mappingEntries"] = nameof(UnifiedRequest.MappingEntriesJson),
+        ["listName"] = nameof(UnifiedRequest.ListName),
+        ["entryKey"] = nameof(UnifiedRequest.EntryKey),
+        ["entry"] = nameof(UnifiedRequest.EntryJson),
+        ["filePath"] = nameof(UnifiedRequest.FilePath),
+        ["expectedNames"] = nameof(UnifiedRequest.ExpectedNamesJson),
+        ["eventType"] = nameof(UnifiedRequest.EventType),
+        ["scriptProperties"] = nameof(UnifiedRequest.ScriptPropertiesJson),
+        ["directory"] = nameof(UnifiedRequest.Directory),
+        ["tagTable"] = nameof(UnifiedRequest.TagTable),
+        ["fileName"] = nameof(UnifiedRequest.FileName),
+        ["expectedTagNames"] = nameof(UnifiedRequest.ExpectedTagNamesJson),
+        ["moduleName"] = nameof(UnifiedRequest.ModuleName),
+        ["connectionName"] = nameof(UnifiedRequest.ConnectionName),
+        ["xmlPath"] = nameof(UnifiedRequest.XmlPath),
+        ["displayName"] = nameof(UnifiedRequest.DisplayName),
+        ["expectedProject"] = nameof(UnifiedRequest.ExpectedProject),
+        ["scriptCode"] = nameof(UnifiedRequest.ScriptCode),
+        ["screenPath"] = nameof(UnifiedRequest.ScreenPath),
+        ["itemNames"] = nameof(UnifiedRequest.ItemNamesJson),
+        ["cursor"] = nameof(UnifiedRequest.Cursor),
+        ["budgetMs"] = nameof(UnifiedRequest.BudgetMs),
+        ["beforePages"] = nameof(UnifiedRequest.BeforePagesJson),
+        ["afterPages"] = nameof(UnifiedRequest.AfterPagesJson),
+        ["fields"] = nameof(UnifiedRequest.FieldsJson),
+        ["changes"] = nameof(UnifiedRequest.ChangesJson),
+        ["itemName"] = nameof(UnifiedRequest.ItemName),
+        ["branch"] = nameof(UnifiedRequest.BranchJson),
+        ["typePath"] = nameof(UnifiedRequest.TypePath),
+        ["version"] = nameof(UnifiedRequest.Version),
+        ["folderPath"] = nameof(UnifiedRequest.FolderPath),
+        ["previewToken"] = nameof(UnifiedRequest.ExpectedToken)
+    };
+
+    internal static UnifiedRequest BindUnifiedRequest(string operation, System.Reflection.MethodInfo method,
+        IReadOnlyDictionary<string, JsonElement> arguments)
+    {
+        var request = new UnifiedRequest { Operation = operation };
+        bool paged = operation is "GetUnifiedGraphicSelection" or "ListUnifiedGlobalScripts" or "GetUnifiedGlobalScript"
+            or "ListUnifiedTagDefinitions" or "GetUnifiedScreenBranch" or "GetUnifiedLibraryType"
+            or "ListUnifiedLibraryFolderEntries" or "GetUnifiedFaceplateInstance";
+        foreach (var parameter in method.GetParameters())
+        {
+            var name = parameter.Name!;
+            var propertyName = name == "limit" && paged ? nameof(UnifiedRequest.PageSize)
+                : UnifiedParameters.TryGetValue(name, out var mapped) ? mapped
+                : throw new InvalidOperationException("Unified parameter has no request mapping: " + operation + "." + name);
+            var property = typeof(UnifiedRequest).GetProperty(propertyName)!;
+            if (arguments.TryGetValue(name, out var value))
+                property.SetValue(request, property.PropertyType == typeof(string) && value.ValueKind != JsonValueKind.String
+                    ? value.GetRawText() : JsonSerializer.Deserialize(value.GetRawText(), property.PropertyType));
+            else if (parameter.DefaultValue != null && property.PropertyType.IsInstanceOfType(parameter.DefaultValue))
+                property.SetValue(request, parameter.DefaultValue);
+        }
+        return request;
     }
 
     internal CallToolResult? RefusePortedCapability(IReadOnlyDictionary<string, JsonElement> arguments)
@@ -243,6 +346,14 @@ internal sealed partial class FoundationTool
             UserName = Text("userName"), UserType = Text("userType"), IpAddress = Text("ipAddress"),
             TargetIpAddress = Text("targetIpAddress"), ObjectKind = Text("objectKind") }) != null)
             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+        if (family.Name is "F27" or "F28")
+        {
+            var unified = BindUnifiedRequest(tool.Name, portedMethod!, arguments);
+            UnifiedPortService.DecodeInputs(unified);
+            if (UnifiedCapabilities.Unsupported(portedRelease!, unified) != null)
+                return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+            return null;
+        }
         if (family.Name == "F07" && SecurityCapabilities.Unsupported(portedRelease!, tool.Name, actionName,
             tool.Name == "ManageSyslogServers" ? (Text("scope").Length == 0 ? "project" : Text("scope")) : scope,
             Text("category"), Text("filePath")) != null)
@@ -330,8 +441,8 @@ internal sealed partial class FoundationTool
             "ProjectUserManagementTools" => new ProjectUserManagementTools(new ProjectUserManagementPortService(call, hasProject, identity)),
             "CertificateManagementTools" => new CertificateManagementTools(new CertificateManagementPortService(call, hasProject, identity)),
             "HardwareServicesTools" => new HardwareServicesTools(new HardwareSecurityPortService(call, hasProject, identity)),
-                "HardwareSecurityTools" => new HardwareSecurityTools(new DeviceUserPortService(call, hasProject, identity)),
-                "SecurityDeepTools" => new SecurityDeepTools(new SecurityDeepPortService(call, hasProject, identity)),
+            "HardwareSecurityTools" => new HardwareSecurityTools(new DeviceUserPortService(call, hasProject, identity)),
+            "SecurityDeepTools" => new SecurityDeepTools(new SecurityDeepPortService(call, hasProject, identity)),
             "ProjectSecurityTools" => new ProjectSecurityTools(new ProjectLifecyclePortService(call, hasProject, identity)),
             "ProjectLifecycleSessionTools" => new ProjectLifecycleSessionTools(new ProjectLifecyclePortService(call, hasProject, identity)),
             "ProjectLifecycleProjectTools" => new ProjectLifecycleProjectTools(new ProjectLifecyclePortService(call, hasProject, identity)),
@@ -351,6 +462,15 @@ internal sealed partial class FoundationTool
             "V20OptionsTools" => new V20OptionsTools(new OptionalPorts.OptionalProductsPortService(call, identity)),
             "EngineeringServicesTools" => new EngineeringServicesTools(new EngineeringServicesPortService(call, identity)),
             "HmiDescribeTools" => new HmiDescribeTools(new HmiDescribeService(call, identity)),
+            "UnifiedObjectServicesTools" => new UnifiedObjectServicesTools(new UnifiedObjectServicesService(call, identity)),
+            "UnifiedUiModelTools" => new UnifiedUiModelTools(new UnifiedUiModelService(call, identity)),
+            "UnifiedEngineeringTools" => new UnifiedEngineeringTools(new UnifiedEngineeringService(call, identity)),
+            "UnifiedEventsTools" => new UnifiedEventsTools(new UnifiedEventsService(call, identity)),
+            "UnifiedExchangeTools" => new UnifiedExchangeTools(new UnifiedExchangeService(call, identity)),
+            "GlobalScriptEditTools" => new GlobalScriptEditTools(new GlobalScriptEditService(call, identity)),
+            "GraphicSelectionTools" => new GraphicSelectionTools(new GraphicSelectionService(call, identity)),
+            "RuntimeSettingsTools" => new RuntimeSettingsTools(new RuntimeSettingsService(call, identity)),
+            "MigrationReadTools" => new MigrationReadTools(new MigrationReadService(call, identity)),
             "HmiExchangeTools" => new HmiExchangeTools(new HmiExchangeService(call, identity)),
             "HmiInspectionPortTools" => new HmiInspectionPortTools(new HmiInspectionPortService(call, identity)),
             "UnifiedHmiTools" => new UnifiedHmiTools(new UnifiedHmiService(call, identity)),

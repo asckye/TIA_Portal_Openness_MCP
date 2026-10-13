@@ -186,6 +186,8 @@ namespace TiaMcpServer.Worker
                 var error = UnifiedHmiPropertyPolicy.ValidateProperties(type, TiaMcp.Logic.V4.V4Json.Deserialize<TiaMcp.Logic.V4.Inputs.CompositeAttributeMap>(input));
                 return error == null ? null : JsonSerializer.Deserialize<Dictionary<string, object?>>(TiaMcp.Logic.V4.V4Json.Serialize(error));
             };
+            foundation.ReadEngineeringHmiReadFault = () => ((IHmiToolSession)portal).HmiReadFault is JsonObject fault
+                ? JsonSerializer.Deserialize<Dictionary<string, object?>>(fault.ToJsonString()) : null;
             foundation.HmiBindingIdentity = () => JsonSerializer.Deserialize<Dictionary<string, object?>>(engineering.GetBindingIdentity().ToJsonString());
             foundation.WriteEngineeringHmiTrace = TiaMcpServer.Siemens.HmiReadTrace.WriteLine;
             foundation.HmiReadFault = values => {
@@ -198,6 +200,7 @@ namespace TiaMcpServer.Worker
             foundation.EngineeringLibraryOptionKind = global::TiaMcp.Adapters.PlcFoundationEngine.OptionalLibraryKind;
             foundation.RenderEngineeringValue = value => JsonSerializer.Deserialize<object>(EngineeringScalarProperties.Json(value)?.ToJsonString() ?? "null");
             portal.ResolvePortedEngineeringLibrary = foundation.ExactOpenEngineeringLibrary;
+            TiaMcpServer.Siemens.Services.UnifiedWorkerCodecs.Configure(foundation);
             foundation.EngineeringPlcOrganisationSession = new EnginePlcOrganisationSession(engineering, foundation);
             foundation.PlcB5DocumentPreflight = text => JsonSerializer.Deserialize<object>(EngineeringAuditLogic.DocumentPreflight(text, Engineering.TiaMajorVersion, null).ToJsonString())!;
             foundation.PlcB5AutoOffline = (path, action) => OnlineToolPolicy.WithAutoOffline(action, path);

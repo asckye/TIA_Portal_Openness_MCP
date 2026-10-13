@@ -14,9 +14,13 @@ namespace TiaMcp.Adapters.Reflection
             internal string? ResolvedType;
             internal string? Error;
             internal bool Success => Status == "Value";
-            internal Dictionary<string, object?> Metadata() => ReflectionSession.Meta(Success,
-                ("operationSuccess", Success), ("status", Status), ("failedSegment", Segment),
-                ("resolvedType", ResolvedType), ("error", Error));
+            internal Dictionary<string, object?> Metadata()
+            {
+                var result = TiaMcp.Adapters.Contracts.LegacyResponseMetadata.Basic(null, Success);
+                result["operationSuccess"] = Success; result["status"] = Status;
+                result["failedSegment"] = Segment; result["resolvedType"] = ResolvedType; result["error"] = Error;
+                return result;
+            }
         }
 
         internal static Result Read(object? root, string path)

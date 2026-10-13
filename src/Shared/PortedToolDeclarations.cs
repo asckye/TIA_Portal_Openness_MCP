@@ -37,6 +37,8 @@ namespace TiaMcpServer.ModelContextProtocol
             ["F23"] = new[] { typeof(LibraryTools) },
             ["F24"] = new[] { typeof(HmiDescribeTools), typeof(HmiExchangeTools), typeof(HmiInspectionPortTools), typeof(HmiTagDeletionTools) },
             ["F26"] = new[] { typeof(UnifiedHmiTools), typeof(UnifiedHmiGroupsTools), typeof(UnifiedScreenItemsTools), typeof(HmiInspectionTools) },
+            ["F27"] = new[] { typeof(UnifiedEngineeringTools), typeof(UnifiedEventsTools), typeof(UnifiedObjectServicesTools), typeof(UnifiedUiModelTools) },
+            ["F28"] = new[] { typeof(UnifiedExchangeTools), typeof(GlobalScriptEditTools), typeof(GraphicSelectionTools), typeof(MigrationReadTools), typeof(RuntimeSettingsTools) },
             ["F25"] = new[] { typeof(ClassicHmiFoldersTools), typeof(MotionProDiagClassicHmiTools) },
             ["F35"] = new[] { typeof(ReflectionTools) },
             ["F09"] = new[] { typeof(PlcReadModifyTools), typeof(PlcBuildTools) },

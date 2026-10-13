@@ -22,15 +22,15 @@ internal static class RuntimeSettingsRuntimeTests
     public sealed class Hmi { public Settings RuntimeSettings { get; } = new Settings(); public List<Screen> Screens { get; } = new List<Screen> { new Screen() }; public List<object> ScreenGroups { get; } = new List<object>(); }
     internal static void Run(Assembly server, Action<bool, string> check)
     {
-        var helper = server.GetType("TiaMcpServer.Siemens.UnifiedRuntimeSettingsAccess", true)!;
+        var helper = UnifiedNativeFixture.Helper(server, "UnifiedRuntimeSettingsAccess");
         var update = helper.GetMethod("Update", All)!; var read = helper.GetMethod("Read", All)!;
         var changes = helper.GetMethod("Changes", All)!;
         var metaType = update.GetParameters()[6].ParameterType; var traceType = update.GetParameters()[7].ParameterType;
         var json = new JavaScriptSerializer(); var hmi = new Hmi();
-        Dictionary<string, object> Parse(object value) => (Dictionary<string, object>)json.DeserializeObject(value.ToString());
+        Dictionary<string, object> Parse(object value) => (Dictionary<string, object>)json.DeserializeObject(UnifiedNativeFixture.Json(value));
         Dictionary<string, object> Update(string data, bool dry = true, string token = "")
         {
-            var meta = Activator.CreateInstance(metaType, new object?[] { null })!;
+            var meta = Activator.CreateInstance(metaType, true)!;
             update.Invoke(null, new object[] { hmi, "P", "HMI", changes.Invoke(null, new object[] { data })!, dry, token, meta, Activator.CreateInstance(traceType, true)! });
             return Parse(meta);
         }
@@ -39,7 +39,7 @@ internal static class RuntimeSettingsRuntimeTests
         check(new[] { "GetUnifiedRuntimeSettings", "SetUnifiedRuntimeSettings" }.All(n => mcp.Tool(n)?.CustomAttributes.Any(a => a.AttributeType.Name == "McpServerToolAttribute") == true)
             && (bool)mcp.Tool("SetUnifiedRuntimeSettings")!.GetParameters().Single(p => p.Name == "dryRun").DefaultValue,
             "actual EXE registers runtime setting tools with preview default");
-        var readMeta = Activator.CreateInstance(metaType, new object?[] { null })!;
+        var readMeta = Activator.CreateInstance(metaType, true)!;
         read.Invoke(null, new object[] { hmi, new[] { "StartScreen", "ScreenResolution" }, readMeta, Activator.CreateInstance(traceType, true)! });
         check((bool)Parse(readMeta)["dataComplete"] && hmi.RuntimeSettings.Writes == 0, "actual EXE reads startup setting without writing");
         const string data = "{\"StartScreen\":\"/New\",\"ScreenResolution\":\"SR_1920X1080\"}";

@@ -131,7 +131,7 @@ namespace TiaMcp.Engine.Tests
         {
             var root = new global::Siemens.Engineering.HmiUnified.HmiSoftware();
             var session = new FakeHmiToolSession { FixtureRoot = root };
-            var portal = new MigrationReadService(session);
+            var portal = HmiToolFixture.CreateMigrationRead(session);
             var first = portal.ReadUnifiedGlobalScript("HMI_1", "Project_A", "Navigation", pageSize: 2).Meta!;
             check(first["records"]!.AsArray().Any(r => r!["kind"]!.ToString() == "nativeExportStatus"), "native result is captured before export file pagination starts");
             string cursor = first["nextCursor"]!.ToString();

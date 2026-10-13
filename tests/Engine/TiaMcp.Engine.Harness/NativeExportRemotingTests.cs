@@ -66,9 +66,9 @@ internal static class NativeExportRemotingTests
     private static readonly JavaScriptSerializer Json = new JavaScriptSerializer { MaxJsonLength = 16 * 1024 * 1024 };
     internal static void Run(Assembly server, Action<bool, string> check)
     {
-        var method = server.GetType("TiaMcpServer.Siemens.UnifiedNativeRead", true)!.GetMethod("Export", BindingFlags.NonPublic | BindingFlags.Static)!;
+        var method = UnifiedNativeFixture.Helper(server, "UnifiedNativeRead").GetMethod("Export", BindingFlags.NonPublic | BindingFlags.Static)!;
         IEnumerator Start(object version) => ((IEnumerable)method.Invoke(null, new object[] { version, "/Type/Versions/1.0.0", true })!).GetEnumerator();
-        Dictionary<string, object> Row(object value) => Json.Deserialize<Dictionary<string, object>>(value.ToString());
+        Dictionary<string, object> Row(object value) => Json.Deserialize<Dictionary<string, object>>(UnifiedNativeFixture.Json(value));
         var version = new Version(); var iterator = Start(version);
         var rows = new List<Dictionary<string, object>>();
         try

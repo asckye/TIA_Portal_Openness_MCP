@@ -74,7 +74,7 @@ namespace TiaMcp.Engine.Tests
         private static bool Refused(JsonArray before, JsonArray after)
         {
             var session = new FakeHmiToolSession();
-            return new GraphicSelectionService(session, new MigrationReadService(session)).CompareUnifiedGraphicSelections(before.ToJsonString(), after.ToJsonString()).Meta!["success"]!.GetValue<bool>() == false;
+            return HmiToolFixture.CreateGraphicSelection(session).CompareUnifiedGraphicSelections(before.ToJsonString(), after.ToJsonString()).Meta!["success"]!.GetValue<bool>() == false;
         }
         internal static void Run(Action<bool, string> check)
         {
@@ -82,8 +82,8 @@ namespace TiaMcp.Engine.Tests
             var hmi = new global::Siemens.Engineering.HmiUnified.HmiSoftware(); var screen = new Screen(); hmi.Screens.Add(screen);
             foreach (var name in UnifiedGraphicSelection.Names(NamesJson)) screen.ScreenItems.Add(new Item { Name = name, Parent = screen, Left = name.StartsWith("txt") ? -22 : 4 });
             var session = new FakeHmiToolSession { FixtureRoot = hmi };
-            var migration = new MigrationReadService(session);
-            var portal = new GraphicSelectionService(session, migration);
+            var migration = HmiToolFixture.CreateMigrationRead(session);
+            var portal = HmiToolFixture.CreateGraphicSelection(session);
             var before = Pages(portal); var rows = Rows(before);
             check(rows.Length == 5 && rows.Take(4).All(r => r["geometryComplete"]!.GetValue<bool>()), "four exact names and complete geometry, no deep property traversal");
             check(rows[0]["owner"]!["name"]!["value"]!.ToString() == "Main", "one-hop owner identity stops before owner's Parent");

@@ -45,6 +45,12 @@ namespace TiaMcp.Adapters.Native.Hmi
     }
     internal static class HmiMeta
     {
+        internal static HmiObject Unstamped(bool success, params (string Key, object? Value)[] values)
+        {
+            var meta = new HmiObject(LegacyResponseMetadata.Basic(null, success));
+            foreach (var value in values) meta[value.Key] = value.Value;
+            return meta;
+        }
         internal static HmiObject Basic(bool success, params (string Key, object? Value)[] values)
         {
             var meta = new HmiObject(LegacyResponseMetadata.Basic(TiaMcpServer.ModelContextProtocol.ResponseClock.Now, success));

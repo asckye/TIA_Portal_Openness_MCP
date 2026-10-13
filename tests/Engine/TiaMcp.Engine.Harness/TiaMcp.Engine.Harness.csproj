@@ -20,4 +20,5 @@
   <ItemGroup><Compile Include="../TiaMcp.Engine.Tests/HmiScreenTraversalTests.cs" Link="HmiScreenTraversalTests.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../TiaMcp.Engine.Tests/OfflineContractChecks.cs" Link="OfflineContractChecks.cs" /></ItemGroup>
   <Import Project="../../Shared/HostDomainBuild.targets" />
+  <ItemGroup><ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" /></ItemGroup>
 </Project>

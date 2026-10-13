@@ -176,7 +176,7 @@ internal static class FoundationV4Result
         string? usageName = (string?)raw?["usage"]?["toolName"];
         bool portedUsage = usageName != null && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(usageName)
             && TiaMcpServer.ModelContextProtocol.ToolExecution.Table.TryGetValue(usageName, out var execution)
-            && (execution == "host" || execution == "foundation");
+            && (execution == "host" || execution == "foundation" || TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(usageName).Name is "F27" or "F28");
         var data = name == "GetToolUsage" && ((string?)raw?["usage"]?["profile"] == "full-engine" || portedUsage)
             ? raw!.DeepClone().AsObject() : Object(raw);
         // Collapse the legacy wrapper while retaining all domain and candidate evidence.

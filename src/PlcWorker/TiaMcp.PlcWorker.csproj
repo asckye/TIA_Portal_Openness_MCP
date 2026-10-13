@@ -18,6 +18,19 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(TiaReleaseKey)' == '14sp1'"><DefineConstants>$(DefineConstants);OPCUA_NO_EXTENSION</DefineConstants></PropertyGroup>
   <PropertyGroup Condition="'$(TiaReleaseKey)' == '15.1'"><DefineConstants>$(DefineConstants);OPCUA_NO_UNITS</DefineConstants></PropertyGroup>
+  <PropertyGroup Condition="'$(TiaReleaseKey)' == '19' Or '$(TiaReleaseKey)' == '20' Or '$(TiaReleaseKey)' == '21'">
+    <DefineConstants>$(DefineConstants);HMI_UNIFIED</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TiaReleaseKey)' == '19' Or '$(TiaReleaseKey)' == '20' Or '$(TiaReleaseKey)' == '21'">
+    <Compile Include="../Shared/UnifiedScriptFileCodec.cs" />
+    <Compile Include="../Shared/NativeInputPolicy.cs" />
+    <Compile Include="../Shared/NativePathSelection.cs" />
+    <Compile Include="../Shared/UnifiedDocumentCodec.cs" />
+    <Compile Include="../Shared/UnifiedWorkerCodecs.cs" />
+    <Compile Include="../Logic/Siemens/JavaScriptEvidence.cs" />
+    <PackageReference Include="Esprima" Version="3.0.5" />
+    <PackageReference Include="YamlDotNet" Version="13.7.1" />
+  </ItemGroup>
   <ItemGroup Condition="'$(TiaReleaseKey)' != '14sp1'">
     <Compile Include="../Shared/OpcUaModelledNative.cs" Link="Shared/OpcUaModelledNative.cs" />
     <Compile Include="../../third_party/SiemensOpcUaModelled/**/*.cs" LinkBase="SiemensOpcUaModelled" />

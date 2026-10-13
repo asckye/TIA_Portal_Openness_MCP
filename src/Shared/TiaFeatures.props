@@ -104,6 +104,7 @@
 
     <DefineConstants Condition="'$(TiaReleaseKey)' == '19' Or '$(TiaReleaseKey)' == '20' Or '$(TiaReleaseKey)' == '21'">$(DefineConstants);HMI_UNIFIED</DefineConstants>
     <DefineConstants Condition="'$(TiaReleaseKey)' == '21'">$(DefineConstants);HMI_GRAPHICS_PROVIDER</DefineConstants>
+    <DefineConstants Condition="'$(TiaReleaseKey)' == '21'">$(DefineConstants);HMI_CPM_PROVIDER</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Adapter'">
     <DefineConstants Condition="$([System.String]::Copy('|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);SAFETY_GLOBAL</DefineConstants>

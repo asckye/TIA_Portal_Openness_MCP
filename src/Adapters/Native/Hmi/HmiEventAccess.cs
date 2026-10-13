@@ -2,9 +2,9 @@
 using UnifiedObject = TiaMcp.Adapters.Native.Hmi.HmiObject;
 using UnifiedArray = TiaMcp.Adapters.Native.Hmi.HmiArray;
 using UnifiedNode = System.Object;
-using UnifiedScalar = TiaMcp.Adapters.Native.Hmi.HmiScalar;
+using UnifiedRequestScalar = TiaMcp.Adapters.Native.Hmi.HmiScalar;
 using UnifiedGroups = TiaMcp.Adapters.Native.Plc.PlcGroupOperations;
-using UnifiedValues = TiaMcp.Adapters.Native.Hmi.HmiValues;
+using UnifiedRequestValues = TiaMcp.Adapters.Native.Hmi.HmiValues;
 using UnifiedAccess = TiaMcp.Adapters.Native.Hmi.UnifiedHmiAccess;
 #endif
 using System;

@@ -23,11 +23,11 @@ internal static class GraphicSelectionRuntimeTests
     public sealed class Broken : Item { public override int Left { get => throw new ObjectDisposedException("SoftwareContainer"); set { } } }
     internal static void Run(Assembly server, Action<bool, string> check)
     {
-        var helper = server.GetType("TiaMcpServer.Siemens.UnifiedGraphicSelection", true)!;
+        var helper = UnifiedNativeFixture.Helper(server, "UnifiedGraphicSelection");
         var capture = helper.GetMethod("Capture", All)!;
-        var compare = helper.GetMethod("Compare", All)!;
+        var compare = server.GetType("TiaMcpServer.Siemens.Services.UnifiedGraphicComparison", true)!.GetMethod("Compare", All)!;
         var json = new JavaScriptSerializer { MaxJsonLength = 4 * 1024 * 1024 };
-        Dictionary<string, object> Parse(object value) => (Dictionary<string, object>)json.DeserializeObject(value.ToString());
+        Dictionary<string, object> Parse(object value) => (Dictionary<string, object>)json.DeserializeObject(UnifiedNativeFixture.Json(value));
         var names = new[] { "fgxTop", "txtTop", "gfxBotom", "txtBotom" };
         var hmi = new Hmi(); var screen = new Screen(); hmi.Screens.Add(screen);
         foreach (var name in names) screen.ScreenItems.Add(new Item { Name = name, Left = name.StartsWith("txt") ? -22 : 4, Parent = screen });

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Reflection;
+using System.Linq.Expressions;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
@@ -44,7 +45,17 @@ namespace PlcExchangeTests
         private static CallToolResult Map(string tool, object response, bool writes, bool current)
             => (CallToolResult)ToolType("HmiExchangeContract").GetMethod("Map", All)!.Invoke(null, new[] { tool, response, writes, current })!;
         private static string[] ParseNames(string json)
-            => (string[])Engine.GetType("TiaMcpServer.Siemens.UnifiedExchangeLogic", true)!.GetMethod("ParseExpectedNames", All)!.Invoke(null, new object[] { json, 500 })!;
+        {
+            var reference = Engine.GetReferencedAssemblies().Single(a => a.Name!.StartsWith("TiaMcp.Adapter.", StringComparison.Ordinal));
+            var adapter = Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(Engine.Location)!, reference.Name + ".dll"));
+            var decoder = adapter.GetType("TiaMcp.Adapters.Native.Hmi.UnifiedRequestValues", true)!.GetField("Decoder", All)!;
+            var decode = Engine.GetType("TiaMcpServer.Siemens.Services.UnifiedInputCodec", true)!.GetMethod("Decode", All)!;
+            Func<string, object> read = text => { using var document = JsonDocument.Parse(text); return decode.Invoke(null, new object[] { document.RootElement })!; };
+            var input = Expression.Parameter(typeof(string));
+            decoder.SetValue(null, Expression.Lambda(decoder.FieldType,
+                Expression.Convert(Expression.Invoke(Expression.Constant(read), input), decoder.FieldType.GetGenericArguments()[1]), input).Compile());
+            return (string[])adapter.GetType("TiaMcp.Adapters.Native.Hmi.UnifiedExchangeLogic", true)!.GetMethod("ParseExpectedNames", All)!.Invoke(null, new object[] { json, 500 })!;
+        }
         public class ServerProxy : DispatchProxy
         {
             protected override object? Invoke(MethodInfo? method, object?[]? args) => null;

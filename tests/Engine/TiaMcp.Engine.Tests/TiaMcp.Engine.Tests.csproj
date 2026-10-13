@@ -85,7 +85,6 @@
     <Compile Include="../../../src/Shared/TransactionExecution.cs" Link="TransactionExecution.cs" />
     <Compile Include="../../../src/Shared/EngineeringServicesTools.cs" Link="EngineeringServicesTools.cs" />
     <Compile Include="../../../src/Shared/EngineeringServicesPortService.cs" Link="EngineeringServicesPortService.cs" />
-    <Compile Include="../../../src/Engine/Siemens/Hmi/UnifiedEventOperations.cs" Link="UnifiedEventOperations.cs" />
     <Compile Include="../../../src/Engine/Siemens/EngineeringObjectAddress.cs" Link="EngineeringObjectAddress.cs" />
     <Compile Include="../../../src/Engine/Siemens/PlcTypeGroupCreation.cs" Link="PlcTypeGroupCreation.cs" />
     <Compile Include="../../../src/Engine/Siemens/EngineeringGroupOperations.cs" Link="EngineeringGroupOperations.cs" />
@@ -93,23 +92,14 @@
     <Compile Include="../../../src/Engine/Siemens/SoftwareContainerLookup.cs" Link="SoftwareContainerLookup.cs" />
     <PackageReference Include="Esprima" Version="3.0.5" />
     <PackageReference Include="YamlDotNet" Version="13.7.1" />
-    <Compile Include="../../../src/Engine/Siemens/Services/MigrationReadService.cs" Link="MigrationReadService.cs" />
-    <Compile Include="../../../src/Engine/Siemens/Hmi/UnifiedGraphicSelection.cs" Link="UnifiedGraphicSelection.cs" />
-    <Compile Include="../../../src/Engine/Siemens/Hmi/UnifiedRuntimeSettingsAccess.cs" Link="UnifiedRuntimeSettingsAccess.cs" />
-    <Compile Include="../../../src/Engine/Siemens/Services/RuntimeSettingsService.cs" Link="RuntimeSettingsService.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/RuntimeSettingsTools.cs" Link="RuntimeSettingsTools.cs" />
-    <Compile Include="../../../src/Engine/Siemens/Services/GraphicSelectionService.cs" Link="GraphicSelectionService.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/GraphicSelectionTools.cs" Link="GraphicSelectionTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/MigrationReadTools.cs" Link="MigrationReadTools.cs" />
-    <Compile Include="../../../src/Engine/Siemens/MigrationPages.cs" Link="MigrationPages.cs" />
-    <Compile Include="../../../src/Engine/Siemens/MigrationRead.cs" Link="MigrationRead.cs" />
-    <Compile Include="../../../src/Engine/Siemens/Hmi/UnifiedTagDefinitions.cs" Link="UnifiedTagDefinitions.cs" />
-    <Compile Include="../../../src/Engine/Siemens/NativeExportCapture.cs" Link="NativeExportCapture.cs" />
-    <Compile Include="../../../src/Engine/Siemens/Hmi/UnifiedNativeRead.cs" Link="UnifiedNativeRead.cs" />
-    <Compile Include="../../../src/Engine/Siemens/Hmi/UnifiedScriptAccess.cs" Link="UnifiedScriptAccess.cs" />
-    <Compile Include="../../../src/Engine/Siemens/Hmi/UnifiedGlobalScriptEdit.cs" Link="UnifiedGlobalScriptEdit.cs" />
-    <Compile Include="../../../src/Engine/Siemens/Services/GlobalScriptEditService.cs" Link="GlobalScriptEditService.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/GlobalScriptEditTools.cs" Link="GlobalScriptEditTools.cs" />
+    <Compile Include="../../../src/Shared/MigrationReadService.cs" Link="MigrationReadService.cs" />
+    <Compile Include="../../../src/Shared/RuntimeSettingsService.cs" Link="RuntimeSettingsService.cs" />
+    <Compile Include="../../../src/Shared/RuntimeSettingsTools.cs" Link="RuntimeSettingsTools.cs" />
+    <Compile Include="../../../src/Shared/GraphicSelectionService.cs" Link="GraphicSelectionService.cs" />
+    <Compile Include="../../../src/Shared/GraphicSelectionTools.cs" Link="GraphicSelectionTools.cs" />
+    <Compile Include="../../../src/Shared/MigrationReadTools.cs" Link="MigrationReadTools.cs" />
+    <Compile Include="../../../src/Shared/GlobalScriptEditService.cs" Link="GlobalScriptEditService.cs" />
+    <Compile Include="../../../src/Shared/GlobalScriptEditTools.cs" Link="GlobalScriptEditTools.cs" />
     <Compile Include="../../../src/Adapters/Native/Session/ProjectArchive.cs" Link="ProjectArchive.cs" />
     <Compile Include="../../../src/Engine/Siemens/Hmi/HmiExactAccess.cs" Link="HmiExactAccess.cs" />
     <Compile Include="../../../src/Engine/Siemens/Hmi/HmiSnapshot.cs" Link="HmiSnapshot.cs" />
@@ -175,7 +165,7 @@
     <Compile Include="../../../src/Engine/Siemens/ProjectSecurityLogic.cs" Link="ProjectSecurityLogic.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedUiModelLogic.cs" Link="UnifiedUiModelLogic.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedScreenItemLogic.cs" Link="UnifiedScreenItemLogic.cs" />
-    <Compile Include="../../../src/Engine/Siemens/Hmi/UnifiedExchangeLogic.cs" Link="UnifiedExchangeLogic.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedExchangeLogic.cs" Link="UnifiedExchangeLogic.cs" />
     <Compile Include="../../../src/Engine/Siemens/MotionProDiagClassicHmiLogic.cs" Link="MotionProDiagClassicHmiLogic.cs" />
     <Compile Include="../../../src/OnlineChannels/Simulation/PlcSimAdvancedChannel.cs" Link="PlcSimAdvancedChannel.cs" />
   </ItemGroup>
@@ -201,7 +191,7 @@
     <Compile Include="../../../src/Shared/TeamcenterTools.cs" Link="TeamcenterTools.cs" />
     <Compile Include="../../../src/Shared/UnifiedHmiGroupsTools.cs" Link="UnifiedHmiGroupsTools.cs" />
     <Compile Include="../../../src/Shared/UnifiedScreenItemsTools.cs" Link="UnifiedScreenItemsTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs" Link="UnifiedUiModelTools.cs" />
+    <Compile Include="../../../src/Shared/UnifiedUiModelTools.cs" Link="UnifiedUiModelTools.cs" />
     <Compile Include="../../../src/Shared/AlarmsTools.cs" Link="AlarmsTools.cs" />
     <Compile Include="../../../src/Shared/EngineeringToolContract.cs" Link="EngineeringToolContract.cs" />
     <Compile Include="../../../src/Shared/OpcUaTools.cs" Link="OpcUaTools.cs" />
@@ -258,9 +248,9 @@
     <PackageReference Include="Siemens.Simatic.S7.Webserver.API" Version="3.3.76" />
     <Compile Include="../../../src/Shared/SecurityToolContract.cs" Link="SecurityToolContract.cs" />
     <Compile Include="../../../src/Shared/ReflectionTools.cs" Link="ReflectionTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedEngineeringTools.cs" Link="UnifiedEngineeringTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedEventsTools.cs" Link="UnifiedEventsTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs" Link="UnifiedObjectServicesTools.cs" />
+    <Compile Include="../../../src/Shared/UnifiedEngineeringTools.cs" Link="UnifiedEngineeringTools.cs" />
+    <Compile Include="../../../src/Shared/UnifiedEventsTools.cs" Link="UnifiedEventsTools.cs" />
+    <Compile Include="../../../src/Shared/UnifiedObjectServicesTools.cs" Link="UnifiedObjectServicesTools.cs" />
   </ItemGroup>
   <ItemGroup><Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SessionToolContract.cs" Link="SessionToolContract.cs" /></ItemGroup>
   <ItemGroup>
@@ -307,4 +297,44 @@
     <Compile Include="../../../src/Adapters/Native/Reflection/ReflectionSession.cs" />
   </ItemGroup>
   <Import Project="../../Shared/HostDomainBuild.targets" />
+  <ItemGroup>
+    <Compile Include="../../../src/Adapters/Native/Hmi/IUnifiedSession.cs" Link="Native/Hmi/IUnifiedSession.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedRequestValues.cs" Link="Native/Hmi/UnifiedRequestValues.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedObjectAddress.cs" Link="Native/Hmi/UnifiedObjectAddress.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedRequestScalar.cs" Link="Native/Hmi/UnifiedRequestScalar.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedEventOperations.cs" Link="Native/Hmi/UnifiedEventOperations.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedScriptAccess.cs" Link="Native/Hmi/UnifiedScriptAccess.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedGlobalScriptEdit.cs" Link="Native/Hmi/UnifiedGlobalScriptEdit.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedGraphicSelection.cs" Link="Native/Hmi/UnifiedGraphicSelection.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedTagDefinitions.cs" Link="Native/Hmi/UnifiedTagDefinitions.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedNativeRead.cs" Link="Native/Hmi/UnifiedNativeRead.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedRuntimeSettingsAccess.cs" Link="Native/Hmi/UnifiedRuntimeSettingsAccess.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedCodecs.cs" Link="Native/Hmi/UnifiedCodecs.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/MigrationRead.cs" Link="Native/Hmi/MigrationRead.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/MigrationPages.cs" Link="Native/Hmi/MigrationPages.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/NativeExportCapture.cs" Link="Native/Hmi/NativeExportCapture.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/MigrationReadAdapter.cs" Link="Native/Hmi/MigrationReadAdapter.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/RuntimeSettingsAdapter.cs" Link="Native/Hmi/RuntimeSettingsAdapter.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/GraphicSelectionAdapter.cs" Link="Native/Hmi/GraphicSelectionAdapter.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/GlobalScriptEditAdapter.cs" Link="Native/Hmi/GlobalScriptEditAdapter.cs" />
+    <Compile Include="../../../src/Shared/UnifiedScriptFileCodec.cs" Link="Shared/UnifiedScriptFileCodec.cs" />
+    <Compile Include="../../../src/Shared/UnifiedDocumentCodec.cs" Link="Shared/UnifiedDocumentCodec.cs" />
+    <Compile Include="../../../src/Shared/UnifiedPortService.cs" Link="Shared/UnifiedPortService.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcGroupOperations.cs" Link="Native/Plc/PlcGroupOperations.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiScalar.cs" Link="Native/Hmi/HmiScalar.cs" />
+    <Compile Include="../../../src/Adapters/Native/Libraries/LibraryPolicy.cs" Link="Native/Libraries/LibraryPolicy.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiScalar.Values.cs" Link="Native/Hmi/HmiScalar.Values.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiValueTypes.cs" Link="Native/Hmi/HmiValueTypes.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAddressingPolicy.cs" Link="Native/Hardware/HardwareAddressingPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwarePath.cs" Link="Native/Hardware/HardwarePath.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcGroupCreation.cs" />
+    <Compile Include="../../../src/Shared/UnifiedExchangeTools.cs" />
+    <Compile Include="../../../src/Shared/UnifiedExchangeService.cs" />
+  </ItemGroup>
+  <ItemGroup><Compile Include="../../../src/Adapters/Native/Plc/PlcSoftwareValues.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../../src/Shared/UnifiedGraphicComparison.cs" /></ItemGroup>
 </Project>

@@ -81,6 +81,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/HmiValues.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/HmiValueTypes.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/HmiScalar.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/HmiScalar.Values.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/HmiDynamic.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/HmiAccessPrimitives.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/HmiExactAccess.cs" />
@@ -281,6 +282,38 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Options/OptionalProductSession.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Options/OptionalProductWorker.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Options/TestSuiteAdapter.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/GlobalScriptEditAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/GraphicSelectionAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/MigrationPages.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/MigrationRead.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/MigrationReadAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/IUnifiedSession.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/NativeExportCapture.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/RuntimeSettingsAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedCodecs.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedEngineeringAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedEventOperations.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedEventsAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedExchangeAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedExchangeLogic.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedGlobalScriptEdit.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedGraphicSelection.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedNativeRead.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedObjectAddress.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedPrimitiveBridge.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedObjectServicesAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedRuntimeSettingsAccess.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedRequestScalar.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedScriptAccess.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedSession.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedTagDefinitions.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedUiModelAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedRequestValues.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedWorker.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="@(AdapterSource);@(TiaSharedNativePrimitive)" Link="NativeShared/%(Filename)%(Extension)" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Shared/NativeCallDiagnostics.cs" Link="Diagnostics/NativeCallDiagnostics.Shared.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Shared/NativeCallDiagnostics.Journal.cs" Link="Diagnostics/NativeCallDiagnostics.cs" />
