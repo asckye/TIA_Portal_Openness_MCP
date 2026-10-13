@@ -48,7 +48,6 @@ namespace TiaMcpServer.Siemens
 
         SoftwareContainer? IEngineeringSession.ResolveSoftwareContainerUncached(string softwarePath) => ResolveSoftwareContainerUncached(softwarePath);
         T IEngineeringSession.RequireHardwareUtility<T>(string identifier) => RequireHardwareUtility<T>(identifier);
-        object IEngineeringSession.ExactSiVArcRoot(string category) => ExactSiVArcRoot(category);
         MasterCopy IEngineeringSession.ExactMasterCopy(string libraryName, string path) => ExactMasterCopy(libraryName, path);
         LibraryType IEngineeringSession.ExactLibraryType(object library, string typePath) => ExactLibraryType(library, typePath);
         LibraryTypeVersion IEngineeringSession.ExactTypeVersion(LibraryType type, string version) => ExactTypeVersion(type, version);
@@ -62,11 +61,6 @@ namespace TiaMcpServer.Siemens
             => ExactObjectUnder(root, objectPath, collection, label);
         JsonArray IEngineeringSession.DocumentMessages(DocumentResultMessageComposition? messages) => DocumentMessages(messages);
 
-        DeviceItem IEngineeringSession.ExactDriveItem(string devicePathJson, string itemPathJson) => ExactDriveItem(devicePathJson, itemPathJson);
-        DriveObjectContainer IEngineeringSession.ExactDriveContainer(DeviceItem item) => ExactDriveContainer(item);
-        DriveObject IEngineeringSession.ExactDriveObject(string devicePathJson, string itemPathJson, ushort driveObjectNumber, int driveObjectIndex) => ExactDriveObject(devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex);
-        JsonObject? IEngineeringSession.DccContainerSummary(DriveObject drive) => DccContainerSummary(drive);
-        JsonObject IEngineeringSession.DcbLibraryRow(DcbLibrary library, bool types) => DcbLibraryRow(library, types);
         JsonObject IEngineeringSession.AddressRow(Address address) => AddressRow(address);
         object IEngineeringSession.ExactTechnology(string softwarePath, string objectPath, bool writing) => ExactTechnology(softwarePath, objectPath, writing);
         JsonObject IEngineeringSession.InterfaceRow(object iface) => InterfaceRow(iface);
@@ -105,13 +99,9 @@ namespace TiaMcpServer.Siemens
         DeviceItem IEngineeringSession.ExactDeviceItem(string[] devicePath, string[] itemPath) => ExactDeviceItem(devicePath, itemPath);
         object IEngineeringSession.EngineeringLibraryFolder(object library, string folderPath, string rootProperty) => EngineeringLibraryFolder(library, folderPath, rootProperty);
         string IEngineeringSession.LibraryPathOf(object node, string rootTypeName) => LibraryPathOf(node, rootTypeName);
-        string IEngineeringSession.OptionPackageLibraryTypeKind(LibraryType type) => OptionPackageLibraryTypeKind(type);
         Device IEngineeringSession.ExactEngineeringDevice(string pathJson) => ExactEngineeringDevice(pathJson);
         object IEngineeringSession.ResolveHmiScreenOrThrow(string hmiSoftwarePath, string screenName) => ResolveHmiScreenOrThrow(hmiSoftwarePath, screenName);
         string[] IEngineeringSession.ExactNameList(string json) => ExactNameList(json);
-        Portal.SivarcFamily IEngineeringSession.GetSivarcFamily(string category) => Family(category);
-        global::Siemens.Engineering.SiVArc.Sivarc IEngineeringSession.RequireSivarc() => RequireSivarc();
-        Exception IEngineeringSession.SivarcShape(object node) => SivarcShape(node);
         JsonObject IEngineeringSession.DescribeNode(object target, int depth) => DescribeNode(target, depth);
         PlcTag IEngineeringSession.ExactPlcTag(string softwarePath, string tagPath) => ExactPlcTag(softwarePath, tagPath);
         HmiTarget IEngineeringSession.ExactClassicHmi(string softwarePath) => ExactClassicHmi(softwarePath);

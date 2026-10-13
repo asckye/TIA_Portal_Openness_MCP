@@ -35,7 +35,7 @@ namespace TiaMcp.Engine.Tests
                 yield return new object[] { "S", value, "src/Logic/Siemens/HardwareNetworkLogic.cs:51-60" };
             foreach (string value in new[] { "[]", "[0]", "[65535]", "[1000,1000]", "[-1]", "[65536]", "[2147483648]", "[1.5]", "[1.0]", "[1e2]", "[\"1\"]", "[null]",
                 V4Json.Serialize(new int[200]), V4Json.Serialize(new int[201]) })
-                yield return new object[] { "N", value, "src/Engine/Siemens/StartdriveLogic.cs:107-120 (arrayIndex=-1)" };
+                yield return new object[] { "N", value, "src/Logic/Siemens/StartdriveLogic.cs:107-120 (arrayIndex=-1)" };
             foreach (string value in new[] { "[]", "[{\"property\":\"Value\"}]", "[{\"property\":\"TagTables\",\"name\":\"Table\"},{\"property\":\"Tags\",\"name\":\"Tag\"}]",
                 "[{\"property\":\"Parent\"}]", "[{\"property\":\"parent\"}]", "[{\"property\":\"GetType()\"}]", "[{\"property\":\"Value\",\"name\":\"\"}]",
                 "[{\"Property\":\"Value\"}]", "[{\"property\":\"Value\",\"index\":0}]", "[null]", "{}" })
@@ -45,7 +45,7 @@ namespace TiaMcp.Engine.Tests
             foreach (string value in new[] { "{\"en-US\":\"Motor\"}", "{\"zh-CN\":\"\"}", "{\"en-US\":\"A\",\"zh-CN\":\"B\"}", "{}", "{\" \":\"x\"}", "{\"12345678901234567\":\"x\"}", "{\"en-US\":1}", "{\"en-US\":null}", "{\"en-US\":[]}", "[]" })
                 yield return new object[] { "L", value, "src/Logic/Siemens/PlcTagEditingLogic.cs:48-66" };
             foreach (string value in new[] { "true", "42.5", "\"text\"", "{\"bicoSource\":\"r19\"}", "{\"bicoSource\":\"P2050[0].6\"}", "null", "[]", "{}", "{\"bicoSource\":\"bad\"}", "{\"bicoSource\":\"r19\",\"other\":0}", "{\"BicoSource\":\"r19\"}", "{\"bicoSource\":null}" })
-                yield return new object[] { "V", value, "src/Engine/Siemens/StartdriveLogic.cs:131-158" };
+                yield return new object[] { "V", value, "src/Logic/Siemens/StartdriveLogic.cs:131-158" };
             foreach (string value in new[] { "[{\"name\":\"GetSessionState\",\"arguments\":{}}]", "[]", "{}", "[null]", "[{\"name\":\"CallTool\",\"arguments\":{}}]", "[{\"name\":\"RunToolTransaction\",\"arguments\":{}}]", "[{\"name\":\"GetSessionState\",\"arguments\":[]}]", "[{\"name\":\"bad name\",\"arguments\":{}}]",
                 "[" + string.Join(",", Enumerable.Repeat("{\"name\":\"GetSessionState\",\"arguments\":{}}", 20)) + "]",
                 "[" + string.Join(",", Enumerable.Repeat("{\"name\":\"GetSessionState\",\"arguments\":{}}", 21)) + "]" })

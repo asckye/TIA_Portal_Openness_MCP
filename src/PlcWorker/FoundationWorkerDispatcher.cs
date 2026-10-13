@@ -116,11 +116,18 @@ namespace TiaMcp.PlcWorker
                     if(!WorkerJson.IsString(expected)) throw new AdapterPreconditionException("Execution requires an absolute expected project file.","expectedProjectFile");
                     try
                     {
-                        MutationIdentityPolicy.ValidateTarget(false,confirm.GetBoolean(),expected.GetString()!,name,releaseKey,
-                            WorkerJson.IsString(WorkerJson.Get(values,"path")) ? WorkerJson.Get(values,"path").GetString()! : "",
-                            WorkerJson.IsString(WorkerJson.Get(values,"directoryPath")) ? WorkerJson.Get(values,"directoryPath").GetString()! : "",
-                            WorkerJson.IsString(WorkerJson.Get(values,"projectName")) ? WorkerJson.Get(values,"projectName").GetString()! : "",
-                            WorkerOperations.MutationIdentity(name,engine.RequireProjectIdentity,engine.SharedFamilyMutationIdentity));
+                        var optionalRequest = WorkerJson.Get(values, "request");
+                        string operation = optionalRequest.ValueKind == JsonValueKind.Object && optionalRequest.TryGetProperty("Operation", out var operationValue) ? operationValue.GetString()! : "";
+                        string action = optionalRequest.ValueKind == JsonValueKind.Object && optionalRequest.TryGetProperty("Action", out var actionValue) ? actionValue.GetString()! : "";
+                        OptionalEngineeringMutations.ValidateWrite(name, operation, action, confirm.GetBoolean(), expected.GetString()!,
+                            () => { var state = State; return (state.IsAttached, state.ProjectFile); },
+                            parameter => throw new AdapterPreconditionException(parameter == "confirm" ? "Execution requires confirm=true."
+                                : "Portal settings require the same attached session and project binding.", parameter),
+                            () => MutationIdentityPolicy.ValidateTarget(false,confirm.GetBoolean(),expected.GetString()!,name,releaseKey,
+                                WorkerJson.IsString(WorkerJson.Get(values,"path")) ? WorkerJson.Get(values,"path").GetString()! : "",
+                                WorkerJson.IsString(WorkerJson.Get(values,"directoryPath")) ? WorkerJson.Get(values,"directoryPath").GetString()! : "",
+                                WorkerJson.IsString(WorkerJson.Get(values,"projectName")) ? WorkerJson.Get(values,"projectName").GetString()! : "",
+                                WorkerOperations.MutationIdentity(name,engine.RequireProjectIdentity,engine.SharedFamilyMutationIdentity)));
                     }
                     catch(ArgumentException ex) { throw new AdapterPreconditionException(ex.Message,"expectedProjectFile",true,ex); }
                 }

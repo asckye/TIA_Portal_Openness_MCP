@@ -195,7 +195,7 @@ namespace TiaMcpServer.Worker
             };
             foundation.ResolveEngineeringHmiScreen = (software, path) => engineering.ResolveHmiScreenOrThrow(software, path);
             foundation.ResolveEngineeringLibraryDevice = path => engineering.ExactEngineeringDevice(path);
-            foundation.EngineeringLibraryOptionKind = type => engineering.OptionPackageLibraryTypeKind((global::Siemens.Engineering.Library.Types.LibraryType)type);
+            foundation.EngineeringLibraryOptionKind = global::TiaMcp.Adapters.PlcFoundationEngine.OptionalLibraryKind;
             foundation.RenderEngineeringValue = value => JsonSerializer.Deserialize<object>(EngineeringScalarProperties.Json(value)?.ToJsonString() ?? "null");
             portal.ResolvePortedEngineeringLibrary = foundation.ExactOpenEngineeringLibrary;
             foundation.EngineeringPlcOrganisationSession = new EnginePlcOrganisationSession(engineering, foundation);

@@ -21,6 +21,9 @@ namespace TiaMcpServer.ModelContextProtocol
             ["F03"] = new[] { typeof(HmiOfflineTools), typeof(OfflineSuiteTools), typeof(XmlBuilderTools), typeof(V21EcosystemTools) },
 #endif
             ["F22"] = new[] { typeof(OnlineDownloadTools), typeof(OnlineDataTools), typeof(NativeExchangeTools) },
+            ["F29"] = new[] { typeof(SivarcTools), typeof(OptionalEngineeringTools) },
+            ["F31"] = new[] { typeof(StartdriveTools), typeof(DccTools) },
+            ["F30"] = new[] { typeof(SafetyManagementTools), typeof(SafetyValidationTools) },
             ["F05"] = new[] { typeof(ProjectLifecycleSessionTools), typeof(ProjectLifecycleProjectTools), typeof(ProjectLifecycleInspectionTools), typeof(ProjectLifecycleDeviceTools), typeof(ProjectLifecycleExchangeTools), typeof(ProjectSecurityTools) },
             ["F07"] = new[] { typeof(ProjectProtectionTools), typeof(ProjectUserManagementTools), typeof(CertificateManagementTools), typeof(SecurityDeepTools), typeof(HardwareSecurityTools), typeof(HardwareServicesTools) },
 #if TIA_ENGINE_PORTED

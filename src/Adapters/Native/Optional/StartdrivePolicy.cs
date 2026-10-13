@@ -2,22 +2,32 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json.Nodes;
+using TiaMcp.Adapters.Contracts;
+using TiaMcp.Adapters.Hardware;
+using TiaMcp.Adapters.Native.Hmi;
+using EngineeringGroupOperations = TiaMcp.Adapters.Native.Plc.PlcGroupOperations;
+using EngineeringScalarProperties = TiaMcp.Adapters.Native.Optional.OptionalScalars;
+using EngineeringObjectAddress = TiaMcp.Adapters.Native.Optional.OptionalObjectAddress;
+using NativeFileOutput = TiaMcp.Adapters.Native.Safety.SafetyFileOutput;
+using PlcBlockServicesLogic = TiaMcp.Adapters.Native.Safety.SafetyPrimitives;
+using HardwareServicesLogic = TiaMcp.Adapters.Native.Optional.OptionalRules;
+using ArgumentRules = TiaMcp.Adapters.Native.Optional.OptionalRules;
+using EngineeringPath = TiaMcp.Adapters.Hardware.HardwarePath;
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcp.Adapters.Native.Optional
 {
     // Pure validation for the Startdrive option package - drive objects, offline / online
     // drive parameters (incl. BICO sources), telegrams, the drive function interface (object type, activation, function in use,
     // commissioning, hardware projection of motors / encoders, safety checksums), drive security (UMAC / DDE), technology
     // extensions, hardware modules, safety acceptance tests and the online drive domain functions.
-    internal static class StartdriveLogic
+    internal static class StartdrivePolicy
     {
         internal static string RequireOneOf(string value, string[] allowed, string parameter) => ArgumentRules.RequireOneOf(value, allowed, parameter);
         private static void RequireText(string value, string parameter, int max = 256)
             => ArgumentRules.RequireText(value, parameter, max);
         private static void Refuse(string value, string parameter, string reason)
             => ArgumentRules.Refuse(value, parameter, reason);
-        internal static JsonObject ParseObject(string json, string parameter)
+        internal static HmiObject ParseObject(string json, string parameter)
             => ArgumentRules.ParseObject(json, parameter);
 
         // ---- official enum names (pinned member by member by StartdriveShapeChecks) ---------------------------------------------
@@ -61,16 +71,16 @@ namespace TiaMcpServer.Siemens
         // ---- parameters ----------------------------------------------------------------------------------------------------------
         // Read one exact value, not a recursively expanded parameter description. The primary
         // Parameters view is the documented BICO path; only an absent entry uses ReadParameters.
-        internal static JsonObject? ReadExactParameter<TParameter, TReadParameter>(string name,
+        internal static HmiObject? ReadExactParameter<TParameter, TReadParameter>(string name,
             Func<string, TParameter?> findParameter, Func<string, TReadParameter?> findReadParameter,
-            Func<TParameter, JsonObject> readParameter, Func<TReadParameter, JsonObject> readReadParameter)
+            Func<TParameter, HmiObject> readParameter, Func<TReadParameter, HmiObject> readReadParameter)
             where TParameter : class where TReadParameter : class
         {
             var parameter = findParameter(name);
             if (parameter != null)
-                return new JsonObject { ["name"] = name, ["parameterClass"] = "DriveParameter", ["value"] = readParameter(parameter) };
+                return new HmiObject { ["name"] = name, ["parameterClass"] = "DriveParameter", ["value"] = readParameter(parameter) };
             var readOnly = findReadParameter(name);
-            return readOnly == null ? null : new JsonObject {
+            return readOnly == null ? null : new HmiObject {
                 ["name"] = name, ["parameterClass"] = "ReadDriveParameter", ["value"] = readReadParameter(readOnly)
             };
         }
@@ -86,18 +96,18 @@ namespace TiaMcpServer.Siemens
         internal static ParameterSelector ParseParameterSelector(string namesJson, string numbersJson)
         {
             var selector = new ParameterSelector();
-            var names = (string.IsNullOrWhiteSpace(namesJson) ? new JsonArray() : JsonNode.Parse(namesJson) as JsonArray) ?? throw new ArgumentException("namesJson must be a JSON array of parameter names.");
-            selector.Names = names.Select(n => n?.GetValue<string>() ?? "").ToArray();
+            var names = (string.IsNullOrWhiteSpace(namesJson) ? new HmiArray() : OptionalInputs.Parse(namesJson) as HmiArray) ?? throw new ArgumentException("namesJson must be a JSON array of parameter names.");
+            selector.Names = names.Select(n => n?.OptionalValue<string>() ?? "").ToArray();
             if (selector.Names.Any(n => string.IsNullOrWhiteSpace(n) || n.Length > 64) || selector.Names.Distinct(StringComparer.Ordinal).Count() != selector.Names.Length) throw new ArgumentException("namesJson needs distinct nonempty parameter names such as p1000[0], r47 or p2080[0].6.");
-            var numbers = (string.IsNullOrWhiteSpace(numbersJson) ? new JsonArray() : JsonNode.Parse(numbersJson) as JsonArray) ?? throw new ArgumentException("numbersJson must be a JSON array of {number, arrayIndex} objects.");
+            var numbers = (string.IsNullOrWhiteSpace(numbersJson) ? new HmiArray() : OptionalInputs.Parse(numbersJson) as HmiArray) ?? throw new ArgumentException("numbersJson must be a JSON array of {number, arrayIndex} objects.");
             var list = new List<(int, int)>();
             foreach (var node in numbers)
             {
-                var o = node as JsonObject ?? throw new ArgumentException("numbersJson entries must be objects {number, arrayIndex}.");
+                var o = node as HmiObject ?? throw new ArgumentException("numbersJson entries must be objects {number, arrayIndex}.");
                 foreach (var pair in o) if (pair.Key != "number" && pair.Key != "arrayIndex") throw new ArgumentException("Unknown numbersJson key: " + pair.Key);
-                if (o["number"] is not JsonValue nv || !nv.TryGetValue<int>(out var number) || number < 0 || number > 65535) throw new ArgumentException("numbersJson number must be 0..65535.");
+                if (o["number"] is not object nv || !nv.TryOptionalValue<int>(out var number) || number < 0 || number > 65535) throw new ArgumentException("numbersJson number must be 0..65535.");
                 int arrayIndex = -1;
-                if (o.ContainsKey("arrayIndex")) { if (o["arrayIndex"] is not JsonValue av || !av.TryGetValue<int>(out arrayIndex) || arrayIndex < -1 || arrayIndex > 0x7FFF) throw new ArgumentException("numbersJson arrayIndex must be -1 (no array) or 0..32767."); }
+                if (o.ContainsKey("arrayIndex")) { if (o["arrayIndex"] is not object av || !av.TryOptionalValue<int>(out arrayIndex) || arrayIndex < -1 || arrayIndex > 0x7FFF) throw new ArgumentException("numbersJson arrayIndex must be -1 (no array) or 0..32767."); }
                 list.Add((number, arrayIndex));
             }
             selector.Numbers = list.ToArray();
@@ -123,18 +133,18 @@ namespace TiaMcpServer.Siemens
             return i == name.Length;
         }
         // valueJson for ManageStartdriveParameter: a JSON scalar, or {"bicoSource":"r19"} to wire a BICO sink to a source parameter.
-        internal sealed class ParameterValue { public bool IsBico; public string BicoSource = ""; public JsonNode? Scalar; }
+        internal sealed class ParameterValue { public bool IsBico; public string BicoSource = ""; public object? Scalar; }
         internal static ParameterValue ParseParameterValue(string valueJson)
         {
-            var node = JsonNode.Parse(string.IsNullOrWhiteSpace(valueJson) ? "null" : valueJson);
-            if (node is JsonObject o)
+            var node = OptionalInputs.Parse(string.IsNullOrWhiteSpace(valueJson) ? "null" : valueJson);
+            if (node is HmiObject o)
             {
                 foreach (var pair in o) if (pair.Key != "bicoSource") throw new ArgumentException("valueJson object accepts only {\"bicoSource\":\"r19\"}.");
-                var source = o["bicoSource"]?.GetValue<string>() ?? "";
+                var source = o["bicoSource"]?.OptionalValue<string>() ?? "";
                 if (!LooksLikeParameterName(source)) throw new ArgumentException("bicoSource must be an exact parameter name such as r19 or r2050[0].");
                 return new ParameterValue { IsBico = true, BicoSource = source };
             }
-            if (node is JsonArray) throw new ArgumentException("valueJson must be a scalar or {\"bicoSource\":name}.");
+            if (node is HmiArray) throw new ArgumentException("valueJson must be a scalar or {\"bicoSource\":name}.");
             if (node == null) throw new ArgumentException("valueJson is required for action write.");
             return new ParameterValue { Scalar = node };
         }
@@ -176,7 +186,7 @@ namespace TiaMcpServer.Siemens
             else Refuse(direction, "direction", "applies to action changeSize only.");
             if (action == "connectTechnologyObject")
             {
-                RequireText(softwarePath, "softwarePath"); RequireText(objectPath, "objectPath", 1024); EngineeringGroupOperations.Parts(objectPath);
+                RequireText(softwarePath, "softwarePath"); RequireText(objectPath, "objectPath", 1024); EngineeringPath.Parts(objectPath);
                 r.SoftwarePath = softwarePath; r.ObjectPath = objectPath; r.InterfaceKind = RequireOneOf(interfaceKind, InterfaceKinds, "interfaceKind");
                 if (sensorIndex < 0 || sensorIndex > 15) throw new ArgumentException("sensorIndex 0..15 required.");
                 r.HasConnectOption = !string.IsNullOrEmpty(connectOption); if (r.HasConnectOption) r.ConnectOption = RequireOneOf(connectOption, ConnectOptions, "connectOption");
@@ -197,7 +207,7 @@ namespace TiaMcpServer.Siemens
         {
             public string Action = "", DriveObjectType = "", ActivationState = "", FunctionKey = "", RotaryLinear = "", AbsoluteIncremental = "", Mlfb = "", MotorType = "", EncoderInterface = "", EncoderType = "";
             public int MotorCode = -1, MotorDataSet = -1, DataSet, EncoderNumber = 1; public bool EquivalentCircuitDiagram, HasAbsoluteIncremental;
-            public Dictionary<string, JsonNode?> Entries = new Dictionary<string, JsonNode?>(StringComparer.Ordinal);
+            public Dictionary<string, object?> Entries = new Dictionary<string, object?>(StringComparer.Ordinal);
             public bool Writes;
         }
         // valueJson carries the action-specific fields; unknown keys are refused so a typo never turns into a silent no-op.
@@ -209,13 +219,13 @@ namespace TiaMcpServer.Siemens
             string Str(string key, bool required, string[]? allowed = null)
             {
                 if (!o.ContainsKey(key)) { if (required) throw new ArgumentException(action + " needs valueJson." + key + "."); return ""; }
-                var s = o[key]?.GetValue<string>() ?? ""; if (string.IsNullOrWhiteSpace(s)) throw new ArgumentException("valueJson." + key + " must be a nonempty string.");
+                var s = o[key]?.OptionalValue<string>() ?? ""; if (string.IsNullOrWhiteSpace(s)) throw new ArgumentException("valueJson." + key + " must be a nonempty string.");
                 return allowed == null ? s : RequireOneOf(s, allowed, "valueJson." + key);
             }
             int Int(string key, bool required, int min, int max, int fallback)
             {
                 if (!o.ContainsKey(key)) { if (required) throw new ArgumentException(action + " needs valueJson." + key + "."); return fallback; }
-                if (o[key] is not JsonValue v || !v.TryGetValue<int>(out var i) || i < min || i > max) throw new ArgumentException("valueJson." + key + " must be an integer " + min + ".." + max + ".");
+                if (o[key] is not object v || !v.TryOptionalValue<int>(out var i) || i < min || i > max) throw new ArgumentException("valueJson." + key + " must be an integer " + min + ".." + max + ".");
                 return i;
             }
             var allowedKeys = new List<string>();
@@ -232,7 +242,7 @@ namespace TiaMcpServer.Siemens
                 case "setMotorType": allowedKeys.AddRange(new[] { "motorType", "dataSet" }); r.MotorType = Str("motorType", true, MotorTypes); r.DataSet = Int("dataSet", false, 0, 65535, 0); break;
                 case "readMotorConfiguration": case "setEquivalentCircuitDiagramData": case "projectMotorConfiguration":
                     allowedKeys.AddRange(new[] { "dataSet", "entries", "equivalentCircuitDiagram" }); r.DataSet = Int("dataSet", false, 0, 65535, 0);
-                    if (action == "setEquivalentCircuitDiagramData") { if (o["equivalentCircuitDiagram"] is not JsonValue b || !b.TryGetValue<bool>(out r.EquivalentCircuitDiagram)) throw new ArgumentException("setEquivalentCircuitDiagramData needs valueJson.equivalentCircuitDiagram (bool)."); }
+                    if (action == "setEquivalentCircuitDiagramData") { if (o["equivalentCircuitDiagram"] is not object b || !b.TryOptionalValue<bool>(out r.EquivalentCircuitDiagram)) throw new ArgumentException("setEquivalentCircuitDiagramData needs valueJson.equivalentCircuitDiagram (bool)."); }
                     else Refuse(o.ContainsKey("equivalentCircuitDiagram") ? "x" : "", "valueJson.equivalentCircuitDiagram", "applies to setEquivalentCircuitDiagramData only.");
                     if (action == "projectMotorConfiguration") ReadEntries(o, r); else if (o.ContainsKey("entries")) throw new ArgumentException("valueJson.entries applies to projectMotorConfiguration / projectEncoderConfiguration only.");
                     break;
@@ -254,14 +264,14 @@ namespace TiaMcpServer.Siemens
             r.Writes = action != "read" && action != "readMotorConfiguration" && action != "readEncoderConfiguration" && !dryRun;
             return r;
         }
-        private static void ReadEntries(JsonObject o, FunctionRequest r)
+        private static void ReadEntries(HmiObject o, FunctionRequest r)
         {
-            var entries = o["entries"] as JsonObject ?? throw new ArgumentException("valueJson.entries must be an object {\"p305\": 20, ...} of configuration entry names (or numbers) and scalar values.");
+            var entries = o["entries"] as HmiObject ?? throw new ArgumentException("valueJson.entries must be an object {\"p305\": 20, ...} of configuration entry names (or numbers) and scalar values.");
             if (entries.Count == 0 || entries.Count > 200) throw new ArgumentException("valueJson.entries needs 1..200 entries.");
             foreach (var pair in entries)
             {
                 if (string.IsNullOrWhiteSpace(pair.Key)) throw new ArgumentException("valueJson.entries keys must be entry names such as p305 or numbers such as 305.");
-                if (pair.Value is JsonObject || pair.Value is JsonArray) throw new ArgumentException("valueJson.entries values must be scalars.");
+                if (pair.Value is HmiObject || pair.Value is HmiArray) throw new ArgumentException("valueJson.entries values must be scalars.");
                 r.Entries[pair.Key] = pair.Value;
             }
         }
@@ -300,7 +310,7 @@ namespace TiaMcpServer.Siemens
             if (action == "uninstall" && !confirmUninstallInUse && !dryRun) { /* allowed: TIA refuses itself when the package is in use */ }
             return portal ? action != "readPackages" && !dryRun : action != "read" && !dryRun;
         }
-        internal static bool IsPortalScopedExtensionAction(string action) => action == "readPackages" || action == "install" || action == "installAndGetIdentifier" || action == "uninstall";
+        internal static bool IsPortalScopedExtensionAction(string action) => TiaMcp.Adapters.Contracts.OptionalEngineeringMutations.IsPortalScopedExtensionAction(action);
 
         // ---- hardware modules (V21 DriveItemHardwareModule) + module access point --------------------------------------------------
         internal static readonly string[] HardwareModuleActions = { "read", "changeType", "setPositionNumber" };

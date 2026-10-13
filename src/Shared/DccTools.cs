@@ -42,7 +42,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 DriveToolContract.Check(() =>
                 {
                     StartdriveLogic.ParseDriveSelector(driveObjectNumber, driveObjectIndex);
-                    if (maxDepth < 1 || maxDepth > 8) throw new ArgumentException();
+                    if (maxDepth < 1 || maxDepth > 8) throw new ArgumentException("maxDepth must be between 1 and 8.", nameof(maxDepth));
                     if (chartPath.Length > 0) DccLogic.ChartParts(chartPath);
                 });
                 return _dcc.ReadDccCharts(devicePathJson,itemPathJson,driveObjectNumber,driveObjectIndex,chartPath,maxDepth,includeBlocks,includePins,includeLibraries);
@@ -209,7 +209,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 DriveToolContract.Check(() =>
                 {
                     StartdriveLogic.ParseDriveSelector(driveObjectNumber, driveObjectIndex);
-                    EngineeringObjectAddress.Parse(objectPathJson);
+                    EngineeringObjectPath.Parse(objectPathJson);
                     HardwareServicesLogic.ValidatePagination(offset, limit);
                 });
                 return _dcc.ReadDccObject(devicePathJson,itemPathJson,driveObjectNumber,objectPathJson,offset,limit,driveObjectIndex);

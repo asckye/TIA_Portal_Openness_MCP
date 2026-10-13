@@ -13,6 +13,7 @@
     <DefineConstants>$(DefineConstants);TIA_BUNDLE_LAYOUT_PUBLIC</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../Shared/SafetyPolicy.cs" />
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>TiaMcp.WorkbenchControl.Tests</_Parameter1>
     </AssemblyAttribute>

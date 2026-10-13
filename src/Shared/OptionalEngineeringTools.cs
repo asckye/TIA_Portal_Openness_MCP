@@ -21,7 +21,7 @@ namespace TiaMcpServer.ModelContextProtocol
             => OptionalPackageContract.Run("ListSivarcRules", false, () =>
             {
                 string path = V4Json.Serialize(objectPath ?? Array.Empty<PropertyStep>());
-                EngineeringObjectAddress.Parse(path);
+                EngineeringObjectPath.Parse(path);
                 return _optionalEngineering.ReadSiVArcRules(category, path, offset, limit);
             }, offset, limit);
         [McpServerTool(Name="ManageSivarcRule"), Description("[L2][HMI][WRITE] Native SiVArc rule/folder/table composition create/update/delete with exact collection path and name. Nonempty container deletion refused. Native behaviorPolicy=current; V4 native acceptance is pending. Default preview; no generation/save/compile/download.")]
@@ -35,7 +35,7 @@ namespace TiaMcpServer.ModelContextProtocol
             => OptionalPackageContract.Run("ManageSivarcRule", !dryRun, () =>
             {
                 string path = V4Json.Serialize(collectionPath);
-                EngineeringObjectAddress.Parse(path);
+                EngineeringObjectPath.Parse(path);
                 string changes = V4Json.Serialize(properties ?? new AttributeMap<Scalar>(new Dictionary<string, Scalar>()));
                 return _optionalEngineering.ManageSiVArcRule(category, path, name, action, changes, dryRun);
             });

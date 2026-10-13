@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <Compile Include="../../../src/Shared/SafetyValidationTools.cs" Link="SafetyValidationTools.cs" />
+    <Compile Include="../../../src/Shared/EngineeringObjectPath.cs" Link="EngineeringObjectPath.cs" />
     <Compile Include="../../../src/Shared/ProjectUserManagementTools.cs" />
     <Compile Include="../../../src/Shared/ProjectProtectionTools.cs" />
     <Compile Include="../../../src/Shared/DriveToolContract.cs" Link="DriveToolContract.cs" />
@@ -49,11 +51,11 @@
     <Compile Include="../../../src/Shared/OptionalPackageContract.cs" Link="OptionalPackageContract.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs" Link="TestSuiteTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs" Link="V20OptionsTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/OptionalEngineeringTools.cs" Link="OptionalEngineeringTools.cs" />
+    <Compile Include="../../../src/Shared/OptionalEngineeringTools.cs" Link="OptionalEngineeringTools.cs" />
     <Compile Include="../../../src/Shared/SpecializedExchangeTools.cs" Link="SpecializedExchangeTools.cs" />
     <Compile Include="../../../src/Shared/Host/ToolJsonArguments.cs" Link="ToolJsonArguments.cs" />
     <Compile Include="../../../src/Shared/LibraryTools.cs" Link="LibraryTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs" Link="SivarcTools.cs" />
+    <Compile Include="../../../src/Shared/SivarcTools.cs" Link="SivarcTools.cs" />
     <Compile Include="../../../src/Shared/VersionControlTools.cs" Link="VersionControlTools.cs" />
 
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs" Link="McpServer.BlockImportVerification.cs" />
@@ -151,7 +153,7 @@
     <Compile Include="../../../src/Shared/ProjectLifecycleDeviceTools.cs" />
     <Compile Include="../../../src/Shared/ProjectLifecycleExchangeTools.cs" />
     <Compile Include="../../../src/Shared/ProjectSecurityTools.cs" Link="ProjectSecurityTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SafetyManagementTools.cs" Link="SafetyManagementTools.cs" />
+    <Compile Include="../../../src/Shared/SafetyManagementTools.cs" Link="SafetyManagementTools.cs" />
     <Compile Include="../../../src/Shared/SecurityDeepTools.cs" Link="SecurityDeepTools.cs" />
     <Compile Include="../../../src/Shared/ClassicHmiFoldersTools.cs" Link="ClassicHmiFoldersTools.cs" />
     <Compile Include="../../../src/Shared/MotionProDiagClassicHmiTools.cs" Link="MotionProDiagClassicHmiTools.cs" />
@@ -169,7 +171,7 @@
     <Compile Include="../../../src/Engine/Siemens/EngineeringCredentialRules.cs" Link="EngineeringCredentialRules.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/ToolExamples.cs" Link="ToolExamples.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/InvocationJournal.cs" Link="InvocationJournal.cs" />
-    <Compile Include="../../../src/Engine/Siemens/StartdriveLogic.cs" Link="StartdriveLogic.cs" />
+    <Compile Include="../../../src/Logic/Siemens/StartdriveLogic.cs" Link="StartdriveLogic.cs" />
     <Compile Include="../../../src/Engine/Siemens/ProjectSecurityLogic.cs" Link="ProjectSecurityLogic.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedUiModelLogic.cs" Link="UnifiedUiModelLogic.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedScreenItemLogic.cs" Link="UnifiedScreenItemLogic.cs" />
@@ -194,8 +196,8 @@
   </ItemGroup>
   <ItemGroup><Compile Include="../../../src/Shared/InvocationJournal.cs" Link="Shared/InvocationJournal.cs" /></ItemGroup>
   <ItemGroup>
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/DccTools.cs" Link="DccTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs" Link="StartdriveTools.cs" />
+    <Compile Include="../../../src/Shared/DccTools.cs" Link="DccTools.cs" />
+    <Compile Include="../../../src/Shared/StartdriveTools.cs" Link="StartdriveTools.cs" />
     <Compile Include="../../../src/Shared/TeamcenterTools.cs" Link="TeamcenterTools.cs" />
     <Compile Include="../../../src/Shared/UnifiedHmiGroupsTools.cs" Link="UnifiedHmiGroupsTools.cs" />
     <Compile Include="../../../src/Shared/UnifiedScreenItemsTools.cs" Link="UnifiedScreenItemsTools.cs" />

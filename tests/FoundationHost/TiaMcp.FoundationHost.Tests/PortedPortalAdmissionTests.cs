@@ -199,7 +199,7 @@ public sealed class PortedPortalAdmissionTests
     }
 
     public static IEnumerable<object[]> LaneCases =>
-        from name in PortedFamilies.All.Where(f => f.Name is "F04" or "F22" or "F33" or "F06" or "F23" or "F35" or "F07" or "F24" or "F25").SelectMany(f => f.Tools).Where(name => TiaMcpServer.ModelContextProtocol.ToolExecution.Table[name] != "host").Prepend("CreatePlcBlockGroup")
+        from name in PortedFamilies.All.Where(f => f.Name is "F04" or "F22" or "F33" or "F06" or "F23" or "F35" or "F07" or "F24" or "F25" or "F29" or "F30" or "F31").SelectMany(f => f.Tools).Where(name => TiaMcpServer.ModelContextProtocol.ToolExecution.Table[name] != "host").Prepend("CreatePlcBlockGroup")
         from cancel in new[] { false, true }
         select new object[] { name, cancel };
 

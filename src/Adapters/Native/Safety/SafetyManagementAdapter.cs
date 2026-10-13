@@ -1,7 +1,15 @@
+using TiaOpenness.Shared;
+#if SAFETY_GLOBAL
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json.Nodes;
+using TiaMcp.Adapters.Contracts;
+using TiaMcp.Adapters.Native.Hmi;
+using TiaMcp.Adapters.Hardware;
+using SafetyLogic = TiaOpenness.Shared.SafetyPolicy;
+using EngineeringScalarProperties = TiaMcp.Adapters.Native.Safety.SafetyScalars;
+using PlcBlockServicesLogic = TiaMcp.Adapters.Native.Safety.SafetyPrimitives;
+using NativeFileOutput = TiaMcp.Adapters.Native.Safety.SafetyFileOutput;
 using Siemens.Engineering;
 using Siemens.Engineering.HW;
 using Siemens.Engineering.Safety;
@@ -9,34 +17,35 @@ using Siemens.Engineering.SW;
 using Siemens.Engineering.SW.Blocks;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.Siemens.Services
+namespace TiaMcp.Adapters.Native.Safety
 {
     // Siemens.Engineering.Safety: SafetyAdministration (settings, runtime groups, program signatures, password state),
     // GlobalSettings (portal-wide), SafetySignatureProvider (per block), SafetyPrintout and SafetyBaseIdProvider
     // (PLC device item). F-compile is not part of the PublicAPI; nothing here replaces the safety acceptance test.
-    internal sealed class SafetyManagementService
+    internal sealed class SafetyManagementAdapter
     {
-        private readonly IEngineeringSession _session;
+        private readonly SafetySession _session;
 
-        public SafetyManagementService(IEngineeringSession session) => _session = session;
+        public SafetyManagementAdapter(SafetySession session) => _session = session;
 
         // Program-modifying actions need the F-program login when a password is set; the login itself and the
         // password administration are exempt so a caller can get in (or out) without a second tool.
         private static readonly string[] SafetyProgramEditingActions =
             { "createRuntimeGroup", "deleteRuntimeGroup", "updateRuntimeGroup", "updateSettings", "generateGlobalFIOStatusBlock", "cleanSystemGeneratedObjects", "generateBaseId" };
 
+#if SAFETY_PROGRAM
         private DeviceItem SafetyCpuItem(string softwarePath)
             => _session.GetSoftwareContainer(softwarePath)?.Parent as DeviceItem
-               ?? throw new PortalException(PortalErrorCode.NotFound, "PLC device item not found for " + softwarePath);
+               ?? throw new PlcSoftwareException("NotFound", "PLC device item not found for " + softwarePath);
 
         private SafetyAdministration RequireSafetyAdministration(string softwarePath, PlcSoftware plc)
             => _session.ResolvePlcService<SafetyAdministration>(softwarePath, plc)
-               ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "SafetyAdministration unavailable: not an S7-1200/1500 F-CPU or Safety option not installed.");
+               ?? throw new PlcSoftwareException("NotSupportedOnVersion", "SafetyAdministration unavailable: not an S7-1200/1500 F-CPU or Safety option not installed.");
 
         // Documented dynamic attributes are read one by one; a missing value is reported as null with its native reason.
-        private static JsonObject ReadSafetyAttributes(IEngineeringObject owner, IEnumerable<string> names)
+        private static HmiObject ReadSafetyAttributes(IEngineeringObject owner, IEnumerable<string> names)
         {
-            var values = new JsonObject(); var failures = new JsonObject();
+            var values = new HmiObject(); var failures = new HmiObject();
             foreach (var name in names)
             {
                 try { values[name] = EngineeringScalarProperties.Json(owner.GetAttribute(name)); }
@@ -46,59 +55,69 @@ namespace TiaMcpServer.Siemens.Services
             return values;
         }
 
-        private static JsonArray SignatureRows(SafetySignatureProvider? provider)
+        private static HmiArray SignatureRows(SafetySignatureProvider? provider)
         {
-            var rows = new JsonArray();
+            var rows = new HmiArray();
             if (provider == null) return rows;
             SafetySignatureComposition signatures = provider.Signatures;
             foreach (SafetySignature signature in signatures)
-                rows.Add(SafetyLogic.SignatureRow(signature.Type.ToString(), signature.Value));
+                rows.Add(new HmiObject { ["type"] = signature.Type.ToString(), ["value"] = signature.Value,
+                    ["hex"] = signature.Value == 0 ? null : "0x" + signature.Value.ToString("X"), ["valid"] = signature.Value != 0 });
             return rows;
         }
 
         private static SafetySignatureProvider? ProgramSignatures(SafetyAdministration administration)
         {
-#if TIA_V20
+#if !SAFETY_V21
             return null;
 #else
             return administration.ProgramSignatures;
 #endif
         }
 
-        private static JsonObject ReadSafetySettings(SafetySettings settings)
+        private static HmiObject ReadSafetySettings(SafetySettings settings)
         {
             var result = EngineeringScalarProperties.Read(settings);
             var numbers = settings.AssignmentOfBlockNumbers;
-            result["assignmentOfBlockNumbers"] = numbers == null ? null : new JsonObject
+            result["assignmentOfBlockNumbers"] = numbers == null ? null : new HmiObject
             {
                 ["managementMode"] = numbers.ManagementMode.ToString(),
                 ["fromFB"] = numbers.FromFB, ["toFB"] = numbers.ToFB, ["fromFC"] = numbers.FromFC, ["toFC"] = numbers.ToFC, ["fromDB"] = numbers.FromDB, ["toDB"] = numbers.ToDB
             };
             try { result["safetySystemVersion"] = settings.SafetySystemVersion?.Value; }
             catch (Exception ex) { result["safetySystemVersion"] = null; result["safetySystemVersionError"] = ex.GetBaseException().Message; if (HmiReadSafety.ConnectionUnavailable(ex)) throw; }
-            try { result["applicableSafetySystemVersions"] = new JsonArray(settings.GetApplicableSafetySystemVersions().Select(v => (JsonNode)JsonValue.Create(v.Value)!).ToArray()); }
+            try { result["applicableSafetySystemVersions"] = new HmiArray(settings.GetApplicableSafetySystemVersions().Select(v => (object)HmiValues.Value(v.Value)!).ToArray()); }
             catch (Exception ex) { result["applicableSafetySystemVersions"] = null; result["applicableSafetySystemVersionsError"] = ex.GetBaseException().Message; if (HmiReadSafety.ConnectionUnavailable(ex)) throw; }
             result["attributes"] = ReadSafetyAttributes(settings, SafetyLogic.SettingsAttributes);
             return result;
         }
 
-        private static JsonObject ReadRuntimeGroup(RuntimeGroup group)
+        private static HmiObject ReadRuntimeGroup(RuntimeGroup group)
         {
             var result = EngineeringScalarProperties.Read(group);
             result["attributes"] = ReadSafetyAttributes(group, SafetyLogic.RuntimeGroupAttributes);
             return result;
         }
 
-        private JsonObject ReadSafetyGlobalSettings()
+#endif
+        private HmiObject ReadSafetyGlobalSettings()
         {
             var settings = _session.CurrentPortal?.GetService<GlobalSettings>();
-            if (settings == null) return new JsonObject { ["available"] = false, ["reason"] = "GlobalSettings service unavailable on this TIA Portal (Safety option not installed?)." };
-            var result = new JsonObject { ["available"] = true };
-            var failures = new JsonObject();
+            if (settings == null) return new HmiObject { ["available"] = false, ["reason"] = "GlobalSettings service unavailable on this TIA Portal (Safety option not installed?)." };
+            var result = new HmiObject { ["available"] = true };
+            var failures = new HmiObject();
+            #if SAFETY_GLOBAL_READ
             Read("SafetyModificationsPossible", () => settings.SafetyModificationsPossible());
+            #endif
+#if SAFETY_GLOBAL_FULL
             Read("GenerationOfDefaultFailsafeProgram", () => settings.GenerationOfDefaultFailsafeProgram());
             Read("ManagementOfFailsafeInSoftwareUnitsEnvironment", () => settings.ManagementOfFailsafeInSoftwareUnitsEnvironment());
+            #endif
+#if SAFETY_GLOBAL_READ
             Read("UsernameForFChangeHistory", () => settings.UsernameForFChangeHistory());
+#else
+            result["unavailable"] = "GlobalSettings getters require V17 or later.";
+#endif
             if (failures.Count > 0) result["unavailable"] = failures;
             return result;
             void Read(string name, Func<object?> getter)
@@ -108,13 +127,14 @@ namespace TiaMcpServer.Siemens.Services
             }
         }
 
-        private JsonObject ReadSafetyCpu(string softwarePath)
+#if SAFETY_PROGRAM
+        private HmiObject ReadSafetyCpu(string softwarePath)
         {
             var cpu = SafetyCpuItem(softwarePath);
-            var result = new JsonObject { ["deviceItemName"] = cpu.Name, ["typeIdentifier"] = cpu.TypeIdentifier };
+            var result = new HmiObject { ["deviceItemName"] = cpu.Name, ["typeIdentifier"] = cpu.TypeIdentifier };
             try { result["fCapabilityActivated"] = EngineeringScalarProperties.Json(cpu.GetAttribute("Failsafe_FCapabilityActivated")); }
             catch (Exception ex) { result["fCapabilityActivated"] = null; result["fCapabilityError"] = ex.GetBaseException().Message; if (HmiReadSafety.ConnectionUnavailable(ex)) throw; }
-            result["services"] = new JsonObject
+            result["services"] = new HmiObject
             {
                 ["safetyPrintout"] = cpu.GetService<SafetyPrintout>() != null,
                 ["safetyBaseIdProvider"] = SafetyBaseIdService(cpu) != null,
@@ -123,15 +143,15 @@ namespace TiaMcpServer.Siemens.Services
             return result;
         }
 
-#if TIA_V20
+#if !SAFETY_V21
         private static object? SafetyBaseIdService(DeviceItem cpu) => null;
         private static void GenerateSafetyBaseId(DeviceItem cpu)
-            => throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "SafetyBaseIdProvider is a V21 API (S7-1200 G2/1500 F-CPUs from firmware V4.1 with F-BaseID).");
+            => throw new PlcSoftwareException("NotSupportedOnVersion", "SafetyBaseIdProvider is a V21 API (S7-1200 G2/1500 F-CPUs from firmware V4.1 with F-BaseID).");
 #else
         private static SafetyBaseIdProvider? SafetyBaseIdService(DeviceItem cpu) => cpu.GetService<SafetyBaseIdProvider>();
         private static void GenerateSafetyBaseId(DeviceItem cpu)
         {
-            var provider = SafetyBaseIdService(cpu) ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "SafetyBaseIdProvider unavailable on " + cpu.Name + ": needs an S7-1200 G2/1500 F-CPU from firmware V4.1 with F-BaseID.");
+            var provider = SafetyBaseIdService(cpu) ?? throw new PlcSoftwareException("NotSupportedOnVersion", "SafetyBaseIdProvider unavailable on " + cpu.Name + ": needs an S7-1200 G2/1500 F-CPU from firmware V4.1 with F-BaseID.");
             provider.GenerateBaseId();
         }
 #endif
@@ -144,7 +164,7 @@ namespace TiaMcpServer.Siemens.Services
             return SafetyLogic.JoinBlockPath(names, block.Name);
         }
 
-        public ResponseMessage ManagePlcSafety(string softwarePath, string action = "read", string runtimeGroup = "", string propertiesJson = "{}", bool dryRun = true,
+        public HardwareAddressingReply ManagePlcSafety(string softwarePath, string action = "read", string runtimeGroup = "", string propertiesJson = "{}", bool dryRun = true,
             string password = "", bool confirmSafetyChange = false, string mainSafetyBlockPath = "", string mainSafetyInstanceDbPath = "")
             => _session.RunHmiStepTool("ManagePlcSafety", meta => {
                 meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
@@ -155,7 +175,7 @@ namespace TiaMcpServer.Siemens.Services
                 var plc = _session.ExactPlcForEngineering(softwarePath, writing && editsProgram);
                 var administration = RequireSafetyAdministration(softwarePath, plc);
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["passwordProvided"] = !string.IsNullOrEmpty(password);
-                meta["administration"] = new JsonObject
+                meta["administration"] = new HmiObject
                 {
                     ["isSafetyOfflineProgramPasswordSet"] = administration.IsSafetyOfflineProgramPasswordSet,
                     ["isLoggedOnToSafetyOfflineProgram"] = administration.IsLoggedOnToSafetyOfflineProgram
@@ -164,7 +184,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (action == "read")
                 {
                     meta["settings"] = ReadSafetySettings(administration.Settings);
-                    meta["runtimeGroups"] = new JsonArray(groups.Select(g => (JsonNode)ReadRuntimeGroup(g)).ToArray());
+                    meta["runtimeGroups"] = new HmiArray(groups.Select(g => (object)ReadRuntimeGroup(g)).ToArray());
                     var signatures = ProgramSignatures(administration);
                     meta["programSignatures"] = signatures == null ? null : SignatureRows(signatures);
                     if (signatures == null) meta["programSignaturesNote"] = "SafetyAdministration.ProgramSignatures is a V21 API; on V20 read per-block signatures with GetSafetyBlockSignatures.";
@@ -174,13 +194,13 @@ namespace TiaMcpServer.Siemens.Services
                     return "Safety program metadata read (settings incl. block-number ranges and system version, runtime groups incl. F-OB attributes, collective signatures, global settings, CPU F-capability). No login, compile, save or download; not a safety acceptance.";
                 }
                 if (writing && editsProgram && administration.IsSafetyOfflineProgramPasswordSet && !administration.IsLoggedOnToSafetyOfflineProgram)
-                    throw new PortalException(PortalErrorCode.InvalidState, "Safety offline program is password protected and not logged on. Use action=login with the password (passed to TIA only) or log in inside TIA.");
+                    throw new PlcSoftwareException("InvalidState", "Safety offline program is password protected and not logged on. Use action=login with the password (passed to TIA only) or log in inside TIA.");
                 RuntimeGroup? target = null;
                 if (SafetyLogic.RuntimeGroupActions.Contains(action))
                 {
                     target = groups.Find(runtimeGroup);
                     if (action == "createRuntimeGroup" && target != null) throw new InvalidOperationException("Runtime group exists: " + runtimeGroup);
-                    if (action != "createRuntimeGroup" && target == null) throw new PortalException(PortalErrorCode.NotFound, "Runtime group not found: " + runtimeGroup);
+                    if (action != "createRuntimeGroup" && target == null) throw new PlcSoftwareException("NotFound", "Runtime group not found: " + runtimeGroup);
                     if (target != null) meta["before"] = ReadRuntimeGroup(target);
                 }
                 switch (action)
@@ -197,22 +217,30 @@ namespace TiaMcpServer.Siemens.Services
                         meta["overload"] = mainBlock == null ? "Create(name): TIA generates main safety FB + IDB" : instanceDb == null ? "Create(name, mainSafetyFC)" : "Create(name, mainSafetyFB, mainSafetyIDB)";
                         if (!writing) return "Runtime group creation preview; no modification.";
                         meta["mayHaveChanged"] = true;
+                        #if SAFETY_GLOBAL_FULL
                         var created = mainBlock == null ? groups.Create(runtimeGroup) : instanceDb == null ? groups.Create(runtimeGroup, mainBlock) : groups.Create(runtimeGroup, mainBlock, instanceDb);
                         meta["apiCallSuccess"] = true; meta["after"] = ReadRuntimeGroup(created);
+#else
+                        throw new NotSupportedException("Runtime group creation requires V18 or later.");
+#endif
                         break;
                     }
                     case "deleteRuntimeGroup":
                     {
                         if (!writing) return "Runtime group deletion preview; no modification.";
                         meta["mayHaveChanged"] = true;
+                        #if SAFETY_GLOBAL_FULL
                         target!.Delete();
+#else
+                        throw new NotSupportedException("Runtime group deletion requires V18 or later.");
+#endif
                         if (groups.Find(runtimeGroup) != null) throw new InvalidOperationException("Runtime group remains after Delete; do not blindly retry.");
                         meta["apiCallSuccess"] = true; meta["verifiedAbsent"] = true;
                         break;
                     }
                     case "updateRuntimeGroup":
                     {
-                        var (scalars, attributes) = SafetyLogic.SplitRuntimeGroupChanges(propertiesJson);
+                        var (scalars, attributes) = _session.RuntimeGroupChanges();
                         var prepared = EngineeringScalarProperties.Prepare(typeof(RuntimeGroup), scalars);
                         meta["requestedProperties"] = scalars.DeepClone(); meta["requestedAttributes"] = attributes.DeepClone();
                         if (!writing) return "Runtime group update preview; no modification.";
@@ -224,7 +252,7 @@ namespace TiaMcpServer.Siemens.Services
                     case "updateSettings":
                     {
                         var settings = administration.Settings;
-                        var changes = SafetyLogic.SplitSettingsChanges(propertiesJson);
+                        var changes = _session.SettingsChanges();
                         if (changes.Scalars.ContainsKey("SafetyModeCanBeDisabled") && !confirmSafetyChange) throw new ArgumentException("Changing SafetyModeCanBeDisabled requires confirmSafetyChange=true.");
                         var prepared = EngineeringScalarProperties.Prepare(typeof(SafetySettings), changes.Scalars);
                         var preparedNumbers = EngineeringScalarProperties.Prepare(typeof(AssignmentOfBlockNumbers), changes.BlockNumbers);
@@ -255,9 +283,13 @@ namespace TiaMcpServer.Siemens.Services
                     {
                         if (!writing) return "Global F-I/O status block generation preview; native call creates or overwrites the status block.";
                         meta["mayHaveChanged"] = true;
+                        #if SAFETY_GLOBAL_FULL
                         var block = target!.GenerateGlobalFIOStatusBlock();
                         meta["apiCallSuccess"] = true;
-                        meta["generatedBlock"] = block == null ? null : new JsonObject { ["name"] = block.Name, ["number"] = block.Number, ["path"] = BlockGroupPath(block), ["programmingLanguage"] = block.ProgrammingLanguage.ToString() };
+                        meta["generatedBlock"] = block == null ? null : new HmiObject { ["name"] = block.Name, ["number"] = block.Number, ["path"] = BlockGroupPath(block), ["programmingLanguage"] = block.ProgrammingLanguage.ToString() };
+#else
+                        throw new NotSupportedException("F-I/O status block generation requires V18 or later.");
+#endif
                         break;
                     }
                     case "cleanSystemGeneratedObjects":
@@ -272,7 +304,7 @@ namespace TiaMcpServer.Siemens.Services
                     {
                         var cpu = SafetyCpuItem(softwarePath);
                         meta["cpu"] = ReadSafetyCpu(softwarePath);
-                        if (SafetyBaseIdService(cpu) == null) throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "SafetyBaseIdProvider unavailable on " + cpu.Name + ": V21 API for S7-1200 G2/1500 F-CPUs from firmware V4.1 with F-BaseID.");
+                        if (SafetyBaseIdService(cpu) == null) throw new PlcSoftwareException("NotSupportedOnVersion", "SafetyBaseIdProvider unavailable on " + cpu.Name + ": V21 API for S7-1200 G2/1500 F-CPUs from firmware V4.1 with F-BaseID.");
                         if (!writing) return "F-BaseID generation preview; native call assigns a new random 64-bit F-BaseID to all connected PROFIsafe address type 3 F-I/O.";
                         meta["mayHaveChanged"] = true;
                         GenerateSafetyBaseId(cpu);
@@ -321,7 +353,7 @@ namespace TiaMcpServer.Siemens.Services
                         break;
                     }
                 }
-                meta["administrationAfter"] = new JsonObject
+                meta["administrationAfter"] = new HmiObject
                 {
                     ["isSafetyOfflineProgramPasswordSet"] = administration.IsSafetyOfflineProgramPasswordSet,
                     ["isLoggedOnToSafetyOfflineProgram"] = administration.IsLoggedOnToSafetyOfflineProgram
@@ -331,14 +363,14 @@ namespace TiaMcpServer.Siemens.Services
                     : "Safety administration action completed; no project content changed.";
             });
 
-        private static void ApplySafetyAttributes(IEngineeringObject owner, JsonObject attributes, JsonObject meta)
+        private static void ApplySafetyAttributes(IEngineeringObject owner, HmiObject attributes, HmiObject meta)
         {
             if (attributes.Count == 0) return;
-            var applied = meta["appliedAttributes"] as JsonArray ?? new JsonArray(); meta["appliedAttributes"] = applied;
+            var applied = meta["appliedAttributes"] as HmiArray ?? new HmiArray(); meta["appliedAttributes"] = applied;
             foreach (var attribute in attributes)
             {
                 meta["mayHaveChanged"] = true; meta["lastAttemptedAttribute"] = attribute.Key;
-                object value = attribute.Value is JsonValue v && v.TryGetValue<bool>(out var flag) ? flag : attribute.Value!.GetValue<int>();
+                object value = attribute.Value is bool flag ? flag : attribute.Value!.GetValue<int>();
                 owner.SetAttribute(attribute.Key, value);
                 var readback = owner.GetAttribute(attribute.Key);
                 if (!Equals(Convert.ToString(readback), Convert.ToString(value))) throw new InvalidOperationException("Attribute readback differs: " + attribute.Key + ". Changes are not rolled back.");
@@ -346,40 +378,53 @@ namespace TiaMcpServer.Siemens.Services
             }
         }
 
-        public ResponseMessage ManageSafetyGlobalSettings(string action = "read", string propertiesJson = "{}", bool dryRun = true)
+#endif
+        public HardwareAddressingReply ManageSafetyGlobalSettings(string action = "read", string propertiesJson = "{}", bool dryRun = true)
             => _session.RunHmiStepTool("ManageSafetyGlobalSettings", meta => {
                 meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 if (action != "read" && action != "update") throw new ArgumentException("action must be read or update.");
-                if (_session.CurrentPortal == null) throw new PortalException(PortalErrorCode.InvalidState, "Connect to TIA first.");
+                if (_session.CurrentPortal == null) throw new PlcSoftwareException("InvalidState", "Connect to TIA first.");
                 bool writing = action == "update" && !dryRun;
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 meta["before"] = ReadSafetyGlobalSettings();
                 if (action == "read") { meta["apiCallSuccess"] = true; return "Safety GlobalSettings read (TIA Portal scope, not project scope)."; }
-                var changes = SafetyLogic.ParseGlobalSettingChanges(propertiesJson);
-                var settings = _session.CurrentPortal.GetService<GlobalSettings>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "GlobalSettings service unavailable on this TIA Portal.");
-                meta["requested"] = new JsonObject(changes.Select(c => new KeyValuePair<string, JsonNode?>(c.Key, EngineeringScalarProperties.Json(c.Value))));
+                var changes = _session.GlobalChanges();
+                var settings = _session.CurrentPortal.GetService<GlobalSettings>() ?? throw new PlcSoftwareException("NotSupportedOnVersion", "GlobalSettings service unavailable on this TIA Portal.");
+                meta["requested"] = new HmiObject(changes.ToDictionary(c => c.Key, c => (object?)c.Value));
                 if (!writing) return "Safety GlobalSettings update preview; no modification.";
-                var applied = new JsonArray(); meta["applied"] = applied;
+                var applied = new HmiArray(); meta["applied"] = applied;
                 foreach (var change in changes)
                 {
                     meta["mayHaveChanged"] = true; meta["lastAttempted"] = change.Key;
                     switch (change.Key)
                     {
                         case "SafetyModificationsPossible": settings.SafetyModificationsPossible((bool)change.Value); break;
+                        #if SAFETY_GLOBAL_FULL
                         case "GenerationOfDefaultFailsafeProgram": settings.GenerationOfDefaultFailsafeProgram((bool)change.Value); break;
                         case "ManagementOfFailsafeInSoftwareUnitsEnvironment": settings.ManagementOfFailsafeInSoftwareUnitsEnvironment((bool)change.Value); break;
+                        #endif
                         case "UsernameForFChangeHistory": settings.UsernameForFChangeHistory((string)change.Value); break;
                     }
                     applied.Add(change.Key);
                 }
                 meta["apiCallSuccess"] = true; meta["after"] = ReadSafetyGlobalSettings();
                 // An empty user name resets to the TIA default, so its readback is informational rather than an equality check.
+#if SAFETY_GLOBAL_READ
                 foreach (var change in changes.Where(c => c.Key != "UsernameForFChangeHistory"))
-                    if (!Equals(meta["after"]![change.Key]?.GetValue<bool>(), (bool)change.Value)) throw new InvalidOperationException("GlobalSettings readback differs: " + change.Key);
+                    if (!Equals(((HmiObject)meta["after"]!)[change.Key]?.GetValue<bool>(), (bool)change.Value)) throw new InvalidOperationException("GlobalSettings readback differs: " + change.Key);
+#else
+                meta["dataComplete"] = false;
+                meta["readbackScope"] = "V16 has setters but no GlobalSettings getters; setter return only.";
+#endif
+                #if SAFETY_GLOBAL_READ
                 return "Safety GlobalSettings updated and read back; portal-wide effect, no project save.";
+#else
+                return "Safety GlobalSettings setters completed; this release has no getters for verification; portal-wide effect, no project save.";
+#endif
             }, requiresProject: false);
 
-        public ResponseMessage ReadSafetyBlockSignatures(string softwarePath, string blockPath = "", bool includeProgramSignatures = true, int offset = 0, int limit = 100)
+#if SAFETY_PROGRAM
+        public HardwareAddressingReply ReadSafetyBlockSignatures(string softwarePath, string blockPath = "", bool includeProgramSignatures = true, int offset = 0, int limit = 100)
             => _session.RunHmiStepTool("GetSafetyBlockSignatures", meta => {
                 meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
@@ -396,13 +441,13 @@ namespace TiaMcpServer.Siemens.Services
                 if (!string.IsNullOrWhiteSpace(blockPath))
                     blocks.Add(_session.ExactMasterCopyPlcSource(softwarePath, blockPath, true) as PlcBlock ?? throw new ArgumentException("blockPath must identify a block."));
                 else _session.GetBlocksRecursive(plc.BlockGroup, blocks);
-                var rows = new List<JsonNode>(); int scanned = 0, withoutProvider = 0;
+                var rows = new List<object>(); int scanned = 0, withoutProvider = 0;
                 foreach (var block in blocks)
                 {
                     scanned++;
                     var provider = block.GetService<SafetySignatureProvider>();
                     if (provider == null) { withoutProvider++; if (!string.IsNullOrWhiteSpace(blockPath)) meta["notAnFBlock"] = true; continue; }
-                    rows.Add(new JsonObject
+                    rows.Add(new HmiObject
                     {
                         ["path"] = BlockGroupPath(block), ["name"] = block.Name, ["number"] = block.Number, ["kind"] = block.GetType().Name,
                         ["programmingLanguage"] = block.ProgrammingLanguage.ToString(), ["isKnowHowProtected"] = block.IsKnowHowProtected,
@@ -411,7 +456,7 @@ namespace TiaMcpServer.Siemens.Services
                 }
                 meta["blocksScanned"] = scanned; meta["blocksWithoutSafetySignature"] = withoutProvider;
                 var (skip, take) = PlcBlockServicesLogic.Paginate(meta, rows.Count, offset, limit);
-                meta["records"] = new JsonArray(rows.Skip(skip).Take(take).ToArray());
+                meta["records"] = new HmiArray(rows.Skip(skip).Take(take).ToArray());
                 meta["apiCallSuccess"] = true;
                 meta["semantics"] = "Value 0 = no valid F-signature (block changed since the last F-compile, or not an F-block). Signatures are offline values from the project, not read from the CPU.";
                 return rows.Count == 0
@@ -419,14 +464,14 @@ namespace TiaMcpServer.Siemens.Services
                     : "Per-block F-signatures read from the offline project; no change.";
             });
 
-        public ResponseMessage ExportSafetyPrintout(string softwarePath, string filePath, string printer = "MicrosoftPrintToPdf", string option = "All", string documentLayout = "", bool dryRun = true)
+        public HardwareAddressingReply ExportSafetyPrintout(string softwarePath, string filePath, string printer = "MicrosoftPrintToPdf", string option = "All", string documentLayout = "", bool dryRun = true)
             => _session.RunHmiStepTool("ExportSafetyPrintout", meta => {
                 meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 var request = SafetyLogic.ValidatePrintoutRequest(filePath, printer, option, documentLayout);
                 var file = NativeFileOutput.Plan(filePath);
                 _session.ExactPlcForEngineering(softwarePath, false);
                 var cpu = SafetyCpuItem(softwarePath);
-                var service = cpu.GetService<SafetyPrintout>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "SafetyPrintout unavailable on " + cpu.Name + ": not an S7-1200/1500 F-CPU or Safety option not installed.");
+                var service = cpu.GetService<SafetyPrintout>() ?? throw new PlcSoftwareException("NotSupportedOnVersion", "SafetyPrintout unavailable on " + cpu.Name + ": not an S7-1200/1500 F-CPU or Safety option not installed.");
                 meta["dryRun"] = dryRun; meta["mayHaveWrittenFiles"] = false; meta["filePath"] = file.FullName;
                 meta["printer"] = request.Printer; meta["option"] = request.Option; meta["documentLayout"] = request.Layout; meta["cpu"] = cpu.Name;
                 meta["requirement"] = "The selected Windows printer driver (Microsoft Print to PDF / XPS Document Writer) must be enabled on the TIA machine; the printout is the official STEP 7 Safety printout of the offline project.";
@@ -436,9 +481,12 @@ namespace TiaMcpServer.Siemens.Services
                 var printOption = (SafetyPrintoutOption)Enum.Parse(typeof(SafetyPrintoutOption), request.Option);
                 bool success = service.Print(filePrinter, file, request.Layout, printOption);
                 meta["nativeResult"] = success;
-                if (!success) throw new PortalException(PortalErrorCode.ExportFailed, "SafetyPrintout.Print returned false (printer driver disabled, invalid layout name, or F-program not compiled).");
+                if (!success) throw new PlcSoftwareException("ExportFailed", "SafetyPrintout.Print returned false (printer driver disabled, invalid layout name, or F-program not compiled).");
                 meta["apiCallSuccess"] = true; meta["file"] = NativeFileOutput.Verify(file); meta["dataComplete"] = false;
                 return "Safety printout written by TIA and hashed; document content not parsed. No project change.";
             });
+#endif
     }
 }
+
+#endif

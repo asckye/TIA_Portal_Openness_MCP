@@ -1,7 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup Condition="'$(TiaSharedAdapterPaths)' != 'true'"><Compile Include="../Adapters/Native/Vci/VciFallbackAdapter.cs" Link="Native/Vci/VciFallbackAdapter.cs" /></ItemGroup>
   <Import Project="$(MSBuildThisFileDirectory)../../Version.props" />
-  <ItemGroup><Compile Include="../Shared/ProgressHeartbeat.cs" Link="Shared/ProgressHeartbeat.cs" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Shared/EngineeringObjectPath.cs" />
+    <Compile Include="../Shared/SivarcTools.cs" />
+    <Compile Include="../Shared/OptionalEngineeringTools.cs" />
+    <Compile Include="../Shared/StartdriveTools.cs" />
+    <Compile Include="../Shared/DccTools.cs" />
+    <Compile Include="../Shared/SivarcPortService.cs" />
+    <Compile Include="../Shared/OptionalEngineeringPortService.cs" />
+    <Compile Include="../Shared/StartdrivePortService.cs" />
+    <Compile Include="../Shared/DccPortService.cs" />
+    <Compile Include="../Shared/OptionalEngineeringPort.cs" />
+    <Compile Include="../Shared/SafetyValidationTools.cs" />
+    <Compile Include="../Shared/SafetyValidationPortService.cs" />
+    <Compile Include="../Shared/SafetyManagementTools.cs" />
+    <Compile Include="../Shared/SafetyManagementPortService.cs" /><Compile Include="../Shared/ProgressHeartbeat.cs" Link="Shared/ProgressHeartbeat.cs" /></ItemGroup>
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
     <Nullable>enable</Nullable>

@@ -14141,6 +14141,1857 @@
           }
         },
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+      },
+      "GetSivarcRuleTree": {
+        "arguments": {
+          "category": "screens"
+        },
+        "parameters": {
+          "category": {
+            "meaning": "Select the SiVArc rule family: screens | tags | advancedTags | alarms | copies | textLists."
+          },
+          "folderPath": {
+            "exampleValue": ""
+          },
+          "tablePath": {
+            "exampleValue": "Default tag table"
+          },
+          "includeRules": {
+            "exampleValue": true
+          },
+          "maxDepth": {
+            "exampleValue": 4
+          },
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 200
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ManageSivarcRuleContainer": {
+        "arguments": {
+          "category": "screens",
+          "kind": "folder",
+          "path": "Examples",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "parameters": {
+          "category": {
+            "meaning": "Select the SiVArc rule family: screens | tags | advancedTags | alarms | copies | textLists."
+          },
+          "path": {
+            "meaning": "Relative SiVArc family object path such as Examples/Table; not a project file."
+          },
+          "libraryName": {
+            "exampleValue": ""
+          },
+          "typePath": {
+            "exampleValue": "UDT_Status"
+          },
+          "typeVersion": {
+            "exampleValue": "1.0.0"
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "create": {
+            "arguments": {
+              "action": "create",
+              "typePath": "UDT_Status"
+            }
+          },
+          "createFromType": {
+            "arguments": {
+              "action": "createFromType",
+              "typePath": "UDT_Status",
+              "typeVersion": "1.0.0"
+            }
+          },
+          "delete": {
+            "arguments": {
+              "action": "delete",
+              "typePath": "UDT_Status"
+            }
+          }
+        },
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ManageSivarcTableRule": {
+        "arguments": {
+          "category": "screens",
+          "tablePath": "ExampleTable",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read",
+          "rulePath": "ExampleRule"
+        },
+        "parameters": {
+          "category": {
+            "meaning": "Select the SiVArc rule family: screens | tags | advancedTags | alarms | copies | textLists."
+          },
+          "rulePath": {
+            "exampleValue": "<rulePath from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "kind": {
+            "exampleValue": "rule"
+          },
+          "properties": {
+            "exampleValue": {
+              "Comment": "Example"
+            },
+            "requiresBinding": true
+          },
+          "references": {
+            "exampleValue": {
+              "ProgramBlock": {
+                "kind": "plcBlock",
+                "softwarePath": "PLC_1",
+                "path": "Main"
+              }
+            },
+            "requiresBinding": true
+          },
+          "deviceSelection": {
+            "exampleValue": {
+              "PLC_1": true
+            },
+            "requiresBinding": true
+          },
+          "deviceNames": {
+            "exampleValue": [
+              "PLC_1"
+            ],
+            "requiresBinding": true
+          },
+          "libraryName": {
+            "exampleValue": ""
+          },
+          "masterCopyPath": {
+            "exampleValue": "Examples/Example_1"
+          },
+          "createOption": {
+            "exampleValue": "Replace"
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "create": {
+            "arguments": {
+              "action": "create"
+            }
+          },
+          "createFromMasterCopy": {
+            "arguments": {
+              "action": "createFromMasterCopy",
+              "masterCopyPath": "Examples/Example_1",
+              "libraryName": "",
+              "rulePath": ""
+            }
+          },
+          "update": {
+            "arguments": {
+              "action": "update",
+              "properties": {
+                "Enabled": true
+              }
+            }
+          },
+          "delete": {
+            "arguments": {
+              "action": "delete"
+            }
+          }
+        },
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ListSivarcBlockDefinitions": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main"
+        },
+        "parameters": {
+          "includeBlockParameters": {
+            "exampleValue": true
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ManageSivarcBlockDefinition": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "kind": "tagDefinition",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read",
+          "name": "Example_1"
+        },
+        "parameters": {
+          "name": {
+            "exampleValue": "Example_1"
+          },
+          "properties": {
+            "exampleValue": {
+              "Comment": "Example"
+            },
+            "requiresBinding": true
+          },
+          "texts": {
+            "exampleValue": {
+              "en-US": "Example"
+            },
+            "requiresBinding": true
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "create": {
+            "arguments": {
+              "action": "create",
+              "name": "Example_1"
+            }
+          },
+          "update": {
+            "arguments": {
+              "action": "update",
+              "properties": {
+                "Comment": "Example"
+              },
+              "name": "Example_1"
+            }
+          },
+          "delete": {
+            "arguments": {
+              "action": "delete",
+              "name": "Example_1"
+            }
+          }
+        },
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "GenerateSivarc": {
+        "arguments": {
+          "hmiDeviceName": "HMI_1",
+          "plcSoftwarePaths": [
+            "PLC_1"
+          ],
+          "generationOptions": "None",
+          "dryRun": true
+        },
+        "parameters": {
+          "generationOptions": {
+            "requiresBinding": true
+          },
+          "additionalHmiDeviceNames": {
+            "exampleValue": [],
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ListSivarcRules": {
+        "arguments": {
+          "category": "screens"
+        },
+        "parameters": {
+          "category": {
+            "meaning": "Select the SiVArc rule family: screens | tags | advancedTags | alarms | copies | textLists."
+          },
+          "objectPath": {
+            "exampleValue": [
+              {
+                "property": "ScreenFolder"
+              },
+              {
+                "property": "Screens",
+                "name": "Overview"
+              },
+              {
+                "property": "ScreenItems",
+                "name": "StartButton"
+              }
+            ],
+            "meaning": "JSON string encoding property steps: [{property,name?}]. A property is followed directly; name selects an exact member of that collection. This differs from devicePath name arrays."
+          },
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ManageSivarcRule": {
+        "arguments": {
+          "category": "screens",
+          "name": "Example_1",
+          "action": "create",
+          "dryRun": true,
+          "collectionPath": [
+            {
+              "property": "Tables",
+              "name": "ExampleTable"
+            },
+            {
+              "property": "RuleGroups",
+              "name": "ExampleGroup"
+            },
+            {
+              "property": "Rules"
+            }
+          ]
+        },
+        "parameters": {
+          "category": {
+            "meaning": "Select the SiVArc rule family: screens | tags | advancedTags | alarms | copies | textLists."
+          },
+          "properties": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
+            "requiresBinding": true
+          }
+        },
+        "operations": {
+          "create": {
+            "arguments": {}
+          },
+          "update": {
+            "arguments": {
+              "action": "update",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
+            }
+          },
+          "delete": {
+            "arguments": {
+              "action": "delete"
+            }
+          }
+        },
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ListDriveObjects": {
+        "arguments": {
+          "devicePath": [
+            "<exact drive device>"
+          ],
+          "itemPath": [
+            "<exact drive/control unit item>"
+          ],
+          "includeTelegrams": false,
+          "includeFunctions": false,
+          "includeTechnologyExtensions": false,
+          "includeDcc": false
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "inline": true,
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "GetDriveParameters": {
+        "arguments": {
+          "devicePath": [
+            "<exact drive device>"
+          ],
+          "itemPath": [
+            "<exact drive/control unit item>"
+          ],
+          "driveObjectNumber": 0,
+          "driveObjectIndex": 0,
+          "source": "write",
+          "names": [
+            "p1070[0]"
+          ],
+          "includeValue": false,
+          "includeBits": false,
+          "includeEnumValues": false
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "numbers": {
+            "exampleValue": "<numbers from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "inline": true,
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ManageStartdriveParameter": {
+        "arguments": {
+          "devicePath": [
+            "<exact drive device>"
+          ],
+          "itemPath": [
+            "<exact drive/control unit item>"
+          ],
+          "driveObjectNumber": 0,
+          "parameter": "p1070[0]",
+          "driveObjectIndex": 0,
+          "action": "read",
+          "dryRun": true
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "value": {
+            "exampleValue": "true",
+            "examples": [
+              {
+                "value": 0.5,
+                "meaning": "A scalar only for a scalar parameter of the matching native type."
+              },
+              {
+                "value": {
+                  "bicoSource": "r2050[0]"
+                },
+                "meaning": "A BICO connection source; replace with an existing compatible source in this drive, not its current numerical value."
+              }
+            ]
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "write": {
+            "arguments": {
+              "action": "write",
+              "value": {
+                "bicoSource": "<exact source parameter name from this drive>"
+              }
+            }
+          }
+        },
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "inline": true,
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ManageDriveTelegrams": {
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "driveObjectNumber": {
+            "exampleValue": 0
+          },
+          "driveObjectIndex": {
+            "exampleValue": -1
+          },
+          "telegramType": {
+            "exampleValue": "MainTelegram"
+          },
+          "telegramNumber": {
+            "exampleValue": 1
+          },
+          "inputSize": {
+            "exampleValue": -1
+          },
+          "outputSize": {
+            "exampleValue": -1
+          },
+          "direction": {
+            "exampleValue": "Input"
+          },
+          "size": {
+            "exampleValue": -1
+          },
+          "keepOriginalAddress": {
+            "exampleValue": true
+          },
+          "softwarePath": {
+            "exampleValue": "PLC_1"
+          },
+          "interfaceKind": {
+            "exampleValue": "actor"
+          },
+          "sensorIndex": {
+            "exampleValue": 0
+          },
+          "connectOption": {
+            "exampleValue": "Default"
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "check": {
+            "arguments": {
+              "action": "check",
+              "telegramType": "MainTelegram",
+              "telegramNumber": 1
+            }
+          },
+          "insert": {
+            "arguments": {
+              "action": "insert",
+              "telegramType": "MainTelegram",
+              "telegramNumber": 1
+            }
+          },
+          "erase": {
+            "arguments": {
+              "action": "erase",
+              "telegramType": "MainTelegram"
+            }
+          },
+          "changeNumber": {
+            "arguments": {
+              "action": "changeNumber",
+              "telegramType": "MainTelegram",
+              "telegramNumber": 1
+            }
+          },
+          "changeSize": {
+            "arguments": {
+              "action": "changeSize",
+              "telegramType": "MainTelegram",
+              "direction": "Input",
+              "size": 4
+            }
+          },
+          "connectTechnologyObject": {
+            "arguments": {
+              "action": "connectTechnologyObject",
+              "softwarePath": "PLC_1",
+              "objectPath": "Axis_1",
+              "interfaceKind": "actor",
+              "connectOption": "Default"
+            }
+          }
+        },
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ManageDriveFunctions": {
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "driveObjectNumber": {
+            "exampleValue": 0
+          },
+          "driveObjectIndex": {
+            "exampleValue": -1
+          },
+          "value": {
+            "exampleValue": "true"
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "changeDriveObjectType": {
+            "arguments": {
+              "action": "changeDriveObjectType",
+              "value": {
+                "driveObjectType": "<from read PossibleDriveObjectTypes>"
+              }
+            }
+          },
+          "changeActivationState": {
+            "arguments": {
+              "action": "changeActivationState",
+              "value": {
+                "activationState": "Activate"
+              }
+            }
+          },
+          "activateFunction": {
+            "arguments": {
+              "action": "activateFunction",
+              "value": {
+                "functionKey": "BasicPositioner"
+              }
+            }
+          },
+          "deactivateFunction": {
+            "arguments": {
+              "action": "deactivateFunction",
+              "value": {
+                "functionKey": "BasicPositioner"
+              }
+            }
+          },
+          "setSIAxisType": {
+            "arguments": {
+              "action": "setSIAxisType",
+              "value": {
+                "rotaryLinear": "Rotary"
+              }
+            }
+          },
+          "setMotorCode": {
+            "arguments": {
+              "action": "setMotorCode",
+              "value": {
+                "motorCode": 1,
+                "motorDataSet": 0
+              }
+            }
+          },
+          "setSimoGearMlfb": {
+            "arguments": {
+              "action": "setSimoGearMlfb",
+              "value": {
+                "mlfb": "<motor catalog MLFB>"
+              }
+            }
+          },
+          "updateCheckSums": {
+            "arguments": {
+              "action": "updateCheckSums"
+            }
+          },
+          "setMotorType": {
+            "arguments": {
+              "action": "setMotorType",
+              "value": {
+                "motorType": "<MotorType from this hardware configuration>",
+                "dataSet": 0
+              }
+            }
+          },
+          "readMotorConfiguration": {
+            "arguments": {
+              "action": "readMotorConfiguration",
+              "value": {
+                "dataSet": 0
+              }
+            }
+          },
+          "projectMotorConfiguration": {
+            "arguments": {
+              "action": "projectMotorConfiguration",
+              "value": {
+                "dataSet": 0,
+                "entries": {
+                  "<required configuration entry>": "<typed value>"
+                }
+              }
+            }
+          },
+          "setEquivalentCircuitDiagramData": {
+            "arguments": {
+              "action": "setEquivalentCircuitDiagramData",
+              "value": {
+                "dataSet": 0,
+                "equivalentCircuitDiagram": true
+              }
+            }
+          },
+          "setEncoder": {
+            "arguments": {
+              "action": "setEncoder",
+              "value": {
+                "encoderInterface": "<supported EncoderInterface>",
+                "encoderType": "<supported EncoderType>",
+                "absoluteIncremental": "<AbsoluteIncrementalFlag>",
+                "rotaryLinear": "Rotary",
+                "encoderNumber": 1
+              }
+            }
+          },
+          "readEncoderConfiguration": {
+            "arguments": {
+              "action": "readEncoderConfiguration",
+              "value": {
+                "encoderNumber": 1
+              }
+            }
+          },
+          "setEncoderType": {
+            "arguments": {
+              "action": "setEncoderType",
+              "value": {
+                "encoderNumber": 1,
+                "rotaryLinear": "Rotary"
+              }
+            }
+          },
+          "projectEncoderConfiguration": {
+            "arguments": {
+              "action": "projectEncoderConfiguration",
+              "value": {
+                "encoderNumber": 1,
+                "entries": {
+                  "<required configuration entry>": "<typed value>"
+                }
+              }
+            }
+          }
+        },
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ManageDriveSecurity": {
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "driveObjectNumber": {
+            "exampleValue": 0
+          },
+          "driveObjectIndex": {
+            "exampleValue": -1
+          },
+          "password": {
+            "exampleValue": "<password supplied for this target>",
+            "requiresBinding": true
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "activateUmac": {
+            "arguments": {
+              "action": "activateUmac"
+            }
+          },
+          "deactivateUmac": {
+            "arguments": {
+              "action": "deactivateUmac"
+            }
+          },
+          "activateEncryption": {
+            "arguments": {
+              "action": "activateEncryption",
+              "password": "<password supplied for this target>"
+            }
+          },
+          "deactivateEncryption": {
+            "arguments": {
+              "action": "deactivateEncryption",
+              "password": "<password supplied for this target>"
+            }
+          }
+        },
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ManageTechnologyExtensions": {
+        "arguments": {
+          "confirmUninstallInUse": false,
+          "dryRun": true,
+          "action": "read",
+          "devicePath": [
+            "<exact drive device>"
+          ],
+          "itemPath": [
+            "<exact drive/control unit item>"
+          ]
+        },
+        "parameters": {
+          "devicePath": {
+            "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+            "requiresBinding": true
+          },
+          "driveObjectNumber": {
+            "exampleValue": 0
+          },
+          "driveObjectIndex": {
+            "exampleValue": -1
+          },
+          "identifier": {
+            "exampleValue": "<identifier from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "filePath": {
+            "exampleValue": "C:\\Examples\\exports\\Main.xml"
+          },
+          "includeParameters": {
+            "exampleValue": false
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "activate": {
+            "arguments": {
+              "action": "activate",
+              "identifier": "<identifier from this operation's target or user input>"
+            }
+          },
+          "deactivate": {
+            "arguments": {
+              "action": "deactivate",
+              "identifier": "<identifier from this operation's target or user input>"
+            }
+          },
+          "readPackages": {
+            "arguments": {
+              "action": "readPackages"
+            }
+          },
+          "install": {
+            "arguments": {
+              "action": "install",
+              "filePath": "C:\\Examples\\exports\\Main.xml"
+            }
+          },
+          "installAndGetIdentifier": {
+            "arguments": {
+              "action": "installAndGetIdentifier",
+              "filePath": "C:\\Examples\\exports\\Main.xml"
+            }
+          },
+          "uninstall": {
+            "arguments": {
+              "action": "uninstall",
+              "identifier": "<identifier from this operation's target or user input>"
+            }
+          }
+        },
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ManageDriveHardwareModule": {
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "typeIdentifier": {
+            "exampleValue": "<exact TypeIdentifier from SearchHardwareCatalog>",
+            "requiresBinding": true
+          },
+          "positionNumber": {
+            "exampleValue": 2
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "changeType": {
+            "arguments": {
+              "action": "changeType",
+              "typeIdentifier": "<exact TypeIdentifier from SearchHardwareCatalog>"
+            }
+          },
+          "setPositionNumber": {
+            "arguments": {
+              "action": "setPositionNumber",
+              "positionNumber": 2
+            }
+          }
+        },
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ManageOnlineDriveFunctions": {
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
+          "confirmOnline": false,
+          "action": "read"
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "driveObjectNumber": {
+            "exampleValue": 0
+          },
+          "driveObjectIndex": {
+            "exampleValue": -1
+          },
+          "resetMode": {
+            "exampleValue": "ParameterReset"
+          },
+          "activationState": {
+            "exampleValue": "Deactivate"
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "performFactoryReset": {
+            "arguments": {
+              "action": "performFactoryReset"
+            }
+          },
+          "performRamToRomCopy": {
+            "arguments": {
+              "action": "performRamToRomCopy"
+            }
+          },
+          "changeActivationState": {
+            "arguments": {
+              "action": "changeActivationState",
+              "activationState": "Deactivate"
+            }
+          }
+        },
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ListDccCharts": {
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
+          "includeBlocks": false,
+          "includeLibraries": false,
+          "includePins": false
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "driveObjectNumber": {
+            "exampleValue": 0
+          },
+          "driveObjectIndex": {
+            "exampleValue": -1
+          },
+          "chartPath": {
+            "exampleValue": "Chart_1"
+          },
+          "maxDepth": {
+            "exampleValue": 3
+          },
+          "includeBlocks": {
+            "exampleValue": true
+          },
+          "includePins": {
+            "exampleValue": false
+          },
+          "includeLibraries": {
+            "exampleValue": true
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ManageDccChart": {
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
+          "dryRun": true,
+          "confirmDelete": false,
+          "action": "read"
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "chartName": {
+            "exampleValue": "Chart_1"
+          },
+          "filePath": {
+            "exampleValue": "C:\\Examples\\exports\\Main.xml"
+          },
+          "importOptions": {
+            "exampleValue": "<importOptions from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "properties": {
+            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "requiresBinding": true
+          },
+          "driveObjectIndex": {
+            "exampleValue": -1
+          },
+          "sequenceIndex": {
+            "exampleValue": -1
+          },
+          "driveObjectNumber": {
+            "exampleValue": 0
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "readSequence": {
+            "arguments": {
+              "action": "readSequence"
+            }
+          },
+          "create": {
+            "arguments": {
+              "action": "create",
+              "chartName": "Chart_1"
+            }
+          },
+          "update": {
+            "arguments": {
+              "action": "update",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
+              "chartName": "Chart_1"
+            }
+          },
+          "delete": {
+            "arguments": {
+              "action": "delete",
+              "chartName": "Chart_1"
+            }
+          },
+          "export": {
+            "arguments": {
+              "action": "export",
+              "filePath": "C:\\Examples\\exports\\Main.xml",
+              "chartName": "Chart_1"
+            }
+          },
+          "exportAll": {
+            "arguments": {
+              "action": "exportAll"
+            }
+          },
+          "import": {
+            "arguments": {
+              "action": "import",
+              "filePath": "C:\\Examples\\exports\\Main.xml",
+              "chartName": "Chart_1"
+            }
+          },
+          "optimizeSequence": {
+            "arguments": {
+              "action": "optimizeSequence"
+            }
+          },
+          "showEditor": {
+            "arguments": {
+              "action": "showEditor"
+            }
+          }
+        },
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ManageDccBlock": {
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
+          "chartPath": "Chart_1",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read",
+          "blockName": "FC_Example"
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "blockType": {
+            "exampleValue": "<block type from ListDccCharts>",
+            "requiresBinding": true
+          },
+          "libraryName": {
+            "exampleValue": ""
+          },
+          "properties": {
+            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "requiresBinding": true
+          },
+          "driveObjectNumber": {
+            "exampleValue": 0
+          },
+          "driveObjectIndex": {
+            "exampleValue": -1
+          },
+          "sequenceIndex": {
+            "exampleValue": -1
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "create": {
+            "arguments": {
+              "action": "create",
+              "blockName": "ADD_1",
+              "blockType": "<exact block type from ListDccCharts>",
+              "libraryName": "<library containing this block type>"
+            }
+          },
+          "update": {
+            "arguments": {
+              "action": "update",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
+            }
+          },
+          "delete": {
+            "arguments": {
+              "action": "delete"
+            }
+          },
+          "setAsPredecessor": {
+            "arguments": {
+              "action": "setAsPredecessor",
+              "sequenceIndex": -1
+            }
+          }
+        },
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ManageDccPin": {
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
+          "chartPath": "Chart_1",
+          "blockName": "FC_Example",
+          "pinName": "IN1",
+          "dryRun": true,
+          "action": "read"
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "properties": {
+            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "requiresBinding": true
+          },
+          "partner": {
+            "exampleValue": "{\"block\":\"ADD_2\",\"pin\":\"IN1\"}"
+          },
+          "setAsSignal": {
+            "exampleValue": false
+          },
+          "parameterNumber": {
+            "exampleValue": 1070
+          },
+          "arrayIndex": {
+            "exampleValue": 0
+          },
+          "driveObjectNumber": {
+            "exampleValue": 0
+          },
+          "driveObjectIndex": {
+            "exampleValue": -1
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "update": {
+            "arguments": {
+              "action": "update",
+              "properties": {
+                "Comment": "Example pin"
+              }
+            }
+          },
+          "connect": {
+            "arguments": {
+              "action": "connect",
+              "partner": {
+                "block": "ADD_2",
+                "pin": "IN1"
+              }
+            }
+          },
+          "disconnect": {
+            "arguments": {
+              "action": "disconnect",
+              "partner": {
+                "block": "ADD_2",
+                "pin": "IN1"
+              }
+            }
+          },
+          "publish": {
+            "arguments": {
+              "action": "publish",
+              "setAsSignal": true
+            }
+          },
+          "unpublish": {
+            "arguments": {
+              "action": "unpublish"
+            }
+          },
+          "updateParameter": {
+            "arguments": {
+              "action": "updateParameter",
+              "properties": {
+                "ParameterText": "Example"
+              }
+            }
+          }
+        },
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ManageDccChartInterface": {
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
+          "chartPath": "Chart_1",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "interfaceName": {
+            "exampleValue": "Server interface_1"
+          },
+          "sourceBlock": {
+            "exampleValue": "ADD_1"
+          },
+          "sourcePin": {
+            "exampleValue": "OUT"
+          },
+          "properties": {
+            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "requiresBinding": true
+          },
+          "driveObjectNumber": {
+            "exampleValue": 0
+          },
+          "driveObjectIndex": {
+            "exampleValue": -1
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "create": {
+            "arguments": {
+              "action": "create",
+              "interfaceName": "Input_1",
+              "sourceBlock": "ADD_1",
+              "sourcePin": "IN1"
+            }
+          },
+          "update": {
+            "arguments": {
+              "action": "update",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
+              "interfaceName": "Server interface_1"
+            }
+          },
+          "delete": {
+            "arguments": {
+              "action": "delete",
+              "interfaceName": "Server interface_1"
+            }
+          }
+        },
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ManageDccChartPartition": {
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
+          "chartPath": "Chart_1",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "partitionName": {
+            "exampleValue": "Partition_1"
+          },
+          "properties": {
+            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "requiresBinding": true
+          },
+          "driveObjectNumber": {
+            "exampleValue": 0
+          },
+          "driveObjectIndex": {
+            "exampleValue": -1
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "create": {
+            "arguments": {
+              "action": "create",
+              "partitionName": "Partition_1"
+            }
+          },
+          "update": {
+            "arguments": {
+              "action": "update",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
+              "partitionName": "Partition_1"
+            }
+          },
+          "delete": {
+            "arguments": {
+              "action": "delete",
+              "partitionName": "Partition_1"
+            }
+          }
+        },
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ManageDcbLibraries": {
+        "arguments": {
+          "dryRun": true,
+          "action": "read",
+          "devicePath": [
+            "<exact drive device>"
+          ],
+          "itemPath": [
+            "<exact drive/control unit item>"
+          ]
+        },
+        "parameters": {
+          "devicePath": {
+            "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+            "requiresBinding": true
+          },
+          "driveObjectNumber": {
+            "exampleValue": 0
+          },
+          "driveObjectIndex": {
+            "exampleValue": -1
+          },
+          "filePath": {
+            "exampleValue": "C:\\Examples\\exports\\Main.xml"
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "import": {
+            "arguments": {
+              "action": "import",
+              "filePath": "C:\\Examples\\exports\\Main.xml"
+            }
+          }
+        },
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "GetDccObject": {
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ]
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "objectPath": {
+            "exampleValue": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
+            "meaning": "JSON string encoding property steps: [{property,name?}]. A property is followed directly; name selects an exact member of that collection. This differs from devicePath name arrays."
+          },
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 100
+          },
+          "driveObjectIndex": {
+            "exampleValue": -1
+          },
+          "driveObjectNumber": {
+            "exampleValue": 0
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ManagePlcSafety": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "dryRun": true,
+          "confirmSafetyChange": false,
+          "action": "read"
+        },
+        "parameters": {
+          "runtimeGroup": {
+            "exampleValue": "<runtimeGroup from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "properties": {
+            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "requiresBinding": true
+          },
+          "password": {
+            "exampleValue": "<password supplied for this target>",
+            "requiresBinding": true
+          },
+          "mainSafetyBlockPath": {
+            "exampleValue": "<mainSafetyBlockPath from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "mainSafetyInstanceDbPath": {
+            "exampleValue": "<mainSafetyInstanceDbPath from this operation's target or user input>",
+            "requiresBinding": true
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "createRuntimeGroup": {
+            "arguments": {
+              "action": "createRuntimeGroup",
+              "runtimeGroup": "<runtimeGroup from this operation's target or user input>"
+            }
+          },
+          "deleteRuntimeGroup": {
+            "arguments": {
+              "action": "deleteRuntimeGroup",
+              "runtimeGroup": "<runtimeGroup from this operation's target or user input>"
+            }
+          },
+          "updateRuntimeGroup": {
+            "arguments": {
+              "action": "updateRuntimeGroup",
+              "runtimeGroup": "<runtimeGroup from this operation's target or user input>",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
+            }
+          },
+          "updateSettings": {
+            "arguments": {
+              "action": "updateSettings",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
+            }
+          },
+          "generateGlobalFIOStatusBlock": {
+            "arguments": {
+              "action": "generateGlobalFIOStatusBlock"
+            }
+          },
+          "cleanSystemGeneratedObjects": {
+            "arguments": {
+              "action": "cleanSystemGeneratedObjects"
+            }
+          },
+          "generateBaseId": {
+            "arguments": {
+              "action": "generateBaseId"
+            }
+          },
+          "login": {
+            "arguments": {
+              "action": "login",
+              "password": "<password supplied for this target>"
+            }
+          },
+          "logoff": {
+            "arguments": {
+              "action": "logoff"
+            }
+          },
+          "setPassword": {
+            "arguments": {
+              "action": "setPassword",
+              "password": "<password supplied for this target>"
+            }
+          },
+          "revokePassword": {
+            "arguments": {
+              "action": "revokePassword",
+              "password": "<password supplied for this target>"
+            }
+          }
+        },
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ManageSafetyGlobalSettings": {
+        "arguments": {
+          "dryRun": true,
+          "action": "update",
+          "properties": {
+            "SafetyModificationsPossible": true
+          }
+        },
+        "parameters": {
+          "properties": {
+            "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+            "requiresBinding": true
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "update": {
+            "arguments": {
+              "action": "update",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
+            }
+          }
+        },
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "GetSafetyBlockSignatures": {
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "parameters": {
+          "blockPath": {
+            "exampleValue": "Main"
+          },
+          "includeProgramSignatures": {
+            "exampleValue": true
+          },
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "ExportSafetyPrintout": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "filePath": "C:\\Examples\\exports\\Safety.pdf",
+          "dryRun": true
+        },
+        "parameters": {
+          "printer": {
+            "exampleValue": "MicrosoftPrintToPdf"
+          },
+          "option": {
+            "exampleValue": "All"
+          },
+          "documentLayout": {
+            "exampleValue": "<documentLayout from this operation's target or user input>",
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "notes": [
+          "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
+        ]
+      },
+      "GetOnlineDriveParameters": {
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ]
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "driveObjectNumber": {
+            "exampleValue": 0
+          },
+          "driveObjectIndex": {
+            "exampleValue": -1
+          },
+          "names": {
+            "exampleValue": "<names from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "numbers": {
+            "exampleValue": "<numbers from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "includeBits": {
+            "exampleValue": false
+          },
+          "includeEnumValues": {
+            "exampleValue": false
+          },
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 100
+          },
+          "includeValue": {
+            "exampleValue": true
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "notes": [
+          "Reads the connected drive through the API available on the selected release. V15.1–V19 use the Parameters view and V20/V21 use ReadParameters; this call never writes a parameter.",
+          "Use only a reviewed synthetic online target for acceptance. Native behavior remains current / NOT RUN."
+        ]
       }
     },
     "full-engine": {
@@ -26519,7 +28370,11 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "notes": [
+          "Reads the connected drive through the API available on the selected release. V15.1–V19 use the Parameters view and V20/V21 use ReadParameters; this call never writes a parameter.",
+          "Use only a reviewed synthetic online target for acceptance. Native behavior remains current / NOT RUN."
+        ]
       },
       "GetOpcUaAccessControl": {
         "arguments": {

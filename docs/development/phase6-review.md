@@ -545,7 +545,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ExportPlcWatchTable` | `ExportPlcWatchTable` | 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs) |
 | `ExportPlcWatchTablesToDirectory` | `ExportPlcWatchTablesToDirectory` | 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/PlcWatchTools.cs) |
 | `ExportProjectTexts` | `ExportProjectTexts` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/EngineeringServicesTools.cs) |
-| `ExportSafetyPrintout` | `ExportSafetyPrintout` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SafetyManagementTools.cs) |
+| `ExportSafetyPrintout` | `ExportSafetyPrintout` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/SafetyManagementTools.cs) |
 | `ExportScadaData` | `ExportScadaData` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs) |
 | `ExportTechnologyObject` | `ExportTechnologyObject` | 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) |
 | `ExportTechnologyObjectsToDirectory` | `ExportTechnologyObjectsToDirectory` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/PlcTechnologyTools.cs) |
@@ -561,7 +561,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `GeneratePlcDocumentation` | `GeneratePlcDocumentation` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/PlcDocumentationTools.cs) |
 | `GeneratePlcLoadableFile` | `GeneratePlcLoadableFile` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/NativeExchangeTools.cs) |
 | `GeneratePlcSourceFromBlocks` | `GeneratePlcSourceFromBlocks` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/PlcReadModifyTools.cs) |
-| `GenerateSiVArc` | `GenerateSivarc` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `GenerateSiVArc` | `GenerateSivarc` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/SivarcTools.cs) |
 | `GetAuthoringGuide` | `GetToolUsage` | 20, 21 | 原指南入口已删除；ToolUsageCatalog.GuideSelection 保留逐主题选择器映射；GetToolUsage 和 ToolRecipes.Rows 读取同一 Sequences/语言示例库，保留目的、前置条件、步骤、预期与说明，无原生动作。；[源码](../../src/Engine/ModelContextProtocol/Tools/ToolUsageTools.cs) |
 | `GetBlockInfo` | `GetPlcBlockInfo` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
 | `GetBlocks` | `ListPlcBlocks` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
@@ -659,20 +659,20 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageClassicHmiScript` | `ManageClassicHmiScript` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/MotionProDiagClassicHmiTools.cs) |
 | `ManageClassicHmiTextGraphicList` | `ManageClassicHmiTextGraphicList` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/MotionProDiagClassicHmiTools.cs) |
 | `ManageCommunicationConnection` | `ManageCommunicationConnection` | 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareServicesPortTools.cs) |
-| `ManageDcbLibraries` | `ManageDcbLibraries` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDccBlock` | `ManageDccBlock` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDccChart` | `ManageDccChart` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDccChartInterface` | `ManageDccChartInterface` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDccChartPartition` | `ManageDccChartPartition` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDccPin` | `ManageDccPin` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDcbLibraries` | `ManageDcbLibraries` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/DccTools.cs) |
+| `ManageDccBlock` | `ManageDccBlock` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/DccTools.cs) |
+| `ManageDccChart` | `ManageDccChart` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/DccTools.cs) |
+| `ManageDccChartInterface` | `ManageDccChartInterface` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/DccTools.cs) |
+| `ManageDccChartPartition` | `ManageDccChartPartition` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/DccTools.cs) |
+| `ManageDccPin` | `ManageDccPin` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/DccTools.cs) |
 | `ManageDeviceServiceObjects` | `ManageDeviceServiceObjects` | 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ManageDeviceUserGroup` | `ManageDeviceUserGroup` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `ManageDeviceUsers` | `ManageDeviceUsers` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareSecurityTools.cs) |
-| `ManageDriveFunctions` | `ManageDriveFunctions` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ManageDriveHardwareModule` | `ManageDriveHardwareModule` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ManageDriveSafetyAcceptanceTest` | `ManageDriveSafetyAcceptanceTest` | 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ManageDriveSecurity` | `ManageDriveSecurity` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ManageDriveTelegrams` | `ManageDriveTelegrams` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageDriveFunctions` | `ManageDriveFunctions` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/StartdriveTools.cs) |
+| `ManageDriveHardwareModule` | `ManageDriveHardwareModule` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/StartdriveTools.cs) |
+| `ManageDriveSafetyAcceptanceTest` | `ManageDriveSafetyAcceptanceTest` | 21 | 不变；符合命名规则；[源码](../../src/Shared/StartdriveTools.cs) |
+| `ManageDriveSecurity` | `ManageDriveSecurity` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/StartdriveTools.cs) |
+| `ManageDriveTelegrams` | `ManageDriveTelegrams` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/StartdriveTools.cs) |
 | `ManageGlobalLibrary` | `ManageGlobalLibrary` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/LibraryTools.cs) |
 | `ManageHardwareObject` | `ManageHardwareObject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareManagementTools.cs) |
 | `ManageHardwareUtilities` | `ManageHardwareUtilities` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareServicesPortTools.cs) |
@@ -684,7 +684,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageMotionAxis` | `ManageMotionAxis` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/PlcMotionTools.cs) |
 | `ManageMultiuserSession` | `ManageMultiuserSession` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/ProjectSecurityTools.cs) |
 | `ManageNetworkDomain` | `ManageNetworkDomain` | 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
-| `ManageOnlineDriveFunctions` | `ManageOnlineDriveFunctions` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageOnlineDriveFunctions` | `ManageOnlineDriveFunctions` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/StartdriveTools.cs) |
 | `ManageOpcUaAccessControl` | `ManageOpcUaAccessControl` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/OpcUaTools.cs) |
 | `ManageOpcUaInterface` | `ManageOpcUaInterface` | 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/OpcUaTools.cs) |
 | `ManagePasswordPolicy` | `ManagePasswordPolicy` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/SecurityDeepTools.cs) |
@@ -698,7 +698,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManagePlcExternalSources` | `ManagePlcExternalSources` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/PlcReadModifyTools.cs) |
 | `ManagePlcGitRepository` | `ManagePlcGitRepository` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/GitWorkflowTools.cs) |
 | `ManagePlcProtection` | `ManagePlcProtection` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareServicesTools.cs) |
-| `ManagePlcSafety` | `ManagePlcSafety` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SafetyManagementTools.cs) |
+| `ManagePlcSafety` | `ManagePlcSafety` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/SafetyManagementTools.cs) |
 | `ManagePlcSimAdvancedInstance` | `ManagePlcSimAdvancedInstance` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/PlcSimAdvancedTools.cs) |
 | `ManagePlcSoftwareUnit` | `ManagePlcSoftwareUnit` | 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/PlcIntegrityTools.cs) |
 | `ManagePlcSupervision` | `ManagePlcSupervision` | 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/PlcProDiagTools.cs) |
@@ -709,24 +709,24 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageProjectCompilationSettings` | `ManageProjectCompilationSettings` | 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/EngineeringServicesTools.cs) |
 | `ManageProjectLanguage` | `ManageProjectLanguage` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/EngineeringServicesTools.cs) |
 | `ManageProjectUserManagement` | `ManageProjectUserManagement` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/ProjectSecurityTools.cs) |
-| `ManageSafetyActivationTest` | `ManageSafetyActivationTest` | 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
-| `ManageSafetyActivationTestGroup` | `ManageSafetyActivationTestGroup` | 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
-| `ManageSafetyFunction` | `ManageSafetyFunction` | 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
-| `ManageSafetyFunctionCondition` | `ManageSafetyFunctionCondition` | 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
-| `ManageSafetyGlobalSettings` | `ManageSafetyGlobalSettings` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SafetyManagementTools.cs) |
-| `ManageSiVArcRule` | `ManageSivarcRule` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/OptionalEngineeringTools.cs) |
+| `ManageSafetyActivationTest` | `ManageSafetyActivationTest` | 21 | 不变；符合命名规则；[源码](../../src/Shared/SafetyValidationTools.cs) |
+| `ManageSafetyActivationTestGroup` | `ManageSafetyActivationTestGroup` | 21 | 不变；符合命名规则；[源码](../../src/Shared/SafetyValidationTools.cs) |
+| `ManageSafetyFunction` | `ManageSafetyFunction` | 21 | 不变；符合命名规则；[源码](../../src/Shared/SafetyValidationTools.cs) |
+| `ManageSafetyFunctionCondition` | `ManageSafetyFunctionCondition` | 21 | 不变；符合命名规则；[源码](../../src/Shared/SafetyValidationTools.cs) |
+| `ManageSafetyGlobalSettings` | `ManageSafetyGlobalSettings` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/SafetyManagementTools.cs) |
+| `ManageSiVArcRule` | `ManageSivarcRule` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/OptionalEngineeringTools.cs) |
 | `ManageSinumerikArchive` | `ManageSinumerikArchive` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs) |
 | `ManageSinumerikSafetyMode` | `ManageSinumerikSafetyMode` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs) |
-| `ManageSivarcBlockDefinition` | `ManageSivarcBlockDefinition` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
-| `ManageSivarcRuleContainer` | `ManageSivarcRuleContainer` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
-| `ManageSivarcScreenLayout` | `ManageSivarcScreenLayout` | 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
-| `ManageSivarcTableRule` | `ManageSivarcTableRule` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
-| `ManageStartdriveParameter` | `ManageStartdriveParameter` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageSivarcBlockDefinition` | `ManageSivarcBlockDefinition` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/SivarcTools.cs) |
+| `ManageSivarcRuleContainer` | `ManageSivarcRuleContainer` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/SivarcTools.cs) |
+| `ManageSivarcScreenLayout` | `ManageSivarcScreenLayout` | 21 | 不变；符合命名规则；[源码](../../src/Shared/SivarcTools.cs) |
+| `ManageSivarcTableRule` | `ManageSivarcTableRule` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/SivarcTools.cs) |
+| `ManageStartdriveParameter` | `ManageStartdriveParameter` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/StartdriveTools.cs) |
 | `ManageSyslogServers` | `ManageSyslogServers` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/SecurityDeepTools.cs) |
 | `ManageTeamcenterConnection` | `ManageTeamcenterConnection` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/TeamcenterTools.cs) |
 | `ManageTeamcenterDataset` | `ManageTeamcenterDataset` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/TeamcenterTools.cs) |
 | `ManageTeamcenterWorkflow` | `ManageTeamcenterWorkflow` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/TeamcenterTools.cs) |
-| `ManageTechnologyExtensions` | `ManageTechnologyExtensions` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageTechnologyExtensions` | `ManageTechnologyExtensions` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/StartdriveTools.cs) |
 | `ManageTechnologyObject` | `ManageTechnologyObject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/PlcTechnologyTools.cs) |
 | `ManageTestSuiteCase` | `ManageTestSuiteCase` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs) |
 | `ManageTransferArea` | `ManageTransferArea` | 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
@@ -768,12 +768,12 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ReadClassicHmiScreenTree` | `GetClassicHmiScreenTree` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/ClassicHmiFoldersTools.cs) |
 | `ReadClassicHmiScripts` | `ListClassicHmiScripts` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/MotionProDiagClassicHmiTools.cs) |
 | `ReadCommunicationConnections` | `ListCommunicationConnections` | 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareServicesPortTools.cs) |
-| `ReadDccCharts` | `ListDccCharts` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ReadDccObject` | `GetDccObject` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
+| `ReadDccCharts` | `ListDccCharts` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/DccTools.cs) |
+| `ReadDccObject` | `GetDccObject` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/DccTools.cs) |
 | `ReadDeviceAddressing` | `GetDeviceAddressing` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareAddressTools.cs) |
 | `ReadDeviceItemChannels` | `ListDeviceItemChannels` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareNetworkTools.cs) |
-| `ReadDriveObjects` | `ListDriveObjects` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ReadDriveParameters` | `GetDriveParameters` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ReadDriveObjects` | `ListDriveObjects` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/StartdriveTools.cs) |
+| `ReadDriveParameters` | `GetDriveParameters` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/StartdriveTools.cs) |
 | `ReadHardwareFeatures` | `GetHardwareFeatures` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ReadHmiScreenSnapshot` | `GetHmiScreenSnapshot` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HmiInspectionTools.cs) |
 | `ReadIoSystems` | `ListIoSystems` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareNetworkTools.cs) |
@@ -783,7 +783,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ReadNativeInvocationLog` | `GetNativeInvocationLog` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/EngineeringDiagnosticsTools.cs) |
 | `ReadNetworkDomains` | `ListNetworkDomains` | 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `ReadObjectIdentifier` | `GetObjectIdentifier` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/EngineeringServicesTools.cs) |
-| `ReadOnlineDriveParameters` | `GetOnlineDriveParameters` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ReadOnlineDriveParameters` | `GetOnlineDriveParameters` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/StartdriveTools.cs) |
 | `ReadOpcUaAccessControl` | `GetOpcUaAccessControl` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/OpcUaTools.cs) |
 | `ReadOpennessCompatibility` | `GetOpennessCompatibility` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/EngineeringDiagnosticsTools.cs) |
 | `ReadOpennessGuidance` | `GetOpennessGuidance` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/EcosystemTools.cs) |
@@ -810,11 +810,11 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ReadProjectProtection` | `GetProjectProtection` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/ProjectSecurityTools.cs) |
 | `ReadProjectSettings` | `GetProjectSettings` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/EngineeringServicesTools.cs) |
 | `ReadProjectUserManagement` | `GetProjectUserManagement` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/ProjectSecurityTools.cs) |
-| `ReadSafetyActivationTests` | `ListSafetyActivationTests` | 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
-| `ReadSafetyBlockSignatures` | `GetSafetyBlockSignatures` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/SafetyManagementTools.cs) |
-| `ReadSiVArcRules` | `ListSivarcRules` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/OptionalEngineeringTools.cs) |
-| `ReadSivarcBlockDefinitions` | `ListSivarcBlockDefinitions` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
-| `ReadSivarcRuleTree` | `GetSivarcRuleTree` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `ReadSafetyActivationTests` | `ListSafetyActivationTests` | 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/SafetyValidationTools.cs) |
+| `ReadSafetyBlockSignatures` | `GetSafetyBlockSignatures` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/SafetyManagementTools.cs) |
+| `ReadSiVArcRules` | `ListSivarcRules` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/OptionalEngineeringTools.cs) |
+| `ReadSivarcBlockDefinitions` | `ListSivarcBlockDefinitions` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/SivarcTools.cs) |
+| `ReadSivarcRuleTree` | `GetSivarcRuleTree` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/SivarcTools.cs) |
 | `ReadTechnologyObjectTree` | `GetTechnologyObjectTree` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/PlcTechnologyTools.cs) |
 | `ReadTestSuiteCases` | `ListTestSuiteCases` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs) |
 | `ReadToolBatch` | `RunReadOnlyToolBatch` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/McpServer.Batch.cs) |
@@ -846,7 +846,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `RenderPlcProgramAtlas` | `RenderPlcProgramAtlas` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 4.0 新增；P6-48；操作分类 FILE；[源码](../../src/Shared/Host/EcosystemTools.cs) |
 | `RenderPlcVisualDiff` | `RenderPlcVisualDiff` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/EcosystemTools.cs) |
 | `RepairAndReimportBlock` | `RepairAndReimportPlcBlock` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/PlcReadModifyTools.cs) |
-| `ResolveSivarcExpression` | `ResolveSivarcExpression` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `ResolveSivarcExpression` | `ResolveSivarcExpression` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/SivarcTools.cs) |
 | `RestartOpennessWorker` | `RestartOpennessWorker` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/McpServer.Worker.cs) |
 | `RetrieveProjectArchive` | `RetrieveProjectArchive` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/NativeExchangeTools.cs) |
 | `RunCapabilitySelfTest` | `RunCapabilitySelfTest` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DiagnosticsTools.cs) |
@@ -895,7 +895,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `UpdateUnifiedObjectProperties` | `SetUnifiedObjectProperties` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
 | `UpdateUnifiedPlantObject` | `SetUnifiedPlantObject` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
 | `UpdateUnifiedRuntimeSettings` | `SetUnifiedRuntimeSettings` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/RuntimeSettingsTools.cs) |
-| `UpgradeSivarcDefinitions` | `UpgradeSivarcDefinitions` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `UpgradeSivarcDefinitions` | `UpgradeSivarcDefinitions` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/SivarcTools.cs) |
 | `UploadDeviceParameters` | `UploadDeviceParameters` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/OnlineDownloadTools.cs) |
 | `UploadStationFromPlc` | `UploadStationFromPlc` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/OnlineDownloadTools.cs) |
 | `ValidateAutomationContext` | `ValidateAutomationContext` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) |
@@ -965,8 +965,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `GeneratePlcDocumentation` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `extensionsJson` → `extensions` | string | S | `string[]` | [入口及校验调用](../../src/Shared/Host/PlcDocumentationTools.cs) |
 | `GeneratePlcLoadableFile` | 20, 21 | `objectPathsJson` → `objectPaths` | string | S | `string[]` | [入口及校验调用](../../src/Shared/NativeExchangeTools.cs) |
 | `GeneratePlcSourceFromBlocks` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `blockPathsJson` → `blockPaths` | string | S | `string[]` | [入口及校验调用](../../src/Shared/PlcReadModifyTools.cs) |
-| `GenerateSiVArc` | 20, 21 | `additionalHmiDeviceNamesJson` → `additionalHmiDeviceNames` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
-| `GenerateSiVArc` | 20, 21 | `plcSoftwarePathsJson` → `plcSoftwarePaths` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `GenerateSiVArc` | 20, 21 | `additionalHmiDeviceNamesJson` → `additionalHmiDeviceNames` | string | S | `string[]` | [入口及校验调用](../../src/Shared/SivarcTools.cs) |
+| `GenerateSiVArc` | 20, 21 | `plcSoftwarePathsJson` → `plcSoftwarePaths` | string | S | `string[]` | [入口及校验调用](../../src/Shared/SivarcTools.cs) |
 | `GetUnifiedCrossReferences` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
 | `ImportPlcAlarmInstanceTexts` | 16, 17, 18, 19, 20, 21 | `culturesJson` → `cultures` | string | S | `string[]` | [入口及校验调用](../../src/Shared/AlarmsTools.cs) |
 | `ImportSinumerikAlarmTexts` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs) |
@@ -983,41 +983,41 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageCommunicationConnection` | 21 | `partnerDevicePathJson` → `partnerDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ManageCommunicationConnection` | 21 | `partnerInterfaceItemPathJson` → `partnerInterfaceItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ManageCommunicationConnection` | 21 | `partnerItemPathJson` → `partnerItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
-| `ManageDcbLibraries` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDcbLibraries` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDccBlock` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDccBlock` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDccBlock` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDccChart` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDccChart` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDccChart` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDccChartInterface` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDccChartInterface` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDccChartInterface` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDccChartPartition` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDccChartPartition` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDccChartPartition` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDccPin` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDccPin` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDccPin` | 20, 21 | `partnerJson` → `partner` | string | X | `DccPartnerSpec(action)` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDccPin` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDcbLibraries` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/DccTools.cs) |
+| `ManageDcbLibraries` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/DccTools.cs) |
+| `ManageDccBlock` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/DccTools.cs) |
+| `ManageDccBlock` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/DccTools.cs) |
+| `ManageDccBlock` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/DccTools.cs) |
+| `ManageDccChart` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/DccTools.cs) |
+| `ManageDccChart` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/DccTools.cs) |
+| `ManageDccChart` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/DccTools.cs) |
+| `ManageDccChartInterface` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/DccTools.cs) |
+| `ManageDccChartInterface` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/DccTools.cs) |
+| `ManageDccChartInterface` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/DccTools.cs) |
+| `ManageDccChartPartition` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/DccTools.cs) |
+| `ManageDccChartPartition` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/DccTools.cs) |
+| `ManageDccChartPartition` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/DccTools.cs) |
+| `ManageDccPin` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/DccTools.cs) |
+| `ManageDccPin` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/DccTools.cs) |
+| `ManageDccPin` | 20, 21 | `partnerJson` → `partner` | string | X | `DccPartnerSpec(action)` | [入口及校验调用](../../src/Shared/DccTools.cs) |
+| `ManageDccPin` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/DccTools.cs) |
 | `ManageDeviceServiceObjects` | 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ManageDeviceServiceObjects` | 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ManageDeviceServiceObjects` | 18, 19, 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ManageDeviceUsers` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareSecurityTools.cs) |
 | `ManageDeviceUsers` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareSecurityTools.cs) |
 | `ManageDeviceUsers` | 20, 21 | `permissionsJson` → `permissions` | string | S | `string[]` | [入口及校验调用](../../src/Shared/HardwareSecurityTools.cs) |
-| `ManageDriveFunctions` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ManageDriveFunctions` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ManageDriveFunctions` | 20, 21 | `valueJson` → `value` | string | V | `NativeValue` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ManageDriveHardwareModule` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ManageDriveHardwareModule` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ManageDriveSafetyAcceptanceTest` | 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ManageDriveSafetyAcceptanceTest` | 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ManageDriveSecurity` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ManageDriveSecurity` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ManageDriveTelegrams` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ManageDriveTelegrams` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageDriveFunctions` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ManageDriveFunctions` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ManageDriveFunctions` | 20, 21 | `valueJson` → `value` | string | V | `NativeValue` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ManageDriveHardwareModule` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ManageDriveHardwareModule` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ManageDriveSafetyAcceptanceTest` | 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ManageDriveSafetyAcceptanceTest` | 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ManageDriveSecurity` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ManageDriveSecurity` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ManageDriveTelegrams` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ManageDriveTelegrams` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
 | `ManageHardwareObject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `destinationDevicePathJson` → `destinationDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareManagementTools.cs) |
 | `ManageHardwareObject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `destinationItemPathJson` → `destinationItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareManagementTools.cs) |
 | `ManageHardwareObject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareManagementTools.cs) |
@@ -1036,8 +1036,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageNetworkDomain` | 16, 17, 18, 19, 20, 21 | `participantDevicePathJson` → `participantDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
 | `ManageNetworkDomain` | 16, 17, 18, 19, 20, 21 | `participantItemPathJson` → `participantItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
 | `ManageNetworkDomain` | 16, 17, 18, 19, 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
-| `ManageOnlineDriveFunctions` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ManageOnlineDriveFunctions` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageOnlineDriveFunctions` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ManageOnlineDriveFunctions` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
 | `ManageOpcUaAccessControl` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/OpcUaTools.cs) |
 | `ManagePasswordPolicy` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/SecurityDeepTools.cs) |
 | `ManagePlcCertificate` | 20, 21 | `assignmentItemPathJson` → `assignmentItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/CertificateManagementTools.cs) |
@@ -1048,7 +1048,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManagePlcGitRepository` | 20, 21 | `filesJson` → `files` | string | S | `string[]` | [入口及校验调用](../../src/Shared/Host/GitWorkflowTools.cs) |
 | `ManagePlcProtection` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesTools.cs) |
 | `ManagePlcProtection` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesTools.cs) |
-| `ManagePlcSafety` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SafetyManagementTools.cs) |
+| `ManagePlcSafety` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/SafetyManagementTools.cs) |
 | `ManagePlcSoftwareUnit` | 16, 17, 18, 19, 20, 21 | `commentsJson` → `comments` | string | L | `map<string,string>` | [入口及校验调用](../../src/Shared/PlcIntegrityTools.cs) |
 | `ManagePlcSoftwareUnit` | 16, 17, 18, 19, 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/PlcIntegrityTools.cs) |
 | `ManagePlcSupervision` | 17, 18, 19, 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/PlcProDiagTools.cs) |
@@ -1060,29 +1060,29 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageProjectCompilationSettings` | 16, 17, 18, 19, 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/EngineeringServicesTools.cs) |
 | `ManageProjectUserManagement` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/ProjectSecurityTools.cs) |
 | `ManageProjectUserManagement` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/ProjectSecurityTools.cs) |
-| `ManageSafetyActivationTest` | 21 | `groupPathJson` → `groupPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
-| `ManageSafetyActivationTestGroup` | 21 | `groupPathJson` → `groupPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
-| `ManageSafetyFunction` | 21 | `groupPathJson` → `groupPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
-| `ManageSafetyFunction` | 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
-| `ManageSafetyFunctionCondition` | 21 | `groupPathJson` → `groupPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
-| `ManageSafetyFunctionCondition` | 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
-| `ManageSafetyGlobalSettings` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SafetyManagementTools.cs) |
-| `ManageSiVArcRule` | 20, 21 | `collectionPathJson` → `collectionPath` | string | P | `PropertyStep[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/OptionalEngineeringTools.cs) |
-| `ManageSiVArcRule` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/OptionalEngineeringTools.cs) |
+| `ManageSafetyActivationTest` | 21 | `groupPathJson` → `groupPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/SafetyValidationTools.cs) |
+| `ManageSafetyActivationTestGroup` | 21 | `groupPathJson` → `groupPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/SafetyValidationTools.cs) |
+| `ManageSafetyFunction` | 21 | `groupPathJson` → `groupPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/SafetyValidationTools.cs) |
+| `ManageSafetyFunction` | 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/SafetyValidationTools.cs) |
+| `ManageSafetyFunctionCondition` | 21 | `groupPathJson` → `groupPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/SafetyValidationTools.cs) |
+| `ManageSafetyFunctionCondition` | 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/SafetyValidationTools.cs) |
+| `ManageSafetyGlobalSettings` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/SafetyManagementTools.cs) |
+| `ManageSiVArcRule` | 20, 21 | `collectionPathJson` → `collectionPath` | string | P | `PropertyStep[]` | [入口及校验调用](../../src/Shared/OptionalEngineeringTools.cs) |
+| `ManageSiVArcRule` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/OptionalEngineeringTools.cs) |
 | `ManageSinumerikArchive` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs) |
 | `ManageSinumerikArchive` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs) |
 | `ManageSinumerikArchive` | 20, 21 | `modifiedDevicePathJson` → `modifiedDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs) |
 | `ManageSinumerikArchive` | 20, 21 | `modifiedItemPathJson` → `modifiedItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs) |
 | `ManageSinumerikSafetyMode` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs) |
-| `ManageSivarcBlockDefinition` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
-| `ManageSivarcBlockDefinition` | 20, 21 | `textsJson` → `texts` | string | L | `map<string,string>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
-| `ManageSivarcTableRule` | 20, 21 | `deviceNamesJson` → `deviceNames` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
-| `ManageSivarcTableRule` | 20, 21 | `deviceSelectionJson` → `deviceSelection` | string | X | `map<string,bool>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
-| `ManageSivarcTableRule` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
-| `ManageSivarcTableRule` | 20, 21 | `referencesJson` → `references` | string | X | `map<string,SivarcReference\|null>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
-| `ManageStartdriveParameter` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ManageStartdriveParameter` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ManageStartdriveParameter` | 20, 21 | `valueJson` → `value` | string | V | `NativeValue` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageSivarcBlockDefinition` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/SivarcTools.cs) |
+| `ManageSivarcBlockDefinition` | 20, 21 | `textsJson` → `texts` | string | L | `map<string,string>` | [入口及校验调用](../../src/Shared/SivarcTools.cs) |
+| `ManageSivarcTableRule` | 20, 21 | `deviceNamesJson` → `deviceNames` | string | S | `string[]` | [入口及校验调用](../../src/Shared/SivarcTools.cs) |
+| `ManageSivarcTableRule` | 20, 21 | `deviceSelectionJson` → `deviceSelection` | string | X | `map<string,bool>` | [入口及校验调用](../../src/Shared/SivarcTools.cs) |
+| `ManageSivarcTableRule` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/SivarcTools.cs) |
+| `ManageSivarcTableRule` | 20, 21 | `referencesJson` → `references` | string | X | `map<string,SivarcReference\|null>` | [入口及校验调用](../../src/Shared/SivarcTools.cs) |
+| `ManageStartdriveParameter` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ManageStartdriveParameter` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ManageStartdriveParameter` | 20, 21 | `valueJson` → `value` | string | V | `NativeValue` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
 | `ManageSyslogServers` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/SecurityDeepTools.cs) |
 | `ManageSyslogServers` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/SecurityDeepTools.cs) |
 | `ManageSyslogServers` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/SecurityDeepTools.cs) |
@@ -1090,8 +1090,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageTeamcenterWorkflow` | 20, 21 | `customAttributesJson` → `customAttributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/TeamcenterTools.cs) |
 | `ManageTeamcenterWorkflow` | 20, 21 | `itemDetailsJson` → `itemDetails` | string | X | `TeamcenterItemSpec` | [入口及校验调用](../../src/Shared/TeamcenterTools.cs) |
 | `ManageTeamcenterWorkflow` | 20, 21 | `revisionDetailsJson` → `revisionDetails` | string | X | `TeamcenterRevisionSpec` | [入口及校验调用](../../src/Shared/TeamcenterTools.cs) |
-| `ManageTechnologyExtensions` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ManageTechnologyExtensions` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageTechnologyExtensions` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ManageTechnologyExtensions` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
 | `ManageTechnologyObject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `valueJson` → `value` | string | V | `NativeValue` | [入口及校验调用](../../src/Shared/PlcTechnologyTools.cs) |
 | `ManageTestSuiteCase` | 20, 21 | `scopeJson` → `scope` | string | X | `TestScope[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs) |
 | `ManageTransferArea` | 15.1, 16, 17, 18, 19, 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
@@ -1131,40 +1131,40 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `PreviewToolBatch` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `operationsJson` → `operations` | string | C | `ToolCall[]` | [入口及校验调用](../../src/Shared/Host/McpServer.Batch.cs) |
 | `ReadCommunicationConnections` | 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ReadCommunicationConnections` | 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
-| `ReadDccCharts` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ReadDccCharts` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ReadDccObject` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ReadDccObject` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ReadDccObject` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
+| `ReadDccCharts` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/DccTools.cs) |
+| `ReadDccCharts` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/DccTools.cs) |
+| `ReadDccObject` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/DccTools.cs) |
+| `ReadDccObject` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/DccTools.cs) |
+| `ReadDccObject` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../src/Shared/DccTools.cs) |
 | `ReadDeviceAddressing` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareAddressTools.cs) |
 | `ReadDeviceAddressing` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareAddressTools.cs) |
 | `ReadDeviceItemChannels` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `attributeNamesJson` → `attributeNames` | string | S | `string[]` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
 | `ReadDeviceItemChannels` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
 | `ReadDeviceItemChannels` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
-| `ReadDriveObjects` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ReadDriveObjects` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ReadDriveParameters` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ReadDriveParameters` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ReadDriveParameters` | 20, 21 | `namesJson` → `names` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ReadDriveParameters` | 20, 21 | `numbersJson` → `numbers` | string | N | `ParameterRef[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ReadDriveObjects` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ReadDriveObjects` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ReadDriveParameters` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ReadDriveParameters` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ReadDriveParameters` | 20, 21 | `namesJson` → `names` | string | S | `string[]` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ReadDriveParameters` | 20, 21 | `numbersJson` → `numbers` | string | N | `ParameterRef[]` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
 | `ReadHardwareFeatures` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ReadHardwareFeatures` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ReadIoSystems` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
 | `ReadIoSystems` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
 | `ReadObjectIdentifier` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/EngineeringServicesTools.cs) |
 | `ReadObjectIdentifier` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/EngineeringServicesTools.cs) |
-| `ReadOnlineDriveParameters` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ReadOnlineDriveParameters` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ReadOnlineDriveParameters` | 20, 21 | `namesJson` → `names` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ReadOnlineDriveParameters` | 20, 21 | `numbersJson` → `numbers` | string | N | `ParameterRef[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ReadOnlineDriveParameters` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ReadOnlineDriveParameters` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ReadOnlineDriveParameters` | 20, 21 | `namesJson` → `names` | string | S | `string[]` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
+| `ReadOnlineDriveParameters` | 20, 21 | `numbersJson` → `numbers` | string | N | `ParameterRef[]` | [入口及校验调用](../../src/Shared/StartdriveTools.cs) |
 | `ReadPlcLiveValuesOpcUa` | 20, 21 | `nodeIdsJson` → `nodeIds` | string | S | `string[]` | [入口及校验调用](../../src/Shared/Host/RuntimeTools.cs) |
 | `ReadPlcLiveValuesS7` | 20, 21 | `itemsJson` → `items` | string | S | `string[]` | [入口及校验调用](../../src/Shared/Host/RuntimeTools.cs) |
 | `ReadPlcSimAdvancedTags` | 20, 21 | `namesJson` → `names` | string | S | `string[]` | [入口及校验调用](../../src/Shared/PlcSimAdvancedTools.cs) |
 | `ReadPlcWebVars` | 20, 21 | `varsJson` → `vars` | string | S | `string[]` | [入口及校验调用](../../src/Shared/Host/RuntimeChannelTools.cs) |
 | `ReadProjectUserManagement` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/ProjectSecurityTools.cs) |
 | `ReadProjectUserManagement` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/ProjectSecurityTools.cs) |
-| `ReadSafetyActivationTests` | 21 | `groupPathJson` → `groupPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
-| `ReadSiVArcRules` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/OptionalEngineeringTools.cs) |
+| `ReadSafetyActivationTests` | 21 | `groupPathJson` → `groupPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/SafetyValidationTools.cs) |
+| `ReadSiVArcRules` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../src/Shared/OptionalEngineeringTools.cs) |
 | `ReadToolBatch` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `operationsJson` → `operations` | string | C | `ToolCall[]` | [入口及校验调用](../../src/Shared/Host/McpServer.Batch.cs) |
 | `ReadTransferAreas` | 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
 | `ReadTransferAreas` | 15.1, 16, 17, 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
@@ -1176,8 +1176,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ReadUnifiedRuntimeSettings` | 20, 21 | `fieldsJson` → `fields` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/RuntimeSettingsTools.cs) |
 | `ReadUnifiedRuntimeTags` | 20, 21 | `tagsJson` → `tags` | string | S | `string[]` | [入口及校验调用](../../src/Shared/Host/RuntimeChannelTools.cs) |
 | `ReadUnifiedScreenBranch` | 20, 21 | `branchJson` → `branch` | string | P | `BranchStep[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/MigrationReadTools.cs) |
-| `ResolveSivarcExpression` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
-| `ResolveSivarcExpression` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `ResolveSivarcExpression` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/SivarcTools.cs) |
+| `ResolveSivarcExpression` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/SivarcTools.cs) |
 | `RunPlcCompanionTool` | 20, 21 | `argumentsJson` → `arguments` | string | S | `string[]` | [入口及校验调用](../../src/Shared/Host/EcosystemTools.cs) |
 | `RunPlcSimAdvancedTestScenario` | 20, 21 | `scenarioJson` → `scenario` | string | D | `PlcSimScenario` | [入口及校验调用](../../src/Shared/PlcSimAdvancedTools.cs) |
 | `RunTestSuiteCase` | 20, 21 | `namesJson` → `names` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs) |
@@ -1556,15 +1556,15 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [Siemens/ProjectSecurityLogic.cs](../../src/Engine/Siemens/ProjectSecurityLogic.cs):62 | `if (names.Count < 1 \|\| names.Count > 64 \|\| names.Any(n => n is not JsonValue \|\| string.IsNullOrWhiteSpace(n!.GetValue<string>()))) throw new ArgumentException("devicePathJson needs 1-64 exact nonempty names.");` |
 | [Siemens/SecurityDeepLogic.cs](../../src/Engine/Siemens/SecurityDeepLogic.cs):155 | `if (array.Count > 64) throw new ArgumentException("At most 64 subject alternative names.");` |
 | [Siemens/SecurityDeepLogic.cs](../../src/Engine/Siemens/SecurityDeepLogic.cs):161 | `if (string.IsNullOrWhiteSpace(value) \|\| value.Length > 255) throw new ArgumentException("Subject alternative name value must be 1..255 chars.");` |
-| [Siemens/StartdriveLogic.cs](../../src/Engine/Siemens/StartdriveLogic.cs):16 | `private static void RequireText(string value, string parameter, int max = 256)` |
-| [Siemens/StartdriveLogic.cs](../../src/Engine/Siemens/StartdriveLogic.cs):91 | `if (selector.Names.Any(n => string.IsNullOrWhiteSpace(n) \|\| n.Length > 64) \|\| selector.Names.Distinct(StringComparer.Ordinal).Count() != selector.Names.Length) throw new ArgumentException("namesJson needs distinct nonempty parameter names such as p1000[0], r47 or p2080[0].6.");` |
-| [Siemens/StartdriveLogic.cs](../../src/Engine/Siemens/StartdriveLogic.cs):104 | `if (selector.Names.Length + selector.Numbers.Length > 200) throw new ArgumentException("At most 200 parameters per call.");` |
-| [Siemens/StartdriveLogic.cs](../../src/Engine/Siemens/StartdriveLogic.cs):117 | `if (string.IsNullOrEmpty(name) \|\| name.Length > 64) return false;` |
-| [Siemens/StartdriveLogic.cs](../../src/Engine/Siemens/StartdriveLogic.cs):179 | `RequireText(softwarePath, "softwarePath"); RequireText(objectPath, "objectPath", 1024); EngineeringGroupOperations.Parts(objectPath);` |
-| [Siemens/StartdriveLogic.cs](../../src/Engine/Siemens/StartdriveLogic.cs):260 | `if (entries.Count == 0 \|\| entries.Count > 200) throw new ArgumentException("valueJson.entries needs 1..200 entries.");` |
-| [Siemens/StartdriveLogic.cs](../../src/Engine/Siemens/StartdriveLogic.cs):296 | `RequireText(filePath, "filePath", 1024);` |
-| [Siemens/StartdriveLogic.cs](../../src/Engine/Siemens/StartdriveLogic.cs):310 | `if (action == "changeType") { RequireText(typeIdentifier, "typeIdentifier"); if (!typeIdentifier.StartsWith("OrderNumber:", StringComparison.Ordinal) && !typeIdentifier.StartsWith("GSD:", StringComparison.Ordinal) && !typeIdentifier.StartsWith("System:", StringComparison.Ordinal)) throw new ArgumentException("typeIdentifier must be an official TypeIdentifier such as OrderNumber:6SL3120-2TE21-8Axx//10014."); }` |
-| [Siemens/StartdriveLogic.cs](../../src/Engine/Siemens/StartdriveLogic.cs):323 | `if (action == "createProtocol") { RequireText(filePath, "filePath", 1024); RequireOneOf(fileOperation, FileOperations, "fileOperation"); }` |
+| [Siemens/StartdriveLogic.cs](../../src/Logic/Siemens/StartdriveLogic.cs):16 | `private static void RequireText(string value, string parameter, int max = 256)` |
+| [Siemens/StartdriveLogic.cs](../../src/Logic/Siemens/StartdriveLogic.cs):91 | `if (selector.Names.Any(n => string.IsNullOrWhiteSpace(n) \|\| n.Length > 64) \|\| selector.Names.Distinct(StringComparer.Ordinal).Count() != selector.Names.Length) throw new ArgumentException("namesJson needs distinct nonempty parameter names such as p1000[0], r47 or p2080[0].6.");` |
+| [Siemens/StartdriveLogic.cs](../../src/Logic/Siemens/StartdriveLogic.cs):104 | `if (selector.Names.Length + selector.Numbers.Length > 200) throw new ArgumentException("At most 200 parameters per call.");` |
+| [Siemens/StartdriveLogic.cs](../../src/Logic/Siemens/StartdriveLogic.cs):117 | `if (string.IsNullOrEmpty(name) \|\| name.Length > 64) return false;` |
+| [Siemens/StartdriveLogic.cs](../../src/Logic/Siemens/StartdriveLogic.cs):179 | `RequireText(softwarePath, "softwarePath"); RequireText(objectPath, "objectPath", 1024); EngineeringGroupOperations.Parts(objectPath);` |
+| [Siemens/StartdriveLogic.cs](../../src/Logic/Siemens/StartdriveLogic.cs):260 | `if (entries.Count == 0 \|\| entries.Count > 200) throw new ArgumentException("valueJson.entries needs 1..200 entries.");` |
+| [Siemens/StartdriveLogic.cs](../../src/Logic/Siemens/StartdriveLogic.cs):296 | `RequireText(filePath, "filePath", 1024);` |
+| [Siemens/StartdriveLogic.cs](../../src/Logic/Siemens/StartdriveLogic.cs):310 | `if (action == "changeType") { RequireText(typeIdentifier, "typeIdentifier"); if (!typeIdentifier.StartsWith("OrderNumber:", StringComparison.Ordinal) && !typeIdentifier.StartsWith("GSD:", StringComparison.Ordinal) && !typeIdentifier.StartsWith("System:", StringComparison.Ordinal)) throw new ArgumentException("typeIdentifier must be an official TypeIdentifier such as OrderNumber:6SL3120-2TE21-8Axx//10014."); }` |
+| [Siemens/StartdriveLogic.cs](../../src/Logic/Siemens/StartdriveLogic.cs):323 | `if (action == "createProtocol") { RequireText(filePath, "filePath", 1024); RequireOneOf(fileOperation, FileOperations, "fileOperation"); }` |
 | [Siemens/ToolTransactionRules.cs](../../src/Engine/Siemens/ToolTransactionRules.cs):17 | `if (array.Count < 1 \|\| array.Count > 20) throw new ArgumentException("callsJson needs 1..20 tool calls.");` |
 | [Siemens/ToolTransactionRules.cs](../../src/Engine/Siemens/ToolTransactionRules.cs):33 | `if (string.IsNullOrWhiteSpace(text) \|\| text.Length > 200) throw new ArgumentException("text (the undo description shown in TIA) must be 1..200 characters; TIA refuses an empty one.");` |
 | [OfflineBlockCompositionBuilders.cs](../../src/FoundationHost/OfflineBlockCompositionBuilders.cs):19 | `if (string.IsNullOrWhiteSpace(json) \|\| json.Length > OfflineCompositionBuilders.MaxJsonCharacters) throw new ArgumentException("Invalid JSON size.");` |
@@ -2074,15 +2074,15 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | P6-11 | [ModelContextProtocol/Tools/McpServer.Patch.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Patch.cs)<br>[ModelContextProtocol/Tools/NativeExchangeTools.cs](../../src/Shared/NativeExchangeTools.cs)<br>[ModelContextProtocol/Tools/PlcExternalSourcesTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs)<br>[src/Shared/DocumentsTools.cs](../../src/Shared/DocumentsTools.cs)<br>[src/Shared/Host/ExportTools.cs](../../src/Shared/Host/ExportTools.cs) | 15 |
 | P6-12 | [ModelContextProtocol/Tools/DevicesTools.cs](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs)<br>[src/Shared/HardwareAddressTools.cs](../../src/Shared/HardwareAddressTools.cs)<br>[src/Shared/HardwareAmlTools.cs](../../src/Shared/HardwareAmlTools.cs)<br>[src/Shared/HardwareDevicesTools.cs](../../src/Shared/HardwareDevicesTools.cs)<br>[src/Shared/HardwareManagementTools.cs](../../src/Shared/HardwareManagementTools.cs)<br>[src/Shared/ModulesTools.cs](../../src/Shared/ModulesTools.cs) | 26 |
 | P6-13 | [ModelContextProtocol/Tools/HardwareNetworkTools.cs](../../src/Shared/HardwareSecurityTools.cs)<br>[ModelContextProtocol/Tools/HardwareServicesTools.cs](../../src/Shared/HardwareServicesTools.cs)<br>[src/Shared/HardwareNetworkTools.cs](../../src/Shared/HardwareNetworkTools.cs)<br>[src/Shared/HardwareServicesPortTools.cs](../../src/Shared/HardwareServicesPortTools.cs)<br>[src/Shared/PlcCompilePortTools.cs](../../src/Shared/PlcCompilePortTools.cs) | 31 |
-| P6-14 | [ModelContextProtocol/Tools/CertificateManagementTools.cs](../../src/Shared/CertificateManagementTools.cs)<br>[ModelContextProtocol/Tools/ProjectSecurityTools.cs](../../src/Shared/ProjectSecurityTools.cs)<br>[ModelContextProtocol/Tools/SafetyManagementTools.cs](../../src/Engine/ModelContextProtocol/Tools/SafetyManagementTools.cs)<br>[ModelContextProtocol/Tools/SafetyValidationTools.cs](../../src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs)<br>[ModelContextProtocol/Tools/SecurityDeepTools.cs](../../src/Shared/SecurityDeepTools.cs) | 17 |
+| P6-14 | [ModelContextProtocol/Tools/CertificateManagementTools.cs](../../src/Shared/CertificateManagementTools.cs)<br>[ModelContextProtocol/Tools/ProjectSecurityTools.cs](../../src/Shared/ProjectSecurityTools.cs)<br>[ModelContextProtocol/Tools/SafetyManagementTools.cs](../../src/Shared/SafetyManagementTools.cs)<br>[ModelContextProtocol/Tools/SafetyValidationTools.cs](../../src/Shared/SafetyValidationTools.cs)<br>[ModelContextProtocol/Tools/SecurityDeepTools.cs](../../src/Shared/SecurityDeepTools.cs) | 17 |
 | P6-15 | [ModelContextProtocol/Tools/TechnologyObjectsTools.cs](../../src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs)<br>[src/Shared/AlarmsTools.cs](../../src/Shared/AlarmsTools.cs)<br>[src/Shared/OpcUaTools.cs](../../src/Shared/OpcUaTools.cs)<br>[src/Shared/PlcIntegrityTools.cs](../../src/Shared/PlcIntegrityTools.cs)<br>[src/Shared/PlcTechnologyTools.cs](../../src/Shared/PlcTechnologyTools.cs)<br>[src/Shared/SoftwareUnitDeepTools.cs](../../src/Shared/SoftwareUnitDeepTools.cs) | 30 |
 | P6-16 | [ModelContextProtocol/Tools/ClassicHmiFoldersTools.cs](../../src/Shared/ClassicHmiFoldersTools.cs)<br>[ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs](../../src/Shared/MotionProDiagClassicHmiTools.cs)<br>[src/Shared/PlcMotionTools.cs](../../src/Shared/PlcMotionTools.cs)<br>[src/Shared/PlcProDiagTools.cs](../../src/Shared/PlcProDiagTools.cs) | 16 |
 | P6-17 | [ModelContextProtocol/Tools/UnifiedHmiGroupsTools.cs](../../src/Shared/UnifiedHmiGroupsTools.cs)<br>[ModelContextProtocol/Tools/UnifiedHmiTools.cs](../../src/Shared/UnifiedHmiTools.cs)<br>[ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs](../../src/Shared/UnifiedScreenItemsTools.cs)<br>[ModelContextProtocol/Tools/UnifiedUiModelTools.cs](../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs)<br>[src/Shared/HmiOfflineTools.cs](../../src/Shared/HmiOfflineTools.cs) | 36 |
 | P6-18 | [ModelContextProtocol/Tools/HmiExchangeTools.cs](../../src/Shared/HmiExchangeTools.cs)<br>[ModelContextProtocol/Tools/HmiTagDeletionTools.cs](../../src/Shared/HmiTagDeletionTools.cs)<br>[ModelContextProtocol/Tools/UnifiedExchangeTools.cs](../../src/Engine/ModelContextProtocol/Tools/UnifiedExchangeTools.cs) | 17 |
 | P6-19 | [ModelContextProtocol/Tools/GlobalScriptEditTools.cs](../../src/Engine/ModelContextProtocol/Tools/GlobalScriptEditTools.cs)<br>[ModelContextProtocol/Tools/GraphicSelectionTools.cs](../../src/Engine/ModelContextProtocol/Tools/GraphicSelectionTools.cs)<br>[ModelContextProtocol/Tools/HmiDescribeTools.cs](../../src/Shared/HmiDescribeTools.cs)<br>[ModelContextProtocol/Tools/HmiInspectionTools.cs](../../src/Shared/HmiInspectionTools.cs)<br>[ModelContextProtocol/Tools/MigrationReadTools.cs](../../src/Engine/ModelContextProtocol/Tools/MigrationReadTools.cs)<br>[ModelContextProtocol/Tools/UnifiedEngineeringTools.cs](../../src/Engine/ModelContextProtocol/Tools/UnifiedEngineeringTools.cs)<br>[ModelContextProtocol/Tools/UnifiedEventsTools.cs](../../src/Engine/ModelContextProtocol/Tools/UnifiedEventsTools.cs)<br>[ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs)<br>[src/Shared/ReflectionTools.cs](../../src/Shared/ReflectionTools.cs) | 48 |
-| P6-20 | [ModelContextProtocol/Tools/CfcTools.cs](../../src/Engine/ModelContextProtocol/Tools/CfcTools.cs)<br>[ModelContextProtocol/Tools/OptionalEngineeringTools.cs](../../src/Engine/ModelContextProtocol/Tools/OptionalEngineeringTools.cs)<br>[ModelContextProtocol/Tools/TestSuiteTools.cs](../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs)<br>[ModelContextProtocol/Tools/V20OptionsTools.cs](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs)<br>[src/Shared/SpecializedExchangeTools.cs](../../src/Shared/SpecializedExchangeTools.cs) | 14 |
-| P6-21 | [ModelContextProtocol/Tools/DccTools.cs](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs)<br>[ModelContextProtocol/Tools/StartdriveTools.cs](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs)<br>[ModelContextProtocol/Tools/TeamcenterTools.cs](../../src/Shared/TeamcenterTools.cs) | 22 |
-| P6-22 | [ModelContextProtocol/Tools/SivarcTools.cs](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs)<br>[ModelContextProtocol/Tools/VersionControlTools.cs](../../src/Shared/VersionControlTools.cs)<br>[src/Shared/LibraryTools.cs](../../src/Shared/LibraryTools.cs) | 28 |
+| P6-20 | [ModelContextProtocol/Tools/CfcTools.cs](../../src/Engine/ModelContextProtocol/Tools/CfcTools.cs)<br>[ModelContextProtocol/Tools/OptionalEngineeringTools.cs](../../src/Shared/OptionalEngineeringTools.cs)<br>[ModelContextProtocol/Tools/TestSuiteTools.cs](../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs)<br>[ModelContextProtocol/Tools/V20OptionsTools.cs](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs)<br>[src/Shared/SpecializedExchangeTools.cs](../../src/Shared/SpecializedExchangeTools.cs) | 14 |
+| P6-21 | [ModelContextProtocol/Tools/DccTools.cs](../../src/Shared/DccTools.cs)<br>[ModelContextProtocol/Tools/StartdriveTools.cs](../../src/Shared/StartdriveTools.cs)<br>[ModelContextProtocol/Tools/TeamcenterTools.cs](../../src/Shared/TeamcenterTools.cs) | 22 |
+| P6-22 | [ModelContextProtocol/Tools/SivarcTools.cs](../../src/Shared/SivarcTools.cs)<br>[ModelContextProtocol/Tools/VersionControlTools.cs](../../src/Shared/VersionControlTools.cs)<br>[src/Shared/LibraryTools.cs](../../src/Shared/LibraryTools.cs) | 28 |
 | P6-23 | [ModelContextProtocol/Tools/OnlineDownloadTools.cs](../../src/Shared/OnlineDownloadTools.cs)<br>[ModelContextProtocol/Tools/PlcSimAdvancedTools.cs](../../src/Shared/PlcSimAdvancedTools.cs)<br>[ModelContextProtocol/Tools/RuntimeChannelTools.cs](../../src/Shared/Host/RuntimeChannelTools.cs)<br>[ModelContextProtocol/Tools/RuntimeSettingsTools.cs](../../src/Engine/ModelContextProtocol/Tools/RuntimeSettingsTools.cs)<br>[ModelContextProtocol/Tools/RuntimeTools.cs](../../src/Shared/Host/RuntimeTools.cs)<br>[src/Shared/PlcCausalTraceTools.cs](../../src/Shared/PlcCausalTraceTools.cs) | 34 |
 | P6-24 | [ModelContextProtocol/Tools/DiagnosticsTools.cs](../../src/Engine/ModelContextProtocol/Tools/DiagnosticsTools.cs)<br>[ModelContextProtocol/Tools/ProjectSessionTools.cs](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs)<br>[ModelContextProtocol/Tools/SessionTools.cs](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs)<br>[src/Shared/Host/EngineeringDiagnosticsTools.cs](../../src/Shared/Host/EngineeringDiagnosticsTools.cs)<br>[src/Shared/Host/McpServer.Doctor.cs](../../src/Shared/Host/McpServer.Doctor.cs)<br>[src/Shared/Host/McpServer.Maintenance.cs](../../src/Shared/Host/McpServer.Maintenance.cs)<br>[src/Shared/Host/McpServer.Worker.cs](../../src/Shared/Host/McpServer.Worker.cs)<br>[src/Shared/HostMetaTools.cs](../../src/Shared/HostMetaTools.cs) | 28 |
 
@@ -2108,15 +2108,15 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | <a id="phase6-path-p6-11"></a>P6-11 | [src/Engine/ModelContextProtocol/Tools/McpServer.Patch.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Patch.cs)<br>[src/Shared/NativeExchangeTools.cs](../../src/Shared/NativeExchangeTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs)<br>[src/Shared/DocumentsTools.cs](../../src/Shared/DocumentsTools.cs)<br>[src/Shared/Host/ExportTools.cs](../../src/Shared/Host/ExportTools.cs)<br>[src/Shared/NativeExchangeService.cs](../../src/Shared/NativeExchangeService.cs)<br>[src/Engine/Siemens/Services/PlcExternalSourcesService.cs](../../src/Engine/Siemens/Services/PlcExternalSourcesService.cs) |
 | <a id="phase6-path-p6-12"></a>P6-12 | [src/Engine/ModelContextProtocol/Tools/DevicesTools.cs](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs)<br>[src/Shared/HardwareAddressTools.cs](../../src/Shared/HardwareAddressTools.cs)<br>[src/Shared/HardwareAmlTools.cs](../../src/Shared/HardwareAmlTools.cs)<br>[src/Shared/HardwareDevicesTools.cs](../../src/Shared/HardwareDevicesTools.cs)<br>[src/Shared/HardwareManagementTools.cs](../../src/Shared/HardwareManagementTools.cs)<br>[src/Shared/ModulesTools.cs](../../src/Shared/ModulesTools.cs)<br>[src/Engine/Siemens/Services/DevicesService.cs](../../src/Engine/Siemens/Services/DevicesService.cs) |
 | <a id="phase6-path-p6-13"></a>P6-13 | [src/Shared/HardwareSecurityTools.cs](../../src/Shared/HardwareSecurityTools.cs)<br>[src/Shared/HardwareServicesTools.cs](../../src/Shared/HardwareServicesTools.cs)<br>[src/Shared/HardwareNetworkTools.cs](../../src/Shared/HardwareNetworkTools.cs)<br>[src/Shared/HardwareServicesPortTools.cs](../../src/Shared/HardwareServicesPortTools.cs)<br>[src/Shared/PlcCompilePortTools.cs](../../src/Shared/PlcCompilePortTools.cs)<br>[src/Adapters/Native/Security/DeviceUsersAdapter.cs](../../src/Adapters/Native/Security/DeviceUsersAdapter.cs)<br>[src/Adapters/Native/Security/HardwareSecurityAdapter.cs](../../src/Adapters/Native/Security/HardwareSecurityAdapter.cs) |
-| <a id="phase6-path-p6-14"></a>P6-14 | [src/Shared/CertificateManagementTools.cs](../../src/Shared/CertificateManagementTools.cs)<br>[src/Shared/ProjectSecurityTools.cs](../../src/Shared/ProjectSecurityTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/SafetyManagementTools.cs](../../src/Engine/ModelContextProtocol/Tools/SafetyManagementTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs](../../src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs)<br>[src/Shared/SecurityDeepTools.cs](../../src/Shared/SecurityDeepTools.cs)<br>[src/Adapters/Native/Security/CertificateAdapter.cs](../../src/Adapters/Native/Security/CertificateAdapter.cs)<br>[src/Adapters/Native/Security/ProjectUsers.cs](../../src/Adapters/Native/Security/ProjectUsers.cs)<br>[src/Engine/Siemens/Services/SafetyManagementService.cs](../../src/Engine/Siemens/Services/SafetyManagementService.cs)<br>[src/Engine/Siemens/Services/SafetyValidationService.cs](../../src/Engine/Siemens/Services/SafetyValidationService.cs)<br>[src/Adapters/Native/Security/SecurityDeepAdapter.cs](../../src/Adapters/Native/Security/SecurityDeepAdapter.cs) |
+| <a id="phase6-path-p6-14"></a>P6-14 | [src/Shared/CertificateManagementTools.cs](../../src/Shared/CertificateManagementTools.cs)<br>[src/Shared/ProjectSecurityTools.cs](../../src/Shared/ProjectSecurityTools.cs)<br>[src/Shared/SafetyManagementTools.cs](../../src/Shared/SafetyManagementTools.cs)<br>[src/Shared/SafetyValidationTools.cs](../../src/Shared/SafetyValidationTools.cs)<br>[src/Shared/SecurityDeepTools.cs](../../src/Shared/SecurityDeepTools.cs)<br>[src/Adapters/Native/Security/CertificateAdapter.cs](../../src/Adapters/Native/Security/CertificateAdapter.cs)<br>[src/Adapters/Native/Security/ProjectUsers.cs](../../src/Adapters/Native/Security/ProjectUsers.cs)<br>[src/Adapters/Native/Safety/SafetyManagementAdapter.cs](../../src/Adapters/Native/Safety/SafetyManagementAdapter.cs)<br>[src/Adapters/Native/Safety/SafetyValidationAdapter.cs](../../src/Adapters/Native/Safety/SafetyValidationAdapter.cs)<br>[src/Adapters/Native/Security/SecurityDeepAdapter.cs](../../src/Adapters/Native/Security/SecurityDeepAdapter.cs) |
 | <a id="phase6-path-p6-15"></a>P6-15 | [src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs](../../src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs)<br>[src/Shared/AlarmsTools.cs](../../src/Shared/AlarmsTools.cs)<br>[src/Shared/OpcUaTools.cs](../../src/Shared/OpcUaTools.cs)<br>[src/Shared/PlcIntegrityTools.cs](../../src/Shared/PlcIntegrityTools.cs)<br>[src/Shared/PlcTechnologyTools.cs](../../src/Shared/PlcTechnologyTools.cs)<br>[src/Shared/SoftwareUnitDeepTools.cs](../../src/Shared/SoftwareUnitDeepTools.cs)<br>[src/Engine/Siemens/Services/TechnologyObjectsService.cs](../../src/Engine/Siemens/Services/TechnologyObjectsService.cs) |
 | <a id="phase6-path-p6-16"></a>P6-16 | [src/Shared/ClassicHmiFoldersTools.cs](../../src/Shared/ClassicHmiFoldersTools.cs)<br>[src/Shared/MotionProDiagClassicHmiTools.cs](../../src/Shared/MotionProDiagClassicHmiTools.cs)<br>[src/Shared/PlcMotionTools.cs](../../src/Shared/PlcMotionTools.cs)<br>[src/Shared/PlcProDiagTools.cs](../../src/Shared/PlcProDiagTools.cs)<br>[src/Shared/ClassicHmiFoldersService.cs](../../src/Shared/ClassicHmiFoldersService.cs)<br>[src/Shared/MotionProDiagClassicHmiService.cs](../../src/Shared/MotionProDiagClassicHmiService.cs) |
 | <a id="phase6-path-p6-17"></a>P6-17 | [src/Shared/UnifiedHmiGroupsTools.cs](../../src/Shared/UnifiedHmiGroupsTools.cs)<br>[src/Shared/UnifiedHmiTools.cs](../../src/Shared/UnifiedHmiTools.cs)<br>[src/Shared/UnifiedScreenItemsTools.cs](../../src/Shared/UnifiedScreenItemsTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs](../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs)<br>[src/Shared/HmiOfflineTools.cs](../../src/Shared/HmiOfflineTools.cs)<br>[src/Shared/UnifiedHmiGroupsService.cs](../../src/Shared/UnifiedHmiGroupsService.cs)<br>[src/Adapters/Native/Hmi/UnifiedHmiAdapter.cs](../../src/Adapters/Native/Hmi/UnifiedHmiAdapter.cs)<br>[src/Shared/UnifiedScreenItemsService.cs](../../src/Shared/UnifiedScreenItemsService.cs)<br>[src/Engine/Siemens/Services/UnifiedUiModelService.cs](../../src/Engine/Siemens/Services/UnifiedUiModelService.cs) |
 | <a id="phase6-path-p6-18"></a>P6-18 | [src/Shared/HmiExchangeTools.cs](../../src/Shared/HmiExchangeTools.cs)<br>[src/Shared/HmiTagDeletionTools.cs](../../src/Shared/HmiTagDeletionTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/UnifiedExchangeTools.cs](../../src/Engine/ModelContextProtocol/Tools/UnifiedExchangeTools.cs)<br>[src/Shared/HmiExchangeService.cs](../../src/Shared/HmiExchangeService.cs)<br>[src/Shared/HmiTagDeletionService.cs](../../src/Shared/HmiTagDeletionService.cs)<br>[src/Engine/Siemens/Services/UnifiedExchangeService.cs](../../src/Engine/Siemens/Services/UnifiedExchangeService.cs) |
 | <a id="phase6-path-p6-19"></a>P6-19 | [src/Engine/ModelContextProtocol/Tools/GlobalScriptEditTools.cs](../../src/Engine/ModelContextProtocol/Tools/GlobalScriptEditTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/GraphicSelectionTools.cs](../../src/Engine/ModelContextProtocol/Tools/GraphicSelectionTools.cs)<br>[src/Shared/HmiDescribeTools.cs](../../src/Shared/HmiDescribeTools.cs)<br>[src/Shared/HmiInspectionTools.cs](../../src/Shared/HmiInspectionTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/MigrationReadTools.cs](../../src/Engine/ModelContextProtocol/Tools/MigrationReadTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/UnifiedEngineeringTools.cs](../../src/Engine/ModelContextProtocol/Tools/UnifiedEngineeringTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/UnifiedEventsTools.cs](../../src/Engine/ModelContextProtocol/Tools/UnifiedEventsTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs)<br>[src/Shared/ReflectionTools.cs](../../src/Shared/ReflectionTools.cs)<br>[src/Engine/Siemens/Services/GlobalScriptEditService.cs](../../src/Engine/Siemens/Services/GlobalScriptEditService.cs)<br>[src/Engine/Siemens/Services/GraphicSelectionService.cs](../../src/Engine/Siemens/Services/GraphicSelectionService.cs)<br>[src/Shared/HmiDescribeService.cs](../../src/Shared/HmiDescribeService.cs)<br>[src/Shared/HmiInspectionService.cs](../../src/Shared/HmiInspectionService.cs)<br>[src/Engine/Siemens/Services/MigrationReadService.cs](../../src/Engine/Siemens/Services/MigrationReadService.cs)<br>[src/Engine/Siemens/Services/UnifiedEngineeringService.cs](../../src/Engine/Siemens/Services/UnifiedEngineeringService.cs)<br>[src/Engine/Siemens/Services/UnifiedEventsService.cs](../../src/Engine/Siemens/Services/UnifiedEventsService.cs)<br>[src/Engine/Siemens/Services/UnifiedObjectServicesService.cs](../../src/Engine/Siemens/Services/UnifiedObjectServicesService.cs) |
-| <a id="phase6-path-p6-20"></a>P6-20 | [src/Engine/ModelContextProtocol/Tools/CfcTools.cs](../../src/Engine/ModelContextProtocol/Tools/CfcTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/OptionalEngineeringTools.cs](../../src/Engine/ModelContextProtocol/Tools/OptionalEngineeringTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs](../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs)<br>[src/Shared/SpecializedExchangeTools.cs](../../src/Shared/SpecializedExchangeTools.cs)<br>[src/Engine/Siemens/Services/CfcService.cs](../../src/Engine/Siemens/Services/CfcService.cs)<br>[src/Engine/Siemens/Services/OptionalEngineeringService.cs](../../src/Engine/Siemens/Services/OptionalEngineeringService.cs)<br>[src/Engine/Siemens/Services/TestSuiteService.cs](../../src/Engine/Siemens/Services/TestSuiteService.cs)<br>[src/Engine/Siemens/Services/V20OptionsService.cs](../../src/Engine/Siemens/Services/V20OptionsService.cs) |
-| <a id="phase6-path-p6-21"></a>P6-21 | [src/Engine/ModelContextProtocol/Tools/DccTools.cs](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs)<br>[src/Shared/TeamcenterTools.cs](../../src/Shared/TeamcenterTools.cs)<br>[src/Engine/Siemens/Services/DccService.cs](../../src/Engine/Siemens/Services/DccService.cs)<br>[src/Engine/Siemens/Services/StartdriveService.cs](../../src/Engine/Siemens/Services/StartdriveService.cs)<br>[src/Adapters/Native/Collaboration/TeamcenterAdapter.cs](../../src/Adapters/Native/Collaboration/TeamcenterAdapter.cs) |
-| <a id="phase6-path-p6-22"></a>P6-22 | [src/Engine/ModelContextProtocol/Tools/SivarcTools.cs](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs)<br>[src/Shared/VersionControlTools.cs](../../src/Shared/VersionControlTools.cs)<br>[src/Shared/LibraryTools.cs](../../src/Shared/LibraryTools.cs)<br>[src/Engine/Siemens/Services/SivarcService.cs](../../src/Engine/Siemens/Services/SivarcService.cs)<br>[src/Adapters/Native/Vci/VersionControlAdapter.cs](../../src/Adapters/Native/Vci/VersionControlAdapter.cs) |
+| <a id="phase6-path-p6-20"></a>P6-20 | [src/Engine/ModelContextProtocol/Tools/CfcTools.cs](../../src/Engine/ModelContextProtocol/Tools/CfcTools.cs)<br>[src/Shared/OptionalEngineeringTools.cs](../../src/Shared/OptionalEngineeringTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs](../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs)<br>[src/Shared/SpecializedExchangeTools.cs](../../src/Shared/SpecializedExchangeTools.cs)<br>[src/Engine/Siemens/Services/CfcService.cs](../../src/Engine/Siemens/Services/CfcService.cs)<br>[src/Adapters/Native/Optional/OptionalEngineeringAdapter.cs](../../src/Adapters/Native/Optional/OptionalEngineeringAdapter.cs)<br>[src/Engine/Siemens/Services/TestSuiteService.cs](../../src/Engine/Siemens/Services/TestSuiteService.cs)<br>[src/Engine/Siemens/Services/V20OptionsService.cs](../../src/Engine/Siemens/Services/V20OptionsService.cs) |
+| <a id="phase6-path-p6-21"></a>P6-21 | [src/Shared/DccTools.cs](../../src/Shared/DccTools.cs)<br>[src/Shared/StartdriveTools.cs](../../src/Shared/StartdriveTools.cs)<br>[src/Shared/TeamcenterTools.cs](../../src/Shared/TeamcenterTools.cs)<br>[src/Adapters/Native/Optional/DccAdapter.cs](../../src/Adapters/Native/Optional/DccAdapter.cs)<br>[src/Adapters/Native/Optional/StartdriveAdapter.cs](../../src/Adapters/Native/Optional/StartdriveAdapter.cs)<br>[src/Adapters/Native/Collaboration/TeamcenterAdapter.cs](../../src/Adapters/Native/Collaboration/TeamcenterAdapter.cs) |
+| <a id="phase6-path-p6-22"></a>P6-22 | [src/Shared/SivarcTools.cs](../../src/Shared/SivarcTools.cs)<br>[src/Shared/VersionControlTools.cs](../../src/Shared/VersionControlTools.cs)<br>[src/Shared/LibraryTools.cs](../../src/Shared/LibraryTools.cs)<br>[src/Adapters/Native/Optional/SivarcAdapter.cs](../../src/Adapters/Native/Optional/SivarcAdapter.cs)<br>[src/Adapters/Native/Vci/VersionControlAdapter.cs](../../src/Adapters/Native/Vci/VersionControlAdapter.cs) |
 | <a id="phase6-path-p6-23"></a>P6-23 | [src/Shared/OnlineDownloadTools.cs](../../src/Shared/OnlineDownloadTools.cs)<br>[src/Shared/PlcSimAdvancedTools.cs](../../src/Shared/PlcSimAdvancedTools.cs)<br>[src/Shared/Host/RuntimeChannelTools.cs](../../src/Shared/Host/RuntimeChannelTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/RuntimeSettingsTools.cs](../../src/Engine/ModelContextProtocol/Tools/RuntimeSettingsTools.cs)<br>[src/Shared/Host/RuntimeTools.cs](../../src/Shared/Host/RuntimeTools.cs)<br>[src/Shared/PlcCausalTraceTools.cs](../../src/Shared/PlcCausalTraceTools.cs)<br>[src/Adapters/Native/Online/OnlineDownloadAdapter.cs](../../src/Adapters/Native/Online/OnlineDownloadAdapter.cs)<br>[src/Engine/Siemens/Services/RuntimeSettingsService.cs](../../src/Engine/Siemens/Services/RuntimeSettingsService.cs)<br>[src/OnlineChannels](../../src/OnlineChannels)<br>[src/OnlineChannels/Simulation/PlcSimAdvancedChannel.cs](../../src/OnlineChannels/Simulation/PlcSimAdvancedChannel.cs) |
 | <a id="phase6-path-p6-24"></a>P6-24 | [src/Engine/ModelContextProtocol/Tools/DiagnosticsTools.cs](../../src/Engine/ModelContextProtocol/Tools/DiagnosticsTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/SessionTools.cs](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs)<br>[src/Shared/Host/EngineeringDiagnosticsTools.cs](../../src/Shared/Host/EngineeringDiagnosticsTools.cs)<br>[src/Shared/Host/McpServer.Doctor.cs](../../src/Shared/Host/McpServer.Doctor.cs)<br>[src/Shared/Host/McpServer.Maintenance.cs](../../src/Shared/Host/McpServer.Maintenance.cs)<br>[src/Shared/Host/McpServer.Worker.cs](../../src/Shared/Host/McpServer.Worker.cs)<br>[src/Shared/HostMetaTools.cs](../../src/Shared/HostMetaTools.cs)<br>[src/Engine/Siemens/Portal](../../src/Engine/Siemens/Portal)<br>[src/Engine/EngineServices.cs](../../src/Engine/EngineServices.cs)<br>[src/Engine/EngineRegistration.cs](../../src/Engine/EngineRegistration.cs)<br>[src/Engine/Program.cs](../../src/Engine/Program.cs)<br>[src/Engine/ModelContextProtocol/Tools/ToolCatalog.cs](../../src/Engine/ModelContextProtocol/Tools/ToolCatalog.cs)<br>[src/Engine/TiaMcp.Engine.V20.csproj](../../src/Engine/TiaMcp.Engine.V20.csproj)<br>[src/Engine/TiaMcp.Engine.V21.csproj](../../src/Engine/TiaMcp.Engine.V21.csproj)<br>[tests/Engine/TiaMcp.Engine.Harness](../../tests/Engine/TiaMcp.Engine.Harness) |
 | <a id="phase6-path-p6-25"></a>P6-25 | [src/Engine/Cli](../../src/Engine/Cli)<br>[src/Studio/Client](../../src/Studio/Client)<br>[src/Studio/Core](../../src/Studio/Core)<br>[src/Studio/Gui/ViewModels](../../src/Studio/Gui/ViewModels)<br>[src/Studio/Gui/Localization](../../src/Studio/Gui/Localization)<br>[tests/Engine/TiaMcp.Engine.Tests](../../tests/Engine/TiaMcp.Engine.Tests)<br>[tests/Studio/](../../tests/Studio/) |

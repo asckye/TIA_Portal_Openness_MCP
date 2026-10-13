@@ -26,7 +26,7 @@ internal static class PortedToolContract
     // V20/V21 B1 declarations belong to the full EngineHost catalog. The
     // bounded plc-foundation profile includes F18/F19/F20/F21 hardware ports.
     internal static IEnumerable<PortedFamilies.Family> Families(string release) =>
-        PortedFamilies.All.Where(family => (family.Name == "F04" || family.Name == "F22" || family.Name == "F05" || family.Name == "F07" || family.Name == "F33" || family.Name == "F24" || family.Name == "F25" || family.Name == "F26" || family.Name == "F10" || family.Name == "F14" || family.Name == "F15" || family.Name == "F23" || family.Name == "F06" || family.Name == "F35" || family.Name == "F08" || family.Name == "F09" || family.Name == "F11" || family.Name == "F12" || family.Name == "F13" || family.Name == "F16" || family.Name == "F17" || family.Name == "F18" || family.Name == "F19" || family.Name == "F20" || family.Name == "F21") && family.Available(release))
+        PortedFamilies.All.Where(family => (family.Name == "F04" || family.Name == "F22" || family.Name == "F29" || family.Name == "F30" || family.Name == "F31" || family.Name == "F05" || family.Name == "F07" || family.Name == "F33" || family.Name == "F24" || family.Name == "F25" || family.Name == "F26" || family.Name == "F10" || family.Name == "F14" || family.Name == "F15" || family.Name == "F23" || family.Name == "F06" || family.Name == "F35" || family.Name == "F08" || family.Name == "F09" || family.Name == "F11" || family.Name == "F12" || family.Name == "F13" || family.Name == "F16" || family.Name == "F17" || family.Name == "F18" || family.Name == "F19" || family.Name == "F20" || family.Name == "F21") && family.Available(release))
             .Select(family => new PortedFamilies.Family(family.Name, family.OperationPrefix, family.Releases,
                 TiaMcp.PlcWorker.WorkerOperations.FamilyTools(family), family.Actions));
     internal static McpServerTool Wrap(FoundationTool tool)
@@ -46,6 +46,11 @@ internal static class PortedToolContract
     {
         "ListPlcSimAdvancedInstances" or "ManagePlcSimAdvancedInstance" or "GetPlcSimAdvancedTags" or "WritePlcSimAdvancedTags" or "RunPlcSimAdvancedTestScenario" => new[] { "runtime-channels.ExecutePlcSimAdvanced" },
         "CheckDownloadReadiness" or "CompareSoftwareToOnline" or "ConnectOnlinePlc" or "DisconnectOnlinePlc" or "DisconnectOnlinePlcs" or "DownloadPlc" or "DownloadPlcToFolder" or "GeneratePlcLoadableFile" or "GetOnlineState" or "GetPlcBlockFingerprints" or "ListTransferRoutes" or "ManagePlcDataBlockSnapshot" or "ScanAccessibleDevices" or "UploadDeviceParameters" or "UploadStationFromPlc" => new[] { "plc-online.ExecuteOnline", "ReadState" },
+        "ListSafetyActivationTests" or "ManageSafetyActivationTest" or "ManageSafetyActivationTestGroup" or "ManageSafetyFunction" or "ManageSafetyFunctionCondition" => new[] { "plc-safety.ExecuteSafetyValidation", "ReadState" },
+        "ExportSafetyPrintout" or "GetSafetyBlockSignatures" or "ManagePlcSafety" or "ManageSafetyGlobalSettings" => new[] { "plc-safety.ExecuteSafety", "ReadState" },
+        "GenerateSivarc" or "GetSivarcRuleTree" or "ListSivarcBlockDefinitions" or "ListSivarcRules" or "ManageSivarcBlockDefinition" or "ManageSivarcRule" or "ManageSivarcRuleContainer" or "ManageSivarcScreenLayout" or "ManageSivarcTableRule" or "ResolveSivarcExpression" or "UpgradeSivarcDefinitions" => new[] { "sivarc.ExecuteSivarc", "ReadState" },
+        "GetDccObject" or "ListDccCharts" or "ManageDcbLibraries" or "ManageDccBlock" or "ManageDccChart" or "ManageDccChartInterface" or "ManageDccChartPartition" or "ManageDccPin" => new[] { "startdrive.ExecuteDcc", "ReadState" },
+        "GetDriveParameters" or "GetOnlineDriveParameters" or "ListDriveObjects" or "ManageDriveFunctions" or "ManageDriveHardwareModule" or "ManageDriveSafetyAcceptanceTest" or "ManageDriveSecurity" or "ManageDriveTelegrams" or "ManageOnlineDriveFunctions" or "ManageStartdriveParameter" or "ManageTechnologyExtensions" => new[] { "startdrive.ExecuteStartdrive", "ReadState" },
         "ArchiveSavedProject" => new[] { "project-lifecycle.ArchiveSavedProject", "ReadState" },
         "BuildProjectScaffold" => new[] { "project-lifecycle.ExecuteProjectScaffoldPrimitive", "ReadState" },
         "ConnectIsolatedPortal" => new[] { "project-lifecycle.ConnectIsolatedPortal", "ReadState" },
@@ -293,6 +298,12 @@ internal sealed partial class FoundationTool
         var service = new HardwareAddressingService(call, hasProject, identity);
         object target = portedMethod!.DeclaringType!.Name switch
         {
+            "SafetyValidationTools" => new SafetyValidationTools(new SafetyValidationService(call, identity)),
+            "SivarcTools" => new SivarcTools(new SivarcService(call, identity)),
+            "OptionalEngineeringTools" => new OptionalEngineeringTools(new OptionalEngineeringService(call, identity)),
+            "StartdriveTools" => new StartdriveTools(new StartdriveService(call, identity)),
+            "DccTools" => new DccTools(new DccService(call, identity)),
+            "SafetyManagementTools" => new SafetyManagementTools(new SafetyManagementService(call, identity)),
             "DocumentsTools" => new DocumentsTools(new DocumentsService(call, identity)),
             "AlarmsTools" => new AlarmsTools(new AlarmsService(call, identity)),
             "OpcUaTools" => new OpcUaTools(new OpcUaService(call, identity)),

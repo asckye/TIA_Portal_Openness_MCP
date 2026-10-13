@@ -11,6 +11,23 @@ public sealed class CheckAllTests
     private static CommandResult Passed() => new(0, "passed\n", "");
 
     [Fact]
+    public void TrackedBytesChecksEveryUniqueFileAndDetectsChangesWithUnmergedStagePaths()
+    {
+        using var fixture = new OfflineFixtures();
+        File.WriteAllText(Path.Combine(fixture.DirectoryPath, "README.md"), "original\n");
+        File.WriteAllText(Path.Combine(fixture.DirectoryPath, "New.cs"), "new source\n");
+        const string inventory = "README.md\0README.md\0README.md\0New.cs\0";
+        var before = ReleaseCommands.CheckAllTrackedBytes(fixture.DirectoryPath, inventory);
+        Assert.Equal(new[] { "New.cs", "README.md" }, before.Keys.Order());
+        Assert.Equal(Convert.ToBase64String(File.ReadAllBytes(Path.Combine(fixture.DirectoryPath, "README.md"))), before["README.md"]);
+        File.WriteAllText(Path.Combine(fixture.DirectoryPath, "New.cs"), "changed source\n");
+        var after = ReleaseCommands.CheckAllTrackedBytes(fixture.DirectoryPath, inventory);
+        Assert.Equal(before["README.md"], after["README.md"]);
+        Assert.NotEqual(before["New.cs"], after["New.cs"]);
+        Assert.Equal(before.Keys.Order(), after.Keys.Order());
+    }
+
+    [Fact]
     public void SchedulerRunsEveryIndependentCheckAfterFailure()
     {
         using var fixture = new OfflineFixtures(); var ran = new List<string>();

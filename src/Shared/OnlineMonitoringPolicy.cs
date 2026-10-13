@@ -1,3 +1,4 @@
+using TiaOpenness.Shared;
 using System.Collections.Generic;
 namespace TiaMcpServer.ModelContextProtocol
 {

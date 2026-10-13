@@ -74,7 +74,7 @@ internal static class ToolUsageTests
             var connect = JsonNode.Parse(((TextContentBlock)(await Call("{\"toolName\":\"ConnectPortal\"}")).Content.Single()).Text)!["data"]!;
             var arguments = connect["example"]!["request"]!["params"]!["arguments"]!.AsObject();
             check(arguments.Count == 1 && arguments.ContainsKey("processId"), "foundation Connect must not reuse full-engine projectName example");
-            check((await Call("{\"toolName\":\"ManageStartdriveParameter\"}")).IsError == true, "foundation must reject unavailable full-engine usage");
+            check((await Call("{\"toolName\":\"__test_unregistered_tool__\"}")).IsError == true, "foundation must reject unavailable full-engine usage");
             check((await Call("{\"offset\":-1}")).IsError == true, "invalid page is an error");
             check((await Call("{\"toolName\":\"ConnectPortal\",\"query\":\"x\"}")).IsError == true, "conflicting selectors rejected");
             check(worker.Calls == 0, "usage never invokes worker even when native access enabled");

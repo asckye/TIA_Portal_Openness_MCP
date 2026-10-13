@@ -289,7 +289,7 @@ namespace TiaMcp.Adapters.Native.Plc
                ?? throw new ArgumentException("itemPath must identify a device item, not a device.");
 
         private static string? NativeName(object value) => value.GetType().GetProperty("Name")?.GetValue(value)?.ToString();
-        private object ExactTechnology(string softwarePath, string objectPath, bool writing)
+        internal object ExactTechnology(string softwarePath, string objectPath, bool writing)
         {
             var plc = _session.ExactPlcForEngineering(softwarePath, writing); var parts = PlcGroupOperations.Parts(objectPath);
             var group = PlcGroupOperations.Group(WatchNative.TechnologyGroup(plc), string.Join("/", parts.Take(parts.Length - 1)));

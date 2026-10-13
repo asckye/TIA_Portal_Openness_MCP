@@ -360,9 +360,14 @@ internal static partial class ReleaseCommands
     private static Dictionary<string, string> TrackedBytes()
     {
         var result = ProcessRunner.Run("git", ["ls-files", "--cached", "--others", "--exclude-standard", "-z"], Root); ProcessRunner.RequireSuccess(result, "source file inventory");
-        return result.StandardOutput.Split('\0', StringSplitOptions.RemoveEmptyEntries).Where(path => File.Exists(Path.Combine(Root, path))).ToDictionary(path => path,
-            path => Convert.ToBase64String(File.ReadAllBytes(Path.Combine(Root, path))), StringComparer.Ordinal);
+        return CheckAllTrackedBytes(Root, result.StandardOutput);
     }
+
+    internal static Dictionary<string, string> CheckAllTrackedBytes(string root, string inventory)
+        // An unmerged index lists a working file once per stage; drift still checks every unique file's bytes.
+        => inventory.Split('\0', StringSplitOptions.RemoveEmptyEntries).Distinct(StringComparer.Ordinal)
+            .Where(path => File.Exists(Path.Combine(root, path))).ToDictionary(path => path,
+                path => Convert.ToBase64String(File.ReadAllBytes(Path.Combine(root, path))), StringComparer.Ordinal);
 
     private static bool TimestampOnly(string path, Dictionary<string, string> before)
     {

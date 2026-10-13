@@ -320,7 +320,7 @@ CLI 使用的 `DescribeObjectProperty`、`GetObjectProperty`、`ListObjectChildr
 |---|---|---|
 | 库 | [LibraryPortService](../../src/Shared/LibraryPortService.cs) / [LibraryTools](../../src/Shared/LibraryTools.cs)，原生实现 [LibraryService](../../src/Adapters/Native/Libraries/LibraryService.cs) | 14 |
 | VCI | [VersionControlService](../../src/Adapters/Native/Vci/VersionControlAdapter.cs) / [VersionControlTools](../../src/Shared/VersionControlTools.cs) | 5 |
-| SiVArc | [SivarcService](../../src/Engine/Siemens/Services/SivarcService.cs) / [SivarcTools](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) | 9 |
+| SiVArc | [SivarcPortService](../../src/Shared/SivarcPortService.cs) / [SivarcTools](../../src/Shared/SivarcTools.cs)，原生实现 [SivarcAdapter](../../src/Adapters/Native/Optional/SivarcAdapter.cs) | 9 |
 
 库生命周期、类型和主副本工具从混合工具文件一并迁入；SiVArc 的注册工具为 `GenerateSivarc`，其实现方法保留 `GenerateSiVArc` 标识符。
 VCI 的 `_vciOwnerProject`、`_vciCached`、`_vciKeepAlive` 成为服务实例字段，保留原有获取、保活和失效清理顺序。
@@ -370,7 +370,7 @@ OPC UA 服务包括 `HardwareServices` 中的访问控制；工艺对象工具�
 |---|---|---|
 | TestSuite | [TestSuiteService](../../src/Engine/Siemens/Services/TestSuiteService.cs) / [TestSuiteTools](../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs) | 4 |
 | V20Options | [V20OptionsService](../../src/Engine/Siemens/Services/V20OptionsService.cs) / [V20OptionsTools](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs) | 5 |
-| OptionalEngineering | [OptionalEngineeringService](../../src/Engine/Siemens/Services/OptionalEngineeringService.cs) / [OptionalEngineeringTools](../../src/Engine/ModelContextProtocol/Tools/OptionalEngineeringTools.cs) | 2 |
+| OptionalEngineering | [OptionalEngineeringPortService](../../src/Shared/OptionalEngineeringPortService.cs) / [OptionalEngineeringTools](../../src/Shared/OptionalEngineeringTools.cs)，原生实现 [OptionalEngineeringAdapter](../../src/Adapters/Native/Optional/OptionalEngineeringAdapter.cs) | 2 |
 | SpecializedExchange | [SpecializedExchangeService](../../src/Shared/PlcB5Services.cs) / [SpecializedExchangeTools](../../src/Shared/SpecializedExchangeTools.cs) | 1 |
 | SoftwareUnitDeep | [SoftwareUnitDeepService](../../src/Shared/PlcB5Services.cs) / [SoftwareUnitDeepTools](../../src/Shared/SoftwareUnitDeepTools.cs) | 7 |
 
@@ -397,9 +397,9 @@ V20Options 的原生实现仅在 `TIA_V20` 分支编译；V21 仍注册五个工
 
 | 领域 | 服务 / 工具类 | 工具数 |
 |---|---|---|
-| DCC | [DccService](../../src/Engine/Siemens/Services/DccService.cs) / [DccTools](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) | 8 |
+| DCC | [DccPortService](../../src/Shared/DccPortService.cs) / [DccTools](../../src/Shared/DccTools.cs)，原生实现 [DccAdapter](../../src/Adapters/Native/Optional/DccAdapter.cs) | 8 |
 | Teamcenter | [TeamcenterService](../../src/Adapters/Native/Collaboration/TeamcenterAdapter.cs) / [TeamcenterTools](../../src/Shared/TeamcenterTools.cs) | 3 |
-| Startdrive | [StartdriveService](../../src/Engine/Siemens/Services/StartdriveService.cs) / [StartdriveTools](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) | 11 |
+| Startdrive | [StartdrivePortService](../../src/Shared/StartdrivePortService.cs) / [StartdriveTools](../../src/Shared/StartdriveTools.cs)，原生实现 [StartdriveAdapter](../../src/Adapters/Native/Optional/StartdriveAdapter.cs) | 11 |
 
 这些工具没有 CLI 静态调用点，继续按约定注册为单例。Teamcenter 的 `_teamcenterConnection` 与
 `_teamcenterConnectionLabel` 随方法迁入服务，不增加连接、断开或清理动作。

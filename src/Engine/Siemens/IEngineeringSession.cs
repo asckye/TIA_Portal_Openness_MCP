@@ -48,7 +48,6 @@ namespace TiaMcpServer.Siemens
 
         SoftwareContainer? ResolveSoftwareContainerUncached(string softwarePath);
         T RequireHardwareUtility<T>(string identifier) where T : HardwareUtility;
-        object ExactSiVArcRoot(string category);
         MasterCopy ExactMasterCopy(string libraryName, string path);
         LibraryType ExactLibraryType(object library, string typePath);
         LibraryTypeVersion ExactTypeVersion(LibraryType type, string version);
@@ -61,11 +60,6 @@ namespace TiaMcpServer.Siemens
         object ExactObjectUnder(object root, string objectPath, string collection, string label);
         JsonArray DocumentMessages(DocumentResultMessageComposition? messages);
 
-        DeviceItem ExactDriveItem(string devicePathJson, string itemPathJson);
-        DriveObjectContainer ExactDriveContainer(DeviceItem item);
-        DriveObject ExactDriveObject(string devicePathJson, string itemPathJson, ushort driveObjectNumber, int driveObjectIndex);
-        JsonObject? DccContainerSummary(DriveObject drive);
-        JsonObject DcbLibraryRow(DcbLibrary library, bool types);
         JsonObject AddressRow(Address address);
         object ExactTechnology(string softwarePath, string objectPath, bool writing);
         JsonObject InterfaceRow(object iface);
@@ -104,13 +98,9 @@ namespace TiaMcpServer.Siemens
         DeviceItem ExactDeviceItem(string[] devicePath, string[] itemPath);
         object EngineeringLibraryFolder(object library, string folderPath, string rootProperty);
         string LibraryPathOf(object node, string rootTypeName);
-        string OptionPackageLibraryTypeKind(LibraryType type);
         Device ExactEngineeringDevice(string pathJson);
         object ResolveHmiScreenOrThrow(string hmiSoftwarePath, string screenName);
         string[] ExactNameList(string json);
-        Portal.SivarcFamily GetSivarcFamily(string category);
-        global::Siemens.Engineering.SiVArc.Sivarc RequireSivarc();
-        Exception SivarcShape(object node);
         JsonObject DescribeNode(object target, int depth);
         PlcTag ExactPlcTag(string softwarePath, string tagPath);
         HmiTarget ExactClassicHmi(string softwarePath);

@@ -1,28 +1,39 @@
-using static TiaMcpServer.Siemens.EngineeringSessionHelpers;
+#if OPTIONAL_V20_PLUS
+using static TiaMcp.Adapters.Native.Optional.OptionalEvidence;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json.Nodes;
+using TiaMcp.Adapters.Contracts;
+using TiaMcp.Adapters.Hardware;
+using TiaMcp.Adapters.Native.Hmi;
+using EngineeringGroupOperations = TiaMcp.Adapters.Native.Plc.PlcGroupOperations;
+using EngineeringScalarProperties = TiaMcp.Adapters.Native.Optional.OptionalScalars;
+using EngineeringObjectAddress = TiaMcp.Adapters.Native.Optional.OptionalObjectAddress;
+using NativeFileOutput = TiaMcp.Adapters.Native.Safety.SafetyFileOutput;
+using PlcBlockServicesLogic = TiaMcp.Adapters.Native.Safety.SafetyPrimitives;
+using HardwareServicesLogic = TiaMcp.Adapters.Native.Optional.OptionalRules;
+using ArgumentRules = TiaMcp.Adapters.Native.Optional.OptionalRules;
+using EngineeringPath = TiaMcp.Adapters.Hardware.HardwarePath;
 using Siemens.Engineering;
 using Siemens.Engineering.MC.Drives;
 using Siemens.Engineering.MC.Drives.Dcc;
 using Siemens.Engineering.MC.Drives.Dcc.DccExceptions;
 using TiaMcpServer.ModelContextProtocol;
-using Logic = TiaMcpServer.Siemens.DccLogic;
+using Logic = TiaMcp.Adapters.Native.Optional.DccPolicy;
 
-namespace TiaMcpServer.Siemens.Services
+namespace TiaMcp.Adapters.Native.Optional
 {
     // Typed SINAMICS DCC option package (V21 Siemens.Engineering.DCC.dll, V20 inside Siemens.Engineering.dll).
     // DriveControlChartContainer is a service of the DriveObject (null when the drive does not support DCC); charts nest through
     // Subcharts, blocks come from DCB libraries (DcbLibrary / DcbBlockType), pins connect pin-to-pin or to chart interfaces and can be
     // published as drive parameters. Every DCC failure is a DccException (: EngineeringTargetInvocationException) - the 39 concrete
     // classes are classified in DccFailure so a licence, import or naming problem is named, not buried in the stack.
-    internal sealed class DccService
+    internal sealed class DccAdapter
     {
-        private readonly IEngineeringSession _session;
+        private readonly OptionalSession _session;
 
-        public DccService(IEngineeringSession session) => _session = session;
+        public DccAdapter(OptionalSession session) => _session = session;
 
         private static readonly Type[] KnownDccExceptions =
         {
@@ -36,12 +47,12 @@ namespace TiaMcpServer.Siemens.Services
             typeof(DccParameterNumberAlreadyExistsException), typeof(DccParameterNumberOutOfRangeException), typeof(DccPublishedStructAlarmIdException), typeof(DccTextTooLongException), typeof(DccTooManyChartPartitionsException), typeof(DccTooManyChartsException)
         };
         // Runs a DCC tool body; a DccException is recorded typed (class, family, licence flag) before it propagates to RunHmiStepTool.
-        private static string DccStep(JsonObject meta, Func<string> body)
+        private static string DccStep(HmiObject meta, Func<string> body)
         {
             try { return body(); }
             catch (DccException ex)
             {
-                meta["dccException"] = new JsonObject
+                meta["dccException"] = new HmiObject
                 {
                     ["type"] = ex.GetType().Name, ["message"] = ex.Message, ["known"] = KnownDccExceptions.Contains(ex.GetType()),
                     ["family"] = ex is DccImportException ? "import" : ex is DccLicenseUnavailableException ? "licence" : ex is DccExportException ? "export" : "chart",
@@ -53,113 +64,113 @@ namespace TiaMcpServer.Siemens.Services
 
         // ---- resolution ----------------------------------------------------------------------------------------------------------
         private static DriveControlChartContainer ExactDccContainer(DriveObject drive)
-            => drive.GetService<DriveControlChartContainer>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "DriveControlChartContainer not provided by this drive object (device without DCC support, or SINAMICS DCC not installed).");
+            => drive.GetService<DriveControlChartContainer>() ?? throw new PlcSoftwareException("NotSupportedOnVersion", "DriveControlChartContainer not provided by this drive object (device without DCC support, or SINAMICS DCC not installed).");
         private static DriveControlChart ExactDccChart(DriveControlChartContainer container, string[] path)
         {
-            DriveControlChart chart = container.Charts.Find(path[0]) ?? throw new PortalException(PortalErrorCode.NotFound, "DCC chart not found: " + path[0]);
-            foreach (var name in path.Skip(1)) chart = chart.Subcharts.Find(name) ?? throw new PortalException(PortalErrorCode.NotFound, "DCC subchart not found: " + name + " (under " + chart.Name + ")");
+            DriveControlChart chart = container.Charts.Find(path[0]) ?? throw new PlcSoftwareException("NotFound", "DCC chart not found: " + path[0]);
+            foreach (var name in path.Skip(1)) chart = chart.Subcharts.Find(name) ?? throw new PlcSoftwareException("NotFound", "DCC subchart not found: " + name + " (under " + chart.Name + ")");
             return chart;
         }
-        private static DccBlock ExactDccBlock(DriveControlChart chart, string name) => chart.Blocks.Find(name) ?? throw new PortalException(PortalErrorCode.NotFound, "DCC block not found in chart " + chart.Name + ": " + name);
-        private static DccPin ExactDccPin(DccBlock block, string name) => block.Pins.Find(name) ?? throw new PortalException(PortalErrorCode.NotFound, "DCC pin not found on block " + block.Name + ": " + name);
+        private static DccBlock ExactDccBlock(DriveControlChart chart, string name) => chart.Blocks.Find(name) ?? throw new PlcSoftwareException("NotFound", "DCC block not found in chart " + chart.Name + ": " + name);
+        private static DccPin ExactDccPin(DccBlock block, string name) => block.Pins.Find(name) ?? throw new PlcSoftwareException("NotFound", "DCC pin not found on block " + block.Name + ": " + name);
         private static DccChartInterface ExactDccInterface(DriveControlChart chart, string name)
-            => EngineeringGroupOperations.Items(chart.ChartInterfaces).Cast<DccChartInterface>().FirstOrDefault(i => i.Name == name) ?? throw new PortalException(PortalErrorCode.NotFound, "DCC chart interface not found in chart " + chart.Name + ": " + name);
+            => EngineeringGroupOperations.Items(chart.ChartInterfaces).Cast<DccChartInterface>().FirstOrDefault(i => i.Name == name) ?? throw new PlcSoftwareException("NotFound", "DCC chart interface not found in chart " + chart.Name + ": " + name);
 
         // ---- rows ----------------------------------------------------------------------------------------------------------------
-        private static JsonObject StatementRow(Statement s, string statementClass)
+        private static HmiObject StatementRow(Statement s, string statementClass)
         {
-            var row = new JsonObject { ["name"] = s.Name, ["statementClass"] = statementClass };
+            var row = new HmiObject { ["name"] = s.Name, ["statementClass"] = statementClass };
             Safe(row, "comment", () => s.Comment); Safe(row, "positionX", () => s.PositionX); Safe(row, "positionY", () => s.PositionY); Safe(row, "partition", () => s.Partition?.Name);
             return row;
         }
-        private static JsonObject DccParameterRow(DccParameter p)
+        private static HmiObject DccParameterRow(DccParameter p)
         {
-            var row = new JsonObject();
+            var row = new HmiObject();
             Safe(row, "number", () => p.Number); Safe(row, "arrayIndex", () => p.ArrayIndex); Safe(row, "parameterText", () => p.ParameterText); Safe(row, "isSink", () => p.IsSink); Safe(row, "isSignal", () => p.IsSignal);
             return row;
         }
-        private static JsonObject DccEndpointRow(IEngineeringObject? o) => o switch
+        private static HmiObject DccEndpointRow(IEngineeringObject? o) => o switch
         {
-            DccPin pin => new JsonObject { ["kind"] = "pin", ["name"] = pin.Name, ["block"] = (pin.Parent as DccBlock)?.Name },
-            DccChartInterface i => new JsonObject { ["kind"] = "chartInterface", ["name"] = i.Name },
-            DccParameter p => new JsonObject { ["kind"] = "parameter", ["number"] = p.Number, ["arrayIndex"] = p.ArrayIndex },
-            null => new JsonObject { ["kind"] = "none" },
-            _ => new JsonObject { ["kind"] = o.GetType().Name }
+            DccPin pin => new HmiObject { ["kind"] = "pin", ["name"] = pin.Name, ["block"] = (pin.Parent as DccBlock)?.Name },
+            DccChartInterface i => new HmiObject { ["kind"] = "chartInterface", ["name"] = i.Name },
+            DccParameter p => new HmiObject { ["kind"] = "parameter", ["number"] = p.Number, ["arrayIndex"] = p.ArrayIndex },
+            null => new HmiObject { ["kind"] = "none" },
+            _ => new HmiObject { ["kind"] = o.GetType().Name }
         };
-        private static JsonObject ConnectionRow(DccConnection c)
+        private static HmiObject ConnectionRow(DccConnection c)
         {
-            var row = new JsonObject();
+            var row = new HmiObject();
             Safe(row, "sink", () => DccEndpointRow(c.Sink)); Safe(row, "source", () => DccEndpointRow(c.Source));
             return row;
         }
         // DccPin and DccChartInterface share the official IOVariable (: IDccObject) contract: name / comment / value / unit / direction / flags / connections.
-        private static JsonObject IoVariableRow(IOVariable v, bool connections)
+        private static HmiObject IoVariableRow(IOVariable v, bool connections)
         {
             IDccObject dccObject = v;
-            var row = new JsonObject { ["name"] = dccObject.Name };
+            var row = new HmiObject { ["name"] = dccObject.Name };
             Safe(row, "comment", () => dccObject.Comment); Safe(row, "value", () => EngineeringScalarProperties.Json(v.Value)); Safe(row, "unit", () => v.Unit); Safe(row, "isInput", () => v.IsInput);
             Safe(row, "invisible", () => v.Invisible); Safe(row, "forTest", () => v.ForTest);
-            if (connections) Safe(row, "connections", () => new JsonArray(EngineeringGroupOperations.Items(v.Connections).Cast<DccConnection>().Select(c => (JsonNode)ConnectionRow(c)).ToArray()));
+            if (connections) Safe(row, "connections", () => new HmiArray(EngineeringGroupOperations.Items(v.Connections).Cast<DccConnection>().Select(c => (object)ConnectionRow(c)).ToArray()));
             else Safe(row, "connectionCount", () => v.Connections.Count);
             return row;
         }
-        private static JsonObject PinRow(DccPin p, bool connections)
+        private static HmiObject PinRow(DccPin p, bool connections)
         {
             var row = IoVariableRow(p, connections);
             Safe(row, "isPublished", () => p.IsPublished); Safe(row, "parameter", () => p.Parameter == null ? null : DccParameterRow(p.Parameter));
             return row;
         }
-        private static JsonObject BlockRow(DccBlock b, bool pins)
+        private static HmiObject BlockRow(DccBlock b, bool pins)
         {
             var row = StatementRow(b, "DccBlock");
             Safe(row, "genericInputsNumber", () => b.GenericInputsNumber); Safe(row, "pinCount", () => b.Pins.Count);
-            if (pins) Safe(row, "pins", () => new JsonArray(EngineeringGroupOperations.Items(b.Pins).Cast<DccPin>().Take(500).Select(p => (JsonNode)PinRow(p, true)).ToArray()));
+            if (pins) Safe(row, "pins", () => new HmiArray(EngineeringGroupOperations.Items(b.Pins).Cast<DccPin>().Take(500).Select(p => (object)PinRow(p, true)).ToArray()));
             return row;
         }
-        private static JsonObject DccInterfaceRow(DccChartInterface i)
+        private static HmiObject DccInterfaceRow(DccChartInterface i)
         {
             var row = IoVariableRow(i, true);
             Safe(row, "pin", () => DccEndpointRow(i.Pin));
             return row;
         }
-        private static JsonObject ChartRow(DriveControlChart c, int depth, int maxDepth, bool blocks, bool pins)
+        private static HmiObject ChartRow(DriveControlChart c, int depth, int maxDepth, bool blocks, bool pins)
         {
             var row = StatementRow(c, "DriveControlChart");
             Safe(row, "horizontalSheets", () => c.HorizontalSheets); Safe(row, "verticalSheets", () => c.VerticalSheets); Safe(row, "sheetWidth", () => c.SheetWidth); Safe(row, "sheetHeight", () => c.SheetHeight);
             Safe(row, "blockCount", () => c.Blocks.Count); Safe(row, "subchartCount", () => c.Subcharts.Count); Safe(row, "interfaceCount", () => c.ChartInterfaces.Count);
-            Safe(row, "partitions", () => new JsonArray(EngineeringGroupOperations.Items(c.Partitions).Cast<DccChartPartition>().Select(p => (JsonNode)new JsonObject { ["name"] = p.Name, ["comment"] = p.Comment }).ToArray()));
-            Safe(row, "chartInterfaces", () => new JsonArray(EngineeringGroupOperations.Items(c.ChartInterfaces).Cast<DccChartInterface>().Take(200).Select(i => (JsonNode)DccInterfaceRow(i)).ToArray()));
-            if (blocks) Safe(row, "blocks", () => new JsonArray(EngineeringGroupOperations.Items(c.Blocks).Cast<DccBlock>().Take(500).Select(b => (JsonNode)BlockRow(b, pins)).ToArray()));
-            if (depth < maxDepth) Safe(row, "subcharts", () => new JsonArray(EngineeringGroupOperations.Items(c.Subcharts).Cast<DriveControlChart>().Take(200).Select(s => (JsonNode)ChartRow(s, depth + 1, maxDepth, blocks, pins)).ToArray()));
+            Safe(row, "partitions", () => new HmiArray(EngineeringGroupOperations.Items(c.Partitions).Cast<DccChartPartition>().Select(p => (object)new HmiObject { ["name"] = p.Name, ["comment"] = p.Comment }).ToArray()));
+            Safe(row, "chartInterfaces", () => new HmiArray(EngineeringGroupOperations.Items(c.ChartInterfaces).Cast<DccChartInterface>().Take(200).Select(i => (object)DccInterfaceRow(i)).ToArray()));
+            if (blocks) Safe(row, "blocks", () => new HmiArray(EngineeringGroupOperations.Items(c.Blocks).Cast<DccBlock>().Take(500).Select(b => (object)BlockRow(b, pins)).ToArray()));
+            if (depth < maxDepth) Safe(row, "subcharts", () => new HmiArray(EngineeringGroupOperations.Items(c.Subcharts).Cast<DriveControlChart>().Take(200).Select(s => (object)ChartRow(s, depth + 1, maxDepth, blocks, pins)).ToArray()));
             return row;
         }
-        private static JsonArray SequenceRows(IEnumerable<Statement> statements) => new JsonArray(statements.Take(1000).Select((s, i) => (JsonNode)new JsonObject { ["index"] = i, ["name"] = s.Name, ["statementClass"] = s is DriveControlChart ? "DriveControlChart" : s is DccBlock ? "DccBlock" : s.GetType().Name }).ToArray());
+        private static HmiArray SequenceRows(IEnumerable<Statement> statements) => new HmiArray(statements.Take(1000).Select((s, i) => (object)new HmiObject { ["index"] = i, ["name"] = s.Name, ["statementClass"] = s is DriveControlChart ? "DriveControlChart" : s is DccBlock ? "DccBlock" : s.GetType().Name }).ToArray());
         // propertiesJson.Partition names a partition of the owning chart; the other writable scalars go through EngineeringScalarProperties.
-        private static void ApplyDccProperties(object target, JsonObject properties, DriveControlChart? owner, JsonObject meta)
+        private static void ApplyDccProperties(object target, HmiObject properties, DriveControlChart? owner, HmiObject meta)
         {
-            var scalars = new JsonObject(); foreach (var pair in properties) if (pair.Key != "Partition") scalars[pair.Key] = pair.Value?.DeepClone();
+            var scalars = new HmiObject(); foreach (var pair in properties) if (pair.Key != "Partition") scalars[pair.Key] = pair.Value?.DeepClone();
             if (properties.ContainsKey("Partition"))
             {
-                var name = properties["Partition"]?.GetValue<string>() ?? "";
-                var partition = owner?.Partitions.Find(name) ?? throw new PortalException(PortalErrorCode.NotFound, "Partition not found in the owning chart: " + name);
+                var name = properties["Partition"]?.OptionalValue<string>() ?? "";
+                var partition = owner?.Partitions.Find(name) ?? throw new PlcSoftwareException("NotFound", "Partition not found in the owning chart: " + name);
                 ((Statement)target).Partition = partition; meta["partitionApplied"] = partition.Name;
             }
             if (scalars.Count > 0) EngineeringScalarProperties.Apply(target, EngineeringScalarProperties.Prepare(target.GetType(), scalars), meta);
         }
 
         // ---- tools ---------------------------------------------------------------------------------------------------------------
-        public ResponseMessage ReadDccCharts(string devicePathJson, string itemPathJson, ushort driveObjectNumber = 0, int driveObjectIndex = -1, string chartPath = "", int maxDepth = 3, bool includeBlocks = true, bool includePins = false, bool includeLibraries = true)
+        public HardwareAddressingReply ReadDccCharts(string devicePathJson, string itemPathJson, ushort driveObjectNumber = 0, int driveObjectIndex = -1, string chartPath = "", int maxDepth = 3, bool includeBlocks = true, bool includePins = false, bool includeLibraries = true)
             => _session.RunHmiStepTool("ListDccCharts", meta => DccStep(meta, () =>
             {
                 if (maxDepth < 1 || maxDepth > 8) throw new ArgumentException("maxDepth 1..8 required.");
                 var drive = _session.ExactDriveObject(devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex);
                 var container = ExactDccContainer(drive);
-                meta["driveObject"] = StartdriveLogic.ParseDriveSelector(driveObjectNumber, driveObjectIndex).Label;
-                if (includeLibraries) Safe(meta, "dcbLibraries", () => new JsonArray(EngineeringGroupOperations.Items(container.DcbLibraries).Cast<DcbLibrary>().Select(l => (JsonNode)_session.DcbLibraryRow(l, true)).ToArray()));
+                meta["driveObject"] = StartdrivePolicy.ParseDriveSelector(driveObjectNumber, driveObjectIndex).Label;
+                if (includeLibraries) Safe(meta, "dcbLibraries", () => new HmiArray(EngineeringGroupOperations.Items(container.DcbLibraries).Cast<DcbLibrary>().Select(l => (object)OptionalSession.DcbLibraryRow(l, true)).ToArray()));
                 if (string.IsNullOrEmpty(chartPath))
                 {
                     var charts = EngineeringGroupOperations.Items(container.Charts).Cast<DriveControlChart>().ToArray();
-                    meta["records"] = new JsonArray(charts.Select(c => (JsonNode)ChartRow(c, 1, maxDepth, includeBlocks, includePins)).ToArray()); meta["expectedCount"] = charts.Length; meta["actualCount"] = charts.Length;
+                    meta["records"] = new HmiArray(charts.Select(c => (object)ChartRow(c, 1, maxDepth, includeBlocks, includePins)).ToArray()); meta["expectedCount"] = charts.Length; meta["actualCount"] = charts.Length;
                     Safe(meta, "chartSequence", () => SequenceRows(container.Charts.GetChartSequence()));
                     return "DCC chart container read (charts with subcharts, partitions, interfaces" + (includeBlocks ? ", blocks" : "") + (includePins ? ", pins" : "") + ", DCB libraries, execution sequence); no modification.";
                 }
@@ -170,18 +181,18 @@ namespace TiaMcpServer.Siemens.Services
             }));
 
         // chartName is a chart path (Root/Sub); empty on create requests an automatic name.
-        public ResponseMessage ManageDccChart(string devicePathJson, string itemPathJson, ushort driveObjectNumber, string chartName, string action, string filePath = "", string importOptions = "", string propertiesJson = "{}", bool dryRun = true, int driveObjectIndex = -1, bool confirmDelete = false, int sequenceIndex = -1)
+        public HardwareAddressingReply ManageDccChart(string devicePathJson, string itemPathJson, ushort driveObjectNumber, string chartName, string action, string filePath = "", string importOptions = "", string propertiesJson = "{}", bool dryRun = true, int driveObjectIndex = -1, bool confirmDelete = false, int sequenceIndex = -1)
             => _session.RunHmiStepTool("ManageDccChart", meta => DccStep(meta, () =>
             {
                 var r = Logic.ValidateChartRequest(chartName, action, filePath, importOptions, propertiesJson, confirmDelete, dryRun, sequenceIndex);   // sequenceIndex alone is a valid update.
                 using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var drive = _session.ExactDriveObject(devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex);
                 var container = ExactDccContainer(drive);
-                meta["driveObject"] = StartdriveLogic.ParseDriveSelector(driveObjectNumber, driveObjectIndex).Label; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
+                meta["driveObject"] = StartdrivePolicy.ParseDriveSelector(driveObjectNumber, driveObjectIndex).Label; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 DriveControlChart? parent = r.Path.Length > 1 ? ExactDccChart(container, r.Path.Take(r.Path.Length - 1).ToArray()) : null;
                 DriveControlChartComposition charts = parent?.Subcharts ?? container.Charts;
                 DriveControlChart? chart = r.Path.Length == 0 ? null : (r.Action == "create" ? charts.Find(r.Path.Last()) : ExactDccChart(container, r.Path));
-                if (action == "create" && chart != null) throw new PortalException(PortalErrorCode.InvalidState, "DCC chart already exists: " + chartName);
+                if (action == "create" && chart != null) throw new PlcSoftwareException("InvalidState", "DCC chart already exists: " + chartName);
                 if (chart != null) meta["before"] = ChartRow(chart, 1, 1, false, false);
                 switch (action)
                 {
@@ -211,7 +222,7 @@ namespace TiaMcpServer.Siemens.Services
                         {
                             meta["nativeSignature"] = "DriveControlChartComposition.Import(string, DccImportOptions)";
                             DccImportResultData result = charts.Import(file!.FullName, (DccImportOptions)Enum.Parse(typeof(DccImportOptions), r.ImportOption));
-                            var remapped = new JsonObject(); Safe(meta, "remappedParameterNumbers", () => { foreach (var pair in result.RemappedParameterNumbers) remapped[pair.Key.ToString()] = EngineeringScalarProperties.Json(pair.Value); return remapped; });
+                            var remapped = new HmiObject(); Safe(meta, "remappedParameterNumbers", () => { foreach (var pair in result.RemappedParameterNumbers) remapped[pair.Key.ToString()] = EngineeringScalarProperties.Json(pair.Value); return remapped; });
                             break;
                         }
                     case "optimizeSequence": meta["nativeSignature"] = "DriveControlChart.OptimizeRunSequence()"; chart!.OptimizeRunSequence(); Safe(meta, "runSequence", () => SequenceRows(chart.GetRunSequence())); break;
@@ -224,11 +235,11 @@ namespace TiaMcpServer.Siemens.Services
                     if (action == "delete") meta["verifiedAbsent"] = after == null; else if (after != null) meta["after"] = ChartRow(after, 1, 1, false, false);
                     if (action == "delete" ? after != null : action != "import" && action != "exportAll" && after == null) throw new InvalidOperationException("Chart presence not as expected after " + action + ".");
                 }
-                else if (action == "import") meta["after"] = new JsonArray(EngineeringGroupOperations.Items(container.Charts).Cast<DriveControlChart>().Select(c => (JsonNode)c.Name).ToArray());
+                else if (action == "import") meta["after"] = new HmiArray(EngineeringGroupOperations.Items(container.Charts).Cast<DriveControlChart>().Select(c => (object)c.Name).ToArray());
                 return "DCC chart " + action + " executed and read back; no save, download or online drive command.";
             }));
 
-        public ResponseMessage ManageDccBlock(string devicePathJson, string itemPathJson, string chartPath, string blockName = "", string action = "read", string blockType = "", string libraryName = "", string propertiesJson = "{}", ushort driveObjectNumber = 0, int driveObjectIndex = -1, bool confirmDelete = false, int sequenceIndex = -1, bool dryRun = true)
+        public HardwareAddressingReply ManageDccBlock(string devicePathJson, string itemPathJson, string chartPath, string blockName = "", string action = "read", string blockType = "", string libraryName = "", string propertiesJson = "{}", ushort driveObjectNumber = 0, int driveObjectIndex = -1, bool confirmDelete = false, int sequenceIndex = -1, bool dryRun = true)
             => _session.RunHmiStepTool("ManageDccBlock", meta => DccStep(meta, () =>
             {
                 var r = Logic.ValidateBlockRequest(chartPath, blockName, action, blockType, libraryName, propertiesJson, confirmDelete, dryRun, sequenceIndex);
@@ -238,11 +249,11 @@ namespace TiaMcpServer.Siemens.Services
                 meta["chart"] = chartPath; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 if (action == "read")
                 {
-                    if (string.IsNullOrEmpty(blockName)) { var all = EngineeringGroupOperations.Items(chart.Blocks).Cast<DccBlock>().ToArray(); meta["records"] = new JsonArray(all.Select(b => (JsonNode)BlockRow(b, false)).ToArray()); meta["expectedCount"] = all.Length; return "DCC blocks of the chart read; give blockName for one block with pins."; }
+                    if (string.IsNullOrEmpty(blockName)) { var all = EngineeringGroupOperations.Items(chart.Blocks).Cast<DccBlock>().ToArray(); meta["records"] = new HmiArray(all.Select(b => (object)BlockRow(b, false)).ToArray()); meta["expectedCount"] = all.Length; return "DCC blocks of the chart read; give blockName for one block with pins."; }
                     meta["block"] = BlockRow(ExactDccBlock(chart, blockName), true); return "DCC block read with pins, published parameters and connections; no modification.";
                 }
                 DccBlock? block = action == "create" ? (string.IsNullOrEmpty(blockName) ? null : chart.Blocks.Find(blockName)) : ExactDccBlock(chart, blockName);
-                if (action == "create" && block != null) throw new PortalException(PortalErrorCode.InvalidState, "DCC block already exists in the chart: " + blockName);
+                if (action == "create" && block != null) throw new PlcSoftwareException("InvalidState", "DCC block already exists in the chart: " + blockName);
                 if (block != null) meta["before"] = BlockRow(block, false);
                 if (!r.Writes) return "DCC block " + action + " preview; nothing changed.";
                 meta["mayHaveChanged"] = true;
@@ -260,7 +271,7 @@ namespace TiaMcpServer.Siemens.Services
                     case "delete": meta["nativeSignature"] = "DccBlock.Delete()"; block!.Delete(); break;
                     case "setAsPredecessor": meta["nativeSignature"] = "DccBlock.SetAsPredecessor()"; block!.SetAsPredecessor(); break;
                 }
-                var name = action == "create" ? block!.Name : (r.Properties["Name"]?.GetValue<string>() ?? blockName);
+                var name = action == "create" ? block!.Name : (r.Properties["Name"]?.OptionalValue<string>() ?? blockName);
                 var after = chart.Blocks.Find(name);
                 if (action == "delete") { meta["verifiedAbsent"] = after == null; if (after != null) throw new InvalidOperationException("Block remains after Delete()."); }
                 else { if (after == null) throw new InvalidOperationException("Block not found after " + action + "."); meta["after"] = BlockRow(after, action == "create"); }
@@ -271,14 +282,14 @@ namespace TiaMcpServer.Siemens.Services
         // TIA V21, 2026-09-20 (docs/reference/real-machine-ledger.md), S120 V5.2 drive axis, ADD block: DccPin.Value is declared object but TIA only accepts the pin's own data
         // type ("The specified value is of type System.Int32, which is not accepted in place of System.Single") - a JSON number is
         // therefore converted to the CLR type of the current value (Single / Int32 / Boolean / ...) before the write.
-        private static List<(System.Reflection.PropertyInfo Property, object? Value)> TypedValueChanges(List<(System.Reflection.PropertyInfo Property, object? Value)> changes, JsonObject properties, object? currentValue)
+        private static List<(System.Reflection.PropertyInfo Property, object? Value)> TypedValueChanges(List<(System.Reflection.PropertyInfo Property, object? Value)> changes, HmiObject properties, object? currentValue)
         {
             if (currentValue == null || currentValue is IEngineeringObject || properties["Value"] == null) return changes;
             var typed = EngineeringScalarProperties.ConvertValue(properties["Value"], currentValue.GetType());
             return changes.Select(c => c.Property.Name == "Value" ? (c.Property, typed) : c).ToList();
         }
 
-        public ResponseMessage ManageDccPin(string devicePathJson, string itemPathJson, string chartPath, string blockName, string pinName, string action = "read", string propertiesJson = "{}", string partnerJson = "{}", bool setAsSignal = false, int parameterNumber = -1, int arrayIndex = -1, ushort driveObjectNumber = 0, int driveObjectIndex = -1, bool dryRun = true)
+        public HardwareAddressingReply ManageDccPin(string devicePathJson, string itemPathJson, string chartPath, string blockName, string pinName, string action = "read", string propertiesJson = "{}", string partnerJson = "{}", bool setAsSignal = false, int parameterNumber = -1, int arrayIndex = -1, ushort driveObjectNumber = 0, int driveObjectIndex = -1, bool dryRun = true)
             => _session.RunHmiStepTool("ManageDccPin", meta => DccStep(meta, () =>
             {
                 var r = Logic.ValidatePinRequest(chartPath, blockName, pinName, action, propertiesJson, partnerJson, setAsSignal, parameterNumber, arrayIndex, dryRun);
@@ -295,10 +306,10 @@ namespace TiaMcpServer.Siemens.Services
                 if (action == "disconnect")
                 {
                     connection = EngineeringGroupOperations.Items(pin.Connections).Cast<DccConnection>().FirstOrDefault(c => Matches(c.Sink, r) || Matches(c.Source, r))
-                        ?? throw new PortalException(PortalErrorCode.NotFound, "No connection of pin " + pinName + " to the given partner.");
+                        ?? throw new PlcSoftwareException("NotFound", "No connection of pin " + pinName + " to the given partner.");
                     meta["connection"] = ConnectionRow(connection);
                 }
-                if (action == "updateParameter" && pin.Parameter == null) throw new PortalException(PortalErrorCode.InvalidState, "Pin " + pinName + " is not published (no DccParameter).");
+                if (action == "updateParameter" && pin.Parameter == null) throw new PlcSoftwareException("InvalidState", "Pin " + pinName + " is not published (no DccParameter).");
                 if (!r.Writes) return "DCC pin " + action + " preview; nothing changed.";
                 meta["mayHaveChanged"] = true;
                 switch (action)
@@ -327,7 +338,7 @@ namespace TiaMcpServer.Siemens.Services
             _ => false
         };
 
-        public ResponseMessage ManageDccChartInterface(string devicePathJson, string itemPathJson, string chartPath, string interfaceName = "", string action = "read", string sourceBlock = "", string sourcePin = "", string propertiesJson = "{}", ushort driveObjectNumber = 0, int driveObjectIndex = -1, bool confirmDelete = false, bool dryRun = true)
+        public HardwareAddressingReply ManageDccChartInterface(string devicePathJson, string itemPathJson, string chartPath, string interfaceName = "", string action = "read", string sourceBlock = "", string sourcePin = "", string propertiesJson = "{}", ushort driveObjectNumber = 0, int driveObjectIndex = -1, bool confirmDelete = false, bool dryRun = true)
             => _session.RunHmiStepTool("ManageDccChartInterface", meta => DccStep(meta, () =>
             {
                 var r = Logic.ValidateInterfaceRequest(chartPath, interfaceName, action, sourceBlock, sourcePin, propertiesJson, confirmDelete, dryRun);
@@ -337,7 +348,7 @@ namespace TiaMcpServer.Siemens.Services
                 meta["chart"] = chartPath; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 if (action == "read")
                 {
-                    if (string.IsNullOrEmpty(interfaceName)) { var all = EngineeringGroupOperations.Items(chart.ChartInterfaces).Cast<DccChartInterface>().ToArray(); meta["records"] = new JsonArray(all.Select(i => (JsonNode)DccInterfaceRow(i)).ToArray()); meta["expectedCount"] = all.Length; return "DCC chart interfaces read; no modification."; }
+                    if (string.IsNullOrEmpty(interfaceName)) { var all = EngineeringGroupOperations.Items(chart.ChartInterfaces).Cast<DccChartInterface>().ToArray(); meta["records"] = new HmiArray(all.Select(i => (object)DccInterfaceRow(i)).ToArray()); meta["expectedCount"] = all.Length; return "DCC chart interfaces read; no modification."; }
                     meta["interface"] = DccInterfaceRow(ExactDccInterface(chart, interfaceName)); return "DCC chart interface read; no modification.";
                 }
                 DccChartInterface? iface = action == "create" ? null : ExactDccInterface(chart, interfaceName);
@@ -358,7 +369,7 @@ namespace TiaMcpServer.Siemens.Services
                 return "DCC chart interface " + action + " executed and read back; no save, download or online drive command.";
             }));
 
-        public ResponseMessage ManageDccChartPartition(string devicePathJson, string itemPathJson, string chartPath, string partitionName = "", string action = "read", string propertiesJson = "{}", ushort driveObjectNumber = 0, int driveObjectIndex = -1, bool confirmDelete = false, bool dryRun = true)
+        public HardwareAddressingReply ManageDccChartPartition(string devicePathJson, string itemPathJson, string chartPath, string partitionName = "", string action = "read", string propertiesJson = "{}", ushort driveObjectNumber = 0, int driveObjectIndex = -1, bool confirmDelete = false, bool dryRun = true)
             => _session.RunHmiStepTool("ManageDccChartPartition", meta => DccStep(meta, () =>
             {
                 var r = Logic.ValidatePartitionRequest(chartPath, partitionName, action, propertiesJson, confirmDelete, dryRun);
@@ -366,18 +377,18 @@ namespace TiaMcpServer.Siemens.Services
                 var drive = _session.ExactDriveObject(devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex);
                 var chart = ExactDccChart(ExactDccContainer(drive), r.ChartPath);
                 meta["chart"] = chartPath; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
-                JsonArray Rows() => new JsonArray(EngineeringGroupOperations.Items(chart.Partitions).Cast<DccChartPartition>().Select(p => (JsonNode)new JsonObject { ["name"] = p.Name, ["comment"] = p.Comment }).ToArray());
+                HmiArray Rows() => new HmiArray(EngineeringGroupOperations.Items(chart.Partitions).Cast<DccChartPartition>().Select(p => (object)new HmiObject { ["name"] = p.Name, ["comment"] = p.Comment }).ToArray());
                 meta["before"] = Rows();
                 if (action == "read") return "DCC chart partitions read; no modification.";
                 DccChartPartition? partition = chart.Partitions.Find(partitionName);
-                if (action == "create" && partition != null) throw new PortalException(PortalErrorCode.InvalidState, "Partition already exists: " + partitionName);
-                if (action != "create" && partition == null) throw new PortalException(PortalErrorCode.NotFound, "Partition not found: " + partitionName);
+                if (action == "create" && partition != null) throw new PlcSoftwareException("InvalidState", "Partition already exists: " + partitionName);
+                if (action != "create" && partition == null) throw new PlcSoftwareException("NotFound", "Partition not found: " + partitionName);
                 if (!r.Writes) return "DCC chart partition " + action + " preview; nothing changed.";
                 meta["mayHaveChanged"] = true; string name = partitionName;
                 switch (action)
                 {
                     case "create": meta["nativeSignature"] = "DccChartPartitionComposition.Create(string)"; partition = chart.Partitions.Create(partitionName); break;
-                    case "update": EngineeringScalarProperties.Apply(partition!, EngineeringScalarProperties.Prepare(typeof(DccChartPartition), r.Properties), meta); name = r.Properties["Name"]?.GetValue<string>() ?? partitionName; break;
+                    case "update": EngineeringScalarProperties.Apply(partition!, EngineeringScalarProperties.Prepare(typeof(DccChartPartition), r.Properties), meta); name = r.Properties["Name"]?.OptionalValue<string>() ?? partitionName; break;
                     case "delete": meta["nativeSignature"] = "DccChartPartition.Delete()"; partition!.Delete(); break;
                 }
                 var after = chart.Partitions.Find(name);
@@ -387,7 +398,7 @@ namespace TiaMcpServer.Siemens.Services
                 return "DCC chart partition " + action + " executed and read back; no save, download or online drive command.";
             }));
 
-        public ResponseMessage ManageDcbLibraries(string action = "read", string devicePathJson = "[]", string itemPathJson = "[]", ushort driveObjectNumber = 0, int driveObjectIndex = -1, string filePath = "", bool dryRun = true)
+        public HardwareAddressingReply ManageDcbLibraries(string action = "read", string devicePathJson = "[]", string itemPathJson = "[]", ushort driveObjectNumber = 0, int driveObjectIndex = -1, string filePath = "", bool dryRun = true)
             => _session.RunHmiStepTool("ManageDcbLibraries", meta => DccStep(meta, () =>
             {
                 bool write = Logic.ValidateLibraryRequest(action, filePath, dryRun);
@@ -397,17 +408,17 @@ namespace TiaMcpServer.Siemens.Services
                     var drive = _session.ExactDriveObject(devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex);
                     var container = ExactDccContainer(drive);
                     var libraries = EngineeringGroupOperations.Items(container.DcbLibraries).Cast<DcbLibrary>().ToArray();
-                    meta["driveObject"] = StartdriveLogic.ParseDriveSelector(driveObjectNumber, driveObjectIndex).Label;
-                    meta["records"] = new JsonArray(libraries.Select(l => (JsonNode)_session.DcbLibraryRow(l, true)).ToArray()); meta["expectedCount"] = libraries.Length;
+                    meta["driveObject"] = StartdrivePolicy.ParseDriveSelector(driveObjectNumber, driveObjectIndex).Label;
+                    meta["records"] = new HmiArray(libraries.Select(l => (object)OptionalSession.DcbLibraryRow(l, true)).ToArray()); meta["expectedCount"] = libraries.Length;
                     return "DCB libraries used by the drive object's charts read with their block types; no modification.";
                 }
                 using var access = write ? _session.AcquireHmiEditAccess() : null;
                 var file = HardwareServicesLogic.RequireExistingInputFile(filePath, "filePath"); meta["file"] = file.FullName;
-#if TIA_V20
-                throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "DcbLibraryImporter.ImportDcbLibrary is a V21 addition; absent on V20.");
+#if !OPTIONAL_V21
+                throw new PlcSoftwareException("NotSupportedOnVersion", "DcbLibraryImporter.ImportDcbLibrary is a V21 addition; absent on V20.");
 #else
                 var importer = (_session.CurrentProject!.ProjectLibrary as IEngineeringServiceProvider)?.GetService<DcbLibraryImporter>() ?? _session.CurrentProject.GetService<DcbLibraryImporter>()
-                    ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "DcbLibraryImporter unavailable (SINAMICS DCC not installed).");
+                    ?? throw new PlcSoftwareException("NotSupportedOnVersion", "DcbLibraryImporter unavailable (SINAMICS DCC not installed).");
                 if (!write) return "DCB extension library import preview; nothing imported into the project library.";
                 meta["mayHaveChanged"] = true; meta["nativeSignature"] = "DcbLibraryImporter.ImportDcbLibrary(string)";
                 importer.ImportDcbLibrary(file.FullName);
@@ -416,7 +427,7 @@ namespace TiaMcpServer.Siemens.Services
             }));
 
         // Generic property-path reader for arbitrary DCC sub-paths after typed drive resolution.
-        public ResponseMessage ReadDccObject(string devicePathJson, string itemPathJson, ushort driveObjectNumber, string objectPathJson = "[]", int offset = 0, int limit = 100, int driveObjectIndex = -1)
+        public HardwareAddressingReply ReadDccObject(string devicePathJson, string itemPathJson, ushort driveObjectNumber, string objectPathJson = "[]", int offset = 0, int limit = 100, int driveObjectIndex = -1)
             => _session.RunHmiStepTool("GetDccObject", meta => DccStep(meta, () =>
             {
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("Invalid pagination.");
@@ -424,9 +435,11 @@ namespace TiaMcpServer.Siemens.Services
                 var root = ExactDccContainer(drive);
                 var target = EngineeringObjectAddress.Resolve(root, objectPathJson);
                 var items = target is System.Collections.IEnumerable && target is not string ? EngineeringGroupOperations.Items(target).ToArray() : new[] { target };
-                var rows = items.Skip(offset).Take(limit).Select(x => (JsonNode)EngineeringObjectAddress.Read(x)).ToArray();
-                meta["records"] = new JsonArray(rows); meta["expectedCount"] = items.Length; meta["actualCount"] = rows.Length; meta["nextOffset"] = offset + rows.Length < items.Length ? offset + rows.Length : (int?)null; meta["truncated"] = offset + rows.Length < items.Length; meta["dataComplete"] = false;
+                var rows = items.Skip(offset).Take(limit).Select(x => (object)EngineeringObjectAddress.Read(x)).ToArray();
+                meta["records"] = new HmiArray(rows); meta["expectedCount"] = items.Length; meta["actualCount"] = rows.Length; meta["nextOffset"] = offset + rows.Length < items.Length ? offset + rows.Length : (int?)null; meta["truncated"] = offset + rows.Length < items.Length; meta["dataComplete"] = false;
                 return "Offline DCC objects (charts/blocks/pins/libraries) read at exact property path; scalar scope and live pagination only.";
             }));
     }
 }
+
+#endif

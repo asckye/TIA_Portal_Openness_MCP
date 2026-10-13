@@ -1,0 +1,115 @@
+using System;
+using System.Collections.Generic;
+
+namespace TiaMcp.Adapters.Contracts;
+
+public sealed class OptionalEngineeringRequest
+{
+    public string Operation { get; set; } = "";
+    public bool IsWrite { get; set; }
+    public Dictionary<string, OptionalEngineeringValue> Inputs { get; set; } = new Dictionary<string, OptionalEngineeringValue>();
+    public Dictionary<string, string> InputErrors { get; set; } = new Dictionary<string, string>();
+    public string Category { get; set; } = "";
+    public string FolderPath { get; set; } = "";
+    public string TablePath { get; set; } = "";
+    public bool IncludeRules { get; set; } = false;
+    public int MaxDepth { get; set; } = 0;
+    public int Offset { get; set; } = 0;
+    public int Limit { get; set; } = 0;
+    public string Kind { get; set; } = "";
+    public string Path { get; set; } = "";
+    public string Action { get; set; } = "";
+    public string LibraryName { get; set; } = "";
+    public string TypePath { get; set; } = "";
+    public string TypeVersion { get; set; } = "";
+    public bool ConfirmDelete { get; set; } = false;
+    public bool DryRun { get; set; } = false;
+    public string RulePath { get; set; } = "";
+    public string PropertiesJson { get; set; } = "";
+    public string ReferencesJson { get; set; } = "";
+    public string DeviceSelectionJson { get; set; } = "";
+    public string DeviceNamesJson { get; set; } = "";
+    public string MasterCopyPath { get; set; } = "";
+    public string CreateOption { get; set; } = "";
+    public string SoftwarePath { get; set; } = "";
+    public string BlockPath { get; set; } = "";
+    public bool IncludeBlockParameters { get; set; } = false;
+    public string Name { get; set; } = "";
+    public string TextsJson { get; set; } = "";
+    public string DevicePathJson { get; set; } = "";
+    public string ItemPathJson { get; set; } = "";
+    public string LibraryItemKind { get; set; } = "";
+    public string LibraryItemPath { get; set; } = "";
+    public string Expression { get; set; } = "";
+    public int MaxResults { get; set; } = 0;
+    public string ScreenName { get; set; } = "";
+    public string FilePath { get; set; } = "";
+    public string HmiDeviceName { get; set; } = "";
+    public string PlcSoftwarePathsJson { get; set; } = "";
+    public string GenerationOptions { get; set; } = "";
+    public string AdditionalHmiDeviceNamesJson { get; set; } = "";
+    public string ObjectPathJson { get; set; } = "";
+    public string CollectionPathJson { get; set; } = "";
+    public bool IncludeTelegrams { get; set; } = false;
+    public bool IncludeFunctions { get; set; } = false;
+    public bool IncludeTechnologyExtensions { get; set; } = false;
+    public bool IncludeDcc { get; set; } = false;
+    public ushort DriveObjectNumber { get; set; } = 0;
+    public int DriveObjectIndex { get; set; } = 0;
+    public string Source { get; set; } = "";
+    public string NamesJson { get; set; } = "";
+    public string NumbersJson { get; set; } = "";
+    public bool IncludeBits { get; set; } = false;
+    public bool IncludeEnumValues { get; set; } = false;
+    public bool IncludeValue { get; set; } = false;
+    public string Parameter { get; set; } = "";
+    public string ValueJson { get; set; } = "";
+    public string TelegramType { get; set; } = "";
+    public int TelegramNumber { get; set; } = 0;
+    public int InputSize { get; set; } = 0;
+    public int OutputSize { get; set; } = 0;
+    public string Direction { get; set; } = "";
+    public int Size { get; set; } = 0;
+    public bool KeepOriginalAddress { get; set; } = false;
+    public string ObjectPath { get; set; } = "";
+    public string InterfaceKind { get; set; } = "";
+    public int SensorIndex { get; set; } = 0;
+    public string ConnectOption { get; set; } = "";
+    public string Password { get; set; } = "";
+    public string Identifier { get; set; } = "";
+    public bool ConfirmUninstallInUse { get; set; } = false;
+    public bool IncludeParameters { get; set; } = false;
+    public string TypeIdentifier { get; set; } = "";
+    public int PositionNumber { get; set; } = 0;
+    public bool Active { get; set; } = false;
+    public string FileOperation { get; set; } = "";
+    public string ResetMode { get; set; } = "";
+    public string ActivationState { get; set; } = "";
+    public bool ConfirmOnline { get; set; } = false;
+    public string ChartPath { get; set; } = "";
+    public bool IncludeBlocks { get; set; } = false;
+    public bool IncludePins { get; set; } = false;
+    public bool IncludeLibraries { get; set; } = false;
+    public string ChartName { get; set; } = "";
+    public string ImportOptions { get; set; } = "";
+    public int SequenceIndex { get; set; } = 0;
+    public string BlockName { get; set; } = "";
+    public string BlockType { get; set; } = "";
+    public string PinName { get; set; } = "";
+    public string PartnerJson { get; set; } = "";
+    public bool SetAsSignal { get; set; } = false;
+    public int ParameterNumber { get; set; } = 0;
+    public int ArrayIndex { get; set; } = 0;
+    public string InterfaceName { get; set; } = "";
+    public string SourceBlock { get; set; } = "";
+    public string SourcePin { get; set; } = "";
+    public string PartitionName { get; set; } = "";
+}
+
+public sealed class OptionalEngineeringValue
+{
+    public string Kind { get; set; } = "null";
+    public string Text { get; set; } = "";
+    public Dictionary<string, OptionalEngineeringValue> Properties { get; set; } = new Dictionary<string, OptionalEngineeringValue>();
+    public OptionalEngineeringValue[] Items { get; set; } = Array.Empty<OptionalEngineeringValue>();
+}

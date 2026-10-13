@@ -4,6 +4,7 @@
   <PropertyGroup>
     <RootNamespace>TiaMcp.FoundationHost.Tests</RootNamespace><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><DefineConstants>$(DefineConstants);TIA_FOUNDATION_TEST_HOST</DefineConstants></PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../../src/Adapters/Native/Optional/OptionalAssemblyAdmission.cs" Link="OptionalAssemblyAdmission.cs" />
     <Compile Include="../../Generation/TiaMcp.Generation.Planning.Tests/PlanningFixture.cs" Link="Generation/PlanningFixture.cs" />
     <Compile Include="../../../src/FoundationHost/GenerationTool.cs" Link="GenerationTool.cs" />
     <ProjectReference Include="../../WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/TiaMcp.WorkerChannel.TransportFixture.csproj" ReferenceOutputAssembly="false" />

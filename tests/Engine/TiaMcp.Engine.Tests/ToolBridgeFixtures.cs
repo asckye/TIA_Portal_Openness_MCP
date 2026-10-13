@@ -33,7 +33,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
     public class ResponseMessage { public string? Message { get; set; } public JsonObject? Meta { get; set; } }
     public class ResponseStringList : ResponseMessage { public IEnumerable<string>? Items { get; set; } }
-    // Explicit fixture catalogs load this probe; assembly discovery loads the real DCC tool.
+    // Explicit fixture catalogs load these probes; assembly discovery loads the real optional-product tools.
     public static class DcbVersionProbe
     {
         [McpServerTool(Name = "ManageDcbLibraries")]
@@ -41,15 +41,15 @@ namespace TiaMcpServer.ModelContextProtocol
             string[] itemPath = null!, ushort driveObjectNumber = 0, int driveObjectIndex = -1,
             string filePath = "", bool dryRun = true)
         { ToolBridgeProbes.VersionProbeCalls++; return ToolBridgeProbes.ProbeResult(true); }
+        [global::ModelContextProtocol.Server.McpServerTool(Name = "ListSafetyActivationTests")]
+        public static CallToolResult ProbeVersionedSafety()
+        { ToolBridgeProbes.VersionProbeCalls++; return ToolBridgeProbes.ProbeResult(true); }
     }
     [McpServerToolType]
     public static class ToolBridgeProbes
     {
         internal static int VersionProbeCalls;
         // Application-boundary fixtures, not fabricated Siemens SDK classes.
-        [global::ModelContextProtocol.Server.McpServerTool(Name = "ListSafetyActivationTests")]
-        public static CallToolResult ProbeVersionedSafety()
-        { VersionProbeCalls++; return ProbeResult(true); }
         [global::ModelContextProtocol.Server.McpServerTool]
         public static CallToolResult ProbeResult(bool success) => success
             ? McpServer.V4Result("ProbeResult", new JsonObject { ["summary"] = "probe" })
@@ -253,7 +253,7 @@ namespace TiaMcp.Engine.Tests
                 typeof(SoftwareUnitDeepTools), typeof(PlcIntegrityTools), typeof(PlcWatchTools), typeof(PlcCausalTraceTools), typeof(PlcTechnologyTools), typeof(PlcMotionTools), typeof(TechnologyObjectsTools),
                 typeof(ClassicHmiFoldersTools), typeof(MotionProDiagClassicHmiTools), typeof(PlcProDiagTools),
                 typeof(HmiInspectionPortTools), typeof(HmiExchangeTools), typeof(HmiTagDeletionTools),
-                typeof(CertificateManagementTools), typeof(ProjectSecurityTools), typeof(ProjectLifecycleSessionTools), typeof(ProjectLifecycleProjectTools), typeof(ProjectLifecycleInspectionTools), typeof(ProjectLifecycleDeviceTools), typeof(ProjectLifecycleExchangeTools), typeof(ProjectProtectionTools), typeof(ProjectUserManagementTools), typeof(SafetyManagementTools), typeof(SecurityDeepTools),
+                typeof(CertificateManagementTools), typeof(ProjectSecurityTools), typeof(ProjectLifecycleSessionTools), typeof(ProjectLifecycleProjectTools), typeof(ProjectLifecycleInspectionTools), typeof(ProjectLifecycleDeviceTools), typeof(ProjectLifecycleExchangeTools), typeof(ProjectProtectionTools), typeof(ProjectUserManagementTools), typeof(SafetyManagementTools), typeof(SafetyValidationTools), typeof(SecurityDeepTools),
                 typeof(UnifiedHmiTools), typeof(UnifiedHmiGroupsTools), typeof(UnifiedScreenItemsTools), typeof(UnifiedUiModelTools),
                 typeof(LibraryTools), typeof(SivarcTools), typeof(VersionControlTools),
                 typeof(DccTools), typeof(StartdriveTools), typeof(TeamcenterTools),

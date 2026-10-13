@@ -13,7 +13,7 @@ namespace TiaMcp.Engine.Tests
 {
     public sealed class V4InputFollowupTests
     {
-        // src/Engine/Siemens/StartdriveLogic.cs:83-105. The selector is shared by
+        // src/Logic/Siemens/StartdriveLogic.cs:83-105. The selector is shared by
         // the parameter request parsers; omitted index is the legacy -1 sentinel.
         [Theory]
         [InlineData("[]")]

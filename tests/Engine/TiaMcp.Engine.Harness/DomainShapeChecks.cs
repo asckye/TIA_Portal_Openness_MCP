@@ -167,8 +167,10 @@ internal static class DomainShapeChecks
                 check(method.DeclaringType == service && surface.Tool(name) == tool && !tool.IsStatic
                     && ReferenceEquals(target, surface.Target(method)) && ReferenceEquals(toolTarget, surface.Target(tool)),
                     domain.Name + " singleton ownership: " + name);
-                bool ported = domain.Name is "Library" or "VersionControl" or "Teamcenter" or "OnlineDownload";
-                check((ported ? service.GetField(domain.Name == "OnlineDownload" ? "_call" : "call", all)!.GetValue(target) is Delegate
+                bool optionalPorted = domain.Name is "OptionalEngineering" or "Sivarc" or "Dcc" or "Startdrive";
+                bool ported = optionalPorted || domain.Name is "Library" or "VersionControl" or "Teamcenter" or "OnlineDownload";
+                var bridge = optionalPorted ? service.GetField("_port", all)!.GetValue(target) : target;
+                check((ported ? (optionalPorted ? bridge!.GetType().GetField("_call", all)!.GetValue(bridge) : service.GetField(domain.Name == "OnlineDownload" ? "_call" : "call", all)!.GetValue(target)) is Delegate
                         && !service.GetFields(all).Any(f => f.FieldType == contract)
                         : ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session))
                     && ReferenceEquals(tools.GetFields(all).Single(field => field.FieldType == service).GetValue(toolTarget), target),
@@ -213,34 +215,40 @@ internal static class DomainShapeChecks
                     check(!parameter.Name!.EndsWith("Json", StringComparison.Ordinal), name + " retains typed input: " + parameter.Name);
             }
         }
-        foreach (var name in new[] { "ResolveSoftwareContainerUncached", "RequireHardwareUtility", "ExactSiVArcRoot",
+        foreach (var name in new[] { "ResolveSoftwareContainerUncached", "RequireHardwareUtility",
             "ExactMasterCopy", "ExactLibraryType", "ExactTypeVersion", "MultilingualJson", "RequireUnitProvider", "ExactUnit",
             "OptionalUnit", "BlockRootOf", "TypeRootOf", "ExactObjectUnder", "DocumentMessages",
-            "AvailablePlcPathsSuffix", "GetAllPlcSoftware", "ReadPlcConsistency", "RecoverableAuditError",
+            "AvailablePlcPathsSuffix", "GetAllPlcSoftware", "ReadPlcConsistency", "RecoverableAuditError", "ExactNameList",
             "ReadReflectedString", "EnumerateReflectedProperty" })
             check(surface.Method(name, all).DeclaringType == portal && contract.GetMethod(name) != null,
                 name + " stays on the kernel and is exposed through IEngineeringSession");
         check(surface.Adapter!.GetType("TiaMcp.Adapters.PlcFoundationEngine", true)!.GetMethod("HardwareLinkedTagRows", all) != null
             && portal.GetMethod("LinkedTagRows", all) == null && contract.GetMethod("LinkedTagRows") == null,
             "Hardware linked-tag projection belongs only to the adapter");
-        foreach (var name in new[] { "ExactDriveItem", "ExactDriveContainer", "DccContainerSummary", "DcbLibraryRow",
-            "AddressRow", "ExactTechnology", "InterfaceRow" })
+        var optionalSession = surface.Adapter!.GetType("TiaMcp.Adapters.Native.Optional.OptionalSession", true)!;
+        foreach (var name in new[] { "ExactDriveItem", "ExactDriveContainer", "DccContainerSummary", "DcbLibraryRow" })
+            check(optionalSession.GetMethod(name, all) != null && portal.GetMethod(name, all) == null && contract.GetMethod(name) == null,
+                name + " is shared in the optional adapter session without an engine implementation");
+        foreach (var name in new[] { "AddressRow", "ExactTechnology", "InterfaceRow" })
             check(surface.Method(name, all).DeclaringType == portal && contract.GetMethod(name) != null,
                 name + " stays on the kernel and is exposed through IEngineeringSession");
-        check(surface.Method("ExactDriveObject", all, new[] { typeof(string), typeof(string), typeof(ushort), typeof(int) }).DeclaringType == portal
-            && contract.GetMethod("ExactDriveObject") != null, "Shared drive resolution stays on the kernel");
+        check(optionalSession.GetMethod("ExactDriveObject", all, null, new[] { typeof(string), typeof(string), typeof(ushort), typeof(int) }, null) != null
+            && portal.GetMethod("ExactDriveObject", all) == null && contract.GetMethod("ExactDriveObject") == null, "Shared drive resolution belongs to the optional adapter");
         var teamcenter = surface.Adapter!.GetType("TiaMcp.Adapters.Native.Collaboration.TeamcenterAdapter", true)!;
         foreach (var name in new[] { "_teamcenterConnection", "_teamcenterConnectionLabel" })
             check(teamcenter.GetField(name, all)?.DeclaringType == teamcenter && teamcenter.GetField(name, all)!.IsPrivate
                 && portal.GetField(name, all) == null && server.GetType("TiaMcpServer.Siemens.Services.TeamcenterPortService", true)!.GetField(name, all) == null,
                 name + " is private Teamcenter adapter state");
         foreach (var name in new[] { "LibraryRef", "EngineeringLibraryFolder", "ExactMasterCopyPlcSource", "LibraryPathOf",
-            "OptionPackageLibraryTypeKind", "ExactEngineeringDevice", "ExactDeviceItem", "ResolveHmiScreenOrThrow",
-            "ExactNameList", "RequireSivarc", "SivarcShape" })
+            "ExactEngineeringDevice", "ExactDeviceItem", "ResolveHmiScreenOrThrow" })
             check(surface.Method(name, all).DeclaringType == portal && contract.GetMethod(name) != null,
                 name + " remains shared on the kernel through IEngineeringSession");
-        check(surface.Method("Family", all).DeclaringType == portal && contract.GetMethod("GetSivarcFamily") != null,
-            "SiVArc families remain shared with the optional-engineering reader");
+        check(surface.Adapter!.GetType("TiaMcp.Adapters.PlcFoundationEngine", true)!.GetMethod("OptionalLibraryKind", all) != null
+            && portal.GetMethod("OptionPackageLibraryTypeKind", all) == null && contract.GetMethod("OptionPackageLibraryTypeKind") == null,
+            "Optional library classification belongs to the adapter");
+        foreach (var name in new[] { "ExactSiVArcRoot", "RequireSivarc", "SivarcShape", "Family", "GetSivarcFamily" })
+            check(optionalSession.GetMethod(name, all) != null && portal.GetMethod(name, all) == null && contract.GetMethod(name) == null,
+                name + " remains shared by the optional adapters without an engine implementation");
 
         var vci = surface.Adapter!.GetType("TiaMcp.Adapters.Native.Vci.VersionControlAdapter", true)!;
         var constructor = vci.GetConstructors(all).Single();

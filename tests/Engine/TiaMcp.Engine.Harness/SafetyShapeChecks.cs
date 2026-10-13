@@ -108,8 +108,9 @@ internal static class SafetyShapeChecks
     {
         const BindingFlags all = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
         var surface = EngineSurface.For(server);
-        bool familyPorted = domain is "EngineeringServices" or "CertificateManagement" or "SecurityDeep" or "ProjectSecurity";
-        string serviceType = domain == "ProjectSecurity" ? "ProjectLifecyclePortService" : domain + (familyPorted ? "PortService" : "Service");
+        bool optionalPorted = domain is "SafetyManagement" or "SafetyValidation";
+        bool familyPorted = optionalPorted || domain is "EngineeringServices" or "CertificateManagement" or "SecurityDeep" or "ProjectSecurity";
+        string serviceType = domain == "ProjectSecurity" ? "ProjectLifecyclePortService" : domain + (familyPorted && !optionalPorted ? "PortService" : "Service");
         var familyService = server.GetType("TiaMcpServer.Siemens.Services." + serviceType, true)!;
         var familyTools = server.GetType("TiaMcpServer.ModelContextProtocol." + domain + "Tools", true)!;
         foreach (var type in new[] { familyService, familyTools })
@@ -135,7 +136,7 @@ internal static class SafetyShapeChecks
             check(method.DeclaringType == service && tool.DeclaringType == tools && !tool.IsStatic
                 && ReferenceEquals(target, surface.Target(method)) && ReferenceEquals(surface.Target(tool), surface.Target(tool)),
                 domain + " surface resolves the service and tool singletons: " + name);
-            check((ported ? service.GetField("call", all)!.GetValue(target) is Delegate
+            check((ported ? service.GetField(optionalPorted ? "_call" : "call", all)!.GetValue(target) is Delegate
                     && !service.GetFields(all).Any(f => f.FieldType.Name == "IEngineeringSession")
                     : ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session))
                 && ReferenceEquals(tools.GetField("_service", all)!.GetValue(surface.Target(tool)), target),

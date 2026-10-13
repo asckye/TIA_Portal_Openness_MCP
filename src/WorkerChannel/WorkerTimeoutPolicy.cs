@@ -18,6 +18,11 @@ namespace TiaMcp.WorkerChannel
         // Exact PLC dispatcher operations. Coverage tests require a category for every registration.
         public static readonly IReadOnlyDictionary<string, string> PlcFamilies = new Dictionary<string, string>(StringComparer.Ordinal)
         {
+            ["plc-safety.ExecuteSafetyValidation"] = "importExport",
+            ["sivarc.ExecuteSivarc"] = "compile",
+            ["startdrive.ExecuteStartdrive"] = "default",
+            ["startdrive.ExecuteDcc"] = "importExport",
+            ["plc-safety.ExecuteSafety"] = "importExport",
             ["AddDeviceWithFallback"] = "default",
             ["Attach"] = "default",
             ["BindProject"] = "default",

@@ -1,10 +1,21 @@
-using static TiaMcpServer.Siemens.EngineeringSessionHelpers;
+#if OPTIONAL_V20_PLUS
+using static TiaMcp.Adapters.Native.Optional.OptionalEvidence;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security;
-using System.Text.Json.Nodes;
+using TiaMcp.Adapters.Contracts;
+using TiaMcp.Adapters.Hardware;
+using TiaMcp.Adapters.Native.Hmi;
+using EngineeringGroupOperations = TiaMcp.Adapters.Native.Plc.PlcGroupOperations;
+using EngineeringScalarProperties = TiaMcp.Adapters.Native.Optional.OptionalScalars;
+using EngineeringObjectAddress = TiaMcp.Adapters.Native.Optional.OptionalObjectAddress;
+using NativeFileOutput = TiaMcp.Adapters.Native.Safety.SafetyFileOutput;
+using PlcBlockServicesLogic = TiaMcp.Adapters.Native.Safety.SafetyPrimitives;
+using HardwareServicesLogic = TiaMcp.Adapters.Native.Optional.OptionalRules;
+using ArgumentRules = TiaMcp.Adapters.Native.Optional.OptionalRules;
+using EngineeringPath = TiaMcp.Adapters.Hardware.HardwarePath;
 using Siemens.Engineering;
 using Siemens.Engineering.HW;
 using Siemens.Engineering.MC.Drives;
@@ -13,14 +24,14 @@ using Siemens.Engineering.MC.Drives.Enums;
 using Siemens.Engineering.MC.Drives.SecurityObjects;
 using Siemens.Engineering.SW.TechnologicalObjects.Motion;
 using TiaMcpServer.ModelContextProtocol;
-using Logic = TiaMcpServer.Siemens.StartdriveLogic;
+using Logic = TiaMcp.Adapters.Native.Optional.StartdrivePolicy;
 using MotionConnectOption = Siemens.Engineering.SW.TechnologicalObjects.Motion.ConnectOption;
 using DriveEncoderType = Siemens.Engineering.MC.Drives.Enums.EncoderType;
-#if TIA_V20
+#if !OPTIONAL_V21
 using DriveConnectOption = Siemens.Engineering.MC.Drives.Enums.ConnectOption;
 #endif
 
-namespace TiaMcpServer.Siemens.Services
+namespace TiaMcp.Adapters.Native.Optional
 {
     // Typed Startdrive option package (V21 Siemens.Engineering.Startdrive.dll, V20 inside Siemens.Engineering.dll).
     // DriveObjectContainer is a service of the drive unit / control unit DeviceItem; DriveObject carries Parameters / ReadParameters /
@@ -28,11 +39,11 @@ namespace TiaMcpServer.Siemens.Services
     // OnlineDriveObjectContainer / OnlineDriveFunctionInterface mirror the offline shape for a connected drive. TIA V21, 2026-09-19 (docs/reference/real-machine-ledger.md), real project
     // (G120C): DriveObject.DriveObjectNumber throws "Drive object number could not be retrieved", so every selector accepts the
     // composition index and DriveObjectNumber is read defensively.
-    internal sealed class StartdriveService
+    internal sealed class StartdriveAdapter
     {
-        private readonly IEngineeringSession _session;
+        private readonly OptionalSession _session;
 
-        public StartdriveService(IEngineeringSession session) => _session = session;
+        public StartdriveAdapter(OptionalSession session) => _session = session;
 
         // ---- resolution ----------------------------------------------------------------------------------------------------------
         // TIA V21, 2026-09-19 (docs/reference/real-machine-ledger.md), real project (G120C): Find("r722.0") answers null - bit parameters are only reachable through the parent's Bits, whose
@@ -53,167 +64,167 @@ namespace TiaMcpServer.Siemens.Services
         }
         private static OnlineDriveObject ExactOnlineDriveObject(DeviceItem item, Logic.DriveSelector selector)
         {
-            var container = item.GetService<OnlineDriveObjectContainer>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "OnlineDriveObjectContainer unavailable on device item '" + item.Name + "' (drive not online, or not a Startdrive drive object host).");
+            var container = item.GetService<OnlineDriveObjectContainer>() ?? throw new PlcSoftwareException("NotSupportedOnVersion", "OnlineDriveObjectContainer unavailable on device item '" + item.Name + "' (drive not online, or not a Startdrive drive object host).");
             OnlineDriveObjectComposition objects = container.OnlineDriveObjects;
             if (selector.ByNumber)
             {
                 var matches = objects.Where(o => { try { return o.DriveObjectNumber == selector.Number; } catch { /* swallow(enumerate-optional): a drive without a readable number cannot match the requested number; index selection remains available. */ return false; } }).Take(2).ToArray();
-                if (matches.Length != 1) throw new PortalException(PortalErrorCode.NotFound, "Exactly one online drive object with " + selector.Label + " expected, found " + matches.Length + ".");
+                if (matches.Length != 1) throw new PlcSoftwareException("NotFound", "Exactly one online drive object with " + selector.Label + " expected, found " + matches.Length + ".");
                 return matches[0];
             }
-            if (selector.Index >= objects.Count) throw new PortalException(PortalErrorCode.NotFound, selector.Label + " out of range: " + objects.Count + " online drive object(s).");
+            if (selector.Index >= objects.Count) throw new PlcSoftwareException("NotFound", selector.Label + " out of range: " + objects.Count + " online drive object(s).");
             return objects[selector.Index];
         }
 
         // ---- rows ----------------------------------------------------------------------------------------------------------------
-        private static JsonObject BicoOrScalar(object? value) => value switch
+        private static HmiObject BicoOrScalar(object? value) => value switch
         {
-            DriveParameter source => new JsonObject { ["bicoSource"] = source.Name, ["parameterText"] = source.ParameterText },
-            ReadDriveParameter source => new JsonObject { ["bicoSource"] = source.Name, ["parameterText"] = source.ParameterText },
-            _ => new JsonObject { ["value"] = EngineeringScalarProperties.Json(value) }
+            DriveParameter source => new HmiObject { ["bicoSource"] = source.Name, ["parameterText"] = source.ParameterText },
+            ReadDriveParameter source => new HmiObject { ["bicoSource"] = source.Name, ["parameterText"] = source.ParameterText },
+            _ => new HmiObject { ["value"] = EngineeringScalarProperties.Json(value) }
         };
-        private static JsonObject EnumValues(IDictionary<int, string>? list)
+        private static HmiObject EnumValues(IDictionary<int, string>? list)
         {
-            var o = new JsonObject(); if (list == null) return o;
+            var o = new HmiObject(); if (list == null) return o;
             foreach (var pair in list.Take(500)) o[pair.Key.ToString()] = pair.Value; return o;
         }
         // Value is read last and only on request (includeValue): TIA V21, 2026-09-19
         // (docs/reference/real-machine-ledger.md): TIA went down while reading the Value of
         // r2139 (existing G120C) and of the unwired BICO sink p840[0] (freshly added G120C) - the metadata reads before it are safe.
-        private static JsonObject DriveParameterRow(DriveParameter p, bool bits, bool enums, bool value = true)
+        private static HmiObject DriveParameterRow(DriveParameter p, bool bits, bool enums, bool value = true)
         {
-            var row = new JsonObject { ["name"] = p.Name, ["parameterClass"] = "DriveParameter" };
+            var row = new HmiObject { ["name"] = p.Name, ["parameterClass"] = "DriveParameter" };
             Safe(row, "number", () => p.Number); Safe(row, "arrayIndex", () => p.ArrayIndex); Safe(row, "arrayLength", () => p.ArrayLength);
             Safe(row, "minValue", () => EngineeringScalarProperties.Json(p.MinValue)); Safe(row, "maxValue", () => EngineeringScalarProperties.Json(p.MaxValue));
             Safe(row, "unit", () => p.Unit); Safe(row, "parameterText", () => p.ParameterText);
             if (enums) Safe(row, "enumValueList", () => EnumValues(p.EnumValueList));
-            if (bits) Safe(row, "bits", () => new JsonArray(p.Bits.Take(64).Select(b => (JsonNode)DriveParameterRow(b, false, enums, value)).ToArray()));
+            if (bits) Safe(row, "bits", () => new HmiArray(p.Bits.Take(64).Select(b => (object)DriveParameterRow(b, false, enums, value)).ToArray()));
             if (value) Safe(row, "value", () => BicoOrScalar(p.Value)); else row["value"] = null;
             return row;
         }
-        private static JsonObject DriveParameterRow(ReadDriveParameter p, bool bits, bool enums, bool value = true)
+        private static HmiObject DriveParameterRow(ReadDriveParameter p, bool bits, bool enums, bool value = true)
         {
-            var row = new JsonObject { ["name"] = p.Name, ["parameterClass"] = "ReadDriveParameter" };
+            var row = new HmiObject { ["name"] = p.Name, ["parameterClass"] = "ReadDriveParameter" };
             Safe(row, "number", () => p.Number); Safe(row, "arrayIndex", () => p.ArrayIndex); Safe(row, "arrayLength", () => p.ArrayLength);
             Safe(row, "minValue", () => EngineeringScalarProperties.Json(p.MinValue)); Safe(row, "maxValue", () => EngineeringScalarProperties.Json(p.MaxValue));
             Safe(row, "unit", () => p.Unit); Safe(row, "parameterText", () => p.ParameterText);
             if (enums) Safe(row, "enumValueList", () => EnumValues(p.EnumValueList));
-            if (bits) Safe(row, "bits", () => new JsonArray(p.Bits.Take(64).Select(b => (JsonNode)DriveParameterRow(b, false, enums, value)).ToArray()));
+            if (bits) Safe(row, "bits", () => new HmiArray(p.Bits.Take(64).Select(b => (object)DriveParameterRow(b, false, enums, value)).ToArray()));
             if (value) Safe(row, "value", () => BicoOrScalar(p.Value)); else row["value"] = null;
             return row;
         }
-        private JsonObject TelegramRow(Telegram t, bool nested = false)
+        private HmiObject TelegramRow(Telegram t, bool nested = false)
         {
-            var row = new JsonObject();
+            var row = new HmiObject();
             Safe(row, "type", () => t.Type.ToString()); Safe(row, "telegramNumber", () => t.TelegramNumber);
             Safe(row, "inputWords", () => t.GetSize(AddressIoType.Input)); Safe(row, "outputWords", () => t.GetSize(AddressIoType.Output));
             Safe(row, "inputBytes", () => t.GetSizeInBytes(AddressIoType.Input)); Safe(row, "outputBytes", () => t.GetSizeInBytes(AddressIoType.Output));
-            Safe(row, "addresses", () => new JsonArray(EngineeringGroupOperations.Items(t.Addresses).Cast<Address>().Select(a => (JsonNode)_session.AddressRow(a)).ToArray()));
-            Safe(row, "hwIdentifiers", () => new JsonArray(EngineeringGroupOperations.Items(t.HwIdentifiers).Cast<HwIdentifier>().Select(h => (JsonNode)h.Identifier).ToArray()));
+            Safe(row, "addresses", () => new HmiArray(EngineeringGroupOperations.Items(t.Addresses).Cast<Address>().Select(a => (object)_session.AddressRow(a)).ToArray()));
+            Safe(row, "hwIdentifiers", () => new HmiArray(EngineeringGroupOperations.Items(t.HwIdentifiers).Cast<HwIdentifier>().Select(h => (object)h.Identifier).ToArray()));
             if (!nested) Safe(row, "pkw", () => t.PKW == null ? null : TelegramRow(t.PKW, true));
             return row;
         }
-        private static JsonObject DriveObjectTypeRow(DriveObjectType t) => new JsonObject { ["name"] = t.Name, ["number"] = t.Number };
-        private static JsonObject ActivationRow(DriveObjectActivation a) => new JsonObject { ["activationState"] = a.ActivationState.ToString(), ["isActive"] = a.IsActive };
-        private static JsonObject FunctionInterfaceRow(DriveFunctionInterface dfi)
+        private static HmiObject DriveObjectTypeRow(DriveObjectType t) => new HmiObject { ["name"] = t.Name, ["number"] = t.Number };
+        private static HmiObject ActivationRow(DriveObjectActivation a) => new HmiObject { ["activationState"] = a.ActivationState.ToString(), ["isActive"] = a.IsActive };
+        private static HmiObject FunctionInterfaceRow(DriveFunctionInterface dfi)
         {
-            var row = new JsonObject();
-            Safe(row, "driveObjectType", () => { var h = dfi.DriveObjectFunctions?.DriveObjectTypeHandler; return h == null ? null : new JsonObject { ["current"] = h.CurrentDriveObjectType == null ? null : DriveObjectTypeRow(h.CurrentDriveObjectType), ["possible"] = new JsonArray(EngineeringGroupOperations.Items(h.PossibleDriveObjectTypes).Cast<DriveObjectType>().Select(t => (JsonNode)DriveObjectTypeRow(t)).ToArray()) }; });
+            var row = new HmiObject();
+            Safe(row, "driveObjectType", () => { var h = dfi.DriveObjectFunctions?.DriveObjectTypeHandler; return h == null ? null : new HmiObject { ["current"] = h.CurrentDriveObjectType == null ? null : DriveObjectTypeRow(h.CurrentDriveObjectType), ["possible"] = new HmiArray(EngineeringGroupOperations.Items(h.PossibleDriveObjectTypes).Cast<DriveObjectType>().Select(t => (object)DriveObjectTypeRow(t)).ToArray()) }; });
             Safe(row, "activation", () => { var a = dfi.DriveObjectFunctions?.DriveObjectActivation; return a == null ? null : ActivationRow(a); });
             Safe(row, "functionInUseAvailable", () => dfi.FunctionInUse != null); Safe(row, "commissioningAvailable", () => dfi.Commissioning != null);
             Safe(row, "safetyCommissioningAvailable", () => dfi.SafetyCommissioning != null); Safe(row, "hardwareProjectionAvailable", () => dfi.HardwareProjection != null);
             return row;
         }
-        private static JsonObject ConfigurationEntryRow(ConfigurationEntry e)
+        private static HmiObject ConfigurationEntryRow(ConfigurationEntry e)
         {
-            var row = new JsonObject { ["name"] = e.Name };
+            var row = new HmiObject { ["name"] = e.Name };
             Safe(row, "number", () => e.Number); Safe(row, "value", () => EngineeringScalarProperties.Json(e.Value)); Safe(row, "minValue", () => EngineeringScalarProperties.Json(e.MinValue));
             Safe(row, "maxValue", () => EngineeringScalarProperties.Json(e.MaxValue)); Safe(row, "unit", () => e.Unit); Safe(row, "description", () => e.Description); Safe(row, "enumValueList", () => EnumValues(e.EnumValueList));
             return row;
         }
-        private static JsonArray EntryRows(ConfigurationEntryComposition entries) => new JsonArray(EngineeringGroupOperations.Items(entries).Cast<ConfigurationEntry>().Take(500).Select(e => (JsonNode)ConfigurationEntryRow(e)).ToArray());
-        private static JsonObject MotorConfigurationRow(MotorConfiguration c)
+        private static HmiArray EntryRows(ConfigurationEntryComposition entries) => new HmiArray(EngineeringGroupOperations.Items(entries).Cast<ConfigurationEntry>().Take(500).Select(e => (object)ConfigurationEntryRow(e)).ToArray());
+        private static HmiObject MotorConfigurationRow(MotorConfiguration c)
         {
-            var row = new JsonObject();
+            var row = new HmiObject();
             Safe(row, "requiredEntries", () => EntryRows(c.RequiredConfigurationEntries)); Safe(row, "optionalEntries", () => EntryRows(c.OptionalConfigurationEntries)); Safe(row, "canSetEquivalentCircuitDiagramData", () => c.CanSetEquivalentCircuitDiagramData());
             return row;
         }
-        private static JsonObject EncoderConfigurationRow(EncoderConfiguration c)
+        private static HmiObject EncoderConfigurationRow(EncoderConfiguration c)
         {
-            var row = new JsonObject();
+            var row = new HmiObject();
             Safe(row, "requiredEntries", () => EntryRows(c.RequiredConfigurationEntries)); Safe(row, "encoderTypes", () => EntryRows(c.EncoderTypes));
             return row;
         }
-        private static JsonObject TechnologyExtensionRow(TechnologyExtension e, bool parameters)
+        private static HmiObject TechnologyExtensionRow(TechnologyExtension e, bool parameters)
         {
-            var row = new JsonObject { ["identifier"] = e.Identifier };
+            var row = new HmiObject { ["identifier"] = e.Identifier };
             Safe(row, "name", () => e.Name); Safe(row, "displayName", () => e.DisplayName); Safe(row, "isActivated", () => e.IsActivated);
-            if (parameters) Safe(row, "parameters", () => new JsonArray(EngineeringGroupOperations.Items(e.Parameters).Cast<DriveParameter>().Take(200).Select(p => (JsonNode)DriveParameterRow(p, false, false)).ToArray()));
+            if (parameters) Safe(row, "parameters", () => new HmiArray(EngineeringGroupOperations.Items(e.Parameters).Cast<DriveParameter>().Take(200).Select(p => (object)DriveParameterRow(p, false, false)).ToArray()));
             else Safe(row, "parameterCount", () => e.Parameters.Count);
             return row;
         }
-        private static JsonObject TechnologyExtensionPackageRow(TechnologyExtensionPackage p) => new JsonObject { ["identifier"] = p.Identifier, ["name"] = p.Name, ["displayName"] = p.DisplayName };
-        private JsonObject DriveObjectRow(DriveObject d, int index, bool telegrams, bool functions, bool extensions, bool dcc)
+        private static HmiObject TechnologyExtensionPackageRow(TechnologyExtensionPackage p) => new HmiObject { ["identifier"] = p.Identifier, ["name"] = p.Name, ["displayName"] = p.DisplayName };
+        private HmiObject DriveObjectRow(DriveObject d, int index, bool telegrams, bool functions, bool extensions, bool dcc)
         {
-            var row = new JsonObject { ["index"] = index };
+            var row = new HmiObject { ["index"] = index };
             Safe(row, "driveObjectNumber", () => d.DriveObjectNumber);
             Safe(row, "telegramCount", () => d.Telegrams.Count);
-            if (telegrams) Safe(row, "telegrams", () => new JsonArray(EngineeringGroupOperations.Items(d.Telegrams).Cast<Telegram>().Select(t => (JsonNode)TelegramRow(t)).ToArray()));
+            if (telegrams) Safe(row, "telegrams", () => new HmiArray(EngineeringGroupOperations.Items(d.Telegrams).Cast<Telegram>().Select(t => (object)TelegramRow(t)).ToArray()));
             Safe(row, "securityAvailable", () => d.Security != null);
             if (functions) Safe(row, "functionInterface", () => { var dfi = d.GetService<DriveFunctionInterface>(); return dfi == null ? null : FunctionInterfaceRow(dfi); });
-            if (extensions) Safe(row, "technologyExtensions", () => { var c = d.GetService<TechnologyExtensionContainer>(); return c == null ? null : new JsonArray(EngineeringGroupOperations.Items(c.TechnologyExtensions).Cast<TechnologyExtension>().Select(e => (JsonNode)TechnologyExtensionRow(e, false)).ToArray()); });
-            if (dcc) Safe(row, "dcc", () => _session.DccContainerSummary(d));
+            if (extensions) Safe(row, "technologyExtensions", () => { var c = d.GetService<TechnologyExtensionContainer>(); return c == null ? null : new HmiArray(EngineeringGroupOperations.Items(c.TechnologyExtensions).Cast<TechnologyExtension>().Select(e => (object)TechnologyExtensionRow(e, false)).ToArray()); });
+            if (dcc) Safe(row, "dcc", () => OptionalSession.DccContainerSummary(d));
             return row;
         }
 
         // ---- tools ---------------------------------------------------------------------------------------------------------------
-        public ResponseMessage ReadDriveObjects(string devicePathJson, string itemPathJson, bool includeTelegrams = true, bool includeFunctions = true, bool includeTechnologyExtensions = true, bool includeDcc = true)
+        public HardwareAddressingReply ReadDriveObjects(string devicePathJson, string itemPathJson, bool includeTelegrams = true, bool includeFunctions = true, bool includeTechnologyExtensions = true, bool includeDcc = true)
             => _session.RunHmiStepTool("ListDriveObjects", meta =>
             {
                 var item = _session.ExactDriveItem(devicePathJson, itemPathJson);
                 var container = _session.ExactDriveContainer(item);
                 meta["deviceItem"] = item.Name; meta["hostClass"] = item.GetType().Name;
-                Safe(meta, "moduleAccessPointHwIdentifiers", () => { var ap = item.GetService<ModuleAccessPoint>(); return ap == null ? null : new JsonArray(EngineeringGroupOperations.Items(ap.HwIdentifiers).Cast<HwIdentifier>().Select(h => (JsonNode)h.Identifier).ToArray()); });
-#if !TIA_V20
+                Safe(meta, "moduleAccessPointHwIdentifiers", () => { var ap = item.GetService<ModuleAccessPoint>(); return ap == null ? null : new HmiArray(EngineeringGroupOperations.Items(ap.HwIdentifiers).Cast<HwIdentifier>().Select(h => (object)h.Identifier).ToArray()); });
+#if OPTIONAL_V21
                 Safe(meta, "hardwareModule", () => { var m = item.GetService<DriveItemHardwareModule>(); return m == null ? null : HardwareModuleRow(m); });
 #endif
                 Safe(meta, "onlineContainerAvailable", () => item.GetService<OnlineDriveObjectContainer>() != null);
-                var rows = EngineeringGroupOperations.Items(container.DriveObjects).Cast<DriveObject>().Select((d, i) => (JsonNode)DriveObjectRow(d, i, includeTelegrams, includeFunctions, includeTechnologyExtensions, includeDcc)).ToArray();
-                meta["records"] = new JsonArray(rows); meta["expectedCount"] = rows.Length; meta["actualCount"] = rows.Length;
+                var rows = EngineeringGroupOperations.Items(container.DriveObjects).Cast<DriveObject>().Select((d, i) => (object)DriveObjectRow(d, i, includeTelegrams, includeFunctions, includeTechnologyExtensions, includeDcc)).ToArray();
+                meta["records"] = new HmiArray(rows); meta["expectedCount"] = rows.Length; meta["actualCount"] = rows.Length;
                 return "Drive objects of the device item read (DriveObjectContainer.DriveObjects with telegrams, function interface, technology extensions and DCC summary); no modification.";
             });
 
-        public ResponseMessage ReadDriveParameters(string devicePathJson, string itemPathJson, ushort driveObjectNumber = 0, int driveObjectIndex = -1, string source = "read", string namesJson = "[]", string numbersJson = "[]",
+        public HardwareAddressingReply ReadDriveParameters(string devicePathJson, string itemPathJson, ushort driveObjectNumber = 0, int driveObjectIndex = -1, string source = "read", string namesJson = "[]", string numbersJson = "[]",
             bool includeBits = false, bool includeEnumValues = false, int offset = 0, int limit = 100, bool includeValue = true)
             => _session.RunHmiStepTool("GetDriveParameters", meta =>
             {
                 var selector = Logic.ValidateParametersRequest(source, namesJson, numbersJson, offset, limit);
                 var drive = _session.ExactDriveObject(devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex);
                 meta["driveObject"] = Logic.ParseDriveSelector(driveObjectNumber, driveObjectIndex).Label; meta["source"] = source == "read" ? "ReadParameters" : "Parameters";
-                var missing = new JsonArray();
-                JsonNode[] rows;
+                var missing = new HmiArray();
+                object[] rows;
                 if (source == "read")
                 {
                     ReadDriveParameterComposition parameters = drive.ReadParameters;
-                    if (selector.Enumerate) { var all = EngineeringGroupOperations.Items(parameters).Cast<ReadDriveParameter>().Skip(offset).Take(limit + 1).ToArray(); rows = all.Take(limit).Select(p => (JsonNode)DriveParameterRow(p, includeBits, includeEnumValues, includeValue)).ToArray(); meta["truncated"] = all.Length > limit; meta["nextOffset"] = all.Length > limit ? offset + limit : (int?)null; }
+                    if (selector.Enumerate) { var all = EngineeringGroupOperations.Items(parameters).Cast<ReadDriveParameter>().Skip(offset).Take(limit + 1).ToArray(); rows = all.Take(limit).Select(p => (object)DriveParameterRow(p, includeBits, includeEnumValues, includeValue)).ToArray(); meta["truncated"] = all.Length > limit; meta["nextOffset"] = all.Length > limit ? offset + limit : (int?)null; }
                     else rows = selector.Names.Select(n => (Name: n, Parameter: FindParameter(parameters, n))).Concat(selector.Numbers.Select(x => (Name: x.Number + (x.ArrayIndex >= 0 ? "[" + x.ArrayIndex + "]" : ""), Parameter: parameters.Find(x.Number, x.ArrayIndex))))
-                        .Where(x => { if (x.Parameter == null) missing.Add(x.Name); return x.Parameter != null; }).Select(x => (JsonNode)DriveParameterRow(x.Parameter!, includeBits, includeEnumValues, includeValue)).ToArray();
+                        .Where(x => { if (x.Parameter == null) missing.Add(x.Name); return x.Parameter != null; }).Select(x => (object)DriveParameterRow(x.Parameter!, includeBits, includeEnumValues, includeValue)).ToArray();
                 }
                 else
                 {
                     DriveParameterComposition parameters = drive.Parameters;
-                    if (selector.Enumerate) { var all = EngineeringGroupOperations.Items(parameters).Cast<DriveParameter>().Skip(offset).Take(limit + 1).ToArray(); rows = all.Take(limit).Select(p => (JsonNode)DriveParameterRow(p, includeBits, includeEnumValues, includeValue)).ToArray(); meta["truncated"] = all.Length > limit; meta["nextOffset"] = all.Length > limit ? offset + limit : (int?)null; }
+                    if (selector.Enumerate) { var all = EngineeringGroupOperations.Items(parameters).Cast<DriveParameter>().Skip(offset).Take(limit + 1).ToArray(); rows = all.Take(limit).Select(p => (object)DriveParameterRow(p, includeBits, includeEnumValues, includeValue)).ToArray(); meta["truncated"] = all.Length > limit; meta["nextOffset"] = all.Length > limit ? offset + limit : (int?)null; }
                     else rows = selector.Names.Select(n => (Name: n, Parameter: FindParameter(parameters, n))).Concat(selector.Numbers.Select(x => (Name: x.Number + (x.ArrayIndex >= 0 ? "[" + x.ArrayIndex + "]" : ""), Parameter: parameters.Find(x.Number, x.ArrayIndex))))
-                        .Where(x => { if (x.Parameter == null) missing.Add(x.Name); return x.Parameter != null; }).Select(x => (JsonNode)DriveParameterRow(x.Parameter!, includeBits, includeEnumValues, includeValue)).ToArray();
+                        .Where(x => { if (x.Parameter == null) missing.Add(x.Name); return x.Parameter != null; }).Select(x => (object)DriveParameterRow(x.Parameter!, includeBits, includeEnumValues, includeValue)).ToArray();
                 }
-                meta["records"] = new JsonArray(rows); meta["actualCount"] = rows.Length; meta["offset"] = offset; meta["limit"] = limit; meta["notFound"] = missing; meta["includeValue"] = includeValue;
+                meta["records"] = new HmiArray(rows); meta["actualCount"] = rows.Length; meta["offset"] = offset; meta["limit"] = limit; meta["notFound"] = missing; meta["includeValue"] = includeValue;
                 if (!includeValue) meta["scope"] = "Metadata only (Value not read): use this first for BICO sinks / status words on a freshly added drive - 2.7.39 real project: reading Value of r2139 and of the unwired p840[0] took TIA Portal V21 down.";
                 if (selector.Enumerate) meta["scope"] = "Enumeration of the composition in native order; the drive has thousands of parameters, so page with offset / limit or ask by namesJson / numbersJson.";
                 return "Offline drive parameters read (" + (source == "read" ? "ReadDriveParameter rows incl. BICO sources" : "DriveParameter rows incl. BICO sources") + "); no OnlineDriveObject or drive access.";
             });
 
         // Parameters.Find(name) resolves scalar or BICO-source writes; driveObjectIndex selects by composition position.
-        public ResponseMessage ManageStartdriveParameter(string devicePathJson, string itemPathJson, ushort driveObjectNumber, string parameter, string action = "read", string valueJson = "null", bool dryRun = true, int driveObjectIndex = -1)
+        public HardwareAddressingReply ManageStartdriveParameter(string devicePathJson, string itemPathJson, ushort driveObjectNumber, string parameter, string action = "read", string valueJson = "null", bool dryRun = true, int driveObjectIndex = -1)
             => _session.RunHmiStepTool("ManageStartdriveParameter", meta =>
             {
                 Logic.ValidateParameterWriteRequest(parameter, action);
@@ -228,14 +239,14 @@ namespace TiaMcpServer.Siemens.Services
                     meta["before"] = Logic.ReadExactParameter<DriveParameter, ReadDriveParameter>(parameter,
                         name => FindParameter(drive.Parameters, name), name => FindParameter(drive.ReadParameters, name),
                         target => BicoOrScalar(target.Value), target => BicoOrScalar(target.Value))
-                        ?? throw new PortalException(PortalErrorCode.NotFound, "Exact drive parameter not found: " + parameter);
+                        ?? throw new PlcSoftwareException("NotFound", "Exact drive parameter not found: " + parameter);
                     return "Exact offline parameter value read, including BICO source when available; no bit expansion, limits or enum table reads. No OnlineDriveObject or live device access used.";
                 }
-                DriveParameter writable = FindParameter(drive.Parameters, parameter) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact writable drive parameter not found: " + parameter + " (read-only parameters live in ReadParameters).");
+                DriveParameter writable = FindParameter(drive.Parameters, parameter) ?? throw new PlcSoftwareException("NotFound", "Exact writable drive parameter not found: " + parameter + " (read-only parameters live in ReadParameters).");
                 meta["before"] = DriveParameterRow(writable, false, true);
                 var value = Logic.ParseParameterValue(valueJson);
                 object? converted = null; DriveParameter? source = null;
-                if (value.IsBico) { source = FindParameter(drive.Parameters, value.BicoSource) ?? throw new PortalException(PortalErrorCode.NotFound, "BICO source parameter not found in the writable Parameters view: " + value.BicoSource + " (bit sources as r722.0 resolve through the parent's Bits; r19 does not exist on G120C)."); meta["bicoSource"] = DriveParameterRow(source, false, false); }
+                if (value.IsBico) { source = FindParameter(drive.Parameters, value.BicoSource) ?? throw new PlcSoftwareException("NotFound", "BICO source parameter not found in the writable Parameters view: " + value.BicoSource + " (bit sources as r722.0 resolve through the parent's Bits; r19 does not exist on G120C)."); meta["bicoSource"] = DriveParameterRow(source, false, false); }
                 else { var current = writable.Value; converted = current == null || current is DriveParameter ? EngineeringScalarProperties.ConvertValue(value.Scalar, typeof(object)) : EngineeringScalarProperties.ConvertValue(value.Scalar, current.GetType()); meta["requestedValue"] = EngineeringScalarProperties.Json(converted); }
                 if (!write) return "Offline drive parameter write preview; native limits / BICO semantics are checked on execution.";
                 meta["mayHaveChanged"] = true;
@@ -245,7 +256,7 @@ namespace TiaMcpServer.Siemens.Services
                 return "Offline drive parameter changed and read back; no download, online parameter write or drive command.";
             });
 
-        public ResponseMessage ManageDriveTelegrams(string devicePathJson, string itemPathJson, ushort driveObjectNumber = 0, int driveObjectIndex = -1, string action = "read", string telegramType = "", int telegramNumber = -1,
+        public HardwareAddressingReply ManageDriveTelegrams(string devicePathJson, string itemPathJson, ushort driveObjectNumber = 0, int driveObjectIndex = -1, string action = "read", string telegramType = "", int telegramNumber = -1,
             int inputSize = -1, int outputSize = -1, string direction = "", int size = -1, bool keepOriginalAddress = true, string softwarePath = "", string objectPath = "", string interfaceKind = "", int sensorIndex = 0, string connectOption = "", bool dryRun = true)
             => _session.RunHmiStepTool("ManageDriveTelegrams", meta =>
             {
@@ -254,17 +265,17 @@ namespace TiaMcpServer.Siemens.Services
                 var drive = _session.ExactDriveObject(devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex);
                 TelegramComposition telegrams = drive.Telegrams;
                 meta["driveObject"] = Logic.ParseDriveSelector(driveObjectNumber, driveObjectIndex).Label; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
-                JsonArray Rows() => new JsonArray(EngineeringGroupOperations.Items(telegrams).Cast<Telegram>().Select(t => (JsonNode)TelegramRow(t)).ToArray());
+                HmiArray Rows() => new HmiArray(EngineeringGroupOperations.Items(telegrams).Cast<Telegram>().Select(t => (object)TelegramRow(t)).ToArray());
                 meta["before"] = Rows();
                 if (action == "read") return "Drive object telegrams read (Telegram type / number / sizes / addresses / hardware identifiers / PKW); no modification.";
                 var type = (TelegramType)Enum.Parse(typeof(TelegramType), r.TelegramType);
                 Telegram? existing = telegrams.Find(type);
-                var checks = new JsonObject();
+                var checks = new HmiObject();
                 // TIA V21, 2026-09-19 (docs/reference/real-machine-ledger.md), real project (freshly added G120C without a bus interface, Telegrams empty): CanInsertAdditionalTelegram(2, 4) threw
                 // "Invalid operation" and CanInsertTelegram(700, SupplementaryTelegram) took TIA Portal V21 down. The Can* / Insert* family
                 // presupposes a networked drive object with its main telegram; without any telegram nothing is asked of TIA.
                 if (telegrams.Count == 0 && action != "read")
-                    throw new PortalException(PortalErrorCode.InvalidState, "This drive object has no telegram yet (not connected to a PROFINET / PROFIBUS IO system): TelegramComposition.Can* / Insert* / Erase are not called in this state (TIA Portal V21 crashed on a G120C here). Connect the drive to the IO system first, then retry.");
+                    throw new PlcSoftwareException("InvalidState", "This drive object has no telegram yet (not connected to a PROFINET / PROFIBUS IO system): TelegramComposition.Can* / Insert* / Erase are not called in this state (TIA Portal V21 crashed on a G120C here). Connect the drive to the IO system first, then retry.");
                 // TIA V21, 2026-09-19 (docs/reference/real-machine-ledger.md), real project (G120C, main telegram present): CanInsertTelegram(1, MainTelegram) answered false and the following
                 // CanInsertMainTelegram(1) took TIA Portal V21 down. Official: main telegrams are only inserted / erased on G220 drives, so
                 // neither Can* nor Insert* is called while a main telegram exists - changeNumber / changeSize edit the existing one.
@@ -273,7 +284,7 @@ namespace TiaMcpServer.Siemens.Services
                     checks["mainTelegramPresent"] = true; checks["canInsertMainTelegram"] = null;
                     checks["note"] = "A MainTelegram already exists on this drive object: CanInsertMainTelegram / InsertMainTelegram are not called (TIA Portal V21 crashed on a G120C in that state; main telegrams can only be added on G220 drives). Use changeNumber / changeSize.";
                     meta["checks"] = checks;
-                    if (action == "insert") throw new PortalException(PortalErrorCode.InvalidState, "MainTelegram already exists on this drive object (number " + existing.TelegramNumber + "); insert is refused - use changeNumber or changeSize instead.");
+                    if (action == "insert") throw new PlcSoftwareException("InvalidState", "MainTelegram already exists on this drive object (number " + existing.TelegramNumber + "); insert is refused - use changeNumber or changeSize instead.");
                     return "Telegram feasibility: a MainTelegram is already present, the native Can* checks for inserting another one are skipped; nothing changed.";
                 }
                 if (action == "check" || action == "insert")
@@ -292,10 +303,10 @@ namespace TiaMcpServer.Siemens.Services
                     }
                     if (existing != null && r.TelegramNumber >= 0) Safe(checks, "canChangeTelegram", () => existing.CanChangeTelegram(r.TelegramNumber));
                 }
-                if (action == "changeNumber") { if (existing == null) throw new PortalException(PortalErrorCode.NotFound, "No " + type + " on this drive object."); checks["canChangeTelegram"] = existing.CanChangeTelegram(r.TelegramNumber); }
-                if (action == "changeSize") { if (existing == null) throw new PortalException(PortalErrorCode.NotFound, "No " + type + " on this drive object."); var dir = (AddressIoType)Enum.Parse(typeof(AddressIoType), r.Direction); checks["currentWords"] = existing.GetSize(dir); checks["canChangeSize"] = existing.CanChangeSize(dir, r.Size, r.KeepOriginalAddress); }
-                if (action == "erase" && existing == null) throw new PortalException(PortalErrorCode.NotFound, "No " + type + " on this drive object to erase.");
-                if (action == "connectTechnologyObject" && existing == null) throw new PortalException(PortalErrorCode.NotFound, "No " + type + " on this drive object to connect.");
+                if (action == "changeNumber") { if (existing == null) throw new PlcSoftwareException("NotFound", "No " + type + " on this drive object."); checks["canChangeTelegram"] = existing.CanChangeTelegram(r.TelegramNumber); }
+                if (action == "changeSize") { if (existing == null) throw new PlcSoftwareException("NotFound", "No " + type + " on this drive object."); var dir = (AddressIoType)Enum.Parse(typeof(AddressIoType), r.Direction); checks["currentWords"] = existing.GetSize(dir); checks["canChangeSize"] = existing.CanChangeSize(dir, r.Size, r.KeepOriginalAddress); }
+                if (action == "erase" && existing == null) throw new PlcSoftwareException("NotFound", "No " + type + " on this drive object to erase.");
+                if (action == "connectTechnologyObject" && existing == null) throw new PlcSoftwareException("NotFound", "No " + type + " on this drive object to connect.");
                 meta["checks"] = checks;
                 if (action == "check") return "Telegram feasibility checked with the native Can* methods; nothing changed.";
                 if (!r.Writes) return "Telegram " + action + " preview; nothing changed (native Can* results in checks).";
@@ -317,19 +328,19 @@ namespace TiaMcpServer.Siemens.Services
                 }
                 // official note: telegram objects become invalid after size changes - always re-navigate for the readback
                 var fresh = drive.Telegrams;
-                meta["after"] = new JsonArray(EngineeringGroupOperations.Items(fresh).Cast<Telegram>().Select(t => (JsonNode)TelegramRow(t)).ToArray());
+                meta["after"] = new HmiArray(EngineeringGroupOperations.Items(fresh).Cast<Telegram>().Select(t => (object)TelegramRow(t)).ToArray());
                 if (action == "erase") meta["verifiedAbsent"] = fresh.Find(type) == null;
                 if (action == "insert") meta["verifiedPresent"] = fresh.Find(type) != null;
                 return "Telegram " + action + " executed and telegrams read back on a fresh navigation; no download or drive command.";
             });
 
         // V21: the SDR interfaces of the axis / encoder technology object take a Telegram; V20 has Connect(Telegram[, MC.Drives.Enums.ConnectOption]) on the base interfaces.
-        private void ConnectTelegramToTechnologyObject(Telegram telegram, Logic.TelegramRequest r, JsonObject meta)
+        private void ConnectTelegramToTechnologyObject(Telegram telegram, Logic.TelegramRequest r, HmiObject meta)
         {
             var target = _session.ExactTechnology(r.SoftwarePath, r.ObjectPath, true);
             var provider = target as IEngineeringServiceProvider ?? throw new NotSupportedException("Technology object is not a service provider.");
             meta["technologyObject"] = r.ObjectPath; meta["interfaceKind"] = r.InterfaceKind;
-#if TIA_V20
+#if !OPTIONAL_V21
             var option = r.HasConnectOption ? (DriveConnectOption)Enum.Parse(typeof(DriveConnectOption), r.ConnectOption) : DriveConnectOption.Default;
             if (r.InterfaceKind == "encoder")
             {
@@ -369,17 +380,17 @@ namespace TiaMcpServer.Siemens.Services
 #endif
         }
 
-        public ResponseMessage ManageDriveFunctions(string devicePathJson, string itemPathJson, ushort driveObjectNumber = 0, int driveObjectIndex = -1, string action = "read", string valueJson = "{}", bool dryRun = true)
+        public HardwareAddressingReply ManageDriveFunctions(string devicePathJson, string itemPathJson, ushort driveObjectNumber = 0, int driveObjectIndex = -1, string action = "read", string valueJson = "{}", bool dryRun = true)
             => _session.RunHmiStepTool("ManageDriveFunctions", meta =>
             {
                 var r = Logic.ValidateFunctionRequest(action, valueJson, dryRun);
                 using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var drive = _session.ExactDriveObject(devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex);
-                var dfi = drive.GetService<DriveFunctionInterface>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "DriveFunctionInterface not provided by this drive object.");
+                var dfi = drive.GetService<DriveFunctionInterface>() ?? throw new PlcSoftwareException("NotSupportedOnVersion", "DriveFunctionInterface not provided by this drive object.");
                 meta["driveObject"] = Logic.ParseDriveSelector(driveObjectNumber, driveObjectIndex).Label; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 meta["before"] = FunctionInterfaceRow(dfi);
                 if (action == "read") return "Drive function interface read (drive object type handler, activation, function-in-use / commissioning / safety / hardware projection availability); no modification.";
-                T Need<T>(T? value, string what) where T : class => value ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, what + " is not provided by this drive object.");
+                T Need<T>(T? value, string what) where T : class => value ?? throw new PlcSoftwareException("NotSupportedOnVersion", what + " is not provided by this drive object.");
                 HardwareProjection Projection() => Need(dfi.HardwareProjection, "HardwareProjection (G120: needs the Power Module; S120: offline only)");
                 if (action == "readMotorConfiguration") { meta["dataSet"] = r.DataSet; meta["motorConfiguration"] = MotorConfigurationRow(Projection().GetCurrentMotorConfiguration((ushort)r.DataSet)); return "Current motor configuration read (set the motor type first on G120 drives); no modification."; }
                 if (action == "readEncoderConfiguration") { meta["encoderNumber"] = r.EncoderNumber; meta["encoderConfiguration"] = EncoderConfigurationRow(Projection().GetCurrentEncoderConfiguration((ushort)r.EncoderNumber)); return "Current encoder configuration read; no modification."; }
@@ -391,7 +402,7 @@ namespace TiaMcpServer.Siemens.Services
                     case "changeDriveObjectType":
                         {
                             var handler = Need(dfi.DriveObjectFunctions?.DriveObjectTypeHandler, "DriveObjectTypeHandler");
-                            var target = handler.PossibleDriveObjectTypes.Find(r.DriveObjectType) ?? throw new PortalException(PortalErrorCode.NotFound, "Drive object type not among PossibleDriveObjectTypes: " + r.DriveObjectType);
+                            var target = handler.PossibleDriveObjectTypes.Find(r.DriveObjectType) ?? throw new PlcSoftwareException("NotFound", "Drive object type not among PossibleDriveObjectTypes: " + r.DriveObjectType);
                             meta["nativeSignature"] = "DriveObjectTypeHandler.ChangeDriveObjectType(DriveObjectType)"; result = handler.ChangeDriveObjectType(target); break;
                         }
                     case "changeActivationState": meta["nativeSignature"] = "DriveObjectActivation.ChangeActivationState(DriveObjectActivationState)"; result = Need(dfi.DriveObjectFunctions?.DriveObjectActivation, "DriveObjectActivation").ChangeActivationState((DriveObjectActivationState)Enum.Parse(typeof(DriveObjectActivationState), r.ActivationState)); break;
@@ -431,28 +442,28 @@ namespace TiaMcpServer.Siemens.Services
                 return result ? "Drive function " + action + " executed (native bool result true) and the function interface read back; no download or drive command." : "Drive function " + action + " returned false (TIA refused it; see before / after); no download or drive command.";
             });
         // entries {"p305": 20, "307": 30} -> ConfigurationEntry.Value by Name or Number in the required (then optional) composition.
-        private static JsonArray ApplyEntries(Dictionary<string, JsonNode?> entries, ConfigurationEntryComposition required, ConfigurationEntryComposition? optional)
+        private static HmiArray ApplyEntries(Dictionary<string, object?> entries, ConfigurationEntryComposition required, ConfigurationEntryComposition? optional)
         {
-            var applied = new JsonArray();
+            var applied = new HmiArray();
             foreach (var pair in entries)
             {
                 ConfigurationEntry? entry = uint.TryParse(pair.Key, out var number) ? required.Find(number) ?? optional?.Find(number) : required.Find(pair.Key) ?? optional?.Find(pair.Key);
-                if (entry == null) throw new PortalException(PortalErrorCode.NotFound, "Configuration entry not found in the current configuration: " + pair.Key);
+                if (entry == null) throw new PlcSoftwareException("NotFound", "Configuration entry not found in the current configuration: " + pair.Key);
                 var current = entry.Value;
                 var converted = current == null ? EngineeringScalarProperties.ConvertValue(pair.Value, typeof(object)) : EngineeringScalarProperties.ConvertValue(pair.Value, current.GetType());
                 entry.Value = converted;
-                applied.Add(new JsonObject { ["name"] = entry.Name, ["number"] = entry.Number, ["value"] = EngineeringScalarProperties.Json(entry.Value) });
+                applied.Add(new HmiObject { ["name"] = entry.Name, ["number"] = entry.Number, ["value"] = EngineeringScalarProperties.Json(entry.Value) });
             }
             return applied;
         }
 
-        public ResponseMessage ManageDriveSecurity(string devicePathJson, string itemPathJson, ushort driveObjectNumber = 0, int driveObjectIndex = -1, string action = "read", string password = "", bool dryRun = true)
+        public HardwareAddressingReply ManageDriveSecurity(string devicePathJson, string itemPathJson, ushort driveObjectNumber = 0, int driveObjectIndex = -1, string action = "read", string password = "", bool dryRun = true)
             => _session.RunHmiStepTool("ManageDriveSecurity", meta =>
             {
                 bool write = Logic.ValidateSecurityRequest(action, password, dryRun);
                 using var access = write ? _session.AcquireHmiEditAccess() : null;
                 var drive = _session.ExactDriveObject(devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex);
-                global::Siemens.Engineering.MC.Drives.Security security = drive.Security ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "Security is not provided by this drive object (SINAMICS FW V6.1+).");
+                global::Siemens.Engineering.MC.Drives.Security security = drive.Security ?? throw new PlcSoftwareException("NotSupportedOnVersion", "Security is not provided by this drive object (SINAMICS FW V6.1+).");
                 meta["driveObject"] = Logic.ParseDriveSelector(driveObjectNumber, driveObjectIndex).Label; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 Safe(meta, "umacConfigurationAvailable", () => security.UmacConfiguration != null); Safe(meta, "driveDataEncryptionAvailable", () => security.DriveDataEncryption != null);
                 if (action == "read") return "Drive security services read (UmacConfiguration / DriveDataEncryption availability; the API exposes no state); no modification.";
@@ -460,31 +471,31 @@ namespace TiaMcpServer.Siemens.Services
                 meta["mayHaveChanged"] = true; bool result;
                 if (action == "activateUmac" || action == "deactivateUmac")
                 {
-                    UmacConfiguration umac = security.UmacConfiguration ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "UmacConfiguration is not provided by this drive object.");
+                    UmacConfiguration umac = security.UmacConfiguration ?? throw new PlcSoftwareException("NotSupportedOnVersion", "UmacConfiguration is not provided by this drive object.");
                     meta["nativeSignature"] = "UmacConfiguration." + (action == "activateUmac" ? "Activate()" : "Deactivate()"); result = action == "activateUmac" ? umac.Activate() : umac.Deactivate();
                 }
                 else
                 {
-                    DriveDataEncryption dde = security.DriveDataEncryption ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "DriveDataEncryption is not provided by this drive object.");
-                    var secure = new SecureString(); foreach (var c in password) secure.AppendChar(c); secure.MakeReadOnly();
+                    DriveDataEncryption dde = security.DriveDataEncryption ?? throw new PlcSoftwareException("NotSupportedOnVersion", "DriveDataEncryption is not provided by this drive object.");
+                    using var secure = EngineeringCredentialRules.ToSecureString(password);
                     meta["nativeSignature"] = "DriveDataEncryption." + (action == "activateEncryption" ? "Activate(SecureString)" : "Deactivate(SecureString)"); result = action == "activateEncryption" ? dde.Activate(secure) : dde.Deactivate(secure);
                 }
                 meta["result"] = result; if (!result) meta["operationSuccess"] = false;
                 return result ? "Drive security " + action + " executed (native result true); no download." : "Drive security " + action + " returned false (TIA refused it); no download.";
             });
 
-        public ResponseMessage ManageTechnologyExtensions(string action = "read", string devicePathJson = "[]", string itemPathJson = "[]", ushort driveObjectNumber = 0, int driveObjectIndex = -1, string identifier = "", string filePath = "", bool confirmUninstallInUse = false, bool includeParameters = false, bool dryRun = true)
+        public HardwareAddressingReply ManageTechnologyExtensions(string action = "read", string devicePathJson = "[]", string itemPathJson = "[]", ushort driveObjectNumber = 0, int driveObjectIndex = -1, string identifier = "", string filePath = "", bool confirmUninstallInUse = false, bool includeParameters = false, bool dryRun = true)
             => _session.RunHmiStepTool("ManageTechnologyExtensions", meta =>
             {
                 bool write = Logic.ValidateTechnologyExtensionRequest(action, identifier, filePath, confirmUninstallInUse, dryRun);
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 if (Logic.IsPortalScopedExtensionAction(action))
                 {
-                    var provider = (_session.CurrentPortal as IEngineeringServiceProvider)?.GetService<TechnologyExtensionInstallationProvider>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "TechnologyExtensionInstallationProvider unavailable on this TIA Portal (Startdrive not installed).");
-                    JsonArray Packages() => new JsonArray(EngineeringGroupOperations.Items(provider.TechnologyExtensionPackages).Cast<TechnologyExtensionPackage>().Select(p => (JsonNode)TechnologyExtensionPackageRow(p)).ToArray());
+                    var provider = (_session.CurrentPortal as IEngineeringServiceProvider)?.GetService<TechnologyExtensionInstallationProvider>() ?? throw new PlcSoftwareException("NotSupportedOnVersion", "TechnologyExtensionInstallationProvider unavailable on this TIA Portal (Startdrive not installed).");
+                    HmiArray Packages() => new HmiArray(EngineeringGroupOperations.Items(provider.TechnologyExtensionPackages).Cast<TechnologyExtensionPackage>().Select(p => (object)TechnologyExtensionPackageRow(p)).ToArray());
                     meta["before"] = Packages();
                     if (action == "readPackages") return "Installed technology extension packages read (TechnologyExtensionInstallationProvider.TechnologyExtensionPackages); no modification.";
-                    if (action == "uninstall") { var package = provider.TechnologyExtensionPackages.Find(identifier) ?? throw new PortalException(PortalErrorCode.NotFound, "Technology extension package not installed: " + identifier); meta["package"] = TechnologyExtensionPackageRow(package); }
+                    if (action == "uninstall") { var package = provider.TechnologyExtensionPackages.Find(identifier) ?? throw new PlcSoftwareException("NotFound", "Technology extension package not installed: " + identifier); meta["package"] = TechnologyExtensionPackageRow(package); }
                     else { var file = HardwareServicesLogic.RequireExistingInputFile(filePath, "filePath"); meta["file"] = file.FullName; }
                     if (!write) return "Technology extension package " + action + " preview; nothing installed or removed (this changes the TIA Portal installation, not the project).";
                     meta["mayHaveChanged"] = true;
@@ -494,19 +505,19 @@ namespace TiaMcpServer.Siemens.Services
                         case "installAndGetIdentifier": meta["nativeSignature"] = "TechnologyExtensionInstallationProvider.InstallAndGetIdentifier(FileInfo)"; var id = provider.InstallAndGetIdentifier(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath))); meta["identifier"] = id; Safe(meta, "package", () => { var p = provider.TechnologyExtensionPackages.Find(id); return p == null ? null : TechnologyExtensionPackageRow(p); }); break;
                         case "uninstall": meta["nativeSignature"] = "TechnologyExtensionInstallationProvider.Uninstall(string, bool)"; meta["result"] = provider.Uninstall(identifier, confirmUninstallInUse); meta["verifiedAbsent"] = provider.TechnologyExtensionPackages.Find(identifier) == null; break;
                     }
-                    if (meta["result"] is JsonValue v && v.TryGetValue<bool>(out var ok) && !ok) meta["operationSuccess"] = false;
+                    if (meta["result"] is object v && v.TryOptionalValue<bool>(out var ok) && !ok) meta["operationSuccess"] = false;
                     meta["after"] = Packages();
                     return "Technology extension package " + action + " executed on the TIA Portal installation; packages read back.";
                 }
                 using var access = write ? _session.AcquireHmiEditAccess() : null;
                 var drive = _session.ExactDriveObject(devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex);
-                var container = drive.GetService<TechnologyExtensionContainer>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "TechnologyExtensionContainer not provided by this drive object.");
+                var container = drive.GetService<TechnologyExtensionContainer>() ?? throw new PlcSoftwareException("NotSupportedOnVersion", "TechnologyExtensionContainer not provided by this drive object.");
                 meta["driveObject"] = Logic.ParseDriveSelector(driveObjectNumber, driveObjectIndex).Label;
-                JsonArray Rows() => new JsonArray(EngineeringGroupOperations.Items(container.TechnologyExtensions).Cast<TechnologyExtension>().Select(e => (JsonNode)TechnologyExtensionRow(e, includeParameters)).ToArray());
+                HmiArray Rows() => new HmiArray(EngineeringGroupOperations.Items(container.TechnologyExtensions).Cast<TechnologyExtension>().Select(e => (object)TechnologyExtensionRow(e, includeParameters)).ToArray());
                 meta["before"] = Rows();
                 if (action == "read") return "Technology extensions of the drive object read (identifier / name / display name / activation" + (includeParameters ? " / parameters" : "") + "); no modification.";
                 TechnologyExtension extension = container.TechnologyExtensions.Find(identifier) ?? EngineeringGroupOperations.Items(container.TechnologyExtensions).Cast<TechnologyExtension>().FirstOrDefault(e => e.Name == identifier)
-                    ?? throw new PortalException(PortalErrorCode.NotFound, "Technology extension not found by identifier or name: " + identifier);
+                    ?? throw new PlcSoftwareException("NotFound", "Technology extension not found by identifier or name: " + identifier);
                 meta["extension"] = TechnologyExtensionRow(extension, false);
                 if (!write) return "Technology extension " + action + " preview; nothing changed.";
                 meta["mayHaveChanged"] = true; meta["nativeSignature"] = "TechnologyExtension." + (action == "activate" ? "Activate()" : "Deactivate()");
@@ -517,28 +528,28 @@ namespace TiaMcpServer.Siemens.Services
                 return "Technology extension " + action + " executed and read back; no download.";
             });
 
-#if !TIA_V20
-        private static JsonObject HardwareModuleRow(DriveItemHardwareModule m)
+#if OPTIONAL_V21
+        private static HmiObject HardwareModuleRow(DriveItemHardwareModule m)
         {
-            var row = new JsonObject();
+            var row = new HmiObject();
             Safe(row, "componentName", () => m.ComponentName); Safe(row, "positionNumber", () => m.PositionNumber); Safe(row, "typeName", () => m.TypeName); Safe(row, "typeIdentifier", () => m.TypeIdentifier);
             return row;
         }
 #endif
-        public ResponseMessage ManageDriveHardwareModule(string devicePathJson, string itemPathJson, string action = "read", string typeIdentifier = "", int positionNumber = -1, bool dryRun = true)
+        public HardwareAddressingReply ManageDriveHardwareModule(string devicePathJson, string itemPathJson, string action = "read", string typeIdentifier = "", int positionNumber = -1, bool dryRun = true)
             => _session.RunHmiStepTool("ManageDriveHardwareModule", meta =>
             {
                 bool write = Logic.ValidateHardwareModuleRequest(action, typeIdentifier, positionNumber, dryRun);
                 using var access = write ? _session.AcquireHmiEditAccess() : null;
                 var item = _session.ExactDriveItem(devicePathJson, itemPathJson);
                 meta["deviceItem"] = item.Name; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
-                Safe(meta, "moduleAccessPointHwIdentifiers", () => { var ap = item.GetService<ModuleAccessPoint>(); return ap == null ? null : new JsonArray(EngineeringGroupOperations.Items(ap.HwIdentifiers).Cast<HwIdentifier>().Select(h => (JsonNode)h.Identifier).ToArray()); });
-#if TIA_V20
+                Safe(meta, "moduleAccessPointHwIdentifiers", () => { var ap = item.GetService<ModuleAccessPoint>(); return ap == null ? null : new HmiArray(EngineeringGroupOperations.Items(ap.HwIdentifiers).Cast<HwIdentifier>().Select(h => (object)h.Identifier).ToArray()); });
+#if !OPTIONAL_V21
                 meta["hardwareModule"] = null; meta["hardwareModuleNote"] = "DriveItemHardwareModule (component name / position / type identifier / ChangeType) is a V21 addition; absent on V20.";
                 if (action == "read") return "Module access point read; DriveItemHardwareModule is not available on V20.";
-                throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "DriveItemHardwareModule." + (action == "changeType" ? "ChangeType" : "PositionNumber") + " is a V21 addition; absent on V20.");
+                throw new PlcSoftwareException("NotSupportedOnVersion", "DriveItemHardwareModule." + (action == "changeType" ? "ChangeType" : "PositionNumber") + " is a V21 addition; absent on V20.");
 #else
-                var module = item.GetService<DriveItemHardwareModule>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "DriveItemHardwareModule not provided by device item '" + item.Name + "' (drive components only).");
+                var module = item.GetService<DriveItemHardwareModule>() ?? throw new PlcSoftwareException("NotSupportedOnVersion", "DriveItemHardwareModule not provided by device item '" + item.Name + "' (drive components only).");
                 meta["before"] = HardwareModuleRow(module);
                 if (action == "read") return "Drive hardware module read (DriveItemHardwareModule component name / position / type name / type identifier, module access point hardware identifiers); no modification.";
                 if (!write) return "Drive hardware module " + action + " preview; nothing changed.";
@@ -552,24 +563,24 @@ namespace TiaMcpServer.Siemens.Services
 #endif
             });
 
-        public ResponseMessage ManageDriveSafetyAcceptanceTest(string devicePathJson, string itemPathJson, string action = "read", string identifier = "", bool active = false, string filePath = "", string fileOperation = "", bool dryRun = true)
+        public HardwareAddressingReply ManageDriveSafetyAcceptanceTest(string devicePathJson, string itemPathJson, string action = "read", string identifier = "", bool active = false, string filePath = "", string fileOperation = "", bool dryRun = true)
             => _session.RunHmiStepTool("ManageDriveSafetyAcceptanceTest", meta =>
             {
                 bool write = Logic.ValidateSafetyTestRequest(action, identifier, filePath, fileOperation, dryRun);
                 using var access = write ? _session.AcquireHmiEditAccess() : null;
                 var item = _session.ExactDriveItem(devicePathJson, itemPathJson);
                 meta["deviceItem"] = item.Name; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
-#if TIA_V20
-                throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "SafetyAcceptanceTestProvider / SafetyAcceptanceTestReport are V21 additions; absent on V20.");
+#if !OPTIONAL_V21
+                throw new PlcSoftwareException("NotSupportedOnVersion", "SafetyAcceptanceTestProvider / SafetyAcceptanceTestReport are V21 additions; absent on V20.");
 #else
-                var provider = item.GetService<SafetyAcceptanceTestProvider>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "SafetyAcceptanceTestProvider not provided by device item '" + item.Name + "'.");
-                JsonArray Rows() => new JsonArray(EngineeringGroupOperations.Items(provider.TestFunctions).Cast<TestFunction>().Select(t => (JsonNode)new JsonObject { ["identifier"] = t.Identifier, ["active"] = t.Active }).ToArray());
+                var provider = item.GetService<SafetyAcceptanceTestProvider>() ?? throw new PlcSoftwareException("NotSupportedOnVersion", "SafetyAcceptanceTestProvider not provided by device item '" + item.Name + "'.");
+                HmiArray Rows() => new HmiArray(EngineeringGroupOperations.Items(provider.TestFunctions).Cast<TestFunction>().Select(t => (object)new HmiObject { ["identifier"] = t.Identifier, ["active"] = t.Active }).ToArray());
                 meta["before"] = Rows();
                 IEngineeringObject? owner = item.Parent; while (owner is DeviceItem parentItem) owner = parentItem.Parent; var device = owner as Device;
                 if (action == "read") { Safe(meta, "reportAvailable", () => device?.GetService<SafetyAcceptanceTestReport>() != null); return "Safety acceptance test functions read (identifier / active); no modification."; }
                 if (action == "createProtocol")
                 {
-                    var report = device?.GetService<SafetyAcceptanceTestReport>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "SafetyAcceptanceTestReport not provided by the owning device.");
+                    var report = device?.GetService<SafetyAcceptanceTestReport>() ?? throw new PlcSoftwareException("NotSupportedOnVersion", "SafetyAcceptanceTestReport not provided by the owning device.");
                     var operation = (FileOperations)Enum.Parse(typeof(FileOperations), fileOperation);
                     var file = operation == FileOperations.Overwrite ? new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)) : NativeFileOutput.Plan(filePath);
                     meta["file"] = file.FullName; meta["fileOperation"] = fileOperation;
@@ -584,7 +595,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (action == "resetTestFunctions") { meta["nativeSignature"] = "SafetyAcceptanceTestProvider.ResetTestFunctions()"; provider.ResetTestFunctions(); }
                 else
                 {
-                    var function = provider.TestFunctions.Find(identifier) ?? throw new PortalException(PortalErrorCode.NotFound, "Test function not found: " + identifier);
+                    var function = provider.TestFunctions.Find(identifier) ?? throw new PlcSoftwareException("NotFound", "Test function not found: " + identifier);
                     meta["nativeSignature"] = "TestFunction.Active = " + (active ? "true" : "false"); function.Active = active;
                     meta["activeVerified"] = (provider.TestFunctions.Find(identifier)?.Active ?? !active) == active;
                 }
@@ -594,7 +605,7 @@ namespace TiaMcpServer.Siemens.Services
             });
 
         // ---- online (connected drive) --------------------------------------------------------------------------------------------
-        public ResponseMessage ReadOnlineDriveParameters(string devicePathJson, string itemPathJson, ushort driveObjectNumber = 0, int driveObjectIndex = -1, string namesJson = "[]", string numbersJson = "[]", bool includeBits = false, bool includeEnumValues = false, int offset = 0, int limit = 100, bool includeValue = true)
+        public HardwareAddressingReply ReadOnlineDriveParameters(string devicePathJson, string itemPathJson, ushort driveObjectNumber = 0, int driveObjectIndex = -1, string namesJson = "[]", string numbersJson = "[]", bool includeBits = false, bool includeEnumValues = false, int offset = 0, int limit = 100, bool includeValue = true)
             => _session.RunHmiStepTool("GetOnlineDriveParameters", meta =>
             {
                 var selector = Logic.ValidateParametersRequest("read", namesJson, numbersJson, offset, limit);
@@ -602,25 +613,25 @@ namespace TiaMcpServer.Siemens.Services
                 var drive = ExactOnlineDriveObject(item, Logic.ParseDriveSelector(driveObjectNumber, driveObjectIndex));
                 meta["driveObject"] = Logic.ParseDriveSelector(driveObjectNumber, driveObjectIndex).Label; meta["online"] = true;
                 Safe(meta, "driveObjectNumber", () => drive.DriveObjectNumber);
-                ReadDriveParameterComposition parameters = drive.ReadParameters; var missing = new JsonArray(); JsonNode[] rows;
-                if (selector.Enumerate) { var all = EngineeringGroupOperations.Items(parameters).Cast<ReadDriveParameter>().Skip(offset).Take(limit + 1).ToArray(); rows = all.Take(limit).Select(p => (JsonNode)DriveParameterRow(p, includeBits, includeEnumValues, includeValue)).ToArray(); meta["truncated"] = all.Length > limit; meta["nextOffset"] = all.Length > limit ? offset + limit : (int?)null; }
+                ReadDriveParameterComposition parameters = drive.ReadParameters; var missing = new HmiArray(); object[] rows;
+                if (selector.Enumerate) { var all = EngineeringGroupOperations.Items(parameters).Cast<ReadDriveParameter>().Skip(offset).Take(limit + 1).ToArray(); rows = all.Take(limit).Select(p => (object)DriveParameterRow(p, includeBits, includeEnumValues, includeValue)).ToArray(); meta["truncated"] = all.Length > limit; meta["nextOffset"] = all.Length > limit ? offset + limit : (int?)null; }
                 else rows = selector.Names.Select(n => (Name: n, Parameter: FindParameter(parameters, n))).Concat(selector.Numbers.Select(x => (Name: x.Number + (x.ArrayIndex >= 0 ? "[" + x.ArrayIndex + "]" : ""), Parameter: parameters.Find(x.Number, x.ArrayIndex))))
-                    .Where(x => { if (x.Parameter == null) missing.Add(x.Name); return x.Parameter != null; }).Select(x => (JsonNode)DriveParameterRow(x.Parameter!, includeBits, includeEnumValues, includeValue)).ToArray();
-                meta["records"] = new JsonArray(rows); meta["actualCount"] = rows.Length; meta["offset"] = offset; meta["limit"] = limit; meta["notFound"] = missing; meta["includeValue"] = includeValue;
+                    .Where(x => { if (x.Parameter == null) missing.Add(x.Name); return x.Parameter != null; }).Select(x => (object)DriveParameterRow(x.Parameter!, includeBits, includeEnumValues, includeValue)).ToArray();
+                meta["records"] = new HmiArray(rows); meta["actualCount"] = rows.Length; meta["offset"] = offset; meta["limit"] = limit; meta["notFound"] = missing; meta["includeValue"] = includeValue;
                 return "Online drive parameters read from the connected drive (OnlineDriveObject.ReadParameters); nothing written.";
             });
 
-        public ResponseMessage ManageOnlineDriveFunctions(string devicePathJson, string itemPathJson, ushort driveObjectNumber = 0, int driveObjectIndex = -1, string action = "read", string resetMode = "", string activationState = "", bool confirmOnline = false)
+        public HardwareAddressingReply ManageOnlineDriveFunctions(string devicePathJson, string itemPathJson, ushort driveObjectNumber = 0, int driveObjectIndex = -1, string action = "read", string resetMode = "", string activationState = "", bool confirmOnline = false)
             => _session.RunHmiStepTool("ManageOnlineDriveFunctions", meta =>
             {
                 Logic.ValidateOnlineFunctionRequest(action, resetMode, activationState, confirmOnline);
                 var item = _session.ExactDriveItem(devicePathJson, itemPathJson);
                 var drive = ExactOnlineDriveObject(item, Logic.ParseDriveSelector(driveObjectNumber, driveObjectIndex));
-                var dfi = drive.GetService<OnlineDriveFunctionInterface>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "OnlineDriveFunctionInterface not provided (drive offline or unsupported).");
+                var dfi = drive.GetService<OnlineDriveFunctionInterface>() ?? throw new PlcSoftwareException("NotSupportedOnVersion", "OnlineDriveFunctionInterface not provided (drive offline or unsupported).");
                 meta["driveObject"] = Logic.ParseDriveSelector(driveObjectNumber, driveObjectIndex).Label; meta["action"] = action; meta["online"] = true; meta["mayHaveChanged"] = false;
-                JsonObject Row()
+                HmiObject Row()
                 {
-                    var row = new JsonObject();
+                    var row = new HmiObject();
                     Safe(row, "driveDomainFunctionsAvailable", () => dfi.DriveDomainFunctions != null); Safe(row, "hardwareProjectionAvailable", () => dfi.HardwareProjection != null); Safe(row, "functionInUseAvailable", () => dfi.FunctionInUse != null);
                     Safe(row, "activation", () => { var a = dfi.DriveObjectFunctions?.DriveObjectActivation; return a == null ? null : ActivationRow(a); });
                     Safe(row, "securityAvailable", () => drive.Security != null);
@@ -631,12 +642,14 @@ namespace TiaMcpServer.Siemens.Services
                 meta["mayHaveChanged"] = true; bool result;
                 switch (action)
                 {
-                    case "performFactoryReset": { var functions = dfi.DriveDomainFunctions ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "DriveDomainFunctions not provided (G120: Power Module required)."); meta["nativeSignature"] = "DriveDomainFunctions.PerformFactoryReset(ResetMode)"; result = functions.PerformFactoryReset((ResetMode)Enum.Parse(typeof(ResetMode), resetMode)); break; }
-                    case "performRamToRomCopy": { var functions = dfi.DriveDomainFunctions ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "DriveDomainFunctions not provided (G120: Power Module required)."); meta["nativeSignature"] = "DriveDomainFunctions.PerformRAMtoROMCopyAllDriveObject()"; result = functions.PerformRAMtoROMCopyAllDriveObject(); break; }
-                    default: { var activation = dfi.DriveObjectFunctions?.DriveObjectActivation ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "DriveObjectActivation not provided online."); meta["nativeSignature"] = "DriveObjectActivation.ChangeActivationState(DriveObjectActivationState)"; result = activation.ChangeActivationState((DriveObjectActivationState)Enum.Parse(typeof(DriveObjectActivationState), activationState)); break; }
+                    case "performFactoryReset": { var functions = dfi.DriveDomainFunctions ?? throw new PlcSoftwareException("NotSupportedOnVersion", "DriveDomainFunctions not provided (G120: Power Module required)."); meta["nativeSignature"] = "DriveDomainFunctions.PerformFactoryReset(ResetMode)"; result = functions.PerformFactoryReset((ResetMode)Enum.Parse(typeof(ResetMode), resetMode)); break; }
+                    case "performRamToRomCopy": { var functions = dfi.DriveDomainFunctions ?? throw new PlcSoftwareException("NotSupportedOnVersion", "DriveDomainFunctions not provided (G120: Power Module required)."); meta["nativeSignature"] = "DriveDomainFunctions.PerformRAMtoROMCopyAllDriveObject()"; result = functions.PerformRAMtoROMCopyAllDriveObject(); break; }
+                    default: { var activation = dfi.DriveObjectFunctions?.DriveObjectActivation ?? throw new PlcSoftwareException("NotSupportedOnVersion", "DriveObjectActivation not provided online."); meta["nativeSignature"] = "DriveObjectActivation.ChangeActivationState(DriveObjectActivationState)"; result = activation.ChangeActivationState((DriveObjectActivationState)Enum.Parse(typeof(DriveObjectActivationState), activationState)); break; }
                 }
                 meta["result"] = result; if (!result) meta["operationSuccess"] = false; meta["after"] = Row();
                 return result ? "Online drive function " + action + " executed on the connected drive (native result true)." : "Online drive function " + action + " returned false (the drive refused it).";
             });
     }
 }
+
+#endif
