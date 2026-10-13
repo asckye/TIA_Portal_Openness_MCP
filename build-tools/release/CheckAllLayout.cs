@@ -26,10 +26,10 @@ internal static class CheckAllLayout
         .Where(file => !File.Exists(Path.Combine(defaultOutput, file)) || !File.Exists(Path.Combine(checkOutput, file)))
         .Order(StringComparer.Ordinal).ToArray();
 
-    internal static CommandResult Verify(string root, IEnumerable<CheckBuild> builds, string dotnet, string nuget, string api, string directory)
+    internal static CommandResult Verify(string root, IEnumerable<CheckBuild> builds, string dotnet, string nuget, string api, string directory, string manifest)
     {
         Directory.CreateDirectory(directory);
-        var runtime = File.ReadLines(Path.Combine(root, "bin-build/check-all/runtime-paths.tsv")).Select(line => line.Split('\t')).ToArray();
+        var runtime = File.ReadLines(manifest).Select(line => line.Split('\t')).ToArray();
         var tracked = ProcessRunner.Run("git", ["ls-files", "--cached", "--others", "--exclude-standard", "-z"], root); ProcessRunner.RequireSuccess(tracked, "layout input inventory");
         var inputs = tracked.StandardOutput.Split('\0', StringSplitOptions.RemoveEmptyEntries).Where(file => File.Exists(Path.Combine(root, file)))
             .Select(file => new KeyValuePair<string, string>(file, InputHash(root, file))).ToArray();
@@ -85,7 +85,7 @@ internal static class CheckAllLayout
         {
             // Ordinary builds may share their default outputs. Restore each isolated
             // production/fixture payload before any check starts.
-            ReleaseCommands.PrepareCheckAllRuntime(root, builds, Path.Combine(root, "bin-build/check-all/runtime-paths.tsv"));
+            ReleaseCommands.PrepareCheckAllRuntime(root, builds, manifest);
         }
     }
 }

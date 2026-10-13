@@ -140,6 +140,7 @@ internal static partial class ReleaseCommands
                     runPython("scripts/checks/Snapshot-ToolResponses.py", ["compare", "--baseline", "manifest/contracts/v4/responses", "--current", Path.Combine(logs, "responses-http"), "--releases", "20", "21"]);
                 });
                 runStep("09-engine-responses-source-layout", () => CaptureSnapshots("scripts/checks/Snapshot-ToolResponses.py", "engine-responses-source-layout", true, ["20", "21"], sourceLayout: true));
+                runStep("09-packaged-responses-verify", () => VerifyPackagedResponses(Root, output, logs, releaseTemp, runDefaults, runPython));
                 return new PipelineResult("responses", 0, "Response capture and comparison passed." + Environment.NewLine, "");
             }),
             ("relocated-bundle", () =>
@@ -238,5 +239,30 @@ internal static partial class ReleaseCommands
         }));
         ParallelPipeline.Run(jobs, Path.Combine(logs, "post-validation"), maxParallelism);
 
+    }
+
+    internal static void VerifyPackagedResponses(string root, string output, string logs, string releaseTemp,
+        Action<string, string[]> capture, Action<string, string[]> verify)
+    {
+        using var package = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "package-result.json")));
+        var zip = package.RootElement.GetProperty("path").GetString() ?? throw new ReleaseException("Package result has no path");
+        var input = Path.Combine(releaseTemp, "response-input-" + Guid.NewGuid().ToString("N"));
+        var responses = Path.Combine(logs, "packaged-responses");
+        const string script = "scripts/checks/Snapshot-ToolResponses.py";
+        try
+        {
+            ZipFile.ExtractToDirectory(zip, input);
+            var bundle = Path.Combine(input, Path.GetFileNameWithoutExtension(zip));
+            if (!Directory.Exists(bundle)) throw new ReleaseException("Extracted candidate package root is missing: " + bundle);
+            capture(script, ["capture", "--repo-root", bundle, "--packaged-no-tia", "--releases", "20", "21",
+                "--dotnet-root", Path.Combine(bundle, "runtime/dotnet"), "--temp-root", Path.Combine(releaseTemp, "packaged-response-temp"), "--output", responses]);
+            foreach (var release in new[] { "20", "21" })
+                if (!File.Exists(Path.Combine(responses, release + ".json"))) throw new ReleaseException("Packaged response snapshot missing: V" + release);
+            // Keep the existing exact-eight-file verifier and all Foundation assertions.
+            foreach (var release in new[] { "14sp1", "15.1", "16", "17", "18", "19" })
+                File.Copy(Path.Combine(root, "manifest/contracts/v4/responses", release + ".json"), Path.Combine(responses, release + ".json"));
+            verify(script, ["verify", "--repo-root", root, "--responses", responses]);
+        }
+        finally { if (Directory.Exists(input)) Directory.Delete(input, true); }
     }
 }

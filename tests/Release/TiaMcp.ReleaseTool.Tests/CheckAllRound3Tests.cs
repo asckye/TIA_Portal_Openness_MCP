@@ -144,8 +144,9 @@ public sealed class CheckAllRound3Tests(ITestOutputHelper output)
         var one = new CheckBuild("tests/test.csproj", "", ["-p:DefineConstants=ONE"]); var two = new CheckBuild("tests/test.csproj", "", ["-p:DefineConstants=TWO"]);
         var project = Path.Combine(fixture.DirectoryPath, "tests/test.csproj");
         File.WriteAllLines(Path.Combine(directory, "runtime-paths.tsv"), new[] { project + "\t" + one.Variant + "\tone\tlegacy\tone.dll", project + "\t" + two.Variant + "\ttwo\tlegacy\ttwo.dll" });
-        Assert.Equal("one.dll", CheckAllBuild.TestAssembly(fixture.DirectoryPath, one)); Assert.Equal("two.dll", CheckAllBuild.TestAssembly(fixture.DirectoryPath, two));
-        Assert.Null(CheckAllBuild.TestAssembly(fixture.DirectoryPath, new("tests/other.csproj", "", [])));
+        var manifest = Path.Combine(directory, "runtime-paths.tsv");
+        Assert.Equal("one.dll", CheckAllBuild.TestAssembly(fixture.DirectoryPath, one, manifest)); Assert.Equal("two.dll", CheckAllBuild.TestAssembly(fixture.DirectoryPath, two, manifest));
+        Assert.Throws<ReleaseException>(() => CheckAllBuild.TestAssembly(fixture.DirectoryPath, new("tests/other.csproj", "", []), manifest));
         var cli = Path.Combine(fixture.DirectoryPath, "build-tools/release/TiaMcp.ReleaseTool.csproj");
         var cliOutput = Path.Combine(fixture.DirectoryPath, "build-tools/release/bin/Release/net10.0"); Directory.CreateDirectory(cliOutput);
         var cliDll = Path.Combine(cliOutput, "TiaMcp.ReleaseTool.dll"); File.WriteAllText(cliDll, "running CLI");
@@ -267,6 +268,7 @@ public sealed class CheckAllRound3Tests(ITestOutputHelper output)
             new CheckBuild(leafProject, "same", ["-p:DefineConstants=ONE"]), new CheckBuild("middle/middle.csproj", "same", ["-p:DefineConstants=ONE", "-p:SiemensEngineeringDirectory=initial"]) };
         var result = CheckAllBuild.Run(root, builds, Path.Combine(root, "report"), "dotnet", null, Path.Combine(root, "offline.config"), 1, false);
         Assert.True(result.ExitCode == 0, result.StandardOutput + result.StandardError);
+        Assert.False(File.Exists(Path.Combine(root, "bin-build/check-all/runtime-paths.tsv")));
         var runtime = File.ReadLines(Path.Combine(root, "report/runtime-paths.tsv")).Select(line => line.Split('\t')).Where(row => row[0].EndsWith("middle.csproj", StringComparison.Ordinal)).ToArray();
         Assert.Equal(new[] { "net10.0", "netstandard2.1" }, runtime.Select(row => Path.GetFileName(row[2].TrimEnd('/', '\\'))).Order());
         Assert.All(runtime, row => { Assert.True(Directory.Exists(row[2])); Assert.True(File.Exists(row[4])); });

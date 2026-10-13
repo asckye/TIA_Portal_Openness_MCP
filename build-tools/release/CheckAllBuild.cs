@@ -113,19 +113,18 @@ internal static class CheckAllBuild
         }
         if (!stable) return new(1, Combined(1).StandardOutput, Combined(1).StandardError + "Check build graph did not stabilize after Restore; compilation was not started.\n");
         var build = Step("BuildChecks", "build.log");
-        var result = Combined(build.ExitCode);
-        if (result.ExitCode == 0) File.Copy(Path.Combine(directory, "runtime-paths.tsv"), Path.Combine(root, "bin-build/check-all/runtime-paths.tsv"), true);
-        return result;
+        return Combined(build.ExitCode);
     }
 
-    internal static string? TestAssembly(string root, CheckBuild unit)
+    internal static string? TestAssembly(string root, CheckBuild unit, string? manifest, string? suite = null)
     {
-        var manifest = Path.Combine(root, "bin-build/check-all/runtime-paths.tsv");
-        if (!File.Exists(manifest)) return null;
         var project = Path.GetFullPath(Path.Combine(root, unit.Project));
-        var row = File.ReadLines(manifest).Select(line => line.Split('\t')).FirstOrDefault(row => row.Length == 5 &&
-            string.Equals(Path.GetFullPath(row[0]), project, StringComparison.OrdinalIgnoreCase) && row[1] == unit.Variant);
-        return row?[4];
+        var row = File.Exists(manifest) ? File.ReadLines(manifest).Select(line => line.Split('\t')).FirstOrDefault(row => row.Length == 5 &&
+            string.Equals(Path.GetFullPath(row[0]), project, StringComparison.OrdinalIgnoreCase) && row[1] == unit.Variant) : null;
+        if (row is { Length: 5 } && !string.IsNullOrWhiteSpace(row[4])) return row[4];
+        if (unit.Properties.Length != 0 || unit.Variant != "default" || manifest != null)
+            throw new ReleaseException($"Suite {suite ?? unit.Project}: missing runtime manifest row ({project}, {unit.Variant}) in {manifest ?? "(no runtime manifest supplied)"}; refusing to fall back to another build.");
+        return null;
     }
 
     private static string Escape(string value) => value.Replace("%", "%25", StringComparison.Ordinal).Replace(";", "%3B", StringComparison.Ordinal);

@@ -29,7 +29,7 @@ internal static partial class ReleaseCommands
                 var seed = Path.Combine(history, "release-tool.json");
                 if (File.Exists(measured) && !File.Exists(seed)) File.Copy(measured, seed);
                 FastSuites.AddJobs(jobs, Root, "release-tool", CheckAllPreflightSuite(catalog), Path.Combine(output, "preflight-suites"), dotnet, shards, null, [],
-                    history: history, jobPrefix: "preflight-");
+                    history: history, jobPrefix: "preflight-", manifest: Path.Combine(output, "build/runtime-paths.tsv"));
                 dependencies.Add("preflight-release-tool-gate"); continue;
             }
             dependencies.Add(name);
@@ -39,7 +39,7 @@ internal static partial class ReleaseCommands
                 if (check.Args.FirstOrDefault() == "test")
                 {
                     args.AddRange(["--no-build", "--no-restore"]);
-                    if (CheckAllBuild.TestAssembly(Root, CheckAllBuild.Suite(CheckAllPreflightSuite(catalog))) is { } assembly) args.Add("-p:TargetPath=" + assembly);
+                    if (CheckAllBuild.TestAssembly(Root, CheckAllBuild.Suite(CheckAllPreflightSuite(catalog)), Path.Combine(output, "build/runtime-paths.tsv"), "release-tool") is { } assembly) args.Add("-p:TargetPath=" + assembly);
                 }
                 if (check.Args.Contains("-SelfTest") && check.Exe != "test-suites") args.Add("-NoBuild");
                 var command = check.Exe == "test-suites" || check.Exe.StartsWith("check-", StringComparison.Ordinal)

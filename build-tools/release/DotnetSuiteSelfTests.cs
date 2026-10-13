@@ -4,7 +4,7 @@ using TiaMcp.BuildCommon;
 
 namespace TiaMcp.ReleaseTool;
 
-// The CLI and xUnit suite run the same fourteen cases as the original Python runner.
+// The CLI and xUnit suite share the original gate cases and runtime manifest regressions.
 internal static class DotnetSuiteSelfTests
 {
     internal static IReadOnlyList<(string Name, Action Run)> Cases { get; } =
@@ -22,7 +22,10 @@ internal static class DotnetSuiteSelfTests
         ("unknown result", () => WithFixture((path, _) => Require(Check(path, ["Passed", "Error"]).Errors.Count != 0))),
         ("invalid xml and counters", InvalidXml),
         ("missing trx removes stale success", MissingTrx),
-        ("runner command report and nonzero exit", RunnerCommand)
+        ("runner command report and nonzero exit", RunnerCommand),
+        ("missing variant runtime row", MissingVariantRow),
+        ("missing variant fails before test process", MissingVariantProcess),
+        ("concurrent runtime manifests stay independent", ConcurrentManifests)
     ];
 
     internal static void SyntheticTrx(string path, string[] outcomes, Dictionary<string, string>? overrides = null)
@@ -103,5 +106,53 @@ internal static class DotnetSuiteSelfTests
             var report = JsonNode.Parse(File.ReadAllText(Path.Combine(directory, "example.json")))!;
             Require((result.ExitCode == 0) == (code == 0) && report["passed"]!.GetValue<int>() == 2 && report["methods"]![0]!["testMethod"]!.GetValue<string>() == "Check");
         }
+    });
+
+    private static void MissingVariantRow() => WithFixture((_, directory) =>
+    {
+        var manifest = Path.Combine(directory, "runtime-paths.tsv");
+        var project = Path.Combine(directory, "example.csproj");
+        foreach (var unit in new[] { new CheckBuild("example.csproj", "", ["-p:TestVciFamily=initial"]),
+            new CheckBuild("example.csproj", "custom-output", []) })
+        {
+            foreach (var row in new string?[] { null, project + "\tdefault\tbin\tbin\twrong.dll",
+                project + "\t" + unit.Variant + "\tbin\tbin\t" })
+            {
+                File.Delete(manifest);
+                if (row != null) File.WriteAllText(manifest, row + "\n");
+                try { CheckAllBuild.TestAssembly(directory, unit, manifest, "variant-suite"); }
+                catch (ReleaseException ex)
+                {
+                    Require(ex.Message.Contains("variant-suite", StringComparison.Ordinal) && ex.Message.Contains(project, StringComparison.Ordinal)
+                        && ex.Message.Contains(unit.Variant, StringComparison.Ordinal) && ex.Message.Contains(manifest, StringComparison.Ordinal));
+                    continue;
+                }
+                throw new ReleaseException("Missing variant row silently fell back");
+            }
+        }
+    });
+
+    private static void MissingVariantProcess() => WithFixture((_, directory) =>
+    {
+        var result = FastSuites.RunShard(directory, "variant-suite", Suite(), directory, "must-not-start-dotnet", null,
+            CheckAllBuild.Suite(Suite()), 0, 1, manifest: Path.Combine(directory, "missing-runtime-paths.tsv"));
+        Require(result.ExitCode == 1 && result.StandardError.Contains("Suite variant-suite: missing runtime manifest row", StringComparison.Ordinal)
+            && result.StandardError.Contains("refusing to fall back", StringComparison.Ordinal) && !File.Exists(Path.Combine(directory, "variant-suite.trx")));
+    });
+
+    private static void ConcurrentManifests() => WithFixture((_, directory) =>
+    {
+        using var barrier = new Barrier(2);
+        var unit = new CheckBuild("example.csproj", "", ["-p:TestVciFamily=initial"]);
+        void Run(string name)
+        {
+            var output = Path.Combine(directory, name, "build"); Directory.CreateDirectory(output);
+            var manifest = Path.Combine(output, "runtime-paths.tsv");
+            File.WriteAllText(manifest, Path.Combine(directory, unit.Project) + "\t" + unit.Variant + "\tbin\tbin\t" + name + ".dll\n");
+            Require(barrier.SignalAndWait(TimeSpan.FromSeconds(10)));
+            Require(CheckAllBuild.TestAssembly(directory, unit, manifest, name) == name + ".dll");
+        }
+        Parallel.Invoke(() => Run("first"), () => Run("second"));
+        Require(!File.Exists(Path.Combine(directory, "bin-build/check-all/runtime-paths.tsv")));
     });
 }

@@ -53,7 +53,7 @@ internal static class FastSuites
     }
 
     internal static void AddJobs(List<CheckJob> jobs, string root, string name, JsonObject suite, string output, string dotnet,
-        int shards, string? api, string[] dependencies, string? baseline = null, bool prove = false, string[]? extra = null, string? history = null, string? jobPrefix = null)
+        int shards, string? api, string[] dependencies, string? baseline = null, bool prove = false, string[]? extra = null, string? history = null, string? jobPrefix = null, string? manifest = null)
     {
         var unit = CheckAllBuild.Suite(suite);
         var directory = Path.Combine(output, name);
@@ -65,13 +65,13 @@ internal static class FastSuites
         if (prove)
         {
             sequential = Path.Combine(directory, "sequential", name + ".trx");
-            jobs.Add(new(jobPrefix + name + "-sequential", () => RunShard(root, name, suite, Path.GetDirectoryName(sequential)!, dotnet, api, unit, 0, 1, extra), dependencies, Exclusive: true));
+            jobs.Add(new(jobPrefix + name + "-sequential", () => RunShard(root, name, suite, Path.GetDirectoryName(sequential)!, dotnet, api, unit, 0, 1, extra, manifest: manifest), dependencies, Exclusive: true));
         }
         var shardNames = new List<string>();
         for (int i = 0; i < shards; i++)
         {
             var index = i; var jobName = jobPrefix + name + "-shard-" + i; shardNames.Add(jobName);
-            jobs.Add(new(jobName, () => RunShard(root, name, suite, Path.GetDirectoryName(paths[index])!, dotnet, api, unit, index, shards, extra, plan.Path, reserveSensitive), dependencies,
+            jobs.Add(new(jobName, () => RunShard(root, name, suite, Path.GetDirectoryName(paths[index])!, dotnet, api, unit, index, shards, extra, plan.Path, reserveSensitive, manifest), dependencies,
                 Exclusive: reserveSensitive && index == shards - 1 || name is "worker-robustness" or "worker-channel") { EstimatedSeconds = plan.Costs[index] + 5 });
         }
         // Merge runs even after a failed test process, so partial totals/failures remain
@@ -80,7 +80,7 @@ internal static class FastSuites
     }
 
     internal static CommandResult RunShard(string root, string name, JsonObject suite, string directory, string dotnet, string? api,
-        CheckBuild unit, int index, int count, string[]? extra = null, string? plan = null, bool reserveSensitive = false)
+        CheckBuild unit, int index, int count, string[]? extra = null, string? plan = null, bool reserveSensitive = false, string? manifest = null)
     {
         Directory.CreateDirectory(directory);
         var environment = EnvironmentFor(directory, api);
@@ -95,7 +95,9 @@ internal static class FastSuites
         File.Delete(environment["TIA_MCP_TEST_PRODUCER_TIMINGS"]!);
         var trx = Path.Combine(directory, name + ".trx"); File.Delete(trx);
         environment["TIA_MCP_TEST_PHASE_TIMINGS"] = Path.Combine(directory, "phase-timings.json");
-        var assembly = CheckAllBuild.TestAssembly(root, unit);
+        string? assembly;
+        try { assembly = CheckAllBuild.TestAssembly(root, unit, manifest, name); }
+        catch (ReleaseException ex) { return new(1, "", ex.Message + "\n"); }
         List<string> args;
         if (assembly != null && (extra == null || extra.Length == 0))
             args = VstestArguments(assembly, suite["arguments"]!.AsArray().Select(a => a!.GetValue<string>()), name, directory);
@@ -138,6 +140,8 @@ internal static class FastSuites
         int count = Positive(options, "Shards", 8);
         var names = options.All("Suite");
         var builds = CheckAllBuild.WithTestFixtures(names.Select(name => CheckAllBuild.Suite(catalog[name]!.AsObject()))).ToArray();
+        var manifestPath = Path.GetFullPath(options.Get("RuntimeManifest", Path.Combine(output, "build/runtime-paths.tsv")));
+        string? manifest = !options.Has("NoBuild") || options.Has("RuntimeManifest") || File.Exists(manifestPath) ? manifestPath : null;
         if (!options.Has("NoBuild"))
         {
             var build = CheckAllBuild.Run(root, builds, Path.Combine(output, "build"), dotnet,
@@ -148,7 +152,8 @@ internal static class FastSuites
                 { exitCode = build.ExitCode, build = "failed", error = build.StandardError, output = build.StandardOutput }, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }) + "\n");
                 return build;
             }
-            ReleaseCommands.PrepareCheckAllRuntime(root, builds, Path.Combine(output, "build/runtime-paths.tsv"));
+            manifest = Path.Combine(output, "build/runtime-paths.tsv");
+            ReleaseCommands.PrepareCheckAllRuntime(root, builds, manifest);
         }
         var jobs = new List<CheckJob>();
         foreach (var name in names)
@@ -157,7 +162,7 @@ internal static class FastSuites
             string? api = name == "foundation-api" || suite["publicApiRoot"]?.GetValue<bool>() == true
                 ? options.Get("PublicApiRoot") ?? Environment.GetEnvironmentVariable("TIA_MCP_TEST_PUBLIC_API_ROOT") : null;
             AddJobs(jobs, root, name, suite, output, dotnet, suite["minimumPassed"]!.GetValue<int>() >= 100 ? count : 1, api, [],
-                options.Get("SequentialBaselineDirectory") is { } baseline ? Path.Combine(baseline, name + ".trx") : null, options.Has("ProveEquivalence"), options.All("DotnetArg").ToArray());
+                options.Get("SequentialBaselineDirectory") is { } baseline ? Path.Combine(baseline, name + ".trx") : null, options.Has("ProveEquivalence"), options.All("DotnetArg").ToArray(), manifest: manifest);
         }
         var rows = CheckScheduler.Run(jobs.Where(job => !job.Name.EndsWith("-gate", StringComparison.Ordinal)).ToArray(), parallelism, Path.Combine(output, "logs"));
         var gates = CheckScheduler.Run(jobs.Where(job => job.Name.EndsWith("-gate", StringComparison.Ordinal)).Select(job => job with { Dependencies = [] }).ToArray(), parallelism, Path.Combine(output, "gates"));

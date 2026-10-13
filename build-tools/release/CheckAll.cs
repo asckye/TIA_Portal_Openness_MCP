@@ -97,7 +97,8 @@ internal static partial class ReleaseCommands
             "-DiagnosticsDirectory", Path.Combine(output, "build/analyzer-warnings")));
         Wave();
         if (options.Has("BuildOnly")) return Finish();
-        Add("suite-output-parity", () => CheckAllLayout.Verify(Root, builds, dotnet, nuget, api, Path.Combine(output, "suite-output-parity")));
+        var runtimeManifest = Path.Combine(output, "build/runtime-paths.tsv");
+        Add("suite-output-parity", () => CheckAllLayout.Verify(Root, builds, dotnet, nuget, api, Path.Combine(output, "suite-output-parity"), runtimeManifest));
         Wave();
         string host = Path.Combine(Root, "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe");
         string harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
@@ -154,7 +155,7 @@ internal static partial class ReleaseCommands
             var suite = node!.AsObject();
             string? sdk = name == "foundation-api" || suite["publicApiRoot"]?.GetValue<bool>() == true ? api : null;
             FastSuites.AddJobs(jobs, Root, name, suite, Path.Combine(output, "suites"), dotnet, suite["minimumPassed"]!.GetValue<int>() >= 100 ? shards : 1, sdk, [],
-                options.Get("SequentialBaselineDirectory") is { } baseline ? Path.Combine(baseline, name + ".trx") : null, options.Has("ProveEquivalence"));
+                options.Get("SequentialBaselineDirectory") is { } baseline ? Path.Combine(baseline, name + ".trx") : null, options.Has("ProveEquivalence"), manifest: runtimeManifest);
         }
         foreach (var mode in new[] { "false", "true" })
         foreach (var project in new[] { "Core", "Gui" })

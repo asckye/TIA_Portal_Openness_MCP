@@ -535,14 +535,15 @@ def shape(value):
     return {key: json_type(item) for key, item in value.items()} if isinstance(value, dict) else json_type(value)
 
 
-def compact(call, include_text_evidence=False):
+def compact(call, include_text_evidence=False, packaged_no_tia=False):
     call = normalize(call)
     response = call['response']
     raw_evidence = call.pop('rawTextEvidence', None)
     if include_text_evidence:
         call['textEvidence'] = {'response': response, 'rawText': raw_evidence}
     raw = canonical(response).encode('utf-8')
-    if call['tool'] == 'GetToolUsage' or len(raw) > RESPONSE_LIMIT or call['profile'] == 'lite':
+    bootstrap = packaged_no_tia and call['tool'] == 'InitializeEnvironment'
+    if not bootstrap and (call['tool'] == 'GetToolUsage' or len(raw) > RESPONSE_LIMIT or call['profile'] == 'lite'):
         call.pop('response')
         call['responseDigest'] = {'sha256': hashlib.sha256(raw).hexdigest(), 'length': len(raw),
             'shape': shape(response), 'textShapes': [shape(block['text'])
@@ -957,7 +958,7 @@ def capture_release(args, release, exe, public_api):
                 liteAdvertisedTools=sorted(t['name'] for t in lite))
         resources.require(not any('Invocation journal unavailable' in line for line in logs),
                           'Invocation journal failed during bridge capture')
-        snapshot['calls'] = [compact(entries[key], args.include_text_evidence) for key in sorted(entries)]
+        snapshot['calls'] = [compact(entries[key], args.include_text_evidence, args.packaged_no_tia) for key in sorted(entries)]
         return snapshot
 
 
@@ -1384,6 +1385,57 @@ def compare_migration(args):
 
 
 class RawResponseTests(unittest.TestCase):
+    def packaged_snapshot(self, release):
+        root = Path(__file__).resolve().parents[2]
+        snapshot = json.loads((root / 'manifest/contracts/v4/responses' / (release + '.json')).read_text(encoding='utf-8'))
+        snapshot['captureMode'] = 'packaged-no-tia'
+        cause = f'TIA Portal V{release} or its Openness API files were not found.'
+        bodies = {'InitializeEnvironment': {'schemaVersion': 4, 'ok': True,
+                      'data': {'ready': False, 'recommendedReason': cause,
+                               'roster': [{'name': 'x' * 400} for _ in range(50)]}},
+                  'GetEnvironmentDiagnostics': {'schemaVersion': 4, 'ok': True, 'data': {'ready': False, 'cause': cause}},
+                  'GetSessionState': {'schemaVersion': 4, 'ok': False, 'data': None,
+                      'error': {'code': 'PRECONDITION_FAILED', 'details': {'condition': 'native-admission'}},
+                      'meta': {'outcome': 'rejected-before-operation', 'execution': 'not-started',
+                               'requiresSessionReset': False}}}
+        for tool, value in bodies.items():
+            value.setdefault('meta', {})['requestId'] = '0' * 32
+            arguments = {'fix': False} if tool == 'GetEnvironmentDiagnostics' else {}
+            snapshot['calls'] = [call for call in snapshot['calls'] if identity(call) != ('full', tool, canonical(arguments))]
+            response = {'result': {'structuredContent': value, 'content': [{'type': 'text', 'text': value}]}}
+            snapshot['calls'].append(compact(dict(profile='full', tool=tool, arguments=arguments,
+                                                 response=response, rawTextBlocks=[]), packaged_no_tia=True))
+        return snapshot
+
+    def test_large_packaged_bootstrap_stays_inline_and_verifies(self):
+        root = Path(__file__).resolve().parents[2]
+        for release in FULL_RELEASES:
+            with self.subTest(release=release):
+                snapshot = self.packaged_snapshot(release)
+                bootstrap = next(call for call in snapshot['calls'] if call['tool'] == 'InitializeEnvironment'
+                                 and call['profile'] == 'full' and call['arguments'] == {})
+                self.assertGreater(len(canonical(bootstrap['response']).encode('utf-8')), RESPONSE_LIMIT)
+                baseline = json.loads((root / 'manifest/contracts/v4/baseline' / (release + '.json')).read_text(encoding='utf-8'))
+                validate_response_snapshot(snapshot, release + '.json')
+                verify_coverage(release, baseline, snapshot, contracts.catalog_rosters(root)[release][1])
+                # The threshold still applies to other large responses and fixture bootstrap.
+                for tool, packaged in [('InitializeEnvironment', False), ('GetSessionState', True)]:
+                    self.assertIn('responseDigest', compact(dict(bootstrap, tool=tool), packaged_no_tia=packaged))
+
+    def test_packaged_bootstrap_with_tia_dependency_still_fails(self):
+        root = Path(__file__).resolve().parents[2]
+        for release in FULL_RELEASES:
+            snapshot = self.packaged_snapshot(release)
+            bootstrap = next(call for call in snapshot['calls'] if call['tool'] == 'InitializeEnvironment'
+                             and call['profile'] == 'full' and call['arguments'] == {})
+            baseline = json.loads((root / 'manifest/contracts/v4/baseline' / (release + '.json')).read_text(encoding='utf-8'))
+            for ready, reason in [(True, f'no TIA Portal V{release}'),
+                                  (False, 'Current user is not in the required Siemens TIA Openness group.')]:
+                with self.subTest(release=release, ready=ready, reason=reason):
+                    bootstrap['response']['result']['structuredContent']['data'].update(ready=ready, recommendedReason=reason)
+                    with self.assertRaisesRegex(ValueError, 'no-TIA bootstrap readiness'):
+                        verify_coverage(release, baseline, snapshot, contracts.catalog_rosters(root)[release][1])
+
     def test_no_tia_cause_accepts_both_host_wordings_but_not_a_group_failure(self):
         self.assertTrue(missing_tia_cause('There is no TIA Portal V20 installation.', '20'))
         self.assertTrue(missing_tia_cause('TIA Portal V21 or its Openness API files were not found.', '21'))

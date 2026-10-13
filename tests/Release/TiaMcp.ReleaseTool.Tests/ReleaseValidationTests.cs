@@ -7,6 +7,60 @@ namespace TiaMcp.ReleaseTool.Tests;
 public sealed class ReleaseValidationTests
 {
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CandidateVerifiesNoTiaResponsesFromTheActualPackage(bool failVerify)
+    {
+        using var fixture = new TiaMcp.BuildCommon.OfflineFixtures();
+        var directory = fixture.DirectoryPath;
+        Directory.CreateDirectory(Path.Combine(directory, "TIA_V20_PublicAPI/V20"));
+        Directory.CreateDirectory(Path.Combine(directory, "TIA_V21_PublicAPI/V21/net48"));
+        var source = Path.Combine(directory, "source/candidate"); Directory.CreateDirectory(source);
+        File.WriteAllText(Path.Combine(source, "branch-marker.txt"), "candidate from this branch");
+        var zip = Path.Combine(directory, "candidate.zip");
+        System.IO.Compression.ZipFile.CreateFromDirectory(Path.GetDirectoryName(source)!, zip);
+        File.WriteAllText(Path.Combine(directory, "package-result.json"), JsonSerializer.Serialize(new { path = zip }));
+        var steps = new List<string>();
+        string? bundle = null;
+        var verified = false;
+        void Run()
+        {
+            ReleaseCommands.RunCandidateChecks(new("quick", ["engine-responses"], [], []), directory, directory, directory,
+                directory, "dotnet-test-double", "python-test-double", 1,
+                (name, action) => { steps.Add(name); if (name == "09-packaged-responses-verify") action(); },
+                (script, args) =>
+                {
+                    Assert.Equal("scripts/checks/Snapshot-ToolResponses.py", script);
+                    Assert.Equal("verify", args[0]);
+                    var responses = args[Array.IndexOf(args, "--responses") + 1];
+                    Assert.Equal(8, Directory.GetFiles(responses, "*.json").Length);
+                    using var snapshot = JsonDocument.Parse(File.ReadAllText(Path.Combine(responses, "20.json")));
+                    Assert.Equal("packaged-no-tia", snapshot.RootElement.GetProperty("captureMode").GetString());
+                    verified = true;
+                    if (failVerify) throw new ReleaseException("Synthetic TIA dependency");
+                },
+                (script, args) =>
+                {
+                    Assert.Equal("scripts/checks/Snapshot-ToolResponses.py", script);
+                    Assert.Equal("capture", args[0]); Assert.Contains("--packaged-no-tia", args);
+                    Assert.Equal(new[] { "20", "21" }, args.Skip(Array.IndexOf(args, "--releases") + 1).Take(2));
+                    bundle = args[Array.IndexOf(args, "--repo-root") + 1];
+                    Assert.Equal("candidate from this branch", File.ReadAllText(Path.Combine(bundle, "branch-marker.txt")));
+                    Assert.Equal(Path.Combine(bundle, "runtime/dotnet"), args[Array.IndexOf(args, "--dotnet-root") + 1]);
+                    Assert.DoesNotContain("--engine-worker", args);
+                    var responses = args[Array.IndexOf(args, "--output") + 1]; Directory.CreateDirectory(responses);
+                    foreach (var release in new[] { "20", "21" }) File.WriteAllText(Path.Combine(responses, release + ".json"), "{\"captureMode\":\"packaged-no-tia\"}");
+                },
+                (_, _, _, _, _) => new CommandResult(0, "", ""));
+        }
+        if (failVerify) Assert.Throws<ReleaseException>(Run); else Run();
+        Assert.True(verified);
+        Assert.NotNull(bundle); Assert.False(Directory.Exists(bundle));
+        foreach (var step in new[] { "08-v4-responses-capture", "09-v4-responses-compare", "09-v4-responses-http",
+            "09-engine-responses-source-layout", "09-packaged-responses-verify" }) Assert.Contains(step, steps);
+    }
+
+    [Theory]
     [Trait("Category", "Pipeline")]
     [InlineData("none", "aggregate")]
     [InlineData("none", "v20-log")]
