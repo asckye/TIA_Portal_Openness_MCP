@@ -3406,6 +3406,17 @@
         ]
       },
       {
+        "family": "F31",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetDriveParameters",
+          "ListDriveObjects",
+          "ManageDriveTelegrams",
+          "ManageStartdriveParameter"
+        ]
+      },
+      {
         "family": "F00",
         "state": "current",
         "l5": "NOT RUN",
@@ -3879,6 +3890,31 @@
           "ListTransferRoutes",
           "ManagePlcDataBlockSnapshot",
           "UploadStationFromPlc"
+        ]
+      },
+      {
+        "family": "F29",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GenerateSivarc",
+          "GetSivarcRuleTree",
+          "ListSivarcRules",
+          "ManageSivarcRule"
+        ]
+      },
+      {
+        "family": "F31",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetDriveParameters",
+          "GetOnlineDriveParameters",
+          "ListDriveObjects",
+          "ManageDriveFunctions",
+          "ManageDriveTelegrams",
+          "ManageOnlineDriveFunctions",
+          "ManageStartdriveParameter"
         ]
       },
       {
@@ -4394,6 +4430,42 @@
           "ListTransferRoutes",
           "ManagePlcDataBlockSnapshot",
           "UploadStationFromPlc"
+        ]
+      },
+      {
+        "family": "F29",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GenerateSivarc",
+          "GetSivarcRuleTree",
+          "ListSivarcRules",
+          "ManageSivarcRule"
+        ]
+      },
+      {
+        "family": "F31",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetDccObject",
+          "GetDriveParameters",
+          "GetOnlineDriveParameters",
+          "ListDccCharts",
+          "ListDriveObjects",
+          "ManageDccChart",
+          "ManageDriveFunctions",
+          "ManageDriveTelegrams",
+          "ManageOnlineDriveFunctions",
+          "ManageStartdriveParameter"
+        ]
+      },
+      {
+        "family": "F30",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ManageSafetyGlobalSettings"
         ]
       },
       {
@@ -4931,6 +5003,47 @@
           "ListTransferRoutes",
           "ManagePlcDataBlockSnapshot",
           "UploadStationFromPlc"
+        ]
+      },
+      {
+        "family": "F29",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GenerateSivarc",
+          "GetSivarcRuleTree",
+          "ListSivarcBlockDefinitions",
+          "ListSivarcRules",
+          "ManageSivarcBlockDefinition",
+          "ManageSivarcRule"
+        ]
+      },
+      {
+        "family": "F31",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetDccObject",
+          "GetDriveParameters",
+          "GetOnlineDriveParameters",
+          "ListDccCharts",
+          "ListDriveObjects",
+          "ManageDccChart",
+          "ManageDriveFunctions",
+          "ManageDriveTelegrams",
+          "ManageOnlineDriveFunctions",
+          "ManageStartdriveParameter"
+        ]
+      },
+      {
+        "family": "F30",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportSafetyPrintout",
+          "GetSafetyBlockSignatures",
+          "ManagePlcSafety",
+          "ManageSafetyGlobalSettings"
         ]
       },
       {
@@ -5483,6 +5596,55 @@
           "ListTransferRoutes",
           "ManagePlcDataBlockSnapshot",
           "UploadStationFromPlc"
+        ]
+      },
+      {
+        "family": "F29",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GenerateSivarc",
+          "GetSivarcRuleTree",
+          "ListSivarcBlockDefinitions",
+          "ListSivarcRules",
+          "ManageSivarcBlockDefinition",
+          "ManageSivarcRule",
+          "ManageSivarcRuleContainer",
+          "ManageSivarcTableRule"
+        ]
+      },
+      {
+        "family": "F31",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetDccObject",
+          "GetDriveParameters",
+          "GetOnlineDriveParameters",
+          "ListDccCharts",
+          "ListDriveObjects",
+          "ManageDcbLibraries",
+          "ManageDccBlock",
+          "ManageDccChart",
+          "ManageDccChartInterface",
+          "ManageDccChartPartition",
+          "ManageDccPin",
+          "ManageDriveFunctions",
+          "ManageDriveTelegrams",
+          "ManageOnlineDriveFunctions",
+          "ManageStartdriveParameter",
+          "ManageTechnologyExtensions"
+        ]
+      },
+      {
+        "family": "F30",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportSafetyPrintout",
+          "GetSafetyBlockSignatures",
+          "ManagePlcSafety",
+          "ManageSafetyGlobalSettings"
         ]
       },
       {
@@ -6051,6 +6213,57 @@
           "ManagePlcDataBlockSnapshot",
           "ScanAccessibleDevices",
           "UploadStationFromPlc"
+        ]
+      },
+      {
+        "family": "F29",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GenerateSivarc",
+          "GetSivarcRuleTree",
+          "ListSivarcBlockDefinitions",
+          "ListSivarcRules",
+          "ManageSivarcBlockDefinition",
+          "ManageSivarcRule",
+          "ManageSivarcRuleContainer",
+          "ManageSivarcTableRule"
+        ]
+      },
+      {
+        "family": "F31",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetDccObject",
+          "GetDriveParameters",
+          "GetOnlineDriveParameters",
+          "ListDccCharts",
+          "ListDriveObjects",
+          "ManageDcbLibraries",
+          "ManageDccBlock",
+          "ManageDccChart",
+          "ManageDccChartInterface",
+          "ManageDccChartPartition",
+          "ManageDccPin",
+          "ManageDriveFunctions",
+          "ManageDriveHardwareModule",
+          "ManageDriveSecurity",
+          "ManageDriveTelegrams",
+          "ManageOnlineDriveFunctions",
+          "ManageStartdriveParameter",
+          "ManageTechnologyExtensions"
+        ]
+      },
+      {
+        "family": "F30",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportSafetyPrintout",
+          "GetSafetyBlockSignatures",
+          "ManagePlcSafety",
+          "ManageSafetyGlobalSettings"
         ]
       },
       {

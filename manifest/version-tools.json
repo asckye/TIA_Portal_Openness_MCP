@@ -5,7 +5,7 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 273,
+      "toolCount": 277,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -103,6 +103,7 @@
         "GetDeviceItemNetworkInfo",
         "GetDeviceItemTree",
         "GetDevicePlugLocations",
+        "GetDriveParameters",
         "GetEnvironmentDiagnostics",
         "GetExportContent",
         "GetGenerationRun",
@@ -170,6 +171,7 @@
         "ListClassicHmiScripts",
         "ListDeviceItemChannels",
         "ListDevices",
+        "ListDriveObjects",
         "ListExportHandles",
         "ListHmiConnections",
         "ListHmiScreenPaths",
@@ -199,6 +201,7 @@
         "ManageClassicHmiScript",
         "ManageClassicHmiTextGraphicList",
         "ManageDeviceUserGroup",
+        "ManageDriveTelegrams",
         "ManageGenerationArtifacts",
         "ManageGlobalLibrary",
         "ManageHardwareObject",
@@ -218,6 +221,7 @@
         "ManagePortInterconnection",
         "ManageProjectLanguage",
         "ManageStandardPackage",
+        "ManageStartdriveParameter",
         "ManageTechnologyObject",
         "MovePlcBlockToGroup",
         "OpenProject",
@@ -284,7 +288,7 @@
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 306,
+      "toolCount": 317,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -381,6 +385,7 @@
         "GenerateOpcUaModelledInterface",
         "GeneratePlcDocumentation",
         "GeneratePlcSourceFromBlocks",
+        "GenerateSivarc",
         "GetClassicHmiScreenTree",
         "GetDeviceAddressing",
         "GetDeviceAttributes",
@@ -391,6 +396,7 @@
         "GetDeviceItemNetworkInfo",
         "GetDeviceItemTree",
         "GetDevicePlugLocations",
+        "GetDriveParameters",
         "GetEnvironmentDiagnostics",
         "GetExportContent",
         "GetGenerationRun",
@@ -402,6 +408,7 @@
         "GetMotionAxisConfiguration",
         "GetNativeInvocationLog",
         "GetObjectProperty",
+        "GetOnlineDriveParameters",
         "GetOnlineState",
         "GetOpennessCompatibility",
         "GetOpennessGuidance",
@@ -431,6 +438,7 @@
         "GetProjectTopology",
         "GetProjectTree",
         "GetSessionState",
+        "GetSivarcRuleTree",
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetTechnologyObjectTree",
@@ -466,6 +474,7 @@
         "ListClassicHmiScripts",
         "ListDeviceItemChannels",
         "ListDevices",
+        "ListDriveObjects",
         "ListExportHandles",
         "ListHmiConnections",
         "ListHmiScreenPaths",
@@ -486,6 +495,7 @@
         "ListPlcUserConstants",
         "ListPlcWatchTables",
         "ListPortalProcessProjects",
+        "ListSivarcRules",
         "ListStagedImportFiles",
         "ListStandardPackages",
         "ListTechnologyObjects",
@@ -498,6 +508,8 @@
         "ManageClassicHmiScript",
         "ManageClassicHmiTextGraphicList",
         "ManageDeviceUserGroup",
+        "ManageDriveFunctions",
+        "ManageDriveTelegrams",
         "ManageGenerationArtifacts",
         "ManageGlobalLibrary",
         "ManageHardwareObject",
@@ -509,6 +521,7 @@
         "ManageLibraryTypeVersion",
         "ManageMachineDescription",
         "ManageMotionAxis",
+        "ManageOnlineDriveFunctions",
         "ManageOpcUaInterface",
         "ManagePlcBlockProtection",
         "ManagePlcDataBlockSnapshot",
@@ -521,7 +534,9 @@
         "ManagePlcUserGroup",
         "ManagePortInterconnection",
         "ManageProjectLanguage",
+        "ManageSivarcRule",
         "ManageStandardPackage",
+        "ManageStartdriveParameter",
         "ManageTechnologyObject",
         "ManageTransferArea",
         "MonitorPlcWatchTableS7",
@@ -596,7 +611,7 @@
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 329,
+      "toolCount": 344,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -699,7 +714,9 @@
         "GenerateOpcUaModelledInterface",
         "GeneratePlcDocumentation",
         "GeneratePlcSourceFromBlocks",
+        "GenerateSivarc",
         "GetClassicHmiScreenTree",
+        "GetDccObject",
         "GetDeviceAddressing",
         "GetDeviceAttributes",
         "GetDeviceInfo",
@@ -709,6 +726,7 @@
         "GetDeviceItemNetworkInfo",
         "GetDeviceItemTree",
         "GetDevicePlugLocations",
+        "GetDriveParameters",
         "GetEnvironmentDiagnostics",
         "GetExportContent",
         "GetGenerationRun",
@@ -720,6 +738,7 @@
         "GetMotionAxisConfiguration",
         "GetNativeInvocationLog",
         "GetObjectProperty",
+        "GetOnlineDriveParameters",
         "GetOnlineState",
         "GetOpennessCompatibility",
         "GetOpennessGuidance",
@@ -750,6 +769,7 @@
         "GetProjectTopology",
         "GetProjectTree",
         "GetSessionState",
+        "GetSivarcRuleTree",
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetTechnologyObjectTree",
@@ -788,8 +808,10 @@
         "InvokeUnifiedOpenPipe",
         "ListClassicHmiFaceplates",
         "ListClassicHmiScripts",
+        "ListDccCharts",
         "ListDeviceItemChannels",
         "ListDevices",
+        "ListDriveObjects",
         "ListExportHandles",
         "ListHmiConnections",
         "ListHmiScreenPaths",
@@ -812,6 +834,7 @@
         "ListPlcUserConstants",
         "ListPlcWatchTables",
         "ListPortalProcessProjects",
+        "ListSivarcRules",
         "ListStagedImportFiles",
         "ListStandardPackages",
         "ListTechnologyObjects",
@@ -824,8 +847,11 @@
         "ManageClassicHmiScreenObject",
         "ManageClassicHmiScript",
         "ManageClassicHmiTextGraphicList",
+        "ManageDccChart",
         "ManageDeviceUserGroup",
         "ManageDeviceUsers",
+        "ManageDriveFunctions",
+        "ManageDriveTelegrams",
         "ManageGenerationArtifacts",
         "ManageGlobalLibrary",
         "ManageHardwareObject",
@@ -838,6 +864,7 @@
         "ManageMachineDescription",
         "ManageMotionAxis",
         "ManageNetworkDomain",
+        "ManageOnlineDriveFunctions",
         "ManageOpcUaInterface",
         "ManagePlcBlockProtection",
         "ManagePlcCertificate",
@@ -853,7 +880,10 @@
         "ManagePortInterconnection",
         "ManageProjectCompilationSettings",
         "ManageProjectLanguage",
+        "ManageSafetyGlobalSettings",
+        "ManageSivarcRule",
         "ManageStandardPackage",
+        "ManageStartdriveParameter",
         "ManageTechnologyObject",
         "ManageTransferArea",
         "ManageWatchForceTableWebAccess",
@@ -931,7 +961,7 @@
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 341,
+      "toolCount": 361,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1028,6 +1058,7 @@
         "ExportPlcWatchTable",
         "ExportPlcWatchTablesToDirectory",
         "ExportProjectTexts",
+        "ExportSafetyPrintout",
         "ExportTechnologyObject",
         "ExportTechnologyObjectsToDirectory",
         "ExtractPlcBlockMetrics",
@@ -1038,7 +1069,9 @@
         "GenerateOpcUaModelledInterface",
         "GeneratePlcDocumentation",
         "GeneratePlcSourceFromBlocks",
+        "GenerateSivarc",
         "GetClassicHmiScreenTree",
+        "GetDccObject",
         "GetDeviceAddressing",
         "GetDeviceAttributes",
         "GetDeviceInfo",
@@ -1048,6 +1081,7 @@
         "GetDeviceItemNetworkInfo",
         "GetDeviceItemTree",
         "GetDevicePlugLocations",
+        "GetDriveParameters",
         "GetEnvironmentDiagnostics",
         "GetExportContent",
         "GetGenerationRun",
@@ -1059,6 +1093,7 @@
         "GetMotionAxisConfiguration",
         "GetNativeInvocationLog",
         "GetObjectProperty",
+        "GetOnlineDriveParameters",
         "GetOnlineState",
         "GetOpennessCompatibility",
         "GetOpennessGuidance",
@@ -1089,7 +1124,9 @@
         "GetProjectTopology",
         "GetProjectTree",
         "GetProjectUserManagement",
+        "GetSafetyBlockSignatures",
         "GetSessionState",
+        "GetSivarcRuleTree",
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetTechnologyObjectTree",
@@ -1129,8 +1166,10 @@
         "InvokeUnifiedOpenPipe",
         "ListClassicHmiFaceplates",
         "ListClassicHmiScripts",
+        "ListDccCharts",
         "ListDeviceItemChannels",
         "ListDevices",
+        "ListDriveObjects",
         "ListExportHandles",
         "ListHmiConnections",
         "ListHmiScreenPaths",
@@ -1153,6 +1192,8 @@
         "ListPlcUserConstants",
         "ListPlcWatchTables",
         "ListPortalProcessProjects",
+        "ListSivarcBlockDefinitions",
+        "ListSivarcRules",
         "ListStagedImportFiles",
         "ListStandardPackages",
         "ListTechnologyObjects",
@@ -1165,8 +1206,11 @@
         "ManageClassicHmiScreenObject",
         "ManageClassicHmiScript",
         "ManageClassicHmiTextGraphicList",
+        "ManageDccChart",
         "ManageDeviceUserGroup",
         "ManageDeviceUsers",
+        "ManageDriveFunctions",
+        "ManageDriveTelegrams",
         "ManageGenerationArtifacts",
         "ManageGlobalLibrary",
         "ManageHardwareObject",
@@ -1180,6 +1224,7 @@
         "ManageMotionAxis",
         "ManageMultiuserSession",
         "ManageNetworkDomain",
+        "ManageOnlineDriveFunctions",
         "ManageOpcUaInterface",
         "ManagePlcBlockProtection",
         "ManagePlcCertificate",
@@ -1187,6 +1232,7 @@
         "ManagePlcExternalSources",
         "ManagePlcGitRepository",
         "ManagePlcProtection",
+        "ManagePlcSafety",
         "ManagePlcSimAdvancedInstance",
         "ManagePlcSoftwareUnit",
         "ManagePlcSupervision",
@@ -1197,7 +1243,11 @@
         "ManageProjectCompilationSettings",
         "ManageProjectLanguage",
         "ManageProjectUserManagement",
+        "ManageSafetyGlobalSettings",
+        "ManageSivarcBlockDefinition",
+        "ManageSivarcRule",
         "ManageStandardPackage",
+        "ManageStartdriveParameter",
         "ManageTechnologyObject",
         "ManageTransferArea",
         "ManageUmcUsers",
@@ -1278,7 +1328,7 @@
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 356,
+      "toolCount": 384,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1380,6 +1430,7 @@
         "ExportPlcWatchTable",
         "ExportPlcWatchTablesToDirectory",
         "ExportProjectTexts",
+        "ExportSafetyPrintout",
         "ExportTechnologyObject",
         "ExportTechnologyObjectsToDirectory",
         "ExtractPlcBlockMetrics",
@@ -1391,7 +1442,9 @@
         "GeneratePlcDocumentation",
         "GeneratePlcLoadableFile",
         "GeneratePlcSourceFromBlocks",
+        "GenerateSivarc",
         "GetClassicHmiScreenTree",
+        "GetDccObject",
         "GetDeviceAddressing",
         "GetDeviceAttributes",
         "GetDeviceInfo",
@@ -1401,6 +1454,7 @@
         "GetDeviceItemNetworkInfo",
         "GetDeviceItemTree",
         "GetDevicePlugLocations",
+        "GetDriveParameters",
         "GetEnvironmentDiagnostics",
         "GetExportContent",
         "GetGenerationRun",
@@ -1412,6 +1466,7 @@
         "GetMotionAxisConfiguration",
         "GetNativeInvocationLog",
         "GetObjectProperty",
+        "GetOnlineDriveParameters",
         "GetOnlineState",
         "GetOpennessCompatibility",
         "GetOpennessGuidance",
@@ -1443,7 +1498,9 @@
         "GetProjectTopology",
         "GetProjectTree",
         "GetProjectUserManagement",
+        "GetSafetyBlockSignatures",
         "GetSessionState",
+        "GetSivarcRuleTree",
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetTechnologyObjectTree",
@@ -1483,8 +1540,10 @@
         "InvokeUnifiedOpenPipe",
         "ListClassicHmiFaceplates",
         "ListClassicHmiScripts",
+        "ListDccCharts",
         "ListDeviceItemChannels",
         "ListDevices",
+        "ListDriveObjects",
         "ListExportHandles",
         "ListHmiConnections",
         "ListHmiScreenPaths",
@@ -1507,6 +1566,8 @@
         "ListPlcUserConstants",
         "ListPlcWatchTables",
         "ListPortalProcessProjects",
+        "ListSivarcBlockDefinitions",
+        "ListSivarcRules",
         "ListStagedImportFiles",
         "ListStandardPackages",
         "ListTechnologyObjects",
@@ -1519,9 +1580,17 @@
         "ManageClassicHmiScreenObject",
         "ManageClassicHmiScript",
         "ManageClassicHmiTextGraphicList",
+        "ManageDcbLibraries",
+        "ManageDccBlock",
+        "ManageDccChart",
+        "ManageDccChartInterface",
+        "ManageDccChartPartition",
+        "ManageDccPin",
         "ManageDeviceServiceObjects",
         "ManageDeviceUserGroup",
         "ManageDeviceUsers",
+        "ManageDriveFunctions",
+        "ManageDriveTelegrams",
         "ManageGenerationArtifacts",
         "ManageGlobalLibrary",
         "ManageHardwareObject",
@@ -1535,6 +1604,7 @@
         "ManageMotionAxis",
         "ManageMultiuserSession",
         "ManageNetworkDomain",
+        "ManageOnlineDriveFunctions",
         "ManageOpcUaInterface",
         "ManagePasswordPolicy",
         "ManagePlcAlarmTextList",
@@ -1544,6 +1614,7 @@
         "ManagePlcExternalSources",
         "ManagePlcGitRepository",
         "ManagePlcProtection",
+        "ManagePlcSafety",
         "ManagePlcSimAdvancedInstance",
         "ManagePlcSoftwareUnit",
         "ManagePlcSupervision",
@@ -1554,10 +1625,17 @@
         "ManageProjectCompilationSettings",
         "ManageProjectLanguage",
         "ManageProjectUserManagement",
+        "ManageSafetyGlobalSettings",
+        "ManageSivarcBlockDefinition",
+        "ManageSivarcRule",
+        "ManageSivarcRuleContainer",
+        "ManageSivarcTableRule",
         "ManageStandardPackage",
+        "ManageStartdriveParameter",
         "ManageTeamcenterConnection",
         "ManageTeamcenterDataset",
         "ManageTeamcenterWorkflow",
+        "ManageTechnologyExtensions",
         "ManageTechnologyObject",
         "ManageTransferArea",
         "ManageUmcUsers",
@@ -1640,7 +1718,7 @@
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 393,
+      "toolCount": 423,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1766,6 +1844,7 @@
         "ExportPlcWatchTable",
         "ExportPlcWatchTablesToDirectory",
         "ExportProjectTexts",
+        "ExportSafetyPrintout",
         "ExportTechnologyObject",
         "ExportTechnologyObjectsToDirectory",
         "ExtractPlcBlockMetrics",
@@ -1777,7 +1856,9 @@
         "GeneratePlcDocumentation",
         "GeneratePlcLoadableFile",
         "GeneratePlcSourceFromBlocks",
+        "GenerateSivarc",
         "GetClassicHmiScreenTree",
+        "GetDccObject",
         "GetDeviceAddressing",
         "GetDeviceAttributes",
         "GetDeviceInfo",
@@ -1787,6 +1868,7 @@
         "GetDeviceItemNetworkInfo",
         "GetDeviceItemTree",
         "GetDevicePlugLocations",
+        "GetDriveParameters",
         "GetEnvironmentDiagnostics",
         "GetExportContent",
         "GetGenerationRun",
@@ -1798,6 +1880,7 @@
         "GetMotionAxisConfiguration",
         "GetNativeInvocationLog",
         "GetObjectProperty",
+        "GetOnlineDriveParameters",
         "GetOnlineState",
         "GetOpennessCompatibility",
         "GetOpennessGuidance",
@@ -1829,7 +1912,9 @@
         "GetProjectTopology",
         "GetProjectTree",
         "GetProjectUserManagement",
+        "GetSafetyBlockSignatures",
         "GetSessionState",
+        "GetSivarcRuleTree",
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetTechnologyObjectTree",
@@ -1873,8 +1958,10 @@
         "InvokeUnifiedOpenPipe",
         "ListClassicHmiFaceplates",
         "ListClassicHmiScripts",
+        "ListDccCharts",
         "ListDeviceItemChannels",
         "ListDevices",
+        "ListDriveObjects",
         "ListExportHandles",
         "ListHmiConnections",
         "ListHmiScreenPaths",
@@ -1897,6 +1984,8 @@
         "ListPlcUserConstants",
         "ListPlcWatchTables",
         "ListPortalProcessProjects",
+        "ListSivarcBlockDefinitions",
+        "ListSivarcRules",
         "ListStagedImportFiles",
         "ListStandardPackages",
         "ListTechnologyObjects",
@@ -1910,9 +1999,19 @@
         "ManageClassicHmiScreenObject",
         "ManageClassicHmiScript",
         "ManageClassicHmiTextGraphicList",
+        "ManageDcbLibraries",
+        "ManageDccBlock",
+        "ManageDccChart",
+        "ManageDccChartInterface",
+        "ManageDccChartPartition",
+        "ManageDccPin",
         "ManageDeviceServiceObjects",
         "ManageDeviceUserGroup",
         "ManageDeviceUsers",
+        "ManageDriveFunctions",
+        "ManageDriveHardwareModule",
+        "ManageDriveSecurity",
+        "ManageDriveTelegrams",
         "ManageGenerationArtifacts",
         "ManageGlobalLibrary",
         "ManageHardwareObject",
@@ -1926,6 +2025,7 @@
         "ManageMotionAxis",
         "ManageMultiuserSession",
         "ManageNetworkDomain",
+        "ManageOnlineDriveFunctions",
         "ManageOpcUaInterface",
         "ManagePasswordPolicy",
         "ManagePlcAlarmTextList",
@@ -1935,6 +2035,7 @@
         "ManagePlcExternalSources",
         "ManagePlcGitRepository",
         "ManagePlcProtection",
+        "ManagePlcSafety",
         "ManagePlcSimAdvancedInstance",
         "ManagePlcSoftwareUnit",
         "ManagePlcSupervision",
@@ -1945,11 +2046,18 @@
         "ManageProjectCompilationSettings",
         "ManageProjectLanguage",
         "ManageProjectUserManagement",
+        "ManageSafetyGlobalSettings",
+        "ManageSivarcBlockDefinition",
+        "ManageSivarcRule",
+        "ManageSivarcRuleContainer",
+        "ManageSivarcTableRule",
         "ManageStandardPackage",
+        "ManageStartdriveParameter",
         "ManageSyslogServers",
         "ManageTeamcenterConnection",
         "ManageTeamcenterDataset",
         "ManageTeamcenterWorkflow",
+        "ManageTechnologyExtensions",
         "ManageTechnologyObject",
         "ManageTransferArea",
         "ManageUmcUsers",
@@ -3069,8 +3177,8 @@
     }
   },
   "groupCounts": {
-    "all-releases": 273,
-    "shared-subset": 229,
+    "all-releases": 277,
+    "shared-subset": 225,
     "release-only": 14
   },
   "tools": [
@@ -4937,6 +5045,9 @@
     {
       "name": "ExportSafetyPrintout",
       "releases": [
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -5122,6 +5233,11 @@
     {
       "name": "GenerateSivarc",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -5154,6 +5270,10 @@
     {
       "name": "GetDccObject",
       "releases": [
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -5298,10 +5418,16 @@
     {
       "name": "GetDriveParameters",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -5481,6 +5607,11 @@
     {
       "name": "GetOnlineDriveParameters",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -5949,6 +6080,9 @@
     {
       "name": "GetSafetyBlockSignatures",
       "releases": [
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -5973,6 +6107,11 @@
     {
       "name": "GetSivarcRuleTree",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -6780,6 +6919,10 @@
     {
       "name": "ListDccCharts",
       "releases": [
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -6819,10 +6962,16 @@
     {
       "name": "ListDriveObjects",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -7160,6 +7309,9 @@
     {
       "name": "ListSivarcBlockDefinitions",
       "releases": [
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7169,6 +7321,11 @@
     {
       "name": "ListSivarcRules",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7435,6 +7592,8 @@
     {
       "name": "ManageDcbLibraries",
       "releases": [
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7444,6 +7603,8 @@
     {
       "name": "ManageDccBlock",
       "releases": [
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7453,6 +7614,10 @@
     {
       "name": "ManageDccChart",
       "releases": [
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7462,6 +7627,8 @@
     {
       "name": "ManageDccChartInterface",
       "releases": [
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7471,6 +7638,8 @@
     {
       "name": "ManageDccChartPartition",
       "releases": [
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7480,6 +7649,8 @@
     {
       "name": "ManageDccPin",
       "releases": [
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7528,6 +7699,11 @@
     {
       "name": "ManageDriveFunctions",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7537,6 +7713,7 @@
     {
       "name": "ManageDriveHardwareModule",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -7554,6 +7731,7 @@
     {
       "name": "ManageDriveSecurity",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -7563,10 +7741,16 @@
     {
       "name": "ManageDriveTelegrams",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -7762,6 +7946,11 @@
     {
       "name": "ManageOnlineDriveFunctions",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7927,6 +8116,9 @@
     {
       "name": "ManagePlcSafety",
       "releases": [
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -8107,6 +8299,10 @@
     {
       "name": "ManageSafetyGlobalSettings",
       "releases": [
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -8134,6 +8330,9 @@
     {
       "name": "ManageSivarcBlockDefinition",
       "releases": [
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -8143,6 +8342,11 @@
     {
       "name": "ManageSivarcRule",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -8152,6 +8356,8 @@
     {
       "name": "ManageSivarcRuleContainer",
       "releases": [
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -8169,6 +8375,8 @@
     {
       "name": "ManageSivarcTableRule",
       "releases": [
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -8193,10 +8401,16 @@
     {
       "name": "ManageStartdriveParameter",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -8245,6 +8459,8 @@
     {
       "name": "ManageTechnologyExtensions",
       "releases": [
+        "18",
+        "19",
         "20",
         "21"
       ],

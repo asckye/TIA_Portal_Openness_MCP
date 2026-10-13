@@ -41,8 +41,8 @@ public sealed class FoundationV4ContractsTests
     }
 
     [Theory]
-    [InlineData("14sp1", 273)] [InlineData("15.1", 306)] [InlineData("16", 329)]
-    [InlineData("17", 341)] [InlineData("18", 356)] [InlineData("19", 393)]
+    [InlineData("14sp1", 277)] [InlineData("15.1", 317)] [InlineData("16", 344)]
+    [InlineData("17", 361)] [InlineData("18", 384)] [InlineData("19", 423)]
     public async Task EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection(string release, int count)
     {
         var worker = new FakeWorker();

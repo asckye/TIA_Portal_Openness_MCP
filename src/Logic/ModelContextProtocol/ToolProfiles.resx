@@ -416,6 +416,12 @@
     },
     {
       "releaseKey": "14sp1",
+      "family": "F31",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
       "family": "F00",
       "state": "current",
       "l5": "NOT RUN"
@@ -573,6 +579,18 @@
     {
       "releaseKey": "15.1",
       "family": "F22",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F29",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F31",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -746,6 +764,24 @@
     },
     {
       "releaseKey": "16",
+      "family": "F29",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
+      "family": "F31",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
+      "family": "F30",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
       "family": "F00",
       "state": "current",
       "l5": "NOT RUN"
@@ -909,6 +945,24 @@
     {
       "releaseKey": "17",
       "family": "F22",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F29",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F31",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F30",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -1077,6 +1131,24 @@
     {
       "releaseKey": "18",
       "family": "F22",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F29",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F31",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F30",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -1245,6 +1317,24 @@
     {
       "releaseKey": "19",
       "family": "F22",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F29",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F31",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F30",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -5607,6 +5697,78 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "GetDriveParameters",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ],
+        "driveObjectNumber": 0,
+        "driveObjectIndex": 0,
+        "source": "write",
+        "names": [
+          "p1070[0]"
+        ],
+        "includeValue": false,
+        "includeBits": false,
+        "includeEnumValues": false
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ListDriveObjects",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ],
+        "includeTelegrams": false,
+        "includeFunctions": false,
+        "includeTechnologyExtensions": false,
+        "includeDcc": false
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManageDriveTelegrams",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManageStartdriveParameter",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ],
+        "driveObjectNumber": 0,
+        "parameter": "p1070[0]",
+        "driveObjectIndex": 0,
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "ConnectIsolatedPortal",
       "family": "F05",
       "example": {}
@@ -7667,6 +7829,174 @@
         "pgPcInterface": "PLCSIM",
         "dryRun": true,
         "confirmUpload": false
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GenerateSivarc",
+      "family": "F29",
+      "example": {
+        "hmiDeviceName": "HMI_1",
+        "plcSoftwarePaths": [
+          "PLC_1"
+        ],
+        "generationOptions": "None",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetSivarcRuleTree",
+      "family": "F29",
+      "example": {
+        "category": "screens"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ListSivarcRules",
+      "family": "F29",
+      "example": {
+        "category": "screens"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManageSivarcRule",
+      "family": "F29",
+      "example": {
+        "category": "screens",
+        "name": "Example_1",
+        "action": "create",
+        "dryRun": true,
+        "collectionPath": [
+          {
+            "property": "Tables",
+            "name": "ExampleTable"
+          },
+          {
+            "property": "RuleGroups",
+            "name": "ExampleGroup"
+          },
+          {
+            "property": "Rules"
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetDriveParameters",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ],
+        "driveObjectNumber": 0,
+        "driveObjectIndex": 0,
+        "source": "write",
+        "names": [
+          "p1070[0]"
+        ],
+        "includeValue": false,
+        "includeBits": false,
+        "includeEnumValues": false
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetOnlineDriveParameters",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ListDriveObjects",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ],
+        "includeTelegrams": false,
+        "includeFunctions": false,
+        "includeTechnologyExtensions": false,
+        "includeDcc": false
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManageDriveFunctions",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManageDriveTelegrams",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManageOnlineDriveFunctions",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "confirmOnline": false,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManageStartdriveParameter",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ],
+        "driveObjectNumber": 0,
+        "parameter": "p1070[0]",
+        "driveObjectIndex": 0,
+        "action": "read",
+        "dryRun": true
       }
     },
     {
@@ -10030,6 +10360,231 @@
         "pgPcInterface": "PLCSIM",
         "dryRun": true,
         "confirmUpload": false
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GenerateSivarc",
+      "family": "F29",
+      "example": {
+        "hmiDeviceName": "HMI_1",
+        "plcSoftwarePaths": [
+          "PLC_1"
+        ],
+        "generationOptions": "None",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetSivarcRuleTree",
+      "family": "F29",
+      "example": {
+        "category": "screens"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ListSivarcRules",
+      "family": "F29",
+      "example": {
+        "category": "screens"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageSivarcRule",
+      "family": "F29",
+      "example": {
+        "category": "screens",
+        "name": "Example_1",
+        "action": "create",
+        "dryRun": true,
+        "collectionPath": [
+          {
+            "property": "Tables",
+            "name": "ExampleTable"
+          },
+          {
+            "property": "RuleGroups",
+            "name": "ExampleGroup"
+          },
+          {
+            "property": "Rules"
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetDccObject",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetDriveParameters",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ],
+        "driveObjectNumber": 0,
+        "driveObjectIndex": 0,
+        "source": "write",
+        "names": [
+          "p1070[0]"
+        ],
+        "includeValue": false,
+        "includeBits": false,
+        "includeEnumValues": false
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetOnlineDriveParameters",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ListDccCharts",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "includeBlocks": false,
+        "includeLibraries": false,
+        "includePins": false
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ListDriveObjects",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ],
+        "includeTelegrams": false,
+        "includeFunctions": false,
+        "includeTechnologyExtensions": false,
+        "includeDcc": false
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageDccChart",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "confirmDelete": false,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageDriveFunctions",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageDriveTelegrams",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageOnlineDriveFunctions",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "confirmOnline": false,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageStartdriveParameter",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ],
+        "driveObjectNumber": 0,
+        "parameter": "p1070[0]",
+        "driveObjectIndex": 0,
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageSafetyGlobalSettings",
+      "family": "F30",
+      "example": {
+        "dryRun": true,
+        "action": "update",
+        "properties": {
+          "SafetyModificationsPossible": true
+        }
       }
     },
     {
@@ -12612,6 +13167,283 @@
         "pgPcInterface": "PLCSIM",
         "dryRun": true,
         "confirmUpload": false
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GenerateSivarc",
+      "family": "F29",
+      "example": {
+        "hmiDeviceName": "HMI_1",
+        "plcSoftwarePaths": [
+          "PLC_1"
+        ],
+        "generationOptions": "None",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetSivarcRuleTree",
+      "family": "F29",
+      "example": {
+        "category": "screens"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ListSivarcBlockDefinitions",
+      "family": "F29",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ListSivarcRules",
+      "family": "F29",
+      "example": {
+        "category": "screens"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageSivarcBlockDefinition",
+      "family": "F29",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "kind": "tagDefinition",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read",
+        "name": "Example_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageSivarcRule",
+      "family": "F29",
+      "example": {
+        "category": "screens",
+        "name": "Example_1",
+        "action": "create",
+        "dryRun": true,
+        "collectionPath": [
+          {
+            "property": "Tables",
+            "name": "ExampleTable"
+          },
+          {
+            "property": "RuleGroups",
+            "name": "ExampleGroup"
+          },
+          {
+            "property": "Rules"
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetDccObject",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetDriveParameters",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ],
+        "driveObjectNumber": 0,
+        "driveObjectIndex": 0,
+        "source": "write",
+        "names": [
+          "p1070[0]"
+        ],
+        "includeValue": false,
+        "includeBits": false,
+        "includeEnumValues": false
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetOnlineDriveParameters",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ListDccCharts",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "includeBlocks": false,
+        "includeLibraries": false,
+        "includePins": false
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ListDriveObjects",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ],
+        "includeTelegrams": false,
+        "includeFunctions": false,
+        "includeTechnologyExtensions": false,
+        "includeDcc": false
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageDccChart",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "confirmDelete": false,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageDriveFunctions",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageDriveTelegrams",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageOnlineDriveFunctions",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "confirmOnline": false,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageStartdriveParameter",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ],
+        "driveObjectNumber": 0,
+        "parameter": "p1070[0]",
+        "driveObjectIndex": 0,
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExportSafetyPrintout",
+      "family": "F30",
+      "example": {
+        "softwarePath": "PLC_1",
+        "filePath": "C:\\Examples\\exports\\Safety.pdf",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetSafetyBlockSignatures",
+      "family": "F30",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManagePlcSafety",
+      "family": "F30",
+      "example": {
+        "softwarePath": "PLC_1",
+        "dryRun": true,
+        "confirmSafetyChange": false,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageSafetyGlobalSettings",
+      "family": "F30",
+      "example": {
+        "dryRun": true,
+        "action": "update",
+        "properties": {
+          "SafetyModificationsPossible": true
+        }
       }
     },
     {
@@ -15330,6 +16162,410 @@
         "pgPcInterface": "PLCSIM",
         "dryRun": true,
         "confirmUpload": false
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GenerateSivarc",
+      "family": "F29",
+      "example": {
+        "hmiDeviceName": "HMI_1",
+        "plcSoftwarePaths": [
+          "PLC_1"
+        ],
+        "generationOptions": "None",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetSivarcRuleTree",
+      "family": "F29",
+      "example": {
+        "category": "screens"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ListSivarcBlockDefinitions",
+      "family": "F29",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ListSivarcRules",
+      "family": "F29",
+      "example": {
+        "category": "screens"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageSivarcBlockDefinition",
+      "family": "F29",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "kind": "tagDefinition",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read",
+        "name": "Example_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageSivarcRule",
+      "family": "F29",
+      "example": {
+        "category": "screens",
+        "name": "Example_1",
+        "action": "create",
+        "dryRun": true,
+        "collectionPath": [
+          {
+            "property": "Tables",
+            "name": "ExampleTable"
+          },
+          {
+            "property": "RuleGroups",
+            "name": "ExampleGroup"
+          },
+          {
+            "property": "Rules"
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageSivarcRuleContainer",
+      "family": "F29",
+      "example": {
+        "category": "screens",
+        "kind": "folder",
+        "path": "Examples",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageSivarcTableRule",
+      "family": "F29",
+      "example": {
+        "category": "screens",
+        "tablePath": "ExampleTable",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read",
+        "rulePath": "ExampleRule"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetDccObject",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetDriveParameters",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ],
+        "driveObjectNumber": 0,
+        "driveObjectIndex": 0,
+        "source": "write",
+        "names": [
+          "p1070[0]"
+        ],
+        "includeValue": false,
+        "includeBits": false,
+        "includeEnumValues": false
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetOnlineDriveParameters",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ListDccCharts",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "includeBlocks": false,
+        "includeLibraries": false,
+        "includePins": false
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ListDriveObjects",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ],
+        "includeTelegrams": false,
+        "includeFunctions": false,
+        "includeTechnologyExtensions": false,
+        "includeDcc": false
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageDcbLibraries",
+      "family": "F31",
+      "example": {
+        "dryRun": true,
+        "action": "read",
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageDccBlock",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "chartPath": "Chart_1",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read",
+        "blockName": "FC_Example"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageDccChart",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "confirmDelete": false,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageDccChartInterface",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "chartPath": "Chart_1",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageDccChartPartition",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "chartPath": "Chart_1",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageDccPin",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "chartPath": "Chart_1",
+        "blockName": "FC_Example",
+        "pinName": "IN1",
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageDriveFunctions",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageDriveTelegrams",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageOnlineDriveFunctions",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "confirmOnline": false,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageStartdriveParameter",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ],
+        "driveObjectNumber": 0,
+        "parameter": "p1070[0]",
+        "driveObjectIndex": 0,
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageTechnologyExtensions",
+      "family": "F31",
+      "example": {
+        "confirmUninstallInUse": false,
+        "dryRun": true,
+        "action": "read",
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExportSafetyPrintout",
+      "family": "F30",
+      "example": {
+        "softwarePath": "PLC_1",
+        "filePath": "C:\\Examples\\exports\\Safety.pdf",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetSafetyBlockSignatures",
+      "family": "F30",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManagePlcSafety",
+      "family": "F30",
+      "example": {
+        "softwarePath": "PLC_1",
+        "dryRun": true,
+        "confirmSafetyChange": false,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageSafetyGlobalSettings",
+      "family": "F30",
+      "example": {
+        "dryRun": true,
+        "action": "update",
+        "properties": {
+          "SafetyModificationsPossible": true
+        }
       }
     },
     {
@@ -18228,6 +19464,440 @@
         "pgPcInterface": "PLCSIM",
         "dryRun": true,
         "confirmUpload": false
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GenerateSivarc",
+      "family": "F29",
+      "example": {
+        "hmiDeviceName": "HMI_1",
+        "plcSoftwarePaths": [
+          "PLC_1"
+        ],
+        "generationOptions": "None",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetSivarcRuleTree",
+      "family": "F29",
+      "example": {
+        "category": "screens"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListSivarcBlockDefinitions",
+      "family": "F29",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListSivarcRules",
+      "family": "F29",
+      "example": {
+        "category": "screens"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageSivarcBlockDefinition",
+      "family": "F29",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "kind": "tagDefinition",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read",
+        "name": "Example_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageSivarcRule",
+      "family": "F29",
+      "example": {
+        "category": "screens",
+        "name": "Example_1",
+        "action": "create",
+        "dryRun": true,
+        "collectionPath": [
+          {
+            "property": "Tables",
+            "name": "ExampleTable"
+          },
+          {
+            "property": "RuleGroups",
+            "name": "ExampleGroup"
+          },
+          {
+            "property": "Rules"
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageSivarcRuleContainer",
+      "family": "F29",
+      "example": {
+        "category": "screens",
+        "kind": "folder",
+        "path": "Examples",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageSivarcTableRule",
+      "family": "F29",
+      "example": {
+        "category": "screens",
+        "tablePath": "ExampleTable",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read",
+        "rulePath": "ExampleRule"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetDccObject",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetDriveParameters",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ],
+        "driveObjectNumber": 0,
+        "driveObjectIndex": 0,
+        "source": "write",
+        "names": [
+          "p1070[0]"
+        ],
+        "includeValue": false,
+        "includeBits": false,
+        "includeEnumValues": false
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetOnlineDriveParameters",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListDccCharts",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "includeBlocks": false,
+        "includeLibraries": false,
+        "includePins": false
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListDriveObjects",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ],
+        "includeTelegrams": false,
+        "includeFunctions": false,
+        "includeTechnologyExtensions": false,
+        "includeDcc": false
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageDcbLibraries",
+      "family": "F31",
+      "example": {
+        "dryRun": true,
+        "action": "read",
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageDccBlock",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "chartPath": "Chart_1",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read",
+        "blockName": "FC_Example"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageDccChart",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "confirmDelete": false,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageDccChartInterface",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "chartPath": "Chart_1",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageDccChartPartition",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "chartPath": "Chart_1",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageDccPin",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "chartPath": "Chart_1",
+        "blockName": "FC_Example",
+        "pinName": "IN1",
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageDriveFunctions",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageDriveHardwareModule",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageDriveSecurity",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageDriveTelegrams",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageOnlineDriveFunctions",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "confirmOnline": false,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageStartdriveParameter",
+      "family": "F31",
+      "example": {
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ],
+        "driveObjectNumber": 0,
+        "parameter": "p1070[0]",
+        "driveObjectIndex": 0,
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageTechnologyExtensions",
+      "family": "F31",
+      "example": {
+        "confirmUninstallInUse": false,
+        "dryRun": true,
+        "action": "read",
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExportSafetyPrintout",
+      "family": "F30",
+      "example": {
+        "softwarePath": "PLC_1",
+        "filePath": "C:\\Examples\\exports\\Safety.pdf",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetSafetyBlockSignatures",
+      "family": "F30",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManagePlcSafety",
+      "family": "F30",
+      "example": {
+        "softwarePath": "PLC_1",
+        "dryRun": true,
+        "confirmSafetyChange": false,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageSafetyGlobalSettings",
+      "family": "F30",
+      "example": {
+        "dryRun": true,
+        "action": "update",
+        "properties": {
+          "SafetyModificationsPossible": true
+        }
       }
     },
     {
@@ -41480,6 +43150,25 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageDriveTelegrams",
+        "currentName": "ManageDriveTelegrams",
+        "sourceName": "ManageDriveTelegrams",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageGenerationArtifacts",
         "currentName": "ManageGenerationArtifacts",
         "sourceName": "ManageGenerationArtifacts",
@@ -42308,6 +43997,28 @@
           "version": "1.0.0",
           "newId": "example.basic",
           "newVersion": "1.0.0",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageStartdriveParameter",
+        "currentName": "ManageStartdriveParameter",
+        "sourceName": "ManageStartdriveParameter",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
+          "driveObjectNumber": 0,
+          "parameter": "p1070[0]",
+          "driveObjectIndex": 0,
+          "action": "read",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -43252,6 +44963,53 @@
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListDriveObjects",
+        "currentName": "ListDriveObjects",
+        "sourceName": "ReadDriveObjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
+          "includeTelegrams": false,
+          "includeFunctions": false,
+          "includeTechnologyExtensions": false,
+          "includeDcc": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDriveParameters",
+        "currentName": "GetDriveParameters",
+        "sourceName": "ReadDriveParameters",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
+          "driveObjectNumber": 0,
+          "driveObjectIndex": 0,
+          "source": "write",
+          "names": [
+            "p1070[0]"
+          ],
+          "includeValue": false,
+          "includeBits": false,
+          "includeEnumValues": false
         },
         "envelopeVersion": 4
       },
@@ -45635,6 +47393,23 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GenerateSivarc",
+        "currentName": "GenerateSivarc",
+        "sourceName": "GenerateSiVArc",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "hmiDeviceName": "HMI_1",
+          "plcSoftwarePaths": [
+            "PLC_1"
+          ],
+          "generationOptions": "None",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcBlockInfo",
         "currentName": "GetPlcBlockInfo",
         "sourceName": "GetBlockInfo",
@@ -46605,6 +48380,44 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageDriveFunctions",
+        "currentName": "ManageDriveFunctions",
+        "sourceName": "ManageDriveFunctions",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDriveTelegrams",
+        "currentName": "ManageDriveTelegrams",
+        "sourceName": "ManageDriveTelegrams",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageGenerationArtifacts",
         "currentName": "ManageGenerationArtifacts",
         "sourceName": "ManageGenerationArtifacts",
@@ -47306,6 +49119,25 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageOnlineDriveFunctions",
+        "currentName": "ManageOnlineDriveFunctions",
+        "sourceName": "ManageOnlineDriveFunctions",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "confirmOnline": false,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageOpcUaInterface",
         "currentName": "ManageOpcUaInterface",
         "sourceName": "ManageOpcUaInterface",
@@ -47502,6 +49334,34 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageSivarcRule",
+        "currentName": "ManageSivarcRule",
+        "sourceName": "ManageSiVArcRule",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "screens",
+          "name": "Example_1",
+          "action": "create",
+          "dryRun": true,
+          "collectionPath": [
+            {
+              "property": "Tables",
+              "name": "ExampleTable"
+            },
+            {
+              "property": "RuleGroups",
+              "name": "ExampleGroup"
+            },
+            {
+              "property": "Rules"
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageStandardPackage",
         "currentName": "ManageStandardPackage",
         "sourceName": "ManageStandardPackage",
@@ -47514,6 +49374,28 @@
           "version": "1.0.0",
           "newId": "example.basic",
           "newVersion": "1.0.0",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageStartdriveParameter",
+        "currentName": "ManageStartdriveParameter",
+        "sourceName": "ManageStartdriveParameter",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
+          "driveObjectNumber": 0,
+          "parameter": "p1070[0]",
+          "driveObjectIndex": 0,
+          "action": "read",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -48512,6 +50394,53 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ListDriveObjects",
+        "currentName": "ListDriveObjects",
+        "sourceName": "ReadDriveObjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
+          "includeTelegrams": false,
+          "includeFunctions": false,
+          "includeTechnologyExtensions": false,
+          "includeDcc": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDriveParameters",
+        "currentName": "GetDriveParameters",
+        "sourceName": "ReadDriveParameters",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
+          "driveObjectNumber": 0,
+          "driveObjectIndex": 0,
+          "source": "write",
+          "names": [
+            "p1070[0]"
+          ],
+          "includeValue": false,
+          "includeBits": false,
+          "includeEnumValues": false
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetHardwareFeatures",
         "currentName": "GetHardwareFeatures",
         "sourceName": "ReadHardwareFeatures",
@@ -48590,6 +50519,23 @@
         ],
         "arguments": {
           "take": 100
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOnlineDriveParameters",
+        "currentName": "GetOnlineDriveParameters",
+        "sourceName": "ReadOnlineDriveParameters",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -48871,6 +50817,30 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListSivarcRules",
+        "currentName": "ListSivarcRules",
+        "sourceName": "ReadSiVArcRules",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "screens"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetSivarcRuleTree",
+        "currentName": "GetSivarcRuleTree",
+        "sourceName": "ReadSivarcRuleTree",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "screens"
+        },
         "envelopeVersion": 4
       },
       {
@@ -51107,6 +53077,23 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GenerateSivarc",
+        "currentName": "GenerateSivarc",
+        "sourceName": "GenerateSiVArc",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "hmiDeviceName": "HMI_1",
+          "plcSoftwarePaths": [
+            "PLC_1"
+          ],
+          "generationOptions": "None",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcBlockInfo",
         "currentName": "GetPlcBlockInfo",
         "sourceName": "GetBlockInfo",
@@ -52143,6 +54130,26 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageDccChart",
+        "currentName": "ManageDccChart",
+        "sourceName": "ManageDccChart",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "confirmDelete": false,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageDeviceUserGroup",
         "currentName": "ManageDeviceUserGroup",
         "sourceName": "ManageDeviceUserGroup",
@@ -52171,6 +54178,44 @@
           ],
           "family": "webserver",
           "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDriveFunctions",
+        "currentName": "ManageDriveFunctions",
+        "sourceName": "ManageDriveFunctions",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDriveTelegrams",
+        "currentName": "ManageDriveTelegrams",
+        "sourceName": "ManageDriveTelegrams",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "dryRun": true,
           "action": "read"
         },
@@ -52895,6 +54940,25 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageOnlineDriveFunctions",
+        "currentName": "ManageOnlineDriveFunctions",
+        "sourceName": "ManageOnlineDriveFunctions",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "confirmOnline": false,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageOpcUaInterface",
         "currentName": "ManageOpcUaInterface",
         "sourceName": "ManageOpcUaInterface",
@@ -53137,6 +55201,50 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageSafetyGlobalSettings",
+        "currentName": "ManageSafetyGlobalSettings",
+        "sourceName": "ManageSafetyGlobalSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "update",
+          "properties": {
+            "SafetyModificationsPossible": true
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageSivarcRule",
+        "currentName": "ManageSivarcRule",
+        "sourceName": "ManageSiVArcRule",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "screens",
+          "name": "Example_1",
+          "action": "create",
+          "dryRun": true,
+          "collectionPath": [
+            {
+              "property": "Tables",
+              "name": "ExampleTable"
+            },
+            {
+              "property": "RuleGroups",
+              "name": "ExampleGroup"
+            },
+            {
+              "property": "Rules"
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageStandardPackage",
         "currentName": "ManageStandardPackage",
         "sourceName": "ManageStandardPackage",
@@ -53149,6 +55257,28 @@
           "version": "1.0.0",
           "newId": "example.basic",
           "newVersion": "1.0.0",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageStartdriveParameter",
+        "currentName": "ManageStartdriveParameter",
+        "sourceName": "ManageStartdriveParameter",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
+          "driveObjectNumber": 0,
+          "parameter": "p1070[0]",
+          "driveObjectIndex": 0,
+          "action": "read",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -54136,6 +56266,43 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ListDccCharts",
+        "currentName": "ListDccCharts",
+        "sourceName": "ReadDccCharts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "includeBlocks": false,
+          "includeLibraries": false,
+          "includePins": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDccObject",
+        "currentName": "GetDccObject",
+        "sourceName": "ReadDccObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceAddressing",
         "currentName": "GetDeviceAddressing",
         "sourceName": "ReadDeviceAddressing",
@@ -54163,6 +56330,53 @@
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListDriveObjects",
+        "currentName": "ListDriveObjects",
+        "sourceName": "ReadDriveObjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
+          "includeTelegrams": false,
+          "includeFunctions": false,
+          "includeTechnologyExtensions": false,
+          "includeDcc": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDriveParameters",
+        "currentName": "GetDriveParameters",
+        "sourceName": "ReadDriveParameters",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
+          "driveObjectNumber": 0,
+          "driveObjectIndex": 0,
+          "source": "write",
+          "names": [
+            "p1070[0]"
+          ],
+          "includeValue": false,
+          "includeBits": false,
+          "includeEnumValues": false
         },
         "envelopeVersion": 4
       },
@@ -54257,6 +56471,23 @@
         ],
         "arguments": {
           "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOnlineDriveParameters",
+        "currentName": "GetOnlineDriveParameters",
+        "sourceName": "ReadOnlineDriveParameters",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -54564,6 +56795,30 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListSivarcRules",
+        "currentName": "ListSivarcRules",
+        "sourceName": "ReadSiVArcRules",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "screens"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetSivarcRuleTree",
+        "currentName": "GetSivarcRuleTree",
+        "sourceName": "ReadSivarcRuleTree",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "screens"
+        },
         "envelopeVersion": 4
       },
       {
@@ -56711,6 +58966,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExportSafetyPrintout",
+        "currentName": "ExportSafetyPrintout",
+        "sourceName": "ExportSafetyPrintout",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "filePath": "C:\\Examples\\exports\\Safety.pdf",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExportTechnologyObject",
         "currentName": "ExportTechnologyObject",
         "sourceName": "ExportTechnologyObject",
@@ -56883,6 +59152,23 @@
           "blockPaths": [
             "FC_Ready"
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GenerateSivarc",
+        "currentName": "GenerateSivarc",
+        "sourceName": "GenerateSiVArc",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "hmiDeviceName": "HMI_1",
+          "plcSoftwarePaths": [
+            "PLC_1"
+          ],
+          "generationOptions": "None",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -57936,6 +60222,26 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageDccChart",
+        "currentName": "ManageDccChart",
+        "sourceName": "ManageDccChart",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "confirmDelete": false,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageDeviceUserGroup",
         "currentName": "ManageDeviceUserGroup",
         "sourceName": "ManageDeviceUserGroup",
@@ -57964,6 +60270,44 @@
           ],
           "family": "webserver",
           "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDriveFunctions",
+        "currentName": "ManageDriveFunctions",
+        "sourceName": "ManageDriveFunctions",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDriveTelegrams",
+        "currentName": "ManageDriveTelegrams",
+        "sourceName": "ManageDriveTelegrams",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "dryRun": true,
           "action": "read"
         },
@@ -58702,6 +61046,25 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageOnlineDriveFunctions",
+        "currentName": "ManageOnlineDriveFunctions",
+        "sourceName": "ManageOnlineDriveFunctions",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "confirmOnline": false,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageOpcUaInterface",
         "currentName": "ManageOpcUaInterface",
         "sourceName": "ManageOpcUaInterface",
@@ -58812,6 +61175,21 @@
           "action": "read",
           "confirmChange": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcSafety",
+        "currentName": "ManagePlcSafety",
+        "sourceName": "ManagePlcSafety",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "dryRun": true,
+          "confirmSafetyChange": false,
+          "action": "read"
         },
         "envelopeVersion": 4
       },
@@ -58974,6 +61352,68 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageSafetyGlobalSettings",
+        "currentName": "ManageSafetyGlobalSettings",
+        "sourceName": "ManageSafetyGlobalSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "update",
+          "properties": {
+            "SafetyModificationsPossible": true
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageSivarcRule",
+        "currentName": "ManageSivarcRule",
+        "sourceName": "ManageSiVArcRule",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "screens",
+          "name": "Example_1",
+          "action": "create",
+          "dryRun": true,
+          "collectionPath": [
+            {
+              "property": "Tables",
+              "name": "ExampleTable"
+            },
+            {
+              "property": "RuleGroups",
+              "name": "ExampleGroup"
+            },
+            {
+              "property": "Rules"
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageSivarcBlockDefinition",
+        "currentName": "ManageSivarcBlockDefinition",
+        "sourceName": "ManageSivarcBlockDefinition",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "kind": "tagDefinition",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read",
+          "name": "Example_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageStandardPackage",
         "currentName": "ManageStandardPackage",
         "sourceName": "ManageStandardPackage",
@@ -58986,6 +61426,28 @@
           "version": "1.0.0",
           "newId": "example.basic",
           "newVersion": "1.0.0",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageStartdriveParameter",
+        "currentName": "ManageStartdriveParameter",
+        "sourceName": "ManageStartdriveParameter",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
+          "driveObjectNumber": 0,
+          "parameter": "p1070[0]",
+          "driveObjectIndex": 0,
+          "action": "read",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -60001,6 +62463,43 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ListDccCharts",
+        "currentName": "ListDccCharts",
+        "sourceName": "ReadDccCharts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "includeBlocks": false,
+          "includeLibraries": false,
+          "includePins": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDccObject",
+        "currentName": "GetDccObject",
+        "sourceName": "ReadDccObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceAddressing",
         "currentName": "GetDeviceAddressing",
         "sourceName": "ReadDeviceAddressing",
@@ -60028,6 +62527,53 @@
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListDriveObjects",
+        "currentName": "ListDriveObjects",
+        "sourceName": "ReadDriveObjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
+          "includeTelegrams": false,
+          "includeFunctions": false,
+          "includeTechnologyExtensions": false,
+          "includeDcc": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDriveParameters",
+        "currentName": "GetDriveParameters",
+        "sourceName": "ReadDriveParameters",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
+          "driveObjectNumber": 0,
+          "driveObjectIndex": 0,
+          "source": "write",
+          "names": [
+            "p1070[0]"
+          ],
+          "includeValue": false,
+          "includeBits": false,
+          "includeEnumValues": false
         },
         "envelopeVersion": 4
       },
@@ -60122,6 +62668,23 @@
         ],
         "arguments": {
           "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOnlineDriveParameters",
+        "currentName": "GetOnlineDriveParameters",
+        "sourceName": "ReadOnlineDriveParameters",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -60439,6 +63002,55 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetSafetyBlockSignatures",
+        "currentName": "GetSafetyBlockSignatures",
+        "sourceName": "ReadSafetyBlockSignatures",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListSivarcRules",
+        "currentName": "ListSivarcRules",
+        "sourceName": "ReadSiVArcRules",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "screens"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListSivarcBlockDefinitions",
+        "currentName": "ListSivarcBlockDefinitions",
+        "sourceName": "ReadSivarcBlockDefinitions",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetSivarcRuleTree",
+        "currentName": "GetSivarcRuleTree",
+        "sourceName": "ReadSivarcRuleTree",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "screens"
+        },
         "envelopeVersion": 4
       },
       {
@@ -62685,6 +65297,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExportSafetyPrintout",
+        "currentName": "ExportSafetyPrintout",
+        "sourceName": "ExportSafetyPrintout",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "filePath": "C:\\Examples\\exports\\Safety.pdf",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExportTechnologyObject",
         "currentName": "ExportTechnologyObject",
         "sourceName": "ExportTechnologyObject",
@@ -62876,6 +65502,23 @@
           "blockPaths": [
             "FC_Ready"
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GenerateSivarc",
+        "currentName": "GenerateSivarc",
+        "sourceName": "GenerateSiVArc",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "hmiDeviceName": "HMI_1",
+          "plcSoftwarePaths": [
+            "PLC_1"
+          ],
+          "generationOptions": "None",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -63944,6 +66587,131 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageDcbLibraries",
+        "currentName": "ManageDcbLibraries",
+        "sourceName": "ManageDcbLibraries",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "read",
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDccBlock",
+        "currentName": "ManageDccBlock",
+        "sourceName": "ManageDccBlock",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "chartPath": "Chart_1",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read",
+          "blockName": "FC_Example"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDccChart",
+        "currentName": "ManageDccChart",
+        "sourceName": "ManageDccChart",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "confirmDelete": false,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDccChartInterface",
+        "currentName": "ManageDccChartInterface",
+        "sourceName": "ManageDccChartInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "chartPath": "Chart_1",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDccChartPartition",
+        "currentName": "ManageDccChartPartition",
+        "sourceName": "ManageDccChartPartition",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "chartPath": "Chart_1",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDccPin",
+        "currentName": "ManageDccPin",
+        "sourceName": "ManageDccPin",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "chartPath": "Chart_1",
+          "blockName": "FC_Example",
+          "pinName": "IN1",
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageDeviceServiceObjects",
         "currentName": "ManageDeviceServiceObjects",
         "sourceName": "ManageDeviceServiceObjects",
@@ -63993,6 +66761,44 @@
           ],
           "family": "webserver",
           "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDriveFunctions",
+        "currentName": "ManageDriveFunctions",
+        "sourceName": "ManageDriveFunctions",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDriveTelegrams",
+        "currentName": "ManageDriveTelegrams",
+        "sourceName": "ManageDriveTelegrams",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "dryRun": true,
           "action": "read"
         },
@@ -64731,6 +67537,25 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageOnlineDriveFunctions",
+        "currentName": "ManageOnlineDriveFunctions",
+        "sourceName": "ManageOnlineDriveFunctions",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "confirmOnline": false,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageOpcUaInterface",
         "currentName": "ManageOpcUaInterface",
         "sourceName": "ManageOpcUaInterface",
@@ -64870,6 +67695,21 @@
           "action": "read",
           "confirmChange": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcSafety",
+        "currentName": "ManagePlcSafety",
+        "sourceName": "ManagePlcSafety",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "dryRun": true,
+          "confirmSafetyChange": false,
+          "action": "read"
         },
         "envelopeVersion": 4
       },
@@ -65032,6 +67872,102 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageSafetyGlobalSettings",
+        "currentName": "ManageSafetyGlobalSettings",
+        "sourceName": "ManageSafetyGlobalSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "update",
+          "properties": {
+            "SafetyModificationsPossible": true
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageSivarcRule",
+        "currentName": "ManageSivarcRule",
+        "sourceName": "ManageSiVArcRule",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "screens",
+          "name": "Example_1",
+          "action": "create",
+          "dryRun": true,
+          "collectionPath": [
+            {
+              "property": "Tables",
+              "name": "ExampleTable"
+            },
+            {
+              "property": "RuleGroups",
+              "name": "ExampleGroup"
+            },
+            {
+              "property": "Rules"
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageSivarcBlockDefinition",
+        "currentName": "ManageSivarcBlockDefinition",
+        "sourceName": "ManageSivarcBlockDefinition",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "kind": "tagDefinition",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read",
+          "name": "Example_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageSivarcRuleContainer",
+        "currentName": "ManageSivarcRuleContainer",
+        "sourceName": "ManageSivarcRuleContainer",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "screens",
+          "kind": "folder",
+          "path": "Examples",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageSivarcTableRule",
+        "currentName": "ManageSivarcTableRule",
+        "sourceName": "ManageSivarcTableRule",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "screens",
+          "tablePath": "ExampleTable",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read",
+          "rulePath": "ExampleRule"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageStandardPackage",
         "currentName": "ManageStandardPackage",
         "sourceName": "ManageStandardPackage",
@@ -65044,6 +67980,28 @@
           "version": "1.0.0",
           "newId": "example.basic",
           "newVersion": "1.0.0",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageStartdriveParameter",
+        "currentName": "ManageStartdriveParameter",
+        "sourceName": "ManageStartdriveParameter",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
+          "driveObjectNumber": 0,
+          "parameter": "p1070[0]",
+          "driveObjectIndex": 0,
+          "action": "read",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -65087,6 +68045,26 @@
           "itemType": "T4TiaProject",
           "confirmSave": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageTechnologyExtensions",
+        "currentName": "ManageTechnologyExtensions",
+        "sourceName": "ManageTechnologyExtensions",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "confirmUninstallInUse": false,
+          "dryRun": true,
+          "action": "read",
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -66101,6 +69079,43 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ListDccCharts",
+        "currentName": "ListDccCharts",
+        "sourceName": "ReadDccCharts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "includeBlocks": false,
+          "includeLibraries": false,
+          "includePins": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDccObject",
+        "currentName": "GetDccObject",
+        "sourceName": "ReadDccObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceAddressing",
         "currentName": "GetDeviceAddressing",
         "sourceName": "ReadDeviceAddressing",
@@ -66128,6 +69143,53 @@
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListDriveObjects",
+        "currentName": "ListDriveObjects",
+        "sourceName": "ReadDriveObjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
+          "includeTelegrams": false,
+          "includeFunctions": false,
+          "includeTechnologyExtensions": false,
+          "includeDcc": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDriveParameters",
+        "currentName": "GetDriveParameters",
+        "sourceName": "ReadDriveParameters",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
+          "driveObjectNumber": 0,
+          "driveObjectIndex": 0,
+          "source": "write",
+          "names": [
+            "p1070[0]"
+          ],
+          "includeValue": false,
+          "includeBits": false,
+          "includeEnumValues": false
         },
         "envelopeVersion": 4
       },
@@ -66222,6 +69284,23 @@
         ],
         "arguments": {
           "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOnlineDriveParameters",
+        "currentName": "GetOnlineDriveParameters",
+        "sourceName": "ReadOnlineDriveParameters",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -66539,6 +69618,55 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetSafetyBlockSignatures",
+        "currentName": "GetSafetyBlockSignatures",
+        "sourceName": "ReadSafetyBlockSignatures",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListSivarcRules",
+        "currentName": "ListSivarcRules",
+        "sourceName": "ReadSiVArcRules",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "screens"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListSivarcBlockDefinitions",
+        "currentName": "ListSivarcBlockDefinitions",
+        "sourceName": "ReadSivarcBlockDefinitions",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetSivarcRuleTree",
+        "currentName": "GetSivarcRuleTree",
+        "sourceName": "ReadSivarcRuleTree",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "screens"
+        },
         "envelopeVersion": 4
       },
       {
@@ -69213,6 +72341,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExportSafetyPrintout",
+        "currentName": "ExportSafetyPrintout",
+        "sourceName": "ExportSafetyPrintout",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "filePath": "C:\\Examples\\exports\\Safety.pdf",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExportTechnologyObject",
         "currentName": "ExportTechnologyObject",
         "sourceName": "ExportTechnologyObject",
@@ -69404,6 +72546,23 @@
           "blockPaths": [
             "FC_Ready"
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GenerateSivarc",
+        "currentName": "GenerateSivarc",
+        "sourceName": "GenerateSiVArc",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "hmiDeviceName": "HMI_1",
+          "plcSoftwarePaths": [
+            "PLC_1"
+          ],
+          "generationOptions": "None",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -70497,6 +73656,131 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageDcbLibraries",
+        "currentName": "ManageDcbLibraries",
+        "sourceName": "ManageDcbLibraries",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "read",
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDccBlock",
+        "currentName": "ManageDccBlock",
+        "sourceName": "ManageDccBlock",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "chartPath": "Chart_1",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read",
+          "blockName": "FC_Example"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDccChart",
+        "currentName": "ManageDccChart",
+        "sourceName": "ManageDccChart",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "confirmDelete": false,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDccChartInterface",
+        "currentName": "ManageDccChartInterface",
+        "sourceName": "ManageDccChartInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "chartPath": "Chart_1",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDccChartPartition",
+        "currentName": "ManageDccChartPartition",
+        "sourceName": "ManageDccChartPartition",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "chartPath": "Chart_1",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDccPin",
+        "currentName": "ManageDccPin",
+        "sourceName": "ManageDccPin",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "chartPath": "Chart_1",
+          "blockName": "FC_Example",
+          "pinName": "IN1",
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageDeviceServiceObjects",
         "currentName": "ManageDeviceServiceObjects",
         "sourceName": "ManageDeviceServiceObjects",
@@ -70546,6 +73830,82 @@
           ],
           "family": "webserver",
           "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDriveFunctions",
+        "currentName": "ManageDriveFunctions",
+        "sourceName": "ManageDriveFunctions",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDriveHardwareModule",
+        "currentName": "ManageDriveHardwareModule",
+        "sourceName": "ManageDriveHardwareModule",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDriveSecurity",
+        "currentName": "ManageDriveSecurity",
+        "sourceName": "ManageDriveSecurity",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDriveTelegrams",
+        "currentName": "ManageDriveTelegrams",
+        "sourceName": "ManageDriveTelegrams",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
           "dryRun": true,
           "action": "read"
         },
@@ -71284,6 +74644,25 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageOnlineDriveFunctions",
+        "currentName": "ManageOnlineDriveFunctions",
+        "sourceName": "ManageOnlineDriveFunctions",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "confirmOnline": false,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageOpcUaInterface",
         "currentName": "ManageOpcUaInterface",
         "sourceName": "ManageOpcUaInterface",
@@ -71423,6 +74802,21 @@
           "action": "read",
           "confirmChange": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcSafety",
+        "currentName": "ManagePlcSafety",
+        "sourceName": "ManagePlcSafety",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "dryRun": true,
+          "confirmSafetyChange": false,
+          "action": "read"
         },
         "envelopeVersion": 4
       },
@@ -71585,6 +74979,102 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageSafetyGlobalSettings",
+        "currentName": "ManageSafetyGlobalSettings",
+        "sourceName": "ManageSafetyGlobalSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "update",
+          "properties": {
+            "SafetyModificationsPossible": true
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageSivarcRule",
+        "currentName": "ManageSivarcRule",
+        "sourceName": "ManageSiVArcRule",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "screens",
+          "name": "Example_1",
+          "action": "create",
+          "dryRun": true,
+          "collectionPath": [
+            {
+              "property": "Tables",
+              "name": "ExampleTable"
+            },
+            {
+              "property": "RuleGroups",
+              "name": "ExampleGroup"
+            },
+            {
+              "property": "Rules"
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageSivarcBlockDefinition",
+        "currentName": "ManageSivarcBlockDefinition",
+        "sourceName": "ManageSivarcBlockDefinition",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "kind": "tagDefinition",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read",
+          "name": "Example_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageSivarcRuleContainer",
+        "currentName": "ManageSivarcRuleContainer",
+        "sourceName": "ManageSivarcRuleContainer",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "screens",
+          "kind": "folder",
+          "path": "Examples",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageSivarcTableRule",
+        "currentName": "ManageSivarcTableRule",
+        "sourceName": "ManageSivarcTableRule",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "screens",
+          "tablePath": "ExampleTable",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read",
+          "rulePath": "ExampleRule"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageStandardPackage",
         "currentName": "ManageStandardPackage",
         "sourceName": "ManageStandardPackage",
@@ -71597,6 +75087,28 @@
           "version": "1.0.0",
           "newId": "example.basic",
           "newVersion": "1.0.0",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageStartdriveParameter",
+        "currentName": "ManageStartdriveParameter",
+        "sourceName": "ManageStartdriveParameter",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
+          "driveObjectNumber": 0,
+          "parameter": "p1070[0]",
+          "driveObjectIndex": 0,
+          "action": "read",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -71654,6 +75166,26 @@
           "itemType": "T4TiaProject",
           "confirmSave": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageTechnologyExtensions",
+        "currentName": "ManageTechnologyExtensions",
+        "sourceName": "ManageTechnologyExtensions",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "confirmUninstallInUse": false,
+          "dryRun": true,
+          "action": "read",
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -72701,6 +76233,43 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ListDccCharts",
+        "currentName": "ListDccCharts",
+        "sourceName": "ReadDccCharts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "includeBlocks": false,
+          "includeLibraries": false,
+          "includePins": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDccObject",
+        "currentName": "GetDccObject",
+        "sourceName": "ReadDccObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceAddressing",
         "currentName": "GetDeviceAddressing",
         "sourceName": "ReadDeviceAddressing",
@@ -72728,6 +76297,53 @@
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListDriveObjects",
+        "currentName": "ListDriveObjects",
+        "sourceName": "ReadDriveObjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
+          "includeTelegrams": false,
+          "includeFunctions": false,
+          "includeTechnologyExtensions": false,
+          "includeDcc": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDriveParameters",
+        "currentName": "GetDriveParameters",
+        "sourceName": "ReadDriveParameters",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ],
+          "driveObjectNumber": 0,
+          "driveObjectIndex": 0,
+          "source": "write",
+          "names": [
+            "p1070[0]"
+          ],
+          "includeValue": false,
+          "includeBits": false,
+          "includeEnumValues": false
         },
         "envelopeVersion": 4
       },
@@ -72822,6 +76438,23 @@
         ],
         "arguments": {
           "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOnlineDriveParameters",
+        "currentName": "GetOnlineDriveParameters",
+        "sourceName": "ReadOnlineDriveParameters",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -73139,6 +76772,55 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetSafetyBlockSignatures",
+        "currentName": "GetSafetyBlockSignatures",
+        "sourceName": "ReadSafetyBlockSignatures",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListSivarcRules",
+        "currentName": "ListSivarcRules",
+        "sourceName": "ReadSiVArcRules",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "screens"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListSivarcBlockDefinitions",
+        "currentName": "ListSivarcBlockDefinitions",
+        "sourceName": "ReadSivarcBlockDefinitions",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetSivarcRuleTree",
+        "currentName": "GetSivarcRuleTree",
+        "sourceName": "ReadSivarcRuleTree",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "screens"
+        },
         "envelopeVersion": 4
       },
       {

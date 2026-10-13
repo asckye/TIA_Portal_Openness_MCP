@@ -1,10 +1,10 @@
 {
   "package": "TIA_MCP_Delivery_v3.3.0_20261008",
-  "generatedAt": "2026-10-12T16:15:35.4529167+00:00",
+  "generatedAt": "2026-10-13T13:38:02.4359363+00:00",
   "source": "FoundationHost V21 full product catalog; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "3.3.0.0",
   "exeSha256": "5afc7ca3ba0add70c1683614d632ac334bbd83437c9d3a54cc2951cf4edfa9a2",
-  "workerSha256": "8086a95b6e058e9e5b26c010450e66398f18565c9aa9adc4f1c60f651e28e5ad",
+  "workerSha256": "f4bc6736eadebf3aa82ea86e81e59911524cf1ba16f158e78da30e91f1f8374a",
   "toolCount": 516,
   "note": "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -4814,7 +4814,7 @@
       "operation": "ONLINE-WRITE",
       "operationInferred": false,
       "method": "RunPlcCompanionToolV4",
-      "returnType": "Task`1",
+      "returnType": "CallToolResult",
       "parameters": [
         "workingDirectory",
         "mode",
