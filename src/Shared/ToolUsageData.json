@@ -43701,6 +43701,461 @@
             "Reads the connected drive through the API available on the selected release. V15.1–V19 use the Parameters view and V20/V21 use ReadParameters; this call never writes a parameter.",
             "Use only a reviewed synthetic online target for acceptance. Native behavior remains current / NOT RUN."
           ]
+        },
+        "ExchangeCfcCharts": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "action": "import",
+            "filePath": "C:\\Examples\\exports\\Charts.xml.zip",
+            "dryRun": true,
+            "modelVersion": "V2.0"
+          },
+          "parameters": {
+            "modelVersion": {
+              "exampleValue": "<modelVersion from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "filter": {
+              "exampleValue": 0
+            },
+            "unattended": {
+              "exampleValue": true
+            },
+            "deleteAtTarget": {
+              "exampleValue": false
+            },
+            "chartNames": {
+              "exampleValue": [
+                "<chartNames from this operation's target or user input>"
+              ],
+              "requiresBinding": true
+            },
+            "skipChartPreflight": {
+              "exampleValue": false
+            }
+          },
+          "operations": {
+            "export": {
+              "arguments": {}
+            },
+            "selectiveExport": {
+              "arguments": {
+                "action": "selectiveExport",
+                "chartNames": [
+                  "<exact chart name from the CFC inventory>"
+                ]
+              }
+            },
+            "import": {
+              "arguments": {
+                "action": "import"
+              }
+            },
+            "exportInstructionData": {
+              "arguments": {
+                "action": "exportInstructionData",
+                "modelVersion": ""
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: V18-V21 imports remain available. Every export/preflight action is guarded before native calls; skipChartPreflight cannot bypass the guard. ExportInstructionData also lacks an API on V18."
+        },
+        "ManageCfcChartProtection": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "chartName": "Chart_1",
+            "dryRun": true,
+            "action": "read"
+          },
+          "parameters": {
+            "currentPassword": {
+              "exampleValue": "<current password supplied for this target>",
+              "requiresBinding": true
+            },
+            "newHashedPassword": {
+              "exampleValue": "<hash in the format described by this tool>",
+              "requiresBinding": true
+            },
+            "modelVersion": {
+              "exampleValue": "V2.0"
+            },
+            "skipChartPreflight": {
+              "exampleValue": false
+            }
+          },
+          "operations": {
+            "read": {
+              "arguments": {}
+            },
+            "add": {
+              "arguments": {
+                "action": "add"
+              }
+            },
+            "change": {
+              "arguments": {
+                "action": "change"
+              }
+            },
+            "remove": {
+              "arguments": {
+                "action": "remove"
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: Every protection action is guarded on V18-V21 before native calls, including an unknown chart with skipChartPreflight=true. No CompleteExport preflight is permitted."
+        },
+        "ListTestSuiteCases": {
+          "arguments": {
+            "category": "styleGuide"
+          },
+          "parameters": {
+            "name": {
+              "exampleValue": "Example_1"
+            },
+            "offset": {
+              "exampleValue": 0
+            },
+            "limit": {
+              "exampleValue": 100
+            },
+            "kind": {
+              "exampleValue": "case"
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": " Release limits: Available from V17: styleGuide and application cases. System cases require V18; application test sets and importTestSets require V20. Application execution-mode scope overloads, system SetScope and system CreateFrom require V19; system Delete requires V20. System ShowInEditor has no API. Missing actions refuse with UNSUPPORTED_CAPABILITY before native dispatch."
+        },
+        "ManageTestSuiteCase": {
+          "arguments": {
+            "category": "styleGuide",
+            "name": "Example_1",
+            "dryRun": true,
+            "action": "read"
+          },
+          "parameters": {
+            "kind": {
+              "exampleValue": "case"
+            },
+            "newName": {
+              "exampleValue": "Example_2"
+            },
+            "softwarePath": {
+              "exampleValue": "PLC_1"
+            },
+            "instanceName": {
+              "exampleValue": "PLC_SIM_1"
+            },
+            "executionMode": {
+              "exampleValue": "SystemManagedPLCSIMInstance"
+            },
+            "opcUaServerAddress": {
+              "exampleValue": "<opcUaServerAddress from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "serverInterfaceType": {
+              "exampleValue": "UserDefined"
+            },
+            "interfaceFolderPath": {
+              "exampleValue": "<interfaceFolderPath from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "updateOptions": {
+              "exampleValue": "<updateOptions from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "scope": {
+              "exampleValue": [
+                {
+                  "kind": "blocks",
+                  "softwarePath": "PLC_1",
+                  "groupPath": ""
+                }
+              ]
+            },
+            "targetName": {
+              "exampleValue": "Example_2"
+            },
+            "masterCopyPath": {
+              "exampleValue": "Examples/Example_1"
+            },
+            "libraryName": {
+              "exampleValue": ""
+            }
+          },
+          "operations": {
+            "read": {
+              "arguments": {}
+            },
+            "rename": {
+              "arguments": {
+                "action": "rename",
+                "newName": "Example_2"
+              }
+            },
+            "setScope": {
+              "arguments": {
+                "action": "setScope",
+                "scope": [
+                  {
+                    "kind": "blocks",
+                    "softwarePath": "PLC_1",
+                    "groupPath": ""
+                  }
+                ]
+              }
+            },
+            "copyScope": {
+              "arguments": {
+                "action": "copyScope",
+                "targetName": "Example_2"
+              }
+            },
+            "createFromMasterCopy": {
+              "arguments": {
+                "action": "createFromMasterCopy",
+                "masterCopyPath": "Examples/Example_1",
+                "libraryName": ""
+              }
+            },
+            "showInEditor": {
+              "arguments": {
+                "action": "showInEditor"
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: Available from V17: styleGuide and application cases. System cases require V18; application test sets and importTestSets require V20. Application execution-mode scope overloads, system SetScope and system CreateFrom require V19; system Delete requires V20. System ShowInEditor has no API. Missing actions refuse with UNSUPPORTED_CAPABILITY before native dispatch."
+        },
+        "ExchangeTestSuiteCase": {
+          "arguments": {
+            "category": "styleGuide",
+            "action": "export",
+            "name": "ExampleRuleSet",
+            "filePath": "C:\\Examples\\exports\\RuleSet.xml",
+            "dryRun": true
+          },
+          "parameters": {
+            "importOptions": {
+              "exampleValue": "None"
+            },
+            "loadOptions": {
+              "exampleValue": "<loadOptions from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "kind": {
+              "exampleValue": "case"
+            }
+          },
+          "operations": {
+            "import": {
+              "arguments": {
+                "action": "import",
+                "filePath": "C:\\Examples\\exports\\Main.xml"
+              }
+            },
+            "export": {
+              "arguments": {
+                "filePath": "C:\\Examples\\exports\\Main.xml"
+              }
+            },
+            "delete": {
+              "arguments": {
+                "action": "delete"
+              }
+            },
+            "importTestSets": {
+              "arguments": {
+                "action": "importTestSets"
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: Available from V17: styleGuide and application cases. System cases require V18; application test sets and importTestSets require V20. Application execution-mode scope overloads, system SetScope and system CreateFrom require V19; system Delete requires V20. System ShowInEditor has no API. Missing actions refuse with UNSUPPORTED_CAPABILITY before native dispatch."
+        },
+        "RunTestSuiteCase": {
+          "arguments": {
+            "category": "styleGuide",
+            "confirmExternalExecution": false,
+            "dryRun": true,
+            "names": [
+              "<exact test name from ListTestSuiteCases>"
+            ]
+          },
+          "parameters": {
+            "name": {
+              "exampleValue": "Example_1"
+            },
+            "names": {
+              "exampleValue": [
+                "<names from this operation's target or user input>"
+              ],
+              "requiresBinding": true
+            },
+            "runAll": {
+              "exampleValue": false
+            },
+            "kind": {
+              "exampleValue": "case"
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": " Release limits: Available from V17: styleGuide and application cases. System cases require V18; application test sets and importTestSets require V20. Application execution-mode scope overloads, system SetScope and system CreateFrom require V19; system Delete requires V20. System ShowInEditor has no API. Missing actions refuse with UNSUPPORTED_CAPABILITY before native dispatch."
+        },
+        "ExportScadaData": {
+          "arguments": {
+            "filePath": "C:\\Examples\\exports\\Scada.zip",
+            "dryRun": true
+          },
+          "parameters": {
+            "softwarePath": {
+              "exampleValue": "PLC_1"
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": " Release limits: V17-V20 only; no API in the supplied V21 SDK."
+        },
+        "ImportSinumerikAlarmTexts": {
+          "arguments": {
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "files": [
+              "C:\\Examples\\AlarmTexts.csv"
+            ],
+            "dryRun": true
+          },
+          "parameters": {
+            "devicePath": {
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: V18-V20 only; no API in the supplied V21 SDK."
+        },
+        "ManageSinumerikArchive": {
+          "arguments": {
+            "action": "archive",
+            "filePath": "C:\\Examples\\exports\\Example.dsf",
+            "dryRun": true,
+            "devicePath": [
+              "<exact SINUMERIK device from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact NCU PLC item>"
+            ]
+          },
+          "parameters": {
+            "devicePath": {
+              "exampleValue": [
+                "<exact device name from GetProjectTree>"
+              ],
+              "requiresBinding": true
+            },
+            "itemPath": {
+              "exampleValue": [
+                "<exact device item from GetProjectTree>"
+              ],
+              "requiresBinding": true
+            },
+            "modifiedDevicePath": {
+              "exampleValue": [
+                "<modifiedDevicePath from this operation's target or user input>"
+              ],
+              "requiresBinding": true
+            },
+            "modifiedItemPath": {
+              "exampleValue": [
+                "<modifiedItemPath from this operation's target or user input>"
+              ],
+              "requiresBinding": true
+            },
+            "mode": {
+              "exampleValue": "HardwareAndAllProgramBlocks"
+            },
+            "comment": {
+              "exampleValue": "<comment from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "author": {
+              "exampleValue": "<author from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "password": {
+              "exampleValue": "<password supplied for this target>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {
+            "archive": {
+              "arguments": {}
+            },
+            "retrieve": {
+              "arguments": {
+                "action": "retrieve",
+                "devicePath": [],
+                "itemPath": []
+              }
+            },
+            "fAddressArchive": {
+              "arguments": {
+                "action": "fAddressArchive",
+                "modifiedDevicePath": [
+                  "<exact modified SINUMERIK device>"
+                ],
+                "modifiedItemPath": [
+                  "<exact modified NCU PLC item>"
+                ]
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: V16-V20 only. fAddressArchive is refused on V17. Password archive/F-address requires V19; password retrieve requires V20. V16 retrieve returns void without a device identity."
+        },
+        "ManageSinumerikSafetyMode": {
+          "arguments": {
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "dryRun": true,
+            "confirmSafetyChange": false,
+            "action": "read"
+          },
+          "parameters": {
+            "devicePath": {
+              "requiresBinding": true
+            },
+            "mode": {
+              "exampleValue": "OnlyHardware"
+            }
+          },
+          "operations": {
+            "read": {
+              "arguments": {}
+            },
+            "set": {
+              "arguments": {
+                "action": "set"
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: V16-V20 only; no API in the supplied V21 SDK."
+        },
+        "InitializeSimotionScripting": {
+          "arguments": {
+            "dryRun": true
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: V14 SP1/V15.1/V17-V20 only. The supplied V16 and V21 SDK copies omit SimotionProvider; installed SDK acceptance is pending."
         }
       },
       "full-engine": {
@@ -45773,7 +46228,7 @@
         "ExchangeCfcCharts": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "action": "export",
+            "action": "import",
             "filePath": "C:\\Examples\\exports\\Charts.xml.zip",
             "dryRun": true,
             "modelVersion": "V2.0"
@@ -45827,7 +46282,7 @@
             }
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: V18-V21 imports remain available. Every export/preflight action is guarded before native calls; skipChartPreflight cannot bypass the guard. ExportInstructionData also lacks an API on V18."
         },
         "ExchangeMotionCamData": {
           "arguments": {
@@ -46035,7 +46490,7 @@
             }
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: Available from V17: styleGuide and application cases. System cases require V18; application test sets and importTestSets require V20. Application execution-mode scope overloads, system SetScope and system CreateFrom require V19; system Delete requires V20. System ShowInEditor has no API. Missing actions refuse with UNSUPPORTED_CAPABILITY before native dispatch."
         },
         "ExchangeUnifiedScriptModules": {
           "arguments": {
@@ -46691,7 +47146,8 @@
             }
           },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": " Release limits: V17-V20 only; no API in the supplied V21 SDK."
         },
         "ExportTechnologyObject": {
           "arguments": {
@@ -48485,7 +48941,7 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: V18-V20 only; no API in the supplied V21 SDK."
         },
         "ImportTechnologyObject": {
           "arguments": {
@@ -48569,7 +49025,7 @@
           "parameters": {},
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: V14 SP1/V15.1/V17-V20 only. The supplied V16 and V21 SDK copies omit SimotionProvider; installed SDK acceptance is pending."
         },
         "InspectSimaticSdCompatibility": {
           "arguments": {
@@ -48937,7 +49393,7 @@
             }
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: Every protection action is guarded on V18-V21 before native calls, including an unknown chart with skipChartPreflight=true. No CompleteExport preflight is permitted."
         },
         "ManageClassicHmiCycle": {
           "arguments": {
@@ -53435,7 +53891,7 @@
             }
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: V16-V20 only. fAddressArchive is refused on V17. Password archive/F-address requires V19; password retrieve requires V20. V16 retrieve returns void without a device identity."
         },
         "ManageSinumerikSafetyMode": {
           "arguments": {
@@ -53465,7 +53921,7 @@
             }
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: V16-V20 only; no API in the supplied V21 SDK."
         },
         "ManageSivarcBlockDefinition": {
           "arguments": {
@@ -54319,7 +54775,7 @@
             }
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: Available from V17: styleGuide and application cases. System cases require V18; application test sets and importTestSets require V20. Application execution-mode scope overloads, system SetScope and system CreateFrom require V19; system Delete requires V20. System ShowInEditor has no API. Missing actions refuse with UNSUPPORTED_CAPABILITY before native dispatch."
         },
         "ManageTransferArea": {
           "arguments": {
@@ -56530,7 +56986,8 @@
             }
           },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": " Release limits: Available from V17: styleGuide and application cases. System cases require V18; application test sets and importTestSets require V20. Application execution-mode scope overloads, system SetScope and system CreateFrom require V19; system Delete requires V20. System ShowInEditor has no API. Missing actions refuse with UNSUPPORTED_CAPABILITY before native dispatch."
         },
         "ListTransferAreas": {
           "arguments": {
@@ -57220,7 +57677,8 @@
             }
           },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": " Release limits: Available from V17: styleGuide and application cases. System cases require V18; application test sets and importTestSets require V20. Application execution-mode scope overloads, system SetScope and system CreateFrom require V19; system Delete requires V20. System ShowInEditor has no API. Missing actions refuse with UNSUPPORTED_CAPABILITY before native dispatch."
         },
         "RunToolTransaction": {
           "arguments": {

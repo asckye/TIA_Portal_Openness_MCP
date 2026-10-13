@@ -336,12 +336,12 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `EnsureUnifiedHmiScreenItem` | 19, 20, 21 |
 | `EnsureUnifiedHmiTag` | 19, 20, 21 |
 | `EnsureUnifiedHmiTagTable` | 19, 20, 21 |
-| `ExchangeCfcCharts` | 20, 21 |
+| `ExchangeCfcCharts` | 18, 19, 20, 21 |
 | `ExchangeMotionCamData` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `ExchangePlcAlarmTextLists` | 16, 17, 18, 19, 20, 21 |
 | `ExchangePlcSupervisions` | 17, 18, 19, 20, 21 |
 | `ExchangeSystemDiagnosticsSettings` | 17, 18, 19, 20, 21 |
-| `ExchangeTestSuiteCase` | 20, 21 |
+| `ExchangeTestSuiteCase` | 17, 18, 19, 20, 21 |
 | `ExchangeUnifiedScriptModules` | 20, 21 |
 | `ExchangeUnifiedTags` | 20, 21 |
 | `ExportAlarmClasses` | 17, 18, 19, 20, 21 |
@@ -354,7 +354,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ExportPlcWatchTable` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `ExportPlcWatchTablesToDirectory` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `ExportSafetyPrintout` | 17, 18, 19, 20, 21 |
-| `ExportScadaData` | 20, 21 |
+| `ExportScadaData` | 17, 18, 19, 20 |
 | `ExportTechnologyObject` | 16, 17, 18, 19, 20, 21 |
 | `ExportUnifiedEngineeringList` | 20, 21 |
 | `GenerateOpcUaModelledInterface` | 15.1, 16, 17, 18, 19, 20, 21 |
@@ -400,12 +400,12 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ImportPlcBlockDocuments` | 20, 21 |
 | `ImportPlcBlocksDocuments` | 20, 21 |
 | `ImportPlcWatchTableOffline` | 15.1, 16, 17, 18, 19, 20, 21 |
-| `ImportSinumerikAlarmTexts` | 20, 21 |
+| `ImportSinumerikAlarmTexts` | 18, 19, 20 |
 | `ImportTechnologyObject` | 16, 17, 18, 19, 20, 21 |
 | `ImportTechnologyObjectsFromDirectory` | 16, 17, 18, 19, 20, 21 |
 | `ImportUnifiedEngineeringList` | 20, 21 |
 | `ImportUnifiedOpcUaAlarms` | 20, 21 |
-| `InitializeSimotionScripting` | 20, 21 |
+| `InitializeSimotionScripting` | 14sp1, 15.1, 17, 18, 19, 20 |
 | `InspectSimaticSdCompatibility` | 20, 21 |
 | `ListDccCharts` | 16, 17, 18, 19, 20, 21 |
 | `ListNetworkDomains` | 16, 17, 18, 19, 20, 21 |
@@ -414,7 +414,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ListPlcWatchTables` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `ListSivarcBlockDefinitions` | 17, 18, 19, 20, 21 |
 | `ListSivarcRules` | 15.1, 16, 17, 18, 19, 20, 21 |
-| `ListTestSuiteCases` | 20, 21 |
+| `ListTestSuiteCases` | 17, 18, 19, 20, 21 |
 | `ListTransferAreas` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `ListUnifiedEngineeringObjects` | 20, 21 |
 | `ListUnifiedGlobalScripts` | 20, 21 |
@@ -422,7 +422,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ListUnifiedLibraryFolderEntries` | 20, 21 |
 | `ListUnifiedTagDefinitions` | 20, 21 |
 | `ListVersionControlWorkspaces` | 16, 17, 18, 19, 20, 21 |
-| `ManageCfcChartProtection` | 20, 21 |
+| `ManageCfcChartProtection` | 18, 19, 20, 21 |
 | `ManageDcbLibraries` | 18, 19, 20, 21 |
 | `ManageDccBlock` | 18, 19, 20, 21 |
 | `ManageDccChart` | 16, 17, 18, 19, 20, 21 |
@@ -454,8 +454,8 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ManageProjectCompilationSettings` | 16, 17, 18, 19, 20, 21 |
 | `ManageProjectUserManagement` | 17, 18, 19, 20, 21 |
 | `ManageSafetyGlobalSettings` | 16, 17, 18, 19, 20, 21 |
-| `ManageSinumerikArchive` | 20, 21 |
-| `ManageSinumerikSafetyMode` | 20, 21 |
+| `ManageSinumerikArchive` | 16, 17, 18, 19, 20 |
+| `ManageSinumerikSafetyMode` | 16, 17, 18, 19, 20 |
 | `ManageSivarcBlockDefinition` | 17, 18, 19, 20, 21 |
 | `ManageSivarcRule` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `ManageSivarcRuleContainer` | 18, 19, 20, 21 |
@@ -465,7 +465,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ManageTeamcenterDataset` | 18, 19, 20, 21 |
 | `ManageTeamcenterWorkflow` | 18, 19, 20, 21 |
 | `ManageTechnologyExtensions` | 18, 19, 20, 21 |
-| `ManageTestSuiteCase` | 20, 21 |
+| `ManageTestSuiteCase` | 17, 18, 19, 20, 21 |
 | `ManageTransferArea` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `ManageUmcUsers` | 17, 18, 19, 20, 21 |
 | `ManageUnifiedCwcPackage` | 17, 18, 19, 20, 21 |
@@ -490,7 +490,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `RunClassicHmiTemporaryImportPreflight` | 20, 21 |
 | `RunHmiActionScriptRecipeSafetySelfTest` | 19, 20, 21 |
 | `RunHmiTemplatePlcSyncPrecheckSuite` | 19, 20, 21 |
-| `RunTestSuiteCase` | 20, 21 |
+| `RunTestSuiteCase` | 17, 18, 19, 20, 21 |
 | `SaveProjectCopy` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `ScanAccessibleDevices` | 19, 20, 21 |
 | `SearchHardwareCatalog` | 18, 19, 20, 21 |

@@ -5,7 +5,7 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 277,
+      "toolCount": 278,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -163,6 +163,7 @@
         "ImportPlcType",
         "ImportProjectTexts",
         "InitializeEnvironment",
+        "InitializeSimotionScripting",
         "InstantiatePlcTemplates",
         "InvokeObject",
         "InvokeService",
@@ -288,7 +289,7 @@
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 317,
+      "toolCount": 318,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -466,6 +467,7 @@
         "ImportPlcWatchTableOffline",
         "ImportProjectTexts",
         "InitializeEnvironment",
+        "InitializeSimotionScripting",
         "InstantiatePlcTemplates",
         "InvokeObject",
         "InvokeService",
@@ -611,7 +613,7 @@
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 344,
+      "toolCount": 346,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -881,6 +883,8 @@
         "ManageProjectCompilationSettings",
         "ManageProjectLanguage",
         "ManageSafetyGlobalSettings",
+        "ManageSinumerikArchive",
+        "ManageSinumerikSafetyMode",
         "ManageSivarcRule",
         "ManageStandardPackage",
         "ManageStartdriveParameter",
@@ -961,7 +965,7 @@
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 361,
+      "toolCount": 369,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1040,6 +1044,7 @@
         "ExchangePlcAlarmTextLists",
         "ExchangePlcSupervisions",
         "ExchangeSystemDiagnosticsSettings",
+        "ExchangeTestSuiteCase",
         "ExportAlarmClasses",
         "ExportAlarmInstanceTexts",
         "ExportAlarmTextLists",
@@ -1059,6 +1064,7 @@
         "ExportPlcWatchTablesToDirectory",
         "ExportProjectTexts",
         "ExportSafetyPrintout",
+        "ExportScadaData",
         "ExportTechnologyObject",
         "ExportTechnologyObjectsToDirectory",
         "ExtractPlcBlockMetrics",
@@ -1160,6 +1166,7 @@
         "ImportTechnologyObject",
         "ImportTechnologyObjectsFromDirectory",
         "InitializeEnvironment",
+        "InitializeSimotionScripting",
         "InstantiatePlcTemplates",
         "InvokeObject",
         "InvokeService",
@@ -1197,6 +1204,7 @@
         "ListStagedImportFiles",
         "ListStandardPackages",
         "ListTechnologyObjects",
+        "ListTestSuiteCases",
         "ListToolCategories",
         "ListTransferAreas",
         "ListTransferRoutes",
@@ -1244,11 +1252,14 @@
         "ManageProjectLanguage",
         "ManageProjectUserManagement",
         "ManageSafetyGlobalSettings",
+        "ManageSinumerikArchive",
+        "ManageSinumerikSafetyMode",
         "ManageSivarcBlockDefinition",
         "ManageSivarcRule",
         "ManageStandardPackage",
         "ManageStartdriveParameter",
         "ManageTechnologyObject",
+        "ManageTestSuiteCase",
         "ManageTransferArea",
         "ManageUmcUsers",
         "ManageUnifiedCwcPackage",
@@ -1287,6 +1298,7 @@
         "RunPlcCompanionTool",
         "RunPlcSimAdvancedTestScenario",
         "RunReadOnlyToolBatch",
+        "RunTestSuiteCase",
         "RunToolTransaction",
         "SamplePlcLiveValuesS7",
         "SaveExportContent",
@@ -1328,7 +1340,7 @@
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 384,
+      "toolCount": 395,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1408,10 +1420,12 @@
         "DownloadPlc",
         "EnsureOpennessUserGroup",
         "EnsureSubnet",
+        "ExchangeCfcCharts",
         "ExchangeMotionCamData",
         "ExchangePlcAlarmTextLists",
         "ExchangePlcSupervisions",
         "ExchangeSystemDiagnosticsSettings",
+        "ExchangeTestSuiteCase",
         "ExportAlarmClasses",
         "ExportAlarmInstanceTexts",
         "ExportAlarmTextLists",
@@ -1431,6 +1445,7 @@
         "ExportPlcWatchTablesToDirectory",
         "ExportProjectTexts",
         "ExportSafetyPrintout",
+        "ExportScadaData",
         "ExportTechnologyObject",
         "ExportTechnologyObjectsToDirectory",
         "ExtractPlcBlockMetrics",
@@ -1531,9 +1546,11 @@
         "ImportPlcType",
         "ImportPlcWatchTableOffline",
         "ImportProjectTexts",
+        "ImportSinumerikAlarmTexts",
         "ImportTechnologyObject",
         "ImportTechnologyObjectsFromDirectory",
         "InitializeEnvironment",
+        "InitializeSimotionScripting",
         "InstantiatePlcTemplates",
         "InvokeObject",
         "InvokeService",
@@ -1571,10 +1588,12 @@
         "ListStagedImportFiles",
         "ListStandardPackages",
         "ListTechnologyObjects",
+        "ListTestSuiteCases",
         "ListToolCategories",
         "ListTransferAreas",
         "ListTransferRoutes",
         "ListVersionControlWorkspaces",
+        "ManageCfcChartProtection",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
         "ManageClassicHmiScreenObject",
@@ -1626,6 +1645,8 @@
         "ManageProjectLanguage",
         "ManageProjectUserManagement",
         "ManageSafetyGlobalSettings",
+        "ManageSinumerikArchive",
+        "ManageSinumerikSafetyMode",
         "ManageSivarcBlockDefinition",
         "ManageSivarcRule",
         "ManageSivarcRuleContainer",
@@ -1637,6 +1658,7 @@
         "ManageTeamcenterWorkflow",
         "ManageTechnologyExtensions",
         "ManageTechnologyObject",
+        "ManageTestSuiteCase",
         "ManageTransferArea",
         "ManageUmcUsers",
         "ManageUnifiedCwcPackage",
@@ -1675,6 +1697,7 @@
         "RunPlcCompanionTool",
         "RunPlcSimAdvancedTestScenario",
         "RunReadOnlyToolBatch",
+        "RunTestSuiteCase",
         "RunToolTransaction",
         "SamplePlcLiveValuesS7",
         "SaveExportContent",
@@ -1718,7 +1741,7 @@
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 423,
+      "toolCount": 434,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1822,10 +1845,12 @@
         "EnsureUnifiedHmiScreenItem",
         "EnsureUnifiedHmiTag",
         "EnsureUnifiedHmiTagTable",
+        "ExchangeCfcCharts",
         "ExchangeMotionCamData",
         "ExchangePlcAlarmTextLists",
         "ExchangePlcSupervisions",
         "ExchangeSystemDiagnosticsSettings",
+        "ExchangeTestSuiteCase",
         "ExportAlarmClasses",
         "ExportAlarmInstanceTexts",
         "ExportAlarmTextLists",
@@ -1845,6 +1870,7 @@
         "ExportPlcWatchTablesToDirectory",
         "ExportProjectTexts",
         "ExportSafetyPrintout",
+        "ExportScadaData",
         "ExportTechnologyObject",
         "ExportTechnologyObjectsToDirectory",
         "ExtractPlcBlockMetrics",
@@ -1949,9 +1975,11 @@
         "ImportPlcType",
         "ImportPlcWatchTableOffline",
         "ImportProjectTexts",
+        "ImportSinumerikAlarmTexts",
         "ImportTechnologyObject",
         "ImportTechnologyObjectsFromDirectory",
         "InitializeEnvironment",
+        "InitializeSimotionScripting",
         "InstantiatePlcTemplates",
         "InvokeObject",
         "InvokeService",
@@ -1989,11 +2017,13 @@
         "ListStagedImportFiles",
         "ListStandardPackages",
         "ListTechnologyObjects",
+        "ListTestSuiteCases",
         "ListToolCategories",
         "ListTransferAreas",
         "ListTransferRoutes",
         "ListUnifiedHmiApiTypes",
         "ListVersionControlWorkspaces",
+        "ManageCfcChartProtection",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
         "ManageClassicHmiScreenObject",
@@ -2047,6 +2077,8 @@
         "ManageProjectLanguage",
         "ManageProjectUserManagement",
         "ManageSafetyGlobalSettings",
+        "ManageSinumerikArchive",
+        "ManageSinumerikSafetyMode",
         "ManageSivarcBlockDefinition",
         "ManageSivarcRule",
         "ManageSivarcRuleContainer",
@@ -2059,6 +2091,7 @@
         "ManageTeamcenterWorkflow",
         "ManageTechnologyExtensions",
         "ManageTechnologyObject",
+        "ManageTestSuiteCase",
         "ManageTransferArea",
         "ManageUmcUsers",
         "ManageUnifiedCwcPackage",
@@ -2101,6 +2134,7 @@
         "RunPlcCompanionTool",
         "RunPlcSimAdvancedTestScenario",
         "RunReadOnlyToolBatch",
+        "RunTestSuiteCase",
         "RunToolTransaction",
         "SamplePlcLiveValuesS7",
         "SaveExportContent",
@@ -2655,7 +2689,7 @@
     },
     "21": {
       "profile": "full-engine",
-      "toolCount": 516,
+      "toolCount": 511,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -2801,7 +2835,6 @@
         "ExportPlcWatchTablesToDirectory",
         "ExportProjectTexts",
         "ExportSafetyPrintout",
-        "ExportScadaData",
         "ExportTechnologyObject",
         "ExportTechnologyObjectsToDirectory",
         "ExportUnifiedEngineeringList",
@@ -2925,13 +2958,11 @@
         "ImportPlcType",
         "ImportPlcWatchTableOffline",
         "ImportProjectTexts",
-        "ImportSinumerikAlarmTexts",
         "ImportTechnologyObject",
         "ImportTechnologyObjectsFromDirectory",
         "ImportUnifiedEngineeringList",
         "ImportUnifiedOpcUaAlarms",
         "InitializeEnvironment",
-        "InitializeSimotionScripting",
         "InspectSimaticSdCompatibility",
         "InstantiatePlcTemplates",
         "InvokeObject",
@@ -3047,8 +3078,6 @@
         "ManageSafetyFunction",
         "ManageSafetyFunctionCondition",
         "ManageSafetyGlobalSettings",
-        "ManageSinumerikArchive",
-        "ManageSinumerikSafetyMode",
         "ManageSivarcBlockDefinition",
         "ManageSivarcRule",
         "ManageSivarcRuleContainer",
@@ -4683,6 +4712,8 @@
     {
       "name": "ExchangeCfcCharts",
       "releases": [
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -4743,6 +4774,9 @@
     {
       "name": "ExchangeTestSuiteCase",
       "releases": [
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -5057,8 +5091,10 @@
     {
       "name": "ExportScadaData",
       "releases": [
-        "20",
-        "21"
+        "17",
+        "18",
+        "19",
+        "20"
       ],
       "group": "shared-subset",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
@@ -6735,8 +6771,9 @@
     {
       "name": "ImportSinumerikAlarmTexts",
       "releases": [
-        "20",
-        "21"
+        "18",
+        "19",
+        "20"
       ],
       "group": "shared-subset",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
@@ -6803,8 +6840,12 @@
     {
       "name": "InitializeSimotionScripting",
       "releases": [
-        "20",
-        "21"
+        "14sp1",
+        "15.1",
+        "17",
+        "18",
+        "19",
+        "20"
       ],
       "group": "shared-subset",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
@@ -7380,6 +7421,9 @@
     {
       "name": "ListTestSuiteCases",
       "releases": [
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7492,6 +7536,8 @@
     {
       "name": "ManageCfcChartProtection",
       "releases": [
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -8312,8 +8358,11 @@
     {
       "name": "ManageSinumerikArchive",
       "releases": [
-        "20",
-        "21"
+        "16",
+        "17",
+        "18",
+        "19",
+        "20"
       ],
       "group": "shared-subset",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
@@ -8321,8 +8370,11 @@
     {
       "name": "ManageSinumerikSafetyMode",
       "releases": [
-        "20",
-        "21"
+        "16",
+        "17",
+        "18",
+        "19",
+        "20"
       ],
       "group": "shared-subset",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
@@ -8485,6 +8537,9 @@
     {
       "name": "ManageTestSuiteCase",
       "releases": [
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -9209,6 +9264,9 @@
     {
       "name": "RunTestSuiteCase",
       "releases": [
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],

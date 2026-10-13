@@ -428,6 +428,12 @@
     },
     {
       "releaseKey": "14sp1",
+      "family": "F34",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
       "family": "F05",
       "state": "current",
       "l5": "NOT RUN"
@@ -597,6 +603,12 @@
     {
       "releaseKey": "15.1",
       "family": "F00",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F34",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -788,6 +800,12 @@
     },
     {
       "releaseKey": "16",
+      "family": "F34",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
       "family": "F05",
       "state": "current",
       "l5": "NOT RUN"
@@ -974,6 +992,12 @@
     },
     {
       "releaseKey": "17",
+      "family": "F34",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
       "family": "F05",
       "state": "current",
       "l5": "NOT RUN"
@@ -1160,6 +1184,18 @@
     },
     {
       "releaseKey": "18",
+      "family": "F32",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F34",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
       "family": "F05",
       "state": "current",
       "l5": "NOT RUN"
@@ -1341,6 +1377,18 @@
     {
       "releaseKey": "19",
       "family": "F00",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F32",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F34",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -5769,6 +5817,14 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "InitializeSimotionScripting",
+      "family": "F34",
+      "example": {
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "ConnectIsolatedPortal",
       "family": "F05",
       "example": {}
@@ -8009,6 +8065,14 @@
         "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
         "dryRun": true,
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "InitializeSimotionScripting",
+      "family": "F34",
+      "example": {
+        "dryRun": true
       }
     },
     {
@@ -10597,6 +10661,35 @@
         "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
         "dryRun": true,
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageSinumerikArchive",
+      "family": "F34",
+      "example": {
+        "action": "archive",
+        "filePath": "C:\\Examples\\exports\\Example.dsf",
+        "dryRun": true,
+        "devicePath": [
+          "&lt;exact SINUMERIK device from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact NCU PLC item&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageSinumerikSafetyMode",
+      "family": "F34",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "confirmSafetyChange": false,
+        "action": "read"
       }
     },
     {
@@ -13456,6 +13549,96 @@
         "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
         "dryRun": true,
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ListTestSuiteCases",
+      "family": "F34",
+      "example": {
+        "category": "styleGuide"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageTestSuiteCase",
+      "family": "F34",
+      "example": {
+        "category": "styleGuide",
+        "name": "Example_1",
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExchangeTestSuiteCase",
+      "family": "F34",
+      "example": {
+        "category": "styleGuide",
+        "action": "export",
+        "name": "ExampleRuleSet",
+        "filePath": "C:\\Examples\\exports\\RuleSet.xml",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "RunTestSuiteCase",
+      "family": "F34",
+      "example": {
+        "category": "styleGuide",
+        "confirmExternalExecution": false,
+        "dryRun": true,
+        "names": [
+          "&lt;exact test name from ListTestSuiteCases&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExportScadaData",
+      "family": "F34",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Scada.zip",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageSinumerikArchive",
+      "family": "F34",
+      "example": {
+        "action": "archive",
+        "filePath": "C:\\Examples\\exports\\Example.dsf",
+        "dryRun": true,
+        "devicePath": [
+          "&lt;exact SINUMERIK device from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact NCU PLC item&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageSinumerikSafetyMode",
+      "family": "F34",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "confirmSafetyChange": false,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "InitializeSimotionScripting",
+      "family": "F34",
+      "example": {
+        "dryRun": true
       }
     },
     {
@@ -16599,6 +16782,133 @@
         "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
         "dryRun": true,
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExchangeCfcCharts",
+      "family": "F32",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "import",
+        "filePath": "C:\\Examples\\exports\\Charts.xml.zip",
+        "dryRun": true,
+        "modelVersion": "V2.0"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageCfcChartProtection",
+      "family": "F32",
+      "example": {
+        "softwarePath": "PLC_1",
+        "chartName": "Chart_1",
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ListTestSuiteCases",
+      "family": "F34",
+      "example": {
+        "category": "styleGuide"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageTestSuiteCase",
+      "family": "F34",
+      "example": {
+        "category": "styleGuide",
+        "name": "Example_1",
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExchangeTestSuiteCase",
+      "family": "F34",
+      "example": {
+        "category": "styleGuide",
+        "action": "export",
+        "name": "ExampleRuleSet",
+        "filePath": "C:\\Examples\\exports\\RuleSet.xml",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "RunTestSuiteCase",
+      "family": "F34",
+      "example": {
+        "category": "styleGuide",
+        "confirmExternalExecution": false,
+        "dryRun": true,
+        "names": [
+          "&lt;exact test name from ListTestSuiteCases&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExportScadaData",
+      "family": "F34",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Scada.zip",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ImportSinumerikAlarmTexts",
+      "family": "F34",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "files": [
+          "C:\\Examples\\AlarmTexts.csv"
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageSinumerikArchive",
+      "family": "F34",
+      "example": {
+        "action": "archive",
+        "filePath": "C:\\Examples\\exports\\Example.dsf",
+        "dryRun": true,
+        "devicePath": [
+          "&lt;exact SINUMERIK device from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact NCU PLC item&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageSinumerikSafetyMode",
+      "family": "F34",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "confirmSafetyChange": false,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "InitializeSimotionScripting",
+      "family": "F34",
+      "example": {
+        "dryRun": true
       }
     },
     {
@@ -19931,6 +20241,133 @@
         "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
         "dryRun": true,
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExchangeCfcCharts",
+      "family": "F32",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "import",
+        "filePath": "C:\\Examples\\exports\\Charts.xml.zip",
+        "dryRun": true,
+        "modelVersion": "V2.0"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageCfcChartProtection",
+      "family": "F32",
+      "example": {
+        "softwarePath": "PLC_1",
+        "chartName": "Chart_1",
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListTestSuiteCases",
+      "family": "F34",
+      "example": {
+        "category": "styleGuide"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageTestSuiteCase",
+      "family": "F34",
+      "example": {
+        "category": "styleGuide",
+        "name": "Example_1",
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExchangeTestSuiteCase",
+      "family": "F34",
+      "example": {
+        "category": "styleGuide",
+        "action": "export",
+        "name": "ExampleRuleSet",
+        "filePath": "C:\\Examples\\exports\\RuleSet.xml",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "RunTestSuiteCase",
+      "family": "F34",
+      "example": {
+        "category": "styleGuide",
+        "confirmExternalExecution": false,
+        "dryRun": true,
+        "names": [
+          "&lt;exact test name from ListTestSuiteCases&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExportScadaData",
+      "family": "F34",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Scada.zip",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ImportSinumerikAlarmTexts",
+      "family": "F34",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "files": [
+          "C:\\Examples\\AlarmTexts.csv"
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageSinumerikArchive",
+      "family": "F34",
+      "example": {
+        "action": "archive",
+        "filePath": "C:\\Examples\\exports\\Example.dsf",
+        "dryRun": true,
+        "devicePath": [
+          "&lt;exact SINUMERIK device from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact NCU PLC item&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageSinumerikSafetyMode",
+      "family": "F34",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "confirmSafetyChange": false,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "InitializeSimotionScripting",
+      "family": "F34",
+      "example": {
+        "dryRun": true
       }
     },
     {
@@ -34313,19 +34750,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "ExportScadaData",
-        "currentName": "ExportScadaData",
-        "sourceName": "ExportScadaData",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "filePath": "C:\\Examples\\exports\\Scada.zip",
-          "dryRun": true
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "ExportTechnologyObject",
         "currentName": "ExportTechnologyObject",
         "sourceName": "ExportTechnologyObject",
@@ -36055,24 +36479,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "ImportSinumerikAlarmTexts",
-        "currentName": "ImportSinumerikAlarmTexts",
-        "sourceName": "ImportSinumerikAlarmTexts",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "devicePath": [
-            "&lt;exact device name from GetProjectTree&gt;"
-          ],
-          "files": [
-            "C:\\Examples\\AlarmTexts.csv"
-          ],
-          "dryRun": true
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "ImportTechnologyObject",
         "currentName": "ImportTechnologyObject",
         "sourceName": "ImportTechnologyObject",
@@ -36143,18 +36549,6 @@
           "plc-foundation"
         ],
         "arguments": {},
-        "envelopeVersion": 4
-      },
-      {
-        "name": "InitializeSimotionScripting",
-        "currentName": "InitializeSimotionScripting",
-        "sourceName": "InitializeSimotionScripting",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "dryRun": true
-        },
         "envelopeVersion": 4
       },
       {
@@ -38425,43 +38819,6 @@
         ],
         "arguments": {
           "dryRun": true,
-          "action": "read"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "ManageSinumerikArchive",
-        "currentName": "ManageSinumerikArchive",
-        "sourceName": "ManageSinumerikArchive",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "action": "archive",
-          "filePath": "C:\\Examples\\exports\\Example.dsf",
-          "dryRun": true,
-          "devicePath": [
-            "&lt;exact SINUMERIK device from GetProjectTree&gt;"
-          ],
-          "itemPath": [
-            "&lt;exact NCU PLC item&gt;"
-          ]
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "ManageSinumerikSafetyMode",
-        "currentName": "ManageSinumerikSafetyMode",
-        "sourceName": "ManageSinumerikSafetyMode",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "devicePath": [
-            "&lt;exact device name from GetProjectTree&gt;"
-          ],
-          "dryRun": true,
-          "confirmSafetyChange": false,
           "action": "read"
         },
         "envelopeVersion": 4
@@ -42911,6 +43268,18 @@
           "dryRun": true,
           "confirm": false,
           "overwrite": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "InitializeSimotionScripting",
+        "currentName": "InitializeSimotionScripting",
+        "sourceName": "InitializeSimotionScripting",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -48141,6 +48510,18 @@
           "dryRun": true,
           "confirm": false,
           "overwrite": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "InitializeSimotionScripting",
+        "currentName": "InitializeSimotionScripting",
+        "sourceName": "InitializeSimotionScripting",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -55245,6 +55626,43 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageSinumerikArchive",
+        "currentName": "ManageSinumerikArchive",
+        "sourceName": "ManageSinumerikArchive",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "archive",
+          "filePath": "C:\\Examples\\exports\\Example.dsf",
+          "dryRun": true,
+          "devicePath": [
+            "&lt;exact SINUMERIK device from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact NCU PLC item&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageSinumerikSafetyMode",
+        "currentName": "ManageSinumerikSafetyMode",
+        "sourceName": "ManageSinumerikSafetyMode",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "confirmSafetyChange": false,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageStandardPackage",
         "currentName": "ManageStandardPackage",
         "sourceName": "ManageStandardPackage",
@@ -58738,6 +59156,22 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExchangeTestSuiteCase",
+        "currentName": "ExchangeTestSuiteCase",
+        "sourceName": "ExchangeTestSuiteCase",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "styleGuide",
+          "action": "export",
+          "name": "ExampleRuleSet",
+          "filePath": "C:\\Examples\\exports\\RuleSet.xml",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExportAlarmClasses",
         "currentName": "ExportAlarmClasses",
         "sourceName": "ExportAlarmClasses",
@@ -58975,6 +59409,19 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "filePath": "C:\\Examples\\exports\\Safety.pdf",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportScadaData",
+        "currentName": "ExportScadaData",
+        "sourceName": "ExportScadaData",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Scada.zip",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -59996,6 +60443,18 @@
           "dryRun": true,
           "confirm": false,
           "overwrite": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "InitializeSimotionScripting",
+        "currentName": "InitializeSimotionScripting",
+        "sourceName": "InitializeSimotionScripting",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -61396,6 +61855,43 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageSinumerikArchive",
+        "currentName": "ManageSinumerikArchive",
+        "sourceName": "ManageSinumerikArchive",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "archive",
+          "filePath": "C:\\Examples\\exports\\Example.dsf",
+          "dryRun": true,
+          "devicePath": [
+            "&lt;exact SINUMERIK device from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact NCU PLC item&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageSinumerikSafetyMode",
+        "currentName": "ManageSinumerikSafetyMode",
+        "sourceName": "ManageSinumerikSafetyMode",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "confirmSafetyChange": false,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageSivarcBlockDefinition",
         "currentName": "ManageSivarcBlockDefinition",
         "sourceName": "ManageSivarcBlockDefinition",
@@ -61464,6 +61960,21 @@
           "objectPath": "Axis_1",
           "action": "read",
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageTestSuiteCase",
+        "currentName": "ManageTestSuiteCase",
+        "sourceName": "ManageTestSuiteCase",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "styleGuide",
+          "name": "Example_1",
+          "dryRun": true,
+          "action": "read"
         },
         "envelopeVersion": 4
       },
@@ -63066,6 +63577,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ListTestSuiteCases",
+        "currentName": "ListTestSuiteCases",
+        "sourceName": "ReadTestSuiteCases",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "styleGuide"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RunReadOnlyToolBatch",
         "currentName": "RunReadOnlyToolBatch",
         "sourceName": "ReadToolBatch",
@@ -63328,6 +63851,23 @@
           },
           "dryRun": true,
           "confirmRun": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RunTestSuiteCase",
+        "currentName": "RunTestSuiteCase",
+        "sourceName": "RunTestSuiteCase",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "styleGuide",
+          "confirmExternalExecution": false,
+          "dryRun": true,
+          "names": [
+            "&lt;exact test name from ListTestSuiteCases&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -65005,6 +65545,22 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExchangeCfcCharts",
+        "currentName": "ExchangeCfcCharts",
+        "sourceName": "ExchangeCfcCharts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "import",
+          "filePath": "C:\\Examples\\exports\\Charts.xml.zip",
+          "dryRun": true,
+          "modelVersion": "V2.0"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExchangeMotionCamData",
         "currentName": "ExchangeMotionCamData",
         "sourceName": "ExchangeMotionCamData",
@@ -65064,6 +65620,22 @@
           "action": "export",
           "filePath": "C:\\Examples\\exports\\Main.xml",
           "confirmImport": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExchangeTestSuiteCase",
+        "currentName": "ExchangeTestSuiteCase",
+        "sourceName": "ExchangeTestSuiteCase",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "styleGuide",
+          "action": "export",
+          "name": "ExampleRuleSet",
+          "filePath": "C:\\Examples\\exports\\RuleSet.xml",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -65306,6 +65878,19 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "filePath": "C:\\Examples\\exports\\Safety.pdf",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportScadaData",
+        "currentName": "ExportScadaData",
+        "sourceName": "ExportScadaData",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Scada.zip",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -66320,6 +66905,24 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportSinumerikAlarmTexts",
+        "currentName": "ImportSinumerikAlarmTexts",
+        "sourceName": "ImportSinumerikAlarmTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "files": [
+            "C:\\Examples\\AlarmTexts.csv"
+          ],
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportTechnologyObject",
         "currentName": "ImportTechnologyObject",
         "sourceName": "ImportTechnologyObject",
@@ -66361,6 +66964,18 @@
           "dryRun": true,
           "confirm": false,
           "overwrite": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "InitializeSimotionScripting",
+        "currentName": "InitializeSimotionScripting",
+        "sourceName": "InitializeSimotionScripting",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -66504,6 +67119,21 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageCfcChartProtection",
+        "currentName": "ManageCfcChartProtection",
+        "sourceName": "ManageCfcChartProtection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "chartName": "Chart_1",
+          "dryRun": true,
+          "action": "read"
+        },
         "envelopeVersion": 4
       },
       {
@@ -67916,6 +68546,43 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageSinumerikArchive",
+        "currentName": "ManageSinumerikArchive",
+        "sourceName": "ManageSinumerikArchive",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "archive",
+          "filePath": "C:\\Examples\\exports\\Example.dsf",
+          "dryRun": true,
+          "devicePath": [
+            "&lt;exact SINUMERIK device from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact NCU PLC item&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageSinumerikSafetyMode",
+        "currentName": "ManageSinumerikSafetyMode",
+        "sourceName": "ManageSinumerikSafetyMode",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "confirmSafetyChange": false,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageSivarcBlockDefinition",
         "currentName": "ManageSivarcBlockDefinition",
         "sourceName": "ManageSivarcBlockDefinition",
@@ -68080,6 +68747,21 @@
           "objectPath": "Axis_1",
           "action": "read",
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageTestSuiteCase",
+        "currentName": "ManageTestSuiteCase",
+        "sourceName": "ManageTestSuiteCase",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "styleGuide",
+          "name": "Example_1",
+          "dryRun": true,
+          "action": "read"
         },
         "envelopeVersion": 4
       },
@@ -69682,6 +70364,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ListTestSuiteCases",
+        "currentName": "ListTestSuiteCases",
+        "sourceName": "ReadTestSuiteCases",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "styleGuide"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RunReadOnlyToolBatch",
         "currentName": "RunReadOnlyToolBatch",
         "sourceName": "ReadToolBatch",
@@ -69944,6 +70638,23 @@
           },
           "dryRun": true,
           "confirmRun": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RunTestSuiteCase",
+        "currentName": "RunTestSuiteCase",
+        "sourceName": "RunTestSuiteCase",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "styleGuide",
+          "confirmExternalExecution": false,
+          "dryRun": true,
+          "names": [
+            "&lt;exact test name from ListTestSuiteCases&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -72049,6 +72760,22 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExchangeCfcCharts",
+        "currentName": "ExchangeCfcCharts",
+        "sourceName": "ExchangeCfcCharts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "import",
+          "filePath": "C:\\Examples\\exports\\Charts.xml.zip",
+          "dryRun": true,
+          "modelVersion": "V2.0"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExchangeMotionCamData",
         "currentName": "ExchangeMotionCamData",
         "sourceName": "ExchangeMotionCamData",
@@ -72108,6 +72835,22 @@
           "action": "export",
           "filePath": "C:\\Examples\\exports\\Main.xml",
           "confirmImport": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExchangeTestSuiteCase",
+        "currentName": "ExchangeTestSuiteCase",
+        "sourceName": "ExchangeTestSuiteCase",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "styleGuide",
+          "action": "export",
+          "name": "ExampleRuleSet",
+          "filePath": "C:\\Examples\\exports\\RuleSet.xml",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -72350,6 +73093,19 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "filePath": "C:\\Examples\\exports\\Safety.pdf",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportScadaData",
+        "currentName": "ExportScadaData",
+        "sourceName": "ExportScadaData",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Scada.zip",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -73379,6 +74135,24 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportSinumerikAlarmTexts",
+        "currentName": "ImportSinumerikAlarmTexts",
+        "sourceName": "ImportSinumerikAlarmTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "files": [
+            "C:\\Examples\\AlarmTexts.csv"
+          ],
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportTechnologyObject",
         "currentName": "ImportTechnologyObject",
         "sourceName": "ImportTechnologyObject",
@@ -73420,6 +74194,18 @@
           "dryRun": true,
           "confirm": false,
           "overwrite": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "InitializeSimotionScripting",
+        "currentName": "InitializeSimotionScripting",
+        "sourceName": "InitializeSimotionScripting",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -73573,6 +74359,21 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageCfcChartProtection",
+        "currentName": "ManageCfcChartProtection",
+        "sourceName": "ManageCfcChartProtection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "chartName": "Chart_1",
+          "dryRun": true,
+          "action": "read"
+        },
         "envelopeVersion": 4
       },
       {
@@ -75023,6 +75824,43 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageSinumerikArchive",
+        "currentName": "ManageSinumerikArchive",
+        "sourceName": "ManageSinumerikArchive",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "archive",
+          "filePath": "C:\\Examples\\exports\\Example.dsf",
+          "dryRun": true,
+          "devicePath": [
+            "&lt;exact SINUMERIK device from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact NCU PLC item&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageSinumerikSafetyMode",
+        "currentName": "ManageSinumerikSafetyMode",
+        "sourceName": "ManageSinumerikSafetyMode",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "confirmSafetyChange": false,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageSivarcBlockDefinition",
         "currentName": "ManageSivarcBlockDefinition",
         "sourceName": "ManageSivarcBlockDefinition",
@@ -75201,6 +76039,21 @@
           "objectPath": "Axis_1",
           "action": "read",
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageTestSuiteCase",
+        "currentName": "ManageTestSuiteCase",
+        "sourceName": "ManageTestSuiteCase",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "styleGuide",
+          "name": "Example_1",
+          "dryRun": true,
+          "action": "read"
         },
         "envelopeVersion": 4
       },
@@ -76836,6 +77689,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ListTestSuiteCases",
+        "currentName": "ListTestSuiteCases",
+        "sourceName": "ReadTestSuiteCases",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "styleGuide"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RunReadOnlyToolBatch",
         "currentName": "RunReadOnlyToolBatch",
         "sourceName": "ReadToolBatch",
@@ -77166,6 +78031,23 @@
           },
           "dryRun": true,
           "confirmRun": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RunTestSuiteCase",
+        "currentName": "RunTestSuiteCase",
+        "sourceName": "RunTestSuiteCase",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "category": "styleGuide",
+          "confirmExternalExecution": false,
+          "dryRun": true,
+          "names": [
+            "&lt;exact test name from ListTestSuiteCases&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -87571,19 +88453,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "ExportScadaData",
-        "currentName": "ExportScadaData",
-        "sourceName": "ExportScadaData",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "filePath": "C:\\Examples\\exports\\Scada.zip",
-          "dryRun": true
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "ExportTechnologyObject",
         "currentName": "ExportTechnologyObject",
         "sourceName": "ExportTechnologyObject",
@@ -89219,24 +90088,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "ImportSinumerikAlarmTexts",
-        "currentName": "ImportSinumerikAlarmTexts",
-        "sourceName": "ImportSinumerikAlarmTexts",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "devicePath": [
-            "&lt;exact device name from GetProjectTree&gt;"
-          ],
-          "files": [
-            "C:\\Examples\\AlarmTexts.csv"
-          ],
-          "dryRun": true
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "ImportTechnologyObject",
         "currentName": "ImportTechnologyObject",
         "sourceName": "ImportTechnologyObject",
@@ -89306,18 +90157,6 @@
           "lite"
         ],
         "arguments": {},
-        "envelopeVersion": 4
-      },
-      {
-        "name": "InitializeSimotionScripting",
-        "currentName": "InitializeSimotionScripting",
-        "sourceName": "InitializeSimotionScripting",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "dryRun": true
-        },
         "envelopeVersion": 4
       },
       {
@@ -90965,43 +91804,6 @@
         ],
         "arguments": {
           "dryRun": true,
-          "action": "read"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "ManageSinumerikArchive",
-        "currentName": "ManageSinumerikArchive",
-        "sourceName": "ManageSinumerikArchive",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "action": "archive",
-          "filePath": "C:\\Examples\\exports\\Example.dsf",
-          "dryRun": true,
-          "devicePath": [
-            "&lt;exact SINUMERIK device from GetProjectTree&gt;"
-          ],
-          "itemPath": [
-            "&lt;exact NCU PLC item&gt;"
-          ]
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "ManageSinumerikSafetyMode",
-        "currentName": "ManageSinumerikSafetyMode",
-        "sourceName": "ManageSinumerikSafetyMode",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "devicePath": [
-            "&lt;exact device name from GetProjectTree&gt;"
-          ],
-          "dryRun": true,
-          "confirmSafetyChange": false,
           "action": "read"
         },
         "envelopeVersion": 4

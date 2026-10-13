@@ -27,14 +27,14 @@
 
 | TIA 版本 | 注册工具数 | lite 档 |
 |---|---:|---:|
-| V14 SP1 | 277 | 不适用 |
-| V15.1 | 317 | 不适用 |
-| V16 | 344 | 不适用 |
-| V17 | 361 | 不适用 |
-| V18 | 384 | 不适用 |
-| V19 | 423 | 不适用 |
+| V14 SP1 | 278 | 不适用 |
+| V15.1 | 318 | 不适用 |
+| V16 | 346 | 不适用 |
+| V17 | 369 | 不适用 |
+| V18 | 395 | 不适用 |
+| V19 | 434 | 不适用 |
 | V20 | 502 | 84 |
-| V21 | 516 | 84 |
+| V21 | 511 | 84 |
 <!-- generated:tool-counts:end -->
 
 V20/V21 默认使用 lite 档，其余通过 `FindTools` 查找、`CallTool` 调用，也可配置 `--profile full`。八版统一入口为 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`；V20/V21 自动发现 `worker/` 下的引擎与工具目录，八版共有工具采用同一份 Foundation 代码、参数和用法。准确范围见[逐版本工具说明](docs/reference/version-tools.md)及当前服务的 `tools/list`。V14 SP1、V15.1 不等于原版 V14、V15。

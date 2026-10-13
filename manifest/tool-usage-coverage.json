@@ -1,9 +1,9 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "d149793254675f382a18217c791dfa7715e2408c17c4f112adff2b011905e013",
+  "catalogSha256": "2db2ec41653c2d902b56dd2841bbae47747535b0d22004ccd8182b2195a81e17",
   "uniqueTools": 516,
   "documents": 89,
-  "versionToolPairs": 3124,
+  "versionToolPairs": 3153,
   "offlineCallExecutions": 79,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
@@ -48,8 +48,8 @@
   "releases": {
     "14sp1": {
       "releaseKey": "14sp1",
-      "registeredToolCount": 277,
-      "checkedToolCount": 277,
+      "registeredToolCount": 278,
+      "checkedToolCount": 278,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 159,
@@ -1748,6 +1748,20 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "InitializeSimotionScripting",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/devices-and-hardware/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+            "guides/skills/hardware-and-modules/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
           "operations": []
         },
         {
@@ -3747,8 +3761,8 @@
     },
     "15.1": {
       "releaseKey": "15.1",
-      "registeredToolCount": 317,
-      "checkedToolCount": 317,
+      "registeredToolCount": 318,
+      "checkedToolCount": 318,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 219,
@@ -5693,6 +5707,20 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "InitializeSimotionScripting",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/devices-and-hardware/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+            "guides/skills/hardware-and-modules/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
           "operations": []
         },
         {
@@ -8207,11 +8235,11 @@
     },
     "16": {
       "releaseKey": "16",
-      "registeredToolCount": 344,
-      "checkedToolCount": 344,
+      "registeredToolCount": 346,
+      "checkedToolCount": 346,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 266,
+      "operationExampleCount": 271,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -12326,6 +12354,58 @@
           ]
         },
         {
+          "toolName": "ManageSinumerikArchive",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/devices-and-hardware/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+            "guides/skills/hardware-and-modules/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "archive",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": "This registered wrapper has no native implementation for release 16; see interpretation and the tool description."
+            },
+            {
+              "operation": "retrieve",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": "This registered wrapper has no native implementation for release 16; see interpretation and the tool description."
+            },
+            {
+              "operation": "fAddressArchive",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": "This registered wrapper has no native implementation for release 16; see interpretation and the tool description."
+            }
+          ]
+        },
+        {
+          "toolName": "ManageSinumerikSafetyMode",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/plc-safety-administration/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/SafetySnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": "This registered wrapper has no native implementation for release 16; see interpretation and the tool description."
+            },
+            {
+              "operation": "set",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": "This registered wrapper has no native implementation for release 16; see interpretation and the tool description."
+            }
+          ]
+        },
+        {
           "toolName": "ManageSivarcRule",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -13212,11 +13292,11 @@
     },
     "17": {
       "releaseKey": "17",
-      "registeredToolCount": 361,
-      "checkedToolCount": 361,
+      "registeredToolCount": 369,
+      "checkedToolCount": 369,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 331,
+      "operationExampleCount": 346,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -14156,6 +14236,38 @@
           ]
         },
         {
+          "toolName": "ExchangeTestSuiteCase",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "importTestSets",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ExportAlarmClasses",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -14357,6 +14469,19 @@
           "documents": [
             "guides/skills/plc-safety-administration/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/SafetySnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ExportScadaData",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },
@@ -15433,6 +15558,20 @@
           "operations": []
         },
         {
+          "toolName": "InitializeSimotionScripting",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/devices-and-hardware/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+            "guides/skills/hardware-and-modules/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "InstantiatePlcTemplates",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -15816,6 +15955,17 @@
           "documents": [
             "guides/skills/technology-objects/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TechnologyObjectSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ListTestSuiteCases",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
           "operations": []
         },
@@ -17726,6 +17876,58 @@
           ]
         },
         {
+          "toolName": "ManageSinumerikArchive",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/devices-and-hardware/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+            "guides/skills/hardware-and-modules/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "archive",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": "This registered wrapper has no native implementation for release 17; see interpretation and the tool description."
+            },
+            {
+              "operation": "retrieve",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": "This registered wrapper has no native implementation for release 17; see interpretation and the tool description."
+            },
+            {
+              "operation": "fAddressArchive",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": "This registered wrapper has no native implementation for release 17; see interpretation and the tool description."
+            }
+          ]
+        },
+        {
+          "toolName": "ManageSinumerikSafetyMode",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/plc-safety-administration/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/SafetySnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": "This registered wrapper has no native implementation for release 17; see interpretation and the tool description."
+            },
+            {
+              "operation": "set",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": "This registered wrapper has no native implementation for release 17; see interpretation and the tool description."
+            }
+          ]
+        },
+        {
           "toolName": "ManageSivarcBlockDefinition",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -17867,6 +18069,48 @@
             },
             {
               "operation": "setParameter",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageTestSuiteCase",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "rename",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "setScope",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "copyScope",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createFromMasterCopy",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "showInEditor",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -18341,6 +18585,17 @@
           "operations": []
         },
         {
+          "toolName": "RunTestSuiteCase",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "RunToolTransaction",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -18739,11 +18994,11 @@
     },
     "18": {
       "releaseKey": "18",
-      "registeredToolCount": 384,
-      "checkedToolCount": 384,
+      "registeredToolCount": 395,
+      "checkedToolCount": 395,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 401,
+      "operationExampleCount": 424,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -19632,6 +19887,40 @@
           "operations": []
         },
         {
+          "toolName": "ExchangeCfcCharts",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": [
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "selectiveExport",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "exportInstructionData",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ExchangeMotionCamData",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -19739,6 +20028,38 @@
             },
             {
               "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ExchangeTestSuiteCase",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "importTestSets",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -19946,6 +20267,19 @@
           "documents": [
             "guides/skills/plc-safety-administration/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/SafetySnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ExportScadaData",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },
@@ -21014,6 +21348,19 @@
           "operations": []
         },
         {
+          "toolName": "ImportSinumerikAlarmTexts",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "ImportTechnologyObject",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -21045,6 +21392,20 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "InitializeSimotionScripting",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/devices-and-hardware/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+            "guides/skills/hardware-and-modules/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
           "operations": []
         },
         {
@@ -21435,6 +21796,17 @@
           "operations": []
         },
         {
+          "toolName": "ListTestSuiteCases",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "ListToolCategories",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -21476,6 +21848,40 @@
           "relationship": "no-direct-official-example",
           "documents": [],
           "operations": []
+        },
+        {
+          "toolName": "ManageCfcChartProtection",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "add",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "change",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "remove",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
         },
         {
           "toolName": "ManageClassicHmiCycle",
@@ -23620,6 +24026,58 @@
           ]
         },
         {
+          "toolName": "ManageSinumerikArchive",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/devices-and-hardware/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+            "guides/skills/hardware-and-modules/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "archive",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": "This registered wrapper has no native implementation for release 18; see interpretation and the tool description."
+            },
+            {
+              "operation": "retrieve",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": "This registered wrapper has no native implementation for release 18; see interpretation and the tool description."
+            },
+            {
+              "operation": "fAddressArchive",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": "This registered wrapper has no native implementation for release 18; see interpretation and the tool description."
+            }
+          ]
+        },
+        {
+          "toolName": "ManageSinumerikSafetyMode",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/plc-safety-administration/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/SafetySnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": "This registered wrapper has no native implementation for release 18; see interpretation and the tool description."
+            },
+            {
+              "operation": "set",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": "This registered wrapper has no native implementation for release 18; see interpretation and the tool description."
+            }
+          ]
+        },
+        {
           "toolName": "ManageSivarcBlockDefinition",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -23991,6 +24449,48 @@
             },
             {
               "operation": "setParameter",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageTestSuiteCase",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "rename",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "setScope",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "copyScope",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createFromMasterCopy",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "showInEditor",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -24465,6 +24965,17 @@
           "operations": []
         },
         {
+          "toolName": "RunTestSuiteCase",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "RunToolTransaction",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -24890,11 +25401,11 @@
     },
     "19": {
       "releaseKey": "19",
-      "registeredToolCount": 423,
-      "checkedToolCount": 423,
+      "registeredToolCount": 434,
+      "checkedToolCount": 434,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 425,
+      "operationExampleCount": 448,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -25980,6 +26491,40 @@
           "operations": []
         },
         {
+          "toolName": "ExchangeCfcCharts",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": [
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "selectiveExport",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "exportInstructionData",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ExchangeMotionCamData",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -26087,6 +26632,38 @@
             },
             {
               "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ExchangeTestSuiteCase",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "importTestSets",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -26294,6 +26871,19 @@
           "documents": [
             "guides/skills/plc-safety-administration/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/SafetySnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ExportScadaData",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },
@@ -27394,6 +27984,19 @@
           "operations": []
         },
         {
+          "toolName": "ImportSinumerikAlarmTexts",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "ImportTechnologyObject",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -27425,6 +28028,20 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "InitializeSimotionScripting",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/devices-and-hardware/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+            "guides/skills/hardware-and-modules/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
           "operations": []
         },
         {
@@ -27815,6 +28432,17 @@
           "operations": []
         },
         {
+          "toolName": "ListTestSuiteCases",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "ListToolCategories",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -27864,6 +28492,40 @@
           "relationship": "no-direct-official-example",
           "documents": [],
           "operations": []
+        },
+        {
+          "toolName": "ManageCfcChartProtection",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "add",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "change",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "remove",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
         },
         {
           "toolName": "ManageClassicHmiCycle",
@@ -30078,6 +30740,58 @@
           ]
         },
         {
+          "toolName": "ManageSinumerikArchive",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/devices-and-hardware/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+            "guides/skills/hardware-and-modules/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "archive",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": "This registered wrapper has no native implementation for release 19; see interpretation and the tool description."
+            },
+            {
+              "operation": "retrieve",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": "This registered wrapper has no native implementation for release 19; see interpretation and the tool description."
+            },
+            {
+              "operation": "fAddressArchive",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": "This registered wrapper has no native implementation for release 19; see interpretation and the tool description."
+            }
+          ]
+        },
+        {
+          "toolName": "ManageSinumerikSafetyMode",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/plc-safety-administration/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/SafetySnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": "This registered wrapper has no native implementation for release 19; see interpretation and the tool description."
+            },
+            {
+              "operation": "set",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": "This registered wrapper has no native implementation for release 19; see interpretation and the tool description."
+            }
+          ]
+        },
+        {
           "toolName": "ManageSivarcBlockDefinition",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -30501,6 +31215,48 @@
             },
             {
               "operation": "setParameter",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageTestSuiteCase",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "rename",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "setScope",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "copyScope",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createFromMasterCopy",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "showInEditor",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -31046,6 +31802,17 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RunTestSuiteCase",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
           "operations": []
         },
         {
@@ -39235,11 +40002,11 @@
     },
     "21": {
       "releaseKey": "21",
-      "registeredToolCount": 516,
-      "checkedToolCount": 516,
+      "registeredToolCount": 511,
+      "checkedToolCount": 511,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 556,
+      "operationExampleCount": 551,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 2,
@@ -40880,19 +41647,6 @@
           "operations": []
         },
         {
-          "toolName": "ExportScadaData",
-          "usageProfile": "full-engine",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/blocks/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
-            "guides/skills/software-hierarchy/SKILL.md"
-          ],
-          "operations": []
-        },
-        {
           "toolName": "ExportTechnologyObject",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -42150,19 +42904,6 @@
           "operations": []
         },
         {
-          "toolName": "ImportSinumerikAlarmTexts",
-          "usageProfile": "full-engine",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/blocks/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
-            "guides/skills/software-hierarchy/SKILL.md"
-          ],
-          "operations": []
-        },
-        {
           "toolName": "ImportTechnologyObject",
           "usageProfile": "full-engine",
           "exampleKind": "parameterized-call-example",
@@ -42221,20 +42962,6 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "InitializeSimotionScripting",
-          "usageProfile": "full-engine",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-            "guides/skills/hardware-and-modules/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-          ],
           "operations": []
         },
         {
@@ -45447,58 +46174,6 @@
               "operation": "update",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
-            }
-          ]
-        },
-        {
-          "toolName": "ManageSinumerikArchive",
-          "usageProfile": "full-engine",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-            "guides/skills/hardware-and-modules/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-          ],
-          "operations": [
-            {
-              "operation": "archive",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 21; see interpretation and the tool description."
-            },
-            {
-              "operation": "retrieve",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 21; see interpretation and the tool description."
-            },
-            {
-              "operation": "fAddressArchive",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 21; see interpretation and the tool description."
-            }
-          ]
-        },
-        {
-          "toolName": "ManageSinumerikSafetyMode",
-          "usageProfile": "full-engine",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/plc-safety-administration/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/SafetySnippets.cs"
-          ],
-          "operations": [
-            {
-              "operation": "read",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 21; see interpretation and the tool description."
-            },
-            {
-              "operation": "set",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 21; see interpretation and the tool description."
             }
           ]
         },
