@@ -118,7 +118,7 @@ namespace TiaOpenness.Shared
             }
         }
 
-        private static string? Identity(FileStream stream)
+        internal static string? Identity(FileStream stream)
         {
             if (Environment.OSVersion.Platform != PlatformID.Win32NT || !GetFileInformationByHandle(stream.SafeFileHandle, out var info)) return null;
             return info.Volume.ToString("x8", CultureInfo.InvariantCulture) + ":" + info.IndexHigh.ToString("x8", CultureInfo.InvariantCulture)

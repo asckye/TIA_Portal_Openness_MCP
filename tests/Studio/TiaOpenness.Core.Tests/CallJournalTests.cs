@@ -12,6 +12,11 @@ using Xunit;
 
 namespace TiaOpenness.Core.Tests;
 
+// The live reader polls on a timer and the writer sink is static; keep other classes' process and bridge load off its window.
+[CollectionDefinition("Call journal", DisableParallelization = true)]
+public sealed class CallJournalCollection { }
+
+[Collection("Call journal")]
 public sealed class CallJournalTests : IDisposable
 {
     private readonly string root = Path.Combine(AppContext.BaseDirectory, "journal-tests", Guid.NewGuid().ToString("N"));
@@ -143,6 +148,25 @@ public sealed class CallJournalTests : IDisposable
         File.Copy(path + ".previous", path + ".2"); reader.Poll(); Assert.Equal(2, reader.Calls.Count);
         File.Delete(path + ".previous"); File.Delete(path + ".2"); reader.Poll(); Assert.Single(reader.Calls);
         File.Delete(path); reader.Poll(); Assert.Empty(reader.Calls);
+    }
+
+    [Fact]
+    public void Rotation_that_reuses_the_creation_time_rereads_the_replacement()
+    {
+        // NTFS tunnelling and coarse timestamps can give a recreated name the old creation time. The replacement is longer than
+        // the consumed offset, so only the file identity shows that the cursor no longer belongs to this file.
+        string path = Path.Combine(root, "calls-tunnel.jsonl");
+        File.WriteAllLines(path, Rows("one", result: Envelope()));
+        using var reader = new CallJournalReader(root, false);
+        Assert.Single(reader.Calls);
+        var created = File.GetCreationTimeUtc(path);
+        File.Move(path, path + ".previous");
+        File.WriteAllLines(path, Rows("two", args: "{\"softwarePath\":[\"PLC_1\",\"Program blocks\",\"Main\"]}", result: Envelope("unknown", "unknown")));
+        File.SetCreationTimeUtc(path, created);
+        Assert.True(new FileInfo(path).Length > new FileInfo(path + ".previous").Length);
+        reader.Poll();
+        Assert.Equal(2, reader.Calls.Count);
+        Assert.Contains(reader.Calls, call => call.DisplayOutcome == "unknown");
     }
 
     [Fact]

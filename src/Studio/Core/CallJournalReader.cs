@@ -80,7 +80,7 @@ namespace TiaOpenness.Core
                             || info.Length == cursor.Position && info.LastWriteTimeUtc != cursor.Modified)
                         { files[path] = cursor = new FileCursor { Created = info.CreationTimeUtc }; changed = true; }
                         long position = cursor.Position;
-                        if (info.Length > position) Read(path, cursor);
+                        if (info.Length > position) changed |= Read(path, cursor);
                         changed |= cursor.Position != position;
                         cursor.Modified = info.LastWriteTimeUtc;
                     }
@@ -97,9 +97,16 @@ namespace TiaOpenness.Core
             }
         }
 
-        private static void Read(string path, FileCursor cursor)
+        // Returns true when the path now names a different file than the cursor was reading.
+        private static bool Read(string path, FileCursor cursor)
         {
             using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            // A rotated name can be recreated with the old creation time (NTFS tunnelling, coarse timestamps) and a larger
+            // length, so the file identity decides whether the cursor still belongs to this file.
+            string identity = AuditLog.Identity(stream);
+            bool replaced = cursor.Identity != null && identity != null && identity != cursor.Identity;
+            if (replaced) { cursor.Position = 0; cursor.Pending.Clear(); cursor.Oversized = false; cursor.Rows.Clear(); }
+            cursor.Identity = identity;
             stream.Position = cursor.Position;
             var buffer = new byte[8192];
             int remaining = BytesPerPoll;
@@ -125,6 +132,7 @@ namespace TiaOpenness.Core
             }
             if (cursor.Rows.Count > MaximumCalls)
                 foreach (var row in cursor.Rows.Values.OrderByDescending(r => r.Time).Skip(MaximumCalls).ToArray()) cursor.Rows.Remove(row.Identity);
+            return replaced;
         }
 
         private static bool TryRead(string line, out JournalCall row)
@@ -169,6 +177,7 @@ namespace TiaOpenness.Core
         {
             internal long Position;
             internal DateTime Created, Modified;
+            internal string Identity;
             internal bool Oversized;
             internal readonly List<byte> Pending = new List<byte>();
             internal readonly Dictionary<string, JournalCall> Rows = new Dictionary<string, JournalCall>(StringComparer.Ordinal);
