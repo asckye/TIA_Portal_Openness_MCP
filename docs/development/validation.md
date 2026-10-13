@@ -640,7 +640,7 @@ dotnet run tests/Studio/Test-BridgeSmoke.cs -- --bridge <Bridge.exe> --public-ap
 ## 文档数量与链接
 
 编译器分析器警告由 `check-analyzer-warnings` 棘轮约束。`build-solutions` 和 `check-all` 的现有构建为每个
-工程、框架和变体输出 SARIF 2.1；缺少报告会触发该工程的增量编译，不额外执行完整构建。报告固定使用
+工程、框架、变体及全部 file-based C# 程序输出 SARIF 2.1；缺少报告会触发增量编译，不额外执行完整构建。报告固定使用
 英文消息，按规则、仓库相对路径、起止位置与消息去重。检查比较成员、诊断片段的令牌和消息，成员内移动
 行号或空白不会新增警告；相同诊断的多处出现仍分别计数。
 
@@ -661,5 +661,11 @@ dotnet run --project build-tools/release -- check-analyzer-warnings -UpdateBasel
 `TIA_MCP_ANALYZER_REPORT_DIRECTORY` 可以明确指定报告。`build-solutions` 和没有完整 SDK 的离线 CI 比较实际
 编译配置（solutions 不包含全部注册套件），完整
 worktree 检查由 `check-all` 执行。输入 SHA-256 与当前源码、分析器配置必须一致，过期报告和仓库外路径均拒绝。
+
+`build-file-programs` 为离线 CI 编译相同的脚本集合：扫描 `scripts`、`src`、`tests`、`build-tools` 及根目录的
+`#:`/dotnet shebang 入口和工程目录之外的顶层语句，排除构建产物与第三方示例。每个入口使用
+`dotnet build <file>.cs -c Release -p:TiaMcpCollectFileBasedPrograms=true`；普通 file-based 运行不收集其报告。
+SDK runfile 目录内匹配当前入口名称与 64 位十六进制目录哈希的 GlobalUsings、AssemblyInfo 和
+框架 AssemblyAttributes 文件按收据验证 SHA-256，仅作为辅助输入；它们不能授权仓库外诊断。
 
 `generate-tool-counts` 从已核对的注册目录及 lite 配置更新入口、配置、版本范围、运行布局和发布说明中的标记块；`-Check` 逐字节拒绝漂移、缺失和重复块。迁移表由 `generate-release-migration` 维护。文档数值不得手写。仓库检查核对链接和随包路径，死引用检查核对工具名；检查结果仍须与当前目录及适用版本一起审阅。

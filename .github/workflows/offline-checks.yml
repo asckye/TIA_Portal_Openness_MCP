@@ -38,6 +38,8 @@ jobs:
         with:
           name: py-cs-parity-${{ matrix.os }}
           path: bin-build/py-cs-parity
+      - name: Compile every file-based C# program
+        run: dotnet run --project build-tools/release -- build-file-programs
       - name: Reviewed analyzer warning ratchet
         run: dotnet run --project build-tools/release -- check-analyzer-warnings -Check
 
@@ -63,6 +65,8 @@ jobs:
             bin-build/test-results*/
             bin-build/check-all/
 
+      - name: Compile every file-based C# program
+        run: dotnet run --project build-tools/release -- build-file-programs
       - name: Reviewed analyzer warning ratchet
         run: dotnet run --project build-tools/release -- check-analyzer-warnings -Check
 
@@ -120,6 +124,8 @@ jobs:
             bin-build/test-results*/
             bin-build/check-all/
 
+      - name: Compile every file-based C# program
+        run: dotnet run --project build-tools/release -- build-file-programs
       - name: Reviewed analyzer warning ratchet
         run: dotnet run --project build-tools/release -- check-analyzer-warnings -Check
 
@@ -145,6 +151,8 @@ jobs:
           name: studio-test-results-${{ matrix.shared-adapter-paths }}
           path: bin-build/ci-test-results/
 
+      - name: Compile every file-based C# program
+        run: dotnet run --project build-tools/release -- build-file-programs
       - name: Reviewed analyzer warning ratchet
         run: dotnet run --project build-tools/release -- check-analyzer-warnings -Check
 
@@ -174,6 +182,8 @@ jobs:
           done
       - name: Six real STDIO hosts and isolated HTTP sessions
         run: python scripts/checks/Test-FoundationTransport.py --fixture tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe --releases 14sp1 15.1 16 17 18 19 --output bin-build/ci-foundation-results
+      - name: Compile every file-based C# program
+        run: dotnet run --project build-tools/release -- build-file-programs
       - name: Reviewed analyzer warning ratchet
         run: dotnet run --project build-tools/release -- check-analyzer-warnings -Check
       - uses: actions/upload-artifact@v6

@@ -261,13 +261,13 @@ static void WriteCsv(string path, string[] header, IEnumerable<string[]> rows)
     File.WriteAllText(path, sb.ToString(), new UTF8Encoding(false));
 }
 
-sealed record MemberRow(string Version, string Assembly, string Namespace, char Kind, string Owner, string OwnerSimple,
+internal sealed record MemberRow(string Version, string Assembly, string Namespace, char Kind, string Owner, string OwnerSimple,
     string Member, string Signature, bool Boilerplate)
 {
     public string Verdict { get; set; } = "";
 }
-sealed record DynamicEntry(string Pattern, string Tool, string Verified);
-sealed record TypeSummary(string Assembly, string Namespace, string Type, string TypeSimple, int Members,
+internal sealed record DynamicEntry(string Pattern, string Tool, string Verified);
+internal sealed record TypeSummary(string Assembly, string Namespace, string Type, string TypeSimple, int Members,
     int Referenced, int OwnerOnly, int Unreferenced, string Status, string DynamicTool, string DynamicVerified, string UnreferencedMembers);
-sealed record NamespaceSummary(string Assembly, string Namespace, int Types, int TypesCovered, int TypesNamedOnly,
+internal sealed record NamespaceSummary(string Assembly, string Namespace, int Types, int TypesCovered, int TypesNamedOnly,
     int TypesDynamic, int TypesUntouched, int Members, int MembersReferenced);

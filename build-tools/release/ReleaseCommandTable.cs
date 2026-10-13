@@ -9,6 +9,7 @@ internal static class ReleaseCommandTable
     internal static readonly IReadOnlyList<ReleaseCommandSpec> Entries =
     [
         new("build-solutions", "build-solutions -PublicApiRoot <SDK-root>", "solutions.log", "both solutions; exit 0", "developerSolutions"),
+        new("build-file-programs", "build-file-programs", "file-programs.log", "all in-scope file apps; exit 0", "filePrograms"),
         new("publish-vci-watch", "publish-vci-watch", "vci-watch-publish.log", "WinExe in bin-build/vci-watch; exit 0", "vciWatchPublish"),
         new("test-suites", "test-suites -Suite <name> | -SelfTest", "test-suites.log", "registered TRX gate", "dotnetSuites"),
         new("host-parity", "host-parity -EngineMajor <20|21>", "host-behavior-parity.log", "minimum 103; zero skips", "hostBehaviorParity"),

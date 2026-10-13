@@ -27,7 +27,7 @@
     </ItemGroup>
   </Target>
   <Target Name="CollectAnalyzerWarningReport" AfterTargets="CoreCompile"
-          Condition="'$(Language)' == 'C#' and '$(DesignTimeBuild)' != 'true' and (!$([System.String]::Copy('$(MSBuildProjectFullPath)').Replace('\', '/').Contains('/bin-build/')) or '$(TIA_MCP_ANALYZER_REPORT_DIRECTORY)' != '')">
+          Condition="'$(Language)' == 'C#' and '$(DesignTimeBuild)' != 'true' and ('$(FileBasedProgram)' != 'true' or '$(TiaMcpCollectFileBasedPrograms)' == 'true') and (!$([System.String]::Copy('$(MSBuildProjectFullPath)').Replace('\', '/').Contains('/bin-build/')) or '$(TIA_MCP_ANALYZER_REPORT_DIRECTORY)' != '')">
     <Error Condition="!Exists('$(_TiaAnalyzerReport)')" Text="Missing compiler analyzer report: $(_TiaAnalyzerReport)" />
     <MakeDir Directories="$(_TiaAnalyzerDirectory)" />
     <WriteLinesToFile File="$(_TiaAnalyzerReport).identity" Lines="$(_TiaAnalyzerReport)" Overwrite="true" WriteOnlyWhenDifferent="true" />

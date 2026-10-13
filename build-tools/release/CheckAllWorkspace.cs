@@ -113,6 +113,11 @@ internal static partial class ReleaseCommands
         var result = CheckAllBuild.Run(Root, builds, Path.Combine(output, "build"), dotnet, api, nuget, parallelism, options.Has("Cold"));
         if (result.ExitCode == 0) PrepareCheckAllRuntime(Root, builds, Path.Combine(output, "build/runtime-paths.tsv"));
         if (result.ExitCode == 0)
+        {
+            var scripts = FileBasedPrograms.Build(Root, Path.Combine(output, "build/analyzer-warnings"), dotnet, nuget);
+            result = new(scripts.ExitCode, result.StandardOutput + scripts.StandardOutput, result.StandardError + scripts.StandardError);
+        }
+        if (result.ExitCode == 0)
             foreach (var name in new[] { "Test-StaticCheckParity", "Test-MatchPlcName" })
             {
                 var script = CheckAllScriptBuild(name, output, dotnet, nuget);

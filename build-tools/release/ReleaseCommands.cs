@@ -37,6 +37,7 @@ internal static partial class ReleaseCommands
         "build-plc-workers" => BuildWorkers(options),
         "publish-vci-watch" => PublishVciWatch(options),
         "build-solutions" => BuildSolutions(options),
+        "build-file-programs" => BuildFilePrograms(options),
         "prepare-delivery" => PrepareDelivery(options),
         "build-release" => BuildRelease(options),
         "build-multi-version" => BuildMultiVersion(options),
