@@ -7,9 +7,38 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaOpenness.Shared;
 using Argument = TiaMcp.FoundationHost.Argument;
+using TiaMcp.Adapters.Contracts;
 
 public sealed class V4ProtocolRulesTests
 {
+    [Theory]
+    [InlineData("14sp1")]
+    [InlineData("15.1")]
+    [InlineData("16")]
+    [InlineData("17")]
+    [InlineData("18")]
+    [InlineData("19")]
+    [InlineData("20")]
+    [InlineData("21")]
+    public void Listed_test_suite_exchange_is_destructive_on_every_release(string release)
+    {
+        using var worker = new ApprovalWorker();
+        var tools = LegacyHostToolRegistry.Create(worker, release, false);
+        var matches = tools.Where(t => t.ProtocolTool.Name == "ExchangeTestSuiteCase").ToArray();
+        Assert.Equal(PortedFamilies.Available(release, "ExchangeTestSuiteCase"), matches.Length == 1);
+        foreach (var implementation in matches)
+        {
+            var tool = implementation.ProtocolTool;
+            Assert.Equal(new[] { "import", "export", "delete", "importTestSets" },
+                tool.InputSchema.GetProperty("properties").GetProperty("action").GetProperty("enum").EnumerateArray().Select(v => v.GetString()));
+            Assert.False(tool.Annotations!.ReadOnlyHint);
+            Assert.True(tool.Annotations.DestructiveHint);
+            Assert.False(tool.Annotations.IdempotentHint);
+            Assert.False(tool.Annotations.OpenWorldHint);
+        }
+        Assert.Equal(0, worker.Calls);
+    }
+
     [Theory]
     [InlineData("ImportDeviceAml", "{\"dryRun\":false}", true)]
     [InlineData("ImportDeviceAml", "{}", false)]

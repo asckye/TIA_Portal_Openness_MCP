@@ -26,6 +26,10 @@ namespace TiaMcpServer.ModelContextProtocol
             bool destructive = category.DestructiveHint ?? false;
             bool idempotent = category.IdempotentHint ?? read;
             bool open = category.OpenWorldHint ?? category.Operation is "ONLINE" or "ONLINE-WRITE";
+            var documentedActions = Has("action") && !properties.GetProperty("action").TryGetProperty("enum", out _)
+                ? ToolMetadata.Parameter(tool.Name, "action")?.AllowedValues ?? Array.Empty<string>() : Array.Empty<string>();
+            var actions = properties.TryGetProperty("action", out var action) && action.TryGetProperty("enum", out var values)
+                ? values.EnumerateArray().Select(v => v.ToString()).ToArray() : documentedActions;
             if (category.ReadOnlyHint == null)
             {
                 if (category.Operation == "SESSION") read = tool.Name is "GetSessionState" or "ListPortalProcessProjects" or "InitializeEnvironment" or "CheckProductUpdate";
@@ -35,11 +39,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 // Mutation hints are the worst case of the descriptor's actions and
                 // overwrite options. Pure creation and collision-refusing exports
                 // do not inherit a destructive category default.
-                var actions = properties.TryGetProperty("action", out var action) && action.TryGetProperty("enum", out var values)
-                    ? values.EnumerateArray().Select(v => v.ToString()).ToArray() : Array.Empty<string>();
                 destructive = Has("overwrite") || Has("confirmDelete") || Has("deleteAtTarget") || Has("allowWrite")
-                    || actions.Any(a => new[] { "delete", "remove", "replace", "clear", "load", "import", "set", "write", "update", "reset" }
-                        .Any(verb => a.StartsWith(verb, StringComparison.OrdinalIgnoreCase)))
                     || tool.Name.StartsWith("Delete", StringComparison.Ordinal) || tool.Name.StartsWith("Set", StringComparison.Ordinal)
                     || tool.Name.StartsWith("Import", StringComparison.Ordinal) || tool.Name.StartsWith("EnsureUnified", StringComparison.Ordinal)
                     || tool.Name is "ClearExportHandles" or "ApplyToolBatch" or "ApplyGenerationPlan" or "ManagePlcDataBlockSnapshot" or "RunPlcCompanionTool";
@@ -47,6 +47,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     || tool.Name.StartsWith("Compile", StringComparison.Ordinal);
                 if (category.Operation == "ONLINE-WRITE") { destructive = true; open = true; }
             }
+            // Actions bound explicit hints too, including after schema augmentation
+            // supplies their enum. Read-only tools remain non-destructive.
+            destructive |= DestructiveActions(actions);
             if (Has("dryRun")) read = false;
             if (!foundation && tool.Name is "CloseProject" or "OpenProject" or "DisconnectPortal" or "CompilePlcSoftware") destructive = true;
             if (!foundation && tool.Name == "RunCapabilitySelfTest" && Has("connectIfNeeded")) read = false;
@@ -62,6 +65,10 @@ namespace TiaMcpServer.ModelContextProtocol
             ValidateV4(tool);
             return tool;
         }
+
+        private static bool DestructiveActions(IEnumerable<string> actions)
+            => actions.Any(a => new[] { "delete", "remove", "replace", "clear", "load", "import", "set", "write", "update", "reset" }
+                .Any(verb => a.StartsWith(verb, StringComparison.OrdinalIgnoreCase)));
 
         internal static void ValidateV4(Tool tool)
         {

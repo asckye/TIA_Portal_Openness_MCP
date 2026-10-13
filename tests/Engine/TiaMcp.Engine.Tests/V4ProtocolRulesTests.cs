@@ -172,6 +172,52 @@ namespace TiaMcp.Engine.Tests
         }
 
         [Theory]
+        [InlineData("ExchangeTestSuiteCase")]
+        [InlineData("ExchangeCfcCharts")]
+        public void Documented_actions_supply_destructive_hints_without_an_enum(string name)
+        {
+            var tool = DeclaredToolMetadata.V4(Descriptor(name, "{\"action\":{\"type\":\"string\"}}"), true);
+            Assert.NotEmpty(ToolMetadata.Parameter(name, "action")!.AllowedValues);
+            Assert.False(tool.InputSchema.GetProperty("properties").GetProperty("action").TryGetProperty("enum", out _));
+            Assert.False(tool.Annotations!.ReadOnlyHint);
+            Assert.True(tool.Annotations.DestructiveHint);
+            Assert.False(tool.Annotations.IdempotentHint);
+            Assert.False(tool.Annotations.OpenWorldHint);
+        }
+
+        [Fact]
+        public void Documented_read_only_actions_stay_non_destructive()
+        {
+            const string name = "AnalyzePlcReferences";
+            Assert.NotEmpty(ToolMetadata.Parameter(name, "action")!.AllowedValues);
+            var tool = DeclaredToolMetadata.V4(Descriptor(name, "{\"action\":{\"type\":\"string\"}}"), true);
+            Assert.True(tool.Annotations!.ReadOnlyHint);
+            Assert.False(tool.Annotations.DestructiveHint);
+            Assert.True(tool.Annotations.IdempotentHint);
+            Assert.False(tool.Annotations.OpenWorldHint);
+        }
+
+        [Theory]
+        [InlineData("[]", false)]
+        [InlineData("[\"export\"]", false)]
+        [InlineData("[\"import\"]", true)]
+        [InlineData("[\"DELETE\"]", true)]
+        public void Schema_enum_keeps_precedence_over_documented_actions(string values, bool destructive)
+        {
+            var tool = DeclaredToolMetadata.V4(Descriptor("ExchangeCfcCharts", "{\"action\":{\"type\":\"string\",\"enum\":" + values + "}}"), true);
+            Assert.False(tool.Annotations!.ReadOnlyHint);
+            Assert.Equal(destructive, tool.Annotations.DestructiveHint);
+            Assert.False(tool.Annotations.IdempotentHint);
+            Assert.False(tool.Annotations.OpenWorldHint);
+        }
+
+        [Fact]
+        public void Missing_action_parameter_does_not_inherit_documented_mutations()
+        {
+            Assert.False(DeclaredToolMetadata.V4(Descriptor("ExchangeCfcCharts"), true).Annotations!.DestructiveHint);
+        }
+
+        [Theory]
         [InlineData("offset/limit", "offset", "limit")]
         [InlineData("a, b", "a", "b")]
         public void Multiple_parameters_roundtrip_without_changing_message(string parameters, string first, string second)
