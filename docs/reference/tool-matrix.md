@@ -4,7 +4,7 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.cs` 从 `manifest/tools-list.json`（八个 release 的注册工具目录并集）生成，分类来自主机共用的 `ToolTaxonomy`；运行时以 `tools/list` 为准。目录包含 Foundation 共享工具与引擎专用工具，不包含已撤回的生命周期工具。`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-10-13 09:17:21
+- 生成时间：2026-10-13 10:38:11
 - 产品文件版本：3.3.0.0
 - 工具数量：516
 

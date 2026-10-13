@@ -1741,7 +1741,7 @@
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 434,
+      "toolCount": 470,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1785,6 +1785,7 @@
         "ComparePlcBlockDocuments",
         "CompareProjects",
         "CompareSoftwareToOnline",
+        "CompareUnifiedGraphicSelections",
         "CompileDevice",
         "CompileHmiDiagnostics",
         "CompilePlcDiagnostics",
@@ -1851,6 +1852,8 @@
         "ExchangePlcSupervisions",
         "ExchangeSystemDiagnosticsSettings",
         "ExchangeTestSuiteCase",
+        "ExchangeUnifiedScriptModules",
+        "ExchangeUnifiedTags",
         "ExportAlarmClasses",
         "ExportAlarmInstanceTexts",
         "ExportAlarmTextLists",
@@ -1945,11 +1948,23 @@
         "GetSoftwareTree",
         "GetTechnologyObjectTree",
         "GetToolUsage",
+        "GetUnifiedAlarmCommon",
+        "GetUnifiedAuditSettings",
+        "GetUnifiedCrossReferences",
+        "GetUnifiedFaceplateInstance",
+        "GetUnifiedGlobalScript",
+        "GetUnifiedGraphicSelection",
         "GetUnifiedHmiButtonEvent",
         "GetUnifiedHmiDynamization",
         "GetUnifiedHmiTexts",
+        "GetUnifiedLibraryType",
+        "GetUnifiedObjectEvents",
+        "GetUnifiedObjectProperties",
+        "GetUnifiedPlantObject",
         "GetUnifiedRuntimeAlarms",
+        "GetUnifiedRuntimeSettings",
         "GetUnifiedRuntimeTags",
+        "GetUnifiedScreenBranch",
         "GetV21EcosystemCatalog",
         "GetVersionControlStatus",
         "GetWorkbenchSelection",
@@ -1978,6 +1993,7 @@
         "ImportSinumerikAlarmTexts",
         "ImportTechnologyObject",
         "ImportTechnologyObjectsFromDirectory",
+        "ImportUnifiedOpcUaAlarms",
         "InitializeEnvironment",
         "InitializeSimotionScripting",
         "InstantiatePlcTemplates",
@@ -2021,7 +2037,11 @@
         "ListToolCategories",
         "ListTransferAreas",
         "ListTransferRoutes",
+        "ListUnifiedEngineeringObjects",
+        "ListUnifiedGlobalScripts",
         "ListUnifiedHmiApiTypes",
+        "ListUnifiedLibraryFolderEntries",
+        "ListUnifiedTagDefinitions",
         "ListVersionControlWorkspaces",
         "ManageCfcChartProtection",
         "ManageClassicHmiCycle",
@@ -2095,8 +2115,16 @@
         "ManageTransferArea",
         "ManageUmcUsers",
         "ManageUnifiedCwcPackage",
+        "ManageUnifiedDynamization",
+        "ManageUnifiedEngineeringObject",
+        "ManageUnifiedEvent",
         "ManageUnifiedHmiGroup",
+        "ManageUnifiedLoggingTag",
+        "ManageUnifiedObjectParts",
+        "ManageUnifiedOpcUaAlarmType",
+        "ManageUnifiedPlantNode",
         "ManageUnifiedScreenItem",
+        "ManageUnifiedScreenLayout",
         "ManageWatchForceTableWebAccess",
         "MonitorPlcWatchTableS7",
         "MovePlcBlockToGroup",
@@ -2119,6 +2147,7 @@
         "ProbePlcMonitorOnlineCapabilities",
         "ProbeS7CpuIdentity",
         "PublishGenerationRecord",
+        "ReleaseUnifiedReadCursor",
         "RenderPlcBlock",
         "RenderPlcBlockDocument",
         "RenderPlcProgramAtlas",
@@ -2156,8 +2185,14 @@
         "SetPlcUnitObjectAccess",
         "SetPlcWatchTableModifyValue",
         "SetPlcWebOperatingMode",
+        "SetUnifiedGlobalScript",
         "SetUnifiedHmiButtonEventScriptCode",
         "SetUnifiedHmiRuntimeState",
+        "SetUnifiedLogDuration",
+        "SetUnifiedMultilingualProperty",
+        "SetUnifiedObjectProperties",
+        "SetUnifiedPlantObject",
+        "SetUnifiedRuntimeSettings",
         "ShowObjectInEditor",
         "ShowWorkbenchAtlas",
         "ShowWorkbenchBlock",
@@ -2173,6 +2208,7 @@
         "ValidateAutomationContext",
         "ValidatePlcDocumentSchemas",
         "ValidateStandardPackage",
+        "ValidateUnifiedObject",
         "WritePlcSclSourceFile",
         "WritePlcSimAdvancedTags",
         "WritePlcWebVars",
@@ -3878,6 +3914,7 @@
     {
       "name": "CompareUnifiedGraphicSelections",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -4786,6 +4823,7 @@
     {
       "name": "ExchangeUnifiedScriptModules",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -4795,6 +4833,7 @@
     {
       "name": "ExchangeUnifiedTags",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -6217,6 +6256,7 @@
     {
       "name": "GetUnifiedAlarmCommon",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -6226,6 +6266,7 @@
     {
       "name": "GetUnifiedAuditSettings",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -6235,6 +6276,7 @@
     {
       "name": "GetUnifiedCrossReferences",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -6244,6 +6286,7 @@
     {
       "name": "GetUnifiedFaceplateInstance",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -6253,6 +6296,7 @@
     {
       "name": "GetUnifiedGlobalScript",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -6262,6 +6306,7 @@
     {
       "name": "GetUnifiedGraphicSelection",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -6301,6 +6346,7 @@
     {
       "name": "GetUnifiedLibraryType",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -6310,6 +6356,7 @@
     {
       "name": "GetUnifiedObjectEvents",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -6319,6 +6366,7 @@
     {
       "name": "GetUnifiedObjectProperties",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -6328,6 +6376,7 @@
     {
       "name": "GetUnifiedPlantObject",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -6352,6 +6401,7 @@
     {
       "name": "GetUnifiedRuntimeSettings",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -6376,6 +6426,7 @@
     {
       "name": "GetUnifiedScreenBranch",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -6816,6 +6867,7 @@
     {
       "name": "ImportUnifiedOpcUaAlarms",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -7477,6 +7529,7 @@
     {
       "name": "ListUnifiedEngineeringObjects",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -7486,6 +7539,7 @@
     {
       "name": "ListUnifiedGlobalScripts",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -7505,6 +7559,7 @@
     {
       "name": "ListUnifiedLibraryFolderEntries",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -7514,6 +7569,7 @@
     {
       "name": "ListUnifiedTagDefinitions",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -8587,6 +8643,7 @@
     {
       "name": "ManageUnifiedDynamization",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -8596,6 +8653,7 @@
     {
       "name": "ManageUnifiedEngineeringObject",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -8605,6 +8663,7 @@
     {
       "name": "ManageUnifiedEvent",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -8633,6 +8692,7 @@
     {
       "name": "ManageUnifiedLoggingTag",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -8642,6 +8702,7 @@
     {
       "name": "ManageUnifiedObjectParts",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -8651,6 +8712,7 @@
     {
       "name": "ManageUnifiedOpcUaAlarmType",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -8660,6 +8722,7 @@
     {
       "name": "ManageUnifiedPlantNode",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -8679,6 +8742,7 @@
     {
       "name": "ManageUnifiedScreenLayout",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -9014,6 +9078,7 @@
     {
       "name": "ReleaseUnifiedReadCursor",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -9570,6 +9635,7 @@
     {
       "name": "SetUnifiedGlobalScript",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -9599,6 +9665,7 @@
     {
       "name": "SetUnifiedLogDuration",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -9608,6 +9675,7 @@
     {
       "name": "SetUnifiedMultilingualProperty",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -9617,6 +9685,7 @@
     {
       "name": "SetUnifiedObjectProperties",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -9626,6 +9695,7 @@
     {
       "name": "SetUnifiedPlantObject",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -9635,6 +9705,7 @@
     {
       "name": "SetUnifiedRuntimeSettings",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -9901,6 +9972,7 @@
     {
       "name": "ValidateUnifiedObject",
       "releases": [
+        "19",
         "20",
         "21"
       ],

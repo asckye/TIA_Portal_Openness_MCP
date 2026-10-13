@@ -1,9 +1,9 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "2db2ec41653c2d902b56dd2841bbae47747535b0d22004ccd8182b2195a81e17",
+  "catalogSha256": "5ad3ed087ac7176d44888dcf9af6b5b15810510d9754dc1851ba546cc2b41438",
   "uniqueTools": 516,
   "documents": 89,
-  "versionToolPairs": 3153,
+  "versionToolPairs": 3189,
   "offlineCallExecutions": 79,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
@@ -25401,11 +25401,11 @@
     },
     "19": {
       "releaseKey": "19",
-      "registeredToolCount": 434,
-      "checkedToolCount": 434,
+      "registeredToolCount": 470,
+      "checkedToolCount": 470,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 448,
+      "operationExampleCount": 484,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -25840,6 +25840,14 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "CompareUnifiedGraphicSelections",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -26664,6 +26672,44 @@
             },
             {
               "operation": "importTestSets",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ExchangeUnifiedScriptModules",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ExchangeUnifiedTags",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -27688,6 +27734,54 @@
           "operations": []
         },
         {
+          "toolName": "GetUnifiedAlarmCommon",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedAuditSettings",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedCrossReferences",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedFaceplateInstance",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedGlobalScript",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedGraphicSelection",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetUnifiedHmiButtonEvent",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -27712,6 +27806,38 @@
           "operations": []
         },
         {
+          "toolName": "GetUnifiedLibraryType",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedObjectEvents",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedObjectProperties",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedPlantObject",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetUnifiedRuntimeAlarms",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -27720,7 +27846,23 @@
           "operations": []
         },
         {
+          "toolName": "GetUnifiedRuntimeSettings",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetUnifiedRuntimeTags",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedScreenBranch",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -28021,6 +28163,25 @@
             "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
+        },
+        {
+          "toolName": "ImportUnifiedOpcUaAlarms",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
         },
         {
           "toolName": "InitializeEnvironment",
@@ -28478,7 +28639,39 @@
           "operations": []
         },
         {
+          "toolName": "ListUnifiedEngineeringObjects",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ListUnifiedGlobalScripts",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListUnifiedHmiApiTypes",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ListUnifiedLibraryFolderEntries",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ListUnifiedTagDefinitions",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -31400,6 +31593,88 @@
           ]
         },
         {
+          "toolName": "ManageUnifiedDynamization",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "update",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageUnifiedEngineeringObject",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "update",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageUnifiedEvent",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "update",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManageUnifiedHmiGroup",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -31418,6 +31693,107 @@
             },
             {
               "operation": "deleteEmpty",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageUnifiedLoggingTag",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "update",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageUnifiedObjectParts",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "update",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageUnifiedOpcUaAlarmType",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "update",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageUnifiedPlantNode",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "update",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -31447,6 +31823,45 @@
             },
             {
               "operation": "update",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageUnifiedScreenLayout",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "rename",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "update",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "resize",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             },
@@ -31670,6 +32085,14 @@
         },
         {
           "toolName": "PublishGenerationRecord",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ReleaseUnifiedReadCursor",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -32060,6 +32483,14 @@
           "operations": []
         },
         {
+          "toolName": "SetUnifiedGlobalScript",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "SetUnifiedHmiButtonEventScriptCode",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -32069,6 +32500,46 @@
         },
         {
           "toolName": "SetUnifiedHmiRuntimeState",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "SetUnifiedLogDuration",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "SetUnifiedMultilingualProperty",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "SetUnifiedObjectProperties",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "SetUnifiedPlantObject",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "SetUnifiedRuntimeSettings",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -32222,6 +32693,14 @@
         },
         {
           "toolName": "ValidateStandardPackage",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ValidateUnifiedObject",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",

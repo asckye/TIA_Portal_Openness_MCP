@@ -93,7 +93,7 @@ V20/V21 用 `GetOpennessWorkerStatus` 查看 worker 代次、活动调用和故�
 | V16 | 346 | 不适用 |
 | V17 | 369 | 不适用 |
 | V18 | 395 | 不适用 |
-| V19 | 434 | 不适用 |
+| V19 | 470 | 不适用 |
 | V20 | 502 | 84 |
 | V21 | 511 | 84 |
 <!-- generated:tool-counts:end -->

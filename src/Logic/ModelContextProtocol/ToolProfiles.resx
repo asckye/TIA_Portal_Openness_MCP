@@ -1454,6 +1454,18 @@
     },
     {
       "releaseKey": "19",
+      "family": "F27",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F28",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
       "family": "F25",
       "state": "current",
       "l5": "NOT RUN"
@@ -21881,6 +21893,659 @@
       "family": "F26",
       "example": {
         "hmiSoftwarePath": "HMI_RT_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetUnifiedObjectProperties",
+      "family": "F27",
+      "example": {
+        "softwarePath": "HMI_RT_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SetUnifiedObjectProperties",
+      "family": "F27",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "dryRun": true,
+        "objectPath": [
+          {
+            "property": "ScreenFolder"
+          },
+          {
+            "property": "Screens",
+            "name": "Overview"
+          },
+          {
+            "property": "ScreenItems",
+            "name": "StartButton"
+          }
+        ],
+        "properties": {
+          "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+        }
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SetUnifiedMultilingualProperty",
+      "family": "F27",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "property": "Text",
+        "culture": "zh-CN",
+        "rawText": "运行状态",
+        "dryRun": true,
+        "objectPath": [
+          {
+            "property": "ScreenFolder"
+          },
+          {
+            "property": "Screens",
+            "name": "Overview"
+          },
+          {
+            "property": "ScreenItems",
+            "name": "StartButton"
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ValidateUnifiedObject",
+      "family": "F27",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "objectPath": [
+          {
+            "property": "ScreenFolder"
+          },
+          {
+            "property": "Screens",
+            "name": "Overview"
+          },
+          {
+            "property": "ScreenItems",
+            "name": "StartButton"
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetUnifiedCrossReferences",
+      "family": "F27",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "objectPath": [
+          {
+            "property": "ScreenFolder"
+          },
+          {
+            "property": "Screens",
+            "name": "Overview"
+          },
+          {
+            "property": "ScreenItems",
+            "name": "StartButton"
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageUnifiedLoggingTag",
+      "family": "F27",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "tagPath": [
+          {
+            "property": "TagTables",
+            "name": "ExampleTags"
+          },
+          {
+            "property": "Tags",
+            "name": "Ready"
+          }
+        ],
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SetUnifiedLogDuration",
+      "family": "F27",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "durationPath": [
+          {
+            "property": "DataLogs",
+            "name": "ExampleLog"
+          },
+          {
+            "property": "LogDuration"
+          }
+        ],
+        "kind": "log",
+        "days": 1,
+        "hours": 1,
+        "minutes": 1,
+        "seconds": 1,
+        "hundredNanoseconds": 1,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageUnifiedOpcUaAlarmType",
+      "family": "F27",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "name": "Example_1",
+        "nodeId": "ns=3;s=Status",
+        "connection": "PLC_Connection",
+        "dryRun": true,
+        "action": "create"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetUnifiedPlantObject",
+      "family": "F27",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageUnifiedPlantNode",
+      "family": "F27",
+      "example": {
+        "plantPath": "ExampleArea",
+        "action": "create",
+        "plantObjectType": "&lt;existing plant object type from this project library&gt;",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SetUnifiedPlantObject",
+      "family": "F27",
+      "example": {
+        "plantPath": "Plant_1",
+        "dryRun": true,
+        "objectPath": [],
+        "properties": {
+          "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+        }
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetUnifiedObjectEvents",
+      "family": "F27",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "objectPath": [
+          {
+            "property": "ScreenFolder"
+          },
+          {
+            "property": "Screens",
+            "name": "Overview"
+          },
+          {
+            "property": "ScreenItems",
+            "name": "StartButton"
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageUnifiedObjectParts",
+      "family": "F27",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "objectPath": [
+          {
+            "property": "ScreenFolder"
+          },
+          {
+            "property": "Screens",
+            "name": "Overview"
+          },
+          {
+            "property": "ScreenItems",
+            "name": "StartButton"
+          }
+        ],
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageUnifiedDynamization",
+      "family": "F27",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "objectPath": [
+          {
+            "property": "ScreenFolder"
+          },
+          {
+            "property": "Screens",
+            "name": "Overview"
+          },
+          {
+            "property": "ScreenItems",
+            "name": "StartButton"
+          }
+        ],
+        "propertyName": "Visible",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageUnifiedScreenLayout",
+      "family": "F27",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "objectPath": [
+          {
+            "property": "ScreenFolder"
+          },
+          {
+            "property": "Screens",
+            "name": "Overview"
+          }
+        ],
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetUnifiedAlarmCommon",
+      "family": "F27",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "category": "alarmClasses"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetUnifiedAuditSettings",
+      "family": "F27",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "category": "auditTrails"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListUnifiedEngineeringObjects",
+      "family": "F27",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "category": "alarmClasses"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageUnifiedEngineeringObject",
+      "family": "F27",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "category": "textLists",
+        "name": "Example_1",
+        "action": "create",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageUnifiedEvent",
+      "family": "F27",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "eventType": "Down",
+        "dryRun": true,
+        "action": "read",
+        "objectPath": [
+          {
+            "property": "ScreenFolder"
+          },
+          {
+            "property": "Screens",
+            "name": "Overview"
+          },
+          {
+            "property": "ScreenItems",
+            "name": "StartButton"
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExchangeUnifiedTags",
+      "family": "F28",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "action": "export",
+        "directory": "C:\\Examples\\exports",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExchangeUnifiedScriptModules",
+      "family": "F28",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "action": "export",
+        "directory": "C:\\Examples\\exports",
+        "dryRun": true,
+        "moduleName": "Status",
+        "fileName": "Status.js"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ImportUnifiedOpcUaAlarms",
+      "family": "F28",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "connectionName": "PLC_Connection",
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SetUnifiedGlobalScript",
+      "family": "F28",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "expectedProject": "Example",
+        "moduleName": "Status",
+        "scriptCode": "&lt;complete scriptCode from GetUnifiedGlobalScript with the intended edit&gt;",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetUnifiedGraphicSelection",
+      "family": "F28",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "expectedProject": "Example",
+        "screenPath": "Overview",
+        "itemNames": [
+          "StatusText"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CompareUnifiedGraphicSelections",
+      "family": "F28",
+      "example": {
+        "beforePages": [
+          {
+            "pageIndex": 0,
+            "collectionId": "before-snapshot",
+            "scope": {
+              "tool": "ReadUnifiedGraphicSelection",
+              "softwarePath": "HMI_1",
+              "expectedProject": "ExampleProject",
+              "project": "ExampleProject",
+              "screenPath": "/Main",
+              "itemNames": [
+                "A"
+              ]
+            },
+            "apiCallSuccess": true,
+            "traversalComplete": true,
+            "dataComplete": false,
+            "truncated": false,
+            "nextCursor": null,
+            "records": [
+              {
+                "kind": "graphicObject",
+                "name": "A",
+                "path": "/Main/A",
+                "type": "HmiButton",
+                "status": "ok",
+                "geometryComplete": true,
+                "fields": {
+                  "Left": {
+                    "path": "/Main/A/Left",
+                    "kind": "value",
+                    "status": "ok",
+                    "type": "System.Int32",
+                    "value": 0
+                  },
+                  "Top": {
+                    "path": "/Main/A/Top",
+                    "kind": "value",
+                    "status": "ok",
+                    "type": "System.Int32",
+                    "value": 0
+                  },
+                  "Width": {
+                    "path": "/Main/A/Width",
+                    "kind": "value",
+                    "status": "ok",
+                    "type": "System.Int32",
+                    "value": 100
+                  },
+                  "Height": {
+                    "path": "/Main/A/Height",
+                    "kind": "value",
+                    "status": "ok",
+                    "type": "System.Int32",
+                    "value": 50
+                  }
+                }
+              },
+              {
+                "kind": "graphicSelectionSummary",
+                "path": "/Main",
+                "status": "unsupported",
+                "expectedObjectCount": 1,
+                "actualObjectCount": 1,
+                "geometryComplete": true,
+                "nativeGroupVerified": false,
+                "nativeGroup": null,
+                "nativeGroupBounds": null
+              }
+            ]
+          }
+        ],
+        "afterPages": [
+          {
+            "pageIndex": 0,
+            "collectionId": "after-snapshot",
+            "scope": {
+              "tool": "ReadUnifiedGraphicSelection",
+              "softwarePath": "HMI_1",
+              "expectedProject": "ExampleProject",
+              "project": "ExampleProject",
+              "screenPath": "/Main",
+              "itemNames": [
+                "A"
+              ]
+            },
+            "apiCallSuccess": true,
+            "traversalComplete": true,
+            "dataComplete": false,
+            "truncated": false,
+            "nextCursor": null,
+            "records": [
+              {
+                "kind": "graphicObject",
+                "name": "A",
+                "path": "/Main/A",
+                "type": "HmiButton",
+                "status": "ok",
+                "geometryComplete": true,
+                "fields": {
+                  "Left": {
+                    "path": "/Main/A/Left",
+                    "kind": "value",
+                    "status": "ok",
+                    "type": "System.Int32",
+                    "value": 0
+                  },
+                  "Top": {
+                    "path": "/Main/A/Top",
+                    "kind": "value",
+                    "status": "ok",
+                    "type": "System.Int32",
+                    "value": 0
+                  },
+                  "Width": {
+                    "path": "/Main/A/Width",
+                    "kind": "value",
+                    "status": "ok",
+                    "type": "System.Int32",
+                    "value": 100
+                  },
+                  "Height": {
+                    "path": "/Main/A/Height",
+                    "kind": "value",
+                    "status": "ok",
+                    "type": "System.Int32",
+                    "value": 50
+                  }
+                }
+              },
+              {
+                "kind": "graphicSelectionSummary",
+                "path": "/Main",
+                "status": "unsupported",
+                "expectedObjectCount": 1,
+                "actualObjectCount": 1,
+                "geometryComplete": true,
+                "nativeGroupVerified": false,
+                "nativeGroup": null,
+                "nativeGroupBounds": null
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetUnifiedRuntimeSettings",
+      "family": "F28",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "expectedProject": "Example"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SetUnifiedRuntimeSettings",
+      "family": "F28",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "expectedProject": "Example",
+        "changes": {
+          "StartScreen": "/Main",
+          "ScreenResolution": "SR_1920X1080"
+        },
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListUnifiedGlobalScripts",
+      "family": "F28",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "expectedProject": "Example"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetUnifiedGlobalScript",
+      "family": "F28",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "expectedProject": "Example",
+        "moduleName": "Status"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListUnifiedTagDefinitions",
+      "family": "F28",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "expectedProject": "Example"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetUnifiedScreenBranch",
+      "family": "F28",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "expectedProject": "Example",
+        "screenPath": "/Overview"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetUnifiedLibraryType",
+      "family": "F28",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "expectedProject": "Example",
+        "typePath": "UDT_Status",
+        "version": "&lt;version from target discovery&gt;"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListUnifiedLibraryFolderEntries",
+      "family": "F28",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "expectedProject": "Example"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetUnifiedFaceplateInstance",
+      "family": "F28",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "expectedProject": "Example",
+        "screenPath": "Overview",
+        "itemName": "StatusText",
+        "typePath": "UDT_Status",
+        "version": "&lt;version from target discovery&gt;"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ReleaseUnifiedReadCursor",
+      "family": "F28",
+      "example": {
+        "cursor": "&lt;cursor from the preceding read&gt;"
       }
     },
     {
@@ -71978,6 +72643,161 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CompareUnifiedGraphicSelections",
+        "currentName": "CompareUnifiedGraphicSelections",
+        "sourceName": "CompareUnifiedGraphicSelections",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "beforePages": [
+            {
+              "pageIndex": 0,
+              "collectionId": "before-snapshot",
+              "scope": {
+                "tool": "ReadUnifiedGraphicSelection",
+                "softwarePath": "HMI_1",
+                "expectedProject": "ExampleProject",
+                "project": "ExampleProject",
+                "screenPath": "/Main",
+                "itemNames": [
+                  "A"
+                ]
+              },
+              "apiCallSuccess": true,
+              "traversalComplete": true,
+              "dataComplete": false,
+              "truncated": false,
+              "nextCursor": null,
+              "records": [
+                {
+                  "kind": "graphicObject",
+                  "name": "A",
+                  "path": "/Main/A",
+                  "type": "HmiButton",
+                  "status": "ok",
+                  "geometryComplete": true,
+                  "fields": {
+                    "Left": {
+                      "path": "/Main/A/Left",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 0
+                    },
+                    "Top": {
+                      "path": "/Main/A/Top",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 0
+                    },
+                    "Width": {
+                      "path": "/Main/A/Width",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 100
+                    },
+                    "Height": {
+                      "path": "/Main/A/Height",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 50
+                    }
+                  }
+                },
+                {
+                  "kind": "graphicSelectionSummary",
+                  "path": "/Main",
+                  "status": "unsupported",
+                  "expectedObjectCount": 1,
+                  "actualObjectCount": 1,
+                  "geometryComplete": true,
+                  "nativeGroupVerified": false,
+                  "nativeGroup": null,
+                  "nativeGroupBounds": null
+                }
+              ]
+            }
+          ],
+          "afterPages": [
+            {
+              "pageIndex": 0,
+              "collectionId": "after-snapshot",
+              "scope": {
+                "tool": "ReadUnifiedGraphicSelection",
+                "softwarePath": "HMI_1",
+                "expectedProject": "ExampleProject",
+                "project": "ExampleProject",
+                "screenPath": "/Main",
+                "itemNames": [
+                  "A"
+                ]
+              },
+              "apiCallSuccess": true,
+              "traversalComplete": true,
+              "dataComplete": false,
+              "truncated": false,
+              "nextCursor": null,
+              "records": [
+                {
+                  "kind": "graphicObject",
+                  "name": "A",
+                  "path": "/Main/A",
+                  "type": "HmiButton",
+                  "status": "ok",
+                  "geometryComplete": true,
+                  "fields": {
+                    "Left": {
+                      "path": "/Main/A/Left",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 0
+                    },
+                    "Top": {
+                      "path": "/Main/A/Top",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 0
+                    },
+                    "Width": {
+                      "path": "/Main/A/Width",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 100
+                    },
+                    "Height": {
+                      "path": "/Main/A/Height",
+                      "kind": "value",
+                      "status": "ok",
+                      "type": "System.Int32",
+                      "value": 50
+                    }
+                  }
+                },
+                {
+                  "kind": "graphicSelectionSummary",
+                  "path": "/Main",
+                  "status": "unsupported",
+                  "expectedObjectCount": 1,
+                  "actualObjectCount": 1,
+                  "geometryComplete": true,
+                  "nativeGroupVerified": false,
+                  "nativeGroup": null,
+                  "nativeGroupBounds": null
+                }
+              ]
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CompileHmiDiagnostics",
         "currentName": "CompileHmiDiagnostics",
         "sourceName": "CompileAndDiagnoseHmi",
@@ -72851,6 +73671,38 @@
           "action": "export",
           "name": "ExampleRuleSet",
           "filePath": "C:\\Examples\\exports\\RuleSet.xml",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExchangeUnifiedScriptModules",
+        "currentName": "ExchangeUnifiedScriptModules",
+        "sourceName": "ExchangeUnifiedScriptModules",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "action": "export",
+          "directory": "C:\\Examples\\exports",
+          "dryRun": true,
+          "moduleName": "Status",
+          "fileName": "Status.js"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExchangeUnifiedTags",
+        "currentName": "ExchangeUnifiedTags",
+        "sourceName": "ExchangeUnifiedTags",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "action": "export",
+          "directory": "C:\\Examples\\exports",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -73777,6 +74629,31 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetUnifiedCrossReferences",
+        "currentName": "GetUnifiedCrossReferences",
+        "sourceName": "GetUnifiedCrossReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetVersionControlStatus",
         "currentName": "GetVersionControlStatus",
         "sourceName": "GetVersionControlStatus",
@@ -74198,6 +75075,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportUnifiedOpcUaAlarms",
+        "currentName": "ImportUnifiedOpcUaAlarms",
+        "sourceName": "ImportUnifiedOpcUaAlarms",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "connectionName": "PLC_Connection",
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "InitializeSimotionScripting",
         "currentName": "InitializeSimotionScripting",
         "sourceName": "InitializeSimotionScripting",
@@ -74352,6 +75244,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ListUnifiedGlobalScripts",
+        "currentName": "ListUnifiedGlobalScripts",
+        "sourceName": "ListUnifiedGlobalScripts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListUnifiedHmiApiTypes",
         "currentName": "ListUnifiedHmiApiTypes",
         "sourceName": "ListUnifiedHmiApiTypes",
@@ -74359,6 +75264,19 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListUnifiedLibraryFolderEntries",
+        "currentName": "ListUnifiedLibraryFolderEntries",
+        "sourceName": "ListUnifiedLibraryFolder",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example"
+        },
         "envelopeVersion": 4
       },
       {
@@ -76110,6 +77028,79 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageUnifiedDynamization",
+        "currentName": "ManageUnifiedDynamization",
+        "sourceName": "ManageUnifiedDynamization",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ],
+          "propertyName": "Visible",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageUnifiedEngineeringObject",
+        "currentName": "ManageUnifiedEngineeringObject",
+        "sourceName": "ManageUnifiedEngineeringObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "category": "textLists",
+          "name": "Example_1",
+          "action": "create",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageUnifiedEvent",
+        "currentName": "ManageUnifiedEvent",
+        "sourceName": "ManageUnifiedEvent",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "eventType": "Down",
+          "dryRun": true,
+          "action": "read",
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageUnifiedHmiGroup",
         "currentName": "ManageUnifiedHmiGroup",
         "sourceName": "ManageUnifiedHmiGroup",
@@ -76121,6 +77112,90 @@
           "family": "screens",
           "groupPath": "Examples",
           "action": "create",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageUnifiedLoggingTag",
+        "currentName": "ManageUnifiedLoggingTag",
+        "sourceName": "ManageUnifiedLoggingTag",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "tagPath": [
+            {
+              "property": "TagTables",
+              "name": "ExampleTags"
+            },
+            {
+              "property": "Tags",
+              "name": "Ready"
+            }
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageUnifiedObjectParts",
+        "currentName": "ManageUnifiedObjectParts",
+        "sourceName": "ManageUnifiedObjectParts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ],
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageUnifiedOpcUaAlarmType",
+        "currentName": "ManageUnifiedOpcUaAlarmType",
+        "sourceName": "ManageUnifiedOpcUaAlarmType",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "name": "Example_1",
+          "nodeId": "ns=3;s=Status",
+          "connection": "PLC_Connection",
+          "dryRun": true,
+          "action": "create"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageUnifiedPlantNode",
+        "currentName": "ManageUnifiedPlantNode",
+        "sourceName": "ManageUnifiedPlantNode",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plantPath": "ExampleArea",
+          "action": "create",
+          "plantObjectType": "&lt;existing plant object type from this project library&gt;",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -76139,6 +77214,30 @@
           "dryRun": true,
           "action": "read",
           "itemName": "StatusText"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageUnifiedScreenLayout",
+        "currentName": "ManageUnifiedScreenLayout",
+        "sourceName": "ManageUnifiedScreenLayout",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            }
+          ],
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
         },
         "envelopeVersion": 4
       },
@@ -77749,6 +78848,93 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetUnifiedAlarmCommon",
+        "currentName": "GetUnifiedAlarmCommon",
+        "sourceName": "ReadUnifiedAlarmCommon",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "category": "alarmClasses"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedAuditSettings",
+        "currentName": "GetUnifiedAuditSettings",
+        "sourceName": "ReadUnifiedAuditSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "category": "auditTrails"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListUnifiedEngineeringObjects",
+        "currentName": "ListUnifiedEngineeringObjects",
+        "sourceName": "ReadUnifiedEngineeringObjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "category": "alarmClasses"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedFaceplateInstance",
+        "currentName": "GetUnifiedFaceplateInstance",
+        "sourceName": "ReadUnifiedFaceplateInstance",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "screenPath": "Overview",
+          "itemName": "StatusText",
+          "typePath": "UDT_Status",
+          "version": "&lt;version from target discovery&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedGlobalScript",
+        "currentName": "GetUnifiedGlobalScript",
+        "sourceName": "ReadUnifiedGlobalScript",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "moduleName": "Status"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedGraphicSelection",
+        "currentName": "GetUnifiedGraphicSelection",
+        "sourceName": "ReadUnifiedGraphicSelection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "screenPath": "Overview",
+          "itemNames": [
+            "StatusText"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetUnifiedHmiButtonEvent",
         "currentName": "GetUnifiedHmiButtonEvent",
         "sourceName": "ReadUnifiedHmiButtonEvent",
@@ -77793,6 +78979,68 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetUnifiedLibraryType",
+        "currentName": "GetUnifiedLibraryType",
+        "sourceName": "ReadUnifiedLibraryType",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "typePath": "UDT_Status",
+          "version": "&lt;version from target discovery&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedObjectEvents",
+        "currentName": "GetUnifiedObjectEvents",
+        "sourceName": "ReadUnifiedObjectEvents",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedObjectProperties",
+        "currentName": "GetUnifiedObjectProperties",
+        "sourceName": "ReadUnifiedObjectProperties",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedPlantObject",
+        "currentName": "GetUnifiedPlantObject",
+        "sourceName": "ReadUnifiedPlantObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetUnifiedRuntimeAlarms",
         "currentName": "GetUnifiedRuntimeAlarms",
         "sourceName": "ReadUnifiedRuntimeAlarms",
@@ -77800,6 +79048,19 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedRuntimeSettings",
+        "currentName": "GetUnifiedRuntimeSettings",
+        "sourceName": "ReadUnifiedRuntimeSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example"
+        },
         "envelopeVersion": 4
       },
       {
@@ -77813,6 +79074,33 @@
           "tags": [
             "Ready"
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedScreenBranch",
+        "currentName": "GetUnifiedScreenBranch",
+        "sourceName": "ReadUnifiedScreenBranch",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "screenPath": "/Overview"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListUnifiedTagDefinitions",
+        "currentName": "ListUnifiedTagDefinitions",
+        "sourceName": "ReadUnifiedTagDefinitions",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example"
         },
         "envelopeVersion": 4
       },
@@ -77836,6 +79124,18 @@
         "arguments": {
           "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
           "outputDirectory": "C:\\Examples\\generated"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ReleaseUnifiedReadCursor",
+        "currentName": "ReleaseUnifiedReadCursor",
+        "sourceName": "ReleaseUnifiedReadCursor",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "cursor": "&lt;cursor from the preceding read&gt;"
         },
         "envelopeVersion": 4
       },
@@ -78313,6 +79613,34 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetUnifiedLogDuration",
+        "currentName": "SetUnifiedLogDuration",
+        "sourceName": "SetUnifiedLogDuration",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "durationPath": [
+            {
+              "property": "DataLogs",
+              "name": "ExampleLog"
+            },
+            {
+              "property": "LogDuration"
+            }
+          ],
+          "kind": "log",
+          "days": 1,
+          "hours": 1,
+          "minutes": 1,
+          "seconds": 1,
+          "hundredNanoseconds": 1,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SetPlcWatchTableModifyValue",
         "currentName": "SetPlcWatchTableModifyValue",
         "sourceName": "SetWatchTableModifyValue",
@@ -78497,6 +79825,115 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetUnifiedGlobalScript",
+        "currentName": "SetUnifiedGlobalScript",
+        "sourceName": "UpdateUnifiedGlobalScript",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "moduleName": "Status",
+          "scriptCode": "&lt;complete scriptCode from GetUnifiedGlobalScript with the intended edit&gt;",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetUnifiedMultilingualProperty",
+        "currentName": "SetUnifiedMultilingualProperty",
+        "sourceName": "UpdateUnifiedMultilingualProperty",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "property": "Text",
+          "culture": "zh-CN",
+          "rawText": "运行状态",
+          "dryRun": true,
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetUnifiedObjectProperties",
+        "currentName": "SetUnifiedObjectProperties",
+        "sourceName": "UpdateUnifiedObjectProperties",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "dryRun": true,
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ],
+          "properties": {
+            "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetUnifiedPlantObject",
+        "currentName": "SetUnifiedPlantObject",
+        "sourceName": "UpdateUnifiedPlantObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plantPath": "Plant_1",
+          "dryRun": true,
+          "objectPath": [],
+          "properties": {
+            "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetUnifiedRuntimeSettings",
+        "currentName": "SetUnifiedRuntimeSettings",
+        "sourceName": "UpdateUnifiedRuntimeSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "changes": {
+            "StartScreen": "/Main",
+            "ScreenResolution": "SR_1920X1080"
+          },
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "UploadStationFromPlc",
         "currentName": "UploadStationFromPlc",
         "sourceName": "UploadStationFromPlc",
@@ -78547,6 +79984,31 @@
         "arguments": {
           "packageId": "tiamcp.basic",
           "version": "1.0.0"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ValidateUnifiedObject",
+        "currentName": "ValidateUnifiedObject",
+        "sourceName": "ValidateUnifiedObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "objectPath": [
+            {
+              "property": "ScreenFolder"
+            },
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "StartButton"
+            }
+          ]
         },
         "envelopeVersion": 4
       },

@@ -314,7 +314,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `CheckDownloadReadiness` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `CompareLibraries` | 18, 19, 20, 21 |
 | `CompareLibraryObjects` | 18, 19, 20, 21 |
-| `CompareUnifiedGraphicSelections` | 20, 21 |
+| `CompareUnifiedGraphicSelections` | 19, 20, 21 |
 | `ConnectProjectToWorkspace` | 16, 17, 18, 19, 20, 21 |
 | `CreateHardwareCatalogDevice` | 18, 19, 20, 21 |
 | `CreateHardwareDevice` | 18, 19, 20, 21 |
@@ -342,8 +342,8 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ExchangePlcSupervisions` | 17, 18, 19, 20, 21 |
 | `ExchangeSystemDiagnosticsSettings` | 17, 18, 19, 20, 21 |
 | `ExchangeTestSuiteCase` | 17, 18, 19, 20, 21 |
-| `ExchangeUnifiedScriptModules` | 20, 21 |
-| `ExchangeUnifiedTags` | 20, 21 |
+| `ExchangeUnifiedScriptModules` | 19, 20, 21 |
+| `ExchangeUnifiedTags` | 19, 20, 21 |
 | `ExportAlarmClasses` | 17, 18, 19, 20, 21 |
 | `ExportAlarmInstanceTexts` | 16, 17, 18, 19, 20, 21 |
 | `ExportAlarmTextLists` | 16, 17, 18, 19, 20, 21 |
@@ -375,21 +375,21 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `GetProjectUserManagement` | 17, 18, 19, 20, 21 |
 | `GetSafetyBlockSignatures` | 17, 18, 19, 20, 21 |
 | `GetSivarcRuleTree` | 15.1, 16, 17, 18, 19, 20, 21 |
-| `GetUnifiedAlarmCommon` | 20, 21 |
-| `GetUnifiedAuditSettings` | 20, 21 |
-| `GetUnifiedCrossReferences` | 20, 21 |
-| `GetUnifiedFaceplateInstance` | 20, 21 |
-| `GetUnifiedGlobalScript` | 20, 21 |
-| `GetUnifiedGraphicSelection` | 20, 21 |
+| `GetUnifiedAlarmCommon` | 19, 20, 21 |
+| `GetUnifiedAuditSettings` | 19, 20, 21 |
+| `GetUnifiedCrossReferences` | 19, 20, 21 |
+| `GetUnifiedFaceplateInstance` | 19, 20, 21 |
+| `GetUnifiedGlobalScript` | 19, 20, 21 |
+| `GetUnifiedGraphicSelection` | 19, 20, 21 |
 | `GetUnifiedHmiButtonEvent` | 19, 20, 21 |
 | `GetUnifiedHmiDynamization` | 19, 20, 21 |
 | `GetUnifiedHmiTexts` | 19, 20, 21 |
-| `GetUnifiedLibraryType` | 20, 21 |
-| `GetUnifiedObjectEvents` | 20, 21 |
-| `GetUnifiedObjectProperties` | 20, 21 |
-| `GetUnifiedPlantObject` | 20, 21 |
-| `GetUnifiedRuntimeSettings` | 20, 21 |
-| `GetUnifiedScreenBranch` | 20, 21 |
+| `GetUnifiedLibraryType` | 19, 20, 21 |
+| `GetUnifiedObjectEvents` | 19, 20, 21 |
+| `GetUnifiedObjectProperties` | 19, 20, 21 |
+| `GetUnifiedPlantObject` | 19, 20, 21 |
+| `GetUnifiedRuntimeSettings` | 19, 20, 21 |
+| `GetUnifiedScreenBranch` | 19, 20, 21 |
 | `GetVersionControlStatus` | 16, 17, 18, 19, 20, 21 |
 | `ImportAlarmClasses` | 17, 18, 19, 20, 21 |
 | `ImportAlarmTextLists` | 16, 17, 18, 19, 20, 21 |
@@ -404,7 +404,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ImportTechnologyObject` | 16, 17, 18, 19, 20, 21 |
 | `ImportTechnologyObjectsFromDirectory` | 16, 17, 18, 19, 20, 21 |
 | `ImportUnifiedEngineeringList` | 20, 21 |
-| `ImportUnifiedOpcUaAlarms` | 20, 21 |
+| `ImportUnifiedOpcUaAlarms` | 19, 20, 21 |
 | `InitializeSimotionScripting` | 14sp1, 15.1, 17, 18, 19, 20 |
 | `InspectSimaticSdCompatibility` | 20, 21 |
 | `ListDccCharts` | 16, 17, 18, 19, 20, 21 |
@@ -416,11 +416,11 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ListSivarcRules` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `ListTestSuiteCases` | 17, 18, 19, 20, 21 |
 | `ListTransferAreas` | 15.1, 16, 17, 18, 19, 20, 21 |
-| `ListUnifiedEngineeringObjects` | 20, 21 |
-| `ListUnifiedGlobalScripts` | 20, 21 |
+| `ListUnifiedEngineeringObjects` | 19, 20, 21 |
+| `ListUnifiedGlobalScripts` | 19, 20, 21 |
 | `ListUnifiedHmiApiTypes` | 19, 20, 21 |
-| `ListUnifiedLibraryFolderEntries` | 20, 21 |
-| `ListUnifiedTagDefinitions` | 20, 21 |
+| `ListUnifiedLibraryFolderEntries` | 19, 20, 21 |
+| `ListUnifiedTagDefinitions` | 19, 20, 21 |
 | `ListVersionControlWorkspaces` | 16, 17, 18, 19, 20, 21 |
 | `ManageCfcChartProtection` | 18, 19, 20, 21 |
 | `ManageDcbLibraries` | 18, 19, 20, 21 |
@@ -469,21 +469,21 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ManageTransferArea` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `ManageUmcUsers` | 17, 18, 19, 20, 21 |
 | `ManageUnifiedCwcPackage` | 17, 18, 19, 20, 21 |
-| `ManageUnifiedDynamization` | 20, 21 |
-| `ManageUnifiedEngineeringObject` | 20, 21 |
-| `ManageUnifiedEvent` | 20, 21 |
+| `ManageUnifiedDynamization` | 19, 20, 21 |
+| `ManageUnifiedEngineeringObject` | 19, 20, 21 |
+| `ManageUnifiedEvent` | 19, 20, 21 |
 | `ManageUnifiedHmiGroup` | 19, 20, 21 |
 | `ManageUnifiedListEntries` | 20, 21 |
-| `ManageUnifiedLoggingTag` | 20, 21 |
-| `ManageUnifiedObjectParts` | 20, 21 |
-| `ManageUnifiedOpcUaAlarmType` | 20, 21 |
-| `ManageUnifiedPlantNode` | 20, 21 |
+| `ManageUnifiedLoggingTag` | 19, 20, 21 |
+| `ManageUnifiedObjectParts` | 19, 20, 21 |
+| `ManageUnifiedOpcUaAlarmType` | 19, 20, 21 |
+| `ManageUnifiedPlantNode` | 19, 20, 21 |
 | `ManageUnifiedScreenItem` | 19, 20, 21 |
-| `ManageUnifiedScreenLayout` | 20, 21 |
+| `ManageUnifiedScreenLayout` | 19, 20, 21 |
 | `ManageWatchForceTableWebAccess` | 16, 17, 18, 19, 20, 21 |
 | `MonitorPlcWatchTableS7` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `ProbePlcMonitorOnlineCapabilities` | 15.1, 16, 17, 18, 19, 20, 21 |
-| `ReleaseUnifiedReadCursor` | 20, 21 |
+| `ReleaseUnifiedReadCursor` | 19, 20, 21 |
 | `ResolveSivarcExpression` | 20, 21 |
 | `RetrieveProjectArchive` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `RunClassicHmiOfflineValidationSuite` | 20, 21 |
@@ -499,20 +499,20 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `SetPlcPutGetAccess` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `SetPlcUnitObjectAccess` | 16, 17, 18, 19, 20, 21 |
 | `SetPlcWatchTableModifyValue` | 17, 18, 19, 20, 21 |
-| `SetUnifiedGlobalScript` | 20, 21 |
+| `SetUnifiedGlobalScript` | 19, 20, 21 |
 | `SetUnifiedHmiButtonEventScriptCode` | 19, 20, 21 |
 | `SetUnifiedHmiRuntimeState` | 19, 20, 21 |
-| `SetUnifiedLogDuration` | 20, 21 |
-| `SetUnifiedMultilingualProperty` | 20, 21 |
-| `SetUnifiedObjectProperties` | 20, 21 |
-| `SetUnifiedPlantObject` | 20, 21 |
-| `SetUnifiedRuntimeSettings` | 20, 21 |
+| `SetUnifiedLogDuration` | 19, 20, 21 |
+| `SetUnifiedMultilingualProperty` | 19, 20, 21 |
+| `SetUnifiedObjectProperties` | 19, 20, 21 |
+| `SetUnifiedPlantObject` | 19, 20, 21 |
+| `SetUnifiedRuntimeSettings` | 19, 20, 21 |
 | `SynchronizeVersionControlWorkspace` | 16, 17, 18, 19, 20, 21 |
 | `UpgradeSivarcDefinitions` | 20, 21 |
 | `UploadStationFromPlc` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `ValidateClassicHmiMinimalPackageFiles` | 20, 21 |
 | `ValidateClassicHmiMinimalPackagePlcSync` | 20, 21 |
-| `ValidateUnifiedObject` | 20, 21 |
+| `ValidateUnifiedObject` | 19, 20, 21 |
 | `WriteClassicHmiMinimalPackageFiles` | 20, 21 |
 
 ## One release only (14)
