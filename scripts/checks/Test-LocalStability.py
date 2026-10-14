@@ -173,8 +173,8 @@ def cases(major, source):
         ('cfc_project_refused', 'ManageCfcChartProtection', {'softwarePath': '__soak_no_plc__', 'chartName': '__soak_missing__', 'action': 'read', 'dryRun': True}, 'ported_project_refused'),
         # Keep a real engine dispatch in this local-only soak (the host/child
         # correlation check needs one): the shared block read still runs in the
-        # V20/V21 engine worker and refuses the unbound project before provider access.
-        ('block_info_refused', 'GetPlcBlockInfo', {'softwarePath': '__soak_no_plc__', 'blockPath': '__soak_missing__'}, 'project_refused'),
+        # V20/V21 engine worker and refuses the missing portal before provider access.
+        ('block_info_refused', 'GetPlcBlockInfo', {'softwarePath': '__soak_no_plc__', 'blockPath': '__soak_missing__'}, 'portal_refused'),
         ('xref_block_refused', 'GetPlcCrossReferences', xref, 'xref'),
         ('xref_tag_refused', 'GetPlcCrossReferences', dict(xref, objectKind='Tag'), 'xref'),
         ('xref_unit_refused', 'GetPlcCrossReferences', dict(xref, unitName='__unit__'), 'xref'),
