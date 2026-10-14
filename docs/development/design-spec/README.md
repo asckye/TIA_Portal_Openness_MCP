@@ -108,3 +108,4 @@
 
 - [阶段 7 设计：V20/V21 改用 Foundation 宿主与引擎 worker](../design/p7-host-worker-split.md)（历史记录）
 - [P8-31 分阶段生成执行设计](../design/p8-31-staged-generation.md)（现行）
+- [P8-04 引擎退役与八版统一设计](../design/p8-04-engine-retirement.md)（现行）
