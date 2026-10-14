@@ -44,7 +44,7 @@ internal static partial class ReleaseCommands
                 if (check.Args.Contains("-SelfTest") && check.Exe != "test-suites") args.Add("-NoBuild");
                 var command = check.Exe == "test-suites" || check.Exe.StartsWith("check-", StringComparison.Ordinal)
                     ? new[] { typeof(ReleaseCommands).Assembly.Location, check.Exe }.Concat(args) : args;
-                return ProcessRunner.Run(check.Exe == "test-suites" || check.Exe.StartsWith("check-", StringComparison.Ordinal) || check.Exe == Dotnet ? dotnet : check.Exe,
+                return SuiteHang.RunProcess(check.Exe == "test-suites" || check.Exe.StartsWith("check-", StringComparison.Ordinal) || check.Exe == Dotnet ? dotnet : check.Exe,
                     command, Root, FastSuites.EnvironmentFor(Path.Combine(output, "isolation", name)));
             }, []));
         }

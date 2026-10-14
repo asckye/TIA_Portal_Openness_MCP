@@ -8,7 +8,7 @@ internal static partial class ReleaseCommands
     {
         if (options.Has("SelfTest"))
         {
-            var result = ProcessRunner.Run(Dotnet, AddOfflineNuGetConfig(Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", .. options.Has("NoBuild") ? new[] { "--no-build", "--no-restore" } : [], "-p:UseAppHost=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false", "--filter", "Category=Generators"]), Root);
+            var result = SuiteHang.RunProcess(Dotnet, AddOfflineNuGetConfig(Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", .. options.Has("NoBuild") ? new[] { "--no-build", "--no-restore" } : [], "-p:UseAppHost=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false", "--filter", "Category=Generators"]), Root);
             Console.Write(result.StandardOutput); Console.Error.Write(result.StandardError); return result.ExitCode;
         }
         var root = Path.GetFullPath(options.Get("Root", Root)); Dictionary<string, string> outputs;

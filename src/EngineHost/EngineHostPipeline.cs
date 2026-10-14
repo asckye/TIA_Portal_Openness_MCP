@@ -101,6 +101,13 @@ namespace TiaMcp.FoundationHost
 
         public EngineHostPipeline(string path, string workerPath, string releaseKey, IEngineWorker worker, string profile,
             IReadOnlyList<McpServerTool>? sharedTools = null, ISet<string>? sharedEssentials = null)
+            : this(path, workerPath, releaseKey, worker, profile, sharedTools, sharedEssentials, null) { }
+
+        // Only in-process tests supply a transform. The public/file catalog path
+        // always validates EngineCatalog before this seam can add test descriptors.
+        internal EngineHostPipeline(string path, string workerPath, string releaseKey, IEngineWorker worker, string profile,
+            IReadOnlyList<McpServerTool>? sharedTools, ISet<string>? sharedEssentials,
+            Func<IToolCatalogView, IToolCatalogView>? catalogForTest)
         {
             EngineHostConfiguration.ReleaseKey = releaseKey;
             context = new EngineSessionContext(worker) { WorkerBaseDirectory = Path.GetDirectoryName(Path.GetFullPath(workerPath))! };
@@ -108,6 +115,7 @@ namespace TiaMcp.FoundationHost
             EngineHostConfiguration.StagingOwner = () => stagingLifetime.Session;
             var catalog = new EngineCatalog(path, workerPath, releaseKey);
             IToolCatalogView published = sharedTools == null ? catalog : new SharedToolCatalog(catalog, sharedTools, sharedEssentials!);
+            if (catalogForTest != null) published = catalogForTest(published);
             Instructions = catalog.Instructions;
             BehaviorCapabilities = catalog.BehaviorCapabilities;
             McpServer.SetProfileOverride(profile);

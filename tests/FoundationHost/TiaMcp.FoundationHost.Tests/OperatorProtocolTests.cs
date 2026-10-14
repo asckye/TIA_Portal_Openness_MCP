@@ -15,8 +15,17 @@ using Session = foundationhost::TiaMcp.FoundationHost.HostSession;
 using Options = foundationhost::TiaMcp.FoundationHost.HostOptions;
 using Registration = foundationhost::TiaMcp.FoundationHost.HostRegistration;
 
+[Collection(BundleSelectionCollection.Name)]
 public sealed class OperatorProtocolTests
 {
+    [Fact]
+    public async Task Failed_session_creation_is_reported_before_the_handshake_read_can_hang()
+    {
+        using var fixture = new OperatorSessionTests.Fixture("21"); using var registration = fixture.Register();
+        var error = await Assert.ThrowsAsync<InvalidDataException>(() => OperatorSessionTests.Peer.Operator(registration, null,
+            "create", true, _ => throw new InvalidDataException("fixture session startup failed")).WaitAsync(TimeSpan.FromSeconds(5)));
+        Assert.Equal("fixture session startup failed", error.Message); Assert.Empty(registration.List());
+    }
     [Theory]
     [InlineData("{}")]
     [InlineData("{\"protocol\":\"tiamcp.operator\",\"version\":1,\"action\":\"list\"}")]
@@ -62,11 +71,12 @@ public sealed class OperatorProtocolTests
         var (host, client) = OperatorSessionTests.Streams(); using (host) using (client)
         {
             var connection = new Connection(registration, _ => throw new InvalidOperationException("Unexpected create."), _ => false);
-            var serving = connection.Serve(host, Environment.ProcessId, CancellationToken.None);
+            using var deadline = new CancellationTokenSource(OperatorSessionTests.Peer.HandshakeBudget);
+            var serving = connection.Serve(host, Environment.ProcessId, deadline.Token);
             var request = Handshake(action); request.Version = version;
-            await OperatorProtocol.Write(client, request, CancellationToken.None);
-            var result = await OperatorProtocol.Read<OperatorHandshakeResult>(client, CancellationToken.None);
-            Assert.False(result.Accepted); Assert.Equal(error, result.Error); await serving;
+            await OperatorProtocol.Write(client, request, deadline.Token);
+            var result = await OperatorProtocol.Read<OperatorHandshakeResult>(client, deadline.Token);
+            Assert.False(result.Accepted); Assert.Equal(error, result.Error); await serving.WaitAsync(OperatorSessionTests.Peer.HandshakeBudget);
         }
     }
 
@@ -74,7 +84,7 @@ public sealed class OperatorProtocolTests
     public async Task Owner_creates_a_private_session_and_pipe_close_releases_it(string release)
     {
         using var fixture = new OperatorSessionTests.Fixture(release); using var registration = fixture.Register();
-        var panel = await OperatorSessionTests.Peer.Operator(registration, null, "create", true, async _ => await fixture.Create(true));
+        var panel = await OperatorSessionTests.Peer.Operator(registration, null, "create", true, async token => await fixture.Create(true, token));
         string key = panel.Handshake!.SessionKey!;
         Assert.True(registration.Find(key)!.OperatorOwned);
         await panel.Tool("ConnectPortal", new() { ["processId"] = 104 });
@@ -106,15 +116,17 @@ public sealed class OperatorProtocolTests
         registration.Publish();
         var owner = Process.GetCurrentProcess();
         // The fixture injects a trusted peer and memory streams; production Start still performs all kernel checks.
-        await using var endpoint = new Endpoint(registration, _ => Task.FromResult<foundationhost::TiaMcp.FoundationHost.IHostSession>(session),
+        var endpoint = new Endpoint(registration, _ => Task.FromResult<foundationhost::TiaMcp.FoundationHost.IHostSession>(session),
             _ => Environment.ProcessId, listener, owner, options.Transport == "operator");
+        await using var endpointShutdown = new BoundedDisposal(endpoint);
+        using var deadline = new CancellationTokenSource(OperatorSessionTests.Peer.RequestBudget);
         using var stream = listener.Connect();
-        await OperatorProtocol.Write(stream, Handshake("create"), CancellationToken.None);
-        Assert.True((await OperatorProtocol.Read<OperatorHandshakeResult>(stream, CancellationToken.None)).Accepted);
-        var client = await McpClientFactory.CreateAsync(new StreamClientTransport(stream, stream));
+        await OperatorProtocol.Write(stream, Handshake("create"), deadline.Token).WaitAsync(OperatorSessionTests.Peer.HandshakeBudget);
+        Assert.True((await OperatorProtocol.Read<OperatorHandshakeResult>(stream, deadline.Token).WaitAsync(OperatorSessionTests.Peer.HandshakeBudget)).Accepted);
+        var client = await McpClientFactory.CreateAsync(new StreamClientTransport(stream, stream), cancellationToken: deadline.Token).WaitAsync(OperatorSessionTests.Peer.HandshakeBudget);
         try
         {
-            await client.DisposeAsync(); stream.Dispose();
+            await client.DisposeAsync().AsTask().WaitAsync(OperatorSessionTests.Peer.ShutdownBudget); stream.Dispose();
             await shutdownStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.False(endpoint.Completion.IsCompleted); Assert.Equal("BUSY\n", File.ReadAllText(lease));
             using var another = holdStream || transport == "http" ? listener.Connect() : null;
@@ -129,14 +141,18 @@ public sealed class OperatorProtocolTests
             else
             {
                 Assert.False(endpoint.Completion.IsCompleted); Assert.False(owner.HasExited);
-                await OperatorProtocol.Write(another!, Handshake("list"), CancellationToken.None);
-                var listed = await OperatorProtocol.Read<OperatorHandshakeResult>(another!, CancellationToken.None);
+                await OperatorProtocol.Write(another!, Handshake("list"), deadline.Token).WaitAsync(OperatorSessionTests.Peer.HandshakeBudget);
+                var listed = await OperatorProtocol.Read<OperatorHandshakeResult>(another!, deadline.Token).WaitAsync(OperatorSessionTests.Peer.HandshakeBudget);
                 Assert.True(listed.Accepted); Assert.Equal(ai.SessionKey, Assert.Single(listed.Sessions)["sessionKey"]!.GetValue<string>());
                 Assert.False(endpoint.Completion.IsCompleted);
             }
             Assert.False(owner.HasExited);
         }
-        finally { endpoint.Stop(); await client.DisposeAsync(); session.Dispose(); }
+        finally { endpoint.Stop(); await client.DisposeAsync().AsTask().WaitAsync(OperatorSessionTests.Peer.ShutdownBudget); session.Dispose(); }
+    }
+    private sealed class BoundedDisposal(IAsyncDisposable endpoint) : IAsyncDisposable
+    {
+        public async ValueTask DisposeAsync() => await endpoint.DisposeAsync().AsTask().WaitAsync(OperatorSessionTests.Peer.ShutdownBudget);
     }
     private sealed class MemoryListener : foundationhost::TiaMcp.FoundationHost.IOperatorListener
     {
@@ -175,7 +191,8 @@ public sealed class OperatorProtocolTests
         string sid = LocalPipeSecurity.CurrentSid, name = "operator-security-" + Guid.NewGuid().ToString("N");
         using var server = OperatorPipe.CreateServer(name, sid, true);
         using var client = new NamedPipeClientStream(".", name, PipeDirection.InOut, PipeOptions.Asynchronous, TokenImpersonationLevel.Identification);
-        var accepting = server.WaitForConnectionAsync(); await client.ConnectAsync(1000); await accepting;
+        using var deadline = new CancellationTokenSource(TimeSpan.FromMilliseconds(1000));
+        var accepting = server.WaitForConnectionAsync(deadline.Token); await client.ConnectAsync(1000, deadline.Token); await accepting.WaitAsync(TimeSpan.FromMilliseconds(1000));
         int? peer = OperatorPipe.VerifiedClient(server, wrongSid ? "S-1-5-21-1-2-3-1001" : sid,
             wrongImage ? Path.Combine(Path.GetTempPath(), Path.GetFileName(Environment.ProcessPath!)) : Environment.ProcessPath!);
         Assert.Equal(wrongSid || wrongImage ? null : (int?)Environment.ProcessId, peer);

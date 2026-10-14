@@ -9,7 +9,7 @@ internal static class Program
             _ = Task.Run(async () => { await Console.In.ReadLineAsync(); stopping.Cancel(); });
             var options = foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(args.Skip(1).ToArray(), AppContext.BaseDirectory);
             using var logger = new foundationhost::TiaMcp.FoundationHost.HostFileLogger(options.ReleaseKey);
-            return foundationhost::TiaMcp.FoundationHost.EngineReleaseHost.Run(options, logger, stopping.Token).GetAwaiter().GetResult();
+            return foundationhost::TiaMcp.FoundationHost.EngineReleaseHost.RunForTest(options, logger, SessionFixtureTool.Add, stopping.Token).GetAwaiter().GetResult();
         }
         if (args.FirstOrDefault() == "--process-lease-fixture") return FoundationProcessLeaseTests.RunFixture(args);
         if (args.Contains("--engine-worker") || args.Contains("--native-session")) return EngineSessionFixture.Run(args);

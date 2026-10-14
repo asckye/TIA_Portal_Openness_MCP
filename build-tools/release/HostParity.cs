@@ -16,17 +16,20 @@ internal static class HostParity
         var summary = Path.Combine(directory, "host-behavior-parity.json");
         File.Delete(trx);
         File.Delete(summary);
+        var before = SuiteHang.Begin(directory, "host-behavior-parity");
         var command = new List<string> { "test", Path.Combine(root, "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj"),
             "-c", "Release", "--disable-build-servers", "-m:1", "--filter", "FullyQualifiedName~BehaviorParityTests", "--logger", "trx;LogFileName=host-behavior-parity.trx", "--results-directory", directory };
         if (options.Has("NoBuild")) command.AddRange(["--no-build", "--no-restore"]);
         else if (major == "20") command.Add("-p:DefineConstants=TIA_V20");
+        command.AddRange(SuiteHang.TestArguments);
         var env = environment is null ? new Dictionary<string, string?>() : new Dictionary<string, string?>(environment);
         env["TIA_MCP_PARITY_ENGINE_RELEASE"] = major;
         var dotnet = options.Get("Dotnet", "dotnet");
         var output = new StringBuilder($"RUN host-behavior-parity: {dotnet} {string.Join(' ', command)}\n");
-        var result = (process ?? DotnetSuites.RunProcess)(dotnet, command, root, env);
+        var result = SuiteHang.Complete(directory, "host-behavior-parity", before, (process ?? DotnetSuites.RunProcess)(dotnet, command, root, env));
         output.Append(result.StandardOutput);
         var errors = new List<string>();
+        errors.AddRange(SuiteHang.Errors(directory, "host-behavior-parity"));
         var counts = new JsonObject();
         if (result.ExitCode != 0) errors.Add("dotnet test exited " + result.ExitCode);
         if (File.Exists(trx))

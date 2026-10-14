@@ -85,7 +85,7 @@ internal static partial class ReleaseCommands
                     return FastSuites.Run(Root, Options.Parse(["-Suite", "release-tool", "-NoBuild", "-Shards", options.Get("Shards", "8"), "-MaxParallelism", GetMaxParallelism(options).ToString(), "-ResultsDirectory", Path.Combine(logRoot, "release-tool")], new HashSet<string> { "NoBuild" }), DotnetSuites.LoadCatalog(Path.Combine(Root, "tests/test-suites.json"), Root));
                 var command = check.Exe == "test-suites" || check.Exe.StartsWith("check-", StringComparison.Ordinal)
                     ? new[] { typeof(ReleaseCommands).Assembly.Location, check.Exe }.Concat(arguments) : arguments;
-                return ProcessRunner.Run(check.Exe == "test-suites" || check.Exe.StartsWith("check-", StringComparison.Ordinal) ? Dotnet : check.Exe, command, Root, environment);
+                return SuiteHang.RunProcess(check.Exe == "test-suites" || check.Exe.StartsWith("check-", StringComparison.Ordinal) ? Dotnet : check.Exe, command, Root, environment);
             }, [], Exclusive: check.Name == "release tool test suite")).ToArray();
             var rows = CheckScheduler.Run(jobs, GetMaxParallelism(options), logRoot);
             Console.WriteLine($"PREFLIGHT: {rows.Count(row => row.Status == "passed")} passed, {rows.Count(row => row.Status != "passed")} failed; {logRoot}");
@@ -96,7 +96,7 @@ internal static partial class ReleaseCommands
         {
             var arguments = AddOfflineNuGetConfig(check.Exe, check.Args);
             var result = check.Exe == "test-suites" ? DotnetSuites.Run(Root, Options.Parse(arguments, new HashSet<string> { "SelfTest" }))
-                : check.Exe.StartsWith("check-", StringComparison.Ordinal) ? RunStaticCaptured(check.Exe, arguments) : ProcessRunner.Run(check.Exe, arguments, Root);
+                : check.Exe.StartsWith("check-", StringComparison.Ordinal) ? RunStaticCaptured(check.Exe, arguments) : SuiteHang.RunProcess(check.Exe, arguments, Root);
             if (result.ExitCode == 0)
             {
                 Console.WriteLine($"ok   {check.Name}");
@@ -1721,7 +1721,7 @@ internal static partial class ReleaseCommands
 
     private static int RunChild(string exe, string[] args, string cwd, string description)
     {
-        var result = ProcessRunner.Run(exe, AddOfflineNuGetConfig(exe, args), cwd);
+        var result = SuiteHang.RunProcess(exe, AddOfflineNuGetConfig(exe, args), cwd);
         Console.Write(result.StandardOutput);
         Console.Error.Write(result.StandardError);
         if (result.ExitCode != 0) throw new ReleaseException($"{description} failed with exit code {result.ExitCode}");

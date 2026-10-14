@@ -27,7 +27,7 @@ internal static partial class ReleaseCommands
         {
             // The test project references this running tool. Rebuilding its Windows
             // apphost would try to replace the executable currently holding the gate.
-            var result = ProcessRunner.Run(Dotnet, AddOfflineNuGetConfig(Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", .. options.Has("NoBuild") ? new[] { "--no-build", "--no-restore" } : [], "-p:UseAppHost=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false", "--filter", "Category=StaticChecks"]), Root);
+            var result = SuiteHang.RunProcess(Dotnet, AddOfflineNuGetConfig(Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", .. options.Has("NoBuild") ? new[] { "--no-build", "--no-restore" } : [], "-p:UseAppHost=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false", "--filter", "Category=StaticChecks"]), Root);
             Console.Write(result.StandardOutput); Console.Error.Write(result.StandardError);
             return result.ExitCode;
         }

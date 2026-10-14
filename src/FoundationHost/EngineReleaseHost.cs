@@ -8,14 +8,21 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
+using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcp.FoundationHost;
 
 internal static class EngineReleaseHost
 {
-    internal static async Task<int> Run(HostOptions options, HostFileLogger logger, CancellationToken stoppingToken = default)
+    internal static Task<int> Run(HostOptions options, HostFileLogger logger, CancellationToken stoppingToken = default)
+        => RunCore(options, logger, null, stoppingToken);
+
+    // No CLI/environment switch reaches this seam; only the friend test assembly calls it.
+    internal static Task<int> RunForTest(HostOptions options, HostFileLogger logger, Func<IToolCatalogView, IToolCatalogView> catalogForTest, CancellationToken stoppingToken) => RunCore(options, logger, catalogForTest, stoppingToken);
+
+    private static async Task<int> RunCore(HostOptions options, HostFileLogger logger, Func<IToolCatalogView, IToolCatalogView>? catalogForTest, CancellationToken stoppingToken)
     {
-        using var session = CreateSession(options);
+        using var session = CreateSession(options, catalogForTest);
         var worker = session.Worker;
         var pipeline = session.Pipeline;
         if (options.CatalogOnly)
@@ -33,7 +40,7 @@ internal static class EngineReleaseHost
             await HostToolCommand.Run(options.HostCommand, pipeline);
             return 0;
         }
-        await using var operatorEndpoint = OperatorEndpoint.Start(options, async token => await CreateHostSession(options, true, token));
+        await using var operatorEndpoint = OperatorEndpoint.Start(options, async token => await CreateHostSessionCore(options, true, catalogForTest, token));
         using var operatorStopping = stoppingToken.Register(() => operatorEndpoint?.Stop());
         if (options.Transport == "operator")
         {
@@ -45,7 +52,7 @@ internal static class EngineReleaseHost
         {
             // Verify the release and capabilities before listening; sessions never use this probe.
             session.Dispose();
-            await RunHttp(options, logger, pipeline, operatorEndpoint, stoppingToken);
+            await RunHttp(options, logger, pipeline, operatorEndpoint, catalogForTest, stoppingToken);
         }
         else
         {
@@ -65,18 +72,23 @@ internal static class EngineReleaseHost
         return 0;
     }
 
-    private static Session CreateSession(HostOptions options)
+    private static Session CreateSession(HostOptions options, Func<IToolCatalogView, IToolCatalogView>? catalogForTest = null)
     {
         var worker = new EngineWorkerClient(options, EngineCatalog.Hash(options.EngineWorkerExe!));
-        try { return new Session(worker, CreatePipeline(options, worker)); }
+        try { return new Session(worker, CreatePipeline(options, worker, catalogForTest)); }
         catch { worker.Dispose(); throw; }
     }
     private static HostSession CreateHostSession(HostOptions options, Session session, bool operatorOwned = false)
         => new(options.ReleaseKey, session.Pipeline.Instructions, operatorOwned, session.Pipeline.Tools.ToArray(),
             session.Pipeline.OperatorTools, session.Worker.OperatorSnapshot, session.Dispose);
-    internal static async Task<HostSession> CreateHostSession(HostOptions options, bool operatorOwned, CancellationToken token = default)
+    internal static Task<HostSession> CreateHostSession(HostOptions options, bool operatorOwned, CancellationToken token = default)
+        => CreateHostSessionCore(options, operatorOwned, null, token);
+
+    internal static Task<HostSession> CreateHostSessionForTest(HostOptions options, bool operatorOwned, Func<IToolCatalogView, IToolCatalogView> catalogForTest, CancellationToken token) => CreateHostSessionCore(options, operatorOwned, catalogForTest, token);
+
+    private static async Task<HostSession> CreateHostSessionCore(HostOptions options, bool operatorOwned, Func<IToolCatalogView, IToolCatalogView>? catalogForTest, CancellationToken token)
     {
-        var session = CreateSession(options);
+        var session = CreateSession(options, catalogForTest);
         try
         {
             using var context = session.Pipeline.EnterSession();
@@ -86,7 +98,7 @@ internal static class EngineReleaseHost
         catch { session.Dispose(); throw; }
     }
 
-    private static EngineHostPipeline CreatePipeline(HostOptions options, EngineWorkerClient worker)
+    private static EngineHostPipeline CreatePipeline(HostOptions options, EngineWorkerClient worker, Func<IToolCatalogView, IToolCatalogView>? catalogForTest)
     {
         EngineHostConfiguration.ReleaseKey = options.ReleaseKey;
         IReadOnlyList<McpServerTool>? roster = null;
@@ -98,7 +110,7 @@ internal static class EngineReleaseHost
             && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(n).Name == "F00"));
         essentials.IntersectWith(TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(options.ReleaseKey)
             .Where(r => r!["profiles"]!.AsArray().Any(p => (string?)p == "lite")).Select(r => (string)r!["currentName"]!));
-        var pipeline = new EngineHostPipeline(options.EngineCatalog!, options.EngineWorkerExe!, options.ReleaseKey, worker, options.Profile, shared, essentials);
+        var pipeline = new EngineHostPipeline(options.EngineCatalog!, options.EngineWorkerExe!, options.ReleaseKey, worker, options.Profile, shared, essentials, catalogForTest);
         roster = pipeline.AllTools;
         worker.SessionLocked = () => pipeline.SessionLocked;
         return pipeline;
@@ -112,7 +124,8 @@ internal static class EngineReleaseHost
         public void Dispose() { if (Interlocked.Exchange(ref disposed, 1) == 0) { worker.SessionLocked = null; worker.Dispose(); pipeline.Dispose(); } }
     }
 
-    private static async Task RunHttp(HostOptions options, HostFileLogger logger, EngineHostPipeline probe, OperatorEndpoint? operatorEndpoint, CancellationToken stoppingToken)
+    private static async Task RunHttp(HostOptions options, HostFileLogger logger, EngineHostPipeline probe, OperatorEndpoint? operatorEndpoint,
+        Func<IToolCatalogView, IToolCatalogView>? catalogForTest, CancellationToken stoppingToken)
     {
         var builder = WebApplication.CreateBuilder(HttpHostOptions.Create());
         builder.Logging.ClearProviders();
@@ -122,7 +135,7 @@ internal static class EngineReleaseHost
         builder.WebHost.UseSetting("urls", options.HttpPrefix);
         var mcp = builder.Services.AddMcpServer(o => o.ServerInstructions = probe.Instructions).WithHttpTransport(o => {
             o.ConfigureSessionOptions = async (context, server, token) => {
-                var session = CreateSession(options);
+                var session = CreateSession(options, catalogForTest);
                 var hostSession = CreateHostSession(options, session);
                 try
                 {

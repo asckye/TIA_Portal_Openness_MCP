@@ -38,8 +38,16 @@ internal static class SuiteSharding
 
     internal static CommandResult Merge(string name, JsonObject suite, IReadOnlyList<string> shards, string output, string? baseline = null)
     {
-        if (shards.Count == 0 || shards.Any(path => !File.Exists(path))) throw new ReleaseException(name + ": missing shard TRX");
         var errors = new List<string>();
+        foreach (var shard in shards) errors.AddRange(SuiteHang.Errors(Path.GetDirectoryName(shard)!, name));
+        if (shards.Count == 0 || shards.Any(path => !File.Exists(path)))
+        {
+            errors.Add(name + ": missing shard TRX");
+            Directory.CreateDirectory(output);
+            File.WriteAllText(Path.Combine(output, name + ".json"), new JsonObject { ["suite"] = name,
+                ["errors"] = new JsonArray(errors.Select(e => (JsonNode?)JsonValue.Create(e)).ToArray()) }.ToJsonString() + "\n");
+            throw new ReleaseException(string.Join("\n", errors));
+        }
         foreach (var shard in shards) errors.AddRange(DotnetSuites.ReadTrx(shard).Errors.Select(error => Path.GetFileName(shard) + ": " + error));
         var docs = shards.Select(XDocument.Load).ToArray();
         var root = new XElement(docs[0].Root!);

@@ -11,13 +11,20 @@ using Xunit;
 
 public sealed class EngineHttpSessionTests
 {
+    [Fact]
+    public async Task Production_catalog_rejects_fixture_tools_and_startup_reports_stderr()
+    {
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => Fixture.Start("21", invalidCatalog: true).WaitAsync(TimeSpan.FromSeconds(5)));
+        Assert.Contains("Engine catalog execution ownership mismatch: " + SessionFixtureTool.Name, error.Message);
+    }
+
     [Theory, InlineData("20"), InlineData("21")]
     public async Task Unknown_outcome_can_disconnect_and_a_new_session_can_acquire_the_same_lease(string release)
     {
         using var host = await Fixture.Start(release);
         using var a = new Session(host.Url); await a.Initialize();
         await a.Tool("ConnectPortal", new() { ["processId"] = 321 });
-        var unknown = await a.Tool("ListTestSuiteCases", new() { ["fault"] = true }, ok: false);
+        var unknown = await a.Tool(SessionFixtureTool.Name, new() { ["fault"] = true }, ok: false);
         Assert.Equal("Fixture native outcome unknown.", (string?)unknown["error"]?["message"]);
         Assert.NotNull(unknown["data"]?["fixturePid"]);
         string prior = (string)unknown["meta"]!["requestId"]!;
@@ -66,9 +73,9 @@ public sealed class EngineHttpSessionTests
     {
         using var host = await Fixture.Start(release, shortTimeout: waitForTimeout); using var a = new Session(host.Url); await a.Initialize();
         await a.Tool("ConnectPortal", new() { ["processId"] = 323 });
-        int pid = (int)(await a.Tool("ListTestSuiteCases"))["data"]!["fixturePid"]!;
+        int pid = (int)(await a.Tool(SessionFixtureTool.Name))["data"]!["fixturePid"]!;
         using var worker = Process.GetProcessById(pid);
-        var running = a.Tool("ListTestSuiteCases", new() { ["hang"] = true }, ok: false);
+        var running = a.Tool(SessionFixtureTool.Name, new() { ["hang"] = true }, ok: false);
         if (waitForTimeout) await running;
         else
         {
@@ -93,7 +100,7 @@ public sealed class EngineHttpSessionTests
     {
         using var host = await Fixture.Start(release, shortTimeout: true); using var a = new Session(host.Url); await a.Initialize();
         await a.Tool("ConnectPortal", new() { ["processId"] = 324 });
-        await a.Tool("ListTestSuiteCases", new() { ["hang"] = true }, ok: false);
+        await a.Tool(SessionFixtureTool.Name, new() { ["hang"] = true }, ok: false);
         var restarted = await a.Tool("RestartOpennessWorker", new() { ["confirmRestart"] = true });
         Assert.Contains("\"requiresTiaRestart\":true", restarted["data"]!.ToJsonString());
         Assert.Contains("restart that TIA instance", restarted["data"]!.ToJsonString());
@@ -109,8 +116,8 @@ public sealed class EngineHttpSessionTests
         using var b = new Session(host.Url);
         await a.Initialize(); await b.Initialize();
         Assert.NotEqual(a.Id, b.Id);
-        int pidA = (int)(await a.Tool("ListTestSuiteCases"))["data"]!["fixturePid"]!;
-        int pidB = (int)(await b.Tool("CallTool", new() { ["name"] = "ListTestSuiteCases", ["arguments"] = new JsonObject() }))["data"]!["fixturePid"]!;
+        int pidA = (int)(await a.Tool(SessionFixtureTool.Name))["data"]!["fixturePid"]!;
+        int pidB = (int)(await b.Tool("CallTool", new() { ["name"] = SessionFixtureTool.Name, ["arguments"] = new JsonObject() }))["data"]!["fixturePid"]!;
         Assert.NotEqual(pidA, pidB);
         using var processA = Process.GetProcessById(pidA);
         using var processB = Process.GetProcessById(pidB);
@@ -125,7 +132,7 @@ public sealed class EngineHttpSessionTests
         var refused = await a.Tool("GetSessionState", ok: false);
         Assert.Equal("PRECONDITION_FAILED", (string?)refused["error"]?["code"]);
         await b.Tool("GetSessionState"); await b.Tool("ListPortalProcessProjects");
-        int currentB = (int)(await b.Tool("ListTestSuiteCases"))["data"]!["fixturePid"]!;
+        int currentB = (int)(await b.Tool(SessionFixtureTool.Name))["data"]!["fixturePid"]!;
         using var workerB = Process.GetProcessById(currentB);
         await a.End();
         Assert.True(processA.WaitForExit(5000));
@@ -142,9 +149,9 @@ public sealed class EngineHttpSessionTests
         using var host = await Fixture.Start(release);
         using var a = new Session(host.Url); using var b = new Session(host.Url);
         await a.Initialize(); await b.Initialize();
-        await a.Tool("ListTestSuiteCases", new() { ["fault"] = true }, ok: false);
+        await a.Tool(SessionFixtureTool.Name, new() { ["fault"] = true }, ok: false);
         Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await a.Tool("GetSessionState", ok: false))["error"]?["code"]);
-        await b.Tool("GetSessionState"); await b.Tool("ListTestSuiteCases");
+        await b.Tool("GetSessionState"); await b.Tool(SessionFixtureTool.Name);
         var stageArgs = new JsonObject { ["files"] = new JsonArray(new JsonObject { ["fileName"] = "fixture.scl", ["kind"] = "scl", ["content"] = "FUNCTION Fixture : Void\nBEGIN\nEND_FUNCTION" }), ["dryRun"] = false };
         await b.Tool("StageImportFiles", stageArgs, metadata: new JsonObject { ["tiaMcpStagingSession"] = "caller-peer-token", ["other"] = "kept" });
         var batches = (await a.Tool("ListStagedImportFiles"))["data"]!.ToJsonString();
@@ -187,7 +194,7 @@ public sealed class EngineHttpSessionTests
     {
         using var host = await Fixture.Start(release, gracefulShutdown: true);
         using var session = new Session(host.Url); await session.Initialize();
-        int pid = (int)(await session.Tool("ListTestSuiteCases"))["data"]!["fixturePid"]!;
+        int pid = (int)(await session.Tool(SessionFixtureTool.Name))["data"]!["fixturePid"]!;
         using var worker = Process.GetProcessById(pid);
         // Hold a POST body open: shutdown must cancel transport reads as well as session workers.
         using var upload = new TcpClient(); await upload.ConnectAsync("127.0.0.1", new Uri(host.Url).Port);
@@ -230,42 +237,35 @@ public sealed class EngineHttpSessionTests
         public void Dispose() => client.Dispose();
     }
 
-    private sealed class Fixture(Process process, string url, string directory) : IDisposable
+    private sealed class Fixture(Process process, string url, string directory, string image, string adapter, byte[]? priorAdapter) : IDisposable
     {
+        private readonly Task exited = process.WaitForExitAsync();
         internal string Url => url;
         internal string DataDirectory => directory;
-        internal static async Task<Fixture> Start(string release, bool shortTimeout = false, bool gracefulShutdown = false)
+        internal static async Task<Fixture> Start(string release, bool shortTimeout = false, bool gracefulShutdown = false, bool invalidCatalog = false)
         {
             string root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
             string directory = Path.Combine(root, "bin-build", "P7-07a-tests", Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
             string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
-            File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
-            var tools = new JsonArray(); var descriptors = new JsonArray();
-            // CallTool, GetOpennessWorkerStatus and RestartOpennessWorker are ported F01 declarations the host adds itself (P8-03a);
-            // an engine catalog that still exports them is refused.
-            foreach (string name in new[] { "ListTestSuiteCases" })
-            {
-                var properties = name == "ListTestSuiteCases" ? new JsonObject { ["fault"] = new JsonObject { ["type"] = "boolean" }, ["hang"] = new JsonObject { ["type"] = "boolean" } }
-                    : name == "RestartOpennessWorker" ? new JsonObject { ["confirmRestart"] = new JsonObject { ["type"] = "boolean" } }
-                    : name == "CallTool" ? new JsonObject { ["name"] = new JsonObject { ["type"] = "string" }, ["arguments"] = new JsonObject { ["type"] = "object" } } : new JsonObject();
-                tools.Add(new JsonObject { ["name"] = name, ["description"] = "[L0][Diagnostics][READ] Offline session fixture.",
-                    ["inputSchema"] = new JsonObject { ["type"] = "object", ["properties"] = properties, ["additionalProperties"] = false } });
-                var parameters = new JsonArray();
-                foreach (var p in properties) parameters.Add(new JsonObject { ["name"] = p.Key, ["friendlyType"] = (string)p.Value!["type"]!,
-                    ["clrType"] = p.Key == "arguments" ? typeof(TiaMcp.Logic.V4.Inputs.ToolArguments).FullName : p.Key == "name" ? "System.String" : "System.Boolean",
-                    ["required"] = false, ["description"] = "", ["synthesized"] = false, ["allowedValues"] = new JsonArray() });
-                descriptors.Add(new JsonObject { ["name"] = name, ["rawDescription"] = "", ["signature"] = name + "()", ["parameters"] = parameters,
-                    ["dryRun"] = new JsonObject { ["present"] = false, ["default"] = false }, ["execution"] = name == "ListTestSuiteCases" ? "worker" : "host" });
-            }
+            string adapter = Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll");
+            byte[]? priorAdapter = File.Exists(adapter) ? File.ReadAllBytes(adapter) : null;
+            File.WriteAllText(adapter, "offline session fixture");
             string catalog = Path.Combine(directory, "catalog.json");
-            File.WriteAllText(catalog, new JsonObject { ["formatVersion"] = 1, ["release"] = release,
-                ["workerSha256"] = foundationhost::TiaMcp.FoundationHost.EngineWorkerClient.Hash(exe), ["behaviorCapabilities"] = BehaviorCapabilities.Table(typeof(BehaviorCapabilities).Assembly, release),
-                ["tools"] = tools, ["descriptors"] = descriptors, ["liteTools"] = new JsonArray(), ["serverInstructions"] = "Offline session fixture." }.ToJsonString());
+            SessionFixtureTool.WriteCatalog(catalog, release, exe);
+            if (invalidCatalog)
+            {
+                var rejected = JsonNode.Parse(File.ReadAllText(catalog))!;
+                rejected["tools"]!.AsArray().Add(new JsonObject { ["name"] = SessionFixtureTool.Name,
+                    ["inputSchema"] = new JsonObject { ["type"] = "object", ["properties"] = new JsonObject() } });
+                rejected["descriptors"]!.AsArray().Add(new JsonObject { ["name"] = SessionFixtureTool.Name,
+                    ["parameters"] = new JsonArray(), ["execution"] = "worker" });
+                File.WriteAllText(catalog, rejected.ToJsonString());
+            }
             using var listener = new TcpListener(IPAddress.Loopback, 0); listener.Start(); int port = ((IPEndPoint)listener.LocalEndpoint).Port; listener.Stop();
             string url = "http://127.0.0.1:" + port;
-            var start = new ProcessStartInfo(gracefulShutdown ? exe : Path.ChangeExtension(typeof(foundationhost::TiaMcp.FoundationHost.HostOptions).Assembly.Location, ".exe")) {
-                WorkingDirectory = directory, UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true, RedirectStandardInput = gracefulShutdown };
-            if (gracefulShutdown) start.ArgumentList.Add("--foundation-http-fixture");
+            var start = new ProcessStartInfo(exe) {
+                WorkingDirectory = directory, UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true, RedirectStandardInput = true };
+            start.ArgumentList.Add("--foundation-http-fixture");
             foreach (string arg in new[] { "--bundle-root", root, "--release-key", release, "--engine-worker", exe, "--engine-catalog", catalog, "--transport", "http", "--http-prefix", url + "/", "--http-api-key", "fixture-key", "--profile", "full" }) start.ArgumentList.Add(arg);
             if (shortTimeout)
             {
@@ -281,14 +281,20 @@ public sealed class EngineHttpSessionTests
             process.OutputDataReceived += (_, e) => { if (e.Data != null) File.AppendAllText(Path.Combine(directory, "host.log"), e.Data + "\n"); };
             process.ErrorDataReceived += (_, e) => { if (e.Data != null) File.AppendAllText(Path.Combine(directory, "host-error.log"), e.Data + "\n"); };
             process.BeginOutputReadLine(); process.BeginErrorReadLine();
-            var fixture = new Fixture(process, url, directory);
+            var fixture = new Fixture(process, url, directory, exe, adapter, priorAdapter);
             try
             {
                 using var client = new HttpClient(new HttpClientHandler { UseProxy = false }) { Timeout = TimeSpan.FromSeconds(1) };
                 for (int attempt = 0; attempt < 200; attempt++)
                 {
-                    Assert.False(process.HasExited, "Host exited: " + (File.Exists(Path.Combine(directory, "host-error.log")) ? File.ReadAllText(Path.Combine(directory, "host-error.log")) : ""));
-                    try { if ((await client.GetAsync(url + "/mcp/health")).IsSuccessStatusCode) return fixture; }
+                    await fixture.RequireRunning();
+                    try
+                    {
+                        var health = client.GetAsync(url + "/mcp/health");
+                        if (await Task.WhenAny(health, fixture.exited) == fixture.exited) await fixture.RequireRunning();
+                        using var response = await health;
+                        if (response.IsSuccessStatusCode) return fixture;
+                    }
                     catch (Exception error) when (error is HttpRequestException or TaskCanceledException) { }
                     await Task.Delay(50);
                 }
@@ -296,12 +302,28 @@ public sealed class EngineHttpSessionTests
             }
             catch { fixture.Dispose(); throw; }
         }
+        private async Task RequireRunning()
+        {
+            if (!process.HasExited) return;
+            await exited.WaitAsync(TimeSpan.FromSeconds(5)); // Drain redirected stderr before reporting the startup error.
+            throw new InvalidOperationException("Fixture host exited " + process.ExitCode + ": "
+                + (File.Exists(Path.Combine(directory, "host-error.log")) ? File.ReadAllText(Path.Combine(directory, "host-error.log")) : "(no stderr)"));
+        }
         internal void Stop() => process.StandardInput.Close();
         internal async Task<bool> WaitForExit(TimeSpan timeout)
         {
             try { await process.WaitForExitAsync().WaitAsync(timeout); return process.ExitCode == 0; }
             catch (TimeoutException) { return false; }
         }
-        public void Dispose() { if (!process.HasExited) { process.Kill(); process.WaitForExit(5000); } process.Dispose(); }
+        public void Dispose()
+        {
+            if (!process.HasExited)
+            {
+                Assert.Equal(Path.GetFullPath(image), Path.GetFullPath(process.MainModule!.FileName), ignoreCase: true);
+                process.Kill(); Assert.True(process.WaitForExit(5000), "Owned fixture host did not exit.");
+            }
+            process.Dispose();
+            if (priorAdapter == null) File.Delete(adapter); else File.WriteAllBytes(adapter, priorAdapter);
+        }
     }
 }

@@ -31,7 +31,7 @@ public sealed class OperatorSessionTests
         Assert.Equal(a.SessionKey, panel.Handshake!.SessionKey);
         Assert.Equal(1, (int?)panel.Handshake.Sessions.Single()["participants"]?["workbench"]);
         Assert.Equal(1, (int?)a.Snapshot()["participants"]?["workbench"]);
-        var catalogAi = await ai.Client.ListToolsAsync(); var catalogPanel = await panel.Client.ListToolsAsync();
+        var catalogAi = await ai.ListTools(); var catalogPanel = await panel.ListTools();
         Assert.Equal(catalogAi.Select(t => t.Name), catalogPanel.Select(t => t.Name));
         Assert.Equal(a.Tools.Select(t => JsonSerializer.Serialize(t.ProtocolTool)), a.OperatorTools.Select(t => JsonSerializer.Serialize(t.ProtocolTool)));
         int? pidA = (int?)a.Snapshot()["worker"]?["pid"], pidB = (int?)b.Snapshot()["worker"]?["pid"];
@@ -66,7 +66,7 @@ public sealed class OperatorSessionTests
         await attached.State(s => (string?)s["endedBy"] == "mcp");
         if (fixture.Options.EngineWorkerExe == null)
         {
-            foundationhost::TiaMcp.FoundationHost.WorkerShutdown.StopAll();
+            await Task.Run(foundationhost::TiaMcp.FoundationHost.WorkerShutdown.StopAll).WaitAsync(Peer.RequestBudget);
             session.Dispose();
             Assert.Equal("disconnected", (string?)session.Snapshot()["worker"]?["state"]);
         }
@@ -80,7 +80,7 @@ public sealed class OperatorSessionTests
         await using var ai = await Peer.Ai(session); await using var separate = await Peer.Ai(other);
         using var registration = fixture.Register(); using var membership = registration.Register(session);
         await using var panel = await Peer.Operator(registration, session.SessionKey);
-        await panel.Tool("ListTestSuiteCases", new() { ["fault"] = true }, false);
+        await panel.Tool(SessionFixtureTool.Name, new() { ["fault"] = true }, false);
         Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await ai.Tool("GetSessionState", ok: false))["error"]?["code"]);
         Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await panel.Tool("GetSessionState", ok: false))["error"]?["code"]);
         Assert.Equal("workbench", (string?)session.Snapshot()["endedBy"]); Assert.True((bool?)session.Snapshot()["sessionLocked"]);
@@ -101,18 +101,18 @@ public sealed class OperatorSessionTests
         using var registration = fixture.Register(); using var membership = registration.Register(session);
         await using var panel = await Peer.Operator(registration, session.SessionKey);
         await ai.Tool("GetSessionState");
-        var running = ai.Tool("ListTestSuiteCases", new() { ["hang"] = true });
+        var running = ai.Tool(SessionFixtureTool.Name, new() { ["hang"] = true });
         await WaitUntilBusy(fixture);
         await panel.State(s => (string?)s["lane"]?["actor"] == "mcp");
         string? requestId = (string?)session.Snapshot()["lane"]?["requestId"];
         using var cancellation = new CancellationTokenSource();
         var request = new RequestContext<CallToolRequestParams>(System.Reflection.DispatchProxy.Create<IMcpServer, ServerProxy>())
-            { Params = new CallToolRequestParams { Name = "ListTestSuiteCases", Arguments = new Dictionary<string, JsonElement>() } };
-        var queued = session.OperatorTools.Single(t => t.ProtocolTool.Name == "ListTestSuiteCases").InvokeAsync(request, cancellation.Token);
+            { Params = new CallToolRequestParams { Name = SessionFixtureTool.Name, Arguments = new Dictionary<string, JsonElement>() } };
+        var queued = session.OperatorTools.Single(t => t.ProtocolTool.Name == SessionFixtureTool.Name).InvokeAsync(request, cancellation.Token);
         cancellation.Cancel();
-        var cancelled = await queued;
+        var cancelled = await queued.AsTask().WaitAsync(Peer.RequestBudget);
         Assert.Equal("CANCELLED", (string?)cancelled.StructuredContent?["error"]?["code"]);
-        var ordered = panel.Tool("ListTestSuiteCases");
+        var ordered = panel.Tool(SessionFixtureTool.Name);
         await Task.Delay(50); Assert.False(ordered.IsCompleted);
         var completed = await running; await ordered;
         Assert.Equal((string?)completed["meta"]?["requestId"], requestId);
@@ -148,9 +148,9 @@ public sealed class OperatorSessionTests
         using var registration = fixture.Register(); using var membership = registration.Register(session);
         await using var panel = await Peer.Operator(registration, session.SessionKey);
         await ai.Tool("GetSessionState");
-        var running = ai.Tool("ListTestSuiteCases", new() { ["hang"] = true }, ok: false);
+        var running = ai.Tool(SessionFixtureTool.Name, new() { ["hang"] = true }, ok: false);
         await WaitUntilBusy(fixture);
-        var refused = ai.Tool("ListTestSuiteCases", ok: false);
+        var refused = ai.Tool(SessionFixtureTool.Name, ok: false);
         await Task.Delay(100); Assert.False(refused.IsCompleted);
         await panel.Tool("DisconnectPortal");
         await running; await refused;
@@ -170,19 +170,19 @@ public sealed class OperatorSessionTests
         using var staging = pipeline.RegisterHttpSession("real-ai-id");
         var request = new RequestContext<CallToolRequestParams>(System.Reflection.DispatchProxy.Create<IMcpServer, ServerProxy>())
             { Params = new CallToolRequestParams { Name = "GetSessionState", Arguments = new Dictionary<string, JsonElement>() } };
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await pipeline.Tools.Single(t => t.ProtocolTool.Name == "GetSessionState").InvokeAsync(request));
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await pipeline.Tools.Single(t => t.ProtocolTool.Name == "GetSessionState").InvokeAsync(request).AsTask().WaitAsync(Peer.RequestBudget));
         using var actor = ActorScope.EnterWorkbench("real-ai-id");
-        var result = await pipeline.OperatorTools.Single(t => t.ProtocolTool.Name == "GetSessionState").InvokeAsync(request);
+        var result = await pipeline.OperatorTools.Single(t => t.ProtocolTool.Name == "GetSessionState").InvokeAsync(request).AsTask().WaitAsync(Peer.RequestBudget);
         Assert.True((bool?)result.StructuredContent?["ok"]);
         Assert.Null(request.Server.SessionId);
         Assert.Null(enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.OperatorSession.Value);
         using var approval = new DisabledApproval(fixture.Options.BundleRoot);
         request.Params = new CallToolRequestParams { Name = "StageImportFiles", Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
             "{\"files\":[{\"fileName\":\"operator.scl\",\"kind\":\"scl\",\"content\":\"FUNCTION Operator : Void\\nBEGIN\\nEND_FUNCTION\"}],\"dryRun\":false}") };
-        var staged = await pipeline.OperatorTools.Single(t => t.ProtocolTool.Name == "StageImportFiles").InvokeAsync(request);
+        var staged = await pipeline.OperatorTools.Single(t => t.ProtocolTool.Name == "StageImportFiles").InvokeAsync(request).AsTask().WaitAsync(Peer.RequestBudget);
         Assert.True((bool?)staged.StructuredContent?["ok"], staged.StructuredContent?.ToJsonString());
         request.Params = new CallToolRequestParams { Name = "ListStagedImportFiles" };
-        var listing = await pipeline.OperatorTools.Single(t => t.ProtocolTool.Name == "ListStagedImportFiles").InvokeAsync(request);
+        var listing = await pipeline.OperatorTools.Single(t => t.ProtocolTool.Name == "ListStagedImportFiles").InvokeAsync(request).AsTask().WaitAsync(Peer.RequestBudget);
         Assert.Contains("real-ai-id", listing.StructuredContent!.ToJsonString());
         Assert.Contains("\"currentSession\":true", listing.StructuredContent!.ToJsonString());
     }
@@ -197,23 +197,19 @@ public sealed class OperatorSessionTests
     {
         internal readonly string DirectoryPath = Path.Combine(Path.GetTempPath(), "operator-fixture-" + Guid.NewGuid().ToString("N"));
         internal readonly Options Options;
+        private readonly string previousEngineRelease = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+        private readonly string adapterPath;
+        private readonly byte[]? previousAdapter;
         private readonly string? priorLease = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT");
         internal Fixture(string release)
         {
             Directory.CreateDirectory(DirectoryPath); Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", DirectoryPath);
             string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
-            File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
+            adapterPath = Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll");
+            previousAdapter = File.Exists(adapterPath) ? File.ReadAllBytes(adapterPath) : null;
+            File.WriteAllText(adapterPath, "offline session fixture");
             string catalog = Path.Combine(DirectoryPath, "catalog.json");
-            var properties = new JsonObject { ["fault"] = new JsonObject { ["type"] = "boolean" }, ["hang"] = new JsonObject { ["type"] = "boolean" } };
-            File.WriteAllText(catalog, new JsonObject { ["formatVersion"] = 1, ["release"] = release,
-                ["workerSha256"] = foundationhost::TiaMcp.FoundationHost.EngineWorkerClient.Hash(exe),
-                ["behaviorCapabilities"] = TiaMcp.Logic.V4.BehaviorCapabilities.Table(typeof(TiaMcp.Logic.V4.BehaviorCapabilities).Assembly, release),
-                ["tools"] = new JsonArray(new JsonObject { ["name"] = "ListTestSuiteCases", ["description"] = "[L0][Diagnostics][READ] Offline fixture.",
-                    ["inputSchema"] = new JsonObject { ["type"] = "object", ["properties"] = properties, ["additionalProperties"] = false } }),
-                ["descriptors"] = new JsonArray(new JsonObject { ["name"] = "ListTestSuiteCases", ["rawDescription"] = "", ["signature"] = "ListTestSuiteCases()",
-                    ["parameters"] = new JsonArray(properties.Select(p => (JsonNode)new JsonObject { ["name"] = p.Key, ["friendlyType"] = "boolean", ["clrType"] = "System.Boolean", ["required"] = false, ["description"] = "", ["synthesized"] = false, ["allowedValues"] = new JsonArray() }).ToArray()),
-                    ["dryRun"] = new JsonObject { ["present"] = false, ["default"] = false }, ["execution"] = "worker" }),
-                ["liteTools"] = new JsonArray(), ["serverInstructions"] = "Offline operator fixture." }.ToJsonString());
+            SessionFixtureTool.WriteCatalog(catalog, release, exe);
             Options = new Options { ReleaseKey = release, WorkerExe = exe, ApiDirectory = AppContext.BaseDirectory, BundledWorker = false,
                 BundleRoot = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), NativeEnabled = true,
                 EngineWorkerExe = release is "20" or "21" ? exe : null, EngineCatalog = catalog, Profile = "full" };
@@ -222,12 +218,14 @@ public sealed class OperatorSessionTests
         // BundleLayout.Initialize selects the bundle process-wide (AppDomain data and TIA_MCP_BUNDLE_ROOT); restore both.
         private readonly object? previousBundle = AppDomain.CurrentDomain.GetData("TiaOpenness.Shared.BundleLayout.v4");
         private readonly string? previousRootVariable = Environment.GetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT");
-        internal async Task<Session> Create(bool owned = false) => Options.EngineWorkerExe == null
-            ? Session.Legacy(Options, "fixture", owned) : await EngineHost.CreateHostSession(Options, owned);
+        internal async Task<Session> Create(bool owned = false, CancellationToken token = default) => Options.EngineWorkerExe == null
+            ? Session.Legacy(Options, "fixture", owned) : await EngineHost.CreateHostSessionForTest(Options, owned, SessionFixtureTool.Add, token).WaitAsync(Peer.RequestBudget, token);
         internal Registration Register() => new(Options, "S-1-5-21-1-2-3-1001", DirectoryPath, error => throw error);
         public void Dispose()
         {
             Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", priorLease);
+            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousEngineRelease;
+            if (previousAdapter == null) File.Delete(adapterPath); else File.WriteAllBytes(adapterPath, previousAdapter);
             AppDomain.CurrentDomain.SetData("TiaOpenness.Shared.BundleLayout.v4", previousBundle);
             Environment.SetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT", previousRootVariable);
             Directory.Delete(DirectoryPath, true);
@@ -236,15 +234,20 @@ public sealed class OperatorSessionTests
 
     internal sealed class Peer : IAsyncDisposable
     {
+        internal static readonly TimeSpan HandshakeBudget = TimeSpan.FromSeconds(5);
+        internal static readonly TimeSpan RequestBudget = TimeSpan.FromSeconds(120);
+        internal static readonly TimeSpan ShutdownBudget = TimeSpan.FromSeconds(5);
         internal readonly IMcpClient Client;
+        private readonly Stream hostStream, clientStream;
         internal OperatorHandshakeResult? Handshake;
         private readonly CancellationTokenSource stopping;
         private readonly Task running;
         private readonly IMcpServer? server;
         private readonly System.Collections.Concurrent.ConcurrentQueue<JsonObject> states = new();
         private readonly IAsyncDisposable subscription;
-        private Peer(IMcpClient client, Task running, CancellationTokenSource stopping, IMcpServer? server)
+        private Peer(IMcpClient client, Task running, CancellationTokenSource stopping, IMcpServer? server, Stream hostStream, Stream clientStream)
         {
+            this.hostStream = hostStream; this.clientStream = clientStream;
             Client = client; this.running = running; this.stopping = stopping; this.server = server;
             subscription = client.RegisterNotificationHandler(OperatorProtocol.SessionStateNotification, (notification, _) => {
                 states.Enqueue((JsonObject)notification.Params!.DeepClone()); return ValueTask.CompletedTask;
@@ -257,9 +260,14 @@ public sealed class OperatorSessionTests
             var server = McpServerFactory.Create(new StreamServerTransport(host, host), new McpServerOptions { ServerInfo = new Implementation { Name = "fixture", Version = "1" },
                 Capabilities = new ServerCapabilities { Tools = new ToolsCapability { ToolCollection = collection } } });
             var running = server.RunAsync(stopping.Token);
-            var mcp = await McpClientFactory.CreateAsync(new StreamClientTransport(client, client));
-            session.BindAi(server);
-            return new Peer(mcp, running, stopping, server);
+            try
+            {
+                using var deadline = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token); deadline.CancelAfter(HandshakeBudget);
+                var mcp = await Startup(McpClientFactory.CreateAsync(new StreamClientTransport(client, client), cancellationToken: deadline.Token), running);
+                session.BindAi(server);
+                return new Peer(mcp, running, stopping, server, host, client);
+            }
+            catch (Exception error) { await FailedStartup(error, stopping, host, client, running, server); throw; }
         }
         internal static async Task<Peer> Operator(Registration registration, string? key, string action = "attach", bool owner = false,
             Func<CancellationToken, Task<foundationhost::TiaMcp.FoundationHost.IHostSession>>? create = null)
@@ -267,16 +275,45 @@ public sealed class OperatorSessionTests
             var (host, client) = Streams(); var stopping = new CancellationTokenSource();
             var connection = new Connection(registration, create ?? (_ => throw new InvalidOperationException("Unexpected create.")), _ => owner);
             var running = connection.Serve(host, Environment.ProcessId, stopping.Token);
-            await OperatorProtocol.Write(client, new OperatorHandshake { Action = action, SessionKey = key, Workbench = new OperatorWorkbench { Pid = Environment.ProcessId, Version = "fixture" } }, stopping.Token);
-            var result = await OperatorProtocol.Read<OperatorHandshakeResult>(client, stopping.Token); Assert.True(result.Accepted, result.Error);
-            var mcp = await McpClientFactory.CreateAsync(new StreamClientTransport(client, client));
-            return new Peer(mcp, running, stopping, null) { Handshake = result };
+            try
+            {
+                using var deadline = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token); deadline.CancelAfter(HandshakeBudget);
+                await OperatorProtocol.Write(client, new OperatorHandshake { Action = action, SessionKey = key, Workbench = new OperatorWorkbench { Pid = Environment.ProcessId, Version = "fixture" } }, deadline.Token);
+                var result = await Startup(OperatorProtocol.Read<OperatorHandshakeResult>(client, deadline.Token), running); Assert.True(result.Accepted, result.Error);
+                var mcp = await Startup(McpClientFactory.CreateAsync(new StreamClientTransport(client, client), cancellationToken: deadline.Token), running);
+                return new Peer(mcp, running, stopping, null, host, client) { Handshake = result };
+            }
+            catch (Exception error) { await FailedStartup(error, stopping, host, client, running, null); throw; }
+        }
+        private static async Task<T> Startup<T>(Task<T> exchange, Task running)
+        {
+            if (await Task.WhenAny(exchange, running).WaitAsync(HandshakeBudget) == running)
+            {
+                await running; // Propagate the actual server startup error, not a pipe timeout.
+                throw new IOException("Fixture server ended during startup.");
+            }
+            return await exchange;
+        }
+        private static async Task FailedStartup(Exception error, CancellationTokenSource stopping, Stream host, Stream client, Task running, IMcpServer? server)
+        {
+            stopping.Cancel(); client.Dispose(); host.Dispose();
+            try { await running.WaitAsync(ShutdownBudget); }
+            catch (Exception teardown) { error.Data["fixtureTeardown"] = teardown.ToString(); }
+            try { if (server != null) await server.DisposeAsync().AsTask().WaitAsync(ShutdownBudget); }
+            catch (Exception teardown) { error.Data["fixtureServerTeardown"] = teardown.ToString(); }
+            stopping.Dispose();
         }
         internal async Task<JsonObject> Tool(string name, Dictionary<string, object?>? args = null, bool ok = true)
         {
-            var result = await Client.CallToolAsync(name, args);
+            using var deadline = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token); deadline.CancelAfter(RequestBudget);
+            var result = await Client.CallToolAsync(name, args, cancellationToken: deadline.Token).AsTask().WaitAsync(RequestBudget);
             var body = result.StructuredContent?.AsObject() ?? new JsonObject();
             Assert.True(ok == (bool?)body["ok"], JsonSerializer.Serialize(result, McpJsonUtilities.DefaultOptions)); return body;
+        }
+        internal async Task<IList<McpClientTool>> ListTools()
+        {
+            using var deadline = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token); deadline.CancelAfter(RequestBudget);
+            return await Client.ListToolsAsync(cancellationToken: deadline.Token).AsTask().WaitAsync(RequestBudget);
         }
         internal async Task State(Func<JsonObject, bool> predicate)
         {
@@ -286,10 +323,19 @@ public sealed class OperatorSessionTests
         }
         public async ValueTask DisposeAsync()
         {
-            await subscription.DisposeAsync(); stopping.Cancel(); await Client.DisposeAsync();
-            try { await running.WaitAsync(TimeSpan.FromSeconds(5)); }
-            catch (OperationCanceledException) { }
-            if (server != null) await server.DisposeAsync(); stopping.Dispose();
+            stopping.Cancel();
+            try
+            {
+                await subscription.DisposeAsync().AsTask().WaitAsync(ShutdownBudget);
+                await Client.DisposeAsync().AsTask().WaitAsync(ShutdownBudget);
+                try { await running.WaitAsync(ShutdownBudget); }
+                catch (OperationCanceledException) when (stopping.IsCancellationRequested) { }
+            }
+            finally
+            {
+                try { if (server != null) await server.DisposeAsync().AsTask().WaitAsync(ShutdownBudget); }
+                finally { hostStream.Dispose(); clientStream.Dispose(); stopping.Dispose(); }
+            }
         }
     }
     internal static (Stream Host, Stream Client) Streams()
@@ -378,7 +424,7 @@ public sealed class OperatorSessionTests
                 ["expectedProjectFile"] = JsonSerializer.SerializeToElement("C:/Fixture.ap" + release) } } };
         try
         {
-            var result = await tool.InvokeAsync(request);
+            var result = await tool.InvokeAsync(request).AsTask().WaitAsync(Peer.RequestBudget);
             Assert.Equal("generation-run-active", (string?)result.StructuredContent?["error"]?["details"]?["condition"]);
             Assert.Equal("queued-run", (string?)result.StructuredContent?["data"]?["runId"]);
             Assert.Equal(1, approvals); Assert.Equal(0, worker.Writes);
@@ -418,11 +464,24 @@ public sealed class OperatorSessionTests
     {
         public override bool CanRead => true; public override bool CanWrite => true; public override bool CanSeek => false;
         public override long Length => throw new NotSupportedException(); public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
-        public override void Flush() => write.Flush(); public override Task FlushAsync(CancellationToken token) => write.FlushAsync(token);
-        public override int Read(byte[] bytes, int offset, int count) => read.Read(bytes, offset, count);
+        public override void Flush()
+        {
+            using var timeout = new CancellationTokenSource(Peer.RequestBudget);
+            write.FlushAsync(timeout.Token).WaitAsync(Peer.RequestBudget).GetAwaiter().GetResult();
+        }
+        public override Task FlushAsync(CancellationToken token) => write.FlushAsync(token);
+        public override int Read(byte[] bytes, int offset, int count)
+        {
+            using var timeout = new CancellationTokenSource(Peer.RequestBudget);
+            return read.ReadAsync(bytes, offset, count, timeout.Token).WaitAsync(Peer.RequestBudget).GetAwaiter().GetResult();
+        }
         public override Task<int> ReadAsync(byte[] bytes, int offset, int count, CancellationToken token) => read.ReadAsync(bytes, offset, count, token);
         public override ValueTask<int> ReadAsync(Memory<byte> bytes, CancellationToken token = default) => read.ReadAsync(bytes, token);
-        public override void Write(byte[] bytes, int offset, int count) => write.Write(bytes, offset, count);
+        public override void Write(byte[] bytes, int offset, int count)
+        {
+            using var timeout = new CancellationTokenSource(Peer.RequestBudget);
+            write.WriteAsync(bytes, offset, count, timeout.Token).WaitAsync(Peer.RequestBudget).GetAwaiter().GetResult();
+        }
         public override Task WriteAsync(byte[] bytes, int offset, int count, CancellationToken token) => write.WriteAsync(bytes, offset, count, token);
         public override ValueTask WriteAsync(ReadOnlyMemory<byte> bytes, CancellationToken token = default) => write.WriteAsync(bytes, token);
         public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException(); public override void SetLength(long value) => throw new NotSupportedException();

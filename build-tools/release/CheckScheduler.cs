@@ -93,7 +93,9 @@ internal static class CheckScheduler
             using var affinity = CheckAffinity.Enter(job.Affinity);
             var result = job.Run();
             File.WriteAllText(Path.Combine(logs, job.Name + ".log"), result.StandardOutput + result.StandardError);
-            return new(job.Name, result.ExitCode == 0 ? "passed" : "failed", result.ExitCode, timer.Elapsed.TotalSeconds, null) { StartedAtUtc = started, CpuLoad = CheckLoad.Current?.Between(started, DateTime.UtcNow) };
+            return new(job.Name, result.ExitCode == 0 ? "passed" : "failed", result.ExitCode, timer.Elapsed.TotalSeconds,
+                result.ExitCode == 0 ? null : (result.StandardError.Length == 0 ? result.StandardOutput : result.StandardError).Trim())
+                { StartedAtUtc = started, CpuLoad = CheckLoad.Current?.Between(started, DateTime.UtcNow) };
         }
         catch (Exception ex)
         {

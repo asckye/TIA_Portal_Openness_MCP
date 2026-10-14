@@ -65,7 +65,7 @@ internal static partial class ReleaseCommands
             environment["TIA_MCP_CHECK_NO_BUILD"] = "1";
             environment["TIA_MCP_PLC_TOOLS_PYTHON"] = companionPython;
             environment["TIA_MCP_ANALYZER_REPORT_DIRECTORY"] = null;
-            return ProcessRunner.Run(executable, args, Root, environment);
+            return SuiteHang.RunProcess(executable, args, Root, environment);
         }
         void Add(string name, Func<CommandResult> run, string[]? depends = null, bool exclusive = false) => jobs.Add(new(name, run, depends ?? [], Exclusive: exclusive));
         void Wave()

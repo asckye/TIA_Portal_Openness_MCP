@@ -120,12 +120,14 @@ internal static class DotnetSuites
         var report = Path.Combine(directory, name + ".json");
         File.Delete(trx);
         File.Delete(report);
+        var before = SuiteHang.Begin(directory, name);
         var apiRoot = environment is not null && environment.TryGetValue("TIA_MCP_TEST_PUBLIC_API_ROOT", out var api) ? api : Environment.GetEnvironmentVariable("TIA_MCP_TEST_PUBLIC_API_ROOT");
         var command = new List<string> { "test", Path.Combine(root, suite["project"]!.GetValue<string>()), "-c", "Release" };
         command.AddRange(suite["arguments"]!.AsArray().Select(a => a!.GetValue<string>()));
         if (suite["publicApiRoot"]?.GetValue<bool>() == true && !string.IsNullOrEmpty(apiRoot)) command.Add("-p:TiaPublicApiRoot=" + apiRoot);
         if (arguments is not null) command.AddRange(arguments);
         command.AddRange(["--logger", $"trx;LogFileName={name}.trx", "--results-directory", directory]);
+        command.AddRange(SuiteHang.TestArguments);
         var output = new StringBuilder($"RUN {name}: {dotnet} {string.Join(' ', command)}\n");
         var stderr = "";
         var errors = new List<string>();
@@ -133,11 +135,12 @@ internal static class DotnetSuites
         int? exit = null;
         try
         {
-            var result = (process ?? RunProcess)(dotnet, command, root, environment);
+            var result = SuiteHang.Complete(directory, name, before, (process ?? RunProcess)(dotnet, command, root, environment));
             output.Append(result.StandardOutput);
             stderr = result.StandardError;
             exit = result.ExitCode;
             if (exit != 0) errors.Add("dotnet test exited " + exit);
+            errors.AddRange(SuiteHang.Errors(directory, name));
             if (!File.Exists(trx)) errors.Add("missing TRX (no tests discovered or build/test host failed)");
             else
             {
@@ -175,9 +178,14 @@ internal static class DotnetSuites
         var names = options.All("Suite");
         if (options.Has("SelfTest"))
         {
-            foreach (var test in DotnetSuiteSelfTests.Cases) test.Run();
-            output.Append($"COMPLETE: {DotnetSuiteSelfTests.Cases.Count} dotnet gate self-checks passed\n");
-            if (names.Count == 0) return new CommandResult(0, output.ToString(), "");
+            int failed = 0;
+            foreach (var test in DotnetSuiteSelfTests.Cases)
+            {
+                try { test.Run(); }
+                catch (Exception ex) { failed++; errors.Append("FAIL self-check " + test.Name + ": " + ex.Message + "\n"); }
+            }
+            output.Append($"COMPLETE: {DotnetSuiteSelfTests.Cases.Count - failed} dotnet gate self-checks passed; {failed} failed\n");
+            if (failed > 0 || names.Count == 0) return new CommandResult(failed == 0 ? 0 : 1, output.ToString(), errors.ToString());
         }
         if (names.Count == 0) throw new ReleaseException("at least one -Suite or -SelfTest is required", 64);
         var catalog = LoadCatalog(options.Get("Catalog", Path.Combine(root, "tests/test-suites.json")), root);

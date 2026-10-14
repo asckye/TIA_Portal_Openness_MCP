@@ -23,6 +23,8 @@ internal static class DotnetSuiteSelfTests
         ("invalid xml and counters", InvalidXml),
         ("missing trx removes stale success", MissingTrx),
         ("runner command report and nonzero exit", RunnerCommand),
+        ("hang evidence cannot pass or reuse stale artifacts", HangEvidence),
+        ("planted hang produces a mini dump in both runners", PlantedHang),
         ("missing variant runtime row", MissingVariantRow),
         ("missing variant fails before test process", MissingVariantProcess),
         ("concurrent runtime manifests stay independent", ConcurrentManifests)
@@ -100,6 +102,7 @@ internal static class DotnetSuiteSelfTests
             {
                 var args = arguments.ToArray();
                 Require(args[0] == "test" && args.Contains("-p:DefineConstants=TIA_V20") && args.Contains("--no-restore") && args.Contains("trx;LogFileName=example.trx"));
+                Require(SuiteHang.TestArguments.All(args.Contains));
                 SyntheticTrx(path, ["Passed", "Passed"]);
                 return new CommandResult(code, "", "");
             });
@@ -107,6 +110,112 @@ internal static class DotnetSuiteSelfTests
             Require((result.ExitCode == 0) == (code == 0) && report["passed"]!.GetValue<int>() == 2 && report["methods"]![0]!["testMethod"]!.GetValue<string>() == "Check");
         }
     });
+
+    private static void HangEvidence() => WithFixture((path, directory) =>
+    {
+        var sequence = Path.Combine(directory, "fixture_Sequence.xml");
+        var dump = Path.Combine(directory, "testhost_hangdump.dmp");
+        var before = SuiteHang.Begin(directory, "example");
+        File.WriteAllText(sequence, "<TestSequence><Test Name=\"Fixture.PlantedHang\" Completed=\"False\" /></TestSequence>");
+        File.WriteAllText(dump, "synthetic dump marker");
+        Require(SuiteHang.Complete(directory, "example", before, new(0, "", "")).ExitCode == 1);
+        SyntheticTrx(path, ["Passed", "Passed"]);
+        var result = SuiteSharding.Merge("example", Suite(), [path], Path.Combine(directory, "merged"));
+        Require(result.ExitCode == 1 && result.StandardError.Contains("Fixture.PlantedHang", StringComparison.Ordinal)
+            && File.ReadAllText(Path.Combine(directory, "merged/example.json")).Contains("testhost_hangdump.dmp", StringComparison.Ordinal));
+        File.Delete(path);
+        try { SuiteSharding.Merge("example", Suite(), [path], Path.Combine(directory, "missing")); }
+        catch (ReleaseException ex) { Require(ex.Message.Contains("Fixture.PlantedHang", StringComparison.Ordinal)); }
+        Require(File.ReadAllText(Path.Combine(directory, "missing/example.json")).Contains("Fixture.PlantedHang", StringComparison.Ordinal));
+        before = SuiteHang.Begin(directory, "example");
+        Require(SuiteHang.Complete(directory, "example", before, new(0, "", "")).ExitCode == 0 && !SuiteHang.Errors(directory, "example").Any());
+    });
+
+    private static void PlantedHang()
+    {
+        var root = Repository.FindRoot();
+        // Retain the real collector artifacts for the reviewer, below this worktree.
+        var directory = Path.Combine(root, "bin-build/suite-hang-self-tests", Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(directory);
+        var project = Path.Combine(directory, "HangFixture.csproj");
+        var config = Path.Combine(directory, "nuget.config");
+        File.WriteAllText(config, "<configuration><packageSources><clear /></packageSources></configuration>");
+        File.WriteAllText(project, """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup><TargetFramework>net10.0</TargetFramework><IsTestProject>true</IsTestProject>
+                <ImportDirectoryBuildProps>false</ImportDirectoryBuildProps><ImportDirectoryBuildTargets>false</ImportDirectoryBuildTargets>
+                <NuGetAudit>false</NuGetAudit></PropertyGroup>
+              <ItemGroup><PackageReference Include="xunit" Version="2.9.2" />
+                <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+                <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" /></ItemGroup>
+            </Project>
+            """);
+        File.WriteAllText(Path.Combine(directory, "Tests.cs"), """
+            namespace HangFixture;
+            public sealed class Tests
+            {
+                [Xunit.Fact] public async System.Threading.Tasks.Task PlantedHang()
+                {
+                    if (System.Environment.GetEnvironmentVariable("TIA_MCP_PLANTED_HANG") == "1")
+                        await System.Threading.Tasks.Task.Delay(System.Threading.Timeout.Infinite);
+                    Xunit.Assert.Equal(4, 2 + 2);
+                }
+            }
+            """);
+        var build = ProcessRunner.Run("dotnet", ["build", project, "-c", "Release", "-p:RestoreConfigFile=" + config,
+            "-p:NuGetAudit=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false"], root);
+        File.WriteAllText(Path.Combine(directory, "build.log"), build.StandardOutput + build.StandardError);
+        ProcessRunner.RequireSuccess(build, "hang fixture build");
+        var suite = new JsonObject { ["project"] = Path.GetRelativePath(root, project), ["minimumPassed"] = 1,
+            ["maximumSkipped"] = 0, ["arguments"] = new JsonArray() };
+        var unit = CheckAllBuild.Suite(suite);
+        var manifest = Path.Combine(directory, "runtime-paths.tsv");
+        File.WriteAllText(manifest, project + "\t" + unit.Variant + "\tbin\tbin\t" + Path.Combine(directory, "bin/Release/net10.0/HangFixture.dll") + "\n");
+        var failures = new List<string>();
+        foreach (var mode in new[] { "test", "vstest", "test-shard" })
+        foreach (var hang in new[] { false, true })
+        {
+            var fast = mode != "test";
+            var output = Path.Combine(directory, mode + (hang ? "-hang" : "-normal"));
+            try
+            {
+                CommandResult Process(string executable, IEnumerable<string> arguments, string working, IDictionary<string, string?>? environment)
+                {
+                    var args = arguments.ToArray();
+                    Require(mode == "vstest" ? args.Contains(SuiteHang.VstestArgument) : SuiteHang.TestArguments.All(args.Contains));
+                    // Only this planted fixture uses a short limit; production has no override.
+                    args = args.Select(a => a == SuiteHang.Timeout ? "2s" : a.Replace("TestTimeout=" + SuiteHang.Timeout, "TestTimeout=2s", StringComparison.Ordinal)).ToArray();
+                    args = mode == "vstest" ? [.. args, "--Diag:" + Path.Combine(output, "vstest.log")] : [.. args, "--diag", Path.Combine(output, "vstest.log")];
+                    var env = environment == null ? new Dictionary<string, string?>() : new Dictionary<string, string?>(environment);
+                    env["TIA_MCP_PLANTED_HANG"] = hang ? "1" : null;
+                    var result = ProcessRunner.Run(executable, args, working, env);
+                    File.WriteAllText(Path.Combine(output, "process.log"), result.StandardOutput + result.StandardError);
+                    return result;
+                }
+                var result = fast
+                    ? FastSuites.RunShard(root, "fixture", suite, output, "dotnet", null, unit, 0, 1,
+                        extra: mode == "test-shard" ? ["-p:NuGetAudit=false"] : null, manifest: manifest, process: Process)
+                    : DotnetSuites.RunSuite(root, "fixture", suite, output, arguments: ["--no-build", "--no-restore"], process: Process);
+                Require(hang ? result.ExitCode != 0 : result.ExitCode == 0);
+                if (hang)
+                {
+                    Require((result.StandardOutput + result.StandardError).Contains("HangFixture.Tests.PlantedHang", StringComparison.Ordinal));
+                    var evidence = JsonNode.Parse(File.ReadAllText(Path.Combine(output, "fixture.hang.json")))!;
+                    Require(evidence["tests"]!.AsArray().Any(t => t!.GetValue<string>() == "HangFixture.Tests.PlantedHang"));
+                    if (fast)
+                    {
+                        var merged = SuiteSharding.Merge("fixture", suite, [Path.Combine(output, "fixture.trx")], Path.Combine(output, "merged"));
+                        Require(merged.ExitCode != 0 && merged.StandardError.Contains("HangFixture.Tests.PlantedHang", StringComparison.Ordinal));
+                    }
+                    if (!evidence["artifacts"]!.AsArray().Any(p => p!.GetValue<string>().EndsWith(".dmp", StringComparison.OrdinalIgnoreCase)
+                        && new FileInfo(p.GetValue<string>()).Length > 0)) throw new ReleaseException("Missing real mini dump; see " + output);
+                }
+                else Require(DotnetSuites.EvaluateTrx(Path.Combine(output, "fixture.trx"), 1, 0).Errors.Count == 0);
+            }
+            catch (ReleaseException ex) { failures.Add(mode + (hang ? "-hang: " : "-normal: ") + ex.Message); }
+        }
+        if (failures.Count > 0) throw new ReleaseException(string.Join("\n", failures));
+    }
 
     private static void MissingVariantRow() => WithFixture((_, directory) =>
     {

@@ -80,7 +80,7 @@ internal static class FastSuites
     }
 
     internal static CommandResult RunShard(string root, string name, JsonObject suite, string directory, string dotnet, string? api,
-        CheckBuild unit, int index, int count, string[]? extra = null, string? plan = null, bool reserveSensitive = false, string? manifest = null)
+        CheckBuild unit, int index, int count, string[]? extra = null, string? plan = null, bool reserveSensitive = false, string? manifest = null, SuiteProcess? process = null)
     {
         Directory.CreateDirectory(directory);
         var environment = EnvironmentFor(directory, api);
@@ -94,6 +94,7 @@ internal static class FastSuites
         environment["TIA_MCP_TEST_PRODUCER_TIMINGS"] = Path.Combine(directory, "producer-timings.tsv");
         File.Delete(environment["TIA_MCP_TEST_PRODUCER_TIMINGS"]!);
         var trx = Path.Combine(directory, name + ".trx"); File.Delete(trx);
+        var before = SuiteHang.Begin(directory, name);
         environment["TIA_MCP_TEST_PHASE_TIMINGS"] = Path.Combine(directory, "phase-timings.json");
         string? assembly;
         try { assembly = CheckAllBuild.TestAssembly(root, unit, manifest, name); }
@@ -109,8 +110,9 @@ internal static class FastSuites
             if (api != null) args.Add("-p:TiaPublicApiRoot=" + api);
             if (extra != null) args.AddRange(extra);
             args.AddRange(["--logger", "trx;LogFileName=" + name + ".trx", "--results-directory", directory]);
+            args.AddRange(SuiteHang.TestArguments);
         }
-        var result = ProcessRunner.Run(dotnet, args, root, environment);
+        var result = SuiteHang.Complete(directory, name, before, (process ?? DotnetSuites.RunProcess)(dotnet, args, root, environment));
         if (!File.Exists(trx)) return result with { ExitCode = 1, StandardError = result.StandardError + "\nMissing shard TRX: " + trx };
         var errors = DotnetSuites.ReadTrx(trx).Errors;
         if (errors.Count > 0) return result with { ExitCode = 1, StandardError = result.StandardError + "\n" + string.Join("\n", errors) };
@@ -121,6 +123,7 @@ internal static class FastSuites
     {
         var source = arguments.ToArray();
         var result = new List<string> { "vstest", assembly, "--logger:trx;LogFileName=" + name + ".trx", "--ResultsDirectory:" + directory };
+        result.Add(SuiteHang.VstestArgument);
         for (int i = 0; i < source.Length; i++)
         {
             if (source[i].StartsWith("-p:", StringComparison.Ordinal)) continue; // Already represented by the exact built variant.
