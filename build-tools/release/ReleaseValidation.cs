@@ -6,6 +6,11 @@ namespace TiaMcp.ReleaseTool;
 
 internal static class ReleaseValidation
 {
+    internal static string[] ChildToolArguments(string command, params string[] arguments) =>
+        [typeof(ReleaseCommands).Assembly.Location, command, .. arguments];
+
+    internal static string[] PackageToolArguments() => ["--release-tool", typeof(ReleaseCommands).Assembly.Location];
+
     internal static bool ChangelogVersion(string newest, string released, bool repositoryOnly, bool noteExists)
     {
         if (!Version.TryParse(newest, out var next) || !Version.TryParse(released, out var current)) return false;

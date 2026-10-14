@@ -448,10 +448,7 @@ internal static partial class ReleaseCommands
         }
         void RunTool(string command, params string[] args)
         {
-            var arguments = command is "preflight" or "build-tool"
-                ? new List<string> { "run", "--project", "build-tools/release", "--no-restore", "--", command }
-                : new List<string> { Path.Combine(Root, "build-tools/release/bin/Release/net10.0/TiaMcp.ReleaseTool.dll"), command };
-            arguments.AddRange(args);
+            var arguments = ReleaseValidation.ChildToolArguments(command, args);
             var result = RunIsolated("review-" + command, dotnet, arguments);
             Console.Write(result.StandardOutput);
             Console.Error.Write(result.StandardError);
@@ -461,6 +458,7 @@ internal static partial class ReleaseCommands
         {
             var all = new List<string> { script };
             all.AddRange(args);
+            if (script == "build-tools/Package-Release.py") all.AddRange(ReleaseValidation.PackageToolArguments());
             var result = RunIsolated("review-" + Path.GetFileNameWithoutExtension(script), python, all);
             Console.Write(result.StandardOutput);
             Console.Error.Write(result.StandardError);
@@ -653,6 +651,8 @@ internal static partial class ReleaseCommands
             try { ValidateBuildRecords(root, package, noBinaries, options.Has("SkipSourceHashes")); }
             catch (Exception ex) { errors.Add(ex.Message); }
         }
+        if (!noBinaries && rules is not null)
+            errors.AddRange(PackageDependencies.Check(root, path => IsDeliveryFile(path, rules.RootElement)));
         rules?.Dispose();
         foreach (var error in errors) Console.WriteLine("[FAIL] " + error);
         if (errors.Count != 0)
@@ -1155,6 +1155,7 @@ internal static partial class ReleaseCommands
         foreach (var relative in JsonStringArray(rules.RootElement.GetProperty("legacyCleanup"), "files"))
         {
             if (!relative.StartsWith("runtime/v" + key + "/", StringComparison.Ordinal)) continue;
+            if (IsDeliveryFile(relative, rules.RootElement)) continue;
             var file = Path.GetFullPath(Path.Combine(Root, relative));
             if (!string.Equals(Path.GetDirectoryName(file), runtime, StringComparison.OrdinalIgnoreCase))
                 throw new ReleaseException("Legacy engine cleanup escaped its runtime directory: " + relative);

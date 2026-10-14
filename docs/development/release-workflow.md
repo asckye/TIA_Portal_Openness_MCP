@@ -30,6 +30,18 @@ Python 桥接所用两个第三方项目只交付 `src`、PLC Tools 的八个 `p
   生成的旧 package/blueprint 元数据中的 `scripts/checks/validate-bundle` 条目仅属仓库说明，包模式明确忽略该单项。
   新增资源必须纳入规则，不能以源码缺失为由跳过其他必需项。
 
+带二进制的 `validate-bundle` 还检查交付程序集的依赖闭包：逐个读取宿主、worker、Studio、更新器、
+工具和根启动器的 PE 引用及 `deps.json`，按程序目录、Framework 配置的私有探测目录和随包共享框架检查传递依赖。
+PLC worker 的 `ProjectGroupRuntime` 嵌入程序集按既有加载器规则解析，并继续检查其传递引用。
+交付规则排除的文件不能满足依赖；失败信息包含程序路径和缺失程序集名称。Framework/GAC 程序集无需复制，
+已声明身份的 Siemens Openness PublicAPI 程序集继续从所选 TIA 安装加载，不分发 SDK。
+打包器在实际暂存目录运行同一检查，package、quick、full 三档均执行。
+
+发布链将正在执行的 release tool 程序集路径通过 `Package-Release.py --release-tool <assembly>` 传给打包器。
+子校验直接运行该程序集，不执行会重新构建项目的 `dotnet run`，也不假设普通 `bin/Release` 布局。
+独立打包和 CI 未传路径时先在 `bin-build/package-runners/` 的唯一目录构建一次，再复用该工具完成两次校验；
+链中的 `build-tool` 检查同样使用唯一输出目录，保留完整构建检查。
+
 无发布构建时可查看当前文件投影，不执行 Release 或生成可发布资产：
 
 ```powershell

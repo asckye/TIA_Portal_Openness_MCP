@@ -7,8 +7,9 @@ internal static partial class ReleaseCommands
 {
     private static int BuildTool(Options options)
     {
+        var output = Path.Combine(Root, "bin-build/release-tool", Guid.NewGuid().ToString("N"));
         RunDotnetLogged(options, Path.Combine(Root, "bin-build/release-tool"),
-            ["build", "build-tools/release/TiaMcp.ReleaseTool.csproj", "-c", "Release", "--nologo"], "build.log");
+            ["build", "build-tools/release/TiaMcp.ReleaseTool.csproj", "-c", "Release", "--nologo", "-o", output, "-p:UseAppHost=false"], "build.log");
         return 0;
     }
 

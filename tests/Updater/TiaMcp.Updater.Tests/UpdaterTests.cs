@@ -14,6 +14,24 @@ namespace TiaMcp.Updater.Tests
 {
     public sealed class UpdaterTests
     {
+        [Theory]
+        [InlineData("20")]
+        [InlineData("21")]
+        public void Delivered_root_runtime_is_replaced_despite_legacy_cleanup_and_restored_on_rollback(string key)
+        {
+            using var f = new Fixture();
+            string path = "runtime/v" + key + "/TiaMcp.Runtime.dll";
+            f.Write(path, "old-root-runtime");
+            using var record = JsonDocument.Parse(f.Text("manifest/release-file-hashes.json"));
+            var inventory = JsonSerializer.Deserialize<Dictionary<string, string>>(record.RootElement.GetProperty("files").GetRawText());
+            inventory[path] = f.Hash(path);
+            f.Write("manifest/release-file-hashes.json", JsonSerializer.Serialize(new { files = inventory }));
+            Assert.Equal(0, f.Run());
+            Assert.Equal("fixture", f.Text(path));
+            Assert.Equal(0, f.Run(rollback: true));
+            Assert.Equal("old-root-runtime", f.Text(path));
+        }
+
         [Fact] public void Check_reports_release_without_changing_install() { using (var f = new Fixture()) { byte[] before = f.Read("TiaOpenness.exe"); Assert.Equal(0, f.Run(check: true)); Assert.Equal(before, f.Read("TiaOpenness.exe")); } }
         [Fact] public void Self_and_root_launcher_are_replaced_and_user_data_is_preserved() { using (var f = new Fixture()) { Assert.Equal(0, f.Run()); Assert.Equal("new-launcher", f.Text("TiaOpenness.exe")); Assert.Equal("new-updater", f.Text("runtime/tools/TiaMcp.Updater.exe")); Assert.Equal("kept", f.Text("data/config/user.json")); Assert.Equal("unknown", f.Text("notes.txt")); Assert.False(f.Exists("TiaMcp.Updater.exe")); Assert.False(f.Exists("TiaMcp.Updater.exe.config")); Assert.False(f.Exists("scripts/operations/Update-Engine.ps1")); } }
         [Fact] public void Upgrade_moves_engine_workers_and_removes_owned_legacy_entries()

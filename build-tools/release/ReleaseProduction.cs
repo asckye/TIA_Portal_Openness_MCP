@@ -111,7 +111,7 @@ internal static partial class ReleaseCommands
         var plan = ReleasePlan(options);
         WriteTierRecord(plan, passed: false);
         var candidateOutput = Path.Combine(logRoot, "candidate");
-        RunReleaseExternal(python, [Path.Combine(Root, "build-tools/Package-Release.py"), "--local", "--output-directory", candidateOutput],
+        RunReleaseExternal(python, [Path.Combine(Root, "build-tools/Package-Release.py"), "--local", "--output-directory", candidateOutput, .. ReleaseValidation.PackageToolArguments()],
             "candidate-package", logRoot, runTemp, publicApiRoot);
         RunProductionCandidateChecks(plan, options, publicApiRoot, logRoot, candidateOutput, runTemp, python);
         WriteTierRecord(plan, passed: true);
@@ -125,7 +125,7 @@ internal static partial class ReleaseCommands
         var gitExecutable = ResolveApplication(git);
         var packageDir = Path.Combine(Root, "bin-build/releases", "v" + version);
         var packageName = ReadDeliveryPackage(deliveryPath);
-        RunReleaseExternal(python, [Path.Combine(Root, "build-tools/Package-Release.py"), "--git", gitExecutable], "package", logRoot, runTemp, publicApiRoot);
+        RunReleaseExternal(python, [Path.Combine(Root, "build-tools/Package-Release.py"), "--git", gitExecutable, .. ReleaseValidation.PackageToolArguments()], "package", logRoot, runTemp, publicApiRoot);
         ReleaseCheckPolicy.Load(Root).RequireFullPackage(Path.Combine(packageDir, packageName + ".zip"));
         RunReleaseExternal(python, [Path.Combine(Root, "scripts/checks/Verify-ReleaseAsset.py"), Path.Combine(packageDir, packageName + ".zip"), "--git", gitExecutable], "verify-package", logRoot, runTemp, publicApiRoot);
         if (options.Has("NoPush")) { Console.WriteLine("stopped before push (-NoPush)"); return 0; }

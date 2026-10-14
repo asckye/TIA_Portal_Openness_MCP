@@ -36,8 +36,12 @@ internal static class Program
         try
         {
             var options = Options.Parse(args[1..], BooleanOptions);
-            if ((command.Equals("check-all", StringComparison.OrdinalIgnoreCase) || command.Equals("test-suites", StringComparison.OrdinalIgnoreCase) &&
-                (options.Has("Shards") || options.Has("MaxParallelism"))) && Environment.GetEnvironmentVariable("TIA_MCP_CHECK_RUNNER") != "1")
+            if ((command.Equals("check-all", StringComparison.OrdinalIgnoreCase) ||
+                 command.Equals("run-release-build", StringComparison.OrdinalIgnoreCase) ||
+                 command.Equals("build-solutions", StringComparison.OrdinalIgnoreCase) ||
+                 command.Equals("preflight", StringComparison.OrdinalIgnoreCase) ||
+                 command.Equals("test-suites", StringComparison.OrdinalIgnoreCase) || options.Has("SelfTest")) &&
+                Environment.GetEnvironmentVariable("TIA_MCP_CHECK_RUNNER") != "1")
             {
                 // The traversal also compiles this tool. Execute a private copy so
                 // Windows never locks the build outputs being refreshed.
@@ -45,10 +49,22 @@ internal static class Program
                 Directory.CreateDirectory(directory);
                 foreach (var path in Directory.EnumerateFiles(Path.GetDirectoryName(typeof(Program).Assembly.Location)!))
                     File.Copy(path, Path.Combine(directory, Path.GetFileName(path)));
-                var result = ProcessRunner.Run(Environment.GetEnvironmentVariable("DOTNET_EXE") ?? "dotnet",
-                    [Path.Combine(directory, "TiaMcp.ReleaseTool.dll"), .. args], Environment.CurrentDirectory,
-                    new Dictionary<string, string?> { ["TIA_MCP_CHECK_RUNNER"] = "1" }, forwardOutput: true);
-                return result.ExitCode;
+                // ProcessRunner's JIT references BuildCommon; keep the bootstrapper free
+                // of project dependencies that the child traversal can replace.
+                var start = new ProcessStartInfo(Environment.GetEnvironmentVariable("DOTNET_EXE") ?? "dotnet")
+                {
+                    WorkingDirectory = Environment.CurrentDirectory, UseShellExecute = false, CreateNoWindow = true,
+                    RedirectStandardOutput = true, RedirectStandardError = true
+                };
+                start.ArgumentList.Add(Path.Combine(directory, "TiaMcp.ReleaseTool.dll"));
+                foreach (var argument in args) start.ArgumentList.Add(argument);
+                start.Environment["TIA_MCP_CHECK_RUNNER"] = "1";
+                using var process = Process.Start(start) ?? throw new ReleaseException("Could not start private release runner");
+                var output = process.StandardOutput.BaseStream.CopyToAsync(Console.OpenStandardOutput());
+                var error = process.StandardError.BaseStream.CopyToAsync(Console.OpenStandardError());
+                process.WaitForExit();
+                Task.WaitAll(output, error);
+                return process.ExitCode;
             }
             return ReleaseCommands.Run(command.ToLowerInvariant(), options);
         }
