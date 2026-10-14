@@ -60,8 +60,8 @@ namespace TiaMcp.WorkerChannel
                 using (var document = ChannelCodec.Parse(bytes, ChannelCodec.RequestLimit))
                 {
                     var root = document.RootElement;
-                    ChannelCodec.Fields(root, profile == ChannelProfile.Engine
-                        ? new[] { "jsonrpc", "id", "method", "params", "bindingEpoch", "requestId" }
+                    ChannelCodec.Fields(root, profile != ChannelProfile.Studio
+                        ? new[] { "jsonrpc", "id", "method", "params", "bindingEpoch", "requestId", "toolName" }
                         : new[] { "jsonrpc", "id", "method", "params", "bindingEpoch" }); ChannelCodec.Version(root);
                     long id = ChannelCodec.Number(root, "id");
                     if (id <= lastId) throw new IOException("Duplicate or stale worker request id.");
@@ -77,7 +77,9 @@ namespace TiaMcp.WorkerChannel
                     int owner = Thread.CurrentThread.ManagedThreadId, progress = 0;
                     active = true;
                     string? correlationId = root.TryGetProperty("requestId", out _) ? ChannelCodec.Text(root, "requestId") : null;
-                    if (correlationId != null && (correlationId.Length == 0 || correlationId.Length > 128)) throw new IOException("Invalid request correlation.");
+                    if (correlationId != null && !ChannelCodec.ValidIdentity(correlationId)) throw new IOException("Invalid request correlation.");
+                    string? toolName = root.TryGetProperty("toolName", out _) ? ChannelCodec.Text(root, "toolName") : null;
+                    if (toolName != null && (correlationId == null || !ChannelCodec.ValidIdentity(toolName))) throw new IOException("Invalid request tool name.");
                     var request = new ChannelRequest(id, method, args.GetRawText(), (percent, payload) =>
                     {
                         try
@@ -89,7 +91,7 @@ namespace TiaMcp.WorkerChannel
                             Emit(ChannelCodec.Progress(id, progress, percent, payload));
                         }
                         catch (Exception ex) { throw Fault(ex); }
-                    }, correlationId);
+                    }, correlationId, toolName);
                     RequireUsable();
                     dispatched = true;
                     var response = dispatch(request);
@@ -105,9 +107,9 @@ namespace TiaMcp.WorkerChannel
                     }
                     byte[] reply;
                     try { reply = ChannelCodec.Reply(id, before.Epoch, after.Epoch, response, profile); }
-                    catch (ChannelLimitException) when (profile == ChannelProfile.Engine && response.Spill != null) /* swallow(native-fallback): persist the complete result before emitting a bounded spill descriptor */
+                    catch (ChannelLimitException) when (profile != ChannelProfile.Studio && response.Spill != null) /* swallow(native-fallback): persist the complete result before emitting a bounded spill descriptor */
                     { reply = ChannelCodec.Reply(id, before.Epoch, after.Epoch, ChannelResponse.Success(response.Spill()), profile); }
-                    catch (ChannelLimitException) when (profile == ChannelProfile.Engine && response.OversizedResultJson != null) /* swallow(native-fallback): use the bounded engine refusal before emitting any response bytes */
+                    catch (ChannelLimitException) when (profile != ChannelProfile.Studio && response.OversizedResultJson != null) /* swallow(native-fallback): use the bounded worker refusal before emitting any response bytes */
                     { reply = ChannelCodec.Reply(id, before.Epoch, after.Epoch, ChannelResponse.Success(response.OversizedResultJson), profile); }
                     Emit(reply);
                     if (profile != ChannelProfile.Studio && response.Failure?.Outcome == ChannelOutcome.Unknown) recoveryOnly = true;

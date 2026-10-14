@@ -13,6 +13,15 @@ namespace TiaMcp.WorkerChannel
         internal const int ResponseLimit = 16 * 1024 * 1024;
         internal const int ProgressLimit = 1024;
 
+        internal static bool ValidIdentity(string text)
+        {
+            if (text.Length == 0 || text.Length > 128) return false;
+            foreach (char c in text)
+                if (!(c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9'
+                    || c == '-' || c == '_' || c == '.' || c == ':')) return false;
+            return true;
+        }
+
         internal static bool ValidMethod(string method, ChannelProfile profile) =>
             profile == ChannelProfile.Studio ? !string.IsNullOrWhiteSpace(method) :
             profile == ChannelProfile.Engine ? (method.StartsWith("engine.", StringComparison.Ordinal) && method.Length > 7)
@@ -87,10 +96,11 @@ namespace TiaMcp.WorkerChannel
                 throw new IOException("Worker hello identity mismatch or nonfresh binding.");
         }
 
-        internal static byte[] Request(long id, string method, string args, long epoch, string? correlationId = null) => Encode(w =>
+        internal static byte[] Request(long id, string method, string args, long epoch, string? correlationId = null, string? toolName = null) => Encode(w =>
         {
             w.WriteNumber("id", id); w.WriteString("method", method); w.WriteNumber("bindingEpoch", epoch);
             if (correlationId != null) w.WriteString("requestId", correlationId);
+            if (toolName != null) w.WriteString("toolName", toolName);
             Raw(w, "params", args, RequestLimit);
         }, RequestLimit);
 

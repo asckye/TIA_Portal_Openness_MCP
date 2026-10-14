@@ -116,7 +116,21 @@ internal static class Program
             var identity=new ChannelIdentity(releaseKey,HashFile(typeof(Program).Assembly.Location),
                 HashFile(typeof(PlcFoundationEngine).Assembly.Location),System.Diagnostics.Process.GetCurrentProcess().Id,nonce);
             var input=Console.OpenStandardInput();
-            var server=new ChannelServer(input,Console.OpenStandardOutput(),identity,dispatcher.Observe,session.Dispatch);
+            string? hostRequestId = null;
+            TiaMcp.Adapters.Diagnostics.AdapterJournal.ConfigureCorrelation(() => hostRequestId ?? Guid.NewGuid().ToString("N"));
+            var server=new ChannelServer(input,Console.OpenStandardOutput(),identity,dispatcher.Observe,request => {
+                hostRequestId = request.CorrelationId;
+                using var journal = request.ToolName == null ? null : TiaMcp.Adapters.Diagnostics.AdapterJournal.BeginRequest(
+                    request.CorrelationId!, request.ToolName, releaseKey);
+                try
+                {
+                    var response = session.Dispatch(request);
+                    journal?.Complete();
+                    return response.Failure != null ? response : ChannelResponse.WithSpill(response.ResultJson,
+                        () => WorkerReplySpill.Write(TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory, response.ResultJson));
+                }
+                finally { hostRequestId = null; }
+            });
             try { server.Run(); }
             catch(ChannelFaultException ex)
             {

@@ -69,6 +69,8 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             lock (Sync) { (sink as IDisposable)?.Dispose(); sink = write == null ? (IJournalSink)new FileJournalSink() : new CallbackJournalSink(write); correlationSource = correlation; }
         }
+        internal static void ConfigureCorrelation(Func<string> correlation)
+        { lock (Sync) correlationSource = correlation; }
 
         internal interface IJournalSink { public void Write(Func<string> row, bool flush); }
         private sealed class CallbackJournalSink : IJournalSink

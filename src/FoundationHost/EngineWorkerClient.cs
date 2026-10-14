@@ -98,7 +98,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
             return await Disconnect(token).ConfigureAwait(false);
         }
         bool sent = false;
-        string correlation = TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId;
+        string correlation = FoundationWorkerRequest.CorrelationId;
         try
         {
             using var lane = await AcquireLane(token).ConfigureAwait(false);
@@ -123,10 +123,9 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
             if (disconnecting) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Disconnect is ending this session; a new host session is required.", isArgument: false);
             activeRequestId = correlation;
             sent = true;
-            string wire = await channel!.CallAsync("adapter." + operation, arguments.ToJsonString(),
+            string wire = await FoundationWorkerRequest.Dispatch(channel!, "adapter." + operation, arguments.ToJsonString(),
                 WorkerClient.BindingChangeFor(operation, arguments), WorkerOperations.IsReadOnly(operation)
-                    || (bool?)arguments["dryRun"] == true || (string?)arguments["mode"] == "preview", timeouts.ForPlc(operation, arguments, firstAttach), CancellationToken.None,
-                firstAttach: firstAttach, correlationId: correlation).ConfigureAwait(false);
+                    || (bool?)arguments["dryRun"] == true || (string?)arguments["mode"] == "preview", timeouts.ForPlc(operation, arguments, firstAttach), firstAttach, CancellationToken.None).ConfigureAwait(false);
             wire = WorkerReplySpill.Read(SpillsDirectory, wire, out _);
             var result = JsonNode.Parse(wire);
             foundationOutcome.AcceptResult(operation, arguments, result);
@@ -183,9 +182,8 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
         {
             try
             {
-                string correlation = TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId;
-                var wire = await channel!.CallAsync("adapter.Disconnect", "{}", BindingChange.MayAdvance, false,
-                    timeouts.For("Disconnect"), CancellationToken.None, correlationId: correlation).ConfigureAwait(false);
+                var wire = await FoundationWorkerRequest.Dispatch(channel!, "adapter.Disconnect", "{}", BindingChange.MayAdvance, false,
+                    timeouts.For("Disconnect"), false, CancellationToken.None).ConfigureAwait(false);
                 wire = WorkerReplySpill.Read(SpillsDirectory, wire, out _);
                 disconnectAcknowledgement = (JsonObject)DisconnectContract.Validate(JsonNode.Parse(wire), true, attachedProcessId, attachedProcessId.HasValue).DeepClone();
             }

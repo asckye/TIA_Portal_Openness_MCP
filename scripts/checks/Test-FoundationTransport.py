@@ -239,14 +239,18 @@ def engine_transports(args, temp, counts):
                 (fixture.parent / f'TiaMcp.Adapter.{key}.dll').write_text('offline session fixture', encoding='utf-8')
                 catalog_source = (args.sdk_fixture_root / key / 'tool-catalog.json') if args.sdk_fixture_root else ROOT / f'runtime/v{key}/worker/tool-catalog.json'
                 catalog = json.loads(catalog_source.read_text('utf-8'))
-                migrated = {name for family in ported_families.families(ROOT).values() for name in family['tools']}
+                migrated = {tool for name, family in ported_families.families(ROOT).items() if name != 'F00' for tool in family['tools']}
                 catalog['tools'] = [row for row in catalog['tools'] if row['name'] not in migrated]
                 catalog['descriptors'] = [row for row in catalog['descriptors'] if row['name'] not in migrated]
                 catalog['unavailableTools'] = [row for row in catalog.get('unavailableTools', []) if row['tool']['name'] not in migrated]
                 catalog['workerSha256'] = hashlib.sha256(fixture.read_bytes()).hexdigest()
                 catalog_path = temp / f'engine-fixture-catalog-{key}.json'
                 catalog_path.write_text(json.dumps(catalog), encoding='utf-8')
-                http_command += ['--engine-worker', str(fixture), '--engine-catalog', str(catalog_path)]
+                for flag, value in (('--engine-worker', str(fixture)), ('--engine-catalog', str(catalog_path))):
+                    if flag in http_command:
+                        http_command[http_command.index(flag) + 1] = value
+                    else:
+                        http_command += [flag, value]
                 config = data / 'config'
                 config.mkdir(exist_ok=True)
                 (config / 'approval.settings').write_text('enabled=false\ntimeoutSeconds=1\n', encoding='utf-8')

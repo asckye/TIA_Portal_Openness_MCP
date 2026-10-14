@@ -1,3 +1,9 @@
+#if TIA_FOUNDATION_TEST_HOST
+extern alias enginehost;
+using ResponseGuardTool = enginehost::TiaMcpServer.ModelContextProtocol.ResponseGuardTool;
+#else
+using ResponseGuardTool = TiaMcpServer.ModelContextProtocol.ResponseGuardTool;
+#endif
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -29,8 +35,39 @@ internal interface IFoundationSessionWorker : IFoundationWorker
     public void MarkUncertain();
 }
 
-internal sealed class WorkerClient(string releaseKey, string workerExe, string apiDirectory, bool nativeEnabled, int defaultTimeoutSeconds = 120, string? timeoutConfig = null) : IFoundationSessionWorker
+internal static class FoundationWorkerRequest
 {
+    private static readonly AsyncLocal<(string Id, string Name)?> Current = new();
+    internal static string CorrelationId => Current.Value?.Id ?? TiaOpenness.Shared.AuditInvocation.CurrentRequestId
+        ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CurrentCallId ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId;
+    internal static IDisposable Use(string id, string name)
+    {
+        var previous = Current.Value; Current.Value = (id, name);
+        return new Scope(() => Current.Value = previous);
+    }
+    private sealed class Scope(Action restore) : IDisposable { public void Dispose() => restore(); }
+    internal static async Task<string> Dispatch(ChannelClient channel, string method, string args, BindingChange change,
+        bool readOnly, TimeSpan timeout, bool firstAttach, CancellationToken token)
+    {
+        string id = CorrelationId;
+        string? name = Current.Value?.Name ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CurrentTool;
+        string phase = "THREW";
+        if (name != null) TiaMcpServer.ModelContextProtocol.InvocationJournal.Write(id, "worker:" + name, "BEFORE");
+        try
+        {
+            string reply = await channel.CallToolAsync(method, args, change, readOnly, timeout, firstAttach, id, name, token);
+            phase = "RETURNED";
+            return reply;
+        }
+        finally { if (name != null) TiaMcpServer.ModelContextProtocol.InvocationJournal.Write(id, "worker:" + name, phase); }
+    }
+}
+
+internal sealed class WorkerClient(string releaseKey, string workerExe, string apiDirectory, bool nativeEnabled, int defaultTimeoutSeconds = 120, string? timeoutConfig = null) : IFoundationSessionWorker, IFoundationWorkerResult
+{
+    public ModelContextProtocol.Protocol.CallToolResult ParkResult(ModelContextProtocol.Protocol.CallToolResult result, string name)
+        => System.Text.Encoding.UTF8.GetByteCount(JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions)) >= ChannelLimits.ResponseBytes / 2
+            ? ResponseGuardTool.Shrink(result, name, "worker", force: true) : result;
     private readonly WorkerTimeoutPolicy timeouts = new(defaultTimeoutSeconds, timeoutConfig,
         Environment.GetEnvironmentVariable("TIA_MCP_WORKER_TIMEOUTS"));
     private readonly SemaphoreSlim serial = new(1, 1);
@@ -196,6 +233,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                     var start = new ProcessStartInfo(Path.GetFullPath(workerExe)) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true, StandardInputEncoding = new System.Text.UTF8Encoding(false), StandardOutputEncoding = new System.Text.UTF8Encoding(false), StandardErrorEncoding = new System.Text.UTF8Encoding(false) };
                     start.ArgumentList.Add("--native-session"); start.ArgumentList.Add(releaseKey); start.ArgumentList.Add(Path.GetFullPath(apiDirectory));
                     start.ArgumentList.Add(nonce);
+                    start.Environment["TIA_MCP_WORKER_SPILLS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory;
                     start.Environment["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory;
                     process = Process.Start(start) ?? throw new IOException("Worker failed to start."); WorkerJob.Bind(process); WorkerShutdown.Register(this);
                     attachAttempted = false;
@@ -209,7 +247,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 await channel!.ConnectAsync(timeouts.For("status"),token);
             token.ThrowIfCancellationRequested();
             if (disconnecting) throw new InvalidOperationException("Disconnect ended this session; a new host session is required.");
-            activeRequestId = TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId;
+            activeRequestId = FoundationWorkerRequest.CorrelationId;
             HostSessionCall.RequestIdChanged(activeRequestId);
             var change = BindingChangeFor(operation, arguments);
             string response;
@@ -220,9 +258,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 bool firstAttach = attach && !attachAttempted;
                 token.ThrowIfCancellationRequested();
                 if (attach) attachAttempted = true;
-                response=await channel.CallAsync("adapter."+operation,arguments.ToJsonString(),change,
-                    WorkerOperations.IsReadOnly(operation) || arguments["dryRun"]?.GetValue<bool>()==true || WorkerOperations.IsDevicePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsImportPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsExportPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSessionPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSaveClosePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSourcePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsCompilePreview(operation, (string?)arguments["mode"]),timeouts.ForPlc(operation, arguments, firstAttach),CancellationToken.None,
-                    firstAttach: firstAttach);
+                response=await FoundationWorkerRequest.Dispatch(channel, "adapter."+operation,arguments.ToJsonString(),change,
+                    WorkerOperations.IsReadOnly(operation) || arguments["dryRun"]?.GetValue<bool>()==true || WorkerOperations.IsDevicePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsImportPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsExportPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSessionPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSaveClosePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSourcePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsCompilePreview(operation, (string?)arguments["mode"]),timeouts.ForPlc(operation, arguments, firstAttach), firstAttach, CancellationToken.None);
                 sent=true;
             }
             catch(ChannelFailureException failure)
@@ -230,6 +267,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 sent=true;
                 throw WorkerOperationException.FromChannelFailure(failure);
             }
+            response = WorkerReplySpill.Read(TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory, response, out _);
             var result=JsonNode.Parse(response);
             outcome.AcceptResult(operation,arguments,result);
             if (outcome.Poisoned) priorUnknownRequestId ??= activeRequestId;
@@ -310,7 +348,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             {
                 try
                 {
-                    var wire = await channel!.CallAsync("adapter.Disconnect", "{}", BindingChange.MayAdvance, false, TimeSpan.FromMinutes(2), CancellationToken.None);
+                    var wire = await FoundationWorkerRequest.Dispatch(channel!, "adapter.Disconnect", "{}", BindingChange.MayAdvance, false, TimeSpan.FromMinutes(2), false, CancellationToken.None);
+                    wire = WorkerReplySpill.Read(TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory, wire, out _);
                     disconnectAcknowledgement = (JsonObject)DisconnectContract.Validate(JsonNode.Parse(wire), true, attachedProcessId, attachedProcessId.HasValue).DeepClone();
                 }
                 catch (Exception) /* swallow(teardown): an unacknowledged detach retains the unknown outcome and requires TIA restart */ { return TerminateForDisconnect(); }

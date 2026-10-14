@@ -49,8 +49,12 @@ namespace TiaMcp.WorkerChannel
             catch (Exception ex) { throw Poison(ex); }
         }
 
-        public async Task<string> CallAsync(string method, string argumentsJson, BindingChange bindingChange,
+        public Task<string> CallAsync(string method, string argumentsJson, BindingChange bindingChange,
             bool readOnly, TimeSpan timeout, CancellationToken token = default, bool firstAttach = false, string? correlationId = null)
+            => CallToolAsync(method, argumentsJson, bindingChange, readOnly, timeout, firstAttach, correlationId, null, token);
+
+        public async Task<string> CallToolAsync(string method, string argumentsJson, BindingChange bindingChange,
+            bool readOnly, TimeSpan timeout, bool firstAttach, string? correlationId, string? toolName, CancellationToken token = default)
         {
             token.ThrowIfCancellationRequested();
             Pending call;
@@ -63,9 +67,11 @@ namespace TiaMcp.WorkerChannel
                 if (pending != null) throw Poison(new IOException("Concurrent worker call; session stopped."));
                 if (!ChannelCodec.ValidMethod(method, profile)) throw new ArgumentException(profile == ChannelProfile.Foundation
                     ? "Worker method must use adapter.<operation>." : profile == ChannelProfile.Engine ? "Worker method must use engine.<operation>." : "Invalid Studio method.");
-                if (correlationId != null && (profile != ChannelProfile.Engine || correlationId.Length == 0 || correlationId.Length > 128))
-                    throw new ArgumentException("Correlation is a bounded Engine profile request identity.");
-                try { bytes = ChannelCodec.Request(checked(sequence + 1), method, argumentsJson, epoch, correlationId); }
+                if (correlationId != null && (profile == ChannelProfile.Studio || !ChannelCodec.ValidIdentity(correlationId)))
+                    throw new ArgumentException("Correlation is a bounded worker request identity.");
+                if (toolName != null && (correlationId == null || profile == ChannelProfile.Studio || !ChannelCodec.ValidIdentity(toolName)))
+                    throw new ArgumentException("Tool name requires a bounded worker request identity.");
+                try { bytes = ChannelCodec.Request(checked(sequence + 1), method, argumentsJson, epoch, correlationId, toolName); }
                 catch (ChannelLimitException) when (profile == ChannelProfile.Engine) { throw; }
                 catch (Exception ex) { throw Poison(ex); }
                 // Cancellation here is still an unsent call. No id or epoch is consumed.

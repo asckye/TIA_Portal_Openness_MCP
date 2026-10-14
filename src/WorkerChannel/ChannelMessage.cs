@@ -79,10 +79,11 @@ namespace TiaMcp.WorkerChannel
         public string Method { get; }
         public string ArgumentsJson { get; }
         public string? CorrelationId { get; }
+        public string? ToolName { get; }
         public Action<int> Progress { get; }
         public Action<int, string?> ReportProgress { get; }
-        public ChannelRequest(long id, string method, string argumentsJson, Action<int, string?> progress, string? correlationId = null)
-        { Id = id; Method = method; ArgumentsJson = argumentsJson; CorrelationId = correlationId; ReportProgress = progress; Progress = percent => progress(percent, null); }
+        public ChannelRequest(long id, string method, string argumentsJson, Action<int, string?> progress, string? correlationId = null, string? toolName = null)
+        { Id = id; Method = method; ArgumentsJson = argumentsJson; CorrelationId = correlationId; ToolName = toolName; ReportProgress = progress; Progress = percent => progress(percent, null); }
     }
 
     public sealed class ChannelResponse

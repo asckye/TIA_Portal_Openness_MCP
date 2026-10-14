@@ -10,6 +10,9 @@ namespace TiaMcpServer.ModelContextProtocol
     // Keep the engine's JSON contract at its existing boundary.
     internal static partial class InvocationJournal
     {
+        private static readonly System.Threading.AsyncLocal<CallSpan?> CurrentCall = new();
+        internal static string? CurrentCallId => CurrentCall.Value?.Id;
+        internal static string? CurrentTool => CurrentCall.Value?.Tool;
         internal static Func<JsonObject?>? BindingSnapshot;
         private static string? ReadBinding() => BindingSnapshot?.Invoke()?.ToJsonString();
         internal static JsonObject Health() => JsonNode.Parse(HealthRow().ToString())!.AsObject();
@@ -28,6 +31,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         internal sealed class CallSpan : IDisposable
         {
+            private readonly CallSpan? previous = CurrentCall.Value;
+            internal string Id => id;
+            internal string Tool => tool;
             private readonly string id, tool, host;
             private readonly string? release;
             private readonly string actor;
@@ -41,6 +47,7 @@ namespace TiaMcpServer.ModelContextProtocol
             internal CallSpan(string id, string tool, string host, string? release, bool write, Func<string> arguments)
             {
                 this.id = id; this.tool = tool; this.host = host; this.release = release; this.write = write;
+                CurrentCall.Value = this;
                 actor = ActorScope.Actor; mcpSession = ActorScope.McpSession;
                 try { this.arguments = arguments(); }
                 catch (Exception) /* swallow(logging-failure): serialization cannot change invocation behavior or echo unsupported objects */ { this.arguments = "null"; }
@@ -56,6 +63,7 @@ namespace TiaMcpServer.ModelContextProtocol
             public void Dispose()
             {
                 if (!completed) Emit(() => Row(null, "INTERRUPTED"));
+                if (ReferenceEquals(CurrentCall.Value, this)) CurrentCall.Value = previous;
             }
 
             private string Row(string? result, string phase)

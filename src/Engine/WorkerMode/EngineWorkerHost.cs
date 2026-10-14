@@ -446,7 +446,11 @@ namespace TiaMcpServer.Worker
             if (fixtureFault == "tia-lost") ProcessLost("Fixture TIA process lost.");
             if (request.Method.StartsWith("adapter.", StringComparison.Ordinal))
             {
+                using var adapterCorrelation = InvocationJournal.UseCorrelation(request.CorrelationId ?? InvocationJournal.CorrelationId);
+                using var journal = request.ToolName == null ? null : TiaMcp.Adapters.Diagnostics.AdapterJournal.BeginRequest(
+                    request.CorrelationId!, request.ToolName, McpServer.ReleaseKey);
                 var response = DispatchFoundation(request);
+                journal?.Complete();
                 return response.Failure != null ? response : ChannelResponse.WithSpill(response.ResultJson,
                     () => WorkerReplySpill.Write(DataLocations.Current.WorkerSpillsDirectory, response.ResultJson));
             }

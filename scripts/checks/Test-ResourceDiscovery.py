@@ -82,12 +82,12 @@ def engine_fixture_evidence(worker, exe=None):
 @contextmanager
 def server(exe, portal_root, major, transport, profile, harness=None, public_api=None,
            *, env_overrides=None, process_observer=None, evidence_directory=None,
-           engine_worker=None, engine_catalog=None):
+           engine_worker=None, engine_catalog=None, plc_worker=None):
     # HTTP configuration watchers must not observe other checks' mutable tree.
     with fixture_directory('host-content-root-') as content_root:
         require((engine_worker is None) == (engine_catalog is None), 'Both SDK worker and catalog are required')
         inputs = dict(env_overrides=env_overrides, process_observer=process_observer,
-                      evidence_directory=evidence_directory, content_root=Path(content_root), engine_worker=engine_worker, engine_catalog=engine_catalog)
+                      evidence_directory=evidence_directory, content_root=Path(content_root), engine_worker=engine_worker, engine_catalog=engine_catalog, plc_worker=plc_worker)
         if engine_worker is not None:
             require(public_api is not None, 'SDK worker checks require --public-api')
             with fixture_directory('engine-protocol-sdk-') as scratch:
@@ -102,7 +102,7 @@ def server(exe, portal_root, major, transport, profile, harness=None, public_api
 @contextmanager
 def _server(exe, portal_root, major, transport, profile, harness=None, public_api=None,
            *, env_overrides=None, process_observer=None, evidence_directory=None, content_root=None,
-           engine_worker=None, engine_catalog=None):
+           engine_worker=None, engine_catalog=None, plc_worker=None):
     exe = Path(exe).resolve()
     if portal_root is not None: portal_root = Path(portal_root).resolve()
     port = 0
@@ -124,6 +124,9 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
     if worker is not None:
         require(catalog is not None and catalog.is_file(), 'A freshly exported engine worker catalog is required')
         args += ['--engine-worker', str(worker.resolve()), '--engine-catalog', str(catalog.resolve())]
+    if plc_worker is not None:
+        require(worker is None and public_api is not None, 'PLC worker requires its PublicAPI and no engine worker')
+        args += ['--worker-exe', str(plc_worker.resolve()), '--public-api', str(public_api.resolve())]
     if portal_root is not None:
         args += ['--tia-portal-location', str(portal_root)]
     args += ['--transport', transport, '--logging', '1']

@@ -245,7 +245,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                 (string?)body["error"]?["code"] == "CANCELLED" ? "unknown" : (string?)body["meta"]?["outcome"] ?? "unknown");
         }
         if (audit != null) audit.Complete(result.StructuredContent?.ToJsonString() ?? (result.Content.FirstOrDefault() as TextContentBlock)?.Text);
-        if (sharedSession && inner is FoundationTool producingTool) result = producingTool.ParkWorkerResult(result, tool.Name);
+        if (inner is FoundationTool producingTool) result = producingTool.ParkWorkerResult(result, tool.Name);
         return result;
     }
 
@@ -256,6 +256,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         var args = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
         using var journal = internalPrecheck ? null : TiaMcpServer.ModelContextProtocol.InvocationJournal.Observe(id, tool.Name, "foundation", release,
             inner is FoundationTool { JournalIsWrite: true }, () => JsonSerializer.Serialize(args));
+        using var workerRequest = FoundationWorkerRequest.Use(id, tool.Name);
         CallToolResult Recorded(CallToolResult result)
         {
             if (inner is FoundationTool artifactProducer)

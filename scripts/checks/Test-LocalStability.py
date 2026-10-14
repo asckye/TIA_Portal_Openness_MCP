@@ -165,15 +165,12 @@ def owned_worker_pid(parent_pid, executable):
 def cases(major, source):
     target = {'objectKind': 'Block', 'objectPath': '__soak_missing__', 'softwarePath': '__soak_no_plc__'}
     xref = {'softwarePath': '__soak_no_plc__', 'objectPath': '__soak_missing__'}
-    return [
+    scenario = [
         ('state', 'GetSessionState', {}, 'state'),
         ('compatibility', 'GetOpennessCompatibility', {}, 'compatibility'),
         ('format_preflight', 'InspectSimaticSdCompatibility', {'filePath': str(source), 'tiaMajor': major}, 'success'),
         # B12 ported the CFC read; it keeps the generic missing-portal refusal.
         ('cfc_project_refused', 'ManageCfcChartProtection', {'softwarePath': '__soak_no_plc__', 'chartName': '__soak_missing__', 'action': 'read', 'dryRun': True}, 'ported_project_refused'),
-        # Keep a real engine dispatch in this local-only soak (the host/child
-        # correlation check needs one): the shared block read still runs in the
-        # V20/V21 engine worker and refuses the missing portal before provider access.
         ('block_info_refused', 'GetPlcBlockInfo', {'softwarePath': '__soak_no_plc__', 'blockPath': '__soak_missing__'}, 'portal_refused'),
         ('xref_block_refused', 'GetPlcCrossReferences', xref, 'xref'),
         ('xref_tag_refused', 'GetPlcCrossReferences', dict(xref, objectKind='Tag'), 'xref'),
@@ -194,6 +191,17 @@ def cases(major, source):
         ('bridge_unknown_tool', 'CallTool', {'name': '__soak_unknown__'}, 'bridge_error'),
         ('unknown_tool', '__soak_unknown__', {}, 'error'),
     ]
+    if major == 19:
+        # The old-release roster has no InspectSimaticSdCompatibility. Exercise
+        # the registered local builder and its strict input/version refusals.
+        replacements = {
+            'format_preflight': ('build_udt', 'BuildPlcUdt', {'udt': {'name': 'UDT_Soak', 'members': [{'name': 'Enabled', 'datatype': 'Bool'}]}, 'outputReleaseKey': '19'}, 'success'),
+            'format_missing_file': ('build_missing_members', 'BuildPlcUdt', {'udt': {}, 'outputReleaseKey': '19'}, 'error'),
+            'format_bad_version': ('build_bad_version', 'BuildPlcUdt', {'udt': {'members': []}, 'outputReleaseKey': '99'}, 'error'),
+            'bridge_missing_args': ('bridge_missing_args', 'CallTool', {'name': 'BuildPlcUdt'}, 'bridge_error'),
+        }
+        scenario = [replacements.get(case[0], case) for case in scenario]
+    return scenario
 
 
 def run_profile(args, transport, profile, run_dir):
@@ -212,6 +220,7 @@ def run_profile(args, transport, profile, run_dir):
     with resources.server(args.exe, args.public_api, args.major, transport, profile,
             args.host_harness, args.public_api, process_observer=owned.append,
             evidence_directory=run_dir, engine_worker=args.engine_worker, engine_catalog=args.engine_catalog,
+            plc_worker=args.plc_worker,
             env_overrides={'TIA_MCP_DATA_DIRECTORY': str(data.resolve()),
                            'TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES': '0',
                            'TIA_MCP_DIAGNOSTICS_DIRECTORY': str(diagnostics),
@@ -241,6 +250,7 @@ def run_profile(args, transport, profile, run_dir):
             meta = value.get('meta', {})
             error_codes = {
                 'journal_bad_range': 'INTERNAL_ERROR', 'journal_bad_type': 'INVALID_ARGUMENT',
+                'build_missing_members': 'INVALID_ARGUMENT', 'build_bad_version': 'INVALID_ARGUMENT',
                 'format_missing_file': 'INVALID_ARGUMENT', 'format_bad_version': 'INTERNAL_ERROR',
                 'bridge_recursion': 'INVALID_ARGUMENT', 'bridge_bad_json': 'INVALID_ARGUMENT',
                 'bridge_bad_shape': 'INVALID_ARGUMENT', 'bridge_missing_args': 'INVALID_ARGUMENT',
@@ -287,7 +297,7 @@ def run_profile(args, transport, profile, run_dir):
             else:
                 require(value.get('ok') is True and meta['outcome'] == 'succeeded', label + ': expected success: ' + json.dumps(value))
                 if expectation == 'state':
-                    unattached_state(value, args.engine_worker is not None, logs)
+                    unattached_state(value, args.engine_worker is not None or args.plc_worker is not None, logs)
                 if expectation in ('compatibility', 'bridge_success'):
                     evidence = value['data']['evidence']
                     require(evidence['engineMajor'] == args.major and evidence['nativeCrossReferencesEnabled'] is False
@@ -299,8 +309,7 @@ def run_profile(args, transport, profile, run_dir):
         # Warm every case once before measuring the steady sequence, including JIT/error paths.
         scenario = cases(args.major, source)
         if args.engine_worker is not None:
-            # Keep an engine-owned read in the soak after F35 moves to Foundation,
-            # so host/child MCP correlation remains exercised.
+            # These adapter reads retain the existing refusal and build evidence.
             scenario.append(('engine_worker_project_refused', 'GetProjectUserManagement', {}, 'project_refused'))
             scenario.append(('block_group_portal_refused', 'CreatePlcBlockGroup',
                              {'softwarePath': '__soak_no_plc__', 'groupPath': '__soak_missing__'}, 'portal_refused'))
@@ -316,8 +325,11 @@ def run_profile(args, transport, profile, run_dir):
             execute(case, 'warm-' + str(index))
         samples.append(process_sample(owned[0]))
         state = document(rpc('tools/call', 'worker-state', {'name': 'GetOpennessWorkerStatus', 'arguments': {}}))['data']['evidence']['worker']
-        worker_pid = owned_worker_pid(owned[0].pid, args.engine_worker) if args.engine_worker is not None else state['workerPid']
-        require(state['state'] == 'Ready' and worker_pid != owned[0].pid, 'Worker isolation not active')
+        worker_pid = owned_worker_pid(owned[0].pid, args.engine_worker or args.plc_worker)
+        if args.plc_worker is None:
+            require(state['state'] == 'Ready' and worker_pid != owned[0].pid, 'Worker isolation not active')
+        else:
+            require(state['state'] == 'Running' and worker_pid != owned[0].pid, 'Worker isolation not active')
         worker_process = SimpleNamespace(pid=worker_pid)
         worker_samples.append(process_sample(worker_process))
         concurrency = args.concurrency if transport == 'http' else 1
@@ -335,11 +347,15 @@ def run_profile(args, transport, profile, run_dir):
                 require(rpc('ping', f'ping-{batch}').get('result') == {}, 'Ping failed after input errors')
                 recovered = document(rpc('tools/call', f'recovery-{batch}', {'name': 'GetSessionState', 'arguments': {}}))
                 require(recovered['ok'] is True, 'State failed after error batch')
-                unattached_state(recovered, args.engine_worker is not None, logs)
+                unattached_state(recovered, args.engine_worker is not None or args.plc_worker is not None, logs)
                 unknown = rpc('__soak_unknown_method__', f'unknown-{batch}')
                 require(unknown.get('error', {}).get('code') == -32601, 'Unknown method not rejected')
                 empty = rpc('resources/list', f'resources-{batch}')
-                require(empty.get('result') == {'resources': []}, 'Resources unavailable after errors')
+                if args.plc_worker is None:
+                    require(empty.get('result') == {'resources': []}, 'Resources unavailable after errors')
+                else:
+                    require('resources' not in hello['result']['capabilities'] and empty.get('error', {}).get('code') == -32601,
+                            'Unadvertised PLC-host resources must return MethodNotFound after errors')
                 if transport == 'http':
                     try:
                         http({'jsonrpc': '2.0', 'id': f'unauthorized-{batch}', 'method': 'ping'}, authorized=False)
@@ -424,7 +440,7 @@ def run_profile(args, transport, profile, run_dir):
             lanes[lane][key] -= 1
             outstanding[key] -= 1
     require(not any(outstanding.values()), 'Incomplete invocation after all responses returned')
-    if args.engine_worker is not None:
+    if args.engine_worker is not None or args.plc_worker is not None:
         # Typed workers journal implementation names separately from canonical tool projections.
         # Match only this owned child's paired projections, including lite CallTool targets.
         child_calls = {(row['id'], row['tool']) for _, row in projections
@@ -449,9 +465,10 @@ def main():
     parser.add_argument('--exe', type=Path, required=True)
     parser.add_argument('--public-api', type=Path, required=True)
     parser.add_argument('--host-harness', type=Path, help='Compatibility hash evidence; no engine MCP host is started')
-    parser.add_argument('--engine-worker', type=Path, required=True, help='Explicit SDK-only worker for the combined net10 host')
-    parser.add_argument('--engine-catalog', type=Path, required=True)
-    parser.add_argument('--major', type=int, choices=(20, 21), required=True)
+    parser.add_argument('--engine-worker', type=Path, help='Explicit SDK-only worker for the combined net10 host')
+    parser.add_argument('--engine-catalog', type=Path)
+    parser.add_argument('--plc-worker', type=Path, help='Explicit PLC worker for the Foundation profile soak')
+    parser.add_argument('--major', type=int, choices=(19, 20, 21), required=True)
     parser.add_argument('--rounds', type=int, default=50)
     parser.add_argument('--transports', nargs='+', choices=('stdio', 'http'), default=('stdio', 'http'))
     parser.add_argument('--profiles', nargs='+', choices=('full', 'lite'), default=('full', 'lite'))
@@ -462,6 +479,9 @@ def main():
     parser.add_argument('--max-handle-growth', type=int, default=128)
     parser.add_argument('--output', type=Path, required=True, help='Fresh directory for evidence; existing directories are refused')
     args = parser.parse_args()
+    require((args.engine_worker is not None) != (args.plc_worker is not None), 'Select exactly one worker kind')
+    require((args.engine_worker is None) == (args.engine_catalog is None), 'Engine worker requires its catalog')
+    require((args.major == 19) == (args.plc_worker is not None), 'V19 uses the PLC worker; V20/V21 use the engine worker')
     require(os.name == 'nt', 'Windows .NET Framework test host required')
     require(1 <= args.rounds <= 10000 and 1 <= args.concurrency <= 32, 'Rounds 1..10000; concurrency 1..32')
     for name in ('exe', 'public_api', 'output'):
@@ -474,6 +494,8 @@ def main():
         'rounds': args.rounds, 'isolatedWorker': True,
         'workerModel': 'combined-host-supervised-worker', 'bounds': {'maxPrivateMiB': args.max_private_mib, 'maxHandleGrowth': args.max_handle_growth}, 'runs': []}
     report.update(resources.engine_fixture_evidence(args.engine_worker, args.exe))
+    if args.plc_worker is not None:
+        report.update(hostSha256=sha(args.exe), sdkWorkerSha256=sha(args.plc_worker), workerModel='foundation-host-plc-worker')
     try:
         for transport in args.transports:
             for profile in args.profiles:

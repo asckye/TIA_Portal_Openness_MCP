@@ -28,6 +28,14 @@ internal static class EngineSessionFixture
         ChannelResponse Dispatch(ChannelRequest request)
         {
             if (request.Method == "engine.status") return ChannelResponse.Success(Status().ToJsonString());
+            if (request.Method == "adapter.FixtureCorrelation") return ChannelResponse.Success(new JsonObject {
+                ["id"] = request.CorrelationId, ["tool"] = request.ToolName }.ToJsonString());
+            if (request.Method == "adapter.FixtureSpill")
+            {
+                string full = new JsonObject { ["text"] = new string('x', ChannelLimits.ResponseBytes) }.ToJsonString();
+                return ChannelResponse.WithSpill(full, () => WorkerReplySpill.Write(
+                    Environment.GetEnvironmentVariable("TIA_MCP_WORKER_SPILLS_DIRECTORY") ?? DataLocations.Current.WorkerSpillsDirectory, full));
+            }
             var input = JsonNode.Parse(request.ArgumentsJson)!.AsObject();
             if (request.Method == "engine.observe" && (string?)input["operation"] == "assemblies")
                 return ChannelResponse.Success("[]");
