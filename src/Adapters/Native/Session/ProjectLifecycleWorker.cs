@@ -69,8 +69,12 @@ public sealed partial class PlcFoundationEngine
     public void RefreshProjectLifecyclePath()
     {
         Check();
+        string path;
+        if (_workerProcessStart != null) { CaptureWorkerSessionBinding(); path = _workerBinding!.ProjectPath; }
+        else
+            path = project!.Path.FullName;
         lifecycle.Adopt(new PlcRuntimeState { ProcessId = lifecycle.ProcessId, IsAttached = true,
-            ProjectFile = project!.Path.FullName, OwnsProject = lifecycle.OwnsProject, IsLocalSession = lifecycle.IsLocalSession });
+            ProjectFile = path, OwnsProject = lifecycle.OwnsProject, IsLocalSession = lifecycle.IsLocalSession });
         sessionCandidateAdapter = null; saveCloseAdapter = null;
     }
     public void AdoptProjectLifecycleRetrieved(object returned)
@@ -82,7 +86,13 @@ public sealed partial class PlcFoundationEngine
         project = returned as Siemens.Engineering.Project;
 #endif
         if (project == null) throw new InvalidOperationException("Retrieve returned no project; inspect destination for partial files.");
-        lifecycle.Bound(project.Path.FullName, true, false);
+        if (_workerProcessStart != null)
+        {
+            CaptureWorkerSessionBinding();
+            lifecycle.Bound(_workerBinding!.ProjectPath, true, false);
+        }
+        else
+            lifecycle.Bound(project.Path.FullName, true, false);
     }
     public void ReleaseProjectLifecycleProject()
     {
@@ -91,6 +101,7 @@ public sealed partial class PlcFoundationEngine
         localSession = null;
 #endif
         project = null; lifecycle.Unbound();
+        if (_workerProcessStart != null) ClearWorkerSessionBinding();
     }
 
     // The OS group helper is managed, but stays on the selected session lane.

@@ -34,8 +34,14 @@ namespace TiaMcp.Adapters
     public sealed partial class PlcFoundationEngine
     {
         public string ReleaseKey="19";public FakeProject BoundProject=new();public FakePortal AttachedPortal=new();public FakeLifecycle lifecycle=new();public bool Bound=true;
+        public bool WorkerSessionBindingConfigured=true;
         private FakeProject Project()=>Bound?BoundProject:throw new InvalidOperationException("explicit project required");
         private FakePortal Portal()=>AttachedPortal;
+        public Func<Func<string>,TiaMcp.Adapters.Contracts.Candidates.CandidateIdentity>? SharedHardwareCandidateIdentity;
+        public PlcFoundationEngine() { SharedHardwareCandidateIdentity = path => new(lifecycle.ProcessId,
+            new DateTimeOffset(2026,1,1,0,0,0,TimeSpan.Zero),path(),1); }
+        private TiaMcp.Adapters.Contracts.Candidates.CandidateIdentity DeviceCreationBindingIdentity(Func<string> path)
+            => (SharedHardwareCandidateIdentity ?? throw new InvalidOperationException("Exact device-creation binding is unavailable."))(path);
         private void RequireHardwareCatalogBinding() { if(!Bound) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Hardware catalog tools require ConnectPortal followed by AttachOpenProject first.","session",false); }
         private void RequireProjectIdentity(string path)=>MutationIdentityPolicy.RequireSameProject(path,Project().Path.FullName);
     }

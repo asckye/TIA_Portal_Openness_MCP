@@ -76,10 +76,18 @@ internal static class Program
 #if !OPCUA_NO_EXTENSION
             engine.PlcB5GenerateModelled = request => JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, object?>>(new TiaMcpServer.Siemens.OpcUaModelledNative(engine.PlcB5Session).GenerateOpcUaModelledInterface(request.SoftwarePath, request.InterfaceName, request.NamespaceUri, request.OutputPath, request.UnitName, request.KeepFolderStructure, request.KeepEmptyDataBlocks, request.AccessLevelsJson, request.DryRun).ToJsonString())!;
 #endif
-            var dispatcher = new FoundationWorkerDispatcher(engine, typeof(Program).Assembly);
+            WorkerSessionRecovery? recovery = null;
+            var dispatcher = new FoundationWorkerDispatcher(engine, typeof(Program).Assembly,
+                error => recovery!.ObserveFailure(error)
+                );
+            recovery = new WorkerSessionRecovery(dispatcher.SessionOutcome, () => dispatcher.Detached,
+                engine.RefreshWorkerSessionBinding, engine.ClearWorkerSessionBinding, engine.LockWorkerSessionBinding,
+                engine.InvalidateSharedSession, engine.Dispose, () => engine.WorkerSessionBindingFault);
             using var session = new FoundationProcessLease(() => TiaOpenness.Shared.DataLocations.Current.LeasesDirectory,
-                dispatcher.Dispatch, () => dispatcher.State.IsAttached, () => dispatcher.Detached,
-                () => dispatcher.SessionOutcome.RequiresReset, engine.Dispose);
+                request => recovery.Dispatch(request, dispatcher.Dispatch),
+                () => dispatcher.State.IsAttached, () => dispatcher.Detached, () => dispatcher.SessionOutcome.RequiresReset,
+                recovery.DisposeSession, recovery.Synchronize
+                );
             engine.ProjectEnsureGroup = () => TiaMcpServer.Siemens.OpennessGroup.EnsureMembership().GetAwaiter().GetResult();
             engine.ProjectConnectionCreated = connection => {
                 int processId = connection.GetCurrentProcess().Id;
@@ -88,13 +96,17 @@ internal static class Program
             engine.ProjectRetrieved = engine.AdoptProjectLifecycleRetrieved;
             engine.ProjectSavedAs = engine.RefreshProjectLifecyclePath;
             engine.ProjectReleased = engine.ReleaseProjectLifecycleProject;
-            engine.ProjectCachedBinding = () => {
-                var state = engine.ReadState();
-                return new System.Collections.Generic.Dictionary<string, object?> {
-                    ["identity"] = new System.Collections.Generic.Dictionary<string, object?> { ["projectPath"] = state.ProjectFile },
-                    ["instanceReserved"] = state.IsAttached, ["verifiedLive"] = false
-                };
-            };
+            engine.ConfigureWorkerSessionCallbacks(() => session.ProcessStartTicks, () => session.Reserved,
+                (major, pid, ticks, path, name) => {
+                    var binding = new TiaMcpServer.Siemens.ProjectBindingIdentity(major, pid, ticks, path, name);
+                    return new WorkerSessionIdentity(binding.ProcessId, binding.StartUtcTicks, binding.ProjectPath,
+                        binding.ProjectName, binding.Generation,
+                        JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, object?>>(binding.ToJson().ToJsonString())!,
+                        binding.Verify);
+                }, value => JsonSerializer.Deserialize<PlcSeedHmiReply>(JsonSerializer.Serialize(value))!);
+#if WORKER_SEED_HMI_IMPORT
+            engine.SeedReferenceHmiImport = engine.ImportProjectLifecycleSeedHmi;
+#endif
             string HashFile(string path)
             {
                 using(var stream=File.OpenRead(path))

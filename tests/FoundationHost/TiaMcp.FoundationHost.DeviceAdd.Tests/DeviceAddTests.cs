@@ -63,7 +63,7 @@ internal static class DeviceAddTests
         Check(stale.IsArgument && stale.ParamName=="expectedPlanHash" && engine.BoundProject.Devices.Calls==0,"approval-disabled stale reviewed plan refuses before create");
         engine=Engine();engine.ReleaseKey="18";result=Preview(engine);Check(result.Release=="18" && engine.BoundProject.Devices.Calls==0,"V18 preview preserves release and issues no create");Check(Execute(engine,result.PlanHash).Executed && engine.BoundProject.Devices.Calls==1,"V18 apply performs one verified create");
         engine=Engine();engine.ReleaseKey="17";Reject(()=>Preview(engine),"adapter release gate");Check(engine.AttachedPortal.HardwareCatalog.Calls==0,"release before query");
-        engine=Engine();engine.lifecycle.IsLocalSession=false;Reject(()=>Preview(engine),"adapter local gate");
+        engine=Engine();engine.lifecycle.IsLocalSession=false;Check(!Preview(engine).Attempted && engine.BoundProject.Devices.Calls==0,"attached ordinary session preview admitted without creation");
         engine=Engine();var group=new Siemens.Engineering.HW.DeviceUserGroup(){Parent=engine.BoundProject};group.Devices.Add(new(){Name="PLC_2",Parent=group});engine.BoundProject.DeviceGroups.Add(group);Reject(()=>Preview(engine),"grouped name collision");
         engine=Engine();engine.BoundProject.UngroupedDevicesGroup.Devices.Add(new(){Name="plc_2",Parent=engine.BoundProject.UngroupedDevicesGroup});Reject(()=>Preview(engine),"ungrouped name collision");
         engine=Engine();group=new(){Parent=engine.BoundProject};group.Groups.Add(group);engine.BoundProject.DeviceGroups.Add(group);Reject(()=>Preview(engine),"cyclic groups");

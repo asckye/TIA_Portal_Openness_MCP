@@ -12,6 +12,7 @@ namespace TiaMcp.Adapters
     {
         private readonly List<KeyValuePair<object,string>> deviceAddIdentities=new List<KeyValuePair<object,string>>();
         private bool deviceAddOutcomeUnknown;
+        private TiaMcp.Adapters.Contracts.Candidates.CandidateIdentity? deviceAddBinding;
         private string DeviceAddIdentity(object value)
         {
             foreach(var pair in deviceAddIdentities) if(object.Equals(pair.Key,value)) return pair.Value;
@@ -25,11 +26,36 @@ namespace TiaMcp.Adapters
             PlcDeviceAddPolicy.ValidateOptions(request);
 #if PLC_HARDWARE_CATALOG
             RequireHardwareCatalogBinding();
-            PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
+            // The borrowed engine path keeps its served behavior until the worker switch.
+            if(!WorkerSessionBindingConfigured) PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
             var project=Project();var portal=Portal();
-            request.Project=project.Path.FullName;request.ProcessId=lifecycle.ProcessId??throw new InvalidOperationException("Explicit attached process required.");request.RootIdentity=DeviceAddIdentity(project);
+            TiaMcp.Adapters.Contracts.Candidates.CandidateIdentity? binding=null;
+            if(WorkerSessionBindingConfigured)
+            {
+                string? path=null;
+                binding=DeviceCreationBindingIdentity(()=>path=project.Path.FullName);
+                if(deviceAddBinding==null || deviceAddBinding.ProcessId!=binding.ProcessId || deviceAddBinding.ProcessStartUtc!=binding.ProcessStartUtc
+                    || deviceAddBinding.ProjectFile!=binding.ProjectFile || deviceAddBinding.BindingEpoch!=binding.BindingEpoch)
+                {
+                    deviceAddIdentities.Clear();
+                    deviceAddBinding=new TiaMcp.Adapters.Contracts.Candidates.CandidateIdentity(binding.ProcessId,binding.ProcessStartUtc,binding.ProjectFile,binding.BindingEpoch);
+                }
+                request.Project=path!;request.ProcessId=binding.ProcessId??throw new InvalidOperationException("Explicit attached process required.");
+            }
+            else
+            {
+                request.Project=project.Path.FullName;request.ProcessId=lifecycle.ProcessId??throw new InvalidOperationException("Explicit attached process required.");
+            }
+            request.RootIdentity=DeviceAddIdentity(project);
             Action check=()=> {
-                RequireProjectIdentity(request.Project);
+                if(binding!=null)
+                {
+                    var current=DeviceCreationBindingIdentity(()=>project.Path.FullName);
+                    if(binding.ProcessId!=current.ProcessId || binding.ProcessStartUtc!=current.ProcessStartUtc
+                        || binding.ProjectFile!=current.ProjectFile || binding.BindingEpoch!=current.BindingEpoch)
+                        throw new InvalidOperationException("Exact device-creation binding changed.");
+                }
+                else RequireProjectIdentity(request.Project);
                 if(lifecycle.ProcessId!=request.ProcessId || !object.Equals(Project(),project) || !object.Equals(Portal(),portal)) throw new InvalidOperationException("Project/process/session identity changed.");
             };
             Func<IEnumerable<PlcHardwareCatalogCandidate>> catalog=()=>portal.HardwareCatalog.Find(preferredMlfb).Select(entry=>new PlcHardwareCatalogCandidate {TypeIdentifier=NativeHardware.TypeIdentifier(entry),ArticleNumber=NativeHardware.ArticleNumber(entry),Version=NativeHardware.Version(entry)});

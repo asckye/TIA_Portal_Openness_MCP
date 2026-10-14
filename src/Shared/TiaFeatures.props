@@ -3,6 +3,17 @@
        Each row owns one feature's release range. Profiles select each consumer's
        compiler symbols; Adapter also compiles the Studio native sources.
        Pipe delimiters keep service/minor releases distinct from major-version aliases. -->
+  <!-- Every PlcWorker uses the same session flow; Adapter compiles its implementation. -->
+  <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Worker' Or '$(TiaFeatureProfile)' == 'Adapter'">
+    <DefineConstants Condition="$([System.String]::Copy('|14sp1|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);WORKER_SESSION_LIFECYCLE</DefineConstants>
+  </PropertyGroup>
+  <!-- Seed registration stays on the evidenced engine-port formats; older releases still refuse it. -->
+  <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Worker'">
+    <DefineConstants Condition="'$(TiaReleaseKey)' == '20' Or '$(TiaReleaseKey)' == '21'">$(DefineConstants);WORKER_SEED_HMI_IMPORT</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Worker'">
+    <DefineConstants>$(DefineConstants);WORKER_PROPERTY_ADMISSION</DefineConstants>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Adapter' Or '$(TiaFeatureProfile)' == 'HardwareAddressing'">
     <DefineConstants Condition="'$(TiaReleaseKey)' == '21'">$(DefineConstants);PLC_ADDRESS_PROCESS_IMAGE_SERVICE</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_ATTRIBUTE_DELEGATE</DefineConstants>

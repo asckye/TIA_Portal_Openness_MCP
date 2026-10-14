@@ -8,7 +8,8 @@
       "RELEASE",
       "TIA_ADAPTER_INTERNAL_VERSIONING",
       "TIA_NATIVE_ONLINE",
-      "TRACE"
+      "TRACE",
+      "WORKER_SESSION_LIFECYCLE"
     ]
   },
   {
@@ -34,7 +35,8 @@
       "SECURITY_PROJECT_PROTECTION",
       "TIA_ADAPTER_INTERNAL_VERSIONING",
       "TIA_NATIVE_ONLINE",
-      "TRACE"
+      "TRACE",
+      "WORKER_SESSION_LIFECYCLE"
     ]
   },
   {
@@ -75,7 +77,8 @@
       "STUDIO_VCI_INITIAL",
       "TIA_ADAPTER_INTERNAL_VERSIONING",
       "TIA_NATIVE_ONLINE",
-      "TRACE"
+      "TRACE",
+      "WORKER_SESSION_LIFECYCLE"
     ]
   },
   {
@@ -135,7 +138,8 @@
       "STUDIO_VCI_INITIAL",
       "TIA_ADAPTER_INTERNAL_VERSIONING",
       "TIA_NATIVE_ONLINE",
-      "TRACE"
+      "TRACE",
+      "WORKER_SESSION_LIFECYCLE"
     ]
   },
   {
@@ -214,7 +218,8 @@
       "STUDIO_VCI",
       "TIA_ADAPTER_INTERNAL_VERSIONING",
       "TIA_NATIVE_ONLINE",
-      "TRACE"
+      "TRACE",
+      "WORKER_SESSION_LIFECYCLE"
     ]
   },
   {
@@ -307,7 +312,8 @@
       "STUDIO_VCI",
       "TIA_ADAPTER_INTERNAL_VERSIONING",
       "TIA_NATIVE_ONLINE",
-      "TRACE"
+      "TRACE",
+      "WORKER_SESSION_LIFECYCLE"
     ]
   },
   {
@@ -420,7 +426,8 @@
       "STUDIO_VCI_MODERN",
       "TIA_ADAPTER_INTERNAL_VERSIONING",
       "TIA_NATIVE_ONLINE",
-      "TRACE"
+      "TRACE",
+      "WORKER_SESSION_LIFECYCLE"
     ]
   },
   {
@@ -539,7 +546,8 @@
       "STUDIO_VCI_MODERN",
       "TIA_ADAPTER_INTERNAL_VERSIONING",
       "TIA_NATIVE_ONLINE",
-      "TRACE"
+      "TRACE",
+      "WORKER_SESSION_LIFECYCLE"
     ]
   },
   {
@@ -585,7 +593,9 @@
     "defineConstants": [
       "OPCUA_NO_EXTENSION",
       "RELEASE",
-      "TRACE"
+      "TRACE",
+      "WORKER_PROPERTY_ADMISSION",
+      "WORKER_SESSION_LIFECYCLE"
     ]
   },
   {
@@ -597,7 +607,9 @@
     "defineConstants": [
       "OPCUA_NO_UNITS",
       "RELEASE",
-      "TRACE"
+      "TRACE",
+      "WORKER_PROPERTY_ADMISSION",
+      "WORKER_SESSION_LIFECYCLE"
     ]
   },
   {
@@ -608,7 +620,9 @@
     "targetFramework": "net48",
     "defineConstants": [
       "RELEASE",
-      "TRACE"
+      "TRACE",
+      "WORKER_PROPERTY_ADMISSION",
+      "WORKER_SESSION_LIFECYCLE"
     ]
   },
   {
@@ -619,7 +633,9 @@
     "targetFramework": "net48",
     "defineConstants": [
       "RELEASE",
-      "TRACE"
+      "TRACE",
+      "WORKER_PROPERTY_ADMISSION",
+      "WORKER_SESSION_LIFECYCLE"
     ]
   },
   {
@@ -630,7 +646,9 @@
     "targetFramework": "net48",
     "defineConstants": [
       "RELEASE",
-      "TRACE"
+      "TRACE",
+      "WORKER_PROPERTY_ADMISSION",
+      "WORKER_SESSION_LIFECYCLE"
     ]
   },
   {
@@ -642,7 +660,9 @@
     "defineConstants": [
       "HMI_UNIFIED",
       "RELEASE",
-      "TRACE"
+      "TRACE",
+      "WORKER_PROPERTY_ADMISSION",
+      "WORKER_SESSION_LIFECYCLE"
     ]
   },
   {
@@ -654,7 +674,10 @@
     "defineConstants": [
       "HMI_UNIFIED",
       "RELEASE",
-      "TRACE"
+      "TRACE",
+      "WORKER_PROPERTY_ADMISSION",
+      "WORKER_SEED_HMI_IMPORT",
+      "WORKER_SESSION_LIFECYCLE"
     ]
   },
   {
@@ -666,7 +689,10 @@
     "defineConstants": [
       "HMI_UNIFIED",
       "RELEASE",
-      "TRACE"
+      "TRACE",
+      "WORKER_PROPERTY_ADMISSION",
+      "WORKER_SEED_HMI_IMPORT",
+      "WORKER_SESSION_LIFECYCLE"
     ]
   },
   {
@@ -749,6 +775,16 @@
       "STUDIO_VCI",
       "STUDIO_VCI_MODERN",
       "TRACE"
+    ]
+  },
+  {
+    "project": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/TiaMcp.Adapters.Contracts.Tests.csproj",
+    "properties": {},
+    "targetFramework": "net10.0",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE",
+      "WORKER_SESSION_LIFECYCLE"
     ]
   },
   {

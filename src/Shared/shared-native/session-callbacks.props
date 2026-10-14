@@ -1,0 +1,9 @@
+<Project>
+  <ItemGroup>
+    <TiaSharedNativePrimitive Include="$(MSBuildThisFileDirectory)SessionCallbackPrimitives.cs" Link="Native/SessionCallbackPrimitives.cs" />
+    <TiaSharedNativePrimitive Include="$(MSBuildThisFileDirectory)SessionProcessIdentity.cs" Link="Native/SessionProcessIdentity.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TiaFeatureProfile)' == 'Adapter'">
+    <Compile Include="$(MSBuildThisFileDirectory)WorkerSessionCallbacks.cs" Link="Session/WorkerSessionCallbacks.cs" />
+  </ItemGroup>
+</Project>

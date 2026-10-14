@@ -7,6 +7,73 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcp.PlcWorker
 {
+    // Registered only on V20/V21. The fault retains native handles solely for an
+    // acknowledged owner-thread Disconnect; exit after uncertainty abandons them.
+    internal sealed class WorkerSessionRecovery
+    {
+        private readonly WorkerSessionOutcomeState _outcome;
+        private readonly Func<bool> _detached;
+        private readonly Action _refresh, _clear, _invalidate, _dispose;
+        private readonly Action<string> _lock;
+        private readonly Func<string?>? _bindingFault;
+        internal string? Fault { get; private set; }
+
+        internal WorkerSessionRecovery(WorkerSessionOutcomeState outcome, Func<bool> detached,
+            Action refresh, Action clear, Action<string> lockBinding, Action invalidate, Action dispose,
+            Func<string?>? bindingFault = null)
+        {
+            _outcome = outcome; _detached = detached; _refresh = refresh; _clear = clear;
+            _lock = lockBinding; _invalidate = invalidate; _dispose = dispose;
+            _bindingFault = bindingFault;
+        }
+
+        internal void ObserveFailure(Exception error)
+        {
+            if (TiaOpenness.Shared.ProcessLossPolicy.Reason(error) != null) Fault ??= error.Message;
+        }
+
+        internal ChannelResponse Dispatch(ChannelRequest request, Func<ChannelRequest, ChannelResponse> dispatch)
+        {
+            if (Fault != null && request.Method != "adapter.Disconnect")
+                return ChannelResponse.Error(new ChannelFailureException(TiaOpenness.Shared.SessionBehavior.Recovery,
+                    -32603, ChannelOutcome.RejectedBeforeNative));
+            return dispatch(request);
+        }
+
+        private void Lock(string reason)
+        {
+            Fault ??= reason;
+            _outcome.MarkUncertain();
+            _lock(Fault);
+        }
+
+        internal ChannelResponse Synchronize(ChannelRequest request, ChannelResponse response)
+        {
+            if (_detached()) { _clear(); return response; }
+            Fault ??= _bindingFault?.Invoke();
+            // A later, refused request must keep its rejected-before-native outcome.
+            if (Fault != null && response.Failure?.Outcome == ChannelOutcome.RejectedBeforeNative
+                && response.Failure.Message == TiaOpenness.Shared.SessionBehavior.Recovery) return response;
+            if (Fault != null || _outcome.RequiresReset || response.Failure?.Outcome == ChannelOutcome.Unknown)
+            {
+                Lock(response.Failure?.Message ?? TiaOpenness.Shared.SessionBehavior.Recovery);
+                if (response.Failure != null || !WorkerOperations.IsFamilyOperation(request.Method.Substring("adapter.".Length)))
+                    return ChannelResponse.Error(new ChannelFailureException(Fault!, -32603, ChannelOutcome.Unknown,
+                        response.Failure?.EvidenceJson ?? "null"));
+                return response;
+            }
+            try { _refresh(); }
+            catch (Exception error) { Lock(error.Message); throw; }
+            return response;
+        }
+
+        internal void DisposeSession()
+        {
+            if (_outcome.RequiresReset) _invalidate();
+            _dispose();
+        }
+    }
+
     // Admission and teardown surround the existing owner-thread dispatcher. This
     // boundary uses only OS process identity and the shared persistent file lease.
     internal sealed class FoundationProcessLease : IDisposable
@@ -15,14 +82,19 @@ namespace TiaMcp.PlcWorker
         private readonly Func<ChannelRequest, ChannelResponse> dispatch;
         private readonly Func<bool> attached, detached, requiresReset;
         private readonly Action disposeEngine;
+        private readonly Func<ChannelRequest, ChannelResponse, ChannelResponse>? afterDispatch;
         private PortalProcessLease? lease;
         private bool uncertain, disposed;
+        internal long ProcessStartTicks { get; private set; }
+        internal bool Reserved => lease != null;
 
         internal FoundationProcessLease(Func<string> root, Func<ChannelRequest, ChannelResponse> dispatch,
-            Func<bool> attached, Func<bool> detached, Func<bool> requiresReset, Action disposeEngine)
+            Func<bool> attached, Func<bool> detached, Func<bool> requiresReset, Action disposeEngine,
+            Func<ChannelRequest, ChannelResponse, ChannelResponse>? afterDispatch = null)
         {
             this.root = root; this.dispatch = dispatch; this.attached = attached;
             this.detached = detached; this.requiresReset = requiresReset; this.disposeEngine = disposeEngine;
+            this.afterDispatch = afterDispatch;
         }
 
         internal long ReserveCreatedProcess(int processId)
@@ -32,6 +104,7 @@ namespace TiaMcp.PlcWorker
             if (process.HasExited) throw new InvalidOperationException("TIA process exited before attachment.");
             long ticks = process.StartTime.ToUniversalTime().Ticks;
             lease = PortalProcessLease.Acquire(root(), processId, ticks);
+            ProcessStartTicks = ticks;
             lease.BeginRequest();
             return ticks;
         }
@@ -64,12 +137,14 @@ namespace TiaMcp.PlcWorker
                 {
                     using var process = Process.GetProcessById(pid.Value);
                     if (process.HasExited) throw new InvalidOperationException("TIA process exited before attachment.");
-                    lease = PortalProcessLease.Acquire(root(), pid.Value, process.StartTime.ToUniversalTime().Ticks);
+                    ProcessStartTicks = process.StartTime.ToUniversalTime().Ticks;
+                    lease = PortalProcessLease.Acquire(root(), pid.Value, ProcessStartTicks);
                     reserved = true;
                 }
                 if (request.Method != "adapter.ReadState") lease?.BeginRequest();
                 entered = true;
                 var response = dispatch(request);
+                if (afterDispatch != null) response = afterDispatch(request, response);
                 if (detached()) { ReleaseCleanly(); uncertain = false; }
                 else
                 {
@@ -98,7 +173,7 @@ namespace TiaMcp.PlcWorker
             }
         }
 
-        private void ReleaseCleanly() { lease?.ReleaseCleanly(); lease = null; }
+        private void ReleaseCleanly() { lease?.ReleaseCleanly(); lease = null; ProcessStartTicks = 0; }
 
         public void Dispose()
         {

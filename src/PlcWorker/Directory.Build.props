@@ -1,4 +1,12 @@
 <Project>
+  <PropertyGroup><TiaFeatureProfile>Worker</TiaFeatureProfile></PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../Shared/TiaFeatures.props" />
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)../Shared/UnifiedHmiPropertyPolicy.cs" Link="Shared/UnifiedHmiPropertyPolicy.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)../Logic/Siemens/ProjectBindingIdentity.cs" Link="Shared/ProjectBindingIdentity.cs" />
+  </ItemGroup>
   <Import Project="$(MSBuildThisFileDirectory)../Shared/CodeAnalysis.props" Condition="'$(TiaMcpCodeAnalysisImported)' != 'true'" /><PropertyGroup>
   <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj/$(TiaReleaseKey)/</BaseIntermediateOutputPath>
   <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>

@@ -1,3 +1,8 @@
+#if TIA_ENGINE_LOCAL_PRIMITIVES
+using SessionCallbackPrimitives = TiaMcp.Shared.Native.SessionCallbackPrimitives;
+#else
+using SessionCallbackPrimitives = TiaMcp.Adapters.Session.SessionCallbackPrimitives;
+#endif
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -120,11 +125,10 @@ namespace TiaMcpServer.Worker
             foundation.SharedHardwareCandidateIdentity = projectPath => {
                 engineering.VerifyBinding("device-creation-candidate");
                 var identity = engineering.GetBindingIdentity()["identity"]!.AsObject();
-                string generation = identity["generation"]!.GetValue<string>();
-                if (generation != deviceBindingGeneration) { deviceBindingGeneration = generation; deviceBindingEpoch++; }
-                return new TiaMcp.Adapters.Contracts.Candidates.CandidateIdentity(identity["processId"]!.GetValue<int>(),
+                return SessionCallbackPrimitives.HardwareIdentity(identity["processId"]!.GetValue<int>(),
                     DateTimeOffset.Parse(identity["processStartUtc"]!.GetValue<string>(), System.Globalization.CultureInfo.InvariantCulture),
-                    DeviceCreationSession.CanonicalProject(projectPath()), deviceBindingEpoch);
+                    identity["generation"]!.GetValue<string>(), projectPath,
+                    ref deviceBindingGeneration, ref deviceBindingEpoch);
             };
             foundation.AdmitHardwareAmlExport = path => {
                 CallerInputFiles.ValidateNativeFile("ExportDeviceAml", new JsonObject { ["exportPath"] = path });
@@ -206,14 +210,8 @@ namespace TiaMcpServer.Worker
             foundation.PlcB5AutoOffline = (path, action) => OnlineToolPolicy.WithAutoOffline(action, path);
             foundation.PlcB5ResolvedPath = SoftwareContainerLookup.PathOf;
             foundation.PlcB5GenerateModelled = request => JsonSerializer.Deserialize<Dictionary<string, object?>>(new OpcUaModelledNative(foundation.PlcB5Session).GenerateOpcUaModelledInterface(request.SoftwarePath, request.InterfaceName, request.NamespaceUri, request.OutputPath, request.UnitName, request.KeepFolderStructure, request.KeepEmptyDataBlocks, request.AccessLevelsJson, request.DryRun).ToJsonString())!;
-            foundation.SeedReferenceHmiImport = request => {
-                var reply = foundation.ExecuteHmi(new TiaMcp.Adapters.Contracts.HmiRequest {
-                    Operation = request.Kind == "tagTables" ? "ImportHmiTagTablesFromDirectory" : request.Kind == "screens" ? "ImportHmiScreensFromDirectory" : throw new ArgumentException("Unknown seed HMI import kind."),
-                    SoftwarePath = request.SoftwarePath, FolderPath = request.FolderPath, Dir = request.Directory, Overwrite = true, DryRun = false
-                }, false);
-                if (reply.Failure != null) throw new TiaMcp.Adapters.Contracts.PlcSoftwareException(reply.Failure.Code, reply.Failure.Message);
-                return JsonSerializer.Deserialize<TiaMcp.Adapters.Contracts.PlcSeedHmiReply>(JsonSerializer.Serialize(reply.Value))!;
-            };
+            foundation.SeedReferenceHmiImport = request => SessionCallbackPrimitives.SeedImport(
+                request, foundation.ExecuteHmi, value => JsonSerializer.Deserialize<TiaMcp.Adapters.Contracts.PlcSeedHmiReply>(JsonSerializer.Serialize(value))!);
             lifecycle = new SharedSessionLifecycle(RefreshFromEngine, RefreshFromFoundation, reason => {
                 nativeFault = reason;
                 // Keep the original attachment solely for an owner-thread recovery

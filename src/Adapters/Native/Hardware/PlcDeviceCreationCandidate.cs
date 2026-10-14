@@ -1,6 +1,5 @@
 #if PLC_HARDWARE_CATALOG
 using System;
-using System.Diagnostics;
 using System.Linq;
 using TiaMcp.Adapters.Contracts.Candidates;
 using TiaMcp.Adapters.Hardware;
@@ -17,20 +16,11 @@ namespace TiaMcp.Adapters
             {
                 Check();
                 if (ReleaseKey != "19") CandidatePrimitives.Unsupported(ReleaseKey, "device-candidate");
-                PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession, false);
                 var candidateProject = Project();
                 var candidatePortal = Portal();
                 CandidateIdentity Identity()
                 {
-                    Check();
-                    if (!object.Equals(Project(), candidateProject) || !object.Equals(Portal(), candidatePortal))
-                        CandidatePrimitives.Fail("identity", "project");
-                    int pid = lifecycle.ProcessId ?? throw new InvalidOperationException("No attached process identity.");
-                    using var process = Process.GetProcessById(pid);
-                    if (process.HasExited) throw new InvalidOperationException("The attached process exited.");
-                    var path = candidateProject.Path.FullName;
-                    RequireProjectIdentity(path);
-                    return new CandidateIdentity(pid, new DateTimeOffset(process.StartTime.ToUniversalTime()), CandidatePrimitives.CanonicalProject(path), bindingEpoch);
+                    return DeviceCreationBindingIdentity(() => candidateProject.Path.FullName);
                 }
                 if (deviceCandidateAdapter == null || !deviceCandidateAdapter.IsProject(candidateProject))
                     deviceCandidateAdapter = new DeviceCreationAdapter(candidateProject, candidatePortal, Identity);
@@ -60,21 +50,11 @@ namespace TiaMcp.Adapters
             {
                 Check();
                 if (ReleaseKey != "19" && ReleaseKey != "20" && ReleaseKey != "21") CandidatePrimitives.Unsupported(ReleaseKey, "device-candidate");
-                if (SharedHardwareCandidateIdentity == null) PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession, false);
                 var candidateProject = Project();
                 var candidatePortal = Portal();
                 CandidateIdentity Identity()
                 {
-                    if (SharedHardwareCandidateIdentity != null) return SharedHardwareCandidateIdentity(() => candidateProject.Path.FullName);
-                    Check();
-                    if (!object.Equals(Project(), candidateProject) || !object.Equals(Portal(), candidatePortal))
-                        CandidatePrimitives.Fail("identity", "project");
-                    int pid = lifecycle.ProcessId ?? throw new InvalidOperationException("No attached process identity.");
-                    using var process = Process.GetProcessById(pid);
-                    if (process.HasExited) throw new InvalidOperationException("The attached process exited.");
-                    var path = candidateProject.Path.FullName;
-                    RequireProjectIdentity(path);
-                    return new CandidateIdentity(pid, new DateTimeOffset(process.StartTime.ToUniversalTime()), CandidatePrimitives.CanonicalProject(path), bindingEpoch);
+                    return DeviceCreationBindingIdentity(() => candidateProject.Path.FullName);
                 }
                 if (deviceCandidateAdapter == null || !deviceCandidateAdapter.IsProject(candidateProject))
                     deviceCandidateAdapter = new DeviceCreationAdapter(candidateProject, candidatePortal, Identity);
@@ -116,5 +96,7 @@ namespace TiaMcp.Adapters
     public sealed partial class PlcFoundationEngine
     {
         public System.Func<System.Func<string>, TiaMcp.Adapters.Contracts.Candidates.CandidateIdentity>? SharedHardwareCandidateIdentity { get; set; }
+        private TiaMcp.Adapters.Contracts.Candidates.CandidateIdentity DeviceCreationBindingIdentity(System.Func<string> path)
+            => (SharedHardwareCandidateIdentity ?? throw new System.InvalidOperationException("Exact device-creation binding is unavailable."))(path);
     }
 }

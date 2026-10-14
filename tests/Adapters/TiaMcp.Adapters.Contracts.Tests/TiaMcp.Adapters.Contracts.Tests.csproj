@@ -2,6 +2,22 @@
   <Import Project="../../Shared/Xunit.props" />
   <PropertyGroup>
     <RootNamespace>TiaMcp.Adapters.Contracts.Tests</RootNamespace><TargetFramework>net10.0</TargetFramework><GenerateProgramFile>true</GenerateProgramFile><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <PropertyGroup>
+    <!-- Exercise both current-release callback registrations against managed Siemens stand-ins. -->
+    <DefineConstants>$(DefineConstants);WORKER_SESSION_LIFECYCLE</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../../src/Shared/shared-native/SessionCallbackPrimitives.cs" Link="Session/SessionCallbackPrimitives.cs" />
+    <Compile Include="../../../src/Shared/shared-native/SessionProcessIdentity.cs" Link="Session/SessionProcessIdentity.cs" />
+    <Compile Include="../../../src/Shared/shared-native/WorkerSessionCallbacks.cs" Link="Session/WorkerSessionCallbacks.cs" />
+    <Compile Include="../../../src/Adapters/Native/Session/ProjectLifecycleWorker.cs" Link="Session/ProjectLifecycleWorker.cs" />
+    <Compile Include="../../../src/Adapters/Policy/PlcLifecyclePolicy.cs" Link="Session/PlcLifecyclePolicy.cs" />
+    <Compile Include="../../../src/Logic/Siemens/ProjectBindingIdentity.cs" Link="Session/ProjectBindingIdentity.cs" />
+    <Compile Include="../../../src/Logic/Siemens/TiaVersionCatalog.cs" Link="Session/TiaVersionCatalog.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcFoundationPolicy.cs" Link="Session/PlcFoundationPolicy.cs" />
+    <Compile Include="../../../src/Shared/NativeInputPolicy.cs" Link="Shared/NativeInputPolicy.cs" />
+    <Compile Include="../../../src/Shared/NativePathSelection.cs" Link="Shared/NativePathSelection.cs" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="../../../src/Adapters/Native/Optional/OptionalAssemblyAdmission.cs" Link="OptionalAssemblyAdmission.cs" />
     <Compile Include="../../../src/Adapters/Native/Session/MutationIdentityPolicy.cs" Link="MutationIdentityPolicy.cs" />

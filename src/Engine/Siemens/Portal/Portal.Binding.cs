@@ -1,3 +1,8 @@
+#if TIA_ENGINE_LOCAL_PRIMITIVES
+using SessionCallbackPrimitives = TiaMcp.Shared.Native.SessionCallbackPrimitives;
+#else
+using SessionCallbackPrimitives = TiaMcp.Adapters.Session.SessionCallbackPrimitives;
+#endif
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -13,12 +18,9 @@ namespace TiaMcpServer.Siemens
         private ProjectBindingIdentity? _binding;
         private string? _bindingFault;
         private PortalProcessLease? _processLease;
-        private static long ProcessStart(int pid)
-        {
-            using var process = Process.GetProcessById(pid);
-            if (process.HasExited) throw new InvalidOperationException("TIA process exited.");
-            return process.StartTime.ToUniversalTime().Ticks;
-        }
+#if !TIA_ENGINE_LOCAL_PRIMITIVES
+        private static long ProcessStart(int pid) => SessionCallbackPrimitives.ProcessStart(pid);
+#endif
         private static PortalProcessLease Reserve(int pid, long ticks) => PortalProcessLease.Acquire(
             TiaOpenness.Shared.DataLocations.Current.LeasesDirectory, pid, ticks);
         private void CaptureBinding()
@@ -26,17 +28,13 @@ namespace TiaMcpServer.Siemens
             HmiExactAccess.InvalidateTokens();
             _binding = null; _bindingFault = null;
             if (_project == null) return;
-            if (_boundProcessId == null || _processLease == null) throw new InvalidOperationException("No reserved TIA process.");
-            if (ProcessStart(_boundProcessId.Value) != _processStartTicks) throw new InvalidOperationException("TIA process changed before project binding.");
-            _binding = InvocationJournal.Native("Binding.Capture", () => new ProjectBindingIdentity(
-                Engineering.TiaMajorVersion, _boundProcessId.Value, _processStartTicks, _project.Path.FullName, _project.Name));
+            _binding = SessionCallbackPrimitives.Capture(_boundProcessId, _processStartTicks,
+                _processLease != null, () => new ProjectBindingIdentity(Engineering.TiaMajorVersion,
+                    _boundProcessId!.Value, _processStartTicks, _project.Path.FullName, _project.Name));
             _expectedProjectName = _binding.ProjectName;
         }
-        public JsonObject GetBindingIdentity() => new JsonObject {
-            ["identity"] = _binding?.ToJson(), ["fault"] = _bindingFault,
-            ["instanceReserved"] = _processLease != null, ["verifiedLive"] = false,
-            ["note"] = "Cached binding only. Project access verifies PID/start time/full path/name; no implicit rebind."
-        };
+        public JsonObject GetBindingIdentity() => System.Text.Json.JsonSerializer.SerializeToNode(
+            SessionCallbackPrimitives.Snapshot(_binding?.ToJson(), _bindingFault, _processLease != null))!.AsObject();
         internal void VerifyBinding(string operation)
         {
             sessionCandidateAdapter?.VerifyOwnedState();
@@ -48,11 +46,9 @@ namespace TiaMcpServer.Siemens
                 throw new PortalException(PortalErrorCode.InvalidState, "Background Openness calls require MTA; no native call attempted.");
             try
             {
-                if (_binding == null || _boundProcessId == null || _processLease == null)
-                    throw new InvalidOperationException("Exact project binding is unavailable.");
-                _binding.Verify(Engineering.TiaMajorVersion, _boundProcessId.Value, ProcessStart(_boundProcessId.Value),
-                    InvocationJournal.Native("Binding.ProjectPath", () => _project.Path.FullName),
-                    InvocationJournal.Native("Binding.ProjectName", () => _project.Name));
+                SessionCallbackPrimitives.Verify(_binding != null, Engineering.TiaMajorVersion,
+                    _boundProcessId, _processLease != null, () => _project.Path.FullName, () => _project.Name,
+                    (major, pid, ticks, path, name) => _binding!.Verify(major, pid, ticks, path, name));
             }
             catch (Exception ex)
             {
