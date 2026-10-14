@@ -81,7 +81,7 @@ namespace TiaMcp.Logic.V4.Construction
                 {
                     UdtSpec _ => PlcBuilderToolJson.BuildUdt(json, outputReleaseKey),
                     GlobalDbSpec _ => PlcBuilderToolJson.BuildGlobalDb(json, outputReleaseKey),
-                    PlcTagTableSpec _ => PlcBuilderToolJson.BuildTagTable(json),
+                    PlcTagTableSpec _ => PlcBuilderToolJson.BuildTagTableForRelease(json, outputReleaseKey),
                     StructuredTextSpec _ => PlcBuilderToolJson.BuildStructuredText(json, innerOnly),
                     FlgNetCallSpec _ => PlcBuilderToolJson.BuildFlgNetCall(json),
                     FcBlockSpec _ => PlcBuilderToolJson.ComposeFcBlock(json),

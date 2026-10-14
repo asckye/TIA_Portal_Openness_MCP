@@ -149,7 +149,9 @@ internal static class ToolUsageGenerator
             }
             if ((args["dryRun"]?.GetValue<bool>() == false || args["confirm"]?.GetValue<bool>() == true) && !new[] { "StageImportFiles", "CleanupStagedImportFiles", "ManageStandardPackage", "ManageMachineDescription" }.Contains(name)) Require(Text(args["expectedProjectFile"]).Length > 0, "Real call requires expectedProjectFile: " + location);
             if (name is "ImportPlcBlocksFromDirectory" or "ImportPlcProgramFromDirectory") { var pattern = Text(args["regexName"]); Require(pattern.Length > 0 && Regex.IsMatch("Main.xml", "\\A(?:" + pattern + ")\\z") && !Regex.IsMatch("Main", "\\A(?:" + pattern + ")\\z"), "Regex must select extension: " + location); }
-            if (new[] { "BuildPlcTagTable", "BuildStructuredText", "BuildFlgNetCall", "BuildPlcFcBlock", "BuildPlcFbBlock", "BuildPlcLadFcBlock", "BuildPlcGlobalDb", "BuildPlcUdt" }.Contains(name)) Require(Text(args["outputReleaseKey"]) == "21", "Builder must select V21: " + location);
+            if (name is "BuildPlcUdt" or "BuildPlcGlobalDb") Require(Text(args["outputReleaseKey"]) == "{release}", "Declaration builder must select the serving release: " + location);
+            if (name == "BuildPlcTagTable") Require(!args.AsObject().ContainsKey("outputReleaseKey"), "Tag builder must use the serving default: " + location);
+            if (new[] { "BuildStructuredText", "BuildFlgNetCall", "BuildPlcFcBlock", "BuildPlcFbBlock", "BuildPlcLadFcBlock" }.Contains(name)) Require(Text(args["outputReleaseKey"]) == "21", "Builder must select V21: " + location);
         }
         foreach (var (name, entry) in calls["profiles"]!["plc-foundation"]!.AsObject())
         {

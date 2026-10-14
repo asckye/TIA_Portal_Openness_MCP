@@ -108,7 +108,7 @@ public sealed class B3HostPortsTests
     public void Build_import_candidates_use_old_release_formats_and_preserve_modern_builder_bytes(string release)
     {
         using var scope = Host.HardwareContract.UseRelease(release);
-        string target = release is "20" or "21" ? "21" : release;
+        string target = release;
         var format = global::TiaMcpServer.ModelContextProtocol.PlcDeclarationXmlFormat.ForRelease(target);
         var build = typeof(Host.PlcBuildTools).GetMethod("BuildPlcArtifact", BindingFlags.Static | BindingFlags.NonPublic)!;
         foreach (var candidate in new[] {
@@ -124,9 +124,9 @@ public sealed class B3HostPortsTests
             if (release is "20" or "21")
             {
                 var original = candidate.Item1 switch {
-                    "udt" => global::TiaMcpServer.ModelContextProtocol.PlcBuilderToolJson.BuildUdt(candidate.Item2),
-                    "globaldb" => global::TiaMcpServer.ModelContextProtocol.PlcBuilderToolJson.BuildGlobalDb(candidate.Item2),
-                    _ => global::TiaMcpServer.ModelContextProtocol.PlcBuilderToolJson.BuildTagTable(candidate.Item2) };
+                    "udt" => global::TiaMcpServer.ModelContextProtocol.PlcBuilderToolJson.BuildUdt(candidate.Item2, target),
+                    "globaldb" => global::TiaMcpServer.ModelContextProtocol.PlcBuilderToolJson.BuildGlobalDb(candidate.Item2, target),
+                    _ => global::TiaMcpServer.ModelContextProtocol.PlcBuilderToolJson.BuildTagTableForRelease(candidate.Item2, target) };
                 Assert.Equal(original.ToJsonString(), actual.ToJsonString());
             }
         }

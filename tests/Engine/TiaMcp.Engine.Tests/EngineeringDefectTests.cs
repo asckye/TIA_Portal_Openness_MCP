@@ -3,13 +3,15 @@ using HmiEventAccess = TiaMcpServer.Siemens.HmiEventAccess;
 using TiaMcp.Adapters.Native.Hmi;
 using System;
 using System.IO;
+using System.Reflection;
+using System.Reflection.Emit;
 using System.Collections.Generic;
 using TiaMcpServer.Siemens;
 using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcp.Engine.Tests
 {
-    internal static class EngineeringDefectTests
+    public static class EngineeringDefectTests
     {
         public enum EventType { Down, Tapped, Up }
         public sealed class Events
@@ -19,7 +21,7 @@ namespace TiaMcp.Engine.Tests
             public object? Find(EventType kind) => Items.TryGetValue(kind, out var v) ? v : null;
             public object Create(EventType kind) { Creates++; return Items[kind] = new object(); }
         }
-        public sealed class PropertyFixture
+        internal sealed class PropertyFixture
         {
             public string? Empty => null;
             public PropertyFixture? Child => null;
@@ -48,12 +50,20 @@ namespace TiaMcp.Engine.Tests
             }
         }
         public enum ArchiveMode { None, Compressed, DiscardRestorableData }
-        public sealed class ArchiveFixture
+        public class ArchiveFixture
         {
             public bool IsModified {get;set;}
             public int Calls;
             public void Archive(DirectoryInfo directory,string name,ArchiveMode mode)
             { if(mode!=ArchiveMode.Compressed)throw new Exception("wrong mode");Calls++;File.WriteAllText(Path.Combine(directory.FullName,name),"fake archive"); }
+        }
+        private static ArchiveFixture NewArchiveFixture(int major = 21)
+        {
+            var assembly = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("ArchiveFixture" + Guid.NewGuid().ToString("N"))
+                { Version = new Version(major, 0, 0, 0) }, AssemblyBuilderAccess.RunAndCollect);
+            var type = assembly.DefineDynamicModule("Fixture").DefineType("Project", TypeAttributes.Public, typeof(ArchiveFixture));
+            type.DefineDefaultConstructor(MethodAttributes.Public);
+            return (ArchiveFixture)Activator.CreateInstance(type.CreateType()!)!;
         }
         private static string Failure(Action action)
         { try { action(); return "none"; } catch (PortalException ex) { return ex.Code.ToString(); } }
@@ -101,13 +111,24 @@ namespace TiaMcp.Engine.Tests
                 check(ok["success"]!.GetValue<bool>() && File.ReadAllText(path)=="<Export/>" && ok["sha256"]!.ToString().Length==64, "validated export atomically replaces target: " + ok.ToJsonString());
                 var collision=EngineeringExport.Export(new Exporter(),path,overwrite:false);
                 check(!collision["success"]!.GetValue<bool>()&&File.ReadAllText(path)=="<Export/>","no-overwrite commit preserves a raced/existing destination");
-                var project=new ArchiveFixture{IsModified=true};var archive=Path.Combine(directory,"test.zap21");
+                var project=NewArchiveFixture();project.IsModified=true;var archive=Path.Combine(directory,"test.zap21");
                 check(Failure(()=>ProjectArchive.Create(project,archive,false))=="InvalidState"&&project.Calls==0,"archive rejects unsaved project without auto-save");
                 project.IsModified=false;
                 check(ProjectArchive.Create(project,archive)["dryRun"]!.GetValue<bool>()&&project.Calls==0,"native archive defaults to preview");
                 check(ProjectArchive.Create(project,archive,false)["success"]!.GetValue<bool>()&&project.Calls==1&&File.Exists(archive),"native compressed archive validates artifact");
                 check(Failure(()=>ProjectArchive.Create(project,archive,false))=="InvalidParams"&&project.Calls==1,"native archive never overwrites existing backup");
                 check(Failure(()=>ProjectArchive.Create(new object(),Path.Combine(directory,"unsupported.zap21"),false))=="NotSupportedOnVersion","unsupported project/session rejected before file writes");
+                foreach (var release in TiaMcp.Versioning.TiaVersionCatalog.All)
+                {
+                    var candidate = NewArchiveFixture(release.MajorVersion);
+                    string suffix = TiaMcp.Adapters.PlcLifecyclePolicy.FileSuffix(release.Key);
+                    string target = Path.Combine(directory, "archive-" + release.Key + ".zap" + suffix);
+                    check(ProjectArchive.Create(candidate, target, release.Key)["dryRun"]!.GetValue<bool>()
+                        && candidate.Calls == 0 && !File.Exists(target), "archive exact suffix preview " + release.Key);
+                    var mismatched = NewArchiveFixture(release.MajorVersion == 21 ? 20 : 21);
+                    check(Failure(() => ProjectArchive.Create(mismatched, target, release.Key)) == "InvalidParams"
+                        && mismatched.Calls == 0, "archive mismatched assembly refused " + release.Key);
+                }
             }
             finally { Directory.Delete(directory,true); }
         }

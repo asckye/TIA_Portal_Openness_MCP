@@ -34,11 +34,15 @@ namespace TiaMcpServer.Siemens
 
         // A minimal SimaticML document for a new watch table (no entries yet).
         internal static XDocument NewTable(string tableName, int engineeringMajorVersion)
+            => NewTable(tableName, engineeringMajorVersion == 14 ? "14sp1" : engineeringMajorVersion == 15 ? "15.1"
+                : engineeringMajorVersion.ToString(CultureInfo.InvariantCulture));
+
+        internal static XDocument NewTable(string tableName, string releaseKey)
         {
             return new XDocument(
                 new XDeclaration("1.0", "utf-8", null),
                 new XElement("Document",
-                    new XElement("Engineering", new XAttribute("version", "V" + engineeringMajorVersion)),
+                    new XElement("Engineering", new XAttribute("version", TiaMcpServer.ModelContextProtocol.PlcDeclarationXmlFormat.ForRelease(releaseKey).EngineeringVersion)),
                     new XElement(TableElement, new XAttribute("ID", "0"),
                         new XElement("AttributeList", new XElement("Name", tableName)),
                         new XElement("ObjectList"))));

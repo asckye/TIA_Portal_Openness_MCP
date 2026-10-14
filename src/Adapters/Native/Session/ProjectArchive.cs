@@ -25,9 +25,9 @@ namespace TiaMcp.Adapters.Native.Session
             if(modified is not bool isModified)throw new PortalException(PortalErrorCode.InvalidState,"Cannot verify saved project state.");
             if(isModified)throw new PortalException(PortalErrorCode.InvalidState,"Project has unsaved changes. Save explicitly before archiving; no automatic save is performed.");
             var path=Path.GetFullPath(archivePath);
-            if(!path.EndsWith(".zap" + (release == "15.1" ? "15_1" : release), StringComparison.OrdinalIgnoreCase))throw new PortalException(PortalErrorCode.InvalidParams,"Use a .zap20 or .zap21 file path matching the project version.");
+            if(!path.EndsWith(".zap" + PlcLifecyclePolicy.FileSuffix(release), StringComparison.OrdinalIgnoreCase))throw new PortalException(PortalErrorCode.InvalidParams,"Use a .zap" + PlcLifecyclePolicy.FileSuffix(release) + " file path matching the project version.");
             var version=project.GetType().Assembly.GetName().Version?.Major;
-            if((version==20||version==21)&&!path.EndsWith(".zap"+version,StringComparison.OrdinalIgnoreCase))throw new PortalException(PortalErrorCode.InvalidParams,"Archive extension does not match the TIA API version.");
+            if(version != TiaMcp.Versioning.TiaVersionCatalog.Get(release).MajorVersion)throw new PortalException(PortalErrorCode.InvalidParams,"Archive extension does not match the TIA API version.");
             if(File.Exists(path))throw new PortalException(PortalErrorCode.InvalidParams,"Archive target already exists; choose a new file name.");
             var mode=method.GetParameters()[2].ParameterType;
             if(!Enum.GetNames(mode).Contains("Compressed"))throw new PortalException(PortalErrorCode.NotSupportedOnVersion,"Compressed archive mode unavailable.");

@@ -221,7 +221,7 @@ namespace TiaMcp.Adapters
         private static Dictionary<string, object?> HardwareCertificateServiceRow(CertificateSupportedService service) => new Dictionary<string, object?>
         {
 #if !PLC_HARDWARE_LINKED_TAGS
-            ["id"] = service.Id, ["serviceType"] = service.ServiceType.ToString(), ["serviceGroupName"] = service.ServiceGroupName   // V20: UInt16 Id, no ApplicationUri / Guid
+            ["id"] = service.Id, ["serviceType"] = service.ServiceType.ToString(), ["serviceGroupName"] = service.ServiceGroupName   // UInt16 Id, no ApplicationUri / Guid
 #else
             ["id"] = service.Id, ["serviceType"] = service.ServiceType.ToString(), ["serviceGroupName"] = service.ServiceGroupName, ["applicationUri"] = service.ApplicationUri, ["guid"] = service.Guid.ToString()
 #endif
@@ -324,7 +324,7 @@ namespace TiaMcp.Adapters
                         if (action == "setServiceGroupName" || action == "deleteService")
                         {
                             service = (ushort.TryParse(name, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var id) ? services.Find(id) : null)
-                                ?? throw new HardwareAddressingException("NotFound", "No certificate-supported service with Id " + name + " (V20: UInt16 Id, no Guid lookup).");
+                                ?? throw new HardwareAddressingException("NotFound", "No certificate-supported service with Id " + name + " (UInt16 Id, no Guid lookup).");
 #else
                         if (action == "createService" && services.Find(uint.Parse(name, System.Globalization.CultureInfo.InvariantCulture)) != null) throw new InvalidOperationException("A certificate-supported service with Id " + name + " already exists.");
                         if (action == "setServiceGroupName" || action == "deleteService")

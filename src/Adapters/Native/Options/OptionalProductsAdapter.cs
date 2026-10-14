@@ -51,7 +51,7 @@ internal sealed class OptionalProductsAdapter
                 try
                 {
 #if !OPTION_SINUMERIK_ARCHIVE
-                throw new NotSupportedException("SinumerikArchiveProvider is absent from the supplied V21 SDK; use the V20 engine with the appropriate SINUMERIK option.");
+                throw new NotSupportedException("SinumerikArchiveProvider is absent from the selected release's SDK; select a release with this API and the appropriate SINUMERIK option.");
 #else
                 // Refuse unavailable overloads before resolving the native provider or hardware.
 #if !OPTION_ARCHIVE_F_ADDRESS
@@ -132,7 +132,7 @@ internal sealed class OptionalProductsAdapter
                 try
                 {
 #if !OPTION_SINUMERIK_ALARMS
-                throw new NotSupportedException("SinumerikAlarmTextProvider is absent from the supplied V21 SDK.");
+                throw new NotSupportedException("SinumerikAlarmTextProvider is absent from the selected release's SDK.");
 #else
                 var names = _session.Files();
                 if (names.Length < 1 || names.Length > 200) throw new ArgumentException("Supply 1..200 alarm text files.");
@@ -161,7 +161,7 @@ internal sealed class OptionalProductsAdapter
                 try
                 {
 #if !OPTION_SINUMERIK_SAFETY
-                throw new NotSupportedException("SafetyModeProvider is absent from the supplied V21 SDK.");
+                throw new NotSupportedException("SafetyModeProvider is absent from the selected release's SDK.");
 #else
                 if (action != "read" && action != "set") throw new ArgumentException("action: read/set.");
                 bool writing = action == "set" && !dryRun;
@@ -190,7 +190,7 @@ internal sealed class OptionalProductsAdapter
                 try
                 {
 #if !OPTION_SIMOTION
-                throw new NotSupportedException("SimotionProvider is absent from the supplied V21 SDK.");
+                throw new NotSupportedException("SimotionProvider is absent from the selected release's SDK.");
 #else
                 var provider = InvocationJournal.Native("Simotion.GetService", () => _session.CurrentProject!.GetService<SimotionProvider>()) ?? throw new NotSupportedException("Project does not provide SimotionProvider; SIMOTION SCOUT TIA must be installed.");
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
@@ -209,7 +209,7 @@ internal sealed class OptionalProductsAdapter
                 try
                 {
 #if !OPTION_SCADA
-                throw new NotSupportedException("ScadaExportProvider is absent from the supplied V21 SDK.");
+                throw new NotSupportedException("ScadaExportProvider is absent from the selected release's SDK.");
 #else
                 var file = OptionFile(filePath, ".zip", false);
                 IEngineeringServiceProvider owner = string.IsNullOrEmpty(softwarePath) ? (IEngineeringServiceProvider)_session.CurrentProject! : _session.ExactPlcForEngineering(softwarePath, false);

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using ModelContextProtocol.Protocol;
@@ -31,8 +33,22 @@ namespace TiaMcpServer.ModelContextProtocol
     internal sealed class VersionPolicyTool : McpServerTool
     {
         private readonly McpServerTool inner;
-        internal VersionPolicyTool(McpServerTool tool) { inner = tool; }
-        public override Tool ProtocolTool => inner.ProtocolTool;
+        private readonly Tool protocol;
+        internal VersionPolicyTool(McpServerTool tool)
+        {
+            inner = tool;
+            var source = tool.ProtocolTool;
+            protocol = source;
+            if (source.Name is "BuildPlcUdt" or "BuildPlcGlobalDb")
+            {
+                var schema = JsonNode.Parse(source.InputSchema.GetRawText())!.AsObject();
+                schema["properties"]!["outputReleaseKey"]!["default"] = HardwareContract.ReleaseKey;
+                protocol = new Tool { Name = source.Name, Title = source.Title, Description = source.Description,
+                    InputSchema = JsonSerializer.SerializeToElement(schema), OutputSchema = source.OutputSchema,
+                    Annotations = source.Annotations, Meta = source.Meta };
+            }
+        }
+        public override Tool ProtocolTool => protocol;
         public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request,
             CancellationToken cancellationToken = default)
         {

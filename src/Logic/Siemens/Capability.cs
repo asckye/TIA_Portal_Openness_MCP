@@ -47,9 +47,9 @@ namespace TiaMcpServer.Siemens
             };
 
         /// <summary>Unknown, planned and unrecognized versions fail closed.</summary>
-        public static bool IsSupported(TiaFeature feature)
+        public static bool IsSupported(TiaFeature feature, string releaseKey)
         {
-            return IsSupported(feature, Engineering.TiaMajorVersion);
+            return IsSupported(feature, TiaMcp.Versioning.TiaVersionCatalog.Get(releaseKey).MajorVersion);
         }
 
         internal static bool IsSupported(TiaFeature feature, int major)
@@ -61,9 +61,9 @@ namespace TiaMcpServer.Siemens
         }
 
         /// <summary>Throws <see cref="PortalException"/> (NotSupportedOnVersion) when the feature is unavailable on the connected version.</summary>
-        public static void RequireSupported(TiaFeature feature)
+        public static void RequireSupported(TiaFeature feature, string releaseKey)
         {
-            if (!IsSupported(feature))
+            if (!IsSupported(feature, releaseKey))
                 throw new PortalException(PortalErrorCode.NotSupportedOnVersion, Describe(feature));
         }
 
@@ -74,13 +74,13 @@ namespace TiaMcpServer.Siemens
         }
 
         /// <summary>Snapshot of every feature's availability against the connected version, for Bootstrap to advertise.</summary>
-        public static List<CapabilityInfo> Snapshot()
+        public static List<CapabilityInfo> Snapshot(string releaseKey)
         {
             return MinVersion.Keys
                 .Select(f => new CapabilityInfo
                 {
                     Feature = f.ToString(),
-                    Supported = IsSupported(f),
+                    Supported = IsSupported(f, releaseKey),
                     MinVersion = MinVersion[f],
                     Note = Describe(f)
                 })

@@ -53,7 +53,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return new XDocument(
                 new XDeclaration("1.0", "utf-8", null),
                 new XElement("Document",
-                    new XElement("Engineering", new XAttribute("version", "V21")),
+                    new XElement("Engineering", new XAttribute("version", PlcDeclarationXmlFormat.ForRelease("21").EngineeringVersion)),
                     new XElement("DocumentInfo",
                         new XElement("Created", "2000-01-01T00:00:00.0000000Z"),
                         new XElement("ExportSetting", "None"),

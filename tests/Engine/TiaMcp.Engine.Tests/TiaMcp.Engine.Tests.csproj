@@ -101,6 +101,8 @@
     <Compile Include="../../../src/Shared/GlobalScriptEditService.cs" Link="GlobalScriptEditService.cs" />
     <Compile Include="../../../src/Shared/GlobalScriptEditTools.cs" Link="GlobalScriptEditTools.cs" />
     <Compile Include="../../../src/Adapters/Native/Session/ProjectArchive.cs" Link="ProjectArchive.cs" />
+    <Compile Include="../../../src/Adapters/Policy/PlcLifecyclePolicy.cs" Link="PlcLifecyclePolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Session/MutationIdentityPolicy.cs" Link="MutationIdentityPolicy.cs" />
     <Compile Include="../../../src/Engine/Siemens/Hmi/HmiExactAccess.cs" Link="HmiExactAccess.cs" />
     <Compile Include="../../../src/Engine/Siemens/Hmi/HmiSnapshot.cs" Link="HmiSnapshot.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/HmiValues.cs" Link="Native/Hmi/HmiValues.cs" />

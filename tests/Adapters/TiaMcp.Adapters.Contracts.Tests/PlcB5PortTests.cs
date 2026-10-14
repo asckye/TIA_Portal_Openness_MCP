@@ -12,7 +12,7 @@ public sealed class PlcB5PortTests
     [InlineData("17", 1, 10, 6)]
     [InlineData("18", 1, 11, 6)]
     [InlineData("19", 1, 11, 6)]
-    [InlineData("20", 7, 11, 8)]
+    [InlineData("20", 7, 11, 6)]
     [InlineData("21", 7, 11, 8)]
     public void EveryToolHasAnExplicitRegistrationDecision(string release, int documents, int alarms, int opcUa)
     {

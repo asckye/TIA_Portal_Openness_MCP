@@ -93,6 +93,10 @@ namespace TiaMcp.Engine.Tests
             check(WatchTableEntryXml.QuoteSymbol("MCP_DB.Counter") == "\"MCP_DB\".Counter" && WatchTableEntryXml.QuoteSymbol("\"MCP_DB\".Counter") == "\"MCP_DB\".Counter", "watch xml: DB member quoted on the first segment only");
             check(WatchTableEntryXml.SameSymbol("MCP_Start", "\"mcp_start\""), "watch xml: symbol comparison ignores quoting and case");
             var doc = WatchTableEntryXml.NewTable("WT", 21);
+            foreach (var release in TiaMcpServer.ModelContextProtocol.PlcDeclarationXmlFormat.ReleaseKeys)
+                check((string?)WatchTableEntryXml.NewTable("WT", release).Root!.Element("Engineering")!.Attribute("version")
+                    == TiaMcpServer.ModelContextProtocol.PlcDeclarationXmlFormat.ForRelease(release).EngineeringVersion,
+                    "watch XML: exact release header " + release);
             check(WatchTableEntryXml.TableName(doc) == "WT" && !WatchTableEntryXml.Entries(doc).Any(), "watch xml: new table is empty and named");
             check(WatchTableEntryXml.Upsert(doc, "%M0.0", "TRUE", "OnceOnlyAtStart") == "appended" && WatchTableEntryXml.Entries(doc).Count() == 1, "watch xml: first row appended");
             check(WatchTableEntryXml.Upsert(doc, "MCP_Start", "FALSE", "Permanent") == "appended" && WatchTableEntryXml.Entries(doc).Count() == 2, "watch xml: symbol row appended");

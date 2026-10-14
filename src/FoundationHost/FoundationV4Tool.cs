@@ -78,6 +78,8 @@ internal sealed class FoundationV4Tool : McpServerTool
             CancellationToken, Task<TiaOpenness.Shared.ApprovalOutcome>>? approvalWait = null,
         Func<JsonObject>? readinessForTest = null, bool sharedSession = false)
     {
+        if (inner is OfflineXmlTool xmlTool) inner = xmlTool.ForRelease(release);
+        else if (inner is OfflineCompositionTool compositionTool) inner = compositionTool.ForRelease(release);
         this.inner = inner; this.release = release;
         this.approvalSettings = approvalSettings;
         this.approvalWait = approvalWait;

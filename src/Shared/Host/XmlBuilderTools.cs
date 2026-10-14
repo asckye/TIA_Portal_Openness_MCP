@@ -46,19 +46,19 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 #endif
 
-        [McpServerTool(Name = "BuildPlcUdt"), Description("[L2][PLC-Builders][OFFLINE] Build flat PLC UDT/PlcStruct candidate XML using the selected release's interface schema. Explicit outputReleaseKey supports 14sp1, 15.1 and 16-21; default 21 preserves existing calls. Input: {name,members:[{name,datatype,externalWritable?,commentZhCn?}]}. Returns XML only. Runtime XSD and native import validation are separate; it does not connect, import or write files.")]
+        [McpServerTool(Name = "BuildPlcUdt"), Description("[L2][PLC-Builders][OFFLINE] Build flat PLC UDT/PlcStruct candidate XML using the selected release's interface schema. Explicit outputReleaseKey supports 14sp1, 15.1 and 16-21; the default is the serving release. Input: {name,members:[{name,datatype,externalWritable?,commentZhCn?}]}. Returns XML only. Runtime XSD and native import validation are separate; it does not connect, import or write files.")]
         public CallToolResult BuildPlcUdtXmlV4(
             [Description("udt: UdtSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] UdtSpec udt,
-            [Description("outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Default 21 preserves existing calls.")] string outputReleaseKey = "21")
+            [Description("outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Omit to use the serving release.")] string outputReleaseKey = null!)
             => OfflineContracts.Run("BuildPlcUdt", () => BuildPlcUdtXml(ConstructionAdapter.ToBuilderJson(udt), outputReleaseKey), writes: false, current: false);
 
         public ResponseXmlBuild BuildPlcUdtXml(
             [Description("udtJson: JSON object with members[]. Required member fields: name, datatype. Optional: externalWritable, commentZhCn/comment.")] string udtJson,
-            [Description("outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Default 21 preserves existing calls.")] string outputReleaseKey = "21")
+            [Description("outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Omit to use the serving release.")] string outputReleaseKey = null!)
         {
             try
             {
-                return XmlBuildResults.BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildUdt(udtJson, outputReleaseKey), "PLC UDT XML built offline");
+                return XmlBuildResults.BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildUdt(udtJson, outputReleaseKey ?? HardwareContract.ReleaseKey), "PLC UDT XML built offline");
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -66,7 +66,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildPlcTagTable"), Description("[L2][PLC-Builders][OFFLINE] Build a TIA V21 PLC tag table XML document from structured JSON. Input: {tableName,tags:[{name,dataTypeName,logicalAddress}]}. It only returns XML; it does not connect to TIA Portal, import tag tables, write files, or modify projects.")]
+        [McpServerTool(Name = "BuildPlcTagTable"), Description("[L2][PLC-Builders][OFFLINE] Build a PLC tag table XML document for the serving release from structured JSON. Input: {tableName,tags:[{name,dataTypeName,logicalAddress}]}. It only returns XML; it does not connect to TIA Portal, import tag tables, write files, or modify projects.")]
         public CallToolResult BuildPlcTagTableXmlV4(
             [Description("tagTable: PlcTagTableSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] PlcTagTableSpec tagTable)
             => OfflineContracts.Run("BuildPlcTagTable", () => BuildPlcTagTableXml(ConstructionAdapter.ToBuilderJson(tagTable)), writes: false, current: false);
@@ -76,7 +76,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                return XmlBuildResults.BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildTagTable(tagTableJson), "PLC tag table XML built offline");
+                return XmlBuildResults.BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildTagTableForRelease(tagTableJson, HardwareContract.ReleaseKey), "PLC tag table XML built offline");
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -84,19 +84,19 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildPlcGlobalDb"), Description("[L2][PLC-Builders][OFFLINE] Build flat PLC GlobalDB candidate XML using the selected release's interface schema. Explicit outputReleaseKey supports 14sp1, 15.1 and 16-21; default 21 preserves existing calls. Input: {dbName,dbNumber,staticMembers:[{name,datatype,externalWritable?,commentZhCn?,startValue?}]}. Returns XML only. Runtime XSD and native import validation are separate; it does not connect, import or write files.")]
+        [McpServerTool(Name = "BuildPlcGlobalDb"), Description("[L2][PLC-Builders][OFFLINE] Build flat PLC GlobalDB candidate XML using the selected release's interface schema. Explicit outputReleaseKey supports 14sp1, 15.1 and 16-21; the default is the serving release. Input: {dbName,dbNumber,staticMembers:[{name,datatype,externalWritable?,commentZhCn?,startValue?}]}. Returns XML only. Runtime XSD and native import validation are separate; it does not connect, import or write files.")]
         public CallToolResult BuildPlcGlobalDbXmlV4(
             [Description("globalDb: GlobalDbSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] GlobalDbSpec globalDb,
-            [Description("outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Default 21 preserves existing calls.")] string outputReleaseKey = "21")
+            [Description("outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Omit to use the serving release.")] string outputReleaseKey = null!)
             => OfflineContracts.Run("BuildPlcGlobalDb", () => BuildPlcGlobalDbXml(ConstructionAdapter.ToBuilderJson(globalDb), outputReleaseKey), writes: false, current: false);
 
         public ResponseXmlBuild BuildPlcGlobalDbXml(
             [Description("globalDbJson: JSON object with dbName/name, dbNumber/number, and staticMembers[] or members[].")] string globalDbJson,
-            [Description("outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Default 21 preserves existing calls.")] string outputReleaseKey = "21")
+            [Description("outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Omit to use the serving release.")] string outputReleaseKey = null!)
         {
             try
             {
-                return XmlBuildResults.BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildGlobalDb(globalDbJson, outputReleaseKey), "PLC GlobalDB XML built offline");
+                return XmlBuildResults.BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildGlobalDb(globalDbJson, outputReleaseKey ?? HardwareContract.ReleaseKey), "PLC GlobalDB XML built offline");
             }
             catch (Exception ex) when (ex is not McpException)
             {

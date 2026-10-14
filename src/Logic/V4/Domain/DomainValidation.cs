@@ -219,7 +219,7 @@ namespace TiaMcp.Logic.V4.Domain
         public static void Template(TemplateIntent intent, bool readOnly) => Require(readOnly);
         internal static void Capability(string releaseKey, bool available, string name, bool readOnly, bool writes)
         {
-            if ((releaseKey != "20" && releaseKey != "21") || !available) throw new NotSupportedException(name + " capability unavailable for release " + releaseKey);
+            if (!available) throw new NotSupportedException(name + " capability unavailable for release " + releaseKey);
             if (readOnly && writes) throw new NotSupportedException(name + " action is not read-only.");
         }
         private static void Unique(IEnumerable<string> values, StringComparer comparer)

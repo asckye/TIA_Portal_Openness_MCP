@@ -8092,7 +8092,7 @@
       "entry": "ArchiveSavedProject",
       "family": "F05",
       "example": {
-        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "archivePath": "C:\\Examples\\Archive.zap{extension}",
         "dryRun": true
       }
     },
@@ -8123,7 +8123,7 @@
       "entry": "RetrieveProjectArchive",
       "family": "F05",
       "example": {
-        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "archivePath": "C:\\Examples\\Archive.zap{extension}",
         "destinationDirectory": "C:\\Examples\\restored",
         "dryRun": true
       }
@@ -10709,7 +10709,7 @@
       "entry": "ArchiveSavedProject",
       "family": "F05",
       "example": {
-        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "archivePath": "C:\\Examples\\Archive.zap{extension}",
         "dryRun": true
       }
     },
@@ -10740,7 +10740,7 @@
       "entry": "RetrieveProjectArchive",
       "family": "F05",
       "example": {
-        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "archivePath": "C:\\Examples\\Archive.zap{extension}",
         "destinationDirectory": "C:\\Examples\\restored",
         "dryRun": true
       }
@@ -13658,7 +13658,7 @@
       "entry": "ArchiveSavedProject",
       "family": "F05",
       "example": {
-        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "archivePath": "C:\\Examples\\Archive.zap{extension}",
         "dryRun": true
       }
     },
@@ -13699,7 +13699,7 @@
       "entry": "RetrieveProjectArchive",
       "family": "F05",
       "example": {
-        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "archivePath": "C:\\Examples\\Archive.zap{extension}",
         "destinationDirectory": "C:\\Examples\\restored",
         "dryRun": true
       }
@@ -16928,7 +16928,7 @@
       "entry": "ArchiveSavedProject",
       "family": "F05",
       "example": {
-        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "archivePath": "C:\\Examples\\Archive.zap{extension}",
         "dryRun": true
       }
     },
@@ -16969,7 +16969,7 @@
       "entry": "RetrieveProjectArchive",
       "family": "F05",
       "example": {
-        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "archivePath": "C:\\Examples\\Archive.zap{extension}",
         "destinationDirectory": "C:\\Examples\\restored",
         "dryRun": true
       }
@@ -20387,7 +20387,7 @@
       "entry": "ArchiveSavedProject",
       "family": "F05",
       "example": {
-        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "archivePath": "C:\\Examples\\Archive.zap{extension}",
         "dryRun": true
       }
     },
@@ -20428,7 +20428,7 @@
       "entry": "RetrieveProjectArchive",
       "family": "F05",
       "example": {
-        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "archivePath": "C:\\Examples\\Archive.zap{extension}",
         "destinationDirectory": "C:\\Examples\\restored",
         "dryRun": true
       }
@@ -24150,7 +24150,7 @@
           "full"
         ],
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -24500,7 +24500,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
+          "outputReleaseKey": "{release}",
           "globalDb": {
             "dbName": "DB_Status",
             "dbNumber": 10,
@@ -24601,7 +24601,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
+          "outputReleaseKey": "{release}",
           "udt": {
             "name": "UDT_Status",
             "members": [
@@ -26944,18 +26944,6 @@
         "name": "GetOnlineState",
         "currentName": "GetOnlineState",
         "sourceName": "GetOnlineState",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "GetOpcUaAccessControl",
-        "currentName": "GetOpcUaAccessControl",
-        "sourceName": "ReadOpcUaAccessControl",
         "profiles": [
           "full"
         ],
@@ -29976,22 +29964,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "ManageOpcUaAccessControl",
-        "currentName": "ManageOpcUaAccessControl",
-        "sourceName": "ManageOpcUaAccessControl",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "action": "createRole",
-          "roleName": "ExampleRole",
-          "confirmChange": false,
-          "dryRun": true
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "ManageOpcUaInterface",
         "currentName": "ManageOpcUaInterface",
         "sourceName": "ManageOpcUaInterface",
@@ -31906,7 +31878,7 @@
           "full"
         ],
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "destinationDirectory": "C:\\Examples\\restored",
           "dryRun": true
         },
@@ -33151,7 +33123,7 @@
           "full"
         ],
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -33516,7 +33488,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
+          "outputReleaseKey": "{release}",
           "globalDb": {
             "dbName": "DB_Status",
             "dbNumber": 10,
@@ -33617,7 +33589,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
+          "outputReleaseKey": "{release}",
           "udt": {
             "name": "UDT_Status",
             "members": [
@@ -41025,7 +40997,7 @@
           "full"
         ],
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "destinationDirectory": "C:\\Examples\\restored",
           "dryRun": true
         },
@@ -42282,7 +42254,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
+          "outputReleaseKey": "{release}",
           "globalDb": {
             "dbName": "DB_Status",
             "dbNumber": 10,
@@ -42321,7 +42293,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
+          "outputReleaseKey": "{release}",
           "udt": {
             "name": "UDT_Status",
             "members": [
@@ -47230,7 +47202,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -47314,7 +47286,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
+          "outputReleaseKey": "{release}",
           "globalDb": {
             "dbName": "DB_Status",
             "dbNumber": 10,
@@ -47353,7 +47325,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
+          "outputReleaseKey": "{release}",
           "udt": {
             "name": "UDT_Status",
             "members": [
@@ -52079,7 +52051,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "destinationDirectory": "C:\\Examples\\restored",
           "dryRun": true
         },
@@ -52843,7 +52815,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -52927,7 +52899,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
+          "outputReleaseKey": "{release}",
           "globalDb": {
             "dbName": "DB_Status",
             "dbNumber": 10,
@@ -52966,7 +52938,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
+          "outputReleaseKey": "{release}",
           "udt": {
             "name": "UDT_Status",
             "members": [
@@ -58094,7 +58066,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "destinationDirectory": "C:\\Examples\\restored",
           "dryRun": true
         },
@@ -58887,7 +58859,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -58971,7 +58943,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
+          "outputReleaseKey": "{release}",
           "globalDb": {
             "dbName": "DB_Status",
             "dbNumber": 10,
@@ -59010,7 +58982,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
+          "outputReleaseKey": "{release}",
           "udt": {
             "name": "UDT_Status",
             "members": [
@@ -64431,7 +64403,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "destinationDirectory": "C:\\Examples\\restored",
           "dryRun": true
         },
@@ -65287,7 +65259,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -65400,7 +65372,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
+          "outputReleaseKey": "{release}",
           "globalDb": {
             "dbName": "DB_Status",
             "dbNumber": 10,
@@ -65439,7 +65411,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
+          "outputReleaseKey": "{release}",
           "udt": {
             "name": "UDT_Status",
             "members": [
@@ -71218,7 +71190,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "destinationDirectory": "C:\\Examples\\restored",
           "dryRun": true
         },
@@ -72192,7 +72164,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -72321,7 +72293,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
+          "outputReleaseKey": "{release}",
           "globalDb": {
             "dbName": "DB_Status",
             "dbNumber": 10,
@@ -72360,7 +72332,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
+          "outputReleaseKey": "{release}",
           "udt": {
             "name": "UDT_Status",
             "members": [
@@ -79222,7 +79194,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "destinationDirectory": "C:\\Examples\\restored",
           "dryRun": true
         },
@@ -80354,7 +80326,7 @@
           "lite"
         ],
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -83011,18 +82983,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "GetOpcUaAccessControl",
-        "currentName": "GetOpcUaAccessControl",
-        "sourceName": "ReadOpcUaAccessControl",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1"
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "GetOpennessCompatibility",
         "currentName": "GetOpennessCompatibility",
         "sourceName": "ReadOpennessCompatibility",
@@ -85332,22 +85292,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "ManageOpcUaAccessControl",
-        "currentName": "ManageOpcUaAccessControl",
-        "sourceName": "ManageOpcUaAccessControl",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "action": "createRole",
-          "roleName": "ExampleRole",
-          "confirmChange": false,
-          "dryRun": true
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "ManageOpcUaInterface",
         "currentName": "ManageOpcUaInterface",
         "sourceName": "ManageOpcUaInterface",
@@ -86638,7 +86582,7 @@
           "full"
         ],
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "destinationDirectory": "C:\\Examples\\restored",
           "dryRun": true
         },
@@ -87781,7 +87725,7 @@
           "lite"
         ],
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -94183,7 +94127,7 @@
           "full"
         ],
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "destinationDirectory": "C:\\Examples\\restored",
           "dryRun": true
         },

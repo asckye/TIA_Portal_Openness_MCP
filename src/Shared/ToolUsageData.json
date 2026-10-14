@@ -11366,7 +11366,7 @@
     },
     "ArchiveSavedProject": {
       "arguments": {
-        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "archivePath": "C:\\Examples\\Archive.zap{extension}",
         "dryRun": true
       },
       "parameters": {},
@@ -23187,7 +23187,7 @@
     },
     "RetrieveProjectArchive": {
       "arguments": {
-        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "archivePath": "C:\\Examples\\Archive.zap{extension}",
         "destinationDirectory": "C:\\Examples\\restored",
         "dryRun": true
       },
@@ -27844,7 +27844,7 @@
         },
         "BuildPlcGlobalDb": {
           "arguments": {
-            "outputReleaseKey": "21",
+            "outputReleaseKey": "{release}",
             "globalDb": {
               "dbName": "DB_Status",
               "dbNumber": 10,
@@ -27862,14 +27862,14 @@
               "meaning": "Typed globalDb value with exact camelCase fields; see inputSchema."
             },
             "outputReleaseKey": {
-              "exampleValue": "21",
-              "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
+              "exampleValue": "{release}",
+              "meaning": "Exact serving release: 14sp1, 15.1, or 16-21. Omission also defaults to the serving release; explicit targets retain the existing supported-format checks."
             }
           },
           "operations": {},
-          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4. The maintained example now uses the serving release; the historical explicit-V21 VM campaign does not validate this updated example or native import acceptance.",
           "executionTest": "offline-in-memory",
-          "note": "The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
+          "note": "Candidate XML uses the serving release. Read data.outputReleaseKey together with the XML header and interface namespace. Existing supported-format checks remain in force. Native import acceptance remains NOT RUN.",
           "resultContract": {
             "type": "Envelope",
             "schemaVersion": 4,
@@ -27879,7 +27879,7 @@
             "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
             "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics.",
             "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
-            "Inspect data.outputReleaseKey=21 and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. This V21 candidate is not an import artifact for the selected V14-V19 project."
+            "Inspect data.outputReleaseKey={release} and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. Generation alone does not certify native import acceptance."
           ]
         },
         "BuildPlcSymbolManifestFromPath": {
@@ -27929,7 +27929,7 @@
         },
         "BuildPlcUdt": {
           "arguments": {
-            "outputReleaseKey": "21",
+            "outputReleaseKey": "{release}",
             "udt": {
               "name": "UDT_Status",
               "members": [
@@ -27946,14 +27946,14 @@
               "meaning": "Typed udt value with exact camelCase fields; see inputSchema."
             },
             "outputReleaseKey": {
-              "exampleValue": "21",
-              "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
+              "exampleValue": "{release}",
+              "meaning": "Exact serving release: 14sp1, 15.1, or 16-21. Omission also defaults to the serving release; explicit targets retain the existing supported-format checks."
             }
           },
           "operations": {},
-          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4. The maintained example now uses the serving release; the historical explicit-V21 VM campaign does not validate this updated example or native import acceptance.",
           "executionTest": "offline-in-memory",
-          "note": "The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
+          "note": "Candidate XML uses the serving release. Read data.outputReleaseKey together with the XML header and interface namespace. Existing supported-format checks remain in force. Native import acceptance remains NOT RUN.",
           "resultContract": {
             "type": "Envelope",
             "schemaVersion": 4,
@@ -27963,7 +27963,7 @@
             "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
             "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics.",
             "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
-            "Inspect data.outputReleaseKey=21 and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. This V21 candidate is not an import artifact for the selected V14-V19 project."
+            "Inspect data.outputReleaseKey={release} and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. Generation alone does not certify native import acceptance."
           ]
         },
         "CloseProject": {
@@ -39081,7 +39081,6 @@
         },
         "BuildPlcTagTable": {
           "arguments": {
-            "outputReleaseKey": "21",
             "tagTable": {
               "tableName": "ExampleTags",
               "tags": [
@@ -39098,14 +39097,13 @@
               "meaning": "Typed tagTable value with exact camelCase fields; see inputSchema."
             },
             "outputReleaseKey": {
-              "exampleValue": "21",
-              "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
+              "meaning": "Omit to use the serving release. Explicit tag-table output remains limited to the existing V21 format."
             }
           },
           "operations": {},
-          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4. The maintained example now uses the serving release; the historical explicit-V21 VM campaign does not validate this updated example or native import acceptance.",
           "executionTest": "offline-in-memory",
-          "note": "Available on V20/V21 only; withheld on V14 SP1–V19 because this builder emits V21 documents. The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
+          "note": "Candidate XML uses the serving release. Read data.outputReleaseKey together with the XML header and interface namespace. Existing supported-format checks remain in force. Native import acceptance remains NOT RUN.",
           "resultContract": {
             "type": "Envelope",
             "schemaVersion": 4,
@@ -39115,12 +39113,12 @@
             "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
             "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics.",
             "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
-            "Inspect data.outputReleaseKey=21 and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. This V21 candidate is not an import artifact for the selected V14-V19 project."
+            "Inspect data.outputReleaseKey={release} and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. Generation alone does not certify native import acceptance."
           ]
         },
         "ArchiveSavedProject": {
           "arguments": {
-            "archivePath": "C:\\Examples\\Archive.zap{major}",
+            "archivePath": "C:\\Examples\\Archive.zap{extension}",
             "dryRun": true
           },
           "parameters": {},
@@ -39233,7 +39231,7 @@
         },
         "RetrieveProjectArchive": {
           "arguments": {
-            "archivePath": "C:\\Examples\\Archive.zap{major}",
+            "archivePath": "C:\\Examples\\Archive.zap{extension}",
             "destinationDirectory": "C:\\Examples\\restored",
             "dryRun": true
           },
@@ -45773,7 +45771,7 @@
         },
         "ArchiveSavedProject": {
           "arguments": {
-            "archivePath": "C:\\Examples\\Archive.zap{major}",
+            "archivePath": "C:\\Examples\\Archive.zap{extension}",
             "dryRun": true
           },
           "parameters": {},
@@ -58803,7 +58801,7 @@
         },
         "RetrieveProjectArchive": {
           "arguments": {
-            "archivePath": "C:\\Examples\\Archive.zap{major}",
+            "archivePath": "C:\\Examples\\Archive.zap{extension}",
             "destinationDirectory": "C:\\Examples\\restored",
             "dryRun": true
           },
@@ -60395,7 +60393,7 @@
         },
         "BuildPlcGlobalDb": {
           "arguments": {
-            "outputReleaseKey": "21",
+            "outputReleaseKey": "{release}",
             "globalDb": {
               "dbName": "DB_Status",
               "dbNumber": 10,
@@ -60413,14 +60411,14 @@
               "meaning": "Typed globalDb value with exact camelCase fields; see inputSchema."
             },
             "outputReleaseKey": {
-              "exampleValue": "21",
-              "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
+              "exampleValue": "{release}",
+              "meaning": "Exact serving release: 14sp1, 15.1, or 16-21. Omission also defaults to the serving release; explicit targets retain the existing supported-format checks."
             }
           },
           "operations": {},
-          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4. The maintained example now uses the serving release; the historical explicit-V21 VM campaign does not validate this updated example or native import acceptance.",
           "executionTest": "offline-in-memory",
-          "note": "The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
+          "note": "Candidate XML uses the serving release. Read data.outputReleaseKey together with the XML header and interface namespace. Existing supported-format checks remain in force. Native import acceptance remains NOT RUN.",
           "resultContract": {
             "type": "Envelope",
             "schemaVersion": 4,
@@ -60430,7 +60428,7 @@
             "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
             "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics.",
             "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
-            "Inspect data.outputReleaseKey=21 and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. This V21 candidate is not an import artifact for the selected V14-V19 project."
+            "Inspect data.outputReleaseKey={release} and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. Generation alone does not certify native import acceptance."
           ]
         },
         "BuildPlcSymbolManifestFromPath": {
@@ -60480,7 +60478,6 @@
         },
         "BuildPlcTagTable": {
           "arguments": {
-            "outputReleaseKey": "21",
             "tagTable": {
               "tableName": "ExampleTags",
               "tags": [
@@ -60497,14 +60494,13 @@
               "meaning": "Typed tagTable value with exact camelCase fields; see inputSchema."
             },
             "outputReleaseKey": {
-              "exampleValue": "21",
-              "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
+              "meaning": "Omit to use the serving release. Explicit tag-table output remains limited to the existing V21 format."
             }
           },
           "operations": {},
-          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4. The maintained example now uses the serving release; the historical explicit-V21 VM campaign does not validate this updated example or native import acceptance.",
           "executionTest": "offline-in-memory",
-          "note": "The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
+          "note": "Candidate XML uses the serving release. Read data.outputReleaseKey together with the XML header and interface namespace. Existing supported-format checks remain in force. Native import acceptance remains NOT RUN.",
           "resultContract": {
             "type": "Envelope",
             "schemaVersion": 4,
@@ -60514,12 +60510,12 @@
             "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
             "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics.",
             "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
-            "Inspect data.outputReleaseKey=21 and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. This V21 candidate is not an import artifact for the selected V14-V19 project."
+            "Inspect data.outputReleaseKey={release} and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. Generation alone does not certify native import acceptance."
           ]
         },
         "BuildPlcUdt": {
           "arguments": {
-            "outputReleaseKey": "21",
+            "outputReleaseKey": "{release}",
             "udt": {
               "name": "UDT_Status",
               "members": [
@@ -60536,14 +60532,14 @@
               "meaning": "Typed udt value with exact camelCase fields; see inputSchema."
             },
             "outputReleaseKey": {
-              "exampleValue": "21",
-              "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
+              "exampleValue": "{release}",
+              "meaning": "Exact serving release: 14sp1, 15.1, or 16-21. Omission also defaults to the serving release; explicit targets retain the existing supported-format checks."
             }
           },
           "operations": {},
-          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4. The maintained example now uses the serving release; the historical explicit-V21 VM campaign does not validate this updated example or native import acceptance.",
           "executionTest": "offline-in-memory",
-          "note": "The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
+          "note": "Candidate XML uses the serving release. Read data.outputReleaseKey together with the XML header and interface namespace. Existing supported-format checks remain in force. Native import acceptance remains NOT RUN.",
           "resultContract": {
             "type": "Envelope",
             "schemaVersion": 4,
@@ -60553,7 +60549,7 @@
             "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
             "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics.",
             "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
-            "Inspect data.outputReleaseKey=21 and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. This V21 candidate is not an import artifact for the selected V14-V19 project."
+            "Inspect data.outputReleaseKey={release} and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. Generation alone does not certify native import acceptance."
           ]
         },
         "BuildStructuredText": {
@@ -68563,7 +68559,7 @@
       ]
     },
     "BuildPlcUdtXml": {
-      "input": "Select outputReleaseKey explicitly. V14 SP1 uses Engineering version=\"V14 SP1\" and Interface/v2; V15.1 uses v3, V16/V17 v4, V18-V21 v5. Namespace is emitted from V18 onward.",
+      "input": "Omitted outputReleaseKey defaults to the serving release; an explicit supported target remains accepted. V14 SP1 uses Engineering version=\"V14 SP1\" and Interface/v2; V15.1 uses \"V15.1\" and v3, V16/V17 v4, V18-V21 v5. Namespace is emitted from V18 onward. The maintained declaration example explicitly selects the serving release. Native import acceptance remains NOT RUN.",
       "result": "Read data.outputReleaseKey and data.interfaceNamespace together with xml. The builders create flat declarations, not arbitrary version conversions. Automated tests validate interface fragments against the supplied per-release Siemens XSDs; full-document and native TIA import acceptance remain separate.",
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/major-changes/major-changes-for-long-term-stability-in-tia-portal-openness-v18",
@@ -68571,7 +68567,7 @@
       ]
     },
     "BuildPlcGlobalDbXml": {
-      "input": "Select outputReleaseKey explicitly. V14 SP1 uses Engineering version=\"V14 SP1\" and Interface/v2; V15.1 uses v3, V16/V17 v4, V18-V21 v5. Namespace is emitted from V18 onward.",
+      "input": "Omitted outputReleaseKey defaults to the serving release; an explicit supported target remains accepted. V14 SP1 uses Engineering version=\"V14 SP1\" and Interface/v2; V15.1 uses \"V15.1\" and v3, V16/V17 v4, V18-V21 v5. Namespace is emitted from V18 onward. The maintained declaration example explicitly selects the serving release. Native import acceptance remains NOT RUN.",
       "result": "Read data.outputReleaseKey and data.interfaceNamespace together with xml. The builders create flat declarations, not arbitrary version conversions. Automated tests validate interface fragments against the supplied per-release Siemens XSDs; full-document and native TIA import acceptance remain separate.",
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/major-changes/major-changes-for-long-term-stability-in-tia-portal-openness-v18",
@@ -68579,7 +68575,7 @@
       ]
     },
     "BuildPlcUdt": {
-      "input": "Select outputReleaseKey explicitly. V14 SP1 uses Engineering version=\"V14 SP1\" and Interface/v2; V15.1 uses v3, V16/V17 v4, V18-V21 v5. Namespace is emitted from V18 onward. The plc-foundation VM-tested examples deliberately select 21; older declaration targets in the schema were not exercised by that campaign and no native import claim follows.",
+      "input": "Omitted outputReleaseKey defaults to the serving release; an explicit supported target remains accepted. V14 SP1 uses Engineering version=\"V14 SP1\" and Interface/v2; V15.1 uses \"V15.1\" and v3, V16/V17 v4, V18-V21 v5. Namespace is emitted from V18 onward. The maintained declaration example explicitly selects the serving release. Native import acceptance remains NOT RUN.",
       "result": "Read data.outputReleaseKey and data.interfaceNamespace together with xml. The builders create flat declarations, not arbitrary version conversions. Automated tests validate interface fragments against the supplied per-release Siemens XSDs; full-document and native TIA import acceptance remain separate.",
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/major-changes/major-changes-for-long-term-stability-in-tia-portal-openness-v18",
@@ -68588,7 +68584,7 @@
       "resultReading": "Read ok, error, meta.outcome, meta.execution and meta.completeness; independent quality and native evidence remain in data."
     },
     "BuildPlcGlobalDb": {
-      "input": "Select outputReleaseKey explicitly. V14 SP1 uses Engineering version=\"V14 SP1\" and Interface/v2; V15.1 uses v3, V16/V17 v4, V18-V21 v5. Namespace is emitted from V18 onward. The plc-foundation VM-tested examples deliberately select 21; older declaration targets in the schema were not exercised by that campaign and no native import claim follows.",
+      "input": "Omitted outputReleaseKey defaults to the serving release; an explicit supported target remains accepted. V14 SP1 uses Engineering version=\"V14 SP1\" and Interface/v2; V15.1 uses \"V15.1\" and v3, V16/V17 v4, V18-V21 v5. Namespace is emitted from V18 onward. The maintained declaration example explicitly selects the serving release. Native import acceptance remains NOT RUN.",
       "result": "Read data.outputReleaseKey and data.interfaceNamespace together with xml. The builders create flat declarations, not arbitrary version conversions. Automated tests validate interface fragments against the supplied per-release Siemens XSDs; full-document and native TIA import acceptance remain separate.",
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/major-changes/major-changes-for-long-term-stability-in-tia-portal-openness-v18",

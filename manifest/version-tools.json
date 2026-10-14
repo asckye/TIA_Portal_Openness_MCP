@@ -2217,7 +2217,7 @@
     },
     "20": {
       "profile": "full-engine",
-      "toolCount": 502,
+      "toolCount": 500,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -2402,7 +2402,6 @@
         "GetObjectProperty",
         "GetOnlineDriveParameters",
         "GetOnlineState",
-        "GetOpcUaAccessControl",
         "GetOpennessCompatibility",
         "GetOpennessGuidance",
         "GetOpennessWorkerStatus",
@@ -2573,7 +2572,6 @@
         "ManageMultiuserSession",
         "ManageNetworkDomain",
         "ManageOnlineDriveFunctions",
-        "ManageOpcUaAccessControl",
         "ManageOpcUaInterface",
         "ManagePasswordPolicy",
         "ManagePlcAlarmTextList",
@@ -3243,8 +3241,8 @@
   },
   "groupCounts": {
     "all-releases": 277,
-    "shared-subset": 225,
-    "release-only": 14
+    "shared-subset": 223,
+    "release-only": 16
   },
   "tools": [
     {
@@ -5711,10 +5709,9 @@
     {
       "name": "GetOpcUaAccessControl",
       "releases": [
-        "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "release-only",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -8062,10 +8059,9 @@
     {
       "name": "ManageOpcUaAccessControl",
       "releases": [
-        "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "release-only",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {

@@ -79,7 +79,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 string customAttributesJson = DriveToolContract.Attributes(customAttributes);
                 DriveToolContract.Check(() =>
                 {
-                    DomainValidation.Teamcenter(itemDetails, revisionDetails, action, McpServer.ReleaseKey, true, false);
+                    DomainValidation.Teamcenter(itemDetails, revisionDetails, action, HardwareContract.ReleaseKey, true, false);
                     TeamcenterLogic.ValidateWorkflowRequest(action, target, libraryName, itemType, itemId, revisionId, localCacheOption, itemDetailsJson, revisionDetailsJson, customAttributesJson, confirmSave, dryRun);
                 });
                 return _teamcenter.ManageTeamcenterWorkflow(action,target,libraryName,itemType,itemId,revisionId,localCacheOption,itemDetailsJson,revisionDetailsJson,customAttributesJson,confirmSave,dryRun);

@@ -38,7 +38,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                if (Engineering.TiaMajorVersion < 20)
+                if (TiaMcp.Versioning.TiaVersionCatalog.Get(HardwareContract.ReleaseKey).MajorVersion < 20)
                 {
                     throw new McpException("ExportPlcBlockDocuments requires TIA Portal V20 or newer", McpErrorCode.InvalidParams);
                 }
@@ -74,7 +74,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
             try
             {
-                if (Engineering.TiaMajorVersion < 20)
+                if (TiaMcp.Versioning.TiaVersionCatalog.Get(HardwareContract.ReleaseKey).MajorVersion < 20)
                 {
                     throw new McpException("ExportPlcBlocksDocuments requires TIA Portal V20 or newer", McpErrorCode.InvalidParams);
                 }
@@ -255,7 +255,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                if (Engineering.TiaMajorVersion < 20)
+                if (TiaMcp.Versioning.TiaVersionCatalog.Get(HardwareContract.ReleaseKey).MajorVersion < 20)
                 {
                     throw new McpException("ImportPlcBlockDocuments requires TIA Portal V20 or newer", McpErrorCode.InvalidParams);
                 }
@@ -291,7 +291,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 if (fileNameWithoutExtension.Replace('\\', '/').Split('/').Length != 1 || fileNameWithoutExtension.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
                     throw new ArgumentException("fileNameWithoutExtension must be one safe document basename.");
-                var formatPreflight = EngineeringAuditLogic.DocumentPreflight(File.ReadAllText(Path.Combine(importPath, fileNameWithoutExtension + ".s7dcl")), Engineering.TiaMajorVersion, null);
+                var formatPreflight = EngineeringAuditLogic.DocumentPreflight(File.ReadAllText(Path.Combine(importPath, fileNameWithoutExtension + ".s7dcl")), TiaMcp.Versioning.TiaVersionCatalog.Get(HardwareContract.ReleaseKey).MajorVersion, null);
                 var ok = _domain.ImportFromDocuments(softwarePath, groupPath, importPath, fileNameWithoutExtension, option);
                 if (ok)
                 {
@@ -349,7 +349,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
             try
             {
-                if (Engineering.TiaMajorVersion < 20)
+                if (TiaMcp.Versioning.TiaVersionCatalog.Get(HardwareContract.ReleaseKey).MajorVersion < 20)
                 {
                     throw new McpException("ImportPlcBlocksDocuments requires TIA Portal V20 or newer", McpErrorCode.InvalidParams);
                 }

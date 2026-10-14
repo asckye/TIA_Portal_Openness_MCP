@@ -137,7 +137,47 @@ namespace TiaMcp.Engine.Tests
         public void Missing_version_package_or_write_access_is_rejected(string release, bool available, bool readOnly)
         {
             var partner = DomainValidation.Read<DccPartnerSpec>("""{"chartInterface":"I"}""");
-            Assert.Throws<NotSupportedException>(() => DomainValidation.DccPartner(partner, "connect", release, available, readOnly));
+            if (release == "19" && available && !readOnly)
+                Assert.Null(Record.Exception(() => DomainValidation.DccPartner(partner, "connect", release, available, readOnly)));
+            else
+                Assert.Throws<NotSupportedException>(() => DomainValidation.DccPartner(partner, "connect", release, available, readOnly));
+        }
+        [Theory]
+        [InlineData("Motion", "14sp1", "ConfigureMotionHardwareConnection")]
+        [InlineData("DCC", "18", "ManageDccPin")]
+        [InlineData("TestSuite", "17", "ManageTestSuiteCase")]
+        [InlineData("SiVArc", "15.1", "ManageSivarcRule")]
+        [InlineData("Library", "17", "SynchronizeLibrary")]
+        [InlineData("Dynamization", "19", "ManageUnifiedDynamization")]
+        [InlineData("OpenPipe", "14sp1", "InvokeUnifiedOpenPipe")]
+        public void Registered_old_release_domain_validation_uses_supplied_availability(string family, string release, string tool)
+        {
+            Assert.True(TiaMcp.Adapters.Contracts.PortedFamilies.Available(release, tool));
+            switch (family)
+            {
+                case "Motion":
+                    DomainValidation.Motion(DomainValidation.Read<MotionTarget>("{\"devicePath\":[\"PLC\"],\"itemPath\":[\"Axis\"]}"), "", "connectIdent", release, true, false);
+                    break;
+                case "DCC":
+                    DomainValidation.DccPartner(DomainValidation.Read<DccPartnerSpec>("{\"chartInterface\":\"Interface\"}"), "connect", release, true, false);
+                    break;
+                case "TestSuite": DomainValidation.TestScopes(Array.Empty<TestScope>(), "application", "read", "case", release, true, false); break;
+                case "SiVArc":
+                    DomainValidation.Sivarc(new Dictionary<string, SivarcReference?>(StringComparer.Ordinal),
+                        new Dictionary<string, bool>(StringComparer.Ordinal), "screens", "rule", "read", release, true, false);
+                    break;
+                case "Library":
+                    DomainValidation.Library(DomainValidation.Read<LibrarySelection[]>("[{\"folder\":\"\"}]"), Array.Empty<string>(),
+                        "cleanUp", release, true, false, "", "", Array.Empty<string>());
+                    break;
+                case "Dynamization":
+                    DomainValidation.Dynamization(Array.Empty<DynamizationMapping>(), "read", release, true, false,
+                        new Dictionary<string, Type>(StringComparer.Ordinal));
+                    break;
+                default:
+                    DomainValidation.OpenPipe(DomainValidation.Read<OpenPipeRequest>("{\"message\":\"ReadTag\",\"params\":{\"tags\":[]}}"), release, true, false);
+                    break;
+            }
         }
         [Fact]
         public void Motion_preserves_explicit_default_overload_and_ident_action()

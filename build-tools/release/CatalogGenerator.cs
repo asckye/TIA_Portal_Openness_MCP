@@ -25,7 +25,8 @@ internal static class CatalogGenerator
             foreach (var old in tools[key].Select(p => p.Key).Where(n => currentNames.TryGetValue(n, out var current) && withheld.Contains(current)).ToList()) tools[key].Remove(old);
         }
         var only21 = Set(Matches(Source(root, "src/Logic/Siemens/ToolVersionPolicy.cs").Split("internal static string ToolProblem", 2)[0], "\\[\"([^\"]+)\"\\]\\s*="));
-        Require(Set(tools["20"].Select(p => p.Key)).SetEquals(currentNames.Keys.Where(n => !only21.Contains(n) && !only21.Contains(currentNames[n]))), "V20 admission policy differs");
+        var unavailable20 = PortedFamilies.Withheld(data.Families, "20");
+        Require(Set(tools["20"].Select(p => p.Key)).SetEquals(currentNames.Keys.Where(n => !only21.Contains(n) && !only21.Contains(currentNames[n]) && !unavailable20.Contains(currentNames[n]))), "V20 admission policy differs");
         Require(Set(Strings(Read(root, "manifest/history/contracts-v3/baseline/20.json")["liteTools"])).SetEquals(Strings(Read(root, "manifest/history/contracts-v3/baseline/21.json")["liteTools"])), "Frozen engine lite rosters differ");
         Require(Source(root, "src/Shared/ToolUsageCatalog.cs").Contains("GuideSelection(string topic)", StringComparison.Ordinal) && Source(root, "src/Logic/ModelContextProtocol/ToolRecipes.cs").Contains("ToolUsageCatalog.Sequences(", StringComparison.Ordinal) && Source(root, "src/EngineHost/ModelContextProtocol/Tools/ToolUsageTools.cs").Contains("ToolUsageCatalog.Examples(", StringComparison.Ordinal) && Source(root, "src/EngineHost/ModelContextProtocol/Tools/ToolUsageTools.cs").Contains("exampleId", StringComparison.Ordinal), "Guide merge proof differs");
         var calls = Read(root, "reference/tool-examples/calls.json")["profiles"]!; var sourceExamples = Read(root, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceExamples.json");

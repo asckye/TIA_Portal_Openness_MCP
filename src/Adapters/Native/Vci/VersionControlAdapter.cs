@@ -75,7 +75,7 @@ namespace TiaMcp.Adapters.Native.Vci
             var vci = PortVci.Service(project as IEngineeringServiceProvider);
             if (vci == null)
                 throw new InvalidOperationException(
-                    "This project exposes no VersionControlInterface. VCI requires TIA Portal V21 or later.");
+                    "This project exposes no VersionControlInterface. VCI requires TIA Portal V16 or later and a project supporting this service.");
             _vciKeepAlive.Clear();
             _vciOwnerProject = project;
             _vciCached = vci;

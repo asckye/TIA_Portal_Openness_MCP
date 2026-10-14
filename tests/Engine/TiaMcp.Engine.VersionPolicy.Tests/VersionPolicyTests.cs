@@ -11,6 +11,11 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
+    internal static class HardwareContract
+    {
+        internal static string ReleaseKey => "21";
+    }
+
     // Test seam for the application host; policy decisions are exercised separately
     // by TiaMcp.Engine.Tests against the real ToolVersionPolicy in both build modes.
     public static partial class McpServer

@@ -105,7 +105,7 @@ namespace TiaMcp.Adapters.Native.Plc
             }
 
 #else
-            if (!string.IsNullOrEmpty(password)) throw new NotSupportedException("Safety compile login requires V16 or later.");
+            if (!string.IsNullOrEmpty(password)) throw new NotSupportedException("Safety compile login requires V17 or later.");
 #endif
             // PlcSoftware and classic WinCC (HmiTarget) are themselves service providers, so the
             // compiler service comes off the software object. WinCC Unified's HmiSoftware is NOT

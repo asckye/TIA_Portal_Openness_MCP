@@ -35,7 +35,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             return @"<?xml version=""1.0"" encoding=""utf-8""?>
 <Document>
-  <Engineering version=""V21"" />
+  <Engineering version=""" + PlcDeclarationXmlFormat.ForRelease("21").EngineeringVersion + @""" />
   <SW.Tags.PlcTagTable ID=""0"">
     <AttributeList><Name>MotorTags</Name></AttributeList>
     <ObjectList>
@@ -51,7 +51,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var speedSet = includeSpeedSet ? @"            <Member Name=""SpeedSet"" Datatype=""Int"" />" : "";
             return @"<?xml version=""1.0"" encoding=""utf-8""?>
 <Document>
-  <Engineering version=""V21"" />
+  <Engineering version=""" + PlcDeclarationXmlFormat.ForRelease("21").EngineeringVersion + @""" />
   <SW.Blocks.GlobalDB ID=""0"">
     <AttributeList>
       <Interface>

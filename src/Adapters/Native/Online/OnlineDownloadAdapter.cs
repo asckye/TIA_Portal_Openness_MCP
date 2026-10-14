@@ -136,7 +136,7 @@ namespace TiaMcp.Adapters.Native.Online
                     ConfigurationAddress? rhAddress = string.IsNullOrWhiteSpace(ipAddress) ? null : FindConfigurationAddress(rh.Configuration, ipAddress!);
                     if (!string.IsNullOrWhiteSpace(ipAddress) && rhAddress == null) _session.Log.Warning("ConnectOnlinePlc R/H: no ConfigurationAddress {Ip} in the route tree; using the configured address", ipAddress);
 #if !ONLINE_ADDRESS_OVERLOAD
-                    if (rhAddress != null) _session.Log.Warning("ConnectOnlinePlc R/H: the V20 RHOnlineProvider has no address overload; using the configured address");
+                    if (rhAddress != null) _session.Log.Warning("ConnectOnlinePlc R/H: this release's RHOnlineProvider has no address overload; using the configured address");
                     OnlineState rhState = rhTarget == "primary" ? rh.GoOnlineToPrimary() : rh.GoOnlineToBackup();
 #else
                     OnlineState rhState = rhAddress == null
@@ -1697,7 +1697,7 @@ namespace TiaMcp.Adapters.Native.Online
 #endif
                 var onlineProvider = _session.ResolvePlcService<OnlineProvider>(softwarePath, plc); meta["onlineProviderAvailable"] = onlineProvider != null;
                 if (onlineProvider != null) { try { meta["onlineState"] = onlineProvider.State.ToString(); } catch (Exception ex) { meta["onlineStateError"] = ex.GetBaseException().Message; } }
-                meta["compileProviderNote"] = "Siemens.Engineering.Compiler.CompileProvider is internal in the V20/V21 PublicAPI (documented, not public); compilation goes through ICompilable.";
+                meta["compileProviderNote"] = "Siemens.Engineering.Compiler.CompileProvider is internal in the supplied PublicAPI (documented, not public); compilation goes through ICompilable.";
                 meta["truncated"] = truncated; meta["apiCallSuccess"] = true; meta["dataComplete"] = !truncated;
                 meta["scope"] = "ConnectionConfiguration route tree of the download provider (Modes -> PcInterfaces with Addresses / Subnets (Gateways) / TargetInterfaces) plus availability of RHDownloadProvider / RHOnlineProvider (with Primary/BackupState) / OnlineProvider. Read-only; nothing is applied.";
                 return "Transfer routes read; no route applied, no modification.";

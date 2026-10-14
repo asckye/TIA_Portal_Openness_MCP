@@ -11,6 +11,9 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net48' and '$(UseReferenceAssemblyPackage)' == 'true'" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Logic/ModelContextProtocol/Builders/PlcDeclarationXmlFormat.cs" Link="PlcDeclarationXmlFormat.cs" />
+  </ItemGroup>
   <!-- Include resolved references so transitive JSON/native dependencies also fail the build. -->
   <Target Name="RejectNativeAndJsonDependencies" BeforeTargets="CoreCompile" DependsOnTargets="ResolveReferences">
     <ItemGroup>

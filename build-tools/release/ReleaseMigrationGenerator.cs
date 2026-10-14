@@ -71,6 +71,8 @@ internal static class ReleaseMigrationGenerator
             foreach (var old in Sorted(withheld.Keys))
             {
                 string reason = "Removed: " + PortedFamilies.WithheldReason(families, key, withheld[old]);
+                if (key == "20" && withheld[old] is "GetOpcUaAccessControl" or "ManageOpcUaAccessControl")
+                    reason = "Removed: no API on this release";
                 lines.Add($"| {reason} | {Code(old)} | {Code(withheld[old])} is not listed on {key} |");
             }
             if (retired.Count == 0 && withheld.Count == 0) lines.Add("| Removed without replacement | None | — |");

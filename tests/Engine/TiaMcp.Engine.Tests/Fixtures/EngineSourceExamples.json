@@ -245,7 +245,7 @@
   },
   "ArchiveSavedProject": {
     "arguments": {
-      "archivePath": "C:\\Examples\\Archive.zap{major}",
+      "archivePath": "C:\\Examples\\Archive.zap{extension}",
       "dryRun": true
     },
     "parameters": {},
@@ -12066,7 +12066,7 @@
   },
   "RetrieveProjectArchive": {
     "arguments": {
-      "archivePath": "C:\\Examples\\Archive.zap{major}",
+      "archivePath": "C:\\Examples\\Archive.zap{extension}",
       "destinationDirectory": "C:\\Examples\\restored",
       "dryRun": true
     },

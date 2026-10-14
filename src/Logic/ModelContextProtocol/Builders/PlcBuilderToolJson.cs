@@ -54,7 +54,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 ["tableName"] = tableName,
                 ["tagCount"] = tags.Length
-            });
+            }, outputReleaseKey);
         }
 
         public static JsonObject BuildGlobalDb(string json, string outputReleaseKey = "21")
@@ -413,7 +413,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static JsonObject BuildDeclarationResult(string mode, string xml, JsonObject summary, string outputReleaseKey)
         {
             var format = PlcDeclarationXmlFormat.ForRelease(outputReleaseKey);
-            var result = BuildResult(mode, xml, summary);
+            var result = BuildResult(mode, xml, summary, outputReleaseKey);
             result["outputReleaseKey"] = format.ReleaseKey;
             result["interfaceNamespace"] = format.InterfaceNamespace.NamespaceName;
             result["interfaceSchemaFile"] = format.InterfaceSchemaFile;
@@ -424,7 +424,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return result;
         }
 
-        private static JsonObject BuildResult(string mode, string xml, JsonObject summary)
+        private static JsonObject BuildResult(string mode, string xml, JsonObject summary, string outputReleaseKey = "21")
         {
             var parseOk = true;
             string error = "";
@@ -451,7 +451,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["ok"] = parseOk,
                 ["mode"] = mode,
                 ["offlineOnly"] = true,
-                ["outputReleaseKey"] = "21",
+                ["outputReleaseKey"] = outputReleaseKey,
                 ["xmlParseOk"] = parseOk,
                 ["error"] = string.IsNullOrWhiteSpace(error) ? null : JsonValue.Create(error),
                 ["xml"] = xml,

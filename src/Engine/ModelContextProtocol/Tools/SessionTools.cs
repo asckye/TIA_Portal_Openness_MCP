@@ -117,7 +117,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     RecommendedReason = reason, RecommendedFixZh = recommendedFixZh,
                     OperatingRules = rules, KnownLimitations = limits, ToolLayers = layers,
                     SkillFile = "plugin/skill/SKILL.md", ServerVersion = typeof(McpServer).Assembly.GetName().Version?.ToString(),
-                    Capabilities = Capability.Snapshot(), Message = ready ? "TIA Portal MCP ready" : "TIA Portal MCP not ready — see RecommendedNextTool",
+                    Capabilities = Capability.Snapshot(HardwareContract.ReleaseKey), Message = ready ? "TIA Portal MCP ready" : "TIA Portal MCP not ready — see RecommendedNextTool",
                     Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }

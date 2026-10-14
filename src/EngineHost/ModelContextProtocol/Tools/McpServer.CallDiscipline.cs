@@ -164,10 +164,13 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             string name = request.Params?.Name ?? "";
             if (!AllToolDescriptors(true).TryGetValue(name, out var method)) return;
-            // The same order as CallTool and batches: typed families, the argument budget,
+            // Removed access-control tools have no argument contract on this release.
+            // Otherwise keep the order: typed families, the argument budget,
             // then BindV4Call (duplicates, release, typed contract, binding).
             var arguments = JsonSerializer.SerializeToElement(request.Params?.Arguments ?? new Dictionary<string, JsonElement>());
-            var error = ToolInvoker.ValidateArguments(method, arguments, method.Tool.InputSchema, typedFamiliesOnly: true);
+            var error = name is "GetOpcUaAccessControl" or "ManageOpcUaAccessControl" && VersionToolProblem(name) is { Length: > 0 } unavailable
+                ? new Error(unavailable, new UnsupportedCapabilityDetails(ReleaseKey, name, null))
+                : ToolInvoker.ValidateArguments(method, arguments, method.Tool.InputSchema, typedFamiliesOnly: true);
             if (error == null)
             {
                 try { error = ToolInvoker.Bind(name, new ToolArguments(arguments), out _); }

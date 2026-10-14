@@ -14,6 +14,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../Shared/SafetyPolicy.cs" />
+    <Compile Remove="ModelContextProtocol/Builders/PlcDeclarationXmlFormat.cs" />
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>TiaMcp.WorkbenchControl.Tests</_Parameter1>
     </AssemblyAttribute>

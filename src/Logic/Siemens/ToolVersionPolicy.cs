@@ -37,6 +37,9 @@ namespace TiaMcpServer.Siemens
             if (string.IsNullOrWhiteSpace(name)) return "A registered tool name is required.";
             if (version.Key == "20" && V21Only.TryGetValue(name, out var api))
                 return name + " requires the V21 " + api + " API; unavailable on V20.";
+            if (version.Key == "20" && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
+                && !TiaMcp.Adapters.Contracts.PortedFamilies.Available(version.Key, name))
+                return name + " has no supported API action on " + version.DisplayName + ".";
             return "";
         }
 

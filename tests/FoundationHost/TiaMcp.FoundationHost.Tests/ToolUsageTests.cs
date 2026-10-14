@@ -65,8 +65,8 @@ internal static class ToolUsageTests
                 if(release is not ("20" or "21"))
                     check((string?)usage["example"]!["kind"]=="parameterized-call-example", "every deployed foundation tool has a maintained call example: "+release+"/"+tool.ProtocolTool.Name+" ("+(string?)usage["example"]!["kind"]+")");
                 if(tool.ProtocolTool.Name is "BuildPlcUdt" or "BuildPlcGlobalDb")
-                    check((string?)usage["example"]!["request"]!["params"]!["arguments"]!["outputReleaseKey"]=="21",
-                        "Foundation declaration example keeps the VM-tested V21 output independent of host release");
+                    check((string?)usage["example"]!["request"]!["params"]!["arguments"]!["outputReleaseKey"]==release,
+                        "Foundation declaration example selects the serving release");
                 if (release is not ("20" or "21") && tool.ProtocolTool.Name is ("ExportPlcBlocks" or "ExportPlcTypes" or "ImportPlcBlocksFromDirectory" or "ImportPlcProgramFromDirectory"))
                     check(((string?)usage["example"]!["request"]!["params"]!["arguments"]!["softwarePath"])?.Contains("exact softwarePath from GetProjectTree") == true,
                         "batch usage binds the exact software path: " + release + "/" + tool.ProtocolTool.Name);

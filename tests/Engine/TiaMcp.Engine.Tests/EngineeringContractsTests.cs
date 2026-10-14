@@ -99,12 +99,12 @@ namespace TiaMcp.Engine.Tests
             V4Json.Deserialize<Envelope>(text);
             return body;
         }
-        private static void Rejected(CallToolResult result)
+        private static void Rejected(CallToolResult result, string code = "INVALID_ARGUMENT")
         {
             var body = Body(result);
             Assert.Equal("rejected-before-operation", (string?)body["meta"]!["outcome"]);
             Assert.Equal("not-started", (string?)body["meta"]!["execution"]);
-            Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]!["code"]);
+            Assert.Equal(code, (string?)body["error"]!["code"]);
         }
         [Fact]
         public void NamesAndParameterTypesMatchTheReviewedCatalog()
@@ -146,11 +146,12 @@ namespace TiaMcp.Engine.Tests
         [InlineData("GetTechnologyObjectTree", "{\"softwarePath\":\"PLC\",\"maxDepth\":1.5}")]
         public async Task TypedRejectionsRunThroughDirectBridgeAndBatch(string name, string json)
         {
-            Rejected(await tools[name].InvokeAsync(Request(name, json)));
-            Rejected(McpServer.CallTool(name, Arguments(json)));
+            string code = McpServer.ReleaseKey == "20" && name == "ManageOpcUaAccessControl" ? "UNSUPPORTED_CAPABILITY" : "INVALID_ARGUMENT";
+            Rejected(await tools[name].InvokeAsync(Request(name, json)), code);
+            Rejected(McpServer.CallTool(name, Arguments(json)), code);
             var calls = new[] { new ToolCall(name, Arguments(json)) };
             var batch = name == "GetTechnologyObjectTree" ? McpServer.ReadToolBatch(calls) : McpServer.PreviewToolBatch(calls, "fixture");
-            Rejected(batch);
+            Rejected(batch, code);
             Assert.Equal(0, Calls);
         }
         [Theory]

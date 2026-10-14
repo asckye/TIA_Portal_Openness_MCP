@@ -74,13 +74,10 @@ namespace TiaMcp.Adapters.Native.Plc
                 var text = TiaOpenness.Shared.NativeInputPolicy.Read("importPath", () => File.ReadAllText(path, Encoding.UTF8));
 
                 var fixedText = text;
-                int major = int.Parse(_session.ReleaseKey == "14sp1" ? "14" : _session.ReleaseKey == "15.1" ? "15" : _session.ReleaseKey, System.Globalization.CultureInfo.InvariantCulture);
-                if (major > 0)
-                {
-                    fixedText = Regex.Replace(text,
-                        "<Engineering\\s+version=\"V\\d+\"\\s*/>",
-                        $"<Engineering version=\"V{major}\" />");
-                }
+                var version = TiaMcpServer.ModelContextProtocol.PlcDeclarationXmlFormat.ForRelease(_session.ReleaseKey).EngineeringVersion;
+                fixedText = Regex.Replace(text,
+                    "(<Engineering\\s+version=\")[^\"]+(\"\\s*/>)",
+                    match => match.Groups[1].Value + version + match.Groups[2].Value);
 
                 // Already correct: version matches (or unknown) AND a BOM is present -> import as-is.
                 if (fixedText == text && hasBom) return path;

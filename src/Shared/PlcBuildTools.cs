@@ -192,9 +192,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static JsonObject BuildPlcArtifact(string kind, string json)
         {
-            // Preserve the existing V21 candidate format on V20/V21. Newly
-            // enabled releases use their own declaration header and interface schema.
-            string outputRelease = HardwareContract.ReleaseKey is "20" or "21" ? "21" : HardwareContract.ReleaseKey;
+            string outputRelease = HardwareContract.ReleaseKey;
             return kind switch
             {
                 "udt" => PlcBuilderToolJson.BuildUdt(json, outputRelease),

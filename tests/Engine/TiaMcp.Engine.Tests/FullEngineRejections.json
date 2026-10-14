@@ -307,7 +307,7 @@
           }
         },
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "dryRun": true
         },
         "renamedFrom": [],
@@ -862,9 +862,9 @@
           },
           "outputReleaseKey": {
             "type": "string",
-            "default": "\"21\"",
-            "description": "outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Default 21 preserves existing calls.",
-            "value": "21"
+            "default": "null!",
+            "description": "outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Omit to use the serving release.",
+            "value": null
           }
         },
         "arguments": {
@@ -983,9 +983,9 @@
           },
           "outputReleaseKey": {
             "type": "string",
-            "default": "\"21\"",
-            "description": "outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Default 21 preserves existing calls.",
-            "value": "21"
+            "default": "null!",
+            "description": "outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Omit to use the serving release.",
+            "value": null
           }
         },
         "arguments": {
@@ -6211,38 +6211,6 @@
           "softwarePath": "PLC_1"
         },
         "renamedFrom": [],
-        "typedParameters": {}
-      },
-      {
-        "name": "GetOpcUaAccessControl",
-        "parameters": {
-          "softwarePath": {
-            "type": "string",
-            "default": null
-          },
-          "section": {
-            "type": "string",
-            "default": "\"roles\"",
-            "description": "section: roles | restrictions.",
-            "value": "roles"
-          },
-          "offset": {
-            "type": "int",
-            "default": "0",
-            "value": 0
-          },
-          "limit": {
-            "type": "int",
-            "default": "100",
-            "value": 100
-          }
-        },
-        "arguments": {
-          "softwarePath": "PLC_1"
-        },
-        "renamedFrom": [
-          "ReadOpcUaAccessControl"
-        ],
         "typedParameters": {}
       },
       {
@@ -12616,82 +12584,6 @@
         }
       },
       {
-        "name": "ManageOpcUaAccessControl",
-        "parameters": {
-          "softwarePath": {
-            "type": "string",
-            "default": null
-          },
-          "action": {
-            "type": "string",
-            "default": null,
-            "description": "action: the operation to perform - createRole | addStandardRole | deleteRole | setProjectRole | setPermission | setRestriction."
-          },
-          "roleName": {
-            "type": "string",
-            "default": "\"\"",
-            "description": "roleName: exact role name.",
-            "value": ""
-          },
-          "definedInNamespace": {
-            "type": "string",
-            "default": "\"\"",
-            "description": "definedInNamespace: namespace URI in which the role is defined.",
-            "value": ""
-          },
-          "projectRole": {
-            "type": "string",
-            "default": "\"\"",
-            "description": "projectRole: exact project role name.",
-            "value": ""
-          },
-          "namespaceUri": {
-            "type": "string",
-            "default": "\"\"",
-            "description": "namespaceUri: OPC UA namespace URI.",
-            "value": ""
-          },
-          "permission": {
-            "type": "string",
-            "default": "\"\"",
-            "description": "permission: Browse | Read | Write | Call | ReceiveEvents | ReadRolePermissions.",
-            "value": ""
-          },
-          "enabled": {
-            "type": "bool",
-            "default": "false",
-            "description": "enabled: true enables, false disables.",
-            "value": false
-          },
-          "properties": {
-            "type": "AttributeMap<Scalar>",
-            "default": "null!",
-            "value": null
-          },
-          "confirmChange": {
-            "type": "bool",
-            "default": "false",
-            "value": false
-          },
-          "dryRun": {
-            "type": "bool",
-            "default": "true",
-            "value": true
-          }
-        },
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "action": "createRole",
-          "roleName": "ExampleRole",
-          "confirmChange": false,
-          "dryRun": true
-        },
-        "renamedFrom": [],
-        "typedParameters": {
-          "propertiesJson": "properties"
-        }
-      },
-      {
         "name": "ManageOpcUaInterface",
         "parameters": {
           "softwarePath": {
@@ -16878,7 +16770,7 @@
           }
         },
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "destinationDirectory": "C:\\Examples\\restored",
           "dryRun": true
         },
@@ -19403,7 +19295,7 @@
           }
         },
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "dryRun": true
         },
         "renamedFrom": [],
@@ -19991,9 +19883,9 @@
           },
           "outputReleaseKey": {
             "type": "string",
-            "default": "\"21\"",
-            "description": "outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Default 21 preserves existing calls.",
-            "value": "21"
+            "default": "null!",
+            "description": "outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Omit to use the serving release.",
+            "value": null
           }
         },
         "arguments": {
@@ -20112,9 +20004,9 @@
           },
           "outputReleaseKey": {
             "type": "string",
-            "default": "\"21\"",
-            "description": "outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Default 21 preserves existing calls.",
-            "value": "21"
+            "default": "null!",
+            "description": "outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Omit to use the serving release.",
+            "value": null
           }
         },
         "arguments": {
@@ -36518,7 +36410,7 @@
           }
         },
         "arguments": {
-          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "archivePath": "C:\\Examples\\Archive.zap{extension}",
           "destinationDirectory": "C:\\Examples\\restored",
           "dryRun": true
         },

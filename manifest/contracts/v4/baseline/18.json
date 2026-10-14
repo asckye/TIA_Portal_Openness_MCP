@@ -20006,7 +20006,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "06aafd0a5704b6933f33716f62090485bde29b8eed85f4c97da75bc1bf8a0b7b",
+      "descriptionSha256": "3240e431a9da25799f62f67317fd39697dccf2d03a76de462c29adcbfa5a6748",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -20115,7 +20115,7 @@
             "type": "object"
           },
           "outputReleaseKey": {
-            "description": "Exact explicit candidate output release; independent of host selection. GlobalDB supports 14sp1, 15.1 and 16-21; StructuredText remains V21 only. No XML conversion.",
+            "description": "Exact explicit candidate output release; GlobalDB defaults to the serving release when omitted. GlobalDB supports 14sp1, 15.1 and 16-21. No XML conversion.",
             "enum": [
               "14sp1",
               "15.1",
@@ -20130,8 +20130,7 @@
           }
         },
         "required": [
-          "globalDb",
-          "outputReleaseKey"
+          "globalDb"
         ],
         "type": "object"
       },
@@ -22727,12 +22726,12 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "5b989984db8c05bcb6ff5b40e1de469b06aa27447e1128183751ad8a0584a892",
+      "descriptionSha256": "185fe4021fe3ba888b4e8b6a8eb01018cafaaeb32edf709f3c7319af010e59f9",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "outputReleaseKey": {
-            "description": "Required exact candidate output format, never inferred from the host release. Runtime XSD and native import validation are separate.",
+            "description": "Optional exact candidate output format; omitted uses the serving release. Explicit tag-table output remains limited to 21. Runtime XSD and native import validation are separate.",
             "enum": [
               "14sp1",
               "15.1",
@@ -22833,8 +22832,7 @@
           }
         },
         "required": [
-          "udt",
-          "outputReleaseKey"
+          "udt"
         ],
         "type": "object"
       },

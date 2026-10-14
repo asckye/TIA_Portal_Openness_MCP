@@ -42,10 +42,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 //    Covers TIA install, Openness assembly resolution (TIA can be installed WITHOUT
                 //    Openness — the old check said OK and the engine then died on first call),
                 //    engine/TIA version match, .NET Framework 4.8, and Windows MOTW blocking.
-                int? inUse = Engineering.TiaMajorVersion == 0 ? (int?)null : Engineering.TiaMajorVersion;
+                int? inUse = TiaMcp.Versioning.TiaVersionCatalog.Get(HardwareContract.ReleaseKey).MajorVersion;
                 int? detected = Engineering.DetectTiaMajorVersion();
                 string? firstEnvFixZh = null;
-                foreach (var c in Runtime.EnvironmentDoctor.Run(TiaMcp.Versioning.TiaVersionCatalog.Get(McpServer.ReleaseKey).MajorVersion, inUse ?? detected))
+                foreach (var c in Runtime.EnvironmentDoctor.Run(TiaMcp.Versioning.TiaVersionCatalog.Get(HardwareContract.ReleaseKey).MajorVersion, inUse ?? detected))
                 {
                     if (!c.Ok && firstEnvFixZh == null) firstEnvFixZh = c.FixZh;
                     checks.Add(new DoctorCheck

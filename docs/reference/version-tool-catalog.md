@@ -285,7 +285,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `WritePlcWebVars` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `WriteUnifiedRuntimeTags` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 
-## Shared by some releases (225)
+## Shared by some releases (223)
 
 | Tool | Release keys |
 |---|---|
@@ -363,7 +363,6 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `GetDccObject` | 16, 17, 18, 19, 20, 21 |
 | `GetObjectIdentifier` | 20, 21 |
 | `GetOnlineDriveParameters` | 15.1, 16, 17, 18, 19, 20, 21 |
-| `GetOpcUaAccessControl` | 20, 21 |
 | `GetPlcBlockFingerprints` | 16, 17, 18, 19, 20, 21 |
 | `GetPlcChecksums` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `GetPlcCrossReferences` | 18, 19, 20, 21 |
@@ -437,7 +436,6 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ManageMultiuserSession` | 17, 18, 19, 20, 21 |
 | `ManageNetworkDomain` | 16, 17, 18, 19, 20, 21 |
 | `ManageOnlineDriveFunctions` | 15.1, 16, 17, 18, 19, 20, 21 |
-| `ManageOpcUaAccessControl` | 20, 21 |
 | `ManageOpcUaInterface` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `ManagePasswordPolicy` | 18, 19, 20, 21 |
 | `ManagePlcAlarmTextList` | 18, 19, 20, 21 |
@@ -515,17 +513,19 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ValidateUnifiedObject` | 19, 20, 21 |
 | `WriteClassicHmiMinimalPackageFiles` | 20, 21 |
 
-## One release only (14)
+## One release only (16)
 
 | Tool | Release keys |
 |---|---|
 | `BindUnifiedHmiButtonPressedTag` | 21 |
 | `GetClassicHmiGlobalization` | 21 |
+| `GetOpcUaAccessControl` | 21 |
 | `ListCommunicationConnections` | 21 |
 | `ListSafetyActivationTests` | 21 |
 | `ManageClassicHmiGraphic` | 21 |
 | `ManageCommunicationConnection` | 21 |
 | `ManageDriveSafetyAcceptanceTest` | 21 |
+| `ManageOpcUaAccessControl` | 21 |
 | `ManagePlcBlockWriteProtection` | 21 |
 | `ManageSafetyActivationTest` | 21 |
 | `ManageSafetyActivationTestGroup` | 21 |

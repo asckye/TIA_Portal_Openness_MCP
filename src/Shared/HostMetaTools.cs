@@ -405,9 +405,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 case "ambiguouspath":
                     return new List<string> { "List candidates and choose one exact path.", "Avoid single block names when groups may contain duplicates.", "Use GetPlcBlockHierarchy before exporting/importing blocks." };
                 case "unsupportedtiaversion":
-                    return new List<string> { "Confirm TIA Portal V21 is installed.", "Restart the server with --tia-major-version 21.", "Check installed Openness assemblies." };
+                    return new List<string> { "Confirm the selected TIA Portal release is installed.", "Restart the server with the matching --release-key.", "Check installed Openness assemblies." };
                 case "opennesspermissiondenied":
-                    return new List<string> { "Add the user to Siemens TIA Openness group.", "Sign out or restart after changing group membership.", "Run TiaMcp.Engine.V21.exe doctor for the full environment report." };
+                    return new List<string> { "Add the user to Siemens TIA Openness group.", "Sign out or restart after changing group membership.", "Run GetEnvironmentDiagnostics for the full environment report." };
                 case "hardwarecatalognotfound":
                     return new List<string> { "Run SearchHardwareCatalog or SearchInstalledGsdDevices.", "Use MLFB/order number and installed catalog version.", "Do not fall back from third-party hardware to Siemens devices." };
                 case "importschemaerror":
