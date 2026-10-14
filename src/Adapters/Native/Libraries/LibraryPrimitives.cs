@@ -66,7 +66,9 @@ namespace TiaMcp.Adapters
 #endif
         }
         private object? LibraryValue(object? value) => value == null ? null : RenderEngineeringValue != null ? RenderEngineeringValue(value)
-            : HardwareScalarEvidence.Scalar(value.GetType()) ? HardwareAddressingPolicy.ScalarValue(value) : HardwareOfficialService.Result(value)["nativeResult"];
+            : DefaultLibraryValue(value);
+        private static object? DefaultLibraryValue(object value)
+            => HardwareScalarEvidence.Scalar(value.GetType()) ? HardwareAddressingPolicy.ScalarValue(value) : HardwareOfficialService.Result(value)["nativeResult"];
         private static List<object?> LibraryList(IEnumerable<string> values) => values.Cast<object?>().ToList();
         private static object? FindExistingByName(object collection, string name)
         {

@@ -188,8 +188,8 @@ namespace TiaMcp.Adapters
             public IDisposable AcquireHmiEditAccess() => engine.HardwareEditAccess();
             public SoftwareContainer? GetSoftwareContainer(string path) => engine.ResolveEngineeringSoftwareContainer != null
                 ? engine.ResolveEngineeringSoftwareContainer(path) as SoftwareContainer : ReadContainer(path);
-            public SoftwareContainer? ResolveSoftwareContainerUncached(string path) => GetSoftwareContainer(path);
-            private SoftwareContainer ReadContainer(string path)
+            public SoftwareContainer? ResolveSoftwareContainerUncached(string path) => ReadContainer(path);
+            internal SoftwareContainer ReadContainer(string path)
             {
                 var values = new List<PlcReadCandidate<SoftwareContainer>>();
                 void Item(Siemens.Engineering.HW.DeviceItem item, string device, string[] groups, string prefix, int depth)

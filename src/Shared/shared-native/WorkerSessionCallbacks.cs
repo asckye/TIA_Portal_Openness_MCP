@@ -94,6 +94,7 @@ namespace TiaMcp.Adapters
             if (_workerBindingFault != null) return;
             if (project == null || !lifecycle.ProcessId.HasValue)
             {
+                if (_workerBinding != null || _workerProject != null) _resetWorkerFamilyState?.Invoke();
                 _workerBinding = null;
                 _workerProject = null;
                 return;
@@ -105,6 +106,7 @@ namespace TiaMcp.Adapters
                 StringComparison.OrdinalIgnoreCase);
             if (!ReferenceEquals(_workerProject, project) || !samePath)
             {
+                _resetWorkerFamilyState?.Invoke();
                 sessionCandidateAdapter = null; saveCloseAdapter = null;
             }
             if (_workerBinding == null || _workerBinding.ProcessId != lifecycle.ProcessId
@@ -119,6 +121,7 @@ namespace TiaMcp.Adapters
 
         private void CaptureWorkerSessionBinding()
         {
+            _resetWorkerFamilyState?.Invoke();
             _workerBinding = null;
             _workerBindingFault = null;
             if (project == null) return;
@@ -139,6 +142,7 @@ namespace TiaMcp.Adapters
         public void ClearWorkerSessionBinding()
         {
             Check(true);
+            _resetWorkerFamilyState?.Invoke();
             _workerBinding = null;
             _workerProject = null;
             _workerBindingFault = null;

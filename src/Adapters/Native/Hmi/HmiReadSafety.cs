@@ -46,18 +46,22 @@ namespace TiaMcp.Adapters.Native.Hmi
             try
             {
                 if (HmiValues.TraceWriter != null) HmiValues.TraceWriter(LogPath, HmiValues.Serialize(row));
-                else lock (LogGate)
-                {
-                    if (Writer != null && Writer.BaseStream.Length > 8 * 1024 * 1024)
-                    {
-                        Writer.Dispose(); Writer = null;
-                        File.WriteAllText(LogPath, "", new UTF8Encoding(false));
-                    }
-                    Writer ??= new StreamWriter(new FileStream(LogPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite), new UTF8Encoding(false)) { AutoFlush = true };
-                    Writer.WriteLine(HmiValues.Serialize(row));
-                }
+                else WriteLine(LogPath, HmiValues.Serialize(row));
             }
             catch (Exception ex) { LogError = "IO_FAILED: " + ex.Message; TiaOpenness.Shared.DataLocations.ReportLogFailure("TiaMcpServer.hmi-read", ex); }
+        }
+        internal static void WriteLine(string path, string row)
+        {
+            lock (LogGate)
+            {
+                if (Writer != null && Writer.BaseStream.Length > 8 * 1024 * 1024)
+                {
+                    Writer.Dispose(); Writer = null;
+                    File.WriteAllText(path, "", new UTF8Encoding(false));
+                }
+                Writer ??= new StreamWriter(new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite), new UTF8Encoding(false)) { AutoFlush = true };
+                Writer.WriteLine(row);
+            }
         }
         internal void AddTo(HmiObject meta)
         {

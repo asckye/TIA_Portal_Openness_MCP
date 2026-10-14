@@ -43,10 +43,11 @@ namespace TiaMcp.Adapters
                     // PLC 优先
                     PlcSoftware? plcsw;
                     try { plcsw = EngineeringPlcSession.ResolvePlc(objectPath, write); }
-                    catch (PlcSoftwareException error) when (EngineeringPlcOrganisationSession == null && error.Code == "NotFound") /* swallow(probe-optional): old adapters use exact PLC lookup; retain the optional HMI fallback */
+                    catch (PlcSoftwareException error) when ((EngineeringPlcOrganisationSession == null || EngineeringPlcOrganisationSession is OrganisationSession) && error.Code == "NotFound") /* swallow(probe-optional): exact PLC lookup retains the optional HMI fallback */
                     { plcsw = null; }
                     if (plcsw != null) return plcsw;
-                    var plcPaths = EngineeringReflectionLookupPaths != null ? EngineeringReflectionLookupPaths() : EngineeringPlcSession.AvailablePlcPathsSuffix();
+                    var plcPaths = EngineeringReflectionLookupPaths != null && EngineeringPlcOrganisationSession is not OrganisationSession
+                        ? EngineeringReflectionLookupPaths() : EngineeringPlcSession.AvailablePlcPathsSuffix();
                     // HMI 兜底（Unified / Classic），让 DescribeObject/InvokeObject 也能操作 HMI
                     try
                     {

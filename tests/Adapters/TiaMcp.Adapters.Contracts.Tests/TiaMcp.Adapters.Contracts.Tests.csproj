@@ -7,6 +7,9 @@
     <DefineConstants>$(DefineConstants);WORKER_SESSION_LIFECYCLE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../../src/Adapters/Native/Engineering/WorkerFamilyCallbacks.cs" Link="Engineering/WorkerFamilyCallbacks.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiContentTokenPolicy.cs" Link="Hmi/HmiContentTokenPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiEngineeringSteps.cs" Link="Hmi/HmiEngineeringSteps.cs" />
     <Compile Include="../../../src/Shared/shared-native/SessionCallbackPrimitives.cs" Link="Session/SessionCallbackPrimitives.cs" />
     <Compile Include="../../../src/Shared/shared-native/SessionProcessIdentity.cs" Link="Session/SessionProcessIdentity.cs" />
     <Compile Include="../../../src/Shared/shared-native/WorkerSessionCallbacks.cs" Link="Session/WorkerSessionCallbacks.cs" />

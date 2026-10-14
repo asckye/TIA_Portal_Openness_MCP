@@ -91,7 +91,6 @@ namespace TiaMcp.Adapters {
         private void Check(bool allowDisconnected = false) { }
         public PlcRuntimeState ReadState() => new() { ProcessId = lifecycle.ProcessId, ProjectFile = lifecycle.ProjectFile,
             IsAttached = lifecycle.ProcessId.HasValue, OwnsProject = lifecycle.OwnsProject, IsLocalSession = lifecycle.IsLocalSession };
-        private HardwareAddressingReply RunHmiStep(string tool, Func<Dictionary<string,object?>,string> action, bool required) => new();
         public HmiRequest? LastHmiRequest;
         public bool LastHmiDryRun;
         public PlcSoftwareFailure? HmiFailure;

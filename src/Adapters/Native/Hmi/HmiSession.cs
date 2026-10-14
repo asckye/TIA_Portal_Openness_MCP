@@ -26,7 +26,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal IDisposable AcquireHmiEditAccess() => session.AcquireHmiEditAccess();
         internal object? GetBindingIdentity() => engine.HmiBindingIdentity != null ? engine.HmiBindingIdentity() : session.BindingIdentity();
         public object ResolveHmiSoftwareOrThrow(string path) => engine.ResolveEngineeringHmiSoftware != null ? engine.ResolveEngineeringHmiSoftware(path)
-            : session.GetSoftwareContainer(path)?.Software ?? throw new PlcSoftwareException("NotFound", "HMI software not found: " + path);
+            : PlcFoundationEngine.DefaultHmiSoftware(session, path);
         internal HmiTarget ExactClassicHmi(string path)
         {
             var software = session.ResolveSoftwareContainerUncached(path)?.Software ?? throw new PlcSoftwareException("NotFound", "Exact HMI software not found: " + path);

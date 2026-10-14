@@ -17,7 +17,6 @@ namespace TiaMcp.Adapters
         public Action<string, string>? RequireUnifiedPlainFile { get; set; }
         public Action<string>? ValidateUnifiedScript { get; set; }
         public Func<string, string, string, IEnumerable<Dictionary<string, object?>>>? DecodeUnifiedDocument { get; set; }
-        public Func<Dictionary<string, object?>?>? ReadEngineeringHmiReadFault { get; set; }
         private static UnifiedHmiInput HmiInput(UnifiedValue value)
             => new UnifiedHmiInput { Kind = value.Error == null ? value.Kind : "error", Text = value.Error ?? value.Text,
                 Properties = value.Properties.ToDictionary(p => p.Key, p => HmiInput(p.Value), StringComparer.Ordinal),

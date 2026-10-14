@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
+using System.Text.Json;
 
 namespace TiaMcpServer.Siemens
 {
@@ -52,12 +53,11 @@ namespace TiaMcpServer.Siemens
         }
         internal static string Token(string scope, JsonNode data)
         {
-            // Inspection timing is diagnostic metadata, not guarded engineering content.
-            var content = data.DeepClone();
-            if (content is JsonObject snapshot && snapshot["kind"]?.ToString() == "InspectionSnapshot")
-                snapshot.Remove("elapsedMs");
-            using var sha = SHA256.Create();
-            return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(tokenGeneration+"\n"+scope+"\n"+content.ToJsonString()))).Replace("-", "").ToLowerInvariant();
+            return data is JsonObject snapshot
+                ? TiaMcp.Adapters.Native.Hmi.HmiContentTokenPolicy.Compute(tokenGeneration, scope,
+                    snapshot.ToDictionary(pair => pair.Key, pair => (object?)pair.Value?.DeepClone()),
+                    content => JsonSerializer.SerializeToNode(content)!.ToJsonString())
+                : TiaMcp.Adapters.Native.Hmi.HmiContentTokenPolicy.Hash(tokenGeneration, scope, data.DeepClone().ToJsonString());
         }
         internal static void Delete(object value)
             => Native(() => { TiaMcp.Adapters.Native.Hmi.HmiAccessPrimitives.Delete(value); return true; });

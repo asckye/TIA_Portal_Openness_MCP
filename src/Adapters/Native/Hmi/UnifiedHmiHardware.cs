@@ -19,11 +19,10 @@ namespace TiaMcp.Adapters
         internal string UnifiedHmiToken(string scope, Dictionary<string, object?> content)
         {
             if (HmiContentToken != null) return HmiContentToken(scope, content);
-            using var sha = SHA256.Create();
-            return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(
-                _hmiTokenGeneration + "\n" + scope + "\n" + EngineeringPlcSession.SerializeEvidence(content))))
-                .Replace("-", "").ToLowerInvariant();
+            return DefaultUnifiedHmiToken(scope, content);
         }
+        private string DefaultUnifiedHmiToken(string scope, Dictionary<string, object?> content)
+            => HmiContentTokenPolicy.Compute(_hmiTokenGeneration, scope, content, EngineeringPlcSession.SerializeEvidence);
 
         internal void FillUnifiedHmiPartnerNetworkInfo(DeviceItem root, UnifiedHmiPlcPartnerInfo info)
         {

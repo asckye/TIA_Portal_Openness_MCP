@@ -72,7 +72,6 @@ internal static class Program
         {
             engine.OrganisationEvidenceJson = evidence => JsonSerializer.Serialize(evidence);
             engine.UnifiedPropertyAdmission = TiaMcp.Shared.UnifiedHmiPropertyAdmission.Validate;
-            engine.PlcB5DocumentPreflight = text => JsonSerializer.Deserialize<object>(TiaMcpServer.Siemens.EngineeringAuditLogic.DocumentPreflight(text, TiaMcp.Versioning.TiaVersionCatalog.Get(releaseKey).MajorVersion, null).ToJsonString())!;
 #if !OPCUA_NO_EXTENSION
             engine.PlcB5GenerateModelled = request => JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, object?>>(new TiaMcpServer.Siemens.OpcUaModelledNative(engine.PlcB5Session).GenerateOpcUaModelledInterface(request.SoftwarePath, request.InterfaceName, request.NamespaceUri, request.OutputPath, request.UnitName, request.KeepFolderStructure, request.KeepEmptyDataBlocks, request.AccessLevelsJson, request.DryRun).ToJsonString())!;
 #endif
@@ -104,6 +103,10 @@ internal static class Program
                         JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, object?>>(binding.ToJson().ToJsonString())!,
                         binding.Verify);
                 }, value => JsonSerializer.Deserialize<PlcSeedHmiReply>(JsonSerializer.Serialize(value))!);
+            engine.ConfigureWorkerFamilyCallbacks(text => JsonSerializer.Deserialize<object>(
+                TiaMcpServer.Siemens.EngineeringAuditLogic.DocumentPreflight(text,
+                    TiaMcp.Versioning.TiaVersionCatalog.Get(releaseKey).MajorVersion, null).ToJsonString())!,
+                path => JsonSerializer.Deserialize<string[]>(path) ?? throw new ArgumentException("devicePathJson must be an array."));
 #if WORKER_SEED_HMI_IMPORT
             engine.SeedReferenceHmiImport = engine.ImportProjectLifecycleSeedHmi;
 #endif

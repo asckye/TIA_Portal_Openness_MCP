@@ -15,7 +15,9 @@ namespace TiaMcp.Adapters
         private sealed class B5ResolvedPath { internal string Value = ""; }
         internal void RememberB5Container(object container, string path) => b5ResolvedPaths.GetValue(container, _ => new B5ResolvedPath()).Value = path;
         internal string B5ContainerPath(object? container) => PlcB5ResolvedPath != null ? PlcB5ResolvedPath(container)
-            : container != null && b5ResolvedPaths.TryGetValue(container, out var path) ? path.Value : "";
+            : DefaultB5ContainerPath(container);
+        private string DefaultB5ContainerPath(object? container)
+            => container != null && b5ResolvedPaths.TryGetValue(container, out var path) ? path.Value : "";
         public Func<string, object>? PlcB5DocumentPreflight { get; set; }
         public PlcB5Reply ExecutePlcB5(PlcB5Request request, bool dryRun = true)
         {

@@ -108,6 +108,7 @@ namespace TiaMcp.Adapters
         public void InvalidateSharedSession()
         {
             Check(true);
+            _resetWorkerFamilyState?.Invoke();
             portal=null; project=null; lifecycle.Detached();
             sessionCandidateAdapter=null; saveCloseAdapter=null; sessionCandidateStart=null;
 #if PLC_SAFETY
@@ -172,8 +173,8 @@ namespace TiaMcp.Adapters
 #endif
                 project=portal!.Projects.SingleOrDefault(p=>p.Name==projectName && string.Equals(p.Path.FullName,full,StringComparison.OrdinalIgnoreCase)) ?? throw new AdapterPreconditionException("The exact named project is not open.","expectedProjectFile");
             lifecycle.Bound(full,false,session);
-            hmiReadFault = null;
-            _hmiTokenGeneration = Guid.NewGuid().ToString("N");
+            if (_resetWorkerFamilyState != null) _resetWorkerFamilyState();
+            else { hmiReadFault = null; _hmiTokenGeneration = Guid.NewGuid().ToString("N"); }
 #if HMI_UNIFIED
             unifiedPages?.Dispose(); unifiedPages = null;
 #endif
@@ -517,6 +518,7 @@ namespace TiaMcp.Adapters
         {
             Check(true);
             var result=disconnect.Execute(lifecycle.ProcessId,ownsPortal,()=>portal!.Dispose(),sharedPortal);
+            _resetWorkerFamilyState?.Invoke();
             portal=null; project=null; lifecycle.Detached();
 #if PLC_SAFETY
             localSession=null;
