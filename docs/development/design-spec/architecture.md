@@ -117,7 +117,7 @@ flowchart LR
 
 ## 4 宿主内部结构
 
-两条宿主路径共用同一套宿主层代码（`src/EngineHost` 链接引擎的宿主层源码，以 `TIA_ENGINE_HOST` 编译为 net10），差别在工具从哪里来、发往哪个 worker。
+两条宿主路径共用同一套宿主层代码（源码归属 `src/EngineHost`，以 `TIA_ENGINE_HOST` 编译为 net10；V20/V21 引擎链接这些源码），差别在工具从哪里来、发往哪个 worker。
 
 | 方面 | V14 SP1–V19 | V20/V21 |
 |---|---|---|
@@ -357,7 +357,7 @@ stateDiagram-v2
 | 每会话对象、人/AI 归属、会话快照 | `src/FoundationHost/HostSession.cs`、`HostSessionCall.cs`、`src/Shared/ActorScope.cs` |
 | 旧版工具注册与被动诊断 | `src/FoundationHost/FoundationPassiveDiagnostics.cs`（`LegacyHostToolRegistry`）、`FoundationTools.cs`、`*Contract.cs`、`FoundationHostPorts.cs` |
 | Foundation 工具准入、预检、审批与结果映射 | `src/FoundationHost/FoundationV4Tool.cs`、`FoundationV4Result.cs`、`src/Logic/V4/HostBehavior.cs`、`src/Shared/SessionBehavior.cs` |
-| V20/V21 宿主管线 | `src/EngineHost/EngineHostPipeline.cs`、`EngineCatalog.cs`、`SharedToolCatalog.cs`、`WorkerToolInvoker.cs`；链接的 `src/Engine/ModelContextProtocol/Tools/McpServer.{Approval,SerializedCalls,VersionPolicy,ArgDiagnostics,Profile,CallDiscipline}.cs` 与 `src/Shared/Host/McpServer.{ToolBridge,Batch,Exports}.cs` |
+| V20/V21 宿主管线 | `src/EngineHost/EngineHostPipeline.cs`、`EngineCatalog.cs`、`SharedToolCatalog.cs`、`WorkerToolInvoker.cs`；`src/EngineHost/ModelContextProtocol/Tools/McpServer.{Approval,SerializedCalls,VersionPolicy,ArgDiagnostics,Profile,CallDiscipline}.cs` 与 `src/Shared/Host/McpServer.{ToolBridge,Batch,Exports}.cs` |
 | Openness 通道 | `src/Shared/Host/ToolDispatchLanes.cs` |
 | worker 客户端、job object、关停 | `src/FoundationHost/WorkerClient.cs`、`EngineWorkerClient.cs`、`WorkerJob.cs` |
 | worker 通道协议、超时、回复转存、故障注入 | `src/WorkerChannel/` |

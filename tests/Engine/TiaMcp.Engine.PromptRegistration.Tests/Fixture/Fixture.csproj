@@ -5,7 +5,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0-preview.4.25258.110" />
     <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
     <ProjectReference Include="../OptionalDependency/OptionalDependency.csproj" />
-    <Compile Include="../../../../src/Engine/ModelContextProtocol/McpPrompts.cs" Link="McpPrompts.cs" />
-    <Compile Include="../../../../src/Engine/ModelContextProtocol/McpPromptRegistration.cs" Link="McpPromptRegistration.cs" />
+    <Compile Include="../../../../src/EngineHost/ModelContextProtocol/McpPrompts.cs" Link="McpPrompts.cs" />
+    <Compile Include="../../../../src/EngineHost/ModelContextProtocol/McpPromptRegistration.cs" Link="McpPromptRegistration.cs" />
   </ItemGroup>
 </Project>

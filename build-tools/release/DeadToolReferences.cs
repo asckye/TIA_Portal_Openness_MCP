@@ -154,7 +154,12 @@ internal static class DeadToolReferences
     internal static int Run(string root, bool fix)
     {
         var sources = new Dictionary<string, string>();
-        foreach (var folder in new[] { "src/Engine", "src/Logic", "src/Shared" }) foreach (var path in SourceCheck.Files(Path.Combine(root, folder)).Where(p => p.EndsWith(".cs", StringComparison.Ordinal))) sources[path] = Repository.ReadSource(path);
+        foreach (var folder in new[] { "src/Engine", "src/EngineHost", "src/Logic", "src/Shared" }) foreach (var path in SourceCheck.Files(Path.Combine(root, folder)).Where(p => p.EndsWith(".cs", StringComparison.Ordinal))) sources[path] = Repository.ReadSource(path);
+        foreach (var name in new[] { "CrossReferenceTreeReader.cs", "OpennessReleaseContract.cs" })
+        {
+            var path = Path.Combine(root, "src/Adapters/Policy", name);
+            if (File.Exists(path)) sources[path] = Repository.ReadSource(path);
+        }
         if (sources.Count == 0) return 2;
         var historical = ContractNames(root, "manifest/history/contracts-v3/baseline");
         var current = ContractNames(root, "manifest/contracts/v4/baseline");

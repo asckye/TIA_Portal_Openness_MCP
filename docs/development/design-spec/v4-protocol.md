@@ -30,7 +30,7 @@
 | 引擎旧实现到 V4 的映射 | `src/Shared/*ToolContract.cs`、`src/Shared/*Contract.cs` |
 | CallTool 与批次 | `src/Shared/Host/McpServer.ToolBridge.cs`、`src/Shared/Host/McpServer.Batch.cs` |
 | 大响应寄存与导出句柄 | `src/Shared/Host/McpServer.Exports.cs`、`src/Shared/Host/ExportTools.cs`、`src/Logic/ModelContextProtocol/ExportStore.cs` |
-| 审批 | `src/Engine/ModelContextProtocol/Tools/McpServer.Approval.cs`、`src/Shared/ApprovalPipe.cs`、`src/Shared/ApprovalProtocol.cs`、`src/Shared/ApprovalResult.cs` |
+| 审批 | `src/EngineHost/ModelContextProtocol/Tools/McpServer.Approval.cs`、`src/Shared/ApprovalPipe.cs`、`src/Shared/ApprovalProtocol.cs`、`src/Shared/ApprovalResult.cs` |
 | 恢复提示 | `src/Logic/ModelContextProtocol/RecoveryHints.cs`、`docs/reference/recovery-guidance.md` |
 | 生成计划 | `src/Shared/Host/GenerationExecutionTools.cs`、`src/Logic/Generation/*` |
 | CLI | `src/Engine/Cli/CliBoundary.cs`、`CliCommands.cs`、`CliToolExecution.cs` |

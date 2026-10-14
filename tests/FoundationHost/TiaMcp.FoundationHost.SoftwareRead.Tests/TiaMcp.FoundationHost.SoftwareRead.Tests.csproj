@@ -10,7 +10,7 @@
   <ItemGroup>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"><_Parameter1>FacetTestReleaseKey</_Parameter1><_Parameter2>$(TiaReleaseKey)</_Parameter2></AssemblyAttribute>
     <Compile Include="../../../src/Adapters/Native/Session/OpennessAdapter.cs" Link="OpennessAdapter.cs" />
-    <Compile Include="../../../src/Engine/Siemens/OpennessReleaseContract.cs" Link="OpennessReleaseContract.cs" />
+    <Compile Include="../../../src/Adapters/Policy/OpennessReleaseContract.cs" Link="OpennessReleaseContract.cs" />
     <Compile Include="../../../src/Logic/Siemens/TiaVersionCatalog.cs" Link="TiaVersionCatalog.cs" />
     <Compile Include="../../../src/Logic/Siemens/EngineeringAssemblyIdentity.cs" Link="EngineeringAssemblyIdentity.cs" />
     <Compile Include="../../../src/Shared/OpennessEnvironment.cs" Link="OpennessEnvironment.cs" />

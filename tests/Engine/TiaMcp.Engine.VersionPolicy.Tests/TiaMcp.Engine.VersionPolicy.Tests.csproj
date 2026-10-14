@@ -8,6 +8,6 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.VersionPolicy.cs" Link="McpServer.VersionPolicy.cs" />
+    <Compile Include="../../../src/EngineHost/ModelContextProtocol/Tools/McpServer.VersionPolicy.cs" Link="McpServer.VersionPolicy.cs" />
   </ItemGroup>
 </Project>

@@ -27,7 +27,7 @@ public sealed class EngineSourcesTests : IDisposable
     public void MemberSurvivesMoveAndPreservesUtf8()
     {
         var before = Sources().Member("Read", signature: "string text");
-        var moved = Path.Combine(scratch.DirectoryPath, "src/Engine/Services/Nested/Renamed.cs");
+        var moved = Path.Combine(scratch.DirectoryPath, "src/EngineHost/ModelContextProtocol/Tools/Renamed.cs");
         Directory.CreateDirectory(Path.GetDirectoryName(moved)!);
         File.Move(Path.Combine(scratch.DirectoryPath, "src/Engine/Original.cs"), moved);
         Assert.Equal(before, Sources().Member("Read", signature: "string text"));

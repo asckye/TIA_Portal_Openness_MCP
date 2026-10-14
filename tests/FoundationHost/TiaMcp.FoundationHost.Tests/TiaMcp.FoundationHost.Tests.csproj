@@ -115,7 +115,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../../../src/Shared/InvocationJournal.cs" Link="Journal/InvocationJournal.Shared.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/InvocationJournal.cs" Link="Journal/InvocationJournal.cs" />
+    <Compile Include="../../../src/EngineHost/ModelContextProtocol/InvocationJournal.cs" Link="Journal/InvocationJournal.cs" />
     <Compile Include="../../../src/Shared/CallJournalPayload.cs" Link="Journal/CallJournalPayload.cs" />
   </ItemGroup>
   <ItemGroup><Compile Include="../../../src/FoundationHost/FoundationSaveCloseCandidate.cs" Link="FoundationSaveCloseCandidate.cs" /></ItemGroup>

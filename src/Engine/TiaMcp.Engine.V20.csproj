@@ -2,6 +2,34 @@
   <ItemGroup Condition="'$(TiaSharedAdapterPaths)' != 'true'"><Compile Include="../Adapters/Native/Vci/VciFallbackAdapter.cs" Link="Native/Vci/VciFallbackAdapter.cs" /></ItemGroup>
   <Import Project="$(MSBuildThisFileDirectory)../../Version.props" />
   <ItemGroup>
+    <Compile Include="../Shared/PlcVerifiedImport.cs" Link="ModelContextProtocol/Builders/PlcVerifiedImport.cs" />
+    <Compile Include="../Shared/CompilerDiagnostics.cs" Link="ModelContextProtocol/CompilerDiagnostics.cs" />
+    <Compile Include="../EngineHost/ModelContextProtocol/InvocationJournal.cs" Link="ModelContextProtocol/InvocationJournal.cs" />
+    <Compile Include="../EngineHost/ModelContextProtocol/McpHints.cs" Link="ModelContextProtocol/McpHints.cs" />
+    <Compile Include="../EngineHost/ModelContextProtocol/McpPromptRegistration.cs" Link="ModelContextProtocol/McpPromptRegistration.cs" />
+    <Compile Include="../EngineHost/ModelContextProtocol/McpPrompts.cs" Link="ModelContextProtocol/McpPrompts.cs" />
+    <Compile Include="../EngineHost/ModelContextProtocol/Responses.cs" Link="ModelContextProtocol/Responses.cs" />
+    <Compile Include="../EngineHost/ModelContextProtocol/ToolExamples.cs" Link="ModelContextProtocol/ToolExamples.cs" />
+    <Compile Include="../EngineHost/ModelContextProtocol/Tools/ImportOrderTools.cs" Link="ModelContextProtocol/Tools/ImportOrderTools.cs" />
+    <Compile Include="../EngineHost/ModelContextProtocol/Tools/ImportStagingTools.cs" Link="ModelContextProtocol/Tools/ImportStagingTools.cs" />
+    <Compile Include="../EngineHost/ModelContextProtocol/Tools/McpServer.Approval.cs" Link="ModelContextProtocol/Tools/McpServer.Approval.cs" />
+    <Compile Include="../EngineHost/ModelContextProtocol/Tools/McpServer.ArgDiagnostics.cs" Link="ModelContextProtocol/Tools/McpServer.ArgDiagnostics.cs" />
+    <Compile Include="../EngineHost/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs" Link="ModelContextProtocol/Tools/McpServer.CallDiscipline.cs" />
+    <Compile Include="../EngineHost/ModelContextProtocol/Tools/McpServer.Profile.cs" Link="ModelContextProtocol/Tools/McpServer.Profile.cs" />
+    <Compile Include="../EngineHost/ModelContextProtocol/Tools/McpServer.SerializedCalls.cs" Link="ModelContextProtocol/Tools/McpServer.SerializedCalls.cs" />
+    <Compile Include="../EngineHost/ModelContextProtocol/Tools/McpServer.VersionPolicy.cs" Link="ModelContextProtocol/Tools/McpServer.VersionPolicy.cs" />
+    <Compile Include="../EngineHost/ModelContextProtocol/Tools/PlcProgramImport.cs" Link="ModelContextProtocol/Tools/PlcProgramImport.cs" />
+    <Compile Include="../EngineHost/ModelContextProtocol/Tools/SessionToolContract.cs" Link="ModelContextProtocol/Tools/SessionToolContract.cs" />
+    <Compile Include="../EngineHost/ModelContextProtocol/Tools/ToolDescriptor.cs" Link="ModelContextProtocol/Tools/ToolDescriptor.cs" />
+    <Compile Include="../EngineHost/ModelContextProtocol/Tools/ToolUsageTools.cs" Link="ModelContextProtocol/Tools/ToolUsageTools.cs" />
+    <Compile Include="../EngineHost/ModelContextProtocol/Tools/XmlBuildResults.cs" Link="ModelContextProtocol/Tools/XmlBuildResults.cs" />
+    <Compile Include="../EngineHost/ModelContextProtocol/Types.cs" Link="ModelContextProtocol/Types.cs" />
+    <Compile Include="../Adapters/Policy/CrossReferenceTreeReader.cs" Link="Siemens/CrossReferenceTreeReader.cs" />
+    <Compile Include="../Adapters/Policy/OpennessReleaseContract.cs" Link="Siemens/OpennessReleaseContract.cs" />
+    <Compile Include="../EngineHost/Siemens/ProjectSecurityLogic.cs" Link="Siemens/ProjectSecurityLogic.cs" />
+    <Compile Include="../EngineHost/Siemens/SecurityDeepLogic.cs" Link="Siemens/SecurityDeepLogic.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="../Shared/EngineeringObjectPath.cs" />
     <Compile Include="../Shared/SivarcTools.cs" />
     <Compile Include="../Shared/OptionalEngineeringTools.cs" />

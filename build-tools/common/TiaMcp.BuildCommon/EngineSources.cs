@@ -15,9 +15,10 @@ public sealed class EngineSources
     public EngineSources(string? root = null, string? nativeDirectory = null)
     {
         directory = Path.Combine(root ?? Repository.FindRoot(), "src", "Engine");
-        foreach (var path in Directory.Exists(directory) ? Directory.EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories).Order(Comparer<string>.Create(ComparePaths)) : Enumerable.Empty<string>())
+        foreach (var sourceDirectory in new[] { directory, Path.Combine(root ?? Repository.FindRoot(), "src", "EngineHost") })
+        foreach (var path in Directory.Exists(sourceDirectory) ? Directory.EnumerateFiles(sourceDirectory, "*.cs", SearchOption.AllDirectories).Order(Comparer<string>.Create(ComparePaths)) : Enumerable.Empty<string>())
         {
-            var relative = Path.GetRelativePath(directory, path);
+            var relative = Path.GetRelativePath(sourceDirectory, path);
             if (relative.Split(Path.DirectorySeparatorChar).Any(CSharpLexer.SkipDirs.Contains)) continue;
             if (CSharpLexer.GeneratedSuffixes.Any(suffix => path.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))) continue;
             var text = Repository.ReadSource(path);
@@ -29,6 +30,11 @@ public sealed class EngineSources
             var shared = Path.Combine(root ?? Repository.FindRoot(), folder);
             if (Directory.Exists(shared))
                 foreach (var path in Directory.EnumerateFiles(shared, "*.cs").Order(Comparer<string>.Create(ComparePaths))) sources[path] = Repository.ReadSource(path);
+        }
+        foreach (var file in new[] { "CrossReferenceTreeReader.cs", "OpennessReleaseContract.cs" })
+        {
+            var path = Path.Combine(root ?? Repository.FindRoot(), "src/Adapters/Policy", file);
+            if (File.Exists(path)) sources[path] = Repository.ReadSource(path);
         }
         if (nativeDirectory != null)
         {

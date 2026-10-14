@@ -60,8 +60,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PlcVerifiedImportBridge.cs" />
-    <Compile Include="../Engine/ModelContextProtocol/CompilerDiagnostics.cs" Link="CompilerDiagnostics.cs" />
-    <Compile Include="../Engine/ModelContextProtocol/Builders/PlcVerifiedImport.cs" Link="PlcVerifiedImport.cs" />
+    <Compile Include="../Shared/CompilerDiagnostics.cs" Link="CompilerDiagnostics.cs" />
+    <Compile Include="../Shared/PlcVerifiedImport.cs" Link="PlcVerifiedImport.cs" />
     <Compile Include="../Logic/ModelContextProtocol/Builders/PlcDocumentEditing.cs" Link="PlcDocumentEditing.cs" />
     <ProjectReference Include="../OnlineChannels/Simulation/TiaMcp.PlcSimAdvanced.csproj" Aliases="plcsim" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <ProjectReference Include="../WorkerChannel/TiaMcp.WorkerChannel.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />

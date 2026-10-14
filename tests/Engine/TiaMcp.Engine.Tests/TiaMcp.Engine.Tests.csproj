@@ -66,7 +66,7 @@
     <Compile Include="../../../src/Engine/EngineServices.cs" Link="EngineServices.cs" />
     <Compile Include="../../../src/Engine/EngineRegistration.cs" Link="EngineRegistration.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ToolCatalog.cs" Link="ToolCatalog.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ToolDescriptor.cs" Link="ToolDescriptor.cs" />
+    <Compile Include="../../../src/EngineHost/ModelContextProtocol/Tools/ToolDescriptor.cs" Link="ToolDescriptor.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/InProcessToolInvoker.cs" Link="InProcessToolInvoker.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.InProcessTools.cs" Link="McpServer.InProcessTools.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcFoundationPolicy.cs" Link="PlcFoundationPolicy.cs" />
@@ -77,8 +77,8 @@
     <EmbeddedResource Include="Golden/CliV4.json" />
     <Compile Include="../../../src/Shared/Host/McpServer.Maintenance.cs" Link="McpServer.Maintenance.cs" />
     <Compile Include="../../../src/Shared/Host/EnvironmentDoctor.cs" Link="EnvironmentDoctor.cs" />
-    <Compile Include="../../../src/Engine/Siemens/OpennessReleaseContract.cs" Link="OpennessReleaseContract.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Builders/PlcVerifiedImport.cs" Link="PlcVerifiedImport.cs" />
+    <Compile Include="../../../src/Adapters/Policy/OpennessReleaseContract.cs" Link="OpennessReleaseContract.cs" />
+    <Compile Include="../../../src/Shared/PlcVerifiedImport.cs" Link="PlcVerifiedImport.cs" />
     <Compile Include="../../../src/Engine/Siemens/Hmi/HmiTagDeletion.cs" Link="HmiTagDeletion.cs" />
     <Compile Include="../../../src/Engine/Siemens/TimedAttachment.cs" Link="TimedAttachment.cs" />
     <Compile Include="../../../src/Engine/Siemens/ProjectOwnership.cs" Link="ProjectOwnership.cs" />
@@ -126,16 +126,16 @@
     <Compile Include="../../../src/Engine/Siemens/PropertyPathReader.cs" Link="PropertyPathReader.cs" />
     <Compile Include="../../../src/Engine/Siemens/EngineeringExport.cs" Link="EngineeringExport.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/EngineeringFileExport.cs" Link="EngineeringFileExport.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/CompilerDiagnostics.cs" Link="CompilerDiagnostics.cs" />
+    <Compile Include="../../../src/Shared/CompilerDiagnostics.cs" Link="CompilerDiagnostics.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedMultilingualText.cs" Link="UnifiedMultilingualText.cs" />
     <Compile Include="../../../src/Shared/Host/McpServer.ToolBridge.cs" Link="McpServer.ToolBridge.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.Approval.cs" Link="McpServer.Approval.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs" Link="McpServer.CallDiscipline.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.VersionPolicy.cs" Link="McpServer.VersionPolicy.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.Profile.cs" Link="McpServer.Profile.cs" />
+    <Compile Include="../../../src/EngineHost/ModelContextProtocol/Tools/McpServer.Approval.cs" Link="McpServer.Approval.cs" />
+    <Compile Include="../../../src/EngineHost/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs" Link="McpServer.CallDiscipline.cs" />
+    <Compile Include="../../../src/EngineHost/ModelContextProtocol/Tools/McpServer.VersionPolicy.cs" Link="McpServer.VersionPolicy.cs" />
+    <Compile Include="../../../src/EngineHost/ModelContextProtocol/Tools/McpServer.Profile.cs" Link="McpServer.Profile.cs" />
     <Compile Include="../../../src/Shared/Host/McpServer.Batch.cs" Link="McpServer.Batch.cs" />
     <Compile Include="../../../src/Shared/Host/McpServer.Exports.cs" Link="McpServer.Exports.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ToolUsageTools.cs" Link="ToolUsageTools.cs" />
+    <Compile Include="../../../src/EngineHost/ModelContextProtocol/Tools/ToolUsageTools.cs" Link="ToolUsageTools.cs" />
     <Compile Include="../../../src/Shared/CertificateManagementTools.cs" Link="CertificateManagementTools.cs" />
     <Compile Include="../../../src/Shared/ProjectLifecycleSessionTools.cs" />
     <Compile Include="../../../src/Shared/ProjectLifecycleProjectTools.cs" />
@@ -149,20 +149,20 @@
     <Compile Include="../../../src/Shared/MotionProDiagClassicHmiTools.cs" Link="MotionProDiagClassicHmiTools.cs" />
     <Compile Include="../../../src/Shared/HardwareSecurityTools.cs" Link="HardwareNetworkTools.cs" />
     <Compile Include="../../../src/Shared/HardwareServicesTools.cs" Link="HardwareServicesTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/McpHints.cs" Link="McpHints.cs" />
+    <Compile Include="../../../src/EngineHost/ModelContextProtocol/McpHints.cs" Link="McpHints.cs" />
     <!-- Shared Classic / Unified screen traversal, with no Siemens runtime dependency. -->
     <Compile Include="../../../src/Engine/Siemens/Hmi/HmiScreenTraversal.cs" Link="HmiScreenTraversal.cs" />
     <!-- 新工具族的纯逻辑（无 Siemens.Engineering 依赖）：参数校验、JSON 解析、提示应答决策、离线 SimaticML 分析 -->
-    <Compile Include="../../../src/Engine/Siemens/SecurityDeepLogic.cs" Link="SecurityDeepLogic.cs" />
+    <Compile Include="../../../src/EngineHost/Siemens/SecurityDeepLogic.cs" Link="SecurityDeepLogic.cs" />
     <Compile Include="../../../src/Shared/HardwareUtilityRules.cs" Link="HardwareUtilityRules.cs" />
     <Compile Include="../../../src/Shared/DeviceServiceObjectRules.cs" Link="DeviceServiceObjectRules.cs" />
     <Compile Include="../../../src/Engine/Siemens/ObjectIdentityRules.cs" Link="ObjectIdentityRules.cs" />
     <Compile Include="../../../src/Engine/Siemens/ToolTransactionRules.cs" Link="ToolTransactionRules.cs" />
     <Compile Include="../../../src/Engine/Siemens/EngineeringCredentialRules.cs" Link="EngineeringCredentialRules.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/ToolExamples.cs" Link="ToolExamples.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/InvocationJournal.cs" Link="InvocationJournal.cs" />
+    <Compile Include="../../../src/EngineHost/ModelContextProtocol/ToolExamples.cs" Link="ToolExamples.cs" />
+    <Compile Include="../../../src/EngineHost/ModelContextProtocol/InvocationJournal.cs" Link="InvocationJournal.cs" />
     <Compile Include="../../../src/Logic/Siemens/StartdriveLogic.cs" Link="StartdriveLogic.cs" />
-    <Compile Include="../../../src/Engine/Siemens/ProjectSecurityLogic.cs" Link="ProjectSecurityLogic.cs" />
+    <Compile Include="../../../src/EngineHost/Siemens/ProjectSecurityLogic.cs" Link="ProjectSecurityLogic.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedUiModelLogic.cs" Link="UnifiedUiModelLogic.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedScreenItemLogic.cs" Link="UnifiedScreenItemLogic.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedExchangeLogic.cs" Link="UnifiedExchangeLogic.cs" />
@@ -215,8 +215,8 @@
     <Compile Include="../../../src/Shared/Host/EcosystemTools.cs" Link="EcosystemTools.cs" />
     <Compile Include="../../../src/Shared/EngineeringAuditTools.cs" Link="EngineeringAuditTools.cs" />
     <Compile Include="../../../src/Shared/Host/GitWorkflowTools.cs" Link="GitWorkflowTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ImportStagingTools.cs" Link="ImportStagingTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs" Link="ImportOrderTools.cs" />
+    <Compile Include="../../../src/EngineHost/ModelContextProtocol/Tools/ImportStagingTools.cs" Link="ImportStagingTools.cs" />
+    <Compile Include="../../../src/EngineHost/ModelContextProtocol/Tools/ImportOrderTools.cs" Link="ImportOrderTools.cs" />
     <Compile Include="../../../src/Shared/Host/OfflineAnalysisTools.cs" Link="OfflineAnalysisTools.cs" />
     <Compile Include="../../../src/Shared/Host/OfflineSuiteTools.cs" Link="OfflineSuiteTools.cs" />
     <Compile Include="../../../src/Shared/PlcBuildTools.cs" Link="PlcBuildTools.cs" />
@@ -226,9 +226,9 @@
     <Compile Include="../../../src/Shared/Host/V21EcosystemTools.cs" Link="V21EcosystemTools.cs" />
     <Compile Include="../../../src/Shared/Host/XmlBuilderTools.cs" Link="XmlBuilderTools.cs" />
     <Compile Include="../../../src/Shared/Host/OfflineToolExecution.cs" Link="OfflineToolExecution.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/XmlBuildResults.cs" Link="XmlBuildResults.cs" />
+    <Compile Include="../../../src/EngineHost/ModelContextProtocol/Tools/XmlBuildResults.cs" Link="XmlBuildResults.cs" />
   </ItemGroup>
-  <ItemGroup><Compile Include="../../../src/Engine/ModelContextProtocol/Tools/PlcProgramImport.cs" Link="PlcProgramImport.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../../src/EngineHost/ModelContextProtocol/Tools/PlcProgramImport.cs" Link="PlcProgramImport.cs" /></ItemGroup>
   <ItemGroup>
     <Compile Include="../../../src/Shared/Host/EngineeringFileNames.cs" Link="EngineeringFileNames.cs" />
     <Compile Include="../../../src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs" Link="ClassicHmiTemporaryImportPreflightSuite.cs" />
@@ -252,7 +252,7 @@
     <Compile Include="../../../src/Shared/UnifiedEventsTools.cs" Link="UnifiedEventsTools.cs" />
     <Compile Include="../../../src/Shared/UnifiedObjectServicesTools.cs" Link="UnifiedObjectServicesTools.cs" />
   </ItemGroup>
-  <ItemGroup><Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SessionToolContract.cs" Link="SessionToolContract.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../../src/EngineHost/ModelContextProtocol/Tools/SessionToolContract.cs" Link="SessionToolContract.cs" /></ItemGroup>
   <ItemGroup>
     <Compile Include="../../../src/Shared/CallJournalPayload.cs" Link="Journal/CallJournalPayload.cs" />
     <Compile Include="../../../src/Updater/Updater.cs" Link="Updater/Updater.cs" />

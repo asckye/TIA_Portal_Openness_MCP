@@ -123,13 +123,13 @@ J 表示需要设计判断，M 表示可按说明机械执行。
 | `GitWorkflow.cs` | [GitWorkflowTools](../../src/Shared/Host/GitWorkflowTools.cs) | 1 |
 | `PlcTemplates.cs` | [TemplateTools](../../src/Shared/Host/TemplateTools.cs) | 2 |
 | `QualityAudit.cs` | [QualityAuditTools](../../src/Shared/Host/QualityAuditTools.cs) | 1 |
-| `ImportOrder.cs` | [ImportOrderTools](../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs) | 1 |
-| `Guides.cs` | P6-07 已并入 [ToolUsageTools](../../src/Engine/ModelContextProtocol/Tools/ToolUsageTools.cs)，原独立入口删除 | 0 |
-| `ToolUsage.cs` | [ToolUsageTools](../../src/Engine/ModelContextProtocol/Tools/ToolUsageTools.cs) | 1 |
+| `ImportOrder.cs` | [ImportOrderTools](../../src/EngineHost/ModelContextProtocol/Tools/ImportOrderTools.cs) | 1 |
+| `Guides.cs` | P6-07 已并入 [ToolUsageTools](../../src/EngineHost/ModelContextProtocol/Tools/ToolUsageTools.cs)，原独立入口删除 | 0 |
+| `ToolUsage.cs` | [ToolUsageTools](../../src/EngineHost/ModelContextProtocol/Tools/ToolUsageTools.cs) | 1 |
 | `PlcSoftware.OfflineSuites.cs` | [OfflineSuiteTools](../../src/Shared/Host/OfflineSuiteTools.cs) | 16 |
 
 试点工具直接使用 [OfflineToolExecution](../../src/Shared/Host/OfflineToolExecution.cs)
-与 [XmlBuildResults](../../src/Engine/ModelContextProtocol/Tools/XmlBuildResults.cs)；目录查询和工具构造仍由 MCP 宿主提供。
+与 [XmlBuildResults](../../src/EngineHost/ModelContextProtocol/Tools/XmlBuildResults.cs)；目录查询和工具构造仍由 MCP 宿主提供。
 P6-07 将指南和配方统一为 `GetToolUsage` 的语言/示例选择器，已删除不再注册工具的指南类。
 这些试点工具没有 CLI 静态调用点；CLI 的同名报告命令直接使用既有构造器。
 TiaMcp.Engine.Harness 的 `engineering-api-only` 检查真实实例归属、单例生命周期和指南依赖注入；

@@ -172,7 +172,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcTechnologyEvidence.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcCrossReferencePolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcCrossReferences.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Engine/Siemens/CrossReferenceTreeReader.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Policy/CrossReferenceTreeReader.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcGroupCreation.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcGroupOperations.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/EmptyPlcGroupPolicy.cs" />
@@ -243,7 +243,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcReadPathPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Logic/Siemens/TiaVersionCatalog.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Logic/Siemens/EngineeringAssemblyIdentity.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Engine/Siemens/OpennessReleaseContract.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Policy/OpennessReleaseContract.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSupplementaryRead.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSupplementaryReadPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcNativeSoftwareRead.cs" />

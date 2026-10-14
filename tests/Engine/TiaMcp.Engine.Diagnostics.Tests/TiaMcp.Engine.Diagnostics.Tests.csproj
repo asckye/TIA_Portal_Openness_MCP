@@ -13,7 +13,7 @@
     <CustomAdditionalCompileInputs Include="../../../build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="System.Text.Json" Version="10.0.0-preview.4.25258.110" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/InvocationJournal.cs" Link="InvocationJournal.cs" />
+    <Compile Include="../../../src/EngineHost/ModelContextProtocol/InvocationJournal.cs" Link="InvocationJournal.cs" />
     <Compile Include="../../../src/Shared/NativeCallDiagnostics.Journal.cs" Link="NativeCallDiagnostics.cs" />
   </ItemGroup>
   <Target Name="InstrumentFixture" AfterTargets="CoreCompile">
