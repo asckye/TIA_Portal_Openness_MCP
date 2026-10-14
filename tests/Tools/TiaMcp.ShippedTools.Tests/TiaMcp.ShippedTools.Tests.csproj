@@ -9,24 +9,29 @@
   <ItemGroup>
     <ProjectReference Include="../../../src/Tools/WriteGuard/TiaMcp.WriteGuard.csproj" />
     <ProjectReference Include="../../../src/Tools/PluginLauncher/TiaMcp.PluginLauncher.csproj" AdditionalProperties="UseAppHost=true" />
-    <ProjectReference Include="../PluginHostFixture/PluginHostFixture.csproj" ReferenceOutputAssembly="false" AdditionalProperties="UseAppHost=true" />
+    <ProjectReference Include="../PluginHostFixture/PluginHostFixture.csproj" ReferenceOutputAssembly="false" OutputItemType="PluginHostFixtureOutput" AdditionalProperties="UseAppHost=true" />
   </ItemGroup>
+  <!-- Copy from the outputs the project references actually built: a separate GetTargetPath call would inherit this
+       project's global properties (check-all's per-node output identity) and resolve a directory that was never built. -->
   <Target Name="CopyPluginFixtures" AfterTargets="Build">
-    <MSBuild Projects="../../../src/Tools/PluginLauncher/TiaMcp.PluginLauncher.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration);UseAppHost=true" BuildInParallel="false">
-      <Output TaskParameter="TargetOutputs" ItemName="_PluginLauncherAssembly" />
-    </MSBuild>
-    <MSBuild Projects="../PluginHostFixture/PluginHostFixture.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration);UseAppHost=true" BuildInParallel="false">
-      <Output TaskParameter="TargetOutputs" ItemName="_PluginHostAssembly" />
-    </MSBuild>
+    <ItemGroup>
+      <_PluginLauncherReference Include="@(ReferencePath)" Condition="'%(Filename)' == 'TiaMcp.PluginLauncher'" />
+    </ItemGroup>
     <PropertyGroup>
-      <_PluginLauncherDirectory>@(_PluginLauncherAssembly->'%(RootDir)%(Directory)')</_PluginLauncherDirectory>
-      <_PluginHostDirectory>@(_PluginHostAssembly->'%(RootDir)%(Directory)')</_PluginHostDirectory>
+      <_PluginLauncherDirectory>@(_PluginLauncherReference->'%(RootDir)%(Directory)')</_PluginLauncherDirectory>
+      <_PluginHostDirectory>@(PluginHostFixtureOutput->'%(RootDir)%(Directory)')</_PluginHostDirectory>
     </PropertyGroup>
     <ItemGroup>
-      <_PluginLauncherFiles Include="$(_PluginLauncherDirectory)TiaMcp.PluginLauncher.*" />
-      <_PluginHostFiles Include="$(_PluginHostDirectory)PluginHostFixture.*" />
+      <_PluginLauncherFiles Include="$(_PluginLauncherDirectory)TiaMcp.PluginLauncher.*" Condition="'$(_PluginLauncherDirectory)' != ''" />
+      <_PluginHostFiles Include="$(_PluginHostDirectory)PluginHostFixture.*" Condition="'$(_PluginHostDirectory)' != ''" />
     </ItemGroup>
-    <Copy SourceFiles="@(_PluginLauncherFiles)" DestinationFolder="$(TargetDir)plugin-fixtures/launcher" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="@(_PluginHostFiles)" DestinationFolder="$(TargetDir)plugin-fixtures/host" SkipUnchangedFiles="true" />
+    <Error Condition="'@(_PluginLauncherFiles)' == '' or !Exists('$(_PluginLauncherDirectory)TiaMcp.PluginLauncher.exe')" Text="Plugin launcher fixture outputs were not found next to the referenced TiaMcp.PluginLauncher build." />
+    <Error Condition="'@(_PluginHostFiles)' == '' or !Exists('$(_PluginHostDirectory)PluginHostFixture.exe')" Text="Plugin host fixture outputs were not found next to the referenced PluginHostFixture build." />
+    <Copy SourceFiles="@(_PluginLauncherFiles)" DestinationFolder="$(TargetDir)plugin-fixtures/launcher" SkipUnchangedFiles="true">
+      <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
+    </Copy>
+    <Copy SourceFiles="@(_PluginHostFiles)" DestinationFolder="$(TargetDir)plugin-fixtures/host" SkipUnchangedFiles="true">
+      <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
+    </Copy>
   </Target>
 </Project>

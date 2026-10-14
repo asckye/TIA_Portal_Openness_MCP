@@ -47,9 +47,12 @@ namespace TiaMcpServer.ModelContextProtocol
             return client;
         }
 
+        /// <summary>The host directory that anchors the delivery root; tests point it at a fixture bundle.</summary>
+        internal static string HostBaseDirectory { get; set; } = AppContext.BaseDirectory;
+
         /// <summary>The delivery root selected by the common bundle resolver.</summary>
         internal static string? FindInstallRoot()
-            => FindInstallRoot(AppContext.BaseDirectory);
+            => FindInstallRoot(HostBaseDirectory);
 
         internal static string? FindInstallRoot(string baseDirectory, string? bundleRoot = null)
             => TiaOpenness.Shared.BundleLayout.FindInstallRoot(baseDirectory, bundleRoot);

@@ -118,12 +118,11 @@ public sealed class B1HostPortsTests
             Directory.CreateDirectory(Path.Combine(root, "manifest"));
             File.WriteAllText(Path.Combine(root, "manifest", "package-manifest.json"), "{}");
             AppDomain.CurrentDomain.SetData(selection, root);
-            var context = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Current;
             foreach (string release in new[] { "20", "21" })
             {
                 foreach (string anchor in new[] { "src/Engine/bin/Release/net48", "sdk-fixture", "runtime/v" + release + "/worker" })
                 {
-                    context.WorkerBaseDirectory = Path.Combine(root, anchor.Replace('/', Path.DirectorySeparatorChar));
+                    Host.McpServer.HostBaseDirectory = Path.Combine(root, anchor.Replace('/', Path.DirectorySeparatorChar));
                     var result = (await Host.McpServer.CheckProductUpdateV4("x")).StructuredContent!;
                     Assert.StartsWith("repository must be 'owner/name'", (string)result["data"]!["summary"]!);
                     var evidence = result["data"]!["evidence"]!;
@@ -132,7 +131,7 @@ public sealed class B1HostPortsTests
                     Assert.False((bool)evidence["success"]!);
                     Assert.Null(evidence["releaseApiUrl"]);
                 }
-                context.WorkerBaseDirectory = Path.Combine(root, "runtime", "v" + release);
+                Host.McpServer.HostBaseDirectory = Path.Combine(root, "runtime", "v" + release);
                 var missing = (await Host.McpServer.CheckProductUpdateV4("x")).StructuredContent!;
                 Assert.Equal("RESOURCE_UNAVAILABLE", (string?)missing["error"]?["code"]);
                 Assert.Contains("delivery.json", missing.ToJsonString());
@@ -154,6 +153,7 @@ public sealed class B1HostPortsTests
         }
         finally
         {
+            Host.McpServer.HostBaseDirectory = AppContext.BaseDirectory;
             AppDomain.CurrentDomain.SetData(selection, previous);
             Directory.Delete(root, true);
         }
