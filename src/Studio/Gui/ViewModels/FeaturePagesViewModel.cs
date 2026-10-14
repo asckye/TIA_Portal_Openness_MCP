@@ -22,7 +22,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     private readonly Func<DateTimeOffset> _now;
     private IReadOnlyList<CallRecord>? _pausedCalls;
     private bool _writeOnly, _failOnly, _releaseOnly, _humanOnly, _aiOnly, _disposed;
-    private string _search = "", _release = "21";
+    private string _search = "", _release = TiaOpenness.Core.Environment.WorkbenchReleaseSelection.DefaultKey();
     private string? _selectedCall;
     private AuditVerification? _verification;
     private IReadOnlyList<AuditEvent>? _verifiedEvents;

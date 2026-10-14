@@ -67,6 +67,26 @@ internal static class RepositoryChecks
         if (!release.Success || !entry.Success) return ["CHANGELOG.md or Version.props has no release version"];
         return release.Groups[1].Value.Trim() == entry.Groups[1].Value ? [] : [$"Newest CHANGELOG entry {entry.Groups[1].Value} differs from Version.props {release.Groups[1].Value.Trim()}; write the entry in the release commit (release command), keep drafts in docs/releases"];
     }
+    internal static List<string> PluginWriteGuardErrors(string root)
+    {
+        var errors = new List<string>();
+        try
+        {
+            var plugin = JsonNode.Parse(File.ReadAllText(Path.Combine(root, ".claude-plugin/plugin.json")))!;
+            string name = plugin["name"]!.GetValue<string>();
+            string qualified = "mcp__" + Regex.Replace("plugin_" + name + "_tia-portal", "[^A-Za-z0-9_-]", "_") + "__WritePlcWebVars";
+            string pattern = TiaMcp.WriteGuard.ToolNames.Pattern(name);
+            var hooks = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "hooks/hooks.json")))!;
+            string matcher = hooks["hooks"]!["PreToolUse"]![0]!["matcher"]!.GetValue<string>();
+            foreach (string tool in new[] { qualified, "mcp__tia-portal__WritePlcWebVars" })
+                if (!Regex.IsMatch(tool, matcher) || !Regex.IsMatch(tool, pattern))
+                    errors.Add("Plugin write guard does not cover " + tool);
+            if (matcher != TiaMcp.WriteGuard.ToolNames.HookMatcher) errors.Add("Plugin hook matcher differs from WriteGuard's entry pattern");
+        }
+        catch (Exception ex) when (ex is IOException or System.Text.Json.JsonException or InvalidOperationException or ArgumentException or NullReferenceException)
+        { errors.Add("Plugin write guard: " + ex.Message); }
+        return errors;
+    }
     internal static List<string> ArchiveErrors(string root)
     {
         var archive = Path.Combine(root, "manifest/history/contracts-v3");
@@ -97,6 +117,7 @@ internal static class RepositoryChecks
         var rules = DeliveryRules.Load(root);
         packageMode |= !File.Exists(Path.Combine(root, "Version.props"));
         var errors = packageMode ? new List<string>() : ArchiveErrors(root).Concat(ChangelogErrors(root)).ToList();
+        if (!packageMode) errors.AddRange(PluginWriteGuardErrors(root));
         string[] Enumerate() => Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories).Select(p => Path.GetRelativePath(root, p).Replace('\\', '/')).ToArray();
         var git = File.Exists(Path.Combine(root, ".git")) || Directory.Exists(Path.Combine(root, ".git"));
         var names = git ? ProcessRunner.Run("git", ["ls-files", "--cached", "--others", "--exclude-standard", "-z"], root).StandardOutput.Split('\0', StringSplitOptions.RemoveEmptyEntries) : Enumerate();

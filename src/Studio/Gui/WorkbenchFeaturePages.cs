@@ -19,7 +19,7 @@ public partial class MainWindow
 
     private void InitializeFeaturePages()
     {
-        ConfigureFeaturePages(new CallJournalService(_model.SelectedReleaseKey), new AuditLogService(), new EnvironmentCheckService(!_model.OfflineDemo));
+        ConfigureFeaturePages(new CallJournalService(_model.SelectedReleaseKey), new AuditLogService(), new EnvironmentCheckService(!_model.OfflineDemo, () => _model.SelectedReleaseKey));
         Approvals.NewRequest += OnNewApproval;
         _model.PropertyChanged += OnFeatureReleaseChanged;
     }

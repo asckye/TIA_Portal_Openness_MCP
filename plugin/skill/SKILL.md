@@ -7,6 +7,32 @@ description: Use this project's version-specific MCP tools to inspect and edit S
 
 This skill explains how to find and use the project's maintained examples. Tool arguments and programming examples live in `reference/tool-examples` and are returned by `GetToolUsage`; this file does not duplicate their contracts.
 
+## Install and configure the Claude Code plugin
+
+Extract a complete delivery bundle to a fixed local directory, for example `D:\TIA-MCP`. In a Claude Code session, add that local marketplace and install the plugin:
+
+```text
+/plugin marketplace add D:\TIA-MCP
+/plugin install tia-portal-openness-mcp@tia-portal-openness-mcp
+```
+
+Restart Claude Code and create a new session. Check the `tia-portal` server's `tools/list` and `GetToolUsage()` before choosing calls. Preserve the complete bundle; the plugin command is `${CLAUDE_PLUGIN_ROOT}/runtime/tools/TiaMcp.PluginLauncher.exe`. Updating files in the original directory does not refresh an installed cache copy; update the marketplace and installed plugin in Claude Code, then restart it. Check for duplicate manually configured servers.
+
+Set these inherited environment variables before starting Claude Code:
+
+- `TIA_MCP_BUNDLE_ROOT`: optional absolute root of the installed bundle used by the Workbench. It must contain `manifest/package-manifest.json` with the exact `packageType` `tia-portal-mcp-complete-offline-delivery-bundle`. The selected host uses that bundle, its data location and approval scope. A bad override fails with stderr and a nonzero exit code; it never falls back to the plugin copy. Open `TiaOpenness.exe` from the same bundle, choose the same release, and use matching data-location overrides in both processes.
+- `TIA_MCP_RELEASE_KEY`: optional exact runnable key: `14sp1`, `15.1`, `16`, `17`, `18`, `19`, `20` or `21`. Without it, the launcher shares the Workbench rule: newest installed TIA release, otherwise newest runnable bundled host/worker pair. Invalid keys and missing selected runtime files fail without switching releases.
+
+Run this example from any PowerShell directory, replacing the bundle path with the Workbench's actual installation:
+
+```powershell
+$env:TIA_MCP_BUNDLE_ROOT = 'D:\TIA-MCP'
+$env:TIA_MCP_RELEASE_KEY = '19'
+claude
+```
+
+The launcher starts `runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>`, inherits stdin/stdout/stderr unchanged, passes extra arguments unchanged and forwards the host exit code. Closing the launcher stops its host through a Windows lifetime job. Changes to environment variables require a full client restart. See the [plugin installation guide](../../docs/getting-started/plugin.md) for automatic selection and variable removal.
+
 ## Select the current release and tool
 
 The root launcher is `TiaOpenness.exe`, which opens the Workbench. Every release uses `runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>`, with one version-matched worker per MCP session. V20/V21 default to lite; `FindTools` and `CallTool` reach the remaining tools. Older releases also provide discovery and bridge tools. Consult the generated counts and release applicability in `docs/reference/version-tools.md`, and use runtime `tools/list`. The Engineering page shares an MCP session's tools, approvals and audit. The retired `--isolate-openness` and `--no-isolate-openness` switches must be removed from old client commands.

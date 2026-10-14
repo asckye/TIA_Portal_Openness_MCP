@@ -10,15 +10,16 @@ using TiaOpenness.Core.Inspection;
 
 namespace TiaOpenness.Gui.Services;
 
-/// <summary>VCI uses the attached MCP tools; older releases retain only the fenced read bridge.</summary>
+/// <summary>VCI follows the tool registration advertised by the attached MCP session.</summary>
 internal sealed class McpVersionControlClient(McpProjectClient project, IVersionControlClient? readBridge = null) : IVersionControlClient
 {
     private readonly IVersionControlClient bridge = readBridge ?? new ReadOnlyVciBridge(project.Session);
-    private string Release => (string?)project.Session.State?["releaseKey"] ?? "";
-    private bool Engine => Release is "20" or "21";
-    public bool CanRead => project.Session.SessionKey != null && Release is "16" or "17" or "18" or "19" or "20" or "21"
+    private bool McpReads => new[] { "ListVersionControlWorkspaces", "GetVersionControlStatus" }
+        .All(tool => project.Session.ToolSchema(tool) != null);
+    public bool CanRead => project.Session.SessionKey != null && (McpReads || bridge.CanRead)
         && (int?)project.Session.State?["binding"]?["processId"] > 0 && (bool?)project.Session.State?["sessionLocked"] != true;
-    public bool CanWrite => CanRead && Engine;
+    public bool CanWrite => CanRead && McpReads && new[] { "CreateVersionControlWorkspace", "ConnectProjectToWorkspace", "SynchronizeVersionControlWorkspace" }
+        .All(tool => project.Session.ToolSchema(tool) != null);
     private static readonly JsonSerializerOptions Json = new() { PropertyNameCaseInsensitive = true,
         Converters = { new JsonStringEnumConverter() } };
     private static T Model<T>(JsonObject data) where T : new() => data.Deserialize<T>(Json) ?? new();
@@ -78,11 +79,11 @@ internal sealed class McpVersionControlClient(McpProjectClient project, IVersion
             throw new InvalidOperationException("The shared project changed after preview.");
         return await project.Read(tool, arguments);
     }
-    public async Task<bool> VcSupportedAsync() => CanRead && (Engine
+    public async Task<bool> VcSupportedAsync() => CanRead && (McpReads
         ? project.Session.ToolSchema("ListVersionControlWorkspaces") != null : await bridge.VcSupportedAsync());
     public async Task<List<WorkspaceInfo>> VcListWorkspacesAsync()
     {
-        if (!Engine) return await bridge.VcListWorkspacesAsync();
+        if (!McpReads) return await bridge.VcListWorkspacesAsync();
         var data = Evidence(await Read("ListVersionControlWorkspaces", new()));
         return (data["workspaces"] as JsonArray ?? data["items"] as JsonArray ?? new())
             .Select(McpProjectClient.Decode).OfType<JsonObject>().Select(Model<WorkspaceInfo>).ToList();
@@ -119,7 +120,7 @@ internal sealed class McpVersionControlClient(McpProjectClient project, IVersion
     }
     public async Task<WorkspaceStatusReport> VcStatusAsync(string? name, bool changedOnly)
     {
-        if (!Engine) return await bridge.VcStatusAsync(name, changedOnly);
+        if (!McpReads) return await bridge.VcStatusAsync(name, changedOnly);
         const string tool = "GetVersionControlStatus";
         var arguments = Target(tool, name); arguments["changedOnly"] = changedOnly;
         var data = Evidence(await Read(tool, arguments));
@@ -140,7 +141,7 @@ internal sealed class McpVersionControlClient(McpProjectClient project, IVersion
     }
     public async Task<WorkspaceDiff> VcDiffAsync(string? name, string? file)
     {
-        if (!Engine) return await bridge.VcDiffAsync(name, file);
+        if (!McpReads) return await bridge.VcDiffAsync(name, file);
         var workspace = (await VcListWorkspacesAsync()).SingleOrDefault(w => w.Name == name);
         return workspace == null ? new() { Available = false } : GitWorkspaceDiff.Read(workspace.Name, workspace.RootPath, file);
     }

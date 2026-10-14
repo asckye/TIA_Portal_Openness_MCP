@@ -13,6 +13,33 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class StudioBundleLayoutTests(WpfContext wpf) : IDisposable
 {
+    [Theory]
+    [InlineData("14sp1")][InlineData("15.1")][InlineData("16")][InlineData("17")]
+    [InlineData("18")][InlineData("19")][InlineData("20")][InlineData("21")]
+    public void Packaged_update_lookup_anchors_on_host_and_rejects_worker_directory(string release)
+    {
+        Bundle();
+        string host = Directory.CreateDirectory(At(scratch, "runtime/v" + release)).FullName;
+        string worker = Directory.CreateDirectory(At(scratch, "runtime/v" + release + "/worker")).FullName;
+        Assert.Equal(scratch, BundleLayout.FindInstallRoot(host, scratch));
+        Assert.Null(BundleLayout.FindInstallRoot(worker, scratch));
+        Assert.Equal(At(scratch, "runtime/tools/TiaMcp.Updater.exe"), BundleLayout.RequirePath(BundleLayout.FindInstallRoot(host, scratch), "runtime/tools/TiaMcp.Updater.exe"));
+    }
+
+    [Fact]
+    public void Marketplace_copy_and_installed_bundle_have_separate_default_approval_scopes()
+    {
+        Bundle();
+        string cache = At(scratch, "cache/marketplace/plugin/3.3.0");
+        Put(cache, "manifest/package-manifest.json", "{}");
+        string host = Directory.CreateDirectory(At(cache, "runtime/v19")).FullName;
+        string gui = Directory.CreateDirectory(At(scratch, "runtime/studio")).FullName;
+        var cached = DataLocations.Resolve(host, null, At(scratch, "local"), At(scratch, "temp"));
+        var installed = DataLocations.Resolve(gui, null, At(scratch, "local"), At(scratch, "temp"));
+        Assert.NotEqual(Path.Combine(cached.ConfigDirectory, "approval.settings"), Path.Combine(installed.ConfigDirectory, "approval.settings"));
+        Assert.Equal(At(cache, "data"), cached.Root); Assert.Equal(At(scratch, "data"), installed.Root);
+    }
+
     private readonly string scratch = Path.Combine(Path.GetTempPath(), "studio gui 中文 " + Guid.NewGuid().ToString("N"));
     private static string At(string root, string relative) => Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar));
     private static void Put(string root, string relative, string content = "fixture")

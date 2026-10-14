@@ -44,12 +44,18 @@ public static class GuardHost
             payload = JsonNode.Parse(raw);
             if (payload is not JsonObject payloadObject) return "";
             string toolName = NodeString(GetProperty(payloadObject, "tool_name"));
-            Match hookName = Regex.Match(toolName, "^mcp__tia-portal__(.+)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            Match hookName = Regex.Match(toolName, ToolNames.HookMatcher, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
             if (!hookName.Success) return "";
             name = hookName.Groups[1].Value;
 
             string root = GetEnvironment(environment, "CLAUDE_PLUGIN_ROOT") ?? "";
             if (string.IsNullOrWhiteSpace(root)) root = Path.GetFullPath(Path.Combine(baseDirectory, "..", ".."));
+            if (!toolName.StartsWith("mcp__tia-portal__", StringComparison.OrdinalIgnoreCase))
+            {
+                var plugin = JsonNode.Parse(File.ReadAllText(Path.Combine(root, ".claude-plugin", "plugin.json")));
+                string pattern = ToolNames.Pattern(NodeString(plugin?["name"]));
+                if (!Regex.IsMatch(toolName, pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)) return "";
+            }
             var entries = ReadEntries(Path.Combine(root, "manifest", "tools-list.json"));
             var deny = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "ONLINE-WRITE" };
             foreach (string extra in (GetEnvironment(environment, "TIA_MCP_GUARD_DENY_OPERATIONS") ?? "").Split(','))

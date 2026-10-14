@@ -8,5 +8,25 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../src/Tools/WriteGuard/TiaMcp.WriteGuard.csproj" />
+    <ProjectReference Include="../../../src/Tools/PluginLauncher/TiaMcp.PluginLauncher.csproj" AdditionalProperties="UseAppHost=true" />
+    <ProjectReference Include="../PluginHostFixture/PluginHostFixture.csproj" ReferenceOutputAssembly="false" AdditionalProperties="UseAppHost=true" />
   </ItemGroup>
+  <Target Name="CopyPluginFixtures" AfterTargets="Build">
+    <MSBuild Projects="../../../src/Tools/PluginLauncher/TiaMcp.PluginLauncher.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration);UseAppHost=true" BuildInParallel="false">
+      <Output TaskParameter="TargetOutputs" ItemName="_PluginLauncherAssembly" />
+    </MSBuild>
+    <MSBuild Projects="../PluginHostFixture/PluginHostFixture.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration);UseAppHost=true" BuildInParallel="false">
+      <Output TaskParameter="TargetOutputs" ItemName="_PluginHostAssembly" />
+    </MSBuild>
+    <PropertyGroup>
+      <_PluginLauncherDirectory>@(_PluginLauncherAssembly->'%(RootDir)%(Directory)')</_PluginLauncherDirectory>
+      <_PluginHostDirectory>@(_PluginHostAssembly->'%(RootDir)%(Directory)')</_PluginHostDirectory>
+    </PropertyGroup>
+    <ItemGroup>
+      <_PluginLauncherFiles Include="$(_PluginLauncherDirectory)TiaMcp.PluginLauncher.*" />
+      <_PluginHostFiles Include="$(_PluginHostDirectory)PluginHostFixture.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_PluginLauncherFiles)" DestinationFolder="$(TargetDir)plugin-fixtures/launcher" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_PluginHostFiles)" DestinationFolder="$(TargetDir)plugin-fixtures/host" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

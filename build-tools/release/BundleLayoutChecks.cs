@@ -35,7 +35,7 @@ internal static class BundleLayoutChecks
     internal const string Validator = "build-tools/release/BundleManifestRequirements.cs";
     internal const string Launcher = "src/Studio/Launcher/Launcher.cs";
     internal const string GuiProject = "src/Studio/Gui/TiaOpenness.Gui.csproj";
-    internal static readonly string[] Generated = ["runtime/tools/TiaMcp.WriteGuard.exe", "runtime/tools/TiaMcp.Updater.exe", "runtime/tools/TiaMcp.Updater.exe.config"];
+    internal static readonly string[] Generated = ["runtime/tools/TiaMcp.WriteGuard.exe", "runtime/tools/TiaMcp.PluginLauncher.exe", "runtime/tools/TiaMcp.Updater.exe", "runtime/tools/TiaMcp.Updater.exe.config"];
     internal static string[] ResourcePaths(string source)
     {
         var table = Regex.Match(source, @"new Dictionary<BundleResource, string>\s*\{(.*?)\};", RegexOptions.Singleline);

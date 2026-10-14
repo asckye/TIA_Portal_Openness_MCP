@@ -41,7 +41,11 @@
       "runtime/tools/TiaMcp.WriteGuard.runtimeconfig.json",
       ".editorconfig",
       "Directory.Build.props",
-      "src/Shared/CodeAnalysis.props"
+      "src/Shared/CodeAnalysis.props",
+      "runtime/tools/TiaMcp.PluginLauncher.exe",
+      "runtime/tools/TiaMcp.PluginLauncher.dll",
+      "runtime/tools/TiaMcp.PluginLauncher.deps.json",
+      "runtime/tools/TiaMcp.PluginLauncher.runtimeconfig.json"
     ],
     "prefixes": [
       "runtime/",
@@ -233,6 +237,10 @@
     "runtime/v21/worker/tool-catalog.json",
     "runtime/v21/worker/TiaMcp.Engine.V21.exe.config",
     "runtime/studio/TiaOpenness.exe",
-    "runtime/studio/bridge/TiaOpenness.Bridge.exe"
+    "runtime/studio/bridge/TiaOpenness.Bridge.exe",
+    "runtime/tools/TiaMcp.PluginLauncher.exe",
+    "runtime/tools/TiaMcp.PluginLauncher.dll",
+    "runtime/tools/TiaMcp.PluginLauncher.deps.json",
+    "runtime/tools/TiaMcp.PluginLauncher.runtimeconfig.json"
   ]
 }

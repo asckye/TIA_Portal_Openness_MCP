@@ -17,6 +17,40 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class EnvironmentServicesTests(WpfContext wpf)
 {
+    [Theory]
+    [InlineData("14sp1")][InlineData("15.1")][InlineData("16")][InlineData("17")]
+    [InlineData("18")][InlineData("19")][InlineData("20")][InlineData("21")]
+    public async Task Failed_doctor_exit_is_visible_for_each_selected_release(string release)
+    {
+        using var fixture = new Fixture(); fixture.Context.ReleaseKey = release;
+        string host = EnvironmentBundleFiles.Host(fixture.Root, release);
+        Directory.CreateDirectory(Path.GetDirectoryName(host)!); File.WriteAllText(host, "fake doctor");
+        string? invoked = null;
+        var service = new EnvironmentCheckService(() => fixture.Context, Sources, path =>
+        { invoked = path; EnvironmentCheckService.RequireDoctorSuccess(2); });
+        service.Recheck(); await service.Completion;
+        service.Fix("membership"); await service.Completion;
+        Assert.Equal(host, invoked);
+        Assert.Equal("FixFailed", service.Findings.Single(f => f.Id == "membership").Result);
+        Assert.Contains("2", Assert.Single(service.LogTail));
+        wpf.Run(() =>
+        {
+            foreach (var language in new[] { AppLanguage.English, AppLanguage.Chinese })
+            {
+                var previous = Loc.Current.Language;
+                try
+                {
+                    Loc.Current.Language = language;
+                    var error = Assert.Throws<InvalidOperationException>(() => EnvironmentCheckService.RequireDoctorSuccess(2));
+                    Assert.Contains("2", error.Message); Assert.Contains("lusrmgr.msc", error.Message);
+                    Assert.DoesNotContain("V20/V21", Loc.Current["Env.NoDoctorHost"]);
+                    EnvironmentCheckService.RequireDoctorSuccess(0);
+                }
+                finally { Loc.Current.Language = previous; }
+            }
+        });
+    }
+
     [Fact]
     public void Missing_framework_page_finding_explains_the_bilingual_install_fix()
     {

@@ -18,10 +18,10 @@ public partial class MainWindow
     {
         var index = Array.IndexOf(args, "--openness-version");
         var version = index >= 0 && index + 1 < args.Length ? args[index + 1] :
-            TiaOpenness.Core.Environment.OpennessLocator.FindAll().FirstOrDefault()?.Version;
+            TiaOpenness.Core.Environment.WorkbenchReleaseSelection.DefaultKey();
         var match = TiaMcp.Versioning.TiaVersionCatalog.Runnable.FirstOrDefault(release => release.Key == version || release.ApiVersion == version);
         if (index >= 0 && (index + 1 >= args.Length || match == null)) throw new ArgumentException("Unsupported or missing --openness-version.");
-        return match?.Key ?? "21";
+        return match?.Key ?? TiaOpenness.Core.Environment.WorkbenchReleaseSelection.DefaultKey();
     }
 
         internal static string FindBundleRoot(string start)

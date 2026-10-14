@@ -78,6 +78,7 @@ public sealed class PackageDependencyTests
     [InlineData("runtime/studio/bridge/TiaOpenness.Bridge.exe")]
     [InlineData("runtime/tools/TiaMcp.Updater.exe")]
     [InlineData("runtime/tools/TiaMcp.WriteGuard.exe")]
+    [InlineData("runtime/tools/TiaMcp.PluginLauncher.exe")]
     [InlineData("TiaOpenness.exe")]
     public void EveryProgramChecksTransitiveReferencesAtItsOwnProbePath(string program)
     {
@@ -165,6 +166,39 @@ public sealed class PackageDependencyTests
         Assembly(fixture.DirectoryPath, "runtime/v21/de/Host.resources.dll");
         Assert.Empty(PackageDependencies.Check(fixture.DirectoryPath, _ => true));
         Assert.NotEmpty(PackageDependencies.Check(fixture.DirectoryPath, path => !path.EndsWith("Platform.dll", StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public void PluginLauncherDeliveryIncludesModernEntryAssemblyAndDependencyMetadata()
+    {
+        using var fixture = new OfflineFixtures();
+        const string program = "runtime/tools/TiaMcp.PluginLauncher.exe";
+        const string assembly = "runtime/tools/TiaMcp.PluginLauncher.dll";
+        var rules = DeliveryRules.Load(Repository.FindRoot(AppContext.BaseDirectory));
+        foreach (string suffix in new[] { ".exe", ".dll", ".deps.json", ".runtimeconfig.json" })
+        {
+            string file = "runtime/tools/TiaMcp.PluginLauncher" + suffix;
+            Assert.True(rules.Delivered(file));
+            Assert.Contains(file, DeliveryRules.Strings(rules.Data["requiredFiles"]));
+        }
+        string directory = Path.Combine(fixture.DirectoryPath, "runtime/tools");
+        Directory.CreateDirectory(directory);
+        byte[] native = AssemblyBytes(program, [], null);
+        using (var pe = new PEReader(new MemoryStream(native, writable: false)))
+        {
+            int directories = pe.PEHeaders.PEHeaderStartOffset + (pe.PEHeaders.PEHeader!.Magic == PEMagic.PE32Plus ? 112 : 96);
+            Array.Clear(native, directories + 14 * 8, 8);
+        }
+        using (var pe = new PEReader(new MemoryStream(native, writable: false))) Assert.False(pe.HasMetadata);
+        File.WriteAllBytes(Path.Combine(fixture.DirectoryPath, program), native);
+        File.WriteAllText(Path.Combine(directory, "TiaMcp.PluginLauncher.runtimeconfig.json"), """{"runtimeOptions":{}}""");
+        File.WriteAllText(Path.Combine(directory, "TiaMcp.PluginLauncher.deps.json"),
+            """{"runtimeTarget":{"name":"net10"},"targets":{"net10":{}}}""");
+        Assert.Contains(PackageDependencies.Check(fixture.DirectoryPath, rules.Delivered), error => error.Contains("missing entry assembly " + assembly, StringComparison.Ordinal));
+        Assembly(fixture.DirectoryPath, assembly, "RequiredDependency");
+        Assert.Contains(PackageDependencies.Check(fixture.DirectoryPath, rules.Delivered), error => error.Contains("RequiredDependency", StringComparison.Ordinal));
+        Assembly(fixture.DirectoryPath, "runtime/tools/RequiredDependency.dll");
+        Assert.Empty(PackageDependencies.Check(fixture.DirectoryPath, rules.Delivered));
     }
 
     private static void Assembly(string root, string relative, params string[] references)

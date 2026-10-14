@@ -8,6 +8,15 @@ namespace TiaOpenness.Core.Tests;
 public class ReleaseSelectionTests
 {
     [Theory]
+    [InlineData("14.0.1.0", "21", "14sp1")]
+    [InlineData("15.1.0.0,19.0.0.0,16.0.0.0", "21", "19")]
+    [InlineData("20.0.0.0,21.0.0.0", "19", "21")]
+    [InlineData("", "16,19,17", "19")]
+    [InlineData("unsupported", "14sp1,15.1", "15.1")]
+    public void Default_uses_newest_installed_identity_then_newest_bundled_release(string installed, string bundled, string expected)
+        => Assert.Equal(expected, TiaOpenness.Core.Environment.WorkbenchReleaseSelection.Select(installed.Split(','), bundled.Split(',')));
+
+    [Theory]
     [InlineData("14sp1", "14.0.1.0")]
     [InlineData("15.1", "15.1.0.0")]
     [InlineData("16", "16.0.0.0")]

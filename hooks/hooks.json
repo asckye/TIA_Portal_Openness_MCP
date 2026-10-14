@@ -3,7 +3,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "mcp__tia-portal__.*",
+        "matcher": "^mcp__(?:tia-portal|plugin_[A-Za-z0-9_-]+_tia-portal)__(.+)$",
         "hooks": [
           {
             "type": "command",

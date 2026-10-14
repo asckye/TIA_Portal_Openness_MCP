@@ -32,7 +32,32 @@ namespace TiaMcp.Updater.Tests
             Assert.Equal("old-root-runtime", f.Text(path));
         }
 
+        [Theory]
+        [InlineData("14sp1")][InlineData("15.1")][InlineData("16")][InlineData("17")]
+        [InlineData("18")][InlineData("19")][InlineData("20")][InlineData("21")]
+        public void Update_check_finds_the_packaged_host_root_for_every_release(string release)
+        {
+            using var fixture = new Fixture();
+            string host = Directory.CreateDirectory(Path.Combine(fixture.Root, "runtime", "v" + release)).FullName;
+            string worker = Directory.CreateDirectory(Path.Combine(host, "worker")).FullName;
+            var root = TiaOpenness.Shared.BundleLayout.FindInstallRoot(host, fixture.Root);
+            Assert.Equal(fixture.Root, root);
+            Assert.Equal(Path.Combine(fixture.Root, "runtime", "tools", "TiaMcp.Updater.exe"),
+                TiaOpenness.Shared.BundleLayout.RequirePath(root, "runtime/tools/TiaMcp.Updater.exe"));
+            Assert.Null(TiaOpenness.Shared.BundleLayout.FindInstallRoot(worker, fixture.Root));
+        }
+
         [Fact] public void Check_reports_release_without_changing_install() { using (var f = new Fixture()) { byte[] before = f.Read("TiaOpenness.exe"); Assert.Equal(0, f.Run(check: true)); Assert.Equal(before, f.Read("TiaOpenness.exe")); } }
+        [Fact] public void Plugin_launcher_files_are_installed_and_removed_by_rollback()
+        {
+            using var fixture = new Fixture();
+            Assert.Equal(0, fixture.Run());
+            foreach (string suffix in new[] { ".exe", ".dll", ".deps.json", ".runtimeconfig.json" })
+                Assert.Equal("fixture-plugin-launcher", fixture.Text("runtime/tools/TiaMcp.PluginLauncher" + suffix));
+            Assert.Equal(0, fixture.Run(rollback: true));
+            foreach (string suffix in new[] { ".exe", ".dll", ".deps.json", ".runtimeconfig.json" })
+                Assert.False(fixture.Exists("runtime/tools/TiaMcp.PluginLauncher" + suffix));
+        }
         [Fact] public void Self_and_root_launcher_are_replaced_and_user_data_is_preserved() { using (var f = new Fixture()) { Assert.Equal(0, f.Run()); Assert.Equal("new-launcher", f.Text("TiaOpenness.exe")); Assert.Equal("new-updater", f.Text("runtime/tools/TiaMcp.Updater.exe")); Assert.Equal("kept", f.Text("data/config/user.json")); Assert.Equal("unknown", f.Text("notes.txt")); Assert.False(f.Exists("TiaMcp.Updater.exe")); Assert.False(f.Exists("TiaMcp.Updater.exe.config")); Assert.False(f.Exists("scripts/operations/Update-Engine.ps1")); } }
         [Fact] public void Upgrade_moves_engine_workers_and_removes_owned_legacy_entries()
         {
@@ -224,6 +249,7 @@ namespace TiaMcp.Updater.Tests
                 else if (path.StartsWith("runtime/v", StringComparison.Ordinal) && path.Contains("FoundationHost")) add(path, "fixture-host");
                 else if (path.Contains("PlcWorker")) add(path, "fixture-worker");
                 else if (path.StartsWith("runtime/studio/", StringComparison.Ordinal)) add(path, "fixture-studio");
+                else if (path.StartsWith("runtime/tools/TiaMcp.PluginLauncher", StringComparison.Ordinal)) add(path, "fixture-plugin-launcher");
             }
         }
 

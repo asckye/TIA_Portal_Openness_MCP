@@ -34,7 +34,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         Func<string, Task> loadProject)
     {
         _client = client;
-        _selectedReleaseKey = (client as McpProjectClient)?.Session.State?["releaseKey"]?.ToString() ?? "21";
+        _selectedReleaseKey = (client as McpProjectClient)?.Session.State?["releaseKey"]?.ToString() ?? TiaOpenness.Core.Environment.WorkbenchReleaseSelection.DefaultKey();
         _dialogs = dialogs;
         _activity = activity;
         _loadProject = loadProject;

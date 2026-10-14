@@ -59,7 +59,7 @@ internal static class ReleaseValidation
     {
         if (line.Length < 4 || !line.StartsWith(" M", StringComparison.Ordinal)) return false;
         var path = line[3..].Trim().Trim('"').Replace('\\', '/');
-        return path is "Version.props" or ".claude-plugin/plugin.json" or "docs/README.md" or
+        return path is "Version.props" or ".claude-plugin/plugin.json" or ".claude-plugin/marketplace.json" or "docs/README.md" or
                    "docs/development/roadmap.md" or "docs/reference/tool-matrix.md" ||
                Regex.IsMatch(path, "^manifest/[^/]+\\.json$", RegexOptions.CultureInvariant);
     }

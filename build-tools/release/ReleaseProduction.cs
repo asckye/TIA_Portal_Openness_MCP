@@ -385,6 +385,7 @@ internal static partial class ReleaseCommands
 
     private static void BumpReleaseVersion(string version)
     {
+        UpdateMarketplaceVersion(Root, version);
         var props = Path.Combine(Root, "Version.props");
         var previous = Regex.Match(File.ReadAllText(props), "<TiaMcpRelease>(\\d+\\.\\d+\\.\\d+)</TiaMcpRelease>").Groups[1].Value;
         if (previous.Length == 0) throw new ReleaseException("Cannot read TiaMcpRelease from Version.props");
@@ -401,6 +402,16 @@ internal static partial class ReleaseCommands
             if (title.Success) ReplaceReleaseOnce(roadmapPath, title.Value, title.Value.Replace(previous + " 更新", version + " 更新", StringComparison.Ordinal).Replace("（v" + previous + "）", "（v" + version + "）", StringComparison.Ordinal), "roadmap title");
             else if (!roadmap.Contains(version + " 更新）", StringComparison.Ordinal)) Console.WriteLine("WARNING: roadmap title not bumped (pattern not found) - fix by hand");
         }
+    }
+
+    internal static void UpdateMarketplaceVersion(string root, string version)
+    {
+        var plugin = JsonNode.Parse(File.ReadAllText(Path.Combine(root, ".claude-plugin/plugin.json")))!;
+        var path = Path.Combine(root, ".claude-plugin/marketplace.json");
+        var marketplace = JsonNode.Parse(File.ReadAllText(path))!;
+        var entry = marketplace["plugins"]!.AsArray().Single(p => (string?)p?["name"] == (string?)plugin["name"])!;
+        entry["version"] = version;
+        WriteJson(path, marketplace);
     }
 
     private static void ReplaceReleaseOnce(string path, string oldValue, string newValue, string description)

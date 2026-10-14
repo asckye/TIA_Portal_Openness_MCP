@@ -49,24 +49,10 @@ namespace TiaMcpServer.ModelContextProtocol
 
         /// <summary>The delivery root selected by the common bundle resolver.</summary>
         internal static string? FindInstallRoot()
-#if TIA_ENGINE_HOST
-            // Preserve the engine's layout checks when the implementation runs in the host.
-            => FindInstallRoot(TiaMcp.FoundationHost.EngineHostConfiguration.Current.WorkerBaseDirectory);
-#else
             => FindInstallRoot(AppContext.BaseDirectory);
-#endif
 
         internal static string? FindInstallRoot(string baseDirectory, string? bundleRoot = null)
-        {
-            var root = TiaOpenness.Shared.BundleLayout.FindRoot(baseDirectory, bundleRoot);
-            if (root == null) return null;
-            var directory = new DirectoryInfo(baseDirectory);
-            if (!string.Equals(directory.Parent?.FullName, Path.Combine(root, "runtime"), StringComparison.OrdinalIgnoreCase)
-                || !TiaMcp.Versioning.TiaVersionCatalog.Runnable.Any(v => string.Equals(v.RuntimeDirectory, directory.Name, StringComparison.OrdinalIgnoreCase)))
-                return null;
-            TiaOpenness.Shared.BundleLayout.RequirePath(root, "manifest/delivery.json");
-            return root;
-        }
+            => TiaOpenness.Shared.BundleLayout.FindInstallRoot(baseDirectory, bundleRoot);
 
         [McpServerTool(Name = "CheckProductUpdate"), Description(
             "[L0][Diagnostics][SESSION] Read-only update check: compares this engine's version with the latest GitHub release of the project and reports the delivery ZIP " +

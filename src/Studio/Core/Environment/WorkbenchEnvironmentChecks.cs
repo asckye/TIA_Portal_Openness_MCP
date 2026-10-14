@@ -30,6 +30,13 @@ namespace TiaOpenness.Core.Environment
         public static string Host(string root, string key)
         { return TiaOpenness.Shared.BundleLayout.WorkbenchEnginePath(root, key, root); }
 
+        public static string SelectHost(string root, string releaseKey, Func<string, bool> exists)
+        {
+            if (string.IsNullOrEmpty(root)) return null;
+            var keys = string.IsNullOrEmpty(releaseKey) ? TiaVersionCatalog.Runnable.Select(v => v.Key) : new[] { releaseKey };
+            return keys.Select(key => Host(root, key)).FirstOrDefault(exists);
+        }
+
         public static IEnumerable<string> Required(string root, string key)
         {
             var release = TiaVersionCatalog.Get(key);
@@ -61,6 +68,7 @@ namespace TiaOpenness.Core.Environment
 
     public sealed class EnvironmentCheckContext
     {
+        public string ReleaseKey { get; set; }
         public string BundleRoot { get; set; }
         public string DataRoot { get; set; }
         public string ConfigDirectory { get; set; }
@@ -121,9 +129,8 @@ namespace TiaOpenness.Core.Environment
                 {
                     if (doctor == null) return Finding(EnvironmentFindingStatus.Unknown, "Unknown", doctorError);
                     if (string.IsNullOrEmpty(context.BundleRoot)) return Finding(EnvironmentFindingStatus.Unknown, "Unknown");
-                    var engines = new[] { "20", "21" }.Select(key => EnvironmentBundleFiles.Host(context.BundleRoot, key))
-                        .Where(sources.FileExists).ToArray();
-                    if (engines.Length == 0) return Finding(EnvironmentFindingStatus.Unknown, "Unknown", "No bundled V20/V21 engine is present.");
+                    var host = EnvironmentBundleFiles.SelectHost(context.BundleRoot, context.ReleaseKey, sources.FileExists);
+                    if (host == null) return Finding(EnvironmentFindingStatus.Unknown, "Unknown", "No bundled host is present for the selected release.");
                     var problems = doctor.Checks.Where(check => check.Id is "TIA-INSTALL" or "TIA-LAYOUT" or "TIA-GROUP")
                         .Where(check => check.Status == CheckStatus.Fail)
                         .Select(check => check.Title + ": " + check.Detail + (string.IsNullOrWhiteSpace(check.Remedy) ? "" : "\n" + check.Remedy))
@@ -131,7 +138,7 @@ namespace TiaOpenness.Core.Environment
                     return problems.Length == 0
                         ? Finding(EnvironmentFindingStatus.Pass, "Pass", "Engine files are available and the environment doctor found no startup blocker.")
                         : Finding(EnvironmentFindingStatus.Fail, "NotReady", "The MCP engine can start, but TIA Openness is not ready.\n"
-                            + string.Join("\n", problems) + "\nEngines: " + string.Join("; ", engines));
+                            + string.Join("\n", problems) + "\nHost: " + host);
                 }
                 if (id == "installations" || id == "framework" || id == "membership")
                 {

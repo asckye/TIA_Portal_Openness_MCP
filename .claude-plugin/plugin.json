@@ -2,15 +2,15 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "tia-portal-openness-mcp",
   "version": "3.3.0",
-  "description": "Siemens TIA Portal (博途) Openness automation via the TiaMcpServer MCP — project/PLC/HMI scaffolding, SCL/LAD authoring, compile, download, online read. Includes V20/V21 runtimes; the plugin defaults to local V21.",
+  "description": "Siemens TIA Portal Openness automation via MCP — project/PLC/HMI scaffolding, SCL/LAD authoring, compile, download, online read. Includes runtimes for V14 SP1, V15.1, V16, V17, V18, V19, V20 and V21; the plugin selects the newest installed TIA release, then the newest runnable bundled host.",
   "author": { "name": "asckye" },
   "keywords": ["siemens", "tia-portal", "tia-openness", "plc", "hmi", "scl", "s7", "automation", "mcp"],
   "skills": "./plugin",
   "hooks": "./hooks/hooks.json",
   "mcpServers": {
     "tia-portal": {
-      "command": "${CLAUDE_PLUGIN_ROOT}/runtime/v21/TiaMcp.FoundationHost.exe",
-      "args": ["--release-key", "21"]
+      "command": "${CLAUDE_PLUGIN_ROOT}/runtime/tools/TiaMcp.PluginLauncher.exe",
+      "args": []
     }
   }
 }

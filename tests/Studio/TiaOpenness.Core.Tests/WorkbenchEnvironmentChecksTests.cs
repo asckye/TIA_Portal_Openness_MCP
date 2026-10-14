@@ -11,6 +11,21 @@ namespace TiaOpenness.Core.Tests;
 public sealed class WorkbenchEnvironmentChecksTests
 {
     [Theory]
+    [InlineData("14sp1")][InlineData("15.1")][InlineData("16")][InlineData("17")]
+    [InlineData("18")][InlineData("19")][InlineData("20")][InlineData("21")]
+    public void Readiness_uses_the_selected_host_and_does_not_borrow_another_release(string release)
+    {
+        var fixture = new ProbeFixture(); fixture.Context.ReleaseKey = release;
+        string host = EnvironmentBundleFiles.Host(fixture.Context.BundleRoot, release);
+        fixture.Sources.FileExists = path => path == host;
+        Assert.Equal(EnvironmentFindingStatus.Pass, fixture.Check("openness-readiness").Status);
+        fixture.Sources.FileExists = path => path != host;
+        Assert.Equal(EnvironmentFindingStatus.Unknown, fixture.Check("openness-readiness").Status);
+        fixture.Context.ReleaseKey = null;
+        Assert.Equal(EnvironmentFindingStatus.Pass, fixture.Check("openness-readiness").Status);
+    }
+
+    [Theory]
     [InlineData("D:(A;;GX;;;WD)", true)]
     [InlineData("D:(A;;GA;;;WD)", true)]
     [InlineData("D:(A;;GR;;;WD)", false)]

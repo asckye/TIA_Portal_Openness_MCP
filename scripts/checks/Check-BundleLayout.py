@@ -55,7 +55,7 @@ VALIDATOR = 'build-tools/release/BundleManifestRequirements.cs'
 LAUNCHER = 'src/Studio/Launcher/Launcher.cs'
 GUI_PROJECT = 'src/Studio/Gui/TiaOpenness.Gui.csproj'
 DELIVERY_RULES = 'scripts/operations/delivery-files.json'
-GENERATED_RESOURCES = {'runtime/tools/TiaMcp.WriteGuard.exe', 'runtime/tools/TiaMcp.Updater.exe',
+GENERATED_RESOURCES = {'runtime/tools/TiaMcp.WriteGuard.exe', 'runtime/tools/TiaMcp.PluginLauncher.exe', 'runtime/tools/TiaMcp.Updater.exe',
                        'runtime/tools/TiaMcp.Updater.exe.config'}
 SOURCE_ROOTS = 'build-tools/release/source-roots.json'
 
@@ -301,7 +301,7 @@ class LayoutChecks(unittest.TestCase):
                      'runtime/tools/TiaMcp.Updater.exe', 'runtime/tools/TiaMcp.Updater.exe.config',
                      'runtime/dotnet/LICENSE.txt', 'runtime/dotnet/ThirdPartyNotices.txt',
                      '.claude-plugin/plugin.json', 'hooks/hooks.json',
-                     'runtime/tools/TiaMcp.WriteGuard.exe',
+                     'runtime/tools/TiaMcp.WriteGuard.exe', 'runtime/tools/TiaMcp.PluginLauncher.exe',
                      'plugin/skill/SKILL.md',
                      'third_party/siemens-plc-tools/packages/plc-code/src/plc_code/cli.py',
                      'third_party/simaticml-decoder/src/simaticml_decoder/parse.py'):

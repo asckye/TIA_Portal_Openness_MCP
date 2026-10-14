@@ -12,6 +12,7 @@ internal static class BundleManifestRequirements
         "scripts/ecosystem/plc_tools_bridge.py",
         "scripts/ecosystem/simaticml_decode_bridge.py",
         "runtime/tools/TiaMcp.WriteGuard.exe",
+        "runtime/tools/TiaMcp.PluginLauncher.exe",
         "runtime/tools/TiaMcp.Updater.exe",
         "templates"
     ];
@@ -19,6 +20,7 @@ internal static class BundleManifestRequirements
     private static readonly HashSet<string> GeneratedBundleResources = new(StringComparer.Ordinal)
     {
         "runtime/tools/TiaMcp.WriteGuard.exe",
+        "runtime/tools/TiaMcp.PluginLauncher.exe",
         "runtime/tools/TiaMcp.Updater.exe"
     };
 
@@ -38,6 +40,7 @@ internal static class BundleManifestRequirements
         if (noBinaries) return true;
         var buildOutput = resource switch
         {
+            "runtime/tools/TiaMcp.PluginLauncher.exe" => "src/Tools/PluginLauncher/bin/Release/net10.0/TiaMcp.PluginLauncher.exe",
             "runtime/tools/TiaMcp.WriteGuard.exe" => "src/Tools/WriteGuard/bin/Release/net10.0/TiaMcp.WriteGuard.exe",
             "runtime/tools/TiaMcp.Updater.exe" => "bin-build/updater/TiaMcp.Updater.exe",
             _ => ""

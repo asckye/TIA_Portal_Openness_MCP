@@ -28,6 +28,7 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
 
     public EnvironmentCheckService() : this(EnvironmentServiceContext.Current, WindowsEnvironmentSources.Create, RunDoctorFix) { }
     internal EnvironmentCheckService(bool allowFix) : this(EnvironmentServiceContext.Current, WindowsEnvironmentSources.Create, RunDoctorFix, allowFix) { }
+    internal EnvironmentCheckService(bool allowFix, Func<string> release) : this(() => EnvironmentServiceContext.Current(release()), WindowsEnvironmentSources.Create, RunDoctorFix, allowFix) { }
     public EnvironmentCheckService(Func<EnvironmentCheckContext> context, Func<EnvironmentProbeSources> sources, Action<string> fixMembership)
         : this(context, sources, fixMembership, true) { }
     internal EnvironmentCheckService(Func<EnvironmentCheckContext> context, Func<EnvironmentProbeSources> sources, Action<string> fixMembership, bool allowFix)
@@ -93,13 +94,20 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
         {
             try
             {
-                var root = _context().BundleRoot;
-                var host = root == null ? null : new[] { "21", "20" }.Select(k => EnvironmentBundleFiles.Host(root, k)).FirstOrDefault(File.Exists);
+                var context = _context();
+                var host = EnvironmentBundleFiles.SelectHost(context.BundleRoot, context.ReleaseKey, File.Exists);
                 if (host == null) throw new FileNotFoundException(Loc.Current["Env.NoDoctorHost"]);
                 _fixMembership(host);
                 Findings = Capture(); Groups = Group(Findings.Select(EnvironmentCheckCatalogue.Row).ToArray());
             }
-            catch (Exception ex) { LogTail = [new DiagnosticRedactor().Redact(ex.Message).Text]; }
+            catch (Exception ex)
+            {
+                string error = new DiagnosticRedactor().Redact(ex.Message).Text;
+                LogTail = [error];
+                Findings = Findings.Select(f => f.Id == checkId
+                    ? new EnvironmentFinding(checkId, EnvironmentFindingStatus.Fail, "FixFailed", error) : f).ToArray();
+                Groups = Group(Findings.Select(EnvironmentCheckCatalogue.Row).ToArray());
+            }
             finally { Interlocked.Exchange(ref _busy, 0); Raise(nameof(Groups)); Raise(nameof(LogTail)); }
         });
         return LocalizedText.Key("Env.FixStarted");
@@ -107,11 +115,18 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
 
     private static void RunDoctorFix(string host)
     {
-        // The existing doctor owns the only automatic fix. UAC can occur only after Fix is clicked.
+        // P8-04i adds the FoundationHost doctor verb. Until then its rejection must remain visible.
+        // UAC can occur only after Fix is clicked.
         using var process = Process.Start(new ProcessStartInfo(host, "doctor --fix --logging 0")
             { UseShellExecute = true, WindowStyle = ProcessWindowStyle.Hidden });
         if (process == null) throw new InvalidOperationException(Loc.Current["Env.FixFailed"]);
         process.WaitForExit();
+        RequireDoctorSuccess(process.ExitCode);
+    }
+
+    internal static void RequireDoctorSuccess(int exitCode)
+    {
+        if (exitCode != 0) throw new InvalidOperationException(Loc.Current.T("Env.DoctorFailed", exitCode));
     }
 
     private static IReadOnlyList<EnvironmentGroup> Group(IReadOnlyList<EnvironmentCheck> rows) =>
@@ -126,11 +141,15 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
 public static class EnvironmentServiceContext
 {
     public static EnvironmentCheckContext Current()
+        => Current(WorkbenchReleaseSelection.DefaultKey());
+
+    public static EnvironmentCheckContext Current(string releaseKey)
     {
         var data = DataLocations.Current;
         string root = data.WorkbenchDataDirectory;
         var context = new EnvironmentCheckContext
         {
+            ReleaseKey = releaseKey,
             BundleRoot = BundleLayout.RequireWorkbenchRoot(AppContext.BaseDirectory), DataRoot = root,
             UserFallback = data.Root == null, ConfigDirectory = data.ConfigDirectory, LogsDirectory = data.LogsDirectory,
             DiagnosticsDirectory = data.DiagnosticsDirectory, AuditDirectory = data.AuditDirectory,
@@ -192,6 +211,7 @@ public static class EnvironmentCheckCatalogue
     {
         "Pass" => "Env.Passed", "Fail" => "Env.Failed", "Unknown" => "Env.Unknown", "NewLogon" => "Env.NewLogon",
         "NotReady" => "Env.NotReady",
+        "FixFailed" => "Env.FixFailed",
         "Fallback" => "Env.Fallback", "PortUsed" => "Env.PortUsed", "NoEndpoint" => "Env.NoEndpoint", _ => "Env.Guidance",
     };
 }

@@ -10,6 +10,41 @@ namespace TiaMcp.ShippedTools.Tests;
 
 public sealed class WriteGuardPortTests
 {
+    [Theory]
+    [InlineData("mcp__tia-portal__UnknownV4Tool", true)]
+    [InlineData("mcp__plugin_tia-portal-openness-mcp_tia-portal__UnknownV4Tool", true)]
+    [InlineData("mcp__plugin_other_tia-portal__UnknownV4Tool", false)]
+    [InlineData("mcp__other__UnknownV4Tool", false)]
+    public void Both_server_names_are_guarded_and_other_servers_are_ignored(string tool, bool denied)
+    {
+        using var fixture = new GuardFixture();
+        string result = GuardHost.ProcessInput(new JsonObject { ["tool_name"] = tool, ["tool_input"] = new JsonObject() }.ToJsonString(),
+            fixture.Environment, fixture.RepositoryRoot);
+        if (denied) fixture.ExpectDeny(result, "UnknownV4Tool");
+        else fixture.ExpectAllow(result);
+    }
+
+    [Fact]
+    public void Plugin_name_characters_are_replaced_and_hooks_cover_the_manifest_identity()
+    {
+        using var fixture = new GuardFixture();
+        string root = Path.Combine(fixture.Work, "plugin");
+        Directory.CreateDirectory(Path.Combine(root, ".claude-plugin"));
+        Directory.CreateDirectory(Path.Combine(root, "manifest"));
+        File.WriteAllText(Path.Combine(root, ".claude-plugin", "plugin.json"), "{\"name\":\"TIA.portal /中文\"}");
+        File.Copy(Path.Combine(fixture.RepositoryRoot, "manifest", "tools-list.json"), Path.Combine(root, "manifest", "tools-list.json"));
+        var environment = new Dictionary<string, string?>(fixture.Environment) { ["CLAUDE_PLUGIN_ROOT"] = root };
+        const string qualified = "mcp__plugin_TIA_portal_____tia-portal__UnknownV4Tool";
+        fixture.ExpectDeny(GuardHost.ProcessInput(new JsonObject { ["tool_name"] = qualified, ["tool_input"] = new JsonObject() }.ToJsonString(), environment, root), "UnknownV4Tool");
+        string name = JsonNode.Parse(File.ReadAllText(Path.Combine(fixture.RepositoryRoot, ".claude-plugin", "plugin.json")))!["name"]!.GetValue<string>();
+        string derived = "mcp__plugin_" + name + "_tia-portal__UnknownV4Tool";
+        string matcher = JsonNode.Parse(File.ReadAllText(Path.Combine(fixture.RepositoryRoot, "hooks", "hooks.json")))!["hooks"]!["PreToolUse"]![0]!["matcher"]!.GetValue<string>();
+        Assert.Matches(matcher, derived); Assert.Matches(ToolNames.Pattern(name), derived);
+        Assert.Matches(matcher, qualified); Assert.Matches(ToolNames.Pattern("TIA.portal /中文"), qualified);
+        File.WriteAllText(Path.Combine(root, ".claude-plugin", "plugin.json"), "not json");
+        fixture.ExpectDeny(GuardHost.ProcessInput(new JsonObject { ["tool_name"] = qualified }.ToJsonString(), environment, root), "cannot be classified");
+    }
+
     [Fact]
     public void Product_roster_includes_reviewed_Foundation_tools_and_refuses_withdrawn_names()
     {

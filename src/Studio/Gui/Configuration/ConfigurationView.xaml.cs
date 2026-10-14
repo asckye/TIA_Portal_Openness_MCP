@@ -89,7 +89,7 @@ namespace TiaMcpConfigurator
             InitializeComponent();
             var versions = Find<ComboBox>("Version");
             versions.ItemsSource = TiaVersionCatalog.Runnable.ToList();
-            versions.SelectedValue = "21";
+            versions.SelectedValue = TiaOpenness.Core.Environment.WorkbenchReleaseSelection.DefaultKey(root);
             var choices = Find<ListBox>("ClientChoices");
             var cards = preview?.Clients ?? ClientProfiles.All(); choices.ItemsSource = cards;
             int firstDetected = cards.FindIndex(x => x.Detected); choices.SelectedIndex = firstDetected < 0 ? 0 : firstDetected;
@@ -138,7 +138,7 @@ namespace TiaMcpConfigurator
                 if (Text("ServerAddress").Length == 0) Guard(LoadClient);
                 var ignored = OnCheckUpdate(false);   // background; the band reports the outcome, nothing blocks
             }
-            else if (preview == null) { Find<TextBox>("TiaPath").Text = @"C:\Program Files\Siemens\Automation\Portal V21"; DetectTiaPath(false); }
+            else if (preview == null) { Find<TextBox>("TiaPath").Text = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles), "Siemens", "Automation", TiaVersionCatalog.Get(SelectedVersion).InstallFolder); DetectTiaPath(false); }
             else
             {
                 versions.SelectedValue = preview.ReleaseKey;

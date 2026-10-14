@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>TiaMcp.PluginLauncher</AssemblyName>
+    <Nullable>annotations</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AppHostRelativeDotNet>../dotnet</AppHostRelativeDotNet>
+    <AppHostDotNetSearch>AppRelative;EnvironmentVariable;Global</AppHostDotNetSearch>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="TiaMcp.ShippedTools.Tests" />
+    <Compile Include="../../Logic/Siemens/TiaVersionCatalog.cs" Link="Versioning/TiaVersionCatalog.cs" />
+    <Compile Include="../../Shared/BundleLayout.cs;../../Shared/OpennessEnvironment.cs;../../Shared/ProcessArguments.cs" LinkBase="Shared" />
+    <Compile Include="../../Studio/Core/Environment/WorkbenchReleaseSelection.cs;../../Studio/Core/Environment/OpennessLocator.cs" LinkBase="Environment" />
+    <Compile Include="../../Studio/Contracts/Models/OpennessInstallation.cs" Link="Environment/OpennessInstallation.cs" />
+  </ItemGroup>
+</Project>

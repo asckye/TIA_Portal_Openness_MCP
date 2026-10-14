@@ -263,6 +263,9 @@ internal static partial class ReleaseCommands
         var writeGuardProject = Path.Combine(Root, "src/Tools/WriteGuard/TiaMcp.WriteGuard.csproj");
         RestoreBuildProject(dotnet, writeGuardProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
         RunBuildRaw(dotnet, ["publish", writeGuardProject, "-c", "Release", "-o", Path.Combine(Root, "runtime/tools"), "--no-restore", "-p:PublishAot=false", "-p:UseAppHost=true"], Path.Combine(outputDirectory, "write-guard-publish.log"), runTemp, cliHome, apiRoot, nuget, "write-guard publish");
+        var pluginLauncherProject = Path.Combine(Root, "src/Tools/PluginLauncher/TiaMcp.PluginLauncher.csproj");
+        RestoreBuildProject(dotnet, pluginLauncherProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
+        RunBuildRaw(dotnet, ["publish", pluginLauncherProject, "-c", "Release", "-o", Path.Combine(Root, "runtime/tools"), "--no-restore", "-p:UseAppHost=true"], Path.Combine(outputDirectory, "plugin-launcher-publish.log"), runTemp, cliHome, apiRoot, nuget, "plugin launcher publish");
         var updaterProject = Path.Combine(Root, "src/Updater/TiaMcp.Updater.csproj");
         RestoreBuildProject(dotnet, updaterProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
         RunBuildRaw(dotnet, ["build", updaterProject, "-c", "Release", "-f", "net48", "--no-restore", "-v:q"], Path.Combine(outputDirectory, "build-updater.log"), runTemp, cliHome, apiRoot, nuget, "Updater build");

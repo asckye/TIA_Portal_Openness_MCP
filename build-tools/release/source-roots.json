@@ -221,6 +221,14 @@
       ]
     },
     {
+      "path": "src/Tools/PluginLauncher",
+      "inventories": [
+        "engine",
+        "multi",
+        "validation"
+      ]
+    },
+    {
       "path": "tests/Engine",
       "inventories": [
         "engine",

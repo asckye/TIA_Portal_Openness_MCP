@@ -28,6 +28,33 @@ internal sealed class StaticTree : IDisposable
 [Trait("Category", "StaticChecks")]
 public sealed class StaticPolicyTests
 {
+    [Fact]
+    public void Plugin_guard_repository_check_detects_a_legacy_only_matcher()
+    {
+        using var tree = new StaticTree();
+        tree.Copy(".claude-plugin/plugin.json"); tree.Copy("hooks/hooks.json");
+        Assert.Empty(RepositoryChecks.PluginWriteGuardErrors(tree.Root));
+        var path = Path.Combine(tree.Root, "hooks/hooks.json");
+        var hooks = JsonNode.Parse(File.ReadAllText(path))!;
+        hooks["hooks"]!["PreToolUse"]![0]!["matcher"] = "mcp__tia-portal__.*";
+        File.WriteAllText(path, hooks.ToJsonString());
+        Assert.Contains(RepositoryChecks.PluginWriteGuardErrors(tree.Root), error => error.Contains("plugin_", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Release_version_updates_the_marketplace_cache_identity_and_is_idempotent()
+    {
+        using var tree = new StaticTree();
+        tree.Copy(".claude-plugin/plugin.json"); tree.Copy(".claude-plugin/marketplace.json");
+        ReleaseCommands.UpdateMarketplaceVersion(tree.Root, "4.0.0");
+        string path = Path.Combine(tree.Root, ".claude-plugin/marketplace.json");
+        var marketplace = JsonNode.Parse(File.ReadAllText(path))!;
+        Assert.Equal("4.0.0", (string?)marketplace["plugins"]![0]!["version"]);
+        string once = File.ReadAllText(path); ReleaseCommands.UpdateMarketplaceVersion(tree.Root, "4.0.0");
+        Assert.Equal(once, File.ReadAllText(path));
+        Assert.True(ReleaseValidation.IsReleaseManagedChange(" M .claude-plugin/marketplace.json"));
+    }
+
     private static string Root => StaticCheckVectorTests.Root;
     private static string Source(string name) => Repository.ReadSource(Path.Combine(Root, name));
 

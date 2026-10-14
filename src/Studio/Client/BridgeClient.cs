@@ -85,7 +85,7 @@ namespace TiaOpenness.Client
             }
 
             var arguments = NativeArguments(opennessVersion);
-            var version = arguments.Length == 0 ? (OpennessLocator.Resolve(null)?.Version ?? "21") : arguments.Substring("--openness-version ".Length);
+            var version = arguments.Length == 0 ? (WorkbenchReleaseSelection.DefaultKey(root)) : arguments.Substring("--openness-version ".Length);
             var release = TiaMcp.Versioning.TiaVersionCatalog.FromApiVersion(version);
             var nonce = Convert.ToHexString(RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
             var bridgeHash = BridgeChannel.Hash(exe);

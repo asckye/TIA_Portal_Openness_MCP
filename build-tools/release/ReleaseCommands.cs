@@ -709,6 +709,14 @@ internal static partial class ReleaseCommands
             using var delivery = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "manifest/delivery.json")));
             var release = JsonString(delivery.RootElement, "release");
             if (JsonString(plugin.RootElement, "version") != release) throw new ReleaseException("Plugin version differs from release version");
+            var marketplacePath = Path.Combine(root, ".claude-plugin/marketplace.json");
+            if (File.Exists(marketplacePath))
+            {
+                using var marketplace = JsonDocument.Parse(File.ReadAllText(marketplacePath));
+                var entry = marketplace.RootElement.GetProperty("plugins").EnumerateArray()
+                    .Single(p => JsonString(p, "name") == JsonString(plugin.RootElement, "name"));
+                if (JsonString(entry, "version") != release) throw new ReleaseException("Marketplace plugin version differs from release version");
+            }
             if (!JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "manifest/package-manifest.json"))).RootElement.TryGetProperty("capabilities", out _))
                 throw new ReleaseException("package-manifest.json lacks capabilities");
         }

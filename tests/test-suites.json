@@ -389,5 +389,14 @@
       "--filter",
       "FullyQualifiedName~VciReadOnlyBindingTests"
     ]
+  },
+  "plugin-launcher": {
+    "project": "tests/Tools/TiaMcp.ShippedTools.Tests/TiaMcp.ShippedTools.Tests.csproj",
+    "minimumPassed": 32,
+    "maximumSkipped": 0,
+    "arguments": [
+      "--filter",
+      "FullyQualifiedName~PluginLauncherTests"
+    ]
   }
 }

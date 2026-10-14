@@ -51,6 +51,8 @@
     <Project Path="build-tools/release/check-build/TiaMcp.CheckBuild.csproj" />
     <Project Path="build-tools/common/TiaMcp.BuildCommon/TiaMcp.BuildCommon.csproj" />
     <Project Path="src/Tools/WriteGuard/TiaMcp.WriteGuard.csproj" />
+    <Project Path="src/Tools/PluginLauncher/TiaMcp.PluginLauncher.csproj" />
+    <Project Path="tests/Tools/PluginHostFixture/PluginHostFixture.csproj" />
     <Project Path="tests/Tools/TiaMcp.ShippedTools.Tests/TiaMcp.ShippedTools.Tests.csproj" />
     <Project Path="build-tools/native-call-weaver/NativeCallWeaver.csproj" />
     <Project Path="third_party/TiaGitAddIn.Core/TiaGitAddIn.Core.csproj" />

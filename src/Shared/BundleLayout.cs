@@ -17,6 +17,7 @@ namespace TiaOpenness.Shared
         PlcToolsBridge,
         SimaticMlDecodeBridge,
         WriteGuardExecutable,
+        PluginLauncherExecutable,
         Updater,
         Templates
     }
@@ -85,6 +86,19 @@ namespace TiaOpenness.Shared
                 ?? throw new BundleResourceUnavailableException(Combine(baseDirectory, RelativePath(BundleResource.PackageManifest)));
         }
 
+        // Update commands describe the host installation, never its session worker directory.
+        internal static string FindInstallRoot(string hostBaseDirectory, string explicitRoot = null)
+        {
+            var root = FindRoot(hostBaseDirectory, explicitRoot);
+            if (root == null) return null;
+            var directory = new DirectoryInfo(hostBaseDirectory);
+            if (!string.Equals(directory.Parent?.FullName, Path.Combine(root, "runtime"), StringComparison.OrdinalIgnoreCase)
+                || !TiaVersionCatalog.Runnable.Any(v => string.Equals(v.RuntimeDirectory, directory.Name, StringComparison.OrdinalIgnoreCase)))
+                return null;
+            RequirePath(root, "manifest/delivery.json");
+            return root;
+        }
+
         // Pure selection inputs support the complete precedence matrix without process mutations.
         public static string ResolveRoot(string baseDirectory, string explicitRoot, string environmentRoot)
         {
@@ -118,6 +132,7 @@ namespace TiaOpenness.Shared
                 { BundleResource.PlcToolsBridge, "scripts/ecosystem/plc_tools_bridge.py" },
                 { BundleResource.SimaticMlDecodeBridge, "scripts/ecosystem/simaticml_decode_bridge.py" },
             { BundleResource.WriteGuardExecutable, "runtime/tools/TiaMcp.WriteGuard.exe" },
+                { BundleResource.PluginLauncherExecutable, "runtime/tools/TiaMcp.PluginLauncher.exe" },
                 { BundleResource.Updater, "runtime/tools/TiaMcp.Updater.exe" },
                 { BundleResource.Templates, "templates" }
             };
@@ -174,6 +189,8 @@ namespace TiaOpenness.Shared
                 root = FromAnchor(directory, "runtime/" + version.RuntimeDirectory + "/worker");
                 if (root != null) return root;
             }
+            var toolsRoot = FromAnchor(directory, "runtime/tools");
+            if (toolsRoot != null) return toolsRoot;
             var studioRoot = FromAnchor(directory, "runtime/studio");
             if (studioRoot != null) return studioRoot;
             studioRoot = FromAnchor(directory, "runtime/studio/bridge");

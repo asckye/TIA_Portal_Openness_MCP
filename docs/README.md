@@ -6,6 +6,7 @@
 
 - [新手使用指南](getting-started/beginners.zh-CN.md)：安装准备、本机或虚拟机连接、选择 PLC、Studio 操作和首次 SCL 导入编译。
 - [配置指南](getting-started/configuration.md)：客户端、连接方式、升级和排错。
+- [Claude Code 插件安装](getting-started/plugin.md)：安装插件、共用工作台交付包和选择 TIA 版本。
 - [CLI 指南](getting-started/cli.md)：V20/V21 的命令行生成、修改、导入导出和编译。
 - [Studio](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/Studio/README.md)：共享 MCP 会话的工程操作页。
 

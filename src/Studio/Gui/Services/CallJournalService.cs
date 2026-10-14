@@ -28,9 +28,9 @@ public sealed class CallJournalService : ObservableObject, ICallJournalService, 
     public IReadOnlyList<CallRecord> Calls => Volatile.Read(ref _calls);
     public ConnectionInfo Connection => Volatile.Read(ref _connection);
 
-    public CallJournalService(string release = "21", string? directory = null, string? configDirectory = null, bool live = true)
+    public CallJournalService(string? release = null, string? directory = null, string? configDirectory = null, bool live = true)
     {
-        _release = release; _configDirectory = configDirectory ?? ConfigCore.StateDirectory;
+        _release = release ?? TiaOpenness.Core.Environment.WorkbenchReleaseSelection.DefaultKey(); _configDirectory = configDirectory ?? ConfigCore.StateDirectory;
         _reader = new CallJournalReader(directory, false, false);
         _reader.Changed += OnChanged;
         if (!live) Refresh();
