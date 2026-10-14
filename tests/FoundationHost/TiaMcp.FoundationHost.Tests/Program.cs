@@ -7,7 +7,10 @@ internal static class Program
         {
             using var stopping = new CancellationTokenSource();
             _ = Task.Run(async () => { await Console.In.ReadLineAsync(); stopping.Cancel(); });
-            var options = foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(args.Skip(1).ToArray(), AppContext.BaseDirectory);
+            // Select the bundle like src/FoundationHost/Program.cs does; the test output layout has no bundle anchor under check-all.
+            var root = TiaOpenness.Shared.BundleLayout.ExtractRootOption(args.Skip(1).ToArray(), out var hostArgs);
+            TiaOpenness.Shared.BundleLayout.Initialize(AppContext.BaseDirectory, root);
+            var options = foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(hostArgs, AppContext.BaseDirectory);
             using var logger = new foundationhost::TiaMcp.FoundationHost.HostFileLogger(options.ReleaseKey);
             return foundationhost::TiaMcp.FoundationHost.EngineReleaseHost.RunForTest(options, logger, SessionFixtureTool.Add, stopping.Token).GetAwaiter().GetResult();
         }
