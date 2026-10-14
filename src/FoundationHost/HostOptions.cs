@@ -18,6 +18,9 @@ internal sealed class HostOptions
     public required string BundleRoot { get; init; }
     public bool NativeEnabled { get; init; }
     public bool CatalogOnly { get; init; }
+    public string? CatalogToolsList { get; init; }
+    public string CatalogPackage { get; init; } = "";
+    public string? CatalogGeneratedAt { get; init; }
     public string Transport { get; init; } = "stdio";
     public string HttpPrefix { get; init; } = "http://127.0.0.1:8735/";
     public string ApiKey { get; init; } = "";
@@ -37,7 +40,7 @@ internal sealed class HostOptions
         string bundleRoot = TiaOpenness.Shared.BundleLayout.RequireRoot(directory, explicitRoot);
         var options = new Dictionary<string, string>(StringComparer.Ordinal);
         var flags = new HashSet<string>(StringComparer.Ordinal);
-        var valued = new[] { "--release-key", "--tia-major-version", "--worker-exe", "--public-api", "--tia-portal-location", "--transport", "--http-prefix", "--http-api-key", "--logging", "--engine-worker", "--engine-catalog", "--worker-timeout-seconds", "--worker-timeout-config", "--profile", "--host-command", "--operator-owner" };
+        var valued = new[] { "--release-key", "--tia-major-version", "--worker-exe", "--public-api", "--tia-portal-location", "--transport", "--http-prefix", "--http-api-key", "--logging", "--engine-worker", "--engine-catalog", "--worker-timeout-seconds", "--worker-timeout-config", "--profile", "--host-command", "--operator-owner", "--catalog-tools-list", "--catalog-package", "--catalog-generated-at" };
         for (int i = 0; i < args.Length; i++)
         {
             if (args[i] is "--native-session" or "--offline" or "--catalog" or "--with-ui") { flags.Add(args[i]); continue; }
@@ -113,7 +116,8 @@ internal sealed class HostOptions
             TiaPortalLocation = options.ContainsKey("--tia-portal-location") ? Value("--tia-portal-location") : null, Profile = profile,
             WorkerExe = Value("--worker-exe", Path.Combine(bundleRoot, "runtime", version.RuntimeDirectory, "worker", "TiaMcp.PlcWorker." + release + ".exe")),
             BundledWorker = !options.ContainsKey("--worker-exe"),
-            ApiDirectory = api, ApiDirectorySource = apiSource, NativeEnabled = !flags.Contains("--offline"), CatalogOnly = flags.Contains("--catalog"), Transport = transport, HttpPrefix = prefix, ApiKey = key
+            ApiDirectory = api, ApiDirectorySource = apiSource, NativeEnabled = !flags.Contains("--offline"), CatalogOnly = flags.Contains("--catalog"), Transport = transport, HttpPrefix = prefix, ApiKey = key,
+            CatalogToolsList = options.GetValueOrDefault("--catalog-tools-list"), CatalogPackage = Value("--catalog-package"), CatalogGeneratedAt = options.GetValueOrDefault("--catalog-generated-at")
         };
     }
 }

@@ -42,7 +42,7 @@ if (options.CatalogOnly)
     return 0;
 }
 
-const string instructions = TiaOpenness.Shared.ToolUsageCatalog.Instructions + " This release uses the PLC foundation catalog. InitializeEnvironment reports environment/session state; ListPortalProcessProjects returns current process/project identities. Only listed contracts are available.";
+string instructions = ReleaseCatalogData.Releases[options.ReleaseKey].Instructions;
 await using var operatorEndpoint = OperatorEndpoint.Start(options, token => { token.ThrowIfCancellationRequested(); return Task.FromResult<IHostSession>(HostSession.Legacy(options, instructions, true)); });
 if (options.Transport == "operator")
 {

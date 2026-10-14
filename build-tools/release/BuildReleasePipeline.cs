@@ -623,7 +623,20 @@ internal static partial class ReleaseCommands
         if (plan.Includes("engine-functional")) RunBuildSpec("download-route", harness, [exe, "test-download-route", v21Api], outputDirectory, runTemp, cliHome, apiRoot);
         if (plan.Includes("engine-functional")) RunBuildSpec("match-plc-name", harness, [exe, "test-match-plc-name"], outputDirectory, runTemp, cliHome, apiRoot);
         var foundationHost = Path.Combine(Root, "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe");
-        RunBuildSpec("generate-tools-list", harness, [exe, "generate-tools-list", v21Api, Path.Combine(Root, "manifest/tools-list.json"), package, foundationHost, Root], outputDirectory, runTemp, cliHome, apiRoot);
+        var toolsList = Path.Combine(Root, "manifest/tools-list.json");
+        var oracle = Path.Combine(outputDirectory, "tools-list-oracle.json");
+        var hostToolsList = Path.Combine(outputDirectory, "tools-list-host.json");
+        File.Copy(toolsList, oracle, true);
+        // Keep every existing generator assertion while the engine is still present.
+        RunBuildSpec("generate-tools-list", harness, [exe, "generate-tools-list", v21Api, oracle, package, foundationHost, Root], outputDirectory, runTemp, cliHome, apiRoot);
+        var generatedAt = JsonNode.Parse(File.ReadAllText(oracle))!["generatedAt"]!.GetValue<string>();
+        RunBuildRaw(foundationHost, ["--catalog", "--offline", "--profile", "full", "--release-key", "21", "--bundle-root", Root,
+            "--engine-worker", exe, "--engine-catalog", Path.Combine(Path.GetDirectoryName(exe)!, "tool-catalog.json"),
+            "--catalog-tools-list", hostToolsList, "--catalog-package", package, "--catalog-generated-at", generatedAt],
+            Path.Combine(outputDirectory, "host-tools-list.log"), runTemp, cliHome, apiRoot, nuget: null, "Host tools-list producer");
+        if (!File.ReadAllBytes(hostToolsList).SequenceEqual(File.ReadAllBytes(oracle)))
+            throw new ReleaseException("Host tools-list producer differs from the engine oracle.");
+        File.Copy(hostToolsList, toolsList, true);
         RunBuildSpec("tool-capability-matrix", dotnet, ["run", Path.Combine(Root, "scripts/generate/Generate-ToolCapabilityMatrix.cs"), "--", "--tools-list", Path.Combine(Root, "manifest/tools-list.json"), "--out-file", Path.Combine(Root, "docs/reference/tool-matrix.md")], outputDirectory, runTemp, cliHome, apiRoot);
     }
 

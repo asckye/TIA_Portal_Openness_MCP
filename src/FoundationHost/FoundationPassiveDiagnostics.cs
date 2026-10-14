@@ -1,6 +1,7 @@
 #if TIA_FOUNDATION_TEST_HOST
 extern alias enginehost;
 using EngineHostConfiguration = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration;
+using ReleaseCatalogData = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
 #endif
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -278,7 +279,7 @@ internal static class LegacyHostToolRegistry
         tools.AddRange(GenerationTool.Create(releaseKey));
         Func<JsonObject> readiness = readinessProvider ?? (() => FoundationPassiveDiagnostics.Readiness(releaseKey, apiDirectory, apiDirectorySource));
         tools.AddRange(FoundationPassiveDiagnosticTools.Create(releaseKey, nativeSessionConfigured, usageRoster ?? (() => tools), readiness));
-        tools.Add(new ToolUsageTool(releaseKey, usageRoster ?? (() => tools), exampleProfile));
+        tools.Add(new ToolUsageTool(releaseKey, usageRoster ?? (() => tools), exampleProfile ?? ReleaseCatalogData.Releases[releaseKey].ExampleProfile));
         var wrapped = new McpServerTool[tools.Count];
         Parallel.For(0, tools.Count, new ParallelOptions { MaxDegreeOfParallelism = 4 }, i =>
         {

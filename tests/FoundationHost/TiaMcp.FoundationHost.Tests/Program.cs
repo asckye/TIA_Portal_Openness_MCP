@@ -1,4 +1,5 @@
 extern alias foundationhost;
+extern alias enginehost;
 internal static class Program
 {
     private static int Main(string[] args)
@@ -11,6 +12,8 @@ internal static class Program
             var root = TiaOpenness.Shared.BundleLayout.ExtractRootOption(args.Skip(1).ToArray(), out var hostArgs);
             TiaOpenness.Shared.BundleLayout.Initialize(AppContext.BaseDirectory, root);
             var options = foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(hostArgs, AppContext.BaseDirectory);
+            // Keep export validation in the test driver after runtime catalog loading retires.
+            _ = new enginehost::TiaMcp.FoundationHost.EngineCatalog(options.EngineCatalog!, options.EngineWorkerExe!, options.ReleaseKey);
             using var logger = new foundationhost::TiaMcp.FoundationHost.HostFileLogger(options.ReleaseKey);
             return foundationhost::TiaMcp.FoundationHost.EngineReleaseHost.RunForTest(options, logger, SessionFixtureTool.Add, stopping.Token).GetAwaiter().GetResult();
         }

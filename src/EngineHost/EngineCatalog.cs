@@ -23,11 +23,13 @@ namespace TiaMcp.FoundationHost
             => (includeUnavailable ? IncludingUnavailable : All).TryGetValue(name, out var tool) ? tool : null;
 
         internal EngineCatalog(string path, string worker, string release)
+            : this(JsonNode.Parse(File.ReadAllText(path))!.AsObject(), Hash(worker), release) { }
+
+        internal EngineCatalog(JsonObject root, string workerSha256, string release)
         {
-            var root = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
             if ((int?)root["formatVersion"] != 1 || (string?)root["release"] != release || release is not ("20" or "21"))
                 throw new InvalidDataException("Engine catalog format or release mismatch.");
-            if ((string?)root["workerSha256"] != Hash(worker)) throw new InvalidDataException("Engine catalog worker SHA-256 mismatch.");
+            if ((string?)root["workerSha256"] != workerSha256) throw new InvalidDataException("Engine catalog worker SHA-256 mismatch.");
             BehaviorCapabilities = root["behaviorCapabilities"]!.AsArray();
             var expected = JsonSerializer.SerializeToNode(BehaviorCapabilitiesTable(release), global::ModelContextProtocol.McpJsonUtilities.DefaultOptions);
             if (!JsonNode.DeepEquals(BehaviorCapabilities, expected)) throw new InvalidDataException("Engine catalog behavior capabilities mismatch.");
@@ -74,6 +76,39 @@ namespace TiaMcp.FoundationHost
         }
 
         private static JsonArray BehaviorCapabilitiesTable(string release) => TiaMcp.Logic.V4.BehaviorCapabilities.Table(typeof(EngineCatalog).Assembly, release);
+
+        // Offline swap safety net. Runtime sessions do not construct EngineCatalog.
+        internal void CrossCheck(FoundationCatalog host, IReadOnlyList<ModelContextProtocol.Server.McpServerTool> shared,
+            ISet<string> essentials)
+        {
+            var expected = new SharedToolCatalog(this, shared, essentials);
+            Compare(JsonSerializer.SerializeToNode(expected.All.Keys), JsonSerializer.SerializeToNode(host.All.Keys), "tools.order");
+            Compare(JsonSerializer.SerializeToNode(expected.IncludingUnavailable.Keys),
+                JsonSerializer.SerializeToNode(host.IncludingUnavailable.Keys), "unavailableTools.order");
+            foreach (var pair in expected.IncludingUnavailable)
+                Compare(JsonSerializer.SerializeToNode(pair.Value, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions),
+                    JsonSerializer.SerializeToNode(host.IncludingUnavailable[pair.Key], global::ModelContextProtocol.McpJsonUtilities.DefaultOptions), pair.Key);
+            Compare(JsonSerializer.SerializeToNode(expected.Lite.Select(tool => tool.Name)),
+                JsonSerializer.SerializeToNode(host.Lite.Select(tool => tool.Name)), "liteTools");
+            Compare(JsonValue.Create(Instructions), JsonValue.Create(host.Instructions), "serverInstructions");
+            Compare(expected.BehaviorCapabilities, host.BehaviorCapabilities, "behaviorCapabilities");
+        }
+
+        private static void Compare(JsonNode? expected, JsonNode? actual, string field)
+        {
+            if (JsonNode.DeepEquals(expected, actual)) return;
+            if (expected is JsonObject left && actual is JsonObject right)
+            {
+                foreach (var key in left.Select(pair => pair.Key).Concat(right.Select(pair => pair.Key)).Distinct(StringComparer.Ordinal))
+                    Compare(left[key], right[key], field + "." + key);
+            }
+            if (expected is JsonArray leftArray && actual is JsonArray rightArray && leftArray.Count == rightArray.Count)
+            {
+                for (int i = 0; i < leftArray.Count; i++) Compare(leftArray[i], rightArray[i], field + "[" + i + "]");
+            }
+            throw new InvalidDataException("Engine catalog cross-check mismatch: " + field);
+        }
+
         internal static string Hash(string path)
         {
             using var input = File.OpenRead(path);

@@ -103,8 +103,7 @@ namespace TiaMcp.FoundationHost
             IReadOnlyList<McpServerTool>? sharedTools = null, ISet<string>? sharedEssentials = null)
             : this(path, workerPath, releaseKey, worker, profile, sharedTools, sharedEssentials, null) { }
 
-        // Only in-process tests supply a transform. The public/file catalog path
-        // always validates EngineCatalog before this seam can add test descriptors.
+        // Only in-process tests supply a transform of the host-built catalog.
         internal EngineHostPipeline(string path, string workerPath, string releaseKey, IEngineWorker worker, string profile,
             IReadOnlyList<McpServerTool>? sharedTools, ISet<string>? sharedEssentials,
             Func<IToolCatalogView, IToolCatalogView>? catalogForTest)
@@ -113,8 +112,8 @@ namespace TiaMcp.FoundationHost
             context = new EngineSessionContext(worker) { WorkerBaseDirectory = Path.GetDirectoryName(Path.GetFullPath(workerPath))! };
             using var session = EnterSession();
             EngineHostConfiguration.StagingOwner = () => stagingLifetime.Session;
-            var catalog = new EngineCatalog(path, workerPath, releaseKey);
-            IToolCatalogView published = sharedTools == null ? catalog : new SharedToolCatalog(catalog, sharedTools, sharedEssentials!);
+            var catalog = new FoundationCatalog(releaseKey, sharedTools ?? Array.Empty<McpServerTool>(), sharedEssentials);
+            IToolCatalogView published = catalog;
             if (catalogForTest != null) published = catalogForTest(published);
             Instructions = catalog.Instructions;
             BehaviorCapabilities = catalog.BehaviorCapabilities;
@@ -141,41 +140,18 @@ namespace TiaMcp.FoundationHost
             using var session = EnterSession();
             context.StagingOwner = () => stagingLifetime.Session;
             var catalog = new FoundationCatalog(releaseKey, sharedTools);
-            Instructions = TiaOpenness.Shared.ToolUsageCatalog.Instructions;
+            Instructions = catalog.Instructions;
             BehaviorCapabilities = catalog.BehaviorCapabilities;
             McpServer.ConfigureToolBridge(catalog, new WorkerToolInvoker(catalog, worker, stagingLifetime, sharedTools),
                 () => false, new HashSet<string>(StringComparer.Ordinal));
             InvocationJournal.BindingSnapshot = () => EngineHostConfiguration.Worker.Binding as JsonObject;
-            Tools = catalog.All.Values.SelectMany(t => t.Execution == "foundation"
+            // Sparse in-process fixtures can inspect native contracts without implementations.
+            // The public runtime constructor above still requires complete Foundation coverage.
+            Tools = catalog.All.Values.SelectMany(t => t.Execution == "foundation" && sharedTools.Any(s => s.ProtocolTool.Name == t.Name)
                 ? new[] { sharedTools.Single(s => s.ProtocolTool.Name == t.Name) }
                 : McpServer.WrapTools(new[] { McpServer.ToolInvoker.CreateTool(t) }))
                 .Select(t => (McpServerTool)new SessionTool(this, t)).ToList();
             AllTools = Tools.ToArray();
-        }
-
-        private sealed class FoundationCatalog : IToolCatalogView
-        {
-            public IReadOnlyDictionary<string, ToolDescriptor> All { get; }
-            public IReadOnlyDictionary<string, ToolDescriptor> IncludingUnavailable => All;
-            public IReadOnlyList<ToolDescriptor> Lite => Array.Empty<ToolDescriptor>();
-            public JsonArray BehaviorCapabilities { get; }
-            public ToolDescriptor? Find(string name, bool includeUnavailable = false)
-                => All.TryGetValue(name, out var tool) ? tool : null;
-            internal FoundationCatalog(string release, IReadOnlyList<McpServerTool> shared)
-            {
-                BehaviorCapabilities = TiaMcp.Logic.V4.BehaviorCapabilities.Table(typeof(EngineHostPipeline).Assembly, release);
-                All = new Dictionary<string, ToolDescriptor>(StringComparer.OrdinalIgnoreCase);
-                var merged = new SharedToolCatalog(this, shared, new HashSet<string>()).All.ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
-                foreach (var method in PortedToolDeclarations.Methods(release).Where(m =>
-                    ToolExecution.Table[m.GetCustomAttribute<McpServerToolAttribute>()!.Name!] == "host"))
-                {
-                    string name = method.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
-                    DeclaredToolMetadata.Create(name, method, _ => throw new InvalidOperationException("Metadata only."), out var descriptor);
-                    descriptor.Tool.Description += " Native behaviorPolicy=current; V4 native acceptance is pending.";
-                    merged[name] = descriptor;
-                }
-                All = merged;
-            }
         }
 
         internal IDisposable EnterSession()
