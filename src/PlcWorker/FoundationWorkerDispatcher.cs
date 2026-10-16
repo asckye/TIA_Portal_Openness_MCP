@@ -10,6 +10,13 @@ using TiaMcp.WorkerChannel;
 
 namespace TiaMcp.PlcWorker
 {
+    internal sealed class WorkerPrimitiveFailureException : Exception
+    {
+        internal ChannelFailureException Failure { get; }
+        internal WorkerPrimitiveFailureException(ChannelFailureException failure) : base(failure.Message, failure)
+        { Failure = failure; }
+    }
+
     // Both worker products use the same allowlist, argument binding and failure boundary.
     internal sealed class FoundationWorkerDispatcher
     {
@@ -151,6 +158,8 @@ namespace TiaMcp.PlcWorker
             {
                 var cause = ex is TargetInvocationException && ex.InnerException != null ? ex.InnerException : ex;
                 failureObserved?.Invoke(cause);
+                if (cause is WorkerPrimitiveFailureException primitiveFailure)
+                    return ChannelResponse.Error(primitiveFailure.Failure);
                 var classification = WorkerFailurePolicy.Classify(cause, enteredOperation, readOnly);
                 return ChannelResponse.Error(new ChannelFailureException(WorkerFailurePolicy.DiagnosticCause(cause).Message, classification.Code,
                     classification.Outcome, WorkerJson.Evidence(cause)));

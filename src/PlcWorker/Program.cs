@@ -110,6 +110,14 @@ internal static class Program
 #if WORKER_SEED_HMI_IMPORT
             engine.SeedReferenceHmiImport = engine.ImportProjectLifecycleSeedHmi;
 #endif
+#if PROJECT_SCAFFOLD
+            WorkerProjectScaffold.Register(engine.ReleaseKey, primitive => engine.ProjectScaffoldOperation = primitive, (operation, arguments) => {
+                var response = session.Dispatch(new ChannelRequest(0, "adapter." + operation, arguments.ToJsonString(), (_, _) => { }));
+                if (response.Failure != null) throw new WorkerPrimitiveFailureException(response.Failure);
+                return System.Text.Json.Nodes.JsonNode.Parse(response.ResultJson);
+            }, text => TiaMcpServer.Siemens.EngineeringAuditLogic.DocumentPreflight(text,
+                TiaMcp.Versioning.TiaVersionCatalog.Get(releaseKey).MajorVersion, null));
+#endif
             string HashFile(string path)
             {
                 using(var stream=File.OpenRead(path))

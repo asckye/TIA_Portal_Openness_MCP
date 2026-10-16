@@ -78,6 +78,8 @@
     <Compile Include="$(WorkerSourceRoot)/WorkerJson.cs" Link="WorkerJson.cs" />
     <Compile Include="../Shared/UnifiedHmiPropertyAdmission.cs" Link="Shared/UnifiedHmiPropertyAdmission.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerOperations.cs" Link="WorkerOperations.cs" />
+    <Compile Include="$(WorkerSourceRoot)/WorkerProjectScaffold.cs" Link="WorkerProjectScaffold.cs" />
+    <Compile Include="../Logic/ModelContextProtocol/Builders/S7ResScanner.cs" Link="S7ResScanner.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerOperationModule.cs" Link="WorkerOperationModule.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerSessionOutcomeState.cs" Link="WorkerSessionOutcomeState.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerFailurePolicy.cs" Link="WorkerFailurePolicy.cs" />
