@@ -97,10 +97,16 @@ internal static class ToolUsageGenerator
         var meta = Read(root, "reference/tool-examples/metadata.json"); var calls = Read(root, "reference/tool-examples/calls.json"); var sequences = Read(root, "reference/tool-examples/sequences.json").AsArray();
         ValidateCoverage(data.Rosters, calls, data.Families["F00"].Tools); ValidateFoundation(calls, sequences); ValidateRetest(root, calls, sequences, meta);
         ValidateSourceHints(root, Read(root, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceExamples.json"));
+        // The frozen engine examples stay comparison evidence; the served copy follows the same rule as the catalog examples:
+        // a parameter with a declared input pattern takes the maintained call-library value, which must satisfy the pattern.
+        var engineSourceCalls = Read(root, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceExamples.json");
+        foreach (var (name, row) in engineSourceCalls.AsObject().ToList())
+            if (row?["arguments"] is JsonObject sourceArguments)
+                row["arguments"] = CatalogGenerator.CurrentArguments(name, sourceArguments, calls["profiles"]?["full-engine"]?[name]?["arguments"] as JsonObject);
         var result = new JsonObject { ["schemaVersion"] = 2, ["scope"] = "Pinned Siemens source documents and project-authored MCP/programming examples. Per-release contracts are read from the running engine. Templates, complete sources and fragments are distinguished; native acceptance is separate.",
             ["sources"] = sources, ["documents"] = documents, ["tools"] = mappings,
             ["languages"] = Copy(library["languages"]!), ["examples"] = Copy(library["examples"]!),
-            ["engineSourceCalls"] = Read(root, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceExamples.json"), ["engineSourceSequences"] = Read(root, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceSequences.json"),
+            ["engineSourceCalls"] = engineSourceCalls, ["engineSourceSequences"] = Read(root, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceSequences.json"),
             ["calls"] = calls, ["sequences"] = sequences };
         foreach (var p in meta.AsObject().Where(p => p.Key != "schemaVersion")) result[p.Key] = p.Value?.DeepClone();
         return result;

@@ -12321,7 +12321,7 @@
     "DeleteHmiTag": {
       "arguments": {
         "softwarePath": "HMI_RT_1",
-        "tagTablePath": "exact",
+        "tagTablePath": "/Table",
         "tagName": "Ready",
         "dryRun": true,
         "confirmDelete": false
