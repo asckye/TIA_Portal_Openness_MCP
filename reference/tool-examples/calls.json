@@ -10704,7 +10704,7 @@
       "DeleteHmiTag": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTablePath": "exact",
+          "tagTablePath": "/Table",
           "tagName": "Ready",
           "dryRun": true,
           "confirmDelete": false
@@ -16580,7 +16580,8 @@
         "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
         "notes": [
           "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
-        ]
+        ],
+        "note": "Resolve exact target names from this session. Native Unified cross references are disabled by default (PRECONDITION_FAILED, not queried). Controlled diagnosis on a saved test project requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 in the server process before startup, shared with PLC queries. Compilation does not guarantee crash safety. After a TIA exit, inspect the project and MCP/TIA logs before explicitly recovering the session and rebinding; do not enable automatically or retry."
       },
       "ManageUnifiedLoggingTag": {
         "arguments": {
@@ -19201,7 +19202,7 @@
       "DeleteHmiTag": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTablePath": "exact",
+          "tagTablePath": "/Table",
           "tagName": "Ready",
           "dryRun": true,
           "confirmDelete": false
@@ -21707,7 +21708,8 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "note": "Resolve exact target names from this session. Native Unified cross references are disabled by default (PRECONDITION_FAILED, not queried). Controlled diagnosis on a saved test project requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 in the server process before startup, shared with PLC queries. Compilation does not guarantee crash safety. After a TIA exit, inspect the project and MCP/TIA logs before explicitly recovering the session and rebinding; do not enable automatically or retry."
       },
       "GetVersionControlStatus": {
         "arguments": {},

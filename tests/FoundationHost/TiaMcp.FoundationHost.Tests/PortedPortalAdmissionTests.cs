@@ -310,6 +310,7 @@ public sealed class PortedPortalAdmissionTests
         "SetDeviceAddress" or "SetDeviceItemIoAddress" => "{\"ioType\":\"Input\",\"startAddress\":0}",
         "ManagePlcUserGroup" => "{\"family\":\"blocks\",\"action\":\"rename\",\"newName\":\"Next\"}",
         "ManagePlcBlockProtection" => "{\"action\":\"read\"}",
+        "DeleteHmiTag" => "{\"tagTablePath\":\"/Table\"}",
         "ManagePlcExternalSources" => "{\"action\":\"list\"}",
         "ManageHardwareObject" => "{\"action\":\"deleteDevice\"}",
         "ManageDeviceServiceObjects" => "{\"family\":\"certificateServices\"}",

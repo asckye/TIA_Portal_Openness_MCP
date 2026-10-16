@@ -68002,13 +68002,8 @@
             "type": "string"
           },
           "tagTablePath": {
-            "description": "tagTablePath: exact /Group/Sub/Table, or empty for Unified root Tags; Classic requires a table.",
-            "enum": [
-              "exact",
-              "Group",
-              "Sub",
-              "Table"
-            ],
+            "description": "tagTablePath: exact absolute /Table or /Group/Sub/Table, at most 64 nonempty literal segments; no dot segments, controls, wildcards or backslashes. Empty selects Unified root Tags; Classic requires a table.",
+            "pattern": "^(?:/(?!\\.{1,2}(?:/|$))(?=[^/]*[^\\s/\\u0085])[^/*?\\\\\\u0000-\\u001f\\u007f-\\u009f]+){0,64}(?![\\s\\S])",
             "type": "string"
           }
         },

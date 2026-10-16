@@ -207,7 +207,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (string.IsNullOrEmpty(text)) { text = ParameterVocabulary.Describe(p.Name!); synthesized = text != null; }
                 string tool = method.GetCustomAttribute<McpServerToolAttribute>()?.Name ?? method.Name;
                 specs.Add(new PreflightLogic.ParameterSpec(p.Name!, FriendlyTypeName(p.ParameterType), !p.HasDefaultValue, def, text ?? "", synthesized,
-                    ToolMetadata.Parameter(tool, p.Name!)?.AllowedValues));
+                    ToolMetadata.Parameter(tool, p.Name!)?.AllowedValues,
+                    pattern: ToolMetadata.Parameter(tool, p.Name!)?.Pattern));
             }
             return specs;
         }

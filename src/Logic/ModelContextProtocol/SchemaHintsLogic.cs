@@ -18,8 +18,9 @@ namespace TiaMcpServer.ModelContextProtocol
             public int Defaults { get; set; }
             public int Examples { get; set; }
             public int Descriptions { get; set; }
+            public int Patterns { get; set; }
             public List<string> EnumProperties { get; } = new List<string>();
-            public bool Changed => Enums + Defaults + Examples + Descriptions > 0;
+            public bool Changed => Enums + Defaults + Examples + Descriptions + Patterns > 0;
         }
 
         /// <summary>
@@ -50,6 +51,10 @@ namespace TiaMcpServer.ModelContextProtocol
                         property["enum"] = new JsonArray(alternatives.Select(a => (JsonNode)a).ToArray());
                         result.Enums++; result.EnumProperties.Add(spec.Name);
                     }
+                }
+                if (spec.Kind == "string" && property["pattern"] == null && spec.Pattern != null)
+                {
+                    property["pattern"] = spec.Pattern; result.Patterns++;
                 }
                 if (property["default"] == null && spec.DefaultText != null)
                 {

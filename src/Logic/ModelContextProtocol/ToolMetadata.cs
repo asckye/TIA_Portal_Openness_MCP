@@ -38,8 +38,11 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             public string ExampleJson { get; }
             public IReadOnlyList<string> AllowedValues { get; }
+            public string? Pattern { get; }
             public ParameterHint(string exampleJson, params string[] allowedValues)
-            { ExampleJson = exampleJson; AllowedValues = Array.AsReadOnly(allowedValues); }
+                : this(exampleJson, allowedValues, null) { }
+            public ParameterHint(string exampleJson, string[] allowedValues, string? pattern)
+            { ExampleJson = exampleJson; AllowedValues = Array.AsReadOnly(allowedValues); Pattern = pattern; }
         }
         private static readonly Dictionary<string, Classification> Classifications = new Dictionary<string, Classification>(StringComparer.OrdinalIgnoreCase)
         {
@@ -741,7 +744,9 @@ namespace TiaMcpServer.ModelContextProtocol
             ["DeleteEmptyUnifiedHmiScreenGroup.groupPath"] = new ParameterHint("\"Group/Subgroup\""),
             ["DeleteExportHandle.exportId"] = new ParameterHint("\"\\u003CexportId\\u003E\""),
             ["DeleteHmiTag.softwarePath"] = new ParameterHint("\"PLC_1\""),
-            ["DeleteHmiTag.tagTablePath"] = new ParameterHint("\"exact\"", "exact", "Group", "Sub", "Table"),
+            // A literal path example is not a list of enum alternatives.
+            ["DeleteHmiTag.tagTablePath"] = new ParameterHint("\"/Table\"", Array.Empty<string>(),
+                @"^(?:/(?!\.{1,2}(?:/|$))(?=[^/]*[^\s/\u0085])[^/*?\\\u0000-\u001f\u007f-\u009f]+){0,64}(?![\s\S])"),
             ["DeleteHmiTag.tagName"] = new ParameterHint("\"\\u003CtagName\\u003E\""),
             ["DeletePlcBlock.softwarePath"] = new ParameterHint("\"PLC_1\""),
             ["DeletePlcBlock.blockPath"] = new ParameterHint("\"Main\""),

@@ -307,6 +307,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedObjectAddress.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedPrimitiveBridge.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedObjectServicesAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedCrossReferences.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedRuntimeSettingsAccess.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedRequestScalar.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedScriptAccess.cs" />

@@ -2607,7 +2607,7 @@
           "tagTablePath": {
             "type": "string",
             "default": null,
-            "description": "tagTablePath: exact /Group/Sub/Table, or empty for Unified root Tags; Classic requires a table."
+            "description": "tagTablePath: exact absolute /Table or /Group/Sub/Table, at most 64 nonempty literal segments; no dot segments, controls, wildcards or backslashes. Empty selects Unified root Tags; Classic requires a table."
           },
           "tagName": {
             "type": "string",
@@ -21628,7 +21628,7 @@
           "tagTablePath": {
             "type": "string",
             "default": null,
-            "description": "tagTablePath: exact /Group/Sub/Table, or empty for Unified root Tags; Classic requires a table."
+            "description": "tagTablePath: exact absolute /Table or /Group/Sub/Table, at most 64 nonempty literal segments; no dot segments, controls, wildcards or backslashes. Empty selects Unified root Tags; Classic requires a table."
           },
           "tagName": {
             "type": "string",

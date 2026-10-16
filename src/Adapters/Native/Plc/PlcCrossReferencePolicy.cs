@@ -33,13 +33,15 @@ namespace TiaMcp.Adapters.Native.Plc
         }
 
         /// <summary>Only an explicit process setting enables this known-crashing native service.</summary>
-        public static string? PolicyRefusal(string? setting)
+        public static string? PolicyRefusal(string? setting, bool unified = false)
             => setting == "1" ? null
-                : "refused: native PLC cross references are disabled because CrossReferenceService queries have terminated TIA Portal. "
+                : "refused: native " + (unified ? "Unified" : "PLC") + " cross references are disabled because CrossReferenceService queries have terminated TIA Portal. "
                 + "No native query was made; this does not mean there are no references. "
-                + "Use exported PLC documents for partial offline analysis. For controlled diagnosis on a saved test project only, "
+                + (unified ? "No complete offline replacement for Unified references is established. " : "Use exported PLC documents for partial offline analysis. ")
+                + "For controlled diagnosis on a saved test project only, "
                 + "set " + NativeQueryOptInVariable + "=1 in the MCP server process before starting it. "
-                + "Compilation is not a guarantee against this crash.";
+                + "Compilation is not a guarantee against this crash."
+                + (unified ? " If TIA exits, inspect the project and MCP/TIA logs before explicitly recovering the session and rebinding; do not automatically retry." : "");
 
         /// <summary>Null when the query may run; otherwise the refusal text (the blocks that are not compiled).</summary>
         public static string? Refusal(IReadOnlyList<(string Path, bool? Consistent)> blocks, string softwarePath)

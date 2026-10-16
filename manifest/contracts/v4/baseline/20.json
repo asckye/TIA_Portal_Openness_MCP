@@ -115232,13 +115232,8 @@
             "type": "string"
           },
           "tagTablePath": {
-            "description": "tagTablePath: exact /Group/Sub/Table, or empty for Unified root Tags; Classic requires a table.",
-            "enum": [
-              "exact",
-              "Group",
-              "Sub",
-              "Table"
-            ],
+            "description": "tagTablePath: exact absolute /Table or /Group/Sub/Table, at most 64 nonempty literal segments; no dot segments, controls, wildcards or backslashes. Empty selects Unified root Tags; Classic requires a table.",
+            "pattern": "^(?:/(?!\\.{1,2}(?:/|$))(?=[^/]*[^\\s/\\u0085])[^/*?\\\\\\u0000-\\u001f\\u007f-\\u009f]+){0,64}(?![\\s\\S])",
             "type": "string"
           }
         },
@@ -301628,7 +301623,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "778e4939882d2e2019e6563ccd9dcb7b2f194f8ac4f5e5e0695ac366a7116819",
+      "descriptionSha256": "dd18beb0fbae976c452e9b0895681015b49f519ca22ac272e75c14738f5f8b97",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

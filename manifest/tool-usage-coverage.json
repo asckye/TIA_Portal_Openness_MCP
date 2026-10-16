@@ -1,9 +1,9 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "5ad3ed087ac7176d44888dcf9af6b5b15810510d9754dc1851ba546cc2b41438",
+  "catalogSha256": "0d2e8f23d1cbfea4e1880a798c6b704e9f56afc8b8b1293a5d26b330cbf71f57",
   "uniqueTools": 516,
   "documents": 89,
-  "versionToolPairs": 3189,
+  "versionToolPairs": 3187,
   "offlineCallExecutions": 79,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
@@ -32748,11 +32748,11 @@
     },
     "20": {
       "releaseKey": "20",
-      "registeredToolCount": 502,
-      "checkedToolCount": 502,
+      "registeredToolCount": 500,
+      "checkedToolCount": 500,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 504,
+      "operationExampleCount": 498,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 2,
@@ -34829,14 +34829,6 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
           ],
-          "operations": []
-        },
-        {
-          "toolName": "GetOpcUaAccessControl",
-          "usageProfile": "full-engine",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
           "operations": []
         },
         {
@@ -37590,45 +37582,6 @@
             },
             {
               "operation": "changeActivationState",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            }
-          ]
-        },
-        {
-          "toolName": "ManageOpcUaAccessControl",
-          "usageProfile": "full-engine",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": [
-            {
-              "operation": "createRole",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "addStandardRole",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "deleteRole",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "setProjectRole",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "setPermission",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "setRestriction",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }

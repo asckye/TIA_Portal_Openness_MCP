@@ -23,8 +23,9 @@ namespace TiaMcpServer.ModelContextProtocol
             public bool Synthesized { get; }
             public IReadOnlyList<string> AllowedValues { get; }
             public string? ExampleJson { get; }
-            public ParameterSpec(string name, string kind, bool required, string? defaultText, string description, bool synthesized = false, IReadOnlyList<string>? allowedValues = null, string? exampleJson = null)
-            { Name = name; Kind = kind; Required = required; DefaultText = defaultText; Description = description ?? ""; Synthesized = synthesized; AllowedValues = allowedValues ?? Array.Empty<string>(); ExampleJson = exampleJson; }
+            public string? Pattern { get; }
+            public ParameterSpec(string name, string kind, bool required, string? defaultText, string description, bool synthesized = false, IReadOnlyList<string>? allowedValues = null, string? exampleJson = null, string? pattern = null)
+            { Name = name; Kind = kind; Required = required; DefaultText = defaultText; Description = description ?? ""; Synthesized = synthesized; AllowedValues = allowedValues ?? Array.Empty<string>(); ExampleJson = exampleJson; Pattern = pattern; }
         }
 
         public sealed class Report

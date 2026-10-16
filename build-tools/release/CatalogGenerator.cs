@@ -136,6 +136,12 @@ internal static class CatalogGenerator
             var withheld = PortedFamilies.Withheld(data.Families, key);
             var admitted = rows.Values.Where(row => !withheld.Contains(Text(row["currentName"])));
             releases[key] = new JsonArray((key is "20" or "21" ? admitted.OrderBy(r => Text(r["name"]), PythonStringComparer.Instance) : admitted.OrderBy(r => data.HostOnly.ContainsKey(Text(r["currentName"])) && !data.Additions.ContainsKey(Text(r["currentName"]))).ThenBy(r => Text(r["sourceName"]), PythonStringComparer.Instance)).ToArray());
+            foreach (var row in releases[key]!.AsArray())
+            {
+                var name = Text(row!["currentName"]);
+                var exampleProfile = Strings(row["profiles"]).Contains("plc-foundation") ? "plc-foundation" : "full-engine";
+                row["arguments"] = CurrentArguments(name, row["arguments"]!.AsObject(), calls[exampleProfile]?[name]?["arguments"] as JsonObject);
+            }
             Require(Set(releases[key]!.AsArray().Select(r => Text(r!["currentName"]))).SetEquals(data.Rosters[key]), "Runtime roster differs: " + key);
             Require(releases[key]!.AsArray().Where(r => Strings(r!["profiles"]).Contains("lite")).All(r => r!["arguments"] is JsonObject), "Missing lite call arguments: " + key);
         }
@@ -183,6 +189,23 @@ internal static class CatalogGenerator
         else { var finish = ledger.IndexOf('\n', ledger.IndexOf("| P6-PRODUCT ", StringComparison.Ordinal)); outputs["docs/reference/real-machine-ledger.md"] = ledger[..finish] + "\n\n" + block + ledger[finish..]; }
         return outputs;
     }
+    internal static JsonObject CurrentArguments(string name, JsonObject source, JsonObject? curated)
+    {
+        var arguments = source.DeepClone().AsObject();
+        // Frozen engine examples remain comparison evidence. Live examples must
+        // satisfy the declared input pattern and use the maintained call library.
+        foreach (var parameter in source)
+        {
+            var pattern = TiaMcpServer.ModelContextProtocol.ToolMetadata.Parameter(name, parameter.Key)?.Pattern;
+            if (pattern == null) continue;
+            var value = curated?.ContainsKey(parameter.Key) == true ? curated[parameter.Key] : parameter.Value;
+            Require(value is JsonValue scalar && scalar.TryGetValue<string>(out var text) && Regex.IsMatch(text, pattern),
+                "Call example violates the declared pattern: " + name + "/" + parameter.Key);
+            arguments[parameter.Key] = value!.DeepClone();
+        }
+        return arguments;
+    }
+
     internal static string Signature(EngineSources engine, string method)
     {
         var member = engine.Member(method, tool: true); var (tokens, _) = new CSharpLexer(member).Scan(); var pairs = MatchingPairs.Find(tokens);

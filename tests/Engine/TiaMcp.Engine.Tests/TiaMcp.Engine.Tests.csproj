@@ -304,6 +304,8 @@
     <Compile Include="../../../src/Adapters/Native/Hmi/IUnifiedSession.cs" Link="Native/Hmi/IUnifiedSession.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedRequestValues.cs" Link="Native/Hmi/UnifiedRequestValues.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedObjectAddress.cs" Link="Native/Hmi/UnifiedObjectAddress.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedCrossReferences.cs" Link="Native/Hmi/UnifiedCrossReferences.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcCrossReferencePolicy.cs" Link="Native/Plc/PlcCrossReferencePolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedRequestScalar.cs" Link="Native/Hmi/UnifiedRequestScalar.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedEventOperations.cs" Link="Native/Hmi/UnifiedEventOperations.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedScriptAccess.cs" Link="Native/Hmi/UnifiedScriptAccess.cs" />

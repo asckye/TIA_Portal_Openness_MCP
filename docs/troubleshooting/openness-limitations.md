@@ -14,12 +14,12 @@ V20/V21 MCP host 在 TIA 未安装、检测到的 TIA 版本不匹配、Openness
 |---|---|
 | `ManageStartdriveParameter` 读取 BICO `p2051[0]` 时 TIA 崩溃 | 已按官方 `Parameters.Find(name).Value` 路线改为精确单值读取，仅在找不到条目时检查只读视图；不展开位、限值、枚举或继续读取源参数值。离线回归通过，原生复测 **NOT RUN**，根因未确认。返回另一个 `DriveParameter` 表示连接来源，普通值按标量解释，`null` 保留未知，不能当作零、实时值或未连接证明。 |
 | Unified 脚本模块库类型 `Name` 修改 | 指定样本在项目库和独立全局库两次测试中均伴随 TIA 退出，没有已验证修复；“先在全局库改名再同步”也失败。[原生证据](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/manifest/history/unified-library-rename-native-20261001.json)。 |
-| PLC 原生交叉引用 | V21 有真实退出记录，默认禁用。工具返回未查询不等于零引用。编译通过也不能证明查询稳定。通用反射入口不能绕过相同策略。 |
+| PLC 与 Unified 原生交叉引用 | PLC 在 V21 有真实退出记录；Unified 使用同一原生服务，因此两条路径都默认禁用。工具返回未查询不等于零引用。编译通过也不能证明查询稳定。通用反射入口不能绕过相同策略。 |
 | HMI 深层属性读取 | 故障或限制下可能仅返回部分快照；`HmiSystemDiagnosisControl.ScriptDiagnosisOverviewText` 暂缓读取。[快照诊断](hmi-snapshots.md)说明完整性、会话阻断与日志。 |
 
 这些项目仍使用统一调用示例库，不再各自建立规范入口。官方示例：[V20 BICO](https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters)、[V21 BICO](https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters)。示例的正确参数不能消除尚未确定的原生故障。
 
-PLC 交叉引用的显式诊断开关为服务进程环境变量 `TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1`；启用后仍检查相关块/类型一致性。它不是日常使用必需步骤，也不是稳定性修复。离线 `AnalyzePlcReferences` 只覆盖提供的导出文件，不能据此证明整个工程没有引用。
+PLC 与 `GetUnifiedCrossReferences` 共用服务进程环境变量 `TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1` 作为显式诊断开关；虽然名称保留 PLC，两条路径都只有值为 `1` 时才允许原生查询。默认返回 `PRECONDITION_FAILED`，Unified 在解析原生对象和获取服务之前拒绝，不产生原生调用。仅在已保存的测试工程上进行受控诊断时，在启动 MCP 服务进程前设置；不要自动启用。PLC 启用后仍检查相关块/类型一致性。此开关不是日常使用必需步骤，也不是稳定性修复；原生查询可能导致 TIA Portal 退出，编译不能保证安全。查询失败或进程退出后先检查工程与 MCP/TIA 日志，再按[恢复步骤](../guides/openness-worker-isolation.md)显式恢复会话并重新绑定，不要自动重试。离线 `AnalyzePlcReferences` 只覆盖提供的 PLC 导出文件，不能据此证明整个工程没有引用，也不能替代 Unified 原生交叉引用。
 
 ## 工程数据与在线数据
 
