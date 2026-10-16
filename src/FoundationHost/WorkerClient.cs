@@ -65,6 +65,10 @@ internal static class FoundationWorkerRequest
 
 internal sealed class WorkerClient(string releaseKey, string workerExe, string apiDirectory, bool nativeEnabled, int defaultTimeoutSeconds = 120, string? timeoutConfig = null) : IFoundationSessionWorker, IFoundationWorkerResult
 {
+    internal bool WithUi { get; init; }
+    internal string? TiaPortalLocation { get; init; }
+    internal JsonObject Readiness(Func<JsonObject> production)
+        => WorkerSdkFixture.Readiness(workerExe, releaseKey, apiDirectory, production);
     public ModelContextProtocol.Protocol.CallToolResult ParkResult(ModelContextProtocol.Protocol.CallToolResult result, string name)
         => System.Text.Encoding.UTF8.GetByteCount(JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions)) >= ChannelLimits.ResponseBytes / 2
             ? ResponseGuardTool.Shrink(result, name, "worker", force: true) : result;
@@ -231,8 +235,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                     var adapterHash=ArgumentRules.HashFile(adapterFile,FileShare.Read);
                     var nonce=Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
                     var start = new ProcessStartInfo(Path.GetFullPath(workerExe)) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true, StandardInputEncoding = new System.Text.UTF8Encoding(false), StandardOutputEncoding = new System.Text.UTF8Encoding(false), StandardErrorEncoding = new System.Text.UTF8Encoding(false) };
-                    start.ArgumentList.Add("--native-session"); start.ArgumentList.Add(releaseKey); start.ArgumentList.Add(Path.GetFullPath(apiDirectory));
-                    start.ArgumentList.Add(nonce);
+                    foreach (var argument in new WorkerLaunchOptions(releaseKey, apiDirectory, nonce, WithUi, TiaPortalLocation).Arguments())
+                        start.ArgumentList.Add(argument);
                     start.Environment["TIA_MCP_WORKER_SPILLS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory;
                     start.Environment["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory;
                     process = Process.Start(start) ?? throw new IOException("Worker failed to start."); WorkerJob.Bind(process); WorkerShutdown.Register(this);
@@ -307,6 +311,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             // A first-attach timeout therefore remains an unknown native outcome instead
             // of being mistaken for a failure before the worker request was sent.
             sent |= usableAtEntry && channel?.OutcomeUnknown == true;
+            if (sent && channel?.OutcomeUnknown == true) ex.Data["workerOutcomeUnknown"] = true;
             if (TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.IsTimeout(ex) && (operation == "Attach" || operation == WorkerOperations.SessionCandidate && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach"))
             {
                 int? selectedPid = operation == "Attach" ? (int?)arguments["processId"] : (int?)arguments["candidate"]?["Check"]?["Request"]?["ProcessId"];

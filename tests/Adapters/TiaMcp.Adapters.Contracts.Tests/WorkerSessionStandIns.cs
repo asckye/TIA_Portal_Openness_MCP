@@ -5,9 +5,10 @@ using System.Diagnostics;
 using System.IO;
 using TiaMcp.Adapters.Contracts;
 namespace Siemens.Engineering {
-    public enum TiaPortalMode { WithoutUserInterface }
+    public enum TiaPortalMode { WithoutUserInterface, WithUserInterface }
     public sealed class TiaPortal {
-        public TiaPortal(TiaPortalMode mode = TiaPortalMode.WithoutUserInterface) { }
+        public TiaPortalMode Mode { get; }
+        public TiaPortal(TiaPortalMode mode = TiaPortalMode.WithoutUserInterface) { Mode = mode; }
         public int ExclusiveCalls;
         public IDisposable ExclusiveAccess(string text) { ExclusiveCalls++; return Process.GetCurrentProcess(); }
     }

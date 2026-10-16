@@ -15,6 +15,7 @@
     <Compile Include="../Adapters/Native/Session/MutationIdentityPolicy.cs" Link="MutationIdentityPolicy.cs" />
 
     <Compile Include="../PlcWorker/WorkerOperations.cs" Link="WorkerOperations.cs" />
+    <Compile Include="../PlcWorker/WorkerLaunchOptions.cs" Link="WorkerLaunchOptions.cs" />
 
     <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0-preview.4.25258.110" />

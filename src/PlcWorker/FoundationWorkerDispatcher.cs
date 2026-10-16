@@ -24,6 +24,7 @@ namespace TiaMcp.PlcWorker
         private readonly string releaseKey;
         private readonly Dictionary<string, MethodInfo> methods;
         private readonly Action<Exception>? failureObserved;
+        private readonly Assembly policyAssembly;
         internal readonly WorkerSessionOutcomeState SessionOutcome = new WorkerSessionOutcomeState();
         private WorkerSessionOutcomeState sessionOutcome => SessionOutcome;
         private bool disconnectAttempted, disconnected, sharedInvalidated;
@@ -38,6 +39,7 @@ namespace TiaMcp.PlcWorker
         {
             this.engine = engine;
             this.failureObserved = failureObserved;
+            this.policyAssembly = policyAssembly;
             releaseKey = engine.ReleaseKey;
             engine.ValidatePlcVerifiedCandidate = PlcVerifiedImportBridge.Validate;
             engine.ExecutePlcVerifiedWorkflow = PlcVerifiedImportBridge.Execute;
@@ -82,6 +84,13 @@ namespace TiaMcp.PlcWorker
         }
         internal ChannelResponse Dispatch(ChannelRequest request)
         {
+            // The engine retains its own fixture boundary. Only explicitly marked
+            // standalone PlcWorker artifacts can enter this path.
+            var injected = WorkerFaultInjection.PlcBeforeDispatch(policyAssembly, request, lost => {
+                SessionOutcome.MarkUncertain();
+                failureObserved?.Invoke(lost);
+            });
+            if (injected != null) return injected;
             if (request.Method == PlcSimAdvancedWorkerModule.Operation) return PlcSimAdvancedWorkerModule.Dispatch(request);
             bool enteredOperation=false;
             bool readOnly=false;

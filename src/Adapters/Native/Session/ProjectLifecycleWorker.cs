@@ -24,6 +24,7 @@ public sealed partial class PlcFoundationEngine
     public Func<bool>? ProjectEnsureGroup { get; set; }
     public Func<ProjectScaffoldPrimitive, object>? ProjectScaffoldOperation { get; set; }
     public Action? ProjectClearConnectError { get; set; }
+    public bool ProjectLaunchWithUserInterface { get; set; }
     internal TiaPortal? ProjectPortal => portal;
 #if PROJECT_MULTIUSER
     internal Siemens.Engineering.Multiuser.LocalSession? ProjectLocalSession => localSession;
@@ -49,12 +50,15 @@ public sealed partial class PlcFoundationEngine
         if (ProjectConnectionCreated == null)
             throw new InvalidOperationException("The shared process lease owner is unavailable for isolated creation.");
         ProjectClearConnectError?.Invoke();
-        portal = InvocationJournal.Native("TiaPortal.CreateIsolated", () => new TiaPortal(TiaPortalMode.WithoutUserInterface));
+        portal = InvocationJournal.Native("TiaPortal.CreateIsolated", () => new TiaPortal(ProjectLaunchWithUserInterface
+            ? TiaPortalMode.WithUserInterface : TiaPortalMode.WithoutUserInterface));
         ProjectConnectionCreated(portal);
         ownsPortal = true;
         bool connected = portal != null;
         return new SecurityResult {
-            Message = connected ? "Connected to isolated headless TIA Portal (no existing TIA window or project was touched)."
+            Message = connected ? ProjectLaunchWithUserInterface
+                ? "Connected to isolated TIA Portal with user interface (no existing TIA window or project was touched)."
+                : "Connected to isolated headless TIA Portal (no existing TIA window or project was touched)."
                 : "Unverified: ConnectIsolatedPortal returned without an error, but the portal handle could not be read. Whether the isolated instance started is unknown. Inspect GetSessionState before continuing.",
             Meta = HmiMeta.Basic(connected, ("verified", connected), ("isolated", true))
         };

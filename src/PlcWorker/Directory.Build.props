@@ -11,4 +11,7 @@
   <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj/$(TiaReleaseKey)/</BaseIntermediateOutputPath>
   <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
   <BaseOutputPath>$(MSBuildThisFileDirectory)bin/$(TiaReleaseKey)/</BaseOutputPath>
+  <BaseIntermediateOutputPath Condition="'$(TiaMcpPlcWorkerFixtureRoot)' != ''">$(TiaMcpPlcWorkerFixtureRoot)/obj/$(TiaReleaseKey)/</BaseIntermediateOutputPath>
+  <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+  <BaseOutputPath Condition="'$(TiaMcpPlcWorkerFixtureRoot)' != ''">$(TiaMcpPlcWorkerFixtureRoot)/bin/$(TiaReleaseKey)/</BaseOutputPath>
 </PropertyGroup></Project>

@@ -19,13 +19,14 @@ internal static class Program
         Console.InputEncoding = new System.Text.UTF8Encoding(false);
         Console.OutputEncoding = new System.Text.UTF8Encoding(false);
         Console.SetError(new System.IO.StreamWriter(Console.OpenStandardError(), new System.Text.UTF8Encoding(false)) { AutoFlush = true });
-        // A worker is launched lazily by its exact-release host.
-        if (args.Length != 4 || args[0] != "--native-session")
-        {
-            Console.Error.WriteLine("Usage: --native-session <exact-release-key> <verified-public-api-directory> <launch-nonce>.");
-            return 2;
-        }
-        var api = Path.GetFullPath(args[2]);
+        WorkerLaunchOptions options;
+        try { options = WorkerLaunchOptions.Parse(args); }
+        catch (ArgumentException error) { Console.Error.WriteLine(error.Message); return 2; }
+        if (options.TiaPortalLocation != null)
+            Environment.SetEnvironmentVariable("TiaPortalLocation", options.TiaPortalLocation);
+        AppDomain.CurrentDomain.UnhandledException += (_, error) => Console.Error.WriteLine(
+            "PlcWorker background exception; terminating=" + error.IsTerminating + ": " + (error.ExceptionObject as Exception)?.Message);
+        var api = options.ApiDirectory;
         if (!Directory.Exists(api)) throw new DirectoryNotFoundException(api);
         AppDomain.CurrentDomain.AssemblyResolve += (sender, request) =>
         {
@@ -50,12 +51,12 @@ internal static class Program
                 throw new FileLoadException("Selected SDK identity mismatch: " + wanted.FullName + " / " + actual.FullName, file);
             return Assembly.LoadFrom(file);
         };
-        if (args[1] != "20" && args[1] != "21") return Run(args[1], api, args[3]);
+        if (options.ReleaseKey != "20" && options.ReleaseKey != "21") return Run(options);
         int result = 0;
         Exception? failure = null;
         var owner = new System.Threading.Thread(() =>
         {
-            try { result = Run(args[1], api, args[3]); }
+            try { result = Run(options); }
             catch (Exception ex) { failure = ex; }
         });
         owner.SetApartmentState(System.Threading.ApartmentState.MTA);
@@ -66,10 +67,19 @@ internal static class Program
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static int Run(string releaseKey, string api, string nonce)
+    private static int Run(WorkerLaunchOptions options)
     {
+        string releaseKey = options.ReleaseKey, api = options.ApiDirectory, nonce = options.Nonce;
+        if (WorkerFaultInjection.PlcSdkReady(key => typeof(Program).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
+            .SingleOrDefault(attribute => attribute.Key == key)?.Value))
+        {
+            foreach (var reference in typeof(PlcFoundationEngine).Assembly.GetReferencedAssemblies()
+                .Where(name => name.Name!.StartsWith("Siemens.Engineering", StringComparison.Ordinal)))
+                Console.Error.WriteLine("SDK fixture loaded: " + Assembly.Load(reference).FullName);
+        }
         using (var engine = new PlcFoundationEngine(releaseKey, api))
         {
+            engine.ProjectLaunchWithUserInterface = options.WithUi;
             engine.OrganisationEvidenceJson = evidence => JsonSerializer.Serialize(evidence);
             engine.UnifiedPropertyAdmission = TiaMcp.Shared.UnifiedHmiPropertyAdmission.Validate;
 #if !OPCUA_NO_EXTENSION

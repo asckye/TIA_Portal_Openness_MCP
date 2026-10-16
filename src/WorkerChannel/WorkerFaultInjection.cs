@@ -14,6 +14,44 @@ namespace TiaMcp.WorkerChannel
             => assembly.GetCustomAttributes<AssemblyMetadataAttribute>().Any(a =>
                 (a.Key == "TiaMcpEngineWorkerFaultFixture" || a.Key == "TiaMcpEngineWorkerSdkFixture") && a.Value == "true")
                 ? Environment.GetEnvironmentVariable("TIA_MCP_ENGINE_WORKER_FAULT") : null;
+        public static string? PlcMode(Assembly assembly)
+            => Metadata(assembly, "TiaMcpPlcWorkerSdkFixture") == "true"
+                ? Environment.GetEnvironmentVariable("TIA_MCP_PLC_WORKER_FAULT") : null;
+
+        public static bool PlcSdkReady(Func<string, string?> metadata)
+            => Environment.GetEnvironmentVariable("TIA_MCP_PLC_WORKER_SDK_READY") == "1"
+                && metadata("TiaMcpPlcWorkerSdkFixture") == "true";
+
+        private static string? Metadata(Assembly assembly, string key)
+            => assembly.GetCustomAttributes<AssemblyMetadataAttribute>().SingleOrDefault(a => a.Key == key)?.Value;
+
+        public static ChannelResponse? PlcBeforeDispatch(Assembly assembly, ChannelRequest request, Action<Exception> processLost)
+        {
+            string? mode = PlcMode(assembly);
+            BeforeDispatch(mode, request);
+            if (mode != "tia-lost" && mode != "background-tia-exit") return null;
+            var lost = new FixtureNonRecoverableException();
+            processLost(lost);
+            if (mode == "background-tia-exit") BackgroundExceptionAfterTiaExit();
+            return ChannelResponse.Error(new ChannelFailureException(lost.Message, -32603, ChannelOutcome.Unknown,
+                "{\"exceptionType\":\"PortalProcessLost\"}"));
+        }
+
+        private sealed class FixtureNonRecoverableException : Exception
+        {
+            internal FixtureNonRecoverableException() : base("Fixture TIA process lost.") { }
+        }
+
+        public static void BackgroundExceptionAfterTiaExit()
+        {
+            // Deliberately unhandled on a CLR background thread: the executable's
+            // generated config, rather than a catch in the fixture, must keep it alive.
+            Console.Error.WriteLine("Fixture TIA process exited.");
+            var background = new Thread(() => throw new InvalidOperationException("Fixture Openness background exception after TIA exit."))
+                { IsBackground = true };
+            background.Start();
+            background.Join();
+        }
         public static void BeforeDispatch(string? mode, ChannelRequest request)
         {
             if (mode == "hang") Thread.Sleep(Timeout.Infinite);

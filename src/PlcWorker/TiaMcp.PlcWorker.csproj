@@ -63,10 +63,11 @@
     <Compile Include="../Shared/CompilerDiagnostics.cs" Link="CompilerDiagnostics.cs" />
     <Compile Include="../Shared/PlcVerifiedImport.cs" Link="PlcVerifiedImport.cs" />
     <Compile Include="../Logic/ModelContextProtocol/Builders/PlcDocumentEditing.cs" Link="PlcDocumentEditing.cs" />
-    <ProjectReference Include="../OnlineChannels/Simulation/TiaMcp.PlcSimAdvanced.csproj" Aliases="plcsim" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
-    <ProjectReference Include="../WorkerChannel/TiaMcp.WorkerChannel.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
-    <ProjectReference Include="../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
+    <ProjectReference Include="../OnlineChannels/Simulation/TiaMcp.PlcSimAdvanced.csproj" Aliases="plcsim" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier;TiaMcpTestPolicy;TiaMcpPlcWorkerSdkFixture;TiaMcpPlcWorkerFixtureRoot" />
+    <ProjectReference Include="../WorkerChannel/TiaMcp.WorkerChannel.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier;TiaMcpTestPolicy;TiaMcpPlcWorkerSdkFixture;TiaMcpPlcWorkerFixtureRoot" />
+    <ProjectReference Include="../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier;TiaMcpTestPolicy;TiaMcpPlcWorkerSdkFixture;TiaMcpPlcWorkerFixtureRoot" />
     <Compile Include="$(WorkerSourceRoot)/Program.cs" Link="Program.cs" />
+    <Compile Include="$(WorkerSourceRoot)/WorkerLaunchOptions.cs" Link="WorkerLaunchOptions.cs" />
     <Compile Include="../Shared/SwallowedExceptions.cs" Link="Shared/SwallowedExceptions.cs" />
     <Compile Include="$(WorkerSourceRoot)/PlcSimAdvancedWorkerModule.cs" Link="PlcSimAdvancedWorkerModule.cs" />
     <Compile Include="$(WorkerSourceRoot)/FoundationWorkerDispatcher.cs" Link="FoundationWorkerDispatcher.cs" />
@@ -87,14 +88,21 @@
     <Compile Include="../Shared/ProcessLossPolicy.cs" Link="Shared/ProcessLossPolicy.cs" />
     <Compile Include="../Shared/SessionBehavior.cs" Link="Shared/SessionBehavior.cs" />
     <ProjectReference Include="$(SelectedAdapterProject)" Condition="'$(SelectedAdapterProject)' != ''"
-                      GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;TargetFramework;RuntimeIdentifier" />
+                      GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;TargetFramework;RuntimeIdentifier;TiaMcpTestPolicy;TiaMcpPlcWorkerSdkFixture;TiaMcpPlcWorkerFixtureRoot" />
     <PackageReference Include="System.Text.Json" Version="10.0.0-preview.4.25258.110" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net48' and '$(UseReferenceAssemblyPackage)' == 'true'" />
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(TiaMcpTestPolicy)' != ''"><_Parameter1>TiaMcpTestPolicy</_Parameter1><_Parameter2>$(TiaMcpTestPolicy)</_Parameter2></AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(TiaMcpPlcWorkerSdkFixture)' == 'true'"><_Parameter1>TiaMcpPlcWorkerSdkFixture</_Parameter1><_Parameter2>true</_Parameter2></AssemblyAttribute>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"><_Parameter1>TiaReleaseKey</_Parameter1><_Parameter2>$(TiaReleaseKey)</_Parameter2></AssemblyAttribute>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"><_Parameter1>NativeCallInstrumentation</_Parameter1><_Parameter2>adapter-weave-verify-required-production-blocked</_Parameter2></AssemblyAttribute>
   </ItemGroup>
   <Target Name="ValidateWorkerAdapter" BeforeTargets="PrepareForBuild;CollectPackageReferences;ResolveProjectReferences;_GenerateRestoreGraphProjectEntry">
+    <PropertyGroup>
+      <WorkerFixtureFullPath Condition="'$(TiaMcpPlcWorkerFixtureRoot)' != ''">$([MSBuild]::NormalizeDirectory('$(TiaMcpPlcWorkerFixtureRoot)'))</WorkerFixtureFullPath>
+      <WorkerFixtureAllowedRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)/../../bin-build'))</WorkerFixtureAllowedRoot>
+    </PropertyGroup>
+    <Error Condition="('$(TiaMcpPlcWorkerSdkFixture)' == 'true' or '$(TiaMcpTestPolicy)' != '') and '$(TiaMcpPlcWorkerFixtureRoot)' == ''" Text="PlcWorker test metadata requires an isolated TiaMcpPlcWorkerFixtureRoot; production outputs cannot enable fixtures." />
+    <Error Condition="'$(TiaMcpPlcWorkerFixtureRoot)' != '' and !$([System.String]::Copy('$(WorkerFixtureFullPath)').StartsWith('$(WorkerFixtureAllowedRoot)', System.StringComparison.OrdinalIgnoreCase))" Text="PlcWorker fixture outputs must be isolated under this worktree's bin-build directory." />
     <Error Condition="'$(SelectedAdapterDirectory)' == '' or !Exists('$(SelectedAdapterProject)')" Text="Worker requires one of eight exact release adapters; original V14/V15 excluded. No default version is selected." />
     <Error Condition="'$(TargetFramework)' != '$(WorkerExpectedFramework)'" Text="Worker framework mismatch for $(TiaReleaseKey)." />
     <Error Condition="'$(PlatformTarget)' != 'x64' or '$(OutputType)' != 'Exe'" Text="The source-preview worker requires an x64 executable." />

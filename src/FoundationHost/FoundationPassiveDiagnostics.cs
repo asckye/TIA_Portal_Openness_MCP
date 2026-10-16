@@ -277,7 +277,9 @@ internal static class LegacyHostToolRegistry
         tools.Add(new ImportOrderTool());
         tools.AddRange(WorkbenchControlTools.Create(worker, releaseKey));
         tools.AddRange(GenerationTool.Create(releaseKey));
-        Func<JsonObject> readiness = readinessProvider ?? (() => FoundationPassiveDiagnostics.Readiness(releaseKey, apiDirectory, apiDirectorySource));
+        Func<JsonObject> readiness = readinessProvider ?? (() => worker is WorkerClient plc
+            ? plc.Readiness(() => FoundationPassiveDiagnostics.Readiness(releaseKey, apiDirectory, apiDirectorySource))
+            : FoundationPassiveDiagnostics.Readiness(releaseKey, apiDirectory, apiDirectorySource));
         tools.AddRange(FoundationPassiveDiagnosticTools.Create(releaseKey, nativeSessionConfigured, usageRoster ?? (() => tools), readiness));
         tools.Add(new ToolUsageTool(releaseKey, usageRoster ?? (() => tools), exampleProfile ?? ReleaseCatalogData.Releases[releaseKey].ExampleProfile));
         var wrapped = new McpServerTool[tools.Count];

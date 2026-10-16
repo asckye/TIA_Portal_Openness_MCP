@@ -9,6 +9,7 @@
     <Compile Include="../../../src/FoundationHost/GenerationTool.cs" Link="GenerationTool.cs" />
     <ProjectReference Include="../../WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/TiaMcp.WorkerChannel.TransportFixture.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="../../WorkerChannel/TiaMcp.EngineWorker.FaultFixture/TiaMcp.EngineWorker.FaultFixture.csproj" ReferenceOutputAssembly="false" AdditionalProperties="TiaMcpEngineWorkerFaultFixture=true" />
+    <ProjectReference Include="../../WorkerChannel/TiaMcp.PlcWorker.FaultFixture/TiaMcp.PlcWorker.FaultFixture.csproj" ReferenceOutputAssembly="false" AdditionalProperties="TiaMcpPlcWorkerSdkFixture=true" />
     <ProjectReference Include="../../../src/FoundationHost/TiaMcp.FoundationHost.csproj" Aliases="foundationhost" GlobalPropertiesToRemove="DefineConstants" />
     <ProjectReference Include="../../../src/EngineHost/TiaMcp.EngineHost.csproj" Aliases="enginehost" GlobalPropertiesToRemove="DefineConstants" />
     <ProjectReference Include="../../Engine/TiaMcp.Engine.Tests/TiaMcp.Engine.Tests.csproj" Aliases="enginefixture" />
@@ -76,6 +77,8 @@
     <Compile Include="../../../src/FoundationHost/HardwareFamilyWire.cs" Link="HardwareFamilyWire.cs" />
     <Compile Include="../../../src/FoundationHost/SoftwareReadContract.cs" Link="SoftwareReadContract.cs" />
     <Compile Include="../../../src/FoundationHost/WorkerClient.cs" Link="WorkerClient.cs" />
+    <Compile Include="../../../src/FoundationHost/WorkerSdkFixture.cs" Link="WorkerSdkFixture.cs" />
+    <Compile Include="../../../src/PlcWorker/WorkerLaunchOptions.cs" Link="WorkerLaunchOptions.cs" />
     <Compile Include="../../../src/FoundationHost/HostSessionCall.cs" Link="HostSessionCall.cs" />
     <Compile Include="../../../src/FoundationHost/WorkerJob.cs" Link="WorkerJob.cs" />
     <Compile Include="../../../src/FoundationHost/DeclarationReadContract.cs" Link="DeclarationReadContract.cs" />
