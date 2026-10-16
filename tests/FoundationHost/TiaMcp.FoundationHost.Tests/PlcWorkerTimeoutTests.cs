@@ -645,10 +645,17 @@ public sealed class PlcWorkerRobustnessTests
             File.WriteAllText(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + release + ".dll"), "offline fixture identity");
             Worker = new Foundation.WorkerClient(release, exe, Path.GetDirectoryName(exe)!, true, defaultSeconds, config) { Bundled = false };
         }
+        // The fixture appends while the test reads; File.ReadAllText refuses a file another process has open for writing.
+        internal string ReadLog()
+        {
+            using var stream = new FileStream(Log, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
+        }
         internal async Task WaitForDispatch(string operation)
         {
             using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            while (!File.ReadAllText(Log).Contains("\"operation\":\"" + operation + "\"", StringComparison.Ordinal))
+            while (!ReadLog().Contains("\"operation\":\"" + operation + "\"", StringComparison.Ordinal))
                 await Task.Delay(10, deadline.Token);
         }
         public void Dispose()
@@ -765,7 +772,7 @@ public sealed class PlcWorkerRobustnessTests
         var error = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => scope.Worker.Call("CompileSoftware", new(), before.Token));
         var refused = Foundation.FoundationV4Result.Failure("19", "CompilePlc", "cancelled", false, true, null, error);
         Assert.Equal("CANCELLED", (string?)refused.StructuredContent?["error"]?["code"]);
-        Assert.DoesNotContain("CompileSoftware", File.ReadAllText(scope.Log));
+        Assert.DoesNotContain("CompileSoftware", scope.ReadLog());
         using var after = new CancellationTokenSource();
         var call = scope.Worker.Call("CompileSoftware", PlcCompletedArguments("CompileSoftware", 400), after.Token);
         await scope.WaitForDispatch("CompileSoftware"); after.Cancel();

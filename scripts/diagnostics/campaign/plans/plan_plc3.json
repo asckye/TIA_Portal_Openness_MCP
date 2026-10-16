@@ -865,7 +865,17 @@
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "GetOpcUaAccessControl is absent from the V20 release catalog; the OPC UA access-control API exists only in V21."
+},
+"21": {
+"applicable": true,
+"reason": "GetOpcUaAccessControl is registered in V21; validate this input on V21."
+}
+}
 },
 {
 "tool": "ListTechnologyObjects",
