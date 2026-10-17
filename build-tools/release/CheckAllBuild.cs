@@ -26,7 +26,10 @@ internal static class CheckAllBuild
         if (units.Any(unit => Path.GetFileNameWithoutExtension(unit.Project) is "TiaMcp.FoundationHost.Tests" or "TiaMcp.WorkerChannel.Tests"))
             units.Add(new("tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/TiaMcp.WorkerChannel.TransportFixture.csproj", "", []));
         if (units.Any(unit => Path.GetFileNameWithoutExtension(unit.Project) == "TiaMcp.FoundationHost.Tests"))
+        {
             units.Add(new("tests/WorkerChannel/TiaMcp.EngineWorker.FaultFixture/TiaMcp.EngineWorker.FaultFixture.csproj", "", ["-p:TiaMcpEngineWorkerFaultFixture=true"]));
+            units.Add(new("tests/WorkerChannel/TiaMcp.PlcWorker.FaultFixture/TiaMcp.PlcWorker.FaultFixture.csproj", "", ["-p:TiaMcpPlcWorkerSdkFixture=true"]));
+        }
         return units.GroupBy(unit => unit.Project + "|" + unit.Variant + "|" + string.Join(";", unit.Properties), StringComparer.Ordinal).Select(group => group.First());
     }
 
