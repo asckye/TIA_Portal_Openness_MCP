@@ -211,7 +211,8 @@ namespace PlcExchangeTests
         {
             var service = Activator.CreateInstance(EngineType("Siemens.Services.ProjectLifecyclePortService"),
                 BindingFlags.Instance | BindingFlags.NonPublic, null, new object[] {
-                    (Func<string, JsonObject, JsonNode?>)fake.ProjectCall, (Func<bool>)(() => true), (Func<string>)(() => fake.Previous) }, null)!;
+                    // A null release keeps the engine's own release, as the production constructor does.
+                    (Func<string, JsonObject, JsonNode?>)fake.ProjectCall, (Func<bool>)(() => true), (Func<string>)(() => fake.Previous), null! }, null)!;
             return Activator.CreateInstance(EngineType("ModelContextProtocol.ProjectLifecycleProjectTools"), service)!;
         }
 
