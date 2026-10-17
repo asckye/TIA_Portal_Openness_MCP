@@ -145,7 +145,13 @@ internal static class CatalogGenerator
             Require(Set(releases[key]!.AsArray().Select(r => Text(r!["currentName"]))).SetEquals(data.Rosters[key]), "Runtime roster differs: " + key);
             Require(releases[key]!.AsArray().Where(r => Strings(r!["profiles"]).Contains("lite")).All(r => r!["arguments"] is JsonObject), "Missing lite call arguments: " + key);
         }
-        var runtime = new JsonObject { ["schemaVersion"] = 1, ["contractVersion"] = 4, ["foundationLite"] = true, ["behaviorPolicies"] = policies, ["behaviorEntries"] = entries, ["releases"] = releases, ["engineSourceReleases"] = engineReleases };
+        // GetToolUsage serves the engine-source rows on 20/21, so their examples follow the same
+        // pattern rule; the typed rejection evidence below keeps the frozen engine arguments.
+        var servedEngineReleases = new JsonObject();
+        foreach (var (key, rows) in engineReleases)
+            servedEngineReleases[key] = new JsonArray(rows!.AsArray().Select(row => { var copy = row!.DeepClone(); var name = Text(copy["currentName"]);
+                copy["arguments"] = CurrentArguments(name, copy["arguments"]!.AsObject(), calls["full-engine"]?[name]?["arguments"] as JsonObject); return (JsonNode?)copy; }).ToArray());
+        var runtime = new JsonObject { ["schemaVersion"] = 1, ["contractVersion"] = 4, ["foundationLite"] = true, ["behaviorPolicies"] = policies, ["behaviorEntries"] = entries, ["releases"] = releases, ["engineSourceReleases"] = servedEngineReleases };
         var rejections = new JsonObject { ["contractVersion"] = 4, ["releases"] = new JsonObject() };
         var defaultSources = string.Join('\n', Repository.GitFiles(root, "src/Engine", "src/Logic")
             .Where(p => p.EndsWith(".cs", StringComparison.Ordinal) && File.Exists(Path.Combine(root, p)))

@@ -42,7 +42,7 @@ public sealed class HmiTagPathCatalogTests
     }
 
     [Fact]
-    public void All_live_release_examples_are_valid_and_engine_source_examples_remain_frozen()
+    public void All_live_release_examples_are_valid_and_engine_source_examples_keep_every_unvalidated_frozen_value()
     {
         string root = Repository.FindRoot();
         var resource = CatalogGenerator.Generate(root)[CatalogGenerator.Resource];
@@ -53,11 +53,21 @@ public sealed class HmiTagPathCatalogTests
             var row = catalog["releases"]![release]!.AsArray().Single(r => (string?)r!["currentName"] == "DeleteHmiTag")!;
             Assert.Equal("/Table", (string?)row["arguments"]?["tagTablePath"]);
         }
-        var frozen = CatalogJson.Read(root, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceExamples.json");
+        // GetToolUsage serves the engine-source rows on 20/21: the pattern-checked table path takes the
+        // maintained call-library value, and every other argument stays byte-equal to the frozen fixture.
+        var frozen = CatalogJson.Read(root, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceExamples.json")["DeleteHmiTag"]!["arguments"]!.AsObject();
+        var library = CatalogJson.Read(root, "reference/tool-examples/calls.json")["profiles"]!["full-engine"]!["DeleteHmiTag"]!["arguments"]!;
+        string pattern = TiaMcpServer.ModelContextProtocol.ToolMetadata.Parameter("DeleteHmiTag", "tagTablePath")!.Pattern!;
+        Assert.Equal("exact", (string?)frozen["tagTablePath"]);
         foreach (string release in new[] { "20", "21" })
         {
-            var row = catalog["engineSourceReleases"]![release]!.AsArray().Single(r => (string?)r!["currentName"] == "DeleteHmiTag")!;
-            Assert.True(JsonNode.DeepEquals(frozen["DeleteHmiTag"]!["arguments"], row["arguments"]));
+            var arguments = catalog["engineSourceReleases"]![release]!.AsArray().Single(r => (string?)r!["currentName"] == "DeleteHmiTag")!["arguments"]!.AsObject();
+            Assert.Equal(frozen.Select(p => p.Key), arguments.Select(p => p.Key));
+            foreach (var (name, value) in frozen.Where(p => p.Key != "tagTablePath"))
+                Assert.True(JsonNode.DeepEquals(value, arguments[name]), release + "/" + name);
+            Assert.Equal((string?)library["tagTablePath"], (string?)arguments["tagTablePath"]);
+            Assert.Equal("/Table", (string?)arguments["tagTablePath"]);
+            Assert.Matches(pattern, (string?)arguments["tagTablePath"]);
         }
     }
 }
