@@ -114,7 +114,15 @@ public sealed class P870RegressionTests
     public void Access_control_registration_follows_the_available_API(string release, bool available)
     {
         using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
-        var names = LegacyHostToolRegistry.Create(worker, release, false).Select(tool => tool.ProtocolTool.Name).ToArray();
+        // The 20/21 version policy reads the process-wide engine release; earlier tests in the same shard may leave another one.
+        string previousRelease = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+        string[] names;
+        try
+        {
+            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
+            names = LegacyHostToolRegistry.Create(worker, release, false).Select(tool => tool.ProtocolTool.Name).ToArray();
+        }
+        finally { enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease; }
         foreach (var name in new[] { "GetOpcUaAccessControl", "ManageOpcUaAccessControl" })
         {
             Assert.Equal(available, PortedFamilies.Available(release, name));
