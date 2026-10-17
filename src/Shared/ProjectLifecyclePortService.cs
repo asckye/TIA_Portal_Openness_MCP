@@ -12,9 +12,12 @@ internal sealed class ProjectLifecyclePortService
     private readonly Func<string, JsonObject, JsonNode?> call;
     private readonly Func<bool> hasProject;
     private readonly Func<string> identity;
+    private readonly string? releaseKey;
     public ProjectLifecyclePortService() : this(HardwareAddressWorkerBridge.Call, HardwareAddressWorkerBridge.HasProject, HardwareAddressWorkerBridge.ProjectIdentity) { }
-    internal ProjectLifecyclePortService(Func<string, JsonObject, JsonNode?> call, Func<bool> hasProject, Func<string> identity)
-    { this.call = call; this.hasProject = hasProject; this.identity = identity; }
+    internal ProjectLifecyclePortService(Func<string, JsonObject, JsonNode?> call, Func<bool> hasProject, Func<string> identity,
+        string? releaseKey = null)
+    { this.call = call; this.hasProject = hasProject; this.identity = identity; this.releaseKey = releaseKey; }
+    internal string ReleaseKey => releaseKey ?? McpServer.ReleaseKey;
     private JsonObject State => call("ReadState", new JsonObject())!.AsObject();
     internal bool HasProject => hasProject();
     internal bool IsConnected => (bool?)State["IsAttached"] == true;

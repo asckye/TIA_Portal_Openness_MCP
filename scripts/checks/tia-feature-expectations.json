@@ -5,6 +5,7 @@
     "targetFramework": "net48",
     "defineConstants": [
       "OPTION_SIMOTION",
+      "PROJECT_SCAFFOLD",
       "RELEASE",
       "TIA_ADAPTER_INTERNAL_VERSIONING",
       "TIA_NATIVE_ONLINE",
@@ -31,6 +32,7 @@
       "PLC_WATCH_EXPORT",
       "PLC_WATCH_READ",
       "PROJECT_EXCHANGE",
+      "PROJECT_SCAFFOLD",
       "RELEASE",
       "SECURITY_PROJECT_PROTECTION",
       "TIA_ADAPTER_INTERNAL_VERSIONING",
@@ -67,6 +69,7 @@
       "PLC_UNITS",
       "PLC_WATCH_READ",
       "PROJECT_EXCHANGE",
+      "PROJECT_SCAFFOLD",
       "RELEASE",
       "SAFETY_GLOBAL",
       "SECURITY_CERTIFICATE",
@@ -124,6 +127,7 @@
       "PLC_WATCH_READ",
       "PROJECT_EXCHANGE",
       "PROJECT_MULTIUSER",
+      "PROJECT_SCAFFOLD",
       "RELEASE",
       "SAFETY_GLOBAL",
       "SAFETY_GLOBAL_READ",
@@ -201,6 +205,7 @@
       "PLC_WATCH_READ",
       "PROJECT_EXCHANGE",
       "PROJECT_MULTIUSER",
+      "PROJECT_SCAFFOLD",
       "RELEASE",
       "SAFETY_GLOBAL",
       "SAFETY_GLOBAL_FULL",
@@ -292,6 +297,7 @@
       "PLC_WATCH_READ",
       "PROJECT_EXCHANGE",
       "PROJECT_MULTIUSER",
+      "PROJECT_SCAFFOLD",
       "RELEASE",
       "SAFETY_GLOBAL",
       "SAFETY_GLOBAL_FULL",
@@ -592,6 +598,7 @@
     "targetFramework": "net48",
     "defineConstants": [
       "OPCUA_NO_EXTENSION",
+      "PROJECT_SCAFFOLD",
       "RELEASE",
       "TRACE",
       "WORKER_PROPERTY_ADMISSION",
@@ -606,6 +613,7 @@
     "targetFramework": "net48",
     "defineConstants": [
       "OPCUA_NO_UNITS",
+      "PROJECT_SCAFFOLD",
       "RELEASE",
       "TRACE",
       "WORKER_PROPERTY_ADMISSION",
@@ -619,6 +627,7 @@
     },
     "targetFramework": "net48",
     "defineConstants": [
+      "PROJECT_SCAFFOLD",
       "RELEASE",
       "TRACE",
       "WORKER_PROPERTY_ADMISSION",
@@ -632,6 +641,7 @@
     },
     "targetFramework": "net48",
     "defineConstants": [
+      "PROJECT_SCAFFOLD",
       "RELEASE",
       "TRACE",
       "WORKER_PROPERTY_ADMISSION",
@@ -645,6 +655,7 @@
     },
     "targetFramework": "net48",
     "defineConstants": [
+      "PROJECT_SCAFFOLD",
       "RELEASE",
       "TRACE",
       "WORKER_PROPERTY_ADMISSION",
@@ -659,6 +670,7 @@
     "targetFramework": "net48",
     "defineConstants": [
       "HMI_UNIFIED",
+      "PROJECT_SCAFFOLD",
       "RELEASE",
       "TRACE",
       "WORKER_PROPERTY_ADMISSION",
@@ -673,6 +685,7 @@
     "targetFramework": "net48",
     "defineConstants": [
       "HMI_UNIFIED",
+      "PROJECT_SCAFFOLD",
       "RELEASE",
       "TRACE",
       "WORKER_PROPERTY_ADMISSION",
@@ -688,6 +701,7 @@
     "targetFramework": "net48",
     "defineConstants": [
       "HMI_UNIFIED",
+      "PROJECT_SCAFFOLD",
       "RELEASE",
       "TRACE",
       "WORKER_PROPERTY_ADMISSION",

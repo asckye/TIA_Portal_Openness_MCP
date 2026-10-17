@@ -13,7 +13,7 @@ public sealed class ProjectLifecyclePortTests
                 "EnsureOpennessUserGroup", "GetPortalInfo", "ManageMultiuserSession", "RetrieveProjectArchive",
                 "SaveProjectCopy", "ValidateAutomationContext" })
             {
-                bool available = tool == "BuildProjectScaffold" ? version >= 20 : tool == "ManageMultiuserSession" ? version >= 17
+                bool available = tool == "ManageMultiuserSession" ? version >= 17
                     : tool is "ArchiveSavedProject" or "RetrieveProjectArchive" or "SaveProjectCopy" ? version >= 15 : true;
                 yield return new object[] { release, tool, available };
             }

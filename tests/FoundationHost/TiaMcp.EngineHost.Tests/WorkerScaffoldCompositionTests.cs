@@ -82,7 +82,7 @@ public sealed class WorkerScaffoldCompositionTests
                 => operation == "project-lifecycle.ExecuteProjectScaffoldPrimitive"
                     ? JsonSerializer.SerializeToNode(fake.Execute(JsonSerializer.Deserialize<ProjectScaffoldPrimitive>(arguments["request"]!.ToJsonString())!))
                     : fake.Call(operation, arguments);
-            var service = new ProjectLifecyclePortService(Call, () => fake.ProjectFile.Length > 0, () => fake.ProjectFile);
+            var service = new ProjectLifecyclePortService(Call, () => fake.ProjectFile.Length > 0, () => fake.ProjectFile, fake.Release);
             var spec = new JsonObject { ["projectName"] = "P", ["directoryPath"] = directory, ["hmiName"] = "HMI_1", ["hmiSoftwarePath"] = "HMI_RT_1",
                 ["sclSourceFiles"] = new JsonArray(source), ["ladDocs"] = new JsonArray(new JsonObject { ["importPath"] = directory, ["name"] = "Main" }),
                 ["hmiScreens"] = new JsonArray(new JsonObject { ["screenName"] = "Main", ["width"] = 800, ["height"] = 480, ["designJson"] = new JsonObject { ["items"] = new JsonArray() } }),

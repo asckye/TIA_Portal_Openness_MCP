@@ -41,6 +41,7 @@ namespace TiaMcpServer.Siemens.Services
     }
     internal sealed class ProjectLifecyclePortService
     {
+        internal string ReleaseKey => McpServer.ReleaseKey;
         public ResponseMessage ReadProjectUserManagement(string category="users", string name="", string devicePathJson="[]", string itemPathJson="[]", int offset=0, int limit=100) => SecurityServiceFixture.Invoke(category, name, devicePathJson, itemPathJson, offset, limit);
         public ResponseMessage ManageProjectUserManagement(string action, string name, string password="", string roleName="", string rightName="", string comment="", string group="", string devicePathJson="[]", string itemPathJson="[]", bool confirmChange=false, bool dryRun=true) => SecurityServiceFixture.Invoke(action, name, password, roleName, rightName, comment, group, devicePathJson, itemPathJson, confirmChange, dryRun);
         public ResponseMessage ReadProjectProtection() => SecurityServiceFixture.Invoke();

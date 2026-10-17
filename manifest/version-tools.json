@@ -5,7 +5,7 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 278,
+      "toolCount": 279,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -21,6 +21,7 @@
         "BuildPlcGlobalDb",
         "BuildPlcSymbolManifestFromPath",
         "BuildPlcUdt",
+        "BuildProjectScaffold",
         "BuildReleaseDiagnosticReport",
         "BuildReleaseHandoffArtifacts",
         "BuildReleaseManifest",
@@ -289,7 +290,7 @@
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 318,
+      "toolCount": 319,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -306,6 +307,7 @@
         "BuildPlcGlobalDb",
         "BuildPlcSymbolManifestFromPath",
         "BuildPlcUdt",
+        "BuildProjectScaffold",
         "BuildReleaseDiagnosticReport",
         "BuildReleaseHandoffArtifacts",
         "BuildReleaseManifest",
@@ -613,7 +615,7 @@
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 346,
+      "toolCount": 347,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -630,6 +632,7 @@
         "BuildPlcGlobalDb",
         "BuildPlcSymbolManifestFromPath",
         "BuildPlcUdt",
+        "BuildProjectScaffold",
         "BuildReleaseDiagnosticReport",
         "BuildReleaseHandoffArtifacts",
         "BuildReleaseManifest",
@@ -965,7 +968,7 @@
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 369,
+      "toolCount": 370,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -982,6 +985,7 @@
         "BuildPlcGlobalDb",
         "BuildPlcSymbolManifestFromPath",
         "BuildPlcUdt",
+        "BuildProjectScaffold",
         "BuildReleaseDiagnosticReport",
         "BuildReleaseHandoffArtifacts",
         "BuildReleaseManifest",
@@ -1340,7 +1344,7 @@
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 395,
+      "toolCount": 396,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1358,6 +1362,7 @@
         "BuildPlcGlobalDb",
         "BuildPlcSymbolManifestFromPath",
         "BuildPlcUdt",
+        "BuildProjectScaffold",
         "BuildReleaseDiagnosticReport",
         "BuildReleaseHandoffArtifacts",
         "BuildReleaseManifest",
@@ -1741,7 +1746,7 @@
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 470,
+      "toolCount": 471,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1764,6 +1769,7 @@
         "BuildPlcGlobalDb",
         "BuildPlcSymbolManifestFromPath",
         "BuildPlcUdt",
+        "BuildProjectScaffold",
         "BuildReleaseDiagnosticReport",
         "BuildReleaseHandoffArtifacts",
         "BuildReleaseManifest",
@@ -3240,8 +3246,8 @@
     }
   },
   "groupCounts": {
-    "all-releases": 277,
-    "shared-subset": 223,
+    "all-releases": 278,
+    "shared-subset": 222,
     "release-only": 16
   },
   "tools": [
@@ -3613,10 +3619,16 @@
     {
       "name": "BuildProjectScaffold",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {

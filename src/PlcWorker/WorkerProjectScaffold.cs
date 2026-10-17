@@ -123,6 +123,7 @@ internal sealed class WorkerProjectScaffold
             || request.Numbers == null || request.Numbers.Length != (request.Kind == "hmiScreen" ? 2 : 0)
             || request.Flags == null || request.Flags.Length != (request.Kind is "hmiDesign" or "hmiTag" ? 1 : 0))
             throw new ArgumentException("Invalid scaffold primitive arguments.");
+        ProjectScaffoldCapabilities.Require(_release, request.Kind);
         switch (request.Kind)
         {
             case "connect": return Connect();

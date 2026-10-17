@@ -22,7 +22,53 @@ internal sealed class ProjectLifecycleProjectTools
         public CallToolResult BuildProjectScaffoldV4(
             [Description("spec: JSON object describing the project to generate. See tool description for keys.")] string spec,
             [Description("dryRun: DEFAULT true — validates the spec offline (no TIA connection, nothing created). Pass dryRun=false explicitly to actually create the project (after a clean dry run).")] bool dryRun = true)
-            => SessionToolContract.Run("BuildProjectScaffold", !dryRun, true, () => ScaffoldProject(spec, dryRun));
+        {
+            ScaffoldStep? refused;
+            try
+            {
+                var root = JsonNode.Parse(spec);
+                refused = root is JsonObject plan ? UnsupportedSteps(plan).FirstOrDefault() : null;
+            }
+            catch (Exception error) when (error is JsonException || error is ArgumentException)
+            {
+                return SessionToolContract.Run("BuildProjectScaffold", !dryRun, true, () => ScaffoldProject(spec, dryRun));
+            }
+            TiaMcp.Logic.V4.Error Refusal() => new TiaMcp.Logic.V4.Error(refused!.Detail!,
+                new TiaMcp.Logic.V4.UnsupportedCapabilityDetails(_service.ReleaseKey, "BuildProjectScaffold", null));
+            if (!dryRun && refused != null)
+                return McpServer.V4Reject("BuildProjectScaffold", Refusal());
+            var result = SessionToolContract.Run("BuildProjectScaffold", !dryRun, true, () => ScaffoldProject(spec, dryRun));
+            if (dryRun && refused != null && result.StructuredContent?["data"] is JsonObject data)
+            {
+                return McpServer.V4Reject("BuildProjectScaffold", Refusal(), data.DeepClone().AsObject());
+            }
+            return result;
+        }
+
+        private IEnumerable<ScaffoldStep> UnsupportedSteps(JsonNode root)
+        {
+            IEnumerable<ScaffoldStep> Refuse(string key, string kind, string step)
+            {
+                if (!ProjectScaffoldCapabilities.Supports(_service.ReleaseKey, kind) && root[key] is JsonArray items)
+                    foreach (var item in items)
+                        yield return new ScaffoldStep { Step = step, Status = "failed",
+                            Detail = ProjectScaffoldCapabilities.Refusal(_service.ReleaseKey, kind) };
+            }
+            foreach (var step in Refuse("ladDocs", "lad", "lad")) yield return step;
+            bool hmiRequested = root["hmiName"] is JsonValue name && name.TryGetValue<string>(out var hmiName)
+                && !string.IsNullOrWhiteSpace(hmiName);
+            if (!hmiRequested) yield break;
+            if (!ProjectScaffoldCapabilities.Supports(_service.ReleaseKey, "hmiConnect"))
+                yield return new ScaffoldStep { Step = "hmiConnection", Status = "failed",
+                    Detail = ProjectScaffoldCapabilities.Refusal(_service.ReleaseKey, "hmiConnect") };
+            foreach (var step in Refuse("hmiScreens", "hmiScreen", "hmiScreen")) yield return step;
+            if (!ProjectScaffoldCapabilities.Supports(_service.ReleaseKey, "hmiDesign") && root["hmiScreens"] is JsonArray screens)
+                foreach (var screen in screens)
+                    if (screen is JsonObject entry && entry["designJson"] != null)
+                        yield return new ScaffoldStep { Step = "hmiDesign", Status = "failed",
+                            Detail = ProjectScaffoldCapabilities.Refusal(_service.ReleaseKey, "hmiDesign") };
+            foreach (var step in Refuse("hmiTags", "hmiTag", "hmiTag")) yield return step;
+        }
 
         public ResponseScaffold ScaffoldProject(
             [Description("spec: JSON object describing the project to generate. See tool description for keys.")] string spec,
@@ -57,9 +103,15 @@ internal sealed class ProjectLifecycleProjectTools
             resp.ProjectName = projectName;
             resp.DirectoryPath = directoryPath;
 
+            var unsupported = UnsupportedSteps(root).ToArray();
+            if (!dryRun && unsupported.Length != 0)
+                throw new NotSupportedException(unsupported[0].Detail);
+
             // ---- dryRun: offline spec validation only (no TIA connection, nothing created) ----
             if (dryRun)
             {
+                resp.Steps.AddRange(unsupported);
+                if (unsupported.Length != 0) resp.Ok = false;
                 foreach (var pair in new[] { ("udt", "udt"), ("globalDb", "globaldb"), ("tagTable", "tagtable") })
                     foreach (var item in Arr(pair.Item1))
                     {
@@ -75,12 +127,14 @@ internal sealed class ProjectLifecycleProjectTools
                 }
                 foreach (var item in Arr("ladDocs"))
                 {
+                    if (!ProjectScaffoldCapabilities.Supports(_service.ReleaseKey, "lad")) continue;
                     var importPath = IS(item, "importPath"); var name = IS(item, "name");
                     bool exists = !string.IsNullOrWhiteSpace(importPath) && !string.IsNullOrWhiteSpace(name) && System.IO.File.Exists(System.IO.Path.Combine(importPath, name + ".s7dcl"));
                     Step("lad", exists ? "ok" : "failed", exists ? $"{name} (.s7dcl found)" : $"MISSING .s7dcl under {importPath} for {name}"); if (!exists) resp.Ok = false;
                 }
                 foreach (var item in Arr("hmiScreens"))
                 {
+                    if (unsupported.Any(step => step.Step == "hmiScreen")) continue;
                     var screenName = IS(item, "screenName");
                     bool ok = !string.IsNullOrWhiteSpace(screenName) && item?["designJson"] != null;
                     Step("hmiScreen", ok ? "ok" : "failed", ok ? screenName : "missing screenName/designJson"); if (!ok) resp.Ok = false;

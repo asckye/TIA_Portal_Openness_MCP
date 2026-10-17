@@ -13,6 +13,17 @@
   "scope": "Examples for every registered tool in both profiles. Target-dependent bindings and operation parameters accompany the call. A sample value is not evidence that an object exists or an API operation is supported by that device. Ported examples are offered only for tools registered on the selected release, using PortedFamilies.ToolReleases; partial tools keep their action and format refusals.",
   "profiles": {
     "plc-foundation": {
+      "BuildProjectScaffold": {
+        "arguments": {
+          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+          "dryRun": true
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Offline dry run of the served spec/dryRun schema on every release. Native execution NOT RUN.",
+        "inline": true,
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Basic PLC scaffolds are available on all eight releases. LAD S7DCL steps require V20 or later; Unified connection, screen, design and tag steps require V19 or later. An unsupported step refuses the complete apply plan with UNSUPPORTED_CAPABILITY before any native call; dryRun reports each unsupported step. Omit hmiName to generate only the PLC project."
+      },
       "CreateHardwareDevice": {
         "arguments": {
           "preferredMlfb": "6ES7 513-1AM03-0AB0",

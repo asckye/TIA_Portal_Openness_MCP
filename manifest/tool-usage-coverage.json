@@ -1,9 +1,9 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "181ae1ecdad84ad9646691e420a7c77b9dd8be899376f76e730a44d9eb6496fa",
+  "catalogSha256": "ae12e6d5905c9783a5cf8cc589b9b0fadfbc40f3ac56509c9d20d80566562a16",
   "uniqueTools": 516,
   "documents": 89,
-  "versionToolPairs": 3187,
+  "versionToolPairs": 3193,
   "offlineCallExecutions": 79,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
@@ -48,8 +48,8 @@
   "releases": {
     "14sp1": {
       "releaseKey": "14sp1",
-      "registeredToolCount": 278,
-      "checkedToolCount": 278,
+      "registeredToolCount": 279,
+      "checkedToolCount": 279,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 159,
@@ -230,6 +230,17 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildProjectScaffold",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
           "operations": []
         },
         {
@@ -3761,8 +3772,8 @@
     },
     "15.1": {
       "releaseKey": "15.1",
-      "registeredToolCount": 318,
-      "checkedToolCount": 318,
+      "registeredToolCount": 319,
+      "checkedToolCount": 319,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 219,
@@ -3954,6 +3965,17 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildProjectScaffold",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
           "operations": []
         },
         {
@@ -8235,8 +8257,8 @@
     },
     "16": {
       "releaseKey": "16",
-      "registeredToolCount": 346,
-      "checkedToolCount": 346,
+      "registeredToolCount": 347,
+      "checkedToolCount": 347,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 271,
@@ -8428,6 +8450,17 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildProjectScaffold",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
           "operations": []
         },
         {
@@ -13292,8 +13325,8 @@
     },
     "17": {
       "releaseKey": "17",
-      "registeredToolCount": 369,
-      "checkedToolCount": 369,
+      "registeredToolCount": 370,
+      "checkedToolCount": 370,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 346,
@@ -13485,6 +13518,17 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildProjectScaffold",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
           "operations": []
         },
         {
@@ -18994,8 +19038,8 @@
     },
     "18": {
       "releaseKey": "18",
-      "registeredToolCount": 395,
-      "checkedToolCount": 395,
+      "registeredToolCount": 396,
+      "checkedToolCount": 396,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 424,
@@ -19195,6 +19239,17 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildProjectScaffold",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
           "operations": []
         },
         {
@@ -25401,8 +25456,8 @@
     },
     "19": {
       "releaseKey": "19",
-      "registeredToolCount": 470,
-      "checkedToolCount": 470,
+      "registeredToolCount": 471,
+      "checkedToolCount": 471,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 484,
@@ -25643,6 +25698,17 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildProjectScaffold",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
           "operations": []
         },
         {

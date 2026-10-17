@@ -5837,6 +5837,15 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "BuildProjectScaffold",
+      "family": "F05",
+      "example": {
+        "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "ConnectIsolatedPortal",
       "family": "F05",
       "example": {}
@@ -8093,6 +8102,15 @@
       "family": "F05",
       "example": {
         "archivePath": "C:\\Examples\\Archive.zap{extension}",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "BuildProjectScaffold",
+      "family": "F05",
+      "example": {
+        "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
         "dryRun": true
       }
     },
@@ -10710,6 +10728,15 @@
       "family": "F05",
       "example": {
         "archivePath": "C:\\Examples\\Archive.zap{extension}",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "BuildProjectScaffold",
+      "family": "F05",
+      "example": {
+        "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
         "dryRun": true
       }
     },
@@ -13659,6 +13686,15 @@
       "family": "F05",
       "example": {
         "archivePath": "C:\\Examples\\Archive.zap{extension}",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "BuildProjectScaffold",
+      "family": "F05",
+      "example": {
+        "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
         "dryRun": true
       }
     },
@@ -16929,6 +16965,15 @@
       "family": "F05",
       "example": {
         "archivePath": "C:\\Examples\\Archive.zap{extension}",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "BuildProjectScaffold",
+      "family": "F05",
+      "example": {
+        "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
         "dryRun": true
       }
     },
@@ -20388,6 +20433,15 @@
       "family": "F05",
       "example": {
         "archivePath": "C:\\Examples\\Archive.zap{extension}",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "BuildProjectScaffold",
+      "family": "F05",
+      "example": {
+        "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
         "dryRun": true
       }
     },
@@ -46644,6 +46698,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "BuildProjectScaffold",
+        "currentName": "BuildProjectScaffold",
+        "sourceName": "ScaffoldProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ScanPlcSourceAnnotations",
         "currentName": "ScanPlcSourceAnnotations",
         "sourceName": "ScanPlcSourceAnnotations",
@@ -52212,6 +52279,19 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildProjectScaffold",
+        "currentName": "BuildProjectScaffold",
+        "sourceName": "ScaffoldProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -58227,6 +58307,19 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildProjectScaffold",
+        "currentName": "BuildProjectScaffold",
+        "sourceName": "ScaffoldProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -64581,6 +64674,19 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildProjectScaffold",
+        "currentName": "BuildProjectScaffold",
+        "sourceName": "ScaffoldProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -71368,6 +71474,19 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildProjectScaffold",
+        "currentName": "BuildProjectScaffold",
+        "sourceName": "ScaffoldProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -79396,6 +79515,19 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildProjectScaffold",
+        "currentName": "BuildProjectScaffold",
+        "sourceName": "ScaffoldProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },

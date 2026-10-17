@@ -6,6 +6,7 @@
   <!-- Every PlcWorker uses the same session flow; Adapter compiles its implementation. -->
   <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Worker' Or '$(TiaFeatureProfile)' == 'Adapter'">
     <DefineConstants Condition="$([System.String]::Copy('|14sp1|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);WORKER_SESSION_LIFECYCLE</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|14sp1|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_SCAFFOLD</DefineConstants>
   </PropertyGroup>
   <!-- Seed registration stays on the evidenced engine-port formats; older releases still refuse it. -->
   <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Worker'">
@@ -38,7 +39,6 @@
     <DefineConstants Condition="$([System.String]::Copy('|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_EXCHANGE</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_MULTIUSER</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_MULTIUSER_MARKINGS</DefineConstants>
-    <DefineConstants Condition="$([System.String]::Copy('|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_SCAFFOLD</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_TEXT_CATEGORIES</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_HARDWARE_UTILITIES</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);SECURITY_DEVICE_USERS</DefineConstants>

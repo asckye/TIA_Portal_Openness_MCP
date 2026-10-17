@@ -3435,6 +3435,7 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": [
+          "BuildProjectScaffold",
           "ConnectIsolatedPortal",
           "EnsureOpennessUserGroup",
           "GetPortalInfo",
@@ -3947,6 +3948,7 @@
         "l5": "NOT RUN",
         "entries": [
           "ArchiveSavedProject",
+          "BuildProjectScaffold",
           "ConnectIsolatedPortal",
           "EnsureOpennessUserGroup",
           "GetPortalInfo",
@@ -4507,6 +4509,7 @@
         "l5": "NOT RUN",
         "entries": [
           "ArchiveSavedProject",
+          "BuildProjectScaffold",
           "ConnectIsolatedPortal",
           "EnsureOpennessUserGroup",
           "GetPortalInfo",
@@ -5100,6 +5103,7 @@
         "l5": "NOT RUN",
         "entries": [
           "ArchiveSavedProject",
+          "BuildProjectScaffold",
           "ConnectIsolatedPortal",
           "EnsureOpennessUserGroup",
           "GetPortalInfo",
@@ -5728,6 +5732,7 @@
         "l5": "NOT RUN",
         "entries": [
           "ArchiveSavedProject",
+          "BuildProjectScaffold",
           "ConnectIsolatedPortal",
           "EnsureOpennessUserGroup",
           "GetPortalInfo",
@@ -6372,6 +6377,7 @@
         "l5": "NOT RUN",
         "entries": [
           "ArchiveSavedProject",
+          "BuildProjectScaffold",
           "ConnectIsolatedPortal",
           "EnsureOpennessUserGroup",
           "GetPortalInfo",

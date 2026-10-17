@@ -271,7 +271,7 @@ namespace TiaMcp.Adapters.Contracts
             ["ManageUmcUsers"] = new[] { "17", "18", "19", "20", "21" },
             ["ManagePlcCertificate"] = new[] { "16", "17", "18", "19", "20", "21" },
             ["ArchiveSavedProject"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
-            ["BuildProjectScaffold"] = new[] { "20", "21" },
+            ["BuildProjectScaffold"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
             ["ConnectIsolatedPortal"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
             ["EnsureOpennessUserGroup"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
             ["GetPortalInfo"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
