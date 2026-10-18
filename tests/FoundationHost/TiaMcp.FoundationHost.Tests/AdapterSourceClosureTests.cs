@@ -134,7 +134,8 @@ internal static class AdapterSourceClosureTests
             }
             var stdout=output.GetAwaiter().GetResult();
             var stderr=error.GetAwaiter().GetResult();
-            check(process.ExitCode==0,"Adapter MSBuild evaluation succeeded: "+project+"\n"+stderr+stdout);
+            // The evaluation JSON carries volatile item metadata (AccessedTime); keep it out of the label of a passing row.
+            check(process.ExitCode==0,"Adapter MSBuild evaluation succeeded: "+project+(process.ExitCode==0?"":"\n"+stderr+stdout));
             using var result=JsonDocument.Parse(stdout);
             var items=result.RootElement.GetProperty("Items");
             string[] Paths(string item)=>items.GetProperty(item).EnumerateArray().Select(value=>Path.GetFullPath(value.GetProperty("FullPath").GetString()!)).ToArray();
