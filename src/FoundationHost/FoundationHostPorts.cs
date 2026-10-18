@@ -136,6 +136,8 @@ internal static class FoundationHostPorts
             token.ThrowIfCancellationRequested();
             var ready = readiness();
             var profile = ReleaseCatalogData.Releases[release];
+            bool useLocalReadiness = profile.NativeObservations && (bool?)ready["ready"] == false
+                && ready["environment"]?["tiaInstallPath"] == null;
             if (!profile.ObservationSet.Contains(operation)) throw new NotSupportedException("This observation is unavailable on release " + release + ": " + operation);
             if (operation == "tool-names") return new JsonArray((profile.ObservationToolNames.Count == 0
                 ? Roster().Select(t => t.ProtocolTool.Name) : profile.ObservationToolNames).Select(name => (JsonNode?)JsonValue.Create(name)).ToArray());
@@ -156,16 +158,16 @@ internal static class FoundationHostPorts
             switch (operation)
             {
                 case "environment":
-                    if (profile.NativeObservations) return await ReadFacts();
+                    if (profile.NativeObservations && !useLocalReadiness) return await ReadFacts();
                     return new JsonArray(new JsonObject { ["Id"] = "tia-install", ["Ok"] = ready["environment"]?["tiaInstallPath"] != null,
                         ["NameEn"] = "TIA Portal installation", ["NameZh"] = "TIA Portal installation", ["DetailEn"] = ready["cause"]?.DeepClone() ?? JsonValue.Create("Matching release API files found."),
                         ["DetailZh"] = ready["cause"]?.DeepClone(), ["FixEn"] = ready["recommendedFix"]?.DeepClone(), ["FixZh"] = ready["recommendedFixZh"]?.DeepClone() });
-                case "group": return profile.NativeObservations ? await ReadFacts() : ready["environment"]?["opennessGroupOk"]?.DeepClone() ?? JsonValue.Create(false);
+                case "group": return profile.NativeObservations && !useLocalReadiness ? await ReadFacts() : ready["environment"]?["opennessGroupOk"]?.DeepClone() ?? JsonValue.Create(false);
                 case "group.fix":
                     if (profile.NativeObservations) return await ReadFacts();
                     throw new NotSupportedException("Use Windows administration to configure the Siemens TIA Openness group on this release.");
                 case "assemblies":
-                    if (profile.NativeObservations) return await ReadFacts();
+                    if (profile.NativeObservations && !useLocalReadiness) return await ReadFacts();
                     var assemblies = new JsonArray();
                     if (Directory.Exists(apiDirectory))
                         foreach (var path in Directory.GetFiles(apiDirectory!, "Siemens.Engineering*.dll"))
@@ -178,8 +180,8 @@ internal static class FoundationHostPorts
                 case "reflection": return profile.NativeObservations ? await ReadFacts() : new JsonObject { ["guard"] = true, ["DescribeService"] = false, ["InvokeService"] = false, ["InvokeObject"] = false };
                 case "reflection-deny": return profile.NativeObservations ? await ReadFacts() : JsonValue.Create((string?)arguments["method"] == "GetAttribute" ? null : "Reflection writes are not registered on this release.");
                 case "session.GetState":
-                    if (profile.NativeObservations) return await ReadFacts();
-                    var state = (await Status(token))["session"];
+                    if (profile.NativeObservations && !useLocalReadiness) return await ReadFacts();
+                    var state = useLocalReadiness ? Snapshot()["session"] : (await Status(token))["session"];
                     return new JsonObject { ["IsConnected"] = state?["isConnected"]?.DeepClone() ?? JsonValue.Create(false), ["Project"] = state?["project"]?.DeepClone() };
                 case "session.ListPortalProcessProjects":
                     if (profile.NativeObservations) return await ReadFacts();

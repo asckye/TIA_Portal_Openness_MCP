@@ -114,6 +114,58 @@ public sealed class SharedWorkerRegressionTests
         Assert.False(worker.WorkerFaulted);
     }
 
+    [Theory, InlineData("20", "doctor"), InlineData("21", "doctor"),
+        InlineData("20", "self-test"), InlineData("21", "self-test"),
+        InlineData("20", "compatibility"), InlineData("21", "compatibility")]
+    public async Task No_tia_passive_diagnostics_do_not_require_a_startable_worker(string release, string diagnostic)
+    {
+        using var worker = new WorkerClient(release, "missing-worker", "missing-api", true) { SharedSession = true, Bundled = false };
+        JsonObject Ready() => FoundationPassiveDiagnostics.Readiness(release, _ => null, () => false);
+        var services = FoundationHostPorts.CreateServices(worker, release, Ready, null);
+        using var pipeline = new Pipeline(release, services, Array.Empty<McpServerTool>());
+        using var context = pipeline.EnterSession();
+        Assert.False((bool?)services.Snapshot()["readiness"]?["ready"]);
+        Assert.False(string.IsNullOrEmpty((string?)services.Snapshot()["readiness"]?["recommendedFix"]));
+        if (diagnostic == "doctor")
+        {
+            var result = await Server.GetEnvironmentDiagnosticsV4(fix: false);
+            Assert.False(result.IsError == true, result.StructuredContent?.ToJsonString());
+            var data = result.StructuredContent!["data"]!;
+            Assert.False((bool?)data["ready"]);
+            Assert.Contains(data["checks"]!.AsArray(), check => !string.IsNullOrEmpty((string?)check?["fix"]));
+            Assert.False(string.IsNullOrEmpty((string?)data["recommendedFixZh"]));
+        }
+        else if (diagnostic == "self-test")
+        {
+            var result = await new enginehost::TiaMcpServer.ModelContextProtocol.HostMetaTools().RunCapabilitySelfTest();
+            var group = Assert.Single(result.Items!, item => item.Id == "openness.user-group");
+            Assert.Equal("fail", group.Status);
+            Assert.Equal("Current user is not in the Openness group, or membership could not be confirmed.", group.Detail);
+        }
+        else
+        {
+            var result = new enginehost::TiaMcpServer.ModelContextProtocol.EngineeringDiagnosticsTools().GetOpennessCompatibilityV4();
+            Assert.False(result.IsError == true, result.StructuredContent?.ToJsonString());
+        }
+        Assert.Null(worker.OperatorSnapshot()["pid"]);
+        Assert.False(services.Faulted);
+    }
+
+    [Theory, InlineData("20", false), InlineData("21", false), InlineData("20", true), InlineData("21", true)]
+    public async Task Available_worker_passive_observations_keep_the_worker_reply(string release, bool ready)
+    {
+        using var fixture = new Fixture(release);
+        var worker = fixture.Worker;
+        var services = FoundationHostPorts.CreateServices(worker, release, () => new JsonObject { ["ready"] = ready,
+            ["environment"] = new JsonObject { ["tiaInstallPath"] = AppContext.BaseDirectory } }, AppContext.BaseDirectory);
+        foreach (var operation in new[] { "environment", "group", "assemblies" })
+        {
+            var expected = await worker.Observe(operation, new(), CancellationToken.None);
+            var actual = await services.Observe(operation, new(), CancellationToken.None);
+            Assert.Equal(expected?.ToJsonString(), actual?.ToJsonString());
+        }
+    }
+
     [Theory, InlineData("20", false), InlineData("21", false), InlineData("20", true), InlineData("21", true)]
     public async Task Explicit_supervisor_reads_start_only_when_the_cold_lane_is_free(string release, bool restartPreview)
     {
