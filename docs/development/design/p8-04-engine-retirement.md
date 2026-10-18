@@ -45,7 +45,13 @@
 | 种子 HMI | 旧版种子 HMI 导入继续拒绝，等格式证据与真机证据后另开任务 |
 | 检查时长 | 快速门禁仍为 5 分钟；`check-all` 目标改为 30 分钟。批准：只把真正时间敏感的用例放入独占分片、为时间敏感分片保留专用核心、去掉 `check-all` 内部重复执行的检查、把过时的最低通过数提高到接近实际值。检查本身全部保留 |
 | 范围 | 全部纳入 4.0；P8-40、P8-10 第 4–6 批、P8-31f–i 和大的架构整理排在最后，届时可再决定是否推迟 |
-| 许可 | `Siemens.Collaboration.Net` 随 PlcWorker 分发的许可由维护者在 4.0 前确认；两种方案的影响评估先备好 |
+| 许可 | 2026-10-18 决定：六个 `Siemens.Collaboration.Net` 目标码程序集不得再分发。P8-76 用自有 Windows API 实现替换全部八版 PlcWorker 的用户组依赖；引擎及其 Resolver 在 P8-04l 删除，移除前仍阻塞 4.0 发布 |
+
+P8-76 的“就绪”继续表示当前登录令牌包含 Openness 组（维护者 2026-10-18 批准）；启动、`group` 和审批路径的布尔语义不变。`group` 额外按当前用户 SID 查询本机 `Siemens TIA Openness` 的直接成员记录，若与令牌不同则在 stderr 同时报告两者；查询不可用时只记录诊断，不改变令牌结果。直接成员记录不展开域组/嵌套组，不能据此否定令牌中已经生效的间接成员资格。
+
+只有既有 `EnsureOpennessUserGroup` / `group.fix` 修复路径才允许提权；修复未生效时按原因返回五种结果文字（维护者 2026-10-18 批准）。实现用 `NetLocalGroupGetMembers`（本机、level 0、逐页读取、释放 NetAPI 缓冲区）查询，用系统目录的 `net.exe localgroup "Siemens TIA Openness" "当前账号" /add` 和 `runas` 提示管理员授权；不使用命令 shell、不接收其他账号或组参数。已有直接成员而令牌未生效时不再提示提权；添加后重新按同一个 SID 核对，并要求注销重登。拒绝提权、组不存在、已加入待重登和添加失败的消息区分列入 P8-76 审查决定，MCP 名称、参数和结构不变，离线字节门禁仍要求零差异。
+
+实现依据为仓库保留的 [Siemens 用户组说明](../../../reference/siemens-openness/skills/licensing-and-firewall/SKILL.md)及任务给定的公开 Openness 手册要求，以及公开 Windows [NetLocalGroupGetMembers](https://learn.microsoft.com/en-us/windows/win32/api/lmaccess/nf-lmaccess-netlocalgroupgetmembers)、[LOCALGROUP_MEMBERS_INFO_0](https://learn.microsoft.com/en-us/windows/win32/api/lmaccess/ns-lmaccess-localgroup_members_info_0)、[NetApiBufferFree](https://learn.microsoft.com/en-us/windows/win32/api/lmapibuf/nf-lmapibuf-netapibufferfree) 和 [.NET ProcessStartInfo.Verb](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.processstartinfo.verb) 接口；不读取 Siemens.Collaboration 程序集的实现。
 
 线程模型尚未决定。PlcWorker 目前在 V14 SP1–V19 用 STA、在 V20/V21 用 MTA。八个版本的 SDK 都没有关于线程模型的说明。西门子 Openness 指南（`reference/siemens-openness/skills/threading-and-concurrency`）写明，没有消息循环的后台线程必须用 MTA。因此建议八个版本统一用 MTA，由真机验证后定案。
 

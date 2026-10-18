@@ -31,16 +31,6 @@ internal static class Program
         AppDomain.CurrentDomain.AssemblyResolve += (sender, request) =>
         {
             var wanted = new AssemblyName(request.Name);
-              if (wanted.Name != null && wanted.Name.StartsWith("Siemens.Collaboration.", StringComparison.Ordinal))
-              {
-                  using var resource = typeof(Program).Assembly.GetManifestResourceStream("ProjectGroupRuntime." + wanted.Name + ".dll");
-                  if (resource == null) return null;
-                  using var bytes = new MemoryStream(); resource.CopyTo(bytes);
-                  var embedded = Assembly.Load(bytes.ToArray());
-                  if (!string.Equals(wanted.FullName, embedded.FullName, StringComparison.OrdinalIgnoreCase))
-                      throw new FileLoadException("Embedded project group helper identity differs.");
-                  return embedded;
-              }
             if (wanted.Name == null || !wanted.Name.StartsWith("Siemens.Engineering", StringComparison.Ordinal)) return null;
             var file = Path.Combine(api, wanted.Name + ".dll");
             // Siemens.Engineering.Contract and Siemens.Engineering.ClientAdapter.Interfaces are not in the
@@ -103,7 +93,9 @@ internal static class Program
                 recovery.DisposeSession, recovery.Synchronize
                 );
             dispatcher.ProcessStartTicks = () => session.ProcessStartTicks;
-            engine.ProjectEnsureGroup = () => TiaMcpServer.Siemens.OpennessGroup.EnsureMembership().GetAwaiter().GetResult();
+            engine.ProjectEnsureGroup = () => TiaMcpServer.Siemens.WindowsOpennessGroup.RequireEffectiveMembership(
+                TiaMcpServer.Siemens.WindowsOpennessGroup.EnsureMembership(new TiaMcpServer.Siemens.WindowsOpennessGroupPlatform(
+                    TiaMcpServer.Runtime.EnvironmentDoctor.CurrentUserInOpennessGroup)));
             engine.ProjectConnectionCreated = connection => {
                 int processId = connection.GetCurrentProcess().Id;
                 engine.AdoptCreatedProjectLifecycleProcess(processId, session.ReserveCreatedProcess(processId));

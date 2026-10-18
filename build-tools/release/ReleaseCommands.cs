@@ -653,6 +653,8 @@ internal static partial class ReleaseCommands
             try { ValidateBuildRecords(root, package, noBinaries, options.Has("SkipSourceHashes")); }
             catch (Exception ex) { errors.Add(ex.Message); }
         }
+        if (rules is not null)
+            errors.AddRange(OpennessGroupRuntime.DeliveryPolicyErrors(path => IsDeliveryFile(path, rules.RootElement)));
         if (!noBinaries && rules is not null)
             errors.AddRange(PackageDependencies.Check(root, path => IsDeliveryFile(path, rules.RootElement)));
         rules?.Dispose();
@@ -1082,6 +1084,8 @@ internal static partial class ReleaseCommands
             var buildOutput = Path.Combine(Root, $"src/PlcWorker/bin/{key}/Release/net48");
             var worker = Path.Combine(buildOutput, $"TiaMcp.PlcWorker.{key}.exe");
             var adapter = Path.Combine(buildOutput, $"TiaMcp.Adapter.{key}.dll");
+            var opennessGroupRuntime = OpennessGroupRuntime.Inspect(worker);
+            opennessGroupRuntime.RequireClean();
             var verify = ProcessRunner.Run(options.Get("Dotnet", Dotnet), [weaver, "verify", adapter, Path.Combine(output, $"coverage-{key}.json")], Root);
             WriteLog(Path.Combine(output, $"verify-{key}.log"), verify);
             ProcessRunner.RequireSuccess(verify, $"Copied Adapter DLL coverage verification failed for {key}");
@@ -1089,7 +1093,7 @@ internal static partial class ReleaseCommands
             if (adapters.Length != 1 || Path.GetFileName(adapters[0]) != $"TiaMcp.Adapter.{key}.dll") throw new ReleaseException($"Worker output must contain exactly its selected adapter: {buildOutput}");
             if (Directory.EnumerateFiles(buildOutput).Any(path => Path.GetFileName(path).StartsWith("Siemens", StringComparison.OrdinalIgnoreCase) || Path.GetFileName(path).StartsWith("TiaMcp.PlcFoundation", StringComparison.OrdinalIgnoreCase))) throw new ReleaseException($"Unexpected Siemens/old Foundation dependency copied to {buildOutput}");
             var core = Path.Combine(api, rel.Item2 + ".dll");
-            results.Add(new { releaseKey = key, targetFramework = "net48", referenceIdentity = System.Reflection.AssemblyName.GetAssemblyName(core).FullName, referenceSha256 = ReleaseRecords.HashFile(core), workerSha256 = ReleaseRecords.HashFile(worker), adapterSha256 = ReleaseRecords.HashFile(adapter), compile = "passed", nativeAcceptance = "NOT RUN", nativeCallInstrumentation = "Adapter DLL weave and verify required by build", deployment = "Use build-multi-version", scope = "PLC foundation worker; full engines remain separate" });
+            results.Add(new { releaseKey = key, targetFramework = "net48", referenceIdentity = System.Reflection.AssemblyName.GetAssemblyName(core).FullName, referenceSha256 = ReleaseRecords.HashFile(core), workerSha256 = ReleaseRecords.HashFile(worker), adapterSha256 = ReleaseRecords.HashFile(adapter), opennessGroupRuntime, compile = "passed", nativeAcceptance = "NOT RUN", nativeCallInstrumentation = "Adapter DLL weave and verify required by build", deployment = "Use build-multi-version", scope = "PLC foundation worker; full engines remain separate" });
             Console.WriteLine($"{key} worker + single adapter compiled; native acceptance NOT RUN; ready for foundation bundle tests");
         }
         WriteJson(Path.Combine(output, "summary.json"), new { generatedAt = DateTimeOffset.UtcNow.ToString("o"), scope = "compile only; no worker/TIA launch, no change to full V20/V21 engines", results });

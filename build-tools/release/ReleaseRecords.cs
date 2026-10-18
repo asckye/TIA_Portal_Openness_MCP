@@ -55,6 +55,8 @@ internal static class ReleaseRecords
     {
         var runtime = Path.Combine(root, "runtime");
         if (!Directory.Exists(runtime)) return [];
+        foreach (var entry in Directory.EnumerateFiles(runtime, "*", SearchOption.AllDirectories).Where(OpennessGroupRuntime.IsEntryAssembly))
+            OpennessGroupRuntime.Inspect(entry).RequireClean();
         return Directory.EnumerateFiles(runtime, "*", SearchOption.AllDirectories)
             .Where(file =>
             {

@@ -11,6 +11,59 @@ namespace TiaMcp.ReleaseTool.Tests;
 
 public sealed class PackageDependencyTests
 {
+    [Fact]
+    public void OpennessGroupDeliveryRulesExcludePlcAndHostButRetainTheRetiringEngine()
+    {
+        var rules = DeliveryRules.Load(Repository.FindRoot(AppContext.BaseDirectory));
+        Assert.Empty(OpennessGroupRuntime.DeliveryPolicyErrors(rules.Delivered));
+        foreach (var assembly in OpennessGroupRuntime.CollaborationAssemblies)
+            foreach (var key in new[] { "20", "21" })
+                Assert.True(rules.Delivered($"runtime/v{key}/worker/{assembly}"));
+        const string planted = "runtime/v19/worker/Siemens.Collaboration.Net.dll";
+        Assert.Contains(OpennessGroupRuntime.DeliveryPolicyErrors(path => path == planted || rules.Delivered(path)),
+            error => error.Contains(planted, StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData("runtime/v14sp1/worker/TiaMcp.PlcWorker.14sp1.exe")]
+    [InlineData("runtime/v15.1/worker/TiaMcp.PlcWorker.15.1.exe")]
+    [InlineData("runtime/v16/worker/TiaMcp.PlcWorker.16.exe")]
+    [InlineData("runtime/v17/worker/TiaMcp.PlcWorker.17.exe")]
+    [InlineData("runtime/v18/worker/TiaMcp.PlcWorker.18.exe")]
+    [InlineData("runtime/v19/worker/TiaMcp.PlcWorker.19.exe")]
+    [InlineData("runtime/v20/worker/TiaMcp.PlcWorker.20.exe")]
+    [InlineData("runtime/v21/worker/TiaMcp.PlcWorker.21.exe")]
+    [InlineData("runtime/v21/TiaMcp.FoundationHost.dll")]
+    public void OwnEntriesRejectCollaborationReferencesResourcesAndSidecars(string entry)
+    {
+        using var fixture = new OfflineFixtures();
+        var path = Path.Combine(fixture.DirectoryPath, entry);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllBytes(path, AssemblyBytes(entry, [], null));
+        Assert.Empty(OpennessGroupRuntime.Inspect(path).Errors);
+        File.WriteAllBytes(path, AssemblyBytes(entry, ["Siemens.Collaboration.Net"], null));
+        Assert.Contains(OpennessGroupRuntime.Inspect(path).Errors, error => error.Contains("Siemens.Collaboration.Net", StringComparison.Ordinal));
+        // Synthetic resource bytes only; no Siemens object code is read or extracted.
+        File.WriteAllBytes(path, AssemblyBytes(entry, [], new Dictionary<string, byte[]> { ["ProjectGroupRuntime.Siemens.Collaboration.Net.dll"] = [0] }));
+        Assert.Contains(OpennessGroupRuntime.Inspect(path).Errors, error => error.Contains("ProjectGroupRuntime.", StringComparison.Ordinal));
+        File.WriteAllBytes(path, AssemblyBytes(entry, [], null));
+        File.WriteAllText(Path.Combine(Path.GetDirectoryName(path)!, "Siemens.Collaboration.Net.dll"), "synthetic sidecar");
+        Assert.Throws<ReleaseException>(() => OpennessGroupRuntime.Inspect(path).RequireClean());
+        Assert.Throws<ReleaseException>(() => ReleaseRecords.GetRuntimeFiles(fixture.DirectoryPath));
+    }
+
+    [Fact]
+    public void BundleDependencyClosureRejectsEmbeddedGroupRuntimeEvenWhenUnreferenced()
+    {
+        using var fixture = new OfflineFixtures();
+        const string program = "runtime/v19/worker/TiaMcp.PlcWorker.19.exe";
+        var path = Path.Combine(fixture.DirectoryPath, program);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllBytes(path, AssemblyBytes(program, [], new Dictionary<string, byte[]> { ["ProjectGroupRuntime.Siemens.Collaboration.Net.dll"] = [0] }));
+        Assert.Contains(PackageDependencies.Check(fixture.DirectoryPath, _ => true),
+            error => error.Contains("prohibited PlcWorker/host dependency or resource", StringComparison.Ordinal));
+    }
+
     [Theory]
     [InlineData("1.0.0.0", "neutral", true)]
     [InlineData("2.0.0.0", "neutral", false)]

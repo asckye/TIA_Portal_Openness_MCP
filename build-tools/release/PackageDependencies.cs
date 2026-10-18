@@ -112,8 +112,10 @@ internal static class PackageDependencies
             entry = assembly;
             queue.Enqueue(assembly);
         }
-        // The PLC worker's existing resolver loads these resources from its entry assembly.
-        // Inspect their PE references as well, rather than treating an embedded name as sufficient.
+        if (OpennessGroupRuntime.IsEntryAssembly(Path.Combine(root, entry)))
+            errors.AddRange(OpennessGroupRuntime.Inspect(Path.Combine(root, entry)).Errors);
+        // Retain the general embedded-dependency closure check and its regression fixtures.
+        // PlcWorker/host entries now additionally reject the retired group runtime above.
         foreach (var (name, bytes) in EmbeddedRuntime(Path.Combine(root, entry))) embedded.Add(name, bytes);
         var depsPath = Path.ChangeExtension(program, ".deps.json");
         if (modern && !files.Contains(depsPath)) errors.Add($"Dependency closure: {program}: missing {depsPath}");

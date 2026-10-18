@@ -79,6 +79,7 @@ internal static class BundleLayoutChecks
         LauncherPaths(layout, Repository.ReadSource(Path.Combine(root, Launcher)), Repository.ReadSource(Path.Combine(root, GuiProject)));
         var validated = ValidatedPaths(Repository.ReadSource(Path.Combine(root, Validator)));
         var errors = new List<string>();
+        errors.AddRange(OpennessGroupRuntime.DeliveryPolicyErrors(rules.Delivered));
         foreach (var name in tracked ?? new HashSet<string>())
             if ((name.StartsWith("runtime/", StringComparison.Ordinal) || name.StartsWith("hooks/", StringComparison.Ordinal)) && Path.GetExtension(name).ToLowerInvariant() is ".cs" or ".csproj") errors.Add("Shipped runtime/hook tree contains source: " + name);
         foreach (var path in paths)

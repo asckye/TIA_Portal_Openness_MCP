@@ -81,7 +81,12 @@ internal static class WorkerObservations
         if (operation == "status") return CachedStatus();
         return Read(operation, arguments, new Context {
             Environment = () => JsonSerializer.SerializeToNode(EnvironmentDoctor.Run(Engineering.TiaMajorVersion, Engineering.TiaMajorVersion), new JsonSerializerOptions { IncludeFields = true }),
-            Group = EnvironmentDoctor.CurrentUserInOpennessGroup, FixGroup = engine.EnsureOpennessUserGroup,
+#if TIA_PLC_WORKER_OPENNESS_GROUP
+            Group = () => WindowsOpennessGroup.ReadEffectiveMembership(new WindowsOpennessGroupPlatform(EnvironmentDoctor.CurrentUserInOpennessGroup)),
+#else
+            Group = EnvironmentDoctor.CurrentUserInOpennessGroup,
+#endif
+            FixGroup = engine.EnsureOpennessUserGroup,
             ReflectionType = typeof(PlcFoundationEngine).Assembly.GetType("TiaMcp.Adapters.Reflection.OpennessReflection")!, ReflectionProbe = typeof(PlcFoundationEngine).GetMethod("ExecuteOnline") != null,
             ToolNames = () => throw new NotSupportedException("The host owns the tool roster."),
             Session = (name, values) => {

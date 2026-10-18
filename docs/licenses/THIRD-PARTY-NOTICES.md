@@ -56,13 +56,15 @@ F28 迁移后的 V19/V20/V21 PLC worker 也使用下表的 Esprima 3.0.5 和 Yam
 
 ## 关于 Siemens.Collaboration.Net 条款的说明
 
-上述 6 个 Siemens 程序集以**目标码**形式随包分发。其包内许可证（[Siemens.Collaboration.Net.md](Siemens.Collaboration.Net.md)）的结构是：
+上述 6 个 Siemens 程序集目前仅由待退役的 V20/V21 引擎以**目标码**形式随包分发，路径为 `runtime/v20/worker/` 和 `runtime/v21/worker/`。P8-76 已从全部八版 PlcWorker 删除包引用、嵌入资源及解析分支；FoundationHost 也不携带它们。其包内许可证（[Siemens.Collaboration.Net.md](Siemens.Collaboration.Net.md)）的结构是：
 
 - 第 2 条：MIT 许可**仅适用于源码及生成的源码**。
 - 第 3 条：对目标码适用"Royalty-Free Siemens Software Conditions"——授予**免版税、非独占、不可再许可、不可转让**的使用权，限于"开发和测试可与 Siemens 产品配合使用的软件"这一预期用途。
 - 第 1.1 条：除非第 2 条明确授予，不得反编译、翻译、提取、修改或**分发**该软件。
 
-因此，将这些 DLL 打入交付 ZIP 向第三方再分发，与"不可转让 / 不得分发"的措辞之间存在需要维护者自行评估的空间。本清单只如实记录条款，不构成法律意见。可选的处理方式包括：保留现状并在 NOTICE 中明示；或从交付包中剔除这 6 个 DLL、改由安装步骤通过 NuGet 还原；或向 Siemens 确认再分发许可。
+维护者于 2026-10-18 决定不得再分发这六个目标码程序集，改用自有 Windows 用户组代码（P8-76）。自有实现依据公开 Windows API 与 Siemens Openness 用户组要求，不从这些程序集反编译、反汇编、提取或反射获得实现。PlcWorker 的有效成员资格仍以登录令牌为准；本机组的直接 SID 成员记录作为诊断，加入后必须注销并重新登录。
+
+引擎的 Resolver 及包引用在 P8-04l 删除引擎时一并移除；本任务不改变引擎。当前过渡包仍因引擎携带表中六个 DLL，**不代表再分发许可已解决，不能据此发布 4.0**。保留本表与许可原文，直至引擎残留被移除。交付规则排除八版宿主和六版已交付 PlcWorker 目录中的六个 DLL；二进制门禁还拒绝任意八版 PlcWorker/宿主的引用、资源及同目录残留文件。受跟踪的历史构建记录由正式发布工具重新生成，不手改哈希。
 
 ## 维护规则
 

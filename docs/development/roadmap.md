@@ -10,6 +10,8 @@
 
 八版使用 FoundationHost，每个 MCP 会话一个 worker，工具按各版官方 API 注册。B1–B7 和硬件地址样板已合并；剩余在线、运行时、Unified 和选件能力按[移植方案](phase8-port-plan.md)继续迁入 Foundation 适配器。所有族迁完后才退役引擎 worker，见 [ADR 0009](decisions/0009-port-v20-v21-tools-to-foundation-adapters.md)。数量不拉平，见 [ADR 0014](decisions/0014-tool-counts-follow-official-api.md)。
 
+2026-10-18 许可决定：六个 `Siemens.Collaboration.Net` 目标码程序集不得再分发。P8-76 从八版 PlcWorker 移除它们，改用公开 Windows API 查询当前令牌与本机直接组成员、经既有确认路径提权添加当前用户；加入后注销重登才生效。令牌继续决定就绪状态。引擎仍携带六个 DLL，待 P8-04l 删除；其残留继续阻塞 4.0 发布。结果文字与成员资格语义的审查见 [P8-04 设计](design/p8-04-engine-retirement.md)许可行及 `bin-build/refactor/P8-76.result.md`。
+
 ## 工作台与工程生成
 
 控制通道提供显示、读取和预填，不能审批、切换审批或启停服务。工程操作页和版本控制页已使用所选 MCP 会话，保留人和 AI 的归属；端到端验收及旧桥接代码清理按[设计](design/workbench-control-and-shared-session.md)继续。

@@ -58,6 +58,25 @@ DELIVERY_RULES = 'scripts/operations/delivery-files.json'
 GENERATED_RESOURCES = {'runtime/tools/TiaMcp.WriteGuard.exe', 'runtime/tools/TiaMcp.PluginLauncher.exe', 'runtime/tools/TiaMcp.Updater.exe',
                        'runtime/tools/TiaMcp.Updater.exe.config'}
 SOURCE_ROOTS = 'build-tools/release/source-roots.json'
+COLLABORATION_ASSEMBLIES = (
+    'Siemens.Collaboration.Net.dll', 'Siemens.Collaboration.Net.CoreExtensions.dll',
+    'Siemens.Collaboration.Net.Logging.dll', 'Siemens.Collaboration.Net.OperatingSystem.Windows.dll',
+    'Siemens.Collaboration.Net.Windows.Authentication.dll', 'Siemens.Collaboration.Net.TiaPortal.Openness.Resolver.dll',
+)
+
+
+def openness_group_delivery_errors(rules):
+    errors = []
+    for key in ('14sp1', '15.1', '16', '17', '18', '19', '20', '21'):
+        for assembly in COLLABORATION_ASSEMBLIES:
+            host = f'runtime/v{key}/{assembly}'
+            if delivered(host, rules):
+                errors.append('Delivery policy permits retired host group dependency: ' + host)
+            worker = f'runtime/v{key}/worker/{assembly}'
+            # V20/V21 retain the engine until P8-04l; do not silently exclude its dependencies.
+            if key not in ('20', '21') and delivered(worker, rules):
+                errors.append('Delivery policy permits retired PlcWorker group dependency: ' + worker)
+    return errors
 
 
 def source_roots(root):
@@ -187,7 +206,7 @@ def check(root, tracked):
     launcher_paths(layout, (root / LAUNCHER).read_text(encoding='utf-8-sig'),
                    (root / GUI_PROJECT).read_text(encoding='utf-8-sig'))
     validated = validated_paths((root / VALIDATOR).read_text(encoding='utf-8-sig'))
-    errors = []
+    errors = openness_group_delivery_errors(rules)
     for name in tracked or ():
         if name.startswith(('runtime/', 'hooks/')) and Path(name).suffix.lower() in ('.cs', '.csproj'):
             errors.append('Shipped runtime/hook tree contains source: ' + name)
@@ -213,6 +232,16 @@ def check(root, tracked):
 
 
 class LayoutChecks(unittest.TestCase):
+    def test_openness_group_delivery_excludes_plc_and_host_but_retains_engine(self):
+        rules = load_delivery(ROOT)
+        self.assertEqual([], openness_group_delivery_errors(rules))
+        for assembly in COLLABORATION_ASSEMBLIES:
+            for key in ('20', '21'):
+                self.assertTrue(delivered(f'runtime/v{key}/worker/{assembly}', rules))
+        planted = 'runtime/v19/worker/Siemens.Collaboration.Net.dll'
+        rules['exclude']['files'].remove(planted)
+        self.assertTrue(any(planted in error for error in openness_group_delivery_errors(rules)))
+
     def test_quick_package_requires_the_same_build_plan(self):
         policy = json.loads((ROOT / 'build-tools/release/release-checks.json').read_text('utf-8'))
         selected = [check for check in policy['checks'] if check in policy['always']]
