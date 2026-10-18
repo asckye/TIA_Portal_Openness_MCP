@@ -272,8 +272,8 @@ HMI 模板还要求 `--hmi-template-directory <absolute-directory>`，组件目�
 
 仓库模式核对代码表与跟踪文件；包模式从仓库运行校验器，按交付规则检查资源而不要求包内源码。
 检查器不证明运行时返回值、二进制完整性或西门子行为；`Check-Repository.py --no-binaries` 同时运行此检查。
-布局矩阵及调用方差分测试位于完整引擎的 [BundleLayoutTests.cs](../../tests/Engine/TiaMcp.Engine.Tests/BundleLayoutTests.cs)、
-[EcosystemTests.cs](../../tests/Engine/TiaMcp.Engine.Tests/EcosystemTests.cs)、
+布局矩阵及调用方差分测试位于完整引擎的 [BundleLayoutTests.cs](../../tests/KeptCode/TiaMcp.KeptCode.Tests/BundleLayoutTests.cs)、
+[EcosystemTests.cs](../../tests/KeptCode/TiaMcp.KeptCode.Tests/EcosystemTests.cs)、
 [EngineBundleLayoutTests.cs](../../tests/Engine/TiaMcp.Engine.Tests/EngineBundleLayoutTests.cs) 和 Studio 的
 [Core 布局测试](../../tests/Studio/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs)、
 [GUI 布局测试](../../tests/Studio/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs)，覆盖安装、开发输出、worktree、CI、仅 runtime、嵌套暂存、

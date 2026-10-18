@@ -31,7 +31,7 @@ def project_cases(root):
         if '<DefineConstants>' in source or '<TiaMajor>' in source:
             add(path)
     suites = json.loads((root / 'tests/test-suites.json').read_text(encoding='utf-8-sig'))
-    for name in ('offline', 'offline-v20'):
+    for name in ('offline', 'offline-v20', 'kept-code', 'kept-code-v20'):
         properties = dict(arg.removeprefix('-p:').split('=', 1)
                           for arg in suites[name]['arguments'] if arg.startswith('-p:'))
         add(root / suites[name]['project'], properties)

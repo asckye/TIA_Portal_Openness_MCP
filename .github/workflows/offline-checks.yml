@@ -56,7 +56,7 @@ jobs:
       - name: TRX gate self-checks
         run: dotnet run --project build-tools/release -- test-suites -SelfTest
       - name: Offline regression, generation basic package and MCP SDK version policy
-        run: dotnet run --project build-tools/release -- test-suites -Shards 4 -MaxParallelism 4 -Suite offline -Suite offline-v20 -Suite version-policy -Suite generation-model -Suite generation-planning -Suite workbench-control-protocol
+        run: dotnet run --project build-tools/release -- test-suites -Shards 4 -MaxParallelism 4 -Suite offline -Suite offline-v20 -Suite kept-code -Suite kept-code-v20 -Suite version-policy -Suite generation-model -Suite generation-planning -Suite workbench-control-protocol
       - uses: actions/upload-artifact@v6
         if: always()
         with:

@@ -310,46 +310,8 @@ namespace TiaMcp.Engine.Tests
             }
         }
 
-        [Theory]
-        [InlineData("--isolate-openness")]
-        [InlineData("--no-isolate-openness")]
-        [InlineData("--openness-worker-child")]
-        [InlineData("--transport")]
-        [InlineData("--http-prefix")]
-        public void Engine_refuses_retired_host_modes(string option)
-        {
-            var error = Assert.Throws<ArgumentException>(() => TiaMcpServer.CliOptions.ParseArgs(new[] { option }));
-            Assert.Contains("FoundationHost", error.Message);
-        }
-        [Fact]
-        public async Task Approval_frames_refuse_oversize_truncation_and_self_decision_shape()
-        {
-            using var oversized = new MemoryStream(BitConverter.GetBytes(ApprovalFrames.MaximumBytes + 1));
-            await Assert.ThrowsAsync<InvalidDataException>(() => ApprovalFrames.Read<ApprovalDecision>(oversized, CancellationToken.None));
-            using var shortFrame = new MemoryStream(new byte[] { 10, 0, 0, 0, 1 });
-            await Assert.ThrowsAsync<EndOfStreamException>(() => ApprovalFrames.Read<ApprovalDecision>(shortFrame, CancellationToken.None));
-            using var selfApprove = new MemoryStream(); await ApprovalFrames.Write(selfApprove, new ApprovalDecision { Decision = "granted" }, CancellationToken.None);
-            selfApprove.Position = 0;
-            await Assert.ThrowsAsync<InvalidDataException>(() => ApprovalFrames.Read<PendingApproval>(selfApprove, CancellationToken.None));
-            using var missingVersion = new MemoryStream();
-            byte[] missing = System.Text.Encoding.UTF8.GetBytes("{\"RequestId\":\"r1\",\"PlanHash\":\"hash\",\"ArgumentDigest\":\"digest\",\"Decision\":\"granted\"}");
-            missingVersion.Write(BitConverter.GetBytes(missing.Length)); missingVersion.Write(missing); missingVersion.Position = 0;
-            await Assert.ThrowsAsync<InvalidDataException>(() => ApprovalFrames.Read<ApprovalDecision>(missingVersion, CancellationToken.None));
-        }
-        [Theory]
-        [InlineData("request")]
-        [InlineData("hash")]
-        [InlineData("arguments")]
-        [InlineData("version")]
-        public void A_decision_cannot_authorize_another_request_or_plan(string mismatch)
-        {
-            var request = Request(); var decision = new ApprovalDecision { RequestId = request.RequestId, PlanHash = request.PlanHash,
-                ArgumentDigest = request.ArgumentDigest, Decision = "granted" };
-            Assert.True(decision.Matches(request));
-            switch (mismatch) { case "request": decision.RequestId = "other"; break; case "hash": decision.PlanHash = new string('b', 64); break;
-                case "arguments": decision.ArgumentDigest = new string('c', 64); break; default: decision.Version = 2; break; }
-            Assert.False(decision.Matches(request));
-        }
+
+
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
@@ -396,63 +358,9 @@ namespace TiaMcp.Engine.Tests
             }
             finally { TiaMcpServer.ModelContextProtocol.McpServer.LeaveMcpApprovalContext(mcp); before.Save(ApprovalSettings.SettingsPath); }
         }
-        [Theory]
-        [InlineData("denied")]
-        [InlineData("timeout")]
-        [InlineData("workbench-unavailable")]
-        [InlineData("plan-confirmation")]
-        public void Confirmation_details_are_closed_and_roundtrip(string reason)
-        {
-            var details = new ConfirmationRequiredDetails(reason, new string('a', 64), "r1");
-            var error = V4Json.Deserialize<Error>(V4Json.Serialize(new Error("Refused.", details)));
-            Assert.Equal(reason, Assert.IsType<ConfirmationRequiredDetails>(error.Details).Reason);
-            Assert.Throws<ArgumentException>(() => new ConfirmationRequiredDetails("unknown", details.PlanHash, "r1"));
-            Assert.Throws<ArgumentException>(() => new ConfirmationRequiredDetails("denied", null, "r1"));
-            Assert.Throws<System.Text.Json.JsonException>(() => V4Json.Deserialize<Error>("{\"code\":\"CONFIRMATION_REQUIRED\",\"message\":\"Refused.\",\"details\":{\"planHash\":null}}"));
-        }
-        [Fact]
-        public void Digest_binds_identity_and_all_arguments_and_redacts_display_only()
-        {
-            var request = Request();
-            Assert.DoesNotContain("private-input", request.ParametersJson);
-            Assert.NotEqual(request.ArgumentDigest, PendingApproval.Create("engine", "21", "WriteFixture", "{\"blockPath\":\"PLC/Block\",\"password\":\"changed\"}", "{\"projectFile\":\"P.ap21\",\"bindingEpoch\":1}", 3).ArgumentDigest);
-            Assert.NotEqual(request.ArgumentDigest, PendingApproval.Create("engine", "21", "WriteFixture", "{\"blockPath\":\"PLC/Block\",\"password\":\"private-input\"}", "{\"projectFile\":\"Other.ap21\",\"bindingEpoch\":1}", 3).ArgumentDigest);
-            Assert.Equal(PendingApproval.Create("engine", "21", "WriteFixture", "{\"a\":1,\"b\":2}", null, 3).PlanHash,
-                PendingApproval.Create("engine", "21", "WriteFixture", "{\"b\":2,\"a\":1}", null, 3).PlanHash);
-        }
-        [Theory]
-        [InlineData("granted", "none")]
-        [InlineData("denied", "none")]
-        [InlineData("granted", "request")]
-        [InlineData("granted", "hash")]
-        [InlineData("granted", "arguments")]
-        [InlineData("granted", "version")]
-        public async Task Pipe_decision_is_bound_once(string decision, string mismatch)
-        {
-            if (!OperatingSystem.IsWindows()) return;
-            string name = "tia-approval-test-" + Guid.NewGuid().ToString("N");
-            using var server = ApprovalPipe.CreateServer(name, ApprovalPipe.CurrentSid, true);
-            var request = Request(); var audit = new AuditLog(Scratch());
-            using var traceText = new StringWriter(); using var trace = new System.Diagnostics.TextWriterTraceListener(traceText);
-            System.Diagnostics.Trace.Listeners.Add(trace);
-            var response = Task.Run(async () =>
-            {
-                await server.WaitForConnectionAsync();
-                var frame = await ApprovalFrames.Read<PendingApproval>(server, CancellationToken.None);
-                Assert.True(ApprovalPipe.PeerIsCurrentUser(server, ApprovalPipe.CurrentSid));
-                await ApprovalFrames.Write(server, new ApprovalDecision { RequestId = mismatch == "request" ? "other" : frame.RequestId,
-                    PlanHash = mismatch == "hash" ? new string('b', 64) : frame.PlanHash,
-                    ArgumentDigest = mismatch == "arguments" ? new string('c', 64) : frame.ArgumentDigest,
-                    Version = mismatch == "version" ? 2 : 1, Decision = decision }, CancellationToken.None);
-            });
-            var result = await ApprovalClient.Wait(request, new ApprovalSettings(), CancellationToken.None, name, audit);
-            System.Diagnostics.Trace.Listeners.Remove(trace);
-            Assert.False(result.Reason == "workbench-unavailable", traceText.ToString());
-            await response.WaitAsync(TimeSpan.FromSeconds(5));
-            Assert.Equal(decision == "granted" && mismatch == "none" ? null : "denied", result.Reason);
-            Assert.Equal("denied", (await ApprovalClient.Wait(request, new ApprovalSettings(), CancellationToken.None, name, audit)).Reason);
-            Assert.True(audit.Verify().Passed);
-        }
+
+
+
         [Fact]
         public async Task Absent_and_timeout_are_not_started_and_audited()
         {
@@ -490,19 +398,6 @@ namespace TiaMcp.Engine.Tests
             Assert.Equal(2, log.Read().Count(r => r.Event == "approval-switch"));
             File.WriteAllText(path, "enabled=false\ncorrupted=true\n"); Assert.True(ApprovalSettings.Load(path).Enabled);
         }
-        [Fact]
-        public void Protected_acl_grants_only_current_sid_and_refuses_another_sid_simulation()
-        {
-            if (!OperatingSystem.IsWindows()) return;
-            string sid = ApprovalPipe.CurrentSid;
-            var security = new RawSecurityDescriptor(ApprovalPipe.SecurityDescriptor(sid));
-            Assert.True((security.ControlFlags & ControlFlags.DiscretionaryAclProtected) != 0);
-            Assert.Equal(new SecurityIdentifier(sid), security.Owner);
-            var ace = Assert.IsType<CommonAce>(Assert.Single(security.DiscretionaryAcl!.Cast<GenericAce>()));
-            Assert.Equal(new SecurityIdentifier(sid), ace.SecurityIdentifier);
-            Assert.Equal(AceQualifier.AccessAllowed, ace.AceQualifier);
-            Assert.NotEqual(new SecurityIdentifier("S-1-5-21-1-2-3-1001"), ace.SecurityIdentifier);
-            Assert.NotEqual(ApprovalPipe.Name(Scratch(), sid), ApprovalPipe.Name(Scratch(), "S-1-5-21-1-2-3-1001"));
-        }
+
     }
 }

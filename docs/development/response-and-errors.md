@@ -121,7 +121,7 @@ C# 改动；新增、删除、非模板改动均拒绝。省略路径时检查�
 每个领域任务先记录基线 SHA，构建并保留 V20/V21 EXE、依赖和全类别 weave 清单；然后只转换可匹配的调用点：
 
 1. 运行检查器 `--self-test`、`--base <sha> <本任务调用点路径…>`；临时在一个转换处插入额外语句，确认非零退出后恢复。
-2. E2 跑 `Test-DotnetSuites.py --suite offline --suite offline-v20 --suite version-policy`（检查 TRX 下限）；E3 两版
+2. E2 跑 `dotnet run --project build-tools/release -- test-suites -Suite offline -Suite offline-v20 -Suite kept-code -Suite kept-code-v20 -Suite version-policy`（检查 TRX 下限）；E3 两版
    TiaMcp.Engine.Harness `response-golden-only` 各 124 项。新增模板需覆盖键序、CLR 类型、节点归属和时钟取值位置。
 3. E5 对两版 weave `sites` 按声明方法归并 lambda/异步状态机，比较 **全部 category + opcode + member** 多重集合；
    只允许本次初始化器的 `JsonObject::.ctor` 移到不织入的 Logic，并逐方法列出减少数；其余类别及西门子调用顺序不变。

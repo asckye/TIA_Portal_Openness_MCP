@@ -155,7 +155,7 @@ namespace TiaMcp.Engine.Tests
                     var arguments = parameters.Select(p => p == parameters[0] ? JsonSerializer.Deserialize(example[p.Name!]!.ToJsonString(), p.ParameterType)
                         : p.Name == "outputReleaseKey" ? "21" : p.DefaultValue).ToArray();
                     var body = Body(Invoke(group, method.Name, arguments));
-                    Check((bool)body["ok"]!, "Builder example: " + name + " " + body.ToJsonString());
+                    Check((bool)body["ok"]!, "Builder example: " + name + ((bool)body["ok"]! ? "" : " " + body.ToJsonString()));
                     var inputType = parameters[0].ParameterType;
                     string adapted = inputType.Namespace == "TiaMcp.Logic.V4.Construction"
                         ? (string)inputType.Assembly.GetType("TiaMcp.Logic.V4.Construction.ConstructionAdapter", true)!.GetMethod("ToBuilderJson")!.Invoke(null, new[] { arguments[0] })!

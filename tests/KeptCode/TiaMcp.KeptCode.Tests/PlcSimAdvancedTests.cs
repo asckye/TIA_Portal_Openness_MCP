@@ -26,7 +26,7 @@ namespace TiaMcp.Engine.Tests
             var probe = PlcSimAdvancedLogic.CandidateApiPaths(explicitDir, envFile, roots);
             check(probe[0] == Path.Combine(explicitDir, PlcSimAdvancedLogic.ApiFileName), "explicit folder first, DLL name appended");
             check(probe[1] == envFile, "environment file second");
-            check(probe[2].Contains("6.0") && probe[3].Contains("5.0") && probe[4].Contains("4.0") && probe[5].Contains("old"), "installed folders newest first: " + string.Join(" | ", probe.Skip(2)));
+            check(probe[2].Contains("6.0") && probe[3].Contains("5.0") && probe[4].Contains("4.0") && probe[5].Contains("old"), "installed folders newest first" + (probe[2].Contains("6.0") && probe[3].Contains("5.0") && probe[4].Contains("4.0") && probe[5].Contains("old") ? "" : ": " + string.Join(" | ", probe.Skip(2))));
             check(PlcSimAdvancedLogic.CandidateApiPaths(null, null, roots).Count == 4, "no explicit/env -> only installed candidates");
             check(PlcSimAdvancedLogic.CandidateApiPaths(explicitDir, explicitDir + Path.DirectorySeparatorChar, roots).Count == 5, "duplicates collapse");
             check(PlcSimAdvancedLogic.VersionKey("6.0") > PlcSimAdvancedLogic.VersionKey("5.1") && PlcSimAdvancedLogic.VersionKey("x") == new Version(0, 0), "version folder ordering");
@@ -97,7 +97,7 @@ namespace TiaMcp.Engine.Tests
             }
             catch (InvalidOperationException ex)
             {
-                check(ex.Message.StartsWith("PLCSIM Advanced API (", StringComparison.Ordinal) && ex.Message.Contains("Probed:"), "missing API reports probe list: " + ex.Message.Substring(0, Math.Min(80, ex.Message.Length)));
+                check(ex.Message.StartsWith("PLCSIM Advanced API (", StringComparison.Ordinal) && ex.Message.Contains("Probed:"), "missing API reports probe list" + (ex.Message.StartsWith("PLCSIM Advanced API (", StringComparison.Ordinal) && ex.Message.Contains("Probed:") ? "" : ": " + ex.Message.Substring(0, Math.Min(80, ex.Message.Length))));
             }
         }
     }

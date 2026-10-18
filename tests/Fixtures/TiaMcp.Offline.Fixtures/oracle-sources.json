@@ -1,0 +1,46 @@
+{
+  "format": 1,
+  "purpose": "Frozen offline dispatcher infrastructure; original engine subjects remain in the residue.",
+  "sources": [
+    {
+      "original": "src/Engine/EngineRegistration.cs",
+      "fixture": "Oracle/EngineRegistration.cs",
+      "sha256": "7b9c305ab3f5a71514a54ec866dc7b40046b83ff604ab9f6626358cdf4f0884f"
+    },
+    {
+      "original": "src/Engine/EngineServices.cs",
+      "fixture": "Oracle/EngineServices.cs",
+      "sha256": "bd9c95e4f7c3d3c1fbdb4f56a8fd308205872b3bcf314572347f163a815ffab7"
+    },
+    {
+      "original": "src/Engine/ModelContextProtocol/Tools/InProcessToolInvoker.cs",
+      "fixture": "Oracle/ModelContextProtocol/Tools/InProcessToolInvoker.cs",
+      "sha256": "7abd297e4d9f52d89a24ccfd41d4bb64bb956f729097d09f8645bbd130547b40"
+    },
+    {
+      "original": "src/Engine/ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs",
+      "fixture": "Oracle/ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs",
+      "sha256": "9ad709ab232cb2fca7fbacb1e4425217434d94a5042c182437bb31e87ce4de37"
+    },
+    {
+      "original": "src/Engine/ModelContextProtocol/Tools/McpServer.InProcessTools.cs",
+      "fixture": "Oracle/ModelContextProtocol/Tools/McpServer.InProcessTools.cs",
+      "sha256": "6eb780d198bf376893a2de3bce8d265afae815afc745091266b2ae68d4f3a870"
+    },
+    {
+      "original": "src/Engine/ModelContextProtocol/Tools/ToolCatalog.cs",
+      "fixture": "Oracle/ModelContextProtocol/Tools/ToolCatalog.cs",
+      "sha256": "24c7ec29a5799140e873a3fa3c81e4c90c92d162e5b832e5a6387ae622a7aa15"
+    },
+    {
+      "original": "src/Engine/Siemens/EngineRouter.cs",
+      "fixture": "Oracle/Siemens/EngineRouter.cs",
+      "sha256": "b8546fc2ca95da5df143ec49cd9fd16da8244b99b58f24f0a408f4e8d799988b"
+    },
+    {
+      "original": "src/Engine/Siemens/SoftwareContainerLookup.cs",
+      "fixture": "Oracle/Siemens/SoftwareContainerLookup.cs",
+      "sha256": "fb9820b5fa072b3f3929f89cca3492c03b49db354fd68524d2486bca81c10e88"
+    }
+  ]
+}

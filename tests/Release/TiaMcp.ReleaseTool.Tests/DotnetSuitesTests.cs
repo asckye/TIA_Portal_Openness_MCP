@@ -17,6 +17,51 @@ public class DotnetSuitesTests
     }
 
     [Fact]
+    public void SplitSuiteVariantsKeepTheirDefineAndPlatformGates()
+    {
+        var root = Repository.FindRoot();
+        var windows = DotnetSuites.LoadCatalog(Path.Combine(root, "tests/test-suites.json"), root, "windows");
+        var linux = DotnetSuites.LoadCatalog(Path.Combine(root, "tests/test-suites.json"), root, "linux");
+        var features = TiaFeatures.ProjectCases(root);
+        foreach (var (parent, moved) in new[] { ("offline", "kept-code"), ("offline-v20", "kept-code-v20") })
+        {
+            int Minimum(JsonObject catalog, string name) => catalog[name]!["minimumPassed"]!.GetValue<int>();
+            Assert.Equal(5157, Minimum(windows, parent) + Minimum(windows, moved));
+            Assert.Equal(5156, Minimum(linux, parent) + Minimum(linux, moved));
+            Assert.Equal(4854, Minimum(linux, moved));
+            Assert.Equal(windows[parent]!["arguments"]!.ToJsonString(), windows[moved]!["arguments"]!.ToJsonString());
+            foreach (var name in new[] { parent, moved })
+            {
+                Assert.Equal(0, windows[name]!["maximumSkipped"]!.GetValue<int>());
+                Assert.Equal(0, linux[name]!["maximumSkipped"]!.GetValue<int>());
+                Assert.Contains(features, row => row.Project == (string?)windows[name]!["project"] &&
+                    row.Properties.GetValueOrDefault("DefineConstants") == (name.EndsWith("-v20", StringComparison.Ordinal) ? "TIA_V20" : null));
+            }
+        }
+        Assert.True(TimeSensitiveTests.ReserveShard((string)windows["kept-code"]!["project"]!));
+    }
+
+    [Fact]
+    public void SplitSuiteSourcesAndFixturesKeepReleaseInventoriesAndCheckSelection()
+    {
+        var root = Repository.FindRoot();
+        var policy = SourceRoots.Load(root);
+        var original = policy.Roots.Single(row => row.Path == "tests/Engine");
+        foreach (var path in new[] { "tests/KeptCode", "tests/Fixtures" })
+        {
+            var moved = policy.Roots.Single(row => row.Path == path);
+            Assert.Equal(original.Inventories, moved.Inventories);
+            Assert.Equal(original.Checks, moved.Checks);
+            Assert.Contains("offline-suites", ReleaseCheckPolicy.Load(root).Select("quick", [path + "/Example.cs"]).SelectedChecks);
+        }
+        var sources = ReleaseRecords.GetSources(root, "engine").Select(row => row.Path).ToHashSet(StringComparer.Ordinal);
+        Assert.Contains("tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj", sources);
+        Assert.Contains("tests/Fixtures/TiaMcp.Offline.Fixtures/ToolBridgeFixture.cs", sources);
+        foreach (var path in new[] { ".github/workflows/offline-checks.yml", "tests/test-suites.json" })
+            Assert.Contains("dotnetsuites-self-test", ReleaseCheckPolicy.Load(root).Select("quick", [path]).SelectedChecks);
+    }
+
+    [Fact]
     public void SuiteBuildsTakeOnlyTheBuildProperties()
     {
         Assert.Equal(new[] { "-p:EngineRelease=21" }, DotnetSuites.BuildArguments(["--filter", "FullyQualifiedName!~Operator", "-p:EngineRelease=21"]));

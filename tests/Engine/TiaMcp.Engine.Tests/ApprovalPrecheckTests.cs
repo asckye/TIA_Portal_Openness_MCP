@@ -201,27 +201,7 @@ namespace TiaMcp.Engine.Tests
             }
             finally { McpServer.LeaveMcpApprovalContext(context); McpServer.ApprovalWaitOverrideForTests = wait; settings.Save(ApprovalSettings.SettingsPath); }
         }
-        [Theory]
-        [InlineData("SW.Tags.PlcTagTable")][InlineData("SW.Types.PlcStruct")][InlineData("SW.Blocks.FC")]
-        public void Single_xml_import_reads_object_names_and_refuses_existing_without_overwrite(string kind)
-        {
-            var document = System.Xml.Linq.XDocument.Parse($"<Document><{kind}><AttributeList><Name>Existing</Name></AttributeList></{kind}><{kind}><AttributeList><Name>Other</Name></AttributeList></{kind}></Document>");
-            string prefix = kind.StartsWith("SW.Blocks.", StringComparison.Ordinal) ? "SW.Blocks." : kind.StartsWith("SW.Types.", StringComparison.Ordinal) ? "SW.Types." : "SW.Tags.PlcTagTable";
-            var ex = Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() => TiaMcp.Adapters.PlcFoundationPolicy.RequireImportAvailable(document, prefix, false, name => name == "Existing"));
-            Assert.Equal("overwrite", ex.ParamName); Assert.Contains("Existing", ex.Message);
-            TiaMcp.Adapters.PlcFoundationPolicy.RequireImportAvailable(document, prefix, true, _ => throw new Exception("Overwrite does not check existence."));
-            TiaMcp.Adapters.PlcFoundationPolicy.RequireImportAvailable(document, prefix, false, _ => false);
-        }
-        [Theory]
-        [InlineData(true)][InlineData(false)]
-        public void Symbol_lookup_preserves_mixed_case_and_avoids_full_scan_when_find_is_case_insensitive(bool insensitive)
-        {
-            string[] members = Enumerable.Range(0, 10000).Select(i => "Tag" + i).ToArray(); int names = 0;
-            string? Find(string name) => members.FirstOrDefault(s => string.Equals(s, name, insensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal));
-            string Name(string s) { names++; return s; }
-            Assert.True(TiaMcp.Adapters.PlcFoundationPolicy.SymbolExists(members, Find, Name, "tAg9999"));
-            names = 0; Assert.False(TiaMcp.Adapters.PlcFoundationPolicy.SymbolExists(members, Find, Name, "Missing"));
-            Assert.Equal(insensitive ? 2 : 10001, names);
-        }
+
+
     }
 }

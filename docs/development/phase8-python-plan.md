@@ -317,7 +317,7 @@ C# 目标的缩写：
   - source-contracts job 加 `setup-dotnet`，改为执行 `test-suites -Suite source-contracts`。
 - **build-tools/release 改动**
   - 涉及的调用：`RunDotnetSuiteForRelease`；`ReleaseCandidateChecks` 05-prompt-registration；`ReleaseCommands` 1332 和 1352 行；Preflight 中的“suite runner self-tests”。
-  - 配置：`ReleaseCommandTable`（offline、offline-v20、write-guard 等条目）；`release-checks.json` 中 `dotnetsuites-self-test` 及 paths 映射。
+  - 配置：`ReleaseCommandTable`（offline、offline-v20、kept-code、kept-code-v20、write-guard 等条目）；`release-checks.json` 中 `dotnetsuites-self-test` 及 paths 映射。
 - **其他引用**
   - `Test-DownloadRouteSelection.cs` 改用共用库 EngineSources，去掉 `-Python`。
   - 修改 `tests/Engine/*/Program.cs` 的提示文字、`TiaPortalOpenness.Offline.slnx` 的注释、AGENTS.md 和 validation.md。

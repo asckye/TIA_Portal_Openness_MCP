@@ -114,22 +114,6 @@ namespace TiaMcp.Engine.Tests
             _ => throw new ArgumentException(family)
         };
 
-        [Theory]
-        [InlineData("P", "[\"PLC_1\"]")]
-        [InlineData("S", "[\".scl\"]")]
-        [InlineData("N", "[1000]")]
-        [InlineData("R", "[{\"property\":\"TagTables\",\"name\":\"Table\"}]")]
-        [InlineData("M", "{\"Enabled\":true}")]
-        [InlineData("L", "{\"en-US\":\"Motor\"}")]
-        [InlineData("V", "42.5")]
-        [InlineData("C", "[{\"name\":\"GetSessionState\",\"arguments\":{}}]")]
-        [InlineData("W", "[{\"name\":\"Ready\",\"value\":true}]")]
-        public void FamilyGoldenBytes(string family, string golden)
-        {
-            var result = Current(family, golden);
-            Assert.True(result.Accepted);
-            Assert.Equal(Encoding.UTF8.GetBytes(golden), Encoding.UTF8.GetBytes(result.Json!));
-        }
 
         [Fact]
         public void LegacyAliasesAreConvertedBeforeComparison()

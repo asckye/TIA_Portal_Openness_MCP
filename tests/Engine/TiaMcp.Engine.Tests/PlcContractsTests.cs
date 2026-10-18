@@ -75,26 +75,7 @@ namespace TiaMcp.Engine.Tests
             Assert.Equal(2, (int)body["error"]!["details"]!["succeeded"]!);
         }
 
-        [Theory]
-        [InlineData("[]")]
-        [InlineData("\"[]\"")]
-        [InlineData("[null]")]
-        [InlineData("[{\"Action\":\"setBlockText\"}]")]
-        [InlineData("[{\"action\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"old\",\"value\":\"new\",\"extra\":1}]")]
-        [InlineData("[{\"action\":\"setNetworkText\",\"networkIndex\":1.5,\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"old\",\"value\":\"new\"}]")]
-        public void RejectsInvalidBlockEdits(string json)
-            => Assert.NotNull(DomainValidation.Contract<BlockEdit[]>().Read(json, "changes").Error);
 
-        [Theory]
-        [InlineData("null")]
-        [InlineData("\"{}\"")]
-        [InlineData("{\"pollMs\":1.5}")]
-        [InlineData("{\"pollMs\":2147483648}")]
-        [InlineData("{\"PollMs\":1000}")]
-        [InlineData("{\"pollMs\":1,\"pollMs\":2}")]
-        [InlineData("{\"unknown\":true}")]
-        public void RejectsInvalidMonitoringOptions(string json)
-            => Assert.NotNull(DomainValidation.Contract<MonitoringOptions>().Read(json, "options").Error);
 
         [Fact]
         public void TypedValidationStopsBeforeTheLegacyOperation()
@@ -110,17 +91,6 @@ namespace TiaMcp.Engine.Tests
             Assert.Equal("not-started", (string?)Body(result)["meta"]!["execution"]);
         }
 
-        [Fact]
-        public void BlockEditLimitAndCanonicalRoundtripArePreserved()
-        {
-            const string change = "{\"action\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"old\",\"value\":\"new\"}";
-            var contract = DomainValidation.Contract<BlockEdit[]>();
-            var valid = contract.Read("[" + change + "]", "changes");
-            Assert.Null(valid.Error);
-            Assert.IsType<BlockTextEdit>(Assert.Single(valid.Value!));
-            Assert.Null(contract.Read(V4Json.Serialize(valid.Value), "changes").Error);
-            Assert.Equal(ErrorCode.LimitExceeded, contract.Read("[" + string.Join(",", Enumerable.Repeat(change, 101)) + "]", "changes").Error!.Code);
-        }
 
         [Fact]
         public void ConfirmedImportMismatchIsFailedAndRetainsWriteEvidence()

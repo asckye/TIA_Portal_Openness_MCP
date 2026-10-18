@@ -108,7 +108,8 @@ namespace TiaMcp.Engine.Tests
                     check(!result["success"]!.GetValue<bool>() && File.ReadAllText(path)=="old backup", "failed export preserves old file: "+mode);
                 }
                 var ok=EngineeringExport.Export(new Exporter(),path);
-                check(ok["success"]!.GetValue<bool>() && File.ReadAllText(path)=="<Export/>" && ok["sha256"]!.ToString().Length==64, "validated export atomically replaces target: " + ok.ToJsonString());
+                if (!ok["success"]!.GetValue<bool>()) Console.WriteLine("Export result for backup.xml: " + ok.ToJsonString());
+                check(ok["success"]!.GetValue<bool>() && File.ReadAllText(path)=="<Export/>" && ok["sha256"]!.ToString().Length==64, "validated export atomically replaces target: backup.xml");
                 var collision=EngineeringExport.Export(new Exporter(),path,overwrite:false);
                 check(!collision["success"]!.GetValue<bool>()&&File.ReadAllText(path)=="<Export/>","no-overwrite commit preserves a raced/existing destination");
                 var project=NewArchiveFixture();project.IsModified=true;var archive=Path.Combine(directory,"test.zap21");

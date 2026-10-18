@@ -4,7 +4,7 @@
   <ItemGroup><ProjectReference Include="../../../src/Studio/Client/TiaOpenness.Client.csproj" /></ItemGroup>
   <ItemGroup><PackageReference Include="Newtonsoft.Json" Version="13.0.3" /></ItemGroup>
   <ItemGroup><EmbeddedResource Include="BridgeJsonGolden.json" /></ItemGroup>
-  <ItemGroup><Compile Include="../../Engine/TiaMcp.Engine.Tests/BundleLayoutTests.cs" Link="BundleLayoutTests.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../KeptCode/TiaMcp.KeptCode.Tests/BundleLayoutTests.cs" Link="BundleLayoutTests.cs" /></ItemGroup>
   <ItemGroup><ProjectReference Include="../../../src/Studio/Bridge/TiaOpenness.Bridge.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" /></ItemGroup>
   <Target Name="CopyBridgeForFunctionalTests" AfterTargets="Build">
     <ItemGroup><BridgePayload Include="../../../src/Studio/Bridge/bin/$(Configuration)/$(StudioOutputSubdirectory)net48/*.exe;../../../src/Studio/Bridge/bin/$(Configuration)/$(StudioOutputSubdirectory)net48/*.dll;../../../src/Studio/Bridge/bin/$(Configuration)/$(StudioOutputSubdirectory)net48/*.config" /></ItemGroup>

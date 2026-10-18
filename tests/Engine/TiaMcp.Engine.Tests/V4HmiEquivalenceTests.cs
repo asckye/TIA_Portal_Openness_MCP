@@ -115,28 +115,6 @@ namespace TiaMcp.Engine.Tests
 
         private static object[] Row(string family, string json, bool accepted) => new object[] { family, json, accepted };
 
-        [Theory, MemberData(nameof(Samples))]
-        public void CurrentParserDecisionsAndBuilderBytesArePreserved(string family, string legacy, bool accepted)
-        {
-            string canonical = CanonicalInput(family, legacy);
-            var type = family switch
-            {
-                "classic" => typeof(ClassicScreenSpec), "tags" => typeof(ClassicTagTableSpec), "package" => typeof(ClassicPackageSpec),
-                "theme" => typeof(UnifiedThemeSpec), "layout" => typeof(UnifiedLayoutSpec), "aml" => typeof(DeviceAmlSpec),
-                _ => throw new InvalidOperationException(family)
-            };
-            if (!accepted)
-            {
-                Assert.ThrowsAny<Exception>(() => Build(family, legacy));
-                Assert.ThrowsAny<Exception>(() => V4HmiContractTests.Read(type, canonical));
-                return;
-            }
-            var dto = V4HmiContractTests.Read(type, canonical);
-            Assert.True(V4HmiContractTests.HmiSchemaAccepts(dto.GetSchema(), JsonNode.Parse(canonical)), canonical);
-            string expected = Build(family, legacy);
-            string actual = Build(family, dto.ToBuilderInput().ToJsonString());
-            Assert.Equal(Encoding.UTF8.GetBytes(expected), Encoding.UTF8.GetBytes(actual));
-        }
 
         private static string Build(string family, string json)
         {
@@ -293,45 +271,9 @@ namespace TiaMcp.Engine.Tests
             }
         }
 
-        [Fact]
-        public void AmlCountIsSharedAcrossDevices()
-        {
-            var items = Enumerable.Range(0, 2501).Select(i => new DeviceItemSpec("I" + i, builtIn: true)).ToArray();
-            Assert.Throws<ArgumentException>(() => new DeviceAmlSpec("P", new[]
-            {
-                new AmlDeviceSpec("D1", "x", items), new AmlDeviceSpec("D2", "x", items)
-            }));
-            var device = new JsonObject { ["name"] = "D", ["typeIdentifier"] = "x", ["deviceItems"] = new JsonArray(items.Select(i => (JsonNode)i.ToBuilderInput()).ToArray()) };
-            var json = new JsonObject { ["projectName"] = "P", ["devices"] = new JsonArray(device, device.DeepClone()) }.ToJsonString();
-            Assert.Throws<ArgumentException>(() => HardwareAmlLogic.ParseSpec(json));
-            Assert.Throws<ArgumentException>(() => V4Json.Deserialize<DeviceAmlSpec>(json));
-        }
 
-        [Fact]
-        public void JsonDepthLimitIsRetained()
-        {
-            string nested = "0";
-            for (int i = 0; i < 65; i++) nested = "[" + nested + "]";
-            string json = "{\"palette\":{\"extension\":" + nested + "}}";
-            Assert.ThrowsAny<JsonException>(() => JsonNode.Parse(json));
-            Assert.ThrowsAny<JsonException>(() => V4Json.Deserialize<UnifiedThemeSpec>(json));
-        }
 
-        [Theory]
-        [InlineData(8, true)]
-        [InlineData(9, false)]
-        public void AmlDepthBudgetMatchesCurrentParser(int depth, bool accepted)
-        {
-            var item = new JsonObject { ["name"] = "I", ["builtIn"] = true };
-            for (int i = 0; i < depth; i++) item = new JsonObject { ["name"] = "I", ["builtIn"] = true, ["deviceItems"] = new JsonArray(item) };
-            CheckAmlBudget(new JsonArray(item), accepted);
-        }
 
-        [Theory]
-        [InlineData(5000, true)]
-        [InlineData(5001, false)]
-        public void AmlTotalItemBudgetMatchesCurrentParser(int count, bool accepted) => CheckAmlBudget(
-            new JsonArray(Enumerable.Range(0, count).Select(i => (JsonNode)new JsonObject { ["name"] = "I" + i, ["builtIn"] = true }).ToArray()), accepted);
 
         private static void CheckAmlBudget(JsonArray items, bool accepted)
         {
@@ -350,15 +292,5 @@ namespace TiaMcp.Engine.Tests
             }
         }
 
-        [Fact]
-        public void HFamilyDoesNotInheritUnrelatedFoundationCharacterLimits()
-        {
-            // B1: H has no maxLength. The 262144/4096 limits belong to Foundation B.
-            string json = "{\"items\":[{\"type\":\"Text\",\"name\":\"A\",\"text\":\"" + new string('x', 262145) + "\"}]}";
-            var old = ClassicHmiScreenXmlBuilder.BuildFromJson(json)["xml"]!.ToString();
-            var dto = V4Json.Deserialize<ClassicScreenSpec>(json);
-            Assert.Equal(old, ClassicHmiScreenXmlBuilder.BuildFromJson(dto.ToBuilderInput().ToJsonString())["xml"]!.ToString());
-            Assert.Equal(V4Json.Serialize(dto), V4Json.Serialize(V4Json.Deserialize<ClassicScreenSpec>(" \n " + json + " \n ")));
-        }
     }
 }

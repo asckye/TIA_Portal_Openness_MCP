@@ -23,7 +23,7 @@ internal static class TiaFeatures
             if (source.Contains("<DefineConstants>", StringComparison.Ordinal) || source.Contains("<TiaMajor>", StringComparison.Ordinal)) Add(path);
         }
         var suites = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "tests/test-suites.json")))!;
-        foreach (var name in new[] { "offline", "offline-v20" })
+        foreach (var name in ReleaseCommandTable.OfflineSuites)
         {
             var row = suites[name]!;
             var properties = row["arguments"]!.AsArray().Select(a => a!.GetValue<string>()).Where(a => a.StartsWith("-p:", StringComparison.Ordinal)).Select(a => a[3..].Split('=', 2)).ToDictionary(p => p[0], p => p[1]);

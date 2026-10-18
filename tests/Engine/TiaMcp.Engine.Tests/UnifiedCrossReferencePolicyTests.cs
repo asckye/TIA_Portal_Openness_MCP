@@ -63,25 +63,6 @@ namespace TiaMcp.Engine.Tests
             });
         }
 
-        [Theory]
-        [InlineData("19")]
-        [InlineData("20")]
-        [InlineData("21")]
-        public void Explicit_opt_in_uses_the_existing_native_sequence_and_filter(string release)
-        {
-            using var scope = HardwareContract.UseRelease(release);
-            WithSetting("1", () => {
-                var session = new Session();
-                var reply = UnifiedCrossReferences.Read(session, "HMI", "[]", "UnusedObjects");
-                Assert.Equal(1, session.Resolves);
-                Assert.Equal(1, session.Target.ServiceRequests);
-                Assert.Equal(1, session.Target.Service.Calls);
-                Assert.Equal(global::Siemens.Engineering.CrossReference.CrossReferenceFilter.UnusedObjects, session.Target.Service.LastFilter);
-                Assert.True((bool)reply.Meta["apiCallSuccess"]!);
-                Assert.True((bool)reply.Meta["traversalComplete"]!);
-                Assert.False((bool)reply.Meta["dataComplete"]!);
-            });
-        }
 
         private static void WithSetting(string? setting, Action action)
         {

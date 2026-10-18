@@ -142,6 +142,7 @@ internal static class ReleaseRecords
         {
             if (!record.TryGetProperty("validation", out var validation)) return "validation record missing";
             if (includes("offline-suites") && (GetInt(validation, "offlinePassed") <= 0 || GetInt(validation, "offlineV20Passed") <= 0 || GetInt(validation, "versionPolicySdkPassed") <= 0 ||
+                GetInt(validation, "keptCodePassed") <= 0 || GetInt(validation, "keptCodeV20Passed") <= 0 ||
                 GetInt(validation, "writeGuardPassed") < 3 || GetInt(validation, "crashEvidencePassed") < 7 || GetInt(validation, "updaterPassed") < 20))
                 return "offline validation missing";
             foreach (var major in new[] { 20, 21 })

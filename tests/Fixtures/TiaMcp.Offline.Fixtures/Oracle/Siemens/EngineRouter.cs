@@ -1,0 +1,109 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Text;
+using System.Text.RegularExpressions;
+
+namespace TiaMcpServer.Siemens
+{
+    /// <summary>
+    /// Version-aware self-routing (Siemens-free — safe to JIT before any Openness assembly
+    /// resolves). The bundle ships one exe per TIA major version because the IL is hard-bound
+    /// to that version's assembly identities, so running the V21 exe on a V20 machine crashes
+    /// at the first Siemens type load. Instead of crashing, Main asks this class to re-exec
+    /// the sibling exe that matches the effective TIA version, inheriting stdio so MCP/CLI
+    /// callers never notice (GitHub issue #8).
+    /// </summary>
+    public static class EngineRouter
+    {
+        /// <summary>TIA major version this binary's IL is bound to.</summary>
+        public const int CompiledTiaMajorVersion =
+#if TIA_V20
+            20;
+#else
+            21;
+#endif
+
+        private const string RedirectGuardVar = "TIAMCP_NO_REDIRECT";
+
+        /// <summary>
+        /// Locate the sibling exe built for <paramref name="version"/> next to this one.
+        /// Understands both bundle layouts: source-tree (bin\ / bin-v20\ Release\net48) and
+        /// plugin runtime (runtime\v20\ / runtime\v21\). Returns null when not found.
+        /// </summary>
+        public static string? FindSiblingExe(int version)
+            => FindSiblingExe(version, () => Process.GetCurrentProcess().MainModule.FileName);
+
+        internal static string? FindSiblingExe(int version, Func<string> ownExePath, string? bundleRoot = null)
+        {
+            var target = TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(version);
+            try
+            {
+                string own = ownExePath();
+                string candidate = target.WorkerKind == "engine"
+                    ? TiaOpenness.Shared.BundleLayout.RequireWorker(target.Key, Path.GetDirectoryName(own)!, bundleRoot)
+                    : TiaOpenness.Shared.BundleLayout.RequireEngine(target.Key, Path.GetDirectoryName(own)!, bundleRoot);
+                return string.Equals(Path.GetFullPath(candidate), Path.GetFullPath(own), StringComparison.OrdinalIgnoreCase) ? null : candidate;
+            }
+            catch (IOException) { /* swallow(env-probe): missing bundle or sibling paths are unavailable routes; callers fail closed */ return null; }
+        }
+
+        /// <summary>
+        /// Re-exec the sibling exe for <paramref name="version"/> with identical args.
+        /// stdio handles are inherited, so MCP stdio and CLI output pass through unchanged.
+        /// Returns false when no sibling exists or the redirect guard is set (loop protection).
+        /// </summary>
+        public static bool TryRedirect(int version, string[] args, Action<string> log, out int exitCode)
+        {
+            exitCode = 0;
+            if (Environment.GetEnvironmentVariable(RedirectGuardVar) == "1")
+            {
+                log("EngineRouter: redirect guard set; staying in this exe.");
+                return false;
+            }
+
+            string? sibling = FindSiblingExe(version);
+            if (sibling == null)
+            {
+                var target = TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(version);
+                var directory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName)!;
+                sibling = target.WorkerKind == "engine"
+                    ? TiaOpenness.Shared.BundleLayout.RequireWorker(target.Key, directory)
+                    : TiaOpenness.Shared.BundleLayout.RequireEngine(target.Key, directory);
+            }
+
+            log($"EngineRouter: TIA V{version} requested but this exe is built for V{CompiledTiaMajorVersion}; rerouting to {sibling}");
+            var psi = new ProcessStartInfo
+            {
+                FileName = sibling,
+                Arguments = QuoteArgs(args),
+                UseShellExecute = false,
+            };
+            psi.EnvironmentVariables[RedirectGuardVar] = "1";
+            using (var p = Process.Start(psi))
+            {
+                p.WaitForExit();
+                exitCode = p.ExitCode;
+            }
+            return true;
+        }
+
+        /// <summary>Windows-correct argument re-quoting (spaces, quotes, trailing backslashes).</summary>
+        public static string QuoteArgs(string[] args)
+        {
+            var sb = new StringBuilder();
+            foreach (var a in args)
+            {
+                if (sb.Length > 0) sb.Append(' ');
+                if (a.Length > 0 && a.IndexOfAny(new[] { ' ', '\t', '"' }) < 0)
+                {
+                    sb.Append(a);
+                    continue;
+                }
+                sb.Append(TiaOpenness.Shared.ProcessArguments.Quote(a));
+            }
+            return sb.ToString();
+        }
+    }
+}

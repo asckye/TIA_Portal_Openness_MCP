@@ -985,5 +985,24 @@
       "TIA_FOUNDATION_TEST_HOST",
       "TRACE"
     ]
+  },
+  {
+    "project": "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj",
+    "properties": {},
+    "targetFramework": "net10.0",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj",
+    "properties": {
+      "DefineConstants": "TIA_V20"
+    },
+    "targetFramework": "net10.0",
+    "defineConstants": [
+      "TIA_V20"
+    ]
   }
 ]

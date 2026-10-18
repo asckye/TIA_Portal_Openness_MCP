@@ -90,21 +90,6 @@ namespace TiaMcp.Engine.Tests
             if (accepted) Assert.Equal(legacy, typed);
         }
 
-        [Theory]
-        [InlineData("readOnly")]
-        [InlineData("libraryBound")]
-        [InlineData("duplicateSelector")]
-        public void Block_edit_document_preconditions_remain_in_validation(string condition)
-        {
-            // PlcDocumentEditing.cs:124,144-147,165.
-            const string edit = "{\"action\":\"setMemberStartValue\",\"section\":\"Input\",\"memberPath\":\"Speed\",\"expectedValue\":\"1\",\"value\":\"2\"}";
-            string xml = condition == "readOnly" ? Xml.Replace("Name='Speed'", "Name='Speed' ReadOnly='true'")
-                : condition == "libraryBound" ? Xml.Replace("<Name>Main</Name>", "<Name>Main</Name><LibraryTypeGuid>A</LibraryTypeGuid>") : Xml;
-            string changes = "[" + edit + (condition == "duplicateSelector" ? "," + edit : "") + "]";
-            string hash = PlcDocumentEditing.HashText(PlcDocumentEditing.Canonical(PlcDocumentEditing.Parse(xml)));
-            Assert.NotNull(Record.Exception(() => PlcDocumentEditing.Patch(xml, changes, hash)));
-            Assert.NotNull(Record.Exception(() => DomainValidation.BlockEdits(DomainValidation.Read<BlockEdit[]>(changes), xml, hash)));
-        }
 
         private string Evaluate(string family, string json, bool typed)
         {

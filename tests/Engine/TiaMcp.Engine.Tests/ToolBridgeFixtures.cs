@@ -303,17 +303,6 @@ namespace TiaMcp.Engine.Tests
             Assert.Equal(1, instance.Calls);
         }
 
-        [Fact]
-        public void BridgeReceivesLiteProfileAndAllowlist()
-        {
-            ToolBridgeFixture.Configure(lite: true);
-            try
-            {
-                Assert.Contains(McpServer.FindTools("ProbeResult").Items!, line => line.Contains("[already listed - call it directly]"));
-                Assert.Contains(McpServer.FindTools("InstanceProbe").Items!, line => line.Contains("[call via CallTool]"));
-            }
-            finally { ToolBridgeFixture.Configure(); }
-        }
 
         private static RequestContext<CallToolRequestParams> Request(IServiceProvider? services)
             => new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ToolCatalogServerProxy>())

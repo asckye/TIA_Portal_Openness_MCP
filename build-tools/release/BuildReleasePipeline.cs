@@ -154,6 +154,7 @@ internal static partial class ReleaseCommands
             validation = new
             {
                 offlinePassed = GetJsonInt(common, "offlinePassed"), offlineV20Passed = GetJsonInt(common, "offlineV20Passed"),
+                keptCodePassed = GetJsonInt(common, "keptCodePassed"), keptCodeV20Passed = GetJsonInt(common, "keptCodeV20Passed"),
                 writeGuardPassed = GetJsonInt(common, "writeGuardChecksPassed"),
                 crashEvidencePassed = GetJsonInt(common, "crashEvidenceChecksPassed"),
                 versionPolicySdkPassed = GetJsonInt(common, "versionPolicySdkPassed"),
@@ -224,7 +225,7 @@ internal static partial class ReleaseCommands
         var plan = ReleasePlan(options);
         var suiteResults = Path.Combine(outputDirectory, "dotnet-suites");
         Directory.CreateDirectory(suiteResults);
-        int writeGuardPassed = 0, crashEvidencePassed = 0, offlinePassed = 0, offlineV20Passed = 0, versionPolicyPassed = 0, updaterPassed = 0, nativeMcpSafety = 0;
+        int writeGuardPassed = 0, crashEvidencePassed = 0, offlinePassed = 0, offlineV20Passed = 0, keptCodePassed = 0, keptCodeV20Passed = 0, versionPolicyPassed = 0, updaterPassed = 0, nativeMcpSafety = 0;
         Match lifecycleMatch = Match.Empty;
         if (plan.Includes("offline-suites"))
         {
@@ -245,12 +246,15 @@ internal static partial class ReleaseCommands
             RestoreBuildProject(dotnet, Path.Combine(Root, "tests/Repository/TiaMcp.SourceContracts.Tests/TiaMcp.SourceContracts.Tests.csproj"), nuget, outputDirectory, runTemp, cliHome, apiRoot);
             RunDotnetSuiteForRelease("source-contracts", "version-catalog", dotnet, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
 
-            var offlineProject = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Tests/TiaMcp.Engine.Tests.csproj");
-            RestoreBuildProject(dotnet, offlineProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
-            RunDotnetSuiteForRelease("offline", "offline", dotnet, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
+            var offlineSuites = DotnetSuites.LoadCatalog(Path.Combine(Root, "tests/test-suites.json"), Root);
+            foreach (var project in ReleaseCommandTable.OfflineSuites.Select(name => offlineSuites[name]!["project"]!.GetValue<string>()).Distinct(StringComparer.Ordinal))
+                RestoreBuildProject(dotnet, Path.Combine(Root, project), nuget, outputDirectory, runTemp, cliHome, apiRoot);
+            foreach (var name in ReleaseCommandTable.OfflineSuites)
+                RunDotnetSuiteForRelease(name, name, dotnet, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
             offlinePassed = ReadSuitePassed(suiteResults, "offline");
-            RunDotnetSuiteForRelease("offline-v20", "offline-v20", dotnet, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
             offlineV20Passed = ReadSuitePassed(suiteResults, "offline-v20");
+            keptCodePassed = ReadSuitePassed(suiteResults, "kept-code");
+            keptCodeV20Passed = ReadSuitePassed(suiteResults, "kept-code-v20");
             var versionPolicyProject = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.VersionPolicy.Tests/TiaMcp.Engine.VersionPolicy.Tests.csproj");
             RestoreBuildProject(dotnet, versionPolicyProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
             RunDotnetSuiteForRelease("version-policy", "version-policy", dotnet, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
@@ -299,7 +303,7 @@ internal static partial class ReleaseCommands
         }
         var common = new { diagnosticTests = diagnostics, crashEvidenceChecksPassed = crashEvidencePassed, writeGuardChecksPassed = writeGuardPassed, updaterPassed,
             nativeMcpSafetyChecksPassed = nativeMcpSafety, nativeSupervisorChecksPassed = (lifecycleMatch.Success ? int.Parse(lifecycleMatch.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) : 0),
-            offlinePassed, offlineV20Passed, versionPolicySdkPassed = versionPolicyPassed };
+            offlinePassed, offlineV20Passed, keptCodePassed, keptCodeV20Passed, versionPolicySdkPassed = versionPolicyPassed };
         WriteJson(Path.Combine(outputDirectory, "common.json"), common);
         using var result = JsonDocument.Parse(JsonSerializer.Serialize(common, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
         return result.RootElement.Clone();

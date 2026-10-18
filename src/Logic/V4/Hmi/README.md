@@ -99,5 +99,5 @@ limit details before constructors raise their existing `ArgumentException`.
 Both paths use the same family traversal and `InputGuard.Limit` checks.
 No project files, tool/catalog registration, Siemens calls or manifest hashes
 are changed. The original HMI contract/equivalence tests are unchanged;
-[V4HmiInputUnificationTests.cs](../../../../tests/Engine/TiaMcp.Engine.Tests/V4HmiInputUnificationTests.cs)
+[V4HmiInputUnificationTests.cs](../../../../tests/KeptCode/TiaMcp.KeptCode.Tests/V4HmiInputUnificationTests.cs)
 also exercises their samples through text, element and typed contract entry points.

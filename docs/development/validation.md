@@ -266,7 +266,7 @@ dotnet run --project build-tools/release -- check-bundle-layout -SelfTest
 dotnet run --project build-tools/release -- check-bundle-layout
 dotnet run --project build-tools/release -- validate-bundle -Strict
 dotnet run --project build-tools/release -- test-suites -SelfTest
-dotnet run --project build-tools/release -- test-suites -Suite offline -Suite offline-v20 -Suite version-policy
+dotnet run --project build-tools/release -- test-suites -Suite offline -Suite offline-v20 -Suite kept-code -Suite kept-code-v20 -Suite version-policy
 dotnet run --project build-tools/release -- test-suites -Suite foundation -Suite prompt-registration -Suite software-read -Suite special-export-shape -Suite device-add -Suite hardware-catalog -Suite diagnostic-membership
 dotnet run --project tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj -c Release
 dotnet run --project build-tools/release -- build-configurator -Test
@@ -277,7 +277,7 @@ dotnet run --project build-tools/release -- build-configurator -Test
 读取并校验资源代码表，用 `git ls-files` 验证文件或目录内文件受版本管理，并确认路径在 `validate-bundle`
 实际执行的资源清单中；还核对 C# 5 Launcher 的唯一相对候选与 Studio 安装锚点、GUI 输出文件名一致。
 检查使用 .NET 10，但不依赖 `runtime/` 构建产物。布局矩阵通过临时目录分别验证 Logic/引擎调用方
-（offline/offline-v20）与 Studio Core/GUI，覆盖安装、开发输出、worktree、CI、runtime-only、嵌套暂存
+（kept-code/kept-code-v20）与 Studio Core/GUI，覆盖安装、开发输出、worktree、CI、runtime-only、嵌套暂存
 和中文/空格/尾分隔符路径。解析器不借用祖先仓库的缺失资源，调用方仍保留到 4.0 的兼容探测；
 仓库外完整交付包的重定位检查用于排除这种回退掩盖缺文件。实际解析顺序、嵌入生态目录和证据边界见
 [运行时布局](runtime-layout.md)。Markdown 本地链接及入口路径统一由
@@ -325,7 +325,7 @@ B8 识别没有 Meta 且字面消息含失败/拒绝提示的 `ResponseMessage`�
 中央 `TiaMcpServer.ModelContextProtocol.ResponseMeta` 类型自身仍出现在清点中，但不计作手写调用点；此识别与路径无关。
 任一总数增长即失败，减少允许且报告；`-UpdateBaseline` 仅收缩上限，首次经审查建立基线才使用 `-AllowGrowth`。
 
-`ResponseMetaTests` 在 offline/offline-v20 各增加 249 项 E2 检查。每种构造器与注明文件/行号的原初始化器
+`ResponseMetaTests` 已迁至 kept-code/kept-code-v20，每版保留 421 项 E1/E2 检查。每种构造器与注明文件/行号的原初始化器
 在同一固定时钟下比较四条序列化路径的 UTF-8 字节；测试的选项与 POCO 替身另对照 TiaMcp.Engine.Harness/Golden 中
 V20/V21 的全部 36 项 E1 序列化记录。覆盖键追加、success 原位覆盖、null Meta、Local/UTC、数值 CLR 类型及异步时钟隔离。
 `ResponseClock.Pin` 仅在当前执行上下文生效，可嵌套并在释放时恢复；测试进程临时固定 +08:00 时区并恢复 BCL 缓存。
@@ -334,8 +334,11 @@ operationSuccess/apiCallSuccess/dataComplete，异常文本、状态和 success 
 本阶段构造器尚未接入现有调用点，POCO 和引擎返回保持原样。
 
 已迁移的套件使用 xunit，每个原有 Check 对应一条结果；
-[最低数量表](../../tests/test-suites.json)要求 offline、offline-v20、version-policy 至少 4420、4420、10 项通过，均不允许跳过。
-两种 offline 套件的 Linux 下限均为 4419（少一项仅 Windows 可运行的 apartment 检查）。
+[最低数量表](../../tests/test-suites.json)要求 offline、offline-v20 各至少 303 项通过（Linux 302），
+kept-code、kept-code-v20 各至少 4854 项通过，version-policy 至少 10 项通过，均不允许跳过。
+每版 residue + kept-code 的下限仍为 5157（Linux 5156）；仅 Windows apartment 检查仍在 residue 的 OfficialWorkflowTests。
+kept-code 的数据行数量没有平台差异；平台专用实现的测试保留行身份，使用跨平台夹具或测试平台回退。
+`splitFrom` 注册字段记录拆分来源；CI 的 TRX 门禁自检拒绝 CI 工作流或 release 执行清单遗漏任何拆分子套件。
 ImportSelection 的 10 项已并入 offline；BindingSnapshot、ExternalSourcePlan、ExternalSourceDelete 的 199 项已并入 foundation。
 foundation 至少 6521 项通过、最多 1 项跳过；foundation-api 至少 7566 项通过、最多 1 项跳过。PromptRegistration、SoftwareRead、SpecialExportShape、DeviceAdd、HardwareCatalog、DiagnosticMembership 分别要求 134、39、11、124、56、4 项通过，均不允许跳过。
 门禁按请求顺序执行（两种编译符号共享输出目录），拒绝失败、数量不足、超限跳过、零执行及缺失或不一致的 trx；

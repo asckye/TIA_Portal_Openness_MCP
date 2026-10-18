@@ -15,6 +15,10 @@
     <Project Path="src/Studio/Core/TiaOpenness.Core.csproj" />
     <Project Path="src/Studio/Gui/TiaOpenness.Gui.csproj" />
   </Folder>
+  <Folder Name="/Tests/KeptCode/">
+    <Project Path="tests/Fixtures/TiaMcp.Offline.Fixtures/TiaMcp.Offline.Fixtures.csproj" />
+    <Project Path="tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj" />
+  </Folder>
   <Folder Name="/Tests/Engine/">
     <Project Path="tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.Tests.csproj" />
     <Project Path="tests/Adapters/TiaMcp.Adapters.CompileCandidate.Tests/TiaMcp.Adapters.CompileCandidate.Tests.csproj" />

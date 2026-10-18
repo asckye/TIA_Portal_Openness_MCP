@@ -267,17 +267,6 @@ namespace TiaMcp.Engine.Tests
             Assert.True((bool)Body(await tool.InvokeAsync(Request("FindTools", "{\"count\":null}")))["ok"]!);
         }
 
-        [Fact]
-        public void V4NullDefaultCleanupVisitsSchemasAndPreservesExampleData()
-        {
-            const string json = "{\"properties\":{\"input\":{\"default\":null,\"anyOf\":[{\"type\":\"array\",\"items\":{\"type\":\"string\",\"default\":null}}],\"examples\":[{\"default\":null}]}},\"$defs\":{\"child\":{\"type\":\"string\",\"default\":null}}}";
-            var schema = JsonNode.Parse(json)!.AsObject();
-            McpServer.RemoveV4NullDefaults(schema);
-            Assert.False(schema["properties"]!["input"]!.AsObject().ContainsKey("default"));
-            Assert.False(schema["properties"]!["input"]!["anyOf"]![0]!["items"]!.AsObject().ContainsKey("default"));
-            Assert.False(schema["$defs"]!["child"]!.AsObject().ContainsKey("default"));
-            Assert.True(schema["properties"]!["input"]!["examples"]![0]!.AsObject().ContainsKey("default"));
-        }
 
         [Theory]
         [InlineData("{}")]

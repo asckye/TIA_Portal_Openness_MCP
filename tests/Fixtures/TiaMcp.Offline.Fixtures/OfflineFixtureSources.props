@@ -1,0 +1,42 @@
+<Project>
+  <ItemGroup>
+    <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0-preview.4.25258.110" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../../../src/Logic/TiaMcp.Logic.csproj" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Adapters/Native/Plc/PlcBatchImportPolicy.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/EngineHost/ModelContextProtocol/InvocationJournal.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/EngineHost/ModelContextProtocol/McpHints.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/EngineHost/ModelContextProtocol/ToolExamples.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/EngineHost/ModelContextProtocol/Tools/ImportStagingTools.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/EngineHost/ModelContextProtocol/Tools/McpServer.Approval.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/EngineHost/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/EngineHost/ModelContextProtocol/Tools/McpServer.VersionPolicy.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/EngineHost/ModelContextProtocol/Tools/ToolDescriptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/EngineHost/ModelContextProtocol/Tools/ToolUsageTools.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/CallJournalPayload.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/DeclaredToolMetadata.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/HardwareAddressingService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/HardwareAddressTools.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/HardwareAmlService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/HardwareDevicesService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/HardwareManagementService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/HardwareModulesService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/HardwareNetworkPortService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/HardwareNetworkTools.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/HardwareServicesPortService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/HardwareToolContract.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/Host/EnvironmentDoctor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/Host/McpServer.Batch.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/Host/McpServer.ExportFailure.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/Host/McpServer.ToolBridge.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/InvocationJournal.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/PlcToolContract.cs" />
+  </ItemGroup>
+  <Target Name="RejectProductionEngineFixtureDependencies" BeforeTargets="CoreCompile" DependsOnTargets="ResolveReferences">
+    <ItemGroup>
+      <OfflineEngineCompile Include="@(Compile)" Condition="$([System.String]::Copy('%(FullPath)').Replace('\', '/').Contains('/src/Engine/'))" />
+      <OfflineEngineReference Include="@(ReferencePath)" Condition="'%(Filename)' == 'TiaMcp.Engine.Tests' or '%(Filename)' == 'TiaMcp.Engine.V20' or '%(Filename)' == 'TiaMcp.Engine.V21'" />
+    </ItemGroup>
+    <Error Condition="'@(OfflineEngineCompile)' != '' or '@(OfflineEngineReference)' != ''" Text="Kept offline fixtures must not compile or reference the production engine: @(OfflineEngineCompile); @(OfflineEngineReference)." />
+  </Target>
+</Project>

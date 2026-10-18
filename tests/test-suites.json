@@ -34,35 +34,51 @@
   },
   "release-tool": {
     "project": "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj",
-    "minimumPassed": 619,
+    "minimumPassed": 624,
     "maximumSkipped": 0,
     "arguments": []
   },
   "offline": {
     "project": "tests/Engine/TiaMcp.Engine.Tests/TiaMcp.Engine.Tests.csproj",
-    "minimumPassed": 5157,
+    "minimumPassed": 303,
     "maximumSkipped": 0,
     "arguments": [],
     "platforms": {
       "linux": {
-        "minimumPassed": 5156,
+        "minimumPassed": 302,
         "reason": "OfficialWorkflowTests checks the MTA apartment of the attach worker only on Windows"
       }
     }
   },
   "offline-v20": {
     "project": "tests/Engine/TiaMcp.Engine.Tests/TiaMcp.Engine.Tests.csproj",
-    "minimumPassed": 5157,
+    "minimumPassed": 303,
     "maximumSkipped": 0,
     "arguments": [
       "-p:DefineConstants=TIA_V20"
     ],
     "platforms": {
       "linux": {
-        "minimumPassed": 5156,
+        "minimumPassed": 302,
         "reason": "OfficialWorkflowTests checks the MTA apartment of the attach worker only on Windows"
       }
     }
+  },
+  "kept-code": {
+    "splitFrom": "offline",
+    "project": "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj",
+    "minimumPassed": 4854,
+    "maximumSkipped": 0,
+    "arguments": []
+  },
+  "kept-code-v20": {
+    "splitFrom": "offline-v20",
+    "project": "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj",
+    "minimumPassed": 4854,
+    "maximumSkipped": 0,
+    "arguments": [
+      "-p:DefineConstants=TIA_V20"
+    ]
   },
   "version-policy": {
     "project": "tests/Engine/TiaMcp.Engine.VersionPolicy.Tests/TiaMcp.Engine.VersionPolicy.Tests.csproj",

@@ -192,6 +192,9 @@ def main():
             require(sha(data) == row['sha256'], f"Multi-version source changed after validation: {row['path']}")
     if 'offline-suites' in selected:
         require(metadata['validation']['offlinePassed'] > 0, 'No offline suite result')
+        for suite, key in (('offline-v20', 'offlineV20Passed'),
+                           ('kept-code', 'keptCodePassed'), ('kept-code-v20', 'keptCodeV20Passed')):
+            require(metadata['validation'].get(key, 0) > 0, f'No {suite} suite result')
     for major in ('V20', 'V21') if 'native-diagnostics' in selected else []:
         proof = metadata['validation']['runtimes'][major].get('nativeDiagnostics', {})
         require(proof.get('status') == 'passed' and proof.get('uncoveredSupportedBoundaries') == 0 and proof.get('sites', 0) > 1000,

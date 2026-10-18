@@ -46,7 +46,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ScaffoldCalls.Clear();
                 var result = new ResponseScaffold();
                 ApplyScaffoldPlcElements(new TiaMcpServer.Siemens.Services.ProjectLifecyclePortService(), root, "PLC_1", result);
-                check(result.Ok && result.Steps.All(s => s.Status == "ok") && ScaffoldCalls.SequenceEqual(new[] { "udt", "globaldb", "tagtable", "import:Axis.scl", "generate:Axis.scl" }), "shared scaffold imports PLC definitions and generates the imported SCL source in order: " + string.Join("; ", result.Steps.Select(s => s.Step + "=" + s.Status + ":" + s.Detail)));
+                check(result.Ok && result.Steps.All(s => s.Status == "ok") && ScaffoldCalls.SequenceEqual(new[] { "udt", "globaldb", "tagtable", "import:Axis.scl", "generate:Axis.scl" }), "shared scaffold imports PLC definitions and generates the imported SCL source in order" + (result.Ok && result.Steps.All(s => s.Status == "ok") && ScaffoldCalls.SequenceEqual(new[] { "udt", "globaldb", "tagtable", "import:Axis.scl", "generate:Axis.scl" }) ? "" : ": " + string.Join("; ", result.Steps.Select(s => s.Step + "=" + s.Status + ":" + s.Detail))));
                 rejectUdt = true; ScaffoldCalls.Clear(); result = new ResponseScaffold();
                 ApplyScaffoldPlcElements(new TiaMcpServer.Siemens.Services.ProjectLifecyclePortService(), root, "PLC_1", result); rejectUdt = false;
                 check(!result.Ok && result.Steps[0].Status == "failed" && ScaffoldCalls.Contains("generate:Axis.scl"), "shared scaffold records one failed element and processes the remaining elements");

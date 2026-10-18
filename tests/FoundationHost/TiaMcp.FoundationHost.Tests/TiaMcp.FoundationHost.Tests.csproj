@@ -14,12 +14,12 @@
     <ProjectReference Include="../../WorkerChannel/TiaMcp.PlcWorker.FaultFixture/TiaMcp.PlcWorker.FaultFixture.csproj" ReferenceOutputAssembly="false" AdditionalProperties="TiaMcpPlcWorkerSdkFixture=true" />
     <ProjectReference Include="../../../src/FoundationHost/TiaMcp.FoundationHost.csproj" Aliases="foundationhost" GlobalPropertiesToRemove="DefineConstants" />
     <ProjectReference Include="../../../src/EngineHost/TiaMcp.EngineHost.csproj" Aliases="enginehost" GlobalPropertiesToRemove="DefineConstants" />
-    <ProjectReference Include="../../Engine/TiaMcp.Engine.Tests/TiaMcp.Engine.Tests.csproj" Aliases="enginefixture" />
-    <Compile Include="../../Engine/TiaMcp.Engine.Tests/BehaviorParityCases.cs" Link="BehaviorParityCases.cs" />
+    <ProjectReference Include="../../Fixtures/TiaMcp.Offline.Fixtures/TiaMcp.Offline.Fixtures.csproj" Aliases="enginefixture" />
+    <Compile Include="../../Fixtures/TiaMcp.Offline.Fixtures/BehaviorParityCases.cs" Link="BehaviorParityCases.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="../../Engine/TiaMcp.Engine.Tests/BatchReplacementPolicyTests.cs" Link="BatchReplacementPolicyTests.cs" />
-    <Compile Include="../../Engine/TiaMcp.Engine.Tests/ImportStagingTests.cs" Link="ImportStagingTests.cs" />
+    <Compile Include="../../KeptCode/TiaMcp.KeptCode.Tests/BatchReplacementPolicyTests.cs" Link="BatchReplacementPolicyTests.cs" />
+    <Compile Include="../../KeptCode/TiaMcp.KeptCode.Tests/ImportStagingTests.cs" Link="ImportStagingTests.cs" />
     <ProjectReference Include="../../../src/WorkerChannel/TiaMcp.WorkerChannel.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <Compile Include="../../../src/Adapters/Native/Session/BindingSnapshotContract.cs" Link="BindingSnapshotContract.cs" />

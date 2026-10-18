@@ -6,6 +6,8 @@ internal sealed record ReleaseCommandSpec(string Name, string Command, string Lo
 
 internal static class ReleaseCommandTable
 {
+    internal static readonly string[] OfflineSuites = ["offline", "offline-v20", "kept-code", "kept-code-v20"];
+
     internal static readonly IReadOnlyList<ReleaseCommandSpec> Entries =
     [
         new("build-solutions", "build-solutions -PublicApiRoot <SDK-root>", "solutions.log", "both solutions; exit 0", "developerSolutions"),
@@ -31,8 +33,10 @@ internal static class ReleaseCommandTable
         new("tool-counts", "generate-tool-counts -Check", "tool-counts.log", "every documentation block matches catalogs", "toolCounts"),
         new("tool-usage", "generate-tool-usage -Check", "tool-usage-catalog.log", "exit 0", "toolUsageCatalog"),
         new("version-catalog", "test-suites -Suite source-contracts", "version-catalog-wiring.log", "registered TRX gate", "versionCatalogWiring"),
-        new("offline", "test-suites -Suite offline", "offline.log", "minimum 5153 (Linux 5152)", "offlinePassed"),
-        new("offline-v20", "test-suites -Suite offline-v20", "offline-v20.log", "minimum 5153 (Linux 5152)", "offlineV20Passed"),
+        new("offline", "test-suites -Suite offline", "offline.log", "minimum 303 (Linux 302)", "offlinePassed"),
+        new("offline-v20", "test-suites -Suite offline-v20", "offline-v20.log", "minimum 303 (Linux 302)", "offlineV20Passed"),
+        new("kept-code", "test-suites -Suite kept-code", "kept-code.log", "minimum 4854; zero skips", "keptCodePassed"),
+        new("kept-code-v20", "test-suites -Suite kept-code-v20", "kept-code-v20.log", "minimum 4854; zero skips", "keptCodeV20Passed"),
         new("version-policy", "test-suites -Suite version-policy", "version-policy-sdk.log", "minimum 10", "versionPolicySdkPassed"),
         new("native-diagnostics-fixture", "Test-NativeDiagnostics.py --fixture", "native-diagnostics-tests.log", "behavior >= 36; rejection >= 5", "diagnosticTests"),
         new("native-safety", "TiaMcp.Engine.Native.Tests.V{major}.exe --self-test", "native-safety-v{major}.log", "live TIA not run", "nativeHarness.safetyChecksPassed"),

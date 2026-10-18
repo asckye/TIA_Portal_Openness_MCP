@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
+using System.Text.RegularExpressions;
 using TiaMcp.BuildCommon;
 
 namespace TiaMcp.ReleaseTool;
@@ -27,8 +28,61 @@ internal static class DotnetSuiteSelfTests
         ("planted hang produces a mini dump in both runners", PlantedHang),
         ("missing variant runtime row", MissingVariantRow),
         ("missing variant fails before test process", MissingVariantProcess),
-        ("concurrent runtime manifests stay independent", ConcurrentManifests)
+        ("concurrent runtime manifests stay independent", ConcurrentManifests),
+        ("split suite repository coverage", SplitSuiteRepositoryCoverage),
+        ("split suite missing CI child is rejected", MissingSplitCi),
+        ("split suite missing release child is rejected", MissingSplitRelease)
     ];
+
+    internal static List<string> SplitSuiteCoverageErrors(JsonObject catalog, string workflow, IEnumerable<string> releaseSuites)
+    {
+        var release = releaseSuites.ToHashSet(StringComparer.Ordinal);
+        var jobs = Regex.Matches(workflow, @"(?ms)^  ([a-zA-Z0-9_-]+):[ \t]*\r?\n(.*?)(?=^  [a-zA-Z0-9_-]+:[ \t]*\r?$|\z)")
+            .Select(job => (Name: job.Groups[1].Value, Suites: Regex.Matches(job.Groups[2].Value, @"(?m)^        run:[ \t]*(.*(?:\r?\n          [^\r\n]*)*)")
+                .SelectMany(run => Regex.Matches(run.Value, @"(?i)(?:-Suite|--suite)(?:[ \t]+|=)([a-z0-9-]+)").Select(match => match.Groups[1].Value))
+                .ToHashSet(StringComparer.Ordinal))).ToArray();
+        var errors = new List<string>();
+        foreach (var (name, row) in catalog)
+        {
+            if (row?["splitFrom"]?.GetValue<string>() is not { } parent) continue;
+            if (!catalog.ContainsKey(parent)) errors.Add(name + ": missing registered parent " + parent);
+            var owners = jobs.Where(job => job.Suites.Contains(parent)).ToArray();
+            if (owners.Length == 0) errors.Add(parent + ": no CI workflow job");
+            foreach (var job in owners)
+                if (!job.Suites.Contains(name)) errors.Add(name + ": missing from CI job " + job.Name);
+            foreach (var suite in new[] { parent, name })
+                if (!release.Contains(suite)) errors.Add(suite + ": missing from release pipeline");
+        }
+        return errors;
+    }
+
+    private static void SplitSuiteRepositoryCoverage()
+    {
+        var root = Repository.FindRoot();
+        var catalog = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "tests/test-suites.json")))!.AsObject();
+        Require((string?)catalog["kept-code"]?["splitFrom"] == "offline" && (string?)catalog["kept-code-v20"]?["splitFrom"] == "offline-v20");
+        var errors = SplitSuiteCoverageErrors(catalog, File.ReadAllText(Path.Combine(root, ".github/workflows/offline-checks.yml")), ReleaseCommandTable.OfflineSuites);
+        if (errors.Count != 0) throw new ReleaseException(string.Join("\n", errors));
+        foreach (var name in ReleaseCommandTable.OfflineSuites)
+            Require(ReleaseCommandTable.Get(name).Command == "test-suites -Suite " + name);
+    }
+
+    private static void MissingSplitCi()
+    {
+        var catalog = JsonNode.Parse("{\"parent\":{},\"moved\":{\"splitFrom\":\"parent\"},\"another\":{\"splitFrom\":\"parent\"}}")!.AsObject();
+        var workflow = "jobs:\n  regression:\n    steps:\n      - name: Suites\n        run: test-suites -Suite parent -Suite moved\n";
+        var errors = SplitSuiteCoverageErrors(catalog, workflow, ["parent", "moved", "another"]);
+        Require(errors.SequenceEqual(new[] { "another: missing from CI job regression" }));
+        Require(SplitSuiteCoverageErrors(catalog, workflow.Replace("-Suite moved", "-Suite moved -Suite another", StringComparison.Ordinal), ["parent", "moved", "another"]).Count == 0);
+    }
+
+    private static void MissingSplitRelease()
+    {
+        var catalog = JsonNode.Parse("{\"parent\":{},\"moved\":{\"splitFrom\":\"parent\"}}")!.AsObject();
+        var workflow = "jobs:\n  regression:\n    steps:\n      - name: Suites\n        run: |\n          test-suites -Suite parent -Suite moved\n";
+        Require(SplitSuiteCoverageErrors(catalog, workflow, ["parent"]).SequenceEqual(new[] { "moved: missing from release pipeline" }));
+        Require(SplitSuiteCoverageErrors(catalog, workflow, ["parent", "moved"]).Count == 0);
+    }
 
     internal static void SyntheticTrx(string path, string[] outcomes, Dictionary<string, string>? overrides = null)
     {

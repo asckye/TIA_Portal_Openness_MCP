@@ -342,4 +342,25 @@
   </ItemGroup>
   <ItemGroup><Compile Include="../../../src/Adapters/Native/Plc/PlcSoftwareValues.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../../src/Shared/UnifiedGraphicComparison.cs" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../Fixtures/TiaMcp.Offline.Fixtures/BatchReplacementPolicyTestsFixture.cs" />
+    <Compile Include="../../Fixtures/TiaMcp.Offline.Fixtures/ImportStagingTestsFixture.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="CodeDesignTests.cs" />
+    <Compile Remove="McpLocalProcessTests.cs" />
+    <Compile Remove="PlcEditingTests.cs" />
+    <Compile Remove="SwallowedExceptionsTests.cs" />
+    <Compile Remove="UnifiedScriptSyntaxCheckTests.cs" />
+    <Compile Remove="V21EcosystemTests.cs" />
+    <Compile Include="../../Fixtures/TiaMcp.Offline.Fixtures/BundleLayoutData.cs" />
+    <Compile Include="../../Fixtures/TiaMcp.Offline.Fixtures/HardwareAmlTestsData.cs" />
+    <Compile Include="../../Fixtures/TiaMcp.Offline.Fixtures/McpLocalProcessTestsData.cs" />
+    <Compile Include="../../Fixtures/TiaMcp.Offline.Fixtures/V4HmiContractTestsData.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../Fixtures/TiaMcp.Offline.Fixtures/BehaviorParityCases.cs" />
+    <Compile Include="../../Fixtures/TiaMcp.Offline.Fixtures/BehaviorParityEngine.cs" />
+    <Compile Include="../../Fixtures/TiaMcp.Offline.Fixtures/HardwareAddressingParityEngine.cs" />
+  </ItemGroup>
 </Project>

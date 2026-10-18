@@ -43,13 +43,6 @@ namespace TiaMcp.Engine.Tests
             yield return new object[] { type, "987654", NativeStateKind.Unexpected };
         }
 
-        [Theory]
-        [MemberData(nameof(States))]
-        public void EverySdkValueHasAnExplicitMapping(string type, string state, NativeStateKind expected)
-        {
-            Assert.Equal(expected, NativeResultStates.Classify(type, state));
-            Assert.Equal(expected is NativeStateKind.Success or NativeStateKind.Warning, NativeResultStates.Succeeded(type, state));
-        }
 
         [Theory]
         [MemberData(nameof(States))]
@@ -102,47 +95,8 @@ namespace TiaMcp.Engine.Tests
             finally { Directory.Delete(directory, true); }
         }
 
-        [Fact]
-        public void SuccessSpellingFromAnotherEnumAndNullDoNotProveCompletion()
-        {
-            foreach (string? state in new[] { "OK", "Info", "Failed", null })
-            {
-                var evidence = new JsonObject { ["nativeStateType"] = NativeResultStates.Compiler };
-                NativeResultState.Record(evidence, state, false);
-                Assert.True(NativeResultState.TryUnsuccessful(evidence, true, out var outcome, out var error));
-                Assert.Equal(Outcome.Unknown, outcome);
-                Assert.Equal(ErrorCode.OutcomeUnknown, error!.Code);
-            }
-        }
 
-        [Theory]
-        [InlineData("Failure")]
-        [InlineData("Failed")]
-        [InlineData("Success")]
-        [InlineData("Information")]
-        public void LegacyAlarmEvidenceCannotBorrowValuesFromAnotherEnum(string state)
-        {
-            var evidence = new JsonObject(); NativeResultState.Record(evidence, state, false);
-            Assert.True(NativeResultState.TryUnsuccessful(evidence, true, out var outcome, out var error, "ExportAlarmInstanceTexts"));
-            Assert.Equal(Outcome.Unknown, outcome);
-            var body = JsonNode.Parse(V4Json.Serialize(error))!;
-            Assert.Equal(state, (string?)body["details"]?["evidence"]?["nativeState"]);
-            Assert.Equal(NativeResultStates.AlarmTexts, (string?)body["details"]?["evidence"]?["nativeStateType"]);
-        }
 
-        [Theory]
-        [InlineData("Success", true)]
-        [InlineData("Information", true)]
-        [InlineData("Warning", true)]
-        [InlineData("Error", false)]
-        [InlineData("987654", false)]
-        public void CompilerDiagnosticsUsesAllSdkValues(string state, bool success)
-        {
-            var diagnostics = new CompilerDiagnostics.CompilerMessageCollectResult();
-            var summary = diagnostics.Summary(state, 0, 0);
-            Assert.Equal(success, (bool?)summary["success"]);
-            Assert.Equal(state, (string?)summary["rootState"]);
-        }
 
         [Theory]
         [InlineData(false, true)]

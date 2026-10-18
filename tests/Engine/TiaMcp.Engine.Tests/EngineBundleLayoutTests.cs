@@ -63,22 +63,6 @@ namespace TiaMcp.Engine.Tests
             Assert.Null(EngineRouter.FindSiblingExe(version, () => own));
         }
 
-        [Theory]
-        [InlineData("Release", "bin", "20")]
-        [InlineData("Release", "bin-v20", "21")]
-        [InlineData("Debug", "bin", "20")]
-        [InlineData("Debug", "bin-v20", "21")]
-        [InlineData("Release", "bin", "19")]
-        [InlineData("Debug", "bin-v20", "19")]
-        public void Development_routing_keeps_the_formal_configuration(string configuration, string bin, string release)
-        {
-            Put(scratch, "manifest/package-manifest.json");
-            string directory = Directory.CreateDirectory(At(scratch, "src/Engine/" + bin + "/" + configuration + "/net48")).FullName;
-            string expected = At(scratch, "src/FoundationHost/bin/" + configuration + "/net10.0/TiaMcp.FoundationHost.exe");
-            Assert.Equal(expected, BundleLayout.EngineExecutablePath(scratch, release, directory));
-            string spelled = scratch + Path.DirectorySeparatorChar + "." + Path.DirectorySeparatorChar;
-            Assert.Equal(expected, Path.GetFullPath(BundleLayout.EngineExecutablePath(spelled, release, directory)));
-        }
 
         [Theory]
         [InlineData("relative")]
