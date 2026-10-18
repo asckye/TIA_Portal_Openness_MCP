@@ -308,7 +308,7 @@ def run_profile(args, transport, profile, run_dir):
 
         # Warm every case once before measuring the steady sequence, including JIT/error paths.
         scenario = cases(args.major, source)
-        if args.engine_worker is not None:
+        if args.major in (20, 21):
             # These adapter reads retain the existing refusal and build evidence.
             scenario.append(('engine_worker_project_refused', 'GetProjectUserManagement', {}, 'project_refused'))
             scenario.append(('block_group_portal_refused', 'CreatePlcBlockGroup',
@@ -326,7 +326,7 @@ def run_profile(args, transport, profile, run_dir):
         samples.append(process_sample(owned[0]))
         state = document(rpc('tools/call', 'worker-state', {'name': 'GetOpennessWorkerStatus', 'arguments': {}}))['data']['evidence']['worker']
         worker_pid = owned_worker_pid(owned[0].pid, args.engine_worker or args.plc_worker)
-        if args.plc_worker is None:
+        if args.major in (20, 21):
             require(state['state'] == 'Ready' and worker_pid != owned[0].pid, 'Worker isolation not active')
         else:
             require(state['state'] == 'Running' and worker_pid != owned[0].pid, 'Worker isolation not active')
@@ -351,7 +351,7 @@ def run_profile(args, transport, profile, run_dir):
                 unknown = rpc('__soak_unknown_method__', f'unknown-{batch}')
                 require(unknown.get('error', {}).get('code') == -32601, 'Unknown method not rejected')
                 empty = rpc('resources/list', f'resources-{batch}')
-                if args.plc_worker is None:
+                if args.major in (20, 21):
                     require(empty.get('result') == {'resources': []}, 'Resources unavailable after errors')
                 else:
                     require('resources' not in hello['result']['capabilities'] and empty.get('error', {}).get('code') == -32601,
@@ -481,7 +481,7 @@ def main():
     args = parser.parse_args()
     require((args.engine_worker is not None) != (args.plc_worker is not None), 'Select exactly one worker kind')
     require((args.engine_worker is None) == (args.engine_catalog is None), 'Engine worker requires its catalog')
-    require((args.major == 19) == (args.plc_worker is not None), 'V19 uses the PLC worker; V20/V21 use the engine worker')
+    require(args.major != 19 or args.plc_worker is not None, 'V19 requires the PLC worker')
     require(os.name == 'nt', 'Windows .NET Framework test host required')
     require(1 <= args.rounds <= 10000 and 1 <= args.concurrency <= 32, 'Rounds 1..10000; concurrency 1..32')
     for name in ('exe', 'public_api', 'output'):

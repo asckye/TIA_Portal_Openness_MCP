@@ -5,6 +5,7 @@ capture starts each built runtime without TIA: V20/V21 through the release host 
 the ASP.NET Core 10 runtime; when the machine lacks it, point DOTNET_ROOT and DOTNET_ROOT_X64 at a
 private runtime before running capture. compare exits 1 on any breaking change.
 """
+from offline_fixtures import verify_owned_process_image
 import argparse
 from collections import Counter
 import hashlib
@@ -41,8 +42,10 @@ def engine_overrides(values, option):
 def engine_host_environment(args, release, workers, env_overrides):
     environment = dict(os.environ, **env_overrides)
     environment.pop('TIA_MCP_ENGINE_WORKER_SDK_READY', None)
+    environment.pop('TIA_MCP_PLC_WORKER_SDK_READY', None)
     if release in workers and not getattr(args, 'packaged_no_tia', False):
-        environment['TIA_MCP_ENGINE_WORKER_SDK_READY'] = '1'
+        flag = 'TIA_MCP_PLC_WORKER_SDK_READY' if release in engine_overrides(getattr(args, 'plc_worker', []), '--plc-worker') else 'TIA_MCP_ENGINE_WORKER_SDK_READY'
+        environment[flag] = '1'
     return environment
 
 
@@ -50,6 +53,9 @@ def engine_host_environment(args, release, workers, env_overrides):
 def engine_host_server(args, release, portal_root, profile, env_overrides):
     workers = engine_overrides(args.engine_worker, '--engine-worker')
     catalogs = engine_overrides(args.engine_catalog, '--engine-catalog')
+    plc = engine_overrides(getattr(args, 'plc_worker', []), '--plc-worker')
+    if set(plc) & (set(workers) | set(catalogs)):
+        raise ValueError('Select exactly one worker kind per release')
     if (release in workers) != (release in catalogs):
         raise ValueError('EngineHost overrides require both worker and catalog for V' + release)
     transport = args.transport
@@ -62,13 +68,15 @@ def engine_host_server(args, release, portal_root, profile, env_overrides):
     endpoint = f'http://127.0.0.1:{port}/mcp'
     command = [str(args.engine_host.resolve()), '--bundle-root', str(args.repo_root.resolve()),
                '--release-key', release, '--profile', profile, '--transport', transport]
+    if release in plc:
+        command += ['--plc-worker', '--worker-exe', str(plc[release])]
     if release in workers:
         command += ['--engine-worker', str(workers[release]), '--engine-catalog', str(catalogs[release])]
     if portal_root is not None:
         command += ['--tia-portal-location', str(portal_root)]
     if transport == 'http':
         command += ['--http-prefix', f'http://127.0.0.1:{port}/', '--http-api-key', key]
-    environment = engine_host_environment(args, release, workers, env_overrides)
+    environment = engine_host_environment(args, release, dict(workers, **plc), env_overrides)
     process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                text=True, encoding='utf-8', env=environment, creationflags=subprocess.CREATE_NO_WINDOW)
     output, errors = queue.Queue(), []
@@ -139,6 +147,7 @@ def engine_host_server(args, release, portal_root, profile, env_overrides):
         try:
             process.wait(timeout=3 if transport == 'stdio' else .2)
         except subprocess.TimeoutExpired:
+            verify_owned_process_image(process)
             process.terminate()
             process.wait(timeout=5)
         for reader in readers:
@@ -304,6 +313,26 @@ def capture(args):
             result = subprocess.run(command, check=True, capture_output=True,
                                     text=True, encoding='utf-8', timeout=60)
             catalog = json.loads(result.stdout)
+            if args.transport == 'http':
+                with resources.server(exe, None, release, 'http', 'full') as (rpc, _, _):
+                    initialized = rpc('initialize', params={'protocolVersion': '2024-11-05', 'capabilities': {},
+                        'clientInfo': {'name': 'contract-snapshot', 'version': '1'}})
+                    resources.require('result' in initialized, 'Foundation HTTP initialize failed')
+                    rpc('notifications/initialized', notification=True)
+                    tools, cursor, seen = [], None, set()
+                    while True:
+                        reply = rpc('tools/list', params={} if cursor is None else {'cursor': cursor})
+                        resources.require('result' in reply, 'Foundation HTTP tools/list failed')
+                        tools.extend(reply['result']['tools'])
+                        cursor = reply['result'].get('nextCursor')
+                        if cursor is None: break
+                        resources.require(cursor not in seen, 'Repeated Foundation HTTP cursor')
+                        seen.add(cursor)
+                    response = rpc('tools/call', params={'name': 'GetToolUsage', 'arguments': {}})['result']
+                    body = response.get('structuredContent') or json.loads(response['content'][0]['text'])
+                    resources.require(tool_records(tools) == tool_records(catalog['tools']), 'Foundation HTTP/catalog contracts differ')
+                    resources.require(body['data']['behaviorCapabilities'] == catalog['behaviorCapabilities'], 'Foundation HTTP/catalog behavior capabilities differ')
+                    catalog['tools'] = tools
             snapshot.update(profile='plc-foundation', tools=tool_records(catalog['tools']),
                             behaviorCapabilities=catalog['behaviorCapabilities'])
             descriptions = {tool['name']: tool.get('description', '') for tool in catalog['tools']}
@@ -598,6 +627,7 @@ def main():
     capture_parser.add_argument('--repo-root', type=Path, required=True)
     capture_parser.add_argument('--engine-host', type=Path, help='Capture 20/21 through FoundationHost')
     capture_parser.add_argument('--engine-worker', action='append', default=[], metavar='RELEASE=PATH', help='SDK fixture engine worker built with TiaMcpEngineWorkerSdkFixture=true')
+    capture_parser.add_argument('--plc-worker', action='append', default=[], metavar='RELEASE=PATH')
     capture_parser.add_argument('--engine-catalog', action='append', default=[], metavar='RELEASE=PATH')
     capture_parser.add_argument('--transport', choices=('stdio', 'http'), default='stdio', help='EngineHost transport')
     capture_parser.add_argument('--harness', type=Path,

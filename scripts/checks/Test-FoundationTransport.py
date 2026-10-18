@@ -1,4 +1,5 @@
 """Exercise real MCP STDIO/HTTP hosts against a separate synthetic worker. No TIA calls."""
+from offline_fixtures import verify_owned_process_image
 import argparse
 from contextlib import nullcontext
 import ctypes
@@ -145,6 +146,9 @@ def exercise(client, key, logfile, expected_before):
 
 def exercise_engine(client, key, close=True, ready=False):
     capabilities = client.call('initialize', INIT)['capabilities']
+    if ready:
+        # SDK/synthetic readiness is observed on the first cached worker operation.
+        tool(client, 'GetSessionState')
     # Per-session tool collections must not drop the resource and prompt capabilities of the engine host.
     assert {'tools', 'resources', 'prompts'} <= set(capabilities), capabilities
     tools = client.call('tools/list', {})['tools']
@@ -220,12 +224,18 @@ def engine_transports(args, temp, counts):
             directory = (args.sdk_fixture_root / key).resolve()
             command += ['--engine-worker', str(directory / f'TiaMcp.Engine.V{key}.exe'),
                         '--engine-catalog', str(directory / 'tool-catalog.json')]
+        if args.plc_worker:
+            for flag in ('--engine-worker', '--engine-catalog'):
+                if flag in command:
+                    index = command.index(flag); del command[index:index + 2]
+            command += ['--plc-worker', '--worker-exe', str((ROOT / f'src/PlcWorker/bin/{key}/Release/net48/TiaMcp.PlcWorker.{key}.exe').resolve())]
         with (args.output / f'stdio-{key}.log').open('w', encoding='utf-8') as stderr:
             client = Stdio(command, env, stderr)
             try:
                 counts[key] = exercise_engine(client, key)
             finally:
                 if client.p.poll() is None:
+                    verify_owned_process_image(client.p)
                     client.p.terminate(); client.p.wait(10)
         if args.stdio_only:
             continue
@@ -254,6 +264,15 @@ def engine_transports(args, temp, counts):
                 config = data / 'config'
                 config.mkdir(exist_ok=True)
                 (config / 'approval.settings').write_text('enabled=false\ntimeoutSeconds=1\n', encoding='utf-8')
+            if args.plc_worker:
+                assert args.engine_fixture, 'PLC transport checks require the existing synthetic HTTP session fixture'
+                for flag in ('--engine-worker', '--engine-catalog'):
+                    if flag in http_command:
+                        index = http_command.index(flag); del http_command[index:index + 2]
+                for flag in ('--worker-exe', '--public-api'):
+                    if flag in http_command:
+                        index = http_command.index(flag); del http_command[index:index + 2]
+                http_command += ['--worker-exe', str(args.engine_fixture.resolve()), '--public-api', str(temp)]
             process = subprocess.Popen(http_command + ['--transport', 'http', '--http-prefix', url + '/', '--http-api-key', 'fixture-key'],
                                        env=env, cwd=temp, stdout=stderr, stderr=stderr)
             try:
@@ -279,6 +298,11 @@ def engine_transports(args, temp, counts):
                 exercise_engine(first, key, close=False, ready=bool(args.engine_fixture))
                 exercise_engine(second, key, close=False, ready=bool(args.engine_fixture))
                 assert first.sid and second.sid and first.sid != second.sid
+                # Workers now start on first worker operation, for both worker products.
+                for client in (first, second):
+                    state = client.call('tools/call', {'name': 'GetSessionState', 'arguments': {}})
+                    if args.engine_fixture:
+                        assert state['structuredContent']['ok'] is True, state
                 kernel, handles = worker_handles(process.pid, args.engine_fixture.name if args.engine_fixture else None)
                 try:
                     kernel.GetProcessId.argtypes = [wintypes.HANDLE]
@@ -295,18 +319,21 @@ def engine_transports(args, temp, counts):
                         assert time.monotonic() < deadline, 'Session deletion did not terminate exactly one worker'
                         time.sleep(.05)
                     # The remaining session's worker is still bound to the host job.
+                    verify_owned_process_image(process)
                     process.kill(); process.wait(10)
                     assert all(kernel.WaitForSingleObject(handle, 5000) == 0 for handle in handles), 'Engine worker outlived the killed host'
                 finally:
                     for handle in handles:
                         kernel.CloseHandle(handle)
             finally:
+                verify_owned_process_image(process)
                 process.terminate(); process.wait(10)
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--fixture', type=Path)
+    parser.add_argument('--plc-worker', action='store_true', help='Exercise opt-in PLC workers on 20/21 as well as all six old releases')
     parser.add_argument('--releases', nargs='+', choices=KEYS, default=KEYS)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--temp-root', type=Path, help='New worktree directory for retained fixture logs; avoids restricted system TEMP directories')
@@ -331,6 +358,7 @@ def main():
                     counts[key] = exercise(client, key, logfile, 0)
                 finally:
                     if client.p.poll() is None:
+                        verify_owned_process_image(client.p)
                         client.p.terminate(); client.p.wait(10)
             records = [json.loads(line) for line in logfile.read_text('utf-8').splitlines()]
             worker_args = records[0]['args']
@@ -386,6 +414,7 @@ def main():
                     assert len(starts) == 2 and starts[0]['pid'] != starts[1]['pid']
                     assert starts[0]['args'][3] != starts[1]['args'][3]
                 finally:
+                    verify_owned_process_image(p)
                     p.terminate(); p.wait(10)
         engine_transports(args, temp, counts)
     (args.output / 'tool-usage.json').write_text(json.dumps(USAGE_REPORTS, indent=2) + '\n', encoding='utf-8')

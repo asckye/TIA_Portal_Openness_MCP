@@ -146,10 +146,10 @@ namespace TiaMcp.Logic.V4
             catch (Exception ex)
             {
                 if (ex is CandidateObservationException observed) ex = CandidateHostMapping.Import(observed.Fault);
-                if (mode == "apply" && data == null && identity != null && ex is not TiaMcp.Adapters.Contracts.NativeResultException && ex is not TiaMcp.Adapters.Contracts.AdapterPreconditionException && (ex is not PlcImportRejectionException rejected
+                if (mode == "apply" && data == null && identity != null && ex is not TiaMcp.Adapters.Contracts.NativeResultException && (ex is not TiaMcp.Adapters.Contracts.AdapterPreconditionException || TiaOpenness.Shared.HostFailurePolicy.SuppressAdmissionDiagnostic(ex)) && (ex is not PlcImportRejectionException rejected
                     || rejected.Error.Code != ErrorCode.IdentityMismatch && rejected.Error.Code != ErrorCode.PlanStale))
                     ex = new PlcImportRejectionException(new Error("The reviewed input can no longer be read or admitted.", new PlanStaleDetails(expectedPlanHash, "input-unavailable-or-changed")));
-                Error error = ex is TiaMcp.Adapters.Contracts.AdapterPreconditionException typed
+                Error error = ex is TiaMcp.Adapters.Contracts.AdapterPreconditionException typed && !TiaOpenness.Shared.HostFailurePolicy.SuppressAdmissionDiagnostic(ex)
                     ? HostBehavior.FailureError(typed.IsArgument ? TiaOpenness.Shared.HostFailureKind.Argument : TiaOpenness.Shared.HostFailureKind.Precondition,
                         typed.ParamName, new Dictionary<string, JsonElement>(), HostBehavior.SafeDiagnostic(typed.Message))
                     : ex is PlcImportRejectionException refused ? refused.Error

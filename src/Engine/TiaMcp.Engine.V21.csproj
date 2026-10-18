@@ -146,6 +146,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../PlcWorker/PlcSimAdvancedWorkerModule.cs" Link="Worker/PlcSimAdvancedWorkerModule.cs" />
+    <Compile Include="../PlcWorker/WorkerObservations.cs" Link="Worker/WorkerObservations.cs" />
     <Compile Include="../PlcWorker/FoundationWorkerDispatcher.cs" Link="Worker/FoundationWorkerDispatcher.cs" />
     <Compile Include="../PlcWorker/PlcVerifiedImportBridge.cs" Link="Worker/PlcVerifiedImportBridge.cs" />
     <Compile Include="../PlcWorker/WorkerJson.cs" Link="Worker/WorkerJson.cs" />

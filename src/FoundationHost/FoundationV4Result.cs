@@ -87,7 +87,7 @@ internal static class FoundationV4Result
         return Wire(release, name, id, data, readCancelled ? Outcome.ReadFailed : HostBehavior.OutcomeOf(kind),
             readCancelled ? Execution.ReadOnly : HostBehavior.ExecutionOf(kind), HostBehavior.CompletenessOf(kind),
             HostBehavior.FailureError(kind, parameter, details,
-                HostBehavior.AdmissionDiagnostic(exception, worker?.Code, worker?.Outcome, worker?.ExceptionType),
+                exception.Data["foundationSuppressAdmissionDiagnostic"] is true ? null : HostBehavior.AdmissionDiagnostic(exception, worker?.Code, worker?.Outcome, worker?.ExceptionType),
                 reason, dispatched ? "tool-call" : "tool-queue"), true, kind == TiaOpenness.Shared.HostFailureKind.Unknown);
     }
 

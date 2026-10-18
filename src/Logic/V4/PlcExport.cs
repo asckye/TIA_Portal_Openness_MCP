@@ -162,7 +162,7 @@ namespace TiaMcp.Logic.V4
                     residue["nativeStateType"] = native.Evidence.EnumType;
                 }
                 data ??= new JsonObject(); data["residue"] = residue;
-                var admission = ex is TiaMcp.Adapters.Contracts.AdapterPreconditionException typed
+                var admission = ex is TiaMcp.Adapters.Contracts.AdapterPreconditionException typed && !TiaOpenness.Shared.HostFailurePolicy.SuppressAdmissionDiagnostic(ex)
                     ? HostBehavior.FailureError(typed.IsArgument ? TiaOpenness.Shared.HostFailureKind.Argument : TiaOpenness.Shared.HostFailureKind.Precondition,
                         typed.ParamName, new Dictionary<string, JsonElement>(), HostBehavior.SafeDiagnostic(typed.Message)) : null;
                 var error = unknown ? new Error("Export outcome is unknown; inspect staging and destination and rebuild the session. Never replay.", new OutcomeUnknownDetails("native-export-or-readback", new Dictionary<string, JsonElement> { ["residue"] = V4Json.Data(residue)!.Value }))

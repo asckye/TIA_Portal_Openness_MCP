@@ -1,4 +1,5 @@
 """Exercise resource discovery against a real EXE over STDIO and HTTP; never connect to TIA."""
+from offline_fixtures import verify_owned_process_image
 import argparse
 import hashlib
 from contextlib import contextmanager
@@ -88,7 +89,7 @@ def server(exe, portal_root, major, transport, profile, harness=None, public_api
         require((engine_worker is None) == (engine_catalog is None), 'Both SDK worker and catalog are required')
         inputs = dict(env_overrides=env_overrides, process_observer=process_observer,
                       evidence_directory=evidence_directory, content_root=Path(content_root), engine_worker=engine_worker, engine_catalog=engine_catalog, plc_worker=plc_worker)
-        if engine_worker is not None:
+        if engine_worker is not None or plc_worker is not None:
             require(public_api is not None, 'SDK worker checks require --public-api')
             with fixture_directory('engine-protocol-sdk-') as scratch:
                 portal_root = sdk_only_installation(public_api, major, Path(scratch))
@@ -126,7 +127,7 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
         args += ['--engine-worker', str(worker.resolve()), '--engine-catalog', str(catalog.resolve())]
     if plc_worker is not None:
         require(worker is None and public_api is not None, 'PLC worker requires its PublicAPI and no engine worker')
-        args += ['--worker-exe', str(plc_worker.resolve()), '--public-api', str(public_api.resolve())]
+        args += ['--plc-worker', '--worker-exe', str(plc_worker.resolve()), '--public-api', str(public_api.resolve())]
     if portal_root is not None:
         args += ['--tia-portal-location', str(portal_root)]
     args += ['--transport', transport, '--logging', '1']
@@ -135,6 +136,8 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
     env = dict(os.environ, TIA_MCP_PROFILE=profile)
     if engine_worker is not None:
         env['TIA_MCP_ENGINE_WORKER_SDK_READY'] = '1'
+    if plc_worker is not None:
+        env['TIA_MCP_PLC_WORKER_SDK_READY'] = '1'
     if env_overrides:
         env.update(env_overrides)
     process = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -224,6 +227,7 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
             process.wait(timeout=3 if transport == 'stdio' else 0.2)
         except subprocess.TimeoutExpired:
             # Only the test's own MCP process is stopped; no TIA connection was made.
+            verify_owned_process_image(process)
             process.terminate()
             process.wait(timeout=5)
         for reader in readers:
@@ -243,12 +247,15 @@ def main():
     parser.add_argument('--public-api', type=Path)
     parser.add_argument('--engine-worker', type=Path, help='Explicitly marked SDK-only worker for offline usage examples')
     parser.add_argument('--engine-catalog', type=Path)
+    parser.add_argument('--plc-worker', type=Path)
     parser.add_argument('--usage-output', type=Path)
     parser.add_argument('--transport', nargs='+', choices=('stdio', 'http'), default=('stdio', 'http'))
     args = parser.parse_args()
     if (args.engine_worker is None) != (args.engine_catalog is None):
         parser.error('Both --engine-worker and --engine-catalog are required')
-    if args.engine_worker is not None:
+    if args.plc_worker is not None:
+        require(args.engine_worker is None and args.public_api is not None, 'PLC SDK worker requires PublicAPI and no engine worker')
+    if args.engine_worker is not None or args.plc_worker is not None:
         require(args.public_api is not None, 'SDK worker capture requires --public-api')
         with fixture_directory('resource-sdk-worker-') as scratch:
             args.portal_root = sdk_only_installation(args.public_api, args.major, Path(scratch))
@@ -265,7 +272,7 @@ def run(args):
             label = f'V{args.major} {transport} {profile}'
             with server(args.exe.resolve(), args.portal_root.resolve(), args.major,
                         transport, profile, args.host_harness, args.public_api,
-                        engine_worker=args.engine_worker, engine_catalog=args.engine_catalog) as (rpc, http, logs):
+                        engine_worker=args.engine_worker, engine_catalog=args.engine_catalog, plc_worker=args.plc_worker) as (rpc, http, logs):
                 initialized = rpc('initialize', params={'protocolVersion': '2024-11-05',
                     'capabilities': {}, 'clientInfo': {'name': 'resource-discovery-test', 'version': '1'}})
                 require('result' in initialized, 'Initialize failed')

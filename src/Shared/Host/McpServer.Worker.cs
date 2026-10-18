@@ -16,6 +16,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public static ResponseMessage ReadOpennessWorkerStatus()
         {
+            InitializeWorkerSupervisor();
             var worker = Worker.Snapshot();
             return new ResponseMessage {
                 Message = "Local worker and TIA environment state; no native call was made.",
@@ -31,8 +32,17 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseMessage RestartOpennessWorker(
             [Description("confirmRestart: false previews only; true discards the idle/faulted worker and its bindings without replaying any operation.")] bool confirmRestart = false)
         {
+            InitializeWorkerSupervisor();
             return new ResponseMessage { Message = "Worker reset request evaluated; no TIA project was opened or saved.",
                 Meta = Worker.Restart(confirmRestart, System.Threading.CancellationToken.None).GetAwaiter().GetResult() };
+        }
+        private static void InitializeWorkerSupervisor()
+        {
+#if TIA_ENGINE_HOST
+            if (TiaMcp.FoundationHost.ReleaseCatalogData.Releases[ReleaseKey].StartSupervisorOnRead
+                && (string?)Worker.Snapshot()["state"] == "NotStarted")
+                Worker.StartForStatus(System.Threading.CancellationToken.None).GetAwaiter().GetResult();
+#endif
         }
     }
 }

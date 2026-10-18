@@ -72,6 +72,16 @@
 | 4 | P8-04m、P8-63 | 新 ADR（统一原则、引擎退役），取代 0005、0006、0009、0010 的相应部分；用户文档、发布说明、迁移指南、第三方声明、台账、真机验收手册与脚本 |
 | 5 | 发布 | 最终 RC 即为可发布的 4.0.0 包；八版真机验收与复测；台账、重新生成、发布 |
 
+### P8-04h 迁移期开关
+
+FoundationHost 的 `--plc-worker` 显式选择 V20/V21 的独立 PlcWorker；不提供时仍使用引擎 worker。
+例如：`runtime/v21/TiaMcp.FoundationHost.exe --release-key 21 --plc-worker --profile full`。
+开发输出可再指定 `--worker-exe <PlcWorker.exe>` 和 `--public-api <对应 SDK 目录>`；不能与
+`--engine-worker` / `--engine-catalog` 混用。该开关可随发布构建交付，随包 worker 布局与默认值的切换仍由 P8-04j1/j2 管理。
+它保留所选发布键的说明、full/lite、资源/提示词、审批/审计和行为披露；不会选择测试就绪策略。
+所有传输及 `--catalog` / `--host-command` 共用会话工厂，worker 在首次 worker 操作时启动。
+V20/V21 显式读取监督器状态或预演重启时先读取缓存状态，以保留原有就绪回复；该策略也保存在发布数据中。
+
 ## 5 统一项
 
 替换 worker 期间（P8-04c 至 P8-04l）契约与响应保持零差异。下列统一在 P8-04n 中进行，旧版的行为变化逐项列出，由最终真机验收覆盖。

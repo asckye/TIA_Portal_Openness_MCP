@@ -63,7 +63,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var parameters = method.GetParameters();
                 string tool = ((McpServerToolAttribute?)System.Attribute.GetCustomAttribute(method, typeof(McpServerToolAttribute)))?.Name ?? method.Name;
-                observation = InvocationJournal.Observe(id, tool, "engine", ReleaseKey, IsWriteTool(method), () =>
+                observation = InvocationJournal.Observe(id, tool, McpServer.InvocationHostTag, ReleaseKey, IsWriteTool(method), () =>
                 {
                     var values = new Dictionary<string, object?>();
                     for (int i = 0; i < parameters.Length; i++)
@@ -94,7 +94,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var methods = AllToolDescriptors();
                 bool known = name != null && methods.ContainsKey(name);
-                using var journal = InvocationJournal.Observe(System.Guid.NewGuid().ToString("N"), known ? name! : "CallTool", "engine", ReleaseKey,
+                using var journal = InvocationJournal.Observe(System.Guid.NewGuid().ToString("N"), known ? name! : "CallTool", McpServer.InvocationHostTag, ReleaseKey,
                     known && IsWrite(ClassificationOf(methods[name!])), () => arguments.Json.GetRawText());
                 journal.Complete(() => System.Text.Json.JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
             }
@@ -157,7 +157,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     bool bridgeWrite = McpServer.ApprovalResultWrite(ProtocolTool.Name,
                         System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>()));
-                    using var rejectedAudit = TiaOpenness.Shared.AuditInvocation.Begin(bridgeWrite, "engine", McpServer.ReleaseKey, targetName!);
+                    using var rejectedAudit = TiaOpenness.Shared.AuditInvocation.Begin(bridgeWrite, McpServer.InvocationHostTag, McpServer.ReleaseKey, targetName!);
                     bridgeReset = McpServer.SessionPrecheckRefusal(targetName!)!;
                     rejectedAudit?.Complete(bridgeReset.StructuredContent?.ToJsonString());
                     return McpHints.WithRecovery(bridgeReset);
@@ -171,7 +171,7 @@ namespace TiaMcpServer.ModelContextProtocol
             bool disabled = write && !TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath).Enabled;
             string? correlation = null;
             using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write,
-                "engine", McpServer.ReleaseKey, ProtocolTool.Name, correlation);
+                McpServer.InvocationHostTag, McpServer.ReleaseKey, ProtocolTool.Name, correlation);
             var reset = McpServer.SessionPrecheckRefusal(ProtocolTool.Name);
             using var nativeCalls = InvocationJournal.BeginNativeCallScope();
             var result = reset ?? await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
@@ -195,7 +195,7 @@ namespace TiaMcpServer.ModelContextProtocol
             // The call projection starts at the transport boundary. The tool's BEFORE row is written inside its lane,
             // after approval, so journal BEFORE/terminal pairs never overlap on the Openness lane.
             string id = InvocationJournal.NewId(correlation ?? TiaOpenness.Shared.AuditInvocation.CurrentRequestId);
-            using var journal = InvocationJournal.Observe(id, ProtocolTool.Name, "engine", McpServer.ReleaseKey,
+            using var journal = InvocationJournal.Observe(id, ProtocolTool.Name, McpServer.InvocationHostTag, McpServer.ReleaseKey,
                 McpServer.IsWriteTool(ProtocolTool.Name),
                 () => System.Text.Json.JsonSerializer.Serialize(request.Params?.Arguments, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
             CallToolResult Recorded(CallToolResult result)

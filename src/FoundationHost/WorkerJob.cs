@@ -80,19 +80,60 @@ internal static class WorkerShutdown
         // Parallel waits keep the host deadline bounded even with many HTTP sessions.
         Task.WhenAll(Owners.Keys.Select(owner => Task.Run(owner.Dispose))).GetAwaiter().GetResult();
     }
-    internal static void Stop(Process? process, TiaMcp.WorkerChannel.ChannelClient? channel)
+    internal static WorkerTerminationException? Stop(Process? process, TiaMcp.WorkerChannel.ChannelClient? channel,
+        Func<Process, string?>? image = null)
     {
         bool busy = channel?.InFlight == true || channel?.OutcomeUnknown == true && channel.CanDisconnect != true;
         try
         {
             try { if (channel != null) channel.Dispose(); else process?.StandardInput.Close(); }
             catch (IOException) /* swallow(teardown): broken stdin cannot prevent the bounded worker exit/termination */ { }
-            if (process != null && !process.HasExited && (busy || !process.WaitForExit(GracefulTimeoutMilliseconds))) process.Kill();
+            if (process != null && !process.HasExited && (busy || !process.WaitForExit(GracefulTimeoutMilliseconds)))
+                KillOwned(process, image ?? ReadImage);
         }
-        catch (InvalidOperationException) /* swallow(teardown): the worker may have exited while its handle was being inspected */ { }
-        finally { process?.Dispose(); }
+        catch (WorkerTerminationException refusal) { Trace.TraceError(refusal.ToString()); return refusal; }
+        catch (System.ComponentModel.Win32Exception error)
+        { var refusal = new WorkerTerminationException("Unable to verify or stop the owned worker.", error); Trace.TraceError(refusal.ToString()); return refusal; }
+        catch (InvalidOperationException error)
+        {
+            if (process != null && !Exited(process))
+            { var refusal = new WorkerTerminationException("Unable to confirm the owned worker has exited.", error); Trace.TraceError(refusal.ToString()); return refusal; }
+        }
+        process?.Dispose();
+        return null;
+    }
+    internal static void KillOwned(Process process)
+        => KillOwned(process, ReadImage);
+    private static string? ReadImage(Process child) => child.MainModule?.FileName;
+    internal static void KillOwned(Process process, Func<Process, string?> image)
+    {
+        try
+        {
+            if (process.HasExited) return;
+            var expected = Path.GetFullPath(process.StartInfo.FileName);
+            var actual = image(process);
+            if (actual == null || !string.Equals(Path.GetFullPath(actual), expected, StringComparison.OrdinalIgnoreCase))
+                throw new WorkerTerminationException($"Refusing to stop worker {process.Id}: executable '{actual}' differs from owned child '{expected}'.");
+            process.Kill();
+            if (!process.WaitForExit(GracefulTimeoutMilliseconds))
+                throw new WorkerTerminationException($"Owned worker {process.Id} did not exit after termination.");
+        }
+        catch (System.ComponentModel.Win32Exception error)
+        { throw new WorkerTerminationException("Unable to verify or stop the owned worker.", error); }
+        catch (InvalidOperationException error)
+        {
+            if (!Exited(process)) throw new WorkerTerminationException("Unable to confirm the owned worker has exited.", error);
+        }
+    }
+    private static bool Exited(Process process)
+    {
+        try { return process.HasExited; }
+        catch (InvalidOperationException) /* swallow(teardown): an unavailable handle cannot establish successful termination */ { return false; }
+        catch (System.ComponentModel.Win32Exception) /* swallow(teardown): inaccessible process state cannot establish successful termination */ { return false; }
     }
     private delegate bool ConsoleHandler(uint signal);
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern bool SetConsoleCtrlHandler(ConsoleHandler handler, bool add);
 }
+
+internal sealed class WorkerTerminationException(string message, Exception? inner = null) : IOException(message, inner);

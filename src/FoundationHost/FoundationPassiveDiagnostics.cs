@@ -287,7 +287,7 @@ internal static class LegacyHostToolRegistry
         {
             // Gate only the bundled worker: an explicit --worker-exe fixture must reach its own dispatch path.
             Func<JsonObject>? readinessForTool = worker is IFoundationSessionWorker { Bundled: true } ? readiness : null;
-            if (tools[i] is FoundationTool { Ported: true } ported && (releaseKey == "20" || releaseKey == "21"))
+            if (tools[i] is FoundationTool { Ported: true } ported && ReleaseCatalogData.Releases[releaseKey].WrapPortedTools)
             {
                 wrapped[i] = PortedToolContract.Wrap(ported);
                 return;
@@ -296,7 +296,7 @@ internal static class LegacyHostToolRegistry
                 sharedSession: worker is IFoundationSessionWorker { SharedSession: true }));
         });
         tools.Clear(); tools.AddRange(wrapped);
-        if (hostPorts && !TiaVersionCatalog.Get(releaseKey).IsFullEngine)
+        if (hostPorts && ReleaseCatalogData.Releases[releaseKey].FoundationReadinessBoundary)
         {
             var all = FoundationHostPorts.Create(worker, releaseKey, tools.AsReadOnly(), readiness, apiDirectory);
             tools.Clear(); tools.AddRange(all);

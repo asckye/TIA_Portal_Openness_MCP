@@ -431,15 +431,10 @@ namespace TiaMcpServer.Worker
             if (request.Method == "engine.status") { Observe(); return ChannelResponse.Success(Status().ToJsonString()); }
             if (request.Method == "engine.observe")
             {
-                try
-                {
+                return WorkerObservations.Reply(() => {
                     var observation = JsonNode.Parse(request.ArgumentsJson)!.AsObject();
-                    return ChannelResponse.Success(HostObservations.Read((string)observation["operation"]!, observation["arguments"]!.AsObject())?.ToJsonString() ?? "null");
-                }
-                catch (Exception observationError)
-                {
-                    return ChannelResponse.Error(new ChannelFailureException(observationError.Message, -32603, ChannelOutcome.ReadFailed));
-                }
+                    return HostObservations.Read((string)observation["operation"]!, observation["arguments"]!.AsObject());
+                });
             }
             string? fixtureFault = WorkerFaultInjection.Mode(typeof(EngineWorkerHost).Assembly);
             WorkerFaultInjection.BeforeDispatch(fixtureFault, request);

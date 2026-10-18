@@ -78,7 +78,7 @@ internal static class HostToolsListWriter
             ["source"] = "FoundationHost V" + release + " full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
             ["fileVersion"] = FileVersionInfo.GetVersionInfo(Environment.ProcessPath!).FileVersion,
             ["exeSha256"] = EngineCatalog.Hash(Environment.ProcessPath!),
-            ["workerSha256"] = EngineCatalog.Hash(options.EngineWorkerExe!),
+            ["workerSha256"] = EngineCatalog.Hash(options.EngineWorkerExe ?? options.WorkerExe),
             ["toolCount"] = rows.Count,
             ["note"] = "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
             ["callDiscipline"] = new JsonObject

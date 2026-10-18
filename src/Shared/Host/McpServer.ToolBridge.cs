@@ -45,8 +45,22 @@ namespace TiaMcpServer.ModelContextProtocol
             BridgeLiteToolNames = liteToolNames ?? throw new ArgumentNullException(nameof(liteToolNames));
         }
 
+        internal static string InvocationHostTag
+#if TIA_ENGINE_HOST
+            => TiaMcp.FoundationHost.ReleaseCatalogData.Releases[ReleaseKey].HostInvocationTag;
+#else
+            => "engine";
+#endif
+
+        private static bool UseDeclaredReleasePolicy
+#if TIA_ENGINE_HOST
+            => TiaMcp.FoundationHost.ReleaseCatalogData.Releases[ReleaseKey].WrapPortedTools;
+#else
+            => TiaMcp.Versioning.TiaVersionCatalog.Get(ReleaseKey).IsFullEngine;
+#endif
+
         internal static string VersionToolProblem(string name)
-            => TiaMcp.Versioning.TiaVersionCatalog.Get(ReleaseKey).IsFullEngine
+            => UseDeclaredReleasePolicy
                 ? Siemens.ToolVersionPolicy.ToolProblem(ReleaseKey, name)
                 : SessionCatalog() is { } catalog && catalog.Find(name) == null ? "Tool is not registered in this release." : "";
 
@@ -60,7 +74,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         internal static string VersionCallProblem(string name, Func<string, string?> argument)
         {
-            if (TiaMcp.Versioning.TiaVersionCatalog.Get(ReleaseKey).IsFullEngine)
+            if (UseDeclaredReleasePolicy)
                 return Siemens.ToolVersionPolicy.CallProblem(ReleaseKey, name, argument);
             if (VersionToolProblem(name) is { Length: > 0 } problem) return problem;
             if (name is "RenderPlcBlockDocument" or "ComparePlcBlockDocuments"
@@ -271,7 +285,7 @@ namespace TiaMcpServer.ModelContextProtocol
 #if TIA_ENGINE_HOST
             if (CatalogView.Find(name)?.Execution == "foundation" && (!TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(name)
                 || TiaMcp.Adapters.Contracts.PortedFamilies.UsesFoundationCandidate(name)
-                || !TiaMcp.Versioning.TiaVersionCatalog.Get(ReleaseKey).IsFullEngine
+                || !UseDeclaredReleasePolicy
                     && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name != "F04"))
             {
                 var input = arguments ?? EmptyArguments();
@@ -292,7 +306,7 @@ namespace TiaMcpServer.ModelContextProtocol
             bool write = AllToolDescriptors(includeUnavailable: true).TryGetValue(name ?? "", out _) && ApprovalWrite(name ?? "", (arguments ?? EmptyArguments()).Json.GetRawText());
             bool disabled = write && McpApprovalContext.Value && !TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath).Enabled;
             string requestId = Meta.Correlate(InvocationJournal.CorrelationId);
-            using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write, "engine", ReleaseKey, name ?? "", requestId);
+            using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write, McpServer.InvocationHostTag, ReleaseKey, name ?? "", requestId);
             var fenced = write ? GenerationFenceRefusal(name ?? "", (arguments ?? EmptyArguments()).Json.GetRawText()) : null;
             if (fenced != null)
             {
@@ -419,7 +433,7 @@ namespace TiaMcpServer.ModelContextProtocol
             Outcome outcome, Execution execution, Completeness completeness, Paging? paging = null, bool current = false)
         {
 #if TIA_ENGINE_HOST
-            if (!TiaMcp.Versioning.TiaVersionCatalog.Get(ReleaseKey).IsFullEngine && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool)) current = true;
+            if (TiaMcp.FoundationHost.ReleaseCatalogData.Releases[ReleaseKey].DisclosePortedBehavior && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool)) current = true;
 #endif
             var warnings = current ? new[] { new Warning(WarningCode.UnverifiedBehavior,
                 "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()) } : Array.Empty<Warning>();

@@ -59,27 +59,12 @@ internal sealed class HostSession : IHostSession
         OperatorTools = operatorTools.Select(t => (McpServerTool)new OperatorTool(t, this)).ToArray();
     }
     internal static HostSession Legacy(HostOptions options, string instructions, bool operatorOwned = false)
-    {
-        var worker = new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, options.NativeEnabled, options.EngineTimeoutSeconds, options.WorkerTimeoutConfig)
-            { Bundled = options.BundledWorker, WithUi = options.WithUi, TiaPortalLocation = options.TiaPortalLocation };
-        try
-        {
-            var tools = LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled, options.ApiDirectory, options.ApiDirectorySource);
-            var pipeline = (EngineHostPipeline)worker.HostPipeline!;
-            TiaMcp.Logic.ModelContextProtocol.ImportStagingSession? staging = null;
-            var session = new HostSession(options.ReleaseKey, instructions, operatorOwned, tools, pipeline.OperatorTools,
-                () => { var state = worker.OperatorSnapshot(); state["sessionLocked"] = worker.Poisoned || pipeline.OperatorSessionLocked; return state; },
-                () => { staging?.Dispose(); worker.Dispose(); });
-            if (operatorOwned || options.Transport == "stdio")
-            {
-                staging = FoundationTool.RegisterStagingSession(worker, session.SessionKey);
-                session.mcpSessionId = session.SessionKey;
-            }
-            else session.registerAi = id => staging = FoundationTool.RegisterStagingSession(worker, id);
-            return session;
-        }
-        catch { worker.Dispose(); throw; }
-    }
+        => SharedReleaseHost.CreateHostSession(options, operatorOwned).GetAwaiter().GetResult();
+    private IDisposable? stagingRegistration;
+    internal void RegisterSession(string id, Func<string, IDisposable> register)
+    { mcpSessionId = id; stagingRegistration = register(id); }
+    internal void RegisterSessionOnBind(Func<string, IDisposable> register)
+        => registerAi = id => stagingRegistration = register(id);
     public void BindAi(IMcpServer server)
     {
         if (OperatorOwned) throw new InvalidOperationException("AI clients cannot join an operator-owned session.");
@@ -195,7 +180,7 @@ internal sealed class HostSession : IHostSession
         }
         Changed(); closed.Cancel();
         if (aiNotifications != null) aiNotifications.DisposeAsync().AsTask().GetAwaiter().GetResult();
-        dispose();
+        stagingRegistration?.Dispose(); dispose();
         closed.Dispose();
     }
     private sealed class ObservedTool(McpServerTool inner, HostSession session) : McpServerTool

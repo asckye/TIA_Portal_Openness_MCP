@@ -9,8 +9,15 @@ using TiaMcp.PlcWorker;
 
 namespace TiaMcp.FoundationHost;
 
-internal sealed class EngineWorkerClient(HostOptions options, string workerHash, string? spillsDirectoryForTest = null) : IEngineWorker, IEngineWorkerProgress, IFoundationSessionWorker, IFoundationWorkerResult, TiaMcpServer.ModelContextProtocol.IHostToolServices
+internal sealed class EngineWorkerClient(HostOptions options, string workerHash, string? spillsDirectoryForTest = null) : IEngineWorker, IEngineWorkerProgress, IEngineWorkerReadiness, IFoundationWorkerSupervisor, IFoundationSessionWorker, IFoundationWorkerResult, IFoundationWorkerReadiness, TiaMcpServer.ModelContextProtocol.IHostToolServices
 {
+    public async Task PrepareReadiness(CancellationToken token)
+    {
+        if (!ReleaseCatalogData.Releases[options.ReleaseKey].MergeWorkerReadiness || readinessObserved || Faulted) return;
+        using var lane = await AcquireLane(token).ConfigureAwait(false);
+        ActivateLane(lane);
+        if (!readinessObserved && !Faulted) await ReadStatus(token).ConfigureAwait(false);
+    }
     public async Task<JsonNode?> Observe(string operation, JsonObject arguments, CancellationToken token)
     {
         using var lane = await AcquireLane(token).ConfigureAwait(false);
@@ -32,6 +39,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
     private Process? process;
     private ChannelClient? channel;
     private bool faulted;
+    private volatile bool readinessObserved;
     private bool attachAttempted;
     private JsonObject? faultEvidence;
     private readonly AsyncLocal<Action<string>?> progressScope = new();
@@ -48,7 +56,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
     private long generation = 1;
     private int queued, active;
     private readonly JsonArray previousGenerations = new();
-    internal JsonObject OperatorSnapshot()
+    public JsonObject OperatorSnapshot()
     {
         var snapshot = Snapshot();
         lock (stateSync) return new JsonObject { ["pid"] = process?.Id, ["generation"] = generation,
@@ -75,7 +83,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
     public bool Poisoned => foundationOutcome.Poisoned || Faulted || SessionLocked?.Invoke() == true;
     public bool Bundled => true;
     public bool SharedSession => true;
-    public TiaMcp.Logic.ModelContextProtocol.ImportStagingSession StagingOwner => TiaMcpServer.ModelContextProtocol.McpServer.SharedStagingOwner;
+    public TiaMcp.Logic.ModelContextProtocol.ImportStagingSession? StagingOwner => EngineHostConfiguration.CurrentOrNull?.StagingOwner?.Invoke();
     public IDisposable? EnterRequest(ModelContextProtocol.Server.RequestContext<ModelContextProtocol.Protocol.CallToolRequestParams> request)
         => TiaMcpServer.ModelContextProtocol.ImportStagingTools.UseSession(request);
     public void MarkUncertain() => TiaMcpServer.ModelContextProtocol.McpServer.MarkSharedSessionUncertain();
@@ -85,8 +93,10 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
     internal JsonObject FoundationReadiness()
     {
         var readiness = FoundationPassiveDiagnostics.Readiness(options.ReleaseKey, options.ApiDirectory, options.ApiDirectorySource);
+        bool fixture = Environment.GetEnvironmentVariable("TIA_MCP_ENGINE_WORKER_SDK_READY") == "1"
+            && TiaMcp.WorkerChannel.WorkerAssemblyMetadata.Read(options.EngineWorkerExe!).GetValueOrDefault("TiaMcpEngineWorkerSdkFixture") == "true";
         lock (stateSync)
-            if ((bool?)status["readiness"]?["ready"] == true) { readiness["ready"] = true; readiness["cause"] = null; }
+            if (fixture || (bool?)status["readiness"]?["ready"] == true) { readiness["ready"] = true; readiness["cause"] = null; }
         return readiness;
     }
 
@@ -106,9 +116,9 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
             if (disconnectAcknowledgement != null)
             {
                 if (operation == "Disconnect" && arguments.Count == 0) return disconnectAcknowledgement.DeepClone();
-                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Disconnect ended this session. A subsequent explicit Attach requires a new host session; automatic restart is refused.", isArgument: false);
+                throw WorkerClient.SessionEnded(options.ReleaseKey, "Disconnect ended this session. A subsequent explicit Attach requires a new host session; automatic restart is refused.");
             }
-            if (disconnecting) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Disconnect is ending this session; a new host session is required.", isArgument: false);
+            if (disconnecting) throw WorkerClient.SessionEnded(options.ReleaseKey, "Disconnect is ending this session; a new host session is required.");
             if (Poisoned && !WorkerOperations.IsIndependentRuntime(operation)) throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.Recovery);
             if (!options.NativeEnabled) throw new InvalidOperationException("Native calls are disabled by --offline. Start a normal configured session to use Openness.");
             if (options.BundledWorker && WorkerOperations.RequiresPortal(operation) && !attachedProcessId.HasValue
@@ -120,7 +130,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
                 && (string?)arguments["mode"] == "apply" && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach";
             bool firstAttach = attach && !attachAttempted;
             if (attach) attachAttempted = true;
-            if (disconnecting) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Disconnect is ending this session; a new host session is required.", isArgument: false);
+            if (disconnecting) throw WorkerClient.SessionEnded(options.ReleaseKey, "Disconnect is ending this session; a new host session is required.");
             activeRequestId = correlation;
             sent = true;
             string wire = await FoundationWorkerRequest.Dispatch(channel!, "adapter." + operation, arguments.ToJsonString(),
@@ -197,8 +207,8 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
     private JsonObject TerminateForDisconnect()
     {
         priorUnknownRequestId ??= activeRequestId;
+        if (Stop() is { } refusal) throw refusal;
         disconnectAcknowledgement = DisconnectContract.Recovery(DisconnectContract.Idle(), true, priorUnknownRequestId);
-        Stop();
         lock (stateSync) { binding = null; status["binding"] = null; status["session"] = null; attachedProcessId = null; }
         return (JsonObject)disconnectAcknowledgement.DeepClone();
     }
@@ -207,12 +217,10 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
         lock (stateSync)
         {
             if (Faulted && faultEvidence == null) RecordFault(channel?.LastFault ?? new IOException("Worker exited."), "idle", false);
-            return new JsonObject { ["enabled"] = true, ["state"] = Faulted ? "Faulted" : Volatile.Read(ref active) > 0 ? "Busy" : process == null ? "NotStarted" : "Ready",
-                ["generation"] = generation, ["active"] = Volatile.Read(ref active), ["queued"] = Volatile.Read(ref queued),
-                ["timeoutSeconds"] = timeouts.For("status").TotalSeconds, ["timeoutPolicy"] = JsonSerializer.SerializeToNode(timeouts.Budgets.ToDictionary(p => p.Key, p => p.Value.TotalSeconds)),
-                ["sessionLocked"] = Faulted || foundationOutcome.Poisoned || SessionLocked?.Invoke() == true, ["fault"] = faultEvidence?.DeepClone(),
-                ["readiness"] = status["readiness"]?.DeepClone(), ["binding"] = binding?.DeepClone(),
-                ["previousGenerations"] = previousGenerations.DeepClone() };
+            return WorkerSupervisorReplies.Snapshot(options.ReleaseKey, new WorkerSupervisorState(new JsonObject(), Faulted, process != null,
+                generation, Volatile.Read(ref active), Volatile.Read(ref queued), timeouts.For("status").TotalSeconds,
+                JsonSerializer.SerializeToNode(timeouts.Budgets.ToDictionary(p => p.Key, p => p.Value.TotalSeconds)),
+                Faulted || foundationOutcome.Poisoned || SessionLocked?.Invoke() == true, faultEvidence, status["readiness"], binding, previousGenerations));
         }
     }
     private void RecordFault(Exception error, string operation, bool dispatched)
@@ -221,10 +229,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
         {
             faulted = true;
             if (dispatched) priorUnknownRequestId ??= activeRequestId ?? TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId;
-            faultEvidence ??= new JsonObject { ["cause"] = error.GetType().Name, ["message"] = error.Message,
-                ["operation"] = operation, ["dispatched"] = dispatched, ["outcome"] = dispatched ? "unknown" : "not-started",
-                ["observedUtc"] = DateTimeOffset.UtcNow.ToString("O"), ["bindingEpoch"] = channel?.BindingEpoch,
-                ["channelRequestId"] = channel?.LastRequestId, ["processId"] = process?.Id };
+            faultEvidence ??= WorkerSupervisorReplies.Fault(error, operation, dispatched, channel?.BindingEpoch, channel?.LastRequestId, process?.Id);
         }
     }
     internal static string Hash(string path)
@@ -254,12 +259,13 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
         ChannelClient current;
         lock (stateSync)
         {
-            if (disconnecting) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Disconnect ended this session; a new host session is required.", isArgument: false);
+            if (disconnecting) throw WorkerClient.SessionEnded(options.ReleaseKey, "Disconnect ended this session; a new host session is required.");
             if (Faulted && !(independentRuntime && process is { HasExited: false } && channel?.CanCallIndependentRuntime == true))
                 throw new ChannelFaultException("Engine worker generation is faulted; explicitly restart and rebind. Never replay the request.", false);
             if (process == null)
             {
                 string worker = options.EngineWorkerExe!;
+                if (workerHash.Length == 0) workerHash = Hash(worker);
                 if (Hash(worker) != workerHash) throw new InvalidDataException("Engine worker changed after catalog verification.");
                 string adapterHash = Hash(Path.Combine(Path.GetDirectoryName(worker)!, "TiaMcp.Adapter." + options.ReleaseKey + ".dll"));
                 string nonce = Convert.ToHexString(RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
@@ -299,7 +305,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
             token.ThrowIfCancellationRequested();
             await Start(token).ConfigureAwait(false);
             token.ThrowIfCancellationRequested();
-            if (disconnecting) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Disconnect is ending this session; a new host session is required.", isArgument: false);
+            if (disconnecting) throw WorkerClient.SessionEnded(options.ReleaseKey, "Disconnect is ending this session; a new host session is required.");
             activeProgress = report;
             activeRequestId = id;
             sent = true;
@@ -337,6 +343,8 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
 
     public async Task<JsonObject> Status(CancellationToken token)
     {
+        if (!readinessObserved && ReferenceEquals(Held.Value, this) && disconnectAcknowledgement == null && !Faulted)
+            return await ReadStatus(token).ConfigureAwait(false);
         // Local tools use the last worker observation while its native lane is busy.
         if (disconnectAcknowledgement != null || Faulted || !serial.Wait(0)) { lock (stateSync) return (JsonObject)status.DeepClone(); }
         try { return await ReadStatus(token).ConfigureAwait(false); }
@@ -351,16 +359,16 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
             if ((string?)observed["releaseKey"] != options.ReleaseKey || !JsonNode.DeepEquals(observed["behaviorCapabilities"],
                 TiaMcp.Logic.V4.BehaviorCapabilities.Table(typeof(EngineWorkerClient).Assembly, options.ReleaseKey)))
                 throw new InvalidDataException("Engine worker release or behavior capabilities mismatch.");
-            lock (stateSync) { status = observed; binding = observed["binding"]?.DeepClone(); if (observed["nativeFault"] != null) RecordFault(new IOException((string?)observed["nativeFault"]), "status", false); return (JsonObject)status.DeepClone(); }
+            lock (stateSync) { status = observed; readinessObserved = true; binding = observed["binding"]?.DeepClone(); if (observed["nativeFault"] != null) RecordFault(new IOException((string?)observed["nativeFault"]), "status", false); return (JsonObject)status.DeepClone(); }
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
         catch (Exception error) { RecordFault(error, "status", false); throw; }
     }
     public async Task<JsonObject> Restart(bool confirmed, CancellationToken token)
     {
-        if (!confirmed) return new JsonObject { ["success"] = true, ["dryRun"] = true, ["worker"] = Snapshot() };
+        if (!confirmed) return WorkerSupervisorReplies.Restart(options.ReleaseKey, false, true, false, Snapshot());
         if (Volatile.Read(ref queued) > 0 || !serial.Wait(0))
-            return new JsonObject { ["success"] = false, ["requiresTiaRestart"] = false, ["worker"] = Snapshot() };
+            return WorkerSupervisorReplies.Restart(options.ReleaseKey, true, false, false, Snapshot());
         HostSessionCall.LaneChanged(true);
         try
         {
@@ -372,24 +380,26 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
             previous.Remove("previousGenerations");
             lock (stateSync)
             {
+                if (Stop() != null) return WorkerSupervisorReplies.Restart(options.ReleaseKey, true, false, requiresTiaRestart, Snapshot());
                 previousGenerations.Add(previous);
                 while (previousGenerations.Count > 16) previousGenerations.RemoveAt(0);
-                Stop(); faulted = false; faultEvidence = null; attachAttempted = false; attachedProcessId = null; disconnectAcknowledgement = null; disconnecting = false; priorUnknownRequestId = null; foundationOutcome = new WorkerOutcomeState(); binding = null; sessionKey = new object(); generation++;
+                faulted = false; faultEvidence = null; attachAttempted = false; attachedProcessId = null; disconnectAcknowledgement = null; disconnecting = false; priorUnknownRequestId = null; foundationOutcome = new WorkerOutcomeState(); binding = null; sessionKey = new object(); generation++;
                 FoundationCandidateSession.Reset(this);
                 status = new JsonObject { ["readiness"] = new JsonObject { ["ready"] = false } };
+                readinessObserved = false;
             }
             await ReadStatus(token).ConfigureAwait(false);
-            return new JsonObject { ["success"] = true, ["restarted"] = true, ["requiresExplicitRebind"] = true, ["requiresTiaRestart"] = requiresTiaRestart,
-                ["recoveryMessage"] = requiresTiaRestart ? TiaOpenness.Shared.SessionBehavior.TiaRestartRequired : null, ["worker"] = Snapshot() };
+            return WorkerSupervisorReplies.Restart(options.ReleaseKey, true, true, requiresTiaRestart, Snapshot());
         }
         finally { HostSessionCall.LaneChanged(false); serial.Release(); }
     }
-    private void Stop()
+    private WorkerTerminationException? Stop()
     {
         lock (stateSync)
         {
-            WorkerShutdown.Unregister(this);
-            WorkerShutdown.Stop(process, channel); channel = null; process = null;
+            if (WorkerShutdown.Stop(process, channel) is { } refusal) { RecordFault(refusal, "stop", false); return refusal; }
+            WorkerShutdown.Unregister(this); channel = null; process = null;
+            return null;
         }
     }
     public void Dispose() { disconnecting = true; Stop(); }

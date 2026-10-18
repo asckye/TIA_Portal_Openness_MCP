@@ -2,6 +2,7 @@
 extern alias enginehost;
 using DeclaredToolMetadata = enginehost::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
 using ProgressHeartbeat = enginehost::TiaMcpServer.ModelContextProtocol.ProgressHeartbeat;
+using ReleaseCatalogData = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
 #else
 using DeclaredToolMetadata = TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
 using ProgressHeartbeat = TiaMcpServer.ModelContextProtocol.ProgressHeartbeat;
@@ -200,7 +201,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         if (inner is WorkbenchControlTool control)
         {
             string controlId = Meta.Correlate(sharedSession ? TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId : null);
-            using var controlJournal = TiaMcpServer.ModelContextProtocol.InvocationJournal.Observe(controlId, tool.Name, "foundation", release,
+            using var controlJournal = TiaMcpServer.ModelContextProtocol.InvocationJournal.Observe(controlId, tool.Name, ReleaseCatalogData.Releases[release].FoundationInvocationTag, release,
                 false, () => JsonSerializer.Serialize(request.Params?.Arguments));
             var controlResult = await control.InvokeV4Async(request, controlId, cancellationToken);
             controlJournal.Complete(() => JsonSerializer.Serialize(controlResult, McpJsonUtilities.DefaultOptions));
@@ -216,7 +217,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         string id = Meta.Correlate(TiaOpenness.Shared.AuditInvocation.CurrentRequestId
             ?? (sharedSession
                 ? TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId : null));
-        using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write, "foundation", release, tool.Name, id);
+        using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write, ReleaseCatalogData.Releases[release].FoundationInvocationTag, release, tool.Name, id);
         var result = await InvokeCoreAsync(request, cancellationToken, settings, value => approval = value, id, audit, write);
         var body = result.StructuredContent ?? JsonNode.Parse((result.Content.FirstOrDefault() as TextContentBlock)?.Text ?? "null");
         if (TiaMcp.Logic.ModelContextProtocol.RecoveryHints.Attach(body, (name, key, operation) =>
@@ -256,7 +257,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         string id, TiaOpenness.Shared.AuditInvocation? audit, bool write, bool internalPrecheck = false)
     {
         var args = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
-        using var journal = internalPrecheck ? null : TiaMcpServer.ModelContextProtocol.InvocationJournal.Observe(id, tool.Name, "foundation", release,
+        using var journal = internalPrecheck ? null : TiaMcpServer.ModelContextProtocol.InvocationJournal.Observe(id, tool.Name, ReleaseCatalogData.Releases[release].FoundationInvocationTag, release,
             inner is FoundationTool { JournalIsWrite: true }, () => JsonSerializer.Serialize(args));
         using var workerRequest = FoundationWorkerRequest.Use(id, tool.Name);
         CallToolResult Recorded(CallToolResult result)
@@ -289,6 +290,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                     HostBehavior.SessionReset(), true));
             if (tool.Name != "DisconnectPortal" && inner is FoundationTool { RequiresTia: true } nativeTool && (nativeTool.UsesProductionWorker || readinessForTest != null))
             {
+                await nativeTool.PrepareReadiness(cancellationToken).ConfigureAwait(false);
                 var readiness = readinessForTest?.Invoke() ?? FoundationPassiveDiagnostics.Readiness(release);
                 if (!readiness["ready"]!.GetValue<bool>())
                     return Recorded(FoundationV4Result.ReadinessUnavailable(release, tool.Name, id, readiness));
@@ -299,7 +301,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             TiaOpenness.Shared.ApprovalOutcome? approval = null;
             if (write && !preview && inner is not GenerationTool { OwnsApproval: true })
             {
-                pending = TiaOpenness.Shared.PendingApproval.Create("foundation", release, tool.Name, JsonSerializer.Serialize(args),
+                pending = TiaOpenness.Shared.PendingApproval.Create(ReleaseCatalogData.Releases[release].FoundationInvocationTag, release, tool.Name, JsonSerializer.Serialize(args),
                     (inner as FoundationTool)?.ApprovalIdentity, settings.TimeoutSeconds, id);
                 audit?.RecordRequest(pending.PlanHash);
                 if (HostBehavior.NeedsPrecheck(internalPrecheck, write, settings.Enabled, true))
@@ -366,7 +368,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             if (write && FoundationHostPorts.GenerationFence(tool.Name, JsonSerializer.Serialize(args), dispatched: true) is { } dispatchFenced)
                 return Recorded(dispatchFenced);
             if (FoundationHostPorts.BeforeDispatch() is { } batchRefusal) return Recorded(batchRefusal);
-            if (approval != null && !approval.Disabled && pending!.ArgumentDigest != TiaOpenness.Shared.PendingApproval.Create("foundation", release, tool.Name,
+            if (approval != null && !approval.Disabled && pending!.ArgumentDigest != TiaOpenness.Shared.PendingApproval.Create(ReleaseCatalogData.Releases[release].FoundationInvocationTag, release, tool.Name,
                     JsonSerializer.Serialize(args), (inner as FoundationTool)?.ApprovalIdentity, settings.TimeoutSeconds).ArgumentDigest)
             {
                 await TiaOpenness.Shared.ApprovalClient.Complete(approval, "rejected-before-operation");

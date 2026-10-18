@@ -70,6 +70,11 @@ internal static class Program
     private static int Run(WorkerLaunchOptions options)
     {
         string releaseKey = options.ReleaseKey, api = options.ApiDirectory, nonce = options.Nonce;
+        TiaMcpServer.Siemens.Engineering.TiaMajorVersion = TiaMcp.Versioning.TiaVersionCatalog.Get(releaseKey).MajorVersion;
+        TiaMcpServer.Siemens.Engineering.TiaPortalLocationOverride = options.TiaPortalLocation;
+        TiaMcpServer.Runtime.OpennessReadiness.MarkReady(TiaMcpServer.Runtime.EnvironmentDoctor.CurrentUserInOpennessGroup()
+            || WorkerFaultInjection.PlcSdkReady(key => typeof(Program).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
+                .SingleOrDefault(attribute => attribute.Key == key)?.Value));
         if (WorkerFaultInjection.PlcSdkReady(key => typeof(Program).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
             .SingleOrDefault(attribute => attribute.Key == key)?.Value))
         {
@@ -97,6 +102,7 @@ internal static class Program
                 () => dispatcher.State.IsAttached, () => dispatcher.Detached, () => dispatcher.SessionOutcome.RequiresReset,
                 recovery.DisposeSession, recovery.Synchronize
                 );
+            dispatcher.ProcessStartTicks = () => session.ProcessStartTicks;
             engine.ProjectEnsureGroup = () => TiaMcpServer.Siemens.OpennessGroup.EnsureMembership().GetAwaiter().GetResult();
             engine.ProjectConnectionCreated = connection => {
                 int processId = connection.GetCurrentProcess().Id;
@@ -145,7 +151,7 @@ internal static class Program
                     request.CorrelationId!, request.ToolName, releaseKey);
                 try
                 {
-                    var response = session.Dispatch(request);
+                    var response = dispatcher.ReadManagedObservation(request) ?? session.Dispatch(request);
                     journal?.Complete();
                     return response.Failure != null ? response : ChannelResponse.WithSpill(response.ResultJson,
                         () => WorkerReplySpill.Write(TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory, response.ResultJson));

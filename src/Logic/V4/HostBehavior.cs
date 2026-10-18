@@ -118,6 +118,7 @@ namespace TiaMcp.Logic.V4
 
         internal static string? AdmissionDiagnostic(Exception error, int? reportedCode = null, string? reportedOutcome = null, string? reportedExceptionType = null)
         {
+            if (HostFailurePolicy.SuppressAdmissionDiagnostic(error)) return null;
             var precondition = HostFailurePolicy.Precondition(error);
             if (precondition != null) return SafeDiagnostic(precondition.Message);
             return reportedExceptionType == nameof(TiaMcp.Adapters.Contracts.AdapterPreconditionException)

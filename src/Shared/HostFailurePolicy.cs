@@ -27,9 +27,17 @@ namespace TiaOpenness.Shared
 
         internal static AdapterPreconditionException? Precondition(Exception error)
         {
+            if (SuppressAdmissionDiagnostic(error)) return null;
             for (var cause = error; cause != null; cause = cause.InnerException)
                 if (cause is AdapterPreconditionException precondition) return precondition;
             return null;
+        }
+
+        internal static bool SuppressAdmissionDiagnostic(Exception error)
+        {
+            for (var cause = error; cause != null; cause = cause.InnerException)
+                if (cause.Data["foundationSuppressAdmissionDiagnostic"] is true) return true;
+            return false;
         }
 
         internal static HostFailureKind Classify(Exception error, bool dispatched, bool readOnly,

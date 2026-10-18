@@ -155,7 +155,7 @@ namespace TiaMcp.Logic.V4
         }
         public static Error Map(Exception ex, string hash = "")
         {
-            if (ex is TiaMcp.Adapters.Contracts.AdapterPreconditionException typed)
+            if (ex is TiaMcp.Adapters.Contracts.AdapterPreconditionException typed && !TiaOpenness.Shared.HostFailurePolicy.SuppressAdmissionDiagnostic(ex))
                 return HostBehavior.FailureError(typed.IsArgument ? TiaOpenness.Shared.HostFailureKind.Argument : TiaOpenness.Shared.HostFailureKind.Precondition,
                     typed.ParamName, new Dictionary<string, JsonElement>(), HostBehavior.SafeDiagnostic(typed.Message));
             if (ex is SourceRejectionException r) return r.Error;

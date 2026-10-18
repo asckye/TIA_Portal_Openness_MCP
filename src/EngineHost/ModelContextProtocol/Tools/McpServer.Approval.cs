@@ -111,7 +111,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!HostBehavior.NeedsPrecheck(ApprovalPreviewDepth.Value > 0, ApprovalWrite(name, arguments), settings.Enabled,
                 TryDryRunDefault(name, out _) || candidate || HostBehavior.IsSingleXmlImport(name))) return null;
             string? identity = null; ApprovalBindingIdentity(ref identity);
-            AuditInvocation.RecordCurrentRequest(PendingApproval.Create("engine", ReleaseKey, name, arguments, identity, settings.TimeoutSeconds, AuditInvocation.CurrentRequestId).PlanHash);
+            AuditInvocation.RecordCurrentRequest(PendingApproval.Create(McpServer.InvocationHostTag, ReleaseKey, name, arguments, identity, settings.TimeoutSeconds, AuditInvocation.CurrentRequestId).PlanHash);
             CallToolResult? result = null;
             var batchRefusal = HostBehavior.BatchApplyRefusal(name, args);
             if (batchRefusal != null) result = V4Reject(name, batchRefusal);
@@ -173,7 +173,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (tool == "SaveExportContent" && JsonNode.Parse(arguments)?["outputPath"] is JsonValue output
                 && output.TryGetValue<string>(out var path) && ApprovalSettings.IsAdministrativeTarget(path))
             {
-                var rejected = PendingApproval.Create("engine", ReleaseKey, tool, arguments, null, 120, TiaOpenness.Shared.AuditInvocation.CurrentRequestId);
+                var rejected = PendingApproval.Create(McpServer.InvocationHostTag, ReleaseKey, tool, arguments, null, 120, TiaOpenness.Shared.AuditInvocation.CurrentRequestId);
                 TiaOpenness.Shared.AuditInvocation.RecordCurrentRequest(rejected.PlanHash);
                 return ApprovalClient.RejectAdministrativeWrite(rejected);
             }
@@ -184,7 +184,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
             string? identity = null;
             ApprovalBindingIdentity(ref identity);
-            var pending = PendingApproval.Create("engine", ReleaseKey, tool, arguments, identity, settings.TimeoutSeconds, TiaOpenness.Shared.AuditInvocation.CurrentRequestId);
+            var pending = PendingApproval.Create(McpServer.InvocationHostTag, ReleaseKey, tool, arguments, identity, settings.TimeoutSeconds, TiaOpenness.Shared.AuditInvocation.CurrentRequestId);
             TiaOpenness.Shared.AuditInvocation.RecordCurrentRequest(pending.PlanHash);
             if (ApprovalWaitOverride.Value is { } overrideWait) return await overrideWait(pending, settings, token).ConfigureAwait(false);
             if (settings.Enabled) ApprovalWaitSignal("begin", settings.TimeoutSeconds);
@@ -263,7 +263,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 string? identity = null; ApprovalBindingIdentity(ref identity);
-                return PendingApproval.Create("engine", ReleaseKey, approval.Request.Tool, arguments, identity,
+                return PendingApproval.Create(McpServer.InvocationHostTag, ReleaseKey, approval.Request.Tool, arguments, identity,
                     approval.Request.TimeoutSeconds).ArgumentDigest == approval.Request.ArgumentDigest;
             }
             catch (Exception) /* swallow(fail-open-guard): an unreadable identity refuses the write before execution */ { return false; }

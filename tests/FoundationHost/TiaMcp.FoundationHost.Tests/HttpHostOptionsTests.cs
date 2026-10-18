@@ -24,13 +24,17 @@ public sealed class HttpHostOptionsTests
     }
 
     [Fact]
-    public void Both_http_entry_points_build_with_the_shared_options()
+    public void Unified_http_entry_point_builds_with_the_shared_options()
     {
         string root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
-        foreach (var file in new[] { "Program.cs", "EngineReleaseHost.cs" })
+        string entry = File.ReadAllText(Path.Combine(root, "src", "FoundationHost", "Program.cs"));
+        Assert.Contains("SharedReleaseHost.Run(options, fileLogger)", entry, StringComparison.Ordinal);
+        Assert.DoesNotContain("WebApplication.CreateBuilder(", entry, StringComparison.Ordinal);
+        foreach (var file in new[] { "EngineReleaseHost.cs" })
         {
             string source = File.ReadAllText(Path.Combine(root, "src", "FoundationHost", file));
             Assert.Contains("WebApplication.CreateBuilder(", source, StringComparison.Ordinal);
+            Assert.Equal(1, source.Split("WebApplication.CreateBuilder(").Length - 1);
             foreach (var call in source.Split("WebApplication.CreateBuilder(").Skip(1))
                 Assert.StartsWith("HttpHostOptions.Create()", call.Replace("TiaMcp.FoundationHost.", "", StringComparison.Ordinal), StringComparison.Ordinal);
         }

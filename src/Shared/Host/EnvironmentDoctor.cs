@@ -204,7 +204,7 @@ namespace TiaMcpServer.Runtime
 
         private static Check EngineVersionMatch(int compiled, int? detected)
         {
-            #if TIA_ENGINE_HOST
+            #if TIA_ENGINE_HOST || WORKER_SESSION_LIFECYCLE
             return EngineVersionMatch(compiled, detected, _ => null);
 #else
             return EngineVersionMatch(compiled, detected, Siemens.EngineRouter.FindSiblingExe);

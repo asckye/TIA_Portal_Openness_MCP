@@ -8,6 +8,7 @@ internal sealed class HostOptions
     internal const string WorkerTimeoutHelp = "All eight releases (V14 SP1-V21) share worker timeout budgets: default 120 s, firstAttach per generation 300 s, compile/transfer/importExport/archive/libraryUpdate 1800 s. "
         + "--worker-timeout-seconds <seconds> sets the default. --worker-timeout-config <file> reads a JSON object of category names to seconds (0, 86400]. "
         + "TIA_MCP_WORKER_TIMEOUTS uses the same JSON and takes precedence over the file. Previews and reads use default; Disconnect keeps its bounded shutdown wait. "
+        + "--plc-worker opts V20/V21 into the standalone PLC worker; the engine worker remains their default. "
         + "Cancellation before dispatch returns CANCELLED; after dispatch the host waits for the real result.";
     public required string ReleaseKey { get; init; }
     public required string WorkerExe { get; init; }
@@ -24,6 +25,7 @@ internal sealed class HostOptions
     public string Transport { get; init; } = "stdio";
     public string HttpPrefix { get; init; } = "http://127.0.0.1:8735/";
     public string ApiKey { get; init; } = "";
+    public bool PlcWorker { get; init; }
     public string? EngineWorkerExe { get; init; }
     public string? EngineCatalog { get; init; }
     public int EngineTimeoutSeconds { get; init; } = 120;
@@ -43,7 +45,7 @@ internal sealed class HostOptions
         var valued = new[] { "--release-key", "--tia-major-version", "--worker-exe", "--public-api", "--tia-portal-location", "--transport", "--http-prefix", "--http-api-key", "--logging", "--engine-worker", "--engine-catalog", "--worker-timeout-seconds", "--worker-timeout-config", "--profile", "--host-command", "--operator-owner", "--catalog-tools-list", "--catalog-package", "--catalog-generated-at" };
         for (int i = 0; i < args.Length; i++)
         {
-            if (args[i] is "--native-session" or "--offline" or "--catalog" or "--with-ui") { flags.Add(args[i]); continue; }
+            if (args[i] is "--native-session" or "--offline" or "--catalog" or "--with-ui" or "--plc-worker") { flags.Add(args[i]); continue; }
             var name = args[i];
             if (!valued.Contains(name) || i + 1 == args.Length || args[i + 1].StartsWith("--", StringComparison.Ordinal))
                 throw new ArgumentException("Unknown or incomplete option: " + name);
@@ -61,7 +63,10 @@ internal sealed class HostOptions
         if (options.ContainsKey("--release-key") && options.ContainsKey("--tia-major-version"))
             TiaVersionCatalog.RequireMatchingEngine(release, Value("--tia-major-version"));
         var version = TiaVersionCatalog.RequireRunnable(release);
-        bool engine = version.WorkerKind == "engine";
+        bool engineRelease = version.WorkerKind == "engine";
+        bool engine = engineRelease && !flags.Contains("--plc-worker");
+        if (flags.Contains("--plc-worker") && options.ContainsKey("--engine-worker"))
+            throw new ArgumentException("--plc-worker cannot be combined with --engine-worker or --engine-catalog.");
         bool explicitWorker = options.ContainsKey("--engine-worker");
         if (explicitWorker != options.ContainsKey("--engine-catalog") || explicitWorker && !engine)
             throw new ArgumentException("The engine host requires release 20 or 21 and both --engine-worker and --engine-catalog.");
@@ -106,7 +111,7 @@ internal sealed class HostOptions
             api = version.FindApiDirectory(location) ?? "";
         }
         return new HostOptions {
-            BundleRoot = bundleRoot, ReleaseKey = release,
+            BundleRoot = bundleRoot, ReleaseKey = release, PlcWorker = flags.Contains("--plc-worker"),
             OperatorOwner = operatorOwner,
             HostCommand = options.ContainsKey("--host-command") ? Value("--host-command") : null,
             EngineWorkerExe = engine ? Path.GetFullPath(Value("--engine-worker", TiaOpenness.Shared.BundleLayout.EngineWorkerPath(bundleRoot, release, directory))) : null,

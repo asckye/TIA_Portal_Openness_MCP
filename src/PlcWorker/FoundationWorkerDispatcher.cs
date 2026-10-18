@@ -25,6 +25,7 @@ namespace TiaMcp.PlcWorker
         private readonly Dictionary<string, MethodInfo> methods;
         private readonly Action<Exception>? failureObserved;
         private readonly Assembly policyAssembly;
+        internal Func<long>? ProcessStartTicks;
         internal readonly WorkerSessionOutcomeState SessionOutcome = new WorkerSessionOutcomeState();
         private WorkerSessionOutcomeState sessionOutcome => SessionOutcome;
         private bool disconnectAttempted, disconnected, sharedInvalidated;
@@ -82,6 +83,17 @@ namespace TiaMcp.PlcWorker
             observed=state;
             return new ChannelBinding(bindingEpoch,state.IsAttached || !string.IsNullOrEmpty(state.ProjectFile));
         }
+        internal ChannelResponse? ReadManagedObservation(ChannelRequest request)
+        {
+            if (request.Method != "adapter.HostObserve") return null;
+            using var document = JsonDocument.Parse(request.ArgumentsJson);
+            string? operation = document.RootElement.GetProperty("operation").GetString();
+            if (operation is not ("status" or "environment" or "group" or "assemblies" or "reflection" or "reflection-deny" or "session.GetState" or "session.ConnectPortal")) return null;
+            return WorkerObservations.Reply(() => {
+                var value = System.Text.Json.Nodes.JsonNode.Parse(request.ArgumentsJson)!.AsObject();
+                return WorkerObservations.Read(engine, operation!, value["arguments"]!.AsObject(), ProcessStartTicks);
+            });
+        }
         internal ChannelResponse Dispatch(ChannelRequest request)
         {
             // The engine retains its own fixture boundary. Only explicitly marked
@@ -92,6 +104,12 @@ namespace TiaMcp.PlcWorker
             });
             if (injected != null) return injected;
             if (request.Method == PlcSimAdvancedWorkerModule.Operation) return PlcSimAdvancedWorkerModule.Dispatch(request);
+            if (request.Method == "adapter.HostObserve") return WorkerObservations.Reply(() => {
+                var observation = System.Text.Json.Nodes.JsonNode.Parse(request.ArgumentsJson)!.AsObject();
+                var operation = (string)observation["operation"]!;
+                if (operation == "group.fix") throw new ArgumentException("HostObserve only accepts read-only observations.");
+                return WorkerObservations.Read(engine, operation, observation["arguments"]!.AsObject(), ProcessStartTicks);
+            });
             bool enteredOperation=false;
             bool readOnly=false;
             try

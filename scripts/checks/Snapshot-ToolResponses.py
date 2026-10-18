@@ -1010,7 +1010,7 @@ def capture_foundation(args, release, exe):
         if args.dotnet_root:
             env.update(DOTNET_ROOT=str(args.dotnet_root.resolve()),
                        DOTNET_ROOT_X64=str(args.dotnet_root.resolve()))
-        with resources.server(exe, scratch, release, 'stdio', 'full', env_overrides=env) as (rpc, _, _):
+        with resources.server(exe, scratch, release, args.transport, 'full', env_overrides=env) as (rpc, _, _):
             tools = initialize(rpc)
             entries, rejected, skipped = {}, [], {}
             call = recorder(rpc, entries, 'plc-foundation', release,
@@ -1835,6 +1835,7 @@ def main():
     capture_parser.add_argument('--repo-root', required=True, type=Path)
     capture_parser.add_argument('--engine-host', type=Path, help='Capture 20/21 through FoundationHost with SDK fixture workers')
     capture_parser.add_argument('--engine-worker', action='append', default=[], metavar='RELEASE=PATH')
+    capture_parser.add_argument('--plc-worker', action='append', default=[], metavar='RELEASE=PATH')
     capture_parser.add_argument('--engine-catalog', action='append', default=[], metavar='RELEASE=PATH')
     capture_parser.add_argument('--transport', choices=('stdio', 'http'), default='stdio', help='EngineHost transport')
     capture_parser.add_argument('--harness', type=Path,

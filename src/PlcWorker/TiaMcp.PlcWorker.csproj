@@ -66,6 +66,11 @@
     <ProjectReference Include="../OnlineChannels/Simulation/TiaMcp.PlcSimAdvanced.csproj" Aliases="plcsim" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier;TiaMcpTestPolicy;TiaMcpPlcWorkerSdkFixture;TiaMcpPlcWorkerFixtureRoot" />
     <ProjectReference Include="../WorkerChannel/TiaMcp.WorkerChannel.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier;TiaMcpTestPolicy;TiaMcpPlcWorkerSdkFixture;TiaMcpPlcWorkerFixtureRoot" />
     <ProjectReference Include="../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier;TiaMcpTestPolicy;TiaMcpPlcWorkerSdkFixture;TiaMcpPlcWorkerFixtureRoot" />
+    <Compile Include="$(WorkerSourceRoot)/WorkerObservations.cs" Link="WorkerObservations.cs" />
+    <Compile Include="../Shared/Host/EnvironmentDoctor.cs" Link="EnvironmentDoctor.cs" />
+    <Compile Include="../Logic/Siemens/Engineering.cs" Link="Engineering.cs" />
+    <Compile Include="../Logic/Siemens/EngineeringAssemblyIdentity.cs" Link="EngineeringAssemblyIdentity.cs" />
+    <Compile Include="../Shared/OpennessEnvironment.cs" Link="OpennessEnvironment.cs" />
     <Compile Include="$(WorkerSourceRoot)/Program.cs" Link="Program.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerLaunchOptions.cs" Link="WorkerLaunchOptions.cs" />
     <Compile Include="../Shared/SwallowedExceptions.cs" Link="Shared/SwallowedExceptions.cs" />

@@ -100,7 +100,8 @@ internal sealed partial class FoundationTool : McpServerTool
         var session = new TiaMcp.Logic.ModelContextProtocol.ImportStagingSession(mcpSessionId);
         StagingSessions.Add(worker, session); return session;
     }
-    internal IDisposable? EnterStagingRequest() => StagingSessions.TryGetValue(worker, out var session) ? session.EnterRequest() : null;
+    internal IDisposable? EnterStagingRequest() => worker is IFoundationSessionWorker { StagingOwner: { } owner }
+        ? owner.EnterRequest() : StagingSessions.TryGetValue(worker, out var session) ? session.EnterRequest() : null;
     internal bool SharedWorker => worker is IFoundationSessionWorker { SharedSession: true };
     internal CallToolResult ParkWorkerResult(CallToolResult result, string name) => worker is IFoundationWorkerResult store ? store.ParkResult(result, name) : result;
     internal IDisposable? EnterSharedRequest(RequestContext<CallToolRequestParams> request) => (worker as IFoundationSessionWorker)?.EnterRequest(request);
@@ -115,6 +116,8 @@ internal sealed partial class FoundationTool : McpServerTool
     internal bool RequiresTia => RequiresProjectSession && definition.ResponseMember != "RuntimeQuery"
         && !TiaMcpServer.ModelContextProtocol.ToolTaxonomy.IsSafeWithoutTia(tool.Name);
     internal bool UsesProductionWorker => worker is IFoundationSessionWorker { Bundled: true };
+    internal Task PrepareReadiness(CancellationToken token)
+        => worker is IFoundationWorkerReadiness readiness ? readiness.PrepareReadiness(token) : Task.CompletedTask;
     internal string? ApprovalIdentity => (worker as IFoundationSessionWorker)?.ApprovalIdentity;
     internal Task<IDisposable?> AcquireLane(CancellationToken token)
         => IsNative && definition.ResponseMember != "Disconnect" && worker is IFoundationSessionWorker client ? client.AcquireLane(token) : Task.FromResult<IDisposable?>(null);
@@ -290,7 +293,7 @@ internal sealed partial class FoundationTool : McpServerTool
             if (definition.ResponseMember == "ImportStaging")
             {
                 TiaMcp.Logic.ModelContextProtocol.ImportStagingStore store;
-                try { store = stagingForTest ?? (SharedWorker ? SharedStagingStores.GetValue(((IFoundationSessionWorker)worker).StagingOwner!,
+                try { store = stagingForTest ?? (worker is IFoundationSessionWorker { StagingOwner: { } owner } ? SharedStagingStores.GetValue(owner,
                     session => TiaMcp.Logic.ModelContextProtocol.ImportStagingStore.Create(release!, session)) : StagingStores.GetValue(worker, key => StagingSessions.TryGetValue(key, out var session)
                     ? TiaMcp.Logic.ModelContextProtocol.ImportStagingStore.Create(release!, session) : TiaMcp.Logic.ModelContextProtocol.ImportStagingStore.Create(release!))); }
                 catch (IOException ex) { return FoundationV4Result.ImportCandidate(TiaMcp.Logic.ModelContextProtocol.ImportStagingStore.Unavailable(definition.Name, release!, ex, id)); }

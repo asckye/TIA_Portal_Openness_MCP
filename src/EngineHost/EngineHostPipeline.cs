@@ -30,6 +30,7 @@ namespace TiaMcp.FoundationHost
         public object SessionKey { get; }
         public JsonObject Snapshot();
         public Task<JsonObject> Status(CancellationToken token);
+        public Task<JsonObject> StartForStatus(CancellationToken token) => Status(token);
         public Task<JsonObject> Restart(bool confirmed, CancellationToken token);
         public Task<IDisposable> Acquire(CancellationToken token);
         public Task<EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token);
@@ -37,6 +38,10 @@ namespace TiaMcp.FoundationHost
     public interface IEngineWorkerProgress
     {
         public IDisposable UseProgress(Action<string>? report);
+    }
+    public interface IEngineWorkerReadiness
+    {
+        public Task PrepareReadiness(CancellationToken token);
     }
 
     internal static class EngineHostConfiguration
@@ -204,10 +209,11 @@ namespace TiaMcp.FoundationHost
                 return await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
             }
         }
-        public IDisposable RegisterHttpSession(string id)
+        internal IDisposable RegisterStagingSession(string id) => RegisterStagingSession(id, false);
+        public IDisposable RegisterHttpSession(string id) => RegisterStagingSession(id, true);
+        private IDisposable RegisterStagingSession(string id, bool http)
         {
-            ImportStagingTools.HttpTransport = true;
-            context.HttpSessionId = id;
+            if (http) { ImportStagingTools.HttpTransport = true; context.HttpSessionId = id; }
             var session = new TiaMcp.Logic.ModelContextProtocol.ImportStagingSession(id);
             context.StagingOwner = () => session;
             ImportStagingTools.RegisterHttpSession(session);
@@ -221,6 +227,7 @@ namespace TiaMcp.FoundationHost
 
         public void RegisterHandlers(IMcpServerBuilder builder)
         {
+            if (!ReleaseCatalogData.Releases[EngineHostConfiguration.ReleaseKey].RegisterDiscoveryHandlers) return;
             McpPromptRegistration.Configure(builder);
             builder.WithListResourcesHandler((_, token) => { token.ThrowIfCancellationRequested(); return new ValueTask<ListResourcesResult>(new ListResourcesResult { Resources = Array.Empty<Resource>() }); });
             builder.WithListResourceTemplatesHandler((_, token) => { token.ThrowIfCancellationRequested(); return new ValueTask<ListResourceTemplatesResult>(new ListResourceTemplatesResult { ResourceTemplates = Array.Empty<ResourceTemplate>() }); });

@@ -12,7 +12,7 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcp.FoundationHost;
 
-internal static class EngineReleaseHost
+internal static class SharedReleaseHost
 {
     internal static Task<int> Run(HostOptions options, HostFileLogger logger, CancellationToken stoppingToken = default)
         => RunCore(options, logger, null, stoppingToken);
@@ -23,22 +23,24 @@ internal static class EngineReleaseHost
     private static async Task<int> RunCore(HostOptions options, HostFileLogger logger, Func<IToolCatalogView, IToolCatalogView>? catalogForTest, CancellationToken stoppingToken)
     {
         using var session = CreateSession(options, catalogForTest);
-        var worker = session.Worker;
         var pipeline = session.Pipeline;
         if (options.CatalogOnly)
         {
             using var engineContext = pipeline.EnterSession();
-            if (options.CatalogToolsList != null)
+            var data = ReleaseCatalogData.Releases[options.ReleaseKey];
+            if (options.CatalogToolsList != null && data.HasManifestCatalog)
             {
                 HostToolsListWriter.Write(options, pipeline);
                 return 0;
             }
-            Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new { releaseKey = options.ReleaseKey, profile = "full-engine",
-                behaviorCapabilities = pipeline.BehaviorCapabilities, callDiscipline = TiaMcpServer.ModelContextProtocol.McpServer.SchemaHintStatistics(),
-                tools = pipeline.Tools.Select(t => t.ProtocolTool) }, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
+            var catalog = new System.Text.Json.Nodes.JsonObject { ["releaseKey"] = options.ReleaseKey, ["profile"] = data.ProfileName };
+            if (!data.CatalogCallDiscipline) catalog["nativeAcceptance"] = "NOT RUN";
+            catalog["behaviorCapabilities"] = pipeline.BehaviorCapabilities.DeepClone();
+            if (data.CatalogCallDiscipline) catalog["callDiscipline"] = System.Text.Json.JsonSerializer.SerializeToNode(McpServer.SchemaHintStatistics());
+            catalog["tools"] = System.Text.Json.JsonSerializer.SerializeToNode(pipeline.Tools.Select(t => t.ProtocolTool), global::ModelContextProtocol.McpJsonUtilities.DefaultOptions);
+            Console.WriteLine(catalog.ToJsonString(global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
             return 0;
         }
-        await worker.Status(CancellationToken.None);
         if (options.HostCommand != null)
         {
             using var context = pipeline.EnterSession();
@@ -55,7 +57,7 @@ internal static class EngineReleaseHost
         }
         if (options.Transport == "http")
         {
-            // Verify the release and capabilities before listening; sessions never use this probe.
+            // Build the host catalog before listening; each MCP session starts its worker on demand.
             session.Dispose();
             await RunHttp(options, logger, pipeline, operatorEndpoint, catalogForTest, stoppingToken);
         }
@@ -79,49 +81,70 @@ internal static class EngineReleaseHost
 
     private static Session CreateSession(HostOptions options, Func<IToolCatalogView, IToolCatalogView>? catalogForTest = null)
     {
-        var worker = new EngineWorkerClient(options, EngineCatalog.Hash(options.EngineWorkerExe!));
-        try { return new Session(worker, CreatePipeline(options, worker, catalogForTest)); }
+        EngineHostConfiguration.ReleaseKey = options.ReleaseKey;
+        IFoundationSessionWorker worker = options.EngineWorkerExe != null
+            ? new EngineWorkerClient(options, File.Exists(options.EngineWorkerExe) ? EngineCatalog.Hash(options.EngineWorkerExe) : "")
+            : new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, options.NativeEnabled, options.EngineTimeoutSeconds, options.WorkerTimeoutConfig)
+                { Bundled = options.BundledWorker, WithUi = options.WithUi, TiaPortalLocation = options.TiaPortalLocation,
+                    SharedSession = ReleaseCatalogData.Releases[options.ReleaseKey].SharedSession };
+        try
+        {
+            var data = ReleaseCatalogData.Releases[options.ReleaseKey];
+            IReadOnlyList<McpServerTool>? roster = null;
+            Func<System.Text.Json.Nodes.JsonObject> readiness = () => worker is WorkerClient plc
+                ? plc.Readiness(() => FoundationPassiveDiagnostics.Readiness(options.ReleaseKey, options.ApiDirectory, options.ApiDirectorySource))
+                : ((EngineWorkerClient)worker).FoundationReadiness();
+            var shared = LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled, options.ApiDirectory,
+                options.ApiDirectorySource, readiness, () => roster!, data.ExampleProfile, hostPorts: false);
+            var services = FoundationHostPorts.CreateServices(worker, options.ReleaseKey, readiness, options.ApiDirectory);
+            var pipeline = new EngineHostPipeline("", options.EngineWorkerExe ?? options.WorkerExe, options.ReleaseKey, services,
+                data.HasLite ? options.Profile : "full", shared, data.LiteNames.ToHashSet(StringComparer.Ordinal), catalogForTest);
+            services.Roster = () => roster!;
+            services.ResetExports = pipeline.ResetExports;
+            roster = pipeline.AllTools;
+            if (worker is WorkerClient client)
+            {
+                client.SessionLocked = () => pipeline.SessionLocked;
+                client.StagingProvider = () => { using var scope = pipeline.EnterSession(); return McpServer.SharedStagingOwner; };
+            }
+            else ((EngineWorkerClient)worker).SessionLocked = () => pipeline.SessionLocked;
+            return new Session(worker, services, pipeline);
+        }
         catch { worker.Dispose(); throw; }
     }
     private static HostSession CreateHostSession(HostOptions options, Session session, bool operatorOwned = false)
-        => new(options.ReleaseKey, session.Pipeline.Instructions, operatorOwned, session.Pipeline.Tools.ToArray(),
-            session.Pipeline.OperatorTools, session.Worker.OperatorSnapshot, session.Dispose);
+    {
+        var host = new HostSession(options.ReleaseKey, session.Pipeline.Instructions, operatorOwned, session.Pipeline.Tools.ToArray(),
+            session.Pipeline.OperatorTools, () => session.Services.OperatorSnapshot(), session.Dispose);
+        if (operatorOwned || options.Transport == "stdio") host.RegisterSession(host.SessionKey, session.Pipeline.RegisterStagingSession);
+        else host.RegisterSessionOnBind(session.Pipeline.RegisterHttpSession);
+        return host;
+    }
     internal static Task<HostSession> CreateHostSession(HostOptions options, bool operatorOwned, CancellationToken token = default)
         => CreateHostSessionCore(options, operatorOwned, null, token);
 
     internal static Task<HostSession> CreateHostSessionForTest(HostOptions options, bool operatorOwned, Func<IToolCatalogView, IToolCatalogView> catalogForTest, CancellationToken token) => CreateHostSessionCore(options, operatorOwned, catalogForTest, token);
 
-    private static async Task<HostSession> CreateHostSessionCore(HostOptions options, bool operatorOwned, Func<IToolCatalogView, IToolCatalogView>? catalogForTest, CancellationToken token)
+    private static Task<HostSession> CreateHostSessionCore(HostOptions options, bool operatorOwned, Func<IToolCatalogView, IToolCatalogView>? catalogForTest, CancellationToken token)
     {
+        token.ThrowIfCancellationRequested();
         var session = CreateSession(options, catalogForTest);
-        try
-        {
-            using var context = session.Pipeline.EnterSession();
-            await session.Worker.Status(token);
-            return CreateHostSession(options, session, operatorOwned);
-        }
+        try { return Task.FromResult(CreateHostSession(options, session, operatorOwned)); }
         catch { session.Dispose(); throw; }
     }
 
-    private static EngineHostPipeline CreatePipeline(HostOptions options, EngineWorkerClient worker, Func<IToolCatalogView, IToolCatalogView>? catalogForTest)
-    {
-        EngineHostConfiguration.ReleaseKey = options.ReleaseKey;
-        IReadOnlyList<McpServerTool>? roster = null;
-        var shared = LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled, options.ApiDirectory,
-            options.ApiDirectorySource, worker.FoundationReadiness, () => roster!, ReleaseCatalogData.Releases[options.ReleaseKey].ExampleProfile);
-        var essentials = ReleaseCatalogData.Releases[options.ReleaseKey].LiteNames.ToHashSet(StringComparer.Ordinal);
-        var pipeline = new EngineHostPipeline(options.EngineCatalog!, options.EngineWorkerExe!, options.ReleaseKey, worker, options.Profile, shared, essentials, catalogForTest);
-        roster = pipeline.AllTools;
-        worker.SessionLocked = () => pipeline.SessionLocked;
-        return pipeline;
-    }
-
-    private sealed class Session(EngineWorkerClient worker, EngineHostPipeline pipeline) : IDisposable
+    private sealed class Session(IFoundationSessionWorker worker, FoundationHostPorts.Services services, EngineHostPipeline pipeline) : IDisposable
     {
         private int disposed;
-        internal EngineWorkerClient Worker => worker;
+        internal FoundationHostPorts.Services Services => services;
         internal EngineHostPipeline Pipeline => pipeline;
-        public void Dispose() { if (Interlocked.Exchange(ref disposed, 1) == 0) { worker.SessionLocked = null; worker.Dispose(); pipeline.Dispose(); } }
+        public void Dispose()
+        {
+            if (Interlocked.Exchange(ref disposed, 1) != 0) return;
+            if (worker is WorkerClient plc) plc.SessionLocked = null;
+            else ((EngineWorkerClient)worker).SessionLocked = null;
+            worker.Dispose(); pipeline.Dispose();
+        }
     }
 
     private static async Task RunHttp(HostOptions options, HostFileLogger logger, EngineHostPipeline probe, OperatorEndpoint? operatorEndpoint,
@@ -134,13 +157,12 @@ internal static class EngineReleaseHost
         builder.Logging.SetMinimumLevel(LogLevel.Warning);
         builder.WebHost.UseSetting("urls", options.HttpPrefix);
         var mcp = builder.Services.AddMcpServer(o => o.ServerInstructions = probe.Instructions).WithHttpTransport(o => {
-            o.ConfigureSessionOptions = async (context, server, token) => {
+            o.ConfigureSessionOptions = (context, server, token) => {
                 var session = CreateSession(options, catalogForTest);
                 var hostSession = CreateHostSession(options, session);
                 try
                 {
                     using var scope = session.Pipeline.EnterSession();
-                    await session.Worker.Status(token);
                     var tools = new McpServerPrimitiveCollection<McpServerTool>();
                     foreach (var tool in hostSession.Tools) tools.Add(tool);
                     // Keep the resource and prompt capabilities registered on the server builder; only the tools are per session.
@@ -148,13 +170,13 @@ internal static class EngineReleaseHost
                     server.Capabilities.Tools = new ToolsCapability { ToolCollection = tools };
                     context.Items["engineSession"] = session;
                     context.Items["hostSession"] = hostSession;
+                    return Task.CompletedTask;
                 }
                 catch { hostSession.Dispose(); throw; }
             };
             o.RunSessionHandler = async (context, server, token) => {
                 var session = (Session)context.Items["engineSession"]!;
                 using var hostSession = (HostSession)context.Items["hostSession"]!;
-                using var staging = session.Pipeline.RegisterHttpSession(server.SessionId ?? throw new InvalidOperationException("HTTP MCP session id is unavailable."));
                 using var scope = session.Pipeline.EnterSession();
                 hostSession.BindAi(server);
                 using var registration = operatorEndpoint?.Register(hostSession);
@@ -170,10 +192,19 @@ internal static class EngineReleaseHost
             await next(context);
         });
         app.MapMcp("/mcp");
-        app.MapGet("/mcp/health", () => new { status = "ok", fileVersion = typeof(HostOptions).Assembly.GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute>().Single(attribute => attribute.Key == "TiaMcpRelease").Value, releaseKey = options.ReleaseKey, profile = "full-engine" });
+        app.MapGet("/mcp/health", () => new { status = "ok", fileVersion = typeof(HostOptions).Assembly.GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute>().Single(attribute => attribute.Key == "TiaMcpRelease").Value, releaseKey = options.ReleaseKey, profile = ReleaseCatalogData.Releases[options.ReleaseKey].ProfileName });
         app.MapGet("/mcp/ready", () => new { mcpHostReady = true, releaseKey = options.ReleaseKey, nativeAcceptance = "NOT RUN" });
         using var stopping = app.Lifetime.ApplicationStopping.Register(WorkerShutdown.StopAll);
         await ((IHost)app).RunAsync(stoppingToken);
     }
 
+}
+
+// Compatibility entry for existing harnesses. Every transport and release uses SharedReleaseHost.
+internal static class EngineReleaseHost
+{
+    internal static Task<int> Run(HostOptions options, HostFileLogger logger, CancellationToken token = default) => SharedReleaseHost.Run(options, logger, token);
+    internal static Task<int> RunForTest(HostOptions options, HostFileLogger logger, Func<IToolCatalogView, IToolCatalogView> catalog, CancellationToken token) => SharedReleaseHost.RunForTest(options, logger, catalog, token);
+    internal static Task<HostSession> CreateHostSession(HostOptions options, bool operatorOwned, CancellationToken token = default) => SharedReleaseHost.CreateHostSession(options, operatorOwned, token);
+    internal static Task<HostSession> CreateHostSessionForTest(HostOptions options, bool operatorOwned, Func<IToolCatalogView, IToolCatalogView> catalog, CancellationToken token) => SharedReleaseHost.CreateHostSessionForTest(options, operatorOwned, catalog, token);
 }

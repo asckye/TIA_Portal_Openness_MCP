@@ -28,6 +28,7 @@ internal static class EngineSessionFixture
         ChannelResponse Dispatch(ChannelRequest request)
         {
             if (request.Method == "engine.status") return ChannelResponse.Success(Status().ToJsonString());
+            if (request.Method == "adapter.HostObserve") return ChannelResponse.Success(Status().ToJsonString());
             if (request.Method == "adapter.FixtureCorrelation") return ChannelResponse.Success(new JsonObject {
                 ["id"] = request.CorrelationId, ["tool"] = request.ToolName }.ToJsonString());
             if (request.Method == "adapter.FixtureSpill")

@@ -148,7 +148,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var row = BatchRow(rows.Count, name, result);
                 if (!issued)
                 {
-                    using var audit = TiaOpenness.Shared.AuditInvocation.Begin(true, "engine", ReleaseKey, name, requestId);
+                    using var audit = TiaOpenness.Shared.AuditInvocation.Begin(true, McpServer.InvocationHostTag, ReleaseKey, name, requestId);
                     audit?.Complete(ResultBody(result)?.ToJsonString());
                 }
                 // An unreadable target result must never make the parent successful.
