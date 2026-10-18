@@ -1,22 +1,23 @@
 <UserControl xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns:controls="clr-namespace:TiaOpenness.Gui.Controls" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="TiaOpenness.Gui.Views.LogView" x:Name="PageRoot">
-  <Border x:Name="LogCard" Style="{StaticResource Primer.Container}">
-    <Grid>
-      <Grid.RowDefinitions>
-        <RowDefinition Height="Auto" MinHeight="32"/>
-        <RowDefinition Height="12"/>
-        <RowDefinition Height="*"/>
-      </Grid.RowDefinitions>
-      <DockPanel>
-        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+    <Border Style="{StaticResource Primer.PageHead}">
+      <DockPanel MinHeight="32">
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
           <Button AutomationProperties.Name="{l:Tr Log.Copy}" Content="{l:Tr Log.Copy}" Click="OnCopyLog" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
           <Button AutomationProperties.Name="{l:Tr Log.Clear}" Content="{l:Tr Log.Clear}" Click="OnClearLog" Style="{StaticResource Primer.Secondary}"/>
         </StackPanel>
         <StackPanel Orientation="Horizontal">
-          <TextBlock Text="{l:Tr Log.Title}" FontSize="{DynamicResource Ui.FontSize.Title}" FontWeight="SemiBold" VerticalAlignment="Center" AutomationProperties.HeadingLevel="Level1"/>
-          <TextBlock Text="{Binding Tag.LogCount,ElementName=PageRoot}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}" Margin="12,0,0,0"/>
+          <TextBlock Text="{l:Tr Log.Title}" Style="{StaticResource Primer.PageTitle}"/>
+          <TextBlock Text="{Binding Tag.LogCount,ElementName=PageRoot}" Style="{StaticResource Primer.Muted}" Margin="12,0,0,0"/>
         </StackPanel>
       </DockPanel>
-      <ListBox AutomationProperties.Name="{l:Tr Log.Title}" x:Name="LogList" Grid.Row="2" Style="{StaticResource Primer.VirtualList}" ItemsSource="{Binding Tag.LogRows,ElementName=PageRoot}" ScrollViewer.ScrollChanged="OnLogScrollChanged">
+    </Border>
+    <Border x:Name="LogCard" Grid.Row="1" Style="{StaticResource Primer.TableContainer}">
+      <ListBox AutomationProperties.Name="{l:Tr Log.Title}" x:Name="LogList" Style="{StaticResource Primer.VirtualList}" ItemsSource="{Binding Tag.LogRows,ElementName=PageRoot}" ScrollViewer.ScrollChanged="OnLogScrollChanged">
         <ListBox.ItemTemplate>
           <DataTemplate>
             <Grid Margin="10,5">
@@ -31,6 +32,6 @@
           </DataTemplate>
         </ListBox.ItemTemplate>
       </ListBox>
-    </Grid>
-  </Border>
+    </Border>
+  </Grid>
 </UserControl>

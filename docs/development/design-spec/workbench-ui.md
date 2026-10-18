@@ -116,7 +116,7 @@ Microsoft 新版设计指南以 WinUI 控件为例。下表说明工作台（WPF
 3. **右侧栏（可选）**：宽 280–320 epx，放与当前页相关的上下文信息（连接信息、保留策略、诊断、日志尾部）；窄窗口时按 LAY-03 折叠。
 4. **空状态 / 加载 / 错误**：占据主体区域，按 ERR-05/06。
 
-标题栏（44 epx，品牌 + “/” + 当前页名 + 全局按钮 + 窗口按钮）、页签条（40）、子页签条（38，仅工程操作）、状态栏（28）是固定的外框；其高度允许按 LAY-06 随字号增长。
+外框按 Ant 布局（P8-80）：左侧 Sider 216 epx（品牌、分组菜单与收起按钮；宽度低于 992 epx 时收为 56 epx 图标栏）与 Header 56 epx（面包屑“分组 / 页名”、MCP 状态与会话、待批、诊断、语言与窗口按钮）是固定的外框；其高度允许按 LAY-06 随字号增长。
 
 ## 4 字体
 
@@ -146,33 +146,40 @@ Microsoft 新版设计指南以 WinUI 控件为例。下表说明工作台（WPF
 
 ### 5.1 语义 token
 
-视图只引用语义 token；Primer 键名可以保留为实现名，但每个键必须对应下表的一个语义角色，并在三个主题中都有值。
+视觉规范自 2026-10-18 起为 **Ant Design v5**（维护者决定，P8-80）：WPF 保留，只替换视觉层；浅色调色板对应 Ant 默认算法，深色对应 Ant 暗色算法，高对比继续使用 Windows 系统色。WCAG 2.2 AA 与本规范的对比条款（COL-04、COL-05）优先于 Ant 默认值，下表“取值”列已按此调整，调整理由见[偏差清单 C.0](deviations/workbench.md#c0-ant-design-v5-视觉规范)。
 
-| 语义 token | 现 Primer 键 | Light | Dark | 高对比（WPF `SystemColors`） | 用途 | 最低对比 |
-|---|---|---|---|---|---|---|
-| Surface.Window | `bg` | #F6F8FA | #0D1117 | `WindowBrushKey` | 窗口底色 | 无 |
-| Surface.Layer | `card`、`menuBg` | #FFFFFF | #161B22 | `WindowBrushKey` | 卡片、标题栏、页签条、抽屉 | 无 |
-| Surface.Subtle | `cardSoft`、`pill`、`codeBg` | #F6F8FA | #0D1117 / #21262D | `WindowBrushKey` / `ControlBrushKey`（按钮） | 次级面、按钮底、代码块 | 无 |
-| Surface.Selected | `cardSel` | #F0F8FA | #1A2730 | `HighlightBrushKey` | 选中行、选中筛选 | 须另有 ≥ 3:1 的选中指示（COL-05） |
-| Surface.Hover | `pillHover` | #EAEEF2 | #30363D | `HighlightBrushKey` | 悬停 | 无 |
-| Surface.Input | `input` | #FFFFFF | #0D1117 | `WindowBrushKey` | 输入框 | 无 |
-| Scrim | `text` × 30% | 无 | 无 | 不铺遮罩；浮层用 2 px `WindowTextBrushKey` 边框 | 抽屉与对话框背后的遮罩 | 无 |
-| Stroke.Layer | `cardBorder`、`divider` | #D0D7DE / #D8DEE4 | #30363D / #21262D | `WindowTextBrushKey` | 装饰性分隔 | 装饰性可低于 3:1 |
-| Stroke.Control | `inputBorder`、`checkBorder` | #D0D7DE / #8C959F | #30363D / #6E7681 | `ControlTextBrushKey` | 识别控件所需的边界（输入框、复选框） | ≥ 3:1 |
-| Text.Primary | `text` | #1F2328 | #E6EDF3 | `WindowTextBrushKey` | 正文 | ≥ 4.5:1 |
-| Text.Secondary | `textMuted` | #656D76 | #8D96A0 | `WindowTextBrushKey`（不可用 GrayText） | 次要文字、说明、时间戳、占位符 | ≥ 4.5:1 |
-| Text.Disabled | `textFaint` | #8C959F | #6E7681 | `GrayTextBrushKey` | 仅限禁用状态 | 豁免 |
-| Accent | `accent` | #0B7A99 | #4FC3E0 | `HighlightBrushKey` | 交互强调、选中下划线、强调按钮 | 作文字 ≥ 4.5:1；作指示 ≥ 3:1 |
-| OnAccent | `onAccent` | #FFFFFF | #0D1117 | `HighlightTextBrushKey` | 强调底上的文字 | ≥ 4.5:1 |
-| Hyperlink | （无，现借用 accent） | 同 Accent | 同 Accent | `HotTrackBrushKey` | 仅超链接 | ≥ 4.5:1 |
-| Status.Success | `ok` / `okBg` | #1A7F37 / #DAFBE1 | #3FB950 / 15% | `WindowTextBrushKey` + 图标 | 成功 | 文字 ≥ 4.5:1 |
-| Status.Warning | `warn` / `warnBg` | #9A6700 / #FFF8C5 | #D29922 / 15% | `WindowTextBrushKey` + 图标 | 警告、待批 | 文字 ≥ 4.5:1 |
-| Status.Warning.Solid | `warn` 作底 + 白字 | 4.87:1 | 2.52:1 | `ControlBrushKey` / `ControlTextBrushKey` | 警告按钮（如“关闭审批”） | 文字 ≥ 4.5:1 |
-| Status.Error | `diffRed` | #CF222E | #F85149 | `WindowTextBrushKey` + 图标 | 错误 | 文字 ≥ 4.5:1 |
-| Status.Info | `noteBg` / `noteBorder` / `noteAccent` | 无 | 无 | `WindowBrushKey` / `WindowTextBrushKey` | 提示框 | 文字 ≥ 4.5:1 |
-| Code | `codeText` / `codeBg` | 无 | 无 | `WindowTextBrushKey` / `WindowBrushKey` | 代码与 JSON | ≥ 4.5:1 |
-| Diff.Added / Removed | `diffGreen` / `diffRed` | 无 | 无 | `WindowTextBrushKey` + “+/−”前缀 | 差异行 | ≥ 4.5:1，且有前缀 |
-| Focus.Outer / Focus.Inner | （无） | Text.Primary / Surface.Layer | 同左 | `WindowTextBrushKey` / `WindowBrushKey` | 焦点视觉（KEY-03） | 与相邻色 ≥ 3:1 |
+视图只引用语义 token；`Primer.*` 键名保留为实现名，Ant 独有的 token 用 `Ant.*` 键（与 Ant token 同名）。每个键必须对应下表的一个语义角色，并在三个主题中都有值（`ThemeTests`、`ThemeSurfaceTests` 与 `AccessibilityTests` 检查键集一致、取值与对比）。
+
+| 语义 token | 实现键 | Ant token | Light | Dark | 高对比（WPF `SystemColors`） | 用途 | 最低对比 |
+|---|---|---|---|---|---|---|---|
+| Surface.Window | `Primer.bg` | colorBgLayout | #F5F5F5 | #000000 | `WindowColorKey` | 窗口底色、Segmented 轨道 | 无 |
+| Surface.Layer | `Primer.card`、`Primer.input`、`Primer.pill` | colorBgContainer | #FFFFFF | #141414 | `WindowColorKey` / `ControlColorKey` | 卡片、标题栏、页签条、输入框、默认按钮 | 无 |
+| Surface.Elevated | `Primer.menuBg` | colorBgElevated | #FFFFFF | #1F1F1F | `WindowColorKey` | 下拉、抽屉、对话框、选中的 Segmented 项 | 无 |
+| Surface.Subtle | `Primer.cardSoft`、`Primer.codeBg` | colorFillAlter / 代码底 | #FAFAFA / #F5F5F5 | #1D1D1D / #1F1F1F | `WindowColorKey` | 表头、行悬停、代码块 | 无 |
+| Surface.Selected | `Primer.cardSel` | controlItemBgActive | #E6F4FF | #111A2C | `HighlightColorKey`（选中行） | 选中行、选中选项 | 另有 3 px colorPrimary 选中条或勾选（COL-05） |
+| Surface.Hover | `Primer.pillHover` | controlItemBgHover（合成后） | #F5F5F5 | #262626 | `ControlColorKey` | 文字按钮、选项、菜单悬停 | 无 |
+| Scrim | `Ant.colorBgMask` | colorBgMask | 黑 45% | 黑 45% | 不铺遮罩（不透明度 0）；浮层保留边框 | 抽屉与对话框背后的遮罩 | 无 |
+| Shadow | `Ant.boxShadowKey`、`Ant.boxShadowUmbra`、`Ant.boxShadowAmbient` | boxShadowSecondary 三层 | 黑 12% / 8% / 5% | 同左 | 隐藏 | 仅弹出层；不用 `Effect` | 无 |
+| Stroke.Layer | `Primer.cardBorder`、`Primer.divider` | colorBorderSecondary / colorSplit | #F0F0F0 / rgba(5,5,5,0.06) | #303030 / rgba(253,253,253,0.12) | `WindowTextColorKey` | 卡片边框、行分隔 | 装饰性可低于 3:1 |
+| Stroke.Button | `Ant.colorBorder` | colorBorder | #D9D9D9 | #424242 | `WindowTextColorKey` | 默认 / 虚线按钮、标签边框（按钮由文字识别） | 无 |
+| Stroke.Control | `Primer.inputBorder`、`Primer.checkBorder` | （gray-7，替代 colorBorder） | #8C8C8C（3.36:1） | #737373（3.89:1） | `WindowTextColorKey` | 输入框、选择框、复选框、单选框、开关关闭态 | ≥ 3:1 |
+| Text.Primary | `Primer.text`、`Primer.codeText` | colorText | 黑 88%（16.5:1） | 白 85%（13.4:1） | `WindowTextColorKey` | 正文 | ≥ 4.5:1 |
+| Text.Secondary | `Primer.textMuted`、`Primer.textFaint` | colorTextSecondary | 黑 65%（7.0:1） | 白 65%（8.2:1） | `WindowTextColorKey` | 次要文字、时间戳、占位符（Ant 的 45% / 25% 不达标） | ≥ 4.5:1 |
+| Text.Disabled | `Ant.colorTextDisabled` | colorTextDisabled | 黑 25% | 白 25% | `GrayTextColorKey` | 仅限禁用状态 | 豁免 |
+| Accent.Text | `Primer.accent`、`Primer.noteAccent` | （blue-7 / 暗色 blue-7） | #0958D9（6.2:1） | #3C89E8（5.2:1） | `WindowTextColorKey` | 链接、选中页签文字、强调文字 | ≥ 4.5:1 |
+| Accent.Graphic | `Ant.colorPrimary` | colorPrimary | #1677FF（4.1:1） | #1668DC（3.6:1） | `HighlightColorKey` | 选中条、页签墨条、勾选底、开关、进度、输入焦点边框 | ≥ 3:1 |
+| Primary button | `Primer.primaryBg` / `Primer.primaryText`；`Ant.colorPrimaryHover`、`Ant.colorPrimaryActive` | colorPrimary 及悬停 / 按下 | #0958D9 + 白（6.2:1）；悬停 #003EB3、按下 #002C8C | #1668DC + 白（5.2:1）；悬停 #1554AD、按下 #15417E | `ControlColorKey` / `ControlTextColorKey` | 主要按钮、选中筛选标签 | ≥ 4.5:1 |
+| Hover text | `Ant.colorLinkHover` | colorLinkHover（加深） | #003EB3（9.0:1） | #65A9F3（7.5:1） | `HotTrackColorKey` | 默认 / 描边 / 链接按钮悬停文字 | ≥ 4.5:1 |
+| OnAccent | `Primer.onAccent`、`Ant.colorWhite` | colorTextLightSolid / colorWhite | #FFFFFF | #141414 / #FFFFFF | `WindowColorKey` / `HighlightTextColorKey` | 强调底上的文字、勾号与开关手柄 | 文字 ≥ 4.5:1，图形 ≥ 3:1 |
+| Status.Success | `Primer.ok`、`Primer.diffGreen` / `Primer.okBg` / `Ant.colorSuccessBorder` | colorSuccess（green-8） | #237804（5.6:1） / #F6FFED / #B7EB8F | #49AA19（6.2:1） / #162312 / #274916 | `WindowTextColorKey` + 图标 | 成功、新增行 | 文字 ≥ 4.5:1 |
+| Status.Warning | `Primer.warn` / `Primer.warnBg`、`Primer.countWarningBg` / `Ant.colorWarningBorder` | colorWarning（gold-9） | #874D00（6.8:1） / #FFFBE6 / #FFE58F | #D89614（7.3:1） / #2B2111 / #594214 | `WindowTextColorKey` + 图标 | 警告、待批徽章 | 文字 ≥ 4.5:1 |
+| Status.Error | `Primer.diffRed`、`Ant.colorError` / `Ant.colorErrorBg` / `Ant.colorErrorBorder` | colorError（red-7 / colorErrorActive） | #CF1322（5.6:1）、#D9363E / #FFF2F0 / #FFCCC7 | #E86E6B（6.0:1） / #2C1618 / #5B2526 | `WindowTextColorKey` + 图标 | 错误、删除行、危险按钮文字 | 文字 ≥ 4.5:1 |
+| Danger.Solid | `Ant.colorErrorSolid`（悬停 / 按下 `…Hover` / `…Active`） | colorError 实心 | #D9363E + 白（4.6:1）；#CF1322 / #A8071A | #AD393A + 白（6.1:1）；#7E2E2F / #5B2526 | `ControlColorKey` / `ControlTextColorKey` | 风险确认按钮（`Primer.WarningAction`） | ≥ 4.5:1 |
+| Status.Info | `Primer.noteBg` / `Primer.noteBorder` | colorInfoBg / colorInfoBorder | #E6F4FF / #91CAFF | #111A2C / #15325B | `WindowColorKey` / `WindowTextColorKey` | 提示框（Alert info） | 文字 ≥ 4.5:1 |
+| Tooltip | `Ant.colorBgSpotlight` / `Ant.colorTextLightSolid` | colorBgSpotlight | 黑 85% + 白（15.3:1） | #424242 + 白（10.1:1） | `InfoColorKey` / `InfoTextColorKey` | 工具提示 | ≥ 4.5:1 |
+| Focus.Outer / Focus.Inner | `Primer.focusOuter` / `Primer.focusInner` | （2 px colorPrimary 环，代替 4 px #91CAFF 轮廓） | #1677FF / #FFFFFF（4.1:1） | #3C89E8 / #141414（5.2:1） | `WindowTextColorKey` / `WindowColorKey` | 焦点视觉（KEY-03） | 与相邻色 ≥ 3:1 |
+
+非颜色 token 在 `Themes/Primer.xaml`：字号 `Ui.FontSize.*`（12 / 14 / 16，标题 38 / 30 / 24 / 20 / 16）、行高 `Ui.LineHeight*`（22 / 20 / 24）、控件高度 `Ui.ControlHeight*`（32 / 24 / 40）、圆角 `Ui.Radius*`（6 / 2 / 4 / 8）、间距 `Ui.Space*`（4 / 8 / 12 / 16 / 20 / 24 / 32）。字体保留随包 Noto Sans SC（界面）与 JetBrains Mono（代码），见偏差 UI-37。
 
 ### 5.2 规则
 
@@ -453,7 +460,7 @@ Microsoft 新版设计指南以 WinUI 控件为例。下表说明工作台（WPF
 | Control.Height.Compact | 24 | 行内文字按钮、筛选按钮（最小值） |
 | List.RowHeight | 36 | 表格与列表行（最小值） |
 | SidePane.Width | 280–320 | 右侧栏 |
-| Drawer.Width | 400–440 | 抽屉 |
+| Drawer.Width | 400–520 | 抽屉（设置 400、待批 480、调用详情 520） |
 | Dialog.Width | 420–548 | 对话框 |
 
 ### A.2 圆角

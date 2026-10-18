@@ -77,10 +77,10 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         Assert.Equal(TextAlignment.Right, value.TextAlignment);
                     }
                     Assert.Equal(window.Features.Calls.Count == 0 ? Visibility.Collapsed : Visibility.Visible, ((Border)window.FindName("CallsCountBadge")).Visibility);
-                    if (state.Page == "Mcp") Assert.Equal(830, ((FrameworkElement)window.Configuration.FindName("ClientPane")).ActualWidth);
+                    if (state.Page == "Mcp") Assert.Equal(614, ((FrameworkElement)window.Configuration.FindName("ClientPane")).ActualWidth);
                     Assert.Equal(state.Pending ? Visibility.Visible : Visibility.Collapsed, ((FrameworkElement)window.FindName("PendingBadge")).Visibility);
                     Assert.Equal(state.Pending ? Visibility.Visible : Visibility.Collapsed, ((FrameworkElement)window.FindName("ApprovalOffPill")).Visibility);
-                    if (state.Drawer == "Approvals") Assert.Equal(440, ((Border)window.FindName("DrawerPanel")).Width);
+                    if (state.Drawer == "Approvals") Assert.Equal(480, ((Border)window.FindName("DrawerPanel")).Width);
                     if (state.Page == "Engineering") Assert.False(((MainViewModel)window.DataContext).Session.IsConnected);
                     if (state.Name == "mcp-zh-light")
                     {
@@ -90,7 +90,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                             var element = (FrameworkElement)window.FindName(name);
                             var point = element.TransformToAncestor(host).Transform(new Point());
                             Assert.Equal(40, element.ActualHeight);
-                            Assert.Equal(45, point.Y);
+                            Assert.Equal(5, point.X);
                             metrics.Add($"{name}: {point.X},{point.Y} {element.ActualWidth}x{element.ActualHeight}");
                         }
                         foreach (string name in new[] { "MinimizeWindowButton", "MaximizeWindowButton", "CloseWindowButton" })
@@ -143,6 +143,51 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
         }
     }
 
+    [WorkbenchRenderFact]
+    public void Sider_collapses_to_its_icons_below_the_lg_breakpoint()
+    {
+        var output = Path.GetFullPath(Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR")!);
+        Directory.CreateDirectory(output);
+        foreach (var language in new[] { AppLanguage.Chinese, AppLanguage.English })
+            foreach (var theme in new[] { AppTheme.Light, AppTheme.Dark })
+                wpf.RunWithLanguage(language, () =>
+                {
+                    using var trace = new BindingPathTests.BindingTrace();
+                    var previous = ThemeManager.Current.Theme;
+                    ThemeManager.Current.Theme = theme;
+                    var window = new MainWindow(new MainViewModel(new FakeProjectClient(), new FakeDialogService()), false);
+                    try
+                    {
+                        window.Navigate("Calls");
+                        var host = CreateHost(window, 960, 700);
+                        var sider = (Border)window.FindName("Sider");
+                        Assert.Equal(56, sider.ActualWidth);
+                        Assert.Equal(Visibility.Collapsed, ((FrameworkElement)window.FindName("BrandTitle")).Visibility);
+                        var toggle = (Button)window.FindName("SiderToggle");
+                        Assert.Equal(Loc.Current["Shell.ExpandMenu"], System.Windows.Automation.AutomationProperties.GetName(toggle));
+                        foreach (string name in new[] { "RailEngineering", "RailCalls", "RailAudit", "RailEnvironment", "RailLog", "RailMcp", "SettingsButton" })
+                        {
+                            var item = (FrameworkElement)window.FindName(name);
+                            var origin = item.TransformToAncestor(host).Transform(new Point());
+                            Assert.True(origin.X >= 0 && origin.X + item.ActualWidth <= sider.ActualWidth, name + " stays inside the collapsed sider");
+                            Assert.True(item.ActualHeight >= 24, name + " keeps the target size");
+                            Assert.False(string.IsNullOrWhiteSpace(System.Windows.Automation.AutomationProperties.GetName(item)), name + " keeps its name");
+                        }
+                        var title = (FrameworkElement)window.FindName("CurrentPageTitle");
+                        Assert.True(title.TransformToAncestor(host).Transform(new Point()).X > sider.ActualWidth);
+                        string suffix = (language == AppLanguage.Chinese ? "zh" : "en") + "-" + theme.ToString().ToLowerInvariant();
+                        SaveRender(host, Path.Combine(output, "sider-collapsed-" + suffix + ".png"), 960, 700);
+                        // The trigger expands it below the breakpoint, and the label returns.
+                        UnifiedDesktopTests.ClickControl(toggle); host.UpdateLayout(); WpfContext.Drain(); host.UpdateLayout();
+                        Assert.Equal(216, sider.ActualWidth);
+                        Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("BrandTitle")).Visibility);
+                        SaveRender(host, Path.Combine(output, "sider-expanded-" + suffix + ".png"), 960, 700);
+                    }
+                    finally { window.Close(); ThemeManager.Current.Theme = previous; }
+                    Assert.True(string.IsNullOrWhiteSpace(trace.Text), trace.Text);
+                });
+    }
+
     private static System.Collections.Generic.IEnumerable<RenderState> States()
     {
         foreach (var language in new[] { AppLanguage.Chinese, AppLanguage.English })
@@ -158,16 +203,18 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
             }
     }
 
-    internal static Border CreateHost(MainWindow window)
+    internal static Border CreateHost(MainWindow window) => CreateHost(window, 1200, 780);
+
+    internal static Border CreateHost(MainWindow window, double width, double height)
     {
         WpfContext.Drain();
         var content = (FrameworkElement)window.Content;
         window.Content = null;
-        var host = new Border { Child = content, DataContext = window.DataContext, Width = 1200, Height = 780 };
+        var host = new Border { Child = content, DataContext = window.DataContext, Width = width, Height = height };
         NameScope.SetNameScope(host, NameScope.GetNameScope(window));
         foreach (System.Windows.Input.CommandBinding binding in window.CommandBindings) host.CommandBindings.Add(binding);
-        host.Measure(new Size(1200, 780));
-        host.Arrange(new Rect(0, 0, 1200, 780));
+        host.Measure(new Size(width, height));
+        host.Arrange(new Rect(0, 0, width, height));
         host.UpdateLayout();
         WpfContext.Drain();
         host.UpdateLayout();
@@ -175,9 +222,11 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
         return host;
     }
 
-    internal static void SaveRender(FrameworkElement host, string path)
+    internal static void SaveRender(FrameworkElement host, string path) => SaveRender(host, path, 1200, 780);
+
+    internal static void SaveRender(FrameworkElement host, string path, int width, int height)
     {
-        var bitmap = new RenderTargetBitmap(1200, 780, 96, 96, PixelFormats.Pbgra32);
+        var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
         bitmap.Render(host);
         var encoder = new PngBitmapEncoder();
         encoder.Frames.Add(BitmapFrame.Create(bitmap));

@@ -47,6 +47,12 @@ public partial class AiCallsView : UserControl
         }));
     }
     private void OnFollow(object sender, RoutedEventArgs e) => Model.ToggleFollow();
+    private void OnAllCalls(object sender, RoutedEventArgs e)
+    {
+        Model.ClearCallFilters();
+        // The segment is a one-way view of the filters: restore it after the click toggled it locally.
+        System.Windows.Data.BindingOperations.GetBindingExpression(AllFilter, System.Windows.Controls.Primitives.ToggleButton.IsCheckedProperty)?.UpdateTarget();
+    }
     private void OnApprovals(object sender, RoutedEventArgs e) => Model.OpenApprovals();
     private void OnCall(object sender, RoutedEventArgs e) => Model.OpenCall((CallRow)((Button)sender).DataContext);
     private void OnCopyConnection(object sender, RoutedEventArgs e) => Model.Copy(Model.ConnectionJson);

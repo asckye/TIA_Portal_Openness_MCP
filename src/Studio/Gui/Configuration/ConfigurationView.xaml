@@ -8,9 +8,11 @@
     <Grid>
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" MinHeight="58"/>
-        <RowDefinition Height="14"/>
-        <RowDefinition Height="Auto" MinHeight="166"/>
-        <RowDefinition Height="14"/>
+        <RowDefinition Height="16"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="16"/>
+        <RowDefinition Height="Auto" MinHeight="162"/>
+        <RowDefinition Height="16"/>
         <RowDefinition Height="*"/>
       </Grid.RowDefinitions>
       <Grid>
@@ -30,10 +32,52 @@
           </StackPanel>
         </Border>
       </Grid>
-      <Border Grid.Row="2" Style="{StaticResource Primer.TableContainer}">
+      <!-- Ant Steps: the three setup stages of this page. -->
+      <Border x:Name="SetupSteps" Grid.Row="2" Style="{StaticResource Primer.Container}">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+          <StackPanel Orientation="Horizontal">
+            <Border x:Name="Step1Icon" Style="{StaticResource Primer.StepIcon}" VerticalAlignment="Top">
+              <TextBlock Text="1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <StackPanel Margin="8,0,0,0">
+              <TextBlock Text="{l:Tr Config.Installation}" Style="{StaticResource Primer.Text.text}" FontSize="{DynamicResource Ui.FontSize.Large}"/>
+              <TextBlock Text="{l:Tr Config.StepInstallationHint}" Style="{StaticResource Primer.Muted}" Margin="0,2,0,0"/>
+            </StackPanel>
+          </StackPanel>
+          <Border Grid.Column="1" Style="{StaticResource Primer.StepTail}"/>
+          <StackPanel Grid.Column="2" Orientation="Horizontal">
+            <Border x:Name="Step2Icon" Style="{StaticResource Primer.StepIcon}" VerticalAlignment="Top">
+              <TextBlock Text="2" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <StackPanel Margin="8,0,0,0">
+              <TextBlock Text="{l:Tr Config.HttpService}" Style="{StaticResource Primer.Text.text}" FontSize="{DynamicResource Ui.FontSize.Large}"/>
+              <TextBlock Text="{l:Tr Config.StepServiceHint}" Style="{StaticResource Primer.Muted}" Margin="0,2,0,0"/>
+            </StackPanel>
+          </StackPanel>
+          <Border Grid.Column="3" Style="{StaticResource Primer.StepTail}"/>
+          <StackPanel Grid.Column="4" Orientation="Horizontal">
+            <Border x:Name="Step3Icon" Style="{StaticResource Primer.StepIcon}" VerticalAlignment="Top">
+              <TextBlock Text="3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <StackPanel Margin="8,0,0,0">
+              <TextBlock Text="{l:Tr Mcp.Clients}" Style="{StaticResource Primer.Text.text}" FontSize="{DynamicResource Ui.FontSize.Large}"/>
+              <TextBlock Text="{l:Tr Config.StepClientsHint}" Style="{StaticResource Primer.Muted}" Margin="0,2,0,0"/>
+            </StackPanel>
+          </StackPanel>
+        </Grid>
+      </Border>
+      <Border Grid.Row="4" Style="{StaticResource Primer.Plain}">
         <Grid>
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="16"/>
             <ColumnDefinition Width="*"/>
           </Grid.ColumnDefinitions>
           <Border x:Name="InstallationCard" Style="{StaticResource Primer.InstallationHalf}" Grid.Column="0">
@@ -72,7 +116,7 @@
               </StackPanel>
             </Grid>
           </Border>
-          <Border x:Name="ServerPane" Grid.Column="1" Style="{StaticResource Primer.ServerHalf}">
+          <Border x:Name="ServerPane" Grid.Column="2" Style="{StaticResource Primer.ServerHalf}">
             <Grid>
               <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" MinHeight="24"/>
@@ -119,7 +163,7 @@
           </Border>
         </Grid>
       </Border>
-      <Border x:Name="ClientPane" Grid.Row="4" Style="{StaticResource Primer.TableContainer}">
+      <Border x:Name="ClientPane" Grid.Row="6" Style="{StaticResource Primer.TableContainer}">
         <Grid>
           <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -139,7 +183,7 @@
               <TextBlock Grid.Column="1" Text="{l:Tr Mcp.ClientsNote}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
             </Grid>
           </Border>
-          <ListBox x:Name="ClientChoices" AutomationProperties.Name="{l:Tr Mcp.Clients}" Grid.Row="1" Style="{StaticResource Primer.List}" SelectionMode="Multiple" ItemContainerStyle="{StaticResource Primer.ClientRow}" ItemTemplate="{StaticResource Primer.ClientContent}" Margin="0" Padding="0" VerticalAlignment="Top">
+          <ListBox x:Name="ClientChoices" AutomationProperties.Name="{l:Tr Mcp.Clients}" Grid.Row="1" Style="{StaticResource Primer.List}" SelectionMode="Multiple" ItemContainerStyle="{StaticResource Primer.ClientRow}" ItemTemplate="{StaticResource Primer.ClientContent}" Margin="10,10,10,4" Padding="0" VerticalAlignment="Top">
             <ListBox.ItemsPanel>
               <ItemsPanelTemplate>
                 <UniformGrid Columns="3"/>
@@ -165,10 +209,10 @@
 <PasswordBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel5}" AutomationProperties.Name="{l:Tr Mcp.SecretTitle}" x:Name="Key" Style="{StaticResource Primer.SecretInput}"/></StackPanel>
                   <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=KeyVisible}" x:Name="AccessibleLabel6" Content="{l:Tr Access.FieldMcpSecretTitle}" Target="{Binding ElementName=KeyVisible}" Style="{StaticResource Primer.FormLabel}"/>
 <TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel6}" AutomationProperties.Name="{l:Tr Mcp.SecretTitle}" x:Name="KeyVisible" FontFamily="{DynamicResource Ui.FontMono}" Visibility="Collapsed" Style="{StaticResource Primer.MonoInput}"/></StackPanel>
-                  <TextBlock x:Name="KeyPlaceholder" Text="{l:Tr Mcp.NoSecret}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="{DynamicResource Ui.FontSize.Caption}" Margin="12,0" IsHitTestVisible="False" Style="{StaticResource Primer.Text.textFaint}"/>
+                  <TextBlock x:Name="KeyPlaceholder" Text="{l:Tr Mcp.NoSecret}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="{DynamicResource Ui.FontSize.Caption}" Margin="12,0,12,8" VerticalAlignment="Bottom" IsHitTestVisible="False" Style="{StaticResource Primer.Text.textFaint}"/>
                 </Grid>
-                <Button AutomationProperties.Name="{l:Tr Config.Generate}" x:Name="GenerateKey" Grid.Column="2" Content="{l:Tr Config.Generate}" Margin="8,0,0,0" Style="{StaticResource Primer.Secondary}"/>
-                <CheckBox AutomationProperties.Name="{l:Tr Config.Show}" x:Name="ShowKey" Grid.Column="3" Content="{l:Tr Config.Show}" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
+                <Button AutomationProperties.Name="{l:Tr Config.Generate}" x:Name="GenerateKey" Grid.Column="2" Content="{l:Tr Config.Generate}" Margin="8,0,0,0" VerticalAlignment="Bottom" Style="{StaticResource Primer.Secondary}"/>
+                <CheckBox AutomationProperties.Name="{l:Tr Config.Show}" x:Name="ShowKey" Grid.Column="3" Content="{l:Tr Config.Show}" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0" VerticalAlignment="Bottom"/>
               </Grid>
               <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>

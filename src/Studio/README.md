@@ -58,15 +58,32 @@ The GUI build also builds and deploys the API-independent bridge. Native adapter
 by the explicit SDK build above. Runtime compiler downloads and automatic adapter compilation
 are removed. Doctor remains available without loading a native TIA session.
 
-## Primer interface
+## Ant Design interface
 
-The native WPF view uses one [Primer vocabulary](Gui/Themes/Primer.xaml), light/dark palettes,
-Segoe UI with bundled Noto Sans SC, and bundled JetBrains Mono for values and code.
-The minimum window size is 1200 x 780. Underline tabs sit below the 44-pixel header;
-Engineering adds Overview, Program blocks and Version control sub-tabs. The body has
-an expanding main column and a 300-pixel side column. The 28-pixel status bar shows the
-MCP state, TIA version/address/project, and a clickable pending-approval badge.
-Engine & MCP settings opens the settings drawer with English/中文 and Auto/Light/Dark
+Since 2026-10-18 (P8-80) the Workbench follows the Ant Design v5 specification. Ant has no WPF
+library, so the window stays native WPF and only the visual layer is Ant: the light palette maps
+the default algorithm (colorPrimary #1677FF, borderRadius 6/4/8, controlHeight 32/24/40, font sizes
+14/12/16 and headings 38/30/24/20/16), the dark palette the dark algorithm (layout #000000,
+container #141414, elevated #1F1F1F, primary #1668DC), and high contrast keeps the Windows system
+colours. The control templates live in one vocabulary, [Themes/Primer.xaml](Gui/Themes/Primer.xaml),
+whose `Primer.*` key names are kept as implementation names; colours come only from
+`Themes/Palette.*.xaml` by `DynamicResource`, so the theme switch repaints the live window.
+
+WCAG 2.2 AA overrides Ant where they conflict: primary text, links and the light primary button use
+blue-7 #0958D9 (dark text #3C89E8), solid buttons darken on hover and press so white text keeps
+4.5:1, warning and success text use gold-9 and green-8, control outlines use gray-7 (#8C8C8C, dark
+#737373) for 3:1, secondary text also serves for placeholders and faint labels (65 %), and keyboard
+focus is a 2 px colorPrimary ring. Shadows are translucent layers on pop-ups only; in-window drawers
+and dialogs keep a colorBorderSecondary outline. Hover motion is 0.12 s. Glyphs (chevrons, tick,
+ellipsis, Alert and Empty marks) come from `Themes/Icons.xaml`. Segoe UI with bundled Noto Sans SC
+stays the UI font and bundled JetBrains Mono the code font, so screenshots match on every VM.
+
+The minimum window size is 1024 x 640. A 216-pixel side menu groups the pages (it folds to
+56-pixel icons below 992 pixels or with its trigger) and the 56-pixel header shows the
+breadcrumb, the MCP state, TIA version/address/project and the pending-approval badge.
+The Project page holds the project head, program blocks and a 300-pixel column of compile,
+inspection, environment and log cards; other pages use the same page head and side column.
+Engine settings opens the settings drawer with English/中文 and Auto/Light/Dark
 choices. Language and theme changes keep the same ViewModel, session, selection and commands.
 Ctrl+S saves the project; Ctrl+1 selects MCP & clients, Ctrl+2 selects Engineering, and
 Ctrl+3–8 select the remaining pages. The release picker lives in the installation card

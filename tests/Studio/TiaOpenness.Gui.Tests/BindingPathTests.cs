@@ -192,7 +192,7 @@ public sealed class BindingPathTests(WpfContext wpf, ITestOutputHelper output)
                 {
                     Find<RadioButton>(configuration, mode).IsChecked = true;
                     Layout(host);
-                    Assert.Equal(1150, configuration.ActualWidth);
+                    Assert.Equal(934, configuration.ActualWidth);
                     var clients = Find<ListBox>(configuration, "ClientChoices");
                     RealizeItems(host, clients, clients.Items.Count);
                     RealizePickers(configuration);

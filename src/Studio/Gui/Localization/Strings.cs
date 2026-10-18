@@ -14,7 +14,7 @@ namespace TiaOpenness.Gui.Localization;
 internal static partial class Strings
 {
     /// <summary>key, English, Chinese.</summary>
-    internal static (string Key, string En, string Zh)[] Catalogue => [.. CommonCatalogue, .. ProjectPagesCatalogue, .. EngineCatalogue, .. SessionCatalogue];
+    internal static (string Key, string En, string Zh)[] Catalogue => [.. CommonCatalogue, .. ProjectPagesCatalogue, .. EngineCatalogue, .. SessionCatalogue, .. LayoutCatalogue];
 
     private static readonly (string Key, string En, string Zh)[] SessionCatalogue =
     [
@@ -106,10 +106,10 @@ internal static partial class Strings
         ("Control.Clear", "Clear prefill", "清除预填"),
         ("Control.Record", "Workbench UI · {0} · {1}", "工作台界面 · {0} · {1}"),
         ("Shell.VersionControl", "Version control", "版本控制"),
-        ("Shell.Engineering", "Project operations", "项目操作"),
+        ("Shell.Engineering", "Project", "项目"),
         ("Shell.Brand", "TIA Workbench", "TIA 工作台"),
         ("Shell.Overview", "Overview", "概览"),
-        ("Shell.Settings", "Engine & MCP settings…", "引擎 & MCP 设置…"),
+        ("Shell.Settings", "Engine settings", "引擎设置"),
         ("Shell.Diagnostics", "Export diagnostics", "导出诊断包"),
         ("Shell.DiagnosticsNotConnected", "Diagnostic export is not connected yet.", "诊断包导出尚未接入。"),
         ("Shell.ApprovalOff", "Approval off", "审批已关"),

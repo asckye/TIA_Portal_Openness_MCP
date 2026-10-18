@@ -66,7 +66,7 @@ public sealed class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                         var label = Descendants<TextBlock>(host).Single(t => t.Text == "TIA Portal V14 SP1");
                         Assert.Equal(((SolidColorBrush)Application.Current.FindResource("Primer.text")).Color, ((SolidColorBrush)label.Foreground).Color);
                     }
-                    if (state.StartsWith("calls", StringComparison.Ordinal)) Assert.Equal(170, ((FrameworkElement)((Views.AiCallsView)window.FindName("CallsContent")).FindName("SearchBox")).ActualWidth);
+                    if (state.StartsWith("calls", StringComparison.Ordinal)) Assert.Equal(220, ((FrameworkElement)((Views.AiCallsView)window.FindName("CallsContent")).FindName("SearchBox")).ActualWidth);
                     var bitmap = new RenderTargetBitmap(1200, 780, 96, 96, PixelFormats.Pbgra32);
                     bitmap.Render(host);
                     var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));

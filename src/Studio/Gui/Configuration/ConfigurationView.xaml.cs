@@ -184,6 +184,17 @@ namespace TiaMcpConfigurator
         {
             DetectionSource.Text = Loc.Current[tiaDetected ? "Config.Detected" : "Config.NotDetected"];
             DetectionChip.Tag = tiaDetected ? TiaOpenness.Gui.ViewModels.FeatureTone.Accent : TiaOpenness.Gui.ViewModels.FeatureTone.Muted;
+            UpdateSteps();
+        }
+        // Ant Steps: an installation that was detected, a running service (or local stdio, which needs none)
+        // finish their steps; the first unfinished one is current, and writing the clients is the last step.
+        private void UpdateSteps()
+        {
+            bool installed = tiaDetected, served = !Remote || DisplayRunning;
+            int current = !installed ? 1 : !served ? 2 : 3;
+            Step1Icon.Tag = installed ? "Done" : "Current";
+            Step2Icon.Tag = served && installed ? "Done" : current == 2 ? "Current" : null;
+            Step3Icon.Tag = current == 3 ? "Current" : null;
         }
         private void UpdateLastTest()
         {
@@ -248,6 +259,7 @@ namespace TiaMcpConfigurator
             ServiceStateChip.Tag = running ? TiaOpenness.Gui.ViewModels.FeatureTone.Accent : TiaOpenness.Gui.ViewModels.FeatureTone.Muted;
             StartServer.Visibility = running ? Visibility.Collapsed : Visibility.Visible;
             StopServer.Visibility = running ? Visibility.Visible : Visibility.Collapsed;
+            UpdateSteps();
             if (ServiceStateChanged != null) ServiceStateChanged(this, EventArgs.Empty);
         }
         private void UpdateInstructions()

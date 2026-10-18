@@ -1,8 +1,8 @@
 # 工作台偏差清单
 
-状态：现行 · 最后核对：2026-10-11，master `3a227657`
+状态：现行 · 最后核对：2026-10-11，master `3a227657`；C.0 与 UI-31、UI-32、UI-33、UI-37、UI-39、UI-40 按 2026-10-18 的 P8-80 更新（含已批准的 Ant 布局）
 
-- 对照：[工作台界面设计规范](../workbench-ui.md) v0.2（项目红线 + WCAG 2.2 AA + Microsoft Windows 应用设计指南）。
+- 对照：[工作台界面设计规范](../workbench-ui.md) v0.2（项目红线 + WCAG 2.2 AA + Microsoft Windows 应用设计指南）；视觉层自 2026-10-18 起以 Ant Design v5 为规范，见 [C.0](#c0-ant-design-v5-视觉规范)。
 - 状态：按维护者 2026-10-11 的决定填写，默认采用各条建议。维护者另外确认以下各项在 4.0 前完成：高对比主题（UI-01）、UI Automation 名称（UI-02–UI-04）、焦点管理与访问键（UI-05、UI-18）、文字对比 4.5:1 并相应提高测试门槛（UI-08、UI-49）、较小的最小窗口（UI-13）、风险确认默认取消（UI-28）、可见的预填标记（UI-25）。“4.0 前 - P8-61”的条目由任务 P8-61 实施；状态取值见 [设计规范索引](../README.md)。本文不改代码。
 - 编号 UI-01…UI-49；无障碍条目在前（UI-01…UI-24），每条标注 WCAG 2.2 准则编号与级别。
 
@@ -70,16 +70,16 @@ WCAG 2.2 A/AA 中按代码阅读存在不满足的准则共 17 条：A 级 9 条
 | UI-28 | 风险确认默认继续，按钮为“确定 / 是” | 3.3.4 AA（基本满足） | 4.0 前 | S–M | 4.0 前 - P8-61 |
 | UI-29 | 输入守卫未覆盖将来的访问键 | 无 | 4.0 前（随 UI-18） | S | 4.0 前 - P8-61 |
 | UI-30 | “允许 AI 控制界面”开关的控件与位置 | 无 | 4.0 前 | S | 4.0 前 - P8-61 |
-| UI-31 | Primer 配色与固定品牌强调色 | 无 | 保留 | 无 | 有意偏差（已接受） |
-| UI-32 | 未使用 WPF Fluent 主题 | 无 | 保留（4.0） | 无 | 有意偏差（已接受） |
+| UI-31 | Ant Design v5 配色与固定主色（原 Primer 配色） | 无 | 保留 | 无 | 有意偏差（已接受） |
+| UI-32 | 未使用 WPF Fluent 主题（采用 Ant Design v5） | 无 | 保留（4.0） | 无 | 有意偏差（已接受） |
 | UI-33 | 调色板外颜色与按主题分支的触发器 | 无 | 4.0 前 | S | 4.0 前 - P8-61 |
 | UI-34 | 审批抽屉中的 DataGrid / TreeView 未套主题 | 无 | 4.0 前 | S–M | 4.0 前 - P8-61 |
 | UI-35 | 选项侧栏背后铺满不透明正文色 | 无 | 4.0 前 | S | 4.0 前 - P8-61 |
 | UI-36 | 字号 token 未使用，字号散落 | 无 | 4.0 后 | L | 4.0 后 |
 | UI-37 | 随包字体代替系统字体 | 无 | 保留 | 无 | 有意偏差（已接受） |
 | UI-38 | 间距不在 4 epx 网格上 | 无 | 4.0 后 | M–L | 4.0 后 |
-| UI-39 | 圆角值 | 无 | 保留 | 无 | 有意偏差（已接受） |
-| UI-40 | 图标字形来源混杂 | 无 | 保留（政策） | 无 | 有意偏差（已接受） |
+| UI-39 | 圆角值（Ant 6 / 4 / 8） | 无 | 保留 | 无 | 有意偏差（已接受） |
+| UI-40 | 文字按钮政策；字形已统一为 Icon.* | 无 | 保留（政策） | 无 | 有意偏差（已接受） |
 | UI-41 | 两种主要按钮颜色、同面多个强调按钮 | 无 | 4.0 后 | S–M | 4.0 后 |
 | UI-42 | 忙碌无不确定进度、无取消、关闭被静默阻止 | 4.1.3 AA（随 UI-11） | 4.0 前 | S | 4.0 前 - P8-61 |
 | UI-43 | 通知与 toast 机制 | 4.1.3 AA（随 UI-11） | 4.0 后 | M | 4.0 后 |
@@ -413,13 +413,30 @@ WCAG 2.2 A/AA 中按代码阅读存在不满足的准则共 17 条：A 级 9 条
 
 ## C 视觉体系
 
-### UI-31 Primer 配色与固定品牌强调色
+### C.0 Ant Design v5 视觉规范
+
+- **决定**：维护者 2026-10-18 决定工作台采用 Ant Design v5 设计规范（P8-80）。Ant 没有官方 WPF 库，因此保留 WPF，只替换视觉层，做法与 P6-61 的 Primer 重建相同：ViewModel、命令、绑定、引擎调用、中英文界面文字与 UIA 名称不变；`Themes/Primer.xaml` 与 `Primer.*` 键名保留为实现名，Ant 独有的 token 用 `Ant.*` 键。
+- **令牌**：浅色调色板对应 Ant 默认算法，深色对应暗色算法（布局底 #000000、容器 #141414、浮层 #1F1F1F、主色 #1668DC），高对比继续使用 Windows 系统色；逐项取值见[规范 5.1](../workbench-ui.md#51-语义-token)。浅色的种子 / 映射 / 别名 token、蓝色色板与浅深两套中性色已对照 ant.design 的 Customize Theme 与 Colors 页面核对；暗色的容器、浮层、主色以及金 / 绿 / 红色板各阶不在 ant.design 的静态页面中，按 Ant 暗色算法的输出取值。
+- **WCAG 优先的偏差**（维护者 2026-10-18 接受）：
+  - 主色文字、链接与浅色主要按钮用 blue-7 #0958D9（#1677FF 作文字为 4.1:1）；深色文字与链接用 #3C89E8，深色主要按钮保持 #1668DC（白字 5.2:1）。#1677FF / #1668DC 只用于图形（选中条、墨条、勾选、开关、进度、焦点边框，≥ 3:1）。
+  - 实心按钮的悬停与按下取更深的色阶（浅色 #003EB3 / #002C8C，深色 #1554AD / #15417E；危险按钮 #CF1322 / #A8071A 与 #7E2E2F / #5B2526），因为 Ant 变浅的悬停色使白字降到 3.0:1；默认、描边与链接按钮的悬停文字用 #003EB3 / #65A9F3。
+  - 警告文字用 gold-9 #874D00、成功文字用 green-8 #237804、错误文字用 red-7 #CF1322（Ant 的 #FAAD14、#52C41A、#FF4D4F 分别为 1.9、2.3、3.3:1）。
+  - 输入框、选择框、复选框、单选框与开关关闭态的边界用 gray-7 #8C8C8C（深色 #737373），达到 3:1；Ant 的 colorBorder #D9D9D9 / #424242 只用于以文字识别的按钮与标签。
+  - 次要文字（65%）同时用于占位符与弱化标签；Ant 的 45% 与 25% 不足 4.5:1。
+  - 键盘焦点为 2 px colorPrimary 环加 1 px 间隙（Ant 的 4 px #91CAFF 轮廓为 1.8:1）；输入框聚焦时画 2 px 主色内环，代替 10% 透明度的 controlOutline。
+  - Segmented 选中项加 colorPrimary 边框，表格与列表选中行保留 3 px 选中条（Ant 的选中底色与背景仅 1.1:1）。
+  - 测试禁止 `Effect`，阴影只以三层半透明边框画在弹出层上；页面内的抽屉与对话框保留 colorBorderSecondary 边框。悬停动效 0.12 s（测试固定）。标签与筛选标签高 24 px（WCAG 2.5.8 目标尺寸），滚动条保留 24 px 命中区与行按钮。
+  - 风险确认按钮（`Primer.WarningAction`）改为 Ant 实心危险按钮（红色）。
+- **其他决定**：深色布局底保持 Ant 的 #000000（卡片 #141414）；待批徽章底改为 colorWarningBg #FFFBE6（warn 文字 6.5:1）；测试中固定 Primer 交接取值的断言改为 Ant 取值（`ThemeSurfaceTests` 的交接 token 与警告计数色、`PrimerInteractionTests` 的徽章底色、`TiaOpenness.Configuration.Tests` 的窗口底色），对比、硬编码颜色、焦点、禁用效果与几何检查保持不变。
+- **布局**（维护者 2026-10-18 批准）：左侧 Sider 216 epx（分组菜单，宽度低于 992 epx 时收为 56 epx 图标栏，收起按钮可覆盖，越过断点后恢复自动）；Header 56 epx（面包屑“分组 / 页名”、MCP 状态与会话标签按优先级在右端截断、待批、诊断、语言与窗口按钮）；每页 PageHead（标题、说明与操作）；“项目”页合并原项目操作与程序块（选择以 Alert 显示批量操作，右栏为编译、检查、环境体检与日志卡片）；AI 调用页四个 Statistic 卡片、Segmented 筛选（各筛选仍可组合，“全部”清除）、版本选择、搜索与“跟随最新”开关；环境体检页为警告 Alert 与按组的 Collapse 列表，菜单显示需处理数；MCP 页为 Steps（按检测与服务状态标当前步骤）、两张竖排标签的表单卡片与客户端复选卡片；待批抽屉 480 epx，请求为小卡片，按钮顺序“查看完整参数”（链接）、“拒绝”、“批准执行”（主要）；调用详情抽屉 520 epx；对话框按钮按视觉顺序排列，肯定操作在最右。
+
+### UI-31 Ant Design v5 配色与固定主色（原 Primer 配色）
 
 - **规则**：COL-07；[Color in Windows › Accent color](https://learn.microsoft.com/en-us/windows/apps/design/signature-experiences/color#accent-color)。
-- **位置**：`Themes/Palette.Light.xaml`、`Palette.Dark.xaml`（29 个 token，名称与取值来自 Primer 设计交接，`ThemeSurfaceTests.cs:31-32` 固定）；强调色 #0B7A99 / #4FC3E0，不使用 Windows 强调色。
-- **用户影响**：与系统其他应用的强调色不一致；对比已达标（作文字 4.63–9.21:1）。
-- **偏差理由**：维护者已采纳 Primer 设计交接；固定的品牌色便于在 VM 与远程桌面中识别工作台。
-- **建议**：**有意偏差**；条件：UI-01 补齐高对比映射，`onAccent` 对比保持 ≥ 4.5:1。
+- **位置**：`Themes/Palette.Light.xaml`、`Palette.Dark.xaml`（60 个 token：36 个 `Primer.*` 与 24 个 `Ant.*`，取值来自 Ant Design v5 并按 C.0 调整，`ThemeSurfaceTests` 固定）；主色 #0958D9 / #3C89E8（图形 #1677FF / #1668DC），不使用 Windows 强调色。
+- **用户影响**：与系统其他应用的强调色不一致；对比已达标（作文字 5.2–9.0:1）。
+- **偏差理由**：维护者 2026-10-18 采纳 Ant Design v5 作为视觉规范（此前为 Primer 设计交接）；固定的主色便于在 VM 与远程桌面中识别工作台。
+- **建议**：**有意偏差**；条件：高对比映射保持完整，`onAccent` 与主要按钮文字对比保持 ≥ 4.5:1。
 - **状态**：有意偏差（已接受）
 
 ### UI-32 未使用 WPF Fluent 主题
@@ -427,7 +444,7 @@ WCAG 2.2 A/AA 中按代码阅读存在不满足的准则共 17 条：A 级 9 条
 - **规则**：PLT-01；[What's new in WPF for .NET 9 › Fluent theme](https://learn.microsoft.com/en-us/dotnet/desktop/wpf/whats-new/net90#fluent-theme)。
 - **位置**：`App.xaml` 未设置 `ThemeMode`（默认 Aero2）；`Themes/Primer.xaml`（1306 行）重写了按钮、输入框、下拉框、复选框、列表、页签等模板。
 - **用户影响**：得不到 Fluent 主题自带的强调色、高对比与焦点视觉，需要自行补齐（UI-01、UI-07）。
-- **偏差理由**：4.0 前整体换主题风险过大（全部渲染测试、`PrimerVocabularyTests` 与交接设计都要重做）。
+- **偏差理由**：4.0 前整体换主题风险过大（全部渲染测试、`PrimerVocabularyTests` 与交接设计都要重做）。2026-10-18 起视觉规范为 Ant Design v5（C.0），控件模板仍由 `Themes/Primer.xaml` 自绘，焦点、禁用与高对比按 C.0 补齐。
 - **建议**：**有意偏差（4.0）**，4.0 后评估迁移。
 - **状态**：有意偏差（已接受）
 
@@ -436,6 +453,7 @@ WCAG 2.2 A/AA 中按代码阅读存在不满足的准则共 17 条：A 级 9 条
 - **规则**：COL-01、COL-11。
 - **位置**：`Primer.xaml:125` `Primer.CountWarningLight`（#FFF1E5，`StaticResource`）；`:700-709`、`:710-730` 用 `DataTrigger` 绑定 `EffectivelyDark` 切换底色；`:644`、`:649` `Foreground="White"`；遮罩用正文色加 0.3 不透明度（`:1126-1129`）。`ThemeSurfaceTests.cs:19` 专门放行 #FFF1E5。
 - **用户影响**：高对比主题下这些颜色不会被替换。
+- **P8-80 进展**：#FFF1E5 已改为调色板 token `Primer.countWarningBg`（colorWarningBg #FFFBE6），遮罩改用 `Ant.colorBgMask`，模板中不再按 `EffectivelyDark` 分支。
 - **成本 / 风险**：S。
 - **建议**：**4.0 前修改**（UI-01 的前置）。
 - **状态**：4.0 前 - P8-61
@@ -472,7 +490,7 @@ WCAG 2.2 A/AA 中按代码阅读存在不满足的准则共 17 条：A 级 9 条
 - **规则**：TYP-01；[Typography in Windows › Languages](https://learn.microsoft.com/en-us/windows/apps/design/signature-experiences/typography#languages)。
 - **位置**：`Primer.xaml:10-11`：`Segoe UI, Noto Sans SC`（随包 `Fonts/NotoSansSC-Regular.otf` 与 `-Bold.otf` 共约 16.9 MB）、`JetBrains Mono, Consolas`。Microsoft 建议 Segoe UI Variable + Microsoft YaHei UI。
 - **用户影响**：中文字形与其他 Windows 应用略有不同；包体增大。
-- **偏差理由**：交接设计指定；随包字体在 VM 与不同语言版本的 Windows 上字形一致，截图与验收证据稳定。
+- **偏差理由**：交接设计指定；随包字体在 VM 与不同语言版本的 Windows 上字形一致，截图与验收证据稳定。Ant Design 建议使用平台字体，2026-10-18 改用 Ant 规范时维护者决定保留随包 Noto Sans SC 与 JetBrains Mono（`WorkbenchResourceTests` 固定字体链）。
 - **建议**：**有意偏差**；4.0 后评估改用系统字体。
 - **状态**：有意偏差（已接受）
 
@@ -488,8 +506,8 @@ WCAG 2.2 A/AA 中按代码阅读存在不满足的准则共 17 条：A 级 9 条
 ### UI-39 圆角值
 
 - **规则**：LAY-08；[Geometry in Windows 11 › Rounded corners](https://learn.microsoft.com/en-us/windows/apps/design/signature-experiences/geometry#rounded-corners)。
-- **位置**：控件与卡片 6（`Primer.xaml:98、136-137`），芯片 10（`:105`），抽屉与对话框 8（`:733`，符合）。
-- **偏差理由**：Primer 交接设计的一部分；差异小，无可用性影响。
+- **位置**：按 Ant 的 borderRadius：控件 6、小号控件与标签 4、卡片 / 抽屉 / 对话框 / 弹出层 8（`Ui.Radius*`）；计数徽章 10。
+- **偏差理由**：Ant Design v5 规范（C.0）；与 Windows 11 的 4 / 8 差异小，无可用性影响。
 - **建议**：**有意偏差**。
 - **状态**：有意偏差（已接受）
 
@@ -498,7 +516,8 @@ WCAG 2.2 A/AA 中按代码阅读存在不满足的准则共 17 条：A 级 9 条
 - **规则**：ICO-01、ICO-03。
 - **位置**：Segoe Fluent Icons 私用区字符直接写在模板与视图中（`Primer.xaml:211、267`，`MainWindow.xaml:154、187`，`EngineeringOptionsView.xaml:10`）；Unicode 近似字符“✓”（`Primer.xaml:307、1022`）、“⌄/⌃”（`:926、929`）、“⋯”（`ProjectOperationsView.xaml:73`）、“!”（`MainWindow.xaml:189`）；`Themes/Icons.xaml:14、16` 定义的 `Icon.Check`、`Icon.ChevronDown` 未被使用。
 - **偏差理由**：以文字为主的按钮是交接设计的决定（`Icons.xaml` 注释），保留。
-- **建议**：**有意偏差（文字按钮政策）**；字形统一为命名资源在 4.0 后进行，ICO-01 对新代码 MUST。
+- **P8-80 进展**：勾号、展开 / 滚动箭头、溢出省略号、提示“!”与 Alert / Empty 图形已改为 `Themes/Icons.xaml` 的命名几何（`Icon.*`），自动化名称不变；Segoe Fluent Icons 私用区字符只剩关闭类按钮。
+- **建议**：**有意偏差（文字按钮政策）**；剩余私用区字形在 4.0 后统一，ICO-01 对新代码 MUST。
 - **状态**：有意偏差（已接受）
 
 ### UI-41 两种主要按钮颜色、同一面多个强调按钮

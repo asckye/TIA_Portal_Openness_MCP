@@ -16,7 +16,7 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
     {
         var literal = new Regex(@"#[\da-fA-F]{3,8}\b|\b(?:Colors|Brushes)\.(?!Transparent\b)\w+|\bColor\.From\w+");
         // The warning-count colour stays exact; its brush is defined in the light palette.
-        const string countVariant = "<SolidColorBrush x:Key=\"Primer.countWarningBg\" Color=\"#FFF1E5\"/>";
+        const string countVariant = "<SolidColorBrush x:Key=\"Primer.countWarningBg\" Color=\"#FFFBE6\"/>";
         var lightPalette = SourceScan.Markup.Single(file => file.Name.EndsWith(".Themes.Palette.Light.xaml", StringComparison.Ordinal));
         Assert.Single(Regex.Matches(lightPalette.Text, Regex.Escape(countVariant)));
         var brushesOutsidePalettes = SourceScan.Markup
@@ -33,18 +33,18 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
     }
 
     [Theory]
-    [InlineData("Light", "#F6F8FA #FFFFFF #F6F8FA #F0F8FA #D0D7DE #D8DEE4 #FFFFFF #808891 #F6F8FA #EAEEF2 #FFFFFF #1F2328 #626A73 #626A73 #808891 #086D89 #FFFFFF #1A7F37 #916000 #FFF8C5 #1A7F37 #DAFBE1 #DDF4FF #6654AEFF #0969DA #F6F8FA #1F2328 #1A7F37 #CF222E #FFFFFF #FFFFFF #FFF1E5 #1F2328 #FFFFFF #1F2328 #1F2328")]
-    [InlineData("Dark", "#0D1117 #161B22 #0D1117 #1A2730 #30363D #21262D #0D1117 #768390 #21262D #30363D #161B22 #E6EDF3 #9CA5AF #9CA5AF #768390 #4FC3E0 #0D1117 #1A7F37 #D29922 #26D29922 #3FB950 #263FB950 #26388BFD #66388BFD #58A6FF #0D1117 #E6EDF3 #3FB950 #F85149 #FFFFFF #0D1117 #26D29922 #E6EDF3 #161B22 #E6EDF3 #E6EDF3")]
+    [InlineData("Light", "#F5F5F5 #FFFFFF #FAFAFA #E6F4FF #F0F0F0 #0F050505 #FFFFFF #8C8C8C #FFFFFF #F5F5F5 #FFFFFF #E0000000 #A6000000 #A6000000 #8C8C8C #0958D9 #FFFFFF #0958D9 #874D00 #FFFBE6 #237804 #F6FFED #E6F4FF #91CAFF #0958D9 #F5F5F5 #E0000000 #237804 #CF1322 #FFFFFF #FFFFFF #FFFBE6 #1677FF #FFFFFF #E0000000 #E0000000 #1677FF #003EB3 #002C8C #003EB3 #BAE0FF #FFFFFF #D9D9D9 #D9363E #FFF2F0 #FFCCC7 #D9363E #CF1322 #A8071A #FFE58F #B7EB8F #0F000000 #0A000000 #40000000 #73000000 #D9000000 #FFFFFF #1F000000 #14000000 #0D000000")]
+    [InlineData("Dark", "#000000 #141414 #1D1D1D #111A2C #303030 #1FFDFDFD #141414 #737373 #141414 #262626 #1F1F1F #D9FFFFFF #A6FFFFFF #A6FFFFFF #737373 #3C89E8 #141414 #1668DC #D89614 #2B2111 #49AA19 #162312 #111A2C #15325B #3C89E8 #1F1F1F #D9FFFFFF #49AA19 #E86E6B #FFFFFF #141414 #2B2111 #3C89E8 #141414 #D9FFFFFF #D9FFFFFF #1668DC #1554AD #15417E #65A9F3 #112545 #FFFFFF #424242 #E86E6B #2C1618 #5B2526 #AD393A #7E2E2F #5B2526 #594214 #274916 #1FFFFFFF #14FFFFFF #40FFFFFF #73000000 #424242 #FFFFFF #1F000000 #14000000 #0D000000")]
     public void Handoff_surface_text_and_semantic_tokens_are_preserved(string theme, string colors)
     {
         wpf.Run(() =>
         {
             var palette = new ResourceDictionary { Source = new Uri(ThemeManager.PackPrefix + "Palette." + theme + ".xaml") };
-            string[] keys = ["bg", "card", "cardSoft", "cardSel", "cardBorder", "divider", "input", "inputBorder", "pill", "pillHover", "menuBg", "text", "textMuted", "textFaint", "checkBorder", "accent", "onAccent", "primaryBg", "warn", "warnBg", "ok", "okBg", "noteBg", "noteBorder", "noteAccent", "codeBg", "codeText", "diffGreen", "diffRed", "primaryText", "warningText", "countWarningBg", "focusOuter", "focusInner", "selectedText", "hoverText"];
+            string[] keys = ["bg", "card", "cardSoft", "cardSel", "cardBorder", "divider", "input", "inputBorder", "pill", "pillHover", "menuBg", "text", "textMuted", "textFaint", "checkBorder", "accent", "onAccent", "primaryBg", "warn", "warnBg", "ok", "okBg", "noteBg", "noteBorder", "noteAccent", "codeBg", "codeText", "diffGreen", "diffRed", "primaryText", "warningText", "countWarningBg", "focusOuter", "focusInner", "selectedText", "hoverText", "Ant.colorPrimary", "Ant.colorPrimaryHover", "Ant.colorPrimaryActive", "Ant.colorLinkHover", "Ant.controlItemBgActiveHover", "Ant.colorWhite", "Ant.colorBorder", "Ant.colorError", "Ant.colorErrorBg", "Ant.colorErrorBorder", "Ant.colorErrorSolid", "Ant.colorErrorSolidHover", "Ant.colorErrorSolidActive", "Ant.colorWarningBorder", "Ant.colorSuccessBorder", "Ant.colorFillSecondary", "Ant.colorBgContainerDisabled", "Ant.colorTextDisabled", "Ant.colorBgMask", "Ant.colorBgSpotlight", "Ant.colorTextLightSolid", "Ant.boxShadowKey", "Ant.boxShadowUmbra", "Ant.boxShadowAmbient"];
             string[] expected = colors.Split(' ');
             Assert.Equal(keys.Length, palette.Count);
             for (int i = 0; i < keys.Length; i++)
-                Assert.Equal((Color)ColorConverter.ConvertFromString(expected[i]), ((SolidColorBrush)palette["Primer." + keys[i]]).Color);
+                Assert.Equal((Color)ColorConverter.ConvertFromString(expected[i]), ((SolidColorBrush)palette[keys[i].StartsWith("Ant.", StringComparison.Ordinal) ? keys[i] : "Primer." + keys[i]]).Color);
         });
     }
 

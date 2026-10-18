@@ -101,7 +101,7 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
     public bool HasSelection => CanOperate && model.Engineering.Blocks.Any(b => b.Selected);
     public bool HasWorkspace => model.VersionControl.SelectedWorkspace != null;
     public double WorkspaceOpacity => HasWorkspace ? 1 : .45;
-    public double CompileCardHeight => HasCompile ? 289 : Loc.Current.Language == AppLanguage.Chinese ? 89 : 104;
+    public double CompileCardHeight => HasCompile ? 240 : Loc.Current.Language == AppLanguage.Chinese ? 89 : 104;
     public double InspectionCardHeight => HasInspection ? 148 : 85;
     public string CompileBadge => HasCompile ? CompileState : Loc.Current["Pages.NotCompiled"];
     public string InspectionDisplay => HasInspection ? InspectionSummary : Loc.Current["Pages.NotInspected"];

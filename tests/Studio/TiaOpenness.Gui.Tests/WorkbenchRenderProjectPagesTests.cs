@@ -90,8 +90,9 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
                         Assert.Equal(Visibility.Collapsed, ((Border)blocks.FindName("AtlasFooter")).Visibility);
                         var card = (Border)blocks.FindName("BlocksCard");
                         var rows = (Grid)card.Child;
-                        var footer = rows.Children.OfType<Border>().Single(border => Grid.GetRow(border) == 3);
-                        Assert.InRange(card.ActualHeight - footer.TranslatePoint(new Point(0, footer.ActualHeight), card).Y, 1, 3);
+                        var header = rows.Children.OfType<Border>().Single(border => Grid.GetRow(border) == 0);
+                        var selection = rows.Children.OfType<Border>().Single(border => Grid.GetRow(border) == 1);
+                        Assert.InRange(selection.TranslatePoint(new Point(), card).Y - header.TranslatePoint(new Point(0, header.ActualHeight), card).Y, 8, 16);
                     }
                     WorkbenchRenderTests.SaveRender(host, Path.Combine(output, state.Item1 + ".png"));
                     if (state.Item2 is "Engineering" or "Blocks")

@@ -29,6 +29,7 @@
 | [0015](0015-microsoft-design-spec-baseline.md) | 项目设计规范以 Microsoft 规范为基线 | 已采纳 | 2026-10-11 | B39 |
 | [0016](0016-architecture-decision-records.md) | 设计决策用 ADR 记录，一页一个决定 | 已采纳 | 2026-10-11 | B40 |
 | [0017](0017-own-openness-group-code.md) | Openness 用户组检查改用自有代码，不再分发 Siemens.Collaboration.Net | 已采纳 | 2026-10-18 | — |
+| [0018](0018-workbench-ant-design.md) | 工作台界面采用 Ant Design v5 的视觉规范和布局 | 已采纳 | 2026-10-18 | — |
 
 ## 待补写的决定
 

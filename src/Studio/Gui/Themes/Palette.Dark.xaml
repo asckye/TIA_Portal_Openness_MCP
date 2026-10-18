@@ -1,38 +1,96 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <SolidColorBrush x:Key="Primer.bg" Color="#0D1117"/>
-  <SolidColorBrush x:Key="Primer.card" Color="#161B22"/>
-  <SolidColorBrush x:Key="Primer.cardSoft" Color="#0D1117"/>
-  <SolidColorBrush x:Key="Primer.cardSel" Color="#1A2730"/>
-  <SolidColorBrush x:Key="Primer.cardBorder" Color="#30363D"/>
-  <SolidColorBrush x:Key="Primer.divider" Color="#21262D"/>
-  <SolidColorBrush x:Key="Primer.input" Color="#0D1117"/>
-  <SolidColorBrush x:Key="Primer.inputBorder" Color="#768390"/>
-  <SolidColorBrush x:Key="Primer.pill" Color="#21262D"/>
-  <SolidColorBrush x:Key="Primer.pillHover" Color="#30363D"/>
-  <SolidColorBrush x:Key="Primer.menuBg" Color="#161B22"/>
-  <SolidColorBrush x:Key="Primer.text" Color="#E6EDF3"/>
-  <SolidColorBrush x:Key="Primer.textMuted" Color="#9CA5AF"/>
-  <SolidColorBrush x:Key="Primer.textFaint" Color="#9CA5AF"/>
-  <SolidColorBrush x:Key="Primer.checkBorder" Color="#768390"/>
-  <SolidColorBrush x:Key="Primer.accent" Color="#4FC3E0"/>
-  <SolidColorBrush x:Key="Primer.onAccent" Color="#0D1117"/>
-  <SolidColorBrush x:Key="Primer.primaryBg" Color="#1A7F37"/>
-  <SolidColorBrush x:Key="Primer.warn" Color="#D29922"/>
-  <SolidColorBrush x:Key="Primer.warnBg" Color="#26D29922"/>
-  <SolidColorBrush x:Key="Primer.ok" Color="#3FB950"/>
-  <SolidColorBrush x:Key="Primer.okBg" Color="#263FB950"/>
-  <SolidColorBrush x:Key="Primer.noteBg" Color="#26388BFD"/>
-  <SolidColorBrush x:Key="Primer.noteBorder" Color="#66388BFD"/>
-  <SolidColorBrush x:Key="Primer.noteAccent" Color="#58A6FF"/>
-  <SolidColorBrush x:Key="Primer.codeBg" Color="#0D1117"/>
-  <SolidColorBrush x:Key="Primer.codeText" Color="#E6EDF3"/>
-  <SolidColorBrush x:Key="Primer.diffGreen" Color="#3FB950"/>
-  <SolidColorBrush x:Key="Primer.diffRed" Color="#F85149"/>
+  <!--
+    Ant Design v5 dark algorithm, mapped onto the same names as Palette.Light.xaml.
+
+    Surfaces step up from colorBgLayout #000000 to colorBgContainer #141414 and colorBgElevated
+    #1F1F1F. Text that must reach 4.5:1 on those surfaces uses the lighter dark-palette step
+    (blue #3C89E8, error #E86E6B); solid buttons keep white text by moving hover and active to
+    the darker steps instead of Ant's lighter hover.
+  -->
+  <!-- colorBgLayout -->
+  <SolidColorBrush x:Key="Primer.bg" Color="#000000"/>
+  <!-- colorBgContainer -->
+  <SolidColorBrush x:Key="Primer.card" Color="#141414"/>
+  <!-- colorFillAlter over colorBgContainer -->
+  <SolidColorBrush x:Key="Primer.cardSoft" Color="#1D1D1D"/>
+  <!-- controlItemBgActive -->
+  <SolidColorBrush x:Key="Primer.cardSel" Color="#111A2C"/>
+  <!-- colorBorderSecondary -->
+  <SolidColorBrush x:Key="Primer.cardBorder" Color="#303030"/>
+  <!-- colorSplit -->
+  <SolidColorBrush x:Key="Primer.divider" Color="#1FFDFDFD"/>
+  <!-- colorBgContainer -->
+  <SolidColorBrush x:Key="Primer.input" Color="#141414"/>
+  <!-- colorBorder #424242 is 1.7:1; a field boundary needs 3:1 -->
+  <SolidColorBrush x:Key="Primer.inputBorder" Color="#737373"/>
+  <!-- Button defaultBg = colorBgContainer -->
+  <SolidColorBrush x:Key="Primer.pill" Color="#141414"/>
+  <!-- controlItemBgHover (rgba(255,255,255,0.08)) flattened onto colorBgContainer -->
+  <SolidColorBrush x:Key="Primer.pillHover" Color="#262626"/>
+  <!-- colorBgElevated -->
+  <SolidColorBrush x:Key="Primer.menuBg" Color="#1F1F1F"/>
+  <!-- colorText -->
+  <SolidColorBrush x:Key="Primer.text" Color="#D9FFFFFF"/>
+  <!-- colorTextSecondary -->
+  <SolidColorBrush x:Key="Primer.textMuted" Color="#A6FFFFFF"/>
+  <!-- colorTextSecondary, as in light -->
+  <SolidColorBrush x:Key="Primer.textFaint" Color="#A6FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.checkBorder" Color="#737373"/>
+  <!-- dark blue-7 (dark colorPrimaryHover): colorPrimary #1668DC is 3.5:1 as text -->
+  <SolidColorBrush x:Key="Primer.accent" Color="#3C89E8"/>
+  <SolidColorBrush x:Key="Primer.onAccent" Color="#141414"/>
+  <!-- dark colorPrimary: white text 5.2:1 -->
+  <SolidColorBrush x:Key="Primer.primaryBg" Color="#1668DC"/>
+  <!-- dark colorWarning -->
+  <SolidColorBrush x:Key="Primer.warn" Color="#D89614"/>
+  <!-- dark colorWarningBg -->
+  <SolidColorBrush x:Key="Primer.warnBg" Color="#2B2111"/>
+  <!-- dark colorSuccess -->
+  <SolidColorBrush x:Key="Primer.ok" Color="#49AA19"/>
+  <!-- dark colorSuccessBg -->
+  <SolidColorBrush x:Key="Primer.okBg" Color="#162312"/>
+  <!-- dark colorInfoBg / colorInfoBorder -->
+  <SolidColorBrush x:Key="Primer.noteBg" Color="#111A2C"/>
+  <SolidColorBrush x:Key="Primer.noteBorder" Color="#15325B"/>
+  <SolidColorBrush x:Key="Primer.noteAccent" Color="#3C89E8"/>
+  <!-- colorBgElevated -->
+  <SolidColorBrush x:Key="Primer.codeBg" Color="#1F1F1F"/>
+  <SolidColorBrush x:Key="Primer.codeText" Color="#D9FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.diffGreen" Color="#49AA19"/>
+  <!-- dark colorErrorTextHover: dark colorError #DC4446 is 4.4:1 -->
+  <SolidColorBrush x:Key="Primer.diffRed" Color="#E86E6B"/>
   <SolidColorBrush x:Key="Primer.primaryText" Color="#FFFFFF"/>
-  <SolidColorBrush x:Key="Primer.warningText" Color="#0D1117"/>
-  <SolidColorBrush x:Key="Primer.countWarningBg" Color="#26D29922"/>
-  <SolidColorBrush x:Key="Primer.focusOuter" Color="#E6EDF3"/>
-  <SolidColorBrush x:Key="Primer.focusInner" Color="#161B22"/>
-  <SolidColorBrush x:Key="Primer.selectedText" Color="#E6EDF3"/>
-  <SolidColorBrush x:Key="Primer.hoverText" Color="#E6EDF3"/>
+  <SolidColorBrush x:Key="Primer.warningText" Color="#141414"/>
+  <SolidColorBrush x:Key="Primer.countWarningBg" Color="#2B2111"/>
+  <SolidColorBrush x:Key="Primer.focusOuter" Color="#3C89E8"/>
+  <SolidColorBrush x:Key="Primer.focusInner" Color="#141414"/>
+  <SolidColorBrush x:Key="Primer.selectedText" Color="#D9FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.hoverText" Color="#D9FFFFFF"/>
+
+  <!-- Ant tokens without a Primer counterpart. -->
+  <SolidColorBrush x:Key="Ant.colorPrimary" Color="#1668DC"/>
+  <SolidColorBrush x:Key="Ant.colorPrimaryHover" Color="#1554AD"/>
+  <SolidColorBrush x:Key="Ant.colorPrimaryActive" Color="#15417E"/>
+  <SolidColorBrush x:Key="Ant.colorLinkHover" Color="#65A9F3"/>
+  <SolidColorBrush x:Key="Ant.controlItemBgActiveHover" Color="#112545"/>
+  <SolidColorBrush x:Key="Ant.colorWhite" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Ant.colorBorder" Color="#424242"/>
+  <SolidColorBrush x:Key="Ant.colorError" Color="#E86E6B"/>
+  <SolidColorBrush x:Key="Ant.colorErrorBg" Color="#2C1618"/>
+  <SolidColorBrush x:Key="Ant.colorErrorBorder" Color="#5B2526"/>
+  <!-- dark colorErrorActive and the two darker steps: white text 6.1:1 and above -->
+  <SolidColorBrush x:Key="Ant.colorErrorSolid" Color="#AD393A"/>
+  <SolidColorBrush x:Key="Ant.colorErrorSolidHover" Color="#7E2E2F"/>
+  <SolidColorBrush x:Key="Ant.colorErrorSolidActive" Color="#5B2526"/>
+  <SolidColorBrush x:Key="Ant.colorWarningBorder" Color="#594214"/>
+  <SolidColorBrush x:Key="Ant.colorSuccessBorder" Color="#274916"/>
+  <SolidColorBrush x:Key="Ant.colorFillSecondary" Color="#1FFFFFFF"/>
+  <SolidColorBrush x:Key="Ant.colorBgContainerDisabled" Color="#14FFFFFF"/>
+  <SolidColorBrush x:Key="Ant.colorTextDisabled" Color="#40FFFFFF"/>
+  <SolidColorBrush x:Key="Ant.colorBgMask" Color="#73000000"/>
+  <SolidColorBrush x:Key="Ant.colorBgSpotlight" Color="#424242"/>
+  <SolidColorBrush x:Key="Ant.colorTextLightSolid" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Ant.boxShadowKey" Color="#1F000000"/>
+  <SolidColorBrush x:Key="Ant.boxShadowUmbra" Color="#14000000"/>
+  <SolidColorBrush x:Key="Ant.boxShadowAmbient" Color="#0D000000"/>
 </ResourceDictionary>

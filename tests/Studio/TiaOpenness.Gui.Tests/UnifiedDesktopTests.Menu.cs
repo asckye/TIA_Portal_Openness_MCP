@@ -220,11 +220,11 @@ public sealed partial class UnifiedDesktopTests
 
     [Theory]
     [InlineData(MessageBoxButton.OK, 0, MessageBoxResult.OK)]
-    [InlineData(MessageBoxButton.OKCancel, 0, MessageBoxResult.OK)]
-    [InlineData(MessageBoxButton.OKCancel, 1, MessageBoxResult.Cancel)]
-    [InlineData(MessageBoxButton.YesNoCancel, 0, MessageBoxResult.Yes)]
+    [InlineData(MessageBoxButton.OKCancel, 0, MessageBoxResult.Cancel)]
+    [InlineData(MessageBoxButton.OKCancel, 1, MessageBoxResult.OK)]
+    [InlineData(MessageBoxButton.YesNoCancel, 0, MessageBoxResult.Cancel)]
     [InlineData(MessageBoxButton.YesNoCancel, 1, MessageBoxResult.No)]
-    [InlineData(MessageBoxButton.YesNoCancel, 2, MessageBoxResult.Cancel)]
+    [InlineData(MessageBoxButton.YesNoCancel, 2, MessageBoxResult.Yes)]
     public void Themed_dialog_buttons_preserve_message_box_results(MessageBoxButton buttons, int index, MessageBoxResult expected)
     {
         wpf.Run(() =>

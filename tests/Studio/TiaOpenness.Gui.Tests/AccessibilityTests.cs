@@ -361,7 +361,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
         window.Navigate(page); WpfContext.Drain(); window.UpdateLayout();
         string title = page switch
         {
-            "Mcp" => "Desktop.Configuration", "Engineering" => "Shell.Engineering", "Blocks" => "Tree.ProgramBlocks",
+            "Mcp" => "Desktop.Configuration", "Engineering" => "Shell.Engineering", "Blocks" => "Shell.Engineering",
             "VersionControl" => "Shell.VersionControl", "Calls" => "Shell.Calls", "Audit" => "Shell.Audit",
             "Environment" => "Shell.Environment", _ => "Tab.Log",
         };

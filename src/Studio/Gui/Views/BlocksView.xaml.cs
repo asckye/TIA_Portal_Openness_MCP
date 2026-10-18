@@ -59,10 +59,12 @@ public sealed partial class BlocksView : UserControl, IDisposable
         if (e.Key != Key.Space || e.OriginalSource is CheckBox || BlocksList.SelectedItem is not BlockRow row) return;
         row.Selected = !row.Selected; e.Handled = true;
     }
-    private void OnExportOptions(object sender, RoutedEventArgs e) => Options.Show("Export");
+    // The import/export options open in the 项目 page's options pane, which covers the whole page.
+    internal event EventHandler? TransferOptionsRequested;
+    private void OnExportOptions(object sender, RoutedEventArgs e) => TransferOptionsRequested?.Invoke(this, EventArgs.Empty);
     private void OnExport(object sender, RoutedEventArgs e)
     {
-        if (Model.Engineering.OutputDirectory.Length == 0) Options.Show("Export");
+        if (Model.Engineering.OutputDirectory.Length == 0) TransferOptionsRequested?.Invoke(this, EventArgs.Empty);
         else if (Model.Engineering.Export.CanExecute(null)) Model.Engineering.Export.Execute(null);
     }
     private void OnSelectAll(object sender, RoutedEventArgs e) => Model.Engineering.SelectAll(true);

@@ -27,11 +27,14 @@ public partial class MainWindow
         InitializeFeaturePages();
         SettingsContent.Initialize(Approvals);
         SettingsContent.DisableApprovalRequested += OnDisableApprovalRequested;
-        OperationsContent.EnvironmentRequested += OnEnvironmentRequested;
+        EngineeringSideContent.EnvironmentRequested += OnEnvironmentRequested;
+        EngineeringSideContent.InspectionRulesRequested += OnInspectionRulesRequested;
+        BlocksContent.TransferOptionsRequested += OnTransferOptionsRequested;
         Approvals.PropertyChanged += OnApprovalChanged;
         _model.Session.PropertyChanged += OnShellSessionChanged;
         _model.Engineering.PropertyChanged += OnShellSessionChanged;
         Loc.Current.LanguageChanged += OnShellLanguageChanged;
+        Root.SizeChanged += OnShellSizeChanged;
         UpdateLanguage();
         UpdateShell();
         Navigate("Engineering");
@@ -46,7 +49,10 @@ public partial class MainWindow
         DisposeFeaturePages();
         SettingsContent.Dispose();
         SettingsContent.DisableApprovalRequested -= OnDisableApprovalRequested;
-        OperationsContent.EnvironmentRequested -= OnEnvironmentRequested;
+        EngineeringSideContent.EnvironmentRequested -= OnEnvironmentRequested;
+        EngineeringSideContent.InspectionRulesRequested -= OnInspectionRulesRequested;
+        BlocksContent.TransferOptionsRequested -= OnTransferOptionsRequested;
+        Root.SizeChanged -= OnShellSizeChanged;
         Approvals.PropertyChanged -= OnApprovalChanged;
         (Approvals as IDisposable)?.Dispose();
         _model.Session.PropertyChanged -= OnShellSessionChanged;
@@ -62,6 +68,36 @@ public partial class MainWindow
         Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => { _shellQueued = false; UpdateShell(); }));
     }
     private void OnEnvironmentRequested(object? sender, EventArgs e) => NavigateGuarded("Environment");
+    private void OnInspectionRulesRequested(object? sender, EventArgs e) => OperationsContent.ShowControlInspectionRules();
+    private void OnTransferOptionsRequested(object? sender, EventArgs e) => OperationsContent.ShowTransferOptions();
+
+    // Ant Sider: collapsed to its icons below the lg breakpoint (992 px) and expanded above it; the trigger
+    // overrides that until the width crosses the breakpoint again. The header status gives way below 860 px.
+    // Widths are those of the shell content, so a detached render host follows the same rules.
+    private bool? _siderCollapsed;
+    private bool _belowBreakpoint;
+    private double ShellWidth => Root.ActualWidth;
+    private void OnShellSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        bool below = ShellWidth > 0 && ShellWidth < 992;
+        if (below != _belowBreakpoint) { _belowBreakpoint = below; _siderCollapsed = null; }
+        UpdateSider();
+    }
+    private void OnSiderToggle(object sender, RoutedEventArgs e) { _siderCollapsed = !(_siderCollapsed ?? _belowBreakpoint); UpdateSider(); }
+    private void UpdateSider()
+    {
+        bool compact = _siderCollapsed ?? _belowBreakpoint;
+        Sider.Width = compact ? 56 : 216;
+        Controls.Ux.SetCompact(Sider, compact);
+        BrandTitle.Visibility = BrandVersion.Visibility = compact ? Visibility.Collapsed : Visibility.Visible;
+        string toggle = compact ? "Shell.ExpandMenu" : "Shell.CollapseMenu";
+        SiderToggle.SetBinding(ContentControl.ContentProperty, TrExtension.CreateBinding(toggle));
+        SiderToggle.SetBinding(System.Windows.Automation.AutomationProperties.NameProperty, TrExtension.CreateBinding(toggle));
+        SiderToggle.SetResourceReference(Controls.Ux.IconProperty, compact ? "Icon.MenuUnfold" : "Icon.MenuFold");
+        StatusInformation.Visibility = ShellWidth > 0 && ShellWidth < 860 ? Visibility.Collapsed : Visibility.Visible;
+    }
+    private void OnLanguage(object sender, RoutedEventArgs e)
+        => Loc.Current.Language = Loc.Current.IsChinese ? AppLanguage.English : AppLanguage.Chinese;
     private void OnShellSessionChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (!HasProject && _page is "Blocks" or "VersionControl") Navigate("Engineering");
@@ -88,9 +124,15 @@ public partial class MainWindow
         RailMcp.Visibility = RailEngineering.Visibility = _model.OfflineDemo ? Visibility.Collapsed : Visibility.Visible;
         SettingsButton.Visibility = _model.OfflineDemo ? Visibility.Collapsed : Visibility.Visible;
         RailVersion.Text = ViewModels.MainViewModel.AppVersion.TrimStart('v');
+        BlocksContent.Visibility = _page is "Engineering" or "Blocks" && HasProject ? Visibility.Visible : Visibility.Collapsed;
+        BreadcrumbGroup.Text = Loc.Current[_page switch
+        {
+            "Engineering" or "Blocks" or "VersionControl" => "Shell.GroupEngineering", "Calls" => "Shell.GroupAi",
+            "Audit" or "Environment" or "Log" => "Shell.GroupOperations", _ => "Shell.GroupConnection",
+        }];
         CurrentPageTitle.Text = Loc.Current[_page switch
         {
-            "Mcp" => "Desktop.Configuration", "Blocks" => "Tree.ProgramBlocks", "VersionControl" => "Shell.VersionControl",
+            "Mcp" => "Desktop.Configuration", "VersionControl" => "Shell.VersionControl",
             "Calls" => "Shell.Calls", "Audit" => "Shell.Audit", "Environment" => "Shell.Environment", "Log" => "Tab.Log",
             _ => "Shell.Engineering",
         }];
@@ -116,8 +158,9 @@ public partial class MainWindow
         OperationsContent.HideOptions();
         BlocksContent.HideOptions();
         VersionControlContent.HideOptions();
-        OperationsContent.Visibility = page == "Engineering" ? Visibility.Visible : Visibility.Collapsed;
-        BlocksContent.Visibility = page == "Blocks" ? Visibility.Visible : Visibility.Collapsed;
+        // 项目 merges the overview and the program blocks: both keys show the same page.
+        OperationsContent.Visibility = page is "Engineering" or "Blocks" ? Visibility.Visible : Visibility.Collapsed;
+        BlocksContent.Visibility = page is "Engineering" or "Blocks" && HasProject ? Visibility.Visible : Visibility.Collapsed;
         EngineeringSideContent.Visibility = page is "Engineering" or "Blocks" ? Visibility.Visible : Visibility.Collapsed;
         VersionControlContent.Visibility = page == "VersionControl" ? Visibility.Visible : Visibility.Collapsed;
         LogContent.Visibility = page == "Log" ? Visibility.Visible : Visibility.Collapsed;
@@ -130,7 +173,6 @@ public partial class MainWindow
         if (page == "VersionControl") _model.IsVcTab = true;
         else if (page == "Log") _model.IsLogTab = true;
         else if (page is "Engineering" or "Blocks") _model.IsBlocksTab = true;
-        SubTabs.Visibility = page is "Engineering" or "Blocks" or "VersionControl" ? Visibility.Visible : Visibility.Collapsed;
         QueueControlSnapshot();
         ((RadioButton)FindName("Rail" + (page is "Blocks" or "VersionControl" ? "Engineering" : page))).IsChecked = true;
         if (page is "Engineering" or "Blocks" or "VersionControl")
@@ -162,13 +204,12 @@ public partial class MainWindow
         Features.SetVisibility(_page == "Calls", _page == "Audit", name == "Approvals", name == "CallDetail");
         DrawerCount.Visibility = name == "Approvals" ? Visibility.Visible : Visibility.Collapsed;
         DrawerCallResult.Visibility = name == "CallDetail" ? Visibility.Visible : Visibility.Collapsed;
-        DrawerPanel.Width = name == "Settings" ? 400 : 440;
+        DrawerPanel.Width = name switch { "Settings" => 400, "Approvals" => 480, _ => 520 };
         SettingsContent.Visibility = name == "Settings" ? Visibility.Visible : Visibility.Collapsed;
         ApprovalsContent.Visibility = name == "Approvals" ? Visibility.Visible : Visibility.Collapsed;
         CallDetailContent.Visibility = name == "CallDetail" ? Visibility.Visible : Visibility.Collapsed;
         DrawerOverlay.Visibility = Visibility.Visible;
-        SettingsButton.SetResourceReference(Control.BackgroundProperty, name == "Settings" ? "Primer.accent" : "Primer.pill");
-        SettingsButton.SetResourceReference(Control.ForegroundProperty, name == "Settings" ? "Primer.onAccent" : "Primer.text");
+        MarkSettingsOpen(name == "Settings");
         UpdateShell();
         _drawerFocus = new Controls.ModalPane(DrawerOverlay, DrawerTitle, CloseDrawer);
     }
@@ -189,9 +230,12 @@ public partial class MainWindow
         DrawerOverlay.Visibility = Visibility.Collapsed;
         _drawerFocus?.Dispose(); _drawerFocus = null;
         QueueControlSnapshot();
-        SettingsButton.SetResourceReference(Control.BackgroundProperty, "Primer.pill");
-        SettingsButton.SetResourceReference(Control.ForegroundProperty, "Primer.text");
+        MarkSettingsOpen(false);
     }
+    // While its drawer is open the settings entry is drawn as the selected menu item, through a complete
+    // style so its hover and disabled states stay consistent.
+    private void MarkSettingsOpen(bool open)
+        => SettingsButton.SetResourceReference(StyleProperty, open ? "Primer.MenuButton.Selected" : "Primer.MenuButton");
     private void OnDisableApprovalRequested(object? sender, EventArgs e)
     {
         ConfirmOverlay.Visibility = Visibility.Visible;

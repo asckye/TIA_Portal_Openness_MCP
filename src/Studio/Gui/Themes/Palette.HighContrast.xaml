@@ -1,4 +1,5 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- High contrast keeps following the Windows system colours; only the token set follows the Ant palettes. -->
   <SolidColorBrush x:Key="Primer.bg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
   <SolidColorBrush x:Key="Primer.card" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
   <SolidColorBrush x:Key="Primer.cardSoft" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
@@ -35,4 +36,31 @@
   <SolidColorBrush x:Key="Primer.focusInner" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
   <SolidColorBrush x:Key="Primer.selectedText" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
   <SolidColorBrush x:Key="Primer.hoverText" Color="{DynamicResource {x:Static SystemColors.ControlTextColorKey}}"/>
+
+  <!-- Ant tokens without a Primer counterpart. Primary graphics use the system highlight pair,
+       solid button hover and active stay on ButtonFace so ButtonText keeps its contrast. -->
+  <SolidColorBrush x:Key="Ant.colorPrimary" Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.colorPrimaryHover" Color="{DynamicResource {x:Static SystemColors.ControlColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.colorPrimaryActive" Color="{DynamicResource {x:Static SystemColors.ControlColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.colorLinkHover" Color="{DynamicResource {x:Static SystemColors.HotTrackColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.controlItemBgActiveHover" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.colorWhite" Color="{DynamicResource {x:Static SystemColors.HighlightTextColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.colorBorder" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.colorError" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.colorErrorBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.colorErrorBorder" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.colorErrorSolid" Color="{DynamicResource {x:Static SystemColors.ControlColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.colorErrorSolidHover" Color="{DynamicResource {x:Static SystemColors.ControlColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.colorErrorSolidActive" Color="{DynamicResource {x:Static SystemColors.ControlColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.colorWarningBorder" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.colorSuccessBorder" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.colorFillSecondary" Color="{DynamicResource {x:Static SystemColors.ControlColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.colorBgContainerDisabled" Color="{DynamicResource {x:Static SystemColors.ControlColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.colorTextDisabled" Color="{DynamicResource {x:Static SystemColors.GrayTextColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.colorBgMask" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.colorBgSpotlight" Color="{DynamicResource {x:Static SystemColors.InfoColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.colorTextLightSolid" Color="{DynamicResource {x:Static SystemColors.InfoTextColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.boxShadowKey" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.boxShadowUmbra" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
+  <SolidColorBrush x:Key="Ant.boxShadowAmbient" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
 </ResourceDictionary>

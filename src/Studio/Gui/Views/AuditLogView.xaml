@@ -2,18 +2,18 @@
   <Grid ux:ResponsiveLayout.Enabled="True">
     <Grid.ColumnDefinitions>
       <ColumnDefinition/>
-      <ColumnDefinition Width="20"/>
+      <ColumnDefinition Width="16"/>
       <ColumnDefinition Width="300"/>
     </Grid.ColumnDefinitions>
     <Grid>
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto"/>
-        <RowDefinition Height="14"/>
+        <RowDefinition Height="0"/>
         <RowDefinition/>
       </Grid.RowDefinitions>
-      <Border Style="{StaticResource Primer.Container}">
+      <Border Style="{StaticResource Primer.PageHead}">
         <StackPanel>
-          <DockPanel Height="30">
+          <DockPanel MinHeight="32">
             <Button AutomationProperties.Name="{l:Tr Audit.Verify}" x:Name="VerifyButton" DockPanel.Dock="Right" Content="{l:Tr Audit.Verify}" Style="{StaticResource Primer.OutlinedAccent}" Click="OnVerify"/>
             <StackPanel Orientation="Horizontal">
               <TextBlock Text="{l:Tr Shell.Audit}" FontSize="{DynamicResource Ui.FontSize.Title}" FontWeight="SemiBold" VerticalAlignment="Center" AutomationProperties.HeadingLevel="Level1"/>
@@ -95,7 +95,7 @@
               </DataTemplate>
             </ListBox.ItemTemplate>
           </ListBox>
-          <TextBlock Grid.Row="1" Text="{l:Tr Shell.AuditEmpty}" Style="{StaticResource Primer.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding AuditEmpty, Converter={StaticResource BoolToVisibility}}"/>
+          <ContentControl Grid.Row="1" Style="{StaticResource Primer.Empty}" Content="{l:Tr Shell.AuditEmpty}" Visibility="{Binding AuditEmpty, Converter={StaticResource BoolToVisibility}}"/>
         </Grid>
       </Border>
     </Grid>

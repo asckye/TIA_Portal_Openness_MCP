@@ -36,7 +36,7 @@ public class PrimerInteractionTests(WpfContext wpf)
                 foreach (var theme in new[] { AppTheme.Light, AppTheme.Dark })
                 {
                     ThemeManager.Current.Theme = theme; WpfContext.Drain();
-                    Assert.Equal(theme == AppTheme.Light ? Color.FromRgb(255, 241, 229) : ((SolidColorBrush)Application.Current.FindResource("Primer.warnBg")).Color, ((SolidColorBrush)pending.Background).Color);
+                    Assert.Equal(theme == AppTheme.Light ? Color.FromRgb(255, 251, 230) : ((SolidColorBrush)Application.Current.FindResource("Primer.warnBg")).Color, ((SolidColorBrush)pending.Background).Color);
                     Assert.Equal(((SolidColorBrush)Application.Current.FindResource("Primer.warn")).Color, ((SolidColorBrush)pending.BorderBrush).Color);
                 }
             }

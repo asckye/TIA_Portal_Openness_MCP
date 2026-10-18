@@ -2,63 +2,75 @@
   <Grid ux:ResponsiveLayout.Enabled="True">
     <Grid.ColumnDefinitions>
       <ColumnDefinition/>
-      <ColumnDefinition Width="20"/>
+      <ColumnDefinition Width="16"/>
       <ColumnDefinition Width="300"/>
     </Grid.ColumnDefinitions>
     <Grid>
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto"/>
-        <RowDefinition Height="14"/>
+        <RowDefinition Height="0"/>
         <RowDefinition/>
       </Grid.RowDefinitions>
-      <Border Style="{StaticResource Primer.Container}">
-        <DockPanel>
-          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-            <Button AutomationProperties.Name="{l:Tr Env.Recheck}" x:Name="RecheckButton" Content="{l:Tr Env.Recheck}" Style="{StaticResource Primer.Secondary}" Click="OnRecheck"/>
-            <Button AutomationProperties.Name="{l:Tr Env.Generate}" x:Name="GenerateButton" Content="{l:Tr Env.Generate}" Style="{StaticResource Primer.OutlinedAccent}" Margin="14,0,0,0" Click="OnGenerate" IsEnabled="{Binding DiagnosticCanStart}"/>
-          </StackPanel>
-          <StackPanel>
-            <TextBlock Text="{l:Tr Shell.Environment}" FontSize="{DynamicResource Ui.FontSize.Title}" FontWeight="SemiBold" AutomationProperties.HeadingLevel="Level1"/>
-            <ContentControl Style="{StaticResource Primer.StatusChip}" Tag="{Binding EnvironmentTone}" HorizontalAlignment="Left" Margin="0,4,0,0">
-              <TextBlock Text="{Binding EnvironmentSummary}" Style="{StaticResource Primer.StatusText}"/>
-            </ContentControl>
-          </StackPanel>
-        </DockPanel>
+      <Border Style="{StaticResource Primer.PageHead}">
+        <StackPanel>
+          <DockPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+              <Button AutomationProperties.Name="{l:Tr Env.Recheck}" x:Name="RecheckButton" Content="{l:Tr Env.Recheck}" ux:Ux.Icon="{DynamicResource Icon.Reload}" Style="{StaticResource Primer.Secondary}" Click="OnRecheck"/>
+              <Button AutomationProperties.Name="{l:Tr Env.Generate}" x:Name="GenerateButton" Content="{l:Tr Env.Generate}" ux:Ux.Icon="{DynamicResource Icon.Download}" Style="{StaticResource Primer.Run}" Margin="8,0,0,0" Click="OnGenerate" IsEnabled="{Binding DiagnosticCanStart}"/>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock Text="{l:Tr Shell.Environment}" Style="{StaticResource Primer.PageTitle}"/>
+              <ContentControl Style="{StaticResource Primer.StatusChip}" Tag="{Binding EnvironmentTone}" HorizontalAlignment="Left" Margin="0,4,0,0">
+                <TextBlock Text="{Binding EnvironmentSummary}" Style="{StaticResource Primer.StatusText}"/>
+              </ContentControl>
+            </StackPanel>
+          </DockPanel>
+          <!-- Ant Alert (warning, with description) while any check needs action. -->
+          <Border x:Name="AttentionAlert" Style="{StaticResource Primer.Alert.Warning}" Margin="0,16,0,0" Padding="16,12" Visibility="{Binding EnvironmentNeedsAction, Converter={StaticResource BoolToVisibility}}">
+            <DockPanel>
+              <Path DockPanel.Dock="Left" Style="{StaticResource Primer.AlertIcon.Warning}" Width="16" Height="16" VerticalAlignment="Top" Margin="0,2,12,0"/>
+              <StackPanel>
+                <TextBlock Text="{Binding EnvironmentSummary}" Style="{StaticResource Primer.Text}" FontSize="{DynamicResource Ui.FontSize.Large}"/>
+                <TextBlock Text="{Binding EnvironmentAttention}" Style="{StaticResource Primer.Text}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+              </StackPanel>
+            </DockPanel>
+          </Border>
+        </StackPanel>
       </Border>
       <ScrollViewer x:Name="GroupsScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <ItemsControl x:Name="GroupList" ItemsSource="{Binding EnvironmentGroups}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <Border Style="{StaticResource Primer.TableContainer}" Margin="0,0,0,12">
-                <StackPanel>
-                  <Border Style="{StaticResource Primer.HeaderStrip}">
+                <Expander AutomationProperties.Name="{Binding Name}" Style="{StaticResource Primer.Collapse}">
+                  <Expander.Header>
                     <DockPanel>
-                      <ContentControl DockPanel.Dock="Right" Style="{StaticResource Primer.StatusChip}">
+                      <ContentControl DockPanel.Dock="Right" Style="{StaticResource Primer.StatusChip}" Tag="{Binding Tone}">
                         <TextBlock Text="{Binding Summary}" Style="{StaticResource Primer.StatusText}"/>
                       </ContentControl>
-                      <Border Width="3" Height="14" Margin="0,0,8,0" Style="{StaticResource Primer.SectionMark}"/>
                       <TextBlock Text="{Binding Name}" Style="{StaticResource Primer.ContainerTitle}" FontSize="{DynamicResource Ui.FontSize.Control}"/>
                     </DockPanel>
-                  </Border>
+                  </Expander.Header>
                   <ItemsControl ItemsSource="{Binding Rows}">
                     <ItemsControl.ItemTemplate>
                       <DataTemplate>
                         <Border Style="{StaticResource Primer.EnvironmentRow}">
                           <Expander AutomationProperties.Name="{Binding Name}" Style="{StaticResource Primer.Expander}">
                             <Expander.Header>
-                              <Grid Height="36">
+                              <Grid MinHeight="52">
                                 <Grid.ColumnDefinitions>
-                                  <ColumnDefinition Width="18"/>
-                                  <ColumnDefinition Width="1.2*"/>
-                                  <ColumnDefinition Width="1.6*"/>
+                                  <ColumnDefinition Width="38"/>
+                                  <ColumnDefinition Width="*"/>
                                   <ColumnDefinition Width="Auto"/>
-                                  <ColumnDefinition Width="20"/>
+                                  <ColumnDefinition Width="28"/>
                                 </Grid.ColumnDefinitions>
-                                <Ellipse Style="{StaticResource Primer.StatusDot}" Tag="{Binding Tone}" HorizontalAlignment="Left"/>
-                                <TextBlock Grid.Column="1" Text="{Binding Name}" Style="{StaticResource Primer.Text}" FontSize="{DynamicResource Ui.FontSize.Control}" FontWeight="SemiBold" Margin="6,0,12,0" ToolTip="{Binding Name}"/>
-                                <TextBlock Grid.Column="2" Text="{Binding Result}" Style="{StaticResource Primer.ToneText}" Tag="{Binding ResultTone}" FontSize="{DynamicResource Ui.FontSize.Caption}" ToolTip="{Binding Result}" Margin="0,0,8,0"/>
-                                <Button AutomationProperties.Name="{Binding Fix}" Grid.Column="3" Content="{Binding Fix}" Style="{StaticResource Primer.OutlinedAccent}" Visibility="{Binding HasFix, Converter={StaticResource BoolToVisibility}}" Click="OnFix"/>
-                                <TextBlock Grid.Column="4" VerticalAlignment="Center" HorizontalAlignment="Right" Style="{StaticResource Primer.ExpanderChevron.textFaint}"/>
+                                <Path Style="{StaticResource Primer.ToneIcon}" Tag="{Binding Tone}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="16,10,0,0"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,6,12,6">
+                                  <TextBlock Text="{Binding Name}" Style="{StaticResource Primer.Text}" ToolTip="{Binding Name}"/>
+                                  <TextBlock Text="{Binding Result}" Style="{StaticResource Primer.ToneText}" Tag="{Binding ResultTone}" ToolTip="{Binding Result}" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <Button AutomationProperties.Name="{Binding Fix}" Grid.Column="2" Content="{Binding Fix}" Style="{StaticResource Primer.Run.Small}" VerticalAlignment="Center" Visibility="{Binding HasFix, Converter={StaticResource BoolToVisibility}}" Click="OnFix"/>
+                                <Path Grid.Column="3" VerticalAlignment="Center" HorizontalAlignment="Center" Style="{StaticResource Primer.ExpanderChevron.textFaint}"/>
                               </Grid>
                             </Expander.Header>
                             <TextBlock Text="{Binding Detail}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
@@ -67,7 +79,7 @@
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
-                </StackPanel>
+                </Expander>
               </Border>
             </DataTemplate>
           </ItemsControl.ItemTemplate>

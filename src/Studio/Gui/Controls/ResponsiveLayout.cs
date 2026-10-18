@@ -47,7 +47,9 @@ public static class ResponsiveLayout
             grid.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
             {
                 _queued = false;
-                bool narrow = grid.ActualWidth > 0 && grid.ActualWidth < 1008;
+                // Ant's xl breakpoint: with the 216 px side menu and 24 px padding a 1200 px window leaves
+                // about 934 px, so the result column stacks below the content under that width.
+                bool narrow = grid.ActualWidth > 0 && grid.ActualWidth < 930;
                 EnsureContextToggle();
                 if (narrow && _collapsed) CollapseContext(false);
                 if (_toggle != null) _toggle.Visibility = !narrow && grid.ActualWidth < 1232
@@ -58,9 +60,11 @@ public static class ResponsiveLayout
                     _children = grid.Children.Cast<UIElement>().Where(child => child != _toggle).ToList();
                     grid.Children.Clear();
                     var stack = new StackPanel();
-                    foreach (var child in _children.OrderBy(Grid.GetColumn))
+                    foreach (var child in _children.OrderBy(child => child is FrameworkElement head && IsPageHead(head) ? 0 : 1)
+                        .ThenBy(Grid.GetColumn).ThenBy(Grid.GetRow))
                     {
-                        if (child is FrameworkElement view)
+                        // A page head in its own first row keeps its natural height above the stack.
+                        if (child is FrameworkElement view && !IsPageHead(view))
                         {
                             _minimums[view] = view.MinHeight;
                             _heights[view] = view.Height;
@@ -75,6 +79,7 @@ public static class ResponsiveLayout
                     _scroll = new ScrollViewer { Content = stack, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                         HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
                     Grid.SetColumnSpan(_scroll, grid.ColumnDefinitions.Count);
+                    Grid.SetRowSpan(_scroll, Math.Max(1, grid.RowDefinitions.Count));
                     grid.Children.Add(_scroll);
                 }
                 else
@@ -92,13 +97,17 @@ public static class ResponsiveLayout
             }));
         }
 
+        private bool IsPageHead(FrameworkElement view)
+            => grid.RowDefinitions.Count > 1 && Grid.GetRow(view) == 0 && Grid.GetRowSpan(view) == 1;
+
         private void EnsureContextToggle()
         {
             if (_toggle != null || grid.ColumnDefinitions.Count < 3) return;
             _side = grid.Children.OfType<FrameworkElement>().FirstOrDefault(child => Grid.GetColumn(child) == 2);
             if (_side == null) return;
-            _toggle = new ToggleButton { Content = "◂", Width = 32, Height = 32, VerticalAlignment = VerticalAlignment.Top,
-                HorizontalAlignment = HorizontalAlignment.Right };
+            // The fold sits in the 24 px content gutter above the page, so it never covers a card header.
+            _toggle = new ToggleButton { Content = Chevron("Icon.ChevronLeft"), Width = 24, Height = 24, VerticalAlignment = VerticalAlignment.Top,
+                HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, -24, 0, 0) };
             _toggle.SetResourceReference(FrameworkElement.StyleProperty, "Primer.ContextToggle");
             _toggle.SetBinding(AutomationProperties.NameProperty, Localization.TrExtension.CreateBinding("Layout.HideContext"));
             _toggle.SetBinding(FrameworkElement.ToolTipProperty, Localization.TrExtension.CreateBinding("Layout.HideContext"));
@@ -114,7 +123,7 @@ public static class ResponsiveLayout
                 }
                 Queue();
             };
-            Grid.SetColumn(_toggle, 2); grid.Children.Add(_toggle);
+            Grid.SetColumn(_toggle, 2); Grid.SetRow(_toggle, 0); grid.Children.Add(_toggle);
         }
 
         private void CollapseContext(bool collapse)
@@ -133,7 +142,7 @@ public static class ResponsiveLayout
                 grid.ColumnDefinitions[1].Width = collapse ? new GridLength(0) : _gapWidth;
                 _collapsed = collapse;
                 _toggle.IsChecked = collapse;
-                _toggle.Content = collapse ? "▸" : "◂";
+                _toggle.Content = Chevron(collapse ? "Icon.ChevronRight" : "Icon.ChevronLeft");
                 Grid.SetColumn(_toggle, collapse ? 0 : 2);
                 _toggle.SetBinding(AutomationProperties.NameProperty, collapse
                     ? Localization.TrExtension.CreateBinding("Layout.ShowContext")
@@ -143,6 +152,15 @@ public static class ResponsiveLayout
                     : Localization.TrExtension.CreateBinding("Layout.HideContext"));
             }
             finally { _changing = false; }
+        }
+
+        // The fold glyph is an Icons.xaml chevron drawn in the button's text colour.
+        private static System.Windows.Shapes.Path Chevron(string icon)
+        {
+            var glyph = new System.Windows.Shapes.Path();
+            glyph.SetResourceReference(FrameworkElement.StyleProperty, "Primer.ButtonIcon");
+            glyph.SetResourceReference(System.Windows.Shapes.Path.DataProperty, icon);
+            return glyph;
         }
     }
 }

@@ -121,7 +121,7 @@ public class MainWindowTests(WpfContext wpf)
             using var rendered = Render();
 
             var labels = Descendants<TextBlock>(rendered.Host).Select(t => t.Text).ToList();
-            Assert.Contains("概览", labels);
+            Assert.Contains("项目", labels);
             Assert.Contains("尚未打开项目", labels);
         });
     }

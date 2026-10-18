@@ -35,6 +35,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     private bool _queued, _callsVisible = true, _auditVisible = true, _drawerVisible = true, _detailVisible, _verifying;
     private Task? _verificationTask;
     private int _snapshotCount;
+    private (int Pending, int Failed, long? AverageMs) _callStats;
+    private bool _allCalls = true;
     private string _connectionJson = "{}", _connectionSource = "";
     public long RefreshCount { get; private set; }
     private EnvironmentGroupRow[] _groups = [];
@@ -63,7 +65,12 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
 
     public bool WriteOnly { get => _writeOnly; set { if (Set(ref _writeOnly, value)) RefreshCalls(); } }
     public bool FailOnly { get => _failOnly; set { if (Set(ref _failOnly, value)) RefreshCalls(); } }
-    public bool ReleaseOnly { get => _releaseOnly; set { if (Set(ref _releaseOnly, value)) RefreshCalls(); } }
+    public bool ReleaseOnly { get => _releaseOnly; set { if (Set(ref _releaseOnly, value)) { RefreshCalls(); Raise(nameof(ReleaseChoice)); } } }
+    /// <summary>The release select: 0 shows every release, 1 only <see cref="Release"/> (the <see cref="ReleaseOnly"/> filter).</summary>
+    public int ReleaseChoice { get => ReleaseOnly ? 1 : 0; set => ReleaseOnly = value == 1; }
+    /// <summary>True while none of the write, failure and actor filters is set; the first segment of the filter bar.</summary>
+    public bool AllCalls => _allCalls;
+    public void ClearCallFilters() { WriteOnly = FailOnly = HumanOnly = AiOnly = false; Raise(nameof(AllCalls)); }
     public bool HumanOnly { get => _humanOnly; set { if (Set(ref _humanOnly, value)) { if (value) AiOnly = false; RefreshCalls(); } } }
     public bool AiOnly { get => _aiOnly; set { if (Set(ref _aiOnly, value)) { if (value) HumanOnly = false; RefreshCalls(); } } }
     public string Search { get => _search; set { if (Set(ref _search, value)) RefreshCalls(); } }
@@ -75,6 +82,11 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public bool CallsEmpty => _calls.Count == 0;
     public string CallsCount => Loc.Current.T("Calls.Count", _snapshotCount, Approvals.PendingCount);
     public string CallEmptyTitle => Loc.Current[_snapshotCount == 0 ? "Calls.EmptyTitle" : "Calls.NoMatches"];
+    // Statistic cards over the same snapshot the count line uses: the journal plus pending approvals, before filters.
+    public int CallStatTotal => _snapshotCount;
+    public int CallStatPending => _callStats.Pending;
+    public int CallStatFailed => _callStats.Failed;
+    public string CallStatAverage => _callStats.AverageMs is { } ms ? ms.ToString("N0") : "—";
     public CallRow? SelectedCall => _selectedCall != null && _callCache.TryGetValue(_selectedCall, out var row) ? row : null;
     public string Address => string.IsNullOrEmpty(Journal.Connection.Address) ? Loc.Current["Feature.NotConnected"] : Journal.Connection.Address;
     public string Transport => string.IsNullOrEmpty(Journal.Connection.Transport) ? "—" : Journal.Connection.Transport;
@@ -148,6 +160,13 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public IReadOnlyList<EnvironmentGroupRow> EnvironmentGroups => _groups;
     public string EnvironmentSummary => CheckSummary(Environment.Groups.SelectMany(g => g.Rows).ToArray());
     public FeatureTone EnvironmentTone => CheckTone(Environment.Groups.SelectMany(g => g.Rows).ToArray());
+    /// <summary>Shows the warning Alert above the groups while any check warns or fails.</summary>
+    public bool EnvironmentNeedsAction => EnvironmentTone == FeatureTone.Warning;
+    /// <summary>The menu badge: checks that warn or fail.</summary>
+    public int EnvironmentAttentionCount => Environment.Groups.SelectMany(g => g.Rows).Count(r => r.Status is CheckStatus.Warn or CheckStatus.Fail);
+    /// <summary>The Alert description: each check that needs action with its result.</summary>
+    public string EnvironmentAttention => string.Join(Loc.Current.IsChinese ? "；" : "; ", Environment.Groups.SelectMany(g => g.Rows)
+        .Where(r => r.Status is CheckStatus.Warn or CheckStatus.Fail).Select(r => r.Name.Resolve() + " · " + r.Result.Resolve()));
     public string LogTail => string.Join("\n", Environment.LogTail);
     public bool DiagnosticCanStart => !DiagnosticRunning;
     public bool DiagnosticIdle => Diagnostics.Progress.State == DiagnosticState.Idle;
@@ -233,7 +252,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         if (_dirty.ContainsKey(Environment))
         {
             _groups = Environment.Groups.Select(g => new EnvironmentGroupRow(g)).ToArray();
-            Notify(nameof(EnvironmentGroups), nameof(EnvironmentSummary), nameof(EnvironmentTone), nameof(LogTail));
+            Notify(nameof(EnvironmentGroups), nameof(EnvironmentSummary), nameof(EnvironmentTone), nameof(EnvironmentNeedsAction), nameof(EnvironmentAttention), nameof(EnvironmentAttentionCount), nameof(LogTail));
         }
         if (_dirty.ContainsKey(Diagnostics)) Notify(nameof(DiagnosticCanStart), nameof(DiagnosticIdle), nameof(DiagnosticRunning),
             nameof(DiagnosticDone), nameof(DiagnosticLabel), nameof(DiagnosticTone), nameof(DiagnosticStep), nameof(DiagnosticPercent), nameof(DiagnosticPath));
@@ -247,7 +266,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         foreach (var row in _requests) row.RefreshLanguage();
         _groups = Environment.Groups.Select(g => new EnvironmentGroupRow(g)).ToArray();
         RefreshCalls(); RefreshAudit(languageChanged: true);
-        Notify(nameof(EnvironmentGroups), nameof(EnvironmentSummary), nameof(EnvironmentTone), nameof(PendingSummary), nameof(ApprovalSetting),
+        Notify(nameof(EnvironmentGroups), nameof(EnvironmentSummary), nameof(EnvironmentTone), nameof(EnvironmentNeedsAction), nameof(EnvironmentAttention), nameof(EnvironmentAttentionCount), nameof(PendingSummary), nameof(ApprovalSetting),
             nameof(PendingCount), nameof(AuditCount), nameof(Coverage), nameof(FollowLabel), nameof(ReleaseFilter));
         NotifyVerification();
     });
@@ -285,7 +304,13 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
             .OrderBy(c => c.Result == CallResult.Pending ? 0 : 1).ThenByDescending(c => c.Time).Select(c => _callCache[c.JournalKey]).ToArray();
         Sync(_calls, next);
         if ((previousCount == 0) != (_calls.Count == 0)) Raise(nameof(CallsEmpty));
-        if (previousSnapshotCount != _snapshotCount) Notify(nameof(CallsCount), nameof(CallEmptyTitle));
+        if (previousSnapshotCount != _snapshotCount) Notify(nameof(CallsCount), nameof(CallEmptyTitle), nameof(CallStatTotal));
+        var timed = records.Where(c => c.DurationMs != null).ToArray();
+        var stats = (records.Count(c => c.Result == CallResult.Pending), records.Count(c => c.Result is CallResult.Failed or CallResult.Partial or CallResult.Unknown),
+            timed.Length == 0 ? (long?)null : (long)Math.Round(timed.Average(c => (double)c.DurationMs!.Value)));
+        if (stats != _callStats) { _callStats = stats; Notify(nameof(CallStatPending), nameof(CallStatFailed), nameof(CallStatAverage)); }
+        bool all = !(WriteOnly || FailOnly || HumanOnly || AiOnly);
+        if (all != _allCalls) { _allCalls = all; Raise(nameof(AllCalls)); }
         if (!ReferenceEquals(previousSelected, SelectedCall)) Raise(nameof(SelectedCall));
     }
     private void RefreshRequests()
@@ -517,6 +542,7 @@ public sealed record EnvironmentGroupRow(EnvironmentGroup Group)
 {
     public string Name => Group.Name.Resolve();
     public string Summary => FeaturePagesViewModel.CheckSummary(Group.Rows);
+    public FeatureTone Tone => FeaturePagesViewModel.CheckTone(Group.Rows);
     public IReadOnlyList<EnvironmentRow> Rows => Group.Rows.Select(r => new EnvironmentRow(r)).ToArray();
 }
 

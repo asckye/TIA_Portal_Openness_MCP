@@ -4,7 +4,7 @@
 - 日期：2026-10-11
 - 决策者：维护者
 - 置信度：高
-- 相关：[设计规范索引](../design-spec/README.md)；[C# 与 .NET API 设计规范](../design-spec/csharp-design.md)；[V4 工具协议规范](../design-spec/v4-protocol.md)；[工作台界面设计规范](../design-spec/workbench-ui.md)；[文档写作规范](../design-spec/documentation-style.md)；[ADR 0016](0016-architecture-decision-records.md)；任务 P8-60–P8-64
+- 相关：[设计规范索引](../design-spec/README.md)；[C# 与 .NET API 设计规范](../design-spec/csharp-design.md)；[V4 工具协议规范](../design-spec/v4-protocol.md)；[工作台界面设计规范](../design-spec/workbench-ui.md)；[文档写作规范](../design-spec/documentation-style.md)；[ADR 0016](0016-architecture-decision-records.md)；任务 P8-60–P8-64；[ADR 0018](0018-workbench-ant-design.md)（工作台视觉规范改为 Ant Design v5）
 
 ## 背景
 

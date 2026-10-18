@@ -49,7 +49,7 @@ public class StringsTests(WpfContext wpf)
     {
         Assert.Equal("一页连接 TIA 与 AI", Strings.Chinese["Config.RemoteTitle"]);
         Assert.Equal("同一台电脑，一次完成", Strings.Chinese["Config.LocalTitle"]);
-        Assert.Equal("Engine & MCP settings…", Strings.English["Shell.Settings"]);
+        Assert.Equal("Engine settings", Strings.English["Shell.Settings"]);
         Assert.Equal("写操作审批", Strings.Chinese["Settings.Approval"]);
     }
 

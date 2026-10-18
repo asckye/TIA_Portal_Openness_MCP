@@ -1,78 +1,94 @@
 <UserControl xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:views="clr-namespace:TiaOpenness.Gui.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Name="PageRoot" x:Class="TiaOpenness.Gui.Views.BlocksView">
+  <!-- 项目 page, left column: the 程序块 card with search, a selection Alert holding the bulk actions, and the row-selection table. -->
   <Grid>
-    <Grid.RowDefinitions>
-      <RowDefinition Height="Auto" MinHeight="82"/>
-      <RowDefinition Height="14"/>
-      <RowDefinition Height="*"/>
-    </Grid.RowDefinitions>
-    <Border x:Name="BlocksHeaderCard" Style="{StaticResource Primer.Container}">
-      <Grid>
-        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="160"/>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="Auto"/>
-        </Grid.ColumnDefinitions>
-        <StackPanel Margin="0,0,14,0">
-          <TextBlock Text="{l:Tr Tree.ProgramBlocks}" FontSize="{DynamicResource Ui.FontSize.Title}" FontWeight="SemiBold" AutomationProperties.HeadingLevel="Level1"/>
-          <TextBlock Text="{Binding Tag.BlocksSubtitle,ElementName=PageRoot}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}" Margin="0,4,0,0"/>
-        </StackPanel>
-        <StackPanel Grid.Column="1"><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=ControlFilter}" x:Name="AccessibleLabel1" Content="{l:Tr Pages.Filter}" Target="{Binding ElementName=ControlFilter}" Style="{StaticResource Primer.FormLabel}"/>
-<TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}" AutomationProperties.Name="{l:Tr Pages.Filter}" x:Name="ControlFilter" Text="{Binding Engineering.BlockFilter,UpdateSourceTrigger=PropertyChanged}" Tag="{l:Tr Pages.Filter}" Style="{StaticResource Primer.Input}" VerticalAlignment="Center"/></StackPanel>
-        <ux:PrefillMarker x:Name="FilterMarker" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Target="{Binding ElementName=ControlFilter}" Tag="BlockFilter" ClearRequested="OnClearPrefill"/>
-        <Button AutomationProperties.Name="{l:Tr Primer.SelectAll}" Grid.Column="2" Content="{l:Tr Primer.SelectAll}" Click="OnSelectAll" Style="{StaticResource Primer.Secondary}" Margin="14,0,0,0"/>
-        <Button AutomationProperties.Name="{l:Tr Primer.Clear}" Grid.Column="3" Content="{l:Tr Primer.Clear}" Click="OnSelectNone" Style="{StaticResource Primer.Secondary}" Margin="14,0,0,0"/>
-      </Grid>
-    </Border>
-    <Border x:Name="BlocksCard" Grid.Row="2" Style="{StaticResource Primer.TableContainer}">
+    <Border x:Name="BlocksCard" Style="{StaticResource Primer.TableContainer}">
       <Grid>
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto"/>
           <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
           <RowDefinition Height="*"/>
           <RowDefinition Height="Auto"/>
-          <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Border Style="{StaticResource Primer.HeaderStrip}">
+        <Border x:Name="BlocksHeaderCard" Style="{StaticResource Primer.HeaderStrip}">
           <Grid>
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-        <ux:PrefillMarker x:Name="SelectionMarker" Grid.Row="1" VerticalAlignment="Top" Target="{Binding ElementName=BlocksList}" Tag="BlockSelection" ClearRequested="OnClearPrefill"/>
-            <DockPanel>
-              <Button AutomationProperties.Name="{l:Tr Pages.Options}" DockPanel.Dock="Right" Content="{l:Tr Pages.Options}" Click="OnExportOptions" Style="{StaticResource Primer.Quiet}"/>
-              <Button AutomationProperties.Name="{l:Tr Common.Reload}" DockPanel.Dock="Right" Content="{l:Tr Common.Reload}" Command="{Binding Engineering.Refresh}" Style="{StaticResource Primer.Quiet}" Margin="0,0,12,0"/>
-              <TextBlock Text="{Binding Tag.BlocksSummary,ElementName=PageRoot}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <DockPanel VerticalAlignment="Center" Margin="0,0,12,0">
+              <TextBlock DockPanel.Dock="Left" Text="{l:Tr Tree.ProgramBlocks}" Style="{StaticResource Primer.ContainerTitle}" AutomationProperties.HeadingLevel="Level2"/>
+              <TextBlock Text="{Binding Tag.BlocksSummary,ElementName=PageRoot}" Style="{StaticResource Primer.Muted}" Margin="12,0,0,0" ToolTip="{Binding Tag.BlocksSubtitle,ElementName=PageRoot}"/>
             </DockPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+              <Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=ControlFilter}" x:Name="AccessibleLabel1" Content="{l:Tr Pages.Filter}" Target="{Binding ElementName=ControlFilter}" Style="{StaticResource Primer.FormLabel}" Visibility="Collapsed"/>
+              <TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}" AutomationProperties.Name="{l:Tr Pages.Filter}" x:Name="ControlFilter" Text="{Binding Engineering.BlockFilter,UpdateSourceTrigger=PropertyChanged}" Tag="{l:Tr Pages.Filter}" Style="{StaticResource Primer.Input}" Width="200" VerticalAlignment="Center"/>
+              <Button AutomationProperties.Name="{l:Tr Common.Reload}" ToolTip="{l:Tr Common.Reload}" Command="{Binding Engineering.Refresh}" Style="{StaticResource Primer.IconButton}" Width="32" Height="32" Margin="8,0,0,0"><Path Style="{StaticResource Primer.ButtonIcon}" Data="{DynamicResource Icon.Reload}"/></Button>
+              <Button AutomationProperties.Name="{l:Tr Pages.Options}" ToolTip="{l:Tr Primer.Transfer}" Click="OnExportOptions" Style="{StaticResource Primer.IconButton}" Width="32" Height="32" Margin="4,0,0,0"><Path Style="{StaticResource Primer.ButtonIcon}" Data="{DynamicResource Icon.Setting}"/></Button>
+            </StackPanel>
+            <ux:PrefillMarker x:Name="FilterMarker" Grid.Row="1" Grid.ColumnSpan="2" Target="{Binding ElementName=ControlFilter}" Tag="BlockFilter" ClearRequested="OnClearPrefill"/>
           </Grid>
         </Border>
-        <Border Style="{StaticResource Primer.ColumnHeaderStrip}" Grid.Row="1">
+        <Border Grid.Row="1" Margin="16,12,16,12" Style="{StaticResource Primer.SelectionAlert}" Tag="{Binding Tag.HasSelection,ElementName=PageRoot}">
           <Grid>
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="24"/>
-                <ColumnDefinition Width="12"/>
-                <ColumnDefinition Width="1.5*"/>
-                <ColumnDefinition Width="12"/>
-                <ColumnDefinition Width=".45*"/>
-                <ColumnDefinition Width="12"/>
-                <ColumnDefinition Width=".45*"/>
-                <ColumnDefinition Width="12"/>
-                <ColumnDefinition Width=".6*"/>
-                <ColumnDefinition Width="12"/>
-                <ColumnDefinition Width="1.4*"/>
-                <ColumnDefinition Width="12"/>
-                <ColumnDefinition Width=".8*"/>
-              </Grid.ColumnDefinitions>
-              <TextBlock Text="{l:Tr Primer.Name}" Style="{StaticResource Primer.Muted}" Grid.Column="2" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold"/>
-              <TextBlock Text="{l:Tr Primer.Type}" Style="{StaticResource Primer.Muted}" Grid.Column="4" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold"/>
-              <TextBlock Text="{l:Tr Primer.Number}" Style="{StaticResource Primer.Muted}" Grid.Column="6" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold"/>
-              <TextBlock Text="{l:Tr Primer.Language}" Style="{StaticResource Primer.Muted}" Grid.Column="8" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold"/>
-              <TextBlock Text="{l:Tr Primer.Group}" Style="{StaticResource Primer.Muted}" Grid.Column="10" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold"/>
-              <TextBlock Text="{l:Tr Primer.Consistent}" Style="{StaticResource Primer.Muted}" Grid.Column="12" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold"/>
-            </Grid>
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <DockPanel VerticalAlignment="Center" Margin="0,0,8,4">
+              <Path DockPanel.Dock="Left" Style="{StaticResource Primer.AlertIcon.Info}" Margin="0,0,8,0" Visibility="{Binding Tag.HasSelection,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"/>
+              <Path DockPanel.Dock="Left" Style="{StaticResource Primer.AlertIcon.Warning}" Margin="0,0,8,0" Visibility="{Binding Tag.HasSelection,ElementName=PageRoot,Converter={StaticResource NotBoolToVisibility}}"/>
+              <Button DockPanel.Dock="Right" AutomationProperties.Name="{l:Tr Primer.Clear}" Content="{l:Tr Primer.Clear}" Click="OnSelectNone" Style="{StaticResource Primer.Link}" Padding="4,0" MinHeight="24"/>
+              <Button DockPanel.Dock="Right" AutomationProperties.Name="{l:Tr Primer.SelectAll}" Content="{l:Tr Primer.SelectAll}" Click="OnSelectAll" Style="{StaticResource Primer.Link}" Padding="4,0" MinHeight="24"/>
+              <TextBlock Text="{Binding Tag.SelectedSummary,ElementName=PageRoot}" Style="{StaticResource Primer.Text}" Visibility="{Binding Tag.HasSelection,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"/>
+              <TextBlock Text="{l:Tr Pages.NoSelection}" Style="{StaticResource Primer.Text}" TextWrapping="Wrap" Visibility="{Binding Tag.HasSelection,ElementName=PageRoot,Converter={StaticResource NotBoolToVisibility}}"/>
+            </DockPanel>
+            <WrapPanel Grid.Row="1" Grid.ColumnSpan="2">
+              <Button AutomationProperties.Name="{l:Tr Blocks.Export}" x:Name="ExportButton" Click="OnExport" IsEnabled="{Binding Tag.HasSelection,ElementName=PageRoot}" Style="{StaticResource Primer.Small}" Margin="0,4,8,0">
+                <Button.Content>
+                  <MultiBinding Converter="{StaticResource Primer.Value}" ConverterParameter="export">
+                    <Binding Path="Engineering.SourceFormat"/>
+                    <Binding Source="{x:Static l:Loc.Current}" Path="Language"/>
+                  </MultiBinding>
+                </Button.Content>
+              </Button>
+              <Button AutomationProperties.Name="{l:Tr Pages.Import}" Content="{l:Tr Pages.Import}" ToolTip="{l:Tr Pages.TransferDescription}" Command="{Binding Engineering.Import}" Style="{StaticResource Primer.Small}" Margin="0,4,8,0"/>
+              <Button AutomationProperties.Name="{l:Tr Pages.ViewLadder}" x:Name="ViewLadderButton" Content="{l:Tr Pages.ViewLadder}" Click="OnViewLadder" IsEnabled="{Binding Atlas.CanViewBlock,ElementName=PageRoot}" Style="{StaticResource Primer.Small}" Margin="0,4,8,0"/>
+              <Button AutomationProperties.Name="{l:Tr Pages.GenerateAtlas}" x:Name="GenerateAtlasButton" Content="{l:Tr Pages.GenerateAtlas}" Click="OnGenerateAtlas" IsEnabled="{Binding Atlas.CanGenerate,ElementName=PageRoot}" Style="{StaticResource Primer.Small}" Margin="0,4,8,0"/>
+              <Button AutomationProperties.Name="{l:Tr Toolbar.Inspect}" Content="{l:Tr Toolbar.Inspect}" ToolTip="{l:Tr Pages.InspectDescription}" Command="{Binding Engineering.Inspect}" IsEnabled="{Binding Tag.CanOperate,ElementName=PageRoot}" Style="{StaticResource Primer.Small}" Margin="0,4,8,0"/>
+              <Button AutomationProperties.Name="{l:Tr Primer.CompileSoftware}" Content="{l:Tr Primer.CompileSoftware}" ToolTip="Ctrl+B" AutomationProperties.AcceleratorKey="Ctrl+B" Command="{Binding Engineering.Compile}" Style="{StaticResource Primer.Run.Small}" Margin="0,4,0,0"/>
+            </WrapPanel>
           </Grid>
         </Border>
-        <ListBox AutomationProperties.Name="{l:Tr Tree.ProgramBlocks}" x:Name="BlocksList" Grid.Row="2" ItemsSource="{Binding Engineering.BlocksView}" Style="{StaticResource Primer.List}" ItemContainerStyle="{StaticResource Primer.BlockItem}">
+        <Border Style="{StaticResource Primer.ColumnHeaderStrip}" Grid.Row="2">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="24"/>
+              <ColumnDefinition Width="12"/>
+              <ColumnDefinition Width="1.5*"/>
+              <ColumnDefinition Width="12"/>
+              <ColumnDefinition Width=".45*"/>
+              <ColumnDefinition Width="12"/>
+              <ColumnDefinition Width=".45*"/>
+              <ColumnDefinition Width="12"/>
+              <ColumnDefinition Width=".6*"/>
+              <ColumnDefinition Width="12"/>
+              <ColumnDefinition Width="1.4*"/>
+              <ColumnDefinition Width="12"/>
+              <ColumnDefinition Width=".8*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="{l:Tr Primer.Name}" Style="{StaticResource Primer.TableHeader}" Grid.Column="2"/>
+            <TextBlock Text="{l:Tr Primer.Type}" Style="{StaticResource Primer.TableHeader}" Grid.Column="4"/>
+            <TextBlock Text="{l:Tr Primer.Number}" Style="{StaticResource Primer.TableHeader}" Grid.Column="6" TextAlignment="Right" Margin="0"/>
+            <TextBlock Text="{l:Tr Primer.Language}" Style="{StaticResource Primer.TableHeader}" Grid.Column="8"/>
+            <TextBlock Text="{l:Tr Primer.Group}" Style="{StaticResource Primer.TableHeader}" Grid.Column="10"/>
+            <TextBlock Text="{l:Tr Primer.Consistent}" Style="{StaticResource Primer.TableHeader}" Grid.Column="12"/>
+          </Grid>
+        </Border>
+        <ux:PrefillMarker x:Name="SelectionMarker" Grid.Row="2" VerticalAlignment="Bottom" Target="{Binding ElementName=BlocksList}" Tag="BlockSelection" ClearRequested="OnClearPrefill"/>
+        <ListBox AutomationProperties.Name="{l:Tr Tree.ProgramBlocks}" x:Name="BlocksList" Grid.Row="3" ItemsSource="{Binding Engineering.BlocksView}" Style="{StaticResource Primer.List}" ItemContainerStyle="{StaticResource Primer.BlockItem}">
           <ListBox.ItemTemplate>
             <DataTemplate>
               <Grid>
@@ -92,48 +108,30 @@
                   <ColumnDefinition Width=".8*"/>
                 </Grid.ColumnDefinitions>
                 <CheckBox AutomationProperties.Name="{Binding Name}" MinWidth="24" MinHeight="24" IsChecked="{Binding Selected}" Style="{StaticResource Primer.Checkbox}"/>
-                <TextBlock Grid.Column="2" Text="{Binding Name}" Style="{StaticResource Primer.Text}" FontWeight="Medium" ToolTip="{Binding Name}"/>
-                <TextBlock Grid.Column="4" Text="{Binding Kind}" Style="{StaticResource Primer.Text}"/>
-                <TextBlock Grid.Column="6" Text="{Binding Number}" Style="{StaticResource Primer.Mono.text}"/>
+                <TextBlock Grid.Column="2" Text="{Binding Name}" Style="{StaticResource Primer.Text}" FontWeight="SemiBold" ToolTip="{Binding Name}"/>
+                <Border Grid.Column="4" Style="{StaticResource Primer.Tag}" HorizontalAlignment="Left">
+                  <TextBlock Text="{Binding Kind}" Style="{StaticResource Primer.Text.text}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
+                </Border>
+                <TextBlock Grid.Column="6" Text="{Binding Number}" Style="{StaticResource Primer.Mono.text}" TextAlignment="Right"/>
                 <TextBlock Grid.Column="8" Text="{Binding Language}" Style="{StaticResource Primer.Text}"/>
-                <TextBlock Grid.Column="10" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}" Text="{Binding Path,Converter={StaticResource Primer.Value},ConverterParameter=group}" ToolTip="{Binding Path}"/>
-                <TextBlock Grid.Column="12" Style="{StaticResource Primer.ConsistencyText}">
-                  <TextBlock.Text>
-                    <MultiBinding Converter="{StaticResource Primer.Value}" ConverterParameter="consistent">
-                      <Binding Path="Info.IsConsistent"/>
-                      <Binding Source="{x:Static l:Loc.Current}" Path="Language"/>
-                    </MultiBinding>
-                  </TextBlock.Text>
-                </TextBlock>
+                <TextBlock Grid.Column="10" Style="{StaticResource Primer.Muted}" Text="{Binding Path,Converter={StaticResource Primer.Value},ConverterParameter=group}" ToolTip="{Binding Path}"/>
+                <DockPanel Grid.Column="12">
+                  <Ellipse Style="{StaticResource Primer.ConsistencyDot}"/>
+                  <TextBlock Style="{StaticResource Primer.ConsistencyText}">
+                    <TextBlock.Text>
+                      <MultiBinding Converter="{StaticResource Primer.Value}" ConverterParameter="consistent">
+                        <Binding Path="Info.IsConsistent"/>
+                        <Binding Source="{x:Static l:Loc.Current}" Path="Language"/>
+                      </MultiBinding>
+                    </TextBlock.Text>
+                  </TextBlock>
+                </DockPanel>
               </Grid>
             </DataTemplate>
           </ListBox.ItemTemplate>
         </ListBox>
-        <Border Style="{StaticResource Primer.FooterStrip}" Grid.Row="3">
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*"/>
-              <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <WrapPanel>
-              <Button AutomationProperties.Name="{l:Tr Blocks.Export}" x:Name="ExportButton" Click="OnExport" IsEnabled="{Binding Tag.HasSelection,ElementName=PageRoot}" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0">
-                <Button.Content>
-                  <MultiBinding Converter="{StaticResource Primer.Value}" ConverterParameter="export">
-                    <Binding Path="Engineering.SourceFormat"/>
-                    <Binding Source="{x:Static l:Loc.Current}" Path="Language"/>
-                  </MultiBinding>
-                </Button.Content>
-              </Button>
-              <Button AutomationProperties.Name="{l:Tr Pages.Import}" Content="{l:Tr Pages.Import}" Command="{Binding Engineering.Import}" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
-              <Border Width="1" MinHeight="24" Margin="0,0,8,0" Style="{StaticResource Primer.Plain}"/>
-              <Button AutomationProperties.Name="{l:Tr Pages.ViewLadder}" x:Name="ViewLadderButton" Content="{l:Tr Pages.ViewLadder}" Click="OnViewLadder" IsEnabled="{Binding Atlas.CanViewBlock,ElementName=PageRoot}" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
-              <Button AutomationProperties.Name="{l:Tr Pages.GenerateAtlas}" x:Name="GenerateAtlasButton" Content="{l:Tr Pages.GenerateAtlas}" Click="OnGenerateAtlas" IsEnabled="{Binding Atlas.CanGenerate,ElementName=PageRoot}" Style="{StaticResource Primer.Secondary}"/>
-            </WrapPanel>
-            <Button AutomationProperties.Name="{l:Tr Primer.CompileSoftware}" Grid.Column="1" Content="{l:Tr Primer.CompileSoftware}" ToolTip="Ctrl+B" AutomationProperties.AcceleratorKey="Ctrl+B" Command="{Binding Engineering.Compile}" Style="{StaticResource Primer.OutlinedAccent}" Margin="8,0,0,0" VerticalAlignment="Bottom"/>
-          </Grid>
-        </Border>
         <Border x:Name="AtlasFooter" Style="{StaticResource Primer.FooterStrip}" Grid.Row="4" Visibility="{Binding Atlas.Visible,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}">
-          <Border x:Name="AtlasBar" Padding="12,10" Visibility="{Binding Atlas.Visible,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.AtlasState}">
+          <Border x:Name="AtlasBar" Padding="12,8" Visibility="{Binding Atlas.Visible,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.AtlasState}">
             <Grid>
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="8"/>
@@ -144,14 +142,14 @@
               <Ellipse Width="8" Height="8" Fill="{Binding Path=(TextElement.Foreground),RelativeSource={RelativeSource AncestorType=Border}}"/>
               <TextBlock Grid.Column="1" AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding Atlas.Label,ElementName=PageRoot}" Text="{Binding Atlas.Label,ElementName=PageRoot}" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold" Margin="12,0" VerticalAlignment="Center"/>
               <TextBlock Grid.Column="2" Text="{Binding Atlas.Detail,ElementName=PageRoot}" ToolTip="{Binding Atlas.Detail,ElementName=PageRoot}" Style="{StaticResource Primer.Mono}"/>
-              <Button Grid.Column="3" Content="{l:Tr Session.Cancel}" AutomationProperties.Name="{l:Tr Session.Cancel}" Click="OnCancelAtlas" Style="{StaticResource Primer.Secondary}" Visibility="{Binding Atlas.Running,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"/>
+              <Button Grid.Column="3" Content="{l:Tr Session.Cancel}" AutomationProperties.Name="{l:Tr Session.Cancel}" Click="OnCancelAtlas" Style="{StaticResource Primer.Small}" Visibility="{Binding Atlas.Running,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"/>
               <ProgressBar Grid.Column="2" IsIndeterminate="{Binding Atlas.Indeterminate,ElementName=PageRoot}" Width="120" Height="4" Maximum="100" Value="{Binding Atlas.Percent,ElementName=PageRoot,Mode=OneWay}" Margin="12,0,0,0" Visibility="{Binding Atlas.Running,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"/>
-              <Button AutomationProperties.Name="{l:Tr Common.Open}" Grid.Column="3" Content="{l:Tr Common.Open}" Click="OnOpenAtlas" Style="{StaticResource Primer.OutlinedAccent}" Margin="12,0,0,0" Visibility="{Binding Atlas.Done,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"/>
+              <Button AutomationProperties.Name="{l:Tr Common.Open}" Grid.Column="3" Content="{l:Tr Common.Open}" Click="OnOpenAtlas" Style="{StaticResource Primer.Small}" Margin="12,0,0,0" Visibility="{Binding Atlas.Done,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"/>
             </Grid>
           </Border>
         </Border>
       </Grid>
     </Border>
-    <views:EngineeringOptionsView x:Name="Options" Grid.RowSpan="3"/>
+    <views:EngineeringOptionsView x:Name="Options"/>
   </Grid>
 </UserControl>

@@ -85,7 +85,7 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                 window.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
 
                 host.Measure(new Size(1200, 780)); host.Arrange(new Rect(0, 0, 1200, 780)); host.UpdateLayout();
-                Assert.Equal(1150, page.ActualWidth);
+                Assert.Equal(934, page.ActualWidth);
                 var bitmap = new RenderTargetBitmap(1200, 780, 96, 96, PixelFormats.Pbgra32);
                 bitmap.Render(host);
                 var output = Environment.GetEnvironmentVariable("TIA_PRIMER_SCREENSHOTS") ??
