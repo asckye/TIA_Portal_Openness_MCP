@@ -80,20 +80,15 @@
     ]
   },
   "cli": {
-    "description": "Call runtime/v21/worker/TiaMcp.Engine.V21.exe or runtime/v20/worker/TiaMcp.Engine.V20.exe with a CLI verb. JSON/YAML generation requires no MCP client.",
-    "exe": "runtime/v21/worker/TiaMcp.Engine.V21.exe",
+    "description": "Call runtime/<release-directory>/TiaMcp.FoundationHost.exe <verb> --release-key <key> on all eight releases. Project changes use MCP tools and the project generation framework. install-plc-tools preserves pip's exit status.",
+    "exe": "runtime/v21/TiaMcp.FoundationHost.exe",
     "verbs": [
-      "gen",
-      "patch",
-      "compile",
-      "export",
-      "import",
-      "describe",
-      "prewarm",
-      "config",
       "doctor",
+      "audit verify",
       "schema",
       "version",
+      "config",
+      "install-plc-tools",
       "help"
     ],
     "specFormats": [
@@ -102,8 +97,12 @@
     ],
     "exitCodes": {
       "0": "success",
-      "1": "completed with failed steps",
-      "2": "error"
+      "2": "rejected, doctor not ready or no successful config writes",
+      "3": "failed",
+      "4": "partial",
+      "5": "outcome unknown",
+      "64": "syntax error",
+      "70": "runtime resources unavailable"
     }
   },
   "capabilities": {

@@ -91,11 +91,26 @@ public sealed class StaticPolicyTests
     public void ExternalInstallerMatchesUpstreamToml()
     {
         var expected = Directory.EnumerateFiles(Path.Combine(Root, "third_party/siemens-plc-tools"), "pyproject.toml", SearchOption.AllDirectories).SelectMany(p => ProjectDependencies.Read(Repository.ReadSource(p))).ToHashSet();
-        var installer = Source("src/Engine/Cli/InstallPlcToolsCommand.cs");
+        var installer = Source("src/Shared/Host/InstallPlcToolsCommand.cs");
         var actual = Regex.Match(installer, @"ExternalPackages\s*=\s*\{(.*?)\n\s*\};", RegexOptions.Singleline);
         Assert.True(actual.Success);
         Assert.True(expected.SetEquals(Regex.Matches(actual.Groups[1].Value, "\"([^\"\\n]+)\"").Select(m => m.Groups[1].Value)));
         foreach (var name in new[] { "pytest", "pytest-asyncio", "pytest-cov", "reportlab" }) Assert.Contains("\"" + name + "\"", installer);
+    }
+    [Fact]
+    public void Package_cli_targets_the_host_subset_and_both_engines_share_the_installer()
+    {
+        var cli = new JsonObject();
+        CatalogGenerator.WriteHostCli(cli);
+        Assert.Equal("runtime/v21/TiaMcp.FoundationHost.exe", (string?)cli["exe"]);
+        Assert.Equal(new[] { "doctor", "audit verify", "schema", "version", "config", "install-plc-tools", "help" },
+            cli["verbs"]!.AsArray().Select(v => (string)v!));
+        Assert.Equal(new[] { "0", "2", "3", "4", "5", "64", "70" }, cli["exitCodes"]!.AsObject().Select(p => p.Key));
+        Assert.Equal("rejected, doctor not ready or no successful config writes", (string?)cli["exitCodes"]?["2"]);
+        Assert.Contains("install-plc-tools preserves pip's exit status.", (string?)cli["description"]);
+        foreach (var project in new[] { "src/FoundationHost/TiaMcp.FoundationHost.csproj", "src/Engine/TiaMcp.Engine.V20.csproj", "src/Engine/TiaMcp.Engine.V21.csproj" })
+            Assert.Contains("../Shared/Host/InstallPlcToolsCommand.cs", Source(project));
+        Assert.Contains("CatalogGenerator.WriteHostCli(cli)", Source("build-tools/release/ReleaseCommands.cs"));
     }
     [Fact]
     public void TomlDependencyArraysRespectQuotesCommentsExtrasAndEscapes()

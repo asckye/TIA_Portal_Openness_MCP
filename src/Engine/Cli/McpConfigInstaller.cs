@@ -81,12 +81,17 @@ namespace TiaMcpServer.Cli
         /// The exe the config should point at for <paramref name="tiaMajorVersion"/>: this exe
         /// from the selected bundle's formal install/development layout.
         /// </summary>
-        public static string ExeForVersion(int tiaMajorVersion)
+        public static string ExeForVersion(int tiaMajorVersion) => ExeForVersion(tiaMajorVersion.ToString());
+
+        public static string ExeForVersion(string tiaMajorVersion)
         {
             return TiaOpenness.Shared.BundleLayout.RequireEngine(tiaMajorVersion.ToString(), Path.GetDirectoryName(OwnExePath())!);
         }
 
         public static JsonObject BuildServerEntry(string exePath, int tiaMajorVersion, HostStyle style, bool full = false)
+            => BuildServerEntry(exePath, tiaMajorVersion.ToString(), style, full);
+
+        public static JsonObject BuildServerEntry(string exePath, string tiaMajorVersion, HostStyle style, bool full = false)
         {
             var entry = new JsonObject();
             if (style == HostStyle.VsCode) entry["type"] = "stdio";
@@ -101,6 +106,9 @@ namespace TiaMcpServer.Cli
 
         /// <summary>Pretty single-server snippet for hosts we don't write automatically.</summary>
         public static string Snippet(string exePath, int tiaMajorVersion, HostStyle style = HostStyle.McpServers, bool full = false)
+            => Snippet(exePath, tiaMajorVersion.ToString(), style, full);
+
+        public static string Snippet(string exePath, string tiaMajorVersion, HostStyle style = HostStyle.McpServers, bool full = false)
         {
             if (style == HostStyle.CodexToml) return CodexTomlSection(exePath, tiaMajorVersion, full);
             string rootKey = style == HostStyle.VsCode ? "servers" : "mcpServers";
@@ -116,6 +124,9 @@ namespace TiaMcpServer.Cli
         /// Throws on hard I/O / parse failure so the caller can report it.
         /// </summary>
         public static string Apply(string configPath, string exePath, int tiaMajorVersion, HostStyle style = HostStyle.McpServers, bool full = false)
+            => Apply(configPath, exePath, tiaMajorVersion.ToString(), style, full);
+
+        public static string Apply(string configPath, string exePath, string tiaMajorVersion, HostStyle style = HostStyle.McpServers, bool full = false)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(configPath));
             if (style == HostStyle.CodexToml) return ApplyCodexToml(configPath, exePath, tiaMajorVersion, full);
@@ -189,7 +200,7 @@ namespace TiaMcpServer.Cli
         }
 
         /// <summary>The TOML section Codex needs; standalone so `config --print` can show it too.</summary>
-        private static string CodexTomlSection(string exePath, int tiaMajorVersion, bool full)
+        private static string CodexTomlSection(string exePath, string tiaMajorVersion, bool full)
         {
             var sb = new StringBuilder();
             sb.AppendLine("[mcp_servers." + ServerKey + "]");
@@ -213,7 +224,7 @@ namespace TiaMcpServer.Cli
         /// one — a [a.b] section is legal anywhere in the file, so everything the user wrote for
         /// other servers survives untouched.
         /// </summary>
-        private static string ApplyCodexToml(string configPath, string exePath, int tiaMajorVersion, bool full)
+        private static string ApplyCodexToml(string configPath, string exePath, string tiaMajorVersion, bool full)
         {
             string text = "";
             bool existed = false;

@@ -2,6 +2,7 @@
   <ItemGroup Condition="'$(TiaSharedAdapterPaths)' != 'true'"><Compile Include="../Adapters/Native/Vci/VciFallbackAdapter.cs" Link="Native/Vci/VciFallbackAdapter.cs" /></ItemGroup>
   <Import Project="$(MSBuildThisFileDirectory)../../Version.props" />
   <ItemGroup>
+    <Compile Include="../Shared/Host/InstallPlcToolsCommand.cs" Link="Cli/InstallPlcToolsCommand.cs" />
     <Compile Include="../Shared/PlcVerifiedImport.cs" Link="ModelContextProtocol/Builders/PlcVerifiedImport.cs" />
     <Compile Include="../Shared/CompilerDiagnostics.cs" Link="ModelContextProtocol/CompilerDiagnostics.cs" />
     <Compile Include="../EngineHost/ModelContextProtocol/InvocationJournal.cs" Link="ModelContextProtocol/InvocationJournal.cs" />

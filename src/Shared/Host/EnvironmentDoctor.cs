@@ -170,6 +170,46 @@ namespace TiaMcpServer.Runtime
         #endif
         }
 
+#if TIA_ENGINE_HOST
+        // The CLI must diagnose an installation even when a worker cannot be started. File,
+        // registry and token checks stay managed; startup facts come from HostObserve/status.
+        public static List<Check> RunHost(string releaseKey, int? detected,
+            (bool Ok, string? InstallPath, string? ResolvedDll, string? Problem) assemblies,
+            IEnumerable<string> binaryDirectories, System.Text.Json.Nodes.JsonObject? startup)
+        {
+            var release = TiaMcp.Versioning.TiaVersionCatalog.Get(releaseKey);
+            var install = TiaInstall(detected);
+            string supported = string.Join(" / ", TiaMcp.Versioning.TiaVersionCatalog.All.Select(v => v.DisplayName));
+            if (!install.Ok)
+            {
+                install.FixEn = install.FixEn!.Replace(SupportedVersions, supported);
+                install.FixZh = install.FixZh!.Replace(SupportedVersions, supported);
+            }
+            var version = EngineVersionMatch(release.MajorVersion, detected, major =>
+                TiaMcp.Versioning.TiaVersionCatalog.All.Any(v => v.MajorVersion == major) ? "host" : null);
+            string? detectedName = detected.HasValue ? detected.Value == release.MajorVersion ? release.DisplayName : "V" + detected.Value : null;
+            version.DetailEn = "exe built for " + release.DisplayName + (detectedName != null ? ", machine has " + detectedName : ", machine version unknown");
+            version.DetailZh = "该 exe 为 " + release.DisplayName + " 构建" + (detectedName != null ? "，本机装的是 " + detectedName : "，本机版本未知");
+            version.Ok = !detected.HasValue || TiaMcp.Versioning.TiaVersionCatalog.All.Any(v => v.MajorVersion == detected.Value);
+            if (version.Ok) { version.FixEn = null; version.FixZh = null; }
+            else
+            {
+                version.FixEn = "Select a supported release with TiaMcp.FoundationHost.exe doctor --release-key <key>.";
+                version.FixZh = "请使用 TiaMcp.FoundationHost.exe doctor --release-key <发布键> 选择受支持的版本。";
+            }
+            var checks = new List<Check> { install, OpennessAssemblies(assemblies), version, DotNetFramework48(), FilesNotBlocked(binaryDirectories) };
+            if (startup != null && (bool?)startup["ready"] != true)
+                checks.Add(new Check {
+                    Id = "openness-startup", Ok = false, NameEn = "TIA Openness startup", NameZh = "TIA Openness startup",
+                    DetailEn = (string?)startup["cause"] ?? "TIA Openness did not initialize.",
+                    DetailZh = (string?)startup["cause"] ?? "TIA Openness did not initialize.",
+                    FixEn = (string?)startup["recommendedFix"] ?? DefaultFixEn,
+                    FixZh = (string?)startup["recommendedFixZh"] ?? DefaultFixZh
+                });
+            return checks;
+        }
+#endif
+
         private static Check TiaInstall(int? detected)
         {
             bool ok = detected != null;
@@ -188,7 +228,11 @@ namespace TiaMcpServer.Runtime
 
         private static Check OpennessAssemblies()
         {
-            var probe = Siemens.Engineering.ProbeOpennessAssemblies();
+            return OpennessAssemblies(Siemens.Engineering.ProbeOpennessAssemblies());
+        }
+
+        private static Check OpennessAssemblies((bool Ok, string? InstallPath, string? ResolvedDll, string? Problem) probe)
+        {
             return new Check
             {
                 Id = "openness-dll",
@@ -255,7 +299,7 @@ namespace TiaMcpServer.Runtime
         /// .NET then refuses to load the assemblies and the engine fails in ways that look nothing
         /// like "your download is blocked".
         /// </summary>
-        private static Check FilesNotBlocked()
+        private static Check FilesNotBlocked(IEnumerable<string>? directories = null)
         {
             var blocked = new List<string>();
             string dir = "";
@@ -264,7 +308,8 @@ namespace TiaMcpServer.Runtime
                 dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
                 if (!string.IsNullOrEmpty(dir))
                 {
-                    foreach (var f in Directory.GetFiles(dir, "*.dll").Concat(Directory.GetFiles(dir, "*.exe")))
+                    foreach (var f in (directories ?? new[] { dir }).Where(Directory.Exists).Distinct(StringComparer.OrdinalIgnoreCase)
+                        .SelectMany(folder => Directory.GetFiles(folder, "*.dll").Concat(Directory.GetFiles(folder, "*.exe"))))
                     {
                         if (HasZoneIdentifier(f)) blocked.Add(Path.GetFileName(f));
                         if (blocked.Count >= 5) break;
@@ -275,6 +320,9 @@ namespace TiaMcpServer.Runtime
 
             bool ok = blocked.Count == 0;
             string list = string.Join(", ", blocked);
+            string unblock = directories == null ? $"Get-ChildItem -Recurse '{dir}' | Unblock-File"
+                : "Get-ChildItem -Recurse -LiteralPath " + string.Join(", ", directories.Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Select(path => "'" + path.Replace("'", "''") + "'")) + " | Unblock-File";
             return new Check
             {
                 Id = "motw",
@@ -283,8 +331,8 @@ namespace TiaMcpServer.Runtime
                 NameZh = "文件未被 Windows 标记为网络来源 (MOTW)",
                 DetailEn = ok ? "no zone identifier on the engine files" : $"blocked files present: {list}{(blocked.Count >= 5 ? ", ..." : "")}",
                 DetailZh = ok ? "引擎目录下的文件没有网络来源标记" : $"存在被阻止的文件：{list}{(blocked.Count >= 5 ? " …" : "")}",
-                FixEn = ok ? null : $"Unblock the delivery folder in PowerShell:  Get-ChildItem -Recurse '{dir}' | Unblock-File",
-                FixZh = ok ? null : $"用 PowerShell 解除阻止：  Get-ChildItem -Recurse '{dir}' | Unblock-File",
+                FixEn = ok ? null : "Unblock the delivery folder in PowerShell:  " + unblock,
+                FixZh = ok ? null : "用 PowerShell 解除阻止：  " + unblock,
             };
         }
 

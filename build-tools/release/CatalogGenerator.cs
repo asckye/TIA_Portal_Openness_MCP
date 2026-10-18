@@ -8,6 +8,14 @@ namespace TiaMcp.ReleaseTool;
 
 internal static class CatalogGenerator
 {
+    internal static void WriteHostCli(JsonObject cli)
+    {
+        cli["exe"] = "runtime/v21/TiaMcp.FoundationHost.exe";
+        cli["description"] = "Call runtime/<release-directory>/TiaMcp.FoundationHost.exe <verb> --release-key <key> on all eight releases. Project changes use MCP tools and the project generation framework. install-plc-tools preserves pip's exit status.";
+        cli["verbs"] = new JsonArray("doctor", "audit verify", "schema", "version", "config", "install-plc-tools", "help");
+        cli["exitCodes"] = new JsonObject { ["0"] = "success", ["2"] = "rejected, doctor not ready or no successful config writes",
+            ["3"] = "failed", ["4"] = "partial", ["5"] = "outcome unknown", ["64"] = "syntax error", ["70"] = "runtime resources unavailable" };
+    }
     internal const string Resource = "src/Logic/ModelContextProtocol/ToolProfiles.resx";
     internal const string Rejections = "tests/Engine/TiaMcp.Engine.Tests/FullEngineRejections.json";
     internal static Dictionary<string, string> Generate(string root, bool legacyNames = false, Action<Dictionary<string, string>>? prepareSources = null)
@@ -180,7 +188,7 @@ internal static class CatalogGenerator
         var package = Read(root, "manifest/package-manifest.json"); var original = Copy(package); var roster = Read(root, "manifest/tools-list.json");
         Require(Set(roster["tools"]!.AsArray().Select(t => Text(t!["name"]))).SetEquals(data.Rosters.Values.SelectMany(names => names)), "Regenerate tools-list before package counts");
         package["entrypoints"]!["mcpServerExe"] = "runtime/v21/TiaMcp.FoundationHost.exe"; package["entrypoints"]!["configurator"] = "TiaOpenness.exe";
-        package["cli"]!["exe"] = "runtime/v21/worker/TiaMcp.Engine.V21.exe"; package["cli"]!["description"] = "Call runtime/v21/worker/TiaMcp.Engine.V21.exe or runtime/v20/worker/TiaMcp.Engine.V20.exe with a CLI verb. JSON/YAML generation requires no MCP client.";
+        WriteHostCli(package["cli"]!.AsObject());
         package["capabilities"]!["mcpToolCount"] = roster["tools"]!.AsArray().Count; var layers = new JsonObject(); foreach (var tool in roster["tools"]!.AsArray()) { var layer = Text(tool!["layer"]); layers[layer] = (layers[layer]?.GetValue<int>() ?? 0) + 1; } package["capabilities"]!["mcpToolLayers"] = layers;
         package["capabilities"]!["liteProfile"]!["toolCount"] = releases["21"]!.AsArray().Count(r => Strings(r!["profiles"]).Contains("lite"));
         // Release records own the surrounding package formatting; retain it only when the derived fields agree.

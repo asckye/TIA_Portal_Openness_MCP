@@ -1,74 +1,76 @@
-# 命令行与 AI spec
+# 命令行与工程生成
 
-本页适用于 V20/V21 的 CLI。V14 SP1–V19 宿主不提供同一套 `gen` / `patch` 命令。首次使用可先完成[新手指南](beginners.zh-CN.md)；MCP 客户端配置使用[工作台](configuration.md)。
+八个版本（V14 SP1、V15.1、V16–V21）都由 `TiaMcp.FoundationHost.exe` 提供同一套本机诊断与配置命令。首次使用见[新手指南](beginners.zh-CN.md)；图形配置入口见[工作台](configuration.md)。
 
-包资源使用 `--bundle-root` / `TIA_MCP_BUNDLE_ROOT`。私人报告和夹具命令另需 `--workspace-root <existing-absolute-directory>`；工作区不从 cwd 或包根推断。 HMI 模板命令必须同时给出 `--hmi-template-directory <absolute-directory>`，组件目录分析还需 `--global-library-probe-json-path <absolute-file>`。缺失输入返回 `INVALID_ARGUMENT`、退出 64。已知 `TMP_EXPORT`/报告布局只在明确选择的工作区内解释。
+## 选择发布版本
 
-`tia doctor` 显示实际日志与诊断目录。宿主启动及运行消息共用 `data/logs/<releaseKey>/TiaMcpServer-<processKey>.log`，工作台崩溃日志位于 `data/logs/studio`；进程键含 PID、启动 UTC、GUID。只读安装的普通日志回退到 `%TEMP%\TiaMcp\logs`。每次宿主/工作台启动按用途保留最新 32 份，跳过锁定/活动进程文件及非产品文件；写入失败每用途每进程报告一次 `IO_FAILED`。审计写入 `data/logs/audit` 的共享单链，只读安装回退到 `%LOCALAPPDATA%\TiaMcp\logs\audit`，失败报 `DIAGNOSTIC_WRITE_FAILED`。 `tia audit verify` 分别校验主目录和已存在的回退链，报告链目录、断点文件及序号；显式数据根不回退。 Python 默认解释器为 `%LOCALAPPDATA%\TiaMcp\ecosystem-python\Scripts\python.exe`；自选解释器用 `TIA_MCP_PLC_TOOLS_PYTHON`，安装步骤见[生态工具](../reference/ecosystem-tools.md)。
-
-MCP `WRITE` / `ONLINE-WRITE` 实际执行默认须由工作台审批后才派发；`dryRun=true` 和候选工具的 `mode=preview` 不等待审批，也不作为写请求写入审计。`SaveProject`、`SaveProjectCopy`（save-as）和 `CloseProject` 实际执行即使在目录中分类为 `SESSION` 也须审批；connect、attach、open 和 disconnect 仍不审批。拒绝、120 秒默认超时或工作台不可用会在操作开始前返回 `CONFIRMATION_REQUIRED`；MCP 客户端不能自批。每次决定和结果追加到 `data/logs/audit`，用 `tia audit verify` 或工作台审计页检查保留链记录；同一次写调用的 request、审批决定、start/end 与响应使用相同 requestId。校验不能证明整份日志没有被删除。`data/diagnostics` 保存原生调用诊断包。工具输出使用 V4 `ok` / `data` / `error` / `meta` 信封；`OUTCOME_UNKNOWN` 要先核对工程，不能自动重放写调用。
-
-## 选择匹配的引擎
-
-从完整交付包根目录打开 PowerShell。下列命令以 V21 为例；V20 使用 `runtime\v20\worker\TiaMcp.Engine.V20.exe` 并核对 spec 中各输入格式是否支持 V20。非默认安装位置使用该引擎支持的 `--tia-portal-location` 和匹配的 `--tia-major-version`。
+从交付包根目录运行，命令在前，选项在后。下例选择 V21；其他版本将 `v21` 与发布键一起替换为 `v14sp1` / `14sp1`、`v15.1` / `15.1` 或 `v16`–`v20` / `16`–`20`。
 
 ```powershell
-.\runtime\v21\worker\TiaMcp.Engine.V21.exe doctor
-.\runtime\v21\worker\TiaMcp.Engine.V21.exe schema
-.\runtime\v21\worker\TiaMcp.Engine.V21.exe gen .\spec.json --dry-run
-.\runtime\v21\worker\TiaMcp.Engine.V21.exe gen .\spec.json --json
-runtime\v21\worker\TiaMcp.Engine.V21.exe install-plc-tools
+.\runtime\v21\TiaMcp.FoundationHost.exe doctor --release-key 21
+.\runtime\v21\TiaMcp.FoundationHost.exe schema --release-key 21
+.\runtime\v21\TiaMcp.FoundationHost.exe config --print --release-key 21
+.\runtime\v21\TiaMcp.FoundationHost.exe audit verify --release-key 21
+.\runtime\v21\TiaMcp.FoundationHost.exe install-plc-tools --release-key 21
+.\runtime\v21\TiaMcp.FoundationHost.exe help
 ```
 
-直接使用 V21 CLI 的生成和预热命令：
+文档中的 `tia` 是所选宿主的简写。可在当前 PowerShell 会话设置别名：
 
-```text
-runtime\v21\worker\TiaMcp.Engine.V21.exe gen <spec>
-runtime\v21\worker\TiaMcp.Engine.V21.exe prewarm
-runtime\v20\worker\TiaMcp.Engine.V20.exe gen <spec>
-runtime\v20\worker\TiaMcp.Engine.V20.exe prewarm
+```powershell
+Set-Alias tia (Resolve-Path .\runtime\v21\TiaMcp.FoundationHost.exe).Path
+tia doctor
+tia audit verify
 ```
 
-`schema` 输出当前 spec 字段；`--dry-run` 离线校验输入，不创建工程。实际生成后查看每个步骤结果、实际工程位置及编译诊断，不能只根据进程有输出判断成功。
+随包 `release-key.txt` 提供默认发布键；开发构建默认选择 `21`。`--tia-version KEY` 与 `--tia-major-version N` 保留为发布选择的别名；V14 SP1 与 V15.1 必须使用精确键 `14sp1`、`15.1`，原始 V14/V15 不受支持。显式键须与宿主旁的发布标记一致。资源根使用 `--bundle-root <绝对目录>` 或 `TIA_MCP_BUNDLE_ROOT`。
 
-## 常用命令
+## 保留命令
 
-| 命令 | 用途 |
+| 命令 | 用途与输出 |
 |---|---|
-| `gen <spec>` | 创建 spec 描述的工程 |
-| `patch <spec>` | 按 spec 的 `projectPath` 增量修改已有工程 |
-| `describe <工程路径> --plc <PLC名>` | 查看指定 PLC |
-| `compile <工程路径> --plc <PLC名>` | 编译并查看诊断 |
-| `prewarm` | 保持一个可复用的无界面 TIA 实例 |
-| `doctor` | 检查本机安装、API 和用户环境 |
-| `schema` | 查看 spec 字段和格式 |
+| `doctor [--fix]` | 本机安装、Openness API 与版本匹配、.NET Framework 4.8、Windows 网络来源标记、worker 启动就绪、用户组和 AI 客户端配置；输出可读体检报告 |
+| `audit verify [--path <绝对目录>]` | 输出审计链 JSON 报告；完整返回 0，损坏返回 3 |
+| `schema` | 原样输出旧版 JSON/YAML spec 字段参考，供维护已有 spec；新工程使用生成框架 |
+| `version` | 输出 `tia <程序集版本>` |
+| `config [--host <客户端>] [--print] [--full]` | 为所选版本生成或写入 MCP 客户端配置；`--print` 只打印 JSON/TOML，`--full` 显式选择完整工具清单 |
+| `install-plc-tools [--python <路径>] [--environment-path <绝对目录>]` | 使用 Python 3.12+ 建立伴随环境并安装依赖 |
+| `help` / `--help` / `-h` | 输出用法、八版发布键、替代工具和超时说明 |
 
-`gen`、`patch`、`describe`、`compile`、`export`、`import` 在标准输出只打印一份 V4 结果 JSON（与 MCP 工具结果相同的信封），诊断信息只写到标准错误。退出码：`0` 成功；`2` 操作前被拒绝（未执行）；`3` 失败或读取失败；`4` 部分完成；`5` 结果未知（需重置会话后核对工程状态）；`64` 命令或参数写法错误；`70` 无法建立工具运行环境。`4`、`5` 不能当作成功处理。工程、源文件和输出目录均指运行 CLI 的电脑；相对路径以当前工作目录解析。需要 TIA 窗口时按命令支持使用 `--with-ui`。
+`config` 支持 Claude Desktop、Claude Code、Cursor、VS Code、Codex、Gemini CLI、Windsurf 和 Cline。默认只写入检测到的客户端，显式 `--host` 可指定目标；合并保留其他配置，修改前备份为 `.bak`。配置写入后重启 AI 客户端。
 
-### MCP 宿主与 worker
+`doctor` 默认只读。`--fix` 经现有 worker 用户组修复操作添加当前用户，可能弹出 UAC；完成后注销再登录。需要原生启动事实时使用 worker 观测，不连接 Portal 或打开工程。API 或 worker 无法启动时仍输出其余本机检查与修复提示。`--offline` 不启动 worker，不能执行用户组修复。非默认安装可传 `--tia-portal-location <安装目录>`；开发输出可传 `--public-api <准确版本的 API 目录>` 和 `--worker-exe <worker 路径>`。V20/V21 的过渡开关 `--plc-worker` 选择独立 PLC worker；不提供时仍用引擎 worker。
 
-八个版本都由 FoundationHost 提供 MCP，每个 MCP 会话使用一个 worker。V14 SP1–V19 使用 PLC worker，V20/V21 使用引擎 worker；隔离开关 `--isolate-openness` 和 `--no-isolate-openness` 已删除。使用工作台生成的宿主命令，无需选择隔离模式。
+`doctor` 显示实际日志与诊断目录。宿主启动及运行消息共用 `data/logs/<releaseKey>/TiaMcpServer-<processKey>.log`，工作台崩溃日志位于 `data/logs/studio`；进程键含 PID、启动 UTC、GUID。只读安装的普通日志回退到 `%TEMP%\TiaMcp\logs`。每次启动按用途保留最新 32 份，跳过锁定、活动进程和非产品文件；写入失败每用途每进程报告一次 `IO_FAILED`。
 
-worker 超时预算默认为 120 秒，每个代次的首次附着为 300 秒，编译、传输、导入导出、归档和库更新为 30 分钟。可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 设置分类预算，`--worker-timeout-seconds` 设置默认预算。派发前可以取消；派发后等待真实结果，超时或通道故障不会重放原生操作。
+审计写入 `data/logs/audit` 的共享单链，只读安装回退到 `%LOCALAPPDATA%\TiaMcp\logs\audit`，失败报 `DIAGNOSTIC_WRITE_FAILED`。`tia audit verify` 分别校验主目录和已存在的回退链，报告链目录、断点文件及序号；显式数据根不回退。校验不能证明整份日志没有被删除。`data/diagnostics` 保存原生调用诊断包。
 
-V20/V21 用 `GetOpennessWorkerStatus` 查看 worker 代次、活动调用和故障。发生结果未知时先检查 TIA 工程及调用日志，再用 `DisconnectPortal` 恢复：空闲 worker 干净分离，忙碌或丢失的 worker 结束后须重启 TIA。也可显式使用 `RestartOpennessWorker` 重启当前会话的 worker；重新连接后必须再次绑定工程。详见[worker 与恢复](../guides/openness-worker-isolation.md)。
+Python 默认解释器为 `%LOCALAPPDATA%\TiaMcp\ecosystem-python\Scripts\python.exe`；自选解释器使用 `TIA_MCP_PLC_TOOLS_PYTHON`。安装命令的 pip 按当前索引设置联网安装；离线安装可设置 `PIP_NO_INDEX=1` 并提供本地 wheel 缓存。详见[生态工具](../reference/ecosystem-tools.md)。
 
-## 让 AI 生成 spec
+## 退出码
 
-先复制 `schema` 输出，再向 AI 说明工程目标：
+`0` 成功；`2` 操作前被拒绝、`doctor` 未就绪或 `config` 所有尝试写入均失败；`3` 失败或读取失败；`4` 部分完成；`5` 结果未知；`64` 命令或参数写法错误；`70` 无法建立运行环境或缺少包资源。八个版本的宿主均采用此约定：旧引擎中 `doctor` 未就绪和 `config` 写入失败的退出码 `1`，在宿主中改为 `2`。`install-plc-tools` 仍原样返回外部 pip 进程的非零退出码，包括 `1`。没有可写客户端且没有写入错误时，`config` 提示未写入并返回 `0`。`4`、`5` 不能视为成功。
 
-```text
-请根据下面当前引擎的 schema，为我输出合法的 spec.json。
-目标 TIA 版本：[V21]；CPU/HMI 型号和程序要求：[填写实际需求]。
-只使用 schema 中存在的字段；列出需要单独保存的源文件及其服务端路径。
-完整程序从当前 GetToolUsage 的语言示例和调用示例改写，核对适用版本与编码。
-不要把示例 DB 号、地址或面板分辨率当成我的工程参数。
-[粘贴 schema 输出]
-```
-把 spec 和它引用的所有文件保存到实际位置，先离线校验，再执行。若某一步失败，将该步诊断、输入和实际工程状态交给 AI 修正。
+## 退役的工程命令
 
-现有蓝图见 [templates/project-blueprints](../../templates/project-blueprints)。文件中的 `__BUNDLE__` 会解析为交付包根目录。模板不是任意版本的通用工程：UDT/DB builder 有显式八版输出，其余 PLC builder 仍为 V21 候选格式，见 [Builder 说明](../guides/plc/builders.md)。
+宿主不接受以下命令。V20/V21 引擎在删除前仍执行原有命令，并额外向 stderr 打印一行替代指引；stdout JSON 和退出码保持原样。
 
-生成工程和预热不再需要批处理快捷方式；从交付根目录直接运行上面的 V20 或 V21 引擎命令。`install-plc-tools` 为用户 Python 3.12+ 创建伴随环境；pip 按当前索引设置联网安装，也可通过 `PIP_NO_INDEX=1` 配合本地 wheel 缓存或索引离线安装。
+| 旧命令 | 替代入口 |
+|---|---|
+| `gen`、`patch` | [工程生成框架](../guides/project-generation.md)：`PlanProjectGeneration`、`ApplyGenerationPlan`，通过工作台预览与审批 |
+| `describe` | MCP `GetProjectTree`，再按所选 PLC/HMI 查询 |
+| `compile` | MCP `CompilePlcDiagnostics` 或对应设备/HMI 编译工具 |
+| `export`、`import` | 对应 PLC/HMI 的导入导出 MCP 工具；先用 `FindTools` 和 `GetToolUsage` 核对所选版本、输入格式与路径 |
+| `prewarm` | MCP `ConnectPortal`，由 MCP 会话持有 worker 与连接 |
 
-关闭前台 `prewarm` 可按 Ctrl+C。`prewarm --stop` 关闭其 TIA 实例，预热进程本身仍需结束。完整工程流程见[项目生成](../guides/project-generation.md)。
+旧引擎的 `gen`、`patch`、`describe`、`compile`、`export`、`import` 在 stdout 只打印一份 V4 结果 JSON，诊断写入 stderr。`schema` 仍是这些旧命令的字段参考，不能直接替代生成框架的标准包与机器输入。现有蓝图见 [templates/project-blueprints](../../templates/project-blueprints)；PLC 文档构建范围见 [Builder 说明](../guides/plc/builders.md)。
+
+## MCP 宿主与 worker
+
+八版都由 FoundationHost 提供 MCP，每个 MCP 会话使用一个 worker。使用工作台生成的宿主命令；隔离开关 `--isolate-openness` 和 `--no-isolate-openness` 已删除。
+
+worker 超时预算为：默认 120 秒，每个代次首次附着 300 秒，编译、传输、导入导出、归档和库更新 30 分钟。`--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 设置分类预算，`--worker-timeout-seconds` 设置默认预算。派发前可取消；派发后等待真实结果，超时或通道故障不重放原生操作。
+
+MCP 的 `WRITE` / `ONLINE-WRITE` 实际执行默认须经工作台审批。`dryRun=true` 和候选工具 `mode=preview` 不等待审批。`SaveProject`、`SaveProjectCopy` 和 `CloseProject` 实际执行同样须审批；连接、附着、打开和分离不审批。拒绝、120 秒默认超时或工作台不可用会在派发前返回 `CONFIRMATION_REQUIRED`。审批、执行与响应共享 requestId。
+
+V20/V21 可用 `GetOpennessWorkerStatus` 查看代次与故障。`OUTCOME_UNKNOWN` 后先核对工程和调用日志，再用 `DisconnectPortal` 恢复，或显式调用 `RestartOpennessWorker`；重新连接后必须重新绑定工程。详见 [worker 与恢复](../guides/openness-worker-isolation.md)。

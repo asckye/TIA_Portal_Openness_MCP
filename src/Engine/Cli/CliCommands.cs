@@ -20,6 +20,22 @@ namespace TiaMcpServer.Cli
 
         public static bool IsVerb(string s) => Array.IndexOf(Verbs, s.ToLowerInvariant()) >= 0;
 
+        internal static void WriteRetirementGuidance(string[] args)
+        {
+            if (args.Length == 0) return;
+            string? replacement = args[0].ToLowerInvariant() switch
+            {
+                "gen" or "patch" => "the project generation framework (PlanProjectGeneration / ApplyGenerationPlan)",
+                "describe" => "the GetProjectTree MCP tool",
+                "compile" => "the CompilePlcDiagnostics MCP tool",
+                "export" => "PLC/HMI export MCP tools (FindTools / GetToolUsage)",
+                "import" => "PLC/HMI import MCP tools (FindTools / GetToolUsage)",
+                "prewarm" => "the ConnectPortal MCP tool",
+                _ => null
+            };
+            if (replacement != null) Console.Error.WriteLine("Retiring `tia " + args[0].ToLowerInvariant() + "`; use " + replacement + ".");
+        }
+
         internal static int RunWithContext(string[] args)
             => CliBoundary.RunContext(args, () => EngineServices.InitializeStandalone(), () => Run(args), Console.Error);
 

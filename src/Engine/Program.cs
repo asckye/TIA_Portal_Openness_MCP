@@ -53,6 +53,7 @@ namespace TiaMcpServer
                 Environment.ExitCode = 70;
                 return;
             }
+            Cli.CliCommands.WriteRetirementGuidance(args);
             if (Cli.CliBoundary.TryValidate(args, out int syntaxExit))
             {
                 Environment.ExitCode = syntaxExit;

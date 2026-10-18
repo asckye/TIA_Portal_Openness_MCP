@@ -1147,8 +1147,7 @@ internal static partial class ReleaseCommands
         }
         if (manifest["cli"] is JsonObject cli)
         {
-            cli["exe"] = "runtime/v21/worker/TiaMcp.Engine.V21.exe";
-            cli["description"] = "Call runtime/v21/worker/TiaMcp.Engine.V21.exe or runtime/v20/worker/TiaMcp.Engine.V20.exe with a CLI verb. JSON/YAML generation requires no MCP client.";
+            CatalogGenerator.WriteHostCli(cli);
         }
         manifest["validationStatus"] = $"Delivery {release}; engine {fileVersion} validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending";
         WriteJson(manifestPath, manifest);

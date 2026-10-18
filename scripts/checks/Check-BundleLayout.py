@@ -290,7 +290,9 @@ class LayoutChecks(unittest.TestCase):
             expected.update(d for d in project.get('dependencies', []) if not d.startswith('plc-'))
             for extra in ('opcua', 'web'):
                 expected.update(d for d in project.get('optional-dependencies', {}).get(extra, []) if not d.startswith('plc-'))
-        installer = (ROOT / 'src/Engine/Cli/InstallPlcToolsCommand.cs').read_text(encoding='utf-8-sig')
+        installer = (ROOT / 'src/Shared/Host/InstallPlcToolsCommand.cs').read_text(encoding='utf-8-sig')
+        for project in ('src/FoundationHost/TiaMcp.FoundationHost.csproj', 'src/Engine/TiaMcp.Engine.V20.csproj', 'src/Engine/TiaMcp.Engine.V21.csproj'):
+            self.assertIn('../Shared/Host/InstallPlcToolsCommand.cs', (ROOT / project).read_text(encoding='utf-8-sig'))
         actual = re.search(r'ExternalPackages\s*=\s*\{(.*?)\n\s*\};', installer, re.S)
         self.assertIsNotNone(actual)
         self.assertEqual(set(re.findall(r'"([^"\n]+)"', actual[1])), expected)
