@@ -55,6 +55,26 @@ public sealed class OnlinePortAdmissionTests
     }
 
     [Theory]
+    [InlineData("SafetyProgram")]
+    [InlineData("differentTargetConfiguration")]
+    [InlineData("ExpandDownload")]
+    [InlineData("LoadIdentificationData")]
+    public void Opt_in_prompts_cannot_be_answered_through_promptAnswers(string prompt)
+    {
+        string previous = Engine.EngineHostConfiguration.ReleaseKey;
+        try
+        {
+            Engine.EngineHostConfiguration.ReleaseKey = "21";
+            int calls = 0;
+            var service = new Service((_, _) => { calls++; throw new InvalidOperationException("Unexpected dispatch"); }, () => "fixture.ap21");
+            var error = Assert.Throws<ArgumentException>(() => service.DownloadToPlc("PLC_1", promptAnswersJson: "{\"" + prompt + "\":\"AcceptAll\"}"));
+            Assert.Contains("=true", error.Message, StringComparison.Ordinal);
+            Assert.Equal(0, calls);
+        }
+        finally { Engine.EngineHostConfiguration.ReleaseKey = previous; }
+    }
+
+    [Theory]
     [InlineData("createSnapshot")]
     [InlineData("loadSnapshotAsActualValues")]
     [InlineData("loadStartValuesAsActualValues")]

@@ -21,9 +21,11 @@ namespace TiaMcp.Logic.V4
             if (candidate) return args["mode"] is JsonValue mode && mode.TryGetValue<string>(out var text) && text == "apply";
             if (hasDryRun)
             {
-                if (args["dryRun"] is JsonValue dryRun && dryRun.TryGetValue<bool>(out var preview))
-                { if (preview) return false; }
-                else if (args.ContainsKey("dryRun") || defaultPreview) return false;
+                // Only an explicit boolean true previews. A present dryRun that is not a JSON boolean (a string, number or null
+                // that a later binding may convert) fails closed as a write; an absent dryRun follows the schema default.
+                if (args.ContainsKey("dryRun"))
+                { if (args["dryRun"] is JsonValue dryRun && dryRun.TryGetValue<bool>(out var preview) && preview) return false; }
+                else if (defaultPreview) return false;
             }
             if (tool is "ExchangeSystemDiagnosticsSettings" or "ExchangeUnifiedTags" or "ExchangeUnifiedScriptModules")
                 return args["action"] is JsonValue action && action.TryGetValue<string>(out var operation) && operation == "import";

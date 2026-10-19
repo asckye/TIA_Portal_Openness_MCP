@@ -93,6 +93,10 @@ namespace TiaMcp.Engine.Tests
             check(Fails<ArgumentException>(() => RuntimeChannelsLogic.NormalizeS7WebHost("plc:99999")), "bad port refused");
             check(RuntimeChannelsLogic.S7WebSessionKey("PLC", "u", false) != RuntimeChannelsLogic.S7WebSessionKey("PLC", "u", true), "session key separates certificate policies");
             check(RuntimeChannelsLogic.S7WebSessionKey("PLC", "u", false) == RuntimeChannelsLogic.S7WebSessionKey("plc", "u", false), "session key is host-case-insensitive");
+            check(RuntimeChannelsLogic.S7WebSessionKey("PLC", "u", "first", false) != RuntimeChannelsLogic.S7WebSessionKey("PLC", "u", "second", false), "session key separates passwords, so a different password logs in again");
+            check(RuntimeChannelsLogic.S7WebSessionKey("PLC", "u", "first", false) == RuntimeChannelsLogic.S7WebSessionKey("plc", "u", "first", false), "session key with a password stays host-case-insensitive");
+            check(RuntimeChannelsLogic.S7WebSessionKey("PLC", "u", "", false) != RuntimeChannelsLogic.S7WebSessionKey("PLC", "u", "first", false), "an empty password never reuses an authenticated session");
+            check(!RuntimeChannelsLogic.S7WebSessionKey("PLC", "u", "fixture-secret-value", true).Contains("fixture-secret-value"), "the session key never contains the password");
             check(RuntimeChannelsLogic.NormalizeOperatingModeRequest(" RUN ") == "run" && RuntimeChannelsLogic.NormalizeOperatingModeRequest("stop") == "stop", "[sentinel] run/stop accepted");
             foreach (var bad in new[] { "", "hold", "startup", "reset", "memory reset" })
                 check(Fails<ArgumentException>(() => RuntimeChannelsLogic.NormalizeOperatingModeRequest(bad)), "mode '" + bad + "' refused");

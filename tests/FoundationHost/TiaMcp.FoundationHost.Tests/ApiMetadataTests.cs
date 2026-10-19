@@ -13,6 +13,7 @@ internal static class ApiMetadataTests
             var core=Path.Combine(apiRoot,directory,key=="21"?"Siemens.Engineering.Base.dll":"Siemens.Engineering.dll");
             CheckHardwareBranches(Path.Combine(apiRoot,directory),key,check);
             CheckSchemaFragments(Path.Combine(apiRoot,directory),key,check);
+            CheckDownloadPrompts(Path.Combine(apiRoot,directory),key,check);
             CheckMembers(core,"Siemens.Engineering.Online.OnlineProvider",new[]{"State"},true,check);
             if(key!="14sp1") CheckMembers(core,"Siemens.Engineering.Online.RHOnlineProvider",new[]{"PrimaryState","BackupState"},true,check);
             var identity=AssemblyName.GetAssemblyName(core);
@@ -223,6 +224,63 @@ internal static class ApiMetadataTests
         var type=md.TypeDefinitions.Select(md.GetTypeDefinition).Single(t=>md.GetString(t.Namespace)+"."+md.GetString(t.Name)==fullName);
         var names=properties ? type.GetProperties().Select(h=>md.GetString(md.GetPropertyDefinition(h).Name)).ToHashSet() : type.GetMethods().Select(h=>md.GetString(md.GetMethodDefinition(h).Name)).ToHashSet();
         foreach(var name in members) check(names.Contains(name),"Real API member "+fullName+"."+name);
+    }
+
+    // The download prompt policy answers with the release's own enum names (read from the SDK metadata of every release):
+    // V17-V21 DataBlockReinitializationSelections is exactly NoAction/StopPlcAndReinitialize, each opt-in prompt offers the
+    // selection it is allowed or refused with, and every CompareResultState name is a state the online compare classifies.
+    private static void CheckDownloadPrompts(string directory,string key,Action<bool,string> check)
+    {
+        var enums=new Dictionary<string,string[]>(StringComparer.Ordinal);
+        string[]? compareStates=null;
+        foreach(var dll in Directory.GetFiles(directory,"Siemens.Engineering*.dll"))
+        {
+            using var stream=File.OpenRead(dll);
+            using var pe=new PEReader(stream);
+            if(!pe.HasMetadata) continue;
+            var md=pe.GetMetadataReader();
+            foreach(var type in md.TypeDefinitions.Select(md.GetTypeDefinition))
+            {
+                string ns=md.GetString(type.Namespace), name=md.GetString(type.Name);
+                string[] Values()=>type.GetFields().Select(md.GetFieldDefinition).Where(f=>(f.Attributes&FieldAttributes.Static)!=0).Select(f=>md.GetString(f.Name)).ToArray();
+                if(ns=="Siemens.Engineering.Compare" && name=="CompareResultState") compareStates=Values();
+                if((ns.EndsWith(".Download.Configurations",StringComparison.Ordinal) || ns.EndsWith(".Upload.Configurations",StringComparison.Ordinal)) && name.EndsWith("Selections",StringComparison.Ordinal))
+                    enums[name]=Values();
+            }
+        }
+        bool reinitialization=key is "17" or "18" or "19" or "20" or "21";
+        check(enums.ContainsKey("DataBlockReinitializationSelections")==reinitialization,key+" DataBlockReinitialization prompt exists exactly on V17-V21");
+        if(reinitialization)
+        {
+            var values=enums["DataBlockReinitializationSelections"];
+            check(values.OrderBy(v=>v,StringComparer.Ordinal).SequenceEqual(new[]{"NoAction","StopPlcAndReinitialize"}),key+" DataBlockReinitializationSelections is exactly NoAction/StopPlcAndReinitialize");
+            var keep=new global::TiaMcpServer.Siemens.DownloadPromptPolicy().Decide("DataBlockReinitialization",values,false,false);
+            var reset=new global::TiaMcpServer.Siemens.DownloadPromptPolicy{KeepActualValues=false}.Decide("DataBlockReinitialization",values,false,false);
+            check(keep.Value=="NoAction" && reset.Value=="StopPlcAndReinitialize",key+" DataBlockReinitialization is answered with this release's own enum names");
+        }
+        check(enums.ContainsKey("DataBlockReinitializationOrKeepActualValuesSelections")==(key=="21"),key+" DataBlockReinitializationOrKeepActualValues prompt exists exactly on V21");
+        if(enums.TryGetValue("DataBlockReinitializationOrKeepActualValuesSelections",out var orKeep))
+        {
+            var reset=new global::TiaMcpServer.Siemens.DownloadPromptPolicy{KeepActualValues=false}.Decide("DataBlockReinitializationOrKeepActualValues",orKeep,false,false);
+            var noStop=new global::TiaMcpServer.Siemens.DownloadPromptPolicy{KeepActualValues=false,StopBeforeDownload=false}.Decide("DataBlockReinitializationOrKeepActualValues",orKeep,false,false);
+            var keep=new global::TiaMcpServer.Siemens.DownloadPromptPolicy().Decide("DataBlockReinitializationOrKeepActualValues",orKeep,false,false);
+            check(keep.Value=="KeepActualValues" && reset.Value=="StopPlcAndReinitialize" && noStop.Value=="NoAction",key+" DataBlockReinitializationOrKeepActualValues follows the STOP rule with this release's own enum names");
+        }
+        foreach(var prompt in global::TiaMcpServer.Siemens.DownloadPromptPolicy.OptInPrompts)
+        {
+            if(!enums.TryGetValue(prompt+"Selections",out var values))
+            {
+                check(key=="14sp1" || prompt=="SafetyProgram" && key is "15.1" or "16" or "17" or "18" || prompt=="ActiveTestCanPreventDownload" && key=="15.1",key+" "+prompt+" is absent only where the SDK lacks it");
+                continue;
+            }
+            var allowed=new global::TiaMcpServer.Siemens.DownloadPromptPolicy{AllowSafetyProgramDownload=true,AllowHardwareDifferences=true,AllowActiveTestCancel=true,AllowExpandedDownload=true,AllowIdentificationDataLoad=true}.Decide(prompt,values,false,false);
+            var refused=new global::TiaMcpServer.Siemens.DownloadPromptPolicy().Decide(prompt,values,false,false);
+            check(allowed.Kind==global::TiaMcpServer.Siemens.DownloadPromptPolicy.AnswerKind.Selection && refused.Kind==global::TiaMcpServer.Siemens.DownloadPromptPolicy.AnswerKind.Refused
+                && (prompt=="SafetyProgram" ? refused.Value==null : refused.Value!=null),key+" "+prompt+" allow and refuse selections exist in this release's enum");
+        }
+        var known=new[]{"ObjectsIdentical","FolderContentsIdentical","CompareIrrelevant","ObjectsDifferent","LeftMissing","RightMissing","FolderContentsDifferent","FolderContainsDifferencesOwnStateDifferent","FolderContentEqualOwnStateDifferent"};
+        check(compareStates!=null && compareStates.All(known.Contains),key+" every CompareResultState name is classified by the online compare");
+        check(compareStates!=null && compareStates.Contains("CompareIrrelevant")==(key!="14sp1") && (key=="14sp1" || !global::TiaMcp.Adapters.Contracts.OnlineTransitionPolicy.IsCompareDifference("CompareIrrelevant")),key+" CompareIrrelevant is no difference where the release has it");
     }
 
     private static void CheckHardwareBranches(string directory,string key,Action<bool,string> check)

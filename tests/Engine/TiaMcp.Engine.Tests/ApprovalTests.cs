@@ -121,6 +121,25 @@ namespace TiaMcp.Engine.Tests
         }
 
         [Theory]
+        [InlineData("\"true\"")]
+        [InlineData("\"false\"")]
+        [InlineData("1")]
+        [InlineData("null")]
+        [InlineData("{}")]
+        public void A_present_non_boolean_dry_run_is_a_write_on_the_bridge_path(string dryRun)
+        {
+            // Only an explicit boolean true previews; a value a later binding may convert fails closed and waits for approval.
+            using var fixture = new InfrastructureContractsTests();
+            TiaMcpServer.ModelContextProtocol.McpServer.ConfigureToolBridge(new TiaMcpServer.ModelContextProtocol.ToolCatalog(new[] {
+                typeof(TiaMcpServer.ModelContextProtocol.McpServer), typeof(BatchGateProbe) }), () => false, new System.Collections.Generic.HashSet<string>());
+            Assert.True(TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWrite("CreateApprovalFixture", "{\"target\":\"apply\",\"dryRun\":" + dryRun + "}"));
+            Assert.True(TiaMcpServer.ModelContextProtocol.McpServer.ApprovalResultWrite("CallTool",
+                "{\"name\":\"CreateApprovalFixture\",\"arguments\":{\"target\":\"apply\",\"dryRun\":" + dryRun + "}}"));
+            Assert.False(TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWrite("CreateApprovalFixture", "{\"target\":\"preview\",\"dryRun\":true}"));
+            Assert.False(TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWrite("CreateApprovalFixture", "{\"target\":\"schema-default-preview\"}"));
+        }
+
+        [Theory]
         [InlineData("SaveProject")]
         [InlineData("SaveProjectCopy")]
         [InlineData("CloseProject")]

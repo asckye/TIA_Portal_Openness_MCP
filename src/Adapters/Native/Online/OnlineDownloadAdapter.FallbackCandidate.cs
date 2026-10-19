@@ -140,8 +140,9 @@ namespace TiaMcp.Adapters.Native.Online
                     string rhTarget = request.Parameters["rhTarget"];
                     if (rhTarget != "" && rhTarget != "primary" && rhTarget != "backup") CandidatePrimitives.Invalid("rhTarget");
                     provider = _session.ResolvePlcService<DownloadProvider>(request.SoftwarePath, plc) ?? throw new NotSupportedException("DownloadProvider unavailable.");
-                    configuration = provider.Configuration; if (configuration == null) throw new NotSupportedException("ConnectionConfiguration unavailable.");
                     if (rhTarget.Length != 0) rh = _session.ResolvePlcService<RHDownloadProvider>(request.SoftwarePath, plc) ?? throw new NotSupportedException("RHDownloadProvider unavailable.");
+                    // Routes and legitimation belong to the provider that downloads: targets are bound to the provider that enumerated them.
+                    configuration = rh != null ? rh.Configuration : provider.Configuration; if (configuration == null) throw new NotSupportedException("ConnectionConfiguration unavailable.");
                     routes = FallbackRoutes(configuration).ToDictionary(r => r.Id, StringComparer.Ordinal);
                     foreach (var r in routes.Values) discovered.Add(new FallbackRoute { Id = r.Id, TargetId = r.TargetId,
                         NativeCalls = new[] { "ConnectionConfiguration.ApplyConfiguration", rhTarget == "primary" ? "RHDownloadProvider.DownloadToPrimary" : rhTarget == "backup" ? "RHDownloadProvider.DownloadToBackup" : "DownloadProvider.Download" } });
@@ -170,7 +171,10 @@ namespace TiaMcp.Adapters.Native.Online
                 if (online || folder)
                 {
                     bool Flag(string key) => r.Parameters.TryGetValue(key, out var value) && value == "true";
-                    var policy = BuildDownloadPromptPolicy(folder || Flag("consistentBlocksOnly"), folder || Flag("keepActualValues"), !folder && Flag("startAfterDownload"), !folder && Flag("stopBeforeDownload"), "keep", "{}", password, null, null);
+                    var policy = BuildDownloadPromptPolicy(new OnlineRequest { Operation = folder ? "DownloadPlcToFolder" : "DownloadPlc", ConsistentBlocksOnly = folder || Flag("consistentBlocksOnly"),
+                        KeepActualValues = folder || Flag("keepActualValues"), StartAfterDownload = !folder && Flag("startAfterDownload"), StopBeforeDownload = !folder && Flag("stopBeforeDownload"),
+                        Password = password, TargetForSoftware = folder ? r.Parameters["targetForSoftware"] : "CPU" });
+                    if (folder) policy.ModuleAccessPassword = string.IsNullOrEmpty(password) ? null : password;
                     DownloadConfigurationDelegate pre = c => ApplyDownloadPrompt(c, policy), post = c => ApplyDownloadPrompt(c, policy);
                     DownloadResult result;
                     void Returned(DownloadResult raw)
@@ -183,7 +187,6 @@ namespace TiaMcp.Adapters.Native.Online
                     if (folder)
                     {
                         string target = r.Parameters["targetForSoftware"]; if (target != "CPU" && target != "PlcSimulationAdvanced") CandidatePrimitives.Invalid("targetForSoftware");
-                        policy.Explicit["TargetForSoftware"] = target; policy.Explicit["OverwriteOnMemoryCard"] = "NoAction";
                         var directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(r.Parameters["destinationDirectory"]));
                         if (directory.Exists && directory.EnumerateFileSystemInfos().Any()) CandidatePrimitives.Fail("stale", "card-directory-changed");
                         evidence.WriteIssued = true; if (!directory.Exists) directory.Create();
@@ -198,7 +201,7 @@ namespace TiaMcp.Adapters.Native.Online
                     else
                     {
                         var selected = routes[r.Route]; string target = r.Parameters["rhTarget"];
-                        using var legitimation = AttachOnlineLegitimationHandler(configuration, password, new HmiObject(), Flag("trustDeviceCertificate"));
+                        using var legitimation = AttachOnlineLegitimationHandler(configuration, password, new HmiObject(), Flag("trustDeviceCertificate"), false);
                         evidence.OperationIssued = true; evidence.WriteIssued = true;
                         result = target == "primary" ? rh!.DownloadToPrimary(selected.Configuration, pre, post, DownloadOptions.Software)
                             : target == "backup" ? rh!.DownloadToBackup(selected.Configuration, pre, post, DownloadOptions.Software)

@@ -101,7 +101,8 @@ internal sealed partial class OnlineDownloadAdapter
 #endif
 
 #if ONLINE_FINGERPRINTS
-        public HmiMessage ReadPlcBlockFingerprints(string softwarePath, string targetIpAddress, string pgPcInterface = "", string password = "", int offset = 0, int limit = 100, bool dryRun = true)
+        public HmiMessage ReadPlcBlockFingerprints(string softwarePath, string targetIpAddress, string pgPcInterface = "", string password = "", int offset = 0, int limit = 100, bool dryRun = true,
+            bool trustDeviceCertificate = false, bool allowNonTlsLogin = false)
             => _session.RunHmiStepTool("GetPlcBlockFingerprints", meta => {
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset>=0, limit 1..500 required.");
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
@@ -128,6 +129,7 @@ internal sealed partial class OnlineDownloadAdapter
                         }
                     }
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["contactedPlc"] = false; meta["passwordProvided"] = !string.IsNullOrEmpty(password);
+                meta["trustDeviceCertificate"] = trustDeviceCertificate;
                 meta["candidateRoutes"] = new HmiArray(candidates.Take(100).Select(c => (object)HmiScalar.Json(c.Describe())!).ToArray());
                 var route = OnlineDataPolicy.SelectFingerprintRoute(candidates, targetIpAddress, pgPcInterface);
                 meta["selectedRoute"] = route.Describe();
@@ -135,13 +137,22 @@ internal sealed partial class OnlineDownloadAdapter
                 using var secure = string.IsNullOrEmpty(password) ? null : OnlineDataPolicy.ToSecureString(password);
                 OnlineConfigurationDelegate handler = OnlinePrimitives.Handler(cfg =>
                 {
-                    if (secure != null && cfg is OnlinePasswordConfiguration pwd) OnlinePrimitives.Password(pwd, secure);
+                    if (secure != null && cfg is OnlinePasswordConfiguration pwd)
+                    {
+#if ONLINE_PASSWORD_SECURITY
+                        // The official pattern checks IsSecureCommunication before entering a password (V21 on this prompt).
+                        var nonTlsRefusal = DownloadPromptPolicy.NonTlsLoginRefusal(pwd.IsSecureCommunication, allowNonTlsLogin);
+                        if (nonTlsRefusal != null) { meta["onlinePassword"] = new HmiObject { ["isSecureCommunication"] = false, ["answered"] = false, ["note"] = nonTlsRefusal }; return; }
+#endif
+                        OnlinePrimitives.Password(pwd, secure);
+                    }
 #if ONLINE_TLS
                     else if (cfg is TlsVerificationConfiguration tls)   // FW >= 2.9 CPUs ask for certificate trust before any online read
                     {
                         var before = OnlinePrimitives.Selection(tls).ToString();
-                        if (TiaMcp.Adapters.Contracts.EngineeringCredentialRules.TlsSelectionToApply(true, before) != null) OnlinePrimitives.Selection(tls, TlsVerificationConfigurationSelection.Trusted);
-                        meta["tlsVerification"] = new HmiObject { ["plcName"] = OnlinePrimitives.PlcName(tls), ["verificationInfo"] = OnlinePrimitives.VerificationInfo(tls), ["selectionBefore"] = before, ["selectionAfter"] = OnlinePrimitives.Selection(tls).ToString() };
+                        var apply = TiaMcp.Adapters.Contracts.EngineeringCredentialRules.TlsSelectionToApply(trustDeviceCertificate, before);
+                        if (apply != null) OnlinePrimitives.Selection(tls, TlsVerificationConfigurationSelection.Trusted);
+                        meta["tlsVerification"] = TlsRecord(tls, before, trustDeviceCertificate, apply != null);
                     }
 #endif
                 });

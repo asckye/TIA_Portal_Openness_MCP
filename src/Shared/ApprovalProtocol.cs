@@ -108,6 +108,10 @@ namespace TiaOpenness.Shared
                 catch (IOException) /* swallow(privacy): the staging precheck reports the unavailable bundle before approval */
                 { compact["stagingLocation"] = Path.Combine(AppContext.BaseDirectory, "staging"); }
             }
+#if TIA_GENERATION_PLANNER
+            // Download and upload prompts are answered during the native call; the approver sees every answer the call will give.
+            if (TiaMcpServer.Siemens.DownloadPromptPolicy.ApprovalPlan(tool, args) is JsonObject plan) compact["promptAnswerPlan"] = plan;
+#endif
             string json = compact.ToJsonString();
             if (Encoding.UTF8.GetByteCount(json) > 64 * 1024)
                 compact = new JsonObject { ["displayTruncated"] = true, ["argumentByteLength"] = Encoding.UTF8.GetByteCount(args.ToJsonString()) };

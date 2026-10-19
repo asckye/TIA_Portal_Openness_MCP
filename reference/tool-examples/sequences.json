@@ -432,7 +432,7 @@
     "topic": "download-plcsim",
     "purpose": "Download a standard CPU to a PLCSIM Advanced instance and go online (the maintainer's only permitted online target).",
     "preconditions": "cpu-protection done for that CPU; PLCSIM Advanced 8.0 installed on the TIA machine; the CPU is a standard one (F-CPUs are refused by Openness).",
-    "notes": "Softbus makes TIA show a single 'PLCSIM' PG/PC interface; register with that when the instance is new. Downloads to FW >= 2.9 CPUs need trustDeviceCertificate (default true). Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-FALLBACK is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+    "notes": "Softbus makes TIA show a single 'PLCSIM' PG/PC interface; register with that when the instance is new. FW >= 2.9 CPUs (PLCSIM Advanced included) present a device certificate on the first contact; trustDeviceCertificate defaults to false, so these steps pass true only for the lab instance whose certificate was checked (meta.tlsVerification reports it). DownloadPlc needs the PLC offline and connects by itself; go online afterwards. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-FALLBACK is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
     "releaseKeys": [
       "20",
       "21"
@@ -498,7 +498,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "pgPcInterface": "PLCSIM",
-          "targetIpAddress": "<CPU IP>"
+          "targetIpAddress": "<CPU IP>",
+          "trustDeviceCertificate": true
         },
         "expect": "State Success / Warning"
       },
@@ -507,7 +508,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "ipAddress": "<CPU IP>",
-          "pgPcInterface": "PLCSIM"
+          "pgPcInterface": "PLCSIM",
+          "trustDeviceCertificate": true
         },
         "expect": "Online"
       },

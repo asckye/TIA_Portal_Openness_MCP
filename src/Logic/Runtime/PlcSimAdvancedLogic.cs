@@ -328,5 +328,14 @@ namespace TiaMcpServer.Runtime
             ["waitMs"] = s.Steps.Where(x => x.Kind == "wait").Sum(x => x.Count),
             ["modeChanges"] = new JsonArray(s.Steps.Where(x => x.Kind == "powerOn" || x.Kind == "run" || x.Kind == "stop").Select(x => (JsonNode)(x.Index + ":" + x.Kind)).ToArray())
         };
+
+        // IInstance.PowerOn() / PowerOn(UINT32) return ERuntimeErrorCode (PowerOff, Run, Stop and MemoryReset return void). OK and
+        // the warning codes keep the action successful (the code is still reported); any other code fails it. Returns null to
+        // accept, else the failure text.
+        public static string? RuntimeErrorFailure(string action, string? code)
+        {
+            if (string.IsNullOrEmpty(code) || code == "OK" || code!.IndexOf("Warning", StringComparison.OrdinalIgnoreCase) >= 0) return null;
+            return "PLCSIM Advanced " + action + " returned ERuntimeErrorCode " + code + "; the action did not complete.";
+        }
     }
 }

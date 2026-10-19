@@ -280,7 +280,9 @@ namespace TiaMcpServer.Runtime
 
         public static string OperatingState(object instance) => Convert.ToString(GetMember(instance.GetType(), instance, "OperatingState")) ?? "";
 
-        public static void Lifecycle(object instance, string action, int timeoutMs)
+        // Returns the ERuntimeErrorCode name PowerOn reported (null for the void actions); a code other than OK or a warning
+        // fails the action instead of reporting it as executed.
+        public static string? Lifecycle(object instance, string action, int timeoutMs)
         {
             var method = action switch
             {
@@ -289,9 +291,17 @@ namespace TiaMcpServer.Runtime
             };
             var t = instance.GetType();
             var withTimeout = t.GetMethod(method, new[] { typeof(uint) });
-            if (withTimeout != null && method != "UnregisterInstance") { Invoke(withTimeout, instance, (uint)Math.Max(1, timeoutMs)); return; }
-            var plain = t.GetMethod(method, Type.EmptyTypes) ?? throw NotSupported("IInstance." + method + "()");
-            Invoke(plain, instance);
+            object? returned;
+            if (withTimeout != null && method != "UnregisterInstance") returned = Invoke(withTimeout, instance, (uint)Math.Max(1, timeoutMs));
+            else
+            {
+                var plain = t.GetMethod(method, Type.EmptyTypes) ?? throw NotSupported("IInstance." + method + "()");
+                returned = Invoke(plain, instance);
+            }
+            string? code = returned is Enum ? returned.ToString() : null;
+            var failure = PlcSimAdvancedLogic.RuntimeErrorFailure(action, code);
+            if (failure != null) throw new InvalidOperationException(failure);
+            return code;
         }
 
         // ECommunicationInterface (None / Softbus / TCPIP). TCPIP makes the instance reachable through the "Siemens PLCSIM

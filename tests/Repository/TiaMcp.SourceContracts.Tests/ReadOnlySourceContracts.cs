@@ -121,6 +121,24 @@ public sealed class ReadOnlySourceContracts
         foreach (var tool in tools) Assert.Contains(tool, names);
     }
     [Fact]
+    public void OnlineTransitionsResolveThePlcWithoutTheOfflineExportPrecondition()
+    {
+        // GoOffline acts on an online PLC and needs no configuration; GoOnline and DownloadPlc reach R/H systems. The write
+        // resolution runs the offline-export precondition (exactly Offline, standard target only), so none of them may use it.
+        var adapter = Read("src/Adapters/Native/Online/OnlineDownloadAdapter.cs");
+        Excludes(adapter, "ResolvePlc(softwarePath, true)");
+        foreach (var entry in new[] { "public OnlineStateResult GoOnline(string softwarePath, string? ipAddress, string? password, string? userName, string? userType, string rhTarget, string? pgPcInterface, bool trustDeviceCertificate",
+            "public HmiMessage GoOffline(string softwarePath)", "public OnlineDownloadResult DownloadToPlc(OnlineRequest request)" })
+            Contains(EngineSources.BlockAfter(adapter, entry), "_session.ResolvePlc(softwarePath, false)");
+        var download = EngineSources.BlockAfter(adapter, "public OnlineDownloadResult DownloadToPlc(OnlineRequest request)");
+        Contains(download, "RequireDownloadOffline(softwarePath, plcSoftware, rhTarget)", "rh.Configuration", "downloadProvider!.Download(downloadConfig, preDelegate, postDelegate, options)");
+        Excludes(download, "GetMethods(", ".Invoke(downloadProvider");
+        Contains(EngineSources.BlockAfter(adapter, "public HmiMessage GoOffline(string softwarePath)"), "OnlineTransitionPolicy.GoOfflineOutcome(softwarePath, before, after)");
+        Excludes(adapter, "AttachOnlineLegitimationHandler(provider.Configuration, password, meta, true)", "AttachOnlineLegitimationHandler(providerConfiguration, password, meta, true)");
+        Excludes(Read("src/Adapters/Native/Online/OnlineDataAdapter.cs"), "TlsSelectionToApply(true,");
+    }
+
+    [Fact]
     public void SupplementaryReadsUseExplicitSourcesTypedAccessAndReadOnlyDispatch()
     {
         var files = XDocument.Parse(Read("src/Adapters/build/Adapter.Sources.props")).Descendants("AdapterSource").Select(n => Path.GetFullPath(Path.Combine(Root, "src", n.Attribute("Include")!.Value.Replace("$(AdapterSourceRoot)/", "", StringComparison.Ordinal)))).ToList();

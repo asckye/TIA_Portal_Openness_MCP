@@ -104,6 +104,122 @@ public sealed class OnlinePortTests
     }
 
     [Theory]
+    [InlineData("14sp1", true)]
+    [InlineData("15.1", true)]
+    [InlineData("16", true)]
+    [InlineData("17", false)]
+    [InlineData("20", false)]
+    [InlineData("21", false)]
+    public void Software_only_changes_download_needs_the_V17_option(string release, bool refused)
+        => Assert.Equal(refused, OnlineCapabilities.Unsupported(release,
+            new OnlineRequest { Operation = "DownloadPlc", DownloadScope = "softwareOnlyChanges" }) != null);
+
+    [Theory]
+    [InlineData("15.1")]
+    [InlineData("16")]
+    [InlineData("21")]
+    public void Full_software_download_scope_is_admitted_with_the_download_provider(string release)
+        => Assert.Null(OnlineCapabilities.Unsupported(release, new OnlineRequest { Operation = "DownloadPlc", DownloadScope = "software" }));
+
+    [Fact]
+    public void Online_requests_trust_no_certificate_and_allow_no_widening_prompt_by_default()
+    {
+        var request = new OnlineRequest();
+        Assert.False(request.TrustDeviceCertificate);
+        Assert.False(request.AllowNonTlsLogin);
+        Assert.False(request.AllowSafetyProgramDownload || request.AllowHardwareDifferences || request.AllowActiveTestCancel
+            || request.AllowExpandedDownload || request.AllowIdentificationDataLoad);
+        Assert.Equal("software", request.DownloadScope);
+        Assert.Equal(new[] { "software", "softwareOnlyChanges" }, OnlineCapabilities.DownloadScopes);
+        using var wire = JsonDocument.Parse(JsonSerializer.Serialize(new OnlineRequest { TrustDeviceCertificate = true, AllowExpandedDownload = true }));
+        Assert.True(wire.RootElement.GetProperty("TrustDeviceCertificate").GetBoolean());
+        Assert.True(JsonSerializer.Deserialize<OnlineRequest>(wire.RootElement.GetRawText())!.AllowExpandedDownload);
+    }
+
+    [Fact]
+    public void An_online_PLC_is_taken_offline_and_the_state_read_back_decides()
+    {
+        // Fake OnlineProvider: the PLC reads Online, GoOffline changes the state, and the state read back decides the result.
+        var provider = new FakeOnlineProvider("Online");
+        string before = provider.State;
+        provider.GoOffline();
+        var outcome = OnlineTransitionPolicy.GoOfflineOutcome("PLC_1", before, provider.State);
+        Assert.True(outcome.Success);
+        Assert.Contains("now offline", outcome.Message, StringComparison.Ordinal);
+        Assert.Contains("Online", outcome.Message, StringComparison.Ordinal);
+        var stuck = OnlineTransitionPolicy.GoOfflineOutcome("PLC_1", "Online", "Disconnecting");
+        Assert.False(stuck.Success);
+        Assert.Contains("not confirmed", stuck.Message, StringComparison.Ordinal);
+        Assert.True(OnlineTransitionPolicy.GoOfflineOutcome("PLC_1", "Offline", "Offline").Success);
+    }
+
+    private sealed class FakeOnlineProvider(string state)
+    {
+        internal string State { get; private set; } = state;
+        internal void GoOffline() => State = "Offline";
+    }
+
+    [Fact]
+    public void Connecting_is_polled_until_it_settles_within_the_bound()
+    {
+        var states = new Queue<string>(new[] { "Connecting", "Connecting", "Online" });
+        int slept = 0;
+        Assert.Equal("Online", OnlineTransitionPolicy.WaitWhileConnecting("Connecting", () => states.Dequeue(), ms => slept += ms, 10000, 250));
+        Assert.Equal(750, slept);
+        slept = 0;
+        Assert.Equal("Connecting", OnlineTransitionPolicy.WaitWhileConnecting("Connecting", () => "Connecting", ms => slept += ms, 1000, 250));
+        Assert.Equal(1000, slept);
+        Assert.Equal("Protected", OnlineTransitionPolicy.WaitWhileConnecting("Protected",
+            () => throw new InvalidOperationException("not polled"), _ => throw new InvalidOperationException("not slept")));
+    }
+
+    [Theory]
+    [InlineData(false, false, true)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, false)]
+    public void GoOnline_without_a_route_needs_a_configured_connection(bool routeRequested, bool isConfigured, bool refused)
+        => Assert.Equal(refused, OnlineTransitionPolicy.ConnectRefusal(routeRequested, isConfigured) != null);
+
+    [Fact]
+    public void An_explicit_route_that_is_not_applied_is_refused_and_an_automatic_pick_continues()
+    {
+        var refusal = OnlineTransitionPolicy.RouteApplyRefusal(true, false, "The device is online.", "PN/IE / PLCSIM -> 1 X1");
+        Assert.NotNull(refusal);
+        Assert.Contains("The device is online.", refusal, StringComparison.Ordinal);
+        Assert.Contains("ApplyConfiguration returned false", OnlineTransitionPolicy.RouteApplyRefusal(true, false, null, "route")!, StringComparison.Ordinal);
+        Assert.Null(OnlineTransitionPolicy.RouteApplyRefusal(false, false, "failed", "route"));
+        Assert.Null(OnlineTransitionPolicy.RouteApplyRefusal(true, true, null, "route"));
+    }
+
+    [Theory]
+    [InlineData(new[] { "Offline" }, false)]
+    [InlineData(new[] { "Offline", "Offline" }, false)]
+    [InlineData(new[] { "Online" }, true)]
+    [InlineData(new[] { "Connecting" }, true)]
+    [InlineData(new[] { "Offline", "Online" }, true)]
+    [InlineData(new string[0], true)]
+    public void A_download_starts_from_an_offline_PLC(string[] states, bool refused)
+    {
+        var refusal = OnlineTransitionPolicy.DownloadStateRefusal("PLC_1", states);
+        Assert.Equal(refused, refusal != null);
+        if (refused && states.Length > 0) Assert.Contains("DisconnectOnlinePlc", refusal!, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("ObjectsIdentical", false)]
+    [InlineData("FolderContentsIdentical", false)]
+    [InlineData("CompareIrrelevant", false)]
+    [InlineData("Unknown", false)]
+    [InlineData("ObjectsDifferent", true)]
+    [InlineData("LeftMissing", true)]
+    [InlineData("RightMissing", true)]
+    [InlineData("FolderContentsDifferent", true)]
+    [InlineData("FolderContainsDifferencesOwnStateDifferent", true)]
+    [InlineData("FolderContentEqualOwnStateDifferent", true)]
+    public void Online_compare_reports_only_difference_states(string state, bool difference)
+        => Assert.Equal(difference, OnlineTransitionPolicy.IsCompareDifference(state));
+
+    [Theory]
     [InlineData("DownloadPlc", false, true, false, false, null, true)]
     [InlineData("DownloadPlc", false, true, true, false, "Error", false)]
     [InlineData("DownloadPlc", false, false, false, false, null, false)]

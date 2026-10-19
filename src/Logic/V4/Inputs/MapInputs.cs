@@ -92,7 +92,7 @@ namespace TiaMcp.Logic.V4.Inputs
                 return values;
             });
 
-        // DownloadPromptPolicy.cs:43-57,79-100: boolean legacy answers become text;
+        // DownloadPromptPolicy.cs:161-175,257-277: boolean legacy answers become text;
         // runtime prompt metadata narrows options. Passwords use dedicated arguments.
         public static InputContract<AttributeMap<string>> PromptAnswers(IReadOnlyDictionary<string, PromptAdmission>? prompts = null)
         {

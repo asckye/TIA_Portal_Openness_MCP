@@ -1,20 +1,20 @@
 {
   "package": "TIA_MCP_Delivery_v3.3.0_20261008",
-  "generatedAt": "2026-10-13T19:44:16.3442128+00:00",
+  "generatedAt": "2026-10-19T18:04:26.8661907+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "3.3.0.0",
-  "exeSha256": "5afc7ca3ba0add70c1683614d632ac334bbd83437c9d3a54cc2951cf4edfa9a2",
-  "workerSha256": "0375eec27273a134d9c83d5cc713d193d9d6522c2bcb7d98b4f0b01970aecc63",
+  "exeSha256": "4606c257e73305a158d0773de88a267f48f11adc4eb7081afee2744a3529414d",
+  "workerSha256": "7cc19e6fa70d497b4ce4606c22872409e66411db94f20105aee4e115c3626a88",
   "toolCount": 516,
   "note": "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2557,
+    "parameters": 2573,
     "parametersUndocumented": 853,
     "parametersFromVocabulary": 702,
     "toolsWithUndocumentedParameters": 205,
-    "toolsWithEnumHints": 158,
-    "enumHints": 242,
-    "defaultHints": 1404,
+    "toolsWithEnumHints": 157,
+    "enumHints": 241,
+    "defaultHints": 1420,
     "examplesCurated": 516,
     "recipes": 36
   },
@@ -2969,9 +2969,11 @@
         "password",
         "confirmUpload",
         "dryRun",
+        "trustDeviceCertificate",
+        "allowNonTlsLogin",
         "promptAnswers"
       ],
-      "description": "[L2][PLC-Online][ONLINE-WRITE] Upload a station from a live PLC into the project as a NEW device (StationUploadProvider.StationUpload). targetIpAddress must exactly match an IP address seen by ScanAccessibleDevices on the same PG/PC interface (ConfigurationAddressComposition.Create accepts IP addresses only - a device listed by MAC alone, such as a PLCSIM Advanced instance before its first download, cannot be uploaded from). Default preview; execution needs confirmUpload=true, takes exclusive access, answers upload prompts (missing products: TryUpload; password prompts from password) and verifies the uploaded device exists. No save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"targetIpAddress\":\"192.168.0.3\",\"pgPcInterface\":\"PLCSIM\",\"dryRun\":true,\"confirmUpload\":false} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"UploadStationFromPlc\"), optionally operation or language.",
+      "description": "[L2][PLC-Online][ONLINE-WRITE] Upload a station from a live PLC into the project as a NEW device (StationUploadProvider.StationUpload). targetIpAddress must exactly match an IP address in the route tree of the selected PG/PC interface (target interfaces, subnets or gateways) or, on V19+, one seen by ScanAccessibleDevices on that interface; V15.1-V18 have no accessible-device scan, so only addresses already in the route tree work. ConfigurationAddressComposition.Create accepts IP addresses only - a device listed by MAC alone, such as a PLCSIM Advanced instance before its first download, cannot be uploaded from. The default preview only reads the route tree (no network traffic, no change); for an address not in it, execution after approval runs a DCP network scan (GetAccessibleDevices) and creates the route address (ConfigurationAddressComposition.Create) - both approval-gated writes. Execution needs confirmUpload=true, takes exclusive access, answers upload prompts (missing products: TryUpload; password prompts from password) and verifies the uploaded device exists. No save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"targetIpAddress\":\"192.168.0.3\",\"pgPcInterface\":\"PLCSIM\",\"dryRun\":true,\"confirmUpload\":false} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"UploadStationFromPlc\"), optionally operation or language.",
       "example": "{\"targetIpAddress\":\"192.168.0.3\",\"pgPcInterface\":\"PLCSIM\",\"dryRun\":true,\"confirmUpload\":false}"
     },
     {
@@ -2991,9 +2993,11 @@
         "password",
         "confirmUpload",
         "dryRun",
+        "trustDeviceCertificate",
+        "allowNonTlsLogin",
         "promptAnswers"
       ],
-      "description": "[L2][PLC-Online][ONLINE-WRITE] Upload hardware parameters from a live device into the exact offline device/item (ParameterUploadProvider.ParameterUpload). Route is selected by exact pgPcInterface/targetIpAddress. Default preview; execution needs confirmUpload=true and exclusive access; returns before/after scalar properties. No save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"UploadDeviceParameters\"), optionally operation or language.",
+      "description": "[L2][PLC-Online][ONLINE-WRITE] Upload drive parameters from a live SINAMICS StartDrive device into the exact offline head module (ParameterUploadProvider.ParameterUpload; the provider exists only on StartDrive head modules, DeviceItemClassifications.HM - CPUs and other items are refused). Route is selected by pgPcInterface/targetIpAddress; targetIpAddress '' passes a null ConfigurationAddress (the official pattern). The default preview selects the route without applying it (no ApplyConfiguration, no address creation); execution after approval applies it, and an explicit route that is not applied is refused. Execution needs confirmUpload=true and exclusive access; returns before/after scalar properties. No save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"UploadDeviceParameters\"), optionally operation or language.",
       "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact device item from GetProjectTree\\u003E\"],\"targetIpAddress\":\"192.0.2.10\",\"confirmUpload\":false,\"dryRun\":true}"
     },
     {
@@ -5484,7 +5488,7 @@
         "confirmDelete"
       ],
       "description": "[L2][HMI][WRITE] Delete ONE exact ordinary Classic/Unified HMI tag in V20/V21. tagTablePath is /Folder/Table (no recursive name search); empty selects Unified device-root Tags only. Default dryRun=true previews existence. Actual deletion requires dryRun=false AND confirmDelete=true, acquires exclusive access, and verifies absence. No cross-reference call, no save/compile; screen/script/alarm/logging references are NOT checked and may break. No variable table, PLC tag, or system tag deletion. Examples: GetToolUsage(toolName: \"DeleteHmiTag\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"tagTablePath\":\"exact\",\"tagName\":\"Ready\",\"dryRun\":true,\"confirmDelete\":false}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"tagTablePath\":\"/Table\",\"tagName\":\"Ready\",\"dryRun\":true,\"confirmDelete\":false}"
     },
     {
       "name": "DeleteExportHandle",
@@ -5732,7 +5736,7 @@
       "parameters": [
         "softwarePath"
       ],
-      "description": "[L1][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject][ONLINE] Disconnect the online session between TIA Portal and the physical PLC. Safe to call even if not currently online. Always go offline when monitoring or download is complete. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"softwarePath\":\"PLC_1\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"DisconnectOnlinePlc\"), optionally operation or language.",
+      "description": "[L1][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject][ONLINE] Disconnect the online session between TIA Portal and the physical PLC. Safe to call even if not currently online; works on an online PLC (GoOffline needs no route). The state is read back after GoOffline and success is reported only when it reads Offline. Always go offline when monitoring is complete. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"softwarePath\":\"PLC_1\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"DisconnectOnlinePlc\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\"}"
     },
     {
@@ -6250,9 +6254,11 @@
         "userManagementMode",
         "confirmDownload",
         "dryRun",
+        "allowSafetyProgramDownload",
+        "allowExpandedDownload",
         "promptAnswers"
       ],
-      "description": "[L2][PLC-Online][FILE] Write the PLC download as a memory-card image into a new or empty absolute directory (DownloadProvider.Download(DirectoryInfo)); targetForSoftware CPU or PlcSimulationAdvanced. No PLC is contacted. Prompts follow DownloadPlc rules (keepActualValues, userManagementMode, promptAnswers); overwriteOnMemoryCard=false answers NoAction. Default preview; execution needs confirmDownload=true. Reports files/bytes written and unanswered prompts. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"DownloadPlcToFolder\"), optionally operation or language.",
+      "description": "[L2][PLC-Online][FILE] Write the PLC download as a memory-card image into a new or empty absolute directory (DownloadProvider.Download(DirectoryInfo)); targetForSoftware CPU or PlcSimulationAdvanced. No PLC is contacted. Prompts follow DownloadPlc rules (keepActualValues, userManagementMode, promptAnswers); overwriteOnMemoryCard=false answers NoAction; SafetyProgram and ExpandDownload are refused unless allowSafetyProgramDownload / allowExpandedDownload is true. Default preview; execution needs confirmDownload=true. Reports files/bytes written and unanswered or refused prompts. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"DownloadPlcToFolder\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"destinationDirectory\":\"C:\\\\Examples\\\\restored\",\"confirmDownload\":false,\"dryRun\":true}"
     },
     {
@@ -6279,9 +6285,16 @@
         "masterSecretPassword",
         "rhTarget",
         "trustDeviceCertificate",
+        "allowSafetyProgramDownload",
+        "allowHardwareDifferences",
+        "allowActiveTestCancel",
+        "allowExpandedDownload",
+        "allowIdentificationDataLoad",
+        "allowNonTlsLogin",
+        "downloadScope",
         "promptAnswers"
       ],
-      "description": "[L1][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject+CompilePlcSoftware+CheckDownloadReadiness][ONLINE-WRITE] Download the compiled PLC program to the physical CPU over the network. The CPU will stop briefly during download and restart automatically (controlled by startAfterDownload). SAFETY: Verify no personnel are near the machine before downloading. This changes live PLC behavior. Workflow: ConnectPortal → OpenProject → CompilePlcSoftware → CheckDownloadReadiness → DownloadPlc → GetOnlineState. On success State=Success or Warning. On Error check Errors[] for details. Default options (keepActualValues=true, consistentBlocksOnly=true) are safe for most scenarios. Set keepActualValues=false only when DB initial values must be reset — this is irreversible. On a multi-NIC PC the PG/PC interface is picked automatically (the adapter sharing a subnet with the CPU); Meta.pgPcRoute reports which one was used. Override with pgPcInterface / targetIpAddress when the pick is wrong. S7-1500 FW >= 2.9 CPUs (incl. PLCSIM Advanced) ask for certificate trust on the first contact; trustDeviceCertificate=true (default) answers Trusted and Meta.tlsVerification records it, false makes TIA refuse the connection. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"softwarePath\":\"PLC_1\",\"pgPcInterface\":\"PLCSIM\",\"targetIpAddress\":\"192.168.0.3\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"DownloadPlc\"), optionally operation or language.",
+      "description": "[L1][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject+CompilePlcSoftware+CheckDownloadReadiness][ONLINE-WRITE] Download the compiled PLC program to the physical CPU over the network. The CPU will stop briefly during download and restart automatically (controlled by startAfterDownload). SAFETY: Verify no personnel are near the machine before downloading. This changes live PLC behavior. Workflow: ConnectPortal → OpenProject → CompilePlcSoftware → CheckDownloadReadiness → DownloadPlc → GetOnlineState. The PLC must be offline (call DisconnectOnlinePlc first): the route is applied with ConnectionConfiguration.ApplyConfiguration, which throws while the device is online, and the download connects by itself. On success State=Success or Warning. On Error check Errors[] for details. Prompt answers: StopModules / StartModules follow stopBeforeDownload / startAfterDownload, DataBlockReinitialization follows keepActualValues, AllBlocksDownload follows consistentBlocksOnly, UserManagementDownload follows userManagementMode; destructive prompts answer NoAction; promptAnswers names others. Refused unless the request allows them: SafetyProgram (allowSafetyProgramDownload), DifferentTargetConfiguration (allowHardwareDifferences), ActiveTestCanBeAborted / ActiveTestCanPreventDownload (allowActiveTestCancel), ExpandDownload (allowExpandedDownload) and LoadIdentificationData (allowIdentificationDataLoad); the download stops at such a prompt and the result names it and the parameter that allows it. The approval request lists every prompt answer the call will give (promptAnswerPlan). On a multi-NIC PC the PG/PC interface is picked automatically (the adapter sharing a subnet with the CPU); Meta.pgPcRoute reports which one was used. Override with pgPcInterface / targetIpAddress when the pick is wrong; an explicit route that ApplyConfiguration does not apply is refused, only an automatic pick continues unconfirmed (Meta.routeApplied=false). S7-1500 FW >= 2.9 CPUs (incl. PLCSIM Advanced) ask for certificate trust on the first contact; trustDeviceCertificate=false (default) makes TIA refuse an untrusted certificate, true answers Trusted; Meta.tlsVerification records the decision and, on V21, the presented certificates. A password is sent only over a TLS-secured connection where the prompt reports IsSecureCommunication, unless allowNonTlsLogin=true. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"softwarePath\":\"PLC_1\",\"pgPcInterface\":\"PLCSIM\",\"targetIpAddress\":\"192.168.0.3\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"DownloadPlc\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"pgPcInterface\":\"PLCSIM\",\"targetIpAddress\":\"192.168.0.3\"}"
     },
     {
@@ -6372,7 +6385,7 @@
         "outputReleaseKey",
         "udt"
       ],
-      "description": "[offline candidate; native unverified][OFFLINE] Generate XML in memory only; outputReleaseKey explicitly selects its format independently of the host release. Flat UDT generation supports 14sp1, 15.1 and 16-21, with their target interface schema. Candidate declaration XML. Runtime XSD validation and native TIA import have NOT RUN. Not import-ready; the supplied PublicAPI XSD covers interface fragments, not the whole document or CPU/type semantics. JSON supports flat UDT members or PLC tags only; no unknown fields or conflicting aliases. Supply a typed object/array with exact camelCase fields, never a JSON string. Existing Foundation budgets and output-release limits apply. Examples: GetToolUsage(toolName: \"BuildPlcUdt\"), optionally operation or language.",
+      "description": "[offline candidate; native unverified][OFFLINE] Generate XML in memory only; the default output release is the serving release; an explicit outputReleaseKey selects an existing supported format. Flat UDT generation supports 14sp1, 15.1 and 16-21, with their target interface schema. Candidate declaration XML. Runtime XSD validation and native TIA import have NOT RUN. Not import-ready; the supplied PublicAPI XSD covers interface fragments, not the whole document or CPU/type semantics. JSON supports flat UDT members or PLC tags only; no unknown fields or conflicting aliases. Supply a typed object/array with exact camelCase fields, never a JSON string. Existing Foundation budgets and output-release limits apply. Examples: GetToolUsage(toolName: \"BuildPlcUdt\"), optionally operation or language.",
       "example": "{\"outputReleaseKey\":\"21\",\"udt\":{\"name\":\"UDT_Status\",\"members\":[{\"name\":\"Ready\",\"datatype\":\"Bool\",\"comment\":\"Ready state\"}]}}"
     },
     {
@@ -6388,8 +6401,8 @@
         "outputReleaseKey",
         "tagTable"
       ],
-      "description": "[offline candidate; native unverified][OFFLINE] Generate XML in memory only; outputReleaseKey explicitly selects its format independently of the host release. V21 candidate XML only. Target-installed Siemens XSD validation and TIA import validation have NOT RUN. Not import-ready; no lower-version compatibility is claimed. JSON supports flat UDT members or PLC tags only; no unknown fields or conflicting aliases. Supply a typed object/array with exact camelCase fields, never a JSON string. Existing Foundation budgets and output-release limits apply. Examples: GetToolUsage(toolName: \"BuildPlcTagTable\"), optionally operation or language.",
-      "example": "{\"outputReleaseKey\":\"21\",\"tagTable\":{\"tableName\":\"ExampleTags\",\"tags\":[{\"name\":\"Ready\",\"dataTypeName\":\"Bool\",\"logicalAddress\":\"%M0.0\"}]}}"
+      "description": "[offline candidate; native unverified][OFFLINE] Generate XML in memory only; the default output release is the serving release; an explicit outputReleaseKey selects an existing supported format. Candidate declaration XML. Runtime XSD validation and native TIA import have NOT RUN. Not import-ready; the supplied PublicAPI XSD covers interface fragments, not the whole document or CPU/type semantics. JSON supports flat UDT members or PLC tags only; no unknown fields or conflicting aliases. Supply a typed object/array with exact camelCase fields, never a JSON string. Existing Foundation budgets and output-release limits apply. Examples: GetToolUsage(toolName: \"BuildPlcTagTable\"), optionally operation or language.",
+      "example": "{\"tagTable\":{\"tableName\":\"ExampleTags\",\"tags\":[{\"name\":\"Ready\",\"dataTypeName\":\"Bool\",\"logicalAddress\":\"%M0.0\"}]}}"
     },
     {
       "name": "BuildPlcSymbolManifestFromPath",
@@ -6437,7 +6450,7 @@
         "outputReleaseKey",
         "globalDb"
       ],
-      "description": "[offline candidate; native unverified][OFFLINE] In-memory XML generation. Flat GlobalDB generation uses the explicitly selected release's interface schema. Candidate declaration XML. Runtime XSD validation and native TIA import have NOT RUN. Not import-ready; the supplied PublicAPI XSD covers interface fragments, not the whole document or CPU/type semantics. No file reads/writes, connection or worker calls. Supply a typed object/array with exact camelCase fields, never a JSON string. Existing Foundation budgets and output-release limits apply. Examples: GetToolUsage(toolName: \"BuildPlcGlobalDb\"), optionally operation or language.",
+      "description": "[offline candidate; native unverified][OFFLINE] In-memory XML generation. Flat GlobalDB generation defaults to the serving release's interface schema; explicit supported output formats remain available. Candidate declaration XML. Runtime XSD validation and native TIA import have NOT RUN. Not import-ready; the supplied PublicAPI XSD covers interface fragments, not the whole document or CPU/type semantics. No file reads/writes, connection or worker calls. Supply a typed object/array with exact camelCase fields, never a JSON string. Existing Foundation budgets and output-release limits apply. Examples: GetToolUsage(toolName: \"BuildPlcGlobalDb\"), optionally operation or language.",
       "example": "{\"outputReleaseKey\":\"21\",\"globalDb\":{\"dbName\":\"DB_Status\",\"dbNumber\":10,\"staticMembers\":[{\"name\":\"Ready\",\"datatype\":\"Bool\",\"startValue\":\"FALSE\"}]}}"
     },
     {
@@ -6929,9 +6942,10 @@
         "userType",
         "rhTarget",
         "pgPcInterface",
-        "trustDeviceCertificate"
+        "trustDeviceCertificate",
+        "allowNonTlsLogin"
       ],
-      "description": "[L1][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject][ONLINE] Establish an online connection from TIA Portal to the physical PLC. Required before DownloadPlc to confirm reachability, or for future online monitoring tools. Returns State=Online on success. If ipAddress is omitted, uses the IP address configured in the project's hardware configuration. If ipAddress is provided, the matching ConfigurationAddress of the route tree (target interface, subnet or gateway; created on the target interface when TIA has not seen it yet) is applied and OnlineProvider.GoOnline(ConfigurationAddress) is used - this is also how a PLCSIM Advanced instance is reached (pgPcInterface 'PLCSIM Virtual Ethernet Adapter' / 'PLCSIM'). Common failures: NotReachable (wrong IP / no cable), Protected (CPU requires authentication — supply password), Incompatible (firmware mismatch). S7-1500 FW >= 2.9 CPUs (incl. PLCSIM Advanced) ask for certificate trust on the first contact (TlsVerificationConfiguration); trustDeviceCertificate=true (default) answers Trusted - the same prompt TIA shows in the UI - and Meta.tlsVerification records PlcName / VerificationInfo / the selection; with false the connection is refused by TIA ('The device is not trusted'). Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"softwarePath\":\"PLC_1\",\"ipAddress\":\"192.168.0.3\",\"pgPcInterface\":\"PLCSIM\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ConnectOnlinePlc\"), optionally operation or language.",
+      "description": "[L1][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject][ONLINE] Establish an online connection from TIA Portal to the physical PLC. Not needed before DownloadPlc: DownloadPlc connects through its own route and refuses while the PLC is online (call DisconnectOnlinePlc first). Use it before CompareSoftwareToOnline or online monitoring. Returns State=Online on success; GoOnline returns before the connection is established, so the state is polled while it reads Connecting (up to 10 s). An already online PLC is reported as Online without applying a route (ApplyConfiguration throws while the device is online). If ipAddress and pgPcInterface are omitted, the connection must already be configured in this session (ConnectionConfiguration.IsConfigured); otherwise the call is not attempted. If ipAddress is provided, the matching ConfigurationAddress of the route tree (target interface, subnet or gateway; created on the target interface when TIA has not seen it yet) is applied and OnlineProvider.GoOnline(ConfigurationAddress) is used - this is also how a PLCSIM Advanced instance is reached (pgPcInterface 'PLCSIM Virtual Ethernet Adapter' / 'PLCSIM'). Common failures: NotReachable (wrong IP / no cable), Protected (CPU requires authentication — supply password), Incompatible (firmware mismatch). An explicitly requested route that ConnectionConfiguration.ApplyConfiguration does not apply is refused with its reason. S7-1500 FW >= 2.9 CPUs (incl. PLCSIM Advanced) ask for certificate trust on the first contact (TlsVerificationConfiguration); trustDeviceCertificate=false (default) leaves an untrusted certificate untrusted and TIA refuses the connection ('The device is not trusted'); trustDeviceCertificate=true answers Trusted for this call - the same prompt TIA shows in the UI. Meta.tlsVerification records PlcName / VerificationInfo / the selection and, on V21, the certificates the device presented. A password is sent only over a TLS-secured connection where the prompt reports IsSecureCommunication, unless allowNonTlsLogin=true. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"softwarePath\":\"PLC_1\",\"ipAddress\":\"192.168.0.3\",\"pgPcInterface\":\"PLCSIM\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ConnectOnlinePlc\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"ipAddress\":\"192.168.0.3\",\"pgPcInterface\":\"PLCSIM\"}"
     },
     {
@@ -7086,7 +7100,7 @@
         "maxDepth",
         "maxEntries"
       ],
-      "description": "[L2][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject+ConnectOnlinePlc][ONLINE] Compare the offline PLC software in the project against the program currently running on the physical CPU. Use after editing blocks to confirm what differs from the live CPU before downloading, or after a download to verify offline/online consistency. Returns a tree-walked list of differences (only entries where ComparisonResult is not 'Equal' are reported). Requires ConnectOnlinePlc to be called first; will return IsOnline=false with guidance otherwise. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"softwarePath\":\"PLC_1\",\"maxDepth\":4} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"CompareSoftwareToOnline\"), optionally operation or language.",
+      "description": "[L2][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject+ConnectOnlinePlc][ONLINE] Compare the offline PLC software in the project against the program currently running on the physical CPU. Use after editing blocks to confirm what differs from the live CPU before downloading, or after a download to verify offline/online consistency. Returns a tree-walked list of differences: only difference states (ObjectsDifferent, LeftMissing, RightMissing, FolderContentsDifferent and the folder own-state differences) are reported; ObjectsIdentical, FolderContentsIdentical and CompareIrrelevant are not. Requires ConnectOnlinePlc to be called first; will return IsOnline=false with guidance otherwise. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"softwarePath\":\"PLC_1\",\"maxDepth\":4} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"CompareSoftwareToOnline\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"maxDepth\":4}"
     },
     {
@@ -7607,7 +7621,7 @@
         "filter",
         "objectPath"
       ],
-      "description": "[L2][HMI-Unified][READ] Native Unified cross references for exact object. Strict errors; bounded Sources/References/Locations. Does not expand runtime script names or claim all native fields complete. Examples: GetToolUsage(toolName: \"GetUnifiedCrossReferences\"), optionally operation or language.",
+      "description": "[L2][HMI-Unified][READ] Native Unified cross references for exact object. DISABLED BY DEFAULT: CrossReferenceService queries have terminated TIA Portal V21. Refusal means NOT QUERIED, never zero references. Controlled diagnosis on a saved test project requires the server-process setting TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1, shared with PLC queries; do not enable it automatically. Compilation does not guarantee crash safety. Strict errors; bounded Sources/References/Locations. Does not expand runtime script names or claim all native fields complete. Examples: GetToolUsage(toolName: \"GetUnifiedCrossReferences\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"objectPath\":[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]}"
     },
     {
@@ -9458,9 +9472,11 @@
         "password",
         "offset",
         "limit",
-        "dryRun"
+        "dryRun",
+        "trustDeviceCertificate",
+        "allowNonTlsLogin"
       ],
-      "description": "[L2][PLC-Online][ONLINE] Read fingerprint data (identifier/value pairs) from the CPU via native FingerprintDataProvider.GetFingerprintData using the configured route whose CPU address exactly equals targetIpAddress; several PG/PC adapters to that address require the exact pgPcInterface name. Optional CPU password is passed only to the native legitimation callback. Paginated offset/limit<=500. Default preview resolves the route without contacting the PLC; dryRun=false contacts the PLC read-only. No project or PLC change. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"GetPlcBlockFingerprints\"), optionally operation or language.",
+      "description": "[L2][PLC-Online][ONLINE] Read fingerprint data (identifier/value pairs) from the CPU via native FingerprintDataProvider.GetFingerprintData using the configured route whose CPU address exactly equals targetIpAddress; several PG/PC adapters to that address require the exact pgPcInterface name. Optional CPU password is passed only to the native legitimation callback, and only over a TLS-secured connection where V21 reports IsSecureCommunication unless allowNonTlsLogin=true. FW >= 2.9 CPUs ask for certificate trust: trustDeviceCertificate=false (default) leaves an untrusted certificate untrusted (TIA refuses the read), true trusts it for this call. Paginated offset/limit<=500. Default preview resolves the route without contacting the PLC; dryRun=false contacts the PLC read-only. No project or PLC change. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"GetPlcBlockFingerprints\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"targetIpAddress\":\"192.0.2.10\",\"dryRun\":true}"
     },
     {

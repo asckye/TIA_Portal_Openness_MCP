@@ -59311,7 +59311,7 @@
         "openWorldHint": true,
         "readOnlyHint": true
       },
-      "descriptionSha256": "ce4262960d30664340b34d967ded07d7a3fac904986cf544cd01a4570f8d72a2",
+      "descriptionSha256": "eae7e0c47c8cabcec050f974e1530d66c83b7531843488553bfa4771c915049d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -74992,10 +74992,15 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "150a39e736a7efa4d195354f572271d9e3dec036e4d937aedb44f456817ba448",
+      "descriptionSha256": "03623a50e0335172a95966f571256fddf27e81ca6b0cd193130befe2b91c4585",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "allowNonTlsLogin": {
+            "default": false,
+            "description": "allowNonTlsLogin: false (default) sends a password only where the prompt reports IsSecureCommunication=true or the release cannot report it (the download and upload password prompts from V17, OnlineAuthenticationConfiguration from V19, OnlinePasswordConfiguration on V21); true also sends it over a connection that is not TLS-secured.",
+            "type": "boolean"
+          },
           "ipAddress": {
             "default": "",
             "description": "ipAddress: optional IP address override, e.g. '192.168.1.10'. Leave empty to use the project's configured IP.",
@@ -75030,8 +75035,8 @@
             "type": "string"
           },
           "trustDeviceCertificate": {
-            "default": true,
-            "description": "trustDeviceCertificate: true (default) answers the TLS certificate prompt of FW >= 2.9 CPUs with Trusted for this call; false leaves it unanswered and TIA refuses the connection.",
+            "default": false,
+            "description": "trustDeviceCertificate: false (default) leaves an untrusted certificate of FW >= 2.9 CPUs untrusted and TIA refuses the connection; true answers the TLS certificate prompt with Trusted for this call. Meta.tlsVerification reports the decision and, on V21, the certificates the device presented.",
             "type": "boolean"
           },
           "userName": {
@@ -124814,7 +124819,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "dd3a077361b0224434a6b87788f68c9569a098772360a7769195f774bfa886f4",
+      "descriptionSha256": "951ae9c57821605e5736d9de454991124e6f32029a246e4b89525cf0e3200997",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -128681,10 +128686,40 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "205dd86ec637457695f2fff9191d2ece44a1bb4935099f3d9cb033ad924ab38e",
+      "descriptionSha256": "db19e9bb3a696daa18b7d5b7e2314355ec725d518d30a856725fd93b5f6bf659",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "allowActiveTestCancel": {
+            "default": false,
+            "description": "allowActiveTestCancel: true answers ActiveTestCanBeAborted / ActiveTestCanPreventDownload (active test and commissioning functions are cancelled) with AcceptAll; false (default) refuses them and the download stops there.",
+            "type": "boolean"
+          },
+          "allowExpandedDownload": {
+            "default": false,
+            "description": "allowExpandedDownload: true answers ExpandDownload (the download must be expanded beyond the selection) with Download; false (default) refuses it and the download stops there.",
+            "type": "boolean"
+          },
+          "allowHardwareDifferences": {
+            "default": false,
+            "description": "allowHardwareDifferences: true answers DifferentTargetConfiguration (differences between configured and target modules) with AcceptAll; false (default) refuses it and the download stops there.",
+            "type": "boolean"
+          },
+          "allowIdentificationDataLoad": {
+            "default": false,
+            "description": "allowIdentificationDataLoad: true answers LoadIdentificationData (write I&M identification data to the PROFINET IO devices) with LoadData; false (default) refuses it and the download stops there.",
+            "type": "boolean"
+          },
+          "allowNonTlsLogin": {
+            "default": false,
+            "description": "allowNonTlsLogin: false (default) sends a password only where the prompt reports IsSecureCommunication=true or the release cannot report it (the download and upload password prompts from V17, OnlineAuthenticationConfiguration from V19, OnlinePasswordConfiguration on V21); true also sends it over a connection that is not TLS-secured.",
+            "type": "boolean"
+          },
+          "allowSafetyProgramDownload": {
+            "default": false,
+            "description": "allowSafetyProgramDownload: true answers the SafetyProgram prompt (F-program download) with ConsistentDownload; false (default) refuses it and the download stops there.",
+            "type": "boolean"
+          },
           "blockBindingPassword": {
             "default": "",
             "description": "blockBindingPassword: optional password for the BlockBindingPassword prompt (know-how protected blocks bound to a CPU/card). Never logged.",
@@ -128692,12 +128727,17 @@
           },
           "consistentBlocksOnly": {
             "default": true,
-            "description": "consistentBlocksOnly: true=download only consistent blocks (safe default), false=download all blocks even inconsistent ones",
+            "description": "consistentBlocksOnly: true (default) leaves the AllBlocksDownload prompt unanswered, so TIA aborts instead of downloading all blocks; false answers it with its only selection, download all blocks. ConsistentBlocksDownload is always answered ConsistentDownload; neither value downloads inconsistent blocks - compile first.",
             "type": "boolean"
+          },
+          "downloadScope": {
+            "default": "software",
+            "description": "downloadScope: software (default; the Openness download option Software, download software all) or softwareOnlyChanges (the option SoftwareOnlyChanges, download only the changes; V17+).",
+            "type": "string"
           },
           "keepActualValues": {
             "default": true,
-            "description": "keepActualValues: true=preserve current DB actual values (safe default), false=reset all DB values to initial values (irreversible)",
+            "description": "keepActualValues: true (default) keeps the DB actual values (DataBlockReinitialization: NoAction, so TIA aborts a download that needs reinitialization; V21 DataBlockReinitializationOrKeepActualValues: KeepActualValues); false resets all data values to their start values (StopPlcAndReinitialize) only with stopBeforeDownload=true, otherwise both prompts answer NoAction and TIA aborts - irreversible.",
             "type": "boolean"
           },
           "masterSecretPassword": {
@@ -128733,7 +128773,7 @@
           },
           "rhTarget": {
             "default": "",
-            "description": "rhTarget: empty for standard CPUs; primary or backup downloads to that CPU of an R/H system through RHDownloadProvider.DownloadToPrimary/DownloadToBackup.",
+            "description": "rhTarget: empty for standard CPUs; primary or backup downloads to that CPU of an R/H system through RHDownloadProvider.DownloadToPrimary/DownloadToBackup (routes and prompts of RHDownloadProvider.Configuration).",
             "type": "string"
           },
           "softwarePath": {
@@ -128762,8 +128802,8 @@
             "type": "string"
           },
           "trustDeviceCertificate": {
-            "default": true,
-            "description": "trustDeviceCertificate: true (default) answers the TLS certificate prompt of FW >= 2.9 CPUs with Trusted for this call; false leaves it unanswered and TIA refuses the connection.",
+            "default": false,
+            "description": "trustDeviceCertificate: false (default) leaves an untrusted certificate of FW >= 2.9 CPUs untrusted and TIA refuses the connection; true answers the TLS certificate prompt with Trusted for this call. Meta.tlsVerification reports the decision and, on V21, the certificates the device presented.",
             "type": "boolean"
           },
           "userManagementMode": {
@@ -130056,10 +130096,20 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "532f5a71d4ffeca65ea934a40ee1e54543500ea7a3b74651dc3974fa855b4300",
+      "descriptionSha256": "89e36f32edb1b958d8ed391c79fc2d74de80870ad9e1c28f7f2943d8bb0efda8",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "allowExpandedDownload": {
+            "default": false,
+            "description": "allowExpandedDownload: true answers ExpandDownload (the download must be expanded beyond the selection) with Download; false (default) refuses it and the folder download stops there.",
+            "type": "boolean"
+          },
+          "allowSafetyProgramDownload": {
+            "default": false,
+            "description": "allowSafetyProgramDownload: true answers the SafetyProgram prompt (F-program) with ConsistentDownload; false (default) refuses it and the folder download stops there.",
+            "type": "boolean"
+          },
           "confirmDownload": {
             "default": false,
             "description": "confirmDownload: must be true together with dryRun=false to write the download files.",
@@ -130076,7 +130126,7 @@
           },
           "keepActualValues": {
             "default": true,
-            "description": "keepActualValues: true keeps the current data block values (safe default), false resets them to start values.",
+            "description": "keepActualValues: true (default) keeps the data block values. Reinitialization needs a CPU STOP, which a folder download never requests, so false answers a reinitialization prompt with NoAction and the folder download stops there.",
             "type": "boolean"
           },
           "overwriteOnMemoryCard": {
@@ -130098,12 +130148,12 @@
           },
           "targetForSoftware": {
             "default": "CPU",
-            "description": "targetForSoftware: folder on the TIA machine that receives the download files.",
+            "description": "targetForSoftware: the TargetForSoftware prompt answer (TargetForSoftwareSelections, V19+): CPU (default, a real CPU's memory card) or PlcSimulationAdvanced. The folder itself is destinationDirectory.",
             "type": "string"
           },
           "userManagementMode": {
             "default": "keep",
-            "description": "userManagementMode: how the UserManagementDownload prompt is answered (keep, updateKeepPassword, update).",
+            "description": "userManagementMode: how the UserManagementDownload prompt is answered: keep (default), updateKeepPassword or resetToProject.",
             "enum": [
               "keep",
               "updateKeepPassword",
@@ -235245,10 +235295,15 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e01c4e8ce9e4c3033758e570a5ab787a3f8f3dc49fcf37d3182b6751dfc37588",
+      "descriptionSha256": "1d2cbf3e065e1f8008724f30f0424f79c3f75ab36bf3786086d4162566982f8c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "allowNonTlsLogin": {
+            "default": false,
+            "description": "allowNonTlsLogin: false (default) sends the password only where the prompt reports IsSecureCommunication=true or the release cannot report it (OnlinePasswordConfiguration reports it on V21); true also sends it over a connection that is not TLS-secured.",
+            "type": "boolean"
+          },
           "dryRun": {
             "default": true,
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
@@ -235283,6 +235338,11 @@
           "targetIpAddress": {
             "description": "targetIpAddress: IP address of the PLC as ScanAccessibleDevices lists it.",
             "type": "string"
+          },
+          "trustDeviceCertificate": {
+            "default": false,
+            "description": "trustDeviceCertificate: false (default) leaves an untrusted certificate of FW >= 2.9 CPUs untrusted and TIA refuses the connection; true answers the TLS certificate prompt with Trusted for this call. Meta.tlsVerification reports the decision and, on V21, the certificates the device presented.",
+            "type": "boolean"
           }
         },
         "required": [
@@ -620263,10 +620323,15 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "edae800822e782f88554b8d3715ac6cb02a49494f1a3789f31be3fe9605d87d5",
+      "descriptionSha256": "d0d396262a5e56474b23d342172555adebf56ecca57cf7cf07e276a2d7227af1",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "allowNonTlsLogin": {
+            "default": false,
+            "description": "allowNonTlsLogin: false (default) sends a password only where the prompt reports IsSecureCommunication=true or the release cannot report it (the download and upload password prompts from V17, OnlineAuthenticationConfiguration from V19, OnlinePasswordConfiguration on V21); true also sends it over a connection that is not TLS-secured.",
+            "type": "boolean"
+          },
           "confirmUpload": {
             "default": false,
             "description": "confirmUpload: must be true together with dryRun=false to upload (takes exclusive access, creates a new device).",
@@ -620277,7 +620342,7 @@
           },
           "dryRun": {
             "default": true,
-            "description": "dryRun: true (default) previews the route and the target; false uploads.",
+            "description": "dryRun: true (default) previews the route and the target from the route tree only; false uploads.",
             "examples": [
               true
             ],
@@ -620290,7 +620355,7 @@
           },
           "pgPcInterface": {
             "default": "",
-            "description": "pgPcInterface: PG/PC interface name substring, e.g. 'PLCSIM' or 'Realtek' ('' = the first interface).",
+            "description": "pgPcInterface: exact PG/PC interface name or number, e.g. 'PLCSIM'; required when several interfaces exist ('' only when there is one).",
             "examples": [
               "PLCSIM"
             ],
@@ -620310,6 +620375,11 @@
               "192.168.0.3"
             ],
             "type": "string"
+          },
+          "trustDeviceCertificate": {
+            "default": false,
+            "description": "trustDeviceCertificate: false (default) leaves an untrusted certificate of FW >= 2.9 CPUs untrusted and TIA refuses the connection; true answers the TLS certificate prompt with Trusted for this call. Meta.tlsVerification reports the decision and, on V21, the certificates the device presented.",
+            "type": "boolean"
           }
         },
         "required": [

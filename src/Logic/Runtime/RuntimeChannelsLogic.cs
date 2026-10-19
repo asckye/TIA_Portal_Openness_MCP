@@ -421,5 +421,25 @@ namespace TiaMcpServer.Runtime
         }
 
         public static string Truncate(string s, int max) => s.Length <= max ? s : s.Substring(0, max) + "...";
+
+        // The cached Web API session is bound to the credentials that logged it in: a later call with a different password for the
+        // same host and user logs in again instead of reusing the earlier token. Only a per-process salted SHA-256 of the password
+        // enters the key, never the password itself.
+        private static readonly byte[] S7WebPasswordSalt = NewSalt();
+        private static byte[] NewSalt()
+        {
+            var salt = new byte[32];
+            using (var random = System.Security.Cryptography.RandomNumberGenerator.Create()) random.GetBytes(salt);
+            return salt;
+        }
+        public static string S7WebSessionKey(string host, string username, string password, bool ignoreCertificateErrors)
+        {
+            var secret = System.Text.Encoding.UTF8.GetBytes(password ?? "");
+            var input = new byte[S7WebPasswordSalt.Length + secret.Length];
+            Buffer.BlockCopy(S7WebPasswordSalt, 0, input, 0, S7WebPasswordSalt.Length);
+            Buffer.BlockCopy(secret, 0, input, S7WebPasswordSalt.Length, secret.Length);
+            using var sha = System.Security.Cryptography.SHA256.Create();
+            return S7WebSessionKey(host, username, ignoreCertificateErrors) + "|" + BitConverter.ToString(sha.ComputeHash(input)).Replace("-", "");
+        }
     }
 }

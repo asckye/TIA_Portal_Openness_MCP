@@ -21,7 +21,14 @@ public sealed class OnlineRequest
     public string RhTarget { get; set; } = "";
     public string PgPcInterface { get; set; } = "";
     public string TargetIpAddress { get; set; } = "";
-    public bool TrustDeviceCertificate { get; set; } = true;
+    public bool TrustDeviceCertificate { get; set; }
+    public bool AllowNonTlsLogin { get; set; }
+    public bool AllowSafetyProgramDownload { get; set; }
+    public bool AllowHardwareDifferences { get; set; }
+    public bool AllowActiveTestCancel { get; set; }
+    public bool AllowExpandedDownload { get; set; }
+    public bool AllowIdentificationDataLoad { get; set; }
+    public string DownloadScope { get; set; } = "software";
     public bool ConsistentBlocksOnly { get; set; } = true;
     public bool KeepActualValues { get; set; } = true;
     public bool StartAfterDownload { get; set; } = true;

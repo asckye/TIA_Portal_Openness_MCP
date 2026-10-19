@@ -17,6 +17,12 @@ namespace TiaMcp.Engine.Tests
         {
             bool Fails(Action action) { try { action(); return false; } catch { return true; } }
 
+            // ---- IInstance.PowerOn returns ERuntimeErrorCode: OK and warnings succeed, every other code fails the action
+            check(PlcSimAdvancedLogic.RuntimeErrorFailure("powerOn", "OK") == null && PlcSimAdvancedLogic.RuntimeErrorFailure("run", null) == null, "PowerOn OK and the void actions succeed");
+            check(PlcSimAdvancedLogic.RuntimeErrorFailure("powerOn", "WarningTrialModeActive") == null, "a PowerOn warning code keeps the action successful");
+            var powerOnFailure = PlcSimAdvancedLogic.RuntimeErrorFailure("powerOn", "Timeout");
+            check(powerOnFailure != null && powerOnFailure.Contains("Timeout") && powerOnFailure.Contains("powerOn"), "a PowerOn error code fails the action and names the code");
+
             // ---- probing order (paths built with the platform separator: the suite also runs on Linux)
             var temp = Path.GetTempPath();
             var root = Path.Combine(temp, "Common Files", "Siemens", "PLCSIMADV", "API");

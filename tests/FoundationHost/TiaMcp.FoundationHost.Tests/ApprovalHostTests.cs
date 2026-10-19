@@ -184,6 +184,56 @@ public sealed class ApprovalHostTests
         Assert.Empty(audit.Read());
     }
 
+    [Theory]
+    [InlineData("\"true\"")]
+    [InlineData("\"false\"")]
+    [InlineData("1")]
+    [InlineData("null")]
+    public async Task Foundation_non_boolean_dry_run_is_a_write_and_never_reaches_the_worker(string dryRun)
+    {
+        // Only an explicit boolean true previews; a present value of another JSON type fails closed as a write.
+        var worker = new Worker();
+        int waits = 0;
+        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "CreatePlcTagTable"), worker), "19", null,
+            () => new ApprovalSettings(true, 1), (pending, _, _) =>
+            {
+                waits++;
+                return Task.FromResult(new ApprovalOutcome(pending, false, "denied"));
+            });
+        var isWrite = typeof(FoundationV4Tool).GetMethod("IsApprovalWrite", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+        Assert.True((bool)isWrite.Invoke(tool, new object[] { JsonNode.Parse("{\"plc\":\"PLC_1\",\"dryRun\":" + dryRun + "}")!.AsObject() })!);
+        Assert.False((bool)isWrite.Invoke(tool, new object[] { JsonNode.Parse("{\"plc\":\"PLC_1\",\"dryRun\":true}")!.AsObject() })!);
+        Assert.False((bool)isWrite.Invoke(tool, new object[] { JsonNode.Parse("{\"plc\":\"PLC_1\"}")!.AsObject() })!);
+        var result = await tool.InvokeAsync(Request("CreatePlcTagTable", "{\"plc\":\"PLC_1\",\"group\":\"\",\"name\":\"Typed\",\"dryRun\":" + dryRun + "}"));
+        Assert.NotEqual("succeeded", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
+        Assert.Equal(0, worker.Calls);
+        Assert.Equal(0, waits);
+    }
+
+    [Fact]
+    public void Download_approval_request_lists_every_prompt_answer_the_call_will_give()
+    {
+        var pending = PendingApproval.Create("foundation", "21", "DownloadPlc",
+            "{\"softwarePath\":\"PLC_1\",\"keepActualValues\":false,\"allowExpandedDownload\":true,\"allowNonTlsLogin\":true,\"password\":\"fixture-cpu-secret\"}", null, 120);
+        var display = JsonNode.Parse(pending.ParametersJson)!;
+        var plan = display["promptAnswerPlan"]!;
+        var answers = plan["answers"]!.AsObject();
+        Assert.Equal("StopPlcAndReinitialize", (string?)answers["DataBlockReinitialization"]!["answer"]);
+        Assert.Equal("StopAll", (string?)answers["StopModules"]!["answer"]);
+        Assert.Equal("builtin", (string?)answers["StopModules"]!["source"]);
+        Assert.Equal("Download", (string?)answers["ExpandDownload"]!["answer"]);
+        Assert.Equal("refused", (string?)answers["SafetyProgram"]!["source"]);
+        Assert.Equal("allowSafetyProgramDownload", (string?)answers["SafetyProgram"]!["allowWith"]);
+        Assert.Contains(plan["loginPrompts"]!.AsArray(), row => (string?)row!["prompt"] == "ModuleReadAccessPassword" && (bool)row["answered"]!);
+        Assert.Contains("allowNonTlsLogin=true", (string?)plan["loginChannel"], StringComparison.Ordinal);
+        Assert.True((bool)display["allowNonTlsLogin"]!);
+        Assert.DoesNotContain("fixture-cpu-secret", pending.ParametersJson, StringComparison.Ordinal);
+        Assert.Null(JsonNode.Parse(PendingApproval.Create("foundation", "21", "CreatePlcTag", "{\"softwarePath\":\"PLC_1\"}", null, 120).ParametersJson)!["promptAnswerPlan"]);
+        var upload = JsonNode.Parse(PendingApproval.Create("foundation", "21", "UploadStationFromPlc", "{\"targetIpAddress\":\"192.0.2.1\"}", null, 120).ParametersJson)!;
+        Assert.Equal("TryUpload", (string?)upload["promptAnswerPlan"]!["answers"]!["UploadMissingProducts"]!["answer"]);
+    }
+
     [Fact]
     public async Task Foundation_missing_exact_installation_refuses_worker_tools_before_approval()
     {

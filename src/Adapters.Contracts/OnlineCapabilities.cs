@@ -22,6 +22,12 @@ public static class OnlineCapabilities
         if (request.Operation == "ManagePlcDataBlockSnapshot" && request.Action != "read"
             && request.Action != "exportSnapshot" && release != "21")
             return "ValueService is available in V21 only; snapshot read/export use InterfaceSnapshot (15.1+).";
+        if (request.Operation == "DownloadPlc" && request.DownloadScope == "softwareOnlyChanges" && release is "14sp1" or "15.1" or "16")
+            return "DownloadOptions.SoftwareOnlyChanges requires V17 or later; use downloadScope=software.";
         return null;
     }
+
+    // DownloadPlc downloadScope values, mapped to Siemens.Engineering.Download.DownloadOptions.Software ("Download software all")
+    // and DownloadOptions.SoftwareOnlyChanges ("Download software only changes", V17+).
+    public static readonly string[] DownloadScopes = { "software", "softwareOnlyChanges" };
 }

@@ -13880,7 +13880,7 @@
             "requiresBinding": true
           },
           "trustDeviceCertificate": {
-            "exampleValue": true
+            "exampleValue": false
           }
         },
         "operations": {},
@@ -13972,7 +13972,7 @@
             "requiresBinding": true
           },
           "trustDeviceCertificate": {
-            "exampleValue": true
+            "exampleValue": false
           }
         },
         "operations": {},
@@ -19634,7 +19634,7 @@
             "requiresBinding": true
           },
           "trustDeviceCertificate": {
-            "exampleValue": true
+            "exampleValue": false
           }
         },
         "operations": {},
@@ -21785,7 +21785,7 @@
             "requiresBinding": true
           },
           "trustDeviceCertificate": {
-            "exampleValue": true
+            "exampleValue": false
           }
         },
         "operations": {},

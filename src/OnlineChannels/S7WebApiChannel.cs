@@ -327,7 +327,7 @@ namespace TiaMcpServer.Runtime
         private static async Task RunAsync<T>(string host, string username, string password, bool ignoreCert, int budget, T result,
             Func<ApiHttpClientRequestHandler, CancellationToken, Task> body, Action<T, bool> setReused)
         {
-            string key = RuntimeChannelsLogic.S7WebSessionKey(host, username, ignoreCert);
+            string key = RuntimeChannelsLogic.S7WebSessionKey(host, username, password, ignoreCert);
             var gate = LockFor(key);
             if (!await gate.WaitAsync(budget))
                 throw new TimeoutException($"S7 Web API session for '{host}' (user '{username}') is busy with a previous call.");

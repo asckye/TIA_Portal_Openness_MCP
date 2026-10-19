@@ -153,7 +153,8 @@ namespace TiaMcp.PlcWorker.Runtime
                             var detail = new JsonObject(); data["communicationInterfaceRoute"] = detail;
                             data["communicationInterface"] = PlcSimAdvancedChannel.SetCommunicationInterface(api, instance!, communicationInterface, detail);
                         }
-                        PlcSimAdvancedChannel.Lifecycle(instance!, act, timeoutMs);
+                        var runtimeCode = PlcSimAdvancedChannel.Lifecycle(instance!, act, timeoutMs);
+                        if (runtimeCode != null) data["runtimeErrorCode"] = runtimeCode;
                         if (act == "unregister") { PlcSimAdvancedChannel.Forget(name); instance = null; }
                         else if (act == "powerOff" || act == "memoryReset") PlcSimAdvancedChannel.Forget(name);   // the tag list is stale after these; the next call reopens
                     }
@@ -347,7 +348,7 @@ namespace TiaMcp.PlcWorker.Runtime
                                     }
                                     r["checks"] = checks;
                                     break;
-                                case "powerOn": PlcSimAdvancedChannel.Lifecycle(instance, "powerOn", 120000); break;
+                                case "powerOn": r["runtimeErrorCode"] = PlcSimAdvancedChannel.Lifecycle(instance, "powerOn", 120000); break;
                                 case "run": PlcSimAdvancedChannel.Lifecycle(instance, "run", 60000); break;
                                 case "stop": PlcSimAdvancedChannel.Lifecycle(instance, "stop", 60000); break;
                             }

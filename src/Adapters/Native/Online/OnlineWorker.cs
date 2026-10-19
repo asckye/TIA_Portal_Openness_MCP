@@ -44,21 +44,21 @@ public sealed partial class PlcFoundationEngine
         object value = request.Operation switch
         {
             "GetOnlineState" => adapter.GetOnlineState(request.SoftwarePath),
-            "ConnectOnlinePlc" => adapter.GoOnline(request.SoftwarePath, Empty(request.IpAddress), Empty(request.Password), Empty(request.UserName), Empty(request.UserType), request.RhTarget, Empty(request.PgPcInterface), request.TrustDeviceCertificate),
+            "ConnectOnlinePlc" => adapter.GoOnline(request.SoftwarePath, Empty(request.IpAddress), Empty(request.Password), Empty(request.UserName), Empty(request.UserType), request.RhTarget, Empty(request.PgPcInterface), request.TrustDeviceCertificate, request.AllowNonTlsLogin),
             "DisconnectOnlinePlc" => adapter.GoOffline(request.SoftwarePath),
             "DisconnectOnlinePlcs" => adapter.GoOfflineAll(),
             "CompareSoftwareToOnline" => adapter.CompareSoftwareToOnline(request.SoftwarePath, request.MaxDepth, request.MaxEntries),
 #if ONLINE_DOWNLOAD
             "CheckDownloadReadiness" => adapter.CheckDownloadReadiness(request.SoftwarePath),
-            "DownloadPlc" => adapter.DownloadToPlc(request.SoftwarePath, request.ConsistentBlocksOnly, request.KeepActualValues, request.StartAfterDownload, request.StopBeforeDownload, Empty(request.Password), Empty(request.PgPcInterface), Empty(request.TargetIpAddress), request.UserManagementMode, request.PromptAnswersJson, Empty(request.ModuleAccessPassword), Empty(request.BlockBindingPassword), Empty(request.MasterSecretPassword), request.RhTarget, request.TrustDeviceCertificate),
+            "DownloadPlc" => adapter.DownloadToPlc(request),
 #if ONLINE_FOLDER
-            "DownloadPlcToFolder" => adapter.DownloadPlcToFolder(request.SoftwarePath, request.DestinationDirectory, request.TargetForSoftware, request.OverwriteOnMemoryCard, request.KeepActualValues, request.UserManagementMode, request.PromptAnswersJson, request.ConfirmDownload, request.DryRun),
+            "DownloadPlcToFolder" => adapter.DownloadPlcToFolder(request),
 #endif
-            "UploadStationFromPlc" => adapter.UploadStationFromPlc(request.TargetIpAddress, request.PgPcInterface, request.Password, request.PromptAnswersJson, request.ConfirmUpload, request.DryRun),
+            "UploadStationFromPlc" => adapter.UploadStationFromPlc(request),
             "ManagePlcDataBlockSnapshot" => adapter.ManagePlcDataBlockSnapshot(request.SoftwarePath, request.BlockPath, request.Action, request.FilePath, request.ConfirmValueChange, request.DryRun),
 #endif
 #if ONLINE_FINGERPRINTS
-            "GetPlcBlockFingerprints" => adapter.ReadPlcBlockFingerprints(request.SoftwarePath, request.TargetIpAddress, request.PgPcInterface, request.Password, request.Offset, request.Limit, request.DryRun),
+            "GetPlcBlockFingerprints" => adapter.ReadPlcBlockFingerprints(request.SoftwarePath, request.TargetIpAddress, request.PgPcInterface, request.Password, request.Offset, request.Limit, request.DryRun, request.TrustDeviceCertificate, request.AllowNonTlsLogin),
 #endif
 #if ONLINE_LOADABLE
             "GeneratePlcLoadableFile" => adapter.GeneratePlcLoadableFile(request.SoftwarePath, "", request.ObjectKind, request.TargetOption, request.FilePath, request.DryRun),
@@ -67,7 +67,7 @@ public sealed partial class PlcFoundationEngine
             "ScanAccessibleDevices" => adapter.ScanAccessibleDevices(request.PgPcInterface, request.SoftwarePath, request.Offset, request.Limit),
 #endif
 #if ONLINE_PARAMETERS
-            "UploadDeviceParameters" => adapter.UploadDeviceParameters("", "", request.TargetIpAddress, request.PgPcInterface, request.Password, request.PromptAnswersJson, request.ConfirmUpload, request.DryRun),
+            "UploadDeviceParameters" => adapter.UploadDeviceParameters(request),
 #endif
             "ListTransferRoutes" => adapter.ReadTransferRoutes(request.SoftwarePath, request.MaxItems),
             _ => throw new NotSupportedException("Unsupported online operation: " + request.Operation)
