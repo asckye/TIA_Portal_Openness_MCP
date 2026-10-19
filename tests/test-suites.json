@@ -190,7 +190,7 @@
   },
   "diagnostic-membership": {
     "project": "tests/Engine/TiaMcp.Engine.DiagnosticMembership.Tests/TiaMcp.Engine.DiagnosticMembership.Tests.csproj",
-    "minimumPassed": 4,
+    "minimumPassed": 10,
     "maximumSkipped": 0,
     "arguments": []
   },
@@ -269,7 +269,10 @@
     "arguments": [
       "-p:EngineRelease=21"
     ],
-    "publicApiRoot": true
+    "publicApiRoot": true,
+    "companions": [
+      "plc-exchange-worker-v21"
+    ]
   },
   "plc-exchange-v20": {
     "project": "tests/Engine/TiaMcp.Engine.PlcExchange.Tests/TiaMcp.Engine.PlcExchange.Tests.csproj",
@@ -278,11 +281,14 @@
     "arguments": [
       "-p:EngineRelease=20"
     ],
-    "publicApiRoot": true
+    "publicApiRoot": true,
+    "companions": [
+      "plc-exchange-worker-v20"
+    ]
   },
   "engine-host": {
     "project": "tests/FoundationHost/TiaMcp.EngineHost.Tests/TiaMcp.EngineHost.Tests.csproj",
-    "minimumPassed": 157,
+    "minimumPassed": 159,
     "maximumSkipped": 0,
     "arguments": []
   },
@@ -290,7 +296,10 @@
     "project": "tests/Engine/TiaMcp.SharedSession.Tests/TiaMcp.SharedSession.Tests.csproj",
     "minimumPassed": 53,
     "maximumSkipped": 0,
-    "arguments": []
+    "arguments": [],
+    "companions": [
+      "shared-lifecycle-plc"
+    ]
   },
   "shared-pipeline": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
@@ -312,9 +321,12 @@
   },
   "worker-progress": {
     "project": "tests/WorkerChannel/TiaMcp.WorkerProgress.Tests/TiaMcp.WorkerProgress.Tests.csproj",
-    "minimumPassed": 3,
+    "minimumPassed": 5,
     "maximumSkipped": 0,
-    "arguments": []
+    "arguments": [],
+    "companions": [
+      "worker-progress-foundation"
+    ]
   },
   "shared-lifecycle": {
     "project": "tests/Engine/TiaMcp.SharedSession.Tests/TiaMcp.SharedSession.Tests.csproj",
@@ -323,6 +335,9 @@
     "arguments": [
       "--filter",
       "FullyQualifiedName~SharedLifecycleTests"
+    ],
+    "companions": [
+      "shared-lifecycle-plc"
     ]
   },
   "source-contracts": {
@@ -414,5 +429,38 @@
       "--filter",
       "FullyQualifiedName~PluginLauncherTests"
     ]
+  },
+  "plc-exchange-worker-v20": {
+    "project": "tests/FoundationHost/TiaMcp.PlcExchange.Tests/TiaMcp.PlcExchange.Tests.csproj",
+    "minimumPassed": 128,
+    "maximumSkipped": 0,
+    "arguments": [
+      "-p:EngineRelease=20"
+    ],
+    "publicApiRoot": true
+  },
+  "plc-exchange-worker-v21": {
+    "project": "tests/FoundationHost/TiaMcp.PlcExchange.Tests/TiaMcp.PlcExchange.Tests.csproj",
+    "minimumPassed": 128,
+    "maximumSkipped": 0,
+    "arguments": [
+      "-p:EngineRelease=21"
+    ],
+    "publicApiRoot": true
+  },
+  "shared-lifecycle-plc": {
+    "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
+    "minimumPassed": 46,
+    "maximumSkipped": 0,
+    "arguments": [
+      "--filter",
+      "FullyQualifiedName~PlcSharedLifecycleTests"
+    ]
+  },
+  "worker-progress-foundation": {
+    "project": "tests/WorkerChannel/TiaMcp.FoundationProgress.Tests/TiaMcp.FoundationProgress.Tests.csproj",
+    "minimumPassed": 3,
+    "maximumSkipped": 0,
+    "arguments": []
   }
 }

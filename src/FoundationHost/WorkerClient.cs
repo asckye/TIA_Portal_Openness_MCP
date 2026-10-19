@@ -332,29 +332,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                     && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach"
                     ? (int?)arguments["candidate"]?["Check"]?["Request"]?["ProcessId"] : null;
             if (hostAttachPid.HasValue) startBeforeAttach = ProcessStartUtc(hostAttachPid.Value);
-            lock (stateSync)
-            {
-                if (disconnecting) throw SessionEnded(releaseKey, "Disconnect ended this session; a new host session is required.");
-                if (process == null)
-                {
-                    if (!File.Exists(workerExe) || !Directory.Exists(apiDirectory)) throw new FileNotFoundException("Select the compiled worker and authorized PublicAPI directory explicitly.");
-                    var adapterFile=Path.Combine(Path.GetDirectoryName(Path.GetFullPath(workerExe))!,"TiaMcp.Adapter."+releaseKey+".dll");
-                    var workerHash=ArgumentRules.HashFile(workerExe,FileShare.Read);
-                    var adapterHash=ArgumentRules.HashFile(adapterFile,FileShare.Read);
-                    var nonce=Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
-                    var start = new ProcessStartInfo(Path.GetFullPath(workerExe)) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true, StandardInputEncoding = new System.Text.UTF8Encoding(false), StandardOutputEncoding = new System.Text.UTF8Encoding(false), StandardErrorEncoding = new System.Text.UTF8Encoding(false) };
-                    foreach (var argument in new WorkerLaunchOptions(releaseKey, apiDirectory, nonce, WithUi, TiaPortalLocation).Arguments())
-                        start.ArgumentList.Add(argument);
-                    start.Environment["TIA_MCP_WORKER_SPILLS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory;
-                    start.Environment["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory;
-                    process = Process.Start(start) ?? throw new IOException("Worker failed to start."); WorkerJob.Bind(process); WorkerShutdown.Register(this);
-                    attachAttempted = false;
-                    process.ErrorDataReceived += (_, e) => { if (e.Data != null) lock (diagnostics) { diagnostics.Enqueue(e.Data); while (diagnostics.Count > 8) diagnostics.Dequeue(); } };
-                    process.BeginErrorReadLine();
-                    channel=new ChannelClient(process.StandardOutput.BaseStream,process.StandardInput.BaseStream,
-                        new ChannelIdentity(releaseKey,workerHash,adapterHash,process.Id,nonce));
-                }
-            }
+            EnsureProcess();
             if (!WorkerOperations.IsIndependentRuntime(operation) || !channel!.CanCallIndependentRuntime)
                 await channel!.ConnectAsync(timeouts.For("status"),token);
             token.ThrowIfCancellationRequested();
@@ -428,6 +406,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             // of being mistaken for a failure before the worker request was sent.
             sent |= usableAtEntry && channel?.OutcomeUnknown == true;
             if (sent && channel?.OutcomeUnknown == true) ex.Data["workerOutcomeUnknown"] = true;
+            // Same mark as the engine client: a request over the worker frame was never sent.
+            if (!sent && ex is ChannelLimitException) ex.Data["workerLimitBytes"] = ChannelLimits.RequestBytes;
             if (TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.IsTimeout(ex) && (operation == "Attach" || operation == WorkerOperations.SessionCandidate && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach"))
             {
                 int? selectedPid = operation == "Attach" ? (int?)arguments["processId"] : (int?)arguments["candidate"]?["Check"]?["Request"]?["ProcessId"];
@@ -455,6 +435,36 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             throw;
         }
         finally { activeRequestId = null; if (acquired) { Interlocked.Decrement(ref active); serial.Release(); } }
+    }
+
+    // Synchronous on purpose: with CallCore's exception filter in the same async frame, a refusal
+    // thrown inside this lock reached Monitor.Exit(null) in Release builds, so the caller saw an
+    // ArgumentNullException and stateSync stayed held. A separate frame keeps the lock balanced.
+    private void EnsureProcess()
+    {
+        lock (stateSync)
+        {
+            if (disconnecting) throw SessionEnded(releaseKey, "Disconnect ended this session; a new host session is required.");
+            if (process == null)
+            {
+                if (!File.Exists(workerExe) || !Directory.Exists(apiDirectory)) throw new FileNotFoundException("Select the compiled worker and authorized PublicAPI directory explicitly.");
+                var adapterFile=Path.Combine(Path.GetDirectoryName(Path.GetFullPath(workerExe))!,"TiaMcp.Adapter."+releaseKey+".dll");
+                var workerHash=ArgumentRules.HashFile(workerExe,FileShare.Read);
+                var adapterHash=ArgumentRules.HashFile(adapterFile,FileShare.Read);
+                var nonce=Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
+                var start = new ProcessStartInfo(Path.GetFullPath(workerExe)) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true, StandardInputEncoding = new System.Text.UTF8Encoding(false), StandardOutputEncoding = new System.Text.UTF8Encoding(false), StandardErrorEncoding = new System.Text.UTF8Encoding(false) };
+                foreach (var argument in new WorkerLaunchOptions(releaseKey, apiDirectory, nonce, WithUi, TiaPortalLocation).Arguments())
+                    start.ArgumentList.Add(argument);
+                start.Environment["TIA_MCP_WORKER_SPILLS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory;
+                start.Environment["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory;
+                process = Process.Start(start) ?? throw new IOException("Worker failed to start."); WorkerJob.Bind(process); WorkerShutdown.Register(this);
+                attachAttempted = false;
+                process.ErrorDataReceived += (_, e) => { if (e.Data != null) lock (diagnostics) { diagnostics.Enqueue(e.Data); while (diagnostics.Count > 8) diagnostics.Dequeue(); } };
+                process.BeginErrorReadLine();
+                channel=new ChannelClient(process.StandardOutput.BaseStream,process.StandardInput.BaseStream,
+                    new ChannelIdentity(releaseKey,workerHash,adapterHash,process.Id,nonce));
+            }
+        }
     }
 
     private async Task<JsonNode?> Disconnect(CancellationToken token)

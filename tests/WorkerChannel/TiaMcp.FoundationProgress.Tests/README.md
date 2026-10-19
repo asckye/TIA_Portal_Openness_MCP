@@ -1,0 +1,3 @@
+# Foundation progress fixture
+
+`FrozenWorkerProgressShim.cs` is an exact copy of the engine progress emitter at the P8-04k2 launch source. It is fixture infrastructure, not a production implementation. Do not refresh it from future host or worker output. The original `worker-progress` suite still compiles the actual engine emitter; `worker-progress-foundation` uses this frozen emitter to exercise the same owner-thread, token and spill assertions on `ChannelProfile.Foundation` without an engine source or project dependency.

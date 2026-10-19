@@ -26,6 +26,30 @@ public sealed class PlcFixtureWorkerRobustnessTests
                 timeoutConfig: "{\"default\":2}") { Bundled = false, WithUi = true, TiaPortalLocation = "C:/fixture Portal V" + release };
         }
         internal Process? Process => (Process?)typeof(WorkerClient).GetField("process", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(Worker);
+        internal async Task Arm(string operation)
+        {
+            var armed = await Worker.Call("FaultFixtureArm", new() { ["method"] = "adapter." + operation }, CancellationToken.None);
+            Assert.True((bool?)armed?["armed"]);
+        }
+        internal async Task Prechecks(string release)
+        {
+            string correlation = FoundationWorkerRequest.CorrelationId;
+            var state = await Worker.Call("ReadState", new(), CancellationToken.None);
+            Assert.Equal(release, (string?)state?["ReleaseKey"]);
+            var readiness = await Worker.Observe("status", new(), CancellationToken.None);
+            Assert.True((bool?)readiness?["readiness"]?["ready"]);
+            using (FoundationWorkerRequest.Use(Guid.NewGuid().ToString("N"), "ListPlcBlocks"))
+            {
+                var blocks = await Worker.Call("ReadBlocks", new(), CancellationToken.None);
+                Assert.Equal("fixture", (string?)blocks?[0]?["Name"]);
+            }
+            using (FoundationWorkerRequest.Use(correlation, "GetPlcBlockInfo"))
+            {
+                var blocks = await Worker.Call("ReadBlocks", new(), CancellationToken.None);
+                Assert.Equal("fixture", (string?)blocks?[0]?["Name"]);
+            }
+            Assert.False(Worker.Poisoned);
+        }
         internal void VerifyChild()
         {
             if (Process is { HasExited: false } child)
@@ -49,6 +73,8 @@ public sealed class PlcFixtureWorkerRobustnessTests
     public async Task Plc_faults_lock_the_host_and_require_explicit_restart(string release, string mode)
     {
         using var scope = new Scope(release, mode);
+        using var request = FoundationWorkerRequest.Use(Guid.NewGuid().ToString("N"), "GetSessionState");
+        await scope.Arm("ReadState");
         var error = await Assert.ThrowsAnyAsync<Exception>(() => scope.Worker.Call("ReadState", new(), CancellationToken.None));
         Assert.True(scope.Worker.Poisoned, error.ToString());
         Assert.True((bool?)error.Data["foundationRequestSent"]);
@@ -71,7 +97,32 @@ public sealed class PlcFixtureWorkerRobustnessTests
     {
         using var scope = new Scope(release, mode);
         var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(definition => definition.Name == "GetBlocks"), scope.Worker),
-            release, null, () => new(false, 1), readinessForTest: () => new JsonObject { ["ready"] = true });
+            release, null, () => new(false, 1), readinessForTest: () => {
+                scope.Arm("ReadBlocks").GetAwaiter().GetResult();
+                return new JsonObject { ["ready"] = true };
+            });
+        var server = DispatchProxy.Create<IMcpServer, WorkerRobustnessTests.ServerProxy>();
+        var request = new RequestContext<CallToolRequestParams>(server) { Params = JsonSerializer.Deserialize<CallToolRequestParams>(
+            new JsonObject { ["name"] = tool.ProtocolTool.Name, ["arguments"] = new JsonObject { ["softwarePath"] = "PLC", ["regexName"] = "" } }.ToJsonString()) };
+        var result = await tool.InvokeAsync(request);
+        Assert.Equal("unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        Assert.True((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+        Assert.NotEmpty(result.StructuredContent!["meta"]!["warnings"]!.AsArray());
+        Assert.True(scope.Worker.Poisoned);
+        var refused = await tool.InvokeAsync(request);
+        Assert.Equal("SESSION_RESET_REQUIRED", (string?)refused.StructuredContent?["error"]?["code"]);
+    }
+
+    [Theory, MemberData(nameof(Faults))]
+    public async Task Prechecks_and_other_invocations_do_not_consume_the_V4_fault(string release, string mode)
+    {
+        using var scope = new Scope(release, mode);
+        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(definition => definition.Name == "GetBlocks"), scope.Worker),
+            release, null, () => new(false, 1), readinessForTest: () => {
+                scope.Arm("ReadBlocks").GetAwaiter().GetResult();
+                scope.Prechecks(release).GetAwaiter().GetResult();
+                return new JsonObject { ["ready"] = true };
+            });
         var server = DispatchProxy.Create<IMcpServer, WorkerRobustnessTests.ServerProxy>();
         var request = new RequestContext<CallToolRequestParams>(server) { Params = JsonSerializer.Deserialize<CallToolRequestParams>(
             new JsonObject { ["name"] = tool.ProtocolTool.Name, ["arguments"] = new JsonObject { ["softwarePath"] = "PLC", ["regexName"] = "" } }.ToJsonString()) };
@@ -89,6 +140,14 @@ public sealed class PlcFixtureWorkerRobustnessTests
     public async Task Background_exception_after_TIA_exit_survives_and_reports_unknown(string release)
     {
         using var scope = new Scope(release, "background-tia-exit");
+        using var request = FoundationWorkerRequest.Use(Guid.NewGuid().ToString("N"), "GetSessionState");
+        await scope.Arm("ReadState");
+        using (FoundationWorkerRequest.Use(Guid.NewGuid().ToString("N"), "GetSessionState"))
+        {
+            var precheck = await scope.Worker.Call("ReadState", new(), CancellationToken.None);
+            Assert.Equal(release, (string?)precheck?["ReleaseKey"]);
+            Assert.False(scope.Worker.Poisoned);
+        }
         var error = await Assert.ThrowsAsync<WorkerOperationException>(() => scope.Worker.Call("ReadState", new(), CancellationToken.None));
         Assert.Equal("unknown", error.Outcome); Assert.True(scope.Worker.Poisoned);
         Assert.False(scope.Process!.HasExited);

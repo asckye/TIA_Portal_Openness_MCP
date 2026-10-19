@@ -8,7 +8,7 @@ using ModelContextProtocol.Server;
 using TiaMcp.Logic.V4;
 using TiaMcp.WorkerChannel;
 using Xunit;
-using Client = foundationhost::TiaMcp.FoundationHost.EngineWorkerClient;
+using Client = WorkerBackendFixture;
 using Options = foundationhost::TiaMcp.FoundationHost.HostOptions;
 using Host = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
 using Journal = enginehost::TiaMcpServer.ModelContextProtocol.InvocationJournal;
@@ -17,6 +17,15 @@ using Engine = enginehost::TiaMcp.FoundationHost;
 using Descriptor = enginehost::TiaMcpServer.ModelContextProtocol.ToolDescriptor;
 using Parameter = enginehost::TiaMcpServer.ModelContextProtocol.ToolParameterDescriptor;
 
+// Scope sets the process-wide data directory and fault variables. Classes running beside it read
+// DataLocations.Current (approval settings, audit directory) and observed that directory mid-test.
+[CollectionDefinition(Name, DisableParallelization = true)]
+public sealed class WorkerDataDirectoryCollection
+{
+    public const string Name = "Process-wide worker data directory";
+}
+
+[Collection(WorkerDataDirectoryCollection.Name)]
 public sealed class WorkerRobustnessTests
 {
     private static string HostDiagnosticsDirectory()
@@ -29,13 +38,18 @@ public sealed class WorkerRobustnessTests
     }
 
     [Theory]
-    [InlineData("20")]
-    [InlineData("21")]
-    public async Task Worker_inherits_host_diagnostics_directory(string release)
+    [InlineData("20", false)]
+    [InlineData("21", false)]
+    [InlineData("20", true)]
+    [InlineData("21", true)]
+    public async Task Worker_inherits_host_diagnostics_directory(string release, bool plcWorker)
     {
-        using var scope = new Scope("", release);
-        var status = await scope.Worker.Status(CancellationToken.None);
-        Assert.Equal(HostDiagnosticsDirectory(), (string?)status["diagnosticsDirectory"]);
+        using var scope = new Scope("", release, plcWorker);
+        // The engine rows keep their original EngineWorkerClient.Status subject; the PlcWorker
+        // reports the inherited directory in its HostObserve status reply.
+        JsonNode? status = plcWorker ? await scope.Worker.Observe("status", new JsonObject(), CancellationToken.None)
+            : await ((Foundation.EngineWorkerClient)scope.Worker.Client).Status(CancellationToken.None);
+        Assert.Equal(HostDiagnosticsDirectory(), (string?)status!["diagnosticsDirectory"]);
     }
 
     [Fact]
@@ -83,30 +97,51 @@ public sealed class WorkerRobustnessTests
     {
         internal readonly Client Worker;
         internal readonly List<JsonObject> Rows = new();
-        private readonly string? previousFault = Environment.GetEnvironmentVariable("TIA_MCP_ENGINE_WORKER_FAULT");
+        private readonly string faultVariable;
+        private readonly string? previousFault;
+        private readonly bool plcWorker;
         private readonly string? previousData = Environment.GetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY");
+        private readonly string? dataDirectory;
         private readonly enginehost::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime lifetime = new();
         private readonly McpServerTool engine;
         private readonly McpServerTool shared;
         internal readonly string SpillsDirectory = Path.Combine(AppContext.BaseDirectory, "worker-fixture-spills", Guid.NewGuid().ToString("N"));
-        internal Scope(string mode, string release = "21")
+        internal Scope(string mode, string release = "21", bool plcWorker = false)
         {
-            Environment.SetEnvironmentVariable("TIA_MCP_ENGINE_WORKER_FAULT", mode);
-            Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", Path.Combine(AppContext.BaseDirectory, "worker-fixture-data"));
-            string exe = TiaMcp.Engine.Tests.Shared.TestPaths.WorkerFixture("TiaMcp.EngineWorker.FaultFixture", "TiaMcp.EngineWorker.FaultFixture.exe");
+            this.plcWorker = plcWorker;
+            faultVariable = plcWorker ? "TIA_MCP_PLC_WORKER_FAULT" : "TIA_MCP_ENGINE_WORKER_FAULT";
+            previousFault = Environment.GetEnvironmentVariable(faultVariable);
+            Environment.SetEnvironmentVariable(faultVariable, mode);
+            // PlcWorker rows spill into the data location, and parallel shard processes share this
+            // output directory: give each such scope its own location, removed on disposal.
+            dataDirectory = plcWorker ? Path.Combine(AppContext.BaseDirectory, "worker-fixture-data", "plc-" + Guid.NewGuid().ToString("N")) : null;
+            Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", dataDirectory ?? Path.Combine(AppContext.BaseDirectory, "worker-fixture-data"));
+            string exe = plcWorker ? Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+                "tests/WorkerChannel/TiaMcp.PlcWorker.FaultFixture/bin/Release/net48/TiaMcp.PlcWorker.FaultFixture.exe")
+                : TiaMcp.Engine.Tests.Shared.TestPaths.WorkerFixture("TiaMcp.EngineWorker.FaultFixture", "TiaMcp.EngineWorker.FaultFixture.exe");
             Assert.True(File.Exists(exe), exe);
             File.WriteAllText(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + release + ".dll"), "offline fixture identity");
             // A successful 16/32 MiB spill includes serialization and a durable disk flush.
             // Keep the short deadline for injected faults, not as a performance gate for CI disks.
+            if (plcWorker)
+            {
+                var type = typeof(Foundation.WorkerClient).Assembly.GetType("TiaOpenness.Shared.DataLocations")
+                    ?? typeof(Meta).Assembly.GetType("TiaOpenness.Shared.DataLocations", true)!;
+                const BindingFlags all = BindingFlags.Static | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+                var data = type.GetProperty("Current", all)!.GetValue(null)!;
+                SpillsDirectory = (string)type.GetProperty("WorkerSpillsDirectory", all)!.GetValue(data)!;
+            }
             string budget = mode is "oversized" or "oversized-delayed" ? "30" : "0.8";
-            Worker = new Client(new Options { ReleaseKey = release, EngineWorkerExe = exe, WorkerExe = exe, ApiDirectory = "", BundleRoot = AppContext.BaseDirectory,
-                NativeEnabled = true, BundledWorker = false, WorkerTimeoutConfig = "{\"default\":" + budget + ",\"compile\":0.8,\"firstAttach\":1.2}" }, Client.Hash(exe), SpillsDirectory)
-                { StatusTimeoutForTest = TimeSpan.FromSeconds(30) };
+            Worker = new Client(plcWorker, new Options { ReleaseKey = release, EngineWorkerExe = exe, WorkerExe = exe, ApiDirectory = Path.GetDirectoryName(exe)!, BundleRoot = AppContext.BaseDirectory,
+                NativeEnabled = true, BundledWorker = false, WorkerTimeoutConfig = "{\"default\":" + budget + ",\"compile\":0.8,\"firstAttach\":1.2}" }, Client.Hash(exe), SpillsDirectory, TimeSpan.FromSeconds(30));
             Engine.EngineHostConfiguration.ReleaseKey = release; Engine.EngineHostConfiguration.Worker = Worker;
-            var catalog = new Catalog();
-            Host.ConfigureToolBridge(catalog, new Engine.WorkerToolInvoker(catalog, Worker, lifetime), () => false, new HashSet<string>());
+            var ports = plcWorker ? Foundation.LegacyHostToolRegistry.Create(Worker, release, true, hostPorts: false) : null;
+            enginehost::TiaMcpServer.ModelContextProtocol.IToolCatalogView catalog = plcWorker
+                ? new Engine.FoundationCatalog(release, ports!) : new Catalog();
+            Host.ConfigureToolBridge(catalog, new Engine.WorkerToolInvoker(catalog, Worker, lifetime, ports), () => false, new HashSet<string>());
             Journal.ConfigureOutput(row => Rows.Add(JsonNode.Parse(row)!.AsObject()));
-            engine = Host.WrapTools(new[] { Host.ToolInvoker.CreateTool(catalog.All[SessionFixtureTool.Name]) }).Single();
+            engine = plcWorker ? ports!.Single(tool => tool.ProtocolTool.Name == SessionFixtureTool.Name)
+                : Host.WrapTools(new[] { Host.ToolInvoker.CreateTool(catalog.All[SessionFixtureTool.Name]) }).Single();
             shared = new Foundation.FoundationV4Tool(new Foundation.FoundationTool(Foundation.FoundationTools.Definitions.Single(d => d.Name == "GetBlocks"), Worker),
                 release, null, () => new(false, 1), readinessForTest: () => new JsonObject { ["ready"] = true });
             Worker.SessionLocked = () => Host.SessionPrecheckRefusal("GetSessionState") != null;
@@ -115,7 +150,8 @@ public sealed class WorkerRobustnessTests
         internal Task<CallToolResult> Call(bool foundation, CancellationToken token = default, string? payload = null, bool progress = false)
         {
             var tool = foundation ? shared : engine;
-            var args = foundation ? new JsonObject { ["softwarePath"] = "PLC", ["regexName"] = payload ?? "" }
+            var args = plcWorker && !foundation ? new JsonObject { ["category"] = "application", ["name"] = payload ?? "" }
+                : foundation ? new JsonObject { ["softwarePath"] = "PLC", ["regexName"] = payload ?? "" }
                 : payload == null ? new JsonObject() : new JsonObject { ["payload"] = payload };
             var server = DispatchProxy.Create<IMcpServer, ServerProxy>();
             ((ServerProxy)server).Progress = p => { if (FailProgress) throw new IOException("Fixture MCP client disconnected."); Progress.Add(p); };
@@ -125,12 +161,13 @@ public sealed class WorkerRobustnessTests
         }
         internal readonly List<JsonObject> Progress = new();
         internal bool FailProgress;
+        internal void ClearFault() => Environment.SetEnvironmentVariable(faultVariable, null);
         internal string FailureDetails(CallToolResult? result = null)
         {
             const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
-            var process = (System.Diagnostics.Process?)typeof(Client).GetField("process", flags)!.GetValue(Worker);
-            var channel = (ChannelClient?)typeof(Client).GetField("channel", flags)!.GetValue(Worker);
-            var stderr = (Queue<string>)typeof(Client).GetField("diagnostics", flags)!.GetValue(Worker)!;
+            var process = (System.Diagnostics.Process?)Worker.Client.GetType().GetField("process", flags)!.GetValue(Worker.Client);
+            var channel = (ChannelClient?)Worker.Client.GetType().GetField("channel", flags)!.GetValue(Worker.Client);
+            var stderr = (Queue<string>)Worker.Client.GetType().GetField("diagnostics", flags)!.GetValue(Worker.Client)!;
             var details = new JsonObject { ["result"] = result?.StructuredContent?.DeepClone(), ["worker"] = Worker.Snapshot(),
                 ["faultReason"] = channel?.LastFault?.ToString(), ["workerExited"] = process?.HasExited,
                 ["workerExitCode"] = process?.HasExited == true ? process.ExitCode : null,
@@ -150,7 +187,8 @@ public sealed class WorkerRobustnessTests
         {
             Worker.Dispose(); lifetime.Dispose(); Journal.ConfigureOutput(null);
             if (Directory.Exists(SpillsDirectory)) Directory.Delete(SpillsDirectory, true);
-            Environment.SetEnvironmentVariable("TIA_MCP_ENGINE_WORKER_FAULT", previousFault);
+            if (dataDirectory != null && Directory.Exists(dataDirectory)) Directory.Delete(dataDirectory, true);
+            Environment.SetEnvironmentVariable(faultVariable, previousFault);
             Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", previousData);
         }
     }
@@ -167,11 +205,11 @@ public sealed class WorkerRobustnessTests
         private sealed class EmptyServices : IServiceProvider { public object? GetService(Type type) => null; }
     }
     public static IEnumerable<object[]> Faults()
-    { foreach (string release in new[] { "20", "21" }) foreach (bool shared in new[] { false, true }) foreach (string mode in new[] { "hang", "crash", "broken-pipe", "malformed", "truncated", "epoch", "tia-lost" }) yield return new object[] { release, shared, mode }; }
+    { foreach (string release in new[] { "20", "21" }) foreach (bool plcWorker in new[] { false, true }) foreach (bool shared in new[] { false, true }) foreach (string mode in new[] { "hang", "crash", "broken-pipe", "malformed", "truncated", "epoch", "tia-lost" }) yield return new object[] { release, shared, mode, plcWorker }; }
     [Theory, MemberData(nameof(Faults))]
-    public async Task Faults_lock_both_pipelines_and_require_explicit_restart(string release, bool shared, string mode)
+    public async Task Faults_lock_both_pipelines_and_require_explicit_restart(string release, bool shared, string mode, bool plcWorker)
     {
-        using var scope = new Scope(mode, release);
+        using var scope = new Scope(mode, release, plcWorker);
         var result = await scope.Call(shared);
         Assert.Equal("unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
         Assert.True((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
@@ -181,7 +219,7 @@ public sealed class WorkerRobustnessTests
         Assert.Equal("Faulted", (string?)previous["state"]); Assert.True((bool?)previous["sessionLocked"]); Assert.NotNull(previous["fault"]);
         Assert.Contains(scope.Rows, row => (string?)row["phase"] == "RETURNED");
         object key = scope.Worker.SessionKey;
-        Environment.SetEnvironmentVariable("TIA_MCP_ENGINE_WORKER_FAULT", null);
+        scope.ClearFault();
         var restart = await scope.Worker.Restart(true, CancellationToken.None);
         Assert.True((bool?)restart["success"]); Assert.True((bool?)restart["requiresExplicitRebind"]);
         Assert.NotSame(key, scope.Worker.SessionKey); Assert.Null(scope.Worker.Binding);
@@ -191,10 +229,10 @@ public sealed class WorkerRobustnessTests
         Assert.NotNull(scope.Worker.Binding);
         Assert.True((bool?)(await scope.Call(shared)).StructuredContent?["ok"]);
     }
-    [Theory, InlineData(false), InlineData(true)]
-    public async Task Cancellation_before_dispatch_is_a_queue_refusal(bool shared)
+    [Theory, InlineData(false, false), InlineData(true, false), InlineData(false, true), InlineData(true, true)]
+    public async Task Cancellation_before_dispatch_is_a_queue_refusal(bool shared, bool plcWorker)
     {
-        using var scope = new Scope("slow"); using var held = await scope.Worker.Acquire(CancellationToken.None);
+        using var scope = new Scope("slow", plcWorker: plcWorker); using var held = await scope.Worker.Acquire(CancellationToken.None);
         using var cancel = new CancellationTokenSource(); cancel.Cancel();
         var result = await scope.Call(shared, cancel.Token);
         Assert.Equal("CANCELLED", (string?)result.StructuredContent?["error"]?["code"]);
@@ -202,10 +240,10 @@ public sealed class WorkerRobustnessTests
         Assert.Equal("tool-queue", (string?)result.StructuredContent?["error"]?["details"]?["stage"]);
         Assert.False(scope.Worker.Faulted);
     }
-    [Theory, InlineData(false), InlineData(true)]
-    public async Task Cancellation_after_dispatch_keeps_the_late_result_and_journal(bool shared)
+    [Theory, InlineData(false, false), InlineData(true, false), InlineData(false, true), InlineData(true, true)]
+    public async Task Cancellation_after_dispatch_keeps_the_late_result_and_journal(bool shared, bool plcWorker)
     {
-        using var scope = new Scope("slow"); using var cancel = new CancellationTokenSource();
+        using var scope = new Scope("slow", plcWorker: plcWorker); using var cancel = new CancellationTokenSource();
         var call = Task.Run(() => scope.Call(shared, cancel.Token));
         await Task.Delay(70); cancel.Cancel();
         var result = await call;
@@ -213,25 +251,25 @@ public sealed class WorkerRobustnessTests
         Assert.Contains(scope.Rows, row => (string?)row["phase"] == "RETURNED_AFTER_CANCELLATION");
         Assert.True((bool?)(await scope.Call(shared)).StructuredContent?["ok"]);
     }
-    [Theory, InlineData(false), InlineData(true)]
-    public async Task Oversized_request_never_faults_or_dispatches(bool shared)
+    [Theory, InlineData(false, false), InlineData(true, false), InlineData(false, true), InlineData(true, true)]
+    public async Task Oversized_request_never_faults_or_dispatches(bool shared, bool plcWorker)
     {
-        using var scope = new Scope("crash");
+        using var scope = new Scope("crash", plcWorker: plcWorker);
         var result = await scope.Call(shared, payload: new string('x', ChannelLimits.RequestBytes));
         Assert.Equal("LIMIT_EXCEEDED", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
         Assert.False(scope.Worker.Faulted);
     }
-    [Theory, InlineData(false), InlineData(true)]
-    public async Task Oversized_reply_is_a_readable_export_handle(bool shared)
+    [Theory, InlineData(false, false), InlineData(true, false), InlineData(false, true), InlineData(true, true)]
+    public async Task Oversized_reply_is_a_readable_export_handle(bool shared, bool plcWorker)
     {
-        using var scope = new Scope("oversized"); var result = await scope.Call(shared);
+        using var scope = new Scope("oversized", plcWorker: plcWorker); var result = await scope.Call(shared);
         AssertReadableExport(scope, result);
     }
-    [Theory, InlineData(false), InlineData(true)]
-    public async Task Oversized_reply_survives_a_spill_slower_than_the_fault_injection_deadline(bool shared)
+    [Theory, InlineData(false, false), InlineData(true, false), InlineData(false, true), InlineData(true, true)]
+    public async Task Oversized_reply_survives_a_spill_slower_than_the_fault_injection_deadline(bool shared, bool plcWorker)
     {
-        using var scope = new Scope("oversized-delayed");
+        using var scope = new Scope("oversized-delayed", plcWorker: plcWorker);
         var clock = System.Diagnostics.Stopwatch.StartNew();
         var result = await scope.Call(shared);
         AssertReadableExport(scope, result);
@@ -264,19 +302,19 @@ public sealed class WorkerRobustnessTests
         Assert.False(scope.Worker.Faulted);
         Assert.Contains(scope.Rows, row => (string?)row["phase"] == "PROGRESS_DELIVERY_FAILED");
     }
-    [Fact]
-    public async Task First_attach_has_a_longer_deadline_and_the_access_confirmation_hint()
+    [Theory, InlineData(false), InlineData(true)]
+    public async Task First_attach_has_a_longer_deadline_and_the_access_confirmation_hint(bool plcWorker)
     {
-        using var scope = new Scope("hang"); var clock = System.Diagnostics.Stopwatch.StartNew();
+        using var scope = new Scope("hang", plcWorker: plcWorker); var clock = System.Diagnostics.Stopwatch.StartNew();
         var error = await Assert.ThrowsAsync<ChannelFaultException>(() => scope.Worker.Call("Attach", new() { ["processId"] = 123 }, CancellationToken.None));
         Assert.True(clock.Elapsed.TotalSeconds >= 1);
         Assert.Contains("Openness access confirmation", error.Message);
         Assert.True(scope.Worker.Faulted);
     }
-    [Fact]
-    public async Task Restart_clears_an_adopted_binding_and_refuses_a_busy_lane()
+    [Theory, InlineData(false), InlineData(true)]
+    public async Task Restart_clears_an_adopted_binding_and_refuses_a_busy_lane(bool plcWorker)
     {
-        using var scope = new Scope("");
+        using var scope = new Scope("", plcWorker: plcWorker);
         await scope.Worker.Call("Attach", new() { ["processId"] = 123 }, CancellationToken.None);
         Assert.NotNull(scope.Worker.Binding);
         object key = scope.Worker.SessionKey;

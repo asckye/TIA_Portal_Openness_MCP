@@ -15,6 +15,9 @@ namespace PlcExchangeTests
 {
     public sealed class P707bNativeTests
     {
+#if TIA_PLC_EXCHANGE_TESTS
+        public P707bNativeTests() => PlcExchangeTarget.ConfigureHost();
+#endif
         static P707bNativeTests() => RuntimeHelpers.RunClassConstructor(typeof(PlcExchangeContractsTests).TypeHandle);
         private static Type EngineType(string name) => typeof(McpServer).Assembly.GetType("TiaMcpServer." + name, true)!;
         private static JsonObject Body(object result) => ((CallToolResult)result).StructuredContent!.AsObject();
@@ -24,8 +27,13 @@ namespace PlcExchangeTests
         private static (SessionFake Fake, object Service) CfcFixture()
         {
             var assembly = typeof(McpServer).Assembly;
+#if TIA_PLC_EXCHANGE_TESTS
+            var adapter = PlcExchangeTarget.Adapter;
+            var adapterName = adapter.GetName();
+#else
             var adapterName = assembly.GetReferencedAssemblies().Single(name => name.Name!.StartsWith("TiaMcp.Adapter.", StringComparison.Ordinal));
             var adapter = Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(assembly.Location)!, adapterName.Name + ".dll"));
+#endif
             var engineType = adapter.GetType("TiaMcp.Adapters.PlcFoundationEngine", true)!;
             var sessionType = adapter.GetType("TiaMcp.Adapters.Native.Plc.IPlcOrganisationSession", true)!;
             var fake = (SessionFake)DispatchProxy.Create(sessionType, typeof(SessionFake));
@@ -221,7 +229,11 @@ namespace PlcExchangeTests
         [InlineData(true)]
         public void ProductionSaveAsReturnsBothObservedProjectFiles(bool missingAfter)
         {
+#if TIA_PLC_EXCHANGE_TESTS
+            var fake = new SaveAsFake();
+#else
             var fake = (SaveAsFake)DispatchProxy.Create(EngineType("Siemens.IEngineeringSession"), typeof(SaveAsFake));
+#endif
             fake.MissingAfter = missingAfter;
             var body = Body(Call(SaveAsTool(fake), "SaveProjectCopyV4", Path.Combine(Path.GetTempPath(), "Copy")));
             Assert.Equal(1, fake.SaveCalls);
@@ -246,7 +258,11 @@ namespace PlcExchangeTests
         [InlineData(false)]
         public void SaveAsRefusesLocalSessionsOrAnAbsentCachedBinding(bool local)
         {
+#if TIA_PLC_EXCHANGE_TESTS
+            var fake = new SaveAsFake();
+#else
             var fake = (SaveAsFake)DispatchProxy.Create(EngineType("Siemens.IEngineeringSession"), typeof(SaveAsFake));
+#endif
             fake.LocalSession = local;
             fake.MissingBefore = !local;
             var body = Body(Call(SaveAsTool(fake), "SaveProjectCopyV4", Path.Combine(Path.GetTempPath(), "Copy")));

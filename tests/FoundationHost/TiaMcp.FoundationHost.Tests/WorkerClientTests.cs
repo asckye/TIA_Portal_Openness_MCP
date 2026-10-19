@@ -111,4 +111,75 @@ public sealed class WorkerDispatchTests
         Xunit.Assert.True(((TextContentBlock)result.Content.Single()).Text.Length < text.Length);
         Xunit.Assert.False(((IFoundationSessionWorker)worker).SharedSession);
     }
+
+    // A launch refused inside the client's state lock must leave that lock free: the next call,
+    // from another thread, enters it and is refused the same way instead of blocking.
+    [Xunit.Theory, Xunit.InlineData("19"), Xunit.InlineData("21")]
+    public async Task Failed_worker_launch_releases_the_state_lock_for_the_next_call(string release)
+    {
+        using var worker = new foundationhost::TiaMcp.FoundationHost.WorkerClient(release,
+            Path.Combine(AppContext.BaseDirectory, "missing-launch-worker.exe"), AppContext.BaseDirectory, true) { Bundled = false };
+        object sync = typeof(foundationhost::TiaMcp.FoundationHost.WorkerClient)
+            .GetField("stateSync", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(worker)!;
+        // The refusal happens before the first real await, on this thread.
+        await Xunit.Assert.ThrowsAsync<FileNotFoundException>(() => worker.Call("ReadState", new JsonObject(), CancellationToken.None));
+        bool taken = false;
+        var probe = new Thread(() => { taken = Monitor.TryEnter(sync, TimeSpan.FromSeconds(2)); if (taken) Monitor.Exit(sync); });
+        probe.Start(); Xunit.Assert.True(probe.Join(TimeSpan.FromSeconds(10)));
+        Xunit.Assert.True(taken);
+        Exception? second = null;
+        var next = new Thread(() => {
+            try { worker.Call("ReadState", new JsonObject(), CancellationToken.None).GetAwaiter().GetResult(); }
+            catch (Exception error) { second = error; }
+        });
+        next.Start(); Xunit.Assert.True(next.Join(TimeSpan.FromSeconds(10)));
+        Xunit.Assert.IsType<FileNotFoundException>(second);
+        Xunit.Assert.False(worker.Poisoned);
+    }
+
+    // A request the worker client sent and then lost (unknown native outcome) is never reported as
+    // a pre-operation rejection by the ported optional-package path, for reads as well as writes.
+    [Xunit.Theory, Xunit.InlineData("ListTestSuiteCases", false), Xunit.InlineData("ExchangeTestSuiteCase", true)]
+    public void Lost_worker_acknowledgement_maps_to_unknown_for_reads_and_writes(string tool, bool writes)
+    {
+        enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
+        var lost = new IOException("Worker exited; native outcome is unknown.");
+        lost.Data["foundationRequestSent"] = true; lost.Data["workerOutcomeUnknown"] = true;
+        var body = enginehost::TiaMcpServer.ModelContextProtocol.OptionalPackageContract.Run(tool, writes, () => throw lost).StructuredContent!;
+        Xunit.Assert.Equal("unknown", (string?)body["meta"]?["outcome"]);
+        Xunit.Assert.Equal("unknown", (string?)body["meta"]?["execution"]);
+        Xunit.Assert.True((bool?)body["meta"]?["requiresSessionReset"]);
+        Xunit.Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+        Xunit.Assert.Null(body["data"]?["operationNotStarted"]);
+        // The same failure before the request was sent stays a pre-operation rejection.
+        var unsent = new IOException("Worker exited before the request was sent.");
+        unsent.Data["foundationRequestSent"] = false;
+        var refused = enginehost::TiaMcpServer.ModelContextProtocol.OptionalPackageContract.Run(tool, writes, () => throw unsent).StructuredContent!;
+        Xunit.Assert.Equal("rejected-before-operation", (string?)refused["meta"]?["outcome"]);
+        Xunit.Assert.False((bool?)refused["meta"]?["requiresSessionReset"]);
+    }
+
+    // A request over the worker frame is never sent; both the shared (FoundationV4Result) and the
+    // ported (optional-package) mappings report LIMIT_EXCEEDED before operation.
+    [Xunit.Fact]
+    public async Task Over_frame_request_is_limit_exceeded_on_shared_and_ported_paths()
+    {
+        enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
+        using var worker = new foundationhost::TiaMcp.FoundationHost.WorkerClient("21",
+            Path.Combine(AppContext.BaseDirectory, "missing-launch-worker.exe"), AppContext.BaseDirectory, true) { Bundled = false };
+        var args = new JsonObject { ["softwarePath"] = "PLC", ["regexName"] = new string('x', TiaMcp.WorkerChannel.ChannelLimits.RequestBytes) };
+        var error = await Xunit.Assert.ThrowsAsync<TiaMcp.WorkerChannel.ChannelLimitException>(() => worker.Call("ReadBlocks", args, CancellationToken.None));
+        Xunit.Assert.Equal(false, error.Data["foundationRequestSent"]);
+        Xunit.Assert.Equal(TiaMcp.WorkerChannel.ChannelLimits.RequestBytes, error.Data["workerLimitBytes"]);
+        Xunit.Assert.False(worker.Poisoned);
+        var shared = foundationhost::TiaMcp.FoundationHost.FoundationV4Result.Failure("21", "ListPlcBlocks", "fixture", true, false, null, error).StructuredContent!;
+        var ported = enginehost::TiaMcpServer.ModelContextProtocol.OptionalPackageContract.Run("ListTestSuiteCases", false, () => throw error).StructuredContent!;
+        foreach (var body in new[] { shared, ported })
+        {
+            Xunit.Assert.Equal("LIMIT_EXCEEDED", (string?)body["error"]?["code"]);
+            Xunit.Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
+            Xunit.Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+            Xunit.Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
+        }
+    }
 }

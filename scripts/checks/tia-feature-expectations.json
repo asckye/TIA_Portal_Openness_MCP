@@ -995,6 +995,16 @@
     ]
   },
   {
+    "project": "tests/FoundationHost/TiaMcp.PlcExchange.Tests/TiaMcp.PlcExchange.Tests.csproj",
+    "properties": {},
+    "targetFramework": "net10.0",
+    "defineConstants": [
+      "RELEASE",
+      "TIA_PLC_EXCHANGE_TESTS",
+      "TRACE"
+    ]
+  },
+  {
     "project": "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj",
     "properties": {},
     "targetFramework": "net10.0",
@@ -1011,6 +1021,16 @@
     "targetFramework": "net10.0",
     "defineConstants": [
       "TIA_V20"
+    ]
+  },
+  {
+    "project": "tests/WorkerChannel/TiaMcp.FoundationProgress.Tests/TiaMcp.FoundationProgress.Tests.csproj",
+    "properties": {},
+    "targetFramework": "net10.0",
+    "defineConstants": [
+      "RELEASE",
+      "TIA_PLC_PROGRESS_TESTS",
+      "TRACE"
     ]
   }
 ]

@@ -698,11 +698,15 @@ internal static partial class ReleaseCommands
     {
         var spec = ReleaseCommandTable.Get(tableName);
         using var catalog = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root, "tests/test-suites.json")));
-        var suite = catalog.RootElement.GetProperty(name);
-        RestoreBuildProject(dotnet, Path.Combine(Root, suite.GetProperty("project").GetString()!), nuget, outputDirectory, runTemp, cliHome, apiRoot);
-        var buildProperties = suite.GetProperty("arguments").EnumerateArray().Select(item => item.GetString()!).Where(arg => arg.StartsWith("-p:", StringComparison.OrdinalIgnoreCase)).ToArray();
-        RunBuildRaw(dotnet, ["build", suite.GetProperty("project").GetString()!, "-c", "Release", "--no-restore", "-v:q", .. buildProperties],
-            Path.Combine(outputDirectory, name + "-harness-build.log"), runTemp, cliHome, apiRoot, nuget, name + " harness build");
+        var suiteCatalog = JsonNode.Parse(catalog.RootElement.GetRawText())!.AsObject();
+        foreach (var selected in DotnetSuites.WithCompanions(new[] { name }, suiteCatalog))
+        {
+            var suite = catalog.RootElement.GetProperty(selected);
+            var buildProperties = suite.GetProperty("arguments").EnumerateArray().Select(item => item.GetString()!).Where(arg => arg.StartsWith("-p:", StringComparison.OrdinalIgnoreCase)).ToArray();
+            RestoreBuildProject(dotnet, Path.Combine(Root, suite.GetProperty("project").GetString()!), nuget, outputDirectory, runTemp, cliHome, apiRoot, buildProperties);
+            RunBuildRaw(dotnet, ["build", suite.GetProperty("project").GetString()!, "-c", "Release", "--no-restore", "-v:q", .. buildProperties],
+                Path.Combine(outputDirectory, selected + "-harness-build.log"), runTemp, cliHome, apiRoot, nuget, selected + " harness build");
+        }
         var options = Options.Parse(["-Suite", name, "-Dotnet", dotnet, "-NoRestore", "-DotnetArg=--no-build", "-ResultsDirectory", resultDirectory], new HashSet<string> { "NoRestore" });
         var result = RunBuildIsolated(dotnet, [], Path.Combine(outputDirectory, spec.LogFile), runTemp, cliHome, apiRoot, null, false, name,
             env => DotnetSuites.Run(Root, options, env));

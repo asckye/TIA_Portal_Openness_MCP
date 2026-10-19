@@ -9,6 +9,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../../src/FoundationHost/TiaMcp.FoundationHost.csproj" Aliases="foundationhost" />
     <Compile Include="../../../src/PlcWorker/WorkerProjectScaffold.cs" Link="WorkerProjectScaffold.cs" />
     <Compile Include="../../Adapters/TiaMcp.Adapters.Contracts.Tests/ScaffoldWorkerFake.cs" Link="ScaffoldWorkerFake.cs" />
     <ProjectReference Include="../../../src/EngineHost/TiaMcp.EngineHost.csproj" />

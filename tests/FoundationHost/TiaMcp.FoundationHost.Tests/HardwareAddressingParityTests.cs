@@ -73,6 +73,7 @@ public sealed class HardwareAddressingParityTests
 
     [Theory]
     [InlineData("14sp1")]
+    [InlineData("20")]
     [InlineData("21")]
     public void Unsupported_action_uses_the_selected_release(string selected)
     {

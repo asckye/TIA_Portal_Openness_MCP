@@ -9,19 +9,23 @@ using TiaMcp.Logic.V4;
 using TiaOpenness.Shared;
 using Xunit;
 
-public sealed class EngineHttpSessionTests
+public sealed class EngineHttpSessionTests : EngineHttpSessionTestsCases { protected override bool PlcWorker => false; }
+public sealed class EngineHttpSessionTestsPlc : EngineHttpSessionTestsCases { protected override bool PlcWorker => true; }
+
+public abstract class EngineHttpSessionTestsCases
 {
+    protected abstract bool PlcWorker { get; }
     [Fact]
     public async Task Production_catalog_rejects_fixture_tools_and_startup_reports_stderr()
     {
-        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => Fixture.Start("21", invalidCatalog: true).WaitAsync(TimeSpan.FromSeconds(5)));
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => Fixture.Start(PlcWorker, "21", invalidCatalog: true).WaitAsync(TimeSpan.FromSeconds(5)));
         Assert.Contains("Engine catalog execution ownership mismatch: " + SessionFixtureTool.Name, error.Message);
     }
 
     [Theory, InlineData("20"), InlineData("21")]
     public async Task Unknown_outcome_can_disconnect_and_a_new_session_can_acquire_the_same_lease(string release)
     {
-        using var host = await Fixture.Start(release);
+        using var host = await Fixture.Start(PlcWorker, release);
         using var a = new Session(host.Url); await a.Initialize();
         await a.Tool("ConnectPortal", new() { ["processId"] = 321 });
         var unknown = await a.Tool(SessionFixtureTool.Name, new() { ["fault"] = true }, ok: false);
@@ -43,7 +47,7 @@ public sealed class EngineHttpSessionTests
     [Theory, InlineData("20"), InlineData("21")]
     public async Task Http_session_end_without_disconnect_releases_its_attached_worker(string release)
     {
-        using var host = await Fixture.Start(release); using var session = new Session(host.Url); await session.Initialize();
+        using var host = await Fixture.Start(PlcWorker, release); using var session = new Session(host.Url); await session.Initialize();
         await session.Tool("ConnectPortal", new() { ["processId"] = 325 });
         await session.End();
         string lease = Path.Combine(host.DataDirectory, "leases", "325-1.lease");
@@ -59,7 +63,7 @@ public sealed class EngineHttpSessionTests
     [Theory, InlineData("20"), InlineData("21")]
     public async Task Idle_attached_restart_detaches_before_starting_the_next_generation(string release)
     {
-        using var host = await Fixture.Start(release); using var a = new Session(host.Url); await a.Initialize();
+        using var host = await Fixture.Start(PlcWorker, release); using var a = new Session(host.Url); await a.Initialize();
         await a.Tool("ConnectPortal", new() { ["processId"] = 322 });
         var restarted = await a.Tool("RestartOpennessWorker", new() { ["confirmRestart"] = true });
         Assert.Contains("\"requiresTiaRestart\":false", restarted["data"]!.ToJsonString());
@@ -71,7 +75,7 @@ public sealed class EngineHttpSessionTests
     [Theory, InlineData("20", true), InlineData("21", true), InlineData("20", false), InlineData("21", false)]
     public async Task Busy_or_timed_out_disconnect_terminates_the_worker_and_keeps_the_lease_busy(string release, bool waitForTimeout)
     {
-        using var host = await Fixture.Start(release, shortTimeout: waitForTimeout); using var a = new Session(host.Url); await a.Initialize();
+        using var host = await Fixture.Start(PlcWorker, release, shortTimeout: waitForTimeout); using var a = new Session(host.Url); await a.Initialize();
         await a.Tool("ConnectPortal", new() { ["processId"] = 323 });
         int pid = (int)(await a.Tool(SessionFixtureTool.Name))["data"]!["fixturePid"]!;
         using var worker = Process.GetProcessById(pid);
@@ -99,7 +103,7 @@ public sealed class EngineHttpSessionTests
     [Theory, InlineData("20"), InlineData("21")]
     public async Task Restart_after_a_timeout_reports_a_dirty_lease(string release)
     {
-        using var host = await Fixture.Start(release, shortTimeout: true); using var a = new Session(host.Url); await a.Initialize();
+        using var host = await Fixture.Start(PlcWorker, release, shortTimeout: true); using var a = new Session(host.Url); await a.Initialize();
         await a.Tool("ConnectPortal", new() { ["processId"] = 324 });
         await a.Tool(SessionFixtureTool.Name, new() { ["hang"] = true }, ok: false);
         var restarted = await a.Tool("RestartOpennessWorker", new() { ["confirmRestart"] = true });
@@ -112,7 +116,7 @@ public sealed class EngineHttpSessionTests
     [Theory, InlineData("20"), InlineData("21")]
     public async Task Http_sessions_own_workers_disconnect_restart_and_teardown(string release)
     {
-        using var host = await Fixture.Start(release);
+        using var host = await Fixture.Start(PlcWorker, release);
         using var a = new Session(host.Url);
         using var b = new Session(host.Url);
         await a.Initialize(); await b.Initialize();
@@ -147,7 +151,7 @@ public sealed class EngineHttpSessionTests
     [Theory, InlineData("20"), InlineData("21")]
     public async Task Session_fault_and_bridge_staging_owner_do_not_escape_the_session(string release)
     {
-        using var host = await Fixture.Start(release);
+        using var host = await Fixture.Start(PlcWorker, release);
         using var a = new Session(host.Url); using var b = new Session(host.Url);
         await a.Initialize(); await b.Initialize();
         await a.Tool(SessionFixtureTool.Name, new() { ["fault"] = true }, ok: false);
@@ -165,7 +169,7 @@ public sealed class EngineHttpSessionTests
     [Theory, InlineData("20"), InlineData("21")]
     public async Task Authored_lease_refusal_is_sanitised_and_internal_exception_text_is_hidden(string release)
     {
-        using var host = await Fixture.Start(release); using var session = new Session(host.Url); await session.Initialize();
+        using var host = await Fixture.Start(PlcWorker, release); using var session = new Session(host.Url); await session.Initialize();
         var authored = await session.Tool("ConnectPortal", new() { ["processId"] = 901 }, ok: false);
         Assert.Equal("PRECONDITION_FAILED", (string?)authored["error"]?["code"]);
         Assert.Contains(EngineSessionFixture.LeaseMessage, (string?)authored["error"]?["message"]);
@@ -181,7 +185,7 @@ public sealed class EngineHttpSessionTests
     [Fact]
     public async Task Health_has_file_version_and_readiness_requires_authentication()
     {
-        using var host = await Fixture.Start("21"); using var client = new HttpClient(new HttpClientHandler { UseProxy = false }) { BaseAddress = new Uri(host.Url) };
+        using var host = await Fixture.Start(PlcWorker, "21"); using var client = new HttpClient(new HttpClientHandler { UseProxy = false }) { BaseAddress = new Uri(host.Url) };
         var health = await client.GetFromJsonAsync<JsonObject>("/mcp/health");
         Assert.Equal("full-engine", (string?)health!["profile"]); Assert.False(string.IsNullOrWhiteSpace((string?)health["fileVersion"]));
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/mcp/ready")).StatusCode);
@@ -193,7 +197,7 @@ public sealed class EngineHttpSessionTests
     [Theory, InlineData("20"), InlineData("21")]
     public async Task Shutdown_drains_an_open_http_request_and_stops_its_session_worker(string release)
     {
-        using var host = await Fixture.Start(release, gracefulShutdown: true);
+        using var host = await Fixture.Start(PlcWorker, release, gracefulShutdown: true);
         using var session = new Session(host.Url); await session.Initialize();
         int pid = (int)(await session.Tool(SessionFixtureTool.Name))["data"]!["fixturePid"]!;
         using var worker = Process.GetProcessById(pid);
@@ -243,7 +247,7 @@ public sealed class EngineHttpSessionTests
         private readonly Task exited = process.WaitForExitAsync();
         internal string Url { get; private set; } = url;
         internal string DataDirectory => directory;
-        internal static async Task<Fixture> Start(string release, bool shortTimeout = false, bool gracefulShutdown = false, bool invalidCatalog = false)
+        internal static async Task<Fixture> Start(bool plcWorker, string release, bool shortTimeout = false, bool gracefulShutdown = false, bool invalidCatalog = false)
         {
             string root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
             string directory = Path.Combine(root, "bin-build", "P7-07a-tests", Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
@@ -268,7 +272,11 @@ public sealed class EngineHttpSessionTests
             var start = new ProcessStartInfo(exe) {
                 WorkingDirectory = directory, UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true, RedirectStandardInput = true };
             start.ArgumentList.Add("--foundation-http-fixture");
-            foreach (string arg in new[] { "--bundle-root", root, "--release-key", release, "--engine-worker", exe, "--engine-catalog", catalog, "--transport", "http", "--http-prefix", url + "/", "--http-api-key", "fixture-key", "--profile", "full" }) start.ArgumentList.Add(arg);
+            foreach (string arg in new[] { "--bundle-root", root, "--release-key", release, "--transport", "http", "--http-prefix", url + "/", "--http-api-key", "fixture-key", "--profile", "full" }) start.ArgumentList.Add(arg);
+            foreach (string arg in plcWorker ? new[] { "--plc-worker", "--worker-exe", exe, "--public-api", AppContext.BaseDirectory }
+                : new[] { "--engine-worker", exe, "--engine-catalog", catalog }) start.ArgumentList.Add(arg);
+            // The negative case still validates the frozen engine export in the driver.
+            if (plcWorker && invalidCatalog) { start.ArgumentList.Add("--fixture-invalid-catalog"); start.ArgumentList.Add(catalog); }
             if (shortTimeout)
             {
                 string timeouts = Path.Combine(directory, "timeouts.json"); File.WriteAllText(timeouts, "{\"default\":0.5}");

@@ -28,7 +28,9 @@ internal static class EngineSessionFixture
         ChannelResponse Dispatch(ChannelRequest request)
         {
             if (request.Method == "engine.status") return ChannelResponse.Success(Status().ToJsonString());
-            if (request.Method == "adapter.HostObserve") return ChannelResponse.Success(Status().ToJsonString());
+            if (request.Method == "adapter.HostObserve")
+                return ChannelResponse.Success(((string?)JsonNode.Parse(request.ArgumentsJson)?["operation"] == "assemblies"
+                    ? new JsonArray() : (JsonNode)Status()).ToJsonString());
             if (request.Method == "adapter.FixtureCorrelation") return ChannelResponse.Success(new JsonObject {
                 ["id"] = request.CorrelationId, ["tool"] = request.ToolName }.ToJsonString());
             if (request.Method == "adapter.FixtureSpill")
@@ -66,7 +68,7 @@ internal static class EngineSessionFixture
             if (request.Method == "adapter.ReadPortalProcessProjects")
                 return ChannelResponse.Success(new JsonObject { ["ReleaseKey"] = release, ["Processes"] = new JsonArray(),
                     ["IdentityStrategy"] = "os-pid-and-start-time-observation-only" }.ToJsonString());
-            if (request.Method.StartsWith("adapter."))
+            if (request.Method.StartsWith("adapter.") && request.Method != "adapter.FixtureInvoke")
                 return ChannelResponse.Success(new JsonObject { ["ReleaseKey"] = release, ["IsAttached"] = attached != null, ["ProcessId"] = attached,
                     ["ProjectFile"] = null, ["OwnsProject"] = false, ["IsLocalSession"] = false,
                     ["IdentityStatus"] = "unverified-cached-pid", ["RuntimeConnectionStatus"] = "not-probed" }.ToJsonString());

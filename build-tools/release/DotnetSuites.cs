@@ -107,8 +107,31 @@ internal static class DotnetSuites
                 throw new ReleaseException(name + ": project does not exist", 64);
             if (suite["arguments"] is not JsonArray arguments || arguments.Any(a => a is not JsonValue value || !value.TryGetValue<string>(out _)))
                 throw new ReleaseException(name + ": arguments must be a string array", 64);
+            if (suite.ContainsKey("companions") && (suite["companions"] is not JsonArray companions
+                || companions.Any(item => item is not JsonValue value || !value.TryGetValue<string>(out var companion)
+                    || companion == name || !catalog.ContainsKey(companion))))
+                throw new ReleaseException(name + ": companions must name other registered suites", 64);
         }
         return catalog;
+    }
+
+    // A transitional suite name always includes its registered successor. All
+    // existing callers keep the original gate and gain the companion's own TRX gate.
+    internal static IReadOnlyList<string> WithCompanions(IEnumerable<string> selected, JsonObject catalog)
+    {
+        var result = new List<string>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        void Include(string name)
+        {
+            if (!catalog.TryGetPropertyValue(name, out var node) || node is not JsonObject suite)
+                throw new ReleaseException("Unknown suite: " + name, 64);
+            if (!seen.Add(name)) return;
+            result.Add(name);
+            if (suite["companions"] is JsonArray companions)
+                foreach (var companion in companions) Include(companion!.GetValue<string>());
+        }
+        foreach (var name in selected) Include(name);
+        return result;
     }
 
     internal static CommandResult RunSuite(string root, string name, JsonObject suite, string directory, string dotnet = "dotnet",
@@ -189,6 +212,7 @@ internal static class DotnetSuites
         }
         if (names.Count == 0) throw new ReleaseException("at least one -Suite or -SelfTest is required", 64);
         var catalog = LoadCatalog(options.Get("Catalog", Path.Combine(root, "tests/test-suites.json")), root);
+        names = WithCompanions(names, catalog);
         var unknown = names.Where(name => !catalog.ContainsKey(name)).Distinct().Order(PythonStringComparer.Instance).ToArray();
         if (unknown.Length != 0) throw new ReleaseException("Unknown suites: " + string.Join(", ", unknown), 64);
         if (options.Has("Shards") || options.Has("MaxParallelism") || options.Has("NoBuild") || options.Has("ProveEquivalence"))

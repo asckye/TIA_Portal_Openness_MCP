@@ -22,13 +22,23 @@ namespace TiaMcpServer.ModelContextProtocol
             || Flag(data, "mayHaveWrittenFiles") == true || Flag(data, "mayHaveExternalEffects") == true
             || Flag(data, "operationStarted") == true;
 
+        // Marks set by the host's worker client: the request was sent and its acknowledgement
+        // was lost (unknown native outcome), or it exceeded the worker frame before sending.
+        private static bool WorkerMark(Exception exception, string mark, bool sent)
+        {
+            for (Exception? cause = exception; cause != null; cause = cause.InnerException)
+                if (cause.Data["foundationRequestSent"] is bool value && value == sent && cause.Data[mark] != null) return true;
+            return false;
+        }
+        private static bool WorkerOutcomeLost(Exception exception) => WorkerMark(exception, "workerOutcomeUnknown", true);
+
         internal static void RecordFailure(JsonObject data, Exception exception)
         {
             var cause = exception.GetBaseException();
             data["failureType"] = cause.GetType().Name;
-            if (Issued(data)) return;
+            if (Issued(data) || WorkerOutcomeLost(exception)) return;
             data["operationNotStarted"] = true;
-            string? code = cause is PortalException portal ? portal.Code switch
+            string? code = WorkerMark(exception, "workerLimitBytes", false) ? "LIMIT_EXCEEDED" : cause is PortalException portal ? portal.Code switch
             {
                 PortalErrorCode.InvalidParams => "INVALID_ARGUMENT",
                 PortalErrorCode.NotFound => "NOT_FOUND",
@@ -49,11 +59,14 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var evidence = new JsonObject();
                 RecordFailure(evidence, ex);
-                return Map(tool, new ResponseMessage { Meta = evidence }, writes, offset, limit);
+                return MapOutcome(tool, new ResponseMessage { Meta = evidence }, writes, offset, limit, WorkerOutcomeLost(ex));
             }
         }
 
         internal static CallToolResult Map(string tool, ResponseMessage response, bool writes, int? offset = null, int? limit = null)
+            => MapOutcome(tool, response, writes, offset, limit, false);
+
+        private static CallToolResult MapOutcome(string tool, ResponseMessage response, bool writes, int? offset, int? limit, bool outcomeLost)
         {
             var data = response.Meta?.DeepClone().AsObject() ?? new JsonObject();
             bool issued = Issued(data);
@@ -76,7 +89,8 @@ namespace TiaMcpServer.ModelContextProtocol
             bool verificationFailed = Flag(data, "expectedPresenceVerified") == false || Flag(data, "verifiedAbsent") == false;
             if (verificationFailed) success = false;
             bool notStarted = Flag(data, "operationNotStarted") == true;
-            bool unknown = rejection == null && writes && !notStarted && (stateRequired && !stateKnown
+            // A lost worker acknowledgement is unknown for reads too, as in HostFailurePolicy.
+            bool unknown = outcomeLost || rejection == null && writes && !notStarted && (stateRequired && !stateKnown
                 || reset && issued || success != true && !nativeKnown && !verificationFailed);
             int imported = (data["imported"] as JsonArray)?.Count ?? 0;
             bool knownPartial = verificationFailed && imported > 0
@@ -126,6 +140,7 @@ namespace TiaMcpServer.ModelContextProtocol
             "UNSUPPORTED_CAPABILITY" => new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null),
             "NOT_FOUND" => new NotFoundDetails(null),
             "IO_FAILED" => new IoFailedDetails("optional-package-file", null),
+            "LIMIT_EXCEEDED" => new LimitExceededDetails("arguments", null, null),
             _ => new PreconditionFailedDetails("optional-package-operation", null)
         };
 

@@ -62,6 +62,32 @@ public class DotnetSuitesTests
     }
 
     [Fact]
+    public void Transitional_engine_selections_keep_the_engine_and_PlcWorker_gates()
+    {
+        string root = Repository.FindRoot();
+        var catalog = DotnetSuites.LoadCatalog(Path.Combine(root, "tests/test-suites.json"), root, "windows");
+        foreach (var pair in new[] { ("shared-session", "shared-lifecycle-plc"), ("shared-lifecycle", "shared-lifecycle-plc"),
+            ("plc-exchange-v20", "plc-exchange-worker-v20"), ("plc-exchange-v21", "plc-exchange-worker-v21"),
+            ("worker-progress", "worker-progress-foundation") })
+        {
+            Assert.Equal(new[] { pair.Item1, pair.Item2 }, DotnetSuites.WithCompanions(new[] { pair.Item1 }, catalog));
+            Assert.Equal(0, (int?)catalog[pair.Item2]!["maximumSkipped"]);
+            Assert.NotNull(ReleaseCommandTable.Get(pair.Item2));
+        }
+        Assert.Equal(new[] { "shared-session", "shared-lifecycle-plc", "shared-lifecycle" },
+            DotnetSuites.WithCompanions(new[] { "shared-session", "shared-lifecycle", "shared-lifecycle-plc" }, catalog));
+        Assert.Contains("offline-suites", ReleaseCheckPolicy.Load(root).Select("quick",
+            ["tests/FoundationHost/TiaMcp.PlcExchange.Tests/PlcExchangeTarget.cs"]).SelectedChecks);
+    }
+
+    [Fact]
+    public void Missing_registered_companion_is_an_error()
+    {
+        var catalog = JsonNode.Parse("{\"engine\":{\"companions\":[\"missing\"]}}")!.AsObject();
+        Assert.Throws<ReleaseException>(() => DotnetSuites.WithCompanions(new[] { "engine" }, catalog));
+    }
+
+    [Fact]
     public void SuiteBuildsTakeOnlyTheBuildProperties()
     {
         Assert.Equal(new[] { "-p:EngineRelease=21" }, DotnetSuites.BuildArguments(["--filter", "FullyQualifiedName!~Operator", "-p:EngineRelease=21"]));

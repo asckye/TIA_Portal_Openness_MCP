@@ -22,6 +22,9 @@ namespace PlcExchangeTests
         private const BindingFlags All = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
         private static readonly Assembly Engine = typeof(McpServer).Assembly;
         private static Type ToolType(string name) => Engine.GetType("TiaMcpServer.ModelContextProtocol." + name, true)!;
+#if TIA_PLC_EXCHANGE_TESTS
+        public HmiExchangeContractsTests() => PlcExchangeTarget.ConfigureHost();
+#endif
         static HmiExchangeContractsTests()
         {
             AppDomain.CurrentDomain.AssemblyResolve += (_, args) => {
@@ -40,12 +43,19 @@ namespace PlcExchangeTests
             .SelectMany(n => ToolType(n).GetMethods(All)).Where(m => m.GetCustomAttribute<McpServerToolAttribute>() != null)
             .ToDictionary(m => m.GetCustomAttribute<McpServerToolAttribute>()!.Name!, m => m);
         private static MethodInfo Method(string name) => Methods()[name];
-        private static object? Boundary(string name, params object?[] args) => typeof(McpServer).GetMethods(All)
-            .Single(method => method.Name == name && method.GetParameters().Length == args.Length).Invoke(null, args);
+        private static object? Boundary(string name, params object?[] args)
+#if TIA_PLC_EXCHANGE_TESTS
+            => PlcExchangeTarget.Boundary(name, args);
+#else
+            => typeof(McpServer).GetMethods(All).Single(method => method.Name == name && method.GetParameters().Length == args.Length).Invoke(null, args);
+#endif
         private static CallToolResult Map(string tool, object response, bool writes, bool current)
             => (CallToolResult)ToolType("HmiExchangeContract").GetMethod("Map", All)!.Invoke(null, new[] { tool, response, writes, current })!;
         private static string[] ParseNames(string json)
         {
+#if TIA_PLC_EXCHANGE_TESTS
+            return PlcExchangeTarget.ParseNames(json);
+#else
             var reference = Engine.GetReferencedAssemblies().Single(a => a.Name!.StartsWith("TiaMcp.Adapter.", StringComparison.Ordinal));
             var adapter = Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(Engine.Location)!, reference.Name + ".dll"));
             var decoder = adapter.GetType("TiaMcp.Adapters.Native.Hmi.UnifiedRequestValues", true)!.GetField("Decoder", All)!;
@@ -55,6 +65,7 @@ namespace PlcExchangeTests
             decoder.SetValue(null, Expression.Lambda(decoder.FieldType,
                 Expression.Convert(Expression.Invoke(Expression.Constant(read), input), decoder.FieldType.GetGenericArguments()[1]), input).Compile());
             return (string[])adapter.GetType("TiaMcp.Adapters.Native.Hmi.UnifiedExchangeLogic", true)!.GetMethod("ParseExpectedNames", All)!.Invoke(null, new object[] { json, 500 })!;
+#endif
         }
         public class ServerProxy : DispatchProxy
         {
@@ -102,7 +113,11 @@ namespace PlcExchangeTests
         {
             string json = "{\"softwarePath\":\"HMI\",\"action\":\"import\",\"directory\":\"C:/fixture\",\"expectedTagNames\":" + value + "}";
             var method = Method("ExchangeUnifiedTags");
+#if TIA_PLC_EXCHANGE_TESTS
+            var raw = PlcExchangeTarget.RegisteredTool("ExchangeUnifiedTags");
+#else
             var raw = (McpServerTool)ToolType("ToolCatalog").GetMethod("CreateTool", All)!.Invoke(null, new object?[] { method, null })!;
+#endif
             var direct = (McpServerTool)Boundary("WithSchemaHints", raw, "ExchangeUnifiedTags", method)!;
             var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
                 Params = new CallToolRequestParams { Name = "ExchangeUnifiedTags", Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json) }
@@ -132,8 +147,14 @@ namespace PlcExchangeTests
         {
             const string json = "{\"softwarePath\":\"HMI\",\"action\":\"import\",\"directory\":\"C:/fixture\"}";
             object?[] bind = { "ExchangeUnifiedTags", Args(json), null, null };
+#if TIA_PLC_EXCHANGE_TESTS
+            Assert.Null(McpServer.ToolInvoker.Bind("ExchangeUnifiedTags", Args(json), out var bound));
+            Assert.NotNull(bound);
+            Assert.False(Args(json).Json.TryGetProperty("expectedTagNames", out _));
+#else
             Assert.Null(Boundary("BindV4Call", bind));
             Assert.Null(((object?[])bind[3]!)[5]);
+#endif
             Assert.Empty(ParseNames(V4Json.Serialize(Array.Empty<string>())));
             string[] names = { "Tag/one", " Tag,two " };
             Assert.Equal(names, ParseNames(V4Json.Serialize(names)));
@@ -222,8 +243,12 @@ namespace PlcExchangeTests
         {
             var meta = new JsonObject();
             object? target = new object();
+#if TIA_PLC_EXCHANGE_TESTS
+            PlcExchangeTarget.DeleteTag(meta, () => target, _ => target = null);
+#else
             Engine.GetType("TiaMcpServer.Siemens.HmiTagDeletion", true)!.GetMethod("Execute", All)!.Invoke(null,
                 new object[] { meta, false, (Func<object?>)(() => target), (Action<object>)(_ => target = null) });
+#endif
             meta["success"] = true;
             var result = Body(Map("DeleteHmiTag", new ResponseMessage { Meta = meta }, true, false));
             Assert.Equal("succeeded", (string?)result["meta"]!["outcome"]);

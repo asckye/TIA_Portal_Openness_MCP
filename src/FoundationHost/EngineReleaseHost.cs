@@ -18,11 +18,11 @@ internal static class SharedReleaseHost
         => RunCore(options, logger, null, stoppingToken);
 
     // No CLI/environment switch reaches this seam; only the friend test assembly calls it.
-    internal static Task<int> RunForTest(HostOptions options, HostFileLogger logger, Func<IToolCatalogView, IToolCatalogView> catalogForTest, CancellationToken stoppingToken) => RunCore(options, logger, catalogForTest, stoppingToken);
+    internal static Task<int> RunForTest(HostOptions options, HostFileLogger logger, Func<IToolCatalogView, IToolCatalogView> catalogForTest, CancellationToken stoppingToken, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null) => RunCore(options, logger, catalogForTest, stoppingToken, toolsForTest);
 
-    private static async Task<int> RunCore(HostOptions options, HostFileLogger logger, Func<IToolCatalogView, IToolCatalogView>? catalogForTest, CancellationToken stoppingToken)
+    private static async Task<int> RunCore(HostOptions options, HostFileLogger logger, Func<IToolCatalogView, IToolCatalogView>? catalogForTest, CancellationToken stoppingToken, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null)
     {
-        using var session = CreateSession(options, catalogForTest);
+        using var session = CreateSession(options, catalogForTest, toolsForTest);
         var pipeline = session.Pipeline;
         if (options.CatalogOnly)
         {
@@ -47,7 +47,7 @@ internal static class SharedReleaseHost
             await HostToolCommand.Run(options.HostCommand, pipeline);
             return 0;
         }
-        await using var operatorEndpoint = OperatorEndpoint.Start(options, async token => await CreateHostSessionCore(options, true, catalogForTest, token));
+        await using var operatorEndpoint = OperatorEndpoint.Start(options, async token => await CreateHostSessionCore(options, true, catalogForTest, token, toolsForTest));
         using var operatorStopping = stoppingToken.Register(() => operatorEndpoint?.Stop());
         if (options.Transport == "operator")
         {
@@ -59,7 +59,7 @@ internal static class SharedReleaseHost
         {
             // Build the host catalog before listening; each MCP session starts its worker on demand.
             session.Dispose();
-            await RunHttp(options, logger, pipeline, operatorEndpoint, catalogForTest, stoppingToken);
+            await RunHttp(options, logger, pipeline, operatorEndpoint, catalogForTest, stoppingToken, toolsForTest);
         }
         else
         {
@@ -79,7 +79,7 @@ internal static class SharedReleaseHost
         return 0;
     }
 
-    private static Session CreateSession(HostOptions options, Func<IToolCatalogView, IToolCatalogView>? catalogForTest = null)
+    private static Session CreateSession(HostOptions options, Func<IToolCatalogView, IToolCatalogView>? catalogForTest = null, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null)
     {
         EngineHostConfiguration.ReleaseKey = options.ReleaseKey;
         IFoundationSessionWorker worker = options.EngineWorkerExe != null
@@ -96,6 +96,7 @@ internal static class SharedReleaseHost
                 : ((EngineWorkerClient)worker).FoundationReadiness();
             var shared = LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled, options.ApiDirectory,
                 options.ApiDirectorySource, readiness, () => roster!, data.ExampleProfile, hostPorts: false);
+            if (toolsForTest != null) shared = toolsForTest(worker, shared);
             var services = FoundationHostPorts.CreateServices(worker, options.ReleaseKey, readiness, options.ApiDirectory);
             var pipeline = new EngineHostPipeline("", options.EngineWorkerExe ?? options.WorkerExe, options.ReleaseKey, services,
                 data.HasLite ? options.Profile : "full", shared, data.LiteNames.ToHashSet(StringComparer.Ordinal), catalogForTest);
@@ -123,12 +124,12 @@ internal static class SharedReleaseHost
     internal static Task<HostSession> CreateHostSession(HostOptions options, bool operatorOwned, CancellationToken token = default)
         => CreateHostSessionCore(options, operatorOwned, null, token);
 
-    internal static Task<HostSession> CreateHostSessionForTest(HostOptions options, bool operatorOwned, Func<IToolCatalogView, IToolCatalogView> catalogForTest, CancellationToken token) => CreateHostSessionCore(options, operatorOwned, catalogForTest, token);
+    internal static Task<HostSession> CreateHostSessionForTest(HostOptions options, bool operatorOwned, Func<IToolCatalogView, IToolCatalogView> catalogForTest, CancellationToken token, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null) => CreateHostSessionCore(options, operatorOwned, catalogForTest, token, toolsForTest);
 
-    private static Task<HostSession> CreateHostSessionCore(HostOptions options, bool operatorOwned, Func<IToolCatalogView, IToolCatalogView>? catalogForTest, CancellationToken token)
+    private static Task<HostSession> CreateHostSessionCore(HostOptions options, bool operatorOwned, Func<IToolCatalogView, IToolCatalogView>? catalogForTest, CancellationToken token, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null)
     {
         token.ThrowIfCancellationRequested();
-        var session = CreateSession(options, catalogForTest);
+        var session = CreateSession(options, catalogForTest, toolsForTest);
         try { return Task.FromResult(CreateHostSession(options, session, operatorOwned)); }
         catch { session.Dispose(); throw; }
     }
@@ -148,7 +149,7 @@ internal static class SharedReleaseHost
     }
 
     private static async Task RunHttp(HostOptions options, HostFileLogger logger, EngineHostPipeline probe, OperatorEndpoint? operatorEndpoint,
-        Func<IToolCatalogView, IToolCatalogView>? catalogForTest, CancellationToken stoppingToken)
+        Func<IToolCatalogView, IToolCatalogView>? catalogForTest, CancellationToken stoppingToken, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null)
     {
         var builder = WebApplication.CreateBuilder(HttpHostOptions.Create());
         builder.Logging.ClearProviders();
@@ -158,7 +159,7 @@ internal static class SharedReleaseHost
         builder.WebHost.UseSetting("urls", options.HttpPrefix);
         var mcp = builder.Services.AddMcpServer(o => o.ServerInstructions = probe.Instructions).WithHttpTransport(o => {
             o.ConfigureSessionOptions = (context, server, token) => {
-                var session = CreateSession(options, catalogForTest);
+                var session = CreateSession(options, catalogForTest, toolsForTest);
                 var hostSession = CreateHostSession(options, session);
                 try
                 {
@@ -204,7 +205,7 @@ internal static class SharedReleaseHost
 internal static class EngineReleaseHost
 {
     internal static Task<int> Run(HostOptions options, HostFileLogger logger, CancellationToken token = default) => SharedReleaseHost.Run(options, logger, token);
-    internal static Task<int> RunForTest(HostOptions options, HostFileLogger logger, Func<IToolCatalogView, IToolCatalogView> catalog, CancellationToken token) => SharedReleaseHost.RunForTest(options, logger, catalog, token);
+    internal static Task<int> RunForTest(HostOptions options, HostFileLogger logger, Func<IToolCatalogView, IToolCatalogView> catalog, CancellationToken token, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null) => SharedReleaseHost.RunForTest(options, logger, catalog, token, toolsForTest);
     internal static Task<HostSession> CreateHostSession(HostOptions options, bool operatorOwned, CancellationToken token = default) => SharedReleaseHost.CreateHostSession(options, operatorOwned, token);
-    internal static Task<HostSession> CreateHostSessionForTest(HostOptions options, bool operatorOwned, Func<IToolCatalogView, IToolCatalogView> catalog, CancellationToken token) => SharedReleaseHost.CreateHostSessionForTest(options, operatorOwned, catalog, token);
+    internal static Task<HostSession> CreateHostSessionForTest(HostOptions options, bool operatorOwned, Func<IToolCatalogView, IToolCatalogView> catalog, CancellationToken token, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null) => SharedReleaseHost.CreateHostSessionForTest(options, operatorOwned, catalog, token, toolsForTest);
 }

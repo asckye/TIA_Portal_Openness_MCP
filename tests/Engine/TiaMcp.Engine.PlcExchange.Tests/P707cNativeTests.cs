@@ -16,6 +16,9 @@ namespace PlcExchangeTests
 {
     public sealed class P707cNativeTests
     {
+#if TIA_PLC_EXCHANGE_TESTS
+        public P707cNativeTests() => PlcExchangeTarget.ConfigureHost();
+#endif
         static P707cNativeTests() => RuntimeHelpers.RunClassConstructor(typeof(PlcExchangeContractsTests).TypeHandle);
         private static Type EngineType(string name) => typeof(McpServer).Assembly.GetType("TiaMcpServer.ModelContextProtocol." + name, true)!;
 

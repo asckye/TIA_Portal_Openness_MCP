@@ -178,6 +178,8 @@ public sealed class BehaviorParityTests
     {
         var engine = JsonNode.Parse(enginefixture::TiaMcp.Engine.Tests.BehaviorParityEngine.Run(scenario))!;
         var shared = JsonNode.Parse(EngineHostParity.Run(scenario))!;
+        var plcHost = JsonNode.Parse(EngineHostParity.Run(scenario, plcWorker: true))!;
+        Assert.True(JsonNode.DeepEquals(engine, plcHost), scenario + "\nfrozen-engine=" + engine + "\nplc-host=" + plcHost);
         Assert.True(JsonNode.DeepEquals(engine, shared), scenario + "\nengine=" + engine + "\nshared=" + shared);
         if (Environment.GetEnvironmentVariable("TIA_MCP_PARITY_ENGINE_RELEASE") is string expectedRelease)
             Assert.Equal(expectedRelease, (string?)engine["engineRelease"]);

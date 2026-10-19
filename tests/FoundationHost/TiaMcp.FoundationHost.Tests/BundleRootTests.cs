@@ -68,6 +68,20 @@ public sealed class BundleRootTests : IDisposable
         Assert.Equal(At("custom.json"), options.EngineCatalog);
     }
 
+    [Theory, InlineData("20"), InlineData("21")]
+    public void Standalone_plc_worker_uses_the_selected_bundle_and_explicit_override(string release)
+    {
+        Put("manifest/package-manifest.json", "fixture");
+        Put("runtime/v" + release + "/release-key.txt", release);
+        var options = HostOptions.Parse(new[] { "--plc-worker", "--profile", "full", "--offline" }, At("runtime/v" + release));
+        Assert.True(options.PlcWorker); Assert.Null(options.EngineWorkerExe); Assert.Null(options.EngineCatalog);
+        Assert.Equal(At("runtime/v" + release + "/worker/TiaMcp.PlcWorker." + release + ".exe"), options.WorkerExe);
+        Assert.True(options.BundledWorker); Assert.Equal(scratch, options.BundleRoot);
+        options = HostOptions.Parse(new[] { "--plc-worker", "--worker-exe", At("custom worker.exe"), "--offline" }, At("runtime/v" + release));
+        Assert.Equal(At("custom worker.exe"), options.WorkerExe); Assert.False(options.BundledWorker);
+        Assert.Throws<ArgumentException>(() => HostOptions.Parse(new[] { "--plc-worker", "--engine-worker", At("custom.exe"), "--engine-catalog", At("custom.json") }, At("runtime/v" + release)));
+    }
+
     [Fact]
     public void Development_test_host_reads_resources_without_an_override()
     {

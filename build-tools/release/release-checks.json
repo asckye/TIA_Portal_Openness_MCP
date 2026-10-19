@@ -586,6 +586,15 @@
         "resource-discovery",
         "engine-contracts"
       ]
+    },
+    {
+      "path": "tests/FoundationHost/TiaMcp.PlcExchange.Tests",
+      "checks": [
+        "binary-build",
+        "offline-suites",
+        "engine-functional",
+        "dotnetsuites-self-test"
+      ]
     }
   ],
   "selfTests": [

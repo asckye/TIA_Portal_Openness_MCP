@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../Shared/Xunit.props" />
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
+    <DefineConstants>$(DefineConstants);TIA_PLC_EXCHANGE_TESTS</DefineConstants>
+    <EngineRelease Condition="'$(EngineRelease)' == ''">21</EngineRelease>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/EngineHost/TiaMcp.EngineHost.csproj" Aliases="global,enginehost" />
+    <!-- The host-registered tools (LegacyHostToolRegistry) are the successor subject of the engine reflection rows. -->
+    <ProjectReference Include="../../../src/FoundationHost/TiaMcp.FoundationHost.csproj" Aliases="foundationhost" />
+    <None Include="../TiaMcp.EngineHost.Tests/Fixtures/EngineCatalog*.json" Link="Fixtures/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Compile Include="../../Engine/TiaMcp.Engine.PlcExchange.Tests/PlcExchangeContractsTests.cs" Link="PlcExchangeContractsTests.cs" />
+    <Compile Include="../../Engine/TiaMcp.Engine.PlcExchange.Tests/HmiExchangeContractsTests.cs" Link="HmiExchangeContractsTests.cs" />
+    <Compile Include="../../Engine/TiaMcp.Engine.PlcExchange.Tests/P707bNativeTests.cs" Link="P707bNativeTests.cs" />
+    <Compile Include="../../Engine/TiaMcp.Engine.PlcExchange.Tests/P707cNativeTests.cs" Link="P707cNativeTests.cs" />
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ExchangeRelease</_Parameter1><_Parameter2>$(EngineRelease)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+</Project>

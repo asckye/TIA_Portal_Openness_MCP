@@ -22,6 +22,48 @@ internal static class SessionFixtureTool
             ["tools"] = new JsonArray(), ["descriptors"] = new JsonArray(), ["liteTools"] = new JsonArray(),
             ["serverInstructions"] = "Offline session fixture." }.ToJsonString());
 
+    internal static IReadOnlyList<global::ModelContextProtocol.Server.McpServerTool> PlcTools(
+        foundationhost::TiaMcp.FoundationHost.IFoundationSessionWorker worker,
+        IReadOnlyList<global::ModelContextProtocol.Server.McpServerTool> tools)
+    {
+        var descriptor = new Catalog(new EmptyView()).All[Name];
+        var fixture = new PlcTool(worker, descriptor.Tool);
+        var wrapped = enginehost::TiaMcpServer.ModelContextProtocol.McpServer.WrapTools(new[] { fixture }).Single();
+        return tools.Where(tool => tool.ProtocolTool.Name != Name).Append(wrapped).ToArray();
+    }
+    private sealed class EmptyView : View
+    {
+        public IReadOnlyDictionary<string, Descriptor> All { get; } = new Dictionary<string, Descriptor>();
+        public IReadOnlyDictionary<string, Descriptor> IncludingUnavailable => All;
+        public IReadOnlyList<Descriptor> Lite => [];
+        public JsonArray BehaviorCapabilities { get; } = new();
+        public Descriptor? Find(string name, bool includeUnavailable = false) => null;
+    }
+    private sealed class PlcTool(foundationhost::TiaMcp.FoundationHost.IFoundationSessionWorker worker, Tool tool)
+        : global::ModelContextProtocol.Server.McpServerTool
+    {
+        public override Tool ProtocolTool => tool;
+        public override async ValueTask<CallToolResult> InvokeAsync(
+            global::ModelContextProtocol.Server.RequestContext<CallToolRequestParams> request, CancellationToken token = default)
+        {
+            var args = JsonSerializer.SerializeToNode(request.Params!.Arguments)?.AsObject() ?? new JsonObject();
+            // Same request id as a served worker tool (WorkerToolInvoker) and the PlcWorker's
+            // candidate-session invalidation below.
+            string id = TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? enginehost::TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId;
+            var reply = await worker.Call("FixtureInvoke", new JsonObject { ["name"] = Name,
+                ["requestId"] = id, ["arguments"] = args }, token);
+            var result = JsonSerializer.Deserialize<CallToolResult>(reply!["result"]!.ToJsonString(), global::ModelContextProtocol.McpJsonUtilities.DefaultOptions)!;
+            // A host tool that observes an unknown V4 outcome on the PlcWorker invalidates the
+            // worker session exactly as the production candidate tools do.
+            if ((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"] == true)
+            {
+                if (worker is foundationhost::TiaMcp.FoundationHost.WorkerClient native) native.InvalidateCandidateSession();
+                else worker.MarkUncertain();
+            }
+            return result;
+        }
+    }
+
     private sealed class Catalog : View
     {
         public IReadOnlyDictionary<string, Descriptor> All { get; }

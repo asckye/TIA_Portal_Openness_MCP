@@ -144,7 +144,7 @@ public sealed class FoundationProcessLeaseTests
     public async Task Process_gone_is_refused_without_native_dispatch()
     {
         using var session = new Session(); using var target = Start("target");
-        Assert.Equal("READY", await Line(target)); target.Kill(); Assert.True(target.WaitForExit(5000));
+        Assert.Equal("READY", await Line(target)); Assert.Equal(Path.GetFullPath(Path.ChangeExtension(typeof(FoundationProcessLeaseTests).Assembly.Location, ".exe")), Path.GetFullPath(target.MainModule!.FileName), ignoreCase: true); target.Kill(); Assert.True(target.WaitForExit(5000));
         var failure = session.Boundary.Dispatch(Attach(target.Id)).Failure!;
         Assert.Equal(ChannelOutcome.RejectedBeforeNative, failure.Outcome);
         Assert.Equal(0, session.NativeCalls);
@@ -229,10 +229,10 @@ public sealed class FoundationProcessLeaseTests
         Assert.Equal(0, session.NativeCalls);
     }
 
-    [Theory, InlineData(false), InlineData(true)]
-    public async Task Host_process_exit_runs_graceful_stop_before_its_job_closes(bool engine)
+    [Theory, InlineData("19", false), InlineData("20", false), InlineData("21", false), InlineData("20", true), InlineData("21", true)]
+    public async Task Host_process_exit_runs_graceful_stop_before_its_job_closes(string release, bool plcWorker)
     {
-        using var session = new Session(); using var host = Start("shutdown", session.Root, session.Pid.ToString(), engine ? "21" : "19");
+        using var session = new Session(); using var host = Start("shutdown", session.Root, session.Pid.ToString(), release, plcWorker.ToString());
         using var worker = Process.GetProcessById(int.Parse((await Line(host))!));
         host.StandardInput.WriteLine("exit");
         Assert.True(host.WaitForExit(10000)); Assert.Equal(0, host.ExitCode); Assert.True(worker.WaitForExit(10000));
@@ -292,7 +292,7 @@ public sealed class FoundationProcessLeaseTests
             Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", args[2]);
             string exe = Environment.ProcessPath!, release = args[4];
             File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
-            if (release == "21")
+            if ((release is "20" or "21") && !bool.Parse(args[5]))
             {
                 var worker = new foundationhost::TiaMcp.FoundationHost.EngineWorkerClient(new foundationhost::TiaMcp.FoundationHost.HostOptions {
                     ReleaseKey = release, WorkerExe = exe, ApiDirectory = AppContext.BaseDirectory, BundleRoot = AppContext.BaseDirectory,

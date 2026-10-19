@@ -166,7 +166,7 @@ internal static class FastSuites
         using var load = CheckLoad.Current == null ? CheckLoad.Start(Path.Combine(output, "process-load.json")) : null;
         int parallelism = CpuParallelism(root, options);
         int count = Positive(options, "Shards", 8);
-        var names = options.All("Suite");
+        var names = DotnetSuites.WithCompanions(options.All("Suite"), catalog);
         var builds = CheckAllBuild.WithTestFixtures(names.Select(name => CheckAllBuild.Suite(catalog[name]!.AsObject()))).ToArray();
         var manifestPath = Path.GetFullPath(options.Get("RuntimeManifest", Path.Combine(output, "build/runtime-paths.tsv")));
         string? manifest = !options.Has("NoBuild") || options.Has("RuntimeManifest") || File.Exists(manifestPath) ? manifestPath : null;

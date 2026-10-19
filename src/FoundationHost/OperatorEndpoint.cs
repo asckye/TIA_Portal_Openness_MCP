@@ -83,8 +83,7 @@ internal sealed class OperatorEndpoint : IAsyncDisposable
                 try
                 {
                     var pipe = await listener.Accept(stopping.Token).ConfigureAwait(false);
-                    Task task;
-                    lock (sync) { task = Serve(pipe); connections.Add(task); }
+                    var task = Track(pipe);
                     _ = task.ContinueWith(ConnectionEnded, CancellationToken.None,
                         TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
                     handedOff = true;
@@ -96,6 +95,12 @@ internal sealed class OperatorEndpoint : IAsyncDisposable
         catch (Exception error) when (error is IOException or System.ComponentModel.Win32Exception or ObjectDisposedException)
         { Report(error); stopping.Cancel(); }
         finally { listener.Dispose(); registration.Dispose(); }
+    }
+    // Separate frame on purpose: Listen's exception filters share IL locals with a lock taken in
+    // the same method, and a filter runs before the lock's finally (see WorkerClient.EnsureProcess).
+    private Task Track(Stream pipe)
+    {
+        lock (sync) { var task = Serve(pipe); connections.Add(task); return task; }
     }
     private void OwnedSessionEnded()
     {

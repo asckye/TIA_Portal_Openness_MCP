@@ -27,7 +27,12 @@ namespace PlcExchangeTests
             var configuration = HostType("TiaMcp.FoundationHost.EngineHostConfiguration");
             configuration.GetProperty("Worker", BindingFlags.Static | BindingFlags.NonPublic)!.SetValue(null, new HostWorker());
             configuration.GetField("ReleaseKey", BindingFlags.Static | BindingFlags.NonPublic)!.SetValue(null,
-                Engine.GetName().Name!.EndsWith("V20", StringComparison.Ordinal) ? "20" : "21");
+                #if TIA_PLC_EXCHANGE_TESTS
+                PlcExchangeTarget.Release
+#else
+                Engine.GetName().Name!.EndsWith("V20", StringComparison.Ordinal) ? "20" : "21"
+#endif
+                );
         }
         public void Dispose()
         {
@@ -69,7 +74,13 @@ namespace PlcExchangeTests
         }
         private static readonly Assembly Engine = typeof(McpServer).Assembly;
         private static Type Type(string name) => Engine.GetType("TiaMcpServer.ModelContextProtocol." + name, true)!;
+#if TIA_PLC_EXCHANGE_TESTS
+        // PlcExternalSourcesTools is engine-only: the kept host registers those four names as
+        // shared tools, which RegistersOneV4NameWithoutAlias checks in the host catalog.
+        private static readonly string[] Owners = { "DocumentsTools", "NativeExchangeTools" };
+#else
         private static readonly string[] Owners = { "DocumentsTools", "NativeExchangeTools", "PlcExternalSourcesTools" };
+#endif
         private static readonly string[] PortedNames = { "CreatePlcInstanceDb", "GeneratePlcSourceFromBlocks", "ManagePlcTagDefinition",
             "ListPlcSystemGroups", "ManagePlcExternalSources", "GetPlcCrossReferences" };
         private static Dictionary<string, MethodInfo> Entries() => Owners.SelectMany(n => Type(n).GetMethods())
@@ -111,10 +122,19 @@ namespace PlcExchangeTests
         {
             var method = Entries()["GetPlcCrossReferences"];
             Assert.Equal("GetCrossReferencesV4", method.Name);
+#if TIA_PLC_EXCHANGE_TESTS
+            // The kept host classifies the registered descriptors (McpServer.Batch) instead of engine methods.
+            var catalog = PlcExchangeTarget.HostCatalog();
+            var classify = typeof(McpServer).GetMethod("IsBatchOrchestration", BindingFlags.Static | BindingFlags.NonPublic,
+                null, new[] { typeof(ToolDescriptor) }, null)!;
+            Assert.True((bool)classify.Invoke(null, new object[] { catalog.All["GetPlcCrossReferences"] })!);
+            Assert.False((bool)classify.Invoke(null, new object[] { catalog.All["ListExportHandles"] })!);
+#else
             var classify = typeof(McpServer).GetMethod("IsBatchOrchestration", BindingFlags.Static | BindingFlags.NonPublic,
                 null, new[] { typeof(MethodInfo) }, null)!;
             Assert.True((bool)classify.Invoke(null, new object[] { method })!);
             Assert.False((bool)classify.Invoke(null, new object[] { Entries()["ListExportHandles"] })!);
+#endif
             var target = new ToolTarget("GetPlcCrossReferences", new InputSchema(JsonSerializer.Deserialize<JsonElement>("{\"type\":\"object\"}")),
                 new InputBudget(), read: true, preview: true, orchestration: true);
             var call = new ToolCall("GetPlcCrossReferences", new ToolArguments(JsonSerializer.Deserialize<JsonElement>("{}")));
@@ -142,10 +162,23 @@ namespace PlcExchangeTests
         [Fact]
         public void WorkerHasNoRetiredSupervisorOrMcpHost()
         {
+#if TIA_PLC_EXCHANGE_TESTS
+            using var file = File.OpenRead(PlcExchangeTarget.Worker);
+            using var pe = new System.Reflection.PortableExecutable.PEReader(file);
+            var metadata = System.Reflection.Metadata.PEReaderExtensions.GetMetadataReader(pe);
+            var names = metadata.TypeDefinitions.Select(handle => metadata.GetTypeDefinition(handle))
+                .Select(type => metadata.GetString(type.Namespace) + "." + metadata.GetString(type.Name)).ToArray();
+            foreach (var name in new[] { "TiaMcpServer.Isolation.OpennessWorkerSupervisor", "TiaMcpServer.HttpMcpServer", "TiaMcpServer.McpHttpResponseRouter", "TiaMcpServer.Worker.EngineWorkerHost" })
+                Assert.DoesNotContain(name, names);
+            Assert.Contains(".Program", names);
+            Assert.Contains("TiaMcp.PlcWorker.FoundationWorkerDispatcher", names);
+            Assert.DoesNotContain(metadata.MethodDefinitions.Select(handle => metadata.GetString(metadata.GetMethodDefinition(handle).Name)), name => name == "RunStdioHost");
+#else
             foreach (var name in new[] { "TiaMcpServer.Isolation.OpennessWorkerSupervisor", "TiaMcpServer.HttpMcpServer", "TiaMcpServer.McpHttpResponseRouter" })
                 Assert.Null(Engine.GetType(name, false));
             Assert.Null(Engine.GetType("TiaMcpServer.Program", true)!.GetMethod("RunStdioHost", BindingFlags.Public | BindingFlags.Static));
             Assert.NotNull(Engine.GetType("TiaMcpServer.Worker.EngineWorkerHost", true));
+#endif
         }
 
         [Fact]
@@ -211,11 +244,34 @@ namespace PlcExchangeTests
         public void RegistersOneV4NameWithoutAlias(string oldName, string name)
         {
             var entries = Entries();
+#if TIA_PLC_EXCHANGE_TESTS
+            // Host subject: the same 25 names, each registered once in the host-built catalog under
+            // its V4 name only, with the parameters and metadata the engine host publishes.
+            var names = entries.Keys.Concat(PlcExchangeTarget.EngineOnlyExternalSourceTools).ToArray();
+            Assert.Equal(25, names.Distinct(StringComparer.Ordinal).Count());
+            Assert.Contains(name, names);
+            Assert.DoesNotContain(oldName, names);
+            Assert.All(entries.Values, method => Assert.True(method.ReturnType == typeof(CallToolResult)
+                || method.ReturnType == typeof(System.Threading.Tasks.Task<CallToolResult>)));
+            var catalog = PlcExchangeTarget.HostCatalog();
+            var engineHost = PlcExchangeTarget.EngineHostCatalog(catalog);
+            Assert.DoesNotContain(catalog.IncludingUnavailable.Keys, key => string.Equals(key, oldName, StringComparison.OrdinalIgnoreCase));
+            foreach (string tool in names)
+            {
+                Assert.Single(catalog.IncludingUnavailable.Keys, key => string.Equals(key, tool, StringComparison.OrdinalIgnoreCase));
+                Assert.True(catalog.All.TryGetValue(tool, out var descriptor), tool);
+                Assert.True(engineHost.All.TryGetValue(tool, out var published), tool);
+                var expected = JsonSerializer.SerializeToNode(published, ModelContextProtocol.McpJsonUtilities.DefaultOptions);
+                var actual = JsonSerializer.SerializeToNode(descriptor, ModelContextProtocol.McpJsonUtilities.DefaultOptions);
+                Assert.True(JsonNode.DeepEquals(expected, actual), tool + "\nengine-host=" + expected + "\nplc-host=" + actual);
+            }
+#else
             Assert.Equal(25, entries.Count);
             Assert.Contains(name, entries.Keys);
             Assert.DoesNotContain(oldName, entries.Keys);
             Assert.All(entries.Values, method => Assert.True(method.ReturnType == typeof(CallToolResult)
                 || method.ReturnType == typeof(System.Threading.Tasks.Task<CallToolResult>)));
+#endif
         }
 
         [Theory]

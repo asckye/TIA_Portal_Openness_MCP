@@ -26,15 +26,21 @@ internal sealed class WorkbenchControlLog(string? path = null)
                     hostProcessId = request.Origin.HostProcessId, mcpSession = request.Origin.McpSession },
                 operation = request.Operation, argumentDigest = Convert.ToHexStringLower(SHA256.HashData(arguments)),
                 status = response.Status, refusal = response.Refusal, elapsedMs }, WorkbenchControlProtocol.Json) + "\n";
-            lock (_gate)
-            {
-                Directory.CreateDirectory(System.IO.Path.GetDirectoryName(_path)!);
-                JournalRetention.Load(JournalRetention.SettingsPath).Rotate(_path, Encoding.UTF8.GetByteCount(row));
-                File.AppendAllText(_path, row, new UTF8Encoding(false));
-            }
+            Append(row);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         { Trace.TraceWarning("Workbench control log unavailable: {0}", ex.GetType().Name); }
+    }
+    // Separate frame on purpose: in Record the filter above shared an IL local with this lock's
+    // taken flag, and a filter runs before the lock's finally, so the lock could stay held.
+    private void Append(string row)
+    {
+        lock (_gate)
+        {
+            Directory.CreateDirectory(System.IO.Path.GetDirectoryName(_path)!);
+            JournalRetention.Load(JournalRetention.SettingsPath).Rotate(_path, Encoding.UTF8.GetByteCount(row));
+            File.AppendAllText(_path, row, new UTF8Encoding(false));
+        }
     }
     internal static Activity? ReadActivity(string requestId, string? directory = null)
     {
