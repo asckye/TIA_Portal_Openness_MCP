@@ -12,11 +12,20 @@ internal sealed record CheckJob(string Name, Func<CommandResult> Run, string[] D
     internal ulong? Affinity { get; init; }
     internal bool AllowFailedDependencies { get; init; }
     internal TimeSpan Timeout { get; init; } = TimeSpan.FromMinutes(5);
+    internal CheckAllResultBinding? ResultCache { get; init; }
+    internal CheckAllResultSpec? ResultInputs { get; init; }
+    internal string? ResultCachePolicy { get; init; }
 }
 internal sealed record CheckTiming(string Name, string Status, int ExitCode, double Seconds, string? Error)
 {
     public DateTime StartedAtUtc { get; init; }
     public CheckCpuLoad? CpuLoad { get; init; }
+    public string? IdentityHash { get; init; }
+    public string? ReusedRunId { get; init; }
+    public DateTime? ReusedAtUtc { get; init; }
+    public string? EvidencePath { get; init; }
+    public static bool Passed(CheckTiming row) => row.ExitCode == 0 && (row.Status == "passed" ||
+        row.Status == "passed (reused)" && row.IdentityHash != null && row.ReusedRunId != null && row.ReusedAtUtc != null && row.EvidencePath != null);
 }
 
 // Unlike the release publisher's fail-fast scheduler, collect every independent
@@ -43,9 +52,9 @@ internal static class CheckScheduler
         {
             foreach (var job in pending.ToArray())
             {
-                if (!job.AllowFailedDependencies && job.Dependencies.Any(dep => done.TryGetValue(dep, out var row) && row.Status != "passed"))
+                if (!job.AllowFailedDependencies && job.Dependencies.Any(dep => done.TryGetValue(dep, out var row) && !CheckTiming.Passed(row)))
                 {
-                    var row = new CheckTiming(job.Name, "blocked", 1, 0, "Failed prerequisite: " + string.Join(", ", job.Dependencies.Where(dep => done.TryGetValue(dep, out var r) && r.Status != "passed")));
+                    var row = new CheckTiming(job.Name, "blocked", 1, 0, "Failed prerequisite: " + string.Join(", ", job.Dependencies.Where(dep => done.TryGetValue(dep, out var r) && !CheckTiming.Passed(r))));
                     done.Add(job.Name, row); pending.Remove(job);
                     File.WriteAllText(Path.Combine(logs, job.Name + ".log"), row.Error + "\n");
                 }
@@ -104,12 +113,19 @@ internal static class CheckScheduler
             using var affinity = CheckAffinity.Enter(job.Affinity);
             deadline.Value = (job.Name, started + job.Timeout);
             evidenceDirectory.Value = Path.Combine(logs, job.Name + "-processes");
+            var cached = job.ResultCache?.TryReuse(job.Name);
+            if (cached != null)
+            {
+                File.WriteAllText(Path.Combine(logs, job.Name + ".log"), JsonSerializer.Serialize(cached) + "\n");
+                return cached with { Seconds = timer.Elapsed.TotalSeconds, StartedAtUtc = started };
+            }
             var result = job.Run();
             if (DateTime.UtcNow >= deadline.Value.Value.Deadline) throw new ReleaseException("Check job timed out: " + job.Name);
             File.WriteAllText(Path.Combine(logs, job.Name + ".log"), result.StandardOutput + result.StandardError);
-            return new(job.Name, result.ExitCode == 0 ? "passed" : "failed", result.ExitCode, timer.Elapsed.TotalSeconds,
+            var row = new CheckTiming(job.Name, result.ExitCode == 0 ? "passed" : "failed", result.ExitCode, timer.Elapsed.TotalSeconds,
                 result.ExitCode == 0 ? null : (result.StandardError.Length == 0 ? result.StandardOutput : result.StandardError).Trim())
                 { StartedAtUtc = started, CpuLoad = CheckLoad.Current?.Between(started, DateTime.UtcNow) };
+            return job.ResultCache?.Record(row, Path.Combine(logs, job.Name + ".log")) ?? row;
         }
         catch (Exception ex)
         {

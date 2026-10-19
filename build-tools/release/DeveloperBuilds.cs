@@ -77,6 +77,21 @@ internal static partial class ReleaseCommands
         var scripts = FileBasedPrograms.Build(Root, directory, Dotnet, nuget == null ? null : Path.GetFullPath(nuget));
         Console.Write(scripts.StandardOutput); Console.Error.Write(scripts.StandardError); ProcessRunner.RequireSuccess(scripts, "File-based programs");
         AnalyzerWarnings.RememberDirectory(Root, directory);
-        return AnalyzerWarnings.Run(Root, Options.Parse(["-Check", "-DiagnosticsDirectory", directory], new HashSet<string> { "Check" }));
+        var analyzerResult = AnalyzerWarnings.Run(Root, Options.Parse(["-Check", "-DiagnosticsDirectory", directory], new HashSet<string> { "Check" }));
+        if (options.Has("ResultCacheInventory"))
+        {
+            // Read-only policy/planning evidence after the final compilation. No
+            // suite delegate, assertion, capture or comparison is executed.
+            var catalog = DotnetSuites.LoadCatalog(Path.Combine(Root, "tests/test-suites.json"), Root);
+            var jobs = new List<CheckJob>();
+            foreach (var (name, node) in catalog)
+            {
+                var suite = node!.AsObject();
+                FastSuites.AddJobs(jobs, Root, name, suite, Path.Combine(directory, "result-cache-inventory"), Dotnet,
+                    suite["minimumPassed"]!.GetValue<int>() >= 100 ? FastSuites.Positive(options, "Shards", 8) : 1, options.Get("PublicApiRoot"), []);
+            }
+            CheckAllInputClosure.WriteInventory(Root, jobs, directory, Dotnet);
+        }
+        return analyzerResult;
     }
 }

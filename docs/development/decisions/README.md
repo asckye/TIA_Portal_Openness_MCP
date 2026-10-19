@@ -30,6 +30,7 @@
 | [0016](0016-architecture-decision-records.md) | 设计决策用 ADR 记录，一页一个决定 | 已采纳 | 2026-10-11 | B40 |
 | [0017](0017-own-openness-group-code.md) | Openness 用户组检查改用自有代码，不再分发 Siemens.Collaboration.Net | 已采纳 | 2026-10-18 | — |
 | [0018](0018-workbench-ant-design.md) | 工作台界面采用 Ant Design v5 的视觉规范和布局 | 已采纳 | 2026-10-18 | — |
+| [0019](0019-incremental-check-all.md) | check-all 复用输入未变的上次通过结果 | 已采纳 | 2026-10-18 | — |
 
 ## 待补写的决定
 

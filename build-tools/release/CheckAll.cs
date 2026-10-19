@@ -322,14 +322,20 @@ internal static partial class ReleaseCommands
         }).ToArray();
         var scheduled = plan.ToList();
         var sensitiveLanes = CheckAffinity.AssignSensitiveLanes(scheduled, sensitive.Stability, FastSuites.Positive(options, "SensitiveParallelism", 2));
-        plan = scheduled.ToArray();
+        var resultCache = new CheckAllResultCache(Root, output, runtimeManifest, api, nuget, dotnet, python, companionPython, options,
+            JsonSerializer.Serialize(new { parallelism, shards, stabilityParallelism, lanes = sensitiveLanes, available, stability = masks.Stability,
+                sensitive = sensitive.Stability, general = sensitive.General }));
+        plan = scheduled.Select(job => resultCache.Bind(CheckAllResultCache.ReusableStatic(job.Name)
+            ? job with { ResultInputs = new(job.Name.StartsWith("python-", StringComparison.Ordinal) ? "python" : job.Name.EndsWith("-drift", StringComparison.Ordinal) ? "generator" : "static", job.Name) } : job)).ToArray();
+        CheckAllInputClosure.WriteInventory(Root, plan, output);
         var lanes = new Dictionary<string, int>(sensitiveLanes) { ["general"] = parallelism, ["stability"] = stabilityParallelism };
         var priorities = CheckScheduler.CriticalCosts(plan);
         File.WriteAllText(Path.Combine(output, "cpu-plan.json"), JsonSerializer.Serialize(new { availableMask = available.ToString("X"),
             stabilityMask = masks.Stability.ToString("X"), sensitiveMask = sensitive.Stability.ToString("X"), generalMask = sensitive.General.ToString("X"), stabilityCores, generalCores,
             physicalCores = CheckAffinity.PhysicalCores().Select(core => new { mask = core.Mask.ToString("X"), efficiencyClass = core.Efficiency }),
             stabilityParallelism, sensitiveParallelism = sensitiveLanes.Count, sensitiveCores = System.Numerics.BitOperations.PopCount(sensitive.Stability), sensitiveMinWorkerThreads = CheckAffinity.BaselineWorkers, generalParallelism = parallelism, companionPython,
-            checks = plan.Select(job => new { job.Name, job.Lane, job.SensitiveGroup, job.Slots, job.Exclusive, affinityMask = job.Affinity?.ToString("X"), job.EstimatedSeconds, timeoutSeconds = job.Timeout.TotalSeconds, criticalSeconds = priorities[job.Name], job.Dependencies }) }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
+            checks = plan.Select(job => new { job.Name, job.Lane, job.SensitiveGroup, job.Slots, job.Exclusive, affinityMask = job.Affinity?.ToString("X"), job.EstimatedSeconds, timeoutSeconds = job.Timeout.TotalSeconds, criticalSeconds = priorities[job.Name], job.Dependencies,
+                resultCache = job.ResultCachePolicy ?? "always rerun: generated evidence, mutable machine inputs or aggregate gate" }) }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
         timings.AddRange(CheckScheduler.Run(plan, parallelism, Path.Combine(output, "logs"),
             lanes));
         return Finish();
@@ -348,7 +354,8 @@ internal static partial class ReleaseCommands
             timings.Add(new("tracked-tree-drift", unexpected.Length == 0 ? "passed" : "failed", unexpected.Length == 0 ? 0 : 1, 0, string.Join(", ", unexpected)));
             var report = new { schemaVersion = 1, machineCores = Environment.ProcessorCount, parallelism, shards, cold = options.Has("Cold"), clean = options.Has("Clean"),
                 wallSeconds = clock.Elapsed.TotalSeconds, underThirtyMinutes = clock.Elapsed.TotalSeconds < 1800, buildOnly = options.Has("BuildOnly"), nativeTiaExecuted = false,
-                passed = timings.Count(row => row.Status == "passed"), failed = timings.Count(row => row.Status != "passed"), drift, checks = timings };
+                passed = timings.Count(CheckTiming.Passed), reused = timings.Count(row => row.Status == "passed (reused)"),
+                failed = timings.Count(row => !CheckTiming.Passed(row)), drift, checks = timings };
             File.WriteAllText(Path.Combine(output, "report.json"), JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }) + "\n");
             WriteTimingComparison(output, timings, options.Get("BaselineReport"));
             Console.WriteLine($"check-all: {report.passed} passed; {report.failed} failed/blocked; {report.wallSeconds:F3}s; report: {output}");
@@ -367,7 +374,9 @@ internal static partial class ReleaseCommands
         return string.IsNullOrWhiteSpace(python) ? null : ResolveApplication(python);
     }
 
-    internal static bool CheckAllPrerequisitesPassed(IEnumerable<CheckTiming> timings) => timings.All(row => row.Status == "passed");
+    internal static string ResolveResultApplication(string application) => ResolveApplication(application);
+
+    internal static bool CheckAllPrerequisitesPassed(IEnumerable<CheckTiming> timings) => timings.All(CheckTiming.Passed);
 
     internal static double CheckAllJobCost(CheckJob job, IReadOnlyDictionary<string, double> history) =>
         job.Name == "preflight" ? 0 : job.EstimatedSeconds > 0 ? job.EstimatedSeconds
@@ -401,13 +410,13 @@ internal static partial class ReleaseCommands
     {
         var old = baseline == null ? new Dictionary<string, double> { ["foundation"] = 656, ["foundation-api"] = 666, ["release-tool"] = 144, ["engine-host"] = 141 } : JsonNode.Parse(File.ReadAllText(baseline))!["checks"]!.AsArray()
             .ToDictionary(row => (string)row!["Name"]!, row => (double)row!["Seconds"]!);
-        var lines = new List<string> { "Suite times span the first shard start through the final merge, including queue time. Raw process timings remain in report.json.", "", "| Check | Old seconds | New seconds | Result |", "|---|---:|---:|---|" };
+        var lines = new List<string> { "Suite times span the first shard start through the final merge, including queue time. Reused passes are evidence lookups, not new execution measurements. Raw process timings remain in report.json.", "", "| Check | Old seconds | New seconds | Reused checks | Result |", "|---|---:|---:|---:|---|" };
         foreach (var group in timings.GroupBy(row => Regex.Replace(row.Name, "-(shard-[0-9]+|gate)$", "")))
         {
             var rows = group.ToArray();
             var seconds = rows.Length == 1 || rows.Any(row => row.StartedAtUtc == default) ? rows.Max(row => row.Seconds)
                 : (rows.Max(row => row.StartedAtUtc.AddSeconds(row.Seconds)) - rows.Min(row => row.StartedAtUtc)).TotalSeconds;
-            lines.Add($"| {group.Key} | {(old.TryGetValue(group.Key, out var value) ? value.ToString("F3", CultureInfo.InvariantCulture) : "NOT MEASURED")} | {seconds.ToString("F3", CultureInfo.InvariantCulture)} | {(rows.All(row => row.Status == "passed") ? "passed" : "failed/blocked")} |");
+            lines.Add($"| {group.Key} | {(old.TryGetValue(group.Key, out var value) ? value.ToString("F3", CultureInfo.InvariantCulture) : "NOT MEASURED")} | {seconds.ToString("F3", CultureInfo.InvariantCulture)} | {rows.Count(row => row.Status == "passed (reused)")} | {(rows.All(CheckTiming.Passed) ? "passed" : "failed/blocked")} |");
         }
         File.WriteAllText(Path.Combine(output, "comparison.md"), string.Join("\n", lines) + "\n");
     }

@@ -86,6 +86,12 @@ internal static class FastSuites
             var index = i; var jobName = jobPrefix + name + "-shard-" + i; shardNames.Add(jobName);
             jobs.Add(new(jobName, () => RunShard(root, name, suite, Path.GetDirectoryName(paths[index])!, dotnet, api, unit, index, shards, extra, plan.Path, reserveSensitive, manifest, sensitiveShards: sensitiveShards), dependencies,
                 Exclusive: reserveSensitive && index >= shards - sensitiveShards) { EstimatedSeconds = measuredPlan ? plan.Costs[index] + 5 : ColdShardSeconds,
+                    ResultInputs = new("suite", new JsonObject { ["suite"] = name, ["registration"] = suite.DeepClone(),
+                        ["project"] = unit.Project, ["variant"] = unit.Variant, ["index"] = index, ["count"] = shards,
+                        ["api"] = api, ["extra"] = new JsonArray((extra ?? []).Select(arg => (JsonNode?)JsonValue.Create(arg)).ToArray()),
+                        ["reserveSensitive"] = reserveSensitive, ["sensitiveShards"] = sensitiveShards }.ToJsonString(),
+                        Path.GetDirectoryName(paths[index]), Path.GetFileName(paths[index]), plan.Path,
+                        suite["maximumSkipped"]!.GetValue<int>(), prove || baseline != null ? "equivalence proof" : null),
                     SensitiveGroup = sensitiveShards > 1 && index == shards - 1 ? unit.Project + "#portal-lane" : unit.Project });
         }
         // Merge runs even after a failed test process, so partial totals/failures remain
