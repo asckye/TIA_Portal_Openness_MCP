@@ -278,7 +278,7 @@ namespace TiaMcpConfigurator
                 var serverPane = (System.Windows.Controls.Border)form.FindName("ServerPane");
                 var clientPane = (System.Windows.Controls.Border)form.FindName("ClientPane");
                 Assert(list.ActualHeight <= clientPane.ActualHeight && list.ActualHeight < 400, "client list fits inside its card");
-                Assert(Math.Abs(serverPane.ActualHeight - 162) < 1 && clientPane.ActualHeight > 300 && clientPane.ActualHeight < 400, "Primer service halves and client container use the handoff heights");
+                Assert(Math.Abs(serverPane.ActualHeight - 162) < 1 && clientPane.ActualHeight > 300 && clientPane.ActualHeight < 400, $"Primer service halves and client container use the handoff heights (server {serverPane.ActualHeight:F1}, client {clientPane.ActualHeight:F1}, window {window.ActualWidth:F0}x{window.ActualHeight:F0})");
                 // 截图曾按面板宽度建位图却在其外边距偏移处绘制，右边 18px 连同状态胶囊一起被切掉。
                 var shell = (System.Windows.FrameworkElement)window.Content;
                 var pill = (System.Windows.Controls.TextBlock)form.FindName("LinkState");
