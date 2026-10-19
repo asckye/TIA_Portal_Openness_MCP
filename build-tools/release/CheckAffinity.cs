@@ -174,7 +174,12 @@ internal static class CheckAffinity
         return (stability, available & ~stability);
     }
 
-    internal static (ulong Stability, ulong General) SplitPreferred(ulong available, int reserved, ulong[] physicalCores)
+    private const string WholeCoreRefusal = "-StabilityCores must fit whole available physical cores and leave CPUs for other checks";
+
+    internal static (ulong Stability, ulong General) SplitPreferred(ulong available, int reserved, ulong[] physicalCores) =>
+        TrySplitPreferred(available, reserved, physicalCores) ?? throw new ReleaseException(WholeCoreRefusal, 64);
+
+    private static (ulong Stability, ulong General)? TrySplitPreferred(ulong available, int reserved, IEnumerable<ulong> physicalCores)
     {
         ulong stability = 0;
         foreach (var physical in physicalCores)
@@ -184,13 +189,71 @@ internal static class CheckAffinity
             stability |= mask;
             if (System.Numerics.BitOperations.PopCount(stability) == reserved) break;
         }
-        if (System.Numerics.BitOperations.PopCount(stability) != reserved || stability == available)
-            throw new ReleaseException("-StabilityCores must fit whole available physical cores and leave CPUs for other checks", 64);
-        return (stability, available & ~stability);
+        return System.Numerics.BitOperations.PopCount(stability) != reserved || stability == available ? null : (stability, available & ~stability);
     }
 
+    internal static ulong[] PreferredPhysicalCores() =>
+        PhysicalCores().OrderByDescending(core => core.Efficiency).ThenBy(core => core.Mask).Select(core => core.Mask).ToArray();
+
     internal static (ulong Stability, ulong General) SplitForMachine(ulong available, int reserved) =>
-        SplitPreferred(available, reserved, PhysicalCores().OrderByDescending(core => core.Efficiency).ThenBy(core => core.Mask).Select(core => core.Mask).ToArray());
+        SplitPreferred(available, reserved, PreferredPhysicalCores());
+
+    internal const string FullIsolation = "full", DegradedIsolation = "degraded";
+
+    // Sensitive is the reserved sensitive lane's mask; zero means no reserved
+    // lane, and the sensitive checks then run alone in the general lane.
+    internal sealed record CheckAllCpuLayout(ulong Sensitive, ulong Stability, ulong General, string Isolation, string? Reason);
+
+    // The check-all layout: the sensitive lane takes whole physical cores first,
+    // the stability lane whole cores from the rest, general work what remains.
+    // When the requested sizes cannot all be held with a general CPU left, the
+    // first fitting layout below runs and is recorded as degraded:
+    //   1. both lanes resized to the nearest whole-core sizes, still disjoint;
+    //   2. no reserved sensitive lane (as before P8-72): sensitive checks run alone
+    //      in the general lane, the stability lane keeps whole cores;
+    //   3. the sensitive lane keeps whole cores, stability shares the general CPUs;
+    //   4. one physical core: no reserved lanes, everything shares all CPUs.
+    // An explicit -SensitiveCores/-StabilityCores keeps its exact size and is never
+    // shared; both explicit keep the strict refusal. No check changes either way.
+    internal static CheckAllCpuLayout PlanCheckAll(ulong available, int sensitiveCores, bool sensitiveExplicit, int stabilityCores, bool stabilityExplicit, ulong[] physicalCores)
+    {
+        if (TrySplitPreferred(available, sensitiveCores, physicalCores) is { } strictSensitive &&
+            TrySplitPreferred(strictSensitive.General, stabilityCores, physicalCores) is { } strictRest)
+            return new(strictSensitive.Stability, strictRest.Stability, strictRest.General, FullIsolation, null);
+        if (sensitiveExplicit && stabilityExplicit) throw new ReleaseException(WholeCoreRefusal, 64);
+        int logical = System.Numerics.BitOperations.PopCount(available);
+        string Cpus(int count, string noun = "CPU") => string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{count} {noun}{(count == 1 ? "" : "s")}");
+        string Count(ulong mask) => Cpus(System.Numerics.BitOperations.PopCount(mask));
+        string requested = string.Create(System.Globalization.CultureInfo.InvariantCulture,
+            $"{Cpus(logical, "available CPU")} on {Cpus(physicalCores.Count(core => (core & available) != 0), "physical core")} cannot hold the {(sensitiveExplicit ? "requested" : "default")} " +
+            $"{sensitiveCores}-CPU sensitive lane and the {(stabilityExplicit ? "requested" : "default")} {stabilityCores}-CPU stability lane on whole physical cores with a general CPU left");
+        CheckAllCpuLayout Degraded(ulong sensitive, ulong stability, ulong general, string layout) =>
+            new(sensitive, stability, general, DegradedIsolation, requested + "; " + string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{layout} (sensitive {sensitive:X}, stability {stability:X}, general {general:X})"));
+        // Explicit sizes stay exact; defaults try the nearest sizes, smaller first on a tie.
+        IEnumerable<int> Sizes(int size, bool exact) => exact ? [size] : Enumerable.Range(1, Math.Max(0, logical - 1)).OrderBy(k => Math.Abs(k - size)).ThenBy(k => k);
+        foreach (int sensitive in Sizes(sensitiveCores, sensitiveExplicit))
+            if (TrySplitPreferred(available, sensitive, physicalCores) is { } reserved)
+                foreach (int stability in Sizes(stabilityCores, stabilityExplicit))
+                    if (TrySplitPreferred(reserved.General, stability, physicalCores) is { } rest)
+                        return Degraded(reserved.Stability, rest.Stability, rest.General,
+                            $"lanes resized to whole physical cores and still disjoint: sensitive {Count(reserved.Stability)}, stability {Count(rest.Stability)}");
+        if (!sensitiveExplicit)
+            // The general lane, which then runs the sensitive checks, keeps the first choice of cores.
+            foreach (int stability in Sizes(stabilityCores, stabilityExplicit))
+                if (TrySplitPreferred(available, stability, Enumerable.Reverse(physicalCores)) is { } split)
+                    return Degraded(0, split.Stability, split.General,
+                        $"no reserved sensitive lane: each sensitive check runs alone in the general lane on its {Count(split.General)}; the stability lane keeps {Count(split.Stability)} on whole physical cores");
+        if (!stabilityExplicit)
+            foreach (int sensitive in Sizes(sensitiveCores, sensitiveExplicit))
+                if (TrySplitPreferred(available, sensitive, physicalCores) is { } split)
+                    return Degraded(split.Stability, split.General, split.General,
+                        $"the stability lane shares the general lane's {Count(split.General)}; the sensitive lane keeps {Count(split.Stability)} on whole physical cores");
+        if (!sensitiveExplicit && !stabilityExplicit && available != 0)
+            return Degraded(0, available, available, "no reserved lanes: each sensitive check runs alone in the general lane and the stability lane shares every available CPU");
+        var (option, value) = sensitiveExplicit ? ("SensitiveCores", sensitiveCores) : ("StabilityCores", stabilityCores);
+        throw new ReleaseException(string.Create(System.Globalization.CultureInfo.InvariantCulture,
+            $"-{option} {value} must fit whole available physical cores and leave CPUs for other checks (available CPU mask {available:X})"), 64);
+    }
 
     internal static (ulong Stability, ulong General) SplitSensitive(ulong available, int reserved)
     {
@@ -203,7 +266,7 @@ internal static class CheckAffinity
     internal static IReadOnlyDictionary<string, int> AssignSensitiveLanes(List<CheckJob> jobs, ulong mask, int workers, ulong[]? physicalCores = null)
     {
         int cores = System.Numerics.BitOperations.PopCount(mask);
-        physicalCores ??= PhysicalCores().OrderByDescending(core => core.Efficiency).ThenBy(core => core.Mask).Select(core => core.Mask).ToArray();
+        physicalCores ??= PreferredPhysicalCores();
         workers = Math.Min(workers, Math.Max(1, cores / 4));
         var masks = new ulong[workers];
         ulong remaining = mask;
@@ -230,6 +293,24 @@ internal static class CheckAffinity
             }
         }
         return capacities;
+    }
+
+    // check-all lanes: exclusive checks go to the reserved sensitive workers, or
+    // stay in the general lane, where each runs alone, when the layout reserves
+    // no sensitive lane. Jobs without an affinity get their lane's CPUs.
+    internal static IReadOnlyDictionary<string, int> AssignLanes(List<CheckJob> jobs, CheckAllCpuLayout layout, int sensitiveParallelism, ulong[]? physicalCores = null)
+    {
+        bool reserved = layout.Sensitive != 0;
+        for (int i = 0; i < jobs.Count; i++)
+        {
+            var job = jobs[i];
+            jobs[i] = job with
+            {
+                Lane = job.Exclusive && job.Lane == "general" && reserved ? "sensitive" : job.Lane,
+                Affinity = job.Affinity ?? (job.Exclusive && reserved ? layout.Sensitive : layout.General)
+            };
+        }
+        return reserved ? AssignSensitiveLanes(jobs, layout.Sensitive, sensitiveParallelism, physicalCores) : new Dictionary<string, int>();
     }
 
     internal static (ulong Mask, byte Efficiency)[] PhysicalCores()

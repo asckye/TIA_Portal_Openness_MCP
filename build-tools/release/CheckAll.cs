@@ -34,15 +34,18 @@ internal static partial class ReleaseCommands
         var companionPython = CheckAllCompanionPython(options);
         using var currentProcess = Process.GetCurrentProcess();
         var available = unchecked((ulong)currentProcess.ProcessorAffinity.ToInt64());
-        int stabilityCores = FastSuites.Positive(options, "StabilityCores", Math.Min(8, Math.Max(1, Environment.ProcessorCount / 3)));
         // Give the shortest asserted deadlines first choice of complete physical
         // cores. Stability and general work retain disjoint, reserved CPU sets.
-        var reservedSensitive = CheckAffinity.SplitSensitive(available, FastSuites.Positive(options, "SensitiveCores", CheckAffinity.DefaultSensitiveCores(available)));
-        var masks = CheckAffinity.SplitForMachine(reservedSensitive.General, stabilityCores);
-        var sensitive = (Stability: reservedSensitive.Stability, General: masks.General);
-        int generalCores = System.Numerics.BitOperations.PopCount(sensitive.General);
+        // A machine too small for the default lanes runs a recorded degraded
+        // layout; explicit lane sizes are kept exactly or refused (exit 64).
+        var layout = CheckAffinity.PlanCheckAll(available, FastSuites.Positive(options, "SensitiveCores", CheckAffinity.DefaultSensitiveCores(available)), options.Has("SensitiveCores"),
+            FastSuites.Positive(options, "StabilityCores", Math.Min(8, Math.Max(1, Environment.ProcessorCount / 3))), options.Has("StabilityCores"), CheckAffinity.PreferredPhysicalCores());
+        if (layout.Isolation != CheckAffinity.FullIsolation) Console.WriteLine("check-all: cpuIsolation " + layout.Isolation + ": " + layout.Reason);
+        int stabilityCores = System.Numerics.BitOperations.PopCount(layout.Stability);
+        int generalCores = System.Numerics.BitOperations.PopCount(layout.General);
         parallelism = FastSuites.GeneralCapacity(parallelism, generalCores, options.Has("MaxParallelism") || options.Has("CpuParallelism"));
         int stabilityParallelism = Math.Min(FastSuites.Positive(options, "StabilityParallelism", 4), Math.Min(4, stabilityCores));
+        int sensitiveParallelism = FastSuites.Positive(options, "SensitiveParallelism", 2);
         var clock = Stopwatch.StartNew();
         using var load = CheckLoad.Start(Path.Combine(output, "process-load.json"));
         var catalog = DotnetSuites.LoadCatalog(Path.Combine(Root, "tests/test-suites.json"), Root);
@@ -165,7 +168,7 @@ internal static partial class ReleaseCommands
                 }
                 return result;
             }, ["fixture-catalog-v" + key, "production-catalog-v" + key]);
-            jobs[^1] = jobs[^1] with { Lane = "stability", Affinity = masks.Stability };
+            jobs[^1] = jobs[^1] with { Lane = "stability", Affinity = layout.Stability };
         }
         foreach (var (name, node) in catalog)
         {
@@ -312,28 +315,26 @@ internal static partial class ReleaseCommands
             return Tool("usage-audit", "audit-tool-usage", "-Records", records);
         }, CatalogJson.Keys.Select(key => "usage-v" + key).ToArray());
         Add("generate-release-migration", () => Tool("generate-release-migration", "generate-release-migration"));
-        var plan = jobs.Select(job => job with
+        var scheduled = jobs.Select(job => job with
         {
-            Lane = job.Exclusive && job.Lane == "general" ? "sensitive" : job.Lane,
-            Affinity = job.Affinity ?? (job.Exclusive ? sensitive.Stability : sensitive.General),
             EstimatedSeconds = CheckAllJobCost(job, costs),
             Timeout = CheckScheduler.JobTimeout(job, costs),
             Dependencies = job.Name == "migration-drift" ? ["generate-release-migration"] : job.Dependencies
-        }).ToArray();
-        var scheduled = plan.ToList();
-        var sensitiveLanes = CheckAffinity.AssignSensitiveLanes(scheduled, sensitive.Stability, FastSuites.Positive(options, "SensitiveParallelism", 2));
+        }).ToList();
+        var sensitiveLanes = CheckAffinity.AssignLanes(scheduled, layout, sensitiveParallelism);
         var resultCache = new CheckAllResultCache(Root, output, runtimeManifest, api, nuget, dotnet, python, companionPython, options,
-            JsonSerializer.Serialize(new { parallelism, shards, stabilityParallelism, lanes = sensitiveLanes, available, stability = masks.Stability,
-                sensitive = sensitive.Stability, general = sensitive.General }));
-        plan = scheduled.Select(job => resultCache.Bind(CheckAllResultCache.ReusableStatic(job.Name)
+            JsonSerializer.Serialize(new { parallelism, shards, stabilityParallelism, lanes = sensitiveLanes, available, stability = layout.Stability,
+                sensitive = layout.Sensitive, general = layout.General }));
+        var plan = scheduled.Select(job => resultCache.Bind(CheckAllResultCache.ReusableStatic(job.Name)
             ? job with { ResultInputs = new(job.Name.StartsWith("python-", StringComparison.Ordinal) ? "python" : job.Name.EndsWith("-drift", StringComparison.Ordinal) ? "generator" : "static", job.Name) } : job)).ToArray();
         CheckAllInputClosure.WriteInventory(Root, plan, output);
         var lanes = new Dictionary<string, int>(sensitiveLanes) { ["general"] = parallelism, ["stability"] = stabilityParallelism };
         var priorities = CheckScheduler.CriticalCosts(plan);
         File.WriteAllText(Path.Combine(output, "cpu-plan.json"), JsonSerializer.Serialize(new { availableMask = available.ToString("X"),
-            stabilityMask = masks.Stability.ToString("X"), sensitiveMask = sensitive.Stability.ToString("X"), generalMask = sensitive.General.ToString("X"), stabilityCores, generalCores,
+            cpuIsolation = layout.Isolation, cpuIsolationReason = layout.Reason,
+            stabilityMask = layout.Stability.ToString("X"), sensitiveMask = layout.Sensitive.ToString("X"), generalMask = layout.General.ToString("X"), stabilityCores, generalCores,
             physicalCores = CheckAffinity.PhysicalCores().Select(core => new { mask = core.Mask.ToString("X"), efficiencyClass = core.Efficiency }),
-            stabilityParallelism, sensitiveParallelism = sensitiveLanes.Count, sensitiveCores = System.Numerics.BitOperations.PopCount(sensitive.Stability), sensitiveMinWorkerThreads = CheckAffinity.BaselineWorkers, generalParallelism = parallelism, companionPython,
+            stabilityParallelism, sensitiveParallelism = sensitiveLanes.Count, sensitiveCores = System.Numerics.BitOperations.PopCount(layout.Sensitive), sensitiveMinWorkerThreads = CheckAffinity.BaselineWorkers, generalParallelism = parallelism, companionPython,
             checks = plan.Select(job => new { job.Name, job.Lane, job.SensitiveGroup, job.Slots, job.Exclusive, affinityMask = job.Affinity?.ToString("X"), job.EstimatedSeconds, timeoutSeconds = job.Timeout.TotalSeconds, criticalSeconds = priorities[job.Name], job.Dependencies,
                 resultCache = job.ResultCachePolicy ?? "always rerun: generated evidence, mutable machine inputs or aggregate gate" }) }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
         timings.AddRange(CheckScheduler.Run(plan, parallelism, Path.Combine(output, "logs"),
@@ -352,12 +353,13 @@ internal static partial class ReleaseCommands
             // fields are ignored; any other byte change remains a failed drift gate.
             var unexpected = drift.Where(path => !TimestampOnly(path, before)).ToArray();
             timings.Add(new("tracked-tree-drift", unexpected.Length == 0 ? "passed" : "failed", unexpected.Length == 0 ? 0 : 1, 0, string.Join(", ", unexpected)));
-            var report = new { schemaVersion = 1, machineCores = Environment.ProcessorCount, parallelism, shards, cold = options.Has("Cold"), clean = options.Has("Clean"),
+            var report = new { schemaVersion = 1, machineCores = Environment.ProcessorCount, cpuIsolation = layout.Isolation, cpuIsolationReason = layout.Reason,
+                parallelism, shards, cold = options.Has("Cold"), clean = options.Has("Clean"),
                 wallSeconds = clock.Elapsed.TotalSeconds, underThirtyMinutes = clock.Elapsed.TotalSeconds < 1800, buildOnly = options.Has("BuildOnly"), nativeTiaExecuted = false,
                 passed = timings.Count(CheckTiming.Passed), reused = timings.Count(row => row.Status == "passed (reused)"),
                 failed = timings.Count(row => !CheckTiming.Passed(row)), drift, checks = timings };
             File.WriteAllText(Path.Combine(output, "report.json"), JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }) + "\n");
-            WriteTimingComparison(output, timings, options.Get("BaselineReport"));
+            WriteTimingComparison(output, timings, options.Get("BaselineReport"), layout);
             Console.WriteLine($"check-all: {report.passed} passed; {report.failed} failed/blocked; {report.wallSeconds:F3}s; report: {output}");
             return report.failed == 0 && report.underThirtyMinutes ? 0 : 1;
         }
@@ -406,11 +408,13 @@ internal static partial class ReleaseCommands
         return JsonNode.DeepEquals(old, current);
     }
 
-    private static void WriteTimingComparison(string output, List<CheckTiming> timings, string? baseline)
+    private static void WriteTimingComparison(string output, List<CheckTiming> timings, string? baseline, CheckAffinity.CheckAllCpuLayout layout)
     {
         var old = baseline == null ? new Dictionary<string, double> { ["foundation"] = 656, ["foundation-api"] = 666, ["release-tool"] = 144, ["engine-host"] = 141 } : JsonNode.Parse(File.ReadAllText(baseline))!["checks"]!.AsArray()
             .ToDictionary(row => (string)row!["Name"]!, row => (double)row!["Seconds"]!);
-        var lines = new List<string> { "Suite times span the first shard start through the final merge, including queue time. Reused passes are evidence lookups, not new execution measurements. Raw process timings remain in report.json.", "", "| Check | Old seconds | New seconds | Reused checks | Result |", "|---|---:|---:|---:|---|" };
+        var lines = new List<string> { "cpuIsolation: " + layout.Isolation };
+        if (layout.Reason != null) lines.Add("cpuIsolationReason: " + layout.Reason);
+        lines.AddRange(["", "Suite times span the first shard start through the final merge, including queue time. Reused passes are evidence lookups, not new execution measurements. Raw process timings remain in report.json.", "", "| Check | Old seconds | New seconds | Reused checks | Result |", "|---|---:|---:|---:|---|"]);
         foreach (var group in timings.GroupBy(row => Regex.Replace(row.Name, "-(shard-[0-9]+|gate)$", "")))
         {
             var rows = group.ToArray();
