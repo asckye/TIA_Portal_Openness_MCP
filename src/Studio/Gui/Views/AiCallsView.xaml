@@ -14,13 +14,13 @@
       <!-- Ant PageHead with the follow switch and four Statistic cards over the unfiltered snapshot. -->
       <Border Style="{StaticResource Primer.PageHead}">
         <StackPanel>
-          <DockPanel MinHeight="32">
-            <ToggleButton AutomationProperties.Name="{Binding FollowLabel}" x:Name="FollowButton" DockPanel.Dock="Right" Content="{Binding FollowLabel}" IsChecked="{Binding FollowLatest,Mode=OneWay}" Style="{StaticResource Primer.Switch}" VerticalAlignment="Center" Click="OnFollow"/>
+          <ux:PageHeadPanel MinHeight="32">
             <StackPanel Orientation="Horizontal">
               <TextBlock Text="{l:Tr Shell.Calls}" Style="{StaticResource Primer.PageTitle}"/>
               <TextBlock Text="{Binding CallsCount}" Style="{StaticResource Primer.Muted}" Margin="12,0,0,0"/>
             </StackPanel>
-          </DockPanel>
+            <ToggleButton AutomationProperties.Name="{Binding FollowLabel}" x:Name="FollowButton" Content="{Binding FollowLabel}" IsChecked="{Binding FollowLatest,Mode=OneWay}" Style="{StaticResource Primer.Switch}" VerticalAlignment="Center" Click="OnFollow"/>
+          </ux:PageHeadPanel>
           <TextBlock Text="{l:Tr Calls.Subtitle}" Style="{StaticResource Primer.PageSubtitle}" ToolTip="{l:Tr Calls.Subtitle}"/>
           <UniformGrid x:Name="CallStatistics" Rows="1" Margin="-8,16,-8,0">
             <Border Style="{StaticResource Primer.Container}" Margin="8,0">

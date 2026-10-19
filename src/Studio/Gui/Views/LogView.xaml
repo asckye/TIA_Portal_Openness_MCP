@@ -5,16 +5,16 @@
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
     <Border Style="{StaticResource Primer.PageHead}">
-      <DockPanel MinHeight="32">
-        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-          <Button AutomationProperties.Name="{l:Tr Log.Copy}" Content="{l:Tr Log.Copy}" Click="OnCopyLog" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
-          <Button AutomationProperties.Name="{l:Tr Log.Clear}" Content="{l:Tr Log.Clear}" Click="OnClearLog" Style="{StaticResource Primer.Secondary}"/>
-        </StackPanel>
+      <controls:PageHeadPanel MinHeight="32">
         <StackPanel Orientation="Horizontal">
           <TextBlock Text="{l:Tr Log.Title}" Style="{StaticResource Primer.PageTitle}"/>
           <TextBlock Text="{Binding Tag.LogCount,ElementName=PageRoot}" Style="{StaticResource Primer.Muted}" Margin="12,0,0,0"/>
         </StackPanel>
-      </DockPanel>
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+          <Button AutomationProperties.Name="{l:Tr Log.Copy}" Content="{l:Tr Log.Copy}" Click="OnCopyLog" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
+          <Button AutomationProperties.Name="{l:Tr Log.Clear}" Content="{l:Tr Log.Clear}" Click="OnClearLog" Style="{StaticResource Primer.Secondary}"/>
+        </StackPanel>
+      </controls:PageHeadPanel>
     </Border>
     <Border x:Name="LogCard" Grid.Row="1" Style="{StaticResource Primer.TableContainer}">
       <ListBox AutomationProperties.Name="{l:Tr Log.Title}" x:Name="LogList" Style="{StaticResource Primer.VirtualList}" ItemsSource="{Binding Tag.LogRows,ElementName=PageRoot}" ScrollViewer.ScrollChanged="OnLogScrollChanged">

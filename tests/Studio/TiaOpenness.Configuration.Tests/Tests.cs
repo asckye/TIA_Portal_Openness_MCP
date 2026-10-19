@@ -294,6 +294,7 @@ namespace TiaMcpConfigurator
                 form.CapturePage(Path.Combine(output, "remote-compact.png"), 0);
                 Assert(window.MinWidth == 1024 && window.MinHeight == 640 && list.ItemsPanel.LoadContent() is System.Windows.Controls.Primitives.UniformGrid columns && columns.Columns == 3,
                     "minimum window size keeps the three-column client layout");
+                NarrowWindowChecks(window, form, output);
                 window.Width = 1200; window.Height = 780;
                 var font = new System.Windows.Media.FontFamily(new Uri("pack://application:,,,/" + typeof(ConfigurationView).Assembly.GetName().Name + ";component/"), "./Fonts/#Noto Sans SC");
                 System.Windows.Media.GlyphTypeface glyph;
@@ -362,6 +363,48 @@ namespace TiaMcpConfigurator
             }
             Assert(File.Exists(Path.Combine(output, "remote.png")) && File.Exists(Path.Combine(output, "local.png")), "both modes render");
             if (passed - previousChecks < 68) throw new Exception("Expected at least 68 workbench UI checks.");
+        }
+
+        // CI runners have a 1024 px screen and open the 1200 px window at 1044x780. Below Ant's xl breakpoint the
+        // summary and log stack under the clients card, so the cards keep their handoff heights and nothing is cut.
+        private static void NarrowWindowChecks(MainWindow window, ConfigurationView form, string output)
+        {
+            var serverPane = (System.Windows.Controls.Border)form.FindName("ServerPane");
+            var installation = (System.Windows.Controls.Border)form.FindName("InstallationCard");
+            var clientPane = (System.Windows.Controls.Border)form.FindName("ClientPane");
+            var head = (TiaOpenness.Gui.Controls.PageHeadPanel)form.FindName("PageHead");
+            var title = (System.Windows.Controls.TextBlock)form.FindName("PageTitle");
+            var segments = (System.Windows.FrameworkElement)((System.Windows.FrameworkElement)form.FindName("RemoteNav")).Parent;
+            bool Inside(System.Windows.FrameworkElement element, System.Windows.Controls.Border card)
+            {
+                var origin = element.TransformToAncestor(card).Transform(new System.Windows.Point());
+                return origin.X >= card.Padding.Left && origin.X + element.ActualWidth <= card.ActualWidth - card.Padding.Right + 0.5;
+            }
+            window.Width = 1044; window.Height = 780;
+            foreach (var language in new[] { AppLanguage.English, AppLanguage.Chinese })
+            foreach (var theme in new[] { AppTheme.Light, AppTheme.Dark })
+            {
+                Loc.Current.Language = language; ThemeManager.Current.Theme = theme;
+                window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
+                string state = (language == AppLanguage.Chinese ? "zh" : "en") + "-" + theme.ToString().ToLowerInvariant();
+                form.CapturePage(Path.Combine(output, "remote-1044x780-" + state + ".png"), 0);
+                window.UpdateLayout();
+                var probe = new System.Windows.Controls.TextBlock { Text = title.Text, FontFamily = title.FontFamily, FontSize = title.FontSize, FontWeight = title.FontWeight };
+                System.Windows.Media.TextOptions.SetTextFormattingMode(probe, System.Windows.Media.TextOptions.GetTextFormattingMode(title));
+                probe.Measure(new System.Windows.Size(double.PositiveInfinity, double.PositiveInfinity));
+                double titleEnd = title.TransformToAncestor(head).Transform(new System.Windows.Point()).X + probe.DesiredSize.Width;
+                double segmentsStart = segments.TransformToAncestor(head).Transform(new System.Windows.Point()).X;
+                Assert(Math.Abs(window.ActualWidth - 1044) < 1 && Math.Abs(serverPane.ActualHeight - 162) < 1 && Math.Abs(installation.ActualHeight - 162) < 1
+                    && clientPane.ActualHeight > 300 && clientPane.ActualHeight < 400,
+                    $"1044x780 {state}: service halves and client container keep the handoff heights (installation {installation.ActualHeight:F1}, server {serverPane.ActualHeight:F1}, client {clientPane.ActualHeight:F1})");
+                Assert(Inside((System.Windows.FrameworkElement)form.FindName("StartServer"), serverPane) && Inside((System.Windows.FrameworkElement)form.FindName("Network"), serverPane)
+                    && Inside((System.Windows.FrameworkElement)form.FindName("TiaPath"), installation) && Inside((System.Windows.FrameworkElement)form.FindName("DetectTia"), installation),
+                    $"1044x780 {state}: path field and service buttons stay inside their cards");
+                Assert(head.IsWrapped ? segments.TransformToAncestor(head).Transform(new System.Windows.Point()).Y >= title.ActualHeight : titleEnd <= segmentsStart + 0.5,
+                    $"1044x780 {state}: the page title ends at {titleEnd:F1} before the mode control at {segmentsStart:F1}");
+            }
+            Loc.Current.Language = AppLanguage.English; ThemeManager.Current.Theme = AppTheme.Light;
+            window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
         }
 
         [STAThread]

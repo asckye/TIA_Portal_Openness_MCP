@@ -13,18 +13,18 @@
       </Grid.RowDefinitions>
       <Border Style="{StaticResource Primer.PageHead}">
         <StackPanel>
-          <DockPanel>
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-              <Button AutomationProperties.Name="{l:Tr Env.Recheck}" x:Name="RecheckButton" Content="{l:Tr Env.Recheck}" ux:Ux.Icon="{DynamicResource Icon.Reload}" Style="{StaticResource Primer.Secondary}" Click="OnRecheck"/>
-              <Button AutomationProperties.Name="{l:Tr Env.Generate}" x:Name="GenerateButton" Content="{l:Tr Env.Generate}" ux:Ux.Icon="{DynamicResource Icon.Download}" Style="{StaticResource Primer.Run}" Margin="8,0,0,0" Click="OnGenerate" IsEnabled="{Binding DiagnosticCanStart}"/>
-            </StackPanel>
+          <ux:PageHeadPanel>
             <StackPanel>
               <TextBlock Text="{l:Tr Shell.Environment}" Style="{StaticResource Primer.PageTitle}"/>
               <ContentControl Style="{StaticResource Primer.StatusChip}" Tag="{Binding EnvironmentTone}" HorizontalAlignment="Left" Margin="0,4,0,0">
                 <TextBlock Text="{Binding EnvironmentSummary}" Style="{StaticResource Primer.StatusText}"/>
               </ContentControl>
             </StackPanel>
-          </DockPanel>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+              <Button AutomationProperties.Name="{l:Tr Env.Recheck}" x:Name="RecheckButton" Content="{l:Tr Env.Recheck}" ux:Ux.Icon="{DynamicResource Icon.Reload}" Style="{StaticResource Primer.Secondary}" Click="OnRecheck"/>
+              <Button AutomationProperties.Name="{l:Tr Env.Generate}" x:Name="GenerateButton" Content="{l:Tr Env.Generate}" ux:Ux.Icon="{DynamicResource Icon.Download}" Style="{StaticResource Primer.Run}" Margin="8,0,0,0" Click="OnGenerate" IsEnabled="{Binding DiagnosticCanStart}"/>
+            </StackPanel>
+          </ux:PageHeadPanel>
           <!-- Ant Alert (warning, with description) while any check needs action. -->
           <Border x:Name="AttentionAlert" Style="{StaticResource Primer.Alert.Warning}" Margin="0,16,0,0" Padding="16,12" Visibility="{Binding EnvironmentNeedsAction, Converter={StaticResource BoolToVisibility}}">
             <DockPanel>

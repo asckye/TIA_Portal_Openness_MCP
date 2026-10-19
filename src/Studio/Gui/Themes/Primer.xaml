@@ -1898,6 +1898,9 @@
     </Setter.Value></Setter>
     <Setter Property="FocusVisualStyle" Value="{StaticResource Primer.Focus}"/>
     <Setter Property="Padding" Value="0"/>
+    <!-- Ignored by the template; explicit values replace the theme's ancestor bindings (see Primer.LogTailRow). -->
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="ListBoxItem">
@@ -2236,6 +2239,10 @@
     <Setter Property="Height" Value="24"/>
     <Setter Property="Focusable" Value="False"/>
     <Setter Property="Padding" Value="0"/>
+    <!-- The template ignores both; explicit values replace the theme's ancestor bindings, which report a binding
+         error when a narrow page moves this list into its scrolling stack and the rows are regenerated. -->
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="ListBoxItem">

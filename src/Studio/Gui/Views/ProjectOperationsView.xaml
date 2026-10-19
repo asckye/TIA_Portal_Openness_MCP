@@ -58,18 +58,12 @@
       </StackPanel>
     </Border>
     <Border x:Name="ProjectCard" Style="{StaticResource Primer.PageHead}" Visibility="{Binding Tag.HasProject,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}">
-      <Grid>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="Auto"/>
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-          <RowDefinition Height="Auto"/>
-          <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+      <StackPanel>
+      <!-- The actions stay beside the project name while it fits and wrap below the head otherwise. -->
+      <ux:PageHeadPanel Spacing="16" Title="{Binding ElementName=ProjectTitle}">
+        <StackPanel VerticalAlignment="Center">
           <WrapPanel>
-            <TextBlock Text="{Binding Session.ProjectName}" Style="{StaticResource Primer.PageTitle}" ToolTip="{Binding Session.ProjectName}" Margin="0,0,12,0"/>
+            <TextBlock x:Name="ProjectTitle" Text="{Binding Session.ProjectName}" Style="{StaticResource Primer.PageTitle}" ToolTip="{Binding Session.ProjectName}" Margin="0,0,12,0"/>
             <ContentControl Style="{StaticResource Primer.StatusChip}" Tag="{x:Static vm:FeatureTone.Success}" Margin="0,0,8,0">
               <TextBlock Text="{l:Tr Primer.Bound}" Style="{StaticResource Primer.StatusText}"/>
             </ContentControl>
@@ -78,9 +72,7 @@
             </Border>
           </WrapPanel>
         </StackPanel>
-        <!-- The path line spans the whole head so long project paths trim at the right edge, not under the actions. -->
-        <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Session.ProjectPath}" Style="{StaticResource Primer.PageSubtitle}" FontFamily="{DynamicResource Ui.FontMono}" ToolTip="{Binding Session.ProjectPath}"/>
-        <WrapPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" MaxWidth="560">
+        <WrapPanel VerticalAlignment="Center" HorizontalAlignment="Right" MaxWidth="560">
           <Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=SoftwarePicker}" x:Name="SoftwareLabel" Content="{l:Tr Access.Software}" Target="{Binding ElementName=SoftwarePicker}" Style="{StaticResource Primer.FormLabel}" VerticalAlignment="Center" Padding="0,0,8,0"/><ComboBox AutomationProperties.LabeledBy="{Binding ElementName=SoftwareLabel}" AutomationProperties.Name="{l:Tr Access.Software}" x:Name="SoftwarePicker" ItemsSource="{Binding Engineering.Devices}" SelectedItem="{Binding Engineering.SelectedDevice}" Style="{StaticResource Primer.Select}" VerticalAlignment="Center" Width="150">
             <ComboBox.ItemTemplate>
               <DataTemplate>
@@ -95,7 +87,10 @@
           <Button AutomationProperties.Name="{l:Tr Pages.Disconnect}" x:Name="DisconnectButton" Content="{l:Tr Pages.Disconnect}" Command="{Binding Session.Disconnect}" Style="{StaticResource Primer.Danger}" Margin="8,0,0,0"/>
           <Button AutomationProperties.Name="{l:Tr Pages.Options}" Click="OnProjectOptions" ToolTip="{l:Tr Pages.Options}" Style="{StaticResource Primer.IconButton}" Width="32" Height="32" Margin="4,0,0,0"><Path Style="{StaticResource Primer.ButtonIcon.Ellipsis}"/></Button>
         </WrapPanel>
-      </Grid>
+      </ux:PageHeadPanel>
+      <!-- The path line spans the whole head so long project paths trim at the right edge, not under the actions. -->
+      <TextBlock Text="{Binding Session.ProjectPath}" Style="{StaticResource Primer.PageSubtitle}" FontFamily="{DynamicResource Ui.FontMono}" ToolTip="{Binding Session.ProjectPath}"/>
+      </StackPanel>
     </Border>
   </Grid>
   </DockPanel>

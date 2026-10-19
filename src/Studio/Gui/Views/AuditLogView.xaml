@@ -13,13 +13,13 @@
       </Grid.RowDefinitions>
       <Border Style="{StaticResource Primer.PageHead}">
         <StackPanel>
-          <DockPanel MinHeight="32">
-            <Button AutomationProperties.Name="{l:Tr Audit.Verify}" x:Name="VerifyButton" DockPanel.Dock="Right" Content="{l:Tr Audit.Verify}" Style="{StaticResource Primer.OutlinedAccent}" Click="OnVerify"/>
+          <ux:PageHeadPanel MinHeight="32">
             <StackPanel Orientation="Horizontal">
               <TextBlock Text="{l:Tr Shell.Audit}" FontSize="{DynamicResource Ui.FontSize.Title}" FontWeight="SemiBold" VerticalAlignment="Center" AutomationProperties.HeadingLevel="Level1"/>
               <TextBlock Text="{Binding AuditCount}" Style="{StaticResource Primer.Muted}" Margin="12,0,0,0"/>
             </StackPanel>
-          </DockPanel>
+            <Button AutomationProperties.Name="{l:Tr Audit.Verify}" x:Name="VerifyButton" Content="{l:Tr Audit.Verify}" Style="{StaticResource Primer.OutlinedAccent}" Click="OnVerify"/>
+          </ux:PageHeadPanel>
           <Border x:Name="VerificationBanner" Style="{StaticResource Primer.ToneChip}" Tag="{Binding VerificationTone}" MinHeight="38" Padding="12,10" Margin="0,10,0,0" Visibility="{Binding HasVerification, Converter={StaticResource BoolToVisibility}}">
             <DockPanel>
               <Button AutomationProperties.Name="{l:Tr Audit.Jump}" x:Name="JumpButton" DockPanel.Dock="Right" Content="{l:Tr Audit.Jump}" Style="{StaticResource Primer.Quiet}" MinHeight="24" Visibility="{Binding VerificationBroken, Converter={StaticResource BoolToVisibility}}" Click="OnJump"/>

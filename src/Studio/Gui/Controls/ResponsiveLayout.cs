@@ -12,6 +12,13 @@ namespace TiaOpenness.Gui.Controls;
 /// <summary>Moves a page's context column below its content with scrolling at narrow widths.</summary>
 public static class ResponsiveLayout
 {
+    /// <summary>
+    /// Ant's xl breakpoint: a 1200 px window less the 2 px frame, the 216 px side menu and the 2 x 24 px content
+    /// padding leaves 934 px for the page. Narrower pages stack the context column below the content, so the
+    /// content column never gets less width than it has in the approved 1200 px window.
+    /// </summary>
+    public const double StackBelowWidth = 934;
+
     public static readonly DependencyProperty EnabledProperty = DependencyProperty.RegisterAttached(
         "Enabled", typeof(bool), typeof(ResponsiveLayout), new PropertyMetadata(false, Changed));
     public static bool GetEnabled(DependencyObject element) => (bool)element.GetValue(EnabledProperty);
@@ -19,12 +26,17 @@ public static class ResponsiveLayout
     private static readonly DependencyProperty StateProperty = DependencyProperty.RegisterAttached(
         "State", typeof(State), typeof(ResponsiveLayout));
 
+    /// <summary>True while the page shows its context column below the content.</summary>
+    public static bool IsStacked(Grid grid) => grid.GetValue(StateProperty) is State { Stacked: true };
+
     private static void Changed(DependencyObject element, DependencyPropertyChangedEventArgs e)
     {
         if (element is not Grid grid || e.NewValue is not true) return;
         var state = new State(grid);
         grid.SetValue(StateProperty, state);
-        grid.SizeChanged += (_, _) => state.Queue();
+        // The layout pass that sizes the page also settles its arrangement, so the first frame (and a capture
+        // taken right after UpdateLayout) already shows the stacked or the side-by-side page.
+        grid.SizeChanged += (_, _) => state.Apply();
         grid.Loaded += (_, _) => state.Queue();
     }
 
@@ -40,6 +52,10 @@ public static class ResponsiveLayout
         private GridLength _sideWidth, _gapWidth;
         private bool _collapsed, _changing;
         private bool _queued;
+
+        internal bool Stacked => _scroll != null;
+
+        // Loaded and visibility changes arrive during tree walks, where the children cannot change yet.
         internal void Queue()
         {
             if (_queued) return;
@@ -47,54 +63,81 @@ public static class ResponsiveLayout
             grid.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
             {
                 _queued = false;
-                // Ant's xl breakpoint: with the 216 px side menu and 24 px padding a 1200 px window leaves
-                // about 934 px, so the result column stacks below the content under that width.
-                bool narrow = grid.ActualWidth > 0 && grid.ActualWidth < 930;
-                EnsureContextToggle();
-                if (narrow && _collapsed) CollapseContext(false);
-                if (_toggle != null) _toggle.Visibility = !narrow && grid.ActualWidth < 1232
-                    && (_collapsed || _side?.Visibility == Visibility.Visible) ? Visibility.Visible : Visibility.Collapsed;
-                if (narrow == (_scroll != null)) return;
-                if (narrow)
-                {
-                    _children = grid.Children.Cast<UIElement>().Where(child => child != _toggle).ToList();
-                    grid.Children.Clear();
-                    var stack = new StackPanel();
-                    foreach (var child in _children.OrderBy(child => child is FrameworkElement head && IsPageHead(head) ? 0 : 1)
-                        .ThenBy(Grid.GetColumn).ThenBy(Grid.GetRow))
-                    {
-                        // A page head in its own first row keeps its natural height above the stack.
-                        if (child is FrameworkElement view && !IsPageHead(view))
-                        {
-                            _minimums[view] = view.MinHeight;
-                            _heights[view] = view.Height;
-                            view.SetCurrentValue(FrameworkElement.MinHeightProperty,
-                                Math.Max(view.MinHeight, Grid.GetColumn(view) == 2 ? 320 : 520));
-                            // Lists keep a finite viewport so reflow does not defeat virtualization.
-                            view.SetCurrentValue(FrameworkElement.HeightProperty,
-                                Math.Max(view.MinHeight, grid.ActualHeight));
-                        }
-                        stack.Children.Add(child);
-                    }
-                    _scroll = new ScrollViewer { Content = stack, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                        HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
-                    Grid.SetColumnSpan(_scroll, grid.ColumnDefinitions.Count);
-                    Grid.SetRowSpan(_scroll, Math.Max(1, grid.RowDefinitions.Count));
-                    grid.Children.Add(_scroll);
-                }
-                else
-                {
-                    ((StackPanel)_scroll!.Content).Children.Clear();
-                    grid.Children.Clear();
-                    foreach (var child in _children!) grid.Children.Add(child);
-                    if (_toggle != null) grid.Children.Add(_toggle);
-                    foreach (var (view, minimum) in _minimums) view.SetCurrentValue(FrameworkElement.MinHeightProperty, minimum);
-                    foreach (var (view, height) in _heights) view.SetCurrentValue(FrameworkElement.HeightProperty, height);
-                    _minimums.Clear();
-                    _heights.Clear();
-                    _scroll = null;
-                }
+                Apply();
             }));
+        }
+
+        internal void Apply()
+        {
+            // Half a pixel absorbs layout rounding, so a 1200 px window stays side by side at any DPI.
+            bool narrow = grid.ActualWidth > 0 && grid.ActualWidth < StackBelowWidth - 0.5;
+            EnsureContextToggle();
+            if (narrow && _collapsed) CollapseContext(false);
+            if (_toggle != null) _toggle.Visibility = !narrow && grid.ActualWidth < 1232
+                && (_collapsed || _side?.Visibility == Visibility.Visible) ? Visibility.Visible : Visibility.Collapsed;
+            if (narrow != (_scroll != null))
+            {
+                if (narrow) Stack();
+                else Unstack();
+            }
+            // Stacked views keep one viewport of height, also when only the window height changes.
+            if (narrow)
+                foreach (var view in _heights.Keys)
+                    view.SetCurrentValue(FrameworkElement.HeightProperty, Math.Max(view.MinHeight, grid.ActualHeight));
+        }
+
+        private void Stack()
+        {
+            _children = grid.Children.Cast<UIElement>().Where(child => child != _toggle).ToList();
+            var stack = new StackPanel();
+            _scroll = new ScrollViewer { Content = stack, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
+            Grid.SetColumnSpan(_scroll, grid.ColumnDefinitions.Count);
+            Grid.SetRowSpan(_scroll, Math.Max(1, grid.RowDefinitions.Count));
+            // The scroller joins the page before the views move into it, so each view goes straight from one
+            // connected parent to the next.
+            grid.Children.Add(_scroll);
+            if (_toggle != null) grid.Children.Remove(_toggle);
+            foreach (var child in _children.OrderBy(child => child is FrameworkElement head && IsPageHead(head) ? 0 : 1)
+                .ThenBy(Grid.GetColumn).ThenBy(Grid.GetRow))
+            {
+                // A page head in its own first row keeps its natural height above the stack.
+                if (child is FrameworkElement view && !IsPageHead(view))
+                {
+                    _minimums[view] = view.MinHeight;
+                    _heights[view] = view.Height;
+                    view.SetCurrentValue(FrameworkElement.MinHeightProperty,
+                        Math.Max(view.MinHeight, Grid.GetColumn(view) == 2 ? 320 : 520));
+                    // Lists keep a finite viewport so reflow does not defeat virtualization.
+                    view.SetCurrentValue(FrameworkElement.HeightProperty,
+                        Math.Max(view.MinHeight, grid.ActualHeight));
+                }
+                Move(child, grid.Children, stack.Children);
+            }
+        }
+
+        private void Unstack()
+        {
+            var stack = (StackPanel)_scroll!.Content;
+            foreach (var child in _children!) Move(child, stack.Children, grid.Children);
+            grid.Children.Remove(_scroll);
+            if (_toggle != null) grid.Children.Add(_toggle);
+            foreach (var (view, minimum) in _minimums) view.SetCurrentValue(FrameworkElement.MinHeightProperty, minimum);
+            foreach (var (view, height) in _heights) view.SetCurrentValue(FrameworkElement.HeightProperty, height);
+            _minimums.Clear();
+            _heights.Clear();
+            _scroll = null;
+        }
+
+        // A view between two parents would lose its inherited data context for a moment: its lists would drop
+        // and regenerate their rows, and the dropped rows report binding errors. Holding the context avoids that.
+        private static void Move(UIElement child, UIElementCollection from, UIElementCollection to)
+        {
+            bool hold = child is FrameworkElement view && view.ReadLocalValue(FrameworkElement.DataContextProperty) == DependencyProperty.UnsetValue;
+            if (hold) child.SetValue(FrameworkElement.DataContextProperty, ((FrameworkElement)child).DataContext);
+            from.Remove(child);
+            to.Add(child);
+            if (hold) child.ClearValue(FrameworkElement.DataContextProperty);
         }
 
         private bool IsPageHead(FrameworkElement view)
