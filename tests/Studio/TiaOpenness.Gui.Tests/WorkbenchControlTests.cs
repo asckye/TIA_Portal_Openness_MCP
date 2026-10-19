@@ -295,7 +295,11 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
             var page = snapshot.Read(new WorkbenchReadSelectionArguments { Offset = 1, Limit = 1 });
             Assert.Empty(page.CheckedBlocks!); Assert.Equal(1, page.Paging?.Total);
             using var entered = new ManualResetEventSlim(); using var release = new ManualResetEventSlim();
-            window.Dispatcher.BeginInvoke(new Action(() => { entered.Set(); release.Wait(TimeSpan.FromSeconds(2)); }));
+            window.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                using var processing = window.Dispatcher.DisableProcessing();
+                entered.Set(); release.Wait(TimeSpan.FromSeconds(2));
+            }));
             Assert.True(entered.Wait(TimeSpan.FromSeconds(1)));
             try
             {
@@ -318,7 +322,11 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
         var surface = new WorkbenchControlSurface(request => { seen.Enqueue(request.RequestId); return window.ApplyControl(request); }, window.ControlSurface.Snapshot);
         using var server = new WorkbenchControlServer(surface, window.Dispatcher, _ => Environment.ProcessPath!, now: () => now);
         using var entered = new ManualResetEventSlim(); using var release = new ManualResetEventSlim();
-        window.Dispatcher.BeginInvoke(new Action(() => { entered.Set(); release.Wait(TimeSpan.FromSeconds(4)); }));
+        window.Dispatcher.BeginInvoke(new Action(() =>
+        {
+            using var processing = window.Dispatcher.DisableProcessing();
+            entered.Set(); release.Wait(TimeSpan.FromSeconds(4));
+        }));
         Assert.True(entered.Wait(TimeSpan.FromSeconds(1)));
         try
         {
@@ -349,7 +357,11 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
         var surface = new WorkbenchControlSurface(request => { Interlocked.Increment(ref applied); return window.ApplyControl(request); }, window.ControlSurface.Snapshot);
         using var server = new WorkbenchControlServer(surface, window.Dispatcher, _ => Environment.ProcessPath!);
         using var entered = new ManualResetEventSlim(); using var release = new ManualResetEventSlim();
-        window.Dispatcher.BeginInvoke(new Action(() => { entered.Set(); release.Wait(TimeSpan.FromSeconds(2)); }));
+        window.Dispatcher.BeginInvoke(new Action(() =>
+        {
+            using var processing = window.Dispatcher.DisableProcessing();
+            entered.Set(); release.Wait(TimeSpan.FromSeconds(2));
+        }));
         Assert.True(entered.Wait(TimeSpan.FromSeconds(1)));
         try
         {
@@ -358,8 +370,49 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
             if (closing) server.Dispose();
             var response = await pending;
             Assert.Equal(closing ? "workbench-closing" : "workbench-deadline", response.Refusal?.Condition);
-            release.Set(); server.Dispose(); await server.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+            release.Set();
+            await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ContextIdle);
+            server.Dispose(); await server.Completion.WaitAsync(TimeSpan.FromSeconds(2));
             Assert.Equal(0, applied);
+        }
+        finally { release.Set(); server.Dispose(); wpf.Run(window.Close); }
+    }
+
+    [Theory]
+    [InlineData(0, false)] [InlineData(1, false)] [InlineData(2, false)]
+    [InlineData(0, true)] [InlineData(1, true)] [InlineData(2, true)]
+    public async Task Started_requests_report_the_actual_result_after_the_deadline(int failure, bool closing)
+    {
+        var (window, _, _) = wpf.Run(() => Window()); int applied = 0;
+        using var entered = new ManualResetEventSlim(); using var release = new ManualResetEventSlim();
+        DateTimeOffset finished = default;
+        var surface = new WorkbenchControlSurface(request =>
+        {
+            using (window.Dispatcher.DisableProcessing())
+            {
+                Interlocked.Increment(ref applied); entered.Set();
+                if (!release.Wait(TimeSpan.FromSeconds(10))) throw new TimeoutException("Started control fixture was not released.");
+            }
+            finished = DateTimeOffset.UtcNow;
+            if (failure == 1) throw new InvalidOperationException("Started control fixture failed.");
+            if (failure == 2) throw new OperationCanceledException("Started control fixture canceled.");
+            return window.ApplyControl(request);
+        }, window.ControlSurface.Snapshot);
+        using var server = new WorkbenchControlServer(surface, window.Dispatcher, _ => Environment.ProcessPath!);
+        try
+        {
+            var request = Request(); request.DeadlineUtc = DateTimeOffset.UtcNow.AddMilliseconds(150);
+            var pending = server.Execute(request);
+            Assert.True(entered.Wait(TimeSpan.FromSeconds(1)));
+            if (closing) server.Dispose();
+            await Task.Delay(200);
+            Assert.False(pending.IsCompleted);
+            release.Set();
+            var response = await pending.WaitAsync(TimeSpan.FromSeconds(2));
+            Assert.Equal(failure == 0 ? WorkbenchControlStatus.Done : WorkbenchControlStatus.Failed, response.Status);
+            Assert.True(finished > request.DeadlineUtc);
+            Assert.Equal(1, applied);
+            WorkbenchControlProtocol.Validate(response);
         }
         finally { release.Set(); server.Dispose(); wpf.Run(window.Close); }
     }

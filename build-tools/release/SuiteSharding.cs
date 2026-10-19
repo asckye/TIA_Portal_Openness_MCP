@@ -20,7 +20,7 @@ internal static class SuiteSharding
             foreach (var row in root.Element(Ns + "Results")?.Elements(Ns + "UnitTestResult") ?? [])
             {
                 var method = methods[(string)row.Attribute("testId")!];
-                var identity = new JsonArray((string?)method.Attribute("className"), (string?)method.Attribute("name"), (string?)row.Attribute("testName"),
+                var identity = new JsonArray((string?)method.Attribute("className"), (string?)method.Attribute("name"), (string?)row.Attribute("testId"), (string?)row.Attribute("testName"),
                     outcomes ? (string?)row.Attribute("outcome") : null).ToJsonString();
                 identities[identity] = identities.GetValueOrDefault(identity) + 1;
             }
@@ -49,6 +49,9 @@ internal static class SuiteSharding
             throw new ReleaseException(string.Join("\n", errors));
         }
         foreach (var shard in shards) errors.AddRange(DotnetSuites.ReadTrx(shard).Errors.Select(error => Path.GetFileName(shard) + ": " + error));
+        var duplicateIdentities = Identities(shards).Where(pair => pair.Value > 1).ToArray();
+        if (duplicateIdentities.Length != 0)
+            errors.Add(name + ": duplicate test identities across shards: " + string.Join("; ", duplicateIdentities.Select(pair => pair.Key + " x" + pair.Value)));
         var docs = shards.Select(XDocument.Load).ToArray();
         var root = new XElement(docs[0].Root!);
         var definitions = new XElement(Ns + "TestDefinitions");
@@ -94,10 +97,13 @@ internal static class SuiteSharding
     }
 }
 
-internal sealed record ShardPlan(string Path, double[] Costs);
+// MeasuredCases counts the cases with timing history. A fresh CI checkout or new worktree has none, and a run that
+// was stopped part way records only part of a suite; the caller compares it with the registered minimum before it
+// lets the costs set job deadlines.
+internal sealed record ShardPlan(string Path, double[] Costs, int MeasuredCases = int.MaxValue);
 internal static class SuiteCosts
 {
-    internal static ShardPlan Prepare(string name, string directory, string historyDirectory, string? baseline, int fallback, bool reserveSensitive = false)
+    internal static ShardPlan Prepare(string name, string directory, string historyDirectory, string? baseline, int fallback, bool reserveSensitive = false, int sensitiveShards = 1)
     {
         Directory.CreateDirectory(historyDirectory); Directory.CreateDirectory(directory);
         var history = Path.Combine(historyDirectory, name + ".json");
@@ -109,25 +115,32 @@ internal static class SuiteCosts
         foreach (var (key, seconds) in costs)
         {
             var cls = ClassName(key);
-            if (reserveSensitive && cls != null && TimeSensitiveTests.Contains(cls)) continue;
+            if (reserveSensitive && TimeSensitiveTests.ContainsCost(key)) continue;
             // Small classes stay together; expensive classes use measured case
             // costs. Late producers are never executed more than once.
-            if (cls != null && classes.TryGetValue(cls, out var measured) && measured.Seconds <= 55)
+            if (cls != null && !TimeSensitiveTests.Methods.ContainsKey(cls) && classes.TryGetValue(cls, out var measured) && measured.Seconds <= 55)
                 planned["C:" + cls] = measured.Seconds;
             else planned[key] = seconds;
         }
         int count = fallback == 1 ? 1 : planned.Count == 0 ? fallback : Math.Clamp((int)Math.Ceiling(planned.Values.Sum() / 55), 1, 32);
+        // Keep the original total partition budget when adding a dedicated
+        // method lane. At least one ordinary partition remains for unknown cases.
+        if (reserveSensitive) count = Math.Max(1, count - Math.Max(0, sensitiveShards - 1));
         var (assignments, totals) = Balance(planned, count);
         if (reserveSensitive)
         {
-            double sensitiveCost = costs.Where(pair => ClassName(pair.Key) is { } cls && TimeSensitiveTests.Contains(cls)).Sum(pair => pair.Value);
-            totals = [.. totals, sensitiveCost];
+            if (sensitiveShards < 1) throw new ReleaseException("Invalid sensitive shard count");
+            var sensitiveCosts = Enumerable.Range(0, sensitiveShards).Select(partition => costs.Where(pair =>
+                TimeSensitiveTests.ContainsCost(pair.Key) && Math.Min(TimeSensitiveTests.SensitivePartition(pair.Key), sensitiveShards - 1) == partition).Sum(pair => pair.Value));
+            totals = [.. totals, .. sensitiveCosts];
         }
         var path = Path.Combine(directory, "shard-plan.tsv");
         File.WriteAllLines(path, assignments.Select(pair => Convert.ToBase64String(Encoding.UTF8.GetBytes(pair.Key)) + "\t" + pair.Value));
         File.WriteAllText(Path.Combine(directory, "shard-plan.json"), JsonSerializer.Serialize(new { source = history, targetSeconds = 55, startupAllowanceSeconds = 5, costs = totals, assignments, measuredClasses = classes,
-            exclusiveShard = reserveSensitive ? (int?)(totals.Length - 1) : null, timeSensitiveClasses = reserveSensitive ? TimeSensitiveTests.Classes : null }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
-        return new(path, totals);
+            exclusiveShard = reserveSensitive ? (int?)(totals.Length - 1) : null,
+            exclusiveShards = reserveSensitive ? Enumerable.Range(totals.Length - sensitiveShards, sensitiveShards).ToArray() : [], timeSensitiveClasses = reserveSensitive ? TimeSensitiveTests.Classes : null,
+            timeSensitiveMethods = reserveSensitive ? TimeSensitiveTests.Methods : null }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
+        return new(path, totals, costs.Count);
     }
 
     internal sealed record ClassCost(double Seconds, double TrxSeconds, int Cases, DateTime MeasuredUtc);

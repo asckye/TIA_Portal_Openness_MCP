@@ -14,41 +14,34 @@ internal static partial class ReleaseCommands
         return suite;
     }
 
-    private static void AddCheckAllPreflightJobs(List<CheckJob> jobs, JsonObject catalog, string output, string dotnet, int shards)
+    internal static void AddCheckAllPreflightJobs(List<CheckJob> jobs)
     {
-        // Flatten all fifteen preflight checks into the same CPU budget. A nested
-        // full-suite scheduler would either oversubscribe or hold a global barrier.
-        var checks = PreflightChecks(); var dependencies = new List<string>();
-        for (int i = 0; i < checks.Count; i++)
+        // Reuse the authoritative standalone jobs, including the complete release
+        // suite's Pipeline assertions. A missing mapping fails before scheduling.
+        var coverage = new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            var check = checks[i]; var name = "preflight-" + i;
-            if (check.Name == "release tool test suite")
-            {
-                var history = Path.Combine(Root, "bin-build/check-timings/preflight"); Directory.CreateDirectory(history);
-                var measured = Path.Combine(Root, "bin-build/check-timings/release-tool.json");
-                var seed = Path.Combine(history, "release-tool.json");
-                if (File.Exists(measured) && !File.Exists(seed)) File.Copy(measured, seed);
-                FastSuites.AddJobs(jobs, Root, "release-tool", CheckAllPreflightSuite(catalog), Path.Combine(output, "preflight-suites"), dotnet, shards, null, [],
-                    history: history, jobPrefix: "preflight-", manifest: Path.Combine(output, "build/runtime-paths.tsv"));
-                dependencies.Add("preflight-release-tool-gate"); continue;
-            }
-            dependencies.Add(name);
-            jobs.Add(new(name, () =>
-            {
-                var args = AddOfflineNuGetConfig(check.Exe, check.Args).ToList();
-                if (check.Args.FirstOrDefault() == "test")
-                {
-                    args.AddRange(["--no-build", "--no-restore"]);
-                    if (CheckAllBuild.TestAssembly(Root, CheckAllBuild.Suite(CheckAllPreflightSuite(catalog)), Path.Combine(output, "build/runtime-paths.tsv"), "release-tool") is { } assembly) args.Add("-p:TargetPath=" + assembly);
-                }
-                if (check.Args.Contains("-SelfTest") && check.Exe != "test-suites") args.Add("-NoBuild");
-                var command = check.Exe == "test-suites" || check.Exe.StartsWith("check-", StringComparison.Ordinal)
-                    ? new[] { typeof(ReleaseCommands).Assembly.Location, check.Exe }.Concat(args) : args;
-                return SuiteHang.RunProcess(check.Exe == "test-suites" || check.Exe.StartsWith("check-", StringComparison.Ordinal) || check.Exe == Dotnet ? dotnet : check.Exe,
-                    command, Root, FastSuites.EnvironmentFor(Path.Combine(output, "isolation", name)));
-            }, []));
-        }
-        jobs.Add(new("preflight", () => new(0, $"PREFLIGHT: {checks.Count} passed, 0 failed\n", ""), dependencies.ToArray()));
+            ["repository, links, shipped-document links, CHANGELOG version"] = "repository",
+            ["repository check self-tests"] = "repository-self-tests",
+            ["dead tool references (descriptions and current docs)"] = "dead-references",
+            ["product catalogs generator"] = "catalog-drift",
+            ["documentation tool counts"] = "tool-counts-drift",
+            ["tool usage catalog generator"] = "usage-drift",
+            ["release migration tables generator"] = "migration-drift",
+            ["V4 contract snapshots"] = "contract-verify",
+            ["V4 response snapshots"] = "response-verify",
+            ["suite runner self-tests"] = "suite-runner-self-tests",
+            ["release approval gate self-tests"] = "approval-self-tests",
+            ["relocation checker self-tests"] = "relocation-self-tests",
+            ["strict bundle rules"] = "bundle",
+            ["release documentation rules"] = "release-documentation",
+            ["release tool test suite"] = "release-tool-gate",
+            ["parallel pipeline behavior"] = "release-tool-gate"
+        };
+        var checks = PreflightChecks();
+        if (checks.Count != coverage.Count || checks.Any(check => !coverage.TryGetValue(check.Name, out var name) || !jobs.Any(job => job.Name == name)))
+            throw new ReleaseException("Incomplete check-all preflight coverage");
+        var dependencies = checks.Select(check => coverage[check.Name]).Distinct().ToArray();
+        jobs.Add(new("preflight", () => new(0, $"PREFLIGHT: {checks.Count} passed, 0 failed (shared executions)\n", ""), dependencies));
     }
 
     private static void AddCheckAllStaticJobs(Action<string, Func<CommandResult>, string[]?, bool> add,
@@ -58,6 +51,7 @@ internal static partial class ReleaseCommands
         void Tool(string name, params string[] arguments) => add(name, () => tool(name, arguments), null, false);
         void Python(string name, string script, params string[] arguments) => add(name, () => python(name, script, arguments), null, false);
         Tool("catalog-drift", "generate-catalogs", "-Check");
+        Tool("tool-counts-drift", "generate-tool-counts", "-Check");
         Tool("usage-drift", "generate-tool-usage", "-Check");
         Tool("migration-drift", "generate-release-migration", "-Check");
         Tool("tools-list-self-tests", "check-tools-list", "-SelfTest", "-NoBuild");

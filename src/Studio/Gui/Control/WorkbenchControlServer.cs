@@ -15,7 +15,19 @@ namespace TiaOpenness.Gui.ControlChannel;
 
 internal sealed class WorkbenchControlServer : IDisposable
 {
-    private sealed record ControlWork(WorkbenchControlRequest Request, TaskCompletionSource<WorkbenchControlResponse> Completion);
+    private sealed record ControlWork(WorkbenchControlRequest Request, TaskCompletionSource<WorkbenchControlResponse> Completion)
+    {
+        private const int Pending = 0, Started = 1, Expired = 2, Closing = 3;
+        private int _state;
+        internal bool HasStarted => Volatile.Read(ref _state) == Started;
+        internal bool TryStart() => Interlocked.CompareExchange(ref _state, Started, Pending) == Pending;
+        internal void Refuse(bool closing)
+        {
+            if (Interlocked.CompareExchange(ref _state, closing ? Closing : Expired, Pending) != Pending) return;
+            Completion.TrySetResult(closing ? ControlResponse.Refuse(Request, "workbench-closing")
+                : ControlResponse.Refuse(Request, "workbench-deadline", WorkbenchControlError.Timeout));
+        }
+    }
     private sealed class OriginState { internal bool InFlight; internal DateTimeOffset LastDisplay, LastSeen; }
     private readonly IWorkbenchControlSurface _surface;
     private readonly Dispatcher _dispatcher;
@@ -155,8 +167,11 @@ internal sealed class WorkbenchControlServer : IDisposable
                     { return ControlResponse.Refuse(request, "render-artifact-changed", WorkbenchControlError.IdentityMismatch, "render-artifact"); }
                 }
                 var work = new ControlWork(request, new(TaskCreationOptions.RunContinuationsAsynchronously));
+                using var expiry = limit.Token.Register(() => work.Refuse(IsClosing));
+                using var closing = _stop.Token.Register(() => work.Refuse(true));
                 if (!_queue.Writer.TryWrite(work)) return ControlResponse.Refuse(request, IsClosing ? "workbench-closing" : "workbench-busy");
-                var response = await work.Completion.Task.WaitAsync(limit.Token).ConfigureAwait(false);
+                // Once Apply owns the item, its actual result also owns the response.
+                var response = await work.Completion.Task.ConfigureAwait(false);
                 if (response.Status == WorkbenchControlStatus.Done)
                 {
                     lock (_gate) _origins[key].LastDisplay = _now();
@@ -179,21 +194,25 @@ internal sealed class WorkbenchControlServer : IDisposable
     {
         await foreach (var work in _queue.Reader.ReadAllAsync().ConfigureAwait(false))
         {
-            if (IsClosing) { work.Completion.TrySetResult(ControlResponse.Refuse(work.Request, "workbench-closing")); continue; }
+            if (IsClosing) { work.Refuse(true); continue; }
             using var limit = CancellationTokenSource.CreateLinkedTokenSource(_stop.Token);
             var remaining = work.Request.DeadlineUtc - _now();
             limit.CancelAfter(remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero);
             try
             {
-                var response = await _dispatcher.InvokeAsync(() =>
-                    IsClosing ? ControlResponse.Refuse(work.Request, "workbench-closing")
-                    : work.Request.CheckDeadline(_now()) != null ? ControlResponse.Refuse(work.Request, "workbench-deadline", WorkbenchControlError.Timeout)
-                    : _surface.Apply(work.Request), DispatcherPriority.Normal, limit.Token).Task.ConfigureAwait(false);
-                work.Completion.TrySetResult(response);
+                await _dispatcher.InvokeAsync(() =>
+                {
+                    lock (_gate)
+                    {
+                        if (_closing) { work.Refuse(true); return; }
+                        if (work.Request.CheckDeadline(_now()) != null) { work.Refuse(false); return; }
+                        if (!work.TryStart()) return;
+                    }
+                    work.Completion.TrySetResult(_surface.Apply(work.Request));
+                }, DispatcherPriority.Normal, limit.Token).Task.ConfigureAwait(false);
             }
-            catch (OperationCanceledException) /* swallow(ui): canceled dispatch never applies the UI action and completes the waiting request */ { work.Completion.TrySetResult(IsClosing
-                ? ControlResponse.Refuse(work.Request, "workbench-closing")
-                : ControlResponse.Refuse(work.Request, "workbench-deadline", WorkbenchControlError.Timeout)); }
+            catch (OperationCanceledException) when (!work.HasStarted) /* swallow(ui): cancellation can refuse only an unstarted UI action */
+            { work.Refuse(IsClosing); }
             catch (Exception ex)
             {
                 string id = Guid.NewGuid().ToString("N");

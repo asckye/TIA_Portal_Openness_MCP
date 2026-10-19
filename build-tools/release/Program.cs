@@ -14,11 +14,14 @@ internal static class Program
 
     public static int Main(string[] args)
     {
+        CheckAffinity.EnsureRunnerJob();
         // Every run uses fresh DOTNET_CLI_HOME folders; the SDK's first run would append each one's
         // tools folder to the user's persistent PATH until cmd.exe can no longer resolve dotnet.
         Environment.SetEnvironmentVariable("DOTNET_ADD_GLOBAL_TOOLS_TO_PATH", "false");
         Environment.SetEnvironmentVariable("DOTNET_NOLOGO", "1");
+        Environment.SetEnvironmentVariable("MSBUILDDISABLENODEREUSE", "1");
         if (args is ["--check-process"] && Environment.GetEnvironmentVariable("TIA_MCP_CHECK_CHILD") == "1") return CheckAffinity.Child();
+        if (args is ["--check-probe", var probePath] && Environment.GetEnvironmentVariable("TIA_MCP_CHECK_PROBE") == "1") return CheckAffinity.Probe(probePath);
         if (args.Length == 0 || args[0] is "-h" or "--help" or "help")
         {
             PrintUsage();
@@ -150,17 +153,32 @@ internal sealed record CommandResult(int ExitCode, string StandardOutput, string
 
 internal static class ProcessRunner
 {
-    internal static CommandResult Run(string executable, IEnumerable<string> arguments, string workingDirectory, IDictionary<string, string?>? environment = null, string? logPath = null, string? standardInput = null, int? timeoutMilliseconds = null, bool forwardOutput = false, bool waitForDescendants = false)
+    internal static CommandResult Run(string executable, IEnumerable<string> arguments, string workingDirectory, IDictionary<string, string?>? environment = null, string? logPath = null, string? standardInput = null, int? timeoutMilliseconds = null, bool forwardOutput = false, bool waitForDescendants = false, Action? afterExit = null)
     {
+        CheckAffinity.EnsureRunnerJob();
+        var requestedExecutable = executable;
+        var deadline = CheckScheduler.Deadline;
+        var started = DateTime.UtcNow;
+        var end = timeoutMilliseconds is { } milliseconds ? started.AddMilliseconds(milliseconds) : DateTime.MaxValue;
+        if (deadline is { } budget && budget.Deadline < end) end = budget.Deadline;
+        if (end <= started) throw new ReleaseException("Check job timed out: " + deadline?.Name);
         var commandArguments = arguments.ToArray();
         var affinity = CheckAffinity.Current;
+        if (OperatingSystem.IsWindows() && affinity == null && (deadline != null || waitForDescendants || timeoutMilliseconds != null))
+        {
+            using var current = Process.GetCurrentProcess(); affinity = unchecked((ulong)current.ProcessorAffinity.ToInt64());
+        }
+        waitForDescendants |= OperatingSystem.IsWindows() && (deadline != null || timeoutMilliseconds != null);
+        string? jobName = waitForDescendants ? "Local\\TIA-Check-" + Guid.NewGuid().ToString("N") : null;
         string? childInput = null;
         if (affinity != null)
         {
-            var childEnvironment = environment == null ? new Dictionary<string, string?>() : new Dictionary<string, string?>(environment);
-            childEnvironment["DOTNET_PROCESSOR_COUNT"] = System.Numerics.BitOperations.PopCount(affinity.Value).ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var childEnvironment = environment == null ? new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase) : new Dictionary<string, string?>(environment, StringComparer.OrdinalIgnoreCase);
+            childEnvironment[CheckAffinity.CommandJobVariable] = jobName;
+            childEnvironment["MSBUILDDISABLENODEREUSE"] = "1";
+            CheckAffinity.ConfigureRuntime(childEnvironment, affinity.Value);
             childInput = System.Text.Json.JsonSerializer.Serialize(new CheckChild(executable, commandArguments, workingDirectory,
-                childEnvironment, standardInput));
+                childEnvironment, standardInput, jobName));
             executable = Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") ?? Environment.GetEnvironmentVariable("DOTNET_EXE") ?? "dotnet";
             commandArguments = [typeof(Program).Assembly.Location, "--check-process"];
         }
@@ -179,20 +197,21 @@ internal static class ProcessRunner
             start.Environment["TIA_MCP_CHECK_CHILD"] = "1";
             // Convey the actual CPU budget before CLR startup as well as imposing
             // the job limit. Otherwise runtime thread/GC sizing can use all cores.
-            start.Environment["DOTNET_PROCESSOR_COUNT"] = System.Numerics.BitOperations.PopCount(cpuMask).ToString(System.Globalization.CultureInfo.InvariantCulture);
+            CheckAffinity.ConfigureRuntime(start.Environment, cpuMask);
         }
         foreach (var key in new[] { "TIA_MCP_TEST_SHARD_COUNT", "TIA_MCP_TEST_SHARD_INDEX", "TIA_MCP_TEST_SHARD_ASSEMBLY", "TIA_MCP_TEST_SHARD_PLAN", "TIA_MCP_TEST_CASE_TIMINGS", "TIA_MCP_TEST_RESERVE_SENSITIVE_SHARD" }) start.Environment.Remove(key);
         if (environment is not null)
             foreach (var (key, value) in environment)
                 if (value is null) start.Environment.Remove(key); else start.Environment[key] = value;
+        start.Environment["MSBUILDDISABLENODEREUSE"] = "1";
 
         using var process = new Process { StartInfo = start };
         try { process.Start(); }
         catch (Exception ex) { throw new ReleaseException($"Could not start {executable}: {ex.Message}"); }
         CheckLoad.Current?.Register(process.Id);
-        using var affinityJob = affinity is { } mask ? CheckAffinity.Assign(process, mask) : null;
+        using var affinityJob = affinity is { } mask ? CheckAffinity.Assign(process, mask, jobName) : null;
         using var ownedChildren = waitForDescendants ? CheckAffinity.CompleteOnDispose(
-            affinityJob ?? throw new ReleaseException("Descendant cleanup requires an owned affinity job"), TiaMcp.BuildCommon.Repository.FindRoot()) : null;
+            affinityJob ?? throw new ReleaseException("Descendant cleanup requires an owned affinity job"), CheckAffinity.OwnershipRoot) : null;
         StreamWriter? logWriter = null;
         if (logPath != null)
         {
@@ -216,18 +235,33 @@ internal static class ProcessRunner
         var stderr = logPath != null || forwardOutput ? Read(process.StandardError, Console.Error) : process.StandardError.ReadToEndAsync();
         if (standardInput is not null || childInput != null)
         {
-            if (childInput != null) process.StandardInput.WriteLine(childInput); else process.StandardInput.Write(standardInput);
-            process.StandardInput.Close();
+            try
+            {
+                if (childInput != null) process.StandardInput.WriteLine(childInput); else process.StandardInput.Write(standardInput);
+                process.StandardInput.Close();
+            }
+            catch (IOException) when (childInput != null && process.WaitForExit(1000))
+            {
+                Task.WhenAll(stdout, stderr).Wait(1000);
+                throw new ReleaseException("Check launcher exited before accepting " + requestedExecutable + ": " + process.ExitCode + "; " +
+                    (stderr.IsCompletedSuccessfully ? stderr.Result : "stderr incomplete"));
+            }
         }
-        if (timeoutMilliseconds is { } timeout && !process.WaitForExit(timeout))
+        int Remaining() => end == DateTime.MaxValue ? Timeout.Infinite : (int)Math.Clamp((end - DateTime.UtcNow).TotalMilliseconds, 0, int.MaxValue);
+        void TimedOut()
         {
-            if (waitForDescendants) CheckAffinity.StopAndWait(affinityJob!, TiaMcp.BuildCommon.Repository.FindRoot());
-            else process.Kill(entireProcessTree: true);
+            var evidence = logPath == null ? Path.Combine(CheckScheduler.EvidenceDirectory ?? Path.Combine(CheckAffinity.OwnershipRoot, "bin-build/process-jobs"),
+                Guid.NewGuid().ToString("N") + ".timeout.json") : logPath + ".timeout.json";
+            if (affinityJob != null) CheckAffinity.StopAndWait(affinityJob, CheckAffinity.OwnershipRoot, grace: false, evidence: evidence);
+            else CheckAffinity.StopOwnedProcess(process, CheckAffinity.OwnershipRoot);
             process.WaitForExit();
-            throw new ReleaseException($"{executable} timed out after {timeout} ms.");
+            throw new ReleaseException(deadline != null ? "Check job timed out: " + deadline.Value.Name + " (" + requestedExecutable + ")"
+                : $"{requestedExecutable} timed out after {timeoutMilliseconds} ms.");
         }
-        process.WaitForExit();
-        if (waitForDescendants) CheckAffinity.StopAndWait(affinityJob!, TiaMcp.BuildCommon.Repository.FindRoot());
+        if (!process.WaitForExit(Remaining())) TimedOut();
+        afterExit?.Invoke();
+        if (waitForDescendants) CheckAffinity.StopAndWait(affinityJob!, CheckAffinity.OwnershipRoot);
+        if (!Task.WhenAll(stdout, stderr).Wait(Remaining())) TimedOut();
         var output = stdout.GetAwaiter().GetResult();
         var error = stderr.GetAwaiter().GetResult();
         return new CommandResult(process.ExitCode, output, error);

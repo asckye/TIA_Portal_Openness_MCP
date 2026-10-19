@@ -1,7 +1,7 @@
 {
   "operator-host": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-    "minimumPassed": 66,
+    "minimumPassed": 68,
     "maximumSkipped": 0,
     "arguments": [
       "--filter",
@@ -9,12 +9,12 @@
     ],
     "platforms": {
       "linux": {
-        "minimumPassed": 61,
+        "minimumPassed": 63,
         "maximumSkipped": 5,
         "reason": "Three kernel pipe identity cases and two owner image cases require Windows."
       },
       "macos": {
-        "minimumPassed": 61,
+        "minimumPassed": 63,
         "maximumSkipped": 5,
         "reason": "Three kernel pipe identity cases and two owner image cases require Windows."
       }
@@ -22,19 +22,19 @@
   },
   "generation-planning": {
     "project": "tests/Generation/TiaMcp.Generation.Planning.Tests/TiaMcp.Generation.Planning.Tests.csproj",
-    "minimumPassed": 256,
+    "minimumPassed": 260,
     "maximumSkipped": 0,
     "arguments": []
   },
   "generation-model": {
     "project": "tests/Generation/TiaMcp.Generation.Tests/TiaMcp.Generation.Tests.csproj",
-    "minimumPassed": 127,
+    "minimumPassed": 129,
     "maximumSkipped": 0,
     "arguments": []
   },
   "release-tool": {
     "project": "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj",
-    "minimumPassed": 624,
+    "minimumPassed": 720,
     "maximumSkipped": 0,
     "arguments": []
   },
@@ -88,7 +88,7 @@
   },
   "write-guard": {
     "project": "tests/Tools/TiaMcp.ShippedTools.Tests/TiaMcp.ShippedTools.Tests.csproj",
-    "minimumPassed": 4,
+    "minimumPassed": 8,
     "maximumSkipped": 0,
     "arguments": [
       "--filter",
@@ -106,17 +106,17 @@
   },
   "updater": {
     "project": "tests/Updater/TiaMcp.Updater.Tests/TiaMcp.Updater.Tests.csproj",
-    "minimumPassed": 24,
+    "minimumPassed": 33,
     "maximumSkipped": 0,
     "arguments": [],
     "platforms": {
       "linux": {
-        "minimumPassed": 23,
+        "minimumPassed": 32,
         "maximumSkipped": 1,
         "reason": "The end-to-end updater test requires Windows and .NET Framework 4.8."
       },
       "macos": {
-        "minimumPassed": 23,
+        "minimumPassed": 32,
         "maximumSkipped": 1,
         "reason": "The end-to-end updater test requires Windows and .NET Framework 4.8."
       }
@@ -124,7 +124,7 @@
   },
   "foundation": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-    "minimumPassed": 12915,
+    "minimumPassed": 29000,
     "maximumSkipped": 1,
     "arguments": [
       "--filter",
@@ -132,12 +132,12 @@
     ],
     "platforms": {
       "linux": {
-        "minimumPassed": 11687,
+        "minimumPassed": 27772,
         "maximumSkipped": 9,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       },
       "macos": {
-        "minimumPassed": 11687,
+        "minimumPassed": 27772,
         "maximumSkipped": 9,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       }
@@ -145,7 +145,7 @@
   },
   "foundation-api": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-    "minimumPassed": 12915,
+    "minimumPassed": 30000,
     "maximumSkipped": 1,
     "arguments": [
       "--filter",
@@ -153,12 +153,12 @@
     ],
     "platforms": {
       "linux": {
-        "minimumPassed": 9143,
+        "minimumPassed": 26228,
         "maximumSkipped": 9,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       },
       "macos": {
-        "minimumPassed": 9143,
+        "minimumPassed": 26228,
         "maximumSkipped": 9,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       }
@@ -166,25 +166,25 @@
   },
   "software-read": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.SoftwareRead.Tests/TiaMcp.FoundationHost.SoftwareRead.Tests.csproj",
-    "minimumPassed": 257,
+    "minimumPassed": 258,
     "maximumSkipped": 0,
     "arguments": []
   },
   "special-export-shape": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.SpecialExportShape.Tests/TiaMcp.FoundationHost.SpecialExportShape.Tests.csproj",
-    "minimumPassed": 11,
+    "minimumPassed": 12,
     "maximumSkipped": 0,
     "arguments": []
   },
   "device-add": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.DeviceAdd.Tests/TiaMcp.FoundationHost.DeviceAdd.Tests.csproj",
-    "minimumPassed": 125,
+    "minimumPassed": 175,
     "maximumSkipped": 0,
     "arguments": []
   },
   "hardware-catalog": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.HardwareCatalog.Tests/TiaMcp.FoundationHost.HardwareCatalog.Tests.csproj",
-    "minimumPassed": 56,
+    "minimumPassed": 57,
     "maximumSkipped": 0,
     "arguments": []
   },
@@ -202,17 +202,17 @@
   },
   "adapter-contracts": {
     "project": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/TiaMcp.Adapters.Contracts.Tests.csproj",
-    "minimumPassed": 736,
+    "minimumPassed": 1850,
     "maximumSkipped": 0,
     "arguments": [],
     "platforms": {
       "linux": {
-        "minimumPassed": 733,
+        "minimumPassed": 1847,
         "maximumSkipped": 3,
         "reason": "Three new Studio STA ownership/reentry checks require Windows."
       },
       "macos": {
-        "minimumPassed": 733,
+        "minimumPassed": 1847,
         "maximumSkipped": 3,
         "reason": "Three new Studio STA ownership/reentry checks require Windows."
       }
@@ -220,7 +220,7 @@
   },
   "worker-channel": {
     "project": "tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.Tests.csproj",
-    "minimumPassed": 271,
+    "minimumPassed": 275,
     "maximumSkipped": 0,
     "arguments": []
   },
@@ -264,7 +264,7 @@
   },
   "plc-exchange-v21": {
     "project": "tests/Engine/TiaMcp.Engine.PlcExchange.Tests/TiaMcp.Engine.PlcExchange.Tests.csproj",
-    "minimumPassed": 84,
+    "minimumPassed": 125,
     "maximumSkipped": 0,
     "arguments": [
       "-p:EngineRelease=21"
@@ -273,7 +273,7 @@
   },
   "plc-exchange-v20": {
     "project": "tests/Engine/TiaMcp.Engine.PlcExchange.Tests/TiaMcp.Engine.PlcExchange.Tests.csproj",
-    "minimumPassed": 84,
+    "minimumPassed": 125,
     "maximumSkipped": 0,
     "arguments": [
       "-p:EngineRelease=20"
@@ -288,7 +288,7 @@
   },
   "shared-session": {
     "project": "tests/Engine/TiaMcp.SharedSession.Tests/TiaMcp.SharedSession.Tests.csproj",
-    "minimumPassed": 51,
+    "minimumPassed": 53,
     "maximumSkipped": 0,
     "arguments": []
   },
@@ -303,7 +303,7 @@
   },
   "worker-robustness": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-    "minimumPassed": 44,
+    "minimumPassed": 570,
     "maximumSkipped": 0,
     "arguments": [
       "--filter",
@@ -318,7 +318,7 @@
   },
   "shared-lifecycle": {
     "project": "tests/Engine/TiaMcp.SharedSession.Tests/TiaMcp.SharedSession.Tests.csproj",
-    "minimumPassed": 46,
+    "minimumPassed": 48,
     "maximumSkipped": 0,
     "arguments": [
       "--filter",
@@ -333,17 +333,17 @@
   },
   "workbench-control-protocol": {
     "project": "tests/Shared/TiaMcp.WorkbenchControl.Tests/TiaMcp.WorkbenchControl.Tests.csproj",
-    "minimumPassed": 74,
+    "minimumPassed": 94,
     "maximumSkipped": 0,
     "arguments": [],
     "platforms": {
       "linux": {
-        "minimumPassed": 71,
+        "minimumPassed": 91,
         "maximumSkipped": 3,
         "reason": "Three SID/ACL/image-path tests require Windows; counts are identical with or without Siemens SDKs."
       },
       "macos": {
-        "minimumPassed": 71,
+        "minimumPassed": 91,
         "maximumSkipped": 3,
         "reason": "Three SID/ACL/image-path tests require Windows; counts are identical with or without Siemens SDKs."
       }
@@ -360,7 +360,7 @@
   },
   "workbench-control-host": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-    "minimumPassed": 96,
+    "minimumPassed": 98,
     "maximumSkipped": 0,
     "arguments": [
       "--filter",
@@ -368,12 +368,12 @@
     ],
     "platforms": {
       "linux": {
-        "minimumPassed": 88,
+        "minimumPassed": 90,
         "maximumSkipped": 8,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       },
       "macos": {
-        "minimumPassed": 88,
+        "minimumPassed": 90,
         "maximumSkipped": 8,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       }
@@ -381,7 +381,7 @@
   },
   "mcp-panel": {
     "project": "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj",
-    "minimumPassed": 46,
+    "minimumPassed": 48,
     "maximumSkipped": 0,
     "arguments": [
       "--filter",
@@ -390,7 +390,7 @@
   },
   "workbench-vci-prefill": {
     "project": "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj",
-    "minimumPassed": 57,
+    "minimumPassed": 63,
     "maximumSkipped": 0,
     "arguments": [
       "--filter",

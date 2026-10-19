@@ -34,7 +34,7 @@ SDK 仅传入 `foundation-api` 与两个 PLC exchange 套件；其余注册套�
 dotnet run --project build-tools/release -- check-all -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <ecosystem-python/Scripts/python.exe> -MaxParallelism 16 -BuildParallelism 16 -StabilityCores 8 -StabilityParallelism 4 -Shards 8 -OutputDirectory bin-build/check-all/run-1
 ```
 
-`-Clean` 在当前 worktree 的 `bin-build` 内建立保留现有源码修改的 detached checkout，并复用构建缓存；
+`-Clean` 在当前 worktree 的 `bin-build` 内建立保留现有源码修改的 detached checkout，往返复制 `bin-build/check-timings` 的用例、类与整项历史；
 干净 checkout 根目录比原 worktree 最多增加 24 个字符，入口和自检都校验这个余量；暂存生命周期夹具在仓库的
 `bin-build` 下创建自有短目录并清理，避免隔离程序集目录消耗产品的 MAX_PATH 余量。
 `-Cold` 先清理已列入构建图的输出，记录冷构建耗时。暖运行不加 `-Clean`，在同一 worktree 内保留 `obj` 和 `bin` 做增量构建，
@@ -46,24 +46,31 @@ dotnet run --project build-tools/release -- check-all -PublicApiRoot <SDK-root> 
 内容相同时保持时间戳，项目/全局属性身份和输出目录不变。
 构建或生成失败立即停止全集并写出失败报告，不能继续使用旧输出。运行时按 MSBuild 返回的实际路径复制到原发现布局，文件内容不变时不重写；注册套件用对应变体的准确 TargetPath 执行。
 release CLI 保留已经启动的普通目录副本，避免覆盖外层启动器持有的 DLL；检查命令使用私有 driver，release-tool 套件使用准确的变体程序集。
-Studio 测试收到既有的 bundle 根目录覆盖；bridge 载荷来自对应的隔离编译变体。新增 suite-output-parity 比较每个套件变体普通构建与隔离构建的文件清单，内容缺失即失败。普通构建清单按源码和构建属性的输入哈希缓存，测试结果不缓存。
+Foundation 的 transport、Engine fault 与 PLC fault 等 `ReferenceOutputAssembly=false` 夹具也作为构建入口取得 runtime receipt，先投影到测试发现路径；新 checkout 和清单缓存命中都不依赖普通 parity 构建顺便生成这些夹具。
+Studio 测试收到既有的 bundle 根目录覆盖；bridge 载荷来自对应的隔离编译变体。新增 suite-output-parity 比较每个套件变体普通构建与隔离构建的文件清单，内容缺失即失败。普通构建在单个 MSBuild 遍历中生成清单，各入口及入口内部的引用写入依次执行；即使入口属性相同，引用边删除或增加全局属性后也可能产生写同一 obj 的不同节点，不能同时调度这些入口；每个变体完成后立即保存文件存在性和普通输出，避免后续变体改写比较依据。清单按源码、构建属性、SDK/运行时身份的输入哈希缓存，测试结果不缓存。清单缓存仍只在当前 checkout 内复用，-Clean 不携带清单；缓存命中仍逐项检查普通和隔离输出中的全部预期文件，每次都恢复 runtime；缓存缺失时先构建普通基线。
 `-BuildParallelism` 单独控制 MSBuild 并发，沙箱中可设为 1。`-BuildOnly` 只测生成与构建，用于无改动、单文件改动诊断，不能替代全集验收。
-每次 `-OutputDirectory` 必须使用新目录。报告保存每个进程的计时、日志、TRX 合并计数、源码漂移和五分钟门槛。
-低于五分钟与检查通过是两个独立条件，任何一个不满足都返回非零状态。
+每次 `-OutputDirectory` 必须使用新目录。报告保存每个进程的计时、日志、TRX 合并计数、源码漂移和三十分钟门槛（`underThirtyMinutes`）。
+全集低于三十分钟与检查通过是两个独立条件，任何一个不满足都返回非零状态。
 
-构建后的注册套件、Studio、静态检查、捕获、usage、Harness 和引擎检查进入同一依赖调度图。preflight 保留全部检查并加入文档工具数量校验并展开到该图，避免嵌套调度；汇总在依赖结束后执行，失败的分片仍产生汇总。
+构建后的注册套件、Studio、静态检查、捕获、usage、Harness 和引擎检查进入同一依赖调度图。preflight 保留全部检查并引用图中相同检查的结果；ReleaseTool 的完整套件同时覆盖 Pipeline 子集，每轮全集只执行一次，避免重复运行；汇总在依赖结束后执行，失败的分片仍产生汇总。
 压测与其他检查同时运行，但通过 Windows job object 分别限定到互不相交的 CPU 核集合。默认预留 8 个逻辑核（小机器取三分之一）、最多四个压测进程；`-StabilityCores` 和 `-StabilityParallelism` 控制预留和并发。HTTP 夹具使用独立临时工作目录，避免 ASP.NET 配置文件监视器扫描整个 worktree；原句柄和内存界限保持不变。
-读取 Windows 物理核拓扑，优先预留较高性能等级的完整物理核，避免拆开 SMT 同胞；启动前设置 DOTNET_PROCESSOR_COUNT 与 job 的实际核心数一致。cpu-plan.json 记录实际分配，不把非空闲诊断当作性能验收。
-客户端启动后先等待父进程分配 job，再启动实际命令，job 限制覆盖宿主、worker 和立即启动的子孙进程。50 轮、内存和句柄增长限值保持；结果及失败前的 process-samples.json 记录实际 affinity 与样本。worker deadline 和配置页面检查独占普通队列，隔离的压测队列继续运行。
-`-MaxParallelism` 或 `-CpuParallelism` 显式指定普通队列进程上限，受剩余 CPU 数约束，不受旧校准文件压低。未指定时使用本机核心数，只有标记 representativeIdleMeasurement=true 的本机 cpu-budget.json 才覆盖默认值。
-cpu-plan.json 记录核掩码、队列容量、依赖、预测成本及 companion Python；check-costs.json 保存实测整项成本用于最长耗时优先调度。`-CompanionPython` 优先于 TIA_MCP_PLC_TOOLS_PYTHON；未指定时查询 worktree 或 SDK 所属仓库的 TiaMcp_Output/ecosystem-python 环境，传给所有隔离子进程，保留 PDF 和伴随命令检查。
+读取 Windows 物理核拓扑，敏感队列先选较高性能等级的完整物理核，压测随后从余下核心中预留，避免拆开 SMT 同胞；启动前设置 DOTNET_PROCESSOR_COUNT 与 job 的实际核心数一致。cpu-plan.json 记录实际分配，不把非空闲诊断当作性能验收。
+客户端启动后先等待父进程分配 job，再启动实际命令，job 限制覆盖宿主、worker 和立即启动的子孙进程。50 轮、内存和句柄增长限值保持；结果及失败前的 process-samples.json 记录实际 affinity 与样本。时间敏感方法、worker deadline 和配置页面检查进入独立敏感队列，普通队列和压测队列继续运行。默认 `-SensitiveCores 8 -SensitiveParallelism 2`（小机器缩减并保留普通核），每个敏感 worker 独占至少四个逻辑核；按预测成本将敏感分片分配到互不相交的 worker 队列，队列内部串行；使用同一测试程序集的套件固定在同一 worker，避免夹具写入同一程序集目录。Foundation 的纯内存 portal lane 方法独立进入第二个敏感分片，可与进程夹具重叠；其全部用例与原时间断言保留。独立 test-suites 命令按实际敏感程序集组数预留 worker：只有一组时默认四核，没有敏感工作时不闲置预留核心；check-all 默认仍为八核两个 worker。
+`-MaxParallelism` 或 `-CpuParallelism` 显式指定普通队列进程上限，不受旧校准文件或更大的预留核数压低；I/O 等待中的进程可多于普通核数，实际 affinity 仍限制在普通核心集合。未指定时并发不超过普通核心数，只有标记 representativeIdleMeasurement=true 的本机 cpu-budget.json 才覆盖默认值。
+cpu-plan.json 记录核掩码、队列容量、依赖、预测成本及 companion Python；check-costs.json 保存实测整项最大成本用于最长耗时优先调度。`-CompanionPython` 优先于 TIA_MCP_PLC_TOOLS_PYTHON；未指定时查询 worktree 或 SDK 所属仓库的 TiaMcp_Output/ecosystem-python 环境，传给所有隔离子进程，保留 PDF 和伴随命令检查。
 每个进程在系统临时目录下使用独立的短 TEMP，数据及配置位于该 TEMP 内，避免 Git 与安装目录检查误认源码 checkout；Harness 使用独立引擎副本和套件结果目录。
 `bin-build/check-timings` 保存套件的用例耗时历史，先用单进程 TRX 初始化，再用执行边界的实际耗时更新（含旧 theory 的 producer 时间）。
 计划按耗时从长到短分配到最轻的分片，目标为 55 秒执行加约 5 秒启动；可序列化 theory 可逐例拆分，延迟枚举的旧 CheckTheory 保留完整 producer。
 未知用例继续使用确定性分片键，不省略执行；分片计划及预测耗时保存在套件结果目录。`process-load.json` 和每项计时记录同期本轮及其他进程 CPU 增量、不可读取进程数；一秒采样可能漏记很短的进程。
+每项进程受整项 wall-clock deadline 保护：历史最大耗时的三倍，通常至少五分钟，构建和输出清单至少三十分钟；超时按 job 名失败并终止已记录成员的自有 job。Python 检查同样有外层 deadline，VSTest 原五分钟单项 hang 门槛保持。
+runner 在启动任何子进程前先将自身加入拥有的 Windows job；私有 runner、等待 launcher 和全部后代由内核继承所有权，命令另有嵌套 affinity job。系统 SDK 直接使用，不复制或探测 SDK 路径。job 启用 kill-on-close，禁用 BREAKAWAY_OK 与 SILENT_BREAKAWAY_OK；MSBuild 节点复用由 MSBUILDDISABLENODEREUSE=1 和 -nodeReuse:false 禁用。超时先在检查日志旁保存 job 成员的 PID、启动时间和映像路径，再 TerminateJobObject；不按进程名称或路径模式选择终止目标。
+受限核心数命令保留 runner 原有的 CLR 最小 worker 线程数（启动时实测并继承），避免 DOTNET_PROCESSOR_COUNT 缩小时同时饿死管道和 HTTP 回调；job 的 CPU 掩码、报告的处理器数、fixture 时限和断言不变，命令显式传入的线程池环境设置保留。cpu-plan.json 记录 sensitiveMinWorkerThreads。
+干净快照最多保留三个已完成且带本 worktree 所有权标记的目录，运行中的快照不删除。整树构建缓存因含源码路径、无跨快照命中而停止填充；七天未命中的缓存项和超过 10 GiB 的 LRU 项会清理。有效的 file-app 缓存继续使用。
+
 各分片的 `producer-timings.tsv` 记录旧 CheckSuite producer 的名称（Base64）、执行秒数和原始行数，
 用于区分延迟枚举的实际工作与逐行 xUnit 的耗时；不缓存检查结果，也不改变执行顺序。
-合并后仍检查原套件最低通过数、最高跳过数和失败数。
+合并拒绝重复测试身份，并检查注册套件最低通过数、最高跳过数和失败数。Studio Core/Gui、Updater 和 ShippedTools 使用同一分片框架，时间敏感方法逐项列在 `tests/Shared/TimeSensitiveTests.cs`。快速合并门禁保持五分钟。
+注册最低通过数包括 write-guard 8、updater 33（Linux/macOS 32）、workbench-vci-prefill 63；最高跳过数保留注册表原值。
 
 首次等价验证可加 `-ProveEquivalence`，执行原有单进程测试后比较完整测试身份多重集合及结果；此验证运行计入耗时。
 之后可用 `-SequentialBaselineDirectory <directory>` 复用各套件的 `<suite>.trx` 证据，每次仍执行全部分片及比较。
@@ -340,7 +347,7 @@ kept-code、kept-code-v20 各至少 4854 项通过，version-policy 至少 10 �
 kept-code 的数据行数量没有平台差异；平台专用实现的测试保留行身份，使用跨平台夹具或测试平台回退。
 `splitFrom` 注册字段记录拆分来源；CI 的 TRX 门禁自检拒绝 CI 工作流或 release 执行清单遗漏任何拆分子套件。
 ImportSelection 的 10 项已并入 offline；BindingSnapshot、ExternalSourcePlan、ExternalSourceDelete 的 199 项已并入 foundation。
-foundation 至少 6521 项通过、最多 1 项跳过；foundation-api 至少 7566 项通过、最多 1 项跳过。PromptRegistration、SoftwareRead、SpecialExportShape、DeviceAdd、HardwareCatalog、DiagnosticMembership 分别要求 134、39、11、124、56、4 项通过，均不允许跳过。
+foundation 至少 29000 项通过、最多 1 项跳过；foundation-api 至少 30000 项通过、最多 1 项跳过。PromptRegistration、SoftwareRead、SpecialExportShape、DeviceAdd、HardwareCatalog、DiagnosticMembership 分别要求 195、258、12、175、57、4 项通过，均不允许跳过。
 门禁按请求顺序执行（两种编译符号共享输出目录），拒绝失败、数量不足、超限跳过、零执行及缺失或不一致的 trx；
 每次清除同名旧结果，在 `bin-build/test-results/` 写入 `<suite>.trx` 和按测试类/方法统计的 `<suite>.json`，失败时也保存诊断。
 可用 `--results-directory <dir>`、`--dotnet <path>`、`--no-restore` 或重复的 `--dotnet-arg=<arg>` 定制执行。

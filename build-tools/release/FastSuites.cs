@@ -28,6 +28,15 @@ internal static class FastSuites
         return Math.Min(measured, Positive(options, "MaxParallelism", measured));
     }
 
+    internal static int GeneralCapacity(int requested, int cores, bool explicitLimit) =>
+        explicitLimit ? requested : Math.Min(requested, cores);
+
+    internal static int SensitiveCoreBudget(ulong available, IReadOnlyList<CheckJob> jobs)
+    {
+        int groups = jobs.Where(job => job.Exclusive).Select(job => job.SensitiveGroup ?? job.Name).Distinct(StringComparer.Ordinal).Count();
+        return groups == 0 ? 0 : Math.Min(CheckAffinity.DefaultSensitiveCores(available), 4 * Math.Min(2, groups));
+    }
+
     internal static string TemporaryDirectory() => Path.Combine(SystemTemp, "p8s", Guid.NewGuid().ToString("N")[..8]);
 
     internal static Dictionary<string, string?> EnvironmentFor(string directory, string? api = null)
@@ -47,7 +56,7 @@ internal static class FastSuites
             ["LOCALAPPDATA"] = Path.Combine(isolation, "local"), ["APPDATA"] = Path.Combine(isolation, "roaming"),
             ["TIA_MCP_TEST_PIPE_SCOPE"] = Guid.NewGuid().ToString("N"), ["TIA_MCP_TEST_PUBLIC_API_ROOT"] = api,
             ["TIA_MCP_TEST_PRODUCT_ROOT"] = null, ["TIA_MCP_TEST_SHARD_COUNT"] = null, ["TIA_MCP_TEST_SHARD_INDEX"] = null,
-            ["TIA_MCP_TEST_SHARD_ASSEMBLY"] = null, ["TIA_MCP_TEST_SHARD_PLAN"] = null, ["TIA_MCP_TEST_RESERVE_SENSITIVE_SHARD"] = null,
+            ["TIA_MCP_TEST_SENSITIVE_SHARDS"] = null, ["TIA_MCP_TEST_SHARD_ASSEMBLY"] = null, ["TIA_MCP_TEST_SHARD_PLAN"] = null, ["TIA_MCP_TEST_RESERVE_SENSITIVE_SHARD"] = null,
             ["NuGetAudit"] = "false", ["TIA_MCP_CHECK_SYSTEM_TEMP_ROOT"] = SystemTemp
         };
     }
@@ -59,28 +68,37 @@ internal static class FastSuites
         var directory = Path.Combine(output, name);
         history ??= Path.Combine(root, "bin-build/check-timings");
         bool reserveSensitive = TimeSensitiveTests.ReserveShard(unit.Project);
-        var plan = SuiteCosts.Prepare(name, directory, history, baseline, shards, reserveSensitive); shards = plan.Costs.Length;
+        int sensitiveShards = reserveSensitive ? TimeSensitiveTests.ReservedShardCount(unit.Project) : 0;
+        var plan = SuiteCosts.Prepare(name, directory, history, baseline, shards, reserveSensitive, sensitiveShards); shards = plan.Costs.Length;
+        // Costs set deadlines only when the history covers at least the registered minimum number of cases.
+        bool measuredPlan = plan.MeasuredCases >= (suite["minimumPassed"]?.GetValue<int>() ?? int.MaxValue);
         var paths = Enumerable.Range(0, shards).Select(i => Path.Combine(directory, "shard-" + i, name + ".trx")).ToArray();
         var sequential = baseline;
         if (prove)
         {
             sequential = Path.Combine(directory, "sequential", name + ".trx");
-            jobs.Add(new(jobPrefix + name + "-sequential", () => RunShard(root, name, suite, Path.GetDirectoryName(sequential)!, dotnet, api, unit, 0, 1, extra, manifest: manifest), dependencies, Exclusive: true));
+            jobs.Add(new(jobPrefix + name + "-sequential", () => RunShard(root, name, suite, Path.GetDirectoryName(sequential)!, dotnet, api, unit, 0, 1, extra, manifest: manifest), dependencies, Exclusive: true) {
+                SensitiveGroup = unit.Project, EstimatedSeconds = measuredPlan ? plan.Costs.Sum() + 5 : ColdShardSeconds * shards });
         }
         var shardNames = new List<string>();
         for (int i = 0; i < shards; i++)
         {
             var index = i; var jobName = jobPrefix + name + "-shard-" + i; shardNames.Add(jobName);
-            jobs.Add(new(jobName, () => RunShard(root, name, suite, Path.GetDirectoryName(paths[index])!, dotnet, api, unit, index, shards, extra, plan.Path, reserveSensitive, manifest), dependencies,
-                Exclusive: reserveSensitive && index == shards - 1 || name is "worker-robustness" or "worker-channel") { EstimatedSeconds = plan.Costs[index] + 5 });
+            jobs.Add(new(jobName, () => RunShard(root, name, suite, Path.GetDirectoryName(paths[index])!, dotnet, api, unit, index, shards, extra, plan.Path, reserveSensitive, manifest, sensitiveShards: sensitiveShards), dependencies,
+                Exclusive: reserveSensitive && index >= shards - sensitiveShards) { EstimatedSeconds = measuredPlan ? plan.Costs[index] + 5 : ColdShardSeconds,
+                    SensitiveGroup = sensitiveShards > 1 && index == shards - 1 ? unit.Project + "#portal-lane" : unit.Project });
         }
         // Merge runs even after a failed test process, so partial totals/failures remain
         // reviewable. The caller schedules merges in a second wave without prerequisites.
         jobs.Add(new(jobPrefix + name + "-gate", () => { SuiteCosts.Record(name, directory, history); return SuiteSharding.Merge(name, suite, paths, output, sequential); }, shardNames.ToArray()) { AllowFailedDependencies = true });
     }
 
+    // Without timing history a shard has no estimate; three times this allowance (one hour) bounds it instead of the
+    // 300-second floor, which a cold 29,000-case suite in four shards exceeds on CI (P8-72 host/CI evidence 2026-10-19).
+    internal const double ColdShardSeconds = 1200;
+
     internal static CommandResult RunShard(string root, string name, JsonObject suite, string directory, string dotnet, string? api,
-        CheckBuild unit, int index, int count, string[]? extra = null, string? plan = null, bool reserveSensitive = false, string? manifest = null, SuiteProcess? process = null)
+        CheckBuild unit, int index, int count, string[]? extra = null, string? plan = null, bool reserveSensitive = false, string? manifest = null, SuiteProcess? process = null, int sensitiveShards = 1)
     {
         Directory.CreateDirectory(directory);
         var environment = EnvironmentFor(directory, api);
@@ -89,6 +107,7 @@ internal static class FastSuites
         environment["TIA_MCP_TEST_SHARD_ASSEMBLY"] = Path.GetFileNameWithoutExtension(unit.Project);
         environment["TIA_MCP_TEST_SHARD_PLAN"] = plan;
         environment["TIA_MCP_TEST_RESERVE_SENSITIVE_SHARD"] = reserveSensitive ? "1" : null;
+        environment["TIA_MCP_TEST_SENSITIVE_SHARDS"] = reserveSensitive ? sensitiveShards.ToString() : null;
         environment["TIA_MCP_TEST_CASE_TIMINGS"] = Path.Combine(directory, "case-timings.tsv");
         File.Delete(environment["TIA_MCP_TEST_CASE_TIMINGS"]!);
         environment["TIA_MCP_TEST_PRODUCER_TIMINGS"] = Path.Combine(directory, "producer-timings.tsv");
@@ -167,7 +186,27 @@ internal static class FastSuites
             AddJobs(jobs, root, name, suite, output, dotnet, suite["minimumPassed"]!.GetValue<int>() >= 100 ? count : 1, api, [],
                 options.Get("SequentialBaselineDirectory") is { } baseline ? Path.Combine(baseline, name + ".trx") : null, options.Has("ProveEquivalence"), options.All("DotnetArg").ToArray(), manifest: manifest);
         }
-        var rows = CheckScheduler.Run(jobs.Where(job => !job.Name.EndsWith("-gate", StringComparison.Ordinal)).ToArray(), parallelism, Path.Combine(output, "logs"));
+        if (options.Has("SensitiveCores")) _ = Positive(options, "SensitiveCores", 1);
+        if (options.Has("SensitiveParallelism")) _ = Positive(options, "SensitiveParallelism", 1);
+        var lanes = new Dictionary<string, int> { ["general"] = parallelism };
+        if (OperatingSystem.IsWindows() && jobs.Any(job => job.Exclusive))
+        {
+            using var current = System.Diagnostics.Process.GetCurrentProcess();
+            var available = unchecked((ulong)current.ProcessorAffinity.ToInt64());
+            var masks = CheckAffinity.SplitSensitive(available, Positive(options, "SensitiveCores", SensitiveCoreBudget(available, jobs)));
+            parallelism = GeneralCapacity(parallelism, System.Numerics.BitOperations.PopCount(masks.General), options.Has("MaxParallelism") || options.Has("CpuParallelism"));
+            lanes["general"] = parallelism;
+            jobs = jobs.Select(job => job with { Lane = job.Exclusive ? "sensitive" : "general", Affinity = job.Exclusive ? masks.Stability : masks.General,
+                Timeout = CheckScheduler.JobTimeout(job, new Dictionary<string, double>()) }).ToList();
+            foreach (var lane in CheckAffinity.AssignSensitiveLanes(jobs, masks.Stability, Positive(options, "SensitiveParallelism", 2)))
+                lanes[lane.Key] = lane.Value;
+            File.WriteAllText(Path.Combine(output, "cpu-plan.json"), System.Text.Json.JsonSerializer.Serialize(new {
+                sensitiveMask = masks.Stability.ToString("X"), generalMask = masks.General.ToString("X"),
+                sensitiveMinWorkerThreads = CheckAffinity.BaselineWorkers, lanes,
+                checks = jobs.Select(job => new { job.Name, job.Lane, job.SensitiveGroup, affinityMask = job.Affinity?.ToString("X"), job.EstimatedSeconds })
+            }, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }) + "\n");
+        }
+        var rows = CheckScheduler.Run(jobs.Where(job => !job.Name.EndsWith("-gate", StringComparison.Ordinal)).ToArray(), parallelism, Path.Combine(output, "logs"), lanes);
         var gates = CheckScheduler.Run(jobs.Where(job => job.Name.EndsWith("-gate", StringComparison.Ordinal)).Select(job => job with { Dependencies = [] }).ToArray(), parallelism, Path.Combine(output, "gates"));
         File.WriteAllText(Path.Combine(output, "report.json"), System.Text.Json.JsonSerializer.Serialize(new
         { passed = gates.Count(row => row.Status == "passed"), failed = gates.Count(row => row.Status != "passed"), checks = rows.Concat(gates) }, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }) + "\n");

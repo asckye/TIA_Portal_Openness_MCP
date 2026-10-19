@@ -251,6 +251,15 @@ internal sealed class BuildOutputCache(string directory, string unit, long maxBy
             AtomicJson(Path.Combine(folder, "index.json"), row with { Entries = row.Entries.Where(entry => Directory.Exists(Path.Combine(folder, entry.InputHash))).ToArray() });
     }
 
+    internal static void PruneRetained(string root, TimeSpan age, long limit) => Locked(root, () =>
+    {
+        foreach (var (folder, index) in ReadUnits(root))
+            foreach (var entry in index.Entries.Where(entry => DateTime.UtcNow - entry.LastHitUtc > age))
+                DeleteEntry(root, Path.Combine(folder, entry.InputHash));
+        Prune(root, limit);
+        return true;
+    });
+
     private static void DeleteEntry(string root, string entry)
     {
         var target = Path.GetFullPath(entry);

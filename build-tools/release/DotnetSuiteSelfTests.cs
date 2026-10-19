@@ -98,7 +98,7 @@ internal static class DotnetSuiteSelfTests
             new XElement(ns + "Counters", counts.Select(p => new XAttribute(p.Key, p.Value)))),
             new XElement(ns + "TestDefinitions", outcomes.Select((_, i) => new XElement(ns + "UnitTest", new XAttribute("id", i),
                 new XElement(ns + "TestMethod", new XAttribute("className", "Example.Checks"), new XAttribute("name", "Check"))))),
-            new XElement(ns + "Results", outcomes.Select((outcome, i) => new XElement(ns + "UnitTestResult", new XAttribute("testId", i), new XAttribute("executionId", i), new XAttribute("outcome", outcome)))));
+            new XElement(ns + "Results", outcomes.Select((outcome, i) => new XElement(ns + "UnitTestResult", new XAttribute("testId", i), new XAttribute("executionId", i), new XAttribute("testName", "Example.Checks.Check(row: " + i + ")"), new XAttribute("outcome", outcome)))));
         new XDocument(root).Save(path);
     }
 

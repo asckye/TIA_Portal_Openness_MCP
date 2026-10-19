@@ -8,8 +8,10 @@ internal sealed record CheckJob(string Name, Func<CommandResult> Run, string[] D
 {
     internal double EstimatedSeconds { get; init; }
     internal string Lane { get; init; } = "general";
+    internal string? SensitiveGroup { get; init; }
     internal ulong? Affinity { get; init; }
     internal bool AllowFailedDependencies { get; init; }
+    internal TimeSpan Timeout { get; init; } = TimeSpan.FromMinutes(5);
 }
 internal sealed record CheckTiming(string Name, string Status, int ExitCode, double Seconds, string? Error)
 {
@@ -21,6 +23,13 @@ internal sealed record CheckTiming(string Name, string Status, int ExitCode, dou
 // failure here. A failed prerequisite blocks its dependents and makes the run red.
 internal static class CheckScheduler
 {
+    private static readonly AsyncLocal<(string Name, DateTime Deadline)?> deadline = new();
+    private static readonly AsyncLocal<string?> evidenceDirectory = new();
+    internal static (string Name, DateTime Deadline)? Deadline => deadline.Value;
+    internal static string? EvidenceDirectory => evidenceDirectory.Value;
+    internal static TimeSpan JobTimeout(CheckJob job, IReadOnlyDictionary<string, double> history) =>
+        TimeSpan.FromSeconds(Math.Max(job.Name is "build-once" or "suite-output-parity" ? 1800 : 300,
+            3 * Math.Max(job.EstimatedSeconds, history.GetValueOrDefault(job.Name))));
     internal static IReadOnlyList<CheckTiming> Run(IReadOnlyList<CheckJob> jobs, int slots, string logs, IReadOnlyDictionary<string, int>? lanes = null)
     {
         lanes ??= new Dictionary<string, int> { ["general"] = slots };
@@ -53,7 +62,9 @@ internal static class CheckScheduler
                 if (job.Exclusive && lane.Length != 0) continue;
                 if (lane.Sum(row => row.Slots) + job.Slots > lanes[job.Lane]) continue;
                 pending.Remove(job);
-                running.Add(Task.Run(() => Execute(job, logs)), job);
+                // Jobs block on child processes/barriers. Dedicated threads keep
+                // reserved one/two-core CLR pools from serializing admitted work.
+                running.Add(Task.Factory.StartNew(() => Execute(job, logs), CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default), job);
             }
             if (running.Count == 0)
             {
@@ -91,7 +102,10 @@ internal static class CheckScheduler
         try
         {
             using var affinity = CheckAffinity.Enter(job.Affinity);
+            deadline.Value = (job.Name, started + job.Timeout);
+            evidenceDirectory.Value = Path.Combine(logs, job.Name + "-processes");
             var result = job.Run();
+            if (DateTime.UtcNow >= deadline.Value.Value.Deadline) throw new ReleaseException("Check job timed out: " + job.Name);
             File.WriteAllText(Path.Combine(logs, job.Name + ".log"), result.StandardOutput + result.StandardError);
             return new(job.Name, result.ExitCode == 0 ? "passed" : "failed", result.ExitCode, timer.Elapsed.TotalSeconds,
                 result.ExitCode == 0 ? null : (result.StandardError.Length == 0 ? result.StandardOutput : result.StandardError).Trim())
@@ -102,6 +116,7 @@ internal static class CheckScheduler
             File.WriteAllText(Path.Combine(logs, job.Name + ".log"), ex.ToString());
             return new(job.Name, "failed", 1, timer.Elapsed.TotalSeconds, ex.Message) { StartedAtUtc = started, CpuLoad = CheckLoad.Current?.Between(started, DateTime.UtcNow) };
         }
+        finally { deadline.Value = null; evidenceDirectory.Value = null; }
     }
 
     internal static void Validate(IReadOnlyList<CheckJob> jobs, int slots, IReadOnlyDictionary<string, int>? lanes = null)
@@ -111,7 +126,7 @@ internal static class CheckScheduler
         var names = jobs.Select(job => job.Name).ToHashSet(StringComparer.Ordinal);
         if (names.Count != jobs.Count) throw new ReleaseException("Duplicate check names", 64);
         foreach (var job in jobs)
-            if (!lanes.TryGetValue(job.Lane, out var capacity) || job.Slots < 1 || job.Slots > capacity || job.Dependencies.Any(dep => !names.Contains(dep)))
+            if (job.Timeout <= TimeSpan.Zero || !lanes.TryGetValue(job.Lane, out var capacity) || job.Slots < 1 || job.Slots > capacity || job.Dependencies.Any(dep => !names.Contains(dep)))
                 throw new ReleaseException("Invalid check resources/dependencies: " + job.Name, 64);
         var visited = new HashSet<string>();
         while (visited.Count < jobs.Count)

@@ -82,9 +82,10 @@ public sealed class EngineHttpSessionTests
             for (int i = 0; i < 100; i++)
             {
                 var snapshot = await a.Tool("GetOpennessWorkerStatus");
-                if (snapshot["data"]!.ToJsonString().Contains("\"active\":1")) break;
+                if (snapshot["data"]!.ToJsonString().Contains("\"active\":1") && File.Exists(Path.Combine(host.DataDirectory, "leases", "busy"))) break;
                 await Task.Delay(20);
             }
+            Assert.True(File.Exists(Path.Combine(host.DataDirectory, "leases", "busy")), "Native fixture dispatch did not start within the existing polling bound.");
         }
         var detached = await a.Tool("DisconnectPortal");
         Assert.True((bool?)detached["data"]?["requiresTiaRestart"]);
@@ -240,7 +241,7 @@ public sealed class EngineHttpSessionTests
     private sealed class Fixture(Process process, string url, string directory, string image, string adapter, byte[]? priorAdapter) : IDisposable
     {
         private readonly Task exited = process.WaitForExitAsync();
-        internal string Url => url;
+        internal string Url { get; private set; } = url;
         internal string DataDirectory => directory;
         internal static async Task<Fixture> Start(string release, bool shortTimeout = false, bool gracefulShutdown = false, bool invalidCatalog = false)
         {
@@ -261,8 +262,9 @@ public sealed class EngineHttpSessionTests
                     ["parameters"] = new JsonArray(), ["execution"] = "worker" });
                 File.WriteAllText(catalog, rejected.ToJsonString());
             }
-            using var listener = new TcpListener(IPAddress.Loopback, 0); listener.Start(); int port = ((IPEndPoint)listener.LocalEndpoint).Port; listener.Stop();
-            string url = "http://127.0.0.1:" + port;
+            // Let the listening host own its allocated port without a parent/child handoff window.
+            string url = "http://127.0.0.1:0";
+            var listening = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
             var start = new ProcessStartInfo(exe) {
                 WorkingDirectory = directory, UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true, RedirectStandardInput = true };
             start.ArgumentList.Add("--foundation-http-fixture");
@@ -273,13 +275,24 @@ public sealed class EngineHttpSessionTests
                 start.ArgumentList.Add("--worker-timeout-config"); start.ArgumentList.Add(timeouts);
             }
             start.Environment["TIA_MCP_DATA_DIRECTORY"] = directory; start.Environment["TiaPortalLocation"] = "";
+            start.Environment["TIA_MCP_FIXTURE_LEASE_ROOT"] = Path.Combine(directory, "leases");
             // Release checks set their own diagnostics root; the journal assertions read this host's data directory.
             start.Environment["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = Path.Combine(directory, "diagnostics");
+            start.Environment["Logging__LogLevel__Microsoft.Hosting.Lifetime"] = "Information";
             string config = Path.Combine(directory, "config"); Directory.CreateDirectory(config);
             new ApprovalSettings(false, 1).Save(Path.Combine(config, "approval.settings"));
             var process = Process.Start(start)!;
             process.OutputDataReceived += (_, e) => { if (e.Data != null) File.AppendAllText(Path.Combine(directory, "host.log"), e.Data + "\n"); };
-            process.ErrorDataReceived += (_, e) => { if (e.Data != null) File.AppendAllText(Path.Combine(directory, "host-error.log"), e.Data + "\n"); };
+            process.ErrorDataReceived += (_, e) => {
+                if (e.Data == null) return;
+                File.AppendAllText(Path.Combine(directory, "host-error.log"), e.Data + "\n");
+                const string prefix = "Now listening on:";
+                string line = e.Data.Trim();
+                if (line.StartsWith(prefix, StringComparison.Ordinal)
+                    && Uri.TryCreate(line.Substring(prefix.Length).Trim(), UriKind.Absolute, out var endpoint)
+                    && endpoint.Scheme == "http" && endpoint.Host == "127.0.0.1" && endpoint.Port > 0)
+                    listening.TrySetResult(endpoint.GetLeftPart(UriPartial.Authority));
+            };
             process.BeginOutputReadLine(); process.BeginErrorReadLine();
             var fixture = new Fixture(process, url, directory, exe, adapter, priorAdapter);
             try
@@ -288,9 +301,11 @@ public sealed class EngineHttpSessionTests
                 for (int attempt = 0; attempt < 200; attempt++)
                 {
                     await fixture.RequireRunning();
+                    if (!listening.Task.IsCompleted) { await Task.Delay(50); continue; }
+                    fixture.Url = await listening.Task;
                     try
                     {
-                        var health = client.GetAsync(url + "/mcp/health");
+                        var health = client.GetAsync(fixture.Url + "/mcp/health");
                         if (await Task.WhenAny(health, fixture.exited) == fixture.exited) await fixture.RequireRunning();
                         using var response = await health;
                         if (response.IsSuccessStatusCode) return fixture;

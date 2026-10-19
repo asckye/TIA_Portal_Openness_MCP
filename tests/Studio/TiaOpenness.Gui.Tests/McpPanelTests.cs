@@ -328,6 +328,9 @@ public sealed class McpPanelTests(WpfContext wpf)
         });
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         while (wpf.Run(() => command!.IsRunning)) await Task.Delay(10, deadline.Token);
+        // A shared-state notification can start the project load after the command itself has finished;
+        // the shared activity stays busy (and VcRefresh disabled) until that load completes.
+        while (wpf.Run(() => { WpfContext.Drain(); return model!.Busy; })) await Task.Delay(10, deadline.Token);
         wpf.Run(() =>
         {
             Assert.Contains("\"schemaVersion\": 4", model!.LastEnvelope);

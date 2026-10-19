@@ -113,17 +113,20 @@ public sealed class CheckAllTests
     [InlineData(8)]
     public void SensitiveClassesRemainExclusiveEvenWithoutHistoryOrWithOldCaseAssignments(int ordinaryCount)
     {
-        var classes = TiaMcp.Engine.Tests.Shared.TimeSensitiveTests.Classes.Keys.Concat(["Unmeasured", "UnmeasuredTheory"]).ToArray();
-        var cases = classes.SelectMany(cls => Enumerable.Range(0, 7).Select(row => (Class: cls, Key: "T:" + cls + ".Case(" + row + ")"))).ToArray();
+        var cases = TiaMcp.Engine.Tests.Shared.TimeSensitiveTests.Methods.SelectMany(pair => pair.Value.SelectMany(method =>
+            Enumerable.Range(0, 7).Select(row => (Class: pair.Key, Key: "T:" + pair.Key + "." + method + "(" + row + ")"))))
+            .Concat(TiaMcp.Engine.Tests.Shared.TimeSensitiveTests.Classes.Keys.Select(cls => (Class: cls, Key: "T:" + cls + ".Unmeasured()")))
+            .Concat(new[] { "Unmeasured", "UnmeasuredTheory" }.SelectMany(cls =>
+                Enumerable.Range(0, 7).Select(row => (Class: cls, Key: "T:" + cls + ".Case(" + row + ")")))).ToArray();
         var oldPlan = cases.Take(100).ToDictionary(test => test.Key, _ => 0);
         int count = ordinaryCount + 1;
         var shards = Enumerable.Range(0, count).Select(index => cases.Where(test =>
             TestShard.Assign(test.Class, test.Key, test.Key, count, oldPlan, true) == index).ToArray()).ToArray();
         Assert.Equal(cases.OrderBy(test => test.Key), shards.SelectMany(shard => shard).OrderBy(test => test.Key));
         Assert.Equal(cases.Length, shards.Sum(shard => shard.Length));
-        Assert.All(shards[^1], test => Assert.True(TiaMcp.Engine.Tests.Shared.TimeSensitiveTests.Contains(test.Class)));
-        Assert.All(shards.Take(ordinaryCount).SelectMany(shard => shard), test => Assert.False(TiaMcp.Engine.Tests.Shared.TimeSensitiveTests.Contains(test.Class)));
-        Assert.Equal(TiaMcp.Engine.Tests.Shared.TimeSensitiveTests.Classes.Count * 7, shards[^1].Length);
+        Assert.All(shards[^1], test => Assert.True(TiaMcp.Engine.Tests.Shared.TimeSensitiveTests.ContainsCost(test.Key)));
+        Assert.All(shards.Take(ordinaryCount).SelectMany(shard => shard), test => Assert.False(TiaMcp.Engine.Tests.Shared.TimeSensitiveTests.ContainsCost(test.Key)));
+        Assert.Equal(TiaMcp.Engine.Tests.Shared.TimeSensitiveTests.Methods.Values.Sum(methods => methods.Length) * 7, shards[^1].Length);
         Assert.Throws<InvalidOperationException>(() => TestShard.Assign("Unmeasured", "T:unknown", "fallback", count,
             new Dictionary<string, int> { ["C:Unmeasured"] = ordinaryCount }, true));
     }
@@ -210,6 +213,12 @@ public sealed class CheckAllTests
     {
         using var fixture = new OfflineFixtures();
         var paths = MakeShards(fixture.DirectoryPath, new[] { "Passed", "Passed" }, new[] { "Passed", "Passed", "NotExecuted" });
+        for (int i = 0; i < paths.Length; i++)
+        {
+            var doc = XDocument.Load(paths[i]);
+            foreach (var row in doc.Descendants(doc.Root!.Name.Namespace + "UnitTestResult")) row.SetAttributeValue("testName", i + ":" + row.Attribute("testName")!.Value);
+            doc.Save(paths[i]);
+        }
         var result = SuiteSharding.Merge("suite", new JsonObject { ["minimumPassed"] = minimum, ["maximumSkipped"] = maximum }, paths, fixture.DirectoryPath);
         Assert.Equal(passes ? 0 : 1, result.ExitCode);
         var summary = JsonNode.Parse(File.ReadAllText(Path.Combine(fixture.DirectoryPath, "suite.json")))!;

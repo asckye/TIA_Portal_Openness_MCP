@@ -1,3 +1,4 @@
+#nullable enable annotations
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,11 +40,13 @@ namespace TiaMcp.Engine.Tests.Shared
             lateTheory ? "M:" + className + "." + method : "T:" + displayName;
 
         public static int Assign(string className, string costKey, string fallbackKey, int count,
-            IReadOnlyDictionary<string, int> plan, bool reserveSensitive)
+            IReadOnlyDictionary<string, int> plan, bool reserveSensitive, int sensitiveShards = 1)
         {
-            if (count < (reserveSensitive ? 2 : 1)) throw new InvalidOperationException("Invalid test shard count.");
-            if (reserveSensitive && TimeSensitiveTests.Contains(className)) return count - 1;
-            int ordinaryCount = reserveSensitive ? count - 1 : count;
+            if (sensitiveShards < 1 && reserveSensitive || count < (reserveSensitive ? sensitiveShards + 1 : 1))
+                throw new InvalidOperationException("Invalid test shard count.");
+            int ordinaryCount = reserveSensitive ? count - sensitiveShards : count;
+            if (reserveSensitive && TimeSensitiveTests.ContainsCost(costKey))
+                return ordinaryCount + Math.Min(TimeSensitiveTests.SensitivePartition(costKey), sensitiveShards - 1);
             if (plan.TryGetValue(costKey, out int planned) || plan.TryGetValue("C:" + className, out planned))
             {
                 if (planned < 0 || planned >= ordinaryCount) throw new InvalidOperationException("Cost shard outside shard count.");
@@ -80,6 +83,10 @@ namespace TiaMcp.Engine.Tests.Shared
                 if (!int.TryParse(countText, out int count) || !int.TryParse(indexText, out int index) ||
                     count < 1 || index < 0 || index >= count)
                     throw new InvalidOperationException("Invalid test shard index/count.");
+                string? sensitiveText = Environment.GetEnvironmentVariable("TIA_MCP_TEST_SENSITIVE_SHARDS");
+                int sensitiveShards = 1;
+                if (sensitiveText != null && (!int.TryParse(sensitiveText, out sensitiveShards) || sensitiveShards < 1))
+                    throw new InvalidOperationException("Invalid sensitive shard count.");
                 cases = cases.Where(test =>
                 {
                     string cls = test.TestMethod.TestClass.Class.Name;
@@ -87,9 +94,9 @@ namespace TiaMcp.Engine.Tests.Shared
                     // Late-enumerated theories are indivisible: running their producer
                     // repeatedly would duplicate side effects and all recorded assertions.
                     string key = TestShard.SplitCases(cls) && !(test is XunitTheoryTestCase)
-                        ? cls + ":" + test.UniqueID : cls;
+                        ? cls + ":" + test.UniqueID : TimeSensitiveTests.Methods.ContainsKey(cls) ? cls + ":" + test.TestMethod.Method.Name : cls;
                     return TestShard.Assign(cls, costKey, key, count, plan,
-                        Environment.GetEnvironmentVariable("TIA_MCP_TEST_RESERVE_SENSITIVE_SHARD") == "1") == index;
+                        Environment.GetEnvironmentVariable("TIA_MCP_TEST_RESERVE_SENSITIVE_SHARD") == "1", sensitiveShards) == index;
                 });
             }
             string? timings = Environment.GetEnvironmentVariable("TIA_MCP_TEST_CASE_TIMINGS");

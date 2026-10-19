@@ -21,4 +21,12 @@
     <Compile Include="../V4Fixtures.cs" Link="V4Fixtures.cs" />
     <EmbeddedResource Include="../V4Supplemental.json" Link="V4Supplemental.json" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../Shared/ShardFramework.cs" Link="Shared/ShardFramework.cs" />
+    <Compile Include="../../Shared/TimeSensitiveTests.cs" Link="Shared/TimeSensitiveTests.cs" />
+    <AssemblyAttribute Include="Xunit.TestFrameworkAttribute">
+      <_Parameter1>TiaMcp.Engine.Tests.Shared.ShardFramework</_Parameter1>
+      <_Parameter2>$(AssemblyName)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
 </Project>

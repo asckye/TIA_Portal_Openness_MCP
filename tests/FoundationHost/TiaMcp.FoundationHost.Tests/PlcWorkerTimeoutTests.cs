@@ -645,6 +645,24 @@ public sealed class PlcWorkerRobustnessTests
             File.WriteAllText(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + release + ".dll"), "offline fixture identity");
             Worker = new Foundation.WorkerClient(release, exe, Path.GetDirectoryName(exe)!, true, defaultSeconds, config) { Bundled = false };
         }
+        internal async Task WarmBeforeScaledBudgets()
+        {
+            // Startup is not the behaviour this scope measures. Warm the real
+            // channel with the production startup budget, then restore the exact
+            // configured default before any measured compile/import dispatch.
+            var policy = (WorkerTimeoutPolicy)typeof(Foundation.WorkerClient)
+                .GetField("timeouts", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(Worker)!;
+            var budgets = (IDictionary<string, TimeSpan>)policy.Budgets;
+            var original = budgets["default"];
+            Assert.Equal(TimeSpan.FromSeconds(1), original);
+            try
+            {
+                budgets["default"] = WorkerTimeoutPolicy.Defaults["default"];
+                await Worker.Call("ReadState", new(), CancellationToken.None);
+            }
+            finally { budgets["default"] = original; }
+            Assert.Equal(original, policy.For("status"));
+        }
         // The fixture appends while the test reads; File.ReadAllText refuses a file another process has open for writing.
         internal string ReadLog()
         {
@@ -703,13 +721,24 @@ public sealed class PlcWorkerRobustnessTests
     {
         // Scale seconds by 1/120: 1300 ms models a 156 s call, beyond the old 120 s limit.
         using var scope = new PlcTimeoutScope(release, "{\"default\":1,\"compile\":15,\"importExport\":15}");
-        await scope.Worker.Call("ReadState", new(), CancellationToken.None);
+        await scope.WarmBeforeScaledBudgets();
         foreach (string operation in new[] { "CompileSoftware", "ImportBlocks" })
         {
             var result = await scope.Worker.Call(operation, PlcCompletedArguments(operation, 1300), CancellationToken.None);
             Assert.Equal(1300, (int?)result!["fixtureDelayMilliseconds"]);
             Assert.False(scope.Worker.Poisoned);
         }
+    }
+
+    [Theory, InlineData("CompileSoftware"), InlineData("ImportBlocks")]
+    public async Task Plc_scaled_long_call_still_fails_with_only_the_default_budget(string operation)
+    {
+        using var scope = new PlcTimeoutScope("19", "{\"default\":1,\"compile\":1,\"importExport\":1}");
+        await scope.WarmBeforeScaledBudgets();
+        var error = await Assert.ThrowsAsync<ChannelFaultException>(() =>
+            scope.Worker.Call(operation, PlcCompletedArguments(operation, 1300), CancellationToken.None));
+        Assert.Equal(true, error.Data["foundationRequestSent"]);
+        Assert.True(scope.Worker.Poisoned);
     }
 
     [Fact]

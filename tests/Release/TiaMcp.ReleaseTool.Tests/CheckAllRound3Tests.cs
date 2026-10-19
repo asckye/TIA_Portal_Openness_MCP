@@ -186,18 +186,18 @@ public sealed class CheckAllRound3Tests(ITestOutputHelper output)
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("Windows job object verification");
         using var fixture = new OfflineFixtures(); using var current = Process.GetCurrentProcess();
         ulong available = unchecked((ulong)current.ProcessorAffinity.ToInt64()); ulong mask = available & (~available + 1);
-        string Quote(string text) => "'" + text.Replace("'", "''") + "'";
-        var child = Path.Combine(fixture.DirectoryPath, "owned-child.ps1");
+        var child = Path.Combine(fixture.DirectoryPath, "owned-child.txt");
         var ready = Path.Combine(fixture.DirectoryPath, "child-ready.txt");
-        var parent = Path.Combine(fixture.DirectoryPath, "owned-parent.ps1");
-        File.WriteAllText(child, "$PID | Set-Content -LiteralPath " + Quote(ready) + "; Start-Sleep -Seconds 60");
-        File.WriteAllText(parent, "$child = Start-Process powershell.exe -WindowStyle Hidden -PassThru -ArgumentList @('-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', " +
-            Quote("\"" + child + "\"") + "); while (!(Test-Path -LiteralPath " + Quote(ready) + ")) { Start-Sleep -Milliseconds 25 }; $child.Id");
+        var parent = Path.Combine(fixture.DirectoryPath, "owned-parent.txt");
+        var exited = Path.Combine(fixture.DirectoryPath, "parent-exited.txt");
+        File.WriteAllLines(child, ["child", ready]);
+        File.WriteAllLines(parent, ["parent", child, ready, exited]);
         using var affinity = CheckAffinity.Enter(mask);
         try
         {
-            var result = ProcessRunner.Run("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", parent], fixture.DirectoryPath,
-                timeoutMilliseconds: 30000, waitForDescendants: true);
+            var result = ProcessRunner.Run("dotnet", [typeof(CheckAffinity).Assembly.Location, "--check-probe", parent], fixture.DirectoryPath,
+                new Dictionary<string, string?> { ["TIA_MCP_CHECK_PROBE"] = "1" }, timeoutMilliseconds: 30000, waitForDescendants: true);
+            Assert.True(File.Exists(exited), "The parent exited only after its still-running child signalled readiness.");
             Assert.True(result.ExitCode == 0, result.StandardError);
             int pid = int.Parse(result.StandardOutput.Trim());
             Assert.Equal(pid, int.Parse(File.ReadAllText(ready).Trim()));

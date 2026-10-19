@@ -25,6 +25,9 @@ internal static partial class ReleaseCommands
         var snapshot = CheckAllSnapshotPath(original, Guid.NewGuid().ToString("N")[..8]);
         var output = Path.GetFullPath(options.Get("OutputDirectory", Path.Combine(original, "bin-build/check-all/clean-" + Guid.NewGuid().ToString("N"))));
         Directory.CreateDirectory(Path.GetDirectoryName(snapshot)!);
+        PruneCheckAllSnapshots(original, 3);
+        var history = Path.Combine(original, "bin-build/check-timings");
+        CopyCheckAllHistory(history, Path.Combine(snapshot, "bin-build/check-timings"));
         // Git for Windows' clone transport invokes sh even for a local worktree,
         // which cannot create its signal pipe in the sandbox. Initialize the same
         // shared-object detached baseline using only native Git index operations.
@@ -51,12 +54,55 @@ internal static partial class ReleaseCommands
             if (!File.Exists(source)) { if (File.Exists(destination)) File.Delete(destination); continue; }
             Directory.CreateDirectory(Path.GetDirectoryName(destination)!); File.Copy(source, destination, true);
         }
-        var result = ProcessRunner.Run(Dotnet, [typeof(ReleaseCommands).Assembly.Location, "check-all", .. options.Arguments(), "-Worktree=" + snapshot,
-            "-OutputDirectory=" + output, "-CacheDirectory=" + Path.GetFullPath(options.Get("CacheDirectory", Path.Combine(original, "bin-build/cache/check-all")))], snapshot,
-            new Dictionary<string, string?> { ["TIA_MCP_CLEAN_CHECKOUT"] = snapshot, ["TIA_MCP_CHECK_RUNNER"] = "1", ["TIA_MCP_TEST_PUBLIC_API_ROOT"] = null,
-                ["TIA_MCP_CHECK_ISOLATION_ROOT"] = null }, forwardOutput: true);
-        Console.WriteLine("Retained detached source checkout: " + snapshot);
-        return result.ExitCode;
+        try
+        {
+            var result = ProcessRunner.Run(Dotnet, [typeof(ReleaseCommands).Assembly.Location, "check-all", .. options.Arguments(), "-Worktree=" + snapshot,
+                "-OutputDirectory=" + output, "-CacheDirectory=" + Path.GetFullPath(options.Get("CacheDirectory", Path.Combine(original, "bin-build/cache/check-all")))], snapshot,
+                new Dictionary<string, string?> { ["TIA_MCP_CLEAN_CHECKOUT"] = snapshot, ["TIA_MCP_CHECK_RUNNER"] = "1", ["TIA_MCP_TEST_PUBLIC_API_ROOT"] = null,
+                    ["TIA_MCP_CHECK_ISOLATION_ROOT"] = null, ["TIA_MCP_CHECK_ORIGINAL_ROOT"] = original }, forwardOutput: true);
+            return result.ExitCode;
+        }
+        finally
+        {
+            CopyCheckAllHistory(Path.Combine(snapshot, "bin-build/check-timings"), history);
+            File.WriteAllText(Path.Combine(snapshot, "bin-build/check-all-snapshot.json"), JsonSerializer.Serialize(new { original, completedUtc = DateTime.UtcNow }) + "\n");
+            PruneCheckAllSnapshots(original, 3);
+            Console.WriteLine("Retained detached source checkout: " + snapshot);
+        }
+    }
+
+    internal static void CopyCheckAllHistory(string source, string destination)
+    {
+        if (!Directory.Exists(source)) return;
+        foreach (var path in Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories))
+        {
+            var target = Path.GetFullPath(Path.Combine(destination, Path.GetRelativePath(source, path)));
+            RequireCheckAllOwnedPath(destination, target);
+            Directory.CreateDirectory(Path.GetDirectoryName(target)!); File.Copy(path, target, true);
+        }
+    }
+
+    internal static void RequireCheckAllOwnedPath(string root, string path)
+    {
+        var prefix = Path.GetFullPath(root).TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
+        if (!Path.GetFullPath(path).StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) throw new ReleaseException("Path outside this checkout: " + path);
+        for (var info = new DirectoryInfo(Path.GetFullPath(path)); info != null && info.FullName.Length >= prefix.Length; info = info.Parent)
+            if (info.Exists && (info.Attributes & FileAttributes.ReparsePoint) != 0) throw new ReleaseException("Linked check-all path: " + path);
+    }
+
+    internal static void PruneCheckAllSnapshots(string root, int retained)
+    {
+        if (retained < 1) throw new ArgumentOutOfRangeException(nameof(retained));
+        var parent = Path.Combine(root, "bin-build/c"); if (!Directory.Exists(parent)) return;
+        var completed = Directory.EnumerateDirectories(parent).Where(path => File.Exists(Path.Combine(path, "bin-build/check-all-snapshot.json")))
+            .Where(path => System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(Path.Combine(path, "bin-build/check-all-snapshot.json")))!["original"]!.GetValue<string>() == root)
+            .OrderByDescending(path => File.GetLastWriteTimeUtc(Path.Combine(path, "bin-build/check-all-snapshot.json"))).ToArray();
+        foreach (var path in completed.Skip(retained))
+        {
+            RequireCheckAllOwnedPath(parent, path);
+            foreach (var directory in Directory.EnumerateDirectories(path, "*", SearchOption.AllDirectories)) RequireCheckAllOwnedPath(parent, directory);
+            Directory.Delete(path, true);
+        }
     }
 
     private static CommandResult CheckAllCachedBuild(Options options, CheckBuild[] builds, string output, string dotnet, string api, string nuget, int parallelism)
@@ -66,47 +112,13 @@ internal static partial class ReleaseCommands
             File.WriteAllText(Path.Combine(output, "build-cache.json"), "{\"mode\":\"in-place-incremental\",\"outputsRestored\":0}\n");
             return CheckAllInPlaceBuild(options, builds, output, dotnet, api, nuget, parallelism);
         }
-        var directories = builds.Select(unit => Path.Combine(Path.GetDirectoryName(unit.Project)!, "bin").Replace('\\', '/'))
-            .Append("src/Engine/bin-v20").Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-        var files = ProcessRunner.Run("git", ["ls-files", "--cached", "--others", "--exclude-standard", "-z"], Root);
-        ProcessRunner.RequireSuccess(files, "build cache source inventory");
-        var inputs = files.StandardOutput.Split('\0', StringSplitOptions.RemoveEmptyEntries).Where(path => File.Exists(Path.Combine(Root, path)))
-            .Select(path => new ReleaseArtifact(path, ReleaseRecords.HashFile(Path.Combine(Root, path)))).ToList();
-        foreach (var path in Directory.EnumerateFiles(api, "Siemens.Engineering*.dll", SearchOption.AllDirectories))
-            inputs.Add(new("sdk/" + Path.GetRelativePath(api, path).Replace('\\', '/'), ReleaseRecords.HashFile(path)));
-        inputs.Add(new("offline-nuget.config", ReleaseRecords.HashFile(nuget)));
-        var key = BuildOutputCache.Key(inputs, [Environment.OSVersion.ToString(), System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString(),
-            ProcessRunner.Run(dotnet, ["--version"], Root).StandardOutput.Trim(), .. builds.Select(unit => unit.Project + "|" + unit.Variant + "|" + string.Join(";", unit.Properties))]);
+        // Whole-tree keys and source-path-bearing outputs cannot hit across fresh
+        // snapshots. Do not spend time scanning/copying an unusable cache.
         var cacheRoot = Path.GetFullPath(options.Get("CacheDirectory", Path.Combine(Root, "bin-build/cache/check-all")));
-        var cache = new BuildOutputCache(cacheRoot, "check-all-complete");
-        var plan = Path.Combine(cacheRoot, "outputs-" + key + ".json");
-        var eligible = new List<string>(); var hits = new List<string>();
-        if (!options.Has("Cold") && !options.Has("NoBuildCache") && File.Exists(plan))
-        {
-            try
-            {
-                if (JsonSerializer.Deserialize<string[]>(File.ReadAllText(plan)) is { Length: > 0 } paths &&
-                    paths.Distinct(StringComparer.OrdinalIgnoreCase).Count() == paths.Length && paths.All(path => directories.Contains(path, StringComparer.OrdinalIgnoreCase)) && cache.Restore(key, Root, paths)) hits.AddRange(paths);
-            }
-            catch (JsonException) { /* A bad cache plan is a miss; compilation remains authoritative. */ }
-        }
-        var result = CheckAllInPlaceBuild(options, builds, output, dotnet, api, nuget, parallelism);
-        if (result.ExitCode == 0 && !options.Has("NoBuildCache"))
-            foreach (var directory in directories.Where(path => Directory.Exists(Path.Combine(Root, path))))
-            {
-                if (BuildOutputCache.EmbeddedPath(Path.Combine(Root, directory), Root) != null) continue;
-                eligible.Add(directory);
-            }
-        if (result.ExitCode == 0 && !options.Has("NoBuildCache") && eligible.Count > 0 && hits.Count == 0)
-        {
-            // One transaction avoids repeatedly scanning/pruning the entire cache
-            // after each of the many project output directories.
-            cache.Populate(key, Root, eligible);
-            File.WriteAllText(plan, JsonSerializer.Serialize(eligible) + "\n");
-        }
-        File.WriteAllText(Path.Combine(output, "build-cache.json"), JsonSerializer.Serialize(new { key, hits, eligible, outputsRestored = hits.Count,
-            note = "Restored outputs are still validated by the incremental MSBuild traversal; source-path-bearing binaries rebuild in the new worktree." }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
-        return result;
+        RequireCheckAllOwnedPath(Environment.GetEnvironmentVariable("TIA_MCP_CHECK_ORIGINAL_ROOT") ?? Root, cacheRoot);
+        BuildOutputCache.PruneRetained(cacheRoot, TimeSpan.FromDays(7), BuildOutputCache.DefaultMaxBytes);
+        File.WriteAllText(Path.Combine(output, "build-cache.json"), "{\"mode\":\"population-disabled\",\"outputsRestored\":0,\"reason\":\"Whole-tree cache cannot reuse path-bearing snapshot outputs; compile authoritative graph.\"}\n");
+        return CheckAllInPlaceBuild(options, builds, output, dotnet, api, nuget, parallelism);
     }
     private static CommandResult CheckAllInPlaceBuild(Options options, CheckBuild[] builds, string output, string dotnet, string api, string nuget, int parallelism)
     {

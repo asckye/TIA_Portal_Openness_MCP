@@ -310,7 +310,7 @@ public sealed class FoundationProcessLeaseTests
         }
         if (args[1] == "job")
         {
-            using var child = Start(args[2], args[3]); WorkerJob.Bind(child);
+            using var child = Start(args[2], args[3], "job-owned"); WorkerJob.Bind(child);
             if (child.StandardOutput.ReadLine() != "READY") return 1;
             child.StandardInput.WriteLine("attach");
             if (child.StandardOutput.ReadLine() != "ATTACHED") return 1;
@@ -336,6 +336,11 @@ public sealed class FoundationProcessLeaseTests
             var response = boundary.Dispatch(request);
             Console.WriteLine(response.Failure?.Message ?? (detached ? "DISCONNECTED" : "ATTACHED"));
         }
+        // This fixture models abrupt job death, not graceful stdin EOF. The
+        // parent can close the pipe before its last job handle closes. Keep the
+        // idle lease intact until the kernel kills this child. The separate EOF
+        // test still exercises normal boundary disposal.
+        if (args.Length > 3 && args[3] == "job-owned") Thread.Sleep(Timeout.Infinite);
         return 0;
     }
 }

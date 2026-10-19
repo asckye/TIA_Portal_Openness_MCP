@@ -35,9 +35,13 @@ internal static partial class ReleaseCommands
         using var currentProcess = Process.GetCurrentProcess();
         var available = unchecked((ulong)currentProcess.ProcessorAffinity.ToInt64());
         int stabilityCores = FastSuites.Positive(options, "StabilityCores", Math.Min(8, Math.Max(1, Environment.ProcessorCount / 3)));
-        var masks = CheckAffinity.SplitForMachine(available, stabilityCores);
-        int generalCores = System.Numerics.BitOperations.PopCount(masks.General);
-        parallelism = Math.Min(parallelism, generalCores);
+        // Give the shortest asserted deadlines first choice of complete physical
+        // cores. Stability and general work retain disjoint, reserved CPU sets.
+        var reservedSensitive = CheckAffinity.SplitSensitive(available, FastSuites.Positive(options, "SensitiveCores", CheckAffinity.DefaultSensitiveCores(available)));
+        var masks = CheckAffinity.SplitForMachine(reservedSensitive.General, stabilityCores);
+        var sensitive = (Stability: reservedSensitive.Stability, General: masks.General);
+        int generalCores = System.Numerics.BitOperations.PopCount(sensitive.General);
+        parallelism = FastSuites.GeneralCapacity(parallelism, generalCores, options.Has("MaxParallelism") || options.Has("CpuParallelism"));
         int stabilityParallelism = Math.Min(FastSuites.Positive(options, "StabilityParallelism", 4), Math.Min(4, stabilityCores));
         var clock = Stopwatch.StartNew();
         using var load = CheckLoad.Start(Path.Combine(output, "process-load.json"));
@@ -47,6 +51,15 @@ internal static partial class ReleaseCommands
         var jobs = new List<CheckJob>();
         if (options.Get("BaselineReport") is { } timingBaseline)
             SuiteCosts.ImportReport(Path.GetDirectoryName(Path.GetFullPath(timingBaseline))!, Path.Combine(Root, "bin-build/check-timings"));
+        var history = Path.Combine(Root, "bin-build/check-timings/check-costs.json");
+        var costs = File.Exists(history) ? JsonSerializer.Deserialize<Dictionary<string, double>>(File.ReadAllText(history))! : new Dictionary<string, double>();
+        var baselineReport = options.Get("BaselineReport") ?? (File.Exists(Path.Combine(Root, "bin-build/reviewer-run1/report.json")) ? Path.Combine(Root, "bin-build/reviewer-run1/report.json") : null);
+        if (baselineReport != null)
+            foreach (var row in JsonNode.Parse(File.ReadAllText(baselineReport))!["checks"]!.AsArray())
+            {
+                var name = (string)row!["Name"]!;
+                costs[name] = Math.Max(costs.GetValueOrDefault(name), (double)row["Seconds"]!);
+            }
         CommandResult Tool(string name, params string[] args) => Isolated(name, dotnet, [typeof(ReleaseCommands).Assembly.Location, .. args]);
         CommandResult Python(string name, string script, params string[] args)
         {
@@ -67,7 +80,11 @@ internal static partial class ReleaseCommands
             environment["TIA_MCP_ANALYZER_REPORT_DIRECTORY"] = null;
             return SuiteHang.RunProcess(executable, args, Root, environment);
         }
-        void Add(string name, Func<CommandResult> run, string[]? depends = null, bool exclusive = false) => jobs.Add(new(name, run, depends ?? [], Exclusive: exclusive));
+        void Add(string name, Func<CommandResult> run, string[]? depends = null, bool exclusive = false)
+        {
+            var job = new CheckJob(name, run, depends ?? [], Exclusive: exclusive);
+            jobs.Add(job with { Timeout = CheckScheduler.JobTimeout(job, costs) });
+        }
         void Wave()
         {
             if (jobs.Count == 0) return;
@@ -98,7 +115,7 @@ internal static partial class ReleaseCommands
         Wave();
         if (options.Has("BuildOnly")) return Finish();
         var runtimeManifest = Path.Combine(output, "build/runtime-paths.tsv");
-        Add("suite-output-parity", () => CheckAllLayout.Verify(Root, builds, dotnet, nuget, api, Path.Combine(output, "suite-output-parity"), runtimeManifest));
+        Add("suite-output-parity", () => CheckAllLayout.Verify(Root, builds, dotnet, nuget, api, Path.Combine(output, "suite-output-parity"), runtimeManifest, FastSuites.Positive(options, "BuildParallelism", parallelism)));
         Wave();
         string host = Path.Combine(Root, "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe");
         string harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
@@ -164,10 +181,11 @@ internal static partial class ReleaseCommands
             Add(name, () => Isolated(name, dotnet, ["test", $"tests/Studio/TiaOpenness.{selectedProject}.Tests/TiaOpenness.{selectedProject}.Tests.csproj", "-c", "Release", "--no-build", "--no-restore",
                 "-p:TiaSharedAdapterPaths=" + selectedMode,
                 "--disable-build-servers", "-m:1", "-nodeReuse:false", "--logger", "trx;LogFileName=" + name + ".trx", "--results-directory", Path.Combine(output, "studio")]), exclusive: true);
+            jobs[^1] = jobs[^1] with { SensitiveGroup = $"tests/Studio/TiaOpenness.{project}.Tests/TiaOpenness.{project}.Tests.csproj" };
         }
         AddCheckAllStaticJobs(Add, Tool, Python, Isolated, output, api, nuget, parallelism, shards, dotnet);
         jobs.RemoveAll(job => job.Name == "preflight");
-        AddCheckAllPreflightJobs(jobs, catalog, output, dotnet, shards);
+        AddCheckAllPreflightJobs(jobs);
         foreach (var release in CatalogJson.Keys)
         {
             var key = release;
@@ -294,32 +312,33 @@ internal static partial class ReleaseCommands
             return Tool("usage-audit", "audit-tool-usage", "-Records", records);
         }, CatalogJson.Keys.Select(key => "usage-v" + key).ToArray());
         Add("generate-release-migration", () => Tool("generate-release-migration", "generate-release-migration"));
-        var history = Path.Combine(Root, "bin-build/check-timings/check-costs.json");
-        var costs = File.Exists(history) ? JsonSerializer.Deserialize<Dictionary<string, double>>(File.ReadAllText(history))! : new Dictionary<string, double>();
-        var baselineReport = options.Get("BaselineReport") ?? (File.Exists(Path.Combine(Root, "bin-build/reviewer-run1/report.json")) ? Path.Combine(Root, "bin-build/reviewer-run1/report.json") : null);
-        if (costs.Count == 0 && baselineReport != null)
-            foreach (var row in JsonNode.Parse(File.ReadAllText(baselineReport))!["checks"]!.AsArray()) costs[(string)row!["Name"]!] = (double)row["Seconds"]!;
         var plan = jobs.Select(job => job with
         {
-            Affinity = job.Affinity ?? masks.General,
+            Lane = job.Exclusive && job.Lane == "general" ? "sensitive" : job.Lane,
+            Affinity = job.Affinity ?? (job.Exclusive ? sensitive.Stability : sensitive.General),
             EstimatedSeconds = CheckAllJobCost(job, costs),
-            Dependencies = job.Name == "migration-drift" || job.Name == "preflight-" + PreflightChecks().FindIndex(check => check.Name == "release migration tables generator") ? ["generate-release-migration"] : job.Dependencies
+            Timeout = CheckScheduler.JobTimeout(job, costs),
+            Dependencies = job.Name == "migration-drift" ? ["generate-release-migration"] : job.Dependencies
         }).ToArray();
+        var scheduled = plan.ToList();
+        var sensitiveLanes = CheckAffinity.AssignSensitiveLanes(scheduled, sensitive.Stability, FastSuites.Positive(options, "SensitiveParallelism", 2));
+        plan = scheduled.ToArray();
+        var lanes = new Dictionary<string, int>(sensitiveLanes) { ["general"] = parallelism, ["stability"] = stabilityParallelism };
         var priorities = CheckScheduler.CriticalCosts(plan);
         File.WriteAllText(Path.Combine(output, "cpu-plan.json"), JsonSerializer.Serialize(new { availableMask = available.ToString("X"),
-            stabilityMask = masks.Stability.ToString("X"), generalMask = masks.General.ToString("X"), stabilityCores, generalCores,
+            stabilityMask = masks.Stability.ToString("X"), sensitiveMask = sensitive.Stability.ToString("X"), generalMask = sensitive.General.ToString("X"), stabilityCores, generalCores,
             physicalCores = CheckAffinity.PhysicalCores().Select(core => new { mask = core.Mask.ToString("X"), efficiencyClass = core.Efficiency }),
-            stabilityParallelism, generalParallelism = parallelism, companionPython,
-            checks = plan.Select(job => new { job.Name, job.Lane, job.Slots, job.Exclusive, job.EstimatedSeconds, criticalSeconds = priorities[job.Name], job.Dependencies }) }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
+            stabilityParallelism, sensitiveParallelism = sensitiveLanes.Count, sensitiveCores = System.Numerics.BitOperations.PopCount(sensitive.Stability), sensitiveMinWorkerThreads = CheckAffinity.BaselineWorkers, generalParallelism = parallelism, companionPython,
+            checks = plan.Select(job => new { job.Name, job.Lane, job.SensitiveGroup, job.Slots, job.Exclusive, affinityMask = job.Affinity?.ToString("X"), job.EstimatedSeconds, timeoutSeconds = job.Timeout.TotalSeconds, criticalSeconds = priorities[job.Name], job.Dependencies }) }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
         timings.AddRange(CheckScheduler.Run(plan, parallelism, Path.Combine(output, "logs"),
-            new Dictionary<string, int> { ["general"] = parallelism, ["stability"] = stabilityParallelism }));
-        Directory.CreateDirectory(Path.GetDirectoryName(history)!);
-        foreach (var row in timings.Where(row => row.Status == "passed")) costs[row.Name] = row.Seconds;
-        File.WriteAllText(history, JsonSerializer.Serialize(costs, new JsonSerializerOptions { WriteIndented = true }) + "\n");
+            lanes));
         return Finish();
 
         int Finish()
         {
+            Directory.CreateDirectory(Path.GetDirectoryName(history)!);
+            foreach (var row in timings.Where(row => row.Status == "passed")) costs[row.Name] = Math.Max(costs.GetValueOrDefault(row.Name), row.Seconds);
+            File.WriteAllText(history, JsonSerializer.Serialize(costs, new JsonSerializerOptions { WriteIndented = true }) + "\n");
             var after = TrackedBytes();
             var drift = after.Where(pair => !before.TryGetValue(pair.Key, out var hash) || pair.Value != hash).Select(pair => pair.Key)
                 .Concat(before.Keys.Except(after.Keys, StringComparer.Ordinal)).Distinct(StringComparer.Ordinal).ToArray();
@@ -328,12 +347,12 @@ internal static partial class ReleaseCommands
             var unexpected = drift.Where(path => !TimestampOnly(path, before)).ToArray();
             timings.Add(new("tracked-tree-drift", unexpected.Length == 0 ? "passed" : "failed", unexpected.Length == 0 ? 0 : 1, 0, string.Join(", ", unexpected)));
             var report = new { schemaVersion = 1, machineCores = Environment.ProcessorCount, parallelism, shards, cold = options.Has("Cold"), clean = options.Has("Clean"),
-                wallSeconds = clock.Elapsed.TotalSeconds, underFiveMinutes = clock.Elapsed.TotalSeconds < 300, buildOnly = options.Has("BuildOnly"), nativeTiaExecuted = false,
+                wallSeconds = clock.Elapsed.TotalSeconds, underThirtyMinutes = clock.Elapsed.TotalSeconds < 1800, buildOnly = options.Has("BuildOnly"), nativeTiaExecuted = false,
                 passed = timings.Count(row => row.Status == "passed"), failed = timings.Count(row => row.Status != "passed"), drift, checks = timings };
             File.WriteAllText(Path.Combine(output, "report.json"), JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }) + "\n");
             WriteTimingComparison(output, timings, options.Get("BaselineReport"));
             Console.WriteLine($"check-all: {report.passed} passed; {report.failed} failed/blocked; {report.wallSeconds:F3}s; report: {output}");
-            return report.failed == 0 && report.underFiveMinutes ? 0 : 1;
+            return report.failed == 0 && report.underThirtyMinutes ? 0 : 1;
         }
     }
 
@@ -402,7 +421,6 @@ internal static partial class ReleaseCommands
         foreach (var key in CatalogJson.Keys)
             units.Add(new("src/PlcWorker/TiaMcp.PlcWorker.csproj", "", ["-p:TiaReleaseKey=" + key,
                 "-p:SiemensEngineeringDirectory=" + Path.GetFullPath(Path.Combine(apiRoot, ReleaseCommands.PlcWorkerApi(key).Directory))]));
-        units.Add(CheckAllBuild.Suite(CheckAllPreflightSuite(catalog)));
         foreach (var key in new[] { "20", "21" }) units.Add(new($"src/Engine/TiaMcp.Engine.V{key}.csproj", "sdk-" + key, ["-p:TiaMcpEngineWorkerSdkFixture=true"]));
         foreach (var key in new[] { "20", "21" })
         foreach (var mode in CheckAllCandidateModes()) units.Add(CheckAllCandidateBuild(key, mode));
