@@ -11,6 +11,33 @@ public sealed class CheckAllTests
     private static CommandResult Passed() => new(0, "passed\n", "");
 
     [Fact]
+    public void ScriptSuccessorsCoverEveryEngineJobExactlyOnce()
+    {
+        var expected = new List<string> { "usage-audit" };
+        foreach (var key in new[] { "20", "21" })
+        {
+            foreach (var c in new[] { 8, 16 })
+            foreach (var transport in new[] { "stdio", "http" })
+            foreach (var profile in new[] { "full", "lite" }) expected.Add($"stability-v{key}-c{c}-{transport}-{profile}");
+            foreach (var family in new[] { "contracts", "responses", "transport-usage", "usage", "campaign-inputs", "approval", "resources", "ecosystem" })
+                expected.Add(family + "-v" + key);
+        }
+        var mapping = ReleaseCommands.CheckAllScriptSuccessors();
+        Assert.Equal(33, mapping.Count);
+        Assert.Equal(expected.Order(), mapping.Keys.Order());
+        Assert.Equal(33, mapping.Values.Distinct().Count());
+        foreach (var name in expected) Assert.Equal(name + "-plc", ReleaseCommands.CheckAllPlcSuccessor(name));
+        Assert.Throws<ReleaseException>(() => ReleaseCommands.CheckAllPlcSuccessor("harness-v21-http"));
+        var jobs = mapping.SelectMany(pair => new[] { pair.Key, pair.Value }).Select(name => new CheckJob(name, Passed, [])).ToArray();
+        ReleaseCommands.ValidateCheckAllScriptSuccessors(jobs);
+        foreach (var name in jobs.Select(job => job.Name))
+        {
+            Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllScriptSuccessors(jobs.Where(job => job.Name != name).ToArray()));
+            Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllScriptSuccessors([.. jobs, new(name, Passed, [])]));
+        }
+    }
+
+    [Fact]
     public void TrackedBytesChecksEveryUniqueFileAndDetectsChangesWithUnmergedStagePaths()
     {
         using var fixture = new OfflineFixtures();

@@ -25,6 +25,7 @@ def main():
     parser.add_argument('--host-harness', type=Path)
     parser.add_argument('--engine-worker', type=Path, help='Explicit SDK-only worker for the combined net10 host')
     parser.add_argument('--engine-catalog', type=Path)
+    parser.add_argument('--plc-worker', type=Path)
     parser.add_argument('--public-api', type=Path)
     parser.add_argument('--schema-root', type=Path)
     parser.add_argument('--transport', choices=('stdio', 'http', 'both'), default='both')
@@ -67,7 +68,7 @@ def main():
                 (cwc/'control/index.html').write_text('<html>test</html>',encoding='utf-8')
                 (cwc/'manifest.json').write_text(json.dumps({'mver':'1.2.0','control':{'identity':{'name':'Demo','displayname':'Demo','version':'1.0','type':'guid://551BF148-2F0D-4293-8E10-C9C3A1A6A073'}}}),encoding='utf-8')
                 with resources.server(args.exe,args.public_api,args.major,transport,profile,args.host_harness,args.public_api,
-                                      env_overrides={'TIA_MCP_BUNDLE_ROOT':str(ROOT),'TIA_MCP_PLC_TOOLS_PYTHON':sys.executable,'TIA_MCP_MAX_RESPONSE_CHARS':'100000'},evidence_directory=case, engine_worker=args.engine_worker, engine_catalog=args.engine_catalog) as (rpc,http,logs):
+                                      env_overrides={'TIA_MCP_BUNDLE_ROOT':str(ROOT),'TIA_MCP_PLC_TOOLS_PYTHON':sys.executable,'TIA_MCP_MAX_RESPONSE_CHARS':'100000'},evidence_directory=case, engine_worker=args.engine_worker, engine_catalog=args.engine_catalog, plc_worker=args.plc_worker) as (rpc,http,logs):
                     rpc('initialize','init',{'protocolVersion':'2024-11-05','capabilities':{},'clientInfo':{'name':'ecosystem-check','version':'1'}})
                     rpc('notifications/initialized',notification=True)
                     number=0
@@ -100,6 +101,8 @@ def main():
             'scriptSha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
             'scope':'Synthetic decoder fixtures, real local PublicAPI fragment schemas and offline MCP transport dispatch; no TIA attach, writes or runtime CWC deployment.'}
     result.update(resources.engine_fixture_evidence(args.engine_worker))
+    if args.plc_worker is not None:
+        result.update(resources.plc_fixture_evidence(args.plc_worker, args.exe))
     (folder/'result.json').write_text(json.dumps(result,indent=2),encoding='utf-8')
     print(f'COMPLETE: {checks} ecosystem checks passed; native TIA NOT RUN; evidence: {folder}',flush=True)
 

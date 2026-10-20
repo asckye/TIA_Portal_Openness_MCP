@@ -8,6 +8,28 @@ namespace TiaMcp.ReleaseTool.Tests;
 public sealed class CheckAllRound5Tests
 {
     [Fact]
+    public void PlcScriptFixtureBuildsHaveIndependentSdkReceiptsForBothReleases()
+    {
+        var root = Repository.FindRoot();
+        var units = ReleaseCommands.CheckAllPlcFixtureBuilds(Path.Combine(root, "sdk"));
+        Assert.Equal(2, units.Length);
+        foreach (var key in new[] { "20", "21" })
+        {
+            var unit = Assert.Single(units.Where(unit => unit.Properties.Contains("-p:TiaReleaseKey=" + key)));
+            Assert.Equal("src/PlcWorker/TiaMcp.PlcWorker.csproj", unit.Project);
+            Assert.Equal("plc-sdk-" + key, unit.Variant);
+            Assert.Contains("-p:TiaMcpPlcWorkerSdkFixture=true", unit.Properties);
+            Assert.Contains(unit.Properties, property => property.StartsWith("-p:SiemensEngineeringDirectory=", StringComparison.Ordinal) && Path.IsPathFullyQualified(property.Split('=', 2)[1]));
+            var fixtureRoot = Assert.Single(unit.Properties.Where(property => property.StartsWith("-p:TiaMcpPlcWorkerFixtureRoot=", StringComparison.Ordinal))).Split('=', 2)[1];
+            Assert.StartsWith(root + Path.DirectorySeparatorChar, fixtureRoot, StringComparison.OrdinalIgnoreCase);
+            var worker = ReleaseCommands.CheckAllPlcFixture(key);
+            Assert.Equal(PlcWorkerFixtures.Candidate(key, "SOURCE", "current").Worker(Path.GetDirectoryName(fixtureRoot)!), worker);
+            Assert.DoesNotContain("src/Engine", worker.Replace('\\', '/'));
+            Assert.False(unit.Variant.StartsWith("sdk-", StringComparison.Ordinal)); // Engine runtime projection must not claim the PLC fixture.
+        }
+    }
+
+    [Fact]
     public void MergeRejectsRepeatedIdentityEvenWithDifferentExecutionIdsAndPassingTotals()
     {
         using var fixture = new OfflineFixtures();

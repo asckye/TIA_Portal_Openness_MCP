@@ -495,7 +495,7 @@ def main():
         'workerModel': 'combined-host-supervised-worker', 'bounds': {'maxPrivateMiB': args.max_private_mib, 'maxHandleGrowth': args.max_handle_growth}, 'runs': []}
     report.update(resources.engine_fixture_evidence(args.engine_worker, args.exe))
     if args.plc_worker is not None:
-        report.update(hostSha256=sha(args.exe), sdkWorkerSha256=sha(args.plc_worker), workerModel='foundation-host-plc-worker')
+        report.update(resources.plc_fixture_evidence(args.plc_worker, args.exe))
     try:
         for transport in args.transports:
             for profile in args.profiles:

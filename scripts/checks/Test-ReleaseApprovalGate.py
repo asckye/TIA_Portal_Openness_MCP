@@ -270,7 +270,7 @@ def run_engine(args) -> dict:
         readiness_worker = (Path(__file__).resolve().parents[2] / 'src' / 'PlcWorker' / 'bin' / str(args.major)
                             / 'Release' / 'net48' / f'TiaMcp.PlcWorker.{args.major}.exe') if args.plc_worker else None
         with resources.server(exe, readiness_install, args.major, "stdio", "full", None, api,
-                              env_overrides=readiness_env, plc_worker=readiness_worker) as (rpc, _, logs):
+                              env_overrides=readiness_env, plc_worker=readiness_worker, sdk_ready=False) as (rpc, _, logs):
             initialized = rpc("initialize", "init", {"protocolVersion": "2024-11-05", "capabilities": {},
                                                        "clientInfo": {"name": "release-readiness-gate", "version": "1"}})
             require("result" in initialized, f"V{args.major}: real EXE host initialize failed: {logs[-10:]}")
@@ -395,7 +395,7 @@ def main() -> int:
         raise CheckFailure(f"Check count mismatch: {report}")
     report.update(resources.engine_fixture_evidence(args.engine_worker or args.plc_worker, args.exe))
     if args.plc_worker is not None:
-        report['workerModel'] = 'foundation-host-plc-worker'
+        report.update(resources.plc_fixture_evidence(args.plc_worker, args.exe))
     report["status"] = "passed"
     report["approvalSettings"] = ("explicit enabled=true; timeoutSeconds=120 for approval proof; absent for real-EXE readiness proof"
                                    if args.product == "engine" else "explicit enabled=true; timeoutSeconds=120")

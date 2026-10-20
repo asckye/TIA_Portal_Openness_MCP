@@ -7,6 +7,7 @@ from ctypes import wintypes
 from tool_usage_checks import check_usage
 import json
 import hashlib
+import importlib.util
 import os
 from pathlib import Path
 import queue
@@ -24,6 +25,9 @@ ROOT = Path(__file__).resolve().parents[2]
 KEYS = ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']
 USAGE_REPORTS = []
 INIT = {'protocolVersion': '2025-03-26', 'capabilities': {}, 'clientInfo': {'name': 'foundation-transport-test', 'version': '1'}}
+spec = importlib.util.spec_from_file_location('transport_resources', Path(__file__).with_name('Test-ResourceDiscovery.py'))
+resources = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(resources)
 
 
 class Stdio:
@@ -53,13 +57,13 @@ class Stdio:
 
 
 class Http:
-    def __init__(self, url):
-        self.url, self.sid, self.seq = url, None, 0
+    def __init__(self, url, key='fixture-key'):
+        self.url, self.sid, self.seq, self.key = url, None, 0, key
 
     def request(self, path, method='GET', body=None, auth=True):
         headers = {'Accept': 'application/json, text/event-stream', 'MCP-Protocol-Version': '2025-03-26'}
         if auth:
-            headers['Authorization'] = 'Bearer fixture-key'
+            headers['Authorization'] = 'Bearer ' + self.key
         if self.sid:
             headers['Mcp-Session-Id'] = self.sid
         if body is not None:
@@ -330,10 +334,164 @@ def engine_transports(args, temp, counts):
                 process.terminate(); process.wait(10)
 
 
+class SharedStdio:
+    def __init__(self, rpc):
+        self.rpc, self.sequence = rpc, 0
+
+    def call(self, method, params):
+        self.sequence += 1
+        reply = self.rpc(method, self.sequence, params)
+        assert 'error' not in reply, reply
+        return reply['result']
+
+    def close(self):
+        # The shared context owns stdin, wait, image verification and cleanup.
+        pass
+
+
+def plc_transport_inputs(args, key, temp):
+    workers = resources_helper_overrides(args.plc_sdk_worker)
+    full = key in ('20', '21')
+    if full:
+        assert key in workers and args.public_api_root, '20/21 require an explicit SDK fixture worker and PublicAPI root'
+        api = args.public_api_root / f'TIA_V{key}_PublicAPI' / f'V{key}'
+        if key == '21':
+            api /= 'net48'
+        return workers[key], api, full
+    assert args.fixture, 'Old-release transport checks require the synthetic worker'
+    return args.fixture.resolve(), temp, full
+
+
+def resources_helper_overrides(values):
+    # Use the snapshot parser's strict, duplicate-refusing RELEASE=PATH contract.
+    spec = importlib.util.spec_from_file_location('transport_contracts', Path(__file__).with_name('Snapshot-ToolContracts.py'))
+    contracts = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(contracts)
+    return contracts.engine_overrides(values, '--plc-sdk-worker')
+
+
+def plc_transports(args, temp, counts):
+    """All eight releases use the same launcher, transports and session lifetime checks."""
+    evidence = {}
+    for key in args.releases:
+        worker, api, full = plc_transport_inputs(args, key, temp)
+        host = (args.host_exe or ROOT / f'runtime/v{key}/TiaMcp.FoundationHost.exe').resolve()
+        logfile = temp / f'{key}.jsonl'
+        data = temp / ('data-' + key)
+        data.mkdir()
+        env = dict(TIA_FIXTURE_LOG=str(logfile), TIA_MCP_DATA_DIRECTORY=str(data), TiaPortalLocation='')
+        if full:
+            # Retain the engine branch's clean no-TIA worker EOF/exit assertion.
+            done = subprocess.run([str(worker), '--native-session', key, str(api.resolve()), '0' * 64],
+                                  input=b'', capture_output=True, timeout=120,
+                                  env=dict(os.environ, **env, TIA_MCP_PLC_WORKER_SDK_READY='0'))
+            assert done.returncode == 0, (key, done.returncode, done.stderr.decode('utf-8', 'replace')[-2000:])
+        # Retain the no-TIA readiness assertion, then also exercise SDK-ready dispatch.
+        # Old releases keep their original launch: no TIA installation location reaches the synthetic worker.
+        portal = api if full else None
+        for ready in ((False, True) if full else (False,)):
+            owned = []
+            with resources.server(host, portal, key, 'stdio', 'full', public_api=api, plc_worker=worker,
+                                  sdk_ready=ready, env_overrides=env, evidence_directory=args.output,
+                                  rpc_timeout=15, startup_timeout=60, stdio_exit_timeout=15,
+                                  process_observer=owned.append, sdk_installation=full) as (rpc, _, _):
+                client = SharedStdio(rpc)
+                counts[key] = exercise_engine(client, key, ready=ready) if full else exercise(client, key, logfile, 0)
+            assert owned[0].returncode == 0
+        if full:
+            evidence[key] = resources.plc_fixture_evidence(worker, host)
+        else:
+            records = [json.loads(line) for line in logfile.read_text('utf-8').splitlines()]
+            worker_args = records[0]['args']
+            assert len(worker_args) == 4 and worker_args[:2] == ['--native-session', key], worker_args
+            assert re.fullmatch('[0-9a-f]{64}', worker_args[3]), worker_args
+            assert Path(worker_args[2]).samefile(temp), worker_args
+            calls = [r for r in records if r['stage'] == 'call']
+            assert [r['operation'] for r in calls] == ['Attach', 'ReadProjectTree', 'Disconnect']
+            assert [r['Id'] for r in calls] == [1, 2, 3], calls
+            assert all(r['Method'] == 'adapter.' + r['operation'] for r in calls), calls
+        if args.stdio_only:
+            continue
+        if full:
+            unready = []
+            with resources.server(host, api, key, 'http', 'full', public_api=api, plc_worker=worker,
+                                  sdk_ready=False, env_overrides=env, rpc_timeout=15, startup_timeout=60,
+                                  process_observer=unready.append):
+                # Keep the no-TIA HTTP readiness and schema refusals as well as the ready session proof below.
+                command = unready[0].args
+                url = command[command.index('--http-prefix') + 1].rstrip('/')
+                secret = command[command.index('--http-api-key') + 1]
+                for _ in range(2):
+                    exercise_engine(Http(url, secret), key, ready=False)
+        logfile = temp / f'http-{key}.jsonl'
+        env['TIA_FIXTURE_LOG'] = str(logfile)
+        owned = []
+        with resources.server(host, portal, key, 'http', 'full', public_api=api, plc_worker=worker,
+                              sdk_ready=full, env_overrides=env, process_observer=owned.append,
+                              evidence_directory=args.output, rpc_timeout=15, startup_timeout=60,
+                              sdk_installation=full) as (_, _, _):
+            process = owned[0]
+            command = process.args
+            url = command[command.index('--http-prefix') + 1].rstrip('/')
+            secret = command[command.index('--http-api-key') + 1]
+            first, second = Http(url, secret), Http(url, secret)
+            with first.request('/mcp/health', auth=False) as response:
+                health = json.load(response)
+                assert health['releaseKey'] == key
+                if full:
+                    assert health['fileVersion'] and health['profile'] == 'full-engine'
+            try:
+                first.request('/mcp/ready', auth=False)
+                raise AssertionError('Unauthenticated readiness accepted')
+            except urllib.error.HTTPError as error:
+                assert error.code == 401
+            with first.request('/mcp/ready') as response:
+                ready = json.load(response)
+                assert ready['mcpHostReady']
+                if full:
+                    assert ready == {'mcpHostReady': True, 'releaseKey': key, 'nativeAcceptance': 'NOT RUN'}
+            for client in (first, second):
+                if full:
+                    exercise_engine(client, key, close=False, ready=True)
+                    tool(client, 'GetSessionState')
+                else:
+                    before = len(logfile.read_text('utf-8').splitlines()) if logfile.exists() else 0
+                    exercise(client, key, logfile, before)
+                    deadline = time.monotonic() + 10
+                    while sum(json.loads(line)['stage'] == 'exit' for line in logfile.read_text('utf-8').splitlines()) < (1 if client is first else 2):
+                        assert time.monotonic() < deadline
+                        time.sleep(.05)
+            assert first.sid and second.sid and first.sid != second.sid
+            if full:
+                kernel, handles = worker_handles(process.pid, worker.name)
+                try:
+                    kernel.GetProcessId.argtypes = [wintypes.HANDLE]
+                    pids = [kernel.GetProcessId(handle) for handle in handles]
+                    assert len(pids) == 2 and len(set(pids)) == 2, ('Expected two session workers', pids)
+                    first.close()
+                    deadline = time.monotonic() + 10
+                    while sum(kernel.WaitForSingleObject(handle, 0) == 0 for handle in handles) != 1:
+                        assert time.monotonic() < deadline, 'Session deletion did not terminate exactly one worker'
+                        time.sleep(.05)
+                    verify_owned_process_image(process)
+                    process.kill(); process.wait(10)
+                    assert all(kernel.WaitForSingleObject(handle, 5000) == 0 for handle in handles), 'PLC worker outlived the killed host'
+                finally:
+                    for handle in handles:
+                        kernel.CloseHandle(handle)
+            else:
+                starts = [json.loads(line) for line in logfile.read_text('utf-8').splitlines() if '"start"' in line]
+                assert len(starts) == 2 and starts[0]['pid'] != starts[1]['pid']
+                assert starts[0]['args'][3] != starts[1]['args'][3]
+    return evidence
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--fixture', type=Path)
     parser.add_argument('--plc-worker', action='store_true', help='Exercise opt-in PLC workers on 20/21 as well as all six old releases')
+    parser.add_argument('--plc-sdk-worker', action='append', default=[], metavar='RELEASE=PATH')
+    parser.add_argument('--public-api-root', type=Path)
     parser.add_argument('--releases', nargs='+', choices=KEYS, default=KEYS)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--temp-root', type=Path, help='New worktree directory for retained fixture logs; avoids restricted system TEMP directories')
@@ -344,11 +502,14 @@ def main():
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     counts = {}
+    worker_evidence = {}
     if args.temp_root:
         args.temp_root.mkdir(parents=True, exist_ok=False)
     with (nullcontext(args.temp_root.resolve()) if args.temp_root else tempfile.TemporaryDirectory(prefix='tia-foundation-wire-')) as temp:
         temp = Path(temp)
-        for key in (key for key in args.releases if key not in ('20', '21')):
+        if args.plc_worker:
+            worker_evidence = plc_transports(args, temp, counts)
+        for key in (key for key in args.releases if key not in ('20', '21') and not args.plc_worker):
             logfile = temp / f'{key}.jsonl'
             env = dict(os.environ, TIA_FIXTURE_LOG=str(logfile))
             command = [str((args.host_exe or ROOT / f'runtime/v{key}/TiaMcp.FoundationHost.exe').resolve()), '--bundle-root', str(ROOT), '--release-key', key, '--worker-exe', str(args.fixture.resolve()), '--public-api', str(temp)]
@@ -371,7 +532,7 @@ def main():
             calls = [r for r in records if r['stage'] == 'call']
             assert [r['Id'] for r in calls] == [1, 2, 3], calls
             assert all(r['Method'] == 'adapter.' + r['operation'] for r in calls), calls
-        for key in (key for key in args.releases if key not in ('20', '21') and not args.stdio_only):
+        for key in (key for key in args.releases if key not in ('20', '21') and not args.stdio_only and not args.plc_worker):
             with socket.socket() as port:
                 port.bind(('127.0.0.1', 0)); number = port.getsockname()[1]
             url = f'http://127.0.0.1:{number}'
@@ -416,9 +577,16 @@ def main():
                 finally:
                     verify_owned_process_image(p)
                     p.terminate(); p.wait(10)
-        engine_transports(args, temp, counts)
+        if not args.plc_worker:
+            engine_transports(args, temp, counts)
     (args.output / 'tool-usage.json').write_text(json.dumps(USAGE_REPORTS, indent=2) + '\n', encoding='utf-8')
-    (args.output / 'result.json').write_text(json.dumps({'stdioToolCounts': counts, 'httpSessions': 0 if args.stdio_only else len(args.releases) * 2, 'unicodeRoundTrip': True, 'workerProtocol': 2, 'workerArguments': 'exact release keys and distinct launch nonces', 'nativeTiaExecuted': False}, indent=2), 'utf-8')
+    report = {'stdioToolCounts': counts, 'httpSessions': 0 if args.stdio_only else len(args.releases) * 2,
+              'unicodeRoundTrip': True, 'workerProtocol': 2,
+              'workerArguments': 'exact release keys and distinct launch nonces', 'nativeTiaExecuted': False}
+    if args.plc_worker:
+        report['plcWorkers'] = worker_evidence
+        report['httpSessions'] += 0 if args.stdio_only else 2 * len(set(args.releases) & {'20', '21'})
+    (args.output / 'result.json').write_text(json.dumps(report, indent=2), 'utf-8')
     print(f'COMPLETE: {sum(counts.values()) * (1 if args.stdio_only else 3)} Foundation transport checks passed; {len(counts)} releases; native TIA NOT RUN')
 
 

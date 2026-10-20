@@ -29,6 +29,27 @@ internal sealed class StaticTree : IDisposable
 public sealed class StaticPolicyTests
 {
     [Fact]
+    public void PlcScriptWiringAndEvidenceRegressionsRunWithoutTia()
+    {
+        var root = Repository.FindRoot();
+        var result = ProcessRunner.Run(OperatingSystem.IsWindows() ? "python" : "python3",
+            ["-X", "utf8", Path.Combine(root, "scripts/checks/Test-PlcScriptSuccessors.py")], root,
+            new Dictionary<string, string?> { ["PYTHONDONTWRITEBYTECODE"] = "1" });
+        Assert.Equal(0, result.ExitCode);
+        Assert.Contains("Ran 10 tests", result.StandardError);
+        Assert.Contains("OK", result.StandardError);
+        var inventory = File.ReadAllText(Path.Combine(root, "build-tools/release/CheckAllInventory.cs"));
+        Assert.Contains("\"plc-script-self-tests\"", inventory);
+        Assert.Contains("\"campaign-validator-self-tests\"", inventory);
+        var jobs = File.ReadAllText(Path.Combine(root, "build-tools/release/CheckAll.cs"));
+        Assert.Contains("ValidateCheckAllScriptSuccessors(jobs)", jobs);
+        Assert.Contains("CatalogAudits.Usage(Root, recordsPath: records)", jobs);
+        Assert.Contains("tool-usage-audit-plc.json", jobs);
+        Assert.Contains("PLC usage audit differs from manifest/tool-usage-coverage.json", jobs);
+        Assert.Contains("PLC usage receipt evidence mismatch", jobs);
+    }
+
+    [Fact]
     public void Plugin_guard_repository_check_detects_a_legacy_only_matcher()
     {
         using var tree = new StaticTree();

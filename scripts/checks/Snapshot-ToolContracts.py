@@ -58,6 +58,21 @@ def engine_host_server(args, release, portal_root, profile, env_overrides):
         raise ValueError('Select exactly one worker kind per release')
     if (release in workers) != (release in catalogs):
         raise ValueError('EngineHost overrides require both worker and catalog for V' + release)
+    if release in plc:
+        spec = importlib.util.spec_from_file_location('resource_discovery', Path(__file__).with_name('Test-ResourceDiscovery.py'))
+        resources = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(resources)
+        api_root = args.public_api_root or args.repo_root / 'sdk'
+        public_api = api_root / f'TIA_V{release}_PublicAPI' / f'V{release}'
+        if release == '21':
+            public_api /= 'net48'
+        environment = engine_host_environment(args, release, plc, env_overrides)
+        environment['TIA_MCP_BUNDLE_ROOT'] = str(args.repo_root.resolve())
+        with resources.server(args.engine_host, portal_root, int(release), args.transport, profile,
+                              public_api=public_api, plc_worker=plc[release], env_overrides=environment,
+                              sdk_ready=not getattr(args, 'packaged_no_tia', False)) as value:
+            yield value
+        return
     transport = args.transport
     key = secrets.token_urlsafe(24)
     port = 0

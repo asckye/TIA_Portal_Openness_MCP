@@ -60,9 +60,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--foundation-host', type=Path, required=True)
     parser.add_argument('--engine-host', type=Path, help='Use the unified Foundation engine host for V20/V21; engine paths select SDK fixture workers with sibling catalogs')
-    parser.add_argument('--engine-v20', type=Path, required=True)
-    parser.add_argument('--engine-v21', type=Path, required=True)
-    parser.add_argument('--harness', type=Path, required=True)
+    parser.add_argument('--engine-v20', type=Path)
+    parser.add_argument('--engine-v21', type=Path)
+    parser.add_argument('--harness', type=Path)
+    parser.add_argument('--plc-worker', action='append', default=[], metavar='RELEASE=PATH')
     parser.add_argument('--public-api-root', type=Path, required=True)
     parser.add_argument('--evidence', type=Path, required=True, help='New worktree directory for this run')
     parser.add_argument('--coverage-output', type=Path, required=True)
@@ -73,10 +74,15 @@ def main():
         raise ValueError('audit-tool-usage is the only writer of manifest/tool-usage-coverage.json; choose a bin-build evidence output')
     snapshots = helper('Snapshot-ToolResponses')
     resources = snapshots.resources
+    plc = snapshots.contracts.engine_overrides(args.plc_worker, '--plc-worker')
+    for key in set(args.releases) & {'20', '21'}:
+        if key not in plc and (getattr(args, 'engine_v' + key) is None or args.harness is None):
+            parser.error('Engine usage requires --engine-v' + key + ' and --harness, or an explicit --plc-worker')
     if args.engine_host:
         args.repo_root, args.transport = ROOT, 'stdio'
-        args.engine_worker = [f'{key}={exe.resolve()}' for key, exe in (('20', args.engine_v20), ('21', args.engine_v21))]
-        args.engine_catalog = [f'{key}={exe.resolve().parent / "tool-catalog.json"}' for key, exe in (('20', args.engine_v20), ('21', args.engine_v21))]
+        engines = [(key, exe) for key, exe in (('20', args.engine_v20), ('21', args.engine_v21)) if key not in plc and exe is not None]
+        args.engine_worker = [f'{key}={exe.resolve()}' for key, exe in engines]
+        args.engine_catalog = [f'{key}={exe.resolve().parent / "tool-catalog.json"}' for key, exe in engines]
     evidence = args.evidence.resolve()
     evidence.relative_to(ROOT)
     evidence.mkdir(parents=True, exist_ok=False)
@@ -92,9 +98,13 @@ def main():
             if major == 21:
                 api /= 'net48'
             installation = resources.sdk_only_installation(api, major, case)
-            exe = args.engine_v20 if major == 20 else args.engine_v21
-            options = {'harness': args.harness.resolve(), 'public_api': api.resolve()}
-            env.update(snapshots.capture_readiness_overrides(args.harness.resolve(), False))
+            exe = args.foundation_host if release in plc else (args.engine_v20 if major == 20 else args.engine_v21)
+            options = {'public_api': api.resolve()}
+            if release in plc:
+                options['plc_worker'] = plc[release]
+            else:
+                options['harness'] = args.harness.resolve()
+                env.update(snapshots.capture_readiness_overrides(args.harness.resolve(), False))
             profile = 'full'
         else:
             exe, installation, options, profile = args.foundation_host, case, {}, 'plc-foundation'
@@ -111,6 +121,8 @@ def main():
                 return resources.envelope(reply)
 
             record = check_usage(call, tools, release, verify_documents=True)
+            if release in plc:
+                record.update(resources.plc_fixture_evidence(plc[release], args.foundation_host))
             records.append(record)
             (case / 'tool-usage.json').write_text(json.dumps(record, indent=2) + '\n', encoding='utf-8')
             print(f'PASS V{release}: {record["checkedToolCount"]} tools, '

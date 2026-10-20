@@ -7,6 +7,46 @@ namespace TiaMcp.ReleaseTool;
 
 internal static partial class ReleaseCommands
 {
+    // P8-04l retires only the engine half of this bijection, after both halves pass.
+    internal static IReadOnlyDictionary<string, string> CheckAllScriptSuccessors()
+    {
+        var names = new List<string>();
+        foreach (var key in new[] { "20", "21" })
+        {
+            foreach (var concurrency in new[] { "8", "16" })
+            foreach (var transport in new[] { "stdio", "http" })
+            foreach (var profile in new[] { "full", "lite" })
+                names.Add($"stability-v{key}-c{concurrency}-{transport}-{profile}");
+            foreach (var family in new[] { "contracts", "responses", "transport-usage", "usage", "campaign-inputs", "approval", "resources", "ecosystem" })
+                names.Add(family + "-v" + key);
+        }
+        names.Add("usage-audit");
+        return names.ToDictionary(name => name, name => name + "-plc", StringComparer.Ordinal);
+    }
+
+    internal static string CheckAllPlcSuccessor(string engineJob) => CheckAllScriptSuccessors().TryGetValue(engineJob, out var successor)
+        ? successor : throw new ReleaseException("Unmapped engine script job: " + engineJob);
+
+    internal static void ValidateCheckAllScriptSuccessors(IReadOnlyList<CheckJob> jobs)
+    {
+        var names = jobs.Select(job => job.Name).ToArray();
+        foreach (var (engine, plc) in CheckAllScriptSuccessors())
+            if (names.Count(name => name == engine) != 1 || names.Count(name => name == plc) != 1)
+                throw new ReleaseException("Incomplete engine script successor pair: " + engine + " -> " + plc);
+    }
+
+    private static string CheckAllPlcFixtureRoot => Path.GetFullPath(Path.Combine(Root, "bin-build", "check-plc-fixtures"));
+    internal static string CheckAllPlcFixture(string release) => PlcWorkerFixtures.Candidate(release, "SOURCE", "current").Worker(CheckAllPlcFixtureRoot);
+
+    internal static CheckBuild[] CheckAllPlcFixtureBuilds(string apiRoot) => new[] { "20", "21" }.Select(key =>
+    {
+        var fixture = PlcWorkerFixtures.Candidate(key, "SOURCE", "current");
+        return new CheckBuild("src/PlcWorker/TiaMcp.PlcWorker.csproj", "plc-sdk-" + key,
+            // Same API directory as the production worker units and build-plc-worker-fixtures; inventory needs no SDK present.
+            ["-p:TiaReleaseKey=" + key, "-p:SiemensEngineeringDirectory=" + Path.GetFullPath(Path.Combine(apiRoot, PlcWorkerApi(key).Directory)),
+                .. fixture.Properties(CheckAllPlcFixtureRoot)]);
+    }).ToArray();
+
     internal static JsonObject CheckAllPreflightSuite(JsonObject catalog)
     {
         var suite = catalog["release-tool"]!.DeepClone().AsObject();
@@ -74,6 +114,9 @@ internal static partial class ReleaseCommands
         Python("python-script-self-tests", "scripts/checks/Check-ScriptToolCalls.py", "--self-test");
         Python("python-script-calls", "scripts/checks/Check-ScriptToolCalls.py");
         Python("campaign-runner-self-tests", "scripts/checks/Test-CampaignInputs.py", "--self-test");
+        Python("plc-script-self-tests", "scripts/checks/Test-PlcScriptSuccessors.py");
+        // The runner finds the file program compiled by build-once below the original TEMP, not the job's private TEMP.
+        Python("campaign-validator-self-tests", "scripts/checks/Test-CampaignInputs.py", "--validator-self-test");
         Python("domain-source", "scripts/checks/Test-DomainTools.py", "--source-only");
         Python("contract-self-tests", "scripts/checks/Snapshot-ToolContracts.py", "self-test");
         Python("contract-verify", "scripts/checks/Snapshot-ToolContracts.py", "verify");
