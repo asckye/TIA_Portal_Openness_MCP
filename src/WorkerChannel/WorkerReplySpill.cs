@@ -16,6 +16,11 @@ namespace TiaMcp.WorkerChannel
         }
         public static string Write(string directory, string json)
         {
+            // The net48 workers write spills. .NET Framework passes a file path of MAX_PATH (260) characters or more
+            // to Win32 unchanged, which refuses it ("Could not find a part of the path") unless the process is
+            // long-path aware, and the worker then exits mid-reply. The 45-character spill name reaches that limit
+            // from a 214-character directory; the extended-length form has no such limit. The hosts read on net10.
+            directory = ExtendedLength(directory);
             Directory.CreateDirectory(directory);
             string id = Guid.NewGuid().ToString("N");
             string path = Path.Combine(directory, id + ".json"), pending = path + ".pending";
@@ -24,6 +29,14 @@ namespace TiaMcp.WorkerChannel
             { stream.Write(bytes, 0, bytes.Length); stream.Flush(true); }
             File.Move(pending, path);
             return JsonSerializer.Serialize(new { workerReplySpill = new { id, byteLength = bytes.LongLength, sha256 = Hash(bytes) } });
+        }
+        // Windows: the full path as \\?\<path>, or \\?\UNC\<server>\<share>\... for a share; other systems unchanged.
+        private static string ExtendedLength(string directory)
+        {
+            if (Path.DirectorySeparatorChar != '\\') return directory;
+            string full = Path.GetFullPath(directory);
+            if (full.StartsWith(@"\\?\", StringComparison.Ordinal) || full.StartsWith(@"\\.\", StringComparison.Ordinal)) return full;
+            return full.StartsWith(@"\\", StringComparison.Ordinal) ? @"\\?\UNC\" + full.Substring(2) : @"\\?\" + full;
         }
         public static string Read(string directory, string json, out bool spilled)
         {

@@ -275,6 +275,64 @@ public sealed class WorkerRobustnessTests
         AssertReadableExport(scope, result);
         Assert.True(clock.Elapsed >= TimeSpan.FromMilliseconds(1200), scope.FailureDetails(result));
     }
+    // The net48 PlcWorker writes the spill below the host's data location. On a CI checkout that directory was
+    // 235 characters, .NET Framework refused the 281-character spill file and the worker exited mid-reply.
+    // 240 keeps the directory itself creatable, as on CI; 300 puts the directory beyond MAX_PATH as well.
+    [Theory, InlineData(240), InlineData(300)]
+    public async Task Net48_worker_spills_an_oversized_reply_beyond_MAX_PATH(int directoryLength)
+    {
+        string exe = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+            "tests/WorkerChannel/TiaMcp.PlcWorker.FaultFixture/bin/Release/net48/TiaMcp.PlcWorker.FaultFixture.exe");
+        Assert.True(File.Exists(exe), exe);
+        string adapter = Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter.21.dll");
+        TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(adapter, "offline fixture identity");
+        string root = Path.Combine(AppContext.BaseDirectory, "worker-fixture-spills", Guid.NewGuid().ToString("N")), directory = root;
+        while (directory.Length < directoryLength)
+            directory = Path.Combine(directory, new string('d', Math.Clamp(directoryLength - directory.Length - 1, 1, 40)));
+        Assert.True(directory.Length + "\\".Length + 32 + ".json.pending".Length >= 260, directory);
+        string nonce = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
+        // The channel uses the raw streams, and UTF-8 without a preamble keeps a BOM out of stdin, as in WorkerClient.
+        // Stderr keeps the console code page that the net48 fixture writes in.
+        var utf8 = new System.Text.UTF8Encoding(false);
+        var start = new System.Diagnostics.ProcessStartInfo(exe) { UseShellExecute = false, CreateNoWindow = true,
+            RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true,
+            StandardInputEncoding = utf8, StandardOutputEncoding = utf8 };
+        foreach (string argument in new[] { "--native-session", "21", Path.GetDirectoryName(exe)!, nonce }) start.ArgumentList.Add(argument);
+        start.Environment["TIA_MCP_PLC_WORKER_FAULT"] = "oversized";
+        start.Environment["TIA_MCP_WORKER_SPILLS_DIRECTORY"] = directory;
+        using var process = System.Diagnostics.Process.Start(start)!;
+        var stderr = process.StandardError.ReadToEndAsync();
+        string? failure = null;
+        try
+        {
+            using (var channel = new ChannelClient(process.StandardOutput.BaseStream, process.StandardInput.BaseStream,
+                new ChannelIdentity("21", Client.Hash(exe), Client.Hash(adapter), process.Id, nonce)))
+            {
+                var budget = TimeSpan.FromSeconds(30);
+                await channel.ConnectAsync(budget);
+                string correlation = Guid.NewGuid().ToString("N");
+                await channel.CallToolAsync("adapter.FaultFixtureArm", "{\"method\":\"adapter.ReadBlocks\"}", BindingChange.None, true, budget, false, correlation, "ListPlcBlocks");
+                string wire = await channel.CallToolAsync("adapter.ReadBlocks", "{}", BindingChange.None, true, budget, false, correlation, "ListPlcBlocks");
+                string full = WorkerReplySpill.Read(directory, wire, out bool spilled);
+                Assert.True(spilled, wire);
+                Assert.True(full.Length > ChannelLimits.ResponseBytes);
+                Assert.Contains(new string('x', 1000), full);
+                Assert.Empty(Directory.GetFiles(directory));
+                Assert.False(channel.Poisoned);
+            }
+            // Disposing the channel closes the fixture's input; a worker that did not fault then returns 0.
+            Assert.True(process.WaitForExit(30000), "The worker fixture did not exit after its input closed.");
+            Assert.Equal(0, process.ExitCode);
+        }
+        catch (Exception error) { failure = error.ToString(); }
+        finally
+        {
+            // Only this synthetic child is terminated; production clients never kill a worker.
+            if (!process.HasExited) { process.Kill(); process.WaitForExit(); }
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+        Assert.True(failure == null, failure + Environment.NewLine + "worker stderr:" + Environment.NewLine + await stderr);
+    }
     private static void AssertReadableExport(Scope scope, CallToolResult result)
     {
         Assert.True((bool?)result.StructuredContent?["ok"], scope.FailureDetails(result));

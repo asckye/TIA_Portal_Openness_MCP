@@ -20,7 +20,7 @@ worker 首先发送无 id 的 `hello` 通知。`params` 包含 `protocol: 2`、`
 
 回复包含相同 id、`bindingEpochBefore`、`bindingEpochAfter`，以及唯一的 `result` 或 `error`。错误保留原 code/message，`data` 包含 `outcome`（`RejectedBeforeNative`、`ReadFailed` 或 `Unknown`）及 `evidence`（对象或 null）。各宿主 profile 负责映射，不把内部 outcome 当作 MCP 外部枚举。
 
-Foundation 与 Engine 共用超大回复处理：先完整编码，超过 16 MiB 时，在发送任何回复字节前调用已注册的 spill 回调，返回 `result.workerReplySpill`（`id` 为 32 位 GUID N、`byteLength`、`sha256`）。文件位于数据根既有 `worker-spills` 目录；宿主检查身份、普通文件、UTF-8、长度、哈希与 JSON，验证后删除该文件。没有 spill 回调且提供有界 `OversizedResultJson` 时，发送该拒绝 result（例如 `error.code=LIMIT_EXCEEDED`），不改变拒绝内容。未配置这两种回退或 spill 写入失败时，保留原有未知结果/通道失效行为，不重试派发。两种客户端按相同的 8 MiB 序列化结果阈值寄存为既有导出句柄；旧版的 shared-session 模式不因此改变。
+Foundation 与 Engine 共用超大回复处理：先完整编码，超过 16 MiB 时，在发送任何回复字节前调用已注册的 spill 回调，返回 `result.workerReplySpill`（`id` 为 32 位 GUID N、`byteLength`、`sha256`）。文件位于数据根既有 `worker-spills` 目录；Windows 上 worker 以扩展长度路径（`\\?\` 形式）写入，因此目录达到 214 个字符、文件路径达到 MAX_PATH 时 net48 worker 仍能写入；宿主检查身份、普通文件、UTF-8、长度、哈希与 JSON，验证后删除该文件。没有 spill 回调且提供有界 `OversizedResultJson` 时，发送该拒绝 result（例如 `error.code=LIMIT_EXCEEDED`），不改变拒绝内容。未配置这两种回退或 spill 写入失败时，保留原有未知结果/通道失效行为，不重试派发。两种客户端按相同的 8 MiB 序列化结果阈值寄存为既有导出句柄；旧版的 shared-session 模式不因此改变。
 
 Foundation 仍只接受百分比进度；含 `payload` 的进度仅用于 Engine profile，保留其现有测试，直到引擎退役任务确认覆盖迁移。
 
