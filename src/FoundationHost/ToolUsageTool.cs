@@ -90,9 +90,8 @@ internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpSer
             }
             return ValueTask.FromResult(new CallToolResult { Content = new List<ContentBlock> { new TextContentBlock { Text = new JsonObject { ["success"] = true, ["usage"] = usage }.ToJsonString() } } });
         }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or FormatException)
-        {
-            return ValueTask.FromResult(new CallToolResult { IsError = true, Content = new List<ContentBlock> { new TextContentBlock { Text = ex.Message } } });
-        }
+        // Argument errors propagate to FoundationV4Tool, which returns the INVALID_ARGUMENT envelope before any operation;
+        // a plain-text error result would be classified as an internal host failure.
+        catch (FormatException ex) { throw new ArgumentException(ex.Message, ex); }
     }
 }

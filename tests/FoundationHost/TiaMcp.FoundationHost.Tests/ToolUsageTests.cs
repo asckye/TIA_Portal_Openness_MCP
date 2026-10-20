@@ -78,9 +78,17 @@ internal static class ToolUsageTests
             var connect = JsonNode.Parse(((TextContentBlock)(await Call("{\"toolName\":\"ConnectPortal\"}")).Content.Single()).Text)!["data"]!;
             var arguments = connect["example"]!["request"]!["params"]!["arguments"]!.AsObject();
             check(arguments.Count == 1 && arguments.ContainsKey("processId"), "foundation Connect must not reuse full-engine projectName example");
-            check((await Call("{\"toolName\":\"__test_unregistered_tool__\"}")).IsError == true, "foundation must reject unavailable full-engine usage");
-            check((await Call("{\"offset\":-1}")).IsError == true, "invalid page is an error");
-            check((await Call("{\"toolName\":\"ConnectPortal\",\"query\":\"x\"}")).IsError == true, "conflicting selectors rejected");
+            // Each refusal is the typed V4 argument rejection, not an internal failure that also sets IsError.
+            async Task<bool> Rejected(string args)
+            {
+                var refused = await Call(args);
+                var body = JsonNode.Parse(((TextContentBlock)refused.Content.Single()).Text)!;
+                return refused.IsError == true && (string?)body["error"]?["code"] == "INVALID_ARGUMENT"
+                    && (string?)body["meta"]?["outcome"] == "rejected-before-operation" && (string?)body["meta"]?["execution"] == "not-started";
+            }
+            check(await Rejected("{\"toolName\":\"__test_unregistered_tool__\"}"), "foundation must reject unavailable full-engine usage: " + release);
+            check(await Rejected("{\"offset\":-1}"), "invalid page is an argument error: " + release);
+            check(await Rejected("{\"toolName\":\"ConnectPortal\",\"query\":\"x\"}"), "conflicting selectors rejected: " + release);
             check(worker.Calls == 0, "usage never invokes worker even when native access enabled");
         }
         if (!catalogChecks) return;
