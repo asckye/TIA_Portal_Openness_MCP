@@ -24,10 +24,18 @@ internal static class GlobalScriptBridgeTests
     public sealed class Module { public string Name => "Navigation"; }
 
     internal static void Run(Assembly server, Action<bool, string> check)
+        => Run(server, EngineSurface.For(server).Adapter!, server.GetType("TiaMcpServer.Siemens.UnifiedScriptAccess", true)!,
+            () => {
+                var tool = EngineSurface.For(server).Tool("SetUnifiedGlobalScript")!;
+                return tool.CustomAttributes.Any(a => a.AttributeType.Name == "McpServerToolAttribute")
+                    && (bool)tool.GetParameters().Single(p => p.Name == "dryRun").DefaultValue
+                    && tool.GetParameters().Single(p => p.Name == "previewToken").DefaultValue?.ToString() == "";
+            }, check);
+
+    internal static void Run(Assembly server, Assembly adapter, Type access, Func<bool> registered, Action<bool, string> check)
     {
-        var portal = EngineSurface.For(server);
-        var reflection = portal.Adapter!.GetType("TiaMcp.Adapters.Reflection.OpennessReflection", true)!;
-        var sessionType = portal.Adapter.GetType("TiaMcp.Adapters.Reflection.ReflectionSession", true)!;
+        var reflection = adapter.GetType("TiaMcp.Adapters.Reflection.OpennessReflection", true)!;
+        var sessionType = adapter.GetType("TiaMcp.Adapters.Reflection.ReflectionSession", true)!;
         var session = Activator.CreateInstance(sessionType, All, null, new object[] {
             (Func<string, string, string, bool, object?>)((_, __, ___, ____) => throw new InvalidOperationException("This conversion fixture must not resolve a native target.")),
             (Func<string?>)(() => null) }, null)!;
@@ -54,7 +62,6 @@ internal static class GlobalScriptBridgeTests
         result = invoke.Invoke(native, new object[] { target, "Force", "/Scripts", "Import", Strings(@"C:\NativeScripts"), true })!;
         check((string?)Get(result, "Message") != "OK" && target.Calls == 2, "actual EXE retains hard force deny even with allowWrite");
 
-        var access = server.GetType("TiaMcpServer.Siemens.UnifiedScriptAccess", true)!;
         var resolve = access.GetMethod("Resolve", All)!;
         var hmi = new Hmi(); string selected = "";
         Func<string, object> resolver = path => { selected = path; return hmi; };
@@ -63,10 +70,7 @@ internal static class GlobalScriptBridgeTests
         var scripts = resolve.Invoke(null, new object[] { resolver, "HMI_RT_2:Scripts", "", true });
         check(ReferenceEquals(scripts, hmi.Scripts), "actual EXE resolves Scripts composition for native import");
 
-        var tool = EngineSurface.For(server).Tool("SetUnifiedGlobalScript")!;
-        check(tool.CustomAttributes.Any(a => a.AttributeType.Name == "McpServerToolAttribute")
-            && (bool)tool.GetParameters().Single(p => p.Name == "dryRun").DefaultValue
-            && tool.GetParameters().Single(p => p.Name == "previewToken").DefaultValue?.ToString() == "",
+        check(registered(),
             "actual EXE registers SetUnifiedGlobalScript with safe preview defaults");
         // Inspect the actual referenced Siemens DLL, never start/attach TIA.
         var unifiedReference = server.GetReferencedAssemblies().SingleOrDefault(a => a.Name == "Siemens.Engineering.WinCCUnified");

@@ -171,7 +171,10 @@ internal static class SoftwareLookupRuntimeTests
         var kernel = portal.Method("ResolvePlc", BindingFlags.Instance | BindingFlags.NonPublic);
         bool Calls(MethodInfo source, MethodInfo target, int? access = null, bool forwardedAccess = false)
         {
-            var il = source.GetMethodBody()!.GetILAsByteArray()!;
+            // MethodFamily also yields bodyless members (inherited InternalCall methods such as Object.GetType);
+            // they contain no call instruction.
+            var il = source.GetMethodBody()?.GetILAsByteArray();
+            if (il == null) return false;
             for (int i = 0; i + 4 < il.Length; i++)
             {
                 if (il[i] != 0x28 && il[i] != 0x6f) continue;
@@ -225,11 +228,15 @@ internal static class SoftwareLookupRuntimeTests
             var online = name is "DownloadToPlc" or "GoOnline";
             var writer = moved ? portal.Adapter.GetType("TiaMcp.Adapters.Native.Plc.PlcB5Adapter", true)!.GetMethod(name, BindingFlags.Public | BindingFlags.Instance)!
                 : online ? name == "GoOnline"
-                    ? onlineAdapter.GetMethod(name, new[] { typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(bool) })!
+                    // The implementing overload; P8-81a added allowNonTlsLogin after trustDeviceCertificate.
+                    ? onlineAdapter.GetMethod(name, new[] { typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(bool), typeof(bool) })!
                     : onlineAdapter.GetMethod(name, BindingFlags.Public | BindingFlags.Instance)!
                 : portal.Method(name);
             var resolver = moved ? nativeResolver : online ? onlineResolver : writer.DeclaringType == kernel.DeclaringType ? kernel : sessionResolver;
-            EngineSurface.CheckIl(check, EngineSurface.MethodFamily(writer).Any(member => Calls(member, resolver, 1)), "Native write path records Write through same PLC kernel: " + name, writer, resolver);
+            // P8-81a: an online transition or download resolves its PLC with read intent (access 0), so the
+            // offline-export precondition of a write resolution never runs for it.
+            EngineSurface.CheckIl(check, EngineSurface.MethodFamily(writer).Any(member => Calls(member, resolver, online ? 0 : 1)),
+                (online ? "Online path records Read through same PLC kernel: " : "Native write path records Write through same PLC kernel: ") + name, writer, resolver);
         }
         EngineSurface.CheckIl(check, Calls(portal.Method("GetPlcSoftware"), kernel, 0), "EXE read path records Read through same PLC kernel", kernel);
         var strict = server.GetType("TiaMcpServer.Siemens.SoftwareContainerLookup", true)!

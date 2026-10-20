@@ -22,10 +22,17 @@ internal static class GraphicSelectionRuntimeTests
     }
     public sealed class Broken : Item { public override int Left { get => throw new ObjectDisposedException("SoftwareContainer"); set { } } }
     internal static void Run(Assembly server, Action<bool, string> check)
+        => Run(UnifiedNativeFixture.Helper(server, "UnifiedGraphicSelection"),
+            server.GetType("TiaMcpServer.Siemens.Services.UnifiedGraphicComparison", true)!,
+            () => new[] { "GetUnifiedGraphicSelection", "CompareUnifiedGraphicSelections" }.All(n =>
+                EngineSurface.For(server).Tool(n)?.CustomAttributes.Any(a => a.AttributeType.Name == "McpServerToolAttribute") == true), check);
+
+    internal static void Run(Type helper, Type comparison, Func<bool> registered, Action<bool, string> check)
+        => Run(helper, (left, right) => comparison.GetMethod("Compare", All)!.Invoke(null, new object[] { left, right })!, registered, check);
+
+    internal static void Run(Type helper, Func<string, string, object> compare, Func<bool> registered, Action<bool, string> check)
     {
-        var helper = UnifiedNativeFixture.Helper(server, "UnifiedGraphicSelection");
         var capture = helper.GetMethod("Capture", All)!;
-        var compare = server.GetType("TiaMcpServer.Siemens.Services.UnifiedGraphicComparison", true)!.GetMethod("Compare", All)!;
         var json = new JavaScriptSerializer { MaxJsonLength = 4 * 1024 * 1024 };
         Dictionary<string, object> Parse(object value) => (Dictionary<string, object>)json.DeserializeObject(UnifiedNativeFixture.Json(value));
         var names = new[] { "fgxTop", "txtTop", "gfxBotom", "txtBotom" };
@@ -47,11 +54,11 @@ internal static class GraphicSelectionRuntimeTests
         check((string)before.Last()["status"] == "unsupported" && before.Last()["nativeGroupBounds"] == null, "actual EXE does not invent native graphical group bounds");
         ((Item)screen.ScreenItems[0]).Left += 7; ((Item)screen.ScreenItems[1]).Top += 3;
         var after = Read(names);
-        var result = Parse(compare.Invoke(null, new object[] { Page(before, "a"), Page(after, "b") })!);
+        var result = Parse(compare(Page(before, "a"), Page(after, "b")));
         check((int)result["changedObjectCount"] == 2 && !(bool)result["causalityEstablished"], "actual EXE compares sibling coordinate changes without claiming causality");
         var damaged = Read(names); damaged.RemoveAt(0);
         bool rejected = false;
-        try { compare.Invoke(null, new object[] { Page(before, "a"), Page(damaged, "b") }); }
+        try { compare(Page(before, "a"), Page(damaged, "b")); }
         catch (TargetInvocationException ex) when (ex.InnerException is ArgumentException) { rejected = true; }
         check(rejected, "actual EXE refuses incomplete object samples");
         var near = Read(new[] { "gfxTop" });
@@ -61,7 +68,6 @@ internal static class GraphicSelectionRuntimeTests
         try { Read(new[] { "Broken", "fgxTop" }); }
         catch (TargetInvocationException ex) when (ex.InnerException is ObjectDisposedException) { fatal = true; }
         check(fatal, "actual EXE propagates fatal handle exception instead of continuing selection");
-        var mcp = EngineSurface.For(server);
-        check(new[] { "GetUnifiedGraphicSelection", "CompareUnifiedGraphicSelections" }.All(n => mcp.Tool(n)?.CustomAttributes.Any(a => a.AttributeType.Name == "McpServerToolAttribute") == true), "actual EXE registers both graphical-selection tools");
+        check(registered(), "actual EXE registers both graphical-selection tools");
     }
 }

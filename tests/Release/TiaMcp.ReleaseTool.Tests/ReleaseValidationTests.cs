@@ -392,6 +392,30 @@ public sealed class ReleaseValidationTests
     }
 
     [Fact]
+    public void ReleaseCommandTableKeepsHarnessEngineAndPlcBindingsAndD5Reasons()
+    {
+        var entries = ReleaseCommandTable.Entries.ToArray();
+        foreach (var (engine, plc) in ReleaseCommands.CheckAllHarnessSuccessors())
+        {
+            int index = Array.FindIndex(entries, row => row.Name == engine);
+            Assert.True(index >= 0); Assert.Equal(plc, entries[index + 1].Name);
+            Assert.Contains("Test-PlcHarness.py", entries[index + 1].Command);
+            Assert.Contains("--worker <SDK-ready-PlcWorker>", entries[index + 1].Command);
+            Assert.Equal(plc + ".log", entries[index + 1].LogFile);
+            Assert.Equal("harness." + plc, entries[index + 1].RecordKey);
+        }
+        foreach (var (engine, reason) in ReleaseCommands.CheckAllHarnessD5())
+        {
+            Assert.Contains(reason, ReleaseCommandTable.Get(engine).CountRule);
+            Assert.DoesNotContain(entries, row => row.Name == engine + "-plc");
+        }
+        foreach (var (engine, reason) in ReleaseCommands.CheckAllHarnessD5Assertions())
+            Assert.Contains(reason, ReleaseCommandTable.Get(engine).CountRule);
+        Assert.Contains("build-solutions", entries.Select(row => row.Name));
+        Assert.Equal("TiaMcp.Engine.Harness.exe engineering-api-only", ReleaseCommandTable.Get("engineering-api").Command);
+    }
+
+    [Fact]
     [Trait("Category", "Pipeline")]
     public void ParallelPipelinesOverlapAndWriteSeparateEvidence()
     {

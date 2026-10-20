@@ -99,12 +99,18 @@ public sealed class B1OldReleaseBridgeTests
     [Theory, MemberData(nameof(Releases))]
     public async Task PreviewTokenCanOnlyBeConsumedByItsOwningSessionOnce(string release)
     {
-        var fixture = McpServerTool.Create((bool dryRun = true) => Host.McpServer.V4Result("SetDeviceItemAttribute",
-            new JsonObject { ["dryRun"] = dryRun, ["value"] = "fixture" }), new() { Name = "SetDeviceItemAttribute" });
-        using var first = new Pipeline(release, new BoundWorker(), new[] { fixture });
-        using var second = new Pipeline(release, new BoundWorker(), new[] { fixture });
-        var preview = await Invoke(first.AllTools, "PreviewToolBatch", new { expectedProject = "Fixture",
+        // Batch admission is the tool's reviewed classification (ToolMetadata): DeletePlcBlock may be previewed in a
+        // batch, SetDeviceItemAttribute may not (P8-04k3b; the host used to admit every WRITE/FILE tool).
+        McpServerTool Fixture(string name) => McpServerTool.Create((bool dryRun = true) => Host.McpServer.V4Result(name,
+            new JsonObject { ["dryRun"] = dryRun, ["value"] = "fixture" }), new() { Name = name });
+        var fixtures = new[] { Fixture("DeletePlcBlock"), Fixture("SetDeviceItemAttribute") };
+        using var first = new Pipeline(release, new BoundWorker(), fixtures);
+        using var second = new Pipeline(release, new BoundWorker(), fixtures);
+        var refused = await Invoke(first.AllTools, "PreviewToolBatch", new { expectedProject = "Fixture",
             operations = new[] { new { name = "SetDeviceItemAttribute", arguments = new { dryRun = true } } } });
+        Assert.False((bool)refused["ok"]!);
+        var preview = await Invoke(first.AllTools, "PreviewToolBatch", new { expectedProject = "Fixture",
+            operations = new[] { new { name = "DeletePlcBlock", arguments = new { dryRun = true } } } });
         Assert.True((bool)preview["ok"]!);
         string token = (string)preview["data"]!["token"]!;
         using (second.EnterSession()) Assert.Equal("NOT_FOUND", (string?)Host.McpServer.ApplyToolBatch(token).StructuredContent?["error"]?["code"]);

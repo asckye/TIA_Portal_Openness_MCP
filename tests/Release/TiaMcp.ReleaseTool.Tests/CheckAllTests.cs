@@ -310,6 +310,63 @@ public sealed class CheckAllTests
     }
 
     [Fact]
+    public void HarnessSuccessorsAndD5PartitionEveryOriginalJobWithoutRetirement()
+    {
+        var expected = new[] { "20", "21" }.SelectMany(key => ReleaseCommands.CheckAllHarnessModes(key)
+            .Select(mode => "harness-v" + key + "-" + (mode.Length == 0 ? "http" : mode))).ToArray();
+        var mapping = ReleaseCommands.CheckAllHarnessSuccessors(); var d5 = ReleaseCommands.CheckAllHarnessD5();
+        Assert.Equal(34, expected.Length); Assert.Equal(32, mapping.Count); Assert.Equal(2, d5.Count);
+        Assert.Equal(expected.Order(), mapping.Keys.Concat(d5.Keys).Order());
+        Assert.Empty(mapping.Keys.Intersect(d5.Keys)); Assert.Equal(32, mapping.Values.Distinct().Count());
+        Assert.All(mapping, pair => Assert.Equal(pair.Key + "-plc", pair.Value));
+        Assert.All(d5, pair => { Assert.EndsWith("-engineering-api-only", pair.Key); Assert.Contains("D5", pair.Value); });
+        var assertions = ReleaseCommands.CheckAllHarnessD5Assertions();
+        Assert.Equal(8, assertions.Count);
+        Assert.All(assertions, pair => { Assert.Contains(pair.Key, mapping.Keys); Assert.StartsWith("D5:", pair.Value); });
+        var jobs = expected.SelectMany(name => mapping.TryGetValue(name, out var plc) ? new[] { name, plc } : new[] { name })
+            .Select(name => new CheckJob(name, Passed, [])).ToArray();
+        ReleaseCommands.ValidateCheckAllHarnessSuccessors(jobs);
+        foreach (var name in jobs.Select(job => job.Name))
+        {
+            Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllHarnessSuccessors(jobs.Where(job => job.Name != name).ToArray()));
+            Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllHarnessSuccessors([.. jobs, new(name, Passed, [])]));
+        }
+        var swapped = jobs.ToArray(); (swapped[1], swapped[2]) = (swapped[2], swapped[1]);
+        Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllHarnessSuccessors(swapped));
+        Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllHarnessSuccessors([.. jobs, new("harness-v21-engineering-api-only-plc", Passed, [])]));
+        Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllHarnessSuccessors([.. jobs, new("harness-v21-invented", Passed, [])]));
+    }
+
+    [Fact]
+    public void PlcHarnessSuccessorsProveTheirHostWorkerAndDiagnosticsGates()
+    {
+        using var fixture = new OfflineFixtures();
+        string host = Path.Combine(fixture.DirectoryPath, "TiaMcp.FoundationHost.exe"), worker = Path.Combine(fixture.DirectoryPath, "TiaMcp.PlcWorker.21.exe");
+        File.WriteAllText(host, "host"); File.WriteAllText(worker, "worker");
+        string inventory = Path.Combine(fixture.DirectoryPath, "adapter-coverage-v21.json"); File.WriteAllText(inventory, "{\"count\":1200}");
+        string Evidence(string mode, Action<JsonObject>? change = null)
+        {
+            var directory = Path.Combine(fixture.DirectoryPath, Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
+            var value = new JsonObject { ["mode"] = mode, ["release"] = "21", ["nativeTiaExecuted"] = false, ["workerModel"] = "foundation-host-plc-worker",
+                ["runtimeSha256"] = ReleaseRecords.HashFile(worker), ["sdkWorkerSha256"] = ReleaseRecords.HashFile(worker), ["hostSha256"] = ReleaseRecords.HashFile(host) };
+            change?.Invoke(value);
+            File.WriteAllText(Path.Combine(directory, "result.json"), value.ToJsonString());
+            return directory;
+        }
+        ReleaseCommands.ValidateCheckAllPlcHarness("", Evidence("http"), "", "21", host, worker, inventory);
+        ReleaseCommands.ValidateCheckAllPlcHarness("", Evidence("hmi-only"), "hmi-only", "21", host, worker, inventory);
+        foreach (var change in new Action<JsonObject>[] { v => v["mode"] = "hmi-only", v => v["release"] = "20", v => v["nativeTiaExecuted"] = true, v => v.Remove("nativeTiaExecuted"),
+            v => v["workerModel"] = "combined-host-supervised-worker", v => v["runtimeSha256"] = "0", v => v["sdkWorkerSha256"] = "0", v => v["hostSha256"] = "0" })
+            Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllPlcHarness("", Evidence("http", change), "", "21", host, worker, inventory));
+        const string diagnostics = "COMPLETE: 1150 adapter native diagnostic wrappers JIT prepared; 50 open generic wrappers\nCOMPLETE: 9 adapter integration diagnostic checks passed\n"
+            + "COMPLETE: 3 native journal reader checks passed; no native call executed\nCOMPLETE: 4 direct SDK guard checks passed; no native call executed\n";
+        ReleaseCommands.ValidateCheckAllPlcHarness(diagnostics, Evidence("native-diagnostics-only"), "native-diagnostics-only", "21", host, worker, inventory);
+        foreach (var broken in new[] { diagnostics.Replace("50 open", "49 open"), diagnostics.Replace("9 adapter integration", "7 adapter integration"),
+            diagnostics.Replace("3 native journal", "2 native journal"), diagnostics.Replace("4 direct SDK", "3 direct SDK"), diagnostics.Replace("COMPLETE: 4 direct SDK guard checks passed", "") })
+            Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllPlcHarness(broken, Evidence("native-diagnostics-only"), "native-diagnostics-only", "21", host, worker, inventory));
+    }
+
+    [Fact]
     public void CandidateHarnessBuildsSelectOneFamilyAndCannotOverwriteProduction()
     {
         var modes = ReleaseCommands.CheckAllCandidateModes(); Assert.Equal(8, modes.Length);

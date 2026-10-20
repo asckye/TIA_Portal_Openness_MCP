@@ -23,11 +23,13 @@ internal static partial class Program
         Process Start(long ticks)
         {
             var owner = new Process { StartInfo = new ProcessStartInfo(Assembly.GetExecutingAssembly().Location,
-                "\"" + Server.Location + "\" lease-holder \"" + root + "\" " + ticks) {
+                (PlcHarnessChecks.Active ? "--plc-lease-holder \"" + Server.Location + "\" \"" + root + "\" " + ticks
+                    : "\"" + Server.Location + "\" lease-holder \"" + root + "\" " + ticks)) {
                 UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true } };
             try
             {
-                var input = FindServerType(Server, "TiaOpenness.Shared.ChildProcessInput");
+                var input = FindServerType(PlcHarnessChecks.Active ? PlcHarnessChecks.Logic : Server,
+                    "TiaOpenness.Shared.ChildProcessInput");
                 Check((bool)input.GetMethod("Start", All)!.Invoke(null, new object[] { owner })!, "Lease holder did not start");
                 return owner;
             }
@@ -53,21 +55,31 @@ internal static partial class Program
                     Check(owner.WaitForExit(5000) && owner.ExitCode == 0, "Clean holder failed");
                     using var next = (IDisposable)AcquireTestLease(root, 100); CleanLease(next);
                 }
-                finally { if (!owner.HasExited) owner.Kill(); }
+                finally { StopLeaseOwner(owner); }
             });
             await Test("killed owner remains blocked; changed TIA start time can bind", async () => {
                 using var owner = Start(200);
                 try
                 {
                     Check(await Bounded(owner.StandardOutput.ReadLineAsync()) == "RESERVED", "Child did not reserve lease");
-                    owner.Kill(); Check(owner.WaitForExit(5000), "Owner did not exit");
+                    StopLeaseOwner(owner); Check(owner.WaitForExit(5000), "Owner did not exit");
                     Check(Refused(200), "Crash uncertainty marker was ignored");
                     using var restarted = (IDisposable)AcquireTestLease(root, 201); CleanLease(restarted);
                 }
-                finally { if (!owner.HasExited) owner.Kill(); }
+                finally { StopLeaseOwner(owner); }
             });
             Console.WriteLine("COMPLETE: 2 process lease checks passed; no TIA connection attempted");
         }
         finally { Directory.Delete(root, true); }
+    }
+
+    private static void StopLeaseOwner(Process owner)
+    {
+        if (owner.HasExited) return;
+        string executable = Path.GetFullPath(Assembly.GetExecutingAssembly().Location);
+        string worktree = HostPortRunner.RepositoryRoot().TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        Check(executable.StartsWith(worktree, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(owner.MainModule!.FileName, executable, StringComparison.OrdinalIgnoreCase), "Lease owner image is outside this worktree");
+        owner.Kill();
     }
 }

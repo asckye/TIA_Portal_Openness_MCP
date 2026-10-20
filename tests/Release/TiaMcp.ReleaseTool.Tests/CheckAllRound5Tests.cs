@@ -8,6 +8,25 @@ namespace TiaMcp.ReleaseTool.Tests;
 public sealed class CheckAllRound5Tests
 {
     [Fact]
+    public void PlcHarnessJobsUseTheSdkFixtureAndKeepTheEngineJobsAdjacent()
+    {
+        var root = Repository.FindRoot();
+        var jobs = File.ReadAllText(Path.Combine(root, "build-tools/release/CheckAll.cs"));
+        Assert.Contains("CheckAllHarnessSuccessors().TryGetValue(name, out var plcName)", jobs);
+        Assert.Contains("scripts/checks/Test-PlcHarness.py", jobs);
+        Assert.Contains("\"--worker\", CheckAllPlcFixture(key)", jobs);
+        Assert.Contains("\"--api\", targetApi", jobs);
+        Assert.Contains("ValidateCheckAllHarnessSuccessors(jobs)", jobs);
+        Assert.Contains("CheckAllHarness(Isolated(name, harness, [copiedEngine", jobs);
+        var harness = File.ReadAllText(Path.Combine(root, "tests/Engine/TiaMcp.Engine.Harness/Program.cs"));
+        Assert.True(harness.IndexOf("RunPlcHarness(args)", StringComparison.Ordinal)
+            < harness.IndexOf("EngineSurface.CheckHostRetirement", StringComparison.Ordinal));
+        var subject = File.ReadAllText(Path.Combine(root, "tests/Engine/TiaMcp.Engine.Harness/PlcHarnessChecks.cs"));
+        Assert.DoesNotContain("EngineSurface", subject); Assert.DoesNotContain("TiaMcp.Engine.V", subject);
+        Assert.Contains("TiaMcp.Adapter.", subject); Assert.Contains("TiaReleaseKey", subject);
+    }
+
+    [Fact]
     public void PlcScriptFixtureBuildsHaveIndependentSdkReceiptsForBothReleases()
     {
         var root = Repository.FindRoot();

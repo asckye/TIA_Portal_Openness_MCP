@@ -14,6 +14,7 @@ internal static class UnifiedNativeFixture
     internal static string Json(object value) => JsonSerializer.Serialize(value, value.GetType());
     internal static Type Helper(Assembly server, string name)
     {
+        if (PlcHarnessChecks.Active) return PlcHarnessChecks.Helper(name);
         var reference = server.GetReferencedAssemblies().Single(a => a.Name!.StartsWith("TiaMcp.Adapter.", StringComparison.Ordinal));
         var adapter = Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(server.Location)!, reference.Name + ".dll"));
         var values = adapter.GetType("TiaMcp.Adapters.Native.Hmi.HmiValues", true)!;

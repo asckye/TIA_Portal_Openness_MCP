@@ -21,4 +21,25 @@
   <ItemGroup><Compile Include="../TiaMcp.Engine.Tests/OfflineContractChecks.cs" Link="OfflineContractChecks.cs" /></ItemGroup>
   <Import Project="../../Shared/HostDomainBuild.targets" />
   <ItemGroup><ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" /></ItemGroup>
+  <!-- The PLC harness entry reflects over the kept net48 Logic. Its build goes to plc-logic/ and is loaded
+       only by that entry: Logic's dependencies (another Microsoft.Bcl.AsyncInterfaces) in the application
+       base would replace the engine's own copies and stop engine types from loading. -->
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Logic/TiaMcp.Logic.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" ExcludeAssets="all"
+                      SetTargetFramework="TargetFramework=net48" />
+  </ItemGroup>
+  <Target Name="CopyPlcLogicBuild" AfterTargets="Build">
+    <ItemGroup>
+      <PlcLogicReference Include="@(_MSBuildProjectReferenceExistent)" Condition="'%(Filename)' == 'TiaMcp.Logic'" />
+    </ItemGroup>
+    <MSBuild Projects="@(PlcLogicReference)" Targets="GetTargetPath"
+             Properties="%(PlcLogicReference.SetConfiguration);%(PlcLogicReference.SetPlatform);%(PlcLogicReference.SetTargetFramework)"
+             RemoveProperties="%(PlcLogicReference.GlobalPropertiesToRemove);$(_GlobalPropertiesToRemoveFromProjectReferences)">
+      <Output TaskParameter="TargetOutputs" ItemName="PlcLogicBinary" />
+    </MSBuild>
+    <Error Condition="'@(PlcLogicBinary->Count())' != '1' or !Exists('@(PlcLogicBinary)')" Text="The PLC harness entry requires the exact net48 Logic build: @(PlcLogicBinary)." />
+    <ItemGroup><PlcLogicPayload Include="%(PlcLogicBinary.RootDir)%(PlcLogicBinary.Directory)*.dll" /></ItemGroup>
+    <Copy SourceFiles="@(PlcLogicPayload)" DestinationFolder="$(TargetDir)plc-logic" SkipUnchangedFiles="true" />
+    <Error Condition="!Exists('$(TargetDir)plc-logic/TiaMcp.Logic.dll')" Text="The net48 Logic build was not copied to plc-logic." />
+  </Target>
 </Project>

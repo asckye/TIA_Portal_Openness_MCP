@@ -21,8 +21,14 @@ internal static class RuntimeSettingsRuntimeTests
     public sealed class Screen { public string Name { get; set; } = "New"; }
     public sealed class Hmi { public Settings RuntimeSettings { get; } = new Settings(); public List<Screen> Screens { get; } = new List<Screen> { new Screen() }; public List<object> ScreenGroups { get; } = new List<object>(); }
     internal static void Run(Assembly server, Action<bool, string> check)
+        => Run(server, UnifiedNativeFixture.Helper(server, "UnifiedRuntimeSettingsAccess"), () => {
+            var mcp = EngineSurface.For(server);
+            return new[] { "GetUnifiedRuntimeSettings", "SetUnifiedRuntimeSettings" }.All(n => mcp.Tool(n)?.CustomAttributes.Any(a => a.AttributeType.Name == "McpServerToolAttribute") == true)
+                && (bool)mcp.Tool("SetUnifiedRuntimeSettings")!.GetParameters().Single(p => p.Name == "dryRun").DefaultValue;
+        }, check);
+
+    internal static void Run(Assembly server, Type helper, Func<bool> registered, Action<bool, string> check)
     {
-        var helper = UnifiedNativeFixture.Helper(server, "UnifiedRuntimeSettingsAccess");
         var update = helper.GetMethod("Update", All)!; var read = helper.GetMethod("Read", All)!;
         var changes = helper.GetMethod("Changes", All)!;
         var metaType = update.GetParameters()[6].ParameterType; var traceType = update.GetParameters()[7].ParameterType;
@@ -35,9 +41,7 @@ internal static class RuntimeSettingsRuntimeTests
             return Parse(meta);
         }
         bool Reject(string data) { try { Update(data); return false; } catch (TargetInvocationException) { return true; } }
-        var mcp = EngineSurface.For(server);
-        check(new[] { "GetUnifiedRuntimeSettings", "SetUnifiedRuntimeSettings" }.All(n => mcp.Tool(n)?.CustomAttributes.Any(a => a.AttributeType.Name == "McpServerToolAttribute") == true)
-            && (bool)mcp.Tool("SetUnifiedRuntimeSettings")!.GetParameters().Single(p => p.Name == "dryRun").DefaultValue,
+        check(registered(),
             "actual EXE registers runtime setting tools with preview default");
         var readMeta = Activator.CreateInstance(metaType, true)!;
         read.Invoke(null, new object[] { hmi, new[] { "StartScreen", "ScreenResolution" }, readMeta, Activator.CreateInstance(traceType, true)! });

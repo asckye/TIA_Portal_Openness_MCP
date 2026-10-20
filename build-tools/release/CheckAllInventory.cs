@@ -7,6 +7,49 @@ namespace TiaMcp.ReleaseTool;
 
 internal static partial class ReleaseCommands
 {
+    // D5 preserves the composite engine service/registration graph until the
+    // maintainer assigns its assertions individually; it has no kept Portal.
+    internal static IReadOnlyDictionary<string, string> CheckAllHarnessD5() => new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["harness-v20-engineering-api-only"] = "2840 engine Portal/service/registration shape assertions; retained adapter API checks remain in foundation-api; individual D5 mapping required before P8-04l",
+        ["harness-v21-engineering-api-only"] = "3126 engine Portal/service/registration shape assertions; retained adapter API checks remain in foundation-api; individual D5 mapping required before P8-04l"
+    };
+
+    internal static IReadOnlyDictionary<string, string> CheckAllHarnessSuccessors() => new[] { "20", "21" }
+        .SelectMany(key => CheckAllHarnessModes(key).Select(mode => "harness-v" + key + "-" + (mode.Length == 0 ? "http" : mode)))
+        .Where(name => !CheckAllHarnessD5().ContainsKey(name))
+        .ToDictionary(name => name, name => name + "-plc", StringComparer.Ordinal);
+
+    // These successor modes also contain assertions about deleted engine-only
+    // subjects. P8-04l must obtain D5 approval before removing their engine half.
+    internal static IReadOnlyDictionary<string, string> CheckAllHarnessD5Assertions() => new[] { "20", "21" }
+        .SelectMany(key => new[] {
+            new KeyValuePair<string, string>("harness-v" + key + "-software-lookup-only", "D5: Portal resolver/cache/IL and EmptyPlcGroupDeletion have no identical kept subject; adapter exact-selection and shared PlcListingRead assertions run in the successor"),
+            new KeyValuePair<string, string>("harness-v" + key + "-native-diagnostics-only", "D5: engine woven inventory, MigrationPages timer and in-process engine/adapter sink/projection identity disappear; adapter JIT/inventory/journal, host SDK guards and native reader run in the successor"),
+            new KeyValuePair<string, string>("harness-v" + key + "-example-library-only", "D5: PatchProject.ParsePatchSpec is retired with the engine CLI; kept V4 JSON parser null/malformed rejections run in the successor"),
+            new KeyValuePair<string, string>("harness-v" + key + "-descriptor-catalog-only", "D5: ConnectProject remains an engine-only retired alias; successor checks the host's exact descriptor/execution coverage plus its explicit removed-alias set")
+        }).ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
+
+    internal static void ValidateCheckAllHarnessSuccessors(IReadOnlyList<CheckJob> jobs)
+    {
+        var names = jobs.Select(job => job.Name).ToArray();
+        var successors = CheckAllHarnessSuccessors(); var decisions = CheckAllHarnessD5();
+        var expected = successors.Keys.Concat(successors.Values).Concat(decisions.Keys).ToHashSet(StringComparer.Ordinal);
+        if (names.Any(name => name.StartsWith("harness-v", StringComparison.Ordinal) && !expected.Contains(name)))
+            throw new ReleaseException("Unknown engine harness successor job");
+        if (CheckAllHarnessD5Assertions().Any(pair => !successors.ContainsKey(pair.Key) || string.IsNullOrWhiteSpace(pair.Value)))
+            throw new ReleaseException("Unmapped engine-only harness assertion group");
+        foreach (var key in new[] { "20", "21" })
+        foreach (var mode in CheckAllHarnessModes(key))
+        {
+            string engine = "harness-v" + key + "-" + (mode.Length == 0 ? "http" : mode);
+            if (names.Count(name => name == engine) != 1 || successors.ContainsKey(engine) == decisions.ContainsKey(engine)
+                || (successors.TryGetValue(engine, out var plc) && (names.Count(name => name == plc) != 1
+                    || Array.IndexOf(names, plc) != Array.IndexOf(names, engine) + 1)))
+                throw new ReleaseException("Incomplete engine harness successor/D5 mapping: " + engine);
+        }
+    }
+
     // P8-04l retires only the engine half of this bijection, after both halves pass.
     internal static IReadOnlyDictionary<string, string> CheckAllScriptSuccessors()
     {
@@ -115,6 +158,7 @@ internal static partial class ReleaseCommands
         Python("python-script-calls", "scripts/checks/Check-ScriptToolCalls.py");
         Python("campaign-runner-self-tests", "scripts/checks/Test-CampaignInputs.py", "--self-test");
         Python("plc-script-self-tests", "scripts/checks/Test-PlcScriptSuccessors.py");
+        Python("plc-harness-self-tests", "scripts/checks/Test-PlcHarnessSuccessors.py");
         // The runner finds the file program compiled by build-once below the original TEMP, not the job's private TEMP.
         Python("campaign-validator-self-tests", "scripts/checks/Test-CampaignInputs.py", "--validator-self-test");
         Python("domain-source", "scripts/checks/Test-DomainTools.py", "--source-only");
@@ -202,16 +246,34 @@ internal static partial class ReleaseCommands
             GetJsonString(results, "CallTool") != "refused-before-dispatch") throw new ReleaseException("Default approval evidence mismatch");
     }
 
-    private static void ValidateCheckAllJit(string text, string enginePath, string adapterPath)
+    private static void ValidateCheckAllJit(string text, string? enginePath, string adapterPath)
     {
-        using var engine = JsonDocument.Parse(File.ReadAllText(enginePath)); using var adapter = JsonDocument.Parse(File.ReadAllText(adapterPath));
-        foreach (var (prefix, evidence) in new[] { ("", engine.RootElement), ("adapter ", adapter.RootElement) })
+        foreach (var (prefix, path) in enginePath == null ? new[] { ("adapter ", adapterPath) } : new[] { ("", enginePath), ("adapter ", adapterPath) })
         {
+            using var evidence = JsonDocument.Parse(File.ReadAllText(path));
             var match = Regex.Match(text, "COMPLETE: (\\d+) " + prefix + "native diagnostic wrappers JIT prepared; (\\d+) open generic wrappers");
-            if (!match.Success || int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) + int.Parse(match.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture) != GetJsonInt(evidence, "count"))
+            if (!match.Success || int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) + int.Parse(match.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture) != GetJsonInt(evidence.RootElement, "count"))
                 throw new ReleaseException(prefix + "diagnostic wrapper JIT/inventory mismatch");
         }
         RequireCount("adapter journal", text, "COMPLETE: (\\d+) adapter integration diagnostic checks passed", "adapterJournal");
         RequireCount("native journal", text, "COMPLETE: (\\d+) native journal reader checks passed", "nativeJournalReader");
+    }
+
+    // A harness successor keeps its engine job's count gates (CheckAllHarness) and, like the script successors,
+    // proves which host and PlcWorker produced the result. Its native-diagnostics run has no engine inventory:
+    // the adapter JIT/inventory equality and both journal gates are the engine job's, plus all four SDK guards.
+    internal static void ValidateCheckAllPlcHarness(string text, string directory, string mode, string key, string host, string worker, string adapterInventory)
+    {
+        using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "result.json"))); var evidence = doc.RootElement;
+        string workerHash = ReleaseRecords.HashFile(worker);
+        if (GetJsonString(evidence, "mode") != (mode.Length == 0 ? "http" : mode) || GetJsonString(evidence, "release") != key
+            || !evidence.TryGetProperty("nativeTiaExecuted", out var native) || native.ValueKind != JsonValueKind.False
+            || GetJsonString(evidence, "workerModel") != "foundation-host-plc-worker"
+            || GetJsonString(evidence, "runtimeSha256") != workerHash || GetJsonString(evidence, "sdkWorkerSha256") != workerHash
+            || GetJsonString(evidence, "hostSha256") != ReleaseRecords.HashFile(host))
+            throw new ReleaseException("PLC harness evidence mismatch: " + directory);
+        if (mode != "native-diagnostics-only") return;
+        ValidateCheckAllJit(text, null, adapterInventory);
+        if (RequireCount("SDK guard", text, "COMPLETE: (\\d+) direct SDK guard checks passed") != 4) throw new ReleaseException("SDK guard checks incomplete");
     }
 }

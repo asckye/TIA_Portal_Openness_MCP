@@ -1,4 +1,8 @@
 <Project>
+  <!-- Product FileVersion/InformationalVersion from the release property the hosts use (Version.props);
+       the binding identity stays AssemblyVersion 1.0.0.0. -->
+  <Import Project="$(MSBuildThisFileDirectory)../../../Version.props" />
+  <PropertyGroup><AssemblyVersion>1.0.0.0</AssemblyVersion></PropertyGroup>
   <PropertyGroup><TiaPublicApiReleaseKey>$(AdapterReleaseKey)</TiaPublicApiReleaseKey></PropertyGroup>
   <Import Project="$(MSBuildThisFileDirectory)../../Shared/TiaPublicApi.props" />
   <PropertyGroup><TiaFeatureProfile>Adapter</TiaFeatureProfile></PropertyGroup>

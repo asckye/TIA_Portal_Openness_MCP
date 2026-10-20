@@ -56,15 +56,26 @@ namespace TiaMcp.FoundationHost
                         fallback == null ? null : d.ToString(), p.Value.TryGetProperty("description", out var description) ? description.GetString()! : "", false,
                         p.Value.TryGetProperty("enum", out var values) ? values.EnumerateArray().Select(v => v.ToString()).ToArray() : Array.Empty<string>());
                 }).ToArray();
-                var operation = ToolTaxonomy.OperationOf(tool.Name, tool.Description).Operation;
-                var descriptor = new ToolDescriptor(tool.Name, tool.Description ?? "", tool,
-                    new ToolDescriptorClassification("L1", ToolTaxonomy.For(tool.Name).Domain == "Workbench" ? "Workbench" : "PLC", operation, operation is "READ" or "OFFLINE", operation is "WRITE" or "FILE"),
+                var descriptor = new ToolDescriptor(tool.Name, tool.Description ?? "", tool, SharedClassification(tool),
                     tool.Name + "(" + string.Join(", ", parameters.Select(p => p.Name + ": " + p.FriendlyType)) + ")", parameters,
                     new ToolDryRunDescriptor(parameters.Any(p => p.Name == "dryRun"), true), null, "foundation");
                 all[tool.Name] = descriptor; unavailable[tool.Name] = descriptor;
             }
             All = all; IncludingUnavailable = unavailable;
             Lite = all.Values.Where(t => essentials.Contains(t.Name) || SharedToolPolicy.Bridge.Contains(t.Name, StringComparer.Ordinal)).ToArray();
+        }
+
+        // A shared implementation takes the reviewed classification of its tool, as a declaration does
+        // (DeclaredToolMetadata): batch admission and the read/write outcome of a failure depend on it.
+        // Only a tool without a ToolMetadata row keeps the operation-derived defaults.
+        internal static ToolDescriptorClassification SharedClassification(global::ModelContextProtocol.Protocol.Tool tool)
+        {
+            var reviewed = ToolMetadata.Find(tool.Name);
+            if (reviewed != null)
+                return new ToolDescriptorClassification(reviewed.Layer, reviewed.Domain, reviewed.Operation, reviewed.BatchRead, reviewed.BatchWrite);
+            var operation = ToolTaxonomy.OperationOf(tool.Name, tool.Description).Operation;
+            return new ToolDescriptorClassification("L1", ToolTaxonomy.For(tool.Name).Domain == "Workbench" ? "Workbench" : "PLC", operation,
+                operation is "READ" or "OFFLINE", operation is "WRITE" or "FILE");
         }
     }
 }

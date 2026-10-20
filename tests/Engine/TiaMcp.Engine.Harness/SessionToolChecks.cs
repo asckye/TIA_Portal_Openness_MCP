@@ -75,7 +75,8 @@ internal static class SessionToolChecks
         var state = Invoke("CallTool", "{\"name\":\"GetSessionState\",\"arguments\":{}}");
         check(state["ok"]!.GetValue<bool>() && state["data"]!["summary"]!.GetValue<string>().Contains("TIA-Portal MCP server state retrieved"),
             "CallTool invokes the migrated GetSessionState");
-        var scaffold = Invoke("CallTool", "{\"name\":\"BuildProjectScaffold\",\"arguments\":{\"spec\":\"{\\\"projectName\\\":\\\"Offline\\\",\\\"directoryPath\\\":\\\"C:/domain-offline\\\"}\",\"dryRun\":true}}");
+        // P8-81b: a device is created exactly as specified, so the spec names the PLC type (the tool-usage example's values).
+        var scaffold = Invoke("CallTool", "{\"name\":\"BuildProjectScaffold\",\"arguments\":{\"spec\":\"{\\\"projectName\\\":\\\"Offline\\\",\\\"directoryPath\\\":\\\"C:/domain-offline\\\",\\\"plcMlfb\\\":\\\"6ES7 513-1AM03-0AB0\\\",\\\"plcVersion\\\":\\\"V3.0\\\"}\",\"dryRun\":true}}");
         check(scaffold["ok"]!.GetValue<bool>() && scaffold["data"]!["summary"]!.GetValue<string>().Contains("0 ok, 0 failed"),
             "CallTool invokes the migrated BuildProjectScaffold preview without connecting");
         EngineSurface.CheckHostRetirement(server, check);

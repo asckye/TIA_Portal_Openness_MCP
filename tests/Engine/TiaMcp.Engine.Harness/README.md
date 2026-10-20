@@ -1,5 +1,34 @@
 # HTTP transport regression tests
 
+`scripts/checks/Test-PlcHarness.py` is the V20/V21 successor driver. CheckAll keeps
+each engine job and registers its `-plc` job immediately afterwards. The driver
+uses `Test-ResourceDiscovery.py`'s shared FoundationHost launcher with an explicit
+SDK-ready PlcWorker, and runs the same native fixtures against the corresponding
+adapter DLL through this harness's `--plc` entry. It never loads an engine EXE.
+The `--plc` entry loads the kept net48 Logic from `plc-logic/`, which the project
+copies from the Logic build; the application base stays free of Logic's
+dependencies, so the engine entry still binds the engine's own copies.
+The host-side file app `Test-PlcHarness.cs` uses the production session/catalog,
+managed codecs and SDK dispatch guard. Build it through `build-solutions` before
+running the driver; it executes compiled outputs without rebuilding.
+
+Whole-mode and remaining engine-only D5 subjects are recorded in
+`CheckAllHarnessD5()` and `CheckAllHarnessD5Assertions()` in
+`build-tools/release/CheckAllInventory.cs`. Their engine checks remain mandatory
+until the maintainer approves their disposition. The successor table covers all
+34 old jobs (32 successors and two engineering-api D5 rows). Original direct
+engine invocations used by build-release, branch-gate and release-candidate keep
+their arguments and assertions.
+
+```powershell
+python scripts/checks/Test-PlcHarness.py --release 21 --mode hmi-snapshot-only --host src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe --worker bin-build/check-plc-fixtures/sdk/bin/21/Release/net48/TiaMcp.PlcWorker.21.exe --harness tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe --api <PublicAPI-V21-net48> --public-api-root <SDK-root> --output bin-build/plc-harness-v21-snapshot
+```
+
+The driver also retains the `concurrency-only` and `staging-sessions-only`
+compatibility modes on the complete registered `engine-host` suite; they are not
+additional members of the original 34-job matrix. All process fixtures are local,
+use fresh evidence directories, and keep native TIA acceptance as NOT RUN.
+
 `staging-sessions-only` checks the compiled HTTP session bookkeeping and staging
 admission without a listener or native calls: open, DELETE-closed, idle-expired,
 restarted-host, unknown-owner and in-flight sessions. It also checks that HTTP

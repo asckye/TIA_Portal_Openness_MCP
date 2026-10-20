@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="SelectedAdapterProject;SelectedAdapterDirectory;WorkerExpectedFramework">
   <!-- One PLC foundation worker per release. Full V20/V21 MCP engines remain separate. -->
+  <!-- Product FileVersion/InformationalVersion from the release property the hosts use (Version.props);
+       the binding identity stays AssemblyVersion 1.0.0.0. -->
+  <Import Project="$(MSBuildThisFileDirectory)../../Version.props" />
+  <PropertyGroup><AssemblyVersion>1.0.0.0</AssemblyVersion></PropertyGroup>
   <PropertyGroup>
     <RootNamespace>TiaMcp.PlcWorker</RootNamespace>
     <WorkerExpectedFramework>net48</WorkerExpectedFramework>

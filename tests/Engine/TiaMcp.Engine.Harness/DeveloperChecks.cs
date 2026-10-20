@@ -93,7 +93,7 @@ internal static class DeveloperChecks
     {
         Reset();
         AddResolver(server, publicApiDirectory);
-        string release = server.GetName().Name!.Split('.').Last().Substring(1);
+        string release = PlcHarnessChecks.Active ? PlcHarnessChecks.Release : server.GetName().Name!.Split('.').Last().Substring(1);
         var adapter = Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(server.Location)!,
             "TiaMcp.Adapter." + release + ".dll"));
         var serviceType = adapter.GetType("TiaMcp.Adapters.Native.Online.OnlineDownloadAdapter", true)!;
@@ -124,7 +124,8 @@ internal static class DeveloperChecks
                 var description = routeType.GetMethod("Describe", All)?.Invoke(route, null);
                 Console.WriteLine($"  score={score,-2} {description}");
             }
-            var selected = selectMethod.Invoke(service, new object?[] { config, filter, targetIp })!;
+            // apply=true is the production default (P8-81a added the optional preview flag); reflection passes it explicitly.
+            var selected = selectMethod.Invoke(service, new object?[] { config, filter, targetIp, true })!;
             var type = selected.GetType();
             var error = type.GetField("Error", All)!.GetValue(selected) as string;
             var result = error == null ? type.GetField("Description", All)!.GetValue(selected) as string : "ERROR: " + error;
@@ -163,13 +164,21 @@ internal static class DeveloperChecks
     {
         Reset();
         AddResolver(server, publicApiDirectory);
-        var catalogType = server.GetType("TiaMcpServer.ModelContextProtocol.ToolCatalog", true)!;
-        var catalog = catalogType.GetProperty("Engine", All)!.GetValue(null)!;
-        var methods = (IEnumerable)catalogType.GetProperty("Methods", All)!.GetValue(catalog)!;
+        var catalogType = PlcHarnessChecks.Active ? null : server.GetType("TiaMcpServer.ModelContextProtocol.ToolCatalog", true)!;
+        var catalog = catalogType?.GetProperty("Engine", All)!.GetValue(null)!;
+        var methods = PlcHarnessChecks.Active ? null : (IEnumerable)catalogType!.GetProperty("Methods", All)!.GetValue(catalog)!;
         var names = new[] { "ListUnifiedGlobalScripts", "GetUnifiedGlobalScript", "ListUnifiedTagDefinitions", "GetUnifiedScreenBranch", "GetUnifiedLibraryType", "GetUnifiedFaceplateInstance", "ListUnifiedLibraryFolderEntries", "ReleaseUnifiedReadCursor" };
         foreach (var name in names)
         {
-            var found = methods.Cast<object>().Where(entry => string.Equals(Get(entry, "Key") as string, name, StringComparison.Ordinal)).ToArray();
+            if (PlcHarnessChecks.Active)
+            {
+                var metadata = PlcHarnessChecks.Metadata[name];
+                Check(metadata != null, "exactly one catalog entry: " + name);
+                Check(metadata?["method"] != null, "catalog method resolves: " + name);
+                Check((bool?)metadata?["registered"] == true, "MCP registration is present: " + name);
+                continue;
+            }
+            var found = methods!.Cast<object>().Where(entry => string.Equals(Get(entry, "Key") as string, name, StringComparison.Ordinal)).ToArray();
             Check(found.Length == 1, "exactly one catalog entry: " + name);
             if (found.Length != 1) continue;
             var method = Get(found[0], "Value") as MethodInfo;
@@ -182,7 +191,8 @@ internal static class DeveloperChecks
         var reader = FindType(server, "TiaMcpServer.Siemens.JavaScriptEvidence", false);
         if (reader == null)
         {
-            var logic = Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(server.Location)!, "TiaMcp.Logic.dll"));
+            var logic = PlcHarnessChecks.Active ? PlcHarnessChecks.Logic
+                : Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(server.Location)!, "TiaMcp.Logic.dll"));
             reader = logic.GetType("TiaMcpServer.Siemens.JavaScriptEvidence", true)!;
         }
         var analyze = reader.GetMethod("Analyze", BindingFlags.NonPublic | BindingFlags.Static)!;
@@ -216,22 +226,24 @@ internal static class DeveloperChecks
         Environment.SetEnvironmentVariable("TIA_MCP_DIAGNOSTICS_DIRECTORY", diagnostics);
         try
         {
-            var portal = server.GetType("TiaMcpServer.Siemens.Portal", true)!;
+            var portal = PlcHarnessChecks.Active ? PlcHarnessChecks.Adapter.GetType("TiaMcp.Adapters.PlcFoundationEngine", true)!
+                : server.GetType("TiaMcpServer.Siemens.Portal", true)!;
             Check(typeof(IDisposable).IsAssignableFrom(portal), "Portal cleanup is registered with IDisposable");
-            var engineType = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
+            var engineType = PlcHarnessChecks.Active ? null : server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
             var logicPath = Path.Combine(runtime, "TiaMcp.Logic.dll");
-            var logic = Assembly.LoadFrom(logicPath);
-            var bridge = engineType.GetMethods(All).First(m => m.Name == "DispatchNestedTool");
-            var argumentType = bridge.GetParameters()[1].ParameterType.GetGenericArguments()[0];
+            var logic = PlcHarnessChecks.Active ? PlcHarnessChecks.Logic : Assembly.LoadFrom(logicPath);
+            var bridge = engineType?.GetMethods(All).First(m => m.Name == "DispatchNestedTool");
+            var argumentType = bridge?.GetParameters()[1].ParameterType.GetGenericArguments()[0];
             var parse = logic.GetType("TiaMcp.Logic.V4.V4Json", true)!.GetMethod("ParseInput", BindingFlags.NonPublic | BindingFlags.Static)!;
 
             JsonObject Call(string name, object args)
             {
                 var json = new JavaScriptSerializer { MaxJsonLength = 16 * 1024 * 1024 }.Serialize(args);
+                if (PlcHarnessChecks.Active) return HostPortRunner.Call(server, name, JsonNode.Parse(json)!.AsObject());
                 if (EngineSurface.IsHostTool(server, name)) return HostPortRunner.Call(server, name, JsonNode.Parse(json)!.AsObject());
                 var parsed = parse.Invoke(null, new object[] { json });
-                var typed = Activator.CreateInstance(argumentType, new[] { parsed })!;
-                var result = bridge.Invoke(null, new[] { (object)name, typed })!;
+                var typed = Activator.CreateInstance(argumentType!, new[] { parsed })!;
+                var result = bridge!.Invoke(null, new[] { (object)name, typed })!;
                 var textValues = ((IEnumerable)Get(result, "Content")!).Cast<object>()
                     .Select(block => Get(block, "Text") as string).Where(text => text != null).ToArray();
                 if (textValues.Length != 1) throw new InvalidDataException("Expected one V4 TextContent");
@@ -337,7 +349,7 @@ internal static class DeveloperChecks
                 CheckOk(!Ok(badCommand) && Data(badCommand)["exitCode"]!.GetValue<int>() != 0, "Companion reports a nonzero command exit");
             }
 
-            var journal = Directory.GetFiles(diagnostics, "*.jsonl").FirstOrDefault() ?? throw new FileNotFoundException("Invocation journal not found");
+            var journal = Directory.GetFiles(PlcHarnessChecks.Active ? PlcHarnessChecks.Diagnostics : diagnostics, "*.jsonl").FirstOrDefault() ?? throw new FileNotFoundException("Invocation journal not found");
             var entries = File.ReadAllLines(journal).Where(line => !string.IsNullOrWhiteSpace(line)).Select(line => JsonDocument.Parse(line)).Select(document => document.RootElement.Clone()).ToArray();
             CheckOk(entries.Any(entry => entry.GetProperty("phase").GetString() == "BEFORE") && entries.Any(entry => entry.GetProperty("phase").GetString() == "RETURNED"), "Invocation breadcrumbs include before and returned phases");
             CheckOk(!File.ReadAllText(journal).Contains("offline-test@example.invalid"), "Invocation journal contains no argument data");
@@ -611,7 +623,8 @@ internal static class DeveloperChecks
         var found = assembly.GetType(name, false);
         if (found != null) return found;
         var logicPath = Path.Combine(Path.GetDirectoryName(assembly.Location)!, "TiaMcp.Logic.dll");
-        if (File.Exists(logicPath)) found = Assembly.LoadFrom(logicPath).GetType(name, false);
+        if (PlcHarnessChecks.Active) found = PlcHarnessChecks.Logic.GetType(name, false);
+        else if (File.Exists(logicPath)) found = Assembly.LoadFrom(logicPath).GetType(name, false);
         return found ?? (throwOnError ? throw new TypeLoadException("Type not found: " + name) : null)!;
     }
 

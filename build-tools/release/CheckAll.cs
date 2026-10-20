@@ -260,6 +260,19 @@ internal static partial class ReleaseCommands
                         Path.Combine(output, "native-coverage-v" + key + ".json"), Path.Combine(output, "adapter-coverage-v" + key + ".json"));
                     return result;
                 }, selected == "native-diagnostics-only" ? ["native-coverage-v" + key, "adapter-coverage-v" + key] : null);
+                if (CheckAllHarnessSuccessors().TryGetValue(name, out var plcName))
+                    Add(plcName, () =>
+                    {
+                        var inventory = Path.Combine(output, "adapter-coverage-v" + key + ".json");
+                        var result = CheckAllHarness(Python(plcName, "scripts/checks/Test-PlcHarness.py",
+                            "--release", key, "--mode", selected.Length == 0 ? "http" : selected,
+                            "--host", host, "--worker", CheckAllPlcFixture(key), "--harness", harness,
+                            "--api", targetApi, "--public-api-root", api, "--adapter-inventory", inventory,
+                            "--output", Path.Combine(output, plcName)), selected, key);
+                        if (result.ExitCode == 0)
+                            ValidateCheckAllPlcHarness(result.StandardOutput, Path.Combine(output, plcName), selected, key, host, CheckAllPlcFixture(key), inventory);
+                        return result;
+                    }, selected == "native-diagnostics-only" ? ["adapter-coverage-v" + key] : null);
             }
             var campaignName = "campaign-inputs-v" + key;
             Add(campaignName, () => Python(campaignName, "scripts/checks/Test-CampaignInputs.py", "--exe", engine(key), "--major", key,
@@ -377,6 +390,7 @@ internal static partial class ReleaseCommands
             }, CatalogJson.Keys.Select(UsageName).ToArray());
         }
         ValidateCheckAllScriptSuccessors(jobs);
+        ValidateCheckAllHarnessSuccessors(jobs);
         Add("generate-release-migration", () => Tool("generate-release-migration", "generate-release-migration"));
         var scheduled = jobs.Select(job => job with
         {

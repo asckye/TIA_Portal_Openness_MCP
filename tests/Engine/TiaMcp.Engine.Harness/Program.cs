@@ -157,6 +157,11 @@ internal static partial class Program
         // which emits a UTF-8 BOM when the console code page is 65001 and the engine has not replaced it.
         try { Console.InputEncoding = new System.Text.UTF8Encoding(false); } catch (IOException) { }
         try {
+            if (args.Length > 0 && args[0] == "--plc") return await RunPlcHarness(args);
+            if (args.Length > 0 && args[0] == "--plc-lease-holder") {
+                Server = Assembly.LoadFrom(Path.GetFullPath(args[1]));
+                return LeaseFixture(new[] { args[1], "lease-holder", args[2], args[3] });
+            }
             if(args.Length > 0 && args[0] == "stdin-hex-fixture") {
                 using var input = Console.OpenStandardInput();
                 using var bytes = new MemoryStream();

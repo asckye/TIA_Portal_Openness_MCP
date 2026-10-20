@@ -37,16 +37,19 @@ internal static class HmiSnapshotRemotingTests
         public void Dispose() { Disposals++; }
     }
     internal static void Run(Assembly server, Action<bool,string> check)
+        => Run(server.GetType("TiaMcpServer.Siemens.HmiSnapshot", true)!.GetMethod("Capture", BindingFlags.Static | BindingFlags.NonPublic)!, check);
+
+    internal static void Run(MethodInfo capture, Action<bool,string> check, Func<object, string>? render = null)
     {
         var proxy = new ItemProxy();
         var sequence = new Sequence { Current = proxy.GetTransparentProxy() };
-        var capture = server.GetType("TiaMcpServer.Siemens.HmiSnapshot", true)!.GetMethod("Capture", BindingFlags.Static | BindingFlags.NonPublic)!;
         var value = capture.Invoke(null, new object?[] { sequence, 6, 2000, 65536, null });
-        var json = new JavaScriptSerializer { MaxJsonLength = 1024 * 1024 }.Deserialize<Dictionary<string,object>>(value!.ToString());
+        string text = render == null ? value!.ToString() : render(value!);
+        var json = new JavaScriptSerializer { MaxJsonLength = 1024 * 1024 }.Deserialize<Dictionary<string,object>>(text);
         if ((bool)json["apiCallSuccess"]) Console.Error.WriteLine("Unexpected snapshot: " + value + "; proxy calls=" + string.Join(",", proxy.Calls));
         check(!(bool)json["apiCallSuccess"] && !(bool)json["dataComplete"] && (bool)json["connectionUnavailable"], "actual net48 snapshot returns failure for a real remoting exception");
         check(proxy.Calls.Contains("get_A") && proxy.Calls.Contains("get_B") && !proxy.Calls.Contains("get_Z"), "actual EXE stops proxy property reads at first IPC failure");
         check(sequence.Moves == 1 && sequence.Disposals == 0, "actual EXE avoids enumerator calls after nested IPC failure");
-        check(value.ToString().Contains("retained") && (string)json["failurePath"] == "$/0/B", "actual EXE retains partial data and exact failing path");
+        check(text.Contains("retained") && (string)json["failurePath"] == "$/0/B", "actual EXE retains partial data and exact failing path");
     }
 }
