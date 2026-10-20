@@ -21,6 +21,7 @@ import threading
 import uuid
 
 ROOT = Path(__file__).resolve().parents[2]
+WINDOWS = os.name == "nt"
 KEYS = ("14sp1", "15.1", "16", "17", "18", "19")
 # Catalog WRITE tools with arguments valid against the released schemas (reference/tool-examples), so admission passes
 # and the default-on approval is what refuses the write. SaveProject is SESSION in the catalog and is not approval-gated;
@@ -220,7 +221,7 @@ def rpc_call(rpc, name: str, arguments: dict, request_id: str) -> dict:
 
 
 def run_engine(args) -> dict:
-    require(os.name == "nt", "Release host checks require Windows")
+    require(WINDOWS, "Release host checks require Windows")
     exe, portal, api = args.exe.resolve(), args.portal_root.resolve(), args.public_api.resolve()
     harness = args.host_harness.resolve() if args.host_harness else None
     require(exe.is_file() and portal.is_dir() and (harness is None or harness.is_file()) and api.is_dir(), "Engine check input is missing")
@@ -288,7 +289,7 @@ def run_engine(args) -> dict:
 
 
 def run_foundation(args) -> dict:
-    require(os.name == "nt", "Release host checks require Windows")
+    require(WINDOWS, "Release host checks require Windows")
     runtime_root, api = args.runtime_root.resolve(), args.public_api.resolve()
     require(runtime_root.is_dir() and api.is_dir(), "Foundation check input is missing")
     count = 0

@@ -1,6 +1,9 @@
 """PID-specific Windows diagnostics for the owned offline soak processes."""
 import ctypes
-from ctypes import wintypes
+try:
+    from ctypes import wintypes
+except ValueError:  # some Python builds cannot load wintypes outside Windows
+    wintypes = None
 from collections import Counter
 from datetime import datetime, timezone
 

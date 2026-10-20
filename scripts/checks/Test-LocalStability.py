@@ -24,6 +24,7 @@ from stability_process_diagnostics import snapshot as process_diagnostics
 
 
 ROOT = Path(__file__).resolve().parents[2]
+WINDOWS = os.name == 'nt'
 TARGET_DISPATCHERS = {'calltool', 'runreadonlytoolbatch', 'previewtoolbatch', 'applytoolbatch'}
 LOCAL_LANE_BOUND = 8
 WORKER_PIPE_BOUND = 8  # Foundation host worker forwarding bound
@@ -482,7 +483,7 @@ def main():
     require((args.engine_worker is not None) != (args.plc_worker is not None), 'Select exactly one worker kind')
     require((args.engine_worker is None) == (args.engine_catalog is None), 'Engine worker requires its catalog')
     require(args.major != 19 or args.plc_worker is not None, 'V19 requires the PLC worker')
-    require(os.name == 'nt', 'Windows .NET Framework test host required')
+    require(WINDOWS, 'Windows .NET Framework test host required')
     require(1 <= args.rounds <= 10000 and 1 <= args.concurrency <= 32, 'Rounds 1..10000; concurrency 1..32')
     for name in ('exe', 'public_api', 'output'):
         setattr(args, name, getattr(args, name).resolve())

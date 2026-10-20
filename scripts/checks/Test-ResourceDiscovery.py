@@ -171,7 +171,7 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
         env.update(env_overrides)
     process = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE, text=True, encoding='utf-8',
-                               env=env, cwd=content_root, creationflags=subprocess.CREATE_NO_WINDOW)
+                               env=env, cwd=content_root, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
     output, errors = queue.Queue(), []
 
     def drain_stdout():

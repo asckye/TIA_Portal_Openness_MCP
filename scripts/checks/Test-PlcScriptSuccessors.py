@@ -1,7 +1,7 @@
 """No-TIA regression tests for script successor wiring; every process launch is mocked."""
 import argparse
 import ast
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 import hashlib
 import importlib.util
 import io
@@ -27,6 +27,11 @@ def load(name):
 
 class LaunchIntercepted(Exception):
     pass
+
+
+def windows(module):
+    """Pass a script's Windows-host guard so its wiring can be checked on any CI runner."""
+    return patch.object(module, 'WINDOWS', True) if hasattr(module, 'WINDOWS') else nullcontext()
 
 
 class PlcScriptSuccessorTests(unittest.TestCase):
@@ -110,7 +115,8 @@ class PlcScriptSuccessorTests(unittest.TestCase):
             argv = [script, '--exe', str(self.host), '--public-api', str(self.api), '--major', '21',
                     '--plc-worker', str(self.worker)]
             argv += ['--output', str(self.root / script)] if script.endswith('Stability') else ['--portal-root', str(self.api)]
-            with patch.object(sys, 'argv', argv), patch.object(resources, 'server', side_effect=LaunchIntercepted) as server:
+            with patch.object(sys, 'argv', argv), patch.object(resources, 'server', side_effect=LaunchIntercepted) as server, \
+                    windows(module):
                 with self.assertRaises(LaunchIntercepted):
                     module.main()
             self.assertEqual(server.call_args.kwargs['plc_worker'], self.worker)
@@ -122,7 +128,7 @@ class PlcScriptSuccessorTests(unittest.TestCase):
         argv = ['stability', '--exe', str(self.host), '--public-api', str(self.api), '--major', '21',
                 '--plc-worker', str(self.worker), '--output', str(output), '--transports', 'stdio', '--profiles', 'full']
         run = {'measuredToolCalls': 1, 'warmupToolCalls': 1, 'recoveryToolCalls': 1}
-        with patch.object(sys, 'argv', argv), patch.object(module, 'run_profile', return_value=run):
+        with patch.object(sys, 'argv', argv), patch.object(module, 'run_profile', return_value=run), windows(module):
             module.main()
         evidence = json.loads((output / 'result.json').read_text('utf-8'))
         self.assertEqual(evidence['runtimeSha256'], hashlib.sha256(self.worker.read_bytes()).hexdigest())
@@ -143,7 +149,7 @@ class PlcScriptSuccessorTests(unittest.TestCase):
         self.assertEqual(report['runtimeSha256'], hashlib.sha256(self.worker.read_bytes()).hexdigest())
         args = argparse.Namespace(exe=self.host, portal_root=self.api, public_api=self.api, host_harness=None,
             plc_worker=self.worker, engine_worker=None, engine_catalog=None, temp_root=self.root, major=21)
-        with patch.object(module.resources, 'server', side_effect=LaunchIntercepted) as server:
+        with patch.object(module.resources, 'server', side_effect=LaunchIntercepted) as server, windows(module):
             with self.assertRaises(LaunchIntercepted):
                 module.run_engine(args)
         self.assertEqual(server.call_args.kwargs['plc_worker'], self.worker)

@@ -93,7 +93,7 @@ def engine_host_server(args, release, portal_root, profile, env_overrides):
         command += ['--http-prefix', f'http://127.0.0.1:{port}/', '--http-api-key', key]
     environment = engine_host_environment(args, release, dict(workers, **plc), env_overrides)
     process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                               text=True, encoding='utf-8', env=environment, creationflags=subprocess.CREATE_NO_WINDOW)
+                               text=True, encoding='utf-8', env=environment, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
     output, errors = queue.Queue(), []
     def drain_stdout():
         for line in process.stdout:

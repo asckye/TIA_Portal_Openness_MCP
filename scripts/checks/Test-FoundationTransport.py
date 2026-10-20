@@ -3,7 +3,10 @@ from offline_fixtures import verify_owned_process_image
 import argparse
 from contextlib import nullcontext
 import ctypes
-from ctypes import wintypes
+try:
+    from ctypes import wintypes
+except ValueError:  # some Python builds cannot load wintypes outside Windows
+    wintypes = None
 from tool_usage_checks import check_usage
 import json
 import hashlib
@@ -173,9 +176,10 @@ def exercise_engine(client, key, close=True, ready=False):
 
 
 class ProcessEntry(ctypes.Structure):
-    _fields_ = [('dwSize', wintypes.DWORD), ('cntUsage', wintypes.DWORD), ('th32ProcessID', wintypes.DWORD),
-                ('th32DefaultHeapID', ctypes.c_size_t), ('th32ModuleID', wintypes.DWORD), ('cntThreads', wintypes.DWORD),
-                ('th32ParentProcessID', wintypes.DWORD), ('pcPriClassBase', ctypes.c_long), ('dwFlags', wintypes.DWORD),
+    # PROCESSENTRY32W; c_ulong is wintypes.DWORD, spelled out so the module also imports outside Windows.
+    _fields_ = [('dwSize', ctypes.c_ulong), ('cntUsage', ctypes.c_ulong), ('th32ProcessID', ctypes.c_ulong),
+                ('th32DefaultHeapID', ctypes.c_size_t), ('th32ModuleID', ctypes.c_ulong), ('cntThreads', ctypes.c_ulong),
+                ('th32ParentProcessID', ctypes.c_ulong), ('pcPriClassBase', ctypes.c_long), ('dwFlags', ctypes.c_ulong),
                 ('szExeFile', ctypes.c_wchar * 260)]
 
 
