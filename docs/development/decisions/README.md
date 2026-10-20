@@ -24,13 +24,14 @@
 | [0010](0010-discovery-and-batch-tools-on-all-releases.md) | 发现、桥接与批处理工具在全部八个版本发布 | 已采纳 | 2026-10-08 | B16 |
 | [0011](0011-tia-process-lease-on-all-releases.md) | 八个版本都用 TIA 进程租约把一个 TIA 进程保留给一个 MCP 会话 | 已采纳 | 2026-10-08 | B19 |
 | [0012](0012-old-release-tool-registration.md) | 旧版只注册至少有一个动作能在该版 API 上运行的工具 | 已采纳 | 2026-10-09 | B14 |
-| [0013](0013-release-4-0-after-phases-7-and-8.md) | 4.0 在阶段 7 与阶段 8 全部完成后发布，真机验收最后集中进行一次 | 已采纳 | 2026-10-09 | B33 |
+| [0013](0013-release-4-0-after-phases-7-and-8.md) | 4.0 在阶段 7 与阶段 8 全部完成后发布，真机验收最后集中进行一次 | 已采纳，真机验收部分被 0020 取代 | 2026-10-09 | B33 |
 | [0014](0014-tool-counts-follow-official-api.md) | 各版本的工具数量按官方 API 支持决定，不为一致而拉平 | 已采纳 | 2026-10-10 | B15 |
 | [0015](0015-microsoft-design-spec-baseline.md) | 项目设计规范以 Microsoft 规范为基线 | 已采纳 | 2026-10-11 | B39 |
 | [0016](0016-architecture-decision-records.md) | 设计决策用 ADR 记录，一页一个决定 | 已采纳 | 2026-10-11 | B40 |
 | [0017](0017-own-openness-group-code.md) | Openness 用户组检查改用自有代码，不再分发 Siemens.Collaboration.Net | 已采纳 | 2026-10-18 | — |
 | [0018](0018-workbench-ant-design.md) | 工作台界面采用 Ant Design v5 的视觉规范和布局 | 已采纳 | 2026-10-18 | — |
 | [0019](0019-incremental-check-all.md) | check-all 复用输入未变的上次通过结果 | 已采纳 | 2026-10-18 | — |
+| [0020](0020-prereleases-tested-by-users.md) | 我们不做真机验收，4.0 以 GitHub 预发布交给其他用户测试 | 已采纳 | 2026-10-20 | — |
 
 ## 待补写的决定
 
