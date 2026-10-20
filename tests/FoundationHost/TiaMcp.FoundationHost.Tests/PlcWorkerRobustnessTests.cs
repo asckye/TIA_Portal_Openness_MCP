@@ -20,7 +20,7 @@ public sealed class PlcFixtureWorkerRobustnessTests
         internal Scope(string release, string mode)
         {
             Assert.True(File.Exists(Fixture), Fixture);
-            File.WriteAllText(Path.Combine(Path.GetDirectoryName(Fixture)!, "TiaMcp.Adapter." + release + ".dll"), "offline fixture identity");
+            TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(Path.GetDirectoryName(Fixture)!, "TiaMcp.Adapter." + release + ".dll"), "offline fixture identity");
             Environment.SetEnvironmentVariable("TIA_MCP_PLC_WORKER_FAULT", mode);
             Worker = new WorkerClient(release, Fixture, Path.GetDirectoryName(Fixture)!, true,
                 timeoutConfig: "{\"default\":2}") { Bundled = false, WithUi = true, TiaPortalLocation = "C:/fixture Portal V" + release };

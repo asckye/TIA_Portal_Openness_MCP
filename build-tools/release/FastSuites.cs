@@ -62,7 +62,8 @@ internal static class FastSuites
     }
 
     internal static void AddJobs(List<CheckJob> jobs, string root, string name, JsonObject suite, string output, string dotnet,
-        int shards, string? api, string[] dependencies, string? baseline = null, bool prove = false, string[]? extra = null, string? history = null, string? jobPrefix = null, string? manifest = null)
+        int shards, string? api, string[] dependencies, string? baseline = null, bool prove = false, string[]? extra = null, string? history = null, string? jobPrefix = null, string? manifest = null,
+        SuiteProcess? process = null)
     {
         var unit = CheckAllBuild.Suite(suite);
         var directory = Path.Combine(output, name);
@@ -77,14 +78,14 @@ internal static class FastSuites
         if (prove)
         {
             sequential = Path.Combine(directory, "sequential", name + ".trx");
-            jobs.Add(new(jobPrefix + name + "-sequential", () => RunShard(root, name, suite, Path.GetDirectoryName(sequential)!, dotnet, api, unit, 0, 1, extra, manifest: manifest), dependencies, Exclusive: true) {
+            jobs.Add(new(jobPrefix + name + "-sequential", () => RunShard(root, name, suite, Path.GetDirectoryName(sequential)!, dotnet, api, unit, 0, 1, extra, manifest: manifest, process: process), dependencies, Exclusive: true) {
                 SensitiveGroup = unit.Project, EstimatedSeconds = measuredPlan ? plan.Costs.Sum() + 5 : ColdShardSeconds * shards });
         }
         var shardNames = new List<string>();
         for (int i = 0; i < shards; i++)
         {
             var index = i; var jobName = jobPrefix + name + "-shard-" + i; shardNames.Add(jobName);
-            jobs.Add(new(jobName, () => RunShard(root, name, suite, Path.GetDirectoryName(paths[index])!, dotnet, api, unit, index, shards, extra, plan.Path, reserveSensitive, manifest, sensitiveShards: sensitiveShards), dependencies,
+            jobs.Add(new(jobName, () => RunShard(root, name, suite, Path.GetDirectoryName(paths[index])!, dotnet, api, unit, index, shards, extra, plan.Path, reserveSensitive, manifest, process, sensitiveShards), dependencies,
                 Exclusive: reserveSensitive && index >= shards - sensitiveShards) { EstimatedSeconds = measuredPlan ? plan.Costs[index] + 5 : ColdShardSeconds,
                     ResultInputs = new("suite", new JsonObject { ["suite"] = name, ["registration"] = suite.DeepClone(),
                         ["project"] = unit.Project, ["variant"] = unit.Variant, ["index"] = index, ["count"] = shards,
@@ -158,39 +159,55 @@ internal static class FastSuites
         return result;
     }
 
-    internal static CommandResult Run(string root, Options options, JsonObject catalog)
+    internal static CommandResult Run(string root, Options options, JsonObject catalog, SuiteProcess? process = null)
     {
         var output = Path.GetFullPath(options.Get("ResultsDirectory", Path.Combine(root, "bin-build/test-results-fast")));
         var dotnet = options.Get("Dotnet", "dotnet");
+        var partition = SuiteRunners.Parse(options);
+        bool gateOnly = options.Has("GateOnly");
+        if (gateOnly && options.Get("RunnerResults") is null) throw new ReleaseException("-GateOnly requires -RunnerResults <directory with each runner's results>", 64);
+        if (gateOnly && options.Has("ProveEquivalence")) throw new ReleaseException("-ProveEquivalence runs a sequential baseline that runners do not produce; omit it with -GateOnly", 64);
         Directory.CreateDirectory(output);
         using var load = CheckLoad.Current == null ? CheckLoad.Start(Path.Combine(output, "process-load.json")) : null;
         int parallelism = CpuParallelism(root, options);
         int count = Positive(options, "Shards", 8);
         var names = DotnetSuites.WithCompanions(options.All("Suite"), catalog);
-        var builds = CheckAllBuild.WithTestFixtures(names.Select(name => CheckAllBuild.Suite(catalog[name]!.AsObject()))).ToArray();
         var manifestPath = Path.GetFullPath(options.Get("RuntimeManifest", Path.Combine(output, "build/runtime-paths.tsv")));
-        string? manifest = !options.Has("NoBuild") || options.Has("RuntimeManifest") || File.Exists(manifestPath) ? manifestPath : null;
-        if (!options.Has("NoBuild"))
-        {
-            var build = CheckAllBuild.Run(root, builds, Path.Combine(output, "build"), dotnet,
-                options.Get("PublicApiRoot") ?? Environment.GetEnvironmentVariable("TIA_MCP_TEST_PUBLIC_API_ROOT"), options.Get("NuGetConfig") ?? Environment.GetEnvironmentVariable("TIA_MCP_OFFLINE_NUGET_CONFIG"), Positive(options, "BuildParallelism", parallelism), false);
-            if (build.ExitCode != 0)
-            {
-                File.WriteAllText(Path.Combine(output, "report.json"), System.Text.Json.JsonSerializer.Serialize(new
-                { exitCode = build.ExitCode, build = "failed", error = build.StandardError, output = build.StandardOutput }, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }) + "\n");
-                return build;
-            }
-            manifest = Path.Combine(output, "build/runtime-paths.tsv");
-            ReleaseCommands.PrepareCheckAllRuntime(root, builds, manifest);
-        }
+        bool build = !options.Has("NoBuild") && !gateOnly;
+        string? manifest = build ? Path.Combine(output, "build/runtime-paths.tsv") : options.Has("RuntimeManifest") || File.Exists(manifestPath) ? manifestPath : null;
         var jobs = new List<CheckJob>();
+        var jobSuites = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var name in names)
         {
             var suite = catalog[name]!.AsObject();
             string? api = name == "foundation-api" || suite["publicApiRoot"]?.GetValue<bool>() == true
                 ? options.Get("PublicApiRoot") ?? Environment.GetEnvironmentVariable("TIA_MCP_TEST_PUBLIC_API_ROOT") : null;
+            int first = jobs.Count;
             AddJobs(jobs, root, name, suite, output, dotnet, suite["minimumPassed"]!.GetValue<int>() >= 100 ? count : 1, api, [],
-                options.Get("SequentialBaselineDirectory") is { } baseline ? Path.Combine(baseline, name + ".trx") : null, options.Has("ProveEquivalence"), options.All("DotnetArg").ToArray(), manifest: manifest);
+                options.Get("SequentialBaselineDirectory") is { } baseline ? Path.Combine(baseline, name + ".trx") : null, options.Has("ProveEquivalence"), options.All("DotnetArg").ToArray(), manifest: manifest, process: process);
+            foreach (var job in jobs.Skip(first)) jobSuites.Add(job.Name, name);
+        }
+        if (gateOnly) return Gate(root, options, names, count, jobs, jobSuites, output, parallelism);
+        if (partition != null)
+        {
+            var assigned = SuiteRunners.Assign(jobs, partition.Count).Where(pair => pair.Value == partition.Index).Select(pair => pair.Key).ToHashSet(StringComparer.Ordinal);
+            // Each runner records its share before it builds, so the gate can name a runner that failed to report.
+            jobs = jobs.Where(job => assigned.Contains(job.Name)).ToList();
+            SuiteRunners.WriteManifest(output, SuiteRunners.Manifest(partition, count, names, jobSuites, jobs.Select(job => job.Name), output));
+        }
+        if (build)
+        {
+            var suites = names.Where(name => jobs.Any(job => jobSuites[job.Name] == name));
+            var builds = CheckAllBuild.WithTestFixtures(suites.Select(name => CheckAllBuild.Suite(catalog[name]!.AsObject()))).ToArray();
+            var result = builds.Length == 0 ? new CommandResult(0, "", "") : CheckAllBuild.Run(root, builds, Path.Combine(output, "build"), dotnet,
+                options.Get("PublicApiRoot") ?? Environment.GetEnvironmentVariable("TIA_MCP_TEST_PUBLIC_API_ROOT"), options.Get("NuGetConfig") ?? Environment.GetEnvironmentVariable("TIA_MCP_OFFLINE_NUGET_CONFIG"), Positive(options, "BuildParallelism", parallelism), false);
+            if (result.ExitCode != 0)
+            {
+                File.WriteAllText(Path.Combine(output, "report.json"), System.Text.Json.JsonSerializer.Serialize(new
+                { exitCode = result.ExitCode, build = "failed", error = result.StandardError, output = result.StandardOutput }, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }) + "\n");
+                return result;
+            }
+            if (builds.Length != 0) ReleaseCommands.PrepareCheckAllRuntime(root, builds, manifest!);
         }
         if (options.Has("SensitiveCores")) _ = Positive(options, "SensitiveCores", 1);
         if (options.Has("SensitiveParallelism")) _ = Positive(options, "SensitiveParallelism", 1);
@@ -216,6 +233,28 @@ internal static class FastSuites
         var gates = CheckScheduler.Run(jobs.Where(job => job.Name.EndsWith("-gate", StringComparison.Ordinal)).Select(job => job with { Dependencies = [] }).ToArray(), parallelism, Path.Combine(output, "gates"));
         File.WriteAllText(Path.Combine(output, "report.json"), System.Text.Json.JsonSerializer.Serialize(new
         { passed = gates.Count(row => row.Status == "passed"), failed = gates.Count(row => row.Status != "passed"), checks = rows.Concat(gates) }, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }) + "\n");
+        if (partition != null)
+            return new(rows.All(row => row.Status == "passed") ? 0 : 1, $"Runner {partition.Index} of {partition.Count}: {rows.Count(row => row.Status == "passed")} shards passed; "
+                + $"{rows.Count(row => row.Status != "passed")} failed. The suite gates run in test-suites -GateOnly over every runner's results. Evidence: {output}\n", "");
         return new(rows.Concat(gates).All(row => row.Status == "passed") ? 0 : 1, $"Suites: {gates.Count(row => row.Status == "passed")} passed; {gates.Count(row => row.Status != "passed")} failed. Evidence: {output}\n", "");
+    }
+
+    // Runs only the registered suite gates over shard results that other test-suites -RunnerIndex invocations produced.
+    private static CommandResult Gate(string root, Options options, IReadOnlyList<string> names, int count,
+        List<CheckJob> jobs, IReadOnlyDictionary<string, string> jobSuites, string output, int parallelism)
+    {
+        var resultsRoot = Path.GetFullPath(options.Get("RunnerResults")!, root);
+        if (resultsRoot.StartsWith(output + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) || string.Equals(resultsRoot, output, StringComparison.OrdinalIgnoreCase))
+            throw new ReleaseException("-RunnerResults must not be inside -ResultsDirectory", 64);
+        var coverage = SuiteRunners.Collect(resultsRoot, output, count, names, jobSuites);
+        var gates = CheckScheduler.Run(jobs.Where(SuiteRunners.IsGate).Select(job => job with { Dependencies = [] }).ToArray(), parallelism, Path.Combine(output, "gates"));
+        File.WriteAllText(Path.Combine(output, "report.json"), System.Text.Json.JsonSerializer.Serialize(new
+        { passed = gates.Count(row => row.Status == "passed"), failed = gates.Count(row => row.Status != "passed"), runnerResults = resultsRoot, coverageErrors = coverage, checks = gates },
+            new System.Text.Json.JsonSerializerOptions { WriteIndented = true }) + "\n");
+        var text = new System.Text.StringBuilder();
+        foreach (var error in coverage) text.Append("FAIL coverage: ").Append(error).Append('\n');
+        foreach (var gate in gates.Where(row => row.Status != "passed")) text.Append("FAIL ").Append(gate.Name).Append(": ").Append(gate.Error).Append('\n');
+        return new(coverage.Count == 0 && gates.All(row => row.Status == "passed") ? 0 : 1,
+            $"Suites: {gates.Count(row => row.Status == "passed")} passed; {gates.Count(row => row.Status != "passed")} failed; {coverage.Count} coverage errors. Evidence: {output}\n", text.ToString());
     }
 }

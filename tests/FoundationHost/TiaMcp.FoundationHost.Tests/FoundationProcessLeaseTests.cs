@@ -291,7 +291,7 @@ public sealed class FoundationProcessLeaseTests
         {
             Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", args[2]);
             string exe = Environment.ProcessPath!, release = args[4];
-            File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
+            TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
             if ((release is "20" or "21") && !bool.Parse(args[5]))
             {
                 var worker = new foundationhost::TiaMcp.FoundationHost.EngineWorkerClient(new foundationhost::TiaMcp.FoundationHost.HostOptions {

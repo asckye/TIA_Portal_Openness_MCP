@@ -132,7 +132,15 @@ public sealed class ProcessTests
             Process=Process.Start(start)!; diagnostics=Process.StandardError.ReadToEndAsync();
             Client=new ChannelClient(Process.StandardOutput.BaseStream,Process.StandardInput.BaseStream,new ChannelIdentity("19",Hash(exe),Hash(adapter),Process.Id,nonce));
         }
-        internal int Calls=>File.Exists(log)?File.ReadAllLines(log).Count(l=>l.Contains("\"stage\":\"call\"")):0;
+        internal int Calls=>File.Exists(log)?ReadLog().Split('\n').Count(l=>l.Contains("\"stage\":\"call\"")):0;
+        // The fixture appends while the test polls. File.ReadAllLines denies other writers, so either side could fail
+        // with a sharing violation; share read/write access instead.
+        private string ReadLog()
+        {
+            using var stream=new FileStream(log,FileMode.Open,FileAccess.Read,FileShare.ReadWrite|FileShare.Delete);
+            using var reader=new StreamReader(stream);
+            return reader.ReadToEnd();
+        }
         internal Task<string> Call(CancellationToken token=default,TimeSpan? timeout=null)=>Client.CallAsync("adapter.ReadState","{}",BindingChange.None,true,timeout??Budget,token);
         public void Dispose()
         {

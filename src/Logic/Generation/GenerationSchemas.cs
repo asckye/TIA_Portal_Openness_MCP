@@ -49,7 +49,37 @@ namespace TiaMcp.Logic.Generation
                 schemas.Add(name.Substring("TiaMcp.Generation.Schemas.".Length).Replace(".schema.json", ""), document.RootElement.Clone());
             }
             if (schemas.Count != 15) throw new InvalidOperationException("Generation schema resources are missing.");
+            // The bundled patterns are parsed once here, not for every validated value.
+            foreach (var schema in schemas) CompilePatterns(schema.Value, schema.Key);
             return schemas;
+        }
+
+        private static void CompilePatterns(JsonElement schema, string file)
+        {
+            if (schema.ValueKind != JsonValueKind.Object) return;
+            foreach (var keyword in schema.EnumerateObject())
+                switch (keyword.Name)
+                {
+                    case "pattern" when keyword.Value.ValueKind == JsonValueKind.String: Compile(keyword.Value.GetString()!, file); break;
+                    case "patternProperties":
+                        foreach (var item in keyword.Value.EnumerateObject()) { Compile(item.Name, file); CompilePatterns(item.Value, file); }
+                        break;
+                    case "properties": case "$defs": case "definitions":
+                        foreach (var item in keyword.Value.EnumerateObject()) CompilePatterns(item.Value, file);
+                        break;
+                    case "allOf": case "anyOf": case "oneOf":
+                        foreach (var item in keyword.Value.EnumerateArray()) CompilePatterns(item, file);
+                        break;
+                    case "items": case "additionalProperties": case "propertyNames": case "not": case "if": case "then": case "else":
+                        CompilePatterns(keyword.Value, file);
+                        break;
+                }
+        }
+
+        private static void Compile(string pattern, string file)
+        {
+            try { GenerationRegex.Get(pattern); }
+            catch (ArgumentException ex) { throw new InvalidOperationException("Bundled generation schema " + file + " has an invalid pattern.", ex); }
         }
 
         private static void Visit(JsonElement schema, JsonElement value, string file, string path, List<GenerationValidationError> errors, int depth)
@@ -150,7 +180,7 @@ namespace TiaMcp.Logic.Generation
 
         internal static bool Matches(string text, string pattern, string path)
         {
-            try { return Regex.IsMatch(text, pattern, RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100)); }
+            try { return GenerationRegex.IsMatch(pattern, text); }
             catch (Exception ex) when (ex is ArgumentException || ex is RegexMatchTimeoutException)
             { throw CanonicalJson.Failure(path, "pattern", "Invalid or excessively expensive regular expression."); }
         }

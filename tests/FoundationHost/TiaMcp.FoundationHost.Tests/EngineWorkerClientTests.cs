@@ -19,7 +19,7 @@ public sealed class EngineWorkerClientTests
         using var worker = new WorkerBackendFixture(plcWorker, new Options { ReleaseKey = release, BundleRoot = AppContext.BaseDirectory,
             WorkerExe = executable, ApiDirectory = AppContext.BaseDirectory, EngineWorkerExe = executable },
             Client.Hash(executable));
-        File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
+        TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
         var result = await worker.Observe("assemblies", new System.Text.Json.Nodes.JsonObject(), CancellationToken.None);
         Assert.Empty(result!.AsArray());
         Assert.Equal("Ready", (string?)worker.Snapshot()["state"]);
@@ -65,7 +65,7 @@ public sealed class EngineWorkerClientTests
     public async Task Missing_portal_and_refused_connect_do_not_poison_either_client(string release, bool plcWorker)
     {
         string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
-        File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
+        TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
         using var worker = new ClientBridge(release, exe, plcWorker);
         var args = new JsonObject { ["projectName"] = "Project1", ["expectedProjectFile"] = "C:/fixture.ap" + release };
         foreach (bool afterRefusedConnect in new[] { false, true })
@@ -95,7 +95,7 @@ public sealed class EngineWorkerClientTests
         try
         {
             string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
-            File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
+            TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
             using var worker = new ClientBridge(release, exe, plcWorker);
             await worker.Call("Attach", new JsonObject { ["processId"] = 123 }, CancellationToken.None);
             var watch = Stopwatch.StartNew();
@@ -120,7 +120,7 @@ public sealed class EngineWorkerClientTests
         try
         {
             string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
-            File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
+            TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
             using var worker = new ClientBridge(release, exe, plcWorker);
             await worker.Call("Attach", new JsonObject { ["processId"] = 123 }, CancellationToken.None);
             Task<JsonNode?> running = worker.Call(answeredUnknown ? "FixtureUnknown" : "FixtureHang", new JsonObject(), CancellationToken.None);

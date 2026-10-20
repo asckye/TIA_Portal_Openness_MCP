@@ -13,13 +13,45 @@ public sealed class FoundationChecks
     [MemberData(nameof(Rows), DisableDiscoveryEnumeration = true)]
     public void Check(CheckRow row) => row.Verify();
 
+    // VSTest's five-minute blame-hang timeout applies to each test case, and a CheckTheory enumerates its whole
+    // producer before it reports the first row. On a four-vCPU CI runner the single producer took 294 to 300 s
+    // (PassiveHostDiagnosticsTests 84-108 s, ToolUsageTests 175-204 s), so these suites are separate test cases.
+    // Every row still runs and is verified.
+    [CheckTheory]
+    [MemberData(nameof(PassiveHostDiagnosticsRows), DisableDiscoveryEnumeration = true)]
+    public void CheckPassiveHostDiagnostics(CheckRow row) => row.Verify();
+
+    [CheckTheory]
+    [MemberData(nameof(ToolUsageRows), DisableDiscoveryEnumeration = true)]
+    public void CheckToolUsage(CheckRow row) => row.Verify();
+
+    [CheckTheory]
+    [MemberData(nameof(LaterToolUsageRows), DisableDiscoveryEnumeration = true)]
+    public void CheckLaterToolUsage(CheckRow row) => row.Verify();
+
+    public static IEnumerable<object[]> PassiveHostDiagnosticsRows()
+    {
+        var server=DispatchProxy.Create<IMcpServer,ServerProxy>();
+        return CheckSuite.Run(nameof(PassiveHostDiagnosticsTests), check => PassiveHostDiagnosticsTests.Run(server,check).GetAwaiter().GetResult());
+    }
+
+    public static IEnumerable<object[]> ToolUsageRows()
+    {
+        var server=DispatchProxy.Create<IMcpServer,ServerProxy>();
+        return CheckSuite.Run(nameof(ToolUsageTests), check => ToolUsageTests.Run(server,check,ToolUsageTests.FirstReleases,false).GetAwaiter().GetResult());
+    }
+
+    public static IEnumerable<object[]> LaterToolUsageRows()
+    {
+        var server=DispatchProxy.Create<IMcpServer,ServerProxy>();
+        return CheckSuite.Run(nameof(ToolUsageTests), check => ToolUsageTests.Run(server,check,ToolUsageTests.LastReleases,true).GetAwaiter().GetResult());
+    }
+
     public static IEnumerable<object[]> Rows()
     {
         // Preserve the original console runner's suite and dispatch order.
         var server=DispatchProxy.Create<IMcpServer,ServerProxy>();
         foreach (var row in CheckSuite.Run(nameof(DisconnectTests), check => DisconnectTests.Run(server,check).GetAwaiter().GetResult())) yield return row;
-        foreach (var row in CheckSuite.Run(nameof(PassiveHostDiagnosticsTests), check => PassiveHostDiagnosticsTests.Run(server,check).GetAwaiter().GetResult())) yield return row;
-        foreach (var row in CheckSuite.Run(nameof(ToolUsageTests), check => ToolUsageTests.Run(server,check).GetAwaiter().GetResult())) yield return row;
         foreach (var row in CheckSuite.Run(nameof(DocumentImportTests), check => DocumentImportTests.Run(check))) yield return row;
         foreach (var row in CheckSuite.Run(nameof(BatchDocumentImportTests), check => BatchDocumentImportTests.Run(check))) yield return row;
         foreach (var row in CheckSuite.Run(nameof(WorkerSessionOutcomeTests), check => WorkerSessionOutcomeTests.Run(check))) yield return row;

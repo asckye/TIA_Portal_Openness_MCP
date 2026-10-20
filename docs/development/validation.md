@@ -72,6 +72,9 @@ runner 在启动任何子进程前先将自身加入拥有的 Windows job；私�
 用于区分延迟枚举的实际工作与逐行 xUnit 的耗时；不缓存检查结果，也不改变执行顺序。
 合并拒绝重复测试身份，并检查注册套件最低通过数、最高跳过数和失败数。Studio Core/Gui、Updater 和 ShippedTools 使用同一分片框架，时间敏感方法逐项列在 `tests/Shared/TimeSensitiveTests.cs`。快速合并门禁保持五分钟。
 注册最低通过数包括 write-guard 8、updater 33（Linux/macOS 32）、workbench-vci-prefill 63；最高跳过数保留注册表原值。
+`test-suites -RunnerIndex <i> -RunnerCount <n>` 只运行分配给第 i 台机器的分片（按预测耗时最长优先分配，无耗时历史时按套件和分片顺序轮转），不执行套件门禁，并写出记录本机分片与分片计划摘要的 `runner.json`。
+`test-suites -GateOnly -RunnerResults <目录>` 不运行测试：以相同 `-Shards` 和套件列表重新计算分片计划，要求每台机器都有 `runner.json`、计划一致、每个分片恰好由一台机器运行，再对合并结果执行同一套最低通过数、跳过上限、失败数、缺失分片和重复身份检查。
+offline-checks 的 `foundation-suites` 矩阵在四台 runner 上以 `-Shards 8 -MaxParallelism 2` 分担该组套件，`foundation-suites-gate` 汇总判定。
 
 首次等价验证可加 `-ProveEquivalence`，执行原有单进程测试后比较完整测试身份多重集合及结果；此验证运行计入耗时。
 之后可用 `-SequentialBaselineDirectory <directory>` 复用各套件的 `<suite>.trx` 证据，每次仍执行全部分片及比较。

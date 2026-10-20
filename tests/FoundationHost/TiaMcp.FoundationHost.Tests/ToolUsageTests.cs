@@ -7,9 +7,13 @@ using TiaOpenness.Shared;
 
 internal static class ToolUsageTests
 {
-    internal static async Task Run(IMcpServer server, Action<bool,string> check)
+    // FoundationChecks runs the releases as two test cases, each inside VSTest's per-test blame-hang timeout.
+    internal static readonly string[] FirstReleases = { "14sp1", "15.1", "16", "17" };
+    internal static readonly string[] LastReleases = { "18", "19", "20", "21" };
+
+    internal static async Task Run(IMcpServer server, Action<bool,string> check, IReadOnlyList<string> releases, bool catalogChecks)
     {
-        foreach (var release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+        foreach (var release in releases)
         {
             using var engineScope = release is "20" or "21" ? EngineHostParity.EnterScope() : null;
             var worker = new FakeWorker();
@@ -79,6 +83,7 @@ internal static class ToolUsageTests
             check((await Call("{\"toolName\":\"ConnectPortal\",\"query\":\"x\"}")).IsError == true, "conflicting selectors rejected");
             check(worker.Calls == 0, "usage never invokes worker even when native access enabled");
         }
+        if (!catalogChecks) return;
         var docId = "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/ParameterSnippets.cs";
         var first = ToolUsageCatalog.ReadReference("", docId, 0, 7);
         var second = ToolUsageCatalog.ReadReference("", docId, 7, 7);

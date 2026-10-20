@@ -80,7 +80,8 @@ public sealed class ImportStagingHostTests : IDisposable
         Assert.Equal(new[] { "request", "end" }, audit.Read().Select(x => x.Event));
         var large = Args("Main.scl"); large["files"]![0]!["kind"] = "scl"; large["files"]![0]!["content"] = new string('x', 4194304);
         var result = await tool.InvokeAsync(Request("StageImportFiles", large));
-        Assert.True((bool?)result.StructuredContent?["ok"]); Assert.Equal(1, approvals); Assert.Equal(0, worker.Calls);
+        // The envelope names the refusal if this fails; the CI failures under load recorded no reason.
+        Assert.True((bool?)result.StructuredContent?["ok"], result.StructuredContent?.ToJsonString()); Assert.Equal(1, approvals); Assert.Equal(0, worker.Calls);
         Assert.True(audit.Verify().Passed); Assert.Contains(audit.Read(), x => x.Event == "approval-granted");
         Assert.Single(store.List()["batches"]!.AsArray());
     }

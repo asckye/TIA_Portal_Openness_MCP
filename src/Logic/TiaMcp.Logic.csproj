@@ -18,6 +18,9 @@
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>TiaMcp.WorkbenchControl.Tests</_Parameter1>
     </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>TiaMcp.Generation.Tests</_Parameter1>
+    </AssemblyAttribute>
     <ProjectReference Include="../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
     <PackageReference Include="Esprima" Version="3.0.5" />
     <PackageReference Include="System.Text.Json" Version="10.0.0-preview.4.25258.110" />

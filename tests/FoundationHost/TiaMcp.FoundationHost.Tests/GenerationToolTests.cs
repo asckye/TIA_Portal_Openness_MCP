@@ -32,6 +32,7 @@ public sealed class GenerationToolTests : IDisposable
     [MemberData(nameof(Releases))]
     public async Task EveryToolAdmitsOfflineCallsAndRefusesInvalidFieldsBeforeApproval(string release)
     {
+        using var diagnostics = new GenerationFailureDiagnostics();
         var machine = JsonNode.Parse(System.Text.Encoding.UTF8.GetString(store.Load("tiamcp.basic", "1.0.0").ReadFile("examples/machine.json")))!;
         machine["target"]!["release"] = release;
         foreach (var name in new[] { "ListStandardPackages", "ValidateStandardPackage", "DescribeStandardPackage", "ManageStandardPackage", "ManageMachineDescription" })
@@ -42,7 +43,7 @@ public sealed class GenerationToolTests : IDisposable
             if (name == "ManageStandardPackage") { args["action"] = "fork"; args["newId"] = "example.fork"; args["newVersion"] = "1.1.0"; }
             if (name == "ManageMachineDescription") { args["action"] = "validate"; args["machine"] = machine.DeepClone(); args["dryRun"] = false; }
             var result = await tool.InvokeAsync(Request(name, args));
-            Assert.True((bool?)result.StructuredContent?["ok"], result.Content.OfType<TextContentBlock>().First().Text);
+            Assert.True((bool?)result.StructuredContent?["ok"], diagnostics.Failure(name, result));
             Assert.Equal(release, (string?)result.StructuredContent?["meta"]?["releaseKey"]);
             if (name == "ManageMachineDescription")
             {
@@ -50,7 +51,7 @@ public sealed class GenerationToolTests : IDisposable
                 var described = await usage.InvokeAsync(Request("GetToolUsage", new JsonObject { ["toolName"] = name }));
                 var example = described.StructuredContent!["data"]!["example"]!["request"]!["params"]!["arguments"]!.AsObject();
                 var admitted = await tool.InvokeAsync(Request(name, (JsonObject)example.DeepClone()));
-                Assert.True((bool?)admitted.StructuredContent?["ok"], admitted.Content.OfType<TextContentBlock>().First().Text);
+                Assert.True((bool?)admitted.StructuredContent?["ok"], diagnostics.Failure(name + " usage example", admitted));
             }
             args["unknownField"] = true;
             result = await tool.InvokeAsync(Request(name, args));

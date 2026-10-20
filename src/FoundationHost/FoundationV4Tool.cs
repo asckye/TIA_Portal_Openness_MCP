@@ -405,8 +405,16 @@ internal sealed class FoundationV4Tool : McpServerTool
                 if (inner is not GenerationTool { OwnsApproval: true }) audit?.Start();
                 if (inner is FoundationTool foundation) return Recorded(await foundation.InvokeV4Async(request, release, id, cancellationToken));
                 var result = await inner.InvokeAsync(request, cancellationToken);
+                JsonNode? body;
+                try
+                {
+                    body = inner is GenerationTool
+                        ? result.StructuredContent ?? JsonNode.Parse((result.Content.FirstOrDefault() as TextContentBlock)?.Text ?? "null")
+                        : JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text);
+                }
+                catch (JsonException) /* swallow(privacy): SDK error text is an internal failure, not client data or invalid input */
+                { return Recorded(FoundationV4Result.HostFailure(release, tool.Name, id)); }
                 if (inner is GenerationTool) return Recorded(result);
-                var body = JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text);
                 return Recorded(FoundationV4Result.Host(release, tool.Name, id, body, parameter != null && parameter != "artifacts", result.IsError == true, args));
             }
             finally { request.Params = original; }

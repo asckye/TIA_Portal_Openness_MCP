@@ -9,6 +9,8 @@ internal static class SuiteHang
     // Existing check-all TRX maxima: 61.8104231s (master-b353f5ef),
     // 60.2262008s (master-ba5a4a9d). Its longest producer-inclusive boundary
     // was 97.0151567s (FoundationChecks.Check); five minutes leaves >3x headroom.
+    // A 4-vCPU CI runner needed 295-300 s for that producer, so its two longest
+    // suites run as separate test cases; the timeout applies per test case.
     internal const string Timeout = "5m";
     internal static string[] TestArguments => ["--blame-hang", "--blame-hang-timeout", Timeout, "--blame-hang-dump-type", "mini"];
     internal static string VstestArgument => "--Blame:CollectHangDump;HangDumpType=mini;TestTimeout=" + Timeout;

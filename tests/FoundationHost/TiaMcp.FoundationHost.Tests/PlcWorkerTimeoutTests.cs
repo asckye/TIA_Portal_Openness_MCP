@@ -642,7 +642,7 @@ public sealed class PlcWorkerRobustnessTests
                 File.Copy(source, destination);
             }
             exe = Path.Combine(fixtureDirectory, Path.GetFileName(exe));
-            File.WriteAllText(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + release + ".dll"), "offline fixture identity");
+            TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + release + ".dll"), "offline fixture identity");
             Worker = new Foundation.WorkerClient(release, exe, Path.GetDirectoryName(exe)!, true, defaultSeconds, config) { Bundled = false };
         }
         internal async Task WarmBeforeScaledBudgets()

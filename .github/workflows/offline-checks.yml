@@ -156,8 +156,15 @@ jobs:
       - name: Reviewed analyzer warning ratchet
         run: dotnet run --project build-tools/release -- check-analyzer-warnings -Check
 
-  foundation-transport:
+  foundation-suites:
+    # One 4-vCPU runner cannot host this group at 4-way parallelism without starving its own
+    # timing-sensitive tests. Four runners each run a disjoint quarter of the shards at 2-way
+    # parallelism; foundation-suites-gate applies every registered suite gate to their union.
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [0, 1, 2, 3]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v6
@@ -168,8 +175,48 @@ jobs:
           python-version: '3.12'
       - name: Build the development host that the host CLI tests start
         run: dotnet build src/FoundationHost/TiaMcp.FoundationHost.csproj -c Release
-      - name: Foundation contracts and functional tests
-        run: dotnet run --project build-tools/release -- test-suites -Shards 4 -MaxParallelism 4 -Suite foundation -Suite engine-host -Suite shared-session -Suite shared-lifecycle -Suite worker-progress -Suite prompt-registration -Suite software-read -Suite special-export-shape -Suite device-add -Suite hardware-catalog -Suite diagnostic-membership -Suite adapter-contracts -Suite worker-channel -Suite compile-candidate -Suite compile-candidate-no-safety -Suite fallback-vci-modern -Suite fallback-vci-initial -Suite fallback-vci-classic -Suite workbench-control-protocol
+      - name: Foundation contracts and functional tests, runner ${{ matrix.runner }} of 4
+        run: dotnet run --project build-tools/release -- test-suites -Shards 8 -MaxParallelism 2 -RunnerIndex ${{ matrix.runner }} -RunnerCount 4 -ResultsDirectory bin-build/runner-results -Suite foundation -Suite engine-host -Suite shared-session -Suite shared-lifecycle -Suite worker-progress -Suite prompt-registration -Suite software-read -Suite special-export-shape -Suite device-add -Suite hardware-catalog -Suite diagnostic-membership -Suite adapter-contracts -Suite worker-channel -Suite compile-candidate -Suite compile-candidate-no-safety -Suite fallback-vci-modern -Suite fallback-vci-initial -Suite fallback-vci-classic -Suite workbench-control-protocol
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: foundation-runner-${{ matrix.runner }}
+          path: bin-build/runner-results/
+
+  foundation-suites-gate:
+    # Same -Shards and suite list as the runners: the gate recomputes the shard plan and refuses a
+    # missing runner, a shard that no runner or two runners ran, and any suite gate failure.
+    needs: foundation-suites
+    if: always()
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/download-artifact@v6
+        with:
+          pattern: foundation-runner-*
+          path: bin-build/runner-results
+      - name: Registered suite gates over every runner's shards
+        run: dotnet run --project build-tools/release -- test-suites -Shards 8 -GateOnly -RunnerResults bin-build/runner-results -ResultsDirectory bin-build/test-results-fast -Suite foundation -Suite engine-host -Suite shared-session -Suite shared-lifecycle -Suite worker-progress -Suite prompt-registration -Suite software-read -Suite special-export-shape -Suite device-add -Suite hardware-catalog -Suite diagnostic-membership -Suite adapter-contracts -Suite worker-channel -Suite compile-candidate -Suite compile-candidate-no-safety -Suite fallback-vci-modern -Suite fallback-vci-initial -Suite fallback-vci-classic -Suite workbench-control-protocol
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: foundation-transport-test-results
+          path: |
+            bin-build/test-results*/
+
+  foundation-transport:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
       - name: Build host and synthetic worker without Siemens SDKs
         shell: bash
         run: |
@@ -191,8 +238,7 @@ jobs:
       - uses: actions/upload-artifact@v6
         if: always()
         with:
-          name: foundation-transport-test-results
+          name: foundation-transport-host-results
           path: |
-            bin-build/test-results*/
             bin-build/check-all/
             bin-build/ci-foundation-results/

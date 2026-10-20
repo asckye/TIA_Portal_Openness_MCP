@@ -27,5 +27,30 @@ namespace TiaMcp.Engine.Tests.Shared
 
         public static string WorkerFixture(string project, string file) => Path.Combine(
             RepositoryRoot(AppContext.BaseDirectory), "tests", "WorkerChannel", project, "bin", "Release", "net10.0", file);
+
+        // Parallel shard processes share one output directory, and their worker fixtures hash this file at startup.
+        // File.WriteAllText truncates it in place, so another process could hash an empty file or be refused by the
+        // writer's handle and exit before its handshake. Write the content once and replace the file atomically.
+        public static void WriteFixtureFile(string path, string content)
+        {
+            for (int attempt = 0; ; attempt++)
+            {
+                string temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+                try
+                {
+                    if (File.Exists(path) && File.ReadAllText(path) == content) return;
+                    File.WriteAllText(temporary, content);
+                    if (File.Exists(path)) File.Replace(temporary, path, null);
+                    else File.Move(temporary, path);
+                    return;
+                }
+                catch (Exception error) when ((error is IOException || error is UnauthorizedAccessException) && attempt < 100)
+                {
+                    // Another process is reading or replacing the file; its content is checked again.
+                    System.Threading.Thread.Sleep(10);
+                }
+                finally { if (File.Exists(temporary)) File.Delete(temporary); }
+            }
+        }
     }
 }

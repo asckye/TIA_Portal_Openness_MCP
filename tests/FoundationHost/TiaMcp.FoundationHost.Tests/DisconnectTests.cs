@@ -94,7 +94,7 @@ public sealed class FoundationRecoveryTests
     public async Task Foundation_channel_preserves_both_lease_refusals_without_poisoning(string release)
     {
         string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
-        File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
+        TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
         using var worker = new WorkerClient(release, exe, AppContext.BaseDirectory, true) { Bundled = false };
         foreach (var item in new[] { (901, TiaOpenness.Shared.SessionBehavior.LeaseNotReleased), (904, TiaOpenness.Shared.SessionBehavior.LeaseReserved) })
         {
@@ -113,7 +113,7 @@ public sealed class FoundationRecoveryTests
     public async Task Answered_unknown_can_detach_and_a_new_foundation_worker_can_attach(string release)
     {
         string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
-        File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
+        TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
         using var worker = new WorkerClient(release, exe, AppContext.BaseDirectory, true) { Bundled = false };
         await worker.Call("Attach", new JsonObject { ["processId"] = 123 }, CancellationToken.None);
         using (TiaMcpServer.ModelContextProtocol.InvocationJournal.UseCorrelation("prior-foundation-unknown"))
@@ -134,7 +134,7 @@ public sealed class FoundationRecoveryTests
     public async Task Foundation_in_flight_disconnect_does_not_wait_for_a_hung_native_call(string release)
     {
         string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
-        File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
+        TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
         using var worker = new WorkerClient(release, exe, AppContext.BaseDirectory, true) { Bundled = false };
         await worker.Call("Attach", new JsonObject { ["processId"] = 123 }, CancellationToken.None);
         var running = worker.Call("FixtureHang", new JsonObject(), CancellationToken.None);

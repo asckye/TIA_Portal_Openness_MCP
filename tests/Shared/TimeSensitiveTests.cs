@@ -19,6 +19,8 @@ namespace TiaMcp.Engine.Tests.Shared
             ["WorkerRobustnessTests"] ="Scaled worker budgets, dispatch cancellation and real timeout measurements.",
             ["PlcWorkerRobustnessTests"] = "One-second startup/default budgets and 1.3-second synthetic native calls.",
             ["PlcFixtureWorkerRobustnessTests"] = "Two-second worker startup/default budget and injected fault deadlines.",
+            ["SharedWorkerRegressionTests"] = "Cold worker readiness and compile wrapper inside a two-second request deadline.",
+            ["FoundationRecoveryTests"] = "Worker answered-unknown detach and reattach within the scaled worker budgets.",
             ["EngineWorkerClientTests"] = "Worker startup and disposal measured against ten/two-second bounds.",
             ["FoundationProcessLeaseTests"] = "Child readiness/exit bounds and durable-request overhead measurement.",
             ["FoundationChecks"] = "Indivisible legacy producer includes bounded adapter evaluation and FIFO fixture startup.",
@@ -99,7 +101,20 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Faults_lock_both_pipelines_and_require_explicit_restart",
                 "Cancellation_after_dispatch_keeps_the_late_result_and_journal",
                 "Oversized_reply_survives_a_spill_slower_than_the_fault_injection_deadline",
-                "First_attach_has_a_longer_deadline_and_the_access_confirmation_hint"
+                "First_attach_has_a_longer_deadline_and_the_access_confirmation_hint",
+                "Restart_clears_an_adopted_binding_and_refuses_a_busy_lane",
+                "Worker_inherits_host_diagnostics_directory",
+                "Progress_requires_a_token_and_preserves_it",
+                "Cancellation_before_dispatch_is_a_queue_refusal"
+            },
+            ["PlcFixtureWorkerRobustnessTests"] = new[] {
+                "Plc_faults_lock_the_host_and_require_explicit_restart"
+            },
+            ["SharedWorkerRegressionTests"] = new[] {
+                "CallTool_compile_wrapper_observes_cold_readiness_inside_the_target_lane"
+            },
+            ["FoundationRecoveryTests"] = new[] {
+                "Answered_unknown_can_detach_and_a_new_foundation_worker_can_attach"
             },
             ["PlcWorkerRobustnessTests"] = new[] {
                 "Plc_long_compile_and_import_complete_with_scaled_production_budgets",
@@ -124,7 +139,10 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Worker_stdin_eof_releases_an_attached_session_before_the_next_worker"
             },
             ["FoundationChecks"] = new[] {
-                "Check"
+                "Check",
+                "CheckPassiveHostDiagnostics",
+                "CheckToolUsage",
+                "CheckLaterToolUsage"
             },
             ["PortedPortalAdmissionTests"] = new[] {
                 "Port_dispatch_takes_the_shared_worker_lane_before_journaling"

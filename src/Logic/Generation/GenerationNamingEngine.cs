@@ -105,7 +105,7 @@ namespace TiaMcp.Logic.Generation
             if (name.Length < (rule.MinLength ?? 1) || name.Length > (rule.MaxLength ?? 4096) || name.Any(c => char.IsControl(c) || c == '"')) return false;
             try
             {
-                if (!Regex.IsMatch(name, rule.Pattern, RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100))) return false;
+                if (!GenerationRegex.IsMatch(rule.Pattern, name)) return false;
             }
             catch (RegexMatchTimeoutException) { throw CanonicalJson.Failure("/naming/" + rule.Id, "pattern-timeout", "Naming pattern exceeded its time budget."); }
             return rule.Case switch

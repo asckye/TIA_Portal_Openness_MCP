@@ -36,7 +36,7 @@ public sealed class WorkerDispatchTests
     {
         string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
         string release = engine ? "21" : "19";
-        File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
+        TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
         var rows = new List<string>();
         using IFoundationWorker? plc = engine ? null : new WorkerClient(release, exe, AppContext.BaseDirectory, true) { Bundled = false };
         using var worker = engine ? new foundationhost::TiaMcp.FoundationHost.EngineWorkerClient(
@@ -84,7 +84,7 @@ public sealed class WorkerDispatchTests
     public async Task Foundation_client_consumes_the_full_spill_and_removes_only_the_validated_file()
     {
         string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
-        File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter.19.dll"), "offline session fixture");
+        TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter.19.dll"), "offline session fixture");
         string directory = TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory;
         var before = Directory.GetFiles(directory).OrderBy(path => path, StringComparer.Ordinal).ToArray();
         using var worker = new WorkerClient("19", exe, AppContext.BaseDirectory, true) { Bundled = false };

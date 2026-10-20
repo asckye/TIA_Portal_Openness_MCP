@@ -30,18 +30,17 @@ namespace TiaMcp.Logic.Generation
             try { source = new UTF8Encoding(false, true).GetString(bytes); }
             catch (DecoderFallbackException) { throw CanonicalJson.Failure("/sources", "encoding", "SCL must be UTF-8."); }
             source = source.Replace("\r\n", "\n").Replace("\r", "\n").TrimStart('\ufeff');
-            // Mask comments and SCL string literals while keeping offsets and newlines.
-            var code = Regex.Replace(source, @"//[^\n]*|/\*[\s\S]*?\*/|'(?:[^']|'')*'", m => new string(m.Value.Select(c => c == '\n' ? '\n' : ' ').ToArray()), RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
-            var headers = Regex.Matches(code, @"(?im)^\s*(TYPE|FUNCTION_BLOCK|FUNCTION|DATA_BLOCK|ORGANIZATION_BLOCK)\s+(?:""([^""\n]+)""|([A-Za-z_][A-Za-z0-9_]*))", RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
-            if (headers.Count == 0) throw CanonicalJson.Failure("/sources", "scl-declaration", "SCL source has no named declaration.");
+            var code = Mask(source);
+            var headers = GenerationRegex.Matches(code, @"(?im)^\s*(TYPE|FUNCTION_BLOCK|FUNCTION|DATA_BLOCK|ORGANIZATION_BLOCK)\s+(?:""([^""\n]+)""|([A-Za-z_][A-Za-z0-9_]*))");
+            if (headers.Length == 0) throw CanonicalJson.Failure("/sources", "scl-declaration", "SCL source has no named declaration.");
             var declarations = new List<SclDeclaration>();
-            for (var i = 0; i < headers.Count; i++)
+            for (var i = 0; i < headers.Length; i++)
             {
                 var header = headers[i];
                 var keyword = header.Groups[1].Value.ToUpperInvariant();
                 var endPattern = keyword == "TYPE" ? "END_TYPE" : "END_" + keyword;
-                var end = Regex.Match(code.Substring(header.Index + header.Length), @"(?im)^\s*" + endPattern + @"\b[^\n]*", RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
-                if (!end.Success || i + 1 < headers.Count && header.Index + header.Length + end.Index >= headers[i + 1].Index)
+                var end = GenerationRegex.Match(code.Substring(header.Index + header.Length), @"(?im)^\s*" + endPattern + @"\b[^\n]*");
+                if (!end.Success || i + 1 < headers.Length && header.Index + header.Length + end.Index >= headers[i + 1].Index)
                     throw CanonicalJson.Failure("/sources", "scl-declaration", "Missing declaration terminator: " + endPattern);
                 var length = header.Length + end.Index + end.Length;
                 var content = source.Substring(header.Index, length).Trim() + "\n";
@@ -114,9 +113,9 @@ namespace TiaMcp.Logic.Generation
 
         internal static Dictionary<string, string> Members(string content)
         {
-            var code = Regex.Replace(content, @"//[^\n]*|/\*[\s\S]*?\*/|'(?:[^']|'')*'", m => new string(m.Value.Select(c => c == '\n' ? '\n' : ' ').ToArray()), RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
+            var code = Mask(content);
             var members = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (Match field in Regex.Matches(code, @"(?m)^\s*(?:""([^""\n]+)""|([A-Za-z_][A-Za-z0-9_]*))\s*:\s*(?:""([^""\n]+)""|([A-Za-z_][A-Za-z0-9_]*))\s*(?:;|:=)", RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100)))
+            foreach (var field in GenerationRegex.Matches(code, @"(?m)^\s*(?:""([^""\n]+)""|([A-Za-z_][A-Za-z0-9_]*))\s*:\s*(?:""([^""\n]+)""|([A-Za-z_][A-Za-z0-9_]*))\s*(?:;|:=)"))
             {
                 var name = field.Groups[1].Success ? field.Groups[1].Value : field.Groups[2].Value;
                 if (name == "VERSION") continue;
@@ -125,6 +124,10 @@ namespace TiaMcp.Logic.Generation
             }
             return members;
         }
+
+        // Masks comments and SCL string literals while keeping offsets and newlines.
+        private static string Mask(string source) => GenerationRegex.Replace(source, @"//[^\n]*|/\*[\s\S]*?\*/|'(?:[^']|'')*'",
+            m => new string(m.Value.Select(c => c == '\n' ? '\n' : ' ').ToArray()));
 
         internal static string Quote(string name)
         {

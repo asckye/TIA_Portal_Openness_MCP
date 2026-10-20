@@ -215,9 +215,10 @@ internal static class DotnetSuites
         names = WithCompanions(names, catalog);
         var unknown = names.Where(name => !catalog.ContainsKey(name)).Distinct().Order(PythonStringComparer.Instance).ToArray();
         if (unknown.Length != 0) throw new ReleaseException("Unknown suites: " + string.Join(", ", unknown), 64);
-        if (options.Has("Shards") || options.Has("MaxParallelism") || options.Has("NoBuild") || options.Has("ProveEquivalence"))
+        if (options.Has("Shards") || options.Has("MaxParallelism") || options.Has("NoBuild") || options.Has("ProveEquivalence")
+            || options.Has("RunnerIndex") || options.Has("RunnerCount") || options.Has("GateOnly"))
         {
-            var fast = FastSuites.Run(root, options, catalog);
+            var fast = FastSuites.Run(root, options, catalog, process);
             return fast with { StandardOutput = output + fast.StandardOutput };
         }
         var arguments = options.All("DotnetArg").Concat(options.Has("NoRestore") ? new[] { "--no-restore" } : []).ToArray();
