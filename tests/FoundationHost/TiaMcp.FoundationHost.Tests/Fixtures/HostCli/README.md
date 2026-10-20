@@ -11,7 +11,8 @@ or group repair was executed. No live or external service was used.
 `HostCliTests.Stable_stdout_matches_frozen_engine_bytes` compares six successful or
 rejected cases per release byte for byte, including exit statuses and host stderr.
 Only the recorded root and explicit data directory relocate to the current test
-workspace. The raw fixture never changes during a test run.
+workspace, and the accepted line replacements below apply to the schema output.
+The raw fixture never changes during a test run.
 
 The full capture also retains accepted intentional differences: help describes
 the host subset, doctor repair hints list all eight releases, an unready host doctor
@@ -26,6 +27,22 @@ releases (maintainer decision, 2026-10-18). The frozen config samples use --prin
 this write failure is covered by HostCliTests.Failed_config_write_returns_two_on_every_release,
 not by a captured write attempt. install-plc-tools still passes through pip's
 nonzero exit status, including 1.
+
+Accepted line replacements (maintainer decision, 2026-10-19). The schema samples stay
+in the byte comparison. `HostCliTests.AcceptedLines` records each changed line as one
+exact frozen line and its replacement. For each replacement the test asserts that the
+frozen line occurs exactly once in the frozen bytes; it then applies the replacements
+and compares the complete stdout byte for byte. The raw capture is not edited. Device
+creation now creates only the requested type (P8-81b), so the spec lines change:
+
+| Frozen line | Replacement line(s) |
+|---|---|
+| `plcFamily       string  default S7-1500.` | `plcFamily       string  label only; no device is chosen from it.` |
+| `plcMlfb         string  exact order number (optional).` | `plcMlfb         string  gen: required. Exact order number or full TypeIdentifier.` and the new line `plcVersion      string  exact catalog version; empty with a full TypeIdentifier.` |
+| `hmiFamily       string  default WinCCUnifiedPC.` | `hmiFamily       string  label only; no device is chosen from it.` and the new lines `hmiMlfb         string  gen: required with hmiName; same rules as plcMlfb.` and `hmiVersion      string  same rules as plcVersion.` |
+
+In the output each of these lines starts with two spaces, which the table leaves out;
+the test holds the exact text.
 
 The fixture is evidence from a Windows machine, including its language and local
 environment facts; it is not a native TIA acceptance record. Do not regenerate it

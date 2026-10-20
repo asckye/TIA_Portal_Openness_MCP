@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Siemens.Engineering.HW;
+using Siemens.Engineering.HW.Utilities;
 using TiaMcp.Adapters.Contracts;
 namespace TiaMcp.Adapters
 {
@@ -188,13 +189,14 @@ namespace TiaMcp.Adapters
                 slotCandidates = free.Select(x => x.PositionNumber).ToList();
             }
 
-            var typeIdentifiers = BuildPlugTypeIdentifiers(orderNumber, version);
-            if (typeIdentifiers.Count == 0)
+            var resolved = ResolvePlugTypeIdentifier(orderNumber, version);
+            if (resolved.TypeIdentifier == null)
             {
-                result.Reason = "InvalidParams";
-                result.Message = $"Cannot construct an available TypeIdentifier from orderNumber='{orderNumber}' version='{version}'.";
+                result.Reason = resolved.Reason;
+                result.Message = resolved.Message;
                 return result;
             }
+            var typeIdentifiers = new List<string> { resolved.TypeIdentifier };
 
             var itemName = ResolveNewItemName(host, name, slotCandidates[0]);
 
@@ -259,7 +261,7 @@ namespace TiaMcp.Adapters
                     result.Reason = "NotSupportedByDevice";
                     result.Message = $"'{deviceItemPath}' slot(s) {FormatSlots(free)} do not accept '{orderNumber}'"
                                    + $"{catalogNote}, so an incorrect order number cannot be distinguished from a board unsupported by this CPU. "
-                                   + "See attempts for the variants tried.";
+                                   + "See attempts for the CanPlugNew results.";
                 }
                 else
                 {
@@ -267,7 +269,7 @@ namespace TiaMcp.Adapters
                     result.Message = $"The hardware catalog contains '{orderNumber}'{catalogNote}, "
                                    + $"but '{deviceItemPath}' slot(s) {FormatSlots(free)} do not accept it. "
                                    + "Common causes: the board does not support this CPU model/firmware version, or version is incorrect "
-                                   + $"(see attempts for the version variants tried).";
+                                   + $"(only '{resolved.TypeIdentifier}' was checked; see attempts).";
                 }
 
                 result.TypeIdentifier = null;
@@ -351,14 +353,15 @@ namespace TiaMcp.Adapters
             result.Plugged = after;
 
             // 地址一并读回：issue #26 的另一半就是要改这个，直接把现值摆出来，省一次往返。
-            var verifyItem = verifyHost.DeviceItems?.FirstOrDefault(d =>
-            {
-                try { return d.PositionNumber == acceptedSlot; } catch /* swallow(probe-optional): 无法读取名称或位置时保留既有模块验证回退路径。 */ { return false; }
-            });
-            if (verifyItem != null)
-            {
-                result.Addresses = TiaMcp.Adapters.PlcFoundationEngine.ReadAddresses(verifyItem);
-            }
+            // The matched read-back item carries the addresses: by name (rail modules appear only in HardwareObject.Items),
+            // else by slot among DeviceItems and Items, else the returned proxy; its sub-items are included.
+            var verifyItem = (createdName != null ? FindDescendantByName(verifyHost, createdName, 3) : null)
+                ?? HardwareSlotItems(verifyHost).FirstOrDefault(d =>
+                {
+                    try { return d.PositionNumber == acceptedSlot; } catch /* swallow(probe-optional): 无法读取名称或位置时保留既有模块验证回退路径。 */ { return false; }
+                })
+                ?? created;
+            result.Addresses = ReadAddressesDeep(verifyItem);
 
             result.Ok = true;
             result.RequiresSessionReset = false;
@@ -382,55 +385,57 @@ namespace TiaMcp.Adapters
                     : $"{x.PositionNumber}({x.Label})"));
         }
 
-        private static List<string> BuildPlugTypeIdentifiers(string orderNumber, string version)
+        // Documented type resolution (functions-on-device-items/creating-and-plugging-a-device-item): a full TypeIdentifier is
+        // used verbatim; otherwise ModuleInformationProvider.FindModuleTypes on the partial identifier "OrderNumber:<orderNumber>"
+        // returns the complete identifiers of the installed versions and exactly the requested version is selected.
+        // No spelling or version variants are generated and only one identifier reaches CanPlugNew/PlugNew.
+        private (string? TypeIdentifier, string Reason, string Message) ResolvePlugTypeIdentifier(string orderNumber, string version)
         {
             var raw = (orderNumber ?? "").Trim();
-
-            // 用户直接给了完整 TypeIdentifier 就别再拼了，原样用。
-            if (raw.StartsWith("OrderNumber:", StringComparison.OrdinalIgnoreCase))
+            var requestedVersion = (version ?? "").Trim();
+            if (raw.StartsWith("OrderNumber:", StringComparison.Ordinal) || raw.StartsWith("GSD:", StringComparison.Ordinal)) return (raw, "", "");
+            var partial = "OrderNumber:" + raw;
+            List<string> types;
+            try
             {
-                return new List<string> { raw };
+                var provider = HardwareRequireUtility<ModuleInformationProvider>("ModuleInformationProvider");
+                types = (provider.FindModuleTypes(partial) ?? Array.Empty<string>()).Where(t => !string.IsNullOrWhiteSpace(t)).Distinct(StringComparer.Ordinal).ToList();
             }
-
-            var orders = new List<string>
+            catch (Exception ex) when (ex is not OutOfMemoryException)
             {
-                raw,
-                NormalizeOrderNumber(raw),
-                TryFormatMlfbWithSpaces(raw),
-                TryFormatMlfbWithSpaces(NormalizeOrderNumber(raw))
-            }.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-
-            var v = (version ?? "").Trim();
-            var vNoV = v.StartsWith("V", StringComparison.OrdinalIgnoreCase) ? v.Substring(1) : v;
-
-            var versions = new List<string>();
-            if (!string.IsNullOrWhiteSpace(v))
-            {
-                versions.Add(v);
-                versions.Add("V" + vNoV);
-                versions.Add(vNoV);
-                if (v.Contains('.'))
-                {
-                    versions.Add("V" + vNoV + ".0");
-                }
+                return (null, "InvalidParams", $"ModuleInformationProvider.FindModuleTypes('{partial}') failed: {ShortExceptionMessage(ex)}. Pass the full TypeIdentifier as orderNumber.");
             }
+            if (types.Count == 0)
+                return (null, "OrderNumberNotFound", $"ModuleInformationProvider.FindModuleTypes('{partial}') returned no installed module type. Check the article number (with its spaces) or pass the full TypeIdentifier.");
+            var matches = requestedVersion.Length == 0 ? types : types.Where(t => t.EndsWith("/" + requestedVersion, StringComparison.Ordinal)).ToList();
+            if (matches.Count == 1) return (matches[0], "", "");
+            var listed = string.Join("; ", types.Take(12)) + (types.Count > 12 ? "; ..." : "");
+            return (null, "InvalidParams", (matches.Count == 0
+                ? $"No installed type of '{raw}' has version '{requestedVersion}'."
+                : $"'{raw}' has several installed versions; pass the exact version.") + $" Installed types: {listed}.");
+        }
 
-            versions = versions.Where(x => !string.IsNullOrWhiteSpace(x))
-                               .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        private static IEnumerable<DeviceItem> HardwareSlotItems(HardwareObject host)
+        {
+            var items = new List<DeviceItem>();
+            try { foreach (DeviceItem child in host.DeviceItems) if (child != null) items.Add(child); } catch /* swallow(enumerate-optional): an unreadable child list still lets the hardware component list be checked. */ { }
+            try { foreach (var item in host.Items) if (item is DeviceItem child && !items.Contains(child)) items.Add(child); } catch /* swallow(enumerate-optional): an unreadable hardware component list keeps the children already found. */ { }
+            return items;
+        }
 
-            var result = new List<string>();
-            foreach (var o in orders)
+        private static List<IoAddressInfo> ReadAddressesDeep(DeviceItem item)
+        {
+            var rows = new List<IoAddressInfo>();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            void Walk(DeviceItem current, int depth)
             {
-                foreach (var ver in versions)
-                {
-                    result.Add($"OrderNumber:{o}/{ver}");
-                }
-
-                // 不带版本的形态放最后：让 TIA 自己挑默认版本，是版本写错时的最后一根救命稻草。
-                result.Add($"OrderNumber:{o}");
+                foreach (var row in TiaMcp.Adapters.PlcFoundationEngine.ReadAddresses(current))
+                    if (seen.Add(row.IoType + "|" + row.StartAddress + "|" + row.Length)) rows.Add(row);
+                if (depth >= 3) return;
+                foreach (DeviceItem child in current.DeviceItems) if (child != null) Walk(child, depth + 1);
             }
-
-            return result.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            Walk(item, 0);
+            return rows;
         }
 
         private static string ResolveNewItemName(HardwareObject host, string? requested, int slot)

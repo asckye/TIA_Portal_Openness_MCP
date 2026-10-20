@@ -28,6 +28,9 @@ internal static class DeviceAddTests
         Reset();rows=Enumerable.Range(0,1001).Select(_=>Candidate()).ToList();Reject(()=>Run(Request()),"catalog budget");
         Reset();items.Add(Item("plc_2","two"));Reject(()=>Run(Request()),"case insensitive collision");
         Reset();items.Add(Item("plc_1","two"));Reject(()=>Run(Request()),"ambiguous existing names");
+        // CreateWithItem names the head item with deviceName too: an existing head item (CPU) of that name is a collision (P8-81b H-10).
+        Reset();items[0].ItemNames=new[]{"Rail_0","plc_2"};Reject(()=>Run(Request()),"head item name collision");Check(calls==0,"head item collision no create");
+        Reset();var headApply=Apply();items[0].ItemNames=new[]{"PLC_2"};Reject(()=>Run(headApply),"late head item collision");Check(calls==0,"late head item collision no create");
         Reset();items.Add(Item("other","one"));Reject(()=>Run(Request()),"duplicate identities");
         Reset();items[0].ParentVerified=false;Reject(()=>Run(Request()),"wrong parent");
         Reset();items=Enumerable.Range(0,4097).Select(i=>Item("N"+i,"I"+i)).ToList();Reject(()=>Run(Request()),"inventory budget");

@@ -57,6 +57,12 @@ namespace TiaMcp.Adapters
             Device device;
             if (devicePath.Length == 1)
                 device = (Device)(Find(EnumerateAllDevices().ToArray(), devicePath[0]) ?? throw new InvalidOperationException("Exact unique device not found."));
+            else if (devicePath[0] == TiaMcp.Adapters.Native.Hardware.ProjectDeviceWalk.UngroupedSegment)
+            {
+                // The ungrouped system group has a localized name and no subgroups.
+                if (devicePath.Length != 2) throw new InvalidOperationException("Use [\"$ungrouped\", \"<device>\"] for a device in the ungrouped devices group.");
+                device = (Device)(Find(project!.UngroupedDevicesGroup.Devices, devicePath[1]) ?? throw new InvalidOperationException("Device not found in the ungrouped devices group."));
+            }
             else
             {
                 var group = Find(project!.DeviceGroups, devicePath[0]) as DeviceUserGroup

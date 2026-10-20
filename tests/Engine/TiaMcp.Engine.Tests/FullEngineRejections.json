@@ -2214,17 +2214,17 @@
           "orderNumber": {
             "type": "string",
             "default": null,
-            "description": "orderNumber: MLFB/order number from the TIA hardware catalog, e.g. '6ES7211-1BE40-0XB0' or '6ES7 211-1BE40-0XB0'"
+            "description": "orderNumber: exact article number as written in the TIA hardware catalog, including its spaces (e.g. '6ES7 211-1BE40-0XB0'), or a full TypeIdentifier ('OrderNumber:.../V4.7'); used verbatim"
           },
           "version": {
             "type": "string",
             "default": null,
-            "description": "version: catalog device version, e.g. 'V4.7', 'V3.1', or empty to let TIA try defaults"
+            "description": "version: exact catalog version as written in the TypeIdentifier (e.g. 'V4.7'); empty only for a full TypeIdentifier or a module with no or a single installed version (TIA rule)"
           },
           "deviceName": {
             "type": "string",
             "default": null,
-            "description": "deviceName: name in project tree"
+            "description": "deviceName: name of the new device and its head item; must not be used by any device or head item"
           }
         },
         "arguments": {
@@ -2243,17 +2243,17 @@
           "keyword": {
             "type": "string",
             "default": null,
-            "description": "keyword: device/vendor/order/DAP keyword, e.g. 'AFM60A', 'ATV320', 'DL100'"
+            "description": "keyword: exact catalog TypeIdentifier to create; search text (e.g. 'AFM60A') is refused with the ranked candidates"
           },
           "deviceName": {
             "type": "string",
             "default": null,
-            "description": "deviceName: name in project tree, e.g. 'ENC_AFM60A_1'"
+            "description": "deviceName: name of the new device and its head item, e.g. 'ENC_AFM60A_1'"
           },
           "preferredDap": {
             "type": "string",
             "default": "\"\"",
-            "description": "preferredDap: optional DAP/version hint, e.g. 'DAP V2.0', 'DAP 1', or empty",
+            "description": "preferredDap: optional ranking hint for the refusal candidate list, e.g. 'DAP V2.0'",
             "value": ""
           }
         },
@@ -2272,17 +2272,17 @@
           "keyword": {
             "type": "string",
             "default": null,
-            "description": "keyword: MLFB/order number/device/family text, e.g. 'KTP700 Basic PN', '6AV2123-2GB03', 'S7-1211C DC/DC/DC'"
+            "description": "keyword: exact catalog TypeIdentifier to create, e.g. 'OrderNumber:6AV2 123-2GB03-0AX0/17.0.0.0'; search text (e.g. 'KTP700 Basic PN') is refused with the ranked candidates"
           },
           "deviceName": {
             "type": "string",
             "default": null,
-            "description": "deviceName: name in project tree, e.g. 'HMI_KTP700_1'"
+            "description": "deviceName: name of the new device and its head item, e.g. 'HMI_KTP700_1'"
           },
           "preferredText": {
             "type": "string",
             "default": "\"\"",
-            "description": "preferredText: optional ranking hint, e.g. 'PN 17.0.0.0 landscape', '6AV2 123-2GB03-0AX0'",
+            "description": "preferredText: optional ranking hint for the refusal candidate list, e.g. 'PN 17.0.0.0 landscape'",
             "value": ""
           }
         },
@@ -2301,22 +2301,22 @@
           "preferredMlfb": {
             "type": "string",
             "default": null,
-            "description": "preferredMlfb: preferred MLFB/order number, e.g. '6ES7211-1BE40-0XB0'; empty uses family fallback list"
+            "description": "preferredMlfb: exact article number with its spaces (e.g. '6ES7 211-1BE40-0XB0') or a full TypeIdentifier; required, used verbatim"
           },
           "preferredVersion": {
             "type": "string",
             "default": null,
-            "description": "preferredVersion: preferred catalog version, e.g. 'V4.7'; empty probes known/default versions"
+            "description": "preferredVersion: exact catalog version (e.g. 'V4.7'); empty only with a full TypeIdentifier or a single installed version"
           },
           "deviceName": {
             "type": "string",
             "default": null,
-            "description": "deviceName: name in project tree"
+            "description": "deviceName: name of the new device and its head item"
           },
           "family": {
             "type": "string",
             "default": "\"S7-1500\"",
-            "description": "family: fallback hint, e.g. 'S7-1200', 'S7-1500', or 'WinCCUnifiedPC'",
+            "description": "family: label only, e.g. 'S7-1200', 'S7-1500', or 'WinCCUnifiedPC'; never selects another model",
             "value": "S7-1500"
           }
         },
@@ -21319,17 +21319,17 @@
           "orderNumber": {
             "type": "string",
             "default": null,
-            "description": "orderNumber: MLFB/order number from the TIA hardware catalog, e.g. '6ES7211-1BE40-0XB0' or '6ES7 211-1BE40-0XB0'"
+            "description": "orderNumber: exact article number as written in the TIA hardware catalog, including its spaces (e.g. '6ES7 211-1BE40-0XB0'), or a full TypeIdentifier ('OrderNumber:.../V4.7'); used verbatim"
           },
           "version": {
             "type": "string",
             "default": null,
-            "description": "version: catalog device version, e.g. 'V4.7', 'V3.1', or empty to let TIA try defaults"
+            "description": "version: exact catalog version as written in the TypeIdentifier (e.g. 'V4.7'); empty only for a full TypeIdentifier or a module with no or a single installed version (TIA rule)"
           },
           "deviceName": {
             "type": "string",
             "default": null,
-            "description": "deviceName: name in project tree"
+            "description": "deviceName: name of the new device and its head item; must not be used by any device or head item"
           }
         },
         "arguments": {
@@ -21348,17 +21348,17 @@
           "keyword": {
             "type": "string",
             "default": null,
-            "description": "keyword: device/vendor/order/DAP keyword, e.g. 'AFM60A', 'ATV320', 'DL100'"
+            "description": "keyword: exact catalog TypeIdentifier to create; search text (e.g. 'AFM60A') is refused with the ranked candidates"
           },
           "deviceName": {
             "type": "string",
             "default": null,
-            "description": "deviceName: name in project tree, e.g. 'ENC_AFM60A_1'"
+            "description": "deviceName: name of the new device and its head item, e.g. 'ENC_AFM60A_1'"
           },
           "preferredDap": {
             "type": "string",
             "default": "\"\"",
-            "description": "preferredDap: optional DAP/version hint, e.g. 'DAP V2.0', 'DAP 1', or empty",
+            "description": "preferredDap: optional ranking hint for the refusal candidate list, e.g. 'DAP V2.0'",
             "value": ""
           }
         },
@@ -21377,17 +21377,17 @@
           "keyword": {
             "type": "string",
             "default": null,
-            "description": "keyword: MLFB/order number/device/family text, e.g. 'KTP700 Basic PN', '6AV2123-2GB03', 'S7-1211C DC/DC/DC'"
+            "description": "keyword: exact catalog TypeIdentifier to create, e.g. 'OrderNumber:6AV2 123-2GB03-0AX0/17.0.0.0'; search text (e.g. 'KTP700 Basic PN') is refused with the ranked candidates"
           },
           "deviceName": {
             "type": "string",
             "default": null,
-            "description": "deviceName: name in project tree, e.g. 'HMI_KTP700_1'"
+            "description": "deviceName: name of the new device and its head item, e.g. 'HMI_KTP700_1'"
           },
           "preferredText": {
             "type": "string",
             "default": "\"\"",
-            "description": "preferredText: optional ranking hint, e.g. 'PN 17.0.0.0 landscape', '6AV2 123-2GB03-0AX0'",
+            "description": "preferredText: optional ranking hint for the refusal candidate list, e.g. 'PN 17.0.0.0 landscape'",
             "value": ""
           }
         },
@@ -21406,22 +21406,22 @@
           "preferredMlfb": {
             "type": "string",
             "default": null,
-            "description": "preferredMlfb: preferred MLFB/order number, e.g. '6ES7211-1BE40-0XB0'; empty uses family fallback list"
+            "description": "preferredMlfb: exact article number with its spaces (e.g. '6ES7 211-1BE40-0XB0') or a full TypeIdentifier; required, used verbatim"
           },
           "preferredVersion": {
             "type": "string",
             "default": null,
-            "description": "preferredVersion: preferred catalog version, e.g. 'V4.7'; empty probes known/default versions"
+            "description": "preferredVersion: exact catalog version (e.g. 'V4.7'); empty only with a full TypeIdentifier or a single installed version"
           },
           "deviceName": {
             "type": "string",
             "default": null,
-            "description": "deviceName: name in project tree"
+            "description": "deviceName: name of the new device and its head item"
           },
           "family": {
             "type": "string",
             "default": "\"S7-1500\"",
-            "description": "family: fallback hint, e.g. 'S7-1200', 'S7-1500', or 'WinCCUnifiedPC'",
+            "description": "family: label only, e.g. 'S7-1200', 'S7-1500', or 'WinCCUnifiedPC'; never selects another model",
             "value": "S7-1500"
           }
         },

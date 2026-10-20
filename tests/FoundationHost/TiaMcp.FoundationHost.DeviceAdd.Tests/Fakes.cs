@@ -4,7 +4,8 @@ namespace Siemens.Engineering
 }
 namespace Siemens.Engineering.HW
 {
-    public class Device { public string Name="";public object? Parent; }
+    public class Device { public string Name="";public object? Parent;public List<DeviceItem> DeviceItems=new(); }
+    public class DeviceItem { public string Name=""; }
     public class DeviceComposition : List<Device>
     {
         public object? Owner;public int Calls;public bool ThrowAfterCreate;

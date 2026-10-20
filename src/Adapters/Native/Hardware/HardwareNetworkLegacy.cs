@@ -9,6 +9,7 @@ using Siemens.Engineering.HW;
 using Siemens.Engineering.HW.Features;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Hardware;
+using TiaMcp.Adapters.Native.Hardware;
 
 namespace TiaMcp.Adapters
 {
@@ -18,36 +19,17 @@ namespace TiaMcp.Adapters
         public Func<Exception, string>? FormatEngineeringException { get; set; }
         public Func<string, object?>? ResolveEngineeringSoftwareContainer { get; set; }
         private string HardwareExceptionDetail(Exception error) => FormatEngineeringException != null ? FormatEngineeringException(error) : error.ToString();
-        private SoftwareContainer? HardwareSoftwareContainer(string name)
-        {
-            if (ResolveEngineeringSoftwareContainer != null) return ResolveEngineeringSoftwareContainer(name) as SoftwareContainer;
-            var item = HardwareResolveItem(name);
-            return item == null ? null : ((IEngineeringServiceProvider)item).GetService<SoftwareContainer>();
-        }
-        private static bool? IsAttributeWritable(object attributeInfo)
-        {
-            var names = new[] { "AccessMode", "Access", "Mode" };
-            foreach (var name in names)
-            {
-                var value = HardwareTryProperty(attributeInfo, name)?.ToString();
-                if (string.IsNullOrWhiteSpace(value)) continue;
-                if (value!.IndexOf("ReadWrite", StringComparison.OrdinalIgnoreCase) >= 0) return true;
-                if (value.IndexOf("Write", StringComparison.OrdinalIgnoreCase) >= 0 && value.IndexOf("ReadOnly", StringComparison.OrdinalIgnoreCase) < 0) return true;
-                if (value.IndexOf("ReadOnly", StringComparison.OrdinalIgnoreCase) >= 0) return false;
-            }
-
-            return null;
-        }
         public Dictionary<string, object?> HardwareGetProjectTopology()
         {
             if (HardwareProjectMissing()) return new Dictionary<string, object?> { ["failureCode"] = "PROJECT_NOT_BOUND", ["message"] = "No project open." };
             var devices = new List<object?>();
-            foreach (Device device in project!.Devices)
+            foreach (var located in ProjectDeviceWalk.Walk(project!.Devices, project.DeviceGroups, project.UngroupedDevicesGroup))
             {
                 devices.Add(new Dictionary<string, object?>
                 {
-                    ["device"] = device.Name ?? string.Empty,
-                    ["nodes"] = HardwareBuildDeviceNodesJson(device)
+                    ["device"] = located.Device.Name ?? string.Empty,
+                    ["groupPath"] = located.GroupPath,
+                    ["nodes"] = HardwareBuildDeviceNodesJson(located.Device)
                 });
             }
             return new Dictionary<string, object?>
@@ -55,7 +37,7 @@ namespace TiaMcp.Adapters
                 ["projectName"] = project!.Name ?? string.Empty,
                 ["deviceCount"] = devices.Count,
                 ["devices"] = devices,
-                ["note"] = "Devices placed inside device groups are not enumerated here (mirrors Project.Devices)."
+                ["note"] = "Root devices, nested device groups and the ungrouped devices group are enumerated (groupPath names the group)."
             };
         }
 
@@ -95,45 +77,44 @@ namespace TiaMcp.Adapters
                     return new HardwareAddressingReply { Message = "Anchor device item not found", Meta = meta };
                 }
 
-                var existing = HardwareFindConnectedSubnetByName(subnetName);
+                // Project.Subnets is authoritative (accessing-subnets); a subnet without nodes is still found.
+                var existing = HardwareFindSubnet(subnetName);
                 if (existing != null)
                 {
-                    // envelope: legacy-single-verdict
-                    meta["success"] = true;
                     meta["created"] = false;
                     meta["readback"] = HardwareBuildSubnetReadbackJson(subnetName);
-                    return new HardwareAddressingReply { Message = "Subnet already exists and was read back", Meta = meta };
+                    meta["success"] = true;
+                    return new HardwareAddressingReply { Message = "Subnet already exists in Project.Subnets and was read back", Meta = meta };
                 }
 
                 var node = FindNetworkNodes(anchorRoot).FirstOrDefault(n => IsIndustrialEthernetNode(n.Node)) ?? new NetworkNodeInfo();
-                if (node.Node == null)
+                if (node.Node is not Node anchorNode)
                 {
                     meta["error"] = "No Industrial Ethernet/PROFINET network node found under anchor path.";
                     meta["readback"] = HardwareBuildSubnetReadbackJson(subnetName);
                     return new HardwareAddressingReply { Message = "No suitable network node found", Meta = meta };
                 }
 
-                object? subnet = TryGetPropertyValue(node.Node, "ConnectedSubnet");
-                if (subnet == null)
+                meta["selectedNode"] = HardwareFormatNodeInfo(node);
+                if (anchorNode.ConnectedSubnet != null)
                 {
-                    var create = node.Node.GetType().GetMethod("CreateAndConnectToSubnet", BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(string) }, null);
-                    meta["mayHaveChanged"] = create != null;
-                    subnet = create?.Invoke(node.Node, new object[] { subnetName });
-                    meta["created"] = subnet != null;
-                }
-                else
-                {
-                    meta["created"] = false;
-                    meta["reusedExistingNodeSubnet"] = TryGetName(subnet) ?? subnet.ToString();
+                    // CreateAndConnectToSubnet on a connected node would move or fail; the anchor must be free.
+                    meta["anchorConnectedSubnet"] = anchorNode.ConnectedSubnet.Name;
+                    meta["refusalReason"] = "The anchor node is attached to subnet '" + anchorNode.ConnectedSubnet.Name + "', not to '" + subnetName + "'; choose a free anchor node or disconnect it explicitly first. Nothing was created.";
+                    meta["readback"] = HardwareBuildSubnetReadbackJson(subnetName);
+                    return new HardwareAddressingReply { Message = "Anchor node is attached to another subnet; nothing was created", Meta = meta };
                 }
 
-                meta["selectedNode"] = HardwareFormatNodeInfo(node);
+                meta["mayHaveChanged"] = true;
+                var subnet = anchorNode.CreateAndConnectToSubnet(subnetName);
+                meta["created"] = subnet != null;
+                meta["createdSubnetName"] = subnet?.Name;
                 meta["readback"] = HardwareBuildSubnetReadbackJson(subnetName);
-                var ok = subnet != null && HardwareSubnetReadbackContains(subnetName);
+                var ok = subnet != null && object.Equals(anchorNode.ConnectedSubnet, subnet) && object.Equals(HardwareFindSubnet(subnetName), subnet);
                 meta["success"] = ok;
                 return new HardwareAddressingReply
                 {
-                    Message = ok ? "Subnet ensured and read back" : "Subnet ensure did not produce readback evidence",
+                    Message = ok ? "Subnet created on the anchor node and read back (Project.Subnets and Node.ConnectedSubnet)" : "Subnet creation did not read back as the anchor node's subnet",
                     Meta = meta
                 };
             }
@@ -174,17 +155,17 @@ namespace TiaMcp.Adapters
                     return new HardwareAddressingReply { Message = "Device item not found", Meta = meta };
                 }
 
-                object? subnet = HardwareFindConnectedSubnetByName(subnetName);
+                var subnet = HardwareFindSubnet(subnetName);
                 if (subnet == null && !string.IsNullOrWhiteSpace(anchorDeviceItemPath))
                 {
                     var ensure = HardwareEnsureSubnet(anchorDeviceItemPath, "PROFINET", subnetName);
                     meta["ensureSubnet"] = ensure.Meta;
-                    subnet = HardwareFindConnectedSubnetByName(subnetName);
+                    subnet = HardwareFindSubnet(subnetName);
                 }
 
                 if (subnet == null)
                 {
-                    meta["error"] = "Subnet was not found. Call EnsureSubnet with a valid anchor first or pass anchorDeviceItemPath.";
+                    meta["error"] = "Subnet was not found in Project.Subnets. Call EnsureSubnet with a valid anchor first or pass anchorDeviceItemPath.";
                     meta["readback"] = HardwareBuildSubnetReadbackJson(subnetName);
                     return new HardwareAddressingReply { Message = "Subnet not found", Meta = meta };
                 }
@@ -200,22 +181,34 @@ namespace TiaMcp.Adapters
                 }
 
                 var selected = nodes[interfaceIndex];
-                var connected = TryGetPropertyValue(selected.Node, "ConnectedSubnet");
-                var connectedName = TryGetName(connected);
-                if (!string.Equals(connectedName, subnetName, StringComparison.OrdinalIgnoreCase))
-                {
-                    var connect = selected.Node.GetType().GetMethod("ConnectToSubnet", BindingFlags.Public | BindingFlags.Instance);
-                    meta["mayHaveChanged"] = connect != null;
-                    connect?.Invoke(selected.Node, new object[] { subnet });
-                }
-
                 meta["selectedNodeBefore"] = HardwareFormatNodeInfo(selected);
+                if (selected.Node is not Node node)
+                {
+                    meta["error"] = "The selected network node is not an Openness Node.";
+                    return new HardwareAddressingReply { Message = "Selected node is not a Node", Meta = meta };
+                }
+                var connected = node.ConnectedSubnet;
+                if (connected != null && !object.Equals(connected, subnet))
+                {
+                    // Node.ConnectToSubnet throws on a connected node (devices-and-hardware skill); never move it implicitly.
+                    meta["nodeConnectedSubnet"] = connected.Name;
+                    meta["refusalReason"] = "The node is attached to subnet '" + connected.Name + "', not to '" + subnetName + "'; disconnect it explicitly first. Nothing was changed.";
+                    meta["readback"] = HardwareBuildSubnetReadbackJson(subnetName);
+                    return new HardwareAddressingReply { Message = "Node is attached to another subnet; nothing was changed", Meta = meta };
+                }
+                if (connected == null)
+                {
+                    meta["mayHaveChanged"] = true;
+                    node.ConnectToSubnet(subnet);
+                }
+                else meta["alreadyConnected"] = true;
+
                 meta["readback"] = HardwareBuildSubnetReadbackJson(subnetName);
-                var ok = HardwareSubnetReadbackContains(subnetName) && HardwareBuildSubnetReadbackLines(subnetName).Any(x => x.IndexOf(deviceItemPath, StringComparison.OrdinalIgnoreCase) >= 0 || x.IndexOf(selected.Item.Name, StringComparison.OrdinalIgnoreCase) >= 0);
+                var ok = object.Equals(node.ConnectedSubnet, subnet);
                 meta["success"] = ok;
                 return new HardwareAddressingReply
                 {
-                    Message = ok ? "Device network node attached to subnet and read back" : "Device network node attach did not produce readback evidence",
+                    Message = ok ? "Device network node reads back on the subnet (Node.ConnectedSubnet)" : "Device network node attach did not read back on the subnet",
                     Meta = meta
                 };
             }
@@ -434,59 +427,10 @@ namespace TiaMcp.Adapters
                    || value.Equals("PN/IE", StringComparison.OrdinalIgnoreCase);
         }
 
-        private object? HardwareFindConnectedSubnetByName(string subnetName)
+        private Subnet? HardwareFindSubnet(string subnetName)
         {
-            if (project == null || string.IsNullOrWhiteSpace(subnetName))
-                return null;
-
-            foreach (var device in project.Devices)
-            {
-                foreach (var root in device.DeviceItems)
-                {
-                    foreach (var node in FindNetworkNodes(root))
-                    {
-                        var subnet = TryGetPropertyValue(node.Node, "ConnectedSubnet");
-                        if (subnet == null) continue;
-
-                        var name = TryGetName(subnet) ?? subnet.ToString() ?? string.Empty;
-                        if (string.Equals(name, subnetName, StringComparison.OrdinalIgnoreCase))
-                            return subnet;
-                    }
-                }
-            }
-
-            foreach (var group in project.DeviceGroups)
-            {
-                foreach (var subnet in HardwareFindConnectedSubnetByNameInGroup(group, subnetName))
-                    return subnet;
-            }
-
-            return null;
-        }
-
-        private IEnumerable<object> HardwareFindConnectedSubnetByNameInGroup(DeviceUserGroup group, string subnetName)
-        {
-            foreach (var device in group.Devices)
-            {
-                foreach (var root in device.DeviceItems)
-                {
-                    foreach (var node in FindNetworkNodes(root))
-                    {
-                        var subnet = TryGetPropertyValue(node.Node, "ConnectedSubnet");
-                        if (subnet == null) continue;
-
-                        var name = TryGetName(subnet) ?? subnet.ToString() ?? string.Empty;
-                        if (string.Equals(name, subnetName, StringComparison.OrdinalIgnoreCase))
-                            yield return subnet;
-                    }
-                }
-            }
-
-            foreach (var child in group.Groups)
-            {
-                foreach (var subnet in HardwareFindConnectedSubnetByNameInGroup(child, subnetName))
-                    yield return subnet;
-            }
+            if (project == null || string.IsNullOrWhiteSpace(subnetName)) return null;
+            return HardwareGroupOperations.Find(project.Subnets, HardwareNetworkPolicy.RequireExactName(subnetName, "subnetName")) as Subnet;
         }
 
         private List<object?> HardwareBuildSubnetReadbackJson(string subnetName)
@@ -501,11 +445,8 @@ namespace TiaMcp.Adapters
         {
             var lines = new List<string>();
             if (project == null) return lines;
-
-            void AddFromDevice(Device device)
-            {
+            foreach (var device in EnumerateAllDevices())
                 foreach (var root in device.DeviceItems)
-                {
                     foreach (var node in FindNetworkNodes(root))
                     {
                         var subnet = TryGetPropertyValue(node.Node, "ConnectedSubnet");
@@ -513,41 +454,7 @@ namespace TiaMcp.Adapters
                         if (string.IsNullOrWhiteSpace(subnetName) || string.Equals(name, subnetName, StringComparison.OrdinalIgnoreCase))
                             lines.Add(HardwareFormatNodeInfo(node));
                     }
-                }
-            }
-
-            foreach (var device in project.Devices)
-                AddFromDevice(device);
-            foreach (var group in project.DeviceGroups)
-                HardwareAddSubnetReadbackLinesFromGroup(group, subnetName, lines);
-
             return lines;
-        }
-
-        private void HardwareAddSubnetReadbackLinesFromGroup(DeviceUserGroup group, string subnetName, List<string> lines)
-        {
-            foreach (var device in group.Devices)
-            {
-                foreach (var root in device.DeviceItems)
-                {
-                    foreach (var node in FindNetworkNodes(root))
-                    {
-                        var subnet = TryGetPropertyValue(node.Node, "ConnectedSubnet");
-                        var name = TryGetName(subnet) ?? subnet?.ToString() ?? "<none>";
-                        if (string.IsNullOrWhiteSpace(subnetName) || string.Equals(name, subnetName, StringComparison.OrdinalIgnoreCase))
-                            lines.Add(HardwareFormatNodeInfo(node));
-                    }
-                }
-            }
-
-            foreach (var child in group.Groups)
-                HardwareAddSubnetReadbackLinesFromGroup(child, subnetName, lines);
-        }
-
-        private bool HardwareSubnetReadbackContains(string subnetName)
-        {
-            return HardwareBuildSubnetReadbackLines(subnetName)
-                .Any(x => x.IndexOf("connectedSubnet=" + subnetName, StringComparison.OrdinalIgnoreCase) >= 0);
         }
 
         public List<HardwareNetworkAttribute>? HardwareGetDeviceItemNetworkInfo(string deviceItemPath)
@@ -582,8 +489,8 @@ namespace TiaMcp.Adapters
                     {
                         Name = info.Name,
                         Value = v,
-                        DataType = TryGetPropertyValue(info, "DataType", "Type")?.ToString(),
-                        IsWritable = IsAttributeWritable(info)
+                        DataType = HardwareAttributeTypes(info) is { Length: > 0 } types ? types : null,
+                        IsWritable = HardwareAttributeWritable(info)
                     });
                 }
             }
@@ -617,6 +524,10 @@ namespace TiaMcp.Adapters
             return arr;
         }
 
+        // ConnectDeviceNodesToProfinetSubnet. The operation name is kept for the worker wire; this is a guarded write, not a probe:
+        // the subnet comes from Project.Subnets (an existing subnet of that name is joined explicitly, never through a silent
+        // CreateAndConnectToSubnet name collision), a node attached to another subnet is refused, and success is the typed
+        // Node.ConnectedSubnet read-back of both nodes. Connections are read from the HMI software under the second root.
         public string HardwareProbeConnectDeviceNodesToSubnet(string plcRootPath, string hmiRootPath, string subnetName)
         {
             var sb = new StringBuilder();
@@ -626,14 +537,10 @@ namespace TiaMcp.Adapters
             var hmiRoot = HardwareResolveItem(hmiRootPath);
             sb.AppendLine("PLC root: " + plcRootPath + " -> " + (plcRoot?.Name ?? "<not found>"));
             sb.AppendLine("HMI root: " + hmiRootPath + " -> " + (hmiRoot?.Name ?? "<not found>"));
-            if (plcRoot == null || hmiRoot == null) return sb.ToString();
+            if (plcRoot == null || hmiRoot == null) return sb.AppendLine("Result: NOT CONNECTED: a root path was not found; nothing was changed.").ToString();
 
             var plcNodes = FindNetworkNodes(plcRoot).ToList();
             var hmiNodes = FindNetworkNodes(hmiRoot).ToList();
-            sb.AppendLine("PLC item service scan:");
-            foreach (var line in HardwareDescribeNetworkServiceScan(plcRoot)) sb.AppendLine("  " + line);
-            sb.AppendLine("HMI item service scan:");
-            foreach (var line in HardwareDescribeNetworkServiceScan(hmiRoot)) sb.AppendLine("  " + line);
             sb.AppendLine("PLC nodes:");
             foreach (var n in plcNodes) sb.AppendLine("  " + HardwareFormatNodeInfo(n));
             sb.AppendLine("HMI nodes:");
@@ -643,50 +550,59 @@ namespace TiaMcp.Adapters
             var hmiNode = hmiNodes.FirstOrDefault(n => IsIndustrialEthernetNode(n.Node)) ?? new NetworkNodeInfo();
             sb.AppendLine("Selected PLC node: " + (plcNode.Node == null ? "<none>" : HardwareFormatNodeInfo(plcNode)));
             sb.AppendLine("Selected HMI node: " + (hmiNode.Node == null ? "<none>" : HardwareFormatNodeInfo(hmiNode)));
-            if (plcNode.Node == null || hmiNode.Node == null) return sb.ToString();
+            if (plcNode.Node is not Node plc || hmiNode.Node is not Node hmi)
+                return sb.AppendLine("Result: NOT CONNECTED: no Industrial Ethernet/PROFINET node under both roots; nothing was changed.").ToString();
 
-            object? subnet = null;
+            Subnet? target;
+            try { target = HardwareFindSubnet(subnetName); }
+            catch (Exception ex) { return sb.AppendLine("Result: NOT CONNECTED: invalid subnetName: " + HardwareExceptionDetail(ex)).ToString(); }
+            sb.AppendLine("Project.Subnets '" + subnetName + "': " + (target == null ? "<absent>" : "exists"));
+
+            // Both nodes must be free or already on the target before anything is written.
+            string? Conflict(string label, Node node)
+                => node.ConnectedSubnet != null && (target == null || !object.Equals(node.ConnectedSubnet, target))
+                    ? label + " node is attached to subnet '" + node.ConnectedSubnet.Name + "', not to '" + subnetName + "'" : null;
+            var conflict = Conflict("PLC", plc) ?? Conflict("HMI", hmi);
+            if (conflict != null) return sb.AppendLine("Result: NOT CONNECTED: " + conflict + "; disconnect it explicitly first. Nothing was changed.").ToString();
+
             try
             {
-                subnet = TryGetPropertyValue(plcNode.Node, "ConnectedSubnet");
-                if (subnet == null)
+                if (target == null)
                 {
-                    var create = plcNode.Node.GetType().GetMethod("CreateAndConnectToSubnet", BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(string) }, null);
-                    subnet = create?.Invoke(plcNode.Node, new object[] { subnetName });
-                    sb.AppendLine("PLC CreateAndConnectToSubnet: " + (subnet == null ? "NULL" : "OK " + TryGetName(subnet)));
+                    target = plc.CreateAndConnectToSubnet(subnetName);
+                    sb.AppendLine("PLC CreateAndConnectToSubnet: " + (target == null ? "NULL" : "created '" + target.Name + "'"));
+                    if (target == null) return sb.AppendLine("Result: NOT CONNECTED: CreateAndConnectToSubnet returned null; inspect the project.").ToString();
                 }
-                else
+                else if (plc.ConnectedSubnet == null)
                 {
-                    sb.AppendLine("PLC already connected to subnet: " + (TryGetName(subnet) ?? subnet.ToString()));
+                    plc.ConnectToSubnet(target);
+                    sb.AppendLine("PLC ConnectToSubnet(existing '" + target.Name + "') called");
                 }
+                else sb.AppendLine("PLC node is on '" + target.Name + "' (no call)");
+
+                if (hmi.ConnectedSubnet == null)
+                {
+                    hmi.ConnectToSubnet(target);
+                    sb.AppendLine("HMI ConnectToSubnet('" + target.Name + "') called");
+                }
+                else sb.AppendLine("HMI node is on '" + target.Name + "' (no call)");
             }
             catch (Exception ex)
             {
-                sb.AppendLine("PLC subnet create/connect error: " + HardwareExceptionDetail(ex));
-            }
-
-            if (subnet != null)
-            {
-                try
-                {
-                    var connect = hmiNode.Node.GetType().GetMethod("ConnectToSubnet", BindingFlags.Public | BindingFlags.Instance);
-                    connect?.Invoke(hmiNode.Node, new object[] { subnet });
-                    sb.AppendLine("HMI ConnectToSubnet: OK");
-                }
-                catch (Exception ex)
-                {
-                    sb.AppendLine("HMI ConnectToSubnet error: " + HardwareExceptionDetail(ex));
-                }
+                sb.AppendLine("Subnet create/connect error: " + HardwareExceptionDetail(ex));
             }
 
             sb.AppendLine("Readback PLC node: " + HardwareFormatNodeInfo(plcNode));
             sb.AppendLine("Readback HMI node: " + HardwareFormatNodeInfo(hmiNode));
+            bool verified = target != null && object.Equals(plc.ConnectedSubnet, target) && object.Equals(hmi.ConnectedSubnet, target)
+                && object.Equals(HardwareFindSubnet(subnetName), target);
 
             try
             {
-                var sw = HardwareSoftwareContainer("HMI_RT_1")?.Software;
+                var container = HardwareSoftwareContainerUnder(hmiRoot);
+                var sw = container?.Software;
                 var connections = sw == null ? null : TryGetPropertyValue(sw, "Connections");
-                sb.AppendLine("HMI Connections after subnet:");
+                sb.AppendLine("HMI Connections after subnet (" + (sw == null ? "no HMI software under " + hmiRootPath : "software '" + (TryGetName(sw) ?? "<unnamed>") + "'") + "):");
                 if (connections is IEnumerable en)
                 {
                     var any = false;
@@ -707,7 +623,41 @@ namespace TiaMcp.Adapters
                 sb.AppendLine("HMI connection readback error: " + HardwareExceptionDetail(ex));
             }
 
+            sb.AppendLine(verified
+                ? "Result: ConnectToSubnet: OK (both nodes read back on subnet '" + subnetName + "')"
+                : "Result: NOT CONNECTED: Node.ConnectedSubnet read-back does not show both nodes on '" + subnetName + "'; inspect the project.");
             return sb.ToString();
+        }
+
+        // The HMI software container of the second root, its parent item or its device's items (Unified PC/panel head item).
+        private static SoftwareContainer? HardwareSoftwareContainerUnder(DeviceItem root)
+        {
+            var pending = new Stack<DeviceItem>();
+            pending.Push(root);
+            if (root.Parent is DeviceItem parent) pending.Push(parent);
+            if (HardwareOwningDevice(root) is Device device) foreach (DeviceItem item in device.DeviceItems) pending.Push(item);
+            var seen = new HashSet<DeviceItem>();
+            int budget = 0;
+            while (pending.Count > 0 && ++budget < 4096)
+            {
+                var item = pending.Pop();
+                if (!seen.Add(item)) continue;
+                var container = ((IEngineeringServiceProvider)item).GetService<SoftwareContainer>();
+                if (container?.Software != null && (container.Software.GetType().FullName ?? "").IndexOf("Hmi", StringComparison.Ordinal) >= 0) return container;
+                foreach (DeviceItem child in item.DeviceItems) pending.Push(child);
+            }
+            return null;
+        }
+
+        private static Device? HardwareOwningDevice(DeviceItem item)
+        {
+            object? current = item;
+            for (int hop = 0; hop < 16 && current != null; hop++)
+            {
+                if (current is Device device) return device;
+                current = (current as IEngineeringInstance)?.Parent;
+            }
+            return null;
         }
 
         private IEnumerable<(string Label, object? Target, object LocalNode, DeviceItem PartnerTarget, object PartnerNode)> HardwareBuildHardwareHmiConnectionCandidates(NetworkNodeInfo plcNode, NetworkNodeInfo hmiNode)
@@ -773,35 +723,6 @@ namespace TiaMcp.Adapters
             yield return ("HMI node", hmiNode.Node, hmiNode.Node, plcNode.Item, plcNode.Node);
             yield return ("HMI network interface", hmiNode.NetworkInterface, hmiNode.Node, plcNode.Item, plcNode.Node);
             yield return ("HMI device item", hmiNode.Item, hmiNode.Node, plcNode.Item, plcNode.Node);
-        }
-
-        private static IEnumerable<string> HardwareDescribeNetworkServiceScan(DeviceItem root)
-        {
-            foreach (var item in TraverseDeviceItemsAndHardware(root, root.Name, new HashSet<DeviceItem>()))
-            {
-                object? networkInterface = null;
-                Exception? networkEx = null;
-                try { networkInterface = TryGetNetworkInterfaceService(item.Object) ?? TryGetNetworkInterfaceFromNetworkPort(item.Object); } catch (Exception ex) { networkEx = ex; }
-
-                var line = $"path={item.Path}; item={TryGetName(item.Object) ?? item.DeviceItem.Name}; ownerDeviceItem={item.DeviceItem.Name}; objectKind={item.Kind}; type={item.Object.GetType().FullName}";
-                if (networkInterface != null)
-                {
-                    var nodes = TryGetPropertyValue(networkInterface, "Nodes") as IEnumerable;
-                    var nodeCount = 0;
-                    if (nodes != null)
-                    {
-                        foreach (var _ in nodes) nodeCount++;
-                    }
-                    line += $"; NetworkInterface=YES; nodes={nodeCount}";
-                }
-                else
-                {
-                    line += "; NetworkInterface=NO";
-                    if (networkEx != null) line += "; err=" + networkEx.Message;
-                }
-
-                yield return line;
-            }
         }
 
         private static string HardwareFormatNodeInfo(NetworkNodeInfo info)

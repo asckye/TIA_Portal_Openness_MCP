@@ -22,6 +22,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Vci/VersionControlPrimitives.cs" Link="VersionControlPrimitives.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Plc/PlcBlockPrimitives.cs" Link="PlcBlockPrimitives.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/PlcNavigator.cs" Link="PlcNavigator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Hardware/ProjectDeviceWalk.cs" Link="ProjectDeviceWalk.cs" />
     <Compile Include="StudioRelease.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Shared/NativePathSelection.cs" Link="Shared/NativePathSelection.cs" />
     <NativeApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering*.dll" />

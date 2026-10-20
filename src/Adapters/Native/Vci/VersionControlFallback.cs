@@ -1,4 +1,5 @@
 #if STUDIO_VCI
+using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Contracts.Candidates;
 using System;
 using System.Collections.Generic;
@@ -25,10 +26,12 @@ namespace TiaMcp.Adapters.Native.Vci
                 {
                     if (depth > 64 || targets.Count >= limit) CandidatePrimitives.Fail("precondition", "complete-mapping-inventory");
                     if (node.Obj is Device && request.Parameters["deviceFilter"].Length > 0 && ObjName(node.Obj) != request.Parameters["deviceFilter"]) return;
-                    targets.Add(new VciMappingTarget { Object = node.Obj, Name = ObjName(node.Obj), RelativePath = node.Label, Ancestors = parents });
+                    // The UngroupedDevicesGroup is a folder only (UngroupedDevices); its devices are the targets.
+                    if (!node.Structural) targets.Add(new VciMappingTarget { Object = node.Obj, Name = ObjName(node.Obj), RelativePath = node.Label, Ancestors = parents });
                     if (node.Descendable) foreach (var child in TypedChildren(node)) Walk(child, parents.Concat(new[] { node.Obj }).ToArray(), depth + 1);
                 }
-                Walk(new VcNode { Obj = (IEngineeringObject)project()!, Label = ObjName((IEngineeringObject)project()!), Descendable = true }, Array.Empty<IEngineeringObject>(), 0);
+                try { Walk(new VcNode { Obj = (IEngineeringObject)project()!, Label = ObjName((IEngineeringObject)project()!), Descendable = true }, Array.Empty<IEngineeringObject>(), 0); }
+                catch (AdapterPreconditionException error) { CandidatePrimitives.Fail("precondition", "vci-ungrouped-workspace-folder", error.Message); }
                 return targets.ToArray();
             };
             return fallbackAdapter;

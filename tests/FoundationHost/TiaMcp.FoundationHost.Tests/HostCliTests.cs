@@ -59,13 +59,41 @@ public sealed class HostCliTests : IDisposable
             if (verb is "help" or "doctor" || (long)sample["exit"]! > int.MaxValue) continue;
             var actual = Run(args);
             Assert.Equal((int)sample["exit"]!, actual.Exit);
-            var expected = Encoding.UTF8.GetBytes(Relocate(Encoding.UTF8.GetString(Convert.FromBase64String((string)sample["stdout"]!)), fixture));
+            var expected = Encoding.UTF8.GetBytes(Accepted(verb, Relocate(Encoding.UTF8.GetString(Convert.FromBase64String((string)sample["stdout"]!)), fixture)));
             Assert.Equal(expected, actual.Stdout);
             if (verb == "install-plc-tools") Assert.Equal("IO_FAILED: --environment-path must be absolute: relative\r\n", actual.ErrorText);
             else Assert.Empty(actual.Stderr);
             compared++;
         }
         Assert.Equal(6, compared); // schema, version, audit, installer and two config profiles
+    }
+
+    // Accepted output differences, each one exact frozen line -> new line(s), applied to the frozen bytes before the full
+    // byte comparison (decided 2026-10-19; listed in Fixtures/HostCli/README.md). The schema spec lines follow
+    // device creation: plcMlfb is required for gen, no device is chosen from plcFamily/hmiFamily, and plcVersion, hmiMlfb and
+    // hmiVersion are documented. The schema text separates its lines with LF.
+    private static readonly (string Verb, string Old, string New)[] AcceptedLines =
+    {
+        ("schema", "  plcFamily       string  default S7-1500.",
+            "  plcFamily       string  label only; no device is chosen from it."),
+        ("schema", "  plcMlfb         string  exact order number (optional).",
+            "  plcMlfb         string  gen: required. Exact order number or full TypeIdentifier.\n"
+            + "  plcVersion      string  exact catalog version; empty with a full TypeIdentifier."),
+        ("schema", "  hmiFamily       string  default WinCCUnifiedPC.",
+            "  hmiFamily       string  label only; no device is chosen from it.\n"
+            + "  hmiMlfb         string  gen: required with hmiName; same rules as plcMlfb.\n"
+            + "  hmiVersion      string  same rules as plcVersion."),
+    };
+
+    private static string Accepted(string verb, string frozen)
+    {
+        foreach (var (_, old, replacement) in AcceptedLines.Where(line => line.Verb == verb))
+        {
+            var lines = frozen.Split('\n');
+            Assert.Equal(1, lines.Count(line => line.TrimEnd('\r') == old));
+            frozen = string.Join("\n", lines.Select(line => line.TrimEnd('\r') == old ? replacement + line[old.Length..] : line));
+        }
+        return frozen;
     }
 
     private string Relocate(string value, JsonNode fixture) => value

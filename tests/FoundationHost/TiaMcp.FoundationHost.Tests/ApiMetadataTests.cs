@@ -12,6 +12,7 @@ internal static class ApiMetadataTests
             string directory=key=="14sp1" ? "TIA_V14SP1_PublicAPI/V14 SP1" : $"TIA_V{key}_PublicAPI/V{key}"+(key=="21"?"/net48":"");
             var core=Path.Combine(apiRoot,directory,key=="21"?"Siemens.Engineering.Base.dll":"Siemens.Engineering.dll");
             CheckHardwareBranches(Path.Combine(apiRoot,directory),key,check);
+            CheckHardwareAuditMembers(Path.Combine(apiRoot,directory),key,check);
             CheckSchemaFragments(Path.Combine(apiRoot,directory),key,check);
             CheckDownloadPrompts(Path.Combine(apiRoot,directory),key,check);
             CheckMembers(core,"Siemens.Engineering.Online.OnlineProvider",new[]{"State"},true,check);
@@ -281,6 +282,78 @@ internal static class ApiMetadataTests
         var known=new[]{"ObjectsIdentical","FolderContentsIdentical","CompareIrrelevant","ObjectsDifferent","LeftMissing","RightMissing","FolderContentsDifferent","FolderContainsDifferencesOwnStateDifferent","FolderContentEqualOwnStateDifferent"};
         check(compareStates!=null && compareStates.All(known.Contains),key+" every CompareResultState name is classified by the online compare");
         check(compareStates!=null && compareStates.Contains("CompareIrrelevant")==(key!="14sp1") && (key=="14sp1" || !global::TiaMcp.Adapters.Contracts.OnlineTransitionPolicy.IsCompareDifference("CompareIrrelevant")),key+" CompareIrrelevant is no difference where the release has it");
+    }
+
+    // P8-81b: the shared device walk, the documented type resolution and the release symbols rest on these SDK members in
+    // every release (read from metadata only). PLC_ATTRIBUTE_SUPPORTED_TYPES = 18-21, PLC_HARDWARE_TRANSFER_MULTICAST_V19 = 19-21,
+    // PLC_CAX_TRANSFER_RESULT = 19-21 in src/Shared/TiaFeatures.props.
+    private static void CheckHardwareAuditMembers(string directory,string key,Action<bool,string> check)
+    {
+        var properties=new Dictionary<string,HashSet<string>>(StringComparer.Ordinal);
+        var methods=new Dictionary<string,HashSet<string>>(StringComparer.Ordinal);
+        var bases=new Dictionary<string,string>(StringComparer.Ordinal);
+        foreach(var dll in Directory.GetFiles(directory,"Siemens.Engineering*.dll"))
+        {
+            using var stream=File.OpenRead(dll); using var pe=new PEReader(stream);
+            if(!pe.HasMetadata) continue;
+            var md=pe.GetMetadataReader();
+            foreach(var handle in md.TypeDefinitions)
+            {
+                var type=md.GetTypeDefinition(handle);
+                string name=md.GetString(type.Namespace)+"."+md.GetString(type.Name);
+                if(!properties.TryGetValue(name,out var props)) properties[name]=props=new HashSet<string>(StringComparer.Ordinal);
+                if(!methods.TryGetValue(name,out var calls)) methods[name]=calls=new HashSet<string>(StringComparer.Ordinal);
+                foreach(var prop in type.GetProperties()) props.Add(md.GetString(md.GetPropertyDefinition(prop).Name));
+                foreach(var methodHandle in type.GetMethods())
+                {
+                    var method=md.GetMethodDefinition(methodHandle);
+                    calls.Add(md.GetString(method.Name)+"/"+method.GetParameters().Select(md.GetParameter).Count(p=>p.SequenceNumber>0));
+                }
+                if(type.BaseType.IsNil) continue;
+                if(type.BaseType.Kind==HandleKind.TypeReference)
+                {
+                    var reference=md.GetTypeReference((TypeReferenceHandle)type.BaseType);
+                    bases[name]=md.GetString(reference.Namespace)+"."+md.GetString(reference.Name);
+                }
+                else if(type.BaseType.Kind==HandleKind.TypeDefinition)
+                {
+                    var definition=md.GetTypeDefinition((TypeDefinitionHandle)type.BaseType);
+                    bases[name]=md.GetString(definition.Namespace)+"."+md.GetString(definition.Name);
+                }
+            }
+        }
+        bool Property(string type,string member)=>properties.TryGetValue(type,out var names) && names.Contains(member);
+        bool Method(string type,string member,int arguments)=>methods.TryGetValue(type,out var names) && names.Contains(member+"/"+arguments);
+        int version=key=="14sp1"?14:key=="15.1"?15:int.Parse(key);
+        string project=version<=16 ? "Siemens.Engineering.Project" : "Siemens.Engineering.ProjectBase";
+        // Devices sit in Project.Devices, DeviceGroups (nested Groups) and UngroupedDevicesGroup (a DeviceGroup with Devices/Name).
+        check(Property(project,"Devices") && Property(project,"DeviceGroups") && Property(project,"UngroupedDevicesGroup") && Property(project,"Subnets"),
+            key+" "+project+" exposes the three device roots and Subnets");
+        check(Property("Siemens.Engineering.HW.DeviceGroup","Devices") && Property("Siemens.Engineering.HW.DeviceGroup","Name")
+            && bases.GetValueOrDefault("Siemens.Engineering.HW.DeviceUserGroup")=="Siemens.Engineering.HW.DeviceGroup" && Property("Siemens.Engineering.HW.DeviceUserGroup","Groups")
+            && bases.GetValueOrDefault("Siemens.Engineering.HW.DeviceSystemGroup")=="Siemens.Engineering.HW.DeviceGroup",
+            key+" user and ungrouped device groups share DeviceGroup.Devices for the shared walk");
+        check(Method("Siemens.Engineering.HW.Utilities.ModuleInformationProvider","FindModuleTypes",1),key+" ModuleInformationProvider.FindModuleTypes resolves plug type identifiers");
+        check(Method("Siemens.Engineering.HW.DeviceComposition","CreateWithItem",3),key+" DeviceComposition.CreateWithItem(typeIdentifier, name, deviceName)");
+        check(Method("Siemens.Engineering.HW.Node","ConnectToSubnet",1) && Method("Siemens.Engineering.HW.Node","CreateAndConnectToSubnet",1)
+            && Property("Siemens.Engineering.HW.Node","ConnectedSubnet") && Method("Siemens.Engineering.HW.SubnetComposition","Find",1),
+            key+" typed Node subnet calls and Project.Subnets.Find");
+        check(Method("Siemens.Engineering.HW.IoController","CreateIoSystem",1) && Property("Siemens.Engineering.HW.Subnet","IoSystems")
+            && Property("Siemens.Engineering.HW.IoSystem","Subnet"),key+" IO system creation is verifiable on the interface's subnet");
+        check(Property("Siemens.Engineering.EngineeringAttributeInfo","AccessMode"),key+" EngineeringAttributeInfo.AccessMode decides writability");
+        check(Property("Siemens.Engineering.EngineeringAttributeInfo","SupportedTypes")==(version>=18),key+" EngineeringAttributeInfo.SupportedTypes exists exactly on V18-V21");
+        bool multicast=methods.ContainsKey("Siemens.Engineering.HW.MulticastableTransferArea");
+        check(multicast==(version>=18),key+" multicastable transfer areas exist from V18");
+        if(multicast)
+        {
+            bool v19=Property("Siemens.Engineering.HW.MulticastableTransferArea","DataLength") && Property("Siemens.Engineering.HW.MulticastableTransferArea","Addresses")
+                && Method("Siemens.Engineering.HW.MulticastableTransferArea","Delete",0) && Method("Siemens.Engineering.HW.MulticastableTransferAreaComposition","Create",2);
+            check(v19==(version>=19),key+" multicast transfer area mutations and DataLength/Addresses exist exactly on V19-V21");
+            // V18 has only the single Address (read by ListTransferAreas there); V20/V21 no longer expose it.
+            if(version==18) check(Property("Siemens.Engineering.HW.MulticastableTransferArea","Address"),key+" MulticastableTransferArea.Address is readable on V18");
+        }
+        check(Method("Siemens.Engineering.Cax.CaxProvider","Import",2)==(version>=19) && Method("Siemens.Engineering.Cax.CaxProvider","Import",3),
+            key+" CaxProvider.Import TransferResult overload exists exactly on V19-V21 next to the log-file overload");
     }
 
     private static void CheckHardwareBranches(string directory,string key,Action<bool,string> check)

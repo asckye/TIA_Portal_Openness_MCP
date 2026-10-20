@@ -91,6 +91,20 @@ namespace TiaMcp.Adapters
                 meta["sourceFile"] = HardwareAmlPolicy.Verify(source); meta["plannedLogFile"] = log.FullName;
                 meta["deviceCountBefore"] = EnumerateAllDevices().Count();
                 if (dryRun) return "CAx/AutomationML import preview; source hashed, nothing imported.";
+#if PLC_CAX_TRANSFER_RESULT
+                // V19+: Import(FileInfo, CaxImportOptions) returns a TransferResult with structured messages and no log file.
+                meta["mayHaveChanged"] = true;
+                var result = cax.Import(source, option);
+                var state = result?.State.ToString() ?? "Unknown";
+                bool ok = result != null && NativeResultStates.Succeeded(result.State);
+                meta["apiCallSuccess"] = true; meta["nativeResult"] = state;
+                meta["errorCount"] = result?.ErrorCount ?? 0; meta["warningCount"] = result?.WarningCount ?? 0;
+                meta["messages"] = new List<object?>(FlattenHardwareAmlMessages(result?.Messages).Cast<object?>());
+                meta["deviceCountAfter"] = EnumerateAllDevices().Count();
+                meta["logFile"] = null; meta["logFileScope"] = "V19+ reports the TransferResult messages; logFilePath is not written by this overload.";
+                if (!ok) throw new HardwareAddressingException("ImportFailed", "CaxProvider.Import returned TransferResult state " + state + "; inspect the reported messages.");
+                return "CAx/AutomationML import returned TransferResult " + state + " (messages reported); imported content not semantically verified. Project not saved, compiled or downloaded.";
+#else
                 meta["mayHaveChanged"] = true; meta["mayHaveWrittenFiles"] = true;
                 bool ok = cax.Import(source, log, option);
                 meta["apiCallSuccess"] = true; meta["nativeResult"] = ok;
@@ -100,6 +114,7 @@ namespace TiaMcp.Adapters
                 else { meta["logFile"] = null; meta["logFileMissing"] = true; }
                 if (!ok) throw new HardwareAddressingException("ImportFailed", "CaxProvider.Import returned false; inspect the native log file.");
                 return "CAx/AutomationML import returned true (native log hashed); imported content not semantically verified. Project not saved, compiled or downloaded.";
+#endif
             });
         }
     }

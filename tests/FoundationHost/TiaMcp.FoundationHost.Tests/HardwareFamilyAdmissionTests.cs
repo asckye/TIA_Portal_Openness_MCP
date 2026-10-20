@@ -24,6 +24,55 @@ public sealed class HardwareFamilyAdmissionTests
         Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
     }
 
+    // Device creation refusals (no exact type, name collision, TIA refusal with an unchanged inventory) are typed preconditions
+    // in the worker; the host keeps them typed for the four creation operations only (P8-81b, decided 2026-10-19).
+    [Theory]
+    [InlineData("hardware-devices.HardwareCreateDevice", true)]
+    [InlineData("hardware-devices.HardwareCreateDeviceFallback", true)]
+    [InlineData("hardware-devices.HardwareCreateGsdDevice", true)]
+    [InlineData("hardware-devices.HardwareCreateCatalogDevice", true)]
+    [InlineData("hardware-devices.HardwarePlugModule", false)]
+    [InlineData("hardware-network.HardwareManageIoSystem", false)]
+    public void Device_creation_refusals_stay_typed_preconditions(string operation, bool typed)
+    {
+        string evidence = JsonSerializer.Serialize(new { exceptionType = nameof(AdapterPreconditionException), parameter = "keyword" });
+        var refused = new WorkerOperationException("Creation needs keyword to be one exact TypeIdentifier; 'KTP700' is not. Ranked hardware catalog candidates: OrderNumber:6AV2 123-2GB03-0AX0/17.0.0.0. (Parameter 'keyword')",
+            -32603, "rejected-before-operation", evidence);
+        Assert.Equal(typed, PortedToolContract.IsDeviceRefusal(operation, refused));
+        Assert.False(PortedToolContract.IsDeviceRefusal(operation, new WorkerOperationException("unknown", -32603, "unknown", evidence)));
+        Assert.False(PortedToolContract.IsDeviceRefusal(operation, new WorkerOperationException("io", -32603, "rejected-before-operation",
+            JsonSerializer.Serialize(new { exceptionType = "IOException", parameter = "keyword" }))));
+        var refusal = PortedToolContract.DeviceRefusal(refused);
+        Assert.Equal("keyword", refusal.ParamName);
+        Assert.False(refusal.IsArgument);
+        Assert.Same(refused, refusal.InnerException);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(refusal.Message, System.Text.RegularExpressions.Regex.Escape("(Parameter 'keyword')")));
+        Assert.Contains("OrderNumber:6AV2 123-2GB03-0AX0/17.0.0.0", refusal.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("14sp1")]
+    [InlineData("21")]
+    public void A_typed_creation_refusal_is_rejected_before_operation_with_its_candidates(string release)
+    {
+        using var selected = enginehost::TiaMcpServer.ModelContextProtocol.HardwareContract.UseRelease(release);
+        var candidates = DeviceCreationRules.CandidateText("6ES7 513-1AM03-0AB0", new[] { "OrderNumber:6ES7 513-1AM03-0AB0/V3.0" });
+        int calls = 0;
+        var service = new enginehost::TiaMcpServer.Siemens.Services.HardwareDevicesService((operation, _) =>
+        {
+            calls++;
+            Assert.Equal("hardware-devices.HardwareCreateDevice", operation);
+            throw DeviceCreationRules.TiaRefusal("OrderNumber:6ES7 513-1AM03-0AB0/V9.9", "PLC_2", "Invalid TypeIdentifier", candidates, "orderNumber/version", new InvalidOperationException("native"));
+        }, () => true, () => "C:/Fixture/Fixture.ap21");
+        var tool = new enginehost::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools(service);
+        var result = tool.CreateDeviceV4("6ES7 513-1AM03-0AB0", "V9.9", "PLC_2").StructuredContent!;
+        Assert.Equal(1, calls);
+        Assert.Equal("PRECONDITION_FAILED", (string?)result["error"]?["code"]);
+        Assert.Equal("rejected-before-operation", (string?)result["meta"]?["outcome"]);
+        Assert.Equal("not-started", (string?)result["meta"]?["execution"]);
+        Assert.Contains("OrderNumber:6ES7 513-1AM03-0AB0/V3.0", (string?)result["error"]?["message"], StringComparison.Ordinal);
+    }
+
     public static IEnumerable<object[]> CapabilityBranches()
     {
         foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
@@ -32,10 +81,11 @@ public sealed class HardwareFamilyAdmissionTests
             foreach (var branch in new[] {
                 ("ExchangeSystemDiagnosticsSettings", "export", "", -1, false, 17),
                 ("CreateHardwareCatalogDevice", "", "", -1, false, 18),
+                ("CreateGsdDevice", "", "", -1, false, 18),
                 ("ListTransferAreas", "", "", -1, false, 15),
                 ("ListNetworkDomains", "", "", -1, false, 16),
                 ("ManageTransferArea", "create", "", 1, false, 16),
-                ("ManageTransferArea", "create", "multicast", -1, false, 20),
+                ("ManageTransferArea", "create", "multicast", -1, false, 19),
                 ("ManageDeviceServiceObjects", "read", "webApplications", -1, false, 21),
                 ("ManageDeviceServiceObjects", "export", "telecontrolDataPoints", -1, false, 20),
                 ("ManageDeviceServiceObjects", "import", "telecontrolDataPoints", -1, false, 20),

@@ -31,11 +31,14 @@ public sealed class ScaffoldReleaseCompositionTests
             File.WriteAllText(source, "FUNCTION Main : Void\nEND_FUNCTION");
             var fake = new ScaffoldWorkerFake(release);
             var tools = Tools(fake);
+            // Devices are created exactly as specified (decided 2026-10-19), so the spec names the PLC and HMI types.
             var spec = new JsonObject { ["projectName"] = "P", ["directoryPath"] = directory,
+                ["plcMlfb"] = "6ES7 513-1AM03-0AB0", ["plcVersion"] = "V3.0",
                 ["sclSourceFiles"] = new JsonArray(source) };
             if (release == "19")
             {
                 spec["hmiName"] = "HMI_1";
+                spec["hmiMlfb"] = "OrderNumber:6AV2 155-0AA00-0AA0/19.0.0.0";
                 spec["hmiScreens"] = new JsonArray(new JsonObject { ["screenName"] = "Main", ["designJson"] = new JsonObject() });
                 spec["hmiTags"] = new JsonArray(new JsonObject { ["tagName"] = "Start" });
             }

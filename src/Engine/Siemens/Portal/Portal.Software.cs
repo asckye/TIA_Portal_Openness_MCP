@@ -66,8 +66,9 @@ namespace TiaMcpServer.Siemens
                 ?? all.FirstOrDefault(p => string.Equals(p.Name, matched, StringComparison.OrdinalIgnoreCase));
         }
 
-        // Enumerate every PlcSoftware in the open project (devices + device groups), de-duplicated by
-        // name. Used for desktop enumeration and "Available PLC paths" error hints.
+        // Enumerate every PlcSoftware in the open project (root devices, nested device groups and
+        // UngroupedDevicesGroup), de-duplicated by name. Used for desktop enumeration and "Available PLC
+        // paths" error hints.
         public List<PlcSoftware> GetAllPlcSoftware()
         {
             var result = new List<PlcSoftware>();
@@ -95,19 +96,15 @@ namespace TiaMcpServer.Siemens
                 }
             }
 
-            void WalkDevices(DeviceComposition? devices)
+            // The shared walk over the three device roots; an unreadable composition is skipped.
+            try
             {
-                if (devices == null) return;
-                foreach (var d in devices) { try { Collect(d.DeviceItems); } catch { /* swallow(enumerate-optional): An unreadable device must not prevent PLC discovery on other devices. */ } }
+                foreach (var located in TiaMcp.Adapters.Native.Hardware.ProjectDeviceWalk.Walk(_project.Devices, _project.DeviceGroups, _project.UngroupedDevicesGroup, _ => { }))
+                {
+                    try { Collect(located.Device.DeviceItems); } catch { /* swallow(enumerate-optional): An unreadable device must not prevent PLC discovery on other devices. */ }
+                }
             }
-            void WalkGroups(DeviceUserGroupComposition? groups)
-            {
-                if (groups == null) return;
-                foreach (var g in groups) { try { WalkDevices(g.Devices); WalkGroups(g.Groups); } catch { /* swallow(enumerate-optional): An unreadable device group must not prevent inspecting sibling groups. */ } }
-            }
-
-            try { WalkDevices(_project.Devices); } catch { /* swallow(enumerate-optional): Root device enumeration is best effort; grouped devices are still inspected. */ }
-            try { WalkGroups(_project.DeviceGroups); } catch { /* swallow(enumerate-optional): Grouped device enumeration is best effort; already discovered PLCs are retained. */ }
+            catch { /* swallow(enumerate-optional): Device enumeration is best effort; already discovered PLCs are retained. */ }
             return result;
         }
 

@@ -136,6 +136,7 @@ namespace TiaMcp.Adapters.Native.Vci
             meta["mayHaveChanged"] = issued;
             if (!issued)
                 meta["v4Rejection"] = error is PortalException portal && portal.Code == PortalErrorCode.InvalidState ? "PROJECT_NOT_BOUND"
+                    : error is AdapterPreconditionException ? "PRECONDITION_FAILED"
                     : error is ArgumentException ? "INVALID_ARGUMENT"
                     : error is DirectoryNotFoundException ? "NOT_FOUND" : null;
             return meta;
@@ -424,6 +425,10 @@ namespace TiaMcp.Adapters.Native.Vci
             public string Label = "";    // human path in the project tree
             public string RelDir = "";   // folder inside the workspace ("" = workspace root)
             public bool Descendable;     // may we walk into it when VCI cannot map it as a unit?
+            public bool Structural;      // the UngroupedDevicesGroup: a folder only, never asked or mapped
+            public bool UngroupedDevice; // a device of the UngroupedDevicesGroup: a VCI refusal is a failure
+            public VcNode? UngroupedRoot; // the ungrouped device this node belongs to
+            public bool Reported;        // on an ungrouped device: a line was written for it or below it
         }
 
         private static string Flatten(string s)
@@ -476,6 +481,8 @@ namespace TiaMcp.Adapters.Native.Vci
                     Label = node.Label + "/" + nm,
                     RelDir = subDir,
                     Descendable = descendable,
+                    UngroupedDevice = node.Structural && o is Device,
+                    UngroupedRoot = node.UngroupedDevice ? node : node.UngroupedRoot,
                 });
             }
 
@@ -493,6 +500,28 @@ namespace TiaMcp.Adapters.Native.Vci
                 case Project proj:
                     foreach (var d in PortVci.Enumerate(PortVci.Devices(proj))) Add(d, dir, true);
                     foreach (var g in PortVci.Enumerate(PortVci.DeviceGroups(proj))) Add(g, dir, true);
+                    // UngroupedDevicesGroup.Devices go under the fixed folder VciWorkspaceLayout.UngroupedFolder, because
+                    // the group's Name is localized. A root device or group that already owns that folder is refused.
+                    var ungrouped = PortVci.UngroupedDevicesGroup(proj);
+                    var ungroupedDevices = new List<Device>();
+                    if (ungrouped != null) foreach (var d in PortVci.Enumerate(PortVci.Devices(ungrouped))) ungroupedDevices.Add(d);
+                    if (ungroupedDevices.Count > 0)
+                    {
+                        var owner = VciWorkspaceLayout.UngroupedFolderOwner(kids.Select(k => (ObjName(k.Obj), SanitizePathPart(ObjName(k.Obj)))));
+                        if (owner != null) throw VciWorkspaceLayout.UngroupedFolderTaken(owner);
+                        kids.Add(new VcNode
+                        {
+                            Obj = ungrouped!,
+                            Label = node.Label + "/" + VciWorkspaceLayout.UngroupedFolder,
+                            RelDir = string.IsNullOrEmpty(dir) ? VciWorkspaceLayout.UngroupedFolder : Path.Combine(dir, VciWorkspaceLayout.UngroupedFolder),
+                            Descendable = true,
+                            Structural = true,
+                        });
+                    }
+                    break;
+
+                case DeviceSystemGroup system:
+                    foreach (var d in PortVci.Enumerate(PortVci.Devices(system))) Add(d, dir, true);
                     break;
 
                 case DeviceUserGroup dg:
@@ -566,6 +595,8 @@ namespace TiaMcp.Adapters.Native.Vci
 
                 int mapped = 0, already = 0, failed = 0, unsupported = 0, visited = 0;
                 bool truncated = false;
+                var ungroupedDevices = new List<VcNode>();
+                void Note(VcNode reported) { var device = reported.UngroupedDevice ? reported : reported.UngroupedRoot; if (device != null) device.Reported = true; }
 
                 var stack = new Stack<VcNode>();
                 stack.Push(new VcNode
@@ -589,18 +620,30 @@ namespace TiaMcp.Adapters.Native.Vci
                         && node.Obj is Device
                         && !string.Equals(ObjName(node.Obj), deviceFilter.Trim(), StringComparison.OrdinalIgnoreCase))
                         continue;
+                    if (node.UngroupedDevice) ungroupedDevices.Add(node);
 
-                    IList<string> formats;
-                    try
+                    IList<string> formats = new List<string>();
+                    if (!node.Structural)   // the UngroupedDevicesGroup is a folder only: never asked, always walked
                     {
-                        var f = PortVci.SupportedFormats(ws, node.Obj);
-                        formats = f == null ? new List<string>() : f.ToList();
-                    }
-                    catch (Exception ex)
-                    {
-                        formats = new List<string>();
-                        if (walkTrace) Console.Error.WriteLine("[VCI-walk]     query threw: " + ex.Message.Split('\n')[0]);
-                        ws = ReAcquire();   // the throw killed the handle
+                        try
+                        {
+                            var f = PortVci.SupportedFormats(ws, node.Obj);
+                            formats = f == null ? new List<string>() : f.ToList();
+                        }
+                        catch (Exception ex)
+                        {
+                            formats = new List<string>();
+                            if (walkTrace) Console.Error.WriteLine("[VCI-walk]     query threw: " + ex.Message.Split('\n')[0]);
+                            ws = ReAcquire();   // the throw killed the handle
+                            if (node.UngroupedDevice)
+                            {
+                                // A native refusal of an ungrouped device is reported as a failure, not walked past.
+                                failed++;
+                                Note(node);
+                                lines.Add(VciWorkspaceLayout.NativeRefusal(node.Label, Flatten(ex.Message)));
+                                continue;
+                            }
+                        }
                     }
 
                     if (walkTrace)
@@ -620,10 +663,12 @@ namespace TiaMcp.Adapters.Native.Vci
                         if (existing != null)
                         {
                             already++;
+                            Note(node);
                             lines.Add(node.Label + " | already mapped");
                             continue;
                         }
 
+                        Note(node);
                         if (dryRun)
                         {
                             mapped++;
@@ -656,20 +701,28 @@ namespace TiaMcp.Adapters.Native.Vci
                     if (!node.Descendable)
                     {
                         unsupported++;
+                        Note(node);
                         lines.Add(node.Label + " | not supported by VCI (" + node.Obj.GetType().Name + ")");
                         continue;
                     }
 
                     List<VcNode> kids;
                     try { kids = TypedChildren(node); }
-                    catch (Exception ex)
+                    catch (Exception ex) when (!(ex is AdapterPreconditionException))   // the ungrouped-folder refusal ends the call
                     {
                         kids = new List<VcNode>();
+                        Note(node);
                         lines.Add(node.Label + " | could not enumerate children: " + ex.Message.Split('\n')[0]);
                     }
                     if (walkTrace) Console.Error.WriteLine("[VCI-walk]     children=" + kids.Count);
                     foreach (var kid in kids) stack.Push(kid);
                 }
+                if (!truncated)
+                    foreach (var device in ungroupedDevices.Where(d => !d.Reported))
+                    {
+                        unsupported++;
+                        lines.Add(VciWorkspaceLayout.NothingMappable(device.Label));
+                    }
 
                 string head = dryRun
                     ? string.Format("DRY RUN - nothing was mapped. {0} object(s) would be mapped into workspace '{1}' ({2}); " +

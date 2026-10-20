@@ -67,7 +67,8 @@ namespace TiaMcp.Adapters
                     foreach(var device in composition) {
                         if(++visited>4096) throw new InvalidOperationException("Device graph budget exceeded.");
                         if(device==null) throw new InvalidOperationException("Device unavailable.");
-                        rows.Add(new PlcDeviceAddItem {Name=device.Name,Identity=DeviceAddIdentity(device),ParentIdentity=DeviceAddIdentity(parent),ParentVerified=object.Equals(device.Parent,parent)});
+                        rows.Add(new PlcDeviceAddItem {Name=device.Name,Identity=DeviceAddIdentity(device),ParentIdentity=DeviceAddIdentity(parent),ParentVerified=object.Equals(device.Parent,parent),
+                            ItemNames=device.DeviceItems.Select(item=>item.Name).ToArray()});
                     }
                 };
                 Action<DeviceUserGroup,object,int> visit=null!;

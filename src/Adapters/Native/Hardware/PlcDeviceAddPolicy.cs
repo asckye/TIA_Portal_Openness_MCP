@@ -16,6 +16,8 @@ namespace TiaMcp.Adapters
     internal sealed class PlcDeviceAddItem
     {
         internal string Name="", Identity="", ParentIdentity="";
+        // Top-level device item names (CPU/head item): CreateWithItem names the head item with deviceName as well.
+        internal string[] ItemNames=new string[0];
         internal bool IsGroup;
         internal bool ParentVerified;
     }
@@ -71,6 +73,11 @@ namespace TiaMcp.Adapters
             if(items.Where(x=>!x.IsGroup).Select(x=>x.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count()!=items.Count(x=>!x.IsGroup) || items.Select(x=>x.Identity).Distinct(StringComparer.Ordinal).Count()!=items.Length) throw new InvalidOperationException("Ambiguous device inventory.");
             return items.OrderBy(x=>x.Identity,StringComparer.Ordinal).ToArray();
         }
+        private static void RequireFreeName(PlcDeviceAddRequest r,PlcDeviceAddItem[] items)
+        {
+            if(items.Any(x=>!x.IsGroup && string.Equals(x.Name,r.Name,StringComparison.OrdinalIgnoreCase))) throw new AdapterPreconditionException("Device name already exists; no create attempted. Choose a new deviceName and preview again.", "deviceName", false);
+            if(items.Any(x=>!x.IsGroup && (x.ItemNames??new string[0]).Any(n=>string.Equals(n,r.Name,StringComparison.OrdinalIgnoreCase)))) throw new AdapterPreconditionException("A device head item already uses this name (CreateWithItem names the new head item with deviceName too); no create attempted. Choose a new deviceName and preview again.", "deviceName", false);
+        }
         private static string Field(string s)=>s.Length.ToString(System.Globalization.CultureInfo.InvariantCulture)+":"+s;
         private static string Hash(PlcDeviceAddRequest r,PlcHardwareCatalogCandidate c,PlcDeviceAddItem[] items)
         {
@@ -92,12 +99,12 @@ namespace TiaMcp.Adapters
             MutationIdentityPolicy.AbsoluteFile(r.Project);
             if(!r.DryRun) MutationIdentityPolicy.RequireSameProject(r.ExpectedProject,r.Project);
             check(); var selected=Select(r,catalog); var before=Snapshot(inventory);
-            if(before.Any(x=>!x.IsGroup && string.Equals(x.Name,r.Name,StringComparison.OrdinalIgnoreCase))) throw new AdapterPreconditionException("Device name already exists; no create attempted. Choose a new deviceName and preview again.", "deviceName", false);
+            RequireFreeName(r,before);
             var hash=Hash(r,selected,before);
             var result=new PlcDeviceAddResult { Release=r.Release,ProjectFile=r.Project,ProcessId=r.ProcessId,DeviceName=r.Name,Family=r.Family,TypeIdentifier=selected.TypeIdentifier!,ArticleNumber=selected.ArticleNumber!,Version=selected.Version!,PlanHash=hash,Inventory=before.Where(x=>!x.IsGroup).Select(x=>x.Name).ToArray() };
             if(r.DryRun) return result;
             if(hash!=r.ExpectedHash) throw new AdapterPreconditionException("Reviewed device selection or project inventory changed; preview again and use the new expectedPlanHash.", "expectedPlanHash");
-            check(); var freshSelection=Select(r,catalog); var freshInventory=Snapshot(inventory);
+            check(); var freshSelection=Select(r,catalog); var freshInventory=Snapshot(inventory); RequireFreeName(r,freshInventory);
             if(Hash(r,freshSelection,freshInventory)!=hash) throw new AdapterPreconditionException("Device selection or inventory changed before creation; preview again.", "expectedPlanHash", false);
             check(); result.Attempted=true;
             try

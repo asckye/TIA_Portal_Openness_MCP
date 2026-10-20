@@ -440,6 +440,8 @@ namespace TiaMcp.Adapters.Contracts
             ["SetPlcProgram"] = new[] { "18", "19", "20", "21" },
             ["GetPlcCrossReferences"] = new[] { "18", "19", "20", "21" },
             ["CreateHardwareCatalogDevice"] = new[] { "18", "19", "20", "21" },
+            // GSD creation needs a catalog TypeIdentifier; the documented GSD:<file>/DAP/<id> form is not verified before V18.
+            ["CreateGsdDevice"] = new[] { "18", "19", "20", "21" },
             ["ManageDeviceServiceObjects"] = new[] { "18", "19", "20", "21" },
             ["ExchangeSystemDiagnosticsSettings"] = new[] { "17", "18", "19", "20", "21" },
             ["ListNetworkDomains"] = new[] { "16", "17", "18", "19", "20", "21" },

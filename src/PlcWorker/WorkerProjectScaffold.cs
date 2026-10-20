@@ -207,7 +207,7 @@ internal sealed class WorkerProjectScaffold
             ["MlfbUsed"] = ok ? probe["MlfbUsed"]?.DeepClone() : null,
             ["VersionUsed"] = ok ? probe["VersionUsed"]?.DeepClone() : null,
             ["Attempts"] = probe["Attempts"]?.DeepClone(), ["Error"] = ok ? null : probe["Error"]?.DeepClone(),
-            ["Message"] = ok ? $"Device '{text[2]}' added (fallback)" : $"Failed to add device '{text[2]}' with fallback probes", ["Meta"] = meta };
+            ["Message"] = ok ? $"Device '{text[2]}' added (one exact create call)" : $"Failed to add device '{text[2]}' exactly as requested", ["Meta"] = meta };
     }
 
     private JsonObject Compile(string path)

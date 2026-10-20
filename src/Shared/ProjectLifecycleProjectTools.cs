@@ -18,7 +18,7 @@ internal sealed class ProjectLifecycleProjectTools
 {
     private readonly ProjectLifecyclePortService _service;
     public ProjectLifecycleProjectTools(ProjectLifecyclePortService service) => _service = service;
-        [McpServerTool(Name = "BuildProjectScaffold"), Description("[L1][Project] One-shot project generator: from a single JSON spec it creates the project, adds PLC (and optional Unified HMI) hardware, builds UDTs/global DBs/PLC tag tables, imports SCL external sources and LAD S7DCL documents, compiles, sets up the HMI connection/screens/tags, and saves — collapsing the ~20-step runbook into one call. Auto-connects if needed. Critical-step failures (connect/createProject/PLC device) abort; per-element failures are collected and reported. Spec keys: projectName(required); directoryPath?(default %TEMP%); plcName?(PLC_1); plcFamily?(S7-1500); plcMlfb?; hmiName?(omit to skip all HMI); hmiFamily?(WinCCUnifiedPC); hmiSoftwarePath?(HMI_RT_1); connectionName?(HMI_Connection_1); udt?/globalDb?/tagTable? = arrays of the same json objects BuildAndImportPlcArtifact accepts; sclSourceFiles? = array of .scl file paths; ladDocs? = array of {importPath,name}; hmiScreens? = array of {screenName,width,height,designJson(object)}; hmiTags? = array of {tagTableName?,tagName,hmiDataType?,plcTag?,address?}; compile?(true); save?(true). Returns a per-step report with compile error/warning counts. dryRun DEFAULTS TO TRUE (safety): the default call only validates the spec offline (PLC block JSON shapes, SCL/LAD file paths, designJson) WITHOUT connecting to TIA or creating anything; after a clean dry run, call again with dryRun=false to actually create the project.")]
+        [McpServerTool(Name = "BuildProjectScaffold"), Description("[L1][Project] One-shot project generator: from a single JSON spec it creates the project, adds PLC (and optional Unified HMI) hardware, builds UDTs/global DBs/PLC tag tables, imports SCL external sources and LAD S7DCL documents, compiles, sets up the HMI connection/screens/tags, and saves — collapsing the ~20-step runbook into one call. Auto-connects if needed. Critical-step failures (connect/createProject/PLC device) abort; per-element failures are collected and reported. Each device is created exactly as specified with one DeviceComposition.CreateWithItem call: no family default device, firmware-version stepping, alternative model or renaming; a TIA refusal is reported with the hardware-catalog candidates (V18+). Spec keys: projectName(required); directoryPath?(default %TEMP%); plcName?(PLC_1); plcFamily?(S7-1500, label only); plcMlfb(required: exact article number with its spaces, or the full TypeIdentifier from SearchHardwareCatalog); plcVersion?(exact catalog version; empty with a full TypeIdentifier); hmiName?(omit to skip all HMI); hmiFamily?(WinCCUnifiedPC, label only); hmiMlfb/hmiVersion(required with hmiName, same rules); hmiSoftwarePath?(HMI_RT_1); connectionName?(HMI_Connection_1); udt?/globalDb?/tagTable? = arrays of the same json objects BuildAndImportPlcArtifact accepts; sclSourceFiles? = array of .scl file paths; ladDocs? = array of {importPath,name}; hmiScreens? = array of {screenName,width,height,designJson(object)}; hmiTags? = array of {tagTableName?,tagName,hmiDataType?,plcTag?,address?}; compile?(true); save?(true). Returns a per-step report with compile error/warning counts. dryRun DEFAULTS TO TRUE (safety): the default call only validates the spec offline (device type keys, PLC block JSON shapes, SCL/LAD file paths, designJson) WITHOUT connecting to TIA or creating anything; after a clean dry run, call again with dryRun=false to actually create the project.")]
         public CallToolResult BuildProjectScaffoldV4(
             [Description("spec: JSON object describing the project to generate. See tool description for keys.")] string spec,
             [Description("dryRun: DEFAULT true — validates the spec offline (no TIA connection, nothing created). Pass dryRun=false explicitly to actually create the project (after a clean dry run).")] bool dryRun = true)
@@ -96,8 +96,11 @@ internal sealed class ProjectLifecycleProjectTools
             var plcName = S("plcName", "PLC_1");
             var plcFamily = S("plcFamily", "S7-1500");
             var plcMlfb = S("plcMlfb");
+            var plcVersion = S("plcVersion");
             var hmiName = S("hmiName");
             var hmiFamily = S("hmiFamily", "WinCCUnifiedPC");
+            var hmiMlfb = S("hmiMlfb");
+            var hmiVersion = S("hmiVersion");
             var hmiSoftwarePathSpec = S("hmiSoftwarePath"); // empty = auto-probe the real path after device add
             var connectionName = S("connectionName", "HMI_Connection_1");
             resp.ProjectName = projectName;
@@ -107,11 +110,19 @@ internal sealed class ProjectLifecycleProjectTools
             if (!dryRun && unsupported.Length != 0)
                 throw new NotSupportedException(unsupported[0].Detail);
 
+            // Devices are created exactly as requested (one CreateWithItem each); there is no family default device.
+            string DeviceLabel(string mlfb, string version) => string.IsNullOrWhiteSpace(version) ? mlfb.Trim() : mlfb.Trim() + " " + version.Trim();
+            var plcDeviceProblem = DeviceCreationRules.SpecProblem(plcMlfb, plcVersion, "plcMlfb", "plcVersion");
+            bool hmiRequested = !string.IsNullOrWhiteSpace(hmiName);
+            var hmiDeviceProblem = hmiRequested ? DeviceCreationRules.SpecProblem(hmiMlfb, hmiVersion, "hmiMlfb", "hmiVersion") : null;
+
             // ---- dryRun: offline spec validation only (no TIA connection, nothing created) ----
             if (dryRun)
             {
                 resp.Steps.AddRange(unsupported);
                 if (unsupported.Length != 0) resp.Ok = false;
+                if (plcDeviceProblem != null) { Step("addDevicePlc", "failed", plcDeviceProblem); resp.Ok = false; }
+                if (hmiDeviceProblem != null) { Step("addDeviceHmi", "failed", hmiDeviceProblem); resp.Ok = false; }
                 foreach (var pair in new[] { ("udt", "udt"), ("globalDb", "globaldb"), ("tagTable", "tagtable") })
                     foreach (var item in Arr(pair.Item1))
                     {
@@ -148,6 +159,7 @@ internal sealed class ProjectLifecycleProjectTools
             }
 
             // ---- critical: connect + create project + PLC device ----
+            if (plcDeviceProblem != null) throw new McpException("BuildProjectScaffold refused before connect: " + plcDeviceProblem, McpErrorCode.InvalidParams);
             try
             {
                 if (!_service.IsConnected) { _service.Primitive<ResponseConnect>("connect"); Step("connect", "ok"); }
@@ -160,22 +172,22 @@ internal sealed class ProjectLifecycleProjectTools
 
             try
             {
-                var d = _service.AddDeviceWithFallback(plcMlfb, "", plcName, plcFamily);
-                if (d.Ok == true) Step("addDevicePlc", "ok", $"{plcName} {d.MlfbUsed}");
+                var d = _service.AddDeviceWithFallback(plcMlfb, plcVersion, plcName, plcFamily);
+                if (d.Ok == true) Step("addDevicePlc", "ok", $"{plcName} {DeviceLabel(plcMlfb, plcVersion)}");
                 else throw new McpException($"PLC device add failed: {d.Error}", McpErrorCode.InternalError);
             }
             catch (McpException) { Step("addDevicePlc", "failed", "see error"); resp.Ok = false; throw; }
             catch (Exception ex) { Step("addDevicePlc", "failed", ex.Message); resp.Ok = false; throw new McpException($"BuildProjectScaffold aborted at addDevicePlc: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError); }
 
             // ---- optional HMI device ----
-            bool hmiRequested = !string.IsNullOrWhiteSpace(hmiName);
             bool hmiDeviceOk = false;
-            if (hmiRequested)
+            if (hmiRequested && hmiDeviceProblem != null) { Step("addDeviceHmi", "failed", hmiDeviceProblem); resp.Ok = false; }
+            else if (hmiRequested)
             {
                 try
                 {
-                    var d = _service.AddDeviceWithFallback("", "", hmiName, hmiFamily);
-                    if (d.Ok == true) { hmiDeviceOk = true; Step("addDeviceHmi", "ok", $"{hmiName} {d.MlfbUsed}"); }
+                    var d = _service.AddDeviceWithFallback(hmiMlfb, hmiVersion, hmiName, hmiFamily);
+                    if (d.Ok == true) { hmiDeviceOk = true; Step("addDeviceHmi", "ok", $"{hmiName} {DeviceLabel(hmiMlfb, hmiVersion)}"); }
                     else { Step("addDeviceHmi", "failed", d.Error); resp.Ok = false; }
                 }
                 catch (Exception ex) { Step("addDeviceHmi", "failed", ex.Message); resp.Ok = false; }

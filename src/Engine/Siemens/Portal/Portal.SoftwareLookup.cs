@@ -17,7 +17,11 @@ namespace TiaMcpServer.Siemens
             if (_project == null) return null;
             try
             {
-                var roots = _project.Devices.Cast<object>().Concat(_project.DeviceGroups.Cast<object>());
+                // The first level is the root devices, the user groups and the UngroupedDevicesGroup devices,
+                // as in ProjectDeviceWalk.
+                var ungrouped = _project.UngroupedDevicesGroup;
+                var roots = _project.Devices.Cast<object>().Concat(_project.DeviceGroups.Cast<object>())
+                    .Concat(ungrouped == null ? Enumerable.Empty<object>() : ungrouped.Devices.Cast<object>());
                 string? Alias(object node) => node is Device d ? d.Name : node is DeviceItem item ? item.Name
                     : plcOnly && node is DeviceUserGroup group ? SoftwareLookupGroupName(group) : null;
                 SoftwareContainer? Container(object node) => node is DeviceItem item ? item.GetService<SoftwareContainer>() : null;
@@ -67,20 +71,13 @@ namespace TiaMcpServer.Siemens
                     foreach (var child in item.DeviceItems) pending.Push(child);
                 }
             }
-            IEnumerable<SoftwareContainer> Devices(DeviceComposition devices)
-            {
-                foreach (var device in devices)
-                    foreach (var sc in Items(device.DeviceItems)) yield return sc;
-            }
-            foreach (var sc in Devices(_project.Devices)) yield return sc;
-            var groups = new Stack<DeviceUserGroup>(_project.DeviceGroups);
-            while (groups.Count > 0)
+            // Root devices, nested user groups and UngroupedDevicesGroup through the shared walk (group depth
+            // limit 64); the element budget also counts the devices.
+            foreach (var device in EnumerateAllDevices())
             {
                 if (++count > 100000) throw new PortalException(PortalErrorCode.OpennessError,
                     "Exact software enumeration limit reached; no target selected.");
-                var group = groups.Pop();
-                foreach (var sc in Devices(group.Devices)) yield return sc;
-                foreach (var child in group.Groups) groups.Push(child);
+                foreach (var sc in Items(device.DeviceItems)) yield return sc;
             }
         }
 

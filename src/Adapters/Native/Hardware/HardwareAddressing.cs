@@ -61,6 +61,12 @@ namespace TiaMcp.Adapters
             return hints;
         }
 
+        private static string FormatAddressRows(IEnumerable<IoAddressInfo> rows)
+        {
+            var text = string.Join(", ", rows.Select(r => r.IoType + " " + r.StartAddress + " (length " + r.Length + ")"));
+            return text.Length == 0 ? "none" : text;
+        }
+
         public static List<IoAddressInfo> ReadAddresses(DeviceItem item)
         {
             var list = new List<IoAddressInfo>();
@@ -164,6 +170,7 @@ namespace TiaMcp.Adapters
                 return IoWrite(true, $"The start address is already {startAddress}; no change was made.", before, before);
             }
 
+            var allBefore = ReadAddresses(item);
             try
             {
                 target.StartAddress = startAddress;
@@ -184,14 +191,19 @@ namespace TiaMcp.Adapters
                 return IoWrite(false, "Readback after the write could not find an address of the same type. The state is abnormal; verify it in the TIA UI.", before, null);
             }
 
+            // Address.StartAddress (accessing-attributes-of-an-address-object): changing one IoType can move the other IoType of
+            // the same module, tags are not rewired, and the PLC must be offline. Report every address row before and after.
+            var rows = " All addresses of the item before: " + FormatAddressRows(allBefore) + "; after: " + FormatAddressRows(afterList) + "."
+                     + " Documented restrictions: changing a start address can also move the address of the other IO type of the same module,"
+                     + " PLC tags are not rewired, and the change requires the PLC to be offline.";
             if (after.StartAddress != startAddress)
             {
                 return IoWrite(false, $"The write did not take effect: expected {startAddress}, readback is still {after.StartAddress}. "
-                             + "The module start address may be locked by its configuration.", before, after);
+                             + "The module start address may be locked by its configuration." + rows, before, after);
             }
 
             return IoWrite(true, $"The start address changed from {before.StartAddress} to {after.StartAddress}"
-                        + " (native byte offsets). Run CompilePlcSoftware and SaveProject after the change.", before, after);
+                        + " (native byte offsets)." + rows + " Run CompilePlcSoftware and SaveProject after the change.", before, after);
         }
 
         private static bool TryParseIoType(string text, out AddressIoType value)

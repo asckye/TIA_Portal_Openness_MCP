@@ -15356,7 +15356,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "739d39bb332d64dfc6ef46cc00ad1e49e97a500957f4c61e3cec55e43704773a",
+      "descriptionSha256": "578ae294d5fdaf150c627fe28859bd49ae6e0b8fa0ad7545b8758737a910a8c7",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -43840,7 +43840,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "ad9e45f5510ad4c4f71d5431555879c21188f81a7f85be88a2fcbd73126337d3",
+      "descriptionSha256": "a8d1f1817d9c18a2339c4baae582fdd7a3cfd54fc72ff028b0822d305e17c4b0",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -86393,7 +86393,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "d33af799c8f5ba48b4e06cbfc799a37a4b3ebdcfcc0dcc0624641a7d6d84b81b",
+      "descriptionSha256": "9ff82854205c64beae47ecd27a50eb1c174fbbe97c6ed3981ad897ea0c73ec68",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -91625,7 +91625,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "60bca50ffd4fd3d4db26d18fb10f7e3b4e2032d947d66b2b92a1ce417272992a",
+      "descriptionSha256": "477b0e69366e85be8a534fd3dd413aaceee95790d657d86fd8e27be8d0474ad8",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -92936,26 +92936,26 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "34084de7f208e35f77ea99ca5751b24c221c5e36a9092f3cb6317ca883ef2bc2",
+      "descriptionSha256": "6fb968d2e12985bfa49129dae3578e7b693afa87cdfe4a2bdd0f7c725758971e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "deviceName": {
-            "description": "deviceName: name in project tree",
+            "description": "deviceName: name of the new device and its head item; must not be used by any device or head item",
             "examples": [
               "PLC_2"
             ],
             "type": "string"
           },
           "orderNumber": {
-            "description": "orderNumber: MLFB/order number from the TIA hardware catalog, e.g. '6ES7211-1BE40-0XB0' or '6ES7 211-1BE40-0XB0'",
+            "description": "orderNumber: exact article number as written in the TIA hardware catalog, including its spaces (e.g. '6ES7 211-1BE40-0XB0'), or a full TypeIdentifier ('OrderNumber:.../V4.7'); used verbatim",
             "examples": [
               "6ES7 515-2AM02-0AB0"
             ],
             "type": "string"
           },
           "version": {
-            "description": "version: catalog device version, e.g. 'V4.7', 'V3.1', or empty to let TIA try defaults",
+            "description": "version: exact catalog version as written in the TypeIdentifier (e.g. 'V4.7'); empty only for a full TypeIdentifier or a module with no or a single installed version (TIA rule)",
             "examples": [
               "V2.9"
             ],
@@ -94248,21 +94248,21 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "a9d1d8086b48282e234c3fbabeace1dd9901276849c6654de17fd3bf1996bbc3",
+      "descriptionSha256": "52188ba35ede079516e784b24ac9c38bb7a3d3e4edb5ba14a70c35d6b37d227c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "deviceName": {
-            "description": "deviceName: name in project tree, e.g. 'ENC_AFM60A_1'",
+            "description": "deviceName: name of the new device and its head item, e.g. 'ENC_AFM60A_1'",
             "type": "string"
           },
           "keyword": {
-            "description": "keyword: device/vendor/order/DAP keyword, e.g. 'AFM60A', 'ATV320', 'DL100'",
+            "description": "keyword: exact catalog TypeIdentifier to create; search text (e.g. 'AFM60A') is refused with the ranked candidates",
             "type": "string"
           },
           "preferredDap": {
             "default": "",
-            "description": "preferredDap: optional DAP/version hint, e.g. 'DAP V2.0', 'DAP 1', or empty",
+            "description": "preferredDap: optional ranking hint for the refusal candidate list, e.g. 'DAP V2.0'",
             "type": "string"
           }
         },
@@ -95551,21 +95551,21 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "eda2f5c856013704622326c8fc15d9369cfc18f541b2554ecc2db39e0c40e2ec",
+      "descriptionSha256": "efc2a429286815712f09671a6ac43d6c94d1ee871ffb6fc1a396ef5e3a5d0b75",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "deviceName": {
-            "description": "deviceName: name in project tree, e.g. 'HMI_KTP700_1'",
+            "description": "deviceName: name of the new device and its head item, e.g. 'HMI_KTP700_1'",
             "type": "string"
           },
           "keyword": {
-            "description": "keyword: MLFB/order number/device/family text, e.g. 'KTP700 Basic PN', '6AV2123-2GB03', 'S7-1211C DC/DC/DC'",
+            "description": "keyword: exact catalog TypeIdentifier to create, e.g. 'OrderNumber:6AV2 123-2GB03-0AX0/17.0.0.0'; search text (e.g. 'KTP700 Basic PN') is refused with the ranked candidates",
             "type": "string"
           },
           "preferredText": {
             "default": "",
-            "description": "preferredText: optional ranking hint, e.g. 'PN 17.0.0.0 landscape', '6AV2 123-2GB03-0AX0'",
+            "description": "preferredText: optional ranking hint for the refusal candidate list, e.g. 'PN 17.0.0.0 landscape'",
             "type": "string"
           }
         },
@@ -148028,7 +148028,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "747d4fd8ebb5666477a4fcaad721ff979d39a13e07edb6d7d6b6758311db5e90",
+      "descriptionSha256": "0c96adb7cfc7b2dbc249570d84043edf5e6088b1670d8e904623a5bf65723bf3",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -285993,7 +285993,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "7127a8235f7a811da3c28cad7b187a025ac0e8fcc7e67c5c3797fac18627ed72",
+      "descriptionSha256": "cddad6e7bb79ac511c43c5a4c041d80058dc9ebf24fc538e1ee272710d22c460",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -329367,7 +329367,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "69c42967d89cdfaa1c0c6190b010aa1bd5db5612d08e8710a16afb442f631a80",
+      "descriptionSha256": "f4dba7192372e8fa71433ec3adb2c45be80c7be0458d167c1d103d650024c246",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -380049,7 +380049,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "47c307cb5678f5d6981ad062cc07aba7adf04cac946d1d192263e86ceb55245d",
+      "descriptionSha256": "492d24997c47e7600d50e83357d928d30c678193d2cedaba070a17619b0f88a2",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -462133,7 +462133,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "9940c2c23a7074f8bc4a26e8020cdc8bcb026e135b5402c926f9c9b7b121fbe3",
+      "descriptionSha256": "bf9150a3e6d3d1379de2c1005809b8c814926601535fa06438c04ed8ae4b2a5c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -619859,7 +619859,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "74e192140cea17667c0bdf945270200aad51c9ca5e35660148b0f6835b38a8c2",
+      "descriptionSha256": "a999ffe4cd55dcfcbe44ea1fd502d9a118091cf85eca019f8c84245a2e798818",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

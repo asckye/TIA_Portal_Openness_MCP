@@ -18,7 +18,9 @@ public sealed class B3HostPortsTests
         ["ManageDeviceServiceObjects"] = 18, ["ExchangeSystemDiagnosticsSettings"] = 17,
         ["ListNetworkDomains"] = 16, ["ManageNetworkDomain"] = 16,
         ["ListTransferAreas"] = 15, ["ManageTransferArea"] = 15,
-        ["ListCommunicationConnections"] = 21, ["ManageCommunicationConnection"] = 21
+        ["ListCommunicationConnections"] = 21, ["ManageCommunicationConnection"] = 21,
+        // GSD creation needs a HardwareCatalog TypeIdentifier (V18); the GSD:<file>/DAP/<id> form is not verified earlier (P8-81b H-05).
+        ["CreateGsdDevice"] = 18
     };
 
     public static IEnumerable<object[]> Releases => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Select(r => new object[] { r });

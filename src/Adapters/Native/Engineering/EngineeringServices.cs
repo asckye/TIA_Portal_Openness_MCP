@@ -245,8 +245,13 @@ namespace TiaMcp.Adapters
             Device device;
             if (names.Length == 1)
             {
-                var all = project.Devices.Cast<Device>().Concat(EnumerateGroupDevices(project.DeviceGroups)).ToArray();
+                var all = TiaMcp.Adapters.Native.Hardware.ProjectDeviceWalk.Devices(project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup).ToArray();
                 device = (Device)(PlcGroupOperations.Find(all, names[0]) ?? throw new PlcSoftwareException("NotFound", "Exact unique device not found in project " + project.Name + ": " + names[0]));
+            }
+            else if (names[0] == TiaMcp.Adapters.Native.Hardware.ProjectDeviceWalk.UngroupedSegment)
+            {
+                if (names.Length != 2) throw new PlcSoftwareException("NotFound", "Use [\"$ungrouped\", \"<device>\"] for a device in the ungrouped devices group.");
+                device = (Device)(PlcGroupOperations.Find(project.UngroupedDevicesGroup.Devices, names[1]) ?? throw new PlcSoftwareException("NotFound", "Device not found in the ungrouped devices group: " + names[1]));
             }
             else
             {

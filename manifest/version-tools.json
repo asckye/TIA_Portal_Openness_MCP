@@ -5,7 +5,7 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 279,
+      "toolCount": 278,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -45,7 +45,6 @@
         "ConnectOnlinePlc",
         "ConnectPortal",
         "CreateDevice",
-        "CreateGsdDevice",
         "CreateLibraryMasterCopy",
         "CreatePlcBlockGroup",
         "CreatePlcTag",
@@ -290,7 +289,7 @@
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 319,
+      "toolCount": 318,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -332,7 +331,6 @@
         "ConnectOnlinePlc",
         "ConnectPortal",
         "CreateDevice",
-        "CreateGsdDevice",
         "CreateLibraryMasterCopy",
         "CreatePlcBlockGroup",
         "CreatePlcInstanceDb",
@@ -615,7 +613,7 @@
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 347,
+      "toolCount": 346,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -658,7 +656,6 @@
         "ConnectPortal",
         "ConnectProjectToWorkspace",
         "CreateDevice",
-        "CreateGsdDevice",
         "CreateLibraryMasterCopy",
         "CreatePlcBlockGroup",
         "CreatePlcInstanceDb",
@@ -968,7 +965,7 @@
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 370,
+      "toolCount": 369,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1011,7 +1008,6 @@
         "ConnectPortal",
         "ConnectProjectToWorkspace",
         "CreateDevice",
-        "CreateGsdDevice",
         "CreateLibraryMasterCopy",
         "CreatePlcBlockGroup",
         "CreatePlcInstanceDb",
@@ -3246,8 +3242,8 @@
     }
   },
   "groupCounts": {
-    "all-releases": 278,
-    "shared-subset": 222,
+    "all-releases": 277,
+    "shared-subset": 223,
     "release-only": 16
   },
   "tools": [
@@ -4097,16 +4093,12 @@
     {
       "name": "CreateGsdDevice",
       "releases": [
-        "14sp1",
-        "15.1",
-        "16",
-        "17",
         "18",
         "19",
         "20",
         "21"
       ],
-      "group": "all-releases",
+      "group": "shared-subset",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {

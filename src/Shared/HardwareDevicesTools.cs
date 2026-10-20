@@ -207,7 +207,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         // NOTE: Deprecated demo tools removed (GenerateStartStopBlocks / EnsureUnifiedMainScreen).
 
-        [McpServerTool(Name = "ListDevices"), Description("[L1][Hardware] List all hardware devices (PLCs, HMI panels, drives) in the project with their attributes. Requires: ConnectPortal + OpenProject. Prefer GetProjectTree for a visual overview; use this when you need the exact device Name and attribute values for subsequent operations like CreateDevice or SetDeviceItemAttribute.")]
+        [McpServerTool(Name = "ListDevices"), Description("[L1][Hardware] List all hardware devices (PLCs, HMI panels, drives) in the project with their attributes: project root, nested device groups and the ungrouped devices group (single-name device paths resolve in all three; [\"$ungrouped\", \"<device>\"] addresses the ungrouped group explicitly). Requires: ConnectPortal + OpenProject. Prefer GetProjectTree for a visual overview; use this when you need the exact device Name and attribute values for subsequent operations like CreateDevice or SetDeviceItemAttribute.")]
         public CallToolResult ListDevicesV4(
             [Description("includePlcSoftware: include a structured PLC software name inventory for desktop browsing.")] bool includePlcSoftware = false)
             => HardwareContract.Run("ListDevices", () =>
@@ -264,11 +264,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "CreateDevice"), Description("[L2][Hardware] Add one hardware device using an exact MLFB/order number and version from the TIA hardware catalog. Requires: ConnectPortal + OpenProject. Use SearchHardwareCatalog first to find the exact MLFB/version. For unknown or approximate device names, use CreateHardwareDevice or CreateHardwareCatalogDevice instead. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "CreateDevice"), Description("[L2][Hardware] Add one hardware device with exactly the requested type and name: TypeIdentifier OrderNumber:<orderNumber>/<version> (or a full TypeIdentifier in orderNumber with an empty version), deviceName for the device and its head item. Requires: ConnectPortal + OpenProject. One DeviceComposition.CreateWithItem call: no firmware-version stepping, no alternative spelling or model, no renaming retries. A name already used by a device or head item (root, grouped or ungrouped) is refused before the call. When TIA refuses, the unchanged device inventory is verified and the typed refusal lists the hardware-catalog candidates (V18+; earlier releases have no catalog API) to choose again. Find the exact article number and version with SearchHardwareCatalog (V18+) or the TIA type identifier display. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult CreateDeviceV4(
-            [Description("orderNumber: MLFB/order number from the TIA hardware catalog, e.g. '6ES7211-1BE40-0XB0' or '6ES7 211-1BE40-0XB0'")] string orderNumber,
-            [Description("version: catalog device version, e.g. 'V4.7', 'V3.1', or empty to let TIA try defaults")] string version,
-            [Description("deviceName: name in project tree")] string deviceName)
+            [Description("orderNumber: exact article number as written in the TIA hardware catalog, including its spaces (e.g. '6ES7 211-1BE40-0XB0'), or a full TypeIdentifier ('OrderNumber:.../V4.7'); used verbatim")] string orderNumber,
+            [Description("version: exact catalog version as written in the TypeIdentifier (e.g. 'V4.7'); empty only for a full TypeIdentifier or a module with no or a single installed version (TIA rule)")] string version,
+            [Description("deviceName: name of the new device and its head item; must not be used by any device or head item")] string deviceName)
             => HardwareContract.Run("CreateDevice", () =>
             {
                 HardwareContract.RequireProject(_service.HasProject);
@@ -311,12 +311,12 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "CreateHardwareDevice"), Description("[L1][Hardware] PREFERRED for natural-language device insertion. Adds a Siemens hardware device by probing the installed TIA catalog with fallback versions. Requires: ConnectPortal + OpenProject. Example: 'add CPU 1211C AC/DC/RLY' → family='S7-1200'. Families: S7-1200, S7-1500, WinCCUnifiedPC. For third-party/GSD devices use CreateGsdDevice. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "CreateHardwareDevice"), Description("[L1][Hardware] Add one Siemens hardware device with exactly preferredMlfb (article number with its spaces, or a full TypeIdentifier) and preferredVersion, named deviceName. Requires: ConnectPortal + OpenProject. One DeviceComposition.CreateWithItem call: no family default device, no firmware-version stepping, no alternative model, no renaming retries; family is a label only. When TIA refuses, the unchanged device inventory is verified and the typed refusal lists the hardware-catalog candidates (V18+). For third-party/GSD devices use CreateGsdDevice. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult CreateHardwareDeviceV4(
-            [Description("preferredMlfb: preferred MLFB/order number, e.g. '6ES7211-1BE40-0XB0'; empty uses family fallback list")] string preferredMlfb,
-            [Description("preferredVersion: preferred catalog version, e.g. 'V4.7'; empty probes known/default versions")] string preferredVersion,
-            [Description("deviceName: name in project tree")] string deviceName,
-            [Description("family: fallback hint, e.g. 'S7-1200', 'S7-1500', or 'WinCCUnifiedPC'")] string family = "S7-1500")
+            [Description("preferredMlfb: exact article number with its spaces (e.g. '6ES7 211-1BE40-0XB0') or a full TypeIdentifier; required, used verbatim")] string preferredMlfb,
+            [Description("preferredVersion: exact catalog version (e.g. 'V4.7'); empty only with a full TypeIdentifier or a single installed version")] string preferredVersion,
+            [Description("deviceName: name of the new device and its head item")] string deviceName,
+            [Description("family: label only, e.g. 'S7-1200', 'S7-1500', or 'WinCCUnifiedPC'; never selects another model")] string family = "S7-1500")
             => HardwareContract.Run("CreateHardwareDevice", () =>
             {
                 return AddDeviceWithFallback(preferredMlfb, preferredVersion, deviceName, family);
@@ -340,7 +340,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     return new ResponseDeviceProbe
                     {
-                        Message = $"Failed to add device '{deviceName}' with fallback probes",
+                        Message = $"Failed to add device '{deviceName}' exactly as requested",
                         Ok = false,
                         DeviceName = deviceName,
                         Family = family,
@@ -352,7 +352,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 return new ResponseDeviceProbe
                 {
-                    Message = $"Device '{deviceName}' added (fallback)",
+                    Message = $"Device '{deviceName}' added (one exact create call)",
                     Ok = true,
                     DeviceName = deviceName,
                     Family = family,
@@ -364,7 +364,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error adding device with fallback: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error adding device: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
             }
         }
 
@@ -436,11 +436,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "CreateGsdDevice"), Description("[L2][Hardware]Add a third-party GSD/GSDML hardware device by first searching the installed TIA hardware catalog, ranking candidates, and inserting with the exact catalog TypeIdentifier. Does not fall back to unrelated Siemens devices. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "CreateGsdDevice"), Description("[L2][Hardware]Add one third-party GSD/GSDML device from the installed TIA hardware catalog (V18+). keyword must be the exact catalog TypeIdentifier of one candidate (from SearchInstalledGsdDevices or SearchHardwareCatalog); that entry is created once with deviceName. Any other keyword is refused with the ranked candidates (preferredDap only ranks them); GSDML file rows without a catalog TypeIdentifier are never created. One DeviceComposition.CreateWithItem call: no next-candidate retry, no renaming. A TIA refusal is verified by the unchanged device inventory and lists the candidates. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult CreateGsdDeviceV4(
-            [Description("keyword: device/vendor/order/DAP keyword, e.g. 'AFM60A', 'ATV320', 'DL100'")] string keyword,
-            [Description("deviceName: name in project tree, e.g. 'ENC_AFM60A_1'")] string deviceName,
-            [Description("preferredDap: optional DAP/version hint, e.g. 'DAP V2.0', 'DAP 1', or empty")] string preferredDap = "")
+            [Description("keyword: exact catalog TypeIdentifier to create; search text (e.g. 'AFM60A') is refused with the ranked candidates")] string keyword,
+            [Description("deviceName: name of the new device and its head item, e.g. 'ENC_AFM60A_1'")] string deviceName,
+            [Description("preferredDap: optional ranking hint for the refusal candidate list, e.g. 'DAP V2.0'")] string preferredDap = "")
             => HardwareContract.Run("CreateGsdDevice", () =>
             {
                 HardwareContract.RequireProject(_service.HasProject);
@@ -495,11 +495,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "CreateHardwareCatalogDevice"), Description("[L2][Hardware]Add a hardware device by searching the installed TIA hardware catalog, ranking insertable TypeIdentifier candidates, and inserting the best match. Use for Siemens devices/HMI panels when exact TypeIdentifier is unknown, e.g. KTP700 Basic PN. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "CreateHardwareCatalogDevice"), Description("[L2][Hardware]Add one device from the installed TIA hardware catalog (V18+). keyword must be the exact TypeIdentifier of one catalog candidate (from SearchHardwareCatalog); that entry is created once with deviceName. Any other keyword is refused with the ranked candidates (preferredText only ranks them) so the caller chooses. One DeviceComposition.CreateWithItem call: no best-match guess, no next-candidate retry, no renaming. A TIA refusal is verified by the unchanged device inventory and lists the catalog candidates. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult CreateHardwareCatalogDeviceV4(
-            [Description("keyword: MLFB/order number/device/family text, e.g. 'KTP700 Basic PN', '6AV2123-2GB03', 'S7-1211C DC/DC/DC'")] string keyword,
-            [Description("deviceName: name in project tree, e.g. 'HMI_KTP700_1'")] string deviceName,
-            [Description("preferredText: optional ranking hint, e.g. 'PN 17.0.0.0 landscape', '6AV2 123-2GB03-0AX0'")] string preferredText = "")
+            [Description("keyword: exact catalog TypeIdentifier to create, e.g. 'OrderNumber:6AV2 123-2GB03-0AX0/17.0.0.0'; search text (e.g. 'KTP700 Basic PN') is refused with the ranked candidates")] string keyword,
+            [Description("deviceName: name of the new device and its head item, e.g. 'HMI_KTP700_1'")] string deviceName,
+            [Description("preferredText: optional ranking hint for the refusal candidate list, e.g. 'PN 17.0.0.0 landscape'")] string preferredText = "")
             => HardwareContract.Run("CreateHardwareCatalogDevice", () =>
             {
                 HardwareContract.RequireProject(_service.HasProject);

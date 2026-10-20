@@ -1680,18 +1680,6 @@
     },
     {
       "releaseKey": "14sp1",
-      "entry": "CreateGsdDevice",
-      "family": "P6-DEVICE",
-      "example": {
-        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
-        "deviceName": "Device_1",
-        "family": "GSD",
-        "mode": "preview",
-        "confirm": false
-      }
-    },
-    {
-      "releaseKey": "14sp1",
       "entry": "DeletePlcExternalSource",
       "family": "P6-SOURCE",
       "example": {
@@ -2097,18 +2085,6 @@
         "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
         "deviceName": "Device_1",
         "family": "S7-1500",
-        "mode": "preview",
-        "confirm": false
-      }
-    },
-    {
-      "releaseKey": "15.1",
-      "entry": "CreateGsdDevice",
-      "family": "P6-DEVICE",
-      "example": {
-        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
-        "deviceName": "Device_1",
-        "family": "GSD",
         "mode": "preview",
         "confirm": false
       }
@@ -2530,18 +2506,6 @@
         "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
         "deviceName": "Device_1",
         "family": "S7-1500",
-        "mode": "preview",
-        "confirm": false
-      }
-    },
-    {
-      "releaseKey": "16",
-      "entry": "CreateGsdDevice",
-      "family": "P6-DEVICE",
-      "example": {
-        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
-        "deviceName": "Device_1",
-        "family": "GSD",
         "mode": "preview",
         "confirm": false
       }
@@ -2963,18 +2927,6 @@
         "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
         "deviceName": "Device_1",
         "family": "S7-1500",
-        "mode": "preview",
-        "confirm": false
-      }
-    },
-    {
-      "releaseKey": "17",
-      "entry": "CreateGsdDevice",
-      "family": "P6-DEVICE",
-      "example": {
-        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
-        "deviceName": "Device_1",
-        "family": "GSD",
         "mode": "preview",
         "confirm": false
       }
@@ -5840,7 +5792,7 @@
       "entry": "BuildProjectScaffold",
       "family": "F05",
       "example": {
-        "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+        "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AM03-0AB0\",\"plcVersion\":\"V3.0\"}",
         "dryRun": true
       }
     },
@@ -7204,15 +7156,6 @@
     },
     {
       "releaseKey": "14sp1",
-      "entry": "CreateGsdDevice",
-      "family": "F18",
-      "example": {
-        "keyword": "1513",
-        "deviceName": "PLC_2"
-      }
-    },
-    {
-      "releaseKey": "14sp1",
       "entry": "ListDevices",
       "family": "F18",
       "example": {}
@@ -8110,7 +8053,7 @@
       "entry": "BuildProjectScaffold",
       "family": "F05",
       "example": {
-        "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+        "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AM03-0AB0\",\"plcVersion\":\"V3.0\"}",
         "dryRun": true
       }
     },
@@ -9709,15 +9652,6 @@
     },
     {
       "releaseKey": "15.1",
-      "entry": "CreateGsdDevice",
-      "family": "F18",
-      "example": {
-        "keyword": "1513",
-        "deviceName": "PLC_2"
-      }
-    },
-    {
-      "releaseKey": "15.1",
       "entry": "ListDevices",
       "family": "F18",
       "example": {}
@@ -10736,7 +10670,7 @@
       "entry": "BuildProjectScaffold",
       "family": "F05",
       "example": {
-        "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+        "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AM03-0AB0\",\"plcVersion\":\"V3.0\"}",
         "dryRun": true
       }
     },
@@ -12533,15 +12467,6 @@
     },
     {
       "releaseKey": "16",
-      "entry": "CreateGsdDevice",
-      "family": "F18",
-      "example": {
-        "keyword": "1513",
-        "deviceName": "PLC_2"
-      }
-    },
-    {
-      "releaseKey": "16",
       "entry": "ListDevices",
       "family": "F18",
       "example": {}
@@ -13694,7 +13619,7 @@
       "entry": "BuildProjectScaffold",
       "family": "F05",
       "example": {
-        "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+        "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AM03-0AB0\",\"plcVersion\":\"V3.0\"}",
         "dryRun": true
       }
     },
@@ -15601,15 +15526,6 @@
     },
     {
       "releaseKey": "17",
-      "entry": "CreateGsdDevice",
-      "family": "F18",
-      "example": {
-        "keyword": "1513",
-        "deviceName": "PLC_2"
-      }
-    },
-    {
-      "releaseKey": "17",
       "entry": "ListDevices",
       "family": "F18",
       "example": {}
@@ -16973,7 +16889,7 @@
       "entry": "BuildProjectScaffold",
       "family": "F05",
       "example": {
-        "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+        "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AM03-0AB0\",\"plcVersion\":\"V3.0\"}",
         "dryRun": true
       }
     },
@@ -18996,7 +18912,7 @@
       "entry": "CreateGsdDevice",
       "family": "F18",
       "example": {
-        "keyword": "1513",
+        "keyword": "&lt;exact catalog TypeIdentifier from SearchInstalledGsdDevices&gt;",
         "deviceName": "PLC_2"
       }
     },
@@ -19005,7 +18921,7 @@
       "entry": "CreateHardwareCatalogDevice",
       "family": "F18",
       "example": {
-        "keyword": "1513",
+        "keyword": "&lt;exact TypeIdentifier from SearchHardwareCatalog&gt;",
         "deviceName": "PLC_2"
       }
     },
@@ -20441,7 +20357,7 @@
       "entry": "BuildProjectScaffold",
       "family": "F05",
       "example": {
-        "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+        "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AM03-0AB0\",\"plcVersion\":\"V3.0\"}",
         "dryRun": true
       }
     },
@@ -23520,7 +23436,7 @@
       "entry": "CreateGsdDevice",
       "family": "F18",
       "example": {
-        "keyword": "1513",
+        "keyword": "&lt;exact catalog TypeIdentifier from SearchInstalledGsdDevices&gt;",
         "deviceName": "PLC_2"
       }
     },
@@ -23529,7 +23445,7 @@
       "entry": "CreateHardwareCatalogDevice",
       "family": "F18",
       "example": {
-        "keyword": "1513",
+        "keyword": "&lt;exact TypeIdentifier from SearchHardwareCatalog&gt;",
         "deviceName": "PLC_2"
       }
     },
@@ -42150,19 +42066,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "CreateGsdDevice",
-        "currentName": "CreateGsdDevice",
-        "sourceName": "AddGsdDeviceWithProbe",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "keyword": "1513",
-          "deviceName": "PLC_2"
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "AnalyzeGlobalLibraryPackage",
         "currentName": "AnalyzeGlobalLibraryPackage",
         "sourceName": "AnalyzeGlobalLibraryPackage",
@@ -46705,7 +46608,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AM03-0AB0\",\"plcVersion\":\"V3.0\"}",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -47177,19 +47080,6 @@
         "arguments": {
           "orderNumber": "6ES7 515-2AM02-0AB0",
           "version": "V2.9",
-          "deviceName": "PLC_2"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "CreateGsdDevice",
-        "currentName": "CreateGsdDevice",
-        "sourceName": "AddGsdDeviceWithProbe",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "keyword": "1513",
           "deviceName": "PLC_2"
         },
         "envelopeVersion": 4
@@ -52290,7 +52180,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AM03-0AB0\",\"plcVersion\":\"V3.0\"}",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -52803,19 +52693,6 @@
         "arguments": {
           "orderNumber": "6ES7 515-2AM02-0AB0",
           "version": "V2.9",
-          "deviceName": "PLC_2"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "CreateGsdDevice",
-        "currentName": "CreateGsdDevice",
-        "sourceName": "AddGsdDeviceWithProbe",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "keyword": "1513",
           "deviceName": "PLC_2"
         },
         "envelopeVersion": 4
@@ -58318,7 +58195,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AM03-0AB0\",\"plcVersion\":\"V3.0\"}",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -58860,19 +58737,6 @@
         "arguments": {
           "orderNumber": "6ES7 515-2AM02-0AB0",
           "version": "V2.9",
-          "deviceName": "PLC_2"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "CreateGsdDevice",
-        "currentName": "CreateGsdDevice",
-        "sourceName": "AddGsdDeviceWithProbe",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "keyword": "1513",
           "deviceName": "PLC_2"
         },
         "envelopeVersion": 4
@@ -64685,7 +64549,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AM03-0AB0\",\"plcVersion\":\"V3.0\"}",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -65272,7 +65136,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "keyword": "1513",
+          "keyword": "&lt;exact catalog TypeIdentifier from SearchInstalledGsdDevices&gt;",
           "deviceName": "PLC_2"
         },
         "envelopeVersion": 4
@@ -65285,7 +65149,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "keyword": "1513",
+          "keyword": "&lt;exact TypeIdentifier from SearchHardwareCatalog&gt;",
           "deviceName": "PLC_2"
         },
         "envelopeVersion": 4
@@ -71485,7 +71349,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AM03-0AB0\",\"plcVersion\":\"V3.0\"}",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -72098,7 +71962,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "keyword": "1513",
+          "keyword": "&lt;exact catalog TypeIdentifier from SearchInstalledGsdDevices&gt;",
           "deviceName": "PLC_2"
         },
         "envelopeVersion": 4
@@ -72111,7 +71975,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "keyword": "1513",
+          "keyword": "&lt;exact TypeIdentifier from SearchHardwareCatalog&gt;",
           "deviceName": "PLC_2"
         },
         "envelopeVersion": 4
@@ -79526,7 +79390,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AM03-0AB0\",\"plcVersion\":\"V3.0\"}",
           "dryRun": true
         },
         "envelopeVersion": 4

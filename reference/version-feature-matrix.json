@@ -3286,8 +3286,7 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": [
-          "CreateDevice",
-          "CreateGsdDevice"
+          "CreateDevice"
         ]
       },
       {
@@ -3711,7 +3710,6 @@
         "l5": "NOT RUN",
         "entries": [
           "CreateDevice",
-          "CreateGsdDevice",
           "GetDeviceAttributes",
           "GetDeviceInfo",
           "GetDeviceItemInfo",
@@ -3777,8 +3775,7 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": [
-          "CreateDevice",
-          "CreateGsdDevice"
+          "CreateDevice"
         ]
       },
       {
@@ -4257,7 +4254,6 @@
         "l5": "NOT RUN",
         "entries": [
           "CreateDevice",
-          "CreateGsdDevice",
           "GetDeviceAttributes",
           "GetDeviceInfo",
           "GetDeviceItemInfo",
@@ -4325,8 +4321,7 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": [
-          "CreateDevice",
-          "CreateGsdDevice"
+          "CreateDevice"
         ]
       },
       {
@@ -4838,7 +4833,6 @@
         "l5": "NOT RUN",
         "entries": [
           "CreateDevice",
-          "CreateGsdDevice",
           "GetDeviceAttributes",
           "GetDeviceInfo",
           "GetDeviceItemInfo",
@@ -4908,8 +4902,7 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": [
-          "CreateDevice",
-          "CreateGsdDevice"
+          "CreateDevice"
         ]
       },
       {
@@ -5443,7 +5436,6 @@
         "l5": "NOT RUN",
         "entries": [
           "CreateDevice",
-          "CreateGsdDevice",
           "ExchangeSystemDiagnosticsSettings",
           "GetDeviceAttributes",
           "GetDeviceInfo",

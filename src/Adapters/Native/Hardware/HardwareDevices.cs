@@ -13,6 +13,7 @@ using Siemens.Engineering.SW;
 using Siemens.Engineering.HW.Features;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Hardware;
+using TiaMcp.Adapters.Native.Hardware;
 namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
@@ -29,227 +30,77 @@ namespace TiaMcp.Adapters
             return null;
         }
         private void HardwareLegacyRequireCatalogBinding() { Check(); HardwareCatalogPolicy.RequireBound(portal != null && project != null, false); }
-        private void RequireHardwareDeviceName(string deviceName)
-            => HardwareCatalogPolicy.AvailableName(HardwareReadDevicesRaw().Concat(project!.UngroupedDevicesGroup.Devices).Select(device => device.Name), deviceName);
-        private Device HardwareLegacyAddDevice(string orderNumber, string version, string deviceName)
+
+        // Device creation (CreateDevice, CreateHardwareCatalogDevice, CreateGsdDevice, the HardwareCreateDeviceFallback
+        // operation and the BuildProjectScaffold addDevice step) follows DeviceCreationRules: exactly the requested type
+        // identifier and name, one CreateWithItem call, and a typed refusal with the hardware-catalog candidates.
+        private List<Device> HardwareDeviceInventory()
+            => ProjectDeviceWalk.Devices(project!.Devices, project.DeviceGroups, project.UngroupedDevicesGroup).ToList();
+
+        private Device HardwareCreateExactDevice(string typeIdentifier, string deviceName, string parameter)
         {
             HardwareLegacyRequireCatalogBinding();
-            RequireHardwareDeviceName(deviceName);
-
             if (HardwareProjectMissing()) throw new HardwareAddressingException("InvalidState", "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
-
-            string? lastVariantError = null;
+            var local = this.project as Project ?? throw new HardwareAddressingException("InvalidState", "Current project is not a local Project instance");
+            // CreateWithItem names the device and its head item (CPU, interface module) with deviceName, so both names collide.
+            DeviceCreationRules.RequireFreeName(ProjectDeviceWalk.OccupiedNames(project!.Devices, project.DeviceGroups, project.UngroupedDevicesGroup), deviceName);
+            GuardUnifiedPanelVersion(typeIdentifier, "");
+            var before = HardwareDeviceInventory();
+            Device? created;
             try
             {
-                // Openness CreateWithItem expects a TypeIdentifier, not split order/version.
-                // Example: OrderNumber:6ES7 513-1AM03-0AB0/V3.0
-                var project = (this.project as Project);
-                if (project == null) throw new HardwareAddressingException("InvalidState", "Current project is not a local Project instance");
-
-                var orderRaw = orderNumber ?? "";
-                var verRaw = version ?? "";
-                GuardUnifiedPanelVersion(orderRaw, verRaw);
-
-                var orderVariants = new List<string>
-                {
-                    orderRaw,
-                    NormalizeOrderNumber(orderRaw),
-                    TryFormatMlfbWithSpaces(orderRaw),
-                    TryFormatMlfbWithSpaces(NormalizeOrderNumber(orderRaw))
-                }.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-
-                var v = verRaw.Trim();
-                var vNoV = v.StartsWith("V", StringComparison.OrdinalIgnoreCase) ? v.Substring(1) : v;
-                var versionVariants = new List<string>
-                {
-                    v,
-                    "V" + vNoV,
-                    vNoV,
-                    "" // let TIA pick default/latest if supported
-                };
-
-                // append common ".0" expansions (V3.0 -> V3.0.0 etc.)
-                foreach (var baseV in new[] { v, "V" + vNoV, vNoV })
-                {
-                    if (string.IsNullOrWhiteSpace(baseV)) continue;
-                    if (!baseV.Contains('.')) continue;
-
-                    versionVariants.Add(baseV + ".0");
-                    versionVariants.Add(baseV + ".0.0");
-                }
-
-                // Heuristic: if user provides TIA20.* for Unified panels, try bump to 21.* as well.
-                // (Common when copying order/version from older screenshots.)
-                try
-                {
-                    var parts = vNoV.Split('.');
-                    if (parts.Length > 0 && int.TryParse(parts[0], System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var maj) && maj == 20)
-                    {
-                        versionVariants.Add("21.0.0.0");
-                        versionVariants.Add("21.0.0.1");
-                        versionVariants.Add("V21.0.0.0");
-                    }
-                }
-                catch /* swallow(probe-optional): Version expansion is optional; retain the explicit variants when it cannot be computed. */ { }
-
-                versionVariants = versionVariants
-                    .Where(x => x != null) // keep empty-string variant
-                    .Select(x => x.Trim())
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToList();
-
-                var typeIdentifierVariants = new List<string>();
-                foreach (var o in orderVariants)
-                {
-                    foreach (var ver in versionVariants)
-                    {
-                        if (o.StartsWith("OrderNumber:", StringComparison.OrdinalIgnoreCase))
-                        {
-                            typeIdentifierVariants.Add(o);
-                            continue;
-                        }
-
-                        if (!string.IsNullOrWhiteSpace(ver))
-                            typeIdentifierVariants.Add($"OrderNumber:{o}/{ver}");
-                    }
-                }
-
-                typeIdentifierVariants = typeIdentifierVariants
-                    .Where(x => !string.IsNullOrWhiteSpace(x))
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToList();
-
-                // Keep one line per variant - the TIA V21 project (2026-09-20; docs/reference/real-machine-ledger.md, TP700 Comfort, catalog TypeIdentifier
-                // "OrderNumber:6AV2 124-0GC01-0AX0/14.0.1.0") only ever showed the LAST variant's error (".../V14.0.1.0.0.0"), so the
-                // reason the exact catalog identifier was refused stayed invisible.
-                var attempts = new List<string>();
-                foreach (var typeIdentifier in typeIdentifierVariants)
-                {
-                    foreach (var itemName in new[] { deviceName, "Device_1", "Station_1" }.Distinct(StringComparer.OrdinalIgnoreCase))
-                    {
-                        try
-                        {
-                            var dev = TiaMcp.Adapters.Hardware.HardwarePrimitives.CreateWithItem(TiaMcp.Adapters.Hardware.HardwarePrimitives.Devices(project), typeIdentifier, itemName, deviceName);
-                            if (dev is Device d) return d;
-                            attempts.Add($"{typeIdentifier} [{itemName}] -> CreateWithItem returned null");
-                        }
-                        catch (Exception exTry) /* swallow(probe-optional): Preserve the original optional catalog/module observation; the caller retains its existing fallback and readback. */
-                        {
-                            // try next variant
-                            lastVariantError = HardwareExceptionDetail(exTry);
-                            attempts.Add($"{typeIdentifier} [{itemName}] -> {ShortExceptionMessage(exTry)}");
-                        }
-                    }
-                }
-
-                var shown = attempts.Take(24).ToList();
-                var more = attempts.Count > shown.Count ? $"\n... {attempts.Count - shown.Count} more" : "";
-                throw new HardwareAddressingException("OpennessError",
-                    $"CreateDevice failed: no device created for OrderNumber={orderNumber} Version={version}; {attempts.Count} CreateWithItem attempt(s):\n"
-                    + string.Join("\n", shown) + more
-                    + "\nHint: SearchHardwareCatalog / CreateHardwareCatalogDevice report the catalog's exact TypeIdentifier (HMI panels carry the version without a 'V', e.g. '.../14.0.1.0'); pass that as orderNumber (a value starting with 'OrderNumber:' is used verbatim)."
-                    + (lastVariantError != null ? "\nLast error detail: " + lastVariantError : ""));
+                created = TiaMcp.Adapters.Hardware.HardwarePrimitives.CreateWithItem(TiaMcp.Adapters.Hardware.HardwarePrimitives.Devices(local), typeIdentifier, deviceName, deviceName);
             }
-            catch (HardwareAddressingException)
+            catch (Exception error)
             {
-                throw;
+                List<Device> after;
+                try { after = HardwareDeviceInventory(); }
+                catch (Exception readback) { throw new HardwareAddressingException("OpennessError", "CreateWithItem('" + typeIdentifier + "') threw and the device inventory could not be read back; the outcome is unknown: " + ShortExceptionMessage(readback), null, error); }
+                if (!DeviceCreationRules.SameInventory(before, after))
+                    throw new HardwareAddressingException("OpennessError", "CreateWithItem('" + typeIdentifier + "') threw but the device inventory changed; the outcome is unknown. Inspect the project before continuing.", null, error);
+                throw DeviceCreationRules.TiaRefusal(typeIdentifier, deviceName, ShortExceptionMessage(error), HardwareCatalogCandidates(typeIdentifier), parameter, error);
             }
-            catch (Exception ex) /* swallow(probe-optional): Preserve the original optional catalog/module observation; the caller retains its existing fallback and readback. */
-            {
-                throw new HardwareAddressingException("OpennessError", HardwareExceptionDetail(ex), null, ex);
-            }
+            if (created == null) throw new HardwareAddressingException("OpennessError", "CreateWithItem('" + typeIdentifier + "') returned null; the outcome is unknown. Inspect the project before continuing.");
+            var added = HardwareDeviceInventory().Where(d => !before.Contains(d)).ToList();
+            // TIA may file a decentralized station under UngroupedDevicesGroup; both roots are verified by inventory difference.
+            if (added.Count != 1 || !object.Equals(added[0], created))
+                throw new HardwareAddressingException("OpennessError", "CreateWithItem('" + typeIdentifier + "') returned a device, but the device inventory did not grow by exactly that device; inspect the project before continuing.");
+            return created;
         }
 
+        // Catalog rows for the article number part; exact identifiers are compared on the client side.
+        private string HardwareCatalogCandidates(string typeIdentifier)
+        {
+#if PLC_HARDWARE_CATALOG
+            var filter = DeviceCreationRules.CatalogFilter(typeIdentifier);
+            if (filter.Length == 0 || portal == null) return " No hardware-catalog candidates were listed (no article number in the request).";
+            try
+            {
+                return DeviceCreationRules.CandidateText(filter, portal.HardwareCatalog.Find(filter).Select(TiaMcp.Adapters.Hardware.HardwarePrimitives.TypeIdentifier)
+                    .Take(DeviceCreationRules.CandidateListLimit + 1).ToList());
+            }
+            catch (Exception error) when (error is not OutOfMemoryException)
+            {
+                return " Hardware-catalog candidates could not be read: " + ShortExceptionMessage(error) + ".";
+            }
+#else
+            return DeviceCreationRules.NoCatalogText(typeIdentifier);
+#endif
+        }
+
+        private Device HardwareLegacyAddDevice(string orderNumber, string version, string deviceName)
+            => HardwareCreateExactDevice(DeviceCreationRules.RequestedTypeIdentifier(orderNumber, version, "orderNumber", "version"), deviceName, "orderNumber/version");
+
+        // Kept operation name for the scaffold and engine wire; the family is a label only, never a list of alternatives.
         private (Device? Device, string? MlfbUsed, string? VersionUsed, List<string> Attempts, string? Error) HardwareLegacyAddDeviceWithFallback(
             string preferredMlfb,
             string preferredVersion,
             string deviceName,
             string family)
         {
-            HardwareLegacyRequireCatalogBinding();
-            RequireHardwareDeviceName(deviceName);
-            if (!string.IsNullOrWhiteSpace(preferredMlfb))
-                HardwareCatalogPolicy.ExactRow(HardwareLegacySearchHardwareCatalog(preferredMlfb, 100).Select(row =>
-                    new TiaMcp.Adapters.Contracts.Candidates.DeviceCatalogEntry { TypeIdentifier = row.TypeIdentifier ?? "", ArticleNumber = row.ArticleNumber ?? "", Version = row.Version ?? "" }), preferredMlfb, preferredVersion);
-            var attempts = new List<string>();
-            string? lastError = null;
-
-            // Minimal built-in list (keep small; user can pass preferred MLFB first)
-            var known = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase)
-            {
-                ["S7-1500"] = new List<string>
-                {
-                    "6ES7513-1AM03-0AB0",
-                    "6ES7516-3AN03-0AB0",
-                    "6ES7515-2AM02-0AB0",
-                    "6ES7513-1AL03-0AB0",
-                    "6ES7512-1AK02-0AB0",
-                },
-                ["WinCCUnifiedPC"] = new List<string>
-                {
-                    // Unified PC Runtime (actual availability depends on installed packages/HSP)
-                    "6AV2123-3GB32-0AW0",
-                    "6AV2154-0BS01-0AA0",
-                    "6AV2154-0BP01-0AA0",
-                },
-                ["S7-1200"] = new List<string>
-                {
-                    // CPU 1211C AC/DC/Rly
-                    "6ES7211-1BE40-0XB0",
-                }
-            };
-
-            var mlfbs = new List<string>();
-            if (!string.IsNullOrWhiteSpace(preferredMlfb)) mlfbs.Add(preferredMlfb);
-            if (known.TryGetValue(family ?? "", out var list)) mlfbs.AddRange(list);
-            mlfbs = mlfbs.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-
-            var versions = new List<string>();
-            if (!string.IsNullOrWhiteSpace(preferredVersion)) versions.Add(preferredVersion);
-            if (string.Equals(family, "S7-1500", StringComparison.OrdinalIgnoreCase))
-            {
-                versions.Add("V3.0");
-                versions.Add("V3.1");
-                versions.Add("V2.9");
-            }
-            if (string.Equals(family, "WinCCUnifiedPC", StringComparison.OrdinalIgnoreCase))
-            {
-                versions.Add("20.0.0.0");
-                versions.Add("21.0.0.0");
-            }
-            if (string.Equals(family, "S7-1200", StringComparison.OrdinalIgnoreCase))
-            {
-                versions.Add("V4.7");
-                versions.Add("4.7");
-                versions.Add("V4.6");
-                versions.Add("4.6");
-                versions.Add("V4.5");
-                versions.Add("4.5");
-            }
-            versions.Add("21.0.0.0");
-            versions.Add("V21.0.0.0");
-            versions.Add("");
-            versions = versions.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-
-            foreach (var mlfb in mlfbs)
-            {
-                foreach (var ver in versions)
-                {
-                    try
-                    {
-                        var d = HardwareLegacyAddDevice(mlfb, ver, deviceName);
-                        attempts.Add($"{mlfb} {ver} -> OK");
-                        return (d, mlfb, ver, attempts, null);
-                    }
-                    catch (Exception ex) /* swallow(probe-optional): Preserve the original optional catalog/module observation; the caller retains its existing fallback and readback. */
-                    {
-                        lastError = ex.Message;
-                        attempts.Add($"{mlfb} {ver} -> FAIL: {ex.Message}");
-                    }
-                }
-            }
-
-            return (null, null, null, attempts, lastError ?? "All attempts failed");
+            var typeIdentifier = DeviceCreationRules.RequestedTypeIdentifier(preferredMlfb, preferredVersion, "preferredMlfb", "preferredVersion");
+            var device = HardwareCreateExactDevice(typeIdentifier, deviceName, "preferredMlfb/preferredVersion");
+            return (device, preferredMlfb, preferredVersion, new List<string> { typeIdentifier + " -> created (one CreateWithItem call)" }, null);
         }
 
         public List<HardwareGsdCandidate> HardwareLegacySearchInstalledGsdDevices(string keyword, int limit = 50)
@@ -367,10 +218,11 @@ namespace TiaMcp.Adapters
                 .ToList();
         }
 
+        // The ranked search is a preview only: creation needs keyword = one candidate's exact TypeIdentifier, and that entry is
+        // created once. Any other keyword is refused with the ranked candidates so the caller chooses again.
         private (Device? Device, HardwareCatalogEntry? Candidate, List<HardwareCatalogEntry> Candidates, List<string> Attempts, string? Error)
             HardwareLegacyAddHardwareCatalogDeviceWithProbe(string keyword, string deviceName, string preferredText = "")
         {
-            var attempts = new List<string>();
             var candidates = HardwareLegacySearchHardwareCatalog(keyword, 100)
                 .Select(c =>
                 {
@@ -379,63 +231,15 @@ namespace TiaMcp.Adapters
                 })
                 .OrderByDescending(c => c.Score ?? 0)
                 .ToList();
-
-            if (candidates.Count == 0)
-            {
-                return (null, null, candidates, attempts, $"No hardware catalog candidates found for '{keyword}'");
-            }
-
-            if (HardwareProjectMissing())
-            {
-                return (null, null, candidates, attempts, "No project is open. Open or attach to a project before adding the device.");
-            }
-
-            var project = this.project as Project;
-            if (project == null)
-            {
-                return (null, null, candidates, attempts, "Current project is not a local Project instance.");
-            }
-
-            string? lastError = null;
-            foreach (var candidate in candidates.Where(c => !string.IsNullOrWhiteSpace(c.TypeIdentifier)))
-            {
-                var typeIdentifier = candidate.TypeIdentifier!.Trim();
-                try
-                {
-                    GuardUnifiedPanelVersion(typeIdentifier, "");        // The Unified panel version guard also applies to catalog candidates.
-                    var itemName = MakeEngineeringName(deviceName);
-                    var dev = TiaMcp.Adapters.Hardware.HardwarePrimitives.CreateWithItem(TiaMcp.Adapters.Hardware.HardwarePrimitives.Devices(project), typeIdentifier, itemName, deviceName);
-                    if (dev is Device d)
-                    {
-                        attempts.Add($"{typeIdentifier} -> OK");
-                        return (d, candidate, candidates, attempts, null);
-                    }
-
-                    lastError = "CreateWithItem returned null";
-                    attempts.Add($"{typeIdentifier} -> FAIL: {lastError}");
-                }
-                catch (HardwareAddressingException pex) when (pex.Status == "InvalidParams")
-                {
-                    lastError = pex.Message;
-                    attempts.Add($"{typeIdentifier} -> SKIPPED: {pex.Message}");
-                }
-                catch (Exception ex) /* swallow(probe-optional): Preserve the original optional catalog/module observation; the caller retains its existing fallback and readback. */
-                {
-                    lastError = HardwareExceptionDetail(ex);
-                    attempts.Add($"{typeIdentifier} -> FAIL: {lastError}");
-                }
-            }
-
-            if (!candidates.Any(c => c.Insertable == true))
-                lastError = "Hardware catalog returned no insertable TypeIdentifier candidates.";
-
-            return (null, null, candidates, attempts, lastError ?? "All insert attempts failed");
+            var exact = DeviceCreationRules.ExactCandidate(candidates.Select(c => c.TypeIdentifier), keyword, "hardware catalog");
+            var candidate = candidates.First(c => string.Equals(c.TypeIdentifier, exact, StringComparison.Ordinal));
+            var device = HardwareCreateExactDevice(exact, deviceName, "keyword");
+            return (device, candidate, candidates, new List<string> { exact + " -> created (one CreateWithItem call)" }, null);
         }
 
         private (Device? Device, HardwareGsdCandidate? Candidate, List<HardwareGsdCandidate> Candidates, List<string> Attempts, string? Error)
             HardwareLegacyAddGsdDeviceWithProbe(string keyword, string deviceName, string preferredDap = "")
         {
-            var attempts = new List<string>();
             var candidates = HardwareLegacySearchInstalledGsdDevices(keyword, 100)
                 .Select(c =>
                 {
@@ -444,53 +248,12 @@ namespace TiaMcp.Adapters
                 })
                 .OrderByDescending(c => c.Score ?? 0)
                 .ToList();
-
-            if (candidates.Count == 0)
-            {
-                return (null, null, candidates, attempts, $"No installed GSD/catalog candidates found for '{keyword}'");
-            }
-
-            if (HardwareProjectMissing())
-            {
-                return (null, null, candidates, attempts, "No project is open. Open or attach to a project before adding the device.");
-            }
-
-            var project = this.project as Project;
-            if (project == null)
-            {
-                return (null, null, candidates, attempts, "Current project is not a local Project instance.");
-            }
-
-            string? lastError = null;
-            foreach (var candidate in candidates.Where(c => !string.IsNullOrWhiteSpace(c.TypeIdentifier)))
-            {
-                var typeIdentifier = candidate.TypeIdentifier!.Trim();
-                try
-                {
-                    var itemName = MakeEngineeringName(deviceName);
-                    var dev = TiaMcp.Adapters.Hardware.HardwarePrimitives.CreateWithItem(TiaMcp.Adapters.Hardware.HardwarePrimitives.Devices(project), typeIdentifier, itemName, deviceName);
-                    if (dev is Device d)
-                    {
-                        attempts.Add($"{typeIdentifier} -> OK");
-                        return (d, candidate, candidates, attempts, null);
-                    }
-
-                    lastError = "CreateWithItem returned null";
-                    attempts.Add($"{typeIdentifier} -> FAIL: {lastError}");
-                }
-                catch (Exception ex) /* swallow(probe-optional): Preserve the original optional catalog/module observation; the caller retains its existing fallback and readback. */
-                {
-                    lastError = HardwareExceptionDetail(ex);
-                    attempts.Add($"{typeIdentifier} -> FAIL: {lastError}");
-                }
-            }
-
-            if (!candidates.Any(c => !string.IsNullOrWhiteSpace(c.TypeIdentifier)))
-            {
-                lastError = "Only GSDML file metadata was found; HardwareCatalog did not return an insertable TypeIdentifier.";
-            }
-
-            return (null, null, candidates, attempts, lastError ?? "All insert attempts failed");
+            var metadataOnly = candidates.Count(c => string.IsNullOrWhiteSpace(c.TypeIdentifier));
+            var exact = DeviceCreationRules.ExactCandidate(candidates.Select(c => c.TypeIdentifier), keyword, "installed GSD/catalog",
+                metadataOnly == 0 ? "" : " " + metadataOnly + " GSDML file row(s) carry no TypeIdentifier (GSDML DAP metadata only) and cannot be created by this tool.");
+            var candidate = candidates.First(c => string.Equals(c.TypeIdentifier, exact, StringComparison.Ordinal));
+            var device = HardwareCreateExactDevice(exact, deviceName, "keyword");
+            return (device, candidate, candidates, new List<string> { exact + " -> created (one CreateWithItem call)" }, null);
         }
 
         private static IEnumerable<string> BuildHardwareCatalogFilters(string keyword)
@@ -750,14 +513,6 @@ namespace TiaMcp.Adapters
                 .Distinct(StringComparer.OrdinalIgnoreCase);
         }
 
-        private static string MakeEngineeringName(string value)
-        {
-            var name = Regex.Replace(value ?? "Device_1", @"[^\w]", "_");
-            if (string.IsNullOrWhiteSpace(name)) name = "Device_1";
-            if (char.IsDigit(name[0])) name = "Device_" + name;
-            return name;
-        }
-
         private static string ShortExceptionMessage(Exception ex)
         {
             var inner = ex is TargetInvocationException tie && tie.InnerException != null ? tie.InnerException : ex;
@@ -775,27 +530,13 @@ namespace TiaMcp.Adapters
             var match = Regex.Match(text, @"/V?(\d+)\.(\d+)");
             if (!match.Success) return;
             if (int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) != HardwareMajorVersion)
-                throw new HardwareAddressingException("InvalidParams", "WinCC Unified panel version " + match.Value.TrimStart('/') + " does not match TIA Portal V" + HardwareMajorVersion
-                    + ": on the real machine a Unified Comfort panel created with a /20.0.0.0 identifier made TIA Portal V21 exit (NonRecoverable). Use the catalog entry ending in /" + HardwareMajorVersion + ".0.0.0 (SearchHardwareCatalog).");
+                throw new AdapterPreconditionException("WinCC Unified panel version " + match.Value.TrimStart('/') + " does not match TIA Portal V" + HardwareMajorVersion
+                    + ": on the real machine a Unified Comfort panel created with a /20.0.0.0 identifier made TIA Portal V21 exit (NonRecoverable). Use the catalog entry ending in /" + HardwareMajorVersion + ".0.0.0 (SearchHardwareCatalog); no create attempted.", "typeIdentifier");
         }
 
         internal static string NormalizeOrderNumber(string s)
         {
             return (s ?? string.Empty).Replace(" ", "").Trim();
-        }
-
-        internal static string TryFormatMlfbWithSpaces(string value)
-        {
-            var n = NormalizeOrderNumber(value);
-            if (n.Length < 8) return n;
-
-            if (n.StartsWith("6ES7", StringComparison.OrdinalIgnoreCase))
-                return n.Substring(0, 4) + " " + n.Substring(4);
-
-            if (n.StartsWith("6AV2", StringComparison.OrdinalIgnoreCase))
-                return n.Substring(0, 4) + " " + n.Substring(4);
-
-            return n;
         }
 
         public HardwareAddressingReply HardwareLegacySetDeviceItemAttribute(string deviceItemPath, string attributeName, string value)
@@ -835,10 +576,22 @@ namespace TiaMcp.Adapters
                 object? oldValue = null;
                 try { oldValue = di.GetAttribute(info.Name); } catch /* swallow(probe-optional): Attribute readback is best effort; preserve the write result when this value cannot be read. */ { }
                 meta["oldValue"] = oldValue?.ToString() ?? string.Empty;
-                meta["attributeDataType"] = HardwareTryProperty(info, "DataType", "Type")?.ToString() ?? string.Empty;
-                meta["attributeWritable"] = IsAttributeWritable(info);
+                meta["attributeDataType"] = HardwareAttributeTypes(info);
+                meta["attributeAccessMode"] = info.AccessMode.ToString();
+                meta["attributeWritable"] = HardwareAttributeWritable(info);
 
-                object typedValue = HardwareCoerceAttributeValue(value, oldValue, info);
+                // EngineeringAttributeInfo.AccessMode decides writability; a read-only attribute is never written.
+                if (!HardwareAttributeWritable(info))
+                {
+                    meta["refusalReason"] = "Attribute '" + info.Name + "' is not writable (AccessMode=" + info.AccessMode + "); nothing was written.";
+                    return new HardwareAddressingReply { Message = $"Device item attribute '{attributeName}' is not writable", Meta = meta };
+                }
+                if (!HardwareTryCoerceAttributeValue(value, oldValue, info, out var typedValue, out var typeProblem))
+                {
+                    meta["refusalReason"] = typeProblem + " Nothing was written.";
+                    return new HardwareAddressingReply { Message = $"Device item attribute '{attributeName}' value type is unknown", Meta = meta };
+                }
+                meta["requestedValue"] = typedValue.ToString() ?? string.Empty;
                 meta["mayHaveChanged"] = true;
                 meta["writeOutcomeUnknown"] = true;
                 di.SetAttribute(info.Name, typedValue);
@@ -846,9 +599,12 @@ namespace TiaMcp.Adapters
                 object? newValue = null;
                 try { newValue = di.GetAttribute(info.Name); meta["writeOutcomeUnknown"] = false; } catch /* swallow(probe-optional): Attribute readback is best effort; preserve the write result when this value cannot be read. */ { }
                 meta["newValue"] = newValue?.ToString() ?? string.Empty;
+                // TIA may ignore or normalize a written value: success only when the read-back equals the request.
+                bool matched = !Equals(meta["writeOutcomeUnknown"], true) && HardwareAddressingPolicy.SameValue(newValue, typedValue);
+                if (!Equals(meta["writeOutcomeUnknown"], true)) { meta["postStateKnown"] = true; meta["valueMismatch"] = !matched; }
                 // envelope: legacy-single-verdict
-                meta["success"] = true;
-                return new HardwareAddressingReply { Message = $"Device item attribute '{attributeName}' set", Meta = meta };
+                meta["success"] = matched;
+                return new HardwareAddressingReply { Message = matched ? $"Device item attribute '{attributeName}' set and read back" : $"Device item attribute '{attributeName}' read back a different value than requested", Meta = meta };
             }
             catch (Exception ex) /* swallow(probe-optional): Preserve the original optional catalog/module observation; the caller retains its existing fallback and readback. */
             {
@@ -900,7 +656,7 @@ namespace TiaMcp.Adapters
                         continue;
                     }
 
-                    if (IsAttributeWritable(info) != true)
+                    if (!HardwareAttributeWritable(info))
                     {
                         rejected.Add(new Dictionary<string, object?>
                         {
@@ -916,7 +672,11 @@ namespace TiaMcp.Adapters
                     {
                         object? oldValue = null;
                         try { oldValue = di.GetAttribute(info.Name); } catch /* swallow(probe-optional): Optional attribute readback must not interrupt the per-attribute settings report. */ { }
-                        var typedValue = HardwareCoerceAttributeValue(value, oldValue, info);
+                        if (!HardwareTryCoerceAttributeValue(value, oldValue, info, out var typedValue, out var typeProblem))
+                        {
+                            rejected.Add(new Dictionary<string, object?> { ["attribute"] = info.Name, ["reason"] = typeProblem });
+                            continue;
+                        }
                         writeIssued = true; meta["mayHaveChanged"] = true;
                         di.SetAttribute(info.Name, typedValue);
                         object? newValue = null;
@@ -928,7 +688,7 @@ namespace TiaMcp.Adapters
                             ["oldValue"] = oldValue?.ToString() ?? string.Empty,
                             ["newValue"] = newValue?.ToString() ?? string.Empty,
                             ["readbackComplete"] = readbackComplete,
-                            ["dataType"] = HardwareTryProperty(info, "DataType", "Type")?.ToString() ?? string.Empty
+                            ["dataType"] = HardwareAttributeTypes(info)
                         });
                     }
                     catch (Exception ex) /* swallow(probe-optional): Preserve the original optional catalog/module observation; the caller retains its existing fallback and readback. */
@@ -1065,66 +825,17 @@ namespace TiaMcp.Adapters
             var result = HardwareLegacyAddGsdDeviceWithProbe(keyword, deviceName, preferredDap);
             return new Dictionary<string, object?> { ["Device"] = result.Device == null ? null : new Dictionary<string, object?> { ["Name"] = result.Device.Name }, ["Candidate"] = result.Candidate, ["Candidates"] = result.Candidates, ["Attempts"] = result.Attempts, ["Error"] = result.Error };
         }
+        // ListDevices: root devices, nested user groups and the ungrouped system group (one shared walk).
         public List<Device> HardwareReadDevicesRaw(string regexName = "")
         {
-
-
-            if (HardwareProjectMissing())
-            {
-                return [];
-            }
-
-            var list = new List<Device>();
-
-            if (project?.Devices != null)
-            {
-                foreach (Device device in project.Devices)
-                {
-                    list.Add(device);
-                }
-
-                foreach (var group in project.DeviceGroups)
-                {
-                    GetDevicesRecursive(group, list, regexName);
-                }
-
-            }
-
-            return list;
+            if (HardwareProjectMissing()) return [];
+            return EnumerateAllDevices().Where(device => HardwareNameMatches(device.Name, regexName)).ToList();
         }
-        private bool GetDevicesRecursive(DeviceUserGroup group, List<Device> list, string regexName = "")
+        private static bool HardwareNameMatches(string name, string regexName)
         {
-            var anySuccess = false;
-
-            foreach (var composition in group.Devices)
-            {
-                if (composition is Device device)
-                {
-                    try
-                    {
-                        if (!string.IsNullOrEmpty(regexName) && !Regex.IsMatch(device.Name, regexName, RegexOptions.IgnoreCase))
-                        {
-                            continue; // Skip this device if it doesn't match the pattern
-                        }
-                    }
-                    catch (Exception) /* swallow(parse-fallback): an invalid regex or unreadable device name skips this candidate */
-                    {
-                        // Invalid regex pattern, skip this device
-                        continue;
-                    }
-
-                    list.Add(device);
-
-                    anySuccess = true;
-                }
-            }
-
-            foreach (var subgroup in group.Groups)
-            {
-                anySuccess = GetDevicesRecursive(subgroup, list, regexName);
-            }
-
-            return anySuccess;
+            if (string.IsNullOrEmpty(regexName)) return true;
+            try { return Regex.IsMatch(name, regexName, RegexOptions.IgnoreCase); }
+            catch (ArgumentException) /* swallow(parse-fallback): an invalid regex filter matches no device */ { return false; }
         }
         public List<HardwareDeviceDescription> HardwareDescribeDevices(string regexName = "")
             => HardwareReadDevicesRaw(regexName).Select(HardwareDescribeDevice).ToList();
@@ -1164,31 +875,61 @@ namespace TiaMcp.Adapters
                 if (item != null) yield return item;
             }
         }
-        private static object HardwareCoerceAttributeValue(string value, object? oldValue, object attributeInfo)
+        // EngineeringAttributeInfo documents Name, AccessMode and CreateRelevance (all releases) and SupportedTypes (V18+).
+        private static bool HardwareAttributeWritable(EngineeringAttributeInfo info)
+            => info.AccessMode == EngineeringAttributeAccessMode.Write || info.AccessMode == EngineeringAttributeAccessMode.ReadWrite;
+
+        private static IEnumerable<Type> HardwareSupportedTypes(EngineeringAttributeInfo info)
         {
-            if (oldValue != null)
+#if PLC_ATTRIBUTE_SUPPORTED_TYPES
+            return info.SupportedTypes?.Where(t => t != null) ?? Enumerable.Empty<Type>();
+#else
+            return Enumerable.Empty<Type>();
+#endif
+        }
+
+        private static string HardwareAttributeTypes(EngineeringAttributeInfo info)
+            => string.Join("|", HardwareSupportedTypes(info).Select(t => t.FullName ?? t.Name));
+
+        // The type comes from the current value, then from SupportedTypes (V18+). An attribute whose type cannot be read is
+        // refused instead of being written as a string.
+        private static bool HardwareTryCoerceAttributeValue(string value, object? oldValue, EngineeringAttributeInfo info, out object typed, out string problem)
+        {
+            var candidates = (oldValue != null ? new[] { oldValue.GetType() } : Array.Empty<Type>()).Concat(HardwareSupportedTypes(info)).Distinct().ToList();
+            foreach (var type in candidates)
+                if (HardwareTryConvert(value, type, out typed)) { problem = ""; return true; }
+            typed = value;
+#if PLC_ATTRIBUTE_SUPPORTED_TYPES
+            const string missing = " and no SupportedTypes).";
+#else
+            const string missing = "; SupportedTypes needs V18).";
+#endif
+            problem = candidates.Count == 0
+                ? "The type of attribute '" + info.Name + "' cannot be read (no current value" + missing
+                : "'" + value + "' cannot be converted to " + string.Join(" or ", candidates.Select(t => t.Name)) + " for attribute '" + info.Name + "'.";
+            return false;
+        }
+
+        private static bool HardwareTryConvert(string value, Type type, out object typed)
+        {
+            var culture = System.Globalization.CultureInfo.InvariantCulture;
+            var text = value ?? string.Empty;
+            typed = text;
+            try
             {
-                var oldType = oldValue.GetType();
-                if (oldType == typeof(string)) return value;
-                if (oldType == typeof(bool)) return bool.Parse(value);
-                if (oldType == typeof(int)) return int.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
-                if (oldType == typeof(uint)) return uint.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
-                if (oldType == typeof(short)) return short.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
-                if (oldType == typeof(ushort)) return ushort.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
-                if (oldType == typeof(long)) return long.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
-                if (oldType == typeof(ulong)) return ulong.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
-                if (oldType == typeof(float)) return float.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
-                if (oldType == typeof(double)) return double.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
-                if (oldType.IsEnum) return Enum.Parse(oldType, value, ignoreCase: true);
+                if (type == typeof(string)) return true;
+                if (type.IsEnum) { typed = Enum.Parse(type, text, ignoreCase: true); return Enum.IsDefined(type, typed) || text.IndexOf(',') >= 0; }
+                if (type == typeof(bool)) { if (!bool.TryParse(text, out var b)) return false; typed = b; return true; }
+                if (type == typeof(int) || type == typeof(uint) || type == typeof(short) || type == typeof(ushort) || type == typeof(long) || type == typeof(ulong)
+                    || type == typeof(byte) || type == typeof(sbyte) || type == typeof(float) || type == typeof(double) || type == typeof(decimal))
+                { typed = Convert.ChangeType(text, type, culture); return true; }
             }
-
-            var dataType = HardwareTryProperty(attributeInfo, "DataType", "Type")?.ToString() ?? string.Empty;
-            if (dataType.IndexOf("Boolean", StringComparison.OrdinalIgnoreCase) >= 0 || dataType.Equals("Bool", StringComparison.OrdinalIgnoreCase)) return bool.Parse(value);
-            if (dataType.IndexOf("Int32", StringComparison.OrdinalIgnoreCase) >= 0 || dataType.Equals("Int", StringComparison.OrdinalIgnoreCase)) return int.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
-            if (dataType.IndexOf("UInt32", StringComparison.OrdinalIgnoreCase) >= 0 || dataType.Equals("UInt", StringComparison.OrdinalIgnoreCase)) return uint.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
-            if (dataType.IndexOf("Double", StringComparison.OrdinalIgnoreCase) >= 0 || dataType.Equals("Real", StringComparison.OrdinalIgnoreCase)) return double.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
-
-            return value;
+            catch (Exception error) when (error is FormatException || error is OverflowException || error is ArgumentException || error is InvalidCastException)
+            {
+                typed = error.Message;
+                return false;
+            }
+            return false;
         }
         public string HardwareReadItemTree(string deviceItemPath, int maxDepth = 4)
         {
@@ -1294,9 +1035,9 @@ namespace TiaMcp.Adapters
         {
             if (project == null) yield break;
             int count = 0;
-            IEnumerable<SoftwareContainer> Items(IEnumerable<DeviceItem> items)
+            foreach (var device in EnumerateAllDevices())
             {
-                var pending = new Stack<DeviceItem>(items);
+                var pending = new Stack<DeviceItem>(device.DeviceItems);
                 while (pending.Count > 0)
                 {
                     if (++count > 100000) throw new HardwareAddressingException("OpennessError",
@@ -1306,21 +1047,6 @@ namespace TiaMcp.Adapters
                     if (HardwareSoftwareLookupValue(sc) != null) yield return sc!;
                     foreach (var child in item.DeviceItems) pending.Push(child);
                 }
-            }
-            IEnumerable<SoftwareContainer> Devices(DeviceComposition devices)
-            {
-                foreach (var device in devices)
-                    foreach (var sc in Items(device.DeviceItems)) yield return sc;
-            }
-            foreach (var sc in Devices(project.Devices)) yield return sc;
-            var groups = new Stack<DeviceUserGroup>(project.DeviceGroups);
-            while (groups.Count > 0)
-            {
-                if (++count > 100000) throw new HardwareAddressingException("OpennessError",
-                    "Exact software enumeration limit reached; no target selected.");
-                var group = groups.Pop();
-                foreach (var sc in Devices(group.Devices)) yield return sc;
-                foreach (var child in group.Groups) groups.Push(child);
             }
         }
         private static Software? HardwareSoftwareLookupValue(SoftwareContainer? container)

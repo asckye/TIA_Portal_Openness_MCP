@@ -16,6 +16,10 @@ namespace TiaMcp.Adapters
             => HardwareGroupOperations.Find(project!.Subnets, HardwareNetworkPolicy.RequireExactName(subnetName, "subnetName")) as Subnet
                ?? throw new HardwareAddressingException("NotFound", "Subnet not found: " + subnetName);
 
+        // Every IO system of the project (Project.Subnets / Subnet.IoSystems).
+        private IEnumerable<IoSystem> HardwareProjectIoSystems()
+            => HardwareGroupOperations.Items(project!.Subnets).Cast<Subnet>().SelectMany(s => HardwareGroupOperations.Items(s.IoSystems).Cast<IoSystem>());
+
         private NetworkInterface HardwareRequireNetworkInterface(HardwareObject item, string parameter)
             => HardwareServiceProvider(item).GetService<NetworkInterface>() ?? throw new InvalidOperationException(parameter + " must identify a DeviceItem that exposes NetworkInterface.");
 
@@ -101,11 +105,12 @@ namespace TiaMcp.Adapters
         private Dictionary<string, object?> HardwareMulticastRow(MulticastableTransferArea area) => new Dictionary<string, object?>
         {
             ["kind"] = "multicast", ["name"] = area.Name, ["type"] = area.Type.ToString(), ["direction"] = area.Direction.ToString(), ["comment"] = area.Comment,
-#if PLC_HARDWARE_MRP_INSTANCES
+#if PLC_HARDWARE_TRANSFER_MULTICAST_V19
             ["dataLength"] = area.DataLength,
             ["addresses"] = new List<object?>(HardwareGroupOperations.Items(area.Addresses).Cast<Address>().Select(a => (object)AddressRow(a)).ToArray()),
 #else
-            ["dataLength"] = null, ["addresses"] = Array.Empty<object>(),
+            // V18 exposes the single MulticastableTransferArea.Address; DataLength and Addresses arrive in V19.
+            ["dataLength"] = null, ["addresses"] = area.Address == null ? new List<object?>() : new List<object?> { AddressRow(area.Address) },
 #endif
             ["partnerTransferAreas"] = new List<object?>(HardwareGroupOperations.Items(area.PartnerTransferAreas).Cast<MulticastableTransferArea>()
                 .Select(p => (object)new Dictionary<string, object?> { ["name"] = p.Name, ["ownerPath"] = HardwareOwnerPath(p) }).ToArray()),
@@ -209,14 +214,23 @@ namespace TiaMcp.Adapters
                 if (action == "create")
                 {
                     if (system != null) throw new InvalidOperationException("IoController already owns IO system '" + system.Name + "'.");
-                    if (!HardwareGroupOperations.Items(network.Nodes).Cast<Node>().Any(n => n.ConnectedSubnet != null)) throw new InvalidOperationException("Interface must be connected to a subnet before an IO system can be created.");
-                    meta["requestedName"] = name;
+                    var subnet = HardwareGroupOperations.Items(network.Nodes).Cast<Node>().Select(n => n.ConnectedSubnet).FirstOrDefault(s => s != null)
+                        ?? throw new InvalidOperationException("Interface must be connected to a subnet before an IO system can be created.");
+                    meta["requestedName"] = name; meta["subnetName"] = subnet.Name;
+                    // CreateIoSystem with a name already in use attaches to that IO system without saying so; refuse it.
+                    var clash = HardwareProjectIoSystems().FirstOrDefault(s => string.Equals(s.Name, name, StringComparison.OrdinalIgnoreCase));
+                    if (!string.IsNullOrEmpty(name) && clash != null)
+                        throw new InvalidOperationException("An IO system named '" + clash.Name + "' already exists (subnet '" + clash.Subnet?.Name + "'); choose a new name. Nothing was created.");
+                    int before = HardwareGroupOperations.Items(subnet.IoSystems).Count(); meta["subnetIoSystemCountBefore"] = before;
                     if (dryRun) return "IO system create preview; nothing changed.";
                     meta["mayHaveChanged"] = true;
                     system = controller.CreateIoSystem(string.IsNullOrEmpty(name) ? string.Empty : name);
                     meta["after"] = HardwareIoSystemRow(system);
-                    if (controller.IoSystem == null) throw new InvalidOperationException("CreateIoSystem returned but IoController.IoSystem is still null.");
-                    return "IO system created and read back (empty name = TIA default). No save/compile/download.";
+                    int after = HardwareGroupOperations.Items(subnet.IoSystems).Count(); meta["subnetIoSystemCountAfter"] = after;
+                    if (controller.IoSystem == null || !object.Equals(controller.IoSystem, system)) throw new InvalidOperationException("CreateIoSystem returned but IoController.IoSystem is not the returned IO system.");
+                    if (!object.Equals(system.Subnet, subnet) || after != before + 1 || !string.IsNullOrEmpty(name) && !string.Equals(system.Name, name, StringComparison.Ordinal))
+                        throw new InvalidOperationException("CreateIoSystem returned an IO system that is not a new one named as requested on the interface's subnet; do not blindly retry.");
+                    return "IO system created and read back as a new IO system on the interface's subnet (empty name = TIA default). No save/compile/download.";
                 }
                 if (system == null) throw new InvalidOperationException("IoController has no IO system.");
                 meta["before"] = HardwareIoSystemRow(system);
@@ -377,7 +391,7 @@ namespace TiaMcp.Adapters
                 meta["kind"] = kind; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["interfaceOwnerPath"] = HardwareOwnerPath(network);
                 if (kind == "multicast")
                 {
-#if PLC_HARDWARE_MRP_INSTANCES
+#if PLC_HARDWARE_TRANSFER_MULTICAST_V19
                     Func<object> fresh = () => network.MulticastableTransferAreas;
                     var composition = network.MulticastableTransferAreas; var all = HardwareGroupOperations.Items(composition).Cast<MulticastableTransferArea>().ToArray();
                     meta["countBefore"] = all.Length;
@@ -422,7 +436,7 @@ namespace TiaMcp.Adapters
                     meta["after"] = HardwareMulticastRow(target);
                     return "Multicast transfer area written and read back. No save/compile/download.";
 #else
-                    throw new NotSupportedException("Multicast transfer area mutations require V20.");
+                    throw new NotSupportedException("Multicast transfer area mutations require V19 (MulticastableTransferAreaComposition.Create and MulticastableTransferArea.Delete).");
 #endif
                 }
                 Func<object> freshAreas = () => network.TransferAreas;

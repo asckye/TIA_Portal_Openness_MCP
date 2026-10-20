@@ -105,18 +105,15 @@ namespace TiaMcp.Adapters.Native.Plc
                     catch { /* swallow(enumerate-optional): Continue with readable device items. */ }
                 }
             }
-            void WalkDevices(Siemens.Engineering.HW.DeviceComposition? devices)
+            // Root devices, nested user groups and UngroupedDevicesGroup; an unreadable composition is skipped.
+            try
             {
-                if (devices == null) return;
-                foreach (var device in devices) { try { Collect(device.DeviceItems); } catch { /* swallow(enumerate-optional): Continue with sibling devices. */ } }
+                foreach (var located in TiaMcp.Adapters.Native.Hardware.ProjectDeviceWalk.Walk(project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, _ => { }))
+                {
+                    try { Collect(located.Device.DeviceItems); } catch { /* swallow(enumerate-optional): Continue with sibling devices. */ }
+                }
             }
-            void WalkGroups(Siemens.Engineering.HW.DeviceUserGroupComposition? groups)
-            {
-                if (groups == null) return;
-                foreach (var group in groups) { try { WalkDevices(group.Devices); WalkGroups(group.Groups); } catch { /* swallow(enumerate-optional): Continue with sibling groups. */ } }
-            }
-            try { WalkDevices(project.Devices); } catch { /* swallow(enumerate-optional): Still inspect grouped devices. */ }
-            try { WalkGroups(project.DeviceGroups); } catch { /* swallow(enumerate-optional): Retain PLCs already discovered. */ }
+            catch { /* swallow(enumerate-optional): Retain PLCs already discovered. */ }
             return result;
         }
         internal PlcB5Reply LegacyDocuments()

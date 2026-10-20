@@ -323,10 +323,13 @@ Used by `tia gen` (build from zero) and `tia patch` (upsert into existing).
   projectPath     string  patch: required. Path to the .apXX to open.
   directoryPath   string  gen: output folder (default data/temp; per-user temp fallback).
   plcName         string  default PLC_1.
-  plcFamily       string  default S7-1500.
-  plcMlfb         string  exact order number (optional).
+  plcFamily       string  label only; no device is chosen from it.
+  plcMlfb         string  gen: required. Exact order number or full TypeIdentifier.
+  plcVersion      string  exact catalog version; empty with a full TypeIdentifier.
   hmiName         string  omit to skip all HMI.
-  hmiFamily       string  default WinCCUnifiedPC.
+  hmiFamily       string  label only; no device is chosen from it.
+  hmiMlfb         string  gen: required with hmiName; same rules as plcMlfb.
+  hmiVersion      string  same rules as plcVersion.
   hmiSoftwarePath string  blank = auto-probe.
   connectionName  string  default HMI_Connection_1.
   udt[]           objects same shape as BuildPlcUdt / BuildAndImportPlcArtifact.

@@ -20,6 +20,7 @@ internal sealed class ScaffoldWorkerFake
     internal JsonArray Processes { get; } = new();
     internal List<(string Operation, JsonObject Arguments)> Calls { get; } = new();
     internal List<string> Primitives { get; } = new();
+    internal List<string> DeviceRequests { get; } = new();
     internal WorkerProjectScaffold Worker { get; }
     internal int CompilerErrors { get; set; }
 
@@ -57,7 +58,9 @@ internal sealed class ScaffoldWorkerFake
             case "ImportPlcExternalSource":
             case "GenerateBlocksFromExternalSource": return new JsonObject { ["PlanHash"] = "fixture-plan",
                 ["Executed"] = (bool?)args["dryRun"] == false && !SourceExecutionFailed, ["Error"] = "fixture source failure" };
-            case "hardware-devices.HardwareCreateDeviceFallback": return new JsonObject {
+            case "hardware-devices.HardwareCreateDeviceFallback":
+                DeviceRequests.Add((string?)args["preferredMlfb"] + "|" + (string?)args["preferredVersion"] + "|" + (string?)args["deviceName"] + "|" + (string?)args["family"]);
+                return new JsonObject {
                 ["Device"] = FailedProbe ? null : new JsonObject { ["Name"] = args["deviceName"]!.DeepClone() },
                 ["MlfbUsed"] = "fixture-mlfb", ["VersionUsed"] = "V1", ["Attempts"] = new JsonArray("first", "second"), ["Error"] = "fixture probe failure" };
             case "plc-documents.ExecutePlcB5": return new JsonObject { ["Value"] = true, ["ImportedNames"] = new JsonArray("Main") };

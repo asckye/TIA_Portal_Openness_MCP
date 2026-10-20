@@ -61,7 +61,7 @@ If the intended process is not connected, use ListPortalProcessProjects and the 
         [McpServerPrompt(Name = "AddProfinetDevice"), Description("Add a selected hardware device and connect it to PROFINET")]
         public static string AddProfinetDevice(string keyword, string deviceName, string existingPlcRoot)
         {
-            return WithV4Rules($@"Find the requested catalog item for {keyword}. Call SearchHardwareCatalog and select the exact catalog result with the user. Retrieve GetToolUsage for CreateHardwareCatalogDevice and pass keyword and deviceName as strings; do not invent catalog versions. Call GetProjectTree, then ConnectDeviceNodesToProfinetSubnet with firstRootPath={existingPlcRoot} and the exact new-device root path. Saving is a separate user-requested action.");
+            return WithV4Rules($@"Find the requested catalog item for {keyword}. Call SearchHardwareCatalog and select the exact catalog result with the user. Retrieve GetToolUsage for CreateHardwareCatalogDevice and pass the selected row's exact TypeIdentifier as keyword and deviceName as strings; other keyword text is refused with the ranked candidates. Do not invent catalog versions. Call GetProjectTree, then ConnectDeviceNodesToProfinetSubnet with firstRootPath={existingPlcRoot} and the exact new-device root path. Saving is a separate user-requested action.");
         }
 
         [McpServerPrompt(Name = "GetSoftwareTree"), Description("Get a PLC or HMI software tree")]

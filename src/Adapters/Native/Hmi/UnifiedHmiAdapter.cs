@@ -2279,14 +2279,17 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             try
             {
-                if (_session.CurrentProject?.Devices == null) return string.Empty;
+                var project = _session.CurrentProject;
+                if (project?.Devices == null) return string.Empty;
                 var head = (plcSoftwarePath ?? string.Empty).Trim()
                     .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)
                     .FirstOrDefault() ?? string.Empty;
                 if (string.IsNullOrWhiteSpace(head)) return string.Empty;
 
-                foreach (var device in _session.CurrentProject.Devices)
+                // Root devices, nested user groups and UngroupedDevicesGroup; an unreadable composition is skipped.
+                foreach (var located in TiaMcp.Adapters.Native.Hardware.ProjectDeviceWalk.Walk(project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, _ => { }))
                 {
+                    var device = located.Device;
                     if (!device.Name.Equals(head, StringComparison.OrdinalIgnoreCase)) continue;
                     var stack = new Stack<DeviceItem>(device.DeviceItems ?? Enumerable.Empty<DeviceItem>());
                     while (stack.Count > 0)

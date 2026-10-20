@@ -99,6 +99,9 @@ namespace TiaMcpServer.ModelContextProtocol
             "software object is mappable as one unit it is mapped whole and its children are not visited, so you " +
             "get the fewest mappings that still cover everything. Objects VCI does not support (typically hardware " +
             "configuration) are reported, never silently dropped. " +
+            "Devices of Project.UngroupedDevicesGroup are walked under the fixed workspace folder 'UngroupedDevices' (the group's own " +
+            "name is localized); a root-level device or device group that already uses that folder name is refused before anything is " +
+            "mapped, and an ungrouped device that VCI refuses is reported as a failure. " +
             "DEFAULTS TO dryRun=true: the default call only reports what it WOULD map. " +
             "After a real run call SynchronizeVersionControlWorkspace(ProjectToWorkspace, dryRun=false), then git commit. Current native policy; V4 native acceptance is pending." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ConnectProjectToWorkspaceV4(

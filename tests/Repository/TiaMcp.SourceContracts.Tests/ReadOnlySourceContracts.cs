@@ -139,6 +139,143 @@ public sealed class ReadOnlySourceContracts
     }
 
     [Fact]
+    public void DeviceWalksShareOneEnumerationIncludingTheUngroupedDevicesGroup()
+    {
+        // devices-and-hardware skill: devices sit in Project.Devices, the nested DeviceGroups and UngroupedDevicesGroup.Devices.
+        var walk = Read("src/Adapters/Native/Hardware/ProjectDeviceWalk.cs");
+        Contains(walk, "internal static IEnumerable<Located> Walk(IEnumerable<Device>? root, IEnumerable<DeviceUserGroup>? groups, DeviceGroup? ungrouped,",
+            "Group(group, Name(group, onError), 0, onError)", "Devices(ungrouped, onError)", "new Located(device, ungroupedName, true)",
+            "internal const string UngroupedSegment = \"$ungrouped\";", "root.Concat(ungroupedDevices)");
+        // One source file, linked into every assembly that walks devices: adapter (all eight), Studio (all eight), engine V20/V21.
+        Contains(Read("src/Adapters/build/Adapter.Sources.props"), "Adapters/Native/Hardware/ProjectDeviceWalk.cs");
+        Contains(Read("src/Studio/Openness/Studio.Common.props"), "Adapters/Native/Hardware/ProjectDeviceWalk.cs");
+        foreach (var engineProject in new[] { "src/Engine/TiaMcp.Engine.V20.csproj", "src/Engine/TiaMcp.Engine.V21.csproj" })
+            Contains(Read(engineProject), "../Adapters/Native/Hardware/ProjectDeviceWalk.cs");
+        const string Uses = "ProjectDeviceWalk.";
+        var location = Read("src/Adapters/Native/Hardware/HardwareObjectLocation.cs");
+        Contains(location, "ProjectDeviceWalk.FindDevice(project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, devicePath)",
+            "ProjectDeviceWalk.Devices(project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup)",
+            "ProjectDeviceWalk.FindItem(project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, deviceItemPath)");
+        Excludes(location, "EnumerateGroupDevices", "GetDeviceItemFromDevice");
+        var devices = Read("src/Adapters/Native/Hardware/HardwareDevices.cs");
+        Contains(EngineSources.BlockAfter(devices, "public List<Device> HardwareReadDevicesRaw(string regexName = \"\")"), "EnumerateAllDevices()");
+        Contains(EngineSources.BlockAfter(devices, "private IEnumerable<SoftwareContainer> HardwareEnumerateSoftwareContainers()"), "EnumerateAllDevices()");
+        var network = Read("src/Adapters/Native/Hardware/HardwareNetworkLegacy.cs");
+        Contains(EngineSources.BlockAfter(network, "public Dictionary<string, object?> HardwareGetProjectTopology()"), "ProjectDeviceWalk.Walk(project!.Devices, project.DeviceGroups, project.UngroupedDevicesGroup)");
+        Contains(EngineSources.BlockAfter(network, "private List<string> HardwareBuildSubnetReadbackLines(string subnetName)"), "EnumerateAllDevices()");
+        Excludes(network, "foreach (var device in project.Devices)", "foreach (Device device in project!.Devices)", "Devices placed inside device groups are not enumerated here");
+        Contains(Read("src/Adapters/Native/Hardware/HardwareAddressingSteps.cs"), "ProjectDeviceWalk.UngroupedSegment", "EnumerateAllDevices().ToArray()");
+        Contains(Read("src/Adapters/Native/Hardware/HardwareAml.cs"), "meta[\"deviceCountBefore\"] = EnumerateAllDevices().Count();");
+        Contains(Read("src/Adapters/Native/Session/ProjectAutomationContext.cs"), Uses + "Walk(project!.Devices, project.DeviceGroups, project.UngroupedDevicesGroup)");
+        var services = Read("src/Adapters/Native/Engineering/EngineeringServices.cs");
+        Contains(services, Uses + "Devices(project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup)", Uses + "UngroupedSegment");
+        Excludes(services, "EnumerateGroupDevices(");
+        var navigator = Read("src/Adapters/Native/Studio/PlcNavigator.cs");
+        Contains(navigator, Uses + "Walk(project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, _ => { })");
+        Excludes(navigator, "project.Devices.SafeEnumerate()");
+        var engine = Read("src/Engine/Siemens/Portal/Portal.Helpers.cs");
+        Contains(engine, Uses + "FindDevice(_project.Devices, _project.DeviceGroups, _project.UngroupedDevicesGroup, devicePath)",
+            Uses + "Devices(_project.Devices, _project.DeviceGroups, _project.UngroupedDevicesGroup)",
+            Uses + "FindItem(_project.Devices, _project.DeviceGroups, _project.UngroupedDevicesGroup, deviceItemPath)");
+        Contains(Read("src/Engine/Siemens/Portal/Portal.SessionResolvers.cs"), Uses + "UngroupedSegment");
+    }
+
+    [Fact]
+    public void DocumentExchangeFindsPlcsInGroupedAndUngroupedDevices()
+    {
+        // The document export/import PLC discovery walked the root devices and user groups only.
+        var discovery = EngineSources.BlockAfter(Read("src/Adapters/Native/Plc/PlcB5DocumentExchange.cs"), "private List<PlcSoftware> AllDocumentPlcs()");
+        Contains(discovery, "ProjectDeviceWalk.Walk(project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, _ => { })",
+            "Collect(located.Device.DeviceItems)");
+        Excludes(discovery, "WalkDevices(", "WalkGroups(", "foreach (var device in devices)");
+    }
+
+    [Fact]
+    public void UnifiedHmiPlcFamilyFallbackFindsGroupedAndUngroupedDevices()
+    {
+        // The PLC-family fallback looked up the PLC device among the root devices only.
+        var fallback = EngineSources.BlockAfter(Read("src/Adapters/Native/Hmi/UnifiedHmiAdapter.cs"), "private string TryInferPlcFamilyFromProjectDevices(string plcSoftwarePath)");
+        Contains(fallback, "ProjectDeviceWalk.Walk(project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, _ => { })",
+            "var device = located.Device;");
+        Excludes(fallback, "_session.CurrentProject.Devices", "foreach (var device in");
+    }
+
+    [Fact]
+    public void EnginePlcDiscoveryFindsGroupedAndUngroupedDevices()
+    {
+        // V20/V21 engine (the default there until P8-04j2): GetAllPlcSoftware walked the root devices and user groups only.
+        var discovery = EngineSources.BlockAfter(Read("src/Engine/Siemens/Portal/Portal.Software.cs"), "public List<PlcSoftware> GetAllPlcSoftware()");
+        Contains(discovery, "ProjectDeviceWalk.Walk(_project.Devices, _project.DeviceGroups, _project.UngroupedDevicesGroup, _ => { })",
+            "Collect(located.Device.DeviceItems)");
+        Excludes(discovery, "WalkDevices(", "WalkGroups(");
+    }
+
+    [Fact]
+    public void EngineExactSoftwareLookupFindsGroupedAndUngroupedDevices()
+    {
+        // The exact container enumeration and the direct lookup's first level missed UngroupedDevicesGroup.
+        var source = Read("src/Engine/Siemens/Portal/Portal.SoftwareLookup.cs");
+        var enumeration = EngineSources.BlockAfter(source, "private IEnumerable<SoftwareContainer> EnumerateSoftwareContainersForExactLookup()");
+        Contains(enumeration, "foreach (var device in EnumerateAllDevices())", "if (++count > 100000)", "foreach (var sc in Items(device.DeviceItems)) yield return sc;");
+        Excludes(enumeration, "new Stack<DeviceUserGroup>(_project.DeviceGroups)", "Devices(_project.Devices)");
+        var lookup = EngineSources.BlockAfter(source, "private SoftwareContainer? ResolveSoftwareLookup(string name, bool plcOnly)");
+        Contains(lookup, "var ungrouped = _project.UngroupedDevicesGroup;",
+            ".Concat(ungrouped == null ? Enumerable.Empty<object>() : ungrouped.Devices.Cast<object>())", "EnumerateSoftwareContainersForExactLookup()");
+    }
+
+    [Fact]
+    public void VciWorkspaceWalkPutsUngroupedDevicesUnderTheFixedFolder()
+    {
+        // Decided 2026-10-19: UngroupedDevicesGroup devices under 'UngroupedDevices'; a root device or group owning that folder is
+        // refused (PRECONDITION_FAILED); a native VCI refusal of an ungrouped device is a failure and is never walked past.
+        var adapter = Read("src/Adapters/Native/Vci/VersionControlAdapter.cs");
+        var children = EngineSources.BlockAfter(adapter, "private static List<VcNode> TypedChildren(VcNode node)");
+        Contains(children, "var ungrouped = PortVci.UngroupedDevicesGroup(proj);", "if (owner != null) throw VciWorkspaceLayout.UngroupedFolderTaken(owner);",
+            "Label = node.Label + \"/\" + VciWorkspaceLayout.UngroupedFolder,", "Structural = true,", "case DeviceSystemGroup system:",
+            "UngroupedDevice = node.Structural && o is Device,", "UngroupedRoot = node.UngroupedDevice ? node : node.UngroupedRoot,");
+        var connect = EngineSources.BlockAfter(adapter, "public VersionControlResult ConnectProjectToWorkspace(");
+        Contains(connect, "if (!node.Structural)", "lines.Add(VciWorkspaceLayout.NativeRefusal(node.Label, Flatten(ex.Message)));",
+            "catch (Exception ex) when (!(ex is AdapterPreconditionException))", "lines.Add(VciWorkspaceLayout.NothingMappable(device.Label));");
+        Contains(adapter, ": error is AdapterPreconditionException ? \"PRECONDITION_FAILED\"");
+        Contains(Read("src/Adapters/Native/Vci/VersionControlFallback.cs"), "if (!node.Structural) targets.Add(",
+            "catch (AdapterPreconditionException error) { CandidatePrimitives.Fail(\"precondition\", \"vci-ungrouped-workspace-folder\", error.Message); }");
+        Contains(Read("src/Adapters/Native/Vci/LegacyVciPortPrimitives.cs"), "internal static DeviceSystemGroup UngroupedDevicesGroup(Project project) => project.UngroupedDevicesGroup;");
+        Contains(Read("src/Adapters/Native/Vci/VersionControlPrimitives.cs"), "public static DeviceSystemGroup UngroupedDevicesGroup(ProjectBase project) => project.UngroupedDevicesGroup;");
+        Contains(Read("src/Shared/VersionControlTools.cs"), "fixed workspace folder 'UngroupedDevices'");
+    }
+
+    [Fact]
+    public void DeviceCreationCreatesOnlyTheRequestedTypeOnce()
+    {
+        // Decided 2026-10-19: exactly the requested type identifier, version and name; no version stepping, model list or renaming.
+        var devices = Read("src/Adapters/Native/Hardware/HardwareDevices.cs");
+        Excludes(devices, "\"21.0.0.0\"", "\"V21.0.0.0\"", "\"Device_1\"", "\"Station_1\"", "\"6ES7516-3AN03-0AB0\"", "\"6AV2123-3GB32-0AW0\"",
+            "versionVariants", "orderVariants", "TryFormatMlfbWithSpaces", "MakeEngineeringName", "HardwareSearchHardwareCatalog(preferredMlfb");
+        Count(devices, "HardwarePrimitives.CreateWithItem(", 1);
+        var create = EngineSources.BlockAfter(devices, "private Device HardwareCreateExactDevice(string typeIdentifier, string deviceName, string parameter)");
+        Contains(create, "DeviceCreationRules.RequireFreeName(ProjectDeviceWalk.OccupiedNames(", "DeviceCreationRules.SameInventory(before, after)",
+            "throw DeviceCreationRules.TiaRefusal(typeIdentifier, deviceName, ShortExceptionMessage(error), HardwareCatalogCandidates(typeIdentifier), parameter, error);");
+        foreach (var entry in new[] { "HardwareLegacyAddHardwareCatalogDeviceWithProbe(string keyword, string deviceName, string preferredText = \"\")",
+            "HardwareLegacyAddGsdDeviceWithProbe(string keyword, string deviceName, string preferredDap = \"\")" })
+        {
+            var probe = EngineSources.BlockAfter(devices, entry);
+            Contains(probe, "DeviceCreationRules.ExactCandidate(candidates.Select(c => c.TypeIdentifier), keyword,", "HardwareCreateExactDevice(exact, deviceName, \"keyword\")");
+            Excludes(probe, "foreach (var candidate in candidates");
+        }
+        // Plugging resolves one documented identifier (ModuleInformationProvider.FindModuleTypes) instead of spelling/version variants.
+        var modules = Read("src/Adapters/Native/Hardware/HardwareModules.cs");
+        Contains(modules, "provider.FindModuleTypes(partial)", "var typeIdentifiers = new List<string> { resolved.TypeIdentifier };");
+        Excludes(modules, "BuildPlugTypeIdentifiers", "TryFormatMlfbWithSpaces");
+        // The scaffold passes the requested version and the HMI type; there is no empty family default create.
+        var scaffold = Read("src/Shared/ProjectLifecycleProjectTools.cs");
+        Contains(scaffold, "_service.AddDeviceWithFallback(plcMlfb, plcVersion, plcName, plcFamily)", "_service.AddDeviceWithFallback(hmiMlfb, hmiVersion, hmiName, hmiFamily)",
+            "DeviceCreationRules.SpecProblem(plcMlfb, plcVersion, \"plcMlfb\", \"plcVersion\")");
+        Excludes(scaffold, "AddDeviceWithFallback(\"\", \"\", hmiName, hmiFamily)", "AddDeviceWithFallback(plcMlfb, \"\", plcName, plcFamily)");
+        // Typed refusals from the worker stay typed preconditions for exactly the creation operations.
+        Contains(Read("src/FoundationHost/PortedToolContract.cs"), "catch (WorkerOperationException error) when (PortedToolContract.IsDeviceRefusal(operation, error))");
+    }
+
+    [Fact]
     public void SupplementaryReadsUseExplicitSourcesTypedAccessAndReadOnlyDispatch()
     {
         var files = XDocument.Parse(Read("src/Adapters/build/Adapter.Sources.props")).Descendants("AdapterSource").Select(n => Path.GetFullPath(Path.Combine(Root, "src", n.Attribute("Include")!.Value.Replace("$(AdapterSourceRoot)/", "", StringComparison.Ordinal)))).ToList();

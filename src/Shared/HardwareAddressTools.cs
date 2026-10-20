@@ -120,7 +120,9 @@ namespace TiaMcpServer.ModelContextProtocol
             + "startAddress is the ENGINE RAW byte offset, not '2.0'. It writes hardware configuration, so a wrong "
             + "value does NOT fail compilation — the program silently reads a different module. Read back with "
             + "GetDeviceItemIoAddresses, then CompilePlcSoftware and SaveProject. Overlapping address ranges are "
-            + "rejected by TIA and reported back with the reason.")]
+            + "rejected by TIA and reported back with the reason. Documented Address.StartAddress restrictions: changing one "
+            + "IO type can also move the other IO type of the same module, PLC tags are not rewired, and the PLC must be offline; "
+            + "the result lists every address row of the item before and after the write.")]
         public CallToolResult SetDeviceItemIoAddressV4(
             [Description("deviceItemPath: path in the project structure to the device item, e.g. 'PLC_1/DI 8x24VDC_1'")] string deviceItemPath,
             [Description("ioType: Input, Output, Diagnosis or Substitute")] string ioType,

@@ -20,6 +20,8 @@ namespace TiaMcp.Adapters.Contracts
                 return "System diagnostics settings require V17.";
             if ((name == "CreateHardwareCatalogDevice" || name == "HardwareCreateCatalogDevice" || name == "SearchHardwareCatalog" || name == "HardwareLegacySearchHardwareCatalog") && version < 18)
                 return "HardwareCatalog requires V18.";
+            if ((name == "CreateGsdDevice" || name == "HardwareCreateGsdDevice") && version < 18)
+                return "GSD device creation requires a HardwareCatalog TypeIdentifier (V18); the GSD:<file>/DAP/<id> identifier form is not verified for this release.";
             if (name == "ManageDeviceServiceObjects" || name == "HardwareManageDeviceServiceObjects")
             {
                 if (family == "webApplications" && version < 21) return "DefaultWebPagesFeature requires V21.";
@@ -31,8 +33,8 @@ namespace TiaMcp.Adapters.Contracts
                 return "CardReaderPscProvider requires V15.1.";
             if ((name == "ManageHardwareUtilities" || name == "HardwareManageHardwareUtilities") && action == "normalizeTypeIdentifier" && version < 17)
                 return "GetTypeIdentifierNormalized requires V17.";
-            if ((name == "ManageTransferArea" || name == "HardwareManageTransferArea") && family == "multicast" && version < 20)
-                return "Multicast transfer area mutations require V20.";
+            if ((name == "ManageTransferArea" || name == "HardwareManageTransferArea") && family == "multicast" && version < 19)
+                return "Multicast transfer area mutations require V19.";
             if ((name == "ListTransferAreas" || name == "ManageTransferArea" || name == "HardwareReadTransferAreas" || name == "HardwareManageTransferArea") && version < 16
                 && (extendedPositionNumber >= 0 || action == "create" && positionNumber >= 0))
                 return "Extended positions and explicit creation positions require V16.";

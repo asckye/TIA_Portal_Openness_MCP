@@ -104,6 +104,7 @@ namespace TiaOpenness.Openness
         public static object Attribute(IEngineeringObject target, string name) => target.GetAttribute(name);
         public static DeviceComposition Devices(ProjectBase project) => project.Devices;
         public static DeviceUserGroupComposition DeviceGroups(ProjectBase project) => project.DeviceGroups;
+        public static DeviceSystemGroup UngroupedDevicesGroup(ProjectBase project) => project.UngroupedDevicesGroup;
         public static DeviceComposition Devices(DeviceGroup group) => group.Devices;
         public static DeviceUserGroupComposition DeviceGroups(DeviceUserGroup group) => group.Groups;
         public static DeviceItemComposition DeviceItems(HardwareObject hardware) => hardware.DeviceItems;

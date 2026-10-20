@@ -67,6 +67,7 @@ internal static class LegacyVciPortPrimitives
     internal static object Attribute(IEngineeringObject target, string name) => target.GetAttribute(name);
     internal static DeviceComposition Devices(Project project) => project.Devices;
     internal static DeviceUserGroupComposition DeviceGroups(Project project) => project.DeviceGroups;
+    internal static DeviceSystemGroup UngroupedDevicesGroup(Project project) => project.UngroupedDevicesGroup;
     internal static DeviceComposition Devices(DeviceGroup group) => group.Devices;
     internal static DeviceUserGroupComposition DeviceGroups(DeviceUserGroup group) => group.Groups;
     internal static DeviceItemComposition DeviceItems(HardwareObject hardware) => hardware.DeviceItems;

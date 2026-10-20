@@ -104,7 +104,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, data, compileError, Outcome.Failed, Execution.Completed, Incomplete(evidence) ? Completeness.Partial : Completeness.Complete, current);
             }
 
-            // The topology explicitly excludes grouped devices; an empty root list
+            // The topology lists root, grouped and ungrouped devices; an empty list
             // is still an observed list, while an unbound project has no such list.
             if (tool == "GetProjectTopology" && data["devices"] is JsonArray) success = true;
             if (tool == "ConnectDeviceNodesToProfinetSubnet") success = null;
@@ -246,7 +246,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return _hardware.ReadIoSystems(subnetName,devicePathJson,itemPathJson,offset,limit);
             });
 
-        [McpServerTool(Name="ManageIoSystem"), Description("[L2][Hardware][WRITE] Official IO system actions on the exact interface device item: create (IoController.CreateIoSystem(name), interface must be on a subnet and own no IO system; empty name = TIA default), delete (IoSystem.Delete, needs confirmDelete), update (properties Name/Number + attributes dynamic attributes, each read back), connect (IoConnector.ConnectToIoSystem of the IO system named ioSystemName on subnetName; also DP master systems) and disconnect (IoConnector.DisconnectFromIoSystem). Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ManageIoSystem"), Description("[L2][Hardware][WRITE] Official IO system actions on the exact interface device item: create (IoController.CreateIoSystem(name), interface must be on a subnet and own no IO system; empty name = TIA default; a name already used by an IO system of the project is refused because CreateIoSystem would attach to it silently; verified as one new IO system on the interface's subnet), delete (IoSystem.Delete, needs confirmDelete), update (properties Name/Number + attributes dynamic attributes, each read back), connect (IoConnector.ConnectToIoSystem of the IO system named ioSystemName on subnetName; also DP master systems) and disconnect (IoConnector.DisconnectFromIoSystem). Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManageIoSystem(
             string[] devicePath,
             string[] itemPath,
@@ -463,7 +463,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return GetDeviceItemNetworkInfoCore(deviceItemPath);
             });
 
-        [McpServerTool(Name = "ConnectDeviceNodesToProfinetSubnet"), Description("[L1][Hardware] PREFERRED for PROFINET network setup. Finds the first IE/PROFINET node under two devices, creates/reuses a subnet on the first, connects the second, and returns readback evidence. Requires: ConnectPortal + OpenProject + both devices added. Typical: firstRootPath='PLC_1', secondRootPath='HMI_KTP700_1/HMI_KTP700_1.IE_CP_1'. Verified for S7-1200 + KTP700 Basic PN. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "ConnectDeviceNodesToProfinetSubnet"), Description("[L1][Hardware] PREFERRED for PROFINET network setup. Finds the first IE/PROFINET node under two devices and connects both to subnetName: an existing subnet of that name in Project.Subnets is joined explicitly, otherwise it is created on the first node (Node.CreateAndConnectToSubnet). A node already attached to another subnet is refused before any write; success is the Node.ConnectedSubnet read-back of both nodes, and the HMI connections are read from the HMI software under the second root. Requires: ConnectPortal + OpenProject + both devices added. Typical: firstRootPath='PLC_1', secondRootPath='HMI_KTP700_1/HMI_KTP700_1.IE_CP_1'. Verified for S7-1200 + KTP700 Basic PN. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ConnectDeviceNodesToProfinetSubnet(
             [Description("firstRootPath: first device/device-item root, usually PLC root, e.g. 'PLC_1'")] string firstRootPath,
             [Description("secondRootPath: second device/device-item root, e.g. 'HMI_KTP700_1/HMI_KTP700_1.IE_CP_1'")] string secondRootPath,
@@ -482,7 +482,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return PlanHardwareNetworkConfigurationCore(planJson);
             });
 
-        [McpServerTool(Name = "EnsureSubnet"), Description("[L2][Hardware] Ensure an Industrial Ethernet/PROFINET subnet by anchoring on a real deviceItemPath from GetProjectTree/GetDeviceItemTree. Applies only through TIA Openness, then returns readback evidence (node path, subnet name, interface path). Does not guess paths. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "EnsureSubnet"), Description("[L2][Hardware] Ensure an Industrial Ethernet/PROFINET subnet by anchoring on a real deviceItemPath from GetProjectTree/GetDeviceItemTree. An existing subnet of that name in Project.Subnets is reported without changes; otherwise the anchor's free IE node creates it (Node.CreateAndConnectToSubnet). An anchor node attached to another subnet is refused. Returns readback evidence (Project.Subnets, Node.ConnectedSubnet, node path, interface path). Does not guess paths. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult EnsureSubnet(
             [Description("anchorDeviceItemPath: real device/device-item path resolved from GetProjectTree/GetDeviceItemTree; used to create/reuse the subnet from its first PROFINET node.")] string anchorDeviceItemPath,
             [Description("subnetType: IndustrialEthernet/PROFINET/PN/IE only.")] string subnetType,
@@ -492,7 +492,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return EnsureSubnetCore(anchorDeviceItemPath, subnetType, subnetName);
             });
 
-        [McpServerTool(Name = "AttachDeviceNodeToSubnet"), Description("[L2][Hardware] Attach one real device network node to an existing PROFINET subnet and return readback evidence. deviceItemPath must come from GetProjectTree/GetDeviceItemTree, interfaceIndex selects a discovered Industrial Ethernet/PROFINET node, and online/force operations are never used. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "AttachDeviceNodeToSubnet"), Description("[L2][Hardware] Attach one real device network node to an existing PROFINET subnet (found in Project.Subnets) with Node.ConnectToSubnet and verify Node.ConnectedSubnet. A node already on that subnet is left unchanged; a node attached to another subnet is refused (no implicit disconnect). deviceItemPath must come from GetProjectTree/GetDeviceItemTree, interfaceIndex selects a discovered Industrial Ethernet/PROFINET node, and online/force operations are never used. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult AttachDeviceNodeToSubnet(
             [Description("deviceItemPath: real device/device-item path resolved from GetProjectTree/GetDeviceItemTree.")] string deviceItemPath,
             [Description("interfaceIndex: zero-based index among discovered Industrial Ethernet/PROFINET nodes under deviceItemPath.")] int interfaceIndex,
@@ -525,7 +525,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "GetProjectTopology"), Description(
             "[L1][Category:Hardware][PreCondition:ConnectPortal+OpenProject]" +
-            " One-shot, read-only project topology from Openness: every device with its network nodes (IP, subnet, node type)." +
+            " One-shot, read-only project topology from Openness: every device (root, device groups and ungrouped devices, with groupPath) with its network nodes (IP, subnet, node type)." +
             " Call this early to understand the project's devices and subnets at a glance, instead of probing S7 or parsing AML.")]
         public CallToolResult GetProjectTopology()
             => HardwareToolContract.Invoke("GetProjectTopology", true, false, () =>

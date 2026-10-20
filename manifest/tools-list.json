@@ -1,10 +1,10 @@
 {
   "package": "TIA_MCP_Delivery_v3.3.0_20261008",
-  "generatedAt": "2026-10-19T18:04:26.8661907+00:00",
+  "generatedAt": "2026-10-20T05:34:22.2574225+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "3.3.0.0",
   "exeSha256": "4606c257e73305a158d0773de88a267f48f11adc4eb7081afee2744a3529414d",
-  "workerSha256": "7cc19e6fa70d497b4ce4606c22872409e66411db94f20105aee4e115c3626a88",
+  "workerSha256": "460f6c114e83f6554539ee62a897816ab46119d859cc51d652eba6dee458f51b",
   "toolCount": 516,
   "note": "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -561,7 +561,7 @@
         "properties",
         "attributes"
       ],
-      "description": "[L2][Hardware][WRITE] Official IO system actions on the exact interface device item: create (IoController.CreateIoSystem(name), interface must be on a subnet and own no IO system; empty name = TIA default), delete (IoSystem.Delete, needs confirmDelete), update (properties Name/Number + attributes dynamic attributes, each read back), connect (IoConnector.ConnectToIoSystem of the IO system named ioSystemName on subnetName; also DP master systems) and disconnect (IoConnector.DisconnectFromIoSystem). Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageIoSystem\"), optionally operation or language.",
+      "description": "[L2][Hardware][WRITE] Official IO system actions on the exact interface device item: create (IoController.CreateIoSystem(name), interface must be on a subnet and own no IO system; empty name = TIA default; a name already used by an IO system of the project is refused because CreateIoSystem would attach to it silently; verified as one new IO system on the interface's subnet), delete (IoSystem.Delete, needs confirmDelete), update (properties Name/Number + attributes dynamic attributes, each read back), connect (IoConnector.ConnectToIoSystem of the IO system named ioSystemName on subnetName; also DP master systems) and disconnect (IoConnector.DisconnectFromIoSystem). Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageIoSystem\"), optionally operation or language.",
       "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact device item from GetProjectTree\\u003E\"],\"action\":\"create\",\"name\":\"ExampleIO\",\"subnetName\":\"PN_IE_1\",\"confirmDelete\":false,\"dryRun\":true}"
     },
     {
@@ -2118,7 +2118,7 @@
       "parameters": [
         "includePlcSoftware"
       ],
-      "description": "[L1][Hardware][READ] List all hardware devices (PLCs, HMI panels, drives) in the project with their attributes. Requires: ConnectPortal + OpenProject. Prefer GetProjectTree for a visual overview; use this when you need the exact device Name and attribute values for subsequent operations like CreateDevice or SetDeviceItemAttribute. Examples: GetToolUsage(toolName: \"ListDevices\"), optionally operation or language.",
+      "description": "[L1][Hardware][READ] List all hardware devices (PLCs, HMI panels, drives) in the project with their attributes: project root, nested device groups and the ungrouped devices group (single-name device paths resolve in all three; [\"$ungrouped\", \"<device>\"] addresses the ungrouped group explicitly). Requires: ConnectPortal + OpenProject. Prefer GetProjectTree for a visual overview; use this when you need the exact device Name and attribute values for subsequent operations like CreateDevice or SetDeviceItemAttribute. Examples: GetToolUsage(toolName: \"ListDevices\"), optionally operation or language.",
       "example": "{}"
     },
     {
@@ -3999,7 +3999,7 @@
         "startAddress",
         "dryRun"
       ],
-      "description": "[L2][Hardware][WRITE] Preview or change the I/O START ADDRESS of one device item (e.g. move a DI module to start at %I2.0 by passing startAddress=2). Defaults to dryRun=true. startAddress is the ENGINE RAW byte offset, not '2.0'. It writes hardware configuration, so a wrong value does NOT fail compilation — the program silently reads a different module. Read back with GetDeviceItemIoAddresses, then CompilePlcSoftware and SaveProject. Overlapping address ranges are rejected by TIA and reported back with the reason. Examples: GetToolUsage(toolName: \"SetDeviceItemIoAddress\"), optionally operation or language.",
+      "description": "[L2][Hardware][WRITE] Preview or change the I/O START ADDRESS of one device item (e.g. move a DI module to start at %I2.0 by passing startAddress=2). Defaults to dryRun=true. startAddress is the ENGINE RAW byte offset, not '2.0'. It writes hardware configuration, so a wrong value does NOT fail compilation — the program silently reads a different module. Read back with GetDeviceItemIoAddresses, then CompilePlcSoftware and SaveProject. Overlapping address ranges are rejected by TIA and reported back with the reason. Documented Address.StartAddress restrictions: changing one IO type can also move the other IO type of the same module, PLC tags are not rewired, and the PLC must be offline; the result lists every address row of the item before and after the write. Examples: GetToolUsage(toolName: \"SetDeviceItemIoAddress\"), optionally operation or language.",
       "example": "{\"deviceItemPath\":\"PLC_1/CPU_1\",\"ioType\":\"Input\",\"startAddress\":1,\"dryRun\":true}"
     },
     {
@@ -5721,7 +5721,7 @@
         "deviceName",
         "preferredText"
       ],
-      "description": "[L2][Hardware][WRITE]Add a hardware device by searching the installed TIA hardware catalog, ranking insertable TypeIdentifier candidates, and inserting the best match. Use for Siemens devices/HMI panels when exact TypeIdentifier is unknown, e.g. KTP700 Basic PN. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"CreateHardwareCatalogDevice\"), optionally operation or language.",
+      "description": "[L2][Hardware][WRITE]Add one device from the installed TIA hardware catalog (V18+). keyword must be the exact TypeIdentifier of one catalog candidate (from SearchHardwareCatalog); that entry is created once with deviceName. Any other keyword is refused with the ranked candidates (preferredText only ranks them) so the caller chooses. One DeviceComposition.CreateWithItem call: no best-match guess, no next-candidate retry, no renaming. A TIA refusal is verified by the unchanged device inventory and lists the catalog candidates. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"CreateHardwareCatalogDevice\"), optionally operation or language.",
       "example": "{\"keyword\":\"1513\",\"deviceName\":\"PLC_2\"}"
     },
     {
@@ -6220,7 +6220,7 @@
         "subnetType",
         "subnetName"
       ],
-      "description": "[L2][Hardware][WRITE] Ensure an Industrial Ethernet/PROFINET subnet by anchoring on a real deviceItemPath from GetProjectTree/GetDeviceItemTree. Applies only through TIA Openness, then returns readback evidence (node path, subnet name, interface path). Does not guess paths. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"EnsureSubnet\"), optionally operation or language.",
+      "description": "[L2][Hardware][WRITE] Ensure an Industrial Ethernet/PROFINET subnet by anchoring on a real deviceItemPath from GetProjectTree/GetDeviceItemTree. An existing subnet of that name in Project.Subnets is reported without changes; otherwise the anchor's free IE node creates it (Node.CreateAndConnectToSubnet). An anchor node attached to another subnet is refused. Returns readback evidence (Project.Subnets, Node.ConnectedSubnet, node path, interface path). Does not guess paths. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"EnsureSubnet\"), optionally operation or language.",
       "example": "{\"anchorDeviceItemPath\":\"PLC_1/CPU_1\",\"subnetType\":\"System:Subnet.Ethernet\",\"subnetName\":\"PN_IE_1\"}"
     },
     {
@@ -6333,7 +6333,7 @@
         "deviceName",
         "preferredDap"
       ],
-      "description": "[L2][Hardware][WRITE]Add a third-party GSD/GSDML hardware device by first searching the installed TIA hardware catalog, ranking candidates, and inserting with the exact catalog TypeIdentifier. Does not fall back to unrelated Siemens devices. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"CreateGsdDevice\"), optionally operation or language.",
+      "description": "[L2][Hardware][WRITE]Add one third-party GSD/GSDML device from the installed TIA hardware catalog (V18+). keyword must be the exact catalog TypeIdentifier of one candidate (from SearchInstalledGsdDevices or SearchHardwareCatalog); that entry is created once with deviceName. Any other keyword is refused with the ranked candidates (preferredDap only ranks them); GSDML file rows without a catalog TypeIdentifier are never created. One DeviceComposition.CreateWithItem call: no next-candidate retry, no renaming. A TIA refusal is verified by the unchanged device inventory and lists the candidates. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"CreateGsdDevice\"), optionally operation or language.",
       "example": "{\"keyword\":\"1513\",\"deviceName\":\"PLC_2\"}"
     },
     {
@@ -6350,7 +6350,7 @@
         "version",
         "deviceName"
       ],
-      "description": "[L2][Hardware][WRITE] Add one hardware device using an exact MLFB/order number and version from the TIA hardware catalog. Requires: ConnectPortal + OpenProject. Use SearchHardwareCatalog first to find the exact MLFB/version. For unknown or approximate device names, use CreateHardwareDevice or CreateHardwareCatalogDevice instead. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"orderNumber\":\"6ES7 515-2AM02-0AB0\",\"version\":\"V2.9\",\"deviceName\":\"PLC_2\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"CreateDevice\"), optionally operation or language.",
+      "description": "[L2][Hardware][WRITE] Add one hardware device with exactly the requested type and name: TypeIdentifier OrderNumber:<orderNumber>/<version> (or a full TypeIdentifier in orderNumber with an empty version), deviceName for the device and its head item. Requires: ConnectPortal + OpenProject. One DeviceComposition.CreateWithItem call: no firmware-version stepping, no alternative spelling or model, no renaming retries. A name already used by a device or head item (root, grouped or ungrouped) is refused before the call. When TIA refuses, the unchanged device inventory is verified and the typed refusal lists the hardware-catalog candidates (V18+; earlier releases have no catalog API) to choose again. Find the exact article number and version with SearchHardwareCatalog (V18+) or the TIA type identifier display. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"orderNumber\":\"6ES7 515-2AM02-0AB0\",\"version\":\"V2.9\",\"deviceName\":\"PLC_2\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"CreateDevice\"), optionally operation or language.",
       "example": "{\"orderNumber\":\"6ES7 515-2AM02-0AB0\",\"version\":\"V2.9\",\"deviceName\":\"PLC_2\"}"
     },
     {
@@ -6369,7 +6369,7 @@
         "maxObjects",
         "walkTrace"
       ],
-      "description": "[L2][VersionControl][WRITE] Put a WHOLE project under version control automatically - no TIA UI clicks. Walks the project tree, asks every object whether VCI can map it (Workspace.GetSupportedFileFormats) and maps each supported object with Workspace.ConnectObject. COARSE-FIRST: when a device or PLC software object is mappable as one unit it is mapped whole and its children are not visited, so you get the fewest mappings that still cover everything. Objects VCI does not support (typically hardware configuration) are reported, never silently dropped. DEFAULTS TO dryRun=true: the default call only reports what it WOULD map. After a real run call SynchronizeVersionControlWorkspace(ProjectToWorkspace, dryRun=false), then git commit. Current native policy; V4 native acceptance is pending. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ConnectProjectToWorkspace\"), optionally operation or language.",
+      "description": "[L2][VersionControl][WRITE] Put a WHOLE project under version control automatically - no TIA UI clicks. Walks the project tree, asks every object whether VCI can map it (Workspace.GetSupportedFileFormats) and maps each supported object with Workspace.ConnectObject. COARSE-FIRST: when a device or PLC software object is mappable as one unit it is mapped whole and its children are not visited, so you get the fewest mappings that still cover everything. Objects VCI does not support (typically hardware configuration) are reported, never silently dropped. Devices of Project.UngroupedDevicesGroup are walked under the fixed workspace folder 'UngroupedDevices' (the group's own name is localized); a root-level device or device group that already uses that folder name is refused before anything is mapped, and an ungrouped device that VCI refuses is reported as a failure. DEFAULTS TO dryRun=true: the default call only reports what it WOULD map. After a real run call SynchronizeVersionControlWorkspace(ProjectToWorkspace, dryRun=false), then git commit. Current native policy; V4 native acceptance is pending. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ConnectProjectToWorkspace\"), optionally operation or language.",
       "example": "{\"dryRun\":true}"
     },
     {
@@ -6593,7 +6593,7 @@
         "spec",
         "dryRun"
       ],
-      "description": "[L1][Project][WRITE] One-shot project generator: from a single JSON spec it creates the project, adds PLC (and optional Unified HMI) hardware, builds UDTs/global DBs/PLC tag tables, imports SCL external sources and LAD S7DCL documents, compiles, sets up the HMI connection/screens/tags, and saves — collapsing the ~20-step runbook into one call. Auto-connects if needed. Critical-step failures (connect/createProject/PLC device) abort; per-element failures are collected and reported. Spec keys: projectName(required); directoryPath?(default %TEMP%); plcName?(PLC_1); plcFamily?(S7-1500); plcMlfb?; hmiName?(omit to skip all HMI); hmiFamily?(WinCCUnifiedPC); hmiSoftwarePath?(HMI_RT_1); connectionName?(HMI_Connection_1); udt?/globalDb?/tagTable? = arrays of the same json objects BuildAndImportPlcArtifact accepts; sclSourceFiles? = array of .scl file paths; ladDocs? = array of {importPath,name}; hmiScreens? = array of {screenName,width,height,designJson(object)}; hmiTags? = array of {tagTableName?,tagName,hmiDataType?,plcTag?,address?}; compile?(true); save?(true). Returns a per-step report with compile error/warning counts. dryRun DEFAULTS TO TRUE (safety): the default call only validates the spec offline (PLC block JSON shapes, SCL/LAD file paths, designJson) WITHOUT connecting to TIA or creating anything; after a clean dry run, call again with dryRun=false to actually create the project. Example: {\"spec\":\"{\\u0022projectName\\u0022:\\u0022Demo\\u0022,\\u0022directoryPath\\u0022:\\u0022C:\\\\\\\\Projects\\u0022,\\u0022plcName\\u0022:\\u0022PLC_1\\u0022,\\u0022plcFamily\\u0022:\\u0022S7-1500\\u0022}\",\"dryRun\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"BuildProjectScaffold\"), optionally operation or language.",
+      "description": "[L1][Project][WRITE] One-shot project generator: from a single JSON spec it creates the project, adds PLC (and optional Unified HMI) hardware, builds UDTs/global DBs/PLC tag tables, imports SCL external sources and LAD S7DCL documents, compiles, sets up the HMI connection/screens/tags, and saves — collapsing the ~20-step runbook into one call. Auto-connects if needed. Critical-step failures (connect/createProject/PLC device) abort; per-element failures are collected and reported. Each device is created exactly as specified with one DeviceComposition.CreateWithItem call: no family default device, firmware-version stepping, alternative model or renaming; a TIA refusal is reported with the hardware-catalog candidates (V18+). Spec keys: projectName(required); directoryPath?(default %TEMP%); plcName?(PLC_1); plcFamily?(S7-1500, label only); plcMlfb(required: exact article number with its spaces, or the full TypeIdentifier from SearchHardwareCatalog); plcVersion?(exact catalog version; empty with a full TypeIdentifier); hmiName?(omit to skip all HMI); hmiFamily?(WinCCUnifiedPC, label only); hmiMlfb/hmiVersion(required with hmiName, same rules); hmiSoftwarePath?(HMI_RT_1); connectionName?(HMI_Connection_1); udt?/globalDb?/tagTable? = arrays of the same json objects BuildAndImportPlcArtifact accepts; sclSourceFiles? = array of .scl file paths; ladDocs? = array of {importPath,name}; hmiScreens? = array of {screenName,width,height,designJson(object)}; hmiTags? = array of {tagTableName?,tagName,hmiDataType?,plcTag?,address?}; compile?(true); save?(true). Returns a per-step report with compile error/warning counts. dryRun DEFAULTS TO TRUE (safety): the default call only validates the spec offline (device type keys, PLC block JSON shapes, SCL/LAD file paths, designJson) WITHOUT connecting to TIA or creating anything; after a clean dry run, call again with dryRun=false to actually create the project. Example: {\"spec\":\"{\\u0022projectName\\u0022:\\u0022Demo\\u0022,\\u0022directoryPath\\u0022:\\u0022C:\\\\\\\\Projects\\u0022,\\u0022plcName\\u0022:\\u0022PLC_1\\u0022,\\u0022plcFamily\\u0022:\\u0022S7-1500\\u0022}\",\"dryRun\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"BuildProjectScaffold\"), optionally operation or language.",
       "example": "{\"spec\":\"{\\u0022projectName\\u0022:\\u0022Demo\\u0022,\\u0022directoryPath\\u0022:\\u0022C:\\\\\\\\Projects\\u0022,\\u0022plcName\\u0022:\\u0022PLC_1\\u0022,\\u0022plcFamily\\u0022:\\u0022S7-1500\\u0022}\",\"dryRun\":true}"
     },
     {
@@ -6686,7 +6686,7 @@
         "subnetName",
         "anchorDeviceItemPath"
       ],
-      "description": "[L2][Hardware][WRITE] Attach one real device network node to an existing PROFINET subnet and return readback evidence. deviceItemPath must come from GetProjectTree/GetDeviceItemTree, interfaceIndex selects a discovered Industrial Ethernet/PROFINET node, and online/force operations are never used. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"AttachDeviceNodeToSubnet\"), optionally operation or language.",
+      "description": "[L2][Hardware][WRITE] Attach one real device network node to an existing PROFINET subnet (found in Project.Subnets) with Node.ConnectToSubnet and verify Node.ConnectedSubnet. A node already on that subnet is left unchanged; a node attached to another subnet is refused (no implicit disconnect). deviceItemPath must come from GetProjectTree/GetDeviceItemTree, interfaceIndex selects a discovered Industrial Ethernet/PROFINET node, and online/force operations are never used. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"AttachDeviceNodeToSubnet\"), optionally operation or language.",
       "example": "{\"deviceItemPath\":\"PLC_1/CPU_1\",\"interfaceIndex\":1,\"subnetName\":\"PN_IE_1\"}"
     },
     {
@@ -6975,7 +6975,7 @@
         "secondRootPath",
         "subnetName"
       ],
-      "description": "[L1][Hardware][WRITE] PREFERRED for PROFINET network setup. Finds the first IE/PROFINET node under two devices, creates/reuses a subnet on the first, connects the second, and returns readback evidence. Requires: ConnectPortal + OpenProject + both devices added. Typical: firstRootPath='PLC_1', secondRootPath='HMI_KTP700_1/HMI_KTP700_1.IE_CP_1'. Verified for S7-1200 + KTP700 Basic PN. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"firstRootPath\":\"PLC_1\",\"secondRootPath\":\"HMI_KTP700_1/HMI_KTP700_1.IE_CP_1\",\"subnetName\":\"PN_IE_1\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ConnectDeviceNodesToProfinetSubnet\"), optionally operation or language.",
+      "description": "[L1][Hardware][WRITE] PREFERRED for PROFINET network setup. Finds the first IE/PROFINET node under two devices and connects both to subnetName: an existing subnet of that name in Project.Subnets is joined explicitly, otherwise it is created on the first node (Node.CreateAndConnectToSubnet). A node already attached to another subnet is refused before any write; success is the Node.ConnectedSubnet read-back of both nodes, and the HMI connections are read from the HMI software under the second root. Requires: ConnectPortal + OpenProject + both devices added. Typical: firstRootPath='PLC_1', secondRootPath='HMI_KTP700_1/HMI_KTP700_1.IE_CP_1'. Verified for S7-1200 + KTP700 Basic PN. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"firstRootPath\":\"PLC_1\",\"secondRootPath\":\"HMI_KTP700_1/HMI_KTP700_1.IE_CP_1\",\"subnetName\":\"PN_IE_1\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ConnectDeviceNodesToProfinetSubnet\"), optionally operation or language.",
       "example": "{\"firstRootPath\":\"PLC_1\",\"secondRootPath\":\"HMI_KTP700_1/HMI_KTP700_1.IE_CP_1\",\"subnetName\":\"PN_IE_1\"}"
     },
     {
@@ -7829,7 +7829,7 @@
       "method": "GetProjectTopology",
       "returnType": "CallToolResult",
       "parameters": [],
-      "description": "[L1][Category:Hardware][PreCondition:ConnectPortal+OpenProject][READ] One-shot, read-only project topology from Openness: every device with its network nodes (IP, subnet, node type). Call this early to understand the project's devices and subnets at a glance, instead of probing S7 or parsing AML. Examples: GetToolUsage(toolName: \"GetProjectTopology\"), optionally operation or language.",
+      "description": "[L1][Category:Hardware][PreCondition:ConnectPortal+OpenProject][READ] One-shot, read-only project topology from Openness: every device (root, device groups and ungrouped devices, with groupPath) with its network nodes (IP, subnet, node type). Call this early to understand the project's devices and subnets at a glance, instead of probing S7 or parsing AML. Examples: GetToolUsage(toolName: \"GetProjectTopology\"), optionally operation or language.",
       "example": "{}"
     },
     {
@@ -8492,7 +8492,7 @@
         "confirmImport",
         "dryRun"
       ],
-      "description": "[L2][Hardware][WRITE] Import an AutomationML/CAx (.aml) file into the open project via CaxProvider.Import(file, logFile, option). filePath must exist (absolute); logFilePath is a NEW absolute file; importOption RetainTiaDevice|OverwriteTiaDevice|MoveToParkingLot. May add or replace devices; real run needs confirmImport=true and exclusive access. Returns native bool result, device counts and the log file sha256. Default preview; no save/compile/download. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance. Examples: GetToolUsage(toolName: \"ImportDeviceAml\"), optionally operation or language.",
+      "description": "[L2][Hardware][WRITE] Import an AutomationML/CAx (.aml) file into the open project. V14 SP1-V18: CaxProvider.Import(file, logFile, option) returns a bool and the log file sha256; V19+: CaxProvider.Import(file, option) returns a TransferResult (state, error/warning counts, messages) and writes no log file. filePath must exist (absolute); logFilePath is a NEW absolute file (validated on every release, written only before V19); importOption RetainTiaDevice|OverwriteTiaDevice|MoveToParkingLot. May add or replace devices; real run needs confirmImport=true and exclusive access. Returns the native result and device counts of the root, grouped and ungrouped devices. Default preview; no save/compile/download. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance. Examples: GetToolUsage(toolName: \"ImportDeviceAml\"), optionally operation or language.",
       "example": "{\"filePath\":\"C:\\\\Examples\\\\exports\\\\Device.aml\",\"logFilePath\":\"C:\\\\Examples\\\\import.log\",\"confirmImport\":false,\"dryRun\":true}"
     },
     {

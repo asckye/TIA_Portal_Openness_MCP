@@ -52,12 +52,15 @@ public sealed partial class PlcFoundationEngine
 
             try
             {
-                foreach (var d in project!.Devices)
+                // Root devices, nested user groups and the ungrouped system group (ProjectDeviceWalk).
+                foreach (var located in TiaMcp.Adapters.Native.Hardware.ProjectDeviceWalk.Walk(project!.Devices, project.DeviceGroups, project.UngroupedDevicesGroup))
                 {
+                    var d = located.Device;
                     var deviceInfo = new HmiObject
                     {
                         ["name"] = d.Name,
-                        ["type"] = d.GetType().FullName ?? d.GetType().Name
+                        ["type"] = d.GetType().FullName ?? d.GetType().Name,
+                        ["groupPath"] = located.GroupPath
                     };
                     devices.Add(deviceInfo);
 

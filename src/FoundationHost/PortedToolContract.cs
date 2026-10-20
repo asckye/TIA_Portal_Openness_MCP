@@ -25,6 +25,21 @@ namespace TiaMcp.FoundationHost;
 // by every port. Only the typed service factory is specific to a family.
 internal static class PortedToolContract
 {
+    // Device creation refuses before a native create, or after a TIA refusal verified by an unchanged device
+    // inventory. The worker reports both as a typed precondition; keep it typed for the hardware contract.
+    private static readonly HashSet<string> DeviceCreationOperations = new(StringComparer.Ordinal) {
+        "hardware-devices.HardwareCreateDevice", "hardware-devices.HardwareCreateDeviceFallback",
+        "hardware-devices.HardwareCreateGsdDevice", "hardware-devices.HardwareCreateCatalogDevice" };
+    internal static bool IsDeviceRefusal(string operation, WorkerOperationException error)
+        => DeviceCreationOperations.Contains(operation) && error.KnownNoMutation && error.Outcome == "rejected-before-operation"
+            && error.ExceptionType == nameof(TiaMcp.Adapters.Contracts.AdapterPreconditionException);
+    internal static TiaMcp.Adapters.Contracts.AdapterPreconditionException DeviceRefusal(WorkerOperationException error)
+    {
+        string message = error.Message;
+        string suffix = error.Parameter == null ? "" : " (Parameter '" + error.Parameter + "')";
+        if (suffix.Length > 0 && message.EndsWith(suffix, StringComparison.Ordinal)) message = message[..^suffix.Length];
+        return new TiaMcp.Adapters.Contracts.AdapterPreconditionException(message, error.Parameter, error.Code == -32602, error);
+    }
     // V20/V21 B1 declarations belong to the full EngineHost catalog. The
     // bounded plc-foundation profile includes F18/F19/F20/F21 hardware ports.
     internal static IEnumerable<PortedFamilies.Family> Families(string release) =>
@@ -413,7 +428,9 @@ internal sealed partial class FoundationTool
                 portalDispatchRefused = true;
                 throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.PortalRequired);
             }
-            return worker.Call(operation, input, token).GetAwaiter().GetResult();
+            try { return worker.Call(operation, input, token).GetAwaiter().GetResult(); }
+            catch (WorkerOperationException error) when (PortedToolContract.IsDeviceRefusal(operation, error))
+            { throw PortedToolContract.DeviceRefusal(error); }
         }
         Func<string, JsonObject, JsonNode?> call = Call;
         var service = new HardwareAddressingService(call, hasProject, identity);

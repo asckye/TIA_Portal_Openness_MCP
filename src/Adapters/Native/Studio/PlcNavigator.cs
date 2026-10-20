@@ -47,7 +47,7 @@ namespace TiaOpenness.Openness
     {
         // ---- devices -------------------------------------------------------
 
-        /// <summary>Every device in the project, including those nested in device groups.</summary>
+        /// <summary>Every device in the project: root, nested device groups and the ungrouped devices group.</summary>
         public static IEnumerable<Device> AllDevices(Project project)
         {
             return AllDeviceEntries(project).Select(e => e.Device);
@@ -57,34 +57,15 @@ namespace TiaOpenness.Openness
         public struct DeviceEntry
         {
             public Device Device;
-            /// <summary>Slash-separated group names; empty at the project root.</summary>
+            /// <summary>Slash-separated group names; empty at the project root; the ungrouped group's name for ungrouped stations.</summary>
             public string GroupPath;
         }
 
+        // One shared walk over the three device roots; an unreadable composition is skipped while browsing.
         public static IEnumerable<DeviceEntry> AllDeviceEntries(Project project)
         {
-            foreach (var device in project.Devices.SafeEnumerate())
-            {
-                yield return new DeviceEntry { Device = device, GroupPath = string.Empty };
-            }
-
-            foreach (var group in project.DeviceGroups.SafeEnumerate())
-            {
-                foreach (var entry in AllDeviceEntries(group, group.Name)) yield return entry;
-            }
-        }
-
-        private static IEnumerable<DeviceEntry> AllDeviceEntries(DeviceUserGroup group, string path)
-        {
-            foreach (var device in group.Devices.SafeEnumerate())
-            {
-                yield return new DeviceEntry { Device = device, GroupPath = path };
-            }
-
-            foreach (var child in group.Groups.SafeEnumerate())
-            {
-                foreach (var entry in AllDeviceEntries(child, Join(path, child.Name))) yield return entry;
-            }
+            return TiaMcp.Adapters.Native.Hardware.ProjectDeviceWalk.Walk(project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, _ => { })
+                .Select(located => new DeviceEntry { Device = located.Device, GroupPath = located.GroupPath });
         }
 
         public static DeviceInfo Describe(DeviceEntry entry)

@@ -97,6 +97,13 @@ namespace TiaMcpServer.Siemens
             if (names.Length == 1)
                 return (Device)(EngineeringGroupOperations.Find(EnumerateAllDevices().ToArray(), names[0])
                     ?? throw new InvalidOperationException("Exact unique device not found."));
+            if (names[0] == TiaMcp.Adapters.Native.Hardware.ProjectDeviceWalk.UngroupedSegment)
+            {
+                // The ungrouped system group has a localized name and no subgroups.
+                if (names.Length != 2) throw new InvalidOperationException("Use [\"$ungrouped\", \"<device>\"] for a device in the ungrouped devices group.");
+                return (Device)(EngineeringGroupOperations.Find(_project!.UngroupedDevicesGroup.Devices, names[1])
+                    ?? throw new InvalidOperationException("Device not found in the ungrouped devices group."));
+            }
             var group = EngineeringGroupOperations.Find(_project!.DeviceGroups, names[0]) as DeviceUserGroup
                 ?? throw new InvalidOperationException("Device group not found: " + names[0]);
             foreach (var name in names.Skip(1).Take(names.Length - 2))

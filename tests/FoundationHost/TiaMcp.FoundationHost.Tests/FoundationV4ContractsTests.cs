@@ -41,8 +41,9 @@ public sealed class FoundationV4ContractsTests
     }
 
     [Theory]
-    [InlineData("14sp1", 279)] [InlineData("15.1", 319)] [InlineData("16", 347)]
-    [InlineData("17", 370)] [InlineData("18", 396)] [InlineData("19", 471)]
+    // P8-81b H-05: CreateGsdDevice is registered only on V18-V21 (register only available tools), one tool less on V14 SP1-V17.
+    [InlineData("14sp1", 278)] [InlineData("15.1", 318)] [InlineData("16", 346)]
+    [InlineData("17", 369)] [InlineData("18", 396)] [InlineData("19", 471)]
     public async Task EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection(string release, int count)
     {
         var worker = new FakeWorker();

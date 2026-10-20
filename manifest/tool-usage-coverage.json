@@ -1,9 +1,9 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "56d58a1178a35be52ce5e535030e9d42fa321a290b8cd31f1173edc6bca519e4",
+  "catalogSha256": "6da3d42e553d1954fcf46c1f3d307daef227b7a855e714e04b8b45a56db109dc",
   "uniqueTools": 516,
   "documents": 89,
-  "versionToolPairs": 3193,
+  "versionToolPairs": 3189,
   "offlineCallExecutions": 79,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
@@ -48,8 +48,8 @@
   "releases": {
     "14sp1": {
       "releaseKey": "14sp1",
-      "registeredToolCount": 279,
-      "checkedToolCount": 279,
+      "registeredToolCount": 278,
+      "checkedToolCount": 278,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 159,
@@ -487,20 +487,6 @@
         },
         {
           "toolName": "CreateDevice",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-            "guides/skills/hardware-and-modules/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
-          "toolName": "CreateGsdDevice",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -3772,8 +3758,8 @@
     },
     "15.1": {
       "releaseKey": "15.1",
-      "registeredToolCount": 319,
-      "checkedToolCount": 319,
+      "registeredToolCount": 318,
+      "checkedToolCount": 318,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 219,
@@ -4234,20 +4220,6 @@
         },
         {
           "toolName": "CreateDevice",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-            "guides/skills/hardware-and-modules/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
-          "toolName": "CreateGsdDevice",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -8257,8 +8229,8 @@
     },
     "16": {
       "releaseKey": "16",
-      "registeredToolCount": 347,
-      "checkedToolCount": 347,
+      "registeredToolCount": 346,
+      "checkedToolCount": 346,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 271,
@@ -8727,20 +8699,6 @@
         },
         {
           "toolName": "CreateDevice",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-            "guides/skills/hardware-and-modules/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
-          "toolName": "CreateGsdDevice",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -13325,8 +13283,8 @@
     },
     "17": {
       "releaseKey": "17",
-      "registeredToolCount": 370,
-      "checkedToolCount": 370,
+      "registeredToolCount": 369,
+      "checkedToolCount": 369,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 346,
@@ -13795,20 +13753,6 @@
         },
         {
           "toolName": "CreateDevice",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-            "guides/skills/hardware-and-modules/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
-          "toolName": "CreateGsdDevice",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",

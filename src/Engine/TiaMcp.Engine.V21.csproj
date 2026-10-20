@@ -27,6 +27,7 @@
     <Compile Include="../EngineHost/ModelContextProtocol/Types.cs" Link="ModelContextProtocol/Types.cs" />
     <Compile Include="../Adapters/Policy/CrossReferenceTreeReader.cs" Link="Siemens/CrossReferenceTreeReader.cs" />
     <Compile Include="../Adapters/Policy/OpennessReleaseContract.cs" Link="Siemens/OpennessReleaseContract.cs" />
+    <Compile Include="../Adapters/Native/Hardware/ProjectDeviceWalk.cs" Link="Siemens/ProjectDeviceWalk.cs" />
     <Compile Include="../EngineHost/Siemens/ProjectSecurityLogic.cs" Link="Siemens/ProjectSecurityLogic.cs" />
     <Compile Include="../EngineHost/Siemens/SecurityDeepLogic.cs" Link="Siemens/SecurityDeepLogic.cs" />
   </ItemGroup>

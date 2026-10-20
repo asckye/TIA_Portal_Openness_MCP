@@ -69,6 +69,33 @@ public sealed class WorkerScaffoldCompositionTests
         });
     }
 
+    [Theory, InlineData("20"), InlineData("21")]
+    public void Exact_device_types_are_passed_once_and_a_missing_type_never_creates_a_family_default(string release)
+    {
+        Run(release, (tools, fake, spec) => {
+            var result = tools.ScaffoldProject(spec.ToJsonString(), false);
+            Assert.True(result.Ok);
+            Assert.Equal(new[] { "6ES7 513-1AM03-0AB0|V3.0|PLC_1|S7-1500", "OrderNumber:6AV2 155-0AA00-0AA0/21.0.0.0||HMI_1|WinCCUnifiedPC" }, fake.DeviceRequests);
+        });
+        Run(release, (tools, fake, spec) => {
+            spec.Remove("plcMlfb");
+            var dry = tools.ScaffoldProject(spec.ToJsonString());
+            Assert.False(dry.Ok);
+            Assert.Contains(dry.Steps, step => step.Step == "addDevicePlc" && step.Status == "failed" && step.Detail!.Contains("plcMlfb is required", StringComparison.Ordinal));
+            var error = Assert.Throws<McpException>(() => tools.ScaffoldProject(spec.ToJsonString(), false));
+            Assert.Contains("plcMlfb is required", error.Message, StringComparison.Ordinal);
+            Assert.Empty(fake.Primitives);
+            Assert.Empty(fake.DeviceRequests);
+        });
+        Run(release, (tools, fake, spec) => {
+            spec.Remove("hmiMlfb");
+            var result = tools.ScaffoldProject(spec.ToJsonString(), false);
+            Assert.False(result.Ok);
+            Assert.Equal("failed", result.Steps.Single(step => step.Step == "addDeviceHmi").Status);
+            Assert.Equal(new[] { "6ES7 513-1AM03-0AB0|V3.0|PLC_1|S7-1500" }, fake.DeviceRequests);
+        });
+    }
+
     private static void Run(string release, Action<ProjectLifecycleProjectTools, ScaffoldWorkerFake, JsonObject> test)
     {
         string directory = Path.Combine(Path.GetTempPath(), "scaffold-composition-" + Guid.NewGuid().ToString("N"));
@@ -83,7 +110,9 @@ public sealed class WorkerScaffoldCompositionTests
                     ? JsonSerializer.SerializeToNode(fake.Execute(JsonSerializer.Deserialize<ProjectScaffoldPrimitive>(arguments["request"]!.ToJsonString())!))
                     : fake.Call(operation, arguments);
             var service = new ProjectLifecyclePortService(Call, () => fake.ProjectFile.Length > 0, () => fake.ProjectFile, fake.Release);
-            var spec = new JsonObject { ["projectName"] = "P", ["directoryPath"] = directory, ["hmiName"] = "HMI_1", ["hmiSoftwarePath"] = "HMI_RT_1",
+            // Devices are created exactly as specified (decided 2026-10-19), so the spec names the PLC and HMI types.
+            var spec = new JsonObject { ["projectName"] = "P", ["directoryPath"] = directory, ["plcMlfb"] = "6ES7 513-1AM03-0AB0", ["plcVersion"] = "V3.0",
+                ["hmiName"] = "HMI_1", ["hmiMlfb"] = "OrderNumber:6AV2 155-0AA00-0AA0/21.0.0.0", ["hmiSoftwarePath"] = "HMI_RT_1",
                 ["sclSourceFiles"] = new JsonArray(source), ["ladDocs"] = new JsonArray(new JsonObject { ["importPath"] = directory, ["name"] = "Main" }),
                 ["hmiScreens"] = new JsonArray(new JsonObject { ["screenName"] = "Main", ["width"] = 800, ["height"] = 480, ["designJson"] = new JsonObject { ["items"] = new JsonArray() } }),
                 ["hmiTags"] = new JsonArray(new JsonObject { ["tagName"] = "Start", ["plcTag"] = "Start" }) };
