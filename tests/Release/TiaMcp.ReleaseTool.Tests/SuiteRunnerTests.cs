@@ -86,6 +86,16 @@ public sealed class SuiteRunnerTests
         Assert.Equal(SuiteRunners.Assign(cold, 3), SuiteRunners.Assign(cold, 3));
     }
 
+    [Fact]
+    public void EveryShardGetsItsEstimateDeadlineWithoutASensitiveLane()
+    {
+        // A runner share with no exclusive shard must not fall back to the 5-minute CheckJob default.
+        var jobs = FastSuites.WithTimeouts(new[] { Job("foundation-shard-2", FastSuites.ColdShardSeconds), Job("foundation-shard-6", 400),
+            Job("worker-channel-shard-1", 20), Job("foundation-gate", 0) });
+        Assert.All(jobs, job => Assert.False(job.Exclusive));
+        Assert.Equal(new[] { 3600.0, 1200.0, 300.0, 300.0 }, jobs.Select(job => job.Timeout.TotalSeconds));
+    }
+
     [Theory]
     [InlineData("-RunnerIndex 0")]
     [InlineData("-RunnerCount 2")]

@@ -104,6 +104,11 @@ internal static class FastSuites
     // 300-second floor, which a cold 29,000-case suite in four shards exceeds on CI (P8-72 host/CI evidence 2026-10-19).
     internal const double ColdShardSeconds = 1200;
 
+    // Every job gets its estimate-based deadline, also on a runner whose share holds no sensitive-lane shard
+    // (otherwise the 5-minute CheckJob default applies; CI runner evidence 2026-10-20).
+    internal static List<CheckJob> WithTimeouts(IEnumerable<CheckJob> jobs) =>
+        jobs.Select(job => job with { Timeout = CheckScheduler.JobTimeout(job, new Dictionary<string, double>()) }).ToList();
+
     internal static CommandResult RunShard(string root, string name, JsonObject suite, string directory, string dotnet, string? api,
         CheckBuild unit, int index, int count, string[]? extra = null, string? plan = null, bool reserveSensitive = false, string? manifest = null, SuiteProcess? process = null, int sensitiveShards = 1)
     {
@@ -212,6 +217,7 @@ internal static class FastSuites
         if (options.Has("SensitiveCores")) _ = Positive(options, "SensitiveCores", 1);
         if (options.Has("SensitiveParallelism")) _ = Positive(options, "SensitiveParallelism", 1);
         var lanes = new Dictionary<string, int> { ["general"] = parallelism };
+        jobs = WithTimeouts(jobs);
         if (OperatingSystem.IsWindows() && jobs.Any(job => job.Exclusive))
         {
             using var current = System.Diagnostics.Process.GetCurrentProcess();
@@ -219,8 +225,7 @@ internal static class FastSuites
             var masks = CheckAffinity.SplitSensitive(available, Positive(options, "SensitiveCores", SensitiveCoreBudget(available, jobs)));
             parallelism = GeneralCapacity(parallelism, System.Numerics.BitOperations.PopCount(masks.General), options.Has("MaxParallelism") || options.Has("CpuParallelism"));
             lanes["general"] = parallelism;
-            jobs = jobs.Select(job => job with { Lane = job.Exclusive ? "sensitive" : "general", Affinity = job.Exclusive ? masks.Stability : masks.General,
-                Timeout = CheckScheduler.JobTimeout(job, new Dictionary<string, double>()) }).ToList();
+            jobs = jobs.Select(job => job with { Lane = job.Exclusive ? "sensitive" : "general", Affinity = job.Exclusive ? masks.Stability : masks.General }).ToList();
             foreach (var lane in CheckAffinity.AssignSensitiveLanes(jobs, masks.Stability, Positive(options, "SensitiveParallelism", 2)))
                 lanes[lane.Key] = lane.Value;
             File.WriteAllText(Path.Combine(output, "cpu-plan.json"), System.Text.Json.JsonSerializer.Serialize(new {
