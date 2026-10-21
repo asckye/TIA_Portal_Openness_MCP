@@ -788,7 +788,7 @@ internal static partial class ReleaseCommands
             using var multi = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, ReleaseRecords.MultiPath)));
             if (multi.RootElement.TryGetProperty("plcRuntimes", out _)) ReleaseRecords.AssertPlcProof(root, multi.RootElement, !noBinaries);
         }
-        if (buildRelative == ReleaseRecords.MultiPath) ReleaseRecords.AssertPlcProof(root, buildDoc.RootElement, !noBinaries);
+        if (buildRelative == ReleaseRecords.MultiPath && ReleaseRecords.RequiresPlcProof(buildDoc.RootElement)) ReleaseRecords.AssertPlcProof(root, buildDoc.RootElement, !noBinaries);
         var release = JsonString(delivery, "release");
         var engineRelease = JsonString(build, "release");
         var fileVersion = JsonString(build, "fileVersion");

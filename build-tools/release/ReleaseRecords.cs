@@ -178,6 +178,11 @@ internal static class ReleaseRecords
         return result;
     }
 
+    // The repository keeps the shipped 3.3.0 records until the first 4.0 release writes its own; 3.x records predate the PLC
+    // proof. Every 4.x record (and one whose release cannot be read) must carry it (P8-04j2).
+    internal static bool RequiresPlcProof(JsonElement record) =>
+        !TiaMcp.Versioning.ProductReleaseVersion.TryParse(GetString(record, "release"), out var version) || version is null || version.Major >= 4;
+
     internal static void AssertPlcProof(string root, JsonElement record, bool binaries)
     {
         if (!record.TryGetProperty("engineCompatibility", out var engine) ||

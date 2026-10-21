@@ -27,6 +27,23 @@ public sealed class ReleaseRecordConsumerTests
         Assert.Throws<ReleaseException>(() => ReleaseRecords.AssertBinding(tree.Root, delivery.RootElement, relative));
     }
 
+    [Theory]
+    [InlineData("3.3.0", false)]
+    [InlineData("4.0.0-beta.1", true)]
+    [InlineData("4.0.0", true)]
+    [InlineData("", true)]
+    public void OnlyRecordsBefore4RequireNoPlcProof(string release, bool required)
+    {
+        using var record = JsonDocument.Parse(new JsonObject { ["release"] = release }.ToJsonString());
+        Assert.Equal(required, ReleaseRecords.RequiresPlcProof(record.RootElement));
+    }
+
+    // CI's validate-bundle step (-Strict -NoBinaries -SkipSourceHashes) reads the committed records; between 3.3.0 and the first
+    // 4.0 release they are the shipped 3.3.0 records (P8-04j2 broke this once).
+    [Fact]
+    public void CommittedRecordsValidateWithoutBinaries()
+        => ReleaseCommands.ValidateBuildRecords(TiaMcp.BuildCommon.Repository.FindRoot(), package: false, noBinaries: true, skipSourceHashes: true);
+
     [Fact]
     public void PreferredMultiDoesNotFallBackWhenItsRecordIsDamaged()
     {
