@@ -35,7 +35,16 @@ var server = new ChannelServer(Console.OpenStandardInput(), Console.OpenStandard
     var args = JsonNode.Parse(request.ArgumentsJson)!.AsObject();
     if (request.Method == "adapter.Attach") { bound = true; epoch++; return ChannelResponse.Success("{\"Stage\":\"attached\",\"OwnsPortal\":false,\"AttemptedPids\":[123],\"Strategy\":\"explicit\",\"LaunchMode\":\"attach\"}"); }
     if (request.Method == "adapter.Bind") { bound = true; epoch++; return ChannelResponse.Success("{\"ProjectFile\":\"C:/fixture.ap" + release + "\"}"); }
-    if (mode == "slow" || mode == "progress")
+    // With TIA_MCP_FIXTURE_SLOW_GATE (a directory) a slow request marks its dispatch and waits for the test's release, so a
+    // test can cancel while the request is certainly on the worker (P8-stab-1); otherwise it sleeps as before.
+    string? gate = mode == "slow" ? Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE") : null;
+    if (!string.IsNullOrEmpty(gate))
+    {
+        File.WriteAllText(Path.Combine(gate, "dispatched"), "");
+        var deadline = DateTime.UtcNow.AddSeconds(30);
+        while (!File.Exists(Path.Combine(gate, "release")) && DateTime.UtcNow < deadline) Thread.Sleep(5);
+    }
+    else if (mode == "slow" || mode == "progress")
     {
         for (int i = 0; i < 3; i++) {
             Thread.Sleep(50);

@@ -663,6 +663,16 @@ public sealed class PlcWorkerRobustnessTests
             finally { budgets["default"] = original; }
             Assert.Equal(original, policy.For("status"));
         }
+        // Start (or, after a restart, restart) the worker generation with a ReadState under the production budgets, then restore
+        // the exact scaled budgets for the measured operations (P8-stab-1). Unlike WarmBeforeScaledBudgets it accepts any scaled
+        // default; the budgets the test configured are unchanged afterwards.
+        internal async Task WarmGenerationUnderProductionBudgets()
+        {
+            var budgets = ProductionWorkerBudgets.Live(Worker);
+            var scaled = new Dictionary<string, TimeSpan>(budgets);
+            using (new ProductionWorkerBudgets(Worker)) await Worker.Call("ReadState", new(), CancellationToken.None);
+            Assert.Equal(scaled, new Dictionary<string, TimeSpan>(budgets));
+        }
         // The fixture appends while the test reads; File.ReadAllText refuses a file another process has open for writing.
         internal string ReadLog()
         {
@@ -745,7 +755,7 @@ public sealed class PlcWorkerRobustnessTests
     public async Task Plc_compile_preview_uses_default_instead_of_the_compile_override()
     {
         using var scope = new PlcTimeoutScope("19", "{\"default\":2,\"compile\":0.2}");
-        await scope.Worker.Call("ReadState", new(), CancellationToken.None);
+        await scope.WarmGenerationUnderProductionBudgets();
         var observation = new CompileObservation { Binding = new() { ProcessId = Environment.ProcessId,
             ProcessStartUtc = DateTimeOffset.UtcNow, ProjectFile = Path.Combine(AppContext.BaseDirectory, "fixture.ap19"), Ownership = "borrowed" },
             ObjectValidity = "valid", Dirty = false, TargetId = "software-1", SoftwareId = "software-1", TargetKind = "PlcSoftware",
@@ -762,7 +772,7 @@ public sealed class PlcWorkerRobustnessTests
     {
         string shortBudget = "{\"default\":2,\"compile\":0.2}";
         using var scope = new PlcTimeoutScope("19", environmentOverride ? "{\"compile\":15}" : shortBudget, environmentOverride ? shortBudget : null);
-        await scope.Worker.Call("ReadState", new(), CancellationToken.None);
+        await scope.WarmGenerationUnderProductionBudgets();
         var error = await Assert.ThrowsAsync<ChannelFaultException>(() => scope.Worker.Call("CompileSoftware", new() { ["dryRun"] = false, ["fixtureDelayMilliseconds"] = 1300 }, CancellationToken.None));
         Assert.Equal(true, error.Data["foundationRequestSent"]);
         Assert.Equal(true, error.Data["foundationSessionPoisoned"]);
@@ -777,7 +787,9 @@ public sealed class PlcWorkerRobustnessTests
     public async Task Plc_default_seconds_and_first_attach_budget_apply_once_per_generation()
     {
         using var scope = new PlcTimeoutScope("19", "{\"firstAttach\":3}", defaultSeconds: 1);
-        await scope.Worker.Call("ReadState", new(), CancellationToken.None);
+        // Each generation starts with a ReadState under the production budgets; its first Attach still runs on the scaled
+        // first-attach budget (3 s for a 1.3-s attach) and the second on the scaled default (1 s).
+        await scope.WarmGenerationUnderProductionBudgets();
         await scope.Worker.Call("SessionCandidate", new() { ["mode"] = "preview",
             ["candidate"] = JsonSerializer.SerializeToNode(new SessionCandidateCall { Action = "observe", Check = new() { Request = new() { Action = "attach" } } }),
             ["fixtureReply"] = JsonSerializer.SerializeToNode(new SessionCandidateReply { Observation = new() }) }, CancellationToken.None);
@@ -787,7 +799,7 @@ public sealed class PlcWorkerRobustnessTests
         await Assert.ThrowsAsync<ChannelFaultException>(() => scope.Worker.Call("Attach", args, CancellationToken.None));
         var restart = await scope.Worker.RestartHostWorker(true, CancellationToken.None);
         Assert.True((bool?)restart["restarted"]);
-        await scope.Worker.Call("ReadState", new(), CancellationToken.None);
+        await scope.WarmGenerationUnderProductionBudgets();
         await scope.Worker.Call("Attach", args, CancellationToken.None);
         Assert.False(scope.Worker.Poisoned);
     }
@@ -796,7 +808,7 @@ public sealed class PlcWorkerRobustnessTests
     public async Task Plc_cancellation_before_dispatch_is_CANCELLED_and_after_dispatch_keeps_the_result()
     {
         using var scope = new PlcTimeoutScope("19", "{\"default\":2,\"compile\":3}");
-        await scope.Worker.Call("ReadState", new(), CancellationToken.None);
+        await scope.WarmGenerationUnderProductionBudgets();
         using var before = new CancellationTokenSource(); before.Cancel();
         var error = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => scope.Worker.Call("CompileSoftware", new(), before.Token));
         var refused = Foundation.FoundationV4Result.Failure("19", "CompilePlc", "cancelled", false, true, null, error);

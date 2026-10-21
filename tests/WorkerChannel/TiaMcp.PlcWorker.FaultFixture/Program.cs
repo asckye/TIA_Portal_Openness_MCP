@@ -36,6 +36,16 @@ internal static class Program
             if (mode == "oversized-delayed") Thread.Sleep(1200);
             return WorkerReplySpill.Write(Environment.GetEnvironmentVariable("TIA_MCP_WORKER_SPILLS_DIRECTORY")!, raw);
         }
+        // With TIA_MCP_FIXTURE_SLOW_GATE (a directory) the slow request marks its dispatch and waits for the test's release,
+        // so a test can cancel while the request is certainly on the worker (P8-stab-1); otherwise it sleeps 150 ms as before.
+        void Slow()
+        {
+            string? gate = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE");
+            if (string.IsNullOrEmpty(gate)) { Thread.Sleep(150); return; }
+            File.WriteAllText(Path.Combine(gate, "dispatched"), "");
+            var deadline = DateTime.UtcNow.AddSeconds(30);
+            while (!File.Exists(Path.Combine(gate, "release")) && DateTime.UtcNow < deadline) Thread.Sleep(5);
+        }
         new ChannelServer(Console.OpenStandardInput(), Console.OpenStandardOutput(), identity, () => new ChannelBinding(epoch, bound), request => {
             if (request.Method == "adapter.HostObserve")
                 return ChannelResponse.Success(JsonSerializer.Serialize(new { releaseKey = options.ReleaseKey,
@@ -94,7 +104,7 @@ internal static class Program
                 bound = false; epoch++;
                 return ChannelResponse.Success("{\"Stage\":\"disconnected\",\"SessionState\":\"terminal\",\"Strategy\":\"non-owning-attachment-only\",\"WorkerAcknowledged\":true,\"Detached\":true,\"SavedProject\":false,\"ClosedProject\":false,\"LaunchMode\":\"never\"}");
             }
-            if (mode == "slow" && request.Method != "adapter.ReadState") Thread.Sleep(150);
+            if (mode == "slow" && request.Method != "adapter.ReadState") Slow();
             string padding = mode is "oversized" or "oversized-delayed" ? new string('x', ChannelLimits.ResponseBytes) : "fixture";
             if (request.Method == "adapter.optional-products.ExecuteOptionalProduct")
             {

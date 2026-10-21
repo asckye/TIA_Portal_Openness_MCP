@@ -237,8 +237,9 @@ internal static class DotnetSuiteSelfTests
                 {
                     var args = arguments.ToArray();
                     Require(mode == "vstest" ? args.Contains(SuiteHang.VstestArgument) : SuiteHang.TestArguments.All(args.Contains));
-                    // Only this planted fixture uses a short limit; production has no override.
-                    args = args.Select(a => a == SuiteHang.Timeout ? "2s" : a.Replace("TestTimeout=" + SuiteHang.Timeout, "TestTimeout=2s", StringComparison.Ordinal)).ToArray();
+                    // Only the planted hang uses a short limit; production has no override. The normal control runs with the
+                    // production blame-hang settings: the 2-s limit also covers test-host start-up, which took up to 2.0 s here.
+                    if (hang) args = args.Select(a => a == SuiteHang.Timeout ? "2s" : a.Replace("TestTimeout=" + SuiteHang.Timeout, "TestTimeout=2s", StringComparison.Ordinal)).ToArray();
                     args = mode == "vstest" ? [.. args, "--Diag:" + Path.Combine(output, "vstest.log")] : [.. args, "--diag", Path.Combine(output, "vstest.log")];
                     var env = environment == null ? new Dictionary<string, string?>() : new Dictionary<string, string?>(environment);
                     env["TIA_MCP_PLANTED_HANG"] = hang ? "1" : null;
@@ -250,6 +251,8 @@ internal static class DotnetSuiteSelfTests
                     ? FastSuites.RunShard(root, "fixture", suite, output, "dotnet", null, unit, 0, 1,
                         extra: mode == "test-shard" ? ["-p:NuGetAudit=false"] : null, manifest: manifest, process: Process)
                     : DotnetSuites.RunSuite(root, "fixture", suite, output, arguments: ["--no-build", "--no-restore"], process: Process);
+                // The blame collector records the limit it applied: production for the control, 2 s for the planted hang.
+                Require(AppliedHangTimeouts(output).SequenceEqual(new[] { hang ? "2s" : SuiteHang.Timeout }));
                 Require(hang ? result.ExitCode != 0 : result.ExitCode == 0);
                 if (hang)
                 {
@@ -270,6 +273,15 @@ internal static class DotnetSuiteSelfTests
         }
         if (failures.Count > 0) throw new ReleaseException(string.Join("\n", failures));
     }
+
+    // The hang limits in the collector settings of every VSTest data collector log written in this run directory.
+    private static string[] AppliedHangTimeouts(string output) => Directory.EnumerateFiles(output, "vstest.datacollector.*.log")
+        .SelectMany(log =>
+        {
+            using var reader = new StreamReader(new FileStream(log, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete));
+            return Regex.Matches(reader.ReadToEnd(), "CollectDumpOnTestSessionHang[^>]*?TestTimeout=\\\\?\"([^\"\\\\]+)\\\\?\"")
+                .Select(match => match.Groups[1].Value).ToArray();
+        }).Distinct(StringComparer.Ordinal).ToArray();
 
     private static void MissingVariantRow() => WithFixture((_, directory) =>
     {

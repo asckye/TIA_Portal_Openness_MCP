@@ -449,6 +449,10 @@ namespace TiaMcp.Logic.ModelContextProtocol
                     partial ? (ErrorDetails)new PartialFailureDetails(kept, 1, Math.Max(0, count - kept - 1)) : new IoFailedDetails("import-staging", attemptedPath));
                 outcome = partial ? Outcome.Partial : Outcome.RejectedBeforeOperation; execution = partial ? Execution.Partial : Execution.NotStarted;
             }
+            // A list bounded to the newest batches is a partial observation, and the V4 envelope requires its warning: without it
+            // every list failed once more than MaximumListedBatches batches existed (P8-stab-1).
+            if (error == null && (bool?)data?["truncated"] == true) warnings.Add(new Warning(WarningCode.IncompleteData,
+                "Only the newest " + MaximumListedBatches + " staging batches are listed; totalBatches counts all of them.", new Dictionary<string, JsonElement>()));
             if ((bool?)data?["folderRetained"] == true) warnings.Add(new Warning(WarningCode.StagingFolderRetained,
                 "The batch folder is retained because it contains unknown entries; only staging-owned files are deleted.",
                 new Dictionary<string, JsonElement> { ["unknownEntries"] = JsonSerializer.SerializeToElement(data["unknownEntries"]) }));

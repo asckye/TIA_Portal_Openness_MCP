@@ -24,6 +24,18 @@ public sealed class OperatorSessionTestsPlc : OperatorSessionTestsCases { protec
 public abstract class OperatorSessionTestsCases
 {
     protected abstract bool PlcWorker { get; }
+    // Another shard's host or worker hashes the shared adapter identity while this fixture starts and ends: ArgumentRules.HashFile
+    // and the worker open it for reading with FileShare.Read. Barrier: hold that read handle across the whole fixture lifetime.
+    // The fixture must neither rewrite nor remove the identity under it (P8-stab-1).
+    [Fact]
+    public void Operator_fixture_leaves_the_adapter_identity_that_another_shard_is_hashing()
+    {
+        string adapter = Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter.20.dll");
+        TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(adapter, "offline session fixture");
+        using (new FileStream(adapter, FileMode.Open, FileAccess.Read, FileShare.Read))
+        using (new Fixture("20", PlcWorker)) { }
+        Assert.Equal("offline session fixture", File.ReadAllText(adapter));
+    }
     [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public async Task Operator_stream_shares_one_existing_worker_and_disconnect_state(string release)
     {
@@ -206,16 +218,14 @@ public abstract class OperatorSessionTestsCases
         internal readonly string DirectoryPath = Path.Combine(Path.GetTempPath(), "operator-fixture-" + Guid.NewGuid().ToString("N"));
         internal readonly Options Options;
         private readonly string previousEngineRelease = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
-        private readonly string adapterPath;
-        private readonly byte[]? previousAdapter;
         private readonly string? priorLease = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT");
         internal Fixture(string release, bool plcWorker = false)
         {
             Directory.CreateDirectory(DirectoryPath); Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", DirectoryPath);
             string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
-            adapterPath = Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll");
-            previousAdapter = File.Exists(adapterPath) ? File.ReadAllBytes(adapterPath) : null;
-            File.WriteAllText(adapterPath, "offline session fixture");
+            // Parallel shards share this output directory and hash the identity while their workers start: install it atomically and
+            // leave it in place. Truncating, restoring or deleting it here refused or killed another shard's worker (P8-stab-1).
+            TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
             string catalog = Path.Combine(DirectoryPath, "catalog.json");
             SessionFixtureTool.WriteCatalog(catalog, release, exe);
             Options = new Options { ReleaseKey = release, WorkerExe = exe, ApiDirectory = AppContext.BaseDirectory, BundledWorker = false,
@@ -234,7 +244,6 @@ public abstract class OperatorSessionTestsCases
         {
             Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", priorLease);
             enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousEngineRelease;
-            if (previousAdapter == null) File.Delete(adapterPath); else File.WriteAllBytes(adapterPath, previousAdapter);
             AppDomain.CurrentDomain.SetData("TiaOpenness.Shared.BundleLayout.v4", previousBundle);
             Environment.SetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT", previousRootVariable);
             Directory.Delete(DirectoryPath, true);

@@ -111,7 +111,14 @@ internal static class WorkerShutdown
         {
             if (process.HasExited) return;
             var expected = Path.GetFullPath(process.StartInfo.FileName);
-            var actual = image(process);
+            string? actual;
+            // Closing an idle worker's input lets it leave on its own, and it can do so between HasExited and the image read:
+            // the modules of a process that has left cannot be read. The handle held since Process.Start still names the owned
+            // child and reports its exit, so a failed or empty probe of that exited child means it is already stopped.
+            // A child that is still running keeps the refusal below.
+            try { actual = image(process); }
+            catch (System.ComponentModel.Win32Exception) when (Exited(process)) /* swallow(teardown): the owned child has already exited, so it is stopped */ { return; }
+            if (actual == null && Exited(process)) return;
             if (actual == null || !string.Equals(Path.GetFullPath(actual), expected, StringComparison.OrdinalIgnoreCase))
                 throw new WorkerTerminationException($"Refusing to stop worker {process.Id}: executable '{actual}' differs from owned child '{expected}'.");
             process.Kill();

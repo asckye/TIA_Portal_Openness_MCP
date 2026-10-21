@@ -37,6 +37,16 @@ public sealed class WorkerRobustnessTests
         return (string)type.GetProperty("DiagnosticsDirectory", flags)!.GetValue(current)!;
     }
 
+    // Two scopes in one process never share a spills directory, so disposing one cannot remove another's spill (P8-stab-1).
+    // Before the fix both PlcWorker scopes used the process-cached data location.
+    [Fact]
+    public void Plc_scopes_spill_into_their_own_directories()
+    {
+        string first;
+        using (var scope = new Scope("", plcWorker: true)) first = scope.SpillsDirectory;
+        using (var scope = new Scope("", plcWorker: true)) Assert.NotEqual(first, scope.SpillsDirectory);
+    }
+
     [Theory]
     [InlineData("20", false)]
     [InlineData("21", false)]
@@ -121,16 +131,11 @@ public sealed class WorkerRobustnessTests
                 : TiaMcp.Engine.Tests.Shared.TestPaths.WorkerFixture("TiaMcp.EngineWorker.FaultFixture", "TiaMcp.EngineWorker.FaultFixture.exe");
             Assert.True(File.Exists(exe), exe);
             TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + release + ".dll"), "offline fixture identity");
+            // Both backends spill into this scope's own directory (P8-stab-1). The PlcWorker rows used the process data location,
+            // which is cached at its first use and can be the worker-fixture-data directory every test process shares; deleting it
+            // at dispose broke another process's spill (DirectoryNotFoundException in AssertReadableExport).
             // A successful 16/32 MiB spill includes serialization and a durable disk flush.
             // Keep the short deadline for injected faults, not as a performance gate for CI disks.
-            if (plcWorker)
-            {
-                var type = typeof(Foundation.WorkerClient).Assembly.GetType("TiaOpenness.Shared.DataLocations")
-                    ?? typeof(Meta).Assembly.GetType("TiaOpenness.Shared.DataLocations", true)!;
-                const BindingFlags all = BindingFlags.Static | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
-                var data = type.GetProperty("Current", all)!.GetValue(null)!;
-                SpillsDirectory = (string)type.GetProperty("WorkerSpillsDirectory", all)!.GetValue(data)!;
-            }
             string budget = mode is "oversized" or "oversized-delayed" ? "30" : "0.8";
             Worker = new Client(plcWorker, new Options { ReleaseKey = release, EngineWorkerExe = exe, WorkerExe = exe, ApiDirectory = Path.GetDirectoryName(exe)!, BundleRoot = AppContext.BaseDirectory,
                 NativeEnabled = true, BundledWorker = false, WorkerTimeoutConfig = "{\"default\":" + budget + ",\"compile\":0.8,\"firstAttach\":1.2}" }, Client.Hash(exe), SpillsDirectory, TimeSpan.FromSeconds(30));
@@ -145,7 +150,9 @@ public sealed class WorkerRobustnessTests
             shared = new Foundation.FoundationV4Tool(new Foundation.FoundationTool(Foundation.FoundationTools.Definitions.Single(d => d.Name == "GetBlocks"), Worker),
                 release, null, () => new(false, 1), readinessForTest: () => new JsonObject { ["ready"] = true });
             Worker.SessionLocked = () => Host.SessionPrecheckRefusal("GetSessionState") != null;
-            Worker.Status(CancellationToken.None).GetAwaiter().GetResult();
+            // The first generation starts and reports its status under the production budgets; the scaled budgets above apply
+            // from the first operation a test measures (P8-stab-1).
+            using (Worker.ProductionBudgets()) Worker.Status(CancellationToken.None).GetAwaiter().GetResult();
         }
         internal Task<CallToolResult> Call(bool foundation, CancellationToken token = default, string? payload = null, bool progress = false)
         {
@@ -220,6 +227,9 @@ public sealed class WorkerRobustnessTests
         Assert.Contains(scope.Rows, row => (string?)row["phase"] == "RETURNED");
         object key = scope.Worker.SessionKey;
         scope.ClearFault();
+        // The faulting call above ran on the scaled budgets. The explicit restart starts the next generation, which is then
+        // rebound and used, under the production budgets (P8-stab-1).
+        using var production = scope.Worker.ProductionBudgets();
         var restart = await scope.Worker.Restart(true, CancellationToken.None);
         Assert.True((bool?)restart["success"]); Assert.True((bool?)restart["requiresExplicitRebind"]);
         Assert.NotSame(key, scope.Worker.SessionKey); Assert.Null(scope.Worker.Binding);
@@ -243,13 +253,34 @@ public sealed class WorkerRobustnessTests
     [Theory, InlineData(false, false), InlineData(true, false), InlineData(false, true), InlineData(true, true)]
     public async Task Cancellation_after_dispatch_keeps_the_late_result_and_journal(bool shared, bool plcWorker)
     {
-        using var scope = new Scope("slow", plcWorker: plcWorker); using var cancel = new CancellationTokenSource();
-        var call = Task.Run(() => scope.Call(shared, cancel.Token));
-        await Task.Delay(70); cancel.Cancel();
-        var result = await call;
-        Assert.True((bool?)result.StructuredContent?["ok"], result.StructuredContent?.ToJsonString()); Assert.False(scope.Worker.Faulted);
-        Assert.Contains(scope.Rows, row => (string?)row["phase"] == "RETURNED_AFTER_CANCELLATION");
-        Assert.True((bool?)(await scope.Call(shared)).StructuredContent?["ok"]);
+        // Barrier instead of a 70-ms sleep (P8-stab-1): the slow request marks its dispatch on the worker and waits there until
+        // this test has cancelled. Under load the sleep cancelled before dispatch or after the reply.
+        string gate = Path.Combine(AppContext.BaseDirectory, "worker-fixture-gates", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(gate);
+        string? previousGate = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE");
+        Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE", gate);
+        try
+        {
+            using var scope = new Scope("slow", plcWorker: plcWorker); using var cancel = new CancellationTokenSource();
+            var call = Task.Run(() => scope.Call(shared, cancel.Token));
+            using (var bound = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
+                while (!File.Exists(Path.Combine(gate, "dispatched")))
+                {
+                    Assert.False(call.IsCompleted, "The call completed before its request reached the worker.");
+                    await Task.Delay(5, bound.Token);
+                }
+            cancel.Cancel();
+            File.WriteAllText(Path.Combine(gate, "release"), "");
+            var result = await call;
+            Assert.True((bool?)result.StructuredContent?["ok"], result.StructuredContent?.ToJsonString()); Assert.False(scope.Worker.Faulted);
+            Assert.Contains(scope.Rows, row => (string?)row["phase"] == "RETURNED_AFTER_CANCELLATION");
+            Assert.True((bool?)(await scope.Call(shared)).StructuredContent?["ok"]);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE", previousGate);
+            Directory.Delete(gate, true);
+        }
     }
     [Theory, InlineData(false, false), InlineData(true, false), InlineData(false, true), InlineData(true, true)]
     public async Task Oversized_request_never_faults_or_dispatches(bool shared, bool plcWorker)
@@ -380,6 +411,8 @@ public sealed class WorkerRobustnessTests
         Assert.Same(key, scope.Worker.SessionKey); Assert.NotNull(scope.Worker.Binding);
         using (await scope.Worker.Acquire(CancellationToken.None))
             Assert.False((bool?)(await scope.Worker.Restart(true, CancellationToken.None))["success"]);
+        // The confirmed restart starts the next generation; it does so under the production budgets (P8-stab-1).
+        using var production = scope.Worker.ProductionBudgets();
         var restarted = await scope.Worker.Restart(true, CancellationToken.None);
         Assert.True((bool?)restarted["success"]); Assert.Null(scope.Worker.Binding); Assert.NotSame(key, scope.Worker.SessionKey);
         Assert.NotNull(restarted["worker"]?["previousGenerations"]?[0]?["binding"]);

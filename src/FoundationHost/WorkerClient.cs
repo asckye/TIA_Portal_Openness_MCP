@@ -117,6 +117,10 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             ? ResponseGuardTool.Shrink(result, name, "worker", force: true) : result;
     private readonly WorkerTimeoutPolicy timeouts = new(defaultTimeoutSeconds, timeoutConfig,
         Environment.GetEnvironmentVariable("TIA_MCP_WORKER_TIMEOUTS"));
+    // Same test seam as EngineWorkerClient's spills directory: the process data location is cached at its first use, so
+    // parallel test processes could share it. Production always uses the data location.
+    internal string? SpillsDirectoryForTest { get; init; }
+    private string SpillsDirectory => SpillsDirectoryForTest ?? TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory;
     private readonly SemaphoreSlim serial = new(1, 1);
     private static readonly AsyncLocal<WorkerClient?> Held = new();
     internal async Task<IDisposable?> AcquireLane(CancellationToken token)
@@ -360,7 +364,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 channelFailureForStatus = failure;
                 throw WorkerOperationException.FromChannelFailure(failure);
             }
-            response = WorkerReplySpill.Read(TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory, response, out _);
+            response = WorkerReplySpill.Read(SpillsDirectory, response, out _);
             var result=JsonNode.Parse(response);
             outcome.AcceptResult(operation,arguments,result);
             if (outcome.Poisoned) priorUnknownRequestId ??= activeRequestId;
@@ -457,7 +461,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 var start = new ProcessStartInfo(Path.GetFullPath(workerExe)) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true, StandardInputEncoding = new System.Text.UTF8Encoding(false), StandardOutputEncoding = new System.Text.UTF8Encoding(false), StandardErrorEncoding = new System.Text.UTF8Encoding(false) };
                 foreach (var argument in new WorkerLaunchOptions(releaseKey, apiDirectory, nonce, WithUi, TiaPortalLocation).Arguments())
                     start.ArgumentList.Add(argument);
-                start.Environment["TIA_MCP_WORKER_SPILLS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory;
+                start.Environment["TIA_MCP_WORKER_SPILLS_DIRECTORY"] = SpillsDirectory;
                 start.Environment["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory;
                 process = Process.Start(start) ?? throw new IOException("Worker failed to start."); WorkerJob.Bind(process); WorkerShutdown.Register(this);
                 attachAttempted = false;
@@ -487,7 +491,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 try
                 {
                     var wire = await FoundationWorkerRequest.Dispatch(channel!, "adapter.Disconnect", "{}", BindingChange.MayAdvance, false, TimeSpan.FromMinutes(2), false, CancellationToken.None);
-                    wire = WorkerReplySpill.Read(TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory, wire, out _);
+                    wire = WorkerReplySpill.Read(SpillsDirectory, wire, out _);
                     disconnectAcknowledgement = (JsonObject)DisconnectContract.Validate(JsonNode.Parse(wire), true, attachedProcessId, attachedProcessId.HasValue).DeepClone();
                 }
                 catch (ChannelFailureException refused) when (DisconnectContract.Refused(refused))

@@ -20,7 +20,7 @@ internal sealed class WorkerBackendFixture : Foundation.IFoundationSessionWorker
         if (plcWorker)
             plc = new Foundation.WorkerClient(options.ReleaseKey, options.WorkerExe == "unused" ? options.EngineWorkerExe! : options.WorkerExe,
                 options.ApiDirectory, options.NativeEnabled, options.EngineTimeoutSeconds, options.WorkerTimeoutConfig)
-                { Bundled = options.BundledWorker, SharedSession = true };
+                { Bundled = options.BundledWorker, SharedSession = true, SpillsDirectoryForTest = spills };
         else engine = new Foundation.EngineWorkerClient(options, hash, spills) { StatusTimeoutForTest = statusTimeout };
         faultFixture = plc != null && Path.GetFileName(options.WorkerExe) == "TiaMcp.PlcWorker.FaultFixture.exe";
         services = Foundation.FoundationHostPorts.CreateServices(Inner, options.ReleaseKey,
@@ -68,6 +68,8 @@ internal sealed class WorkerBackendFixture : Foundation.IFoundationSessionWorker
     public JsonObject Snapshot() => services.Snapshot();
     public Task<JsonObject> Status(CancellationToken token) => services.StartForStatus(token);
     public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => services.Restart(confirmed, token);
+    // Production budgets until disposed; see ProductionWorkerBudgets.
+    internal IDisposable ProductionBudgets() => new ProductionWorkerBudgets(Client);
     public Task<IDisposable> Acquire(CancellationToken token) => services.Acquire(token);
     public Task<Engine.EngineReply> Invoke(string id, string name, JsonObject args, bool preview, CancellationToken token)
         => services.Invoke(id, name, args, preview, token);

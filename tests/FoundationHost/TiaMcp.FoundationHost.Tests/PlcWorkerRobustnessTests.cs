@@ -24,6 +24,9 @@ public sealed class PlcFixtureWorkerRobustnessTests
             Environment.SetEnvironmentVariable("TIA_MCP_PLC_WORKER_FAULT", mode);
             Worker = new WorkerClient(release, Fixture, Path.GetDirectoryName(Fixture)!, true,
                 timeoutConfig: "{\"default\":2}") { Bundled = false, WithUi = true, TiaPortalLocation = "C:/fixture Portal V" + release };
+            // Start the worker under the production budgets; the scaled 2-s default applies from the first operation a test
+            // measures (P8-stab-1). The fixture faults only the armed request, so this status read never consumes a fault.
+            using (new ProductionWorkerBudgets(Worker)) Worker.Observe("status", new(), CancellationToken.None).GetAwaiter().GetResult();
         }
         internal Process? Process => (Process?)typeof(WorkerClient).GetField("process", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(Worker);
         internal async Task Arm(string operation)
@@ -84,6 +87,8 @@ public sealed class PlcFixtureWorkerRobustnessTests
         await Assert.ThrowsAsync<InvalidOperationException>(() => scope.Worker.Call("ReadState", new(), CancellationToken.None));
         Environment.SetEnvironmentVariable("TIA_MCP_PLC_WORKER_FAULT", null);
         scope.VerifyChild();
+        // The explicit restart and the next generation's first read run under the production budgets (P8-stab-1).
+        using var production = new ProductionWorkerBudgets(scope.Worker);
         var restarted = await scope.Worker.RestartHostWorker(true, CancellationToken.None);
         Assert.True((bool?)restarted["restarted"]); Assert.True((bool?)restarted["requiresExplicitRebind"]);
         Assert.False(scope.Worker.Poisoned);

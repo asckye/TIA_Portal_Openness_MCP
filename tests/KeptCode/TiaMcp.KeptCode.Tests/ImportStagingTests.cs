@@ -398,6 +398,13 @@ namespace TiaMcp.Engine.Tests
             var result = store.List(); Assert.Equal(201, (int)result["totalBatches"]!);
             Assert.Equal(200, result["batches"]!.AsArray().Count); Assert.True((bool)result["truncated"]!);
             Assert.True(DateTimeOffset.Parse((string)result["batches"]![0]!["createdUtc"]!) > DateTimeOffset.Parse((string)result["batches"]![199]!["createdUtc"]!));
+            // The tool result of the same bounded list (P8-stab-1): it used to throw "Partial successful observations require a
+            // warning", which the hosts reported as INVALID_ARGUMENT for every list once 201 batches existed.
+            var listed = JsonNode.Parse(TiaMcp.Logic.V4.V4Json.Serialize(store.Run("ListStagedImportFiles")))!;
+            Assert.True((bool?)listed["ok"], listed.ToJsonString());
+            Assert.Equal("partial", (string?)listed["meta"]?["completeness"]);
+            Assert.Contains(listed["meta"]!["warnings"]!.AsArray(), warning => (string?)warning?["code"] == "INCOMPLETE_DATA");
+            Assert.Equal(200, listed["data"]!["batches"]!.AsArray().Count); Assert.Equal(201, (int?)listed["data"]!["totalBatches"]);
         }
         [Theory]
         [InlineData(false)][InlineData(true)]

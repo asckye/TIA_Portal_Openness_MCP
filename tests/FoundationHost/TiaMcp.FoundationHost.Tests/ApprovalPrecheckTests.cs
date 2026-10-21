@@ -14,11 +14,19 @@ public sealed class ApprovalPrecheckTests
     {
         internal int Previews, Writes, Reads;
         internal string? Refusal;
-        internal bool Unknown, Cancel;
+        internal bool Unknown, Cancel, StampPreview;
+        internal DateTimeOffset PreviewEnded;
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
         {
             bool preview = (bool?)arguments["dryRun"] == true;
             if (preview) Previews++; else if (arguments.ContainsKey("dryRun")) Writes++; else Reads++;
+            if (preview && StampPreview)
+            {
+                // Let the clock move past the request's creation, so the precheck visibly takes time, then mark its end.
+                var entered = DateTimeOffset.UtcNow;
+                SpinWait.SpinUntil(() => DateTimeOffset.UtcNow > entered);
+                PreviewEnded = DateTimeOffset.UtcNow;
+            }
             if (Cancel) throw new OperationCanceledException(token);
             if (Refusal != null) throw new WorkerOperationException("Fixture precondition: " + Refusal, -32602, "rejected-before-operation", JsonSerializer.Serialize(new { parameter = Refusal }));
             if (!preview && Unknown) throw new WorkerOperationException("Fixture native write interrupted.", -32603, "unknown");
@@ -143,6 +151,22 @@ public sealed class ApprovalPrecheckTests
             if (i >= 5) samples[setting].Add(watch.Elapsed.TotalMilliseconds);
         }
         File.WriteAllText("bin-build/P6-60/foundation-latency.json", JsonSerializer.Serialize(samples.ToDictionary(p => p.Key ? "enabled" : "disabled", p => p.Value)));
+    }
+    // The confirmation window opens after the precheck. Created before it, a request lost the precheck time from its configured
+    // seconds, and a precheck as long as the window expired it before Workbench could show it (ImportStagingHostTests under
+    // load, P8-stab-1). Deterministic: the deadline the wait receives must start no earlier than the end of the preview.
+    [Fact]
+    public async Task Approval_window_opens_after_the_precheck_preview()
+    {
+        var worker = new Worker { StampPreview = true }; DateTimeOffset? deadline = null; int seconds = 0;
+        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "CreatePlcTag"), worker), "19", null,
+            () => new(true, 1), (pending, settings, _) => { deadline = pending.Deadline; seconds = settings.TimeoutSeconds; pending.Validate();
+                return Task.FromResult(new ApprovalOutcome(pending, false, null)); });
+        var args = Arguments("CreatePlcTag"); args["dryRun"] = false; args["confirm"] = true; args["expectedProjectFile"] = "C:/Test.ap19";
+        var result = await tool.InvokeAsync(Request("CreatePlcTag", args));
+        Assert.True((bool?)result.StructuredContent?["ok"], result.StructuredContent?.ToJsonString());
+        Assert.Equal(1, worker.Previews); Assert.Equal(1, worker.Writes); Assert.Equal(1, seconds);
+        Assert.True(deadline >= worker.PreviewEnded.AddSeconds(seconds), $"deadline {deadline:O}; preview ended {worker.PreviewEnded:O}");
     }
     [Fact]
     public async Task Cancellation_in_precheck_is_not_started_and_never_approved()

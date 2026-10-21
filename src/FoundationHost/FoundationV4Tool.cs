@@ -350,6 +350,10 @@ internal sealed class FoundationV4Tool : McpServerTool
                         cancellationToken.ThrowIfCancellationRequested();
                     }
                 }
+                // The request was created before the precheck so the audit records it first; the confirmation window opens
+                // only now, as on the engine host. Otherwise a slow preview consumed the configured seconds, and a precheck
+                // longer than the window expired the request before Workbench could show it.
+                pending.Deadline = DateTimeOffset.UtcNow.AddSeconds(pending.TimeoutSeconds);
                 approval = approvalWait == null
                     ? await TiaOpenness.Shared.ApprovalClient.Wait(pending, settings, cancellationToken)
                     : await approvalWait(pending, settings, cancellationToken);

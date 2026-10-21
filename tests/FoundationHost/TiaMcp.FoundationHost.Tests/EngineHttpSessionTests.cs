@@ -22,6 +22,19 @@ public abstract class EngineHttpSessionTestsCases
         Assert.Contains("Engine catalog execution ownership mismatch: " + SessionFixtureTool.Name, error.Message);
     }
 
+    // Another shard's host or worker hashes the shared adapter identity while this fixture starts and ends: ArgumentRules.HashFile
+    // and the worker open it for reading with FileShare.Read. Barrier: hold that read handle across the whole fixture lifetime.
+    // The fixture must neither rewrite nor remove the identity under it (P8-stab-1).
+    [Fact]
+    public async Task Http_fixture_leaves_the_adapter_identity_that_another_shard_is_hashing()
+    {
+        string adapter = Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter.20.dll");
+        TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(adapter, "offline session fixture");
+        using (new FileStream(adapter, FileMode.Open, FileAccess.Read, FileShare.Read))
+        using (await Fixture.Start(PlcWorker, "20")) { }
+        Assert.Equal("offline session fixture", File.ReadAllText(adapter));
+    }
+
     [Theory, InlineData("20"), InlineData("21")]
     public async Task Unknown_outcome_can_disconnect_and_a_new_session_can_acquire_the_same_lease(string release)
     {
@@ -79,8 +92,10 @@ public abstract class EngineHttpSessionTestsCases
         await a.Tool("ConnectPortal", new() { ["processId"] = 323 });
         int pid = (int)(await a.Tool(SessionFixtureTool.Name))["data"]!["fixturePid"]!;
         using var worker = Process.GetProcessById(pid);
+        // The warm worker gets the scaled 0.5-s budget for the timed-out call only (P8-stab-1).
+        if (waitForTimeout) await host.UseScaledBudgets(true);
         var running = a.Tool(SessionFixtureTool.Name, new() { ["hang"] = true }, ok: false);
-        if (waitForTimeout) await running;
+        if (waitForTimeout) { await running; await host.UseScaledBudgets(false); }
         else
         {
             for (int i = 0; i < 100; i++)
@@ -105,7 +120,11 @@ public abstract class EngineHttpSessionTestsCases
     {
         using var host = await Fixture.Start(PlcWorker, release, shortTimeout: true); using var a = new Session(host.Url); await a.Initialize();
         await a.Tool("ConnectPortal", new() { ["processId"] = 324 });
+        // Start and attach under production budgets, time out the call under test on the scaled 0.5 s, and start the next
+        // generation under production budgets again (P8-stab-1).
+        await host.UseScaledBudgets(true);
         await a.Tool(SessionFixtureTool.Name, new() { ["hang"] = true }, ok: false);
+        await host.UseScaledBudgets(false);
         var restarted = await a.Tool("RestartOpennessWorker", new() { ["confirmRestart"] = true });
         Assert.Contains("\"requiresTiaRestart\":true", restarted["data"]!.ToJsonString());
         Assert.Contains("restart that TIA instance", restarted["data"]!.ToJsonString());
@@ -242,9 +261,19 @@ public abstract class EngineHttpSessionTestsCases
         public void Dispose() => client.Dispose();
     }
 
-    private sealed class Fixture(Process process, string url, string directory, string image, string adapter, byte[]? priorAdapter) : IDisposable
+    private sealed class Fixture(Process process, string url, string directory, string image,
+        System.Threading.Channels.Channel<string> budgetReplies) : IDisposable
     {
         private readonly Task exited = process.WaitForExitAsync();
+        // shortTimeout hosts start every worker under the production budgets; the scaled {"default":0.5} applies only between
+        // UseScaledBudgets(true) and UseScaledBudgets(false). The reply names the default the host applied.
+        internal async Task UseScaledBudgets(bool scaled)
+        {
+            await process.StandardInput.WriteLineAsync(FixtureHostWorkerBudgets.Command + (scaled ? "scaled" : "production"));
+            await process.StandardInput.FlushAsync();
+            string reply = await budgetReplies.Reader.ReadAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(30));
+            Assert.EndsWith(" default=" + (scaled ? "0.5" : "120"), reply);
+        }
         internal string Url { get; private set; } = url;
         internal string DataDirectory => directory;
         internal static async Task<Fixture> Start(bool plcWorker, string release, bool shortTimeout = false, bool gracefulShutdown = false, bool invalidCatalog = false)
@@ -252,9 +281,9 @@ public abstract class EngineHttpSessionTestsCases
             string root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
             string directory = Path.Combine(root, "bin-build", "P7-07a-tests", Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
             string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
-            string adapter = Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll");
-            byte[]? priorAdapter = File.Exists(adapter) ? File.ReadAllBytes(adapter) : null;
-            File.WriteAllText(adapter, "offline session fixture");
+            // Parallel shards share this output directory and hash the identity while their workers start: install it atomically and
+            // leave it in place. Truncating, restoring or deleting it here refused or killed another shard's worker (P8-stab-1).
+            TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
             string catalog = Path.Combine(directory, "catalog.json");
             SessionFixtureTool.WriteCatalog(catalog, release, exe);
             if (invalidCatalog)
@@ -280,7 +309,7 @@ public abstract class EngineHttpSessionTestsCases
             if (shortTimeout)
             {
                 string timeouts = Path.Combine(directory, "timeouts.json"); File.WriteAllText(timeouts, "{\"default\":0.5}");
-                start.ArgumentList.Add("--worker-timeout-config"); start.ArgumentList.Add(timeouts);
+                start.ArgumentList.Add("--fixture-scaled-worker-budgets"); start.ArgumentList.Add(timeouts);
             }
             start.Environment["TIA_MCP_DATA_DIRECTORY"] = directory; start.Environment["TiaPortalLocation"] = "";
             start.Environment["TIA_MCP_FIXTURE_LEASE_ROOT"] = Path.Combine(directory, "leases");
@@ -290,7 +319,12 @@ public abstract class EngineHttpSessionTestsCases
             string config = Path.Combine(directory, "config"); Directory.CreateDirectory(config);
             new ApprovalSettings(false, 1).Save(Path.Combine(config, "approval.settings"));
             var process = Process.Start(start)!;
-            process.OutputDataReceived += (_, e) => { if (e.Data != null) File.AppendAllText(Path.Combine(directory, "host.log"), e.Data + "\n"); };
+            var budgetReplies = System.Threading.Channels.Channel.CreateUnbounded<string>();
+            process.OutputDataReceived += (_, e) => {
+                if (e.Data == null) return;
+                File.AppendAllText(Path.Combine(directory, "host.log"), e.Data + "\n");
+                if (e.Data.StartsWith(FixtureHostWorkerBudgets.Reply, StringComparison.Ordinal)) budgetReplies.Writer.TryWrite(e.Data);
+            };
             process.ErrorDataReceived += (_, e) => {
                 if (e.Data == null) return;
                 File.AppendAllText(Path.Combine(directory, "host-error.log"), e.Data + "\n");
@@ -302,7 +336,7 @@ public abstract class EngineHttpSessionTestsCases
                     listening.TrySetResult(endpoint.GetLeftPart(UriPartial.Authority));
             };
             process.BeginOutputReadLine(); process.BeginErrorReadLine();
-            var fixture = new Fixture(process, url, directory, exe, adapter, priorAdapter);
+            var fixture = new Fixture(process, url, directory, exe, budgetReplies);
             try
             {
                 using var client = new HttpClient(new HttpClientHandler { UseProxy = false }) { Timeout = TimeSpan.FromSeconds(1) };
@@ -346,7 +380,6 @@ public abstract class EngineHttpSessionTestsCases
                 process.Kill(); Assert.True(process.WaitForExit(5000), "Owned fixture host did not exit.");
             }
             process.Dispose();
-            if (priorAdapter == null) File.Delete(adapter); else File.WriteAllBytes(adapter, priorAdapter);
         }
     }
 }

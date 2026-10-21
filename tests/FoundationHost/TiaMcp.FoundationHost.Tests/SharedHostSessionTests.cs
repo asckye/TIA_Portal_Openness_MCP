@@ -49,6 +49,19 @@ public sealed class SharedHostSessionTests
         Assert.Null(session.Snapshot()["worker"]?["pid"]);
     }
 
+    // Another shard's host or worker hashes the shared adapter identity while this fixture starts and ends: ArgumentRules.HashFile
+    // and the worker open it for reading with FileShare.Read. Barrier: hold that read handle across the whole fixture lifetime.
+    // The fixture must neither rewrite nor remove the identity under it (P8-stab-1).
+    [Fact]
+    public void Session_fixture_leaves_the_adapter_identity_that_another_shard_is_hashing()
+    {
+        string adapter = Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter.20.dll");
+        TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(adapter, "offline session fixture");
+        using (new FileStream(adapter, FileMode.Open, FileAccess.Read, FileShare.Read))
+        using (new SessionWorkerFixture("20", false)) { }
+        Assert.Equal("offline session fixture", File.ReadAllText(adapter));
+    }
+
     [Theory] [InlineData("20")] [InlineData("21")]
     public void Plc_opt_in_refuses_an_engine_override(string release)
     {
@@ -216,22 +229,16 @@ public sealed class SharedHostSessionTests
 
     private sealed class SessionWorkerFixture : IDisposable
     {
-        private readonly string adapter;
-        private readonly byte[]? previous;
         internal TiaMcp.FoundationHost.WorkerClient Worker { get; }
         internal SessionWorkerFixture(string release, bool native)
         {
             string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
-            adapter = Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll");
-            previous = File.Exists(adapter) ? File.ReadAllBytes(adapter) : null;
-            File.WriteAllText(adapter, "offline session fixture");
+            // Parallel shards share this output directory and hash the identity while their workers start: install it atomically and
+            // leave it in place. Truncating, restoring or deleting it here refused or killed another shard's worker (P8-stab-1).
+            TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
             Worker = new(release, exe, AppContext.BaseDirectory, native) { Bundled = false, SharedSession = true };
         }
-        public void Dispose()
-        {
-            Worker.Dispose();
-            if (previous == null) File.Delete(adapter); else File.WriteAllBytes(adapter, previous);
-        }
+        public void Dispose() => Worker.Dispose();
     }
 
 }

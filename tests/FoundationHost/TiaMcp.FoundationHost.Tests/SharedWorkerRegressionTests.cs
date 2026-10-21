@@ -248,6 +248,40 @@ public sealed class SharedWorkerRegressionTests
         Assert.False(child.HasExited);
     }
 
+    // TerminateForDisconnect closes the channel before it stops the worker, and an idle worker then leaves on its own, possibly
+    // while its image is probed. Barrier: the probe closes the input and waits for that exit; it then fails or finds no module,
+    // as reading the modules of a process that has left does. The owned child is stopped, so neither outcome is a refusal
+    // (FoundationRecoveryTests under load, P8-stab-1).
+    [Theory, InlineData(true), InlineData(false)]
+    public async Task Shutdown_of_a_worker_that_exits_during_the_image_probe_is_complete(bool probeThrows)
+    {
+        using var fixture = new Fixture("20");
+        await fixture.Worker.Observe("status", new(), CancellationToken.None);
+        var child = Field<Process>(fixture.Worker, "process");
+        var channel = Field<ChannelClient>(fixture.Worker, "channel");
+        var error = Record.Exception(() => WorkerShutdown.KillOwned(child, process =>
+        {
+            channel.Dispose();
+            Assert.True(process.WaitForExit(30000), "The idle worker did not leave after its input closed.");
+            return probeThrows ? throw new Win32Exception(299) : null;
+        }));
+        Assert.Null(error);
+        Assert.True(child.HasExited);
+    }
+
+    // Another shard's host or worker hashes the shared adapter identity while this fixture starts and ends: ArgumentRules.HashFile
+    // and the worker open it for reading with FileShare.Read. Barrier: hold that read handle across the whole fixture lifetime.
+    // The fixture must neither rewrite nor remove the identity under it (P8-stab-1).
+    [Fact]
+    public void Worker_fixture_leaves_the_adapter_identity_that_another_shard_is_hashing()
+    {
+        string adapter = Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter.20.dll");
+        TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(adapter, "offline session fixture");
+        using (new FileStream(adapter, FileMode.Open, FileAccess.Read, FileShare.Read))
+        using (new Fixture("20")) { }
+        Assert.Equal("offline session fixture", File.ReadAllText(adapter));
+    }
+
     [Fact]
     public async Task Shutdown_image_probe_failure_is_a_retained_refusal()
     {
@@ -354,8 +388,6 @@ public sealed class SharedWorkerRegressionTests
     private sealed class Fixture : IDisposable
     {
         private readonly string release;
-        private readonly string adapter;
-        private readonly byte[]? previous;
         private readonly string? previousLease = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT");
         private readonly string root = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
             "bin-build", "r2-worker-" + Guid.NewGuid().ToString("N")[..8]);
@@ -365,9 +397,9 @@ public sealed class SharedWorkerRegressionTests
             this.release = release;
             Directory.CreateDirectory(root);
             Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", root);
-            adapter = Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll");
-            previous = File.Exists(adapter) ? File.ReadAllBytes(adapter) : null;
-            File.WriteAllText(adapter, "offline session fixture");
+            // Parallel shards share this output directory and hash the identity while their workers start: install it atomically and
+            // leave it in place. Truncating, restoring or deleting it here refused or killed another shard's worker (P8-stab-1).
+            TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
             Worker = new(release, Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe"), AppContext.BaseDirectory, true)
                 { Bundled = false, SharedSession = release is "20" or "21" };
         }
@@ -386,7 +418,6 @@ public sealed class SharedWorkerRegressionTests
         public void Dispose()
         {
             Worker.Dispose();
-            if (previous == null) File.Delete(adapter); else File.WriteAllBytes(adapter, previous);
             Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", previousLease);
             Directory.Delete(root, true);
         }
