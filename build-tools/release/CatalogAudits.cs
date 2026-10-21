@@ -22,6 +22,11 @@ internal static class CatalogAudits
         catalogs["20"] = Set(names.Except(only21).Except(PortedFamilies.Withheld(families, "20")));
         catalogs["21"] = Set(names.Except(PortedFamilies.Withheld(families, "21")));
         var expected = new CatalogData(root).Rosters; foreach (var key in Keys) Require(catalogs[key].SetEquals(expected[key]), "Built/source catalog mismatch: " + key);
+        foreach (var key in new[] { "20", "21" })
+        {
+            var hostCatalog = Set(Read(input, $"multi-version/tools-{key}.json")["tools"]!.AsArray().Select(t => Text(t!["name"])));
+            Require(hostCatalog.SetEquals(expected[key]) && hostCatalog.SetEquals(catalogs[key]), "Host/engine/source catalog mismatch: " + key);
+        }
         var results = new Dictionary<string, string>(); var statistics = new JsonArray();
         foreach (var key in Keys)
         {
@@ -49,6 +54,19 @@ internal static class CatalogAudits
             var hashes = new JsonObject(); foreach (var path in xmlFiles) hashes[Path.GetFileName(path)] = Hash(File.ReadAllBytes(path));
             statistics.Add(new JsonObject { ["releaseKey"] = key, ["mcpTools"] = catalogs[key].Count, ["xmlFiles"] = xmlFiles.Length, ["domainSignatures"] = signatures.Count, ["domainMemberNames"] = members.Count, ["compiledDirectMemberNames"] = observed.Count, ["withoutDirectMemberReference"] = candidates.Length,
                 ["topCandidateNamespaces"] = new JsonArray(byNamespace.Select(p => (JsonNode)new JsonArray(p.Name, p.Count)).ToArray()), ["sdkXmlSha256"] = hashes, ["compiledCallInventorySha256"] = Hash(File.ReadAllBytes(coverage)) });
+            if (key is "20" or "21")
+            {
+                var plcCoverage = Path.Combine(input, $"multi-version/adapters/coverage-{key}.json");
+                var plcCalls = new HashSet<(string Kind, string Owner, string Member)>();
+                foreach (var site in Read("", plcCoverage)["sites"]!.AsArray())
+                {
+                    var match = Regex.Match(Text(site!["member"]), @" (Siemens\.Engineering\.[^ ]+?)::([^\(]+)\("); if (!match.Success) continue;
+                    var owner = Regex.Replace(match.Groups[1].Value, "<.*>", "").Replace('/', '.'); var member = match.Groups[2].Value; var kind = member.StartsWith("get_", StringComparison.Ordinal) || member.StartsWith("set_", StringComparison.Ordinal) ? "P" : "M"; if (kind == "P") member = member[4..]; plcCalls.Add((kind, owner, Regex.Replace(member, "<.*>", "")));
+                }
+                statistics[^1]!["plcCompiledDirectMemberNames"] = members.Intersect(plcCalls).Count();
+                statistics[^1]!["plcCompiledCallInventorySha256"] = Hash(File.ReadAllBytes(plcCoverage));
+                statistics[^1]!["hostCatalogSha256"] = Hash(File.ReadAllBytes(Path.Combine(input, $"multi-version/tools-{key}.json")));
+            }
             results[Path.Combine(output, $"api-candidates-{key}.json")] = Encode(new JsonObject { ["releaseKey"] = key, ["caveat"] = "No exact owner/member-name direct call found. Dynamic calls, inherited/generic targets and unadvertised adapter code require manual review. This is not a missing-tool count.", ["members"] = new JsonArray(candidates.OrderBy(p => p.Kind, PythonStringComparer.Instance).ThenBy(p => p.Owner, PythonStringComparer.Instance).ThenBy(p => p.Member, PythonStringComparer.Instance).Select(p => (JsonNode?)JsonValue.Create($"{p.Kind}:{p.Owner}.{p.Member}")).ToArray()) });
         }
         results["manifest/version-api-audit.json"] = Encode(new JsonObject { ["method"] = Method, ["nativeTiaExecuted"] = false, ["versions"] = statistics });
@@ -73,7 +91,16 @@ internal static class CatalogAudits
             var full = Read(input, path).AsArray(); Require(full.Count == 4 && full.All(r => r!["checkedToolCount"]!.GetValue<int>() > 0), "Four full/lite transport reports required: " + key);
             var selected = full.First(r => Text(r!["profile"]) == "full" && Text(r["transport"]) == "stdio")!; Require(selected["allSourceTextRetrievedAndHashChecked"]!.GetValue<bool>(), "Source text hash check required: " + key); records.Add(Copy(selected));
         }
-        return UsageFromRecords(root, matrix, catalog, records);
+        var result = UsageFromRecords(root, matrix, catalog, records);
+        var plcRecords = new JsonArray(records.Where(row => Text(row!["releaseKey"]) is not ("20" or "21")).Select(row => row!.DeepClone()).ToArray());
+        foreach (var key in new[] { "20", "21" })
+            plcRecords.Add(Read(input, $"multi-version/usage-v{key}-plc.json").AsArray().Single()!.DeepClone());
+        Require(plcRecords.Count == Keys.Count && Set(plcRecords.Select(row => Text(row!["releaseKey"]))).SetEquals(Keys), "Exactly eight PLC transport usage receipts required");
+        Require(plcRecords.All(row => row!["allSourceTextRetrievedAndHashChecked"]!.GetValue<bool>()), "Source text hash check required for every PLC usage receipt");
+        // Validated with the same rules, but not written: audit-tool-usage writes this result to manifest/tool-usage-coverage.json,
+        // whose committed bytes check-all's engine and PLC usage audits both reproduce from their own receipts.
+        _ = UsageFromRecords(root, matrix, catalog, plcRecords);
+        return result;
     }
     internal static JsonObject UsageFromRecords(string root, JsonObject matrix, JsonNode catalog, JsonArray records)
     {

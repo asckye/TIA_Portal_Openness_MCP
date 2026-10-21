@@ -6,6 +6,30 @@ namespace TiaMcp.ReleaseTool.Tests;
 
 public sealed class ReleaseRecordParityTests
 {
+    [Theory]
+    [Trait("Category", "ReleaseParity")]
+    [InlineData("20")]
+    [InlineData("21")]
+    public void PlcPreparationIsHashedWhileTheEngineRemainsACompletionInput(string key)
+    {
+        using var tree = new StaticTree();
+        var plc = $"runtime/v{key}/plc-worker/TiaMcp.PlcWorker.{key}.exe";
+        var engine = $"runtime/v{key}/worker/TiaMcp.Engine.V{key}.exe";
+        // GetRuntimeFiles reads every PlcWorker entry assembly's metadata, so the worker must be a real PE image.
+        tree.Write(plc, "");
+        File.WriteAllBytes(Path.Combine(tree.Root, plc), PackageDependencyTests.AssemblyBytes(plc, [], null));
+        tree.Write(engine, "engine");
+        var prepared = ReleaseRecords.GetRuntimeFiles(tree.Root, prepared: true);
+        Assert.Contains(prepared, row => row.Path == plc);
+        Assert.DoesNotContain(prepared, row => row.Path == engine);
+        var complete = ReleaseRecords.GetRuntimeFiles(tree.Root);
+        Assert.Contains(complete, row => row.Path == plc);
+        Assert.Contains(complete, row => row.Path == engine);
+        var hash = prepared.Single(row => row.Path == plc).Sha256;
+        File.WriteAllBytes(Path.Combine(tree.Root, plc), PackageDependencyTests.AssemblyBytes(plc, [], null));
+        Assert.NotEqual(hash, ReleaseRecords.GetRuntimeFiles(tree.Root, prepared: true).Single(row => row.Path == plc).Sha256);
+    }
+
     [Fact]
     [Trait("Category", "ReleaseParity")]
     public void EmptySourceHashMatchesSha256() =>

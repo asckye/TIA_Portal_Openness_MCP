@@ -1305,21 +1305,12 @@ internal static partial class ReleaseCommands
                 foreach (var file in Directory.EnumerateFiles(publish).Where(file => new[] { ".exe", ".dll", ".config", ".json" }.Contains(Path.GetExtension(file), StringComparer.OrdinalIgnoreCase)))
                     File.Copy(file, Path.Combine(runtime, Path.GetFileName(file)), true);
                 File.WriteAllText(Path.Combine(runtime, "release-key.txt"), key, new System.Text.UTF8Encoding(false));
-                if (key is "20" or "21")
-                {
-                    using var baseline = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root, $"manifest/contracts/v4/baseline/{key}.json")));
-                    releaseRows.Add(new { releaseKey = key, profile = "full-engine", toolCount = baseline.RootElement.GetProperty("tools").GetArrayLength(), nativeAcceptance = "NOT RUN" });
-                    continue; // The engine build installs the woven worker and its exact catalog.
-                }
-                var workerBuild = Path.Combine(Root, $"src/PlcWorker/bin/{key}/Release/net48");
-                if (!Directory.Exists(workerBuild)) throw new ReleaseException($"Worker build output missing: {workerBuild}");
-                foreach (var file in Directory.EnumerateFiles(workerBuild).Where(file => new[] { ".exe", ".dll", ".config" }.Contains(Path.GetExtension(file), StringComparer.OrdinalIgnoreCase)))
-                    File.Copy(file, Path.Combine(worker, Path.GetFileName(file)), true);
-                if (Directory.EnumerateFiles(worker, "TiaMcp.Adapter.*.dll").Count() != 1) throw new ReleaseException($"Exactly one matching adapter is required: {key}");
+                InstallReleasePlcWorker(Root, key);
 
                 var catalog = WithIsolatedHost(runTemp, $"foundation-catalog-{key}", approvalEnabled: false, _ =>
                 {
-                    var result = ProcessRunner.Run(Path.Combine(runtime, "TiaMcp.FoundationHost.exe"), ["--catalog"], Root);
+                    var result = ProcessRunner.Run(Path.Combine(runtime, "TiaMcp.FoundationHost.exe"),
+                        ["--catalog", "--release-key", key, "--profile", "full", .. key is "20" or "21" ? new[] { "--plc-worker" } : []], Root);
                     WriteLog(Path.Combine(logs, $"tools-{key}.json"), new CommandResult(0, result.StandardOutput, ""));
                     ProcessRunner.RequireSuccess(result, $"Foundation catalog failed: {key}");
                     return JsonDocument.Parse(result.StandardOutput);
@@ -1327,7 +1318,7 @@ internal static partial class ReleaseCommands
                 using (catalog)
                 {
                     var toolCount = catalog.RootElement.GetProperty("tools").GetArrayLength();
-                    releaseRows.Add(new { releaseKey = key, profile = "plc-foundation", toolCount, nativeAcceptance = "NOT RUN" });
+                    releaseRows.Add(new { releaseKey = key, profile = key is "20" or "21" ? "full-engine" : "plc-foundation", toolCount, nativeAcceptance = "NOT RUN" });
                 }
             }
 
@@ -1385,7 +1376,9 @@ internal static partial class ReleaseCommands
                         var suiteArgs = new List<string> { "-Suite", suite, "-Dotnet", dotnet,
                             "-NoRestore", "-DotnetArg=--no-build", "-ResultsDirectory", Path.Combine(suiteResults, suite) };
                         if (!string.IsNullOrWhiteSpace(nuget)) suiteArgs.Add("-DotnetArg=-p:RestoreConfigFile=" + Path.GetFullPath(nuget));
-                        var result = DotnetSuites.Run(Root, Options.Parse(suiteArgs.ToArray(), new HashSet<string> { "NoRestore" }), host.Environment);
+                        var result = suite == "foundation-api" ? RunSharedSuite("offline-suites foundation-api", FoundationApiSuiteArguments(dotnet, api, logs), logs,
+                                arguments => DotnetSuites.Run(Root, Options.Parse([.. arguments, .. string.IsNullOrWhiteSpace(nuget) ? Array.Empty<string>() : ["-DotnetArg=-p:RestoreConfigFile=" + nuget]], new HashSet<string>()), host.Environment))
+                            : DotnetSuites.Run(Root, Options.Parse(suiteArgs.ToArray(), new HashSet<string> { "NoRestore" }), host.Environment);
                         WriteLog(Path.Combine(logs, suite + "-tests.log"), result);
                         ProcessRunner.RequireSuccess(result, "TRX suite gate failed: " + suite);
                         try { Directory.Delete(host.Root, true); }
@@ -1424,18 +1417,43 @@ internal static partial class ReleaseCommands
                         ["minimumPassed"] = row.GetProperty("minimumPassed").GetInt32(), ["maximumSkipped"] = row.GetProperty("maximumSkipped").GetInt32()
                     };
                 }
+            }
+            if (test && plan.Includes("foundation-transport"))
+            {
+                var fixture = "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/TiaMcp.WorkerChannel.TransportFixture.csproj";
+                ProcessRunner.RequireSuccess(RunLoggedProcess(dotnet, ["build", fixture, "-c", "Release", "-v:q", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false", "-p:NuGetAudit=false"], logs, "fixture-build.log", nuget), "Transport fixture build failed");
+                WithIsolatedHost(runTemp, "foundation-transport", approvalEnabled: false, _ =>
+                {
+                    var result = RunLoggedProcess(python, ["scripts/checks/Test-FoundationTransport.py", "--fixture", "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe", "--releases", "14sp1", "15.1", "16", "17", "18", "19", "--output", Path.Combine(logs, "transport")], logs, "transport.log", null);
+                    ProcessRunner.RequireSuccess(result, "Foundation transport test failed");
+                    return 0;
+                });
+                validationNode["foundationTransportExecuted"] = true;
+            }
+
+            PreparePlcReleaseChecks(dotnet, api, nuget, logs, runTemp, Path.Combine(logs, "dotnet-home-plc"), production: false);
+            if (test)
+            {
+                RunPlcReleaseChecks(plan, options, api, logs, runTemp, Path.Combine(logs, "dotnet-home-plc"), dotnet, python, nuget);
                 if (plan.Includes("foundation-transport"))
                 {
-                    var fixture = "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/TiaMcp.WorkerChannel.TransportFixture.csproj";
-                    ProcessRunner.RequireSuccess(RunLoggedProcess(dotnet, ["build", fixture, "-c", "Release", "-v:q", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false", "-p:NuGetAudit=false"], logs, "fixture-build.log", nuget), "Transport fixture build failed");
-                    WithIsolatedHost(runTemp, "foundation-transport", approvalEnabled: false, _ =>
-                    {
-                        var result = RunLoggedProcess(python, ["scripts/checks/Test-FoundationTransport.py", "--fixture", "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe", "--releases", "14sp1", "15.1", "16", "17", "18", "19", "--output", Path.Combine(logs, "transport")], logs, "transport.log", null);
-                        ProcessRunner.RequireSuccess(result, "Foundation transport test failed");
-                        return 0;
-                    });
-                    validationNode["foundationTransportExecuted"] = true;
+                    RunBuildRaw(python, ["scripts/checks/Test-FoundationTransport.py", "--plc-worker",
+                        "--fixture", Path.Combine(Root, "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe"),
+                        "--host-exe", Path.Combine(Root, "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe"),
+                        "--releases", .. PlcWorkerFixtures.Keys, "--plc-sdk-worker", "20=" + ReleasePlcFixture(logs, "20"),
+                        "--plc-sdk-worker", "21=" + ReleasePlcFixture(logs, "21"), "--public-api-root", api,
+                        "--temp-root", Path.Combine(runTemp, "transport-plc"), "--output", Path.Combine(logs, "transport-plc")], Path.Combine(logs, "transport-plc.log"),
+                        runTemp, Path.Combine(logs, "dotnet-home-plc"), api, nuget, "Eight-release PLC transport");
+                    validationNode["plcFoundationTransportExecuted"] = true;
                 }
+                validationNode["plcChecksExecuted"] = JsonSerializer.SerializeToNode(PlcReleaseJobs(Root, api, logs, runTemp, dotnet, python)
+                    .Where(job => PlcReleaseSelected(plan, job)).Select(job => job.Name));
+            }
+            else if (plan.Includes("foundation-approval"))
+            {
+                // The pre-existing Foundation approval gate also runs without -Test.
+                RunPlcReleaseChecks(plan with { SelectedChecks = ["plc-approval"] }, options, api, logs, runTemp,
+                    Path.Combine(logs, "dotnet-home-plc"), dotnet, python, nuget);
             }
 
             if (File.Exists(pendingPath)) File.Delete(pendingPath);
@@ -1444,6 +1462,7 @@ internal static partial class ReleaseCommands
             var evidencePaths = new List<string>(adapterEvidence);
             evidencePaths.AddRange(Directory.EnumerateFiles(logs, "tools-*.json"));
             evidencePaths.AddRange(releaseCheckEvidence);
+            if (test || plan.Includes("foundation-approval")) evidencePaths.Add(Path.Combine(logs, "plc-checks-result.json"));
             if (test && plan.Includes("foundation-transport")) evidencePaths.Add(Path.Combine(logs, "transport/tool-usage.json"));
 
             if (!options.Has("CompleteOnly") && plan.Includes("foundation-approval"))
@@ -1489,6 +1508,21 @@ internal static partial class ReleaseCommands
                 }
                 evidencePaths.Add(Path.Combine(approvalOutput, "result.json"));
             }
+
+            foreach (var key in new[] { "20", "21" })
+            {
+                var approvalPath = Path.Combine(logs, "approval-v" + key + "-plc/result.json");
+                if (plan.Includes("foundation-approval") || test && plan.Includes("plc-approval"))
+                {
+                    ValidateCheckAllApproval(approvalPath);
+                    evidencePaths.Add(approvalPath);
+                    var index = releaseRows.FindIndex(row => (string)row.GetType().GetProperty("releaseKey")!.GetValue(row)! == key);
+                    var row = releaseRows[index];
+                    releaseRows[index] = new { releaseKey = key, profile = "full-engine", toolCount = (int)row.GetType().GetProperty("toolCount")!.GetValue(row)!,
+                        nativeAcceptance = "NOT RUN", plcApprovalSafetyChecksPassed = 7, plcApprovalDefaultEnabled = true };
+                }
+            }
+            if (test) AddPlcReleaseEvidence(evidencePaths, logs);
 
             var preparedFiles = ReleaseRecords.GetRuntimeFiles(Root, prepared: true);
             var evidence = evidencePaths.Where(File.Exists).Order(StringComparer.OrdinalIgnoreCase)
@@ -1549,6 +1583,19 @@ internal static partial class ReleaseCommands
                 var usage = RunLoggedProcess(Dotnet, [typeof(ReleaseCommands).Assembly.Location, "audit-tool-usage"], logs, "tool-usage.log", null);
                 ProcessRunner.RequireSuccess(usage, "All-release usage coverage failed");
                 validationAfter["toolUsageCoverageExecuted"] = true;
+                var receipts = new JsonArray();
+                var oldReceipts = JsonNode.Parse(File.ReadAllText(Path.Combine(logs, "transport/tool-usage.json")))!.AsArray();
+                foreach (var key in PlcWorkerFixtures.Keys)
+                {
+                    var receipt = key is "20" or "21"
+                        ? JsonNode.Parse(File.ReadAllText(Path.Combine(logs, "usage-v" + key + "-plc.json")))!.AsArray().Single()!
+                        : oldReceipts.Single(row => row!["releaseKey"]!.GetValue<string>() == key)!;
+                    receipts.Add(receipt.DeepClone());
+                }
+                var receiptPath = Path.Combine(logs, "usage-receipts-plc.json");
+                File.WriteAllText(receiptPath, receipts.ToJsonString(), new System.Text.UTF8Encoding(false));
+                WriteJson(Path.Combine(logs, "tool-usage-audit-plc.json"), CatalogAudits.Usage(Root, recordsPath: receiptPath));
+                validationAfter["plcToolUsageCoverageExecuted"] = true;
             }
             var files = ReleaseRecords.GetRuntimeFiles(Root);
             var currentValidation = ReleaseRecords.GetValidationInputs(Root, "multi");

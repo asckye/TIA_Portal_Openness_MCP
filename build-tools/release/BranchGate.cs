@@ -13,6 +13,17 @@ internal static partial class ReleaseCommands
         return 0;
     }
 
+    // check-all's stability jobs run 50 rounds; fewer leave the handle-growth bound only a cold first sample as baseline.
+    internal const int BranchGateMinimumStabilityRounds = 50;
+
+    internal static int BranchGateStabilityRounds(Options options)
+    {
+        var text = options.Get("LocalStabilityRounds", BranchGateMinimumStabilityRounds.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        if (!int.TryParse(text, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var rounds) || rounds < BranchGateMinimumStabilityRounds)
+            throw new ReleaseException($"Branch gate requires at least {BranchGateMinimumStabilityRounds} stability rounds (the check-all value); -LocalStabilityRounds {text} is refused.", 64);
+        return rounds;
+    }
+
     private static int BranchGate(Options options)
     {
         EnsureWindows("branch-gate");
@@ -26,8 +37,7 @@ internal static partial class ReleaseCommands
         var nuget = options.Get("NuGetConfig") ?? Environment.GetEnvironmentVariable("TIA_MCP_OFFLINE_NUGET_CONFIG");
         if (string.IsNullOrWhiteSpace(nuget)) throw new ReleaseException("Branch gate requires -NuGetConfig (offline).");
         if (ReleaseValidation.OfflineNuGetError(nuget) is { } error) throw new ReleaseException(error);
-        var rounds = int.Parse(options.Get("LocalStabilityRounds", "10"), System.Globalization.CultureInfo.InvariantCulture);
-        if (rounds < 10) throw new ReleaseException("Branch gate requires at least 10 stability rounds.");
+        var rounds = BranchGateStabilityRounds(options);
         Directory.CreateDirectory(logs);
         var temp = Path.Combine(Path.GetTempPath(), "tmr-branch-" + Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(temp);
@@ -81,6 +91,7 @@ internal static partial class ReleaseCommands
                 RunBuildRaw(Path.Combine(runtime, $"TiaMcp.Engine.V{major}.exe"), ["--write-tool-catalog", Path.Combine(runtime, "tool-catalog.json")],
                     Path.Combine(logs, $"tool-catalog-v{major}.log"), temp, cli, apiRoot, nuget, "Engine worker catalog");
             }
+            PreparePlcReleaseChecks(dotnet, apiRoot, nuget, logs, temp, cli, production: true);
             var jobs = new[] { 20, 21 }.Select(major => ("branch-v" + major, (Func<PipelineResult>)(() =>
             {
                 var majorLogs = Path.Combine(logs, "v" + major);
@@ -100,6 +111,10 @@ internal static partial class ReleaseCommands
                 return new PipelineResult("branch-v" + major, 0, "Branch engine checks passed.\n", "");
             }))).ToArray();
             ParallelPipeline.Run(jobs, Path.Combine(logs, "pipeline"), GetMaxParallelism(options));
+            var plcPlan = new ReleaseCheckPlan("quick",
+                ["native-coverage", "native-diagnostics", "http-concurrency", "plc-worker-isolation", "plc-approval",
+                 "plc-stability", "plc-isolated-stability", "plc-contracts", "plc-responses"], [], []);
+            RunPlcReleaseChecks(plcPlan, options, apiRoot, logs, temp, cli, dotnet, python, nuget, rounds);
             RunBuildSpec("approval-gate-self-test", python, ["scripts/checks/Test-ReleaseApprovalGate.py", "--self-test"], logs, temp, cli, apiRoot);
             foreach (var script in new[] { "Snapshot-ToolContracts.py", "Snapshot-ToolResponses.py" })
                 RunBuildRaw(python, [Path.Combine(Root, "scripts/checks", script), "verify"], Path.Combine(logs, script + ".log"), temp, cli, apiRoot, null, script);

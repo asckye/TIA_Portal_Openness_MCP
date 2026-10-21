@@ -102,7 +102,7 @@ dotnet run --project build-tools/release -- branch-gate -PublicApiRoot <SDK-root
 dotnet run --project build-tools/release -- run-release-build -Tier package -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -OutputDirectory bin-build/vm-test-package
 ```
 
-branch-gate 运行两版引擎普通/隔离稳定性（每组合至少 10 轮）、native diagnostics fixture/JIT、worker supervisor、
+branch-gate 运行两版引擎普通/隔离稳定性（每组合至少 50 轮）、native diagnostics fixture/JIT、worker supervisor、
 HTTP concurrency、release approval gate 和快照 verify；复用完整链的判定。它不替代 full 的全部套件和快照捕获比较。
 日志必须记录成功运行的冷/热缓存 wall time、机器空闲情况与命中/缺失数；package 热缓存 ≤ 10 分钟、branch gate ≤ 8 分钟是实测目标。
 跨工作树缓存证明使用两个不同路径的干净 HEAD worktree，先后运行 package，显式指定同一个工作树外的缓存目录，记录两次命中/缺失与耗时。

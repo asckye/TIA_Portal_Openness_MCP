@@ -260,7 +260,7 @@ public sealed class PackageDependencyTests
         File.WriteAllBytes(path, AssemblyBytes(relative, references, null));
     }
 
-    private static byte[] AssemblyBytes(string relative, string[] references, Dictionary<string, byte[]>? embedded)
+    internal static byte[] AssemblyBytes(string relative, string[] references, Dictionary<string, byte[]>? embedded)
     {
         var metadata = new MetadataBuilder();
         metadata.AddModule(0, metadata.GetOrAddString(Path.GetFileName(relative)), metadata.GetOrAddGuid(Guid.NewGuid()), default, default);

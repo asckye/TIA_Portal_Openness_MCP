@@ -79,6 +79,19 @@ internal static partial class ReleaseCommands
                 fixtureWorkers.Add(release, worker);
             }
         }
+        if (plan.Includes("plc-responses") || plan.Includes("plc-contracts"))
+        {
+            foreach (var release in new[] { "20", "21" })
+            {
+                var unit = new PlcWorkerFixtureBuild(release, "sdk", null);
+                var result = runIsolated("sdk-worker-build-plc-v" + release, dotnet,
+                    ["build", Path.Combine(Root, "src/PlcWorker/TiaMcp.PlcWorker.csproj"), "-c", "Release", "-v:q", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false",
+                     "-p:TiaReleaseKey=" + release, "-p:SiemensEngineeringDirectory=" + ResolveReleaseApi(null, api, int.Parse(release, System.Globalization.CultureInfo.InvariantCulture)),
+                     "-p:NativeCallWeaverPath=" + Path.Combine(Root, "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll"),
+                     .. unit.Properties(Path.Combine(logs, "plc-fixtures")), "-p:NuGetAudit=false"], true, Root);
+                ProcessRunner.RequireSuccess(result, "SDK PLC fixture worker build");
+            }
+        }
         void RequireFile(string path, string explanation)
         {
             if (!File.Exists(path)) throw new ReleaseException(explanation + ": " + path);
@@ -180,6 +193,21 @@ internal static partial class ReleaseCommands
             ["responses"] = "engine-responses", ["relocated-bundle"] = "relocation"
         };
         var jobs = postValidation.Where(job => plan.Includes(names[job.Name])).ToList();
+        foreach (var group in new[] { "plc-contracts", "plc-responses" }.Where(plan.Includes))
+        {
+            var selected = group;
+            var successor = (Name: selected, Run: (Func<PipelineResult>)(() =>
+            {
+                runStep(selected, () => RunPlcReleaseJobs(
+                    PlcReleaseJobs(Root, api, logs, releaseTemp, dotnet, python).Where(job => job.Check == selected), Root, logs,
+                    job => runIsolated(job.Name, job.Executable, job.Arguments, true, Root), runPython));
+                if (selected == "plc-responses") runStep("09-packaged-responses-verify-plc", () =>
+                    VerifyPackagedResponses(Root, output, logs, releaseTemp, runDefaults, runPython, plc: true));
+                return new PipelineResult(selected, 0, "PLC snapshots and exact comparisons passed.\n", "");
+            }));
+            var engineIndex = jobs.FindIndex(job => job.Name == (selected == "plc-contracts" ? "contracts" : "responses"));
+            jobs.Insert(engineIndex < 0 ? jobs.Count : engineIndex + 1, successor);
+        }
         jobs.Add(("product-smoke", () =>
         {
             runStep("11-product-smoke", () =>
@@ -242,12 +270,12 @@ internal static partial class ReleaseCommands
     }
 
     internal static void VerifyPackagedResponses(string root, string output, string logs, string releaseTemp,
-        Action<string, string[]> capture, Action<string, string[]> verify)
+        Action<string, string[]> capture, Action<string, string[]> verify, bool plc = false)
     {
         using var package = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "package-result.json")));
         var zip = package.RootElement.GetProperty("path").GetString() ?? throw new ReleaseException("Package result has no path");
         var input = Path.Combine(releaseTemp, "response-input-" + Guid.NewGuid().ToString("N"));
-        var responses = Path.Combine(logs, "packaged-responses");
+        var responses = Path.Combine(logs, plc ? "packaged-responses-plc" : "packaged-responses");
         const string script = "scripts/checks/Snapshot-ToolResponses.py";
         try
         {
@@ -255,7 +283,10 @@ internal static partial class ReleaseCommands
             var bundle = Path.Combine(input, Path.GetFileNameWithoutExtension(zip));
             if (!Directory.Exists(bundle)) throw new ReleaseException("Extracted candidate package root is missing: " + bundle);
             capture(script, ["capture", "--repo-root", bundle, "--packaged-no-tia", "--releases", "20", "21",
-                "--dotnet-root", Path.Combine(bundle, "runtime/dotnet"), "--temp-root", Path.Combine(releaseTemp, "packaged-response-temp"), "--output", responses]);
+                .. plc ? new[] { "--engine-host", Path.Combine(bundle, "runtime/v21/TiaMcp.FoundationHost.exe"),
+                    "--plc-worker", "20=" + Path.Combine(PlcReleaseInstallDirectory(bundle, "20"), "TiaMcp.PlcWorker.20.exe"),
+                    "--plc-worker", "21=" + Path.Combine(PlcReleaseInstallDirectory(bundle, "21"), "TiaMcp.PlcWorker.21.exe") } : [],
+                "--dotnet-root", Path.Combine(bundle, "runtime/dotnet"), "--temp-root", Path.Combine(releaseTemp, plc ? "packaged-response-temp-plc" : "packaged-response-temp"), "--output", responses]);
             foreach (var release in new[] { "20", "21" })
                 if (!File.Exists(Path.Combine(responses, release + ".json"))) throw new ReleaseException("Packaged response snapshot missing: V" + release);
             // Keep the existing exact-eight-file verifier and all Foundation assertions.

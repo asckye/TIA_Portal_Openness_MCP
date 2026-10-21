@@ -114,10 +114,10 @@ Studio 视图只选择 GUI 检查，不选择引擎压测；文档路径只运�
 默认 baseline 在 `bin-build/release-review/last-full.json`，`-FullBaseline` 可选择本 worktree 的 bin-build 下其他文件。
 仅 full 全部成功、最终包再次严格验证且源码未变化时更新；baseline 绑定 ZIP 哈希与源码集合。
 
-`branch-gate` 构建当前分支的两版引擎及夹具，可复用同一缓存，然后运行普通/隔离各四组合的稳定性检查（默认 10 轮，
-不能低于 10）、诊断夹具（行为至少 36、拒绝至少 5）、两版诊断 JIT/织入清单、worker supervisor（至少 25）、
+`branch-gate` 构建当前分支的两版引擎及夹具，可复用同一缓存，然后运行普通/隔离各四组合的稳定性检查（默认 50 轮，
+与 check-all 相同，不能低于 50）、诊断夹具（行为至少 36、拒绝至少 5）、两版诊断 JIT/织入清单、worker supervisor（至少 25）、
 HTTP concurrency mode、默认审批门禁及其自测、两种快照的 `verify`。
-它复用完整链的检查代码和成功判定，不捕获快照，不启动 live 分支。输出 `result.json` 与逐项日志，任何检查失败即失败。
+它复用完整链的检查代码和成功判定，不启动 live 分支。引擎部分不捕获快照；V20/V21 的 PlcWorker 后继作业（P8-04j1a）与发布链相同，执行 contracts/responses 捕获并与基线逐字节比较。输出 `result.json` 与逐项日志，任何检查失败即失败。
 目标为热缓存 package ≤ 10 分钟、branch gate ≤ 8 分钟；必须用成功的实际运行证明。
 
 构建中包标为 `checkStatus=pending`，选择的检查全部通过后重新打包为 `passed`。

@@ -1,4 +1,5 @@
 using TiaMcp.ReleaseTool;
+using TiaMcp.BuildCommon;
 using System.Text.Json;
 using Xunit;
 
@@ -6,6 +7,90 @@ namespace TiaMcp.ReleaseTool.Tests;
 
 public sealed class ReleaseValidationTests
 {
+    [Fact]
+    [Trait("Category", "Pipeline")]
+    public void CandidateRetainsEngineStepsAndAddsBothPlcCaptureMatrices()
+    {
+        using var tree = new StaticTree();
+        Directory.CreateDirectory(Path.Combine(tree.Root, "TIA_V20_PublicAPI/V20"));
+        Directory.CreateDirectory(Path.Combine(tree.Root, "TIA_V21_PublicAPI/V21/net48"));
+        var root = Repository.FindRoot();
+        var steps = new List<string>(); var builds = new List<string>(); var captures = new List<string>(); var comparisons = new List<string>();
+        ReleaseCommands.RunCandidateChecks(new("quick", ["engine-contracts", "engine-responses", "plc-contracts", "plc-responses"], [], []),
+            tree.Root, tree.Root, tree.Root, tree.Root, "dotnet-double", "python-double", 1,
+            (name, action) => { steps.Add(name); if (name is "plc-contracts" or "plc-responses") action(); },
+            (script, args) =>
+            {
+                Assert.Equal("compare", args[0]); Assert.Contains("--baseline", args);
+                comparisons.Add(args[Array.IndexOf(args, "--current") + 1]);
+            }, (_, _) => throw new InvalidOperationException("Unexpected engine capture action"),
+            (name, executable, args, defaults, cwd) =>
+            {
+                if (executable == "dotnet-double")
+                {
+                    builds.Add(name);
+                    if (name.StartsWith("sdk-worker-build-plc-v", StringComparison.Ordinal))
+                    {
+                        Assert.Contains("-p:TiaMcpPlcWorkerSdkFixture=true", args);
+                        Assert.Contains(args, arg => arg.StartsWith("-p:TiaMcpPlcWorkerFixtureRoot=", StringComparison.Ordinal));
+                        Assert.DoesNotContain("-p:TiaMcpEngineWorkerSdkFixture=true", args);
+                    }
+                }
+                if (executable == "python-double")
+                {
+                    var arguments = args.ToArray(); Assert.Equal("capture", arguments[1]);
+                    Assert.Contains("--plc-worker", arguments); Assert.DoesNotContain("--engine-worker", arguments);
+                    var output = arguments[Array.IndexOf(arguments, "--output") + 1];
+                    var key = arguments[Array.IndexOf(arguments, "--releases") + 1];
+                    var kind = arguments[0].Contains("Contracts", StringComparison.Ordinal) ? "baseline" : "responses";
+                    Directory.CreateDirectory(output);
+                    File.Copy(Path.Combine(root, "manifest/contracts/v4", kind, key + ".json"), Path.Combine(output, key + ".json"));
+                    captures.Add(name);
+                }
+                return new(0, "", "");
+            });
+        Assert.Equal(2, builds.Count(name => name.StartsWith("sdk-worker-build-plc-v", StringComparison.Ordinal)));
+        Assert.Contains("sdk-worker-build", builds);
+        Assert.Equal(16, captures.Count); Assert.Equal(16, comparisons.Count);
+        Assert.Contains("07-engine-contracts-source-layout", steps);
+        Assert.Contains("09-engine-responses-source-layout", steps);
+        Assert.Contains("09-packaged-responses-verify", steps);
+        Assert.Contains("09-packaged-responses-verify-plc", steps);
+    }
+
+    [Fact]
+    public void PackagedPlcResponsesUseTheExtractedProductionWorkersAndTheUnchangedVerifier()
+    {
+        using var tree = new StaticTree();
+        foreach (var key in new[] { "20", "21" })
+            tree.Write($"source/candidate/runtime/v{key}/plc-worker/TiaMcp.PlcWorker.{key}.exe", "packaged-production-" + key);
+        var zip = Path.Combine(tree.Root, "candidate.zip");
+        System.IO.Compression.ZipFile.CreateFromDirectory(Path.Combine(tree.Root, "source"), zip);
+        tree.Write("package-result.json", JsonSerializer.Serialize(new { path = zip }));
+        var verified = false; string? extracted = null;
+        ReleaseCommands.VerifyPackagedResponses(Repository.FindRoot(), tree.Root, tree.Root, tree.Root, (_, args) =>
+        {
+            Assert.Contains("--packaged-no-tia", args); Assert.DoesNotContain("--engine-worker", args);
+            extracted = args[Array.IndexOf(args, "--repo-root") + 1];
+            var workers = args.Select((value, index) => (value, index)).Where(pair => pair.value == "--plc-worker").Select(pair => args[pair.index + 1]).ToArray();
+            Assert.Equal(2, workers.Length);
+            foreach (var worker in workers)
+            {
+                var parts = worker.Split('=', 2);
+                Assert.StartsWith(extracted, parts[1]);
+                Assert.Equal("packaged-production-" + parts[0], File.ReadAllText(parts[1]));
+            }
+            var responses = args[Array.IndexOf(args, "--output") + 1]; Directory.CreateDirectory(responses);
+            foreach (var key in new[] { "20", "21" }) File.WriteAllText(Path.Combine(responses, key + ".json"), "{}");
+        }, (_, args) =>
+        {
+            Assert.Equal("verify", args[0]);
+            Assert.Equal(8, Directory.GetFiles(args[Array.IndexOf(args, "--responses") + 1], "*.json").Length);
+            verified = true;
+        }, plc: true);
+        Assert.True(verified); Assert.NotNull(extracted); Assert.False(Directory.Exists(extracted));
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -389,6 +474,13 @@ public sealed class ReleaseValidationTests
             Assert.False(string.IsNullOrWhiteSpace(row.CountRule));
             Assert.False(string.IsNullOrWhiteSpace(row.RecordKey));
         });
+        foreach (var job in ReleaseCommands.PlcReleaseJobs("worktree", "sdk", "logs", "temp", "dotnet", "python").Where(job => !job.Name.StartsWith("harness-", StringComparison.Ordinal)))
+        {
+            var binding = ReleaseCommandTable.Get(job.Name);
+            Assert.Equal(job.Name + ".log", binding.LogFile);
+            Assert.Equal("plcChecks." + job.Name, binding.RecordKey);
+            Assert.Contains(Path.GetFileName(job.Arguments[0]), binding.Command);
+        }
     }
 
     [Fact]

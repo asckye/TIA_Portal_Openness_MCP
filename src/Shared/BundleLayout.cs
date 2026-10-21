@@ -95,6 +95,11 @@ namespace TiaOpenness.Shared
             if (!string.Equals(directory.Parent?.FullName, Path.Combine(root, "runtime"), StringComparison.OrdinalIgnoreCase)
                 || !TiaVersionCatalog.Runnable.Any(v => string.Equals(v.RuntimeDirectory, directory.Name, StringComparison.OrdinalIgnoreCase)))
                 return null;
+            // A checkout's own runtime/vK (release chain, check-all) is a development layout, not an installed bundle:
+            // only a package places the updater in runtime/tools, and no package carries Version.props (the package-mode
+            // rule of validate-bundle). Packages are unaffected; the development layout answers like the bin layout.
+            if (!File.Exists(Combine(root, RelativePath(BundleResource.Updater))) && File.Exists(Combine(root, "Version.props")))
+                return null;
             RequirePath(root, "manifest/delivery.json");
             return root;
         }

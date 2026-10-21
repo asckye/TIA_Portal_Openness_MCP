@@ -7,6 +7,30 @@ namespace TiaMcp.ReleaseTool.Tests;
 
 public sealed class ReleaseTierTests
 {
+    [Fact]
+    public void EngineGroupsAlwaysSelectTheirPlcSuccessorsIncludingSourceRootRules()
+    {
+        var policy = ReleaseCheckPolicy.Load(Root);
+        var engines = policy.Checks.Where(check => check.StartsWith("engine-", StringComparison.Ordinal)).ToArray();
+        Assert.Equal(8, engines.Length);
+        foreach (var engine in engines) Assert.Contains("plc-" + engine[7..], policy.Checks);
+        foreach (var rule in policy.Rules)
+        {
+            var plan = policy.Select("quick", [rule.Path.EndsWith('/') ? rule.Path + "Example.cs" : rule.Path]);
+            foreach (var engine in engines)
+                Assert.Equal(plan.Includes(engine), plan.Includes("plc-" + engine[7..]));
+        }
+        foreach (var engine in engines)
+        {
+            var plan = policy.Select("quick", ["src/PlcWorker/Program.cs"]);
+            var plc = "plc-" + engine[7..];
+            Assert.Contains(plc, plan.SelectedChecks);
+            Assert.Throws<ReleaseException>(() => policy.ValidatePlan(plan with {
+                SelectedChecks = plan.SelectedChecks.Where(check => check != plc).ToArray(),
+                SkippedChecks = [.. plan.SkippedChecks, plc] }));
+        }
+    }
+
     private static string Root => FindRoot();
     private static string FindRoot()
     {

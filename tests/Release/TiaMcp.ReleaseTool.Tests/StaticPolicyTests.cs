@@ -29,6 +29,31 @@ internal sealed class StaticTree : IDisposable
 public sealed class StaticPolicyTests
 {
     [Fact]
+    public void StagedReleaseKeepsEngineStepsAndAddsPlcChecksWithoutTouchingTheRecordBinding()
+    {
+        var root = Repository.FindRoot();
+        string Read(string name) => File.ReadAllText(Path.Combine(root, "build-tools/release", name));
+        var multi = Read("ReleaseCommands.cs");
+        Assert.Contains("InstallReleasePlcWorker(Root, key)", multi);
+        Assert.Contains("RunPlcReleaseChecks(plan, options", multi);
+        Assert.Contains(".. PlcWorkerFixtures.Keys", multi);
+        Assert.Contains("\"plcFoundationTransportExecuted\"", multi);
+        Assert.Contains("ReleaseRecords.EngineReuseReason", multi);
+        Assert.Contains("\"Full-engine build\"", multi);
+        Assert.Contains("\"foundationApprovalSafetyChecksPassed\"] = 30", multi);
+        var branch = Read("BranchGate.cs");
+        foreach (var check in new[] { "VerifyNativeJit", "VerifyEngineApproval", "VerifyStability", "VerifyHttpConcurrency" }) Assert.Contains(check, branch);
+        Assert.Contains("PreparePlcReleaseChecks", branch);
+        Assert.Contains("RunPlcReleaseChecks(plcPlan", branch);
+        foreach (var group in new[] { "plc-worker-isolation", "plc-approval", "plc-stability", "plc-isolated-stability", "plc-contracts", "plc-responses" }) Assert.Contains("\"" + group + "\"", branch);
+        var candidate = Read("ReleaseCandidateChecks.cs");
+        Assert.Contains("sdk-worker-build-plc-v", candidate);
+        Assert.Contains("VerifyPackagedResponses(Root", candidate);
+        Assert.Contains("07-engine-contracts-source-layout", candidate);
+        Assert.Contains("RunPlcReleaseJobs", candidate);
+    }
+
+    [Fact]
     public void PlcHarnessWiringRegressionsRunWithoutNativeTiaOrEngineSubjects()
     {
         var root = Repository.FindRoot();

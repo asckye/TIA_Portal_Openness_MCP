@@ -9,13 +9,21 @@
     "prompt-registration",
     "product-smoke",
     "engine-functional",
+    "plc-functional",
     "engine-worker-isolation",
+    "plc-worker-isolation",
     "engine-approval",
+    "plc-approval",
     "engine-ecosystem",
+    "plc-ecosystem",
     "engine-stability",
+    "plc-stability",
     "engine-isolated-stability",
+    "plc-isolated-stability",
     "engine-contracts",
+    "plc-contracts",
     "engine-responses",
+    "plc-responses",
     "foundation-transport",
     "foundation-approval",
     "foundation-responses",
@@ -71,13 +79,21 @@
         "prompt-registration",
         "product-smoke",
         "engine-functional",
+        "plc-functional",
         "engine-worker-isolation",
+        "plc-worker-isolation",
         "engine-approval",
+        "plc-approval",
         "engine-ecosystem",
+        "plc-ecosystem",
         "engine-stability",
+        "plc-stability",
         "engine-isolated-stability",
+        "plc-isolated-stability",
         "engine-contracts",
+        "plc-contracts",
         "engine-responses",
+        "plc-responses",
         "foundation-transport",
         "foundation-approval",
         "foundation-responses",
@@ -200,6 +216,7 @@
       "checks": [
         "approval-self-test",
         "engine-approval",
+        "plc-approval",
         "foundation-approval"
       ]
     },
@@ -214,7 +231,8 @@
       "path": "scripts/checks/Snapshot-ToolContracts.py",
       "checks": [
         "contracts-self-test",
-        "engine-contracts"
+        "engine-contracts",
+        "plc-contracts"
       ]
     },
     {
@@ -222,6 +240,7 @@
       "checks": [
         "responses-self-test",
         "engine-responses",
+        "plc-responses",
         "foundation-responses"
       ]
     },
@@ -229,7 +248,8 @@
       "path": "scripts/checks/Test-V21Ecosystem.py",
       "checks": [
         "ecosystem-self-test",
-        "engine-ecosystem"
+        "engine-ecosystem",
+        "plc-ecosystem"
       ]
     },
     {
@@ -244,7 +264,9 @@
       "path": "scripts/checks/Test-LocalStability.py",
       "checks": [
         "engine-stability",
-        "engine-isolated-stability"
+        "plc-stability",
+        "engine-isolated-stability",
+        "plc-isolated-stability"
       ]
     },
     {
@@ -379,6 +401,7 @@
       "checks": [
         "gui-tests",
         "engine-functional",
+        "plc-functional",
         "foundation-transport"
       ]
     },
@@ -393,6 +416,7 @@
       "checks": [
         "resource-discovery",
         "engine-responses",
+        "plc-responses",
         "foundation-responses",
         "scripttoolcalls-self-test"
       ]
@@ -408,13 +432,21 @@
         "prompt-registration",
         "product-smoke",
         "engine-functional",
+        "plc-functional",
         "engine-worker-isolation",
+        "plc-worker-isolation",
         "engine-approval",
+        "plc-approval",
         "engine-ecosystem",
+        "plc-ecosystem",
         "engine-stability",
+        "plc-stability",
         "engine-isolated-stability",
+        "plc-isolated-stability",
         "engine-contracts",
+        "plc-contracts",
         "engine-responses",
+        "plc-responses",
         "foundation-transport",
         "foundation-approval",
         "foundation-responses",
@@ -530,7 +562,8 @@
         "toolslist-self-test",
         "offline-suites",
         "resource-discovery",
-        "engine-contracts"
+        "engine-contracts",
+        "plc-contracts"
       ]
     },
     {
@@ -539,7 +572,8 @@
         "toolslist-self-test",
         "offline-suites",
         "resource-discovery",
-        "engine-contracts"
+        "engine-contracts",
+        "plc-contracts"
       ]
     },
     {
@@ -548,7 +582,8 @@
         "toolslist-self-test",
         "offline-suites",
         "resource-discovery",
-        "engine-contracts"
+        "engine-contracts",
+        "plc-contracts"
       ]
     },
     {
@@ -557,7 +592,8 @@
         "toolslist-self-test",
         "offline-suites",
         "resource-discovery",
-        "engine-contracts"
+        "engine-contracts",
+        "plc-contracts"
       ]
     },
     {
@@ -566,7 +602,8 @@
         "toolslist-self-test",
         "offline-suites",
         "resource-discovery",
-        "engine-contracts"
+        "engine-contracts",
+        "plc-contracts"
       ]
     },
     {
@@ -575,7 +612,8 @@
         "toolslist-self-test",
         "offline-suites",
         "resource-discovery",
-        "engine-contracts"
+        "engine-contracts",
+        "plc-contracts"
       ]
     },
     {
@@ -584,7 +622,8 @@
         "toolslist-self-test",
         "offline-suites",
         "resource-discovery",
-        "engine-contracts"
+        "engine-contracts",
+        "plc-contracts"
       ]
     },
     {
@@ -814,6 +853,14 @@
     "engine-contracts": "Capture and compare V20/V21 contracts.",
     "engine-responses": "V20/V21 FoundationHost responses using exact worker catalogs; engine A/B checks retained.",
     "gui-tests": "Studio GUI process tests; configuration and core unit suites always run.",
-    "relocation": "Extracted bundle check from outside the checkout, with an SDK root and user outside the Openness group."
+    "relocation": "Extracted bundle check from outside the checkout, with an SDK root and user outside the Openness group.",
+    "plc-functional": "example-library, process-leases, software-lookup, engineering-api, http, hmi, native-export, hmi-snapshot, global-script, graphic-selection, runtime-settings, migration-assembly, ecosystem-assembly, download-route, match-plc-name. PlcWorker successor; the engine group remains required.",
+    "plc-worker-isolation": "Foundation worker fault injection and product transport checks for V20/V21. PlcWorker successor; the engine group remains required.",
+    "plc-approval": "Default-on engine approval and real EXE readiness for V20/V21. PlcWorker successor; the engine group remains required.",
+    "plc-ecosystem": "V21 ecosystem adapters on both engines. PlcWorker successor; the engine group remains required.",
+    "plc-stability": "Four stdio/HTTP full/lite stability runs per engine. PlcWorker successor; the engine group remains required.",
+    "plc-isolated-stability": "Four FoundationHost session-worker stdio/HTTP full/lite stability runs at concurrency 16. PlcWorker successor; the engine group remains required.",
+    "plc-contracts": "Capture and compare V20/V21 contracts. PlcWorker successor; the engine group remains required.",
+    "plc-responses": "V20/V21 FoundationHost responses using exact worker catalogs; engine A/B checks retained. PlcWorker successor; the engine group remains required."
   }
 }
