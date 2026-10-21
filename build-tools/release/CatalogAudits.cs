@@ -12,6 +12,15 @@ internal static class CatalogAudits
 {
     private const string Method = "Group actual release catalogs and compare official XML members with compiled native call sites.\n\nRead-only against Siemens SDKs; emits identifiers and hashes, never copies SDK files.\nDirect member-name references are evidence of compiled calls, not end-to-end tool coverage.\nOverloads are counted separately in domainSignatures and together in domainMemberNames.\n";
     private static readonly HashSet<string> Boiler = Set("Equals GetHashCode ToString GetEnumerator Any Contains IndexOf CopyTo GetAttribute GetAttributes GetAttributeInfos SetAttribute SetAttributes GetComposition GetCompositionInfos GetInvocationInfos GetCreationInfos GetService GetServiceInfos Invoke Find Count Parent Dispose Clone CompareTo GetType MemberwiseClone Finalize Item".Split(' '));
+    /// <summary>The bin-build/releases/v&lt;version&gt; folder of the full-engine evidence: the engine record's release label (a pre-release
+    /// such as 4.0.0-beta.1 shares the file version 4.0.0.0 with 4.0.0) when its file version matches the tools list, otherwise the
+    /// numeric version taken from the file version as before.</summary>
+    internal static string ReleaseDirectoryVersion(string fileVersion, string? recordRelease)
+    {
+        var numeric = fileVersion[..fileVersion.LastIndexOf('.')];
+        return recordRelease is { Length: > 0 } && ReleaseVersions.IsValid(recordRelease) && ReleaseVersions.FileVersionOf(recordRelease) == fileVersion ? recordRelease : numeric;
+    }
+
     internal static Dictionary<string, string> Version(string root, string apiRoot, string output, string? inputsRoot = null, bool legacyLineEndings = false)
     {
         var input = inputsRoot ?? Path.Combine(root, "bin-build"); var full = Read(root, "manifest/tools-list.json");
@@ -41,7 +50,7 @@ internal static class CatalogAudits
                 if (member.Contains('#') || Boiler.Contains(member)) continue; signatures.Add(signature); members.Add((signature[..1], owner, member.Split("``", 2)[0]));
             }
             string coverage;
-            if (key is "20" or "21") { var version = Text(full["fileVersion"]); version = version[..version.LastIndexOf('.')]; var releaseDir = Path.Combine(input, "releases/v" + version); coverage = Path.Combine(releaseDir, $"v{key}/native-call-coverage-v{key}.json"); if (!File.Exists(coverage)) coverage = Path.Combine(releaseDir, $"native-call-coverage-v{key}.json"); }
+            if (key is "20" or "21") { var recordPath = Path.Combine(root, "manifest/release-build.json"); var version = ReleaseDirectoryVersion(Text(full["fileVersion"]), File.Exists(recordPath) ? Text(Read(root, "manifest/release-build.json")["release"]) : null); var releaseDir = Path.Combine(input, "releases/v" + version); coverage = Path.Combine(releaseDir, $"v{key}/native-call-coverage-v{key}.json"); if (!File.Exists(coverage)) coverage = Path.Combine(releaseDir, $"native-call-coverage-v{key}.json"); }
             else coverage = Path.Combine(input, $"multi-version/adapters/coverage-{key}.json");
             var calls = new HashSet<(string Kind, string Owner, string Member)>();
             foreach (var site in Read("", coverage)["sites"]!.AsArray())

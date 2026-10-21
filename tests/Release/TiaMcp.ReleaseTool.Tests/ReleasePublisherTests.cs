@@ -134,16 +134,63 @@ public sealed class ReleasePublisherTests
         Assert.Contains("-NoBuildCache", (await Assert.ThrowsAsync<ReleaseException>(() => ReleasePublisher.PublishAsync(fixture.Root, options))).Message);
     }
 
-    private static PublishOptions Options(LoopbackGitHubApi server, bool draftOnly, bool deleteDraft) =>
-        new("4.0.0", "test-token", "acme/project", server.ApiBaseUrl, draftOnly, deleteDraft, RetryCount: 2, RetryDelaySeconds: 0);
+    [Theory]
+    [InlineData("4.0.0", false)]
+    [InlineData("4.0.0-beta.1", true)]
+    [InlineData("4.0.0-rc.2", true)]
+    public async Task DraftAndPublishBodiesFollowTheVersionKind(string version, bool prerelease)
+    {
+        using var server = new LoopbackGitHubApi("new", "v" + version);
+        using var fixture = new PackageFixture(version: version);
+
+        Assert.Equal(0, await ReleasePublisher.PublishAsync(fixture.Root, Options(server, draftOnly: false, deleteDraft: false, version)));
+
+        using var draft = JsonDocument.Parse(server.Bodies.Single(request => request.Method == "POST" && request.Path == "/api/repos/acme/project/releases").Body);
+        using var publish = JsonDocument.Parse(server.Bodies.Single(request => request.Method == "PATCH").Body);
+        Assert.Equal("v" + version, draft.RootElement.GetProperty("tag_name").GetString());
+        Assert.True(draft.RootElement.GetProperty("draft").GetBoolean());
+        Assert.Equal(prerelease, draft.RootElement.GetProperty("prerelease").GetBoolean());
+        Assert.Equal("false", draft.RootElement.GetProperty("make_latest").GetString());
+        Assert.False(publish.RootElement.GetProperty("draft").GetBoolean());
+        Assert.Equal(prerelease, publish.RootElement.GetProperty("prerelease").GetBoolean());
+        Assert.Equal(prerelease ? "false" : "true", publish.RootElement.GetProperty("make_latest").GetString());
+    }
+
+    [Fact]
+    public async Task PrereleaseWithoutTheNotVerifiedSectionIsRefusedBeforeAnyRequest()
+    {
+        using var server = new LoopbackGitHubApi("new", "v4.0.0-beta.1");
+        using var fixture = new PackageFixture(version: "4.0.0-beta.1", notes: "# v4.0.0-beta.1\n\nNo generated section.\n");
+
+        var error = await Assert.ThrowsAsync<ReleaseException>(() => ReleasePublisher.PublishAsync(fixture.Root, Options(server, draftOnly: false, deleteDraft: false, "4.0.0-beta.1")));
+
+        Assert.Contains("Not verified on a real TIA Portal", error.Message);
+        Assert.Empty(server.Requests);
+    }
+
+    [Theory]
+    [InlineData("4.0.0-alpha.1")]
+    [InlineData("v4.0.0")]
+    public async Task OtherVersionSuffixesAreRefusedBeforeAnyRequest(string version)
+    {
+        using var server = new LoopbackGitHubApi("new");
+        using var fixture = new PackageFixture();
+        Assert.Contains("-Version must be", (await Assert.ThrowsAsync<ReleaseException>(() => ReleasePublisher.PublishAsync(fixture.Root, Options(server, draftOnly: false, deleteDraft: false, version)))).Message);
+        Assert.Empty(server.Requests);
+    }
+
+    private static PublishOptions Options(LoopbackGitHubApi server, bool draftOnly, bool deleteDraft, string version = "4.0.0") =>
+        new(version, "test-token", "acme/project", server.ApiBaseUrl, draftOnly, deleteDraft, RetryCount: 2, RetryDelaySeconds: 0);
 
     private sealed class PackageFixture : IDisposable
     {
+        private readonly string version;
         internal string Root { get; } = Path.Combine(Path.GetTempPath(), "release-publish-fixture-" + Guid.NewGuid().ToString("N"));
-        internal string Output => Path.Combine(Root, "bin-build/releases/v4.0.0");
+        internal string Output => Path.Combine(Root, "bin-build/releases/v" + version);
 
-        internal PackageFixture(bool? buildCacheEnabled = false)
+        internal PackageFixture(bool? buildCacheEnabled = false, string version = "4.0.0", string? notes = null)
         {
+            this.version = version;
             Directory.CreateDirectory(Output);
             Directory.CreateDirectory(Path.Combine(Root, "manifest"));
             Directory.CreateDirectory(Path.Combine(Root, "docs/releases"));
@@ -160,8 +207,10 @@ public sealed class ReleasePublisherTests
             {
                 tier = "full", checkStatus = "passed", path = zip, sha256 = digest, size = new FileInfo(zip).Length, sourceCommit = new string('a', 40), files = 3
             }));
-            File.WriteAllText(Path.Combine(Root, "manifest/delivery.json"), JsonSerializer.Serialize(new { release = "4.0.0", package = "pkg" }));
-            File.WriteAllText(Path.Combine(Root, "docs/releases/v4.0.0.md"), "# Test release\n\nSee [guide](../guides/test.md).\n");
+            File.WriteAllText(Path.Combine(Root, "manifest/delivery.json"), JsonSerializer.Serialize(new { release = version, package = "pkg" }));
+            var prereleaseSection = version.Contains('-', StringComparison.Ordinal)
+                ? "\n" + PrereleaseNotes.Begin + "\n" + PrereleaseNotes.Heading + "\n\n- item\n" + PrereleaseNotes.End + "\n" : "";
+            File.WriteAllText(Path.Combine(Root, "docs/releases/v" + version + ".md"), notes ?? "# Test release\n\nSee [guide](../guides/test.md).\n" + prereleaseSection);
         }
 
         public void Dispose()
@@ -178,17 +227,20 @@ public sealed class ReleasePublisherTests
         private readonly CancellationTokenSource cancellation = new();
         private readonly Task loop;
         private readonly string releaseMode;
+        private readonly string tag;
         private readonly List<Asset> assets = [];
         private int nextAssetId = 100;
         private int uploadAttempts;
 
         internal string ApiBaseUrl { get; }
         internal List<(string Method, string Path)> Requests { get; } = [];
+        internal List<(string Method, string Path, string Body)> Bodies { get; } = [];
         internal IReadOnlyList<Asset> UploadedAssets => assets;
 
-        internal LoopbackGitHubApi(string releaseMode)
+        internal LoopbackGitHubApi(string releaseMode, string tag = "v4.0.0")
         {
             this.releaseMode = releaseMode;
+            this.tag = tag;
             if (releaseMode == "stale-draft") assets.Add(new Asset(99, "pkg.zip", 1, "sha256:stale", "uploaded"));
             listener.Start();
             var port = ((IPEndPoint)listener.LocalEndpoint).Port;
@@ -241,6 +293,7 @@ public sealed class ReleasePublisherTests
                 read += count;
             }
             Requests.Add((method, path));
+            Bodies.Add((method, path, Encoding.UTF8.GetString(body)));
             var response = Respond(method, path, body);
             var payload = Encoding.UTF8.GetBytes(response.Body);
             var head = Encoding.ASCII.GetBytes($"HTTP/1.1 {response.Status} {response.Text}\r\nContent-Type: application/json\r\nContent-Length: {payload.Length}\r\nConnection: close\r\n\r\n");
@@ -253,15 +306,15 @@ public sealed class ReleasePublisherTests
         {
             if (path == "/api/user") return Json(200, "OK", new { login = "loopback-test" });
             if (path == "/api/repos/acme/project/branches/master") return Json(200, "OK", new { commit = new { sha = new string(releaseMode == "branch-mismatch" ? 'b' : 'a', 40) } });
-            if (path == "/api/repos/acme/project/git/ref/tags/v4.0.0") return Json(200, "OK", new { @object = new { type = "commit", sha = new string(releaseMode == "tag-mismatch" ? 'b' : 'a', 40) } });
-            if (path == "/api/repos/acme/project/releases/tags/v4.0.0")
+            if (path == "/api/repos/acme/project/git/ref/tags/" + tag) return Json(200, "OK", new { @object = new { type = "commit", sha = new string(releaseMode == "tag-mismatch" ? 'b' : 'a', 40) } });
+            if (path == "/api/repos/acme/project/releases/tags/" + tag)
             {
                 if (releaseMode is "new" or "upload-fail-once") return (404, "Not Found", "{}");
-                return Json(200, "OK", new { id = 42, tag_name = "v4.0.0", draft = releaseMode is "draft" or "stale-draft", upload_url = ApiBaseUrl + "upload/42{?name,label}" });
+                return Json(200, "OK", new { id = 42, tag_name = tag, draft = releaseMode is "draft" or "stale-draft", upload_url = ApiBaseUrl + "upload/42{?name,label}" });
             }
             if (path == "/api/repos/acme/project/releases?per_page=100") return Json(200, "OK", Array.Empty<object>());
             if (method == "POST" && path == "/api/repos/acme/project/releases")
-                return Json(201, "Created", new { id = 42, tag_name = "v4.0.0", draft = true, upload_url = ApiBaseUrl + "upload/42{?name,label}" });
+                return Json(201, "Created", new { id = 42, tag_name = tag, draft = true, upload_url = ApiBaseUrl + "upload/42{?name,label}" });
             if (method == "DELETE" && path == "/api/repos/acme/project/releases/42") return (204, "No Content", "");
             if (method == "DELETE" && path.StartsWith("/api/repos/acme/project/releases/assets/", StringComparison.Ordinal))
             {

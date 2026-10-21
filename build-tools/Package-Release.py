@@ -167,13 +167,17 @@ def main():
     require(sha(files['manifest/configurator-build.json']) == delivery['configuratorBuildSha256'], 'Configurator build record changed after delivery preparation')
     require(delivery['engineRelease'] == metadata['release'] and delivery['fileVersion'] == metadata['fileVersion'], 'Engine version differs from delivery record')
     release, version, package = (delivery[k] for k in ('release', 'fileVersion', 'package'))
-    require(re.fullmatch(r'\d+\.\d+\.\d+', release) is not None, 'Release version must be X.Y.Z')
+    require(re.fullmatch(r'\d+\.\d+\.\d+(?:-(?:beta|rc)\.(?:0|[1-9]\d*))?', release) is not None, 'Release version must be X.Y.Z, X.Y.Z-beta.N or X.Y.Z-rc.N')
     date = delivery['releaseDate']
     require(re.fullmatch(r'\d{8}', date) is not None, 'Release date must be YYYYMMDD')
     datetime.strptime(date, '%Y%m%d')
     require(package == f'TIA_MCP_Delivery_v{release}_{date}', 'Use TIA_MCP_Delivery_vX.Y.Z_YYYYMMDD for the complete delivery')
-    source_release = ET.fromstring(files['Version.props']).findtext('.//TiaMcpRelease')
-    require(source_release + '.0' == version and source_release == metadata['release'], 'Source version differs from validated build')
+    # One version source: TiaMcpRelease (numeric, file version X.Y.Z.0) plus TiaMcpPrerelease (empty, beta.N or rc.N).
+    source_props = ET.fromstring(files['Version.props'])
+    source_core = source_props.findtext('.//TiaMcpRelease')
+    source_prerelease = (source_props.findtext('.//TiaMcpPrerelease') or '').strip()
+    source_release = source_core + ('-' + source_prerelease if source_prerelease else '')
+    require(source_core + '.0' == version and source_release == metadata['release'], 'Source version differs from validated build')
     runtime_names = {n for n in files if n.startswith('runtime/') and n != 'runtime/README.md'}
     separately_built_updater = {'runtime/tools/TiaMcp.Updater.exe', 'runtime/tools/TiaMcp.Updater.exe.config'}
     runtime_inventory = {r['path'] for r in inventory}

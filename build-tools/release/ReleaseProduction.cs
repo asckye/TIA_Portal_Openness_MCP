@@ -13,6 +13,9 @@ internal static partial class ReleaseCommands
     private static int RunReleaseProduction(Options options)
     {
         var version = options.Get("Version")!;
+        var releaseVersion = ReleaseVersions.Require(version, "-Version must be X.Y.Z, or X.Y.Z-beta.N / X.Y.Z-rc.N for a pre-release");
+        var dryRun = options.Has("DryRun");
+        if (dryRun && options.Has("KillStrayEngine")) throw new ReleaseException("-DryRun never stops processes; close the bundle processes yourself");
         var date = options.Get("ReleaseDate", DateTime.Now.ToString("yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture));
         if (!DateTime.TryParseExact(date, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _))
             throw new ReleaseException("-ReleaseDate must be a valid yyyyMMdd date");
@@ -32,23 +35,37 @@ internal static partial class ReleaseCommands
             return 0;
         }
 
-        // Prerequisites are deliberately the first operation that can contact an external service.
-        Prerequisites(options);
-        var tokenValue = options.Get("Token") ?? Environment.GetEnvironmentVariable("GITHUB_TOKEN") ?? "";
-        var token = ReleasePrerequisites.GetToken(tokenValue, git, Root, localOnly: false);
-        ReleasePrerequisites.RequireToken(token);
-        var branch = GitText(git, ["rev-parse", "--abbrev-ref", "HEAD"]);
-        if (branch != "master") throw new ReleaseException("current branch is " + branch + ", releases go from master");
-        RunGitChecked(git, ["fetch", "origin", "--quiet"], "fetch origin");
-        var behind = GitText(git, ["rev-list", "--count", "master..origin/master"]);
-        if (behind != "0") throw new ReleaseException("origin/master has " + behind + " commit(s) this checkout lacks; pull first");
-        RefuseOrStopStrayEngines(options.Has("KillStrayEngine"));
+        var token = "";
+        if (dryRun)
+        {
+            // A rehearsal runs every local step of the publication flow on this checkout and stops before staging. It needs no token,
+            // never reads or writes origin, and works on any branch and on uncommitted changes; publication keeps every prerequisite.
+            Console.WriteLine($"DRY RUN Release {version}{(releaseVersion.IsPrerelease ? " (pre-release)" : "")}: local rehearsal; the token, origin, branch and clean-tree prerequisites, staging, commit, push, tag and GitHub steps are skipped.");
+        }
+        else
+        {
+            // Prerequisites are deliberately the first operation that can contact an external service.
+            Prerequisites(options);
+            var tokenValue = options.Get("Token") ?? Environment.GetEnvironmentVariable("GITHUB_TOKEN") ?? "";
+            token = ReleasePrerequisites.GetToken(tokenValue, git, Root, localOnly: false);
+            ReleasePrerequisites.RequireToken(token);
+            var branch = GitText(git, ["rev-parse", "--abbrev-ref", "HEAD"]);
+            if (branch != "master") throw new ReleaseException("current branch is " + branch + ", releases go from master");
+            RunGitChecked(git, ["fetch", "origin", "--quiet"], "fetch origin");
+            var behind = GitText(git, ["rev-list", "--count", "master..origin/master"]);
+            if (behind != "0") throw new ReleaseException("origin/master has " + behind + " commit(s) this checkout lacks; pull first");
+        }
+        // Publication refuses every running engine or host; the rehearsal only refuses those started from this checkout,
+        // because a process of another worktree cannot lock this checkout's runtime folders.
+        RefuseOrStopStrayEngines(options.Has("KillStrayEngine"), dryRun ? Root : null);
 
         var changelog = File.ReadAllText(Path.Combine(Root, "CHANGELOG.md"));
-        var entry = Regex.Match(changelog, "(?m)^## \\[(\\d+\\.\\d+\\.\\d+)\\][^\\r\\n]*\\r?\\n");
+        var entry = Regex.Match(changelog, "(?m)^## \\[(" + ReleaseVersions.VersionPattern + ")\\][^\\r\\n]*\\r?\\n");
         if (!entry.Success) throw new ReleaseException("CHANGELOG.md has no \"## [x.y.z]\" entry");
         if (entry.Groups[1].Value != version) throw new ReleaseException("newest CHANGELOG entry is " + entry.Groups[1].Value + ", not " + version + " - write the entry first");
         if (!File.Exists(Path.Combine(Root, "docs/releases", "v" + version + ".md"))) throw new ReleaseException("docs/releases/v" + version + ".md is missing - write the release note first");
+        // Pre-release only: the notes carry the current generated "Not verified on a real TIA Portal" section.
+        if (releaseVersion.IsPrerelease && PrereleaseNotes.CurrentError(Root, version) is { } notesError) throw new ReleaseException(notesError);
         var summary = options.Get("Summary", "");
         if (summary.Length == 0)
         {
@@ -115,6 +132,7 @@ internal static partial class ReleaseCommands
             "candidate-package", logRoot, runTemp, publicApiRoot);
         RunProductionCandidateChecks(plan, options, publicApiRoot, logRoot, candidateOutput, runTemp, python);
         WriteTierRecord(plan, passed: true);
+        if (dryRun) return FinishReleaseDryRun(releaseVersion, summary, candidateOutput, logRoot, git, options.Get("Repository", "asckye/TIA_Portal_Openness_MCP"));
 
         var paths = EnumerateReleaseChanges(Root, git);
         if (!options.Has("Resume") || paths.Length != 0)
@@ -163,6 +181,35 @@ internal static partial class ReleaseCommands
             options.Get("Repository", "asckye/TIA_Portal_Openness_MCP"), int.Parse(options.Get("CiTimeoutMinutes", "30"), System.Globalization.CultureInfo.InvariantCulture));
         Console.WriteLine($"DONE {tag}. Record publication in docs/development/handoff.md and handoff-checklist.md, then commit that separately.");
         _ = paths;
+        return 0;
+    }
+
+    // The rehearsal ends with the candidate package, the two GitHub request bodies it would send and the tracked files it rewrote.
+    private static int FinishReleaseDryRun(TiaMcp.Versioning.ProductReleaseVersion version, string summary, string candidateOutput, string logRoot, string git, string repository)
+    {
+        var resultPath = Path.Combine(candidateOutput, "package-result.json");
+        if (!File.Exists(resultPath)) throw new ReleaseException("Candidate package result missing: " + resultPath);
+        using var package = JsonDocument.Parse(File.ReadAllText(resultPath));
+        var zip = GetJsonString(package.RootElement, "path");
+        var commit = GitText(git, ["rev-parse", "HEAD"]);
+        var notes = File.ReadAllText(Path.Combine(Root, "docs/releases", version.Tag + ".md"), Encoding.UTF8);
+        var body = ReleasePublisher.ComposeBody(notes, "https://github.com", repository, commit, Path.GetFileName(zip), GetJsonInt(package.RootElement, "files"),
+            new FileInfo(zip).Length, GetJsonString(package.RootElement, "sha256"));
+        var requests = new
+        {
+            note = "Dry run: nothing was sent. The release commit does not exist yet, so the target commit is the current HEAD.",
+            draft = new { method = "POST", path = "repos/" + repository + "/releases", body = ReleaseRequestBodies.Draft(version.Tag, commit, body, version.IsPrerelease) },
+            publish = new { method = "PATCH", path = "repos/" + repository + "/releases/<draft-id>", body = ReleaseRequestBodies.Publish(version.Tag, body, version.IsPrerelease) }
+        };
+        var requestsPath = Path.Combine(logRoot, "github-requests.json");
+        WriteJson(requestsPath, requests);
+        var changed = EnumerateReleaseChanges(Root, git);
+        Console.WriteLine("DRY RUN complete for " + version.Tag + ": " + summary);
+        Console.WriteLine("  candidate package: " + zip);
+        Console.WriteLine("  GitHub request bodies (not sent): " + requestsPath + (version.IsPrerelease ? "; prerelease=true, make_latest=\"false\" in both" : "; draft make_latest=\"false\", publish make_latest=\"true\""));
+        Console.WriteLine("  release records and version files rewritten in this checkout (" + changed.Length + "); restore the tracked ones with git checkout -- <paths>:");
+        foreach (var path in changed) Console.WriteLine("    " + path);
+        Console.WriteLine("No Git index, commit, tag, push or GitHub request was made.");
         return 0;
     }
 
@@ -387,13 +434,22 @@ internal static partial class ReleaseCommands
     {
         UpdateMarketplaceVersion(Root, version);
         var props = Path.Combine(Root, "Version.props");
-        var previous = Regex.Match(File.ReadAllText(props), "<TiaMcpRelease>(\\d+\\.\\d+\\.\\d+)</TiaMcpRelease>").Groups[1].Value;
-        if (previous.Length == 0) throw new ReleaseException("Cannot read TiaMcpRelease from Version.props");
+        var propsText = File.ReadAllText(props);
+        var core = Regex.Match(propsText, "<TiaMcpRelease>(\\d+\\.\\d+\\.\\d+)</TiaMcpRelease>").Groups[1].Value;
+        if (core.Length == 0) throw new ReleaseException("Cannot read TiaMcpRelease from Version.props");
+        var prerelease = Regex.Match(propsText, "<TiaMcpPrerelease>([^<]*)</TiaMcpPrerelease>");
+        var previous = TiaMcp.Versioning.ProductReleaseVersion.Compose(core, prerelease.Success ? prerelease.Groups[1].Value : "");
+        var next = ReleaseVersions.Require(version, "-Version must be X.Y.Z, X.Y.Z-beta.N or X.Y.Z-rc.N");
         if (previous == version) Console.WriteLine("version already " + version + " in Version.props; bump skipped");
         else
         {
             ReplaceReleaseOnce(Path.Combine(Root, ".claude-plugin/plugin.json"), "\"version\": \"" + previous + "\"", "\"version\": \"" + version + "\"", "plugin.json");
-            ReplaceReleaseOnce(props, "<TiaMcpRelease>" + previous + "</TiaMcpRelease>", "<TiaMcpRelease>" + version + "</TiaMcpRelease>", "Version.props");
+            if (core != next.Core) ReplaceReleaseOnce(props, "<TiaMcpRelease>" + core + "</TiaMcpRelease>", "<TiaMcpRelease>" + next.Core + "</TiaMcpRelease>", "Version.props");
+            if ((prerelease.Success ? prerelease.Groups[1].Value : "") != next.Prerelease)
+            {
+                if (!prerelease.Success) throw new ReleaseException("Version.props has no <TiaMcpPrerelease></TiaMcpPrerelease> element for the pre-release label");
+                ReplaceReleaseOnce(props, prerelease.Value, "<TiaMcpPrerelease>" + next.Prerelease + "</TiaMcpPrerelease>", "Version.props pre-release label");
+            }
             ReplaceReleaseOnce(Path.Combine(Root, "docs/README.md"), "[当前版本说明](releases/v" + previous + ".md)", "[当前版本说明](releases/v" + version + ".md)", "docs/README.md current release link");
             var roadmapPath = Path.Combine(Root, "docs/development/roadmap.md");
             var roadmap = File.ReadAllText(roadmapPath);
@@ -404,14 +460,63 @@ internal static partial class ReleaseCommands
         }
     }
 
+    // Only the version value of this plugin's marketplace entry changes; every other byte (layout, escapes, line ends, final newline)
+    // stays as written.
     internal static void UpdateMarketplaceVersion(string root, string version)
     {
         var plugin = JsonNode.Parse(File.ReadAllText(Path.Combine(root, ".claude-plugin/plugin.json")))!;
+        var name = (string?)plugin["name"] ?? throw new ReleaseException(".claude-plugin/plugin.json has no name");
         var path = Path.Combine(root, ".claude-plugin/marketplace.json");
-        var marketplace = JsonNode.Parse(File.ReadAllText(path))!;
-        var entry = marketplace["plugins"]!.AsArray().Single(p => (string?)p?["name"] == (string?)plugin["name"])!;
-        entry["version"] = version;
-        WriteJson(path, marketplace);
+        var bytes = File.ReadAllBytes(path);
+        var (start, length) = MarketplaceVersionSpan(bytes, name);
+        var value = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(version));
+        var updated = new byte[bytes.Length - length + value.Length];
+        bytes.AsSpan(0, start).CopyTo(updated);
+        value.CopyTo(updated.AsSpan(start));
+        bytes.AsSpan(start + length).CopyTo(updated.AsSpan(start + value.Length));
+        if (!updated.AsSpan().SequenceEqual(bytes)) File.WriteAllBytes(path, updated);
+    }
+
+    /// <summary>Byte offset and length (quotes included) of the "version" string of the plugins entry named <paramref name="name"/>.</summary>
+    internal static (int Start, int Length) MarketplaceVersionSpan(byte[] bytes, string name)
+    {
+        var offset = bytes.AsSpan().StartsWith(new byte[] { 0xEF, 0xBB, 0xBF }) ? 3 : 0;
+        var reader = new Utf8JsonReader(bytes.AsSpan(offset), new JsonReaderOptions { CommentHandling = JsonCommentHandling.Skip });
+        var inPlugins = false; var entryDepth = -1; string? entryName = null; (int, int)? entryVersion = null; string? property = null;
+        var matches = new List<(int, int)>();
+        while (reader.Read())
+        {
+            switch (reader.TokenType)
+            {
+                case JsonTokenType.PropertyName:
+                    property = reader.GetString();
+                    break;
+                case JsonTokenType.StartArray when reader.CurrentDepth == 1 && property == "plugins":
+                    inPlugins = true; property = null;
+                    break;
+                case JsonTokenType.EndArray when reader.CurrentDepth == 1:
+                    inPlugins = false;
+                    break;
+                case JsonTokenType.StartObject when inPlugins && reader.CurrentDepth == 2:
+                    entryDepth = 2; entryName = null; entryVersion = null; property = null;
+                    break;
+                case JsonTokenType.EndObject when inPlugins && reader.CurrentDepth == 2:
+                    if (entryName == name && entryVersion is { } span) matches.Add(span);
+                    if (entryName == name && entryVersion is null) throw new ReleaseException(".claude-plugin/marketplace.json entry " + name + " has no version string");
+                    entryDepth = -1;
+                    break;
+                case JsonTokenType.String when entryDepth == 2 && reader.CurrentDepth == 3 && property is "name" or "version":
+                    if (property == "name") entryName = reader.GetString();
+                    else entryVersion = (offset + (int)reader.TokenStartIndex, reader.ValueSpan.Length + 2);
+                    property = null;
+                    break;
+                default:
+                    if (reader.TokenType is not (JsonTokenType.StartObject or JsonTokenType.StartArray)) property = null;
+                    break;
+            }
+        }
+        if (matches.Count != 1) throw new ReleaseException(".claude-plugin/marketplace.json needs exactly one plugins entry named " + name + ", found " + matches.Count);
+        return matches[0];
     }
 
     private static void ReplaceReleaseOnce(string path, string oldValue, string newValue, string description)
@@ -432,26 +537,30 @@ internal static partial class ReleaseCommands
 
     private static void TestReleaseDocumentation(string version, bool requireNewest)
     {
-        var props = XDocument.Load(Path.Combine(Root, "Version.props"));
-        var actual = (string?)props.Root?.Element("PropertyGroup")?.Element("TiaMcpRelease") ?? "";
-        if (actual != version) throw new ReleaseException("Early gates require Version.props to match -Version (run after the mechanical bump)");
-        var entry = Regex.Match(File.ReadAllText(Path.Combine(Root, "CHANGELOG.md")), "(?m)^## \\[(\\d+\\.\\d+\\.\\d+)\\]");
-        if (!entry.Success || !Version.TryParse(entry.Groups[1].Value, out var changelog) || !Version.TryParse(version, out var requested) || changelog < requested || (requireNewest && entry.Groups[1].Value != version))
-            throw new ReleaseException("Newest CHANGELOG entry differs from the requested release");
-        if (!File.Exists(Path.Combine(Root, "docs/releases", "v" + entry.Groups[1].Value + ".md"))) throw new ReleaseException("Matching release note missing");
-        if (!File.ReadAllText(Path.Combine(Root, "docs/README.md")).Contains("[当前版本说明](releases/v" + version + ".md)", StringComparison.Ordinal)) throw new ReleaseException("docs/README.md current release link is stale");
-        if (!Regex.IsMatch(File.ReadAllText(Path.Combine(Root, "docs/development/roadmap.md")), "(?m)^# .*" + Regex.Escape(version))) throw new ReleaseException("Roadmap title is stale");
+        // The same assertions as release -DocumentationOnly, for the requested version.
+        if (ReleaseValidation.ReleaseDocumentationError(Root, version, requireNewest) is { } error) throw new ReleaseException(error);
     }
 
-    private static void RefuseOrStopStrayEngines(bool kill)
+    private static void RefuseOrStopStrayEngines(bool kill, string? onlyWithin = null)
     {
         var names = new[] { "TiaMcp.Engine.V20", "TiaMcp.Engine.V21", "TiaMcp.FoundationHost" };
-        var processes = names.SelectMany(Process.GetProcessesByName).ToArray();
+        var processes = names.SelectMany(Process.GetProcessesByName).Where(process => onlyWithin is null || StartedWithin(process, onlyWithin)).ToArray();
         if (processes.Length == 0) return;
         if (!kill) throw new ReleaseException("TiaMcp.Engine.V20.exe / TiaMcp.Engine.V21.exe / TiaMcp.FoundationHost.exe is running (PID " + string.Join(',', processes.Select(process => process.Id)) + ") and would lock runtime/v21; stop it or pass -KillStrayEngine");
         foreach (var process in processes) process.Kill(true);
         foreach (var process in processes) process.WaitForExit(2000);
         Console.WriteLine("killed stray engine and FoundationHost processes");
+    }
+
+    // A process whose image cannot be read counts as started here, so the rehearsal still refuses it.
+    private static bool StartedWithin(Process process, string root)
+    {
+        string? image;
+        try { image = process.MainModule?.FileName; }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or NotSupportedException) { return true; }
+        if (string.IsNullOrEmpty(image)) return true;
+        var boundary = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        return Path.GetFullPath(image).StartsWith(boundary, StringComparison.OrdinalIgnoreCase);
     }
 
     private static void WaitForWorkflows(string[] workflows, string sha, string apiBase, string token, string repository, int timeoutMinutes)

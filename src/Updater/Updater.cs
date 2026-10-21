@@ -12,6 +12,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using TiaMcp.Versioning;
 
 namespace TiaMcp.Updater
 {
@@ -61,6 +62,8 @@ namespace TiaMcp.Updater
     {
         [DataMember(Name = "tag_name")] public string Tag { get; set; }
         [DataMember(Name = "published_at")] public string PublishedAt { get; set; }
+        [DataMember(Name = "prerelease")] public bool Prerelease { get; set; }
+        [DataMember(Name = "draft")] public bool Draft { get; set; }
         [DataMember(Name = "assets")] public List<ReleaseAsset> Assets { get; set; }
     }
 
@@ -96,8 +99,7 @@ namespace TiaMcp.Updater
 
     public static class UpdaterEngine
     {
-        private static readonly Regex VersionPattern = new Regex(@"^v?(\d+)\.(\d+)\.(\d+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex ZipPattern = new Regex(@"^TIA_MCP_Delivery_v\d+\.\d+\.\d+_\d{8}\.zip$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex ZipPattern = new Regex(@"^TIA_MCP_Delivery_v\d+\.\d+\.\d+(?:-(?:beta|rc)\.\d+)?_\d{8}\.zip$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private const string UpdaterPath = "runtime/tools/TiaMcp.Updater.exe";
         private const string UpdaterConfigPath = UpdaterPath + ".config";
 
@@ -109,7 +111,7 @@ namespace TiaMcp.Updater
             options.InstallRoot = root;
             if (options.TimeoutSeconds < 1 || options.TimeoutSeconds > 3600) throw new InvalidOperationException("TimeoutSeconds must be between 1 and 3600.");
             if (!IsValidRepository(options.Repository)) throw new InvalidOperationException("Repository must be owner/name.");
-            if (options.Version != null && options.Version.Length > 0 && !VersionPattern.IsMatch(options.Version)) throw new InvalidOperationException("-Version must be vX.Y.Z.");
+            if (options.Version != null && options.Version.Length > 0 && !IsVersion(options.Version)) throw new InvalidOperationException("-Version must be vX.Y.Z, or vX.Y.Z-beta.N / vX.Y.Z-rc.N for a pre-release.");
             if (IsSourceCheckout(root)) throw new InvalidOperationException("This folder is a source checkout or worktree. The updater only changes an installed delivery.");
 
             string deliveryFile = Combine(root, "manifest/delivery.json");
@@ -125,6 +127,11 @@ namespace TiaMcp.Updater
 
             ReleaseInfo release = FindRelease(options, installed.Release, say);
             string latest = NormalizeVersion(release.Tag);
+            // A plain install is never offered a pre-release; only an explicit -Version selects one.
+            if (string.IsNullOrEmpty(options.Version) && !UsesPrereleaseChannel(installed.Release) && (release.Prerelease || IsPrerelease(latest)))
+                throw new InvalidOperationException("The latest release " + release.Tag + " is a pre-release; a plain install is never offered one. Pass -Version to choose a release.");
+            // Say so before anything is downloaded or replaced.
+            if (IsPrerelease(latest)) say(UpdaterText.Bilingual("PrereleaseTarget", "the selected release is a pre-release, not verified on a real TIA Portal; see its release notes") + ": " + release.Tag);
             int comparison = CompareVersions(latest, installed.Release);
             if (comparison > 0) say(UpdaterText.Bilingual("UpdateAvailable", "UPDATE AVAILABLE") + ": " + installed.Release + " -> " + latest);
             else if (comparison == 0) say(UpdaterText.Bilingual("UpToDate", "UP TO DATE") + ": " + installed.Release);
@@ -165,18 +172,40 @@ namespace TiaMcp.Updater
             return parts.All(p => p.Length > 0 && p != "." && p != "..") && !Path.IsPathRooted(relative);
         }
 
+        /// <summary>X.Y.Z (or X.Y.Z-beta.N / X.Y.Z-rc.N) of a tag or version with an optional leading v.</summary>
         public static string NormalizeVersion(string value)
         {
-            Match match = VersionPattern.Match(value ?? "");
-            if (!match.Success) throw new InvalidOperationException("Release tag is not a version: " + value);
-            return string.Join(".", match.Groups[1].Value, match.Groups[2].Value, match.Groups[3].Value);
+            ProductReleaseVersion version;
+            if (!ProductReleaseVersion.TryParseTag(value, out version) || version == null) throw new InvalidOperationException("Release tag is not a version: " + value);
+            return version.Label;
         }
 
+        /// <summary>Semantic Versioning precedence: numeric versions compare as numbers, and a pre-release sorts below its plain release.</summary>
         public static int CompareVersions(string left, string right)
         {
-            Version a, b;
-            if (!Version.TryParse(NormalizeVersion(left), out a) || !Version.TryParse(NormalizeVersion(right), out b)) throw new InvalidOperationException("Version comparison received an invalid version.");
-            return a.CompareTo(b);
+            ProductReleaseVersion a, b;
+            if (!ProductReleaseVersion.TryParseTag(NormalizeVersion(left), out a) || !ProductReleaseVersion.TryParseTag(NormalizeVersion(right), out b) || a == null || b == null)
+                throw new InvalidOperationException("Version comparison received an invalid version.");
+            return Math.Sign(a.CompareTo(b));
+        }
+
+        public static bool IsVersion(string value) { ProductReleaseVersion version; return ProductReleaseVersion.TryParseTag(value, out version) && version != null; }
+        public static bool IsPrerelease(string value) { return ProductReleaseVersion.IsPrereleaseText(value); }
+
+        /// <summary>An install whose own version is a pre-release reads the releases list; a plain install reads releases/latest.</summary>
+        public static bool UsesPrereleaseChannel(string installed) { return IsPrerelease(installed); }
+
+        /// <summary>The newest published release with both delivery assets by Semantic Versioning precedence; drafts and tags that are not
+        /// versions are ignored. Null when none qualifies.</summary>
+        internal static ReleaseInfo SelectNewest(IEnumerable<ReleaseInfo> releases)
+        {
+            ReleaseInfo best = null;
+            foreach (ReleaseInfo release in releases ?? Enumerable.Empty<ReleaseInfo>())
+            {
+                if (release == null || release.Draft || !IsVersion(release.Tag) || SelectAsset(release, true) == null || SelectAsset(release, false) == null) continue;
+                if (best == null || CompareVersions(release.Tag, best.Tag) > 0) best = release;
+            }
+            return best;
         }
 
         private static void WaitForProcess(UpdaterOptions options, Action<string> say)
@@ -230,10 +259,18 @@ namespace TiaMcp.Updater
         {
             string api = options.ApiBaseUrl ?? "https://api.github.com";
             string tag = string.IsNullOrEmpty(options.Version) ? "" : "v" + options.Version.TrimStart('v', 'V');
-            string url = api.TrimEnd('/') + "/repos/" + options.Repository + "/releases/" + (tag.Length == 0 ? "latest" : "tags/" + tag);
+            bool prereleaseChannel = tag.Length == 0 && UsesPrereleaseChannel(installed);
+            string url = api.TrimEnd('/') + "/repos/" + options.Repository + (prereleaseChannel ? "/releases?per_page=100" : "/releases/" + (tag.Length == 0 ? "latest" : "tags/" + tag));
             try
             {
-                ReleaseInfo release = GetJson<ReleaseInfo>(url, "application/vnd.github+json", options.TimeoutSeconds, options);
+                ReleaseInfo release;
+                if (prereleaseChannel)
+                {
+                    release = SelectNewest(GetJson<List<ReleaseInfo>>(url, "application/vnd.github+json", options.TimeoutSeconds, options));
+                    if (release == null) throw new InvalidOperationException("The releases list has no published release with both delivery assets.");
+                    say(UpdaterText.Bilingual("PrereleaseChannel", "pre-release install: newest release from the releases list") + ": " + release.Tag);
+                }
+                else release = GetJson<ReleaseInfo>(url, "application/vnd.github+json", options.TimeoutSeconds, options);
                 NormalizeVersion(release.Tag);
                 if (SelectAsset(release, true) == null || SelectAsset(release, false) == null) throw new InvalidOperationException("The release does not contain both delivery ZIP and .sha256 assets.");
                 say(UpdaterText.Bilingual("GitHubApi", "GitHub API") + ": " + release.Tag + " (" + (release.PublishedAt ?? "") + ")");
@@ -242,6 +279,7 @@ namespace TiaMcp.Updater
             catch (Exception apiError)
             {
                 say(UpdaterText.Bilingual("ApiFallback", "GitHub API unavailable; using the release page") + ": " + apiError.GetBaseException().Message);
+                if (prereleaseChannel) say(UpdaterText.Bilingual("PrereleaseFallback", "the release page shows only the latest plain release; newer pre-releases appear once the GitHub API answers again"));
                 string pageBase = options.ReleasePageBaseUrl ?? ("https://github.com/" + options.Repository);
                 if (tag.Length == 0)
                 {
@@ -252,7 +290,7 @@ namespace TiaMcp.Updater
                 }
                 var fallback = new ReleaseInfo { Tag = tag, Assets = new List<ReleaseAsset>() };
                 string html = GetText(pageBase.TrimEnd('/') + "/releases/expanded_assets/" + Uri.EscapeDataString(tag), options.TimeoutSeconds, options);
-                foreach (Match asset in Regex.Matches(html, @"/releases/download/" + Regex.Escape(tag) + @"/(?<name>TIA_MCP_Delivery_v\d+\.\d+\.\d+_\d{8}\.(?:zip|sha256))"))
+                foreach (Match asset in Regex.Matches(html, @"/releases/download/" + Regex.Escape(tag) + @"/(?<name>TIA_MCP_Delivery_v\d+\.\d+\.\d+(?:-(?:beta|rc)\.\d+)?_\d{8}\.(?:zip|sha256))"))
                 {
                     string name = Uri.UnescapeDataString(asset.Groups["name"].Value);
                     if (!fallback.Assets.Any(a => string.Equals(a.Name, name, StringComparison.OrdinalIgnoreCase)))

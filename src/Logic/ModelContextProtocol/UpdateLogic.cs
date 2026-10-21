@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using TiaMcp.Versioning;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -31,11 +32,16 @@ namespace TiaMcpServer.ModelContextProtocol
             public bool Prerelease { get; set; }
             public bool Draft { get; set; }
             public List<Asset> Assets { get; } = new List<Asset>();
-            public Asset? Zip => Assets.FirstOrDefault(a => Regex.IsMatch(a.Name, @"^TIA_MCP_Delivery_v\d+\.\d+\.\d+_\d{8}\.zip$", RegexOptions.IgnoreCase));
-            public Asset? Sha256 => Assets.FirstOrDefault(a => Regex.IsMatch(a.Name, @"^TIA_MCP_Delivery_v\d+\.\d+\.\d+_\d{8}\.sha256$", RegexOptions.IgnoreCase));
-            /// <summary>X.Y.Z of the tag, or null when the tag is not a release tag.</summary>
-            public string? Version => ParseVersion(Tag) is int[] v ? string.Join(".", v) : null;
+            public Asset? Zip => Assets.FirstOrDefault(a => Regex.IsMatch(a.Name, @"^TIA_MCP_Delivery_v" + DeliveryVersionPattern + @"_\d{8}\.zip$", RegexOptions.IgnoreCase));
+            public Asset? Sha256 => Assets.FirstOrDefault(a => Regex.IsMatch(a.Name, @"^TIA_MCP_Delivery_v" + DeliveryVersionPattern + @"_\d{8}\.sha256$", RegexOptions.IgnoreCase));
+            /// <summary>X.Y.Z of the tag (X.Y.Z-beta.N / X.Y.Z-rc.N for a pre-release tag), or null when the tag is not a release tag.</summary>
+            public string? Version => ParseVersion(Tag) is int[] v ? string.Join(".", v) : ProductReleaseVersion.TryParseTag(Tag.Trim(), out var label) && label != null ? label.Label : null;
+            /// <summary>GitHub marks it a pre-release, or its tag carries a pre-release label.</summary>
+            public bool IsPrerelease => Prerelease || ProductReleaseVersion.IsPrereleaseText(Tag);
         }
+
+        /// <summary>The version part of a delivery asset name: X.Y.Z, optionally -beta.N or -rc.N.</summary>
+        public const string DeliveryVersionPattern = @"\d+\.\d+\.\d+(?:-(?:beta|rc)\.\d+)?";
 
         private static readonly Regex VersionPattern = new Regex(@"^v?(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?$", RegexOptions.Compiled);
 
@@ -48,14 +54,70 @@ namespace TiaMcpServer.ModelContextProtocol
             return new[] { int.Parse(m.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture), int.Parse(m.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture), int.Parse(m.Groups[3].Value, System.Globalization.CultureInfo.InvariantCulture) };
         }
 
-        /// <summary>Negative when a &lt; b, zero when equal, positive when a &gt; b; null when either does not parse.</summary>
+        /// <summary>Negative when a &lt; b, zero when equal, positive when a &gt; b; null when either does not parse.
+        /// Numeric versions compare as before; when either side carries a pre-release label the Semantic Versioning precedence applies
+        /// (a pre-release sorts below its plain release).</summary>
         public static int? Compare(string? a, string? b)
         {
             var va = ParseVersion(a); var vb = ParseVersion(b);
-            if (va == null || vb == null) return null;
-            for (int i = 0; i < 3; i++) if (va[i] != vb[i]) return va[i].CompareTo(vb[i]);
-            return 0;
+            if (va != null && vb != null)
+            {
+                for (int i = 0; i < 3; i++) if (va[i] != vb[i]) return va[i].CompareTo(vb[i]);
+                return 0;
+            }
+            var ra = ReleaseOf(a); var rb = ReleaseOf(b);
+            if (ra == null || rb == null) return null;
+            return ra.CompareTo(rb);
         }
+
+        private static ProductReleaseVersion? ReleaseOf(string? text)
+        {
+            if (ProductReleaseVersion.TryParseTag(text?.Trim(), out var label)) return label;
+            return ParseVersion(text) is int[] numeric && ProductReleaseVersion.TryParse(string.Join(".", numeric), out var core) ? core : null;
+        }
+
+        /// <summary>The version an install reports: the informational version when it is a pre-release of the same numeric version,
+        /// otherwise the numeric MAJOR.MINOR.PATCH.</summary>
+        public static string InstalledVersion(string numeric, string? informational)
+            => ProductReleaseVersion.TryParse(informational, out var label) && label != null && label.IsPrerelease && label.Core == numeric ? label.Label : numeric;
+
+        /// <summary>A plain install reads GitHub's latest release, which never is a pre-release or a draft. An install whose own version
+        /// is a pre-release reads the releases list and is offered the newest release by Semantic Versioning precedence.</summary>
+        public static bool UsesPrereleaseChannel(string? installed) => ProductReleaseVersion.IsPrereleaseText(installed);
+
+        public static string ReleasesListUrl(string repository) => "https://api.github.com/repos/" + repository.Trim() + "/releases?per_page=100";
+
+        /// <summary>The API endpoint for an install of this version: releases/latest, or the releases list for a pre-release install.</summary>
+        public static string UpdateApiUrl(string repository, string? installed) => UsesPrereleaseChannel(installed) ? ReleasesListUrl(repository) : LatestReleaseUrl(repository);
+
+        /// <summary>Parses the GitHub REST releases list (an array of release objects); entries without a tag are skipped.</summary>
+        public static IReadOnlyList<Release> ParseReleaseList(string json)
+        {
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.ValueKind != JsonValueKind.Array) throw new ArgumentException("GitHub releases list JSON must be an array.");
+            var releases = new List<Release>();
+            foreach (var item in doc.RootElement.EnumerateArray())
+                if (item.ValueKind == JsonValueKind.Object && Text(item, "tag_name").Length != 0) releases.Add(ParseRelease(item.GetRawText()));
+            return releases;
+        }
+
+        /// <summary>The newest published release by Semantic Versioning precedence; drafts and tags that are not versions are ignored,
+        /// and pre-releases only count when <paramref name="includePrerelease"/> is set. Null when none qualifies.</summary>
+        public static Release? SelectNewest(IEnumerable<Release> releases, bool includePrerelease)
+        {
+            Release? best = null; ProductReleaseVersion? bestVersion = null;
+            foreach (var release in releases)
+            {
+                if (release.Draft || (!includePrerelease && release.IsPrerelease)) continue;
+                var version = ReleaseOf(release.Tag);
+                if (version == null) continue;
+                if (bestVersion == null || version.CompareTo(bestVersion) > 0) { best = release; bestVersion = version; }
+            }
+            return best;
+        }
+
+        /// <summary>The release a plain install may be offered from a releases/latest answer: never a pre-release.</summary>
+        public static Release? OfferedToPlainInstall(Release? latest) => latest == null || latest.IsPrerelease ? null : latest;
 
         /// <summary>owner/name only - the value is interpolated into an api.github.com path.</summary>
         public static bool IsValidRepository(string? repository)

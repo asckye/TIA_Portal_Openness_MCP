@@ -10,11 +10,23 @@ namespace TiaMcp.ReleaseTool;
 internal sealed record PublishOptions(string Version, string Token, string Repository, string ApiBaseUrl,
     bool DraftOnly, bool DeleteDraft, int RetryCount = 6, int RetryDelaySeconds = 15, string GitExecutable = "git");
 
+// The JSON bodies of the two release writes. A plain release is drafted with prerelease=false and make_latest="false", then
+// published as the latest release. A pre-release (X.Y.Z-beta.N, X.Y.Z-rc.N) carries prerelease=true and make_latest="false" in both
+// writes, so GitHub's "latest release" (and the updater of every plain install) keeps pointing at the newest plain release.
+internal static class ReleaseRequestBodies
+{
+    internal static object Draft(string tag, string commit, string body, bool prerelease) =>
+        new { tag_name = tag, target_commitish = commit, name = tag, body, draft = true, prerelease, make_latest = "false" };
+
+    internal static object Publish(string tag, string body, bool prerelease) =>
+        new { name = tag, body, draft = false, prerelease, make_latest = prerelease ? "false" : "true" };
+}
+
 internal static class ReleasePublisher
 {
     internal static async Task<int> PublishAsync(string root, PublishOptions options, HttpClient? client = null, CancellationToken cancellationToken = default)
     {
-        if (!Regex.IsMatch(options.Version, "^\\d+\\.\\d+\\.\\d+$")) throw new ReleaseException("-Version must be X.Y.Z");
+        var version = ReleaseVersions.Require(options.Version, "-Version must be X.Y.Z, X.Y.Z-beta.N or X.Y.Z-rc.N");
         if (options.RetryCount < 1 || options.RetryDelaySeconds < 0) throw new ReleaseException("RetryCount must be positive and RetryDelaySeconds cannot be negative");
         using var ownedClient = client is null ? new HttpClient() : null;
         var http = client ?? ownedClient!;
@@ -23,7 +35,7 @@ internal static class ReleasePublisher
         var repoPath = "repos/" + options.Repository.Trim('/');
 
 
-        var tag = "v" + options.Version;
+        var tag = version.Tag;
         var output = Path.Combine(root, "bin-build/releases", tag);
         var resultPath = Path.Combine(output, "package-result.json");
         if (!File.Exists(resultPath)) throw new ReleaseException("no package-result.json in " + output + " - run Package-Release.py first");
@@ -40,7 +52,11 @@ internal static class ReleasePublisher
         if (digest != JsonString(resultRoot, "sha256") || zipInfo.Length != JsonLong(resultRoot, "size"))
             throw new ReleaseException("ZIP differs from package-result.json (size or sha256)");
         ReleaseCheckPolicy.Load(root).RequireFullPackage(zip, requireColdBuild: true);
-        var token = ReleasePrerequisites.GetToken(options.Token, options.GitExecutable, root, localOnly: false);
+        // Pre-release only: the notes must list what was not verified on a real TIA Portal (checked before credentials or requests).
+        var releaseNote = Path.Combine(root, "docs/releases", tag + ".md");
+        if (version.IsPrerelease && (!File.Exists(releaseNote) || !PrereleaseNotes.HasSection(File.ReadAllText(releaseNote, Encoding.UTF8))))
+            throw new ReleaseException(tag + " is a pre-release; docs/releases/" + tag + ".md needs the generated \"Not verified on a real TIA Portal\" section (generate-prerelease-notes)");
+        var token =ReleasePrerequisites.GetToken(options.Token, options.GitExecutable, root, localOnly: false);
         if (string.IsNullOrWhiteSpace(token)) throw new ReleaseException("No GitHub token: pass -Token, set GITHUB_TOKEN, or sign in with Git Credential Manager; token value is never printed");
         var baseUri = new Uri(options.ApiBaseUrl.TrimEnd('/') + "/");
         var api = new GitHubApi(http, baseUri, repoPath, token);
@@ -91,9 +107,7 @@ internal static class ReleasePublisher
         var webBase = options.ApiBaseUrl.StartsWith("https://api.github.com", StringComparison.OrdinalIgnoreCase)
             ? "https://github.com"
             : options.ApiBaseUrl.TrimEnd('/');
-        notes = Regex.Replace(notes, @"\]\((\.\./[^)]+)\)", match => "](" + webBase + "/" + options.Repository + "/blob/" + commit + "/docs/releases/" + match.Groups[1].Value + ")");
-        var fileCount = JsonLong(resultRoot, "files");
-        var body = notes + $"\n\nPackage: `{Path.GetFileName(zip)}` ({fileCount} files, {zipInfo.Length} bytes).\n\nSource commit: [{commit}]({webBase}/{options.Repository}/commit/{commit}).\n\nZIP SHA-256:\n\n```text\n{digest}\n```\n";
+        var body = ComposeBody(notes, webBase, options.Repository, commit, Path.GetFileName(zip), JsonLong(resultRoot, "files"), zipInfo.Length, digest);
         JsonDocument release;
         if (releaseElement is { } draftRelease)
         {
@@ -102,10 +116,7 @@ internal static class ReleasePublisher
         }
         else
         {
-            release = await api.SendJsonRequiredAsync(HttpMethod.Post, repoPath + "/releases", new
-            {
-                tag_name = tag, target_commitish = commit, name = tag, body, draft = true, prerelease = false, make_latest = "false"
-            }, cancellationToken);
+            release = await api.SendJsonRequiredAsync(HttpMethod.Post, repoPath + "/releases", ReleaseRequestBodies.Draft(tag, commit, body, version.IsPrerelease), cancellationToken);
             Console.WriteLine("draft release created: " + JsonLong(release.RootElement, "id"));
         }
 
@@ -125,7 +136,7 @@ internal static class ReleasePublisher
                 return 0;
             }
             using var publishedResponse = await api.SendJsonRequiredAsync(HttpMethod.Patch, repoPath + "/releases/" + releaseId,
-                new { name = tag, body, draft = false, prerelease = false, make_latest = "true" }, cancellationToken);
+                ReleaseRequestBodies.Publish(tag, body, version.IsPrerelease), cancellationToken);
             if (JsonBool(publishedResponse.RootElement, "draft")) throw new ReleaseException("release is still a draft after publishing");
             using var finalAssets = await api.GetRequiredAsync(assetsPath, cancellationToken);
             AssertUploaded(finalAssets.RootElement, Path.GetFileName(zip), zipBytes.LongLength, Sha256Digest(zipBytes));
@@ -136,6 +147,13 @@ internal static class ReleasePublisher
             return 0;
         }
         finally { release.Dispose(); }
+    }
+
+    /// <summary>The release body: the notes with relative links resolved at the source commit, then the package facts.</summary>
+    internal static string ComposeBody(string notes, string webBase, string repository, string commit, string zipName, long fileCount, long zipLength, string digest)
+    {
+        notes = Regex.Replace(notes, @"\]\((\.\./[^)]+)\)", match => "](" + webBase + "/" + repository + "/blob/" + commit + "/docs/releases/" + match.Groups[1].Value + ")");
+        return notes + $"\n\nPackage: `{zipName}` ({fileCount} files, {zipLength} bytes).\n\nSource commit: [{commit}]({webBase}/{repository}/commit/{commit}).\n\nZIP SHA-256:\n\n```text\n{digest}\n```\n";
     }
 
     private static async Task UploadAndVerifyAsync(GitHubApi api, string assetsPath, string uploadBase, byte[] bytes, string name,

@@ -32,6 +32,7 @@
     <Compile Include="../Shared/NativePathSelection.cs" Link="Shared/NativePathSelection.cs" />
     <Compile Include="../Shared/NativeExportPolicy.cs" Link="Shared/NativeExportPolicy.cs" />
     <Compile Include="../Shared/BundleLayout.cs" Link="Shared/BundleLayout.cs" />
+    <Compile Include="../Shared/ProductReleaseVersion.cs" Link="Shared/ProductReleaseVersion.cs" />
     <Compile Include="../Shared/DataLocations.cs" Link="Shared/DataLocations.cs" />
     <Compile Include="../Shared/LocalProcess.cs" Link="Shared/LocalProcess.cs" />
     <Compile Include="../Shared/ProcessArguments.cs" Link="Shared/ProcessArguments.cs" />

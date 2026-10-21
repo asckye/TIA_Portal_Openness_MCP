@@ -98,7 +98,9 @@ internal static partial class ReleaseCommands
                 Directory.CreateDirectory(majorLogs);
                 var api = ResolveReleaseApi(null, apiRoot, major);
                 var exe = Path.Combine(Root, $"runtime/v{major}/worker/TiaMcp.Engine.V{major}.exe");
-                VerifyNativeJit(dotnet, harness, exe, api, majorLogs, temp, cli, apiRoot, major);
+                // The other job's worker-robustness build rebuilds the development host; this job starts its own copy (see CopyDevelopmentHost).
+                var developmentHost = CopyDevelopmentHost(PrivateDevelopmentHostPath(temp, major));
+                VerifyNativeJit(dotnet, harness, exe, api, majorLogs, temp, cli, apiRoot, major, developmentHost);
                 var faultResults = Path.Combine(majorLogs, "worker-fault-suites");
                 RunDotnetSuiteForRelease("worker-robustness", "worker-supervisor", dotnet, faultResults, majorLogs, temp, cli, apiRoot, nuget);
                 CheckReleaseCount("workerFaults", ReadSuitePassed(faultResults, "worker-robustness"), "Foundation worker fault coverage incomplete");
@@ -108,6 +110,7 @@ internal static partial class ReleaseCommands
                 foreach (var isolated in new[] { false, true }) VerifyStability(python, exe, harness, api, majorLogs, temp, cli, apiRoot, major, rounds.ToString(), isolated, protocolWorker);
                 RunBuildSpec("worker-protocol", python, [Path.Combine(Root, "scripts/checks/Test-FoundationTransport.py"),
                     "--releases", major.ToString(), "--output", Path.Combine(majorLogs, "foundation-transport")], majorLogs, temp, cli, apiRoot, major);
+                RemoveDevelopmentHostCopy(developmentHost);
                 return new PipelineResult("branch-v" + major, 0, "Branch engine checks passed.\n", "");
             }))).ToArray();
             ParallelPipeline.Run(jobs, Path.Combine(logs, "pipeline"), GetMaxParallelism(options));

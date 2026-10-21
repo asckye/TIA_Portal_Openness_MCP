@@ -168,21 +168,51 @@ namespace TiaMcpConfigurator
             var window = new MainWindow(new TiaOpenness.Gui.ViewModels.MainViewModel(), false);
             // No explicit root: the test output directory is a known development anchor (P6-38 strict root rules).
             window.ShowConfiguration(false);
+            // The default release is the newest one installed in the selected bundle (host and worker present), after any TIA Portal
+            // installed on the machine. The picker checks therefore run on an explicit fixture bundle in which V21 is installed and no
+            // TIA Portal is found (an empty explicit SDK folder), so they do not depend on what this checkout's runtime/ holds or on
+            // the machine (P8-90).
+            string pickerRoot = Path.Combine(output, "picker-bundle-" + Guid.NewGuid().ToString("N"));
+            foreach (var relative in new[] { "manifest/package-manifest.json", "manifest/delivery.json", "runtime/v21/TiaMcp.FoundationHost.exe", "runtime/v21/worker/TiaMcp.Engine.V21.exe" })
+            {
+                string file = Path.Combine(pickerRoot, relative.Replace('/', Path.DirectorySeparatorChar));
+                Directory.CreateDirectory(Path.GetDirectoryName(file));
+                File.WriteAllText(file, relative.EndsWith(".json", StringComparison.Ordinal) ? "{}" : "fixture");
+            }
+            // The view also writes the update and package lines into its owner's settings page and wires the settings buttons, so the
+            // fixture view gets its own owner with its own settings page; the main window keeps the development bundle's values.
+            var pickerOwner = new System.Windows.Window();
+            var pickerSettings = new TiaOpenness.Gui.Views.SettingsView();
+            System.Windows.NameScope.SetNameScope(pickerOwner, new System.Windows.NameScope());
+            pickerOwner.Content = pickerSettings;
+            pickerOwner.RegisterName("SettingsContent", pickerSettings);
+            string priorSdk = TiaOpenness.Core.Environment.OpennessLocator.PublicApiDirectory;
+            TiaOpenness.Core.Environment.OpennessLocator.PublicApiDirectory = Directory.CreateDirectory(Path.Combine(pickerRoot, "no-openness")).FullName;
+            try
+            {
+                using (var picker = new ConfigurationView(pickerOwner, pickerRoot, false, null))
+                {
+                    var versions = (System.Windows.Controls.ComboBox)picker.FindName("Version");
+                    Assert(versions.Items.Cast<TiaVersionDescriptor>().Select(x => x.Key).SequenceEqual(TiaVersionCatalog.Runnable.Select(x => x.Key))
+                        && versions.Items.Cast<TiaVersionDescriptor>().All(x => x.IsRunnable), "version picker is populated only from runnable catalog descriptors");
+                    Assert(versions.DisplayMemberPath == "DisplayName" && versions.SelectedValuePath == "Key" && (string)versions.SelectedValue == "21",
+                        "version picker displays catalog names, selects stable keys and defaults to V21");
+                    versions.Items.SortDescriptions.Add(new System.ComponentModel.SortDescription("MajorVersion", System.ComponentModel.ListSortDirection.Ascending));
+                    versions.SelectedValue = "20";
+                    Assert(versions.SelectedIndex == versions.Items.Count - 2 && ((System.Windows.Controls.TextBlock)picker.FindName("LinkServer")).Text.EndsWith("V20"),
+                        "selecting the V20 catalog key uses its identity even when the display order is reversed");
+                    versions.Items.SortDescriptions.Clear();
+                    versions.SelectedValue = "21";
+                    Assert(((System.Windows.Controls.TextBlock)picker.FindName("LinkServer")).Text.EndsWith("V21"),
+                        "selecting the V21 catalog key restores the active engine version");
+                }
+            }
+            finally { TiaOpenness.Core.Environment.OpennessLocator.PublicApiDirectory = priorSdk; }
             using (var form = window.Configuration)
             {
+                // The remaining checks continue on the development bundle with V21 selected, as before.
                 var versions = (System.Windows.Controls.ComboBox)form.FindName("Version");
-                Assert(versions.Items.Cast<TiaVersionDescriptor>().Select(x => x.Key).SequenceEqual(TiaVersionCatalog.Runnable.Select(x => x.Key))
-                    && versions.Items.Cast<TiaVersionDescriptor>().All(x => x.IsRunnable), "version picker is populated only from runnable catalog descriptors");
-                Assert(versions.DisplayMemberPath == "DisplayName" && versions.SelectedValuePath == "Key" && (string)versions.SelectedValue == "21",
-                    "version picker displays catalog names, selects stable keys and defaults to V21");
-                versions.Items.SortDescriptions.Add(new System.ComponentModel.SortDescription("MajorVersion", System.ComponentModel.ListSortDirection.Ascending));
-                versions.SelectedValue = "20";
-                Assert(versions.SelectedIndex == versions.Items.Count - 2 && ((System.Windows.Controls.TextBlock)form.FindName("LinkServer")).Text.EndsWith("V20"),
-                    "selecting the V20 catalog key uses its identity even when the display order is reversed");
-                versions.Items.SortDescriptions.Clear();
                 versions.SelectedValue = "21";
-                Assert(((System.Windows.Controls.TextBlock)form.FindName("LinkServer")).Text.EndsWith("V21"),
-                    "selecting the V21 catalog key restores the active engine version");
                 var settings = (TiaOpenness.Gui.Views.SettingsView)window.FindName("SettingsContent");
                 var runUpdate = (System.Windows.Controls.Button)settings.FindName("RunUpdate");
                 var installedItem = (System.Windows.Controls.TextBlock)settings.FindName("UpdateInstalledItem");

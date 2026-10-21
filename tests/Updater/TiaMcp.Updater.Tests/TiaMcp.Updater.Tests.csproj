@@ -9,6 +9,7 @@
   <ItemGroup>
     <Compile Include="../../../src/Updater/Updater.cs" Link="Updater/Updater.cs" />
     <Compile Include="../../../src/Shared/BundleLayout.cs" Link="Shared/BundleLayout.cs" />
+    <Compile Include="../../../src/Shared/ProductReleaseVersion.cs" Link="Shared/ProductReleaseVersion.cs" />
     <Compile Include="../../../src/Logic/Siemens/TiaVersionCatalog.cs" Link="Shared/TiaVersionCatalog.cs" />
     <Compile Include="../../../src/Updater/UpdaterText.cs" Link="Updater/UpdaterText.cs" />
     <EmbeddedResource Include="../../../src/Updater/UpdaterMessages.resx" Link="Updater/UpdaterMessages.resx">

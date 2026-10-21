@@ -75,7 +75,7 @@ internal static class ReleaseRecords
     {
         try
         {
-            if (GetString(record, "release") != release || GetString(record, "fileVersion") != release + ".0") return "release/fileVersion changed";
+            if (GetString(record, "release") != release || GetString(record, "fileVersion") != ReleaseVersions.FileVersionOf(release)) return "release/fileVersion changed";
             if (!record.TryGetProperty("sourceFiles", out var sourceRows) || sourceRows.ValueKind != JsonValueKind.Array || sourceRows.GetArrayLength() == 0 ||
                 !record.TryGetProperty(fileProperty, out var fileRows) || fileRows.ValueKind != JsonValueKind.Array || fileRows.GetArrayLength() == 0)
                 return "empty source or binary inventory";

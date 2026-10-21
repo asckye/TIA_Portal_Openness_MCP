@@ -13,8 +13,27 @@ internal static class ReleaseValidation
 
     internal static bool ChangelogVersion(string newest, string released, bool repositoryOnly, bool noteExists)
     {
-        if (!Version.TryParse(newest, out var next) || !Version.TryParse(released, out var current)) return false;
-        return newest == released || (repositoryOnly && noteExists && next > current);
+        if (!IsReleaseText(newest) || !IsReleaseText(released)) return false;
+        return newest == released || (repositoryOnly && noteExists && IsNewer(newest, released));
+    }
+
+    /// <summary>A release text: X.Y.Z (or the System.Version forms the checks accepted before), X.Y.Z-beta.N or X.Y.Z-rc.N.</summary>
+    internal static bool IsReleaseText(string? text) => Version.TryParse(text, out _) || ReleaseVersions.IsValid(text);
+
+    /// <summary>Semantic Versioning precedence for release labels; numeric System.Version comparison for the other forms.</summary>
+    internal static bool IsNewer(string newest, string released)
+    {
+        if (ReleaseVersions.Compare(newest, released) is { } semantic) return semantic > 0;
+        return Version.TryParse(newest, out var next) && Version.TryParse(released, out var current) && next > current;
+    }
+
+    /// <summary>The package of a release is exactly TIA_MCP_Delivery_v&lt;full version&gt;_&lt;yyyyMMdd&gt; (the archive adds ".zip").</summary>
+    internal static string? PackageNameError(string packageName, string version)
+    {
+        var match = Regex.Match(packageName, "^TIA_MCP_Delivery_v" + Regex.Escape(version) + "_(?<date>\\d{8})$", RegexOptions.CultureInvariant);
+        if (match.Success && DateTime.TryParseExact(match.Groups["date"].Value, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _))
+            return null;
+        return $"Version mismatch: manifest packageName '{packageName}' is not TIA_MCP_Delivery_v{version}_<yyyyMMdd>";
     }
 
     internal static string? OfflineNuGetError(string path)
@@ -66,15 +85,14 @@ internal static class ReleaseValidation
 
     internal static string? ReleaseDocumentationError(string root, string? version, bool requireNewest)
     {
-        var props = System.Xml.Linq.XDocument.Load(Path.Combine(root, "Version.props"));
-        var actual = (string?)props.Root?.Element("PropertyGroup")?.Element("TiaMcpRelease") ?? "";
+        var actual = ReleaseVersions.ReadLabel(root);
         if (version is null) version = actual;
         if (actual != version) return "Early gates require Version.props to match -Version (run after the mechanical bump)";
         var changelog = File.ReadAllText(Path.Combine(root, "CHANGELOG.md"));
-        var match = Regex.Match(changelog, "(?m)^## \\[(\\d+\\.\\d+\\.\\d+)\\]");
-        if (!match.Success || !Version.TryParse(match.Groups[1].Value, out var newest) || !Version.TryParse(version, out var wanted) || newest < wanted || (requireNewest && match.Groups[1].Value != version))
+        var match = ReleaseVersions.NewestChangelogEntry(changelog);
+        if (!match.Success || !IsReleaseText(match.Groups["v"].Value) || !IsReleaseText(version) || IsNewer(version, match.Groups["v"].Value) || (requireNewest && match.Groups["v"].Value != version))
             return "Newest CHANGELOG entry differs from the requested release";
-        if (!File.Exists(Path.Combine(root, $"docs/releases/v{match.Groups[1].Value}.md"))) return "Matching release note missing";
+        if (!File.Exists(Path.Combine(root, $"docs/releases/v{match.Groups["v"].Value}.md"))) return "Matching release note missing";
         if (!File.ReadAllText(Path.Combine(root, "docs/README.md")).Contains($"[当前版本说明](releases/v{version}.md)", StringComparison.Ordinal)) return "docs/README.md current release link is stale";
         if (!Regex.IsMatch(File.ReadAllText(Path.Combine(root, "docs/development/roadmap.md")), "(?m)^# .*" + Regex.Escape(version))) return "Roadmap title is stale";
         return null;

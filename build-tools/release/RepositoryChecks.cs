@@ -62,10 +62,13 @@ internal static class RepositoryChecks
     }
     internal static List<string> ChangelogErrors(string root)
     {
-        var release = Regex.Match(Repository.ReadSource(Path.Combine(root, "Version.props")), @"<TiaMcpRelease>([^<]+)</TiaMcpRelease>");
-        var entry = Regex.Match(Repository.ReadSource(Path.Combine(root, "CHANGELOG.md")), @"^## \[(\d+\.\d+\.\d+)\]", RegexOptions.Multiline);
+        var props = Repository.ReadSource(Path.Combine(root, "Version.props"));
+        var release = Regex.Match(props, @"<TiaMcpRelease>([^<]+)</TiaMcpRelease>");
+        var prerelease = Regex.Match(props, @"<TiaMcpPrerelease>([^<]*)</TiaMcpPrerelease>");
+        var entry = ReleaseVersions.NewestChangelogEntry(Repository.ReadSource(Path.Combine(root, "CHANGELOG.md")));
         if (!release.Success || !entry.Success) return ["CHANGELOG.md or Version.props has no release version"];
-        return release.Groups[1].Value.Trim() == entry.Groups[1].Value ? [] : [$"Newest CHANGELOG entry {entry.Groups[1].Value} differs from Version.props {release.Groups[1].Value.Trim()}; write the entry in the release commit (release command), keep drafts in docs/releases"];
+        var label = TiaMcp.Versioning.ProductReleaseVersion.Compose(release.Groups[1].Value.Trim(), prerelease.Success ? prerelease.Groups[1].Value.Trim() : "");
+        return label == entry.Groups["v"].Value ? [] : [$"Newest CHANGELOG entry {entry.Groups["v"].Value} differs from Version.props {label}; write the entry in the release commit (release command), keep drafts in docs/releases"];
     }
     internal static List<string> PluginWriteGuardErrors(string root)
     {

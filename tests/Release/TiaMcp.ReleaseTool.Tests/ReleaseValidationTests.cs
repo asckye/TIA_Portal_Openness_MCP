@@ -536,6 +536,35 @@ public sealed class ReleaseValidationTests
 
     [Fact]
     [Trait("Category", "Pipeline")]
+    public void ParallelBuildReleasePipelinesStartTheirOwnDevelopmentHostCopies()
+    {
+        // A suite build in one pipeline rebuilds src/FoundationHost/bin/Release; the other pipeline's harness must not start that build (P8-90).
+        var runTemp = Path.Combine(Path.GetTempPath(), "tmr-" + Guid.NewGuid().ToString("N")[..8], "br");
+        var v20 = ReleaseCommands.PrivateDevelopmentHostPath(runTemp, 20);
+        var v21 = ReleaseCommands.PrivateDevelopmentHostPath(runTemp, 21);
+        Assert.NotEqual(v20, v21, StringComparer.OrdinalIgnoreCase);
+        foreach (var (major, host) in new[] { (20, v20), (21, v21) })
+        {
+            Assert.Equal("TiaMcp.FoundationHost.exe", Path.GetFileName(host));
+            Assert.StartsWith(ReleaseCommands.PipelineTempDirectory(runTemp, major) + Path.DirectorySeparatorChar, host, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(Path.Combine("src", "FoundationHost", "bin"), host, StringComparison.OrdinalIgnoreCase);
+        }
+        Assert.False(ReleaseCommands.PipelineTempDirectory(runTemp, 20).StartsWith(ReleaseCommands.PipelineTempDirectory(runTemp, 21), StringComparison.OrdinalIgnoreCase)
+            || ReleaseCommands.PipelineTempDirectory(runTemp, 21).StartsWith(ReleaseCommands.PipelineTempDirectory(runTemp, 20), StringComparison.OrdinalIgnoreCase),
+            "The two pipeline folders must not contain each other.");
+
+        // Every harness step of a version pipeline starts that pipeline's copy; only the shipped-runtime checks after both pipelines use the shared build.
+        var source = File.ReadAllText(Path.Combine(Repository.FindRoot(), "build-tools/release/BuildReleasePipeline.cs"));
+        var start = source.IndexOf("private static object RunBuildReleaseMajor(", StringComparison.Ordinal);
+        var end = source.IndexOf("private static void RunShippedRuntimeChecks(", StringComparison.Ordinal);
+        Assert.True(start > 0 && end > start, "version pipeline source not found");
+        var harnessSteps = System.Text.RegularExpressions.Regex.Matches(source[start..end], "RunBuildSpec\\(\"[^\"]+\", harness, [^;]*;").Select(match => match.Value).ToArray();
+        Assert.True(harnessSteps.Length >= 14, "expected the version pipeline's harness steps, found " + harnessSteps.Length);
+        Assert.All(harnessSteps, step => Assert.Contains("developmentHost: developmentHost", step, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    [Trait("Category", "Pipeline")]
     public void ParallelPipelinesHonorSerialAndBoundedLimits()
     {
         var directory = Path.Combine(Path.GetTempPath(), "release-pipeline-limit-" + Guid.NewGuid().ToString("N"));

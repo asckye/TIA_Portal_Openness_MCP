@@ -150,14 +150,53 @@ dotnet run --project build-tools/release -- release -Version X.Y.Z -Summary "Con
 7. 推送 master，等待 validate-bundle 与 offline-checks，通过后创建 annotated tag vX.Y.Z 并推送。
 
 Build-Release 的程序集反射检查和工具清单生成运行在 net48 TiaMcp.Engine.Harness harness modes 中；独立生成器和输入检查使用 .NET 10 C# file-based apps。工具矩阵在重新生成后可用 `Generate-ToolCapabilityMatrix.cs --check` 验证稳定字节。它们沿用 `manifest/release-build.json` 的既有字段和最小/精确检查计数。
-8. Publish-release 创建草稿、上传 ZIP 和 SHA-256、回读大小及 digest，然后公开发布并置为 latest。
+8. Publish-release 创建草稿、上传 ZIP 和 SHA-256、回读大小及 digest，然后公开发布并置为 latest；预发布不置为 latest（见[预发布](#预发布beta--rc)）。
 9. 等待 Verify published release 下载并校验公开资产，再记录发布 URL、提交和验收状态。
 
 任一步失败即停止。日志保留在 release.log、build.log、bin-build/releases/v<版本>/ 和 bin-build/multi-version/；完整引擎分版日志在版本目录下的 `v20/`、`v21/`，汇总为 `release-v20.log`、`release-v21.log`。一版失败仍收集并报告两版结果。令牌来自 -Token、GITHUB_TOKEN 或 Git Credential Manager，不打印、不放入发布包。
 
+## 预发布（beta / rc）
+
+维护者决定（2026-10-20）：我们不做真机测试，4.0 先以 GitHub 预发布交给其他用户测试。版本写作 `X.Y.Z-beta.N` 或 `X.Y.Z-rc.N`
+（语义化版本，不接受其他后缀），例如：
+
+```powershell
+dotnet run --project build-tools/release -- generate-prerelease-notes -Version 4.0.0-beta.1
+dotnet run --project build-tools/release -- release -Version 4.0.0-beta.1 -DryRun -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -Python <python.exe>
+dotnet run --project build-tools/release -- release -Version 4.0.0-beta.1 -Summary "..." -PublicApiRoot <SDK-root> -V20ReferenceRoot <V20-SDK> -V21ReferenceRoot <V21-net48-SDK> -Python <python.exe>
+```
+
+- 版本只有一个来源：`Version.props` 的 `TiaMcpRelease`（数字 X.Y.Z）加 `TiaMcpPrerelease`（空、`beta.N` 或 `rc.N`），组合为 `TiaMcpReleaseLabel`。
+  AssemblyVersion 与 FileVersion 仍为数字（`4.0.0`、`4.0.0.0`；PlcWorker 与更新器的 AssemblyVersion 保持 `1.0.0.0`，FileVersion 和
+  InformationalVersion 同样来自 `Version.props`）；InformationalVersion、`TiaMcpRelease` 程序集元数据、插件版本、
+  构建记录与 `manifest/delivery.json` 的 `release`、包名 `TIA_MCP_Delivery_v4.0.0-beta.1_<日期>.zip`、tag `v4.0.0-beta.1`、发布说明和
+  `manifest/publication-v4.0.0-beta.1.json` 使用完整版本。正式版本 X.Y.Z 的行为不变。
+- CHANGELOG 条目写作 `## [4.0.0-beta.1] - YYYY-MM-DD`，与正式版本一样在发布命令前写入；`docs/releases/v4.0.0-beta.1.md` 必须带有
+  `generate-prerelease-notes` 生成的 “Not verified on a real TIA Portal” 段落。它来自[真机验收记录](../reference/real-machine-ledger.md)
+  的四个 4.0 段落与[官方 API 审计 VM 核对清单](../reference/api-audit-vm-checklist.md)；两者变化后重新生成。段落中的每一项带全段连续的
+  编号，测试者用[预发布问题模板](../../.github/ISSUE_TEMPLATE/prerelease_report.md)报告时填写该编号。发布命令和 `publish`
+  在构建或访问凭据前拒绝缺少或过期的段落。正式版本不需要该段落。
+- 发布时草稿和公开两次写入都带 `prerelease=true`、`make_latest="false"`，GitHub 的 latest 仍指向最新正式版本。正式版本保持草稿
+  `prerelease=false`、`make_latest="false"`，公开时 `make_latest="true"`。
+- 更新：3.3 的 `Update-Engine.ps1`、工作台更新检查和引擎的更新检查工具只读取 `releases/latest`，GitHub 的 latest 不含预发布和草稿，
+  因此 3.3 用户不会收到预发布。4.0 的更新器、工作台和 `CheckProductUpdate` 对正式安装同样只读 `releases/latest`，并拒绝被标为预发布
+  的答复；自身版本为预发布的安装读取 releases 列表，按语义化版本优先级选择最新的已发布版本（忽略草稿），包括随后的正式版本。
+  更新器的 `-Version vX.Y.Z-beta.N` 可显式选择某个预发布，正式安装也可以；目标为预发布时，更新器在下载和替换前先说明。
+  API 被限流时，预发布安装改读发布页，发布页只给出最新正式版本，更新器会说明更新的预发布要等 API 恢复后才能看到。
+- 门禁：构建、离线套件、快照、check-all 与 CI 保持不变，预发布不放宽任何检查。发布命令本身没有因真机验收 NOT RUN 而拒绝的步骤；
+  [真机验收记录](../reference/real-machine-ledger.md#预发布例外)中“发布前必须在真机上完成”的规则对预发布不适用（按上面的维护者决定），
+  未验证项改为写入预发布说明。正式版本仍须遵守该规则。
+- `-DryRun` 是本地演练：在当前 checkout（任意分支、允许未提交改动）依次执行版本机械更新、早期门禁、冷构建、preflight、严格包验证、
+  候选包和候选检查，然后在暂存前停止；不需要令牌，不访问 origin 或 GitHub，不暂存、不提交、不打 tag。它把两次 GitHub 请求的正文写入
+  `bin-build/release-runs/<run>/github-requests.json`，并列出改写的版本文件和构建记录；演练后用 `git checkout -- <这些路径>` 恢复。
+  `-DryRun` 不能与 `-EarlyGatesOnly` 或 `-KillStrayEngine` 同用。演练只拒绝从本 checkout 启动的引擎/宿主进程，正式发布仍按名称拒绝所有进程。
+- 机械更新只改 `.claude-plugin/marketplace.json` 中本插件条目的版本值，其余字节保持原样；早期门禁的 `validate-bundle -PendingRelease <版本>`
+  把插件与 marketplace 版本与该待发布版本精确比较（构建记录要到 build-release 才重写），不带 `-PendingRelease` 时仍与 `manifest/delivery.json` 比较。
+  包名必须正好是 `TIA_MCP_Delivery_v<完整版本>_<YYYYMMDD>`（ZIP 为同名 `.zip`）。路线图标题写作 `# 路线图与待办（v<版本>）`，机械更新按此替换。
+
 ## 分阶段与恢复
 
--NoPush 完成本地提交、打包和验证后停止；-NoTag 在推送及 CI 后停止；-DryRun 不执行构建、暂存或远程操作。
+-NoPush 完成本地提交、打包和验证后停止；-NoTag 在推送及 CI 后停止；-DryRun 在本地完成构建、检查和候选包后于暂存前停止，不执行暂存或远程操作（见[预发布](#预发布beta--rc)）。
 `-Resume` 重跑预检、早期门禁和冷构建。`-NoReuse` 仍可显式表达冷构建；`-SkipBuild` 不能用于正式发布。
 
 原来的 `sourceFiles` 保持打包器所要求的集合；新记录另存 `validationInputs`，覆盖构建/验证脚本、生态桥接、参考数据、模板等输入。缺少该字段的历史记录需要重建一次。构建前后再次比较输入，期间发生变化则拒绝记录测试结果。缓存命中只恢复编译产物；当前档位的检查、记录时间和交付绑定每次重新生成，正式发布始终冷构建。`prepare-delivery` 要求多版本运行产物和匹配的完整引擎记录已存在，缺项在重建配置器前明确失败；它刷新引擎/配置器交付绑定并执行严格验证。正式发布仍需多版本完成记录及最终严格验证。准备阶段的 `bin-build/multi-version/prepared-build.json` 不是发布记录，不能通过最终八版本发布门禁。
@@ -182,6 +221,7 @@ dotnet run --project build-tools/release -- release -Version X.Y.Z -EarlyGatesOn
 | HTTP 端口 | TiaMcp.Engine.Harness 与 Python 协议夹具均从系统申请端口 0；没有两版共用的固定监听端口 |
 | Logic、Runtime、contracts、第三方项目的 obj/bin | 工作树路径派生的 mutex 保护还原、编译和运行文件复制；该短段串行，随后两版长耗时门禁并行 |
 | MSBuild/C# 服务 | 关闭节点复用和共享编译器；公共测试夹具、weaver 先构建一次，子流水线只读 |
+| 开发宿主 `src/FoundationHost/bin/Release` | 一版的套件构建会重建它；两版流水线（build-release、branch-gate）因此各自在首个步骤前复制一份私有宿主，harness 步骤经 `TIA_MCP_TEST_HOST_PATH` 启动该副本 |
 | TEMP/TMP、DOTNET_CLI_HOME、诊断目录及测试日志 | 各版独立目录；稳定性、生态证据沿用 GUID 子目录 |
 | worker/宿主进程 | 原测试仅清理自己创建的进程；没有按全局进程名清理另一流水线 |
 | tools-list、工具矩阵和 manifest | 两版成功汇合后才串行生成；任一版失败不写完整构建记录 |

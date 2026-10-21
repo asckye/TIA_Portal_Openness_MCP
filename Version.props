@@ -1,13 +1,16 @@
 <Project>
   <PropertyGroup>
     <TiaMcpRelease>3.3.0</TiaMcpRelease>
-    <Version>$(TiaMcpRelease)</Version>
+    <TiaMcpPrerelease></TiaMcpPrerelease>
+    <TiaMcpReleaseLabel>$(TiaMcpRelease)</TiaMcpReleaseLabel>
+    <TiaMcpReleaseLabel Condition="'$(TiaMcpPrerelease)' != ''">$(TiaMcpRelease)-$(TiaMcpPrerelease)</TiaMcpReleaseLabel>
+    <Version>$(TiaMcpReleaseLabel)</Version>
     <AssemblyVersion>$(TiaMcpRelease)</AssemblyVersion>
     <FileVersion>$(TiaMcpRelease).0</FileVersion>
-    <InformationalVersion>$(TiaMcpRelease)</InformationalVersion>
+    <InformationalVersion>$(TiaMcpReleaseLabel)</InformationalVersion>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
   <ItemGroup>
-    <AssemblyMetadata Include="TiaMcpRelease" Value="$(TiaMcpRelease)" />
+    <AssemblyMetadata Include="TiaMcpRelease" Value="$(TiaMcpReleaseLabel)" />
   </ItemGroup>
 </Project>

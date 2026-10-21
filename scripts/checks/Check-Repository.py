@@ -254,11 +254,14 @@ def changelog_version_errors(root):
     Version.props fails every release candidate; the C# release command adds the entry and bumps the version in one release commit."""
     props = (root / 'Version.props').read_text(encoding='utf-8-sig')
     release = re.search(r'<TiaMcpRelease>([^<]+)</TiaMcpRelease>', props)
-    entry = re.search(r'(?m)^## \[(\d+\.\d+\.\d+)\]', (root / 'CHANGELOG.md').read_text(encoding='utf-8-sig'))
+    prerelease = re.search(r'<TiaMcpPrerelease>([^<]*)</TiaMcpPrerelease>', props)
+    # X.Y.Z, or a pre-release X.Y.Z-beta.N / X.Y.Z-rc.N; "## [Unreleased]" is not a version entry.
+    entry = re.search(r'(?m)^## \[(\d+\.\d+\.\d+(?:-(?:beta|rc)\.(?:0|[1-9]\d*))?)\]', (root / 'CHANGELOG.md').read_text(encoding='utf-8-sig'))
     if not release or not entry:
         return ['CHANGELOG.md or Version.props has no release version']
-    if entry.group(1) != release.group(1).strip():
-        return [f'Newest CHANGELOG entry {entry.group(1)} differs from Version.props {release.group(1).strip()}; '
+    label = release.group(1).strip() + ('-' + prerelease.group(1).strip() if prerelease and prerelease.group(1).strip() else '')
+    if entry.group(1) != label:
+        return [f'Newest CHANGELOG entry {entry.group(1)} differs from Version.props {label}; '
                 'write the entry in the release commit (release command), keep drafts in docs/releases']
     return []
 
@@ -274,9 +277,13 @@ def changelog_self_test():
         assert not changelog_version_errors(root)
         (root / 'CHANGELOG.md').write_text('# Changes\n\n## [4.0.0] - draft\n\n## [3.3.0] - 2026-10-03\n', encoding='utf-8')
         assert changelog_version_errors(root), 'an entry ahead of Version.props must fail'
+        (root / 'CHANGELOG.md').write_text('# Changes\n\n## [4.0.0-beta.1] - draft\n\n## [3.3.0] - 2026-10-03\n', encoding='utf-8')
+        assert changelog_version_errors(root), 'a pre-release entry ahead of Version.props must fail'
+        (root / 'Version.props').write_text('<Project><PropertyGroup><TiaMcpRelease>4.0.0</TiaMcpRelease><TiaMcpPrerelease>beta.1</TiaMcpPrerelease></PropertyGroup></Project>', encoding='utf-8')
+        assert not changelog_version_errors(root), 'a pre-release entry matching Version.props passes'
     finally:
         shutil.rmtree(root)
-    print('CHANGELOG version self-tests: 2 passed, 0 failed.')
+    print('CHANGELOG version self-tests: 4 passed, 0 failed.')
 
 
 def main():

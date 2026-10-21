@@ -44,6 +44,17 @@ creation now creates only the requested type (P8-81b), so the spec lines change:
 In the output each of these lines starts with two spaces, which the table leaves out;
 the test holds the exact text.
 
+Version line (lead decision 2026-10-20, P8-90, under the maintainer's 2026-10-19 approval
+of exact line replacements). The `version` samples print the numeric file version of the
+build, so a release bump changes this one line. The same mechanism applies: the test reads
+`TiaMcpRelease` from Version.props at test time, asserts that the frozen line occurs exactly
+once and compares the complete stdout byte for byte; exit status and stderr stay compared.
+A pre-release label (`TiaMcpPrerelease`) does not reach the file version.
+
+| Frozen line | Replacement line |
+|---|---|
+| `tia 3.3.0.0` | `tia <TiaMcpRelease>.0`, for example `tia 4.0.0.0` for 4.0.0-beta.1 |
+
 The fixture is evidence from a Windows machine, including its language and local
 environment facts; it is not a native TIA acceptance record. Do not regenerate it
 from the host or update it to hide an output difference.

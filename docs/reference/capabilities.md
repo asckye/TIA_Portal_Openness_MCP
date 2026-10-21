@@ -59,6 +59,9 @@
 
 本版记录以 [release-build.json](../../manifest/release-build.json) 和 [multi-version-build.json](../../manifest/multi-version-build.json) 为准。新增八版工作流的原生工程验收为 **NOT RUN**；旧版本实测不能自动继承为本版验收。实际历史与未解决问题见[真机证据索引](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md)和[已知限制](../troubleshooting/openness-limitations.md)。
 
+**4.0.0-beta.1 预发布**：未在真实 TIA Portal 上验证。构建、离线套件和 CI 已通过；真机未验证的项目列在
+[发布说明](../releases/v4.0.0-beta.1.md#not-verified-on-a-real-tia-portal)生成的 “Not verified on a real TIA Portal” 清单中。
+
 ## 仍未完成
 
 已移植能力及尚未移植的在线、Unified 和选件能力以[版本目录](version-tools.md)为准。旧版只有至少一个已实现动作具有对应 API 时才注册工具；其他动作在原生调用前拒绝。SDK 中有 API 不代表已有执行入口或已通过真机验收。

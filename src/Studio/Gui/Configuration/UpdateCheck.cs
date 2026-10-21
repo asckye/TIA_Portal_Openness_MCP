@@ -1,3 +1,4 @@
+extern alias PlcRendering;
 using System;
 using TiaOpenness.Gui.Localization;
 using System.Collections.Generic;
@@ -7,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using ProductReleaseVersion = PlcRendering::TiaMcp.Versioning.ProductReleaseVersion;
 
 namespace TiaMcpConfigurator
 {
@@ -22,7 +24,9 @@ namespace TiaMcpConfigurator
         public long ZipSize { get; set; }
         public bool HasSha256 { get; set; }
         public string Source { get; set; }      // api / page
-        public bool UpdateAvailable { get { return UpdateCheck.Compare(Latest, Installed) > 0; } }
+        public bool Prerelease { get; set; }    // GitHub marks the release a pre-release
+        // A plain install is never offered a pre-release; an install whose own version is a pre-release is offered newer releases.
+        public bool UpdateAvailable { get { return UpdateCheck.Compare(Latest, Installed) > 0 && UpdateCheck.MayOffer(Latest, Prerelease, Installed); } }
         public string ZipSizeText { get { return ZipSize <= 0 ? "" : (ZipSize / 1048576.0).ToString("0.0") + " MB"; } }
     }
 
@@ -32,6 +36,17 @@ namespace TiaMcpConfigurator
         public const string UpdaterRelativePath = @"runtime/tools/TiaMcp.Updater.exe";
         public static string ReleasePageUrl(string repository) { return "https://github.com/" + repository + "/releases/latest"; }
         public static string ReleaseApiUrl(string repository) { return "https://api.github.com/repos/" + repository + "/releases/latest"; }
+        public static string ReleasesListUrl(string repository) { return "https://api.github.com/repos/" + repository + "/releases?per_page=100"; }
+        // The endpoint for an install of this version: releases/latest for a plain install, the releases list for a pre-release install.
+        public static string UpdateApiUrl(string repository, string installed) { return UsesPrereleaseChannel(installed) ? ReleasesListUrl(repository) : ReleaseApiUrl(repository); }
+        public static bool UsesPrereleaseChannel(string installed) { return IsPrerelease(installed); }
+        public static bool IsPrerelease(string version) { var release = Release(version); return release != null && release.IsPrerelease; }
+        public static bool MayOffer(string latest, bool markedPrerelease, string installed) { return !(markedPrerelease || IsPrerelease(latest)) || UsesPrereleaseChannel(installed); }
+        private static ProductReleaseVersion Release(string text)
+        {
+            ProductReleaseVersion release;
+            return text != null && ProductReleaseVersion.TryParseTag(text.Trim(), out release) ? release : null;
+        }
 
         // Installed version = manifest\delivery.json next to the executable (null when this is not an unpacked delivery).
         public static string Installed(string root) { return DeliveryField(root, "release"); }
@@ -60,9 +75,12 @@ namespace TiaMcpConfigurator
             return TiaOpenness.Shared.BundleLayout.IsSourceCheckout(root);
         }
 
-        // Numeric MAJOR.MINOR.PATCH comparison; a leading "v" is ignored; unparsable or empty sorts lowest.
+        // Numeric MAJOR.MINOR.PATCH comparison; a leading "v" is ignored; unparsable or empty sorts lowest. When either side is a
+        // pre-release (X.Y.Z-beta.N, X.Y.Z-rc.N) the Semantic Versioning precedence applies: the pre-release sorts below its plain release.
         public static int Compare(string a, string b)
         {
+            var ra = Release(a); var rb = Release(b);
+            if (ra != null && rb != null && (ra.IsPrerelease || rb.IsPrerelease)) return Math.Sign(ra.CompareTo(rb));
             var va = Parse(a); var vb = Parse(b);
             if (va == null && vb == null) return 0;
             if (va == null) return -1;
@@ -85,12 +103,39 @@ namespace TiaMcpConfigurator
         // GitHub API JSON -> UpdateInfo (tag, ZIP asset name / size, .sha256 sidecar present). Pure, so it is tested offline.
         public static UpdateInfo ParseRelease(string json, string installed, string repository)
         {
-            var release = ConfigCore.Json().Deserialize<Dictionary<string, object>>(json);
+            return ParseRelease(ConfigCore.Json().Deserialize<Dictionary<string, object>>(json), installed, repository);
+        }
+
+        // GitHub API releases list -> the newest published release with a delivery ZIP and .sha256 (Semantic Versioning precedence).
+        public static UpdateInfo ParseReleaseList(string json, string installed, string repository)
+        {
+            var releases = ConfigCore.Json().Deserialize<object[]>(json);
+            if (releases == null) throw new InvalidOperationException(Loc.Current["Config.InvalidReleaseJson"]);
+            UpdateInfo best = null;
+            foreach (var release in releases.OfType<Dictionary<string, object>>())
+            {
+                object draft;
+                if (release.TryGetValue("draft", out draft) && draft is bool && (bool)draft) continue;
+                object tagValue;
+                if (!release.TryGetValue("tag_name", out tagValue) || Parse(Convert.ToString(tagValue)) == null) continue;
+                var info = ParseRelease(release, installed, repository);
+                if (info.ZipName == null || !info.HasSha256) continue;
+                if (best == null || Compare(info.Latest, best.Latest) > 0) best = info;
+            }
+            if (best == null) throw new InvalidOperationException(Loc.Current["Config.InvalidReleaseJson"]);
+            return best;
+        }
+
+        private static UpdateInfo ParseRelease(Dictionary<string, object> release, string installed, string repository)
+        {
             if (release == null) throw new InvalidOperationException(Loc.Current["Config.InvalidReleaseJson"]);
             object tagValue;
             string tag = release.TryGetValue("tag_name", out tagValue) ? Convert.ToString(tagValue) : null;
             if (Parse(tag) == null) throw new InvalidOperationException(Loc.Current.T("Config.InvalidReleaseTag", tag));
-            var info = new UpdateInfo { Installed = installed, Tag = tag, Latest = Parse(tag).ToString(), Source = "api" };
+            var label = Release(tag);
+            object prerelease;
+            var info = new UpdateInfo { Installed = installed, Tag = tag, Latest = label != null ? label.Label : Parse(tag).ToString(), Source = "api",
+                Prerelease = release.TryGetValue("prerelease", out prerelease) && prerelease is bool && (bool)prerelease };
             object url;
             info.ReleaseUrl = release.TryGetValue("html_url", out url) && url != null ? Convert.ToString(url) : "https://github.com/" + repository + "/releases/tag/" + tag;
             object assetsValue;
@@ -115,7 +160,12 @@ namespace TiaMcpConfigurator
         {
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
             string apiError;
-            try { return ParseRelease(Download(ReleaseApiUrl(repository), "application/vnd.github+json"), installed, repository); }
+            try
+            {
+                return UsesPrereleaseChannel(installed)
+                    ? ParseReleaseList(Download(ReleasesListUrl(repository), "application/vnd.github+json"), installed, repository)
+                    : ParseRelease(Download(ReleaseApiUrl(repository), "application/vnd.github+json"), installed, repository);
+            }
             catch (Exception ex) { apiError = ex.GetBaseException().Message; }
             try
             {
@@ -124,7 +174,8 @@ namespace TiaMcpConfigurator
                 string tag;
                 using (var response = (HttpWebResponse)request.GetResponse()) tag = TagFromLocation(response.Headers[HttpResponseHeader.Location]);
                 if (Parse(tag) == null) throw new InvalidOperationException(Loc.Current.T("Config.MissingReleaseTag", apiError));
-                return new UpdateInfo { Installed = installed, Tag = tag, Latest = Parse(tag).ToString(), Source = "page", ReleaseUrl = "https://github.com/" + repository + "/releases/tag/" + tag };
+                var label = Release(tag);
+                return new UpdateInfo { Installed = installed, Tag = tag, Latest = label != null ? label.Label : Parse(tag).ToString(), Source = "page", ReleaseUrl = "https://github.com/" + repository + "/releases/tag/" + tag };
             }
             catch (Exception ex) { throw new InvalidOperationException(Loc.Current.T("Config.UpdateUnreachable", ex.GetBaseException().Message), ex); }
         }

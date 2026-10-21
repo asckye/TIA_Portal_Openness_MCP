@@ -73,7 +73,9 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             // envelope: legacy-stamp-then-verdict
             var meta = new JsonObject { ["timestamp"] = DateTime.Now };
-            string current = typeof(McpServer).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
+            string current = UpdateLogic.InstalledVersion(typeof(McpServer).Assembly.GetName().Version?.ToString(3) ?? "0.0.0",
+                System.Reflection.CustomAttributeExtensions.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>(typeof(McpServer).Assembly)?.InformationalVersion);
+            bool prereleaseChannel = UpdateLogic.UsesPrereleaseChannel(current);
             meta["currentVersion"] = current;
             meta["currentFileVersion"] = typeof(McpServer).Assembly.GetName().Version?.ToString();
             var root = FindInstallRoot();
@@ -90,8 +92,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new ResponseStringList { Message = "repository must be 'owner/name', e.g. " + UpdateLogic.DefaultRepository + ".", Items = lines, Meta = meta };
             }
             if (timeoutSeconds < 1 || timeoutSeconds > 120) timeoutSeconds = 15;
-            string url = UpdateLogic.LatestReleaseUrl(repository);
+            string url = UpdateLogic.UpdateApiUrl(repository, current);
             meta["releaseApiUrl"] = url;
+            if (prereleaseChannel) meta["releaseChannel"] = "prerelease";
             meta["releasePageUrl"] = UpdateLogic.ReleasePageUrl(repository);
 
             UpdateLogic.Release? release = null;
@@ -103,7 +106,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 if (response.IsSuccessStatusCode)
                 {
-                    try { release = UpdateLogic.ParseRelease(json); meta["source"] = "api"; }
+                    try
+                    {
+                        release = prereleaseChannel ? UpdateLogic.SelectNewest(UpdateLogic.ParseReleaseList(json), includePrerelease: true) : UpdateLogic.OfferedToPlainInstall(UpdateLogic.ParseRelease(json));
+                        if (release == null) apiProblem = prereleaseChannel ? "no published release found for " + repository : "the latest release is marked as a pre-release; a plain install is never offered one";
+                        else meta["source"] = "api";
+                    }
                     catch (Exception px) { apiProblem = "the GitHub answer could not be parsed: " + px.Message; }
                 }
                 else
@@ -139,7 +147,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         using var fragment = await UpdateHttp.GetAsync(UpdateLogic.ExpandedAssetsUrl(repository, tag), cts.Token).ConfigureAwait(false);
                         var html = fragment.IsSuccessStatusCode ? await fragment.Content.ReadAsStringAsync().ConfigureAwait(false) : "";
-                        release = UpdateLogic.ParseReleasePage(repository, tag, html);
+                        release = UpdateLogic.OfferedToPlainInstall(UpdateLogic.ParseReleasePage(repository, tag, html));
                         meta["source"] = "releasePage"; meta["apiProblem"] = apiProblem;
                     }
                 }

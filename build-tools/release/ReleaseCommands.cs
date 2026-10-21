@@ -17,7 +17,7 @@ internal static partial class ReleaseCommands
 
     internal static int Run(string command, Options options) => command switch
     {
-        "generate-tool-counts" or "generate-catalogs" or "generate-tool-usage" or "generate-release-migration" or "audit-version-tools" or "audit-tool-usage" or "check-tools-list" => GeneratorCommand(command, options),
+        "generate-tool-counts" or "generate-catalogs" or "generate-tool-usage" or "generate-release-migration" or "audit-version-tools" or "audit-tool-usage" or "check-tools-list" or "generate-prerelease-notes" => GeneratorCommand(command, options),
         "check-analyzer-warnings" or "check-ratchet" or "check-envelope-rewrite" or "check-adapter-boundary" or "check-bundle-layout" or "check-repository" or "check-dead-tool-references" or "check-tia-features" or "check-script-tool-calls" => StaticCheck(command, options),
         "preflight" => Preflight(options),
         "prerequisites" => Prerequisites(options),
@@ -276,14 +276,9 @@ internal static partial class ReleaseCommands
         if (options.Get("PackagePath") is { } packagePath) ReleaseCheckPolicy.Load(Root).RequireFullPackage(Path.GetFullPath(packagePath));
         if (options.Has("SkipBuild")) throw new ReleaseException("Release requires a cold rebuild; -SkipBuild is not supported.");
         var version = options.Get("Version");
-        if (version is null || !System.Text.RegularExpressions.Regex.IsMatch(version, "^\\d+\\.\\d+\\.\\d+$"))
-            throw new ReleaseException("-Version must be X.Y.Z");
-        if (options.Has("DryRun"))
-        {
-            Console.WriteLine($"DRY RUN Release {version}: {options.Get("Summary", "test")}");
-            Console.WriteLine("No files, Git index, commits, tags, or remote services were changed.");
-            return 0;
-        }
+        if (!ReleaseVersions.IsValid(version))
+            throw new ReleaseException("-Version must be X.Y.Z, or X.Y.Z-beta.N / X.Y.Z-rc.N for a pre-release");
+        if (options.Has("DryRun") && options.Has("EarlyGatesOnly")) throw new ReleaseException("-DryRun and -EarlyGatesOnly cannot be combined");
         var previousCache = Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED");
         Environment.SetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED", "1");
         try { return RunReleaseProduction(options); }
@@ -646,7 +641,7 @@ internal static partial class ReleaseCommands
             }
             else Console.Write(repositoryCheck.StandardOutput);
         }
-        try { ValidateRequiredJson(root, package); }
+        try { ValidateRequiredJson(root, package, options.Get("PendingRelease")); }
         catch (Exception ex) { errors.Add(ex.Message); }
         if (strict && !options.Has("PendingRelease"))
         {
@@ -681,7 +676,7 @@ internal static partial class ReleaseCommands
         return generated.Length != 0 && File.Exists(Path.Combine(root, generated.Replace('/', Path.DirectorySeparatorChar)));
     }
 
-    private static void ValidateRequiredJson(string root, bool package)
+    private static void ValidateRequiredJson(string root, bool package, string? pendingRelease = null)
     {
         var names = new[] { "manifest/package-manifest.json", "manifest/delivery.json", "manifest/release-build.json", "manifest/configurator-build.json", "manifest/multi-version-build.json", "manifest/tools-list.json" };
         foreach (var name in names)
@@ -709,21 +704,38 @@ internal static partial class ReleaseCommands
         var pluginPath = Path.Combine(root, ".claude-plugin/plugin.json");
         if (File.Exists(pluginPath))
         {
-            using var plugin = JsonDocument.Parse(File.ReadAllText(pluginPath));
-            using var delivery = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "manifest/delivery.json")));
-            var release = JsonString(delivery.RootElement, "release");
-            if (JsonString(plugin.RootElement, "version") != release) throw new ReleaseException("Plugin version differs from release version");
-            var marketplacePath = Path.Combine(root, ".claude-plugin/marketplace.json");
-            if (File.Exists(marketplacePath))
-            {
-                using var marketplace = JsonDocument.Parse(File.ReadAllText(marketplacePath));
-                var entry = marketplace.RootElement.GetProperty("plugins").EnumerateArray()
-                    .Single(p => JsonString(p, "name") == JsonString(plugin.RootElement, "name"));
-                if (JsonString(entry, "version") != release) throw new ReleaseException("Marketplace plugin version differs from release version");
-            }
+            if (PluginVersionError(root, pendingRelease) is { } pluginError) throw new ReleaseException(pluginError);
             if (!JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "manifest/package-manifest.json"))).RootElement.TryGetProperty("capabilities", out _))
                 throw new ReleaseException("package-manifest.json lacks capabilities");
         }
+    }
+
+    /// <summary>The plugin and marketplace versions must equal the release exactly: the delivery record's release, or the pending
+    /// release version during the pre-build gate (-PendingRelease), where the mechanical bump has already run but build-release has
+    /// not rewritten manifest/delivery.json yet.</summary>
+    internal static string? PluginVersionError(string root, string? pendingRelease)
+    {
+        var pluginPath = Path.Combine(root, ".claude-plugin/plugin.json");
+        if (!File.Exists(pluginPath)) return null;
+        if (pendingRelease is not null && !ReleaseVersions.IsValid(pendingRelease)) return "-PendingRelease must be X.Y.Z, X.Y.Z-beta.N or X.Y.Z-rc.N";
+        using var plugin = JsonDocument.Parse(File.ReadAllText(pluginPath));
+        string release;
+        if (pendingRelease is not null) release = pendingRelease;
+        else
+        {
+            using var delivery = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "manifest/delivery.json")));
+            release = JsonString(delivery.RootElement, "release");
+        }
+        if (JsonString(plugin.RootElement, "version") != release) return "Plugin version differs from release version";
+        var marketplacePath = Path.Combine(root, ".claude-plugin/marketplace.json");
+        if (File.Exists(marketplacePath))
+        {
+            using var marketplace = JsonDocument.Parse(File.ReadAllText(marketplacePath));
+            var entry = marketplace.RootElement.GetProperty("plugins").EnumerateArray()
+                .Single(p => JsonString(p, "name") == JsonString(plugin.RootElement, "name"));
+            if (JsonString(entry, "version") != release) return "Marketplace plugin version differs from release version";
+        }
+        return null;
     }
 
     private static void ValidateBuildRecords(string root, bool package, bool noBinaries, bool skipSourceHashes)
@@ -739,17 +751,17 @@ internal static partial class ReleaseCommands
         var release = JsonString(delivery, "release");
         var engineRelease = JsonString(build, "release");
         var fileVersion = JsonString(build, "fileVersion");
-        if (!Version.TryParse(release, out _) || !Version.TryParse(engineRelease, out _)) throw new ReleaseException("Release must be X.Y.Z");
-        var changelog = Regex.Match(File.ReadAllText(Path.Combine(root, "CHANGELOG.md")), "(?m)^##\\s*\\[(?<v>\\d+\\.\\d+\\.\\d+)\\]");
+        if (!ReleaseValidation.IsReleaseText(release) || !ReleaseValidation.IsReleaseText(engineRelease)) throw new ReleaseException("Release must be X.Y.Z, X.Y.Z-beta.N or X.Y.Z-rc.N");
+        var changelog = ReleaseVersions.NewestChangelogEntry(File.ReadAllText(Path.Combine(root, "CHANGELOG.md")), anySpace: true);
         if (!changelog.Success) throw new ReleaseException("CHANGELOG.md has no release version entry");
         var newest = changelog.Groups["v"].Value;
         var note = File.Exists(Path.Combine(root, $"docs/releases/v{newest}.md"));
         if (!ReleaseValidation.ChangelogVersion(newest, release, noBinaries && !package, note)) throw new ReleaseException("CHANGELOG must match the release, or name a newer documented release in repository -NoBinaries mode");
-        if (noBinaries && !package && Version.Parse(newest) > Version.Parse(release)) newest = release;
+        if (noBinaries && !package && ReleaseValidation.IsNewer(newest, release)) newest = release;
         if (JsonString(delivery, "release") != newest || JsonString(delivery, "engineRelease") != engineRelease || JsonString(delivery, "fileVersion") != fileVersion)
             throw new ReleaseException("Delivery version differs from CHANGELOG or engine build record");
-        var sourceRelease = package ? release : (string?)XDocument.Load(Path.Combine(root, "Version.props")).Root?.Element("PropertyGroup")?.Element("TiaMcpRelease") ?? "";
-        if (sourceRelease != engineRelease || sourceRelease + ".0" != fileVersion) throw new ReleaseException("Engine build version differs from Version.props");
+        var sourceRelease = package ? release : ReleaseVersions.ReadLabel(root);
+        if (sourceRelease != engineRelease || ReleaseVersions.FileVersionOf(sourceRelease) != fileVersion) throw new ReleaseException("Engine build version differs from Version.props");
         using var manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "manifest/package-manifest.json")));
         if (!noBinaries && manifest.RootElement.TryGetProperty("tier", out var tier))
         {
@@ -767,7 +779,7 @@ internal static partial class ReleaseCommands
         var bundleVersion = JsonString(manifest.RootElement, "bundleVersion");
         if (bundleVersion != newest) throw new ReleaseException($"Version mismatch: CHANGELOG says {newest}, manifest bundleVersion says {bundleVersion}");
         var packageName = JsonString(manifest.RootElement, "packageName");
-        if (!Regex.IsMatch(packageName, "v" + Regex.Escape(newest) + "[_-]")) throw new ReleaseException($"Version mismatch: manifest packageName '{packageName}' does not carry v{newest}");
+        if (ReleaseValidation.PackageNameError(packageName, newest) is { } packageError) throw new ReleaseException(packageError);
         if (StrictRecordHash(root, delivery, "manifest/release-build.json", "engineBuildSha256") is { } engineHash) throw new ReleaseException(engineHash);
         if (StrictRecordHash(root, delivery, "manifest/configurator-build.json", "configuratorBuildSha256") is { } configHash) throw new ReleaseException(configHash);
         if (IntValue(configurator, "testsPassed") <= 0 && (!build.TryGetProperty("checkPlan", out _) || ReleasePlanFromRecord(build).Includes("gui-tests"))) throw new ReleaseException("Configurator test result missing");
@@ -878,14 +890,12 @@ internal static partial class ReleaseCommands
         var studio = Path.Combine(Root, "src/Studio");
         var resourceOutput = Path.Combine(Root, "bin-build/configurator-resources");
         Directory.CreateDirectory(resourceOutput);
-        var versionDoc = XDocument.Load(Path.Combine(Root, "Version.props"));
-        var release = (string?)versionDoc.Root?.Element("PropertyGroup")?.Element("TiaMcpRelease") ?? "";
-        if (!System.Text.RegularExpressions.Regex.IsMatch(release, "^\\d+\\.\\d+\\.\\d+$")) throw new ReleaseException("Release version must be X.Y.Z");
+        var desktopVersion = ReleaseVersions.ReadVersionProps(Root, "Release version must be X.Y.Z, X.Y.Z-beta.N or X.Y.Z-rc.N");
         var metadata = Path.Combine(resourceOutput, "DesktopVersion.cs");
         File.WriteAllText(metadata, "using System.Reflection;\n" +
             "[assembly: AssemblyTitle(\"TIA Portal Workbench\")]\n" +
             "[assembly: AssemblyDescription(\"Unified TIA Portal engineering, MCP service and AI client desktop\")]\n" +
-            $"[assembly: AssemblyVersion(\"{release}\")]\n[assembly: AssemblyFileVersion(\"{release}.0\")]\n[assembly: AssemblyInformationalVersion(\"{release}\")]\n[assembly: AssemblyMetadata(\"TiaMcpRelease\", \"{release}\")]\n", new System.Text.UTF8Encoding(false));
+            $"[assembly: AssemblyVersion(\"{desktopVersion.Core}\")]\n[assembly: AssemblyFileVersion(\"{desktopVersion.FileVersion}\")]\n[assembly: AssemblyInformationalVersion(\"{desktopVersion.Label}\")]\n[assembly: AssemblyMetadata(\"TiaMcpRelease\", \"{desktopVersion.Label}\")]\n", new System.Text.UTF8Encoding(false));
         var output = Path.Combine(resourceOutput, "TiaOpenness.exe");
         var wpf = Path.Combine(windows, "Microsoft.NET/Framework64/v4.0.30319/WPF");
         var references = new[] { "/r:System.Windows.Forms.dll", "/r:System.Web.Extensions.dll", "/r:System.Security.dll", "/r:System.Core.dll", "/r:System.Xaml.dll", $"/r:{Path.Combine(wpf, "WindowsBase.dll")}", $"/r:{Path.Combine(wpf, "PresentationFramework.dll")}", $"/r:{Path.Combine(wpf, "PresentationCore.dll")}" };
@@ -1103,7 +1113,7 @@ internal static partial class ReleaseCommands
     {
         EnsureWindows("prepare-delivery");
         var release = options.Get("Release") ?? throw new ReleaseException("-Release is required");
-        if (!System.Text.RegularExpressions.Regex.IsMatch(release, "^\\d+\\.\\d+\\.\\d+$")) throw new ReleaseException("-Release must be X.Y.Z");
+        if (!ReleaseVersions.IsValid(release)) throw new ReleaseException("-Release must be X.Y.Z, X.Y.Z-beta.N or X.Y.Z-rc.N");
         var releaseDate = options.Get("ReleaseDate", DateTime.Now.ToString("yyyyMMdd"));
         if (!System.Text.RegularExpressions.Regex.IsMatch(releaseDate, "^\\d{8}$") || !DateTime.TryParseExact(releaseDate, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _))
             throw new ReleaseException("-ReleaseDate must be a valid yyyyMMdd date");
@@ -1112,7 +1122,7 @@ internal static partial class ReleaseCommands
         if (!File.Exists(buildPath)) throw new ReleaseException("Engine build record missing; run build-release after multi-version preparation");
         using var build = JsonDocument.Parse(File.ReadAllText(buildPath));
         var fileVersion = ReleaseRecordsProperty(build.RootElement, "fileVersion");
-        if (ReleaseRecordsProperty(build.RootElement, "release") != release || fileVersion != release + ".0") throw new ReleaseException("Engine build record differs from the requested release; run build-release first");
+        if (ReleaseRecordsProperty(build.RootElement, "release") != release || fileVersion != ReleaseVersions.FileVersionOf(release)) throw new ReleaseException("Engine build record differs from the requested release; run build-release first");
         foreach (var major in new[] { 20, 21 })
             if (!File.Exists(Path.Combine(Root, $"runtime/v{major}/worker/TiaMcp.Engine.V{major}.exe"))) throw new ReleaseException($"V{major} engine output missing; run build-release first");
         var configuratorArgs = new List<string> { "build-configurator", "-Tier", ReleasePlan(options).Tier };
@@ -1181,9 +1191,9 @@ internal static partial class ReleaseCommands
         EnsureWindows("build-multi-version");
         var api = Path.GetFullPath(options.Get("PublicApiRoot") ?? throw new ReleaseException("-PublicApiRoot is required"));
         if (!Directory.Exists(api)) throw new ReleaseException("PublicApiRoot does not exist: " + api);
-        var versionDoc = XDocument.Load(Path.Combine(Root, "Version.props"));
-        var release = (string?)versionDoc.Root?.Element("PropertyGroup")?.Element("TiaMcpRelease") ?? "";
-        if (!Regex.IsMatch(release, "^\\d+\\.\\d+\\.\\d+$")) throw new ReleaseException("Public release version must be X.Y.Z without fork or feature suffixes");
+        var releaseVersion = ReleaseVersions.ReadVersionProps(Root);
+        var release = releaseVersion.Label;
+        var releaseFileVersion = releaseVersion.FileVersion;
         if (options.Has("PrepareOnly") && options.Has("CompleteOnly")) throw new ReleaseException("-PrepareOnly and -CompleteOnly cannot be combined");
 
         var logs = Path.Combine(Root, "bin-build/multi-version");
@@ -1291,7 +1301,7 @@ internal static partial class ReleaseCommands
 
             var hostProject = Path.Combine(Root, "src/FoundationHost/TiaMcp.FoundationHost.csproj");
             var publish = Path.Combine(logs, "foundation-host");
-            var publishArgs = new List<string> { "publish", hostProject, "-c", "Release", "-o", publish, "-v:q", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false", "-p:NuGetAudit=false", $"-p:Version={release}", $"-p:FileVersion={release}.0" };
+            var publishArgs = new List<string> { "publish", hostProject, "-c", "Release", "-o", publish, "-v:q", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false", "-p:NuGetAudit=false", $"-p:Version={release}", $"-p:FileVersion={releaseFileVersion}" };
             AddNugetConfig(publishArgs, nuget);
             ProcessRunner.RequireSuccess(RunLoggedProcess(dotnet, publishArgs, logs, "host.log", nuget), "Foundation host publication failed");
 
@@ -1530,7 +1540,7 @@ internal static partial class ReleaseCommands
             var prepared = new
             {
                 tier = plan.Tier, checkPlan = plan,
-                release, fileVersion = release + ".0", publicApiRoot = api, test,
+                release, fileVersion = releaseFileVersion, publicApiRoot = api, test,
                 releases = releaseRows, validation = validationNode, sourceFiles = sources,
                 validationInputs, files = preparedFiles, evidence
             };
@@ -1568,7 +1578,7 @@ internal static partial class ReleaseCommands
             var deliveryPath = Path.Combine(Root, "manifest/delivery.json");
             if (!File.Exists(deliveryPath)) throw new ReleaseException("Delivery record missing; run prepare-delivery before multi-version completion");
             using var delivery = JsonDocument.Parse(File.ReadAllText(deliveryPath));
-            if (GetJsonString(delivery.RootElement, "release") != release || GetJsonString(delivery.RootElement, "fileVersion") != release + ".0" ||
+            if (GetJsonString(delivery.RootElement, "release") != release || GetJsonString(delivery.RootElement, "fileVersion") != releaseFileVersion ||
                 !string.Equals(GetJsonString(delivery.RootElement, "engineBuildSha256"), ReleaseRecords.HashFile(engineRecordPath), StringComparison.OrdinalIgnoreCase))
                 throw new ReleaseException("Delivery does not bind the current engine record; run prepare-delivery before multi-version completion");
 
@@ -1607,7 +1617,7 @@ internal static partial class ReleaseCommands
             var record = new
             {
                 tier = plan.Tier, checkPlan = plan,
-                createdAt = DateTimeOffset.UtcNow.ToString("o"), release, fileVersion = release + ".0",
+                createdAt = DateTimeOffset.UtcNow.ToString("o"), release, fileVersion = releaseFileVersion,
                 releases = pending.RootElement.GetProperty("releases"),
                 studioReleaseKeys = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
                 nativeAcceptance = "NOT RUN", validation = validationAfter, files,

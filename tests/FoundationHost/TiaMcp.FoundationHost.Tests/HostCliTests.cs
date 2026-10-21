@@ -59,7 +59,7 @@ public sealed class HostCliTests : IDisposable
             if (verb is "help" or "doctor" || (long)sample["exit"]! > int.MaxValue) continue;
             var actual = Run(args);
             Assert.Equal((int)sample["exit"]!, actual.Exit);
-            var expected = Encoding.UTF8.GetBytes(Accepted(verb, Relocate(Encoding.UTF8.GetString(Convert.FromBase64String((string)sample["stdout"]!)), fixture)));
+            var expected = Encoding.UTF8.GetBytes(Accepted(verb, Relocate(Encoding.UTF8.GetString(Convert.FromBase64String((string)sample["stdout"]!)), fixture), AcceptedLinesFor(CurrentRelease())));
             Assert.Equal(expected, actual.Stdout);
             if (verb == "install-plc-tools") Assert.Equal("IO_FAILED: --environment-path must be absolute: relative\r\n", actual.ErrorText);
             else Assert.Empty(actual.Stderr);
@@ -72,6 +72,18 @@ public sealed class HostCliTests : IDisposable
     // byte comparison (decided 2026-10-19; listed in Fixtures/HostCli/README.md). The schema spec lines follow
     // device creation: plcMlfb is required for gen, no device is chosen from plcFamily/hmiFamily, and plcVersion, hmiMlfb and
     // hmiVersion are documented. The schema text separates its lines with LF.
+    // The version line carries the numeric file version of the release being built, read from Version.props at test time
+    // (lead decision 2026-10-20, P8-90, under the 2026-10-19 approval of exact line replacements).
+    private const string FrozenVersionLine = "tia 3.3.0.0";
+
+    private static (string Verb, string Old, string New)[] AcceptedLinesFor(string release) =>
+        [.. AcceptedLines, ("version", FrozenVersionLine, "tia " + release + ".0")];
+
+    // TiaMcpRelease is the numeric X.Y.Z; a pre-release label (TiaMcpPrerelease) never reaches the file version.
+    private static string CurrentRelease() =>
+        (string?)System.Xml.Linq.XDocument.Load(Path.Combine(Root(), "Version.props")).Root?.Element("PropertyGroup")?.Element("TiaMcpRelease")
+            ?? throw new InvalidOperationException("Version.props has no TiaMcpRelease");
+
     private static readonly (string Verb, string Old, string New)[] AcceptedLines =
     {
         ("schema", "  plcFamily       string  default S7-1500.",
@@ -85,9 +97,35 @@ public sealed class HostCliTests : IDisposable
             + "  hmiVersion      string  same rules as plcVersion."),
     };
 
-    private static string Accepted(string verb, string frozen)
+    [Theory]
+    [InlineData("20")]
+    [InlineData("21")]
+    public void Version_line_follows_Version_props_and_changes_nothing_else(string release)
     {
-        foreach (var (_, old, replacement) in AcceptedLines.Where(line => line.Verb == verb))
+        var fixture = JsonNode.Parse(File.ReadAllText(Path.Combine(Root(), "tests/FoundationHost/TiaMcp.FoundationHost.Tests/Fixtures/HostCli/engine-cli.json")))!;
+        var samples = fixture["samples"]!.AsArray().Where(s => (string?)s!["release"] == release).ToArray();
+        var version = Encoding.UTF8.GetString(Convert.FromBase64String((string)samples.Single(s => (string?)s!["args"]![0] == "version")!["stdout"]!));
+        Assert.Equal(FrozenVersionLine + "\r\n", version);
+        Assert.Equal("tia 3.3.0.0\r\n", Accepted("version", version, AcceptedLinesFor("3.3.0")));
+        Assert.Equal("tia 4.0.0.0\r\n", Accepted("version", version, AcceptedLinesFor("4.0.0")));
+        Assert.Equal("tia 9.8.7.0\r\n", Accepted("version", version, AcceptedLinesFor("9.8.7")));
+        // Every other verb is unaffected by the release value.
+        foreach (var sample in samples.Where(s => (string?)s!["args"]![0] != "version"))
+        {
+            var verb = (string)sample!["args"]![0]!;
+            var frozen = Encoding.UTF8.GetString(Convert.FromBase64String((string)sample["stdout"]!));
+            if (verb == "schema") Assert.Equal(Accepted(verb, frozen, AcceptedLines), Accepted(verb, frozen, AcceptedLinesFor("9.8.7")));
+            else Assert.Equal(frozen, Accepted(verb, frozen, AcceptedLinesFor("9.8.7")));
+        }
+        // The frozen line must be there exactly once.
+        Assert.ThrowsAny<Exception>(() => Accepted("version", "tia 3.2.0.0\r\n", AcceptedLinesFor("4.0.0")));
+        Assert.ThrowsAny<Exception>(() => Accepted("version", version + version, AcceptedLinesFor("4.0.0")));
+        Assert.Matches("^\\d+\\.\\d+\\.\\d+$", CurrentRelease());
+    }
+
+    private static string Accepted(string verb, string frozen, (string Verb, string Old, string New)[] accepted)
+    {
+        foreach (var (_, old, replacement) in accepted.Where(line => line.Verb == verb))
         {
             var lines = frozen.Split('\n');
             Assert.Equal(1, lines.Count(line => line.TrimEnd('\r') == old));

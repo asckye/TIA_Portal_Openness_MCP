@@ -212,6 +212,10 @@ public sealed class GeneratorTests
         Assert.ThrowsAny<Exception>(() => CatalogAudits.Usage(Root, Path.Combine(Root, "bin-build/missing-audit-inputs")));
         Assert.ThrowsAny<Exception>(() => CatalogAudits.Version(Root, Path.Combine(Root, "bin-build/missing-sdk"), "bin-build/test-api", Path.Combine(Root, "bin-build/missing-audit-inputs")));
     }
+    // The evidence folder the audit reads for the repository's current records (3.3.0 on master, 4.0.0-beta.1 during that release).
+    private static string RecordedReleaseFolder() => CatalogAudits.ReleaseDirectoryVersion(
+        (string?)JsonNode.Parse(File.ReadAllText(Path.Combine(Root, "manifest/tools-list.json")))!["fileVersion"] ?? "", (string?)JsonNode.Parse(File.ReadAllText(Path.Combine(Root, "manifest/release-build.json")))!["release"]);
+
     [Fact]
     public void NativeAuditCountsXmlOverloadsPropertiesAndExactCompiledMembers()
     {
@@ -225,7 +229,7 @@ public sealed class GeneratorTests
                 var relative = key switch { "14sp1" => "TIA_V14SP1_PublicAPI/V14 SP1", "15.1" => "TIA_V15.1_PublicAPI/V15.1", "21" => "TIA_V21_PublicAPI/V21/net48", _ => $"TIA_V{key}_PublicAPI/V{key}" };
                 Put(Path.Combine(sdk, relative, "Siemens.Engineering.xml"), "<doc><members><member name=\"M:Siemens.Engineering.Domain.Widget.Import(System.String)\"/><member name=\"M:Siemens.Engineering.Domain.Widget.Import(System.Int32)\"/><member name=\"P:Siemens.Engineering.Domain.Widget.Name\"/><member name=\"M:Siemens.Engineering.Domain.Widget.Export\"/><member name=\"M:Siemens.Engineering.Private.Secret.Invoke\"/><member name=\"M:Siemens.Engineering.Domain.Widget.Dispose\"/></members></doc>");
                 Put(Path.Combine(sdk, relative, "Siemens.Engineering.AddIn.xml"), "<invalid/>");
-                var coverage = key is "20" or "21" ? $"releases/v3.3.0/v{key}/native-call-coverage-v{key}.json" : $"multi-version/adapters/coverage-{key}.json";
+                var coverage = key is "20" or "21" ? $"releases/v{RecordedReleaseFolder()}/v{key}/native-call-coverage-v{key}.json" : $"multi-version/adapters/coverage-{key}.json";
                 Put(Path.Combine(input, coverage), "{\"sites\":[{\"member\":\"void Siemens.Engineering.Domain.Widget::Import(System.String)\"},{\"member\":\"string Siemens.Engineering.Domain.Widget::get_Name()\"},{\"member\":\"ignored\"}]}");
                 if (key is "20" or "21") Put(Path.Combine(input, $"multi-version/adapters/coverage-{key}.json"), File.ReadAllText(Path.Combine(input, coverage)));
                 Put(Path.Combine(input, $"multi-version/tools-{key}.json"), Encode(new JsonObject { ["tools"] = new JsonArray(data.Rosters[key].Select(n => (JsonNode)new JsonObject { ["name"] = n }).ToArray()) }));

@@ -2,9 +2,15 @@
 
 当前版本的构建、离线功能、协议测试和 Studio mock 结果见 [release-build.json](../../manifest/release-build.json)、[multi-version-build.json](../../manifest/multi-version-build.json)。这些检查没有连接 TIA 工程或在线 PLC，不能标记为原生验收。
 
+## 预发布例外
+
+维护者决定（2026-10-20）：我们不做真机测试，预发布（`X.Y.Z-beta.N`、`X.Y.Z-rc.N`）交给其他用户测试。下文“发布前必须在真机上完成”
+“失败即停止发布”等真机门槛不约束预发布；预发布说明必须带由本台账与[官方 API 审计 VM 核对清单](api-audit-vm-checklist.md)生成的
+“Not verified on a real TIA Portal”清单（`generate-prerelease-notes`）。正式版本 `X.Y.Z` 仍须遵守本台账的全部真机门槛。
+
 ## 未发布改动的验收边界
 
-下列改动已合并到 master，只有离线证据；发布前必须在真机上完成并记录，否则不得发布。
+下列改动已合并到 master，只有离线证据；正式版本发布前必须在真机上完成并记录，否则不得发布（预发布见上方例外）。
 
 | 改动 | 发布前的真机验收 |
 |---|---|
@@ -128,7 +134,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 ### 4.0 发布前仍需的真实机器步骤
 
 以下均为 **NOT RUN**，只能由维护者在各精确 TIA 版本 VM 上用测试工程副本完成；版本/补丁、候选 SHA-256、
-引擎/worker/adapter 哈希、完整日志、错误后的工程状态、回读和显式保存结果须登记。失败即停止发布。
+引擎/worker/adapter 哈希、完整日志、错误后的工程状态、回读和显式保存结果须登记。失败即停止正式版本发布（预发布见上方例外）。
 
 | 门槛 | 必须完成的机器步骤 |
 |---|---|
