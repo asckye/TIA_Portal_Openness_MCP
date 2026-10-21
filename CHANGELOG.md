@@ -2,6 +2,18 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)：最新版本在前，日期为 ISO 8601；当前版本说明在 `docs/releases/`，历史正文保留在 Git 历史与 GitHub Releases，交付包在 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)。版本号从 2.8.0 起按[语义化版本](https://semver.org/lang/zh-CN/)：**MAJOR** = 工具名 / 参数 / 返回形状的不兼容改动或删除工具；**MINOR** = 新工具、新参数、新功能、内部重构；**PATCH** = 修缺陷、改文案 / 文档、只动交付脚本。2.7.x 及之前每版都可能新增工具，未按此规则。预发布版本为 X.Y.Z-beta.N 或 X.Y.Z-rc.N，条目写作 `## [4.0.0-beta.1] - YYYY-MM-DD`，与正式版本相同，在发布命令前写入；`## [Unreleased]` 不被视为版本条目。
 
+## [4.0.0-beta.1] - 2026-10-22
+
+4.0 的第一个预发布版本，在 GitHub 上标为预发布，不设为最新版；3.3 的更新器和工作台更新检查不会提示它，需要从发布页手动下载。本版未在真实 TIA Portal 上验证：构建、离线套件、V4 契约与响应快照和 GitHub CI 已通过，只能在真机上确认的项目编号列在 [v4.0.0-beta.1](docs/releases/v4.0.0-beta.1.md) 末尾，请用工程副本测试，并按[预发布问题模板](https://github.com/asckye/TIA_Portal_Openness_MCP/issues/new?template=prerelease_report.md)报告。完整变化见 [4.0.0 发布说明草稿](docs/releases/v4.0.0.md)，3.x 工具名的去向见[工具迁移表](docs/releases/v4.0.0-tool-migration.md)。
+
+- MCP 接口不兼容变化：工具名按操作与领域统一，输入使用类型化的 V4 schema，所有结果使用同一个 schemaVersion 4 信封；不提供 3.x 别名。
+- 八个版本（V14 SP1–V21）统一由 `TiaMcp.FoundationHost.exe --release-key <key>` 启动，每个 MCP 会话一个 PlcWorker；V20/V21 也改用 PlcWorker，交付包不再包含引擎程序。
+- 会话租用所选 TIA 进程，结果未知的写入会锁定会话；写入先预览再审批，拒绝带类型化原因。
+- 审批与审计摘要不含敏感值：审批卡、参数摘要、生成计划与候选计划哈希、审计记录在计算前把密码、密钥、凭据和令牌换成固定占位符；真实值照常交给操作，因此执行时可以使用与预览不同的密码。
+- 按官方 API 复核并修正在线与下载、硬件与网络、会话与工程生命周期（含 V15.1–V21 受 UMAC 保护工程的凭据）。
+- 新版工作台界面：按 Ant Design v5 重画，分组侧边菜单（窄窗口只显示图标）、带 MCP 状态与连接信息的顶栏，以及合并概览与程序块的“项目”页；窗口窄于 1200 px 时右侧卡片移到内容下方；保留浅色、深色、高对比度主题和中英文，文字与按钮对比度符合 WCAG 2.2 AA。全部文字改用 Maple Mono CN 字体（SIL OFL 1.1，从安装目录私有加载，不安装到系统），风格与 EplanMCP 工作台一致：关闭连字，选中的菜单项加粗，“拒绝”与“批准执行”同样式、同宽。
+- 工作台：写入审批、哈希链审计日志、实时调用面板、环境检查与修复、梯形图与程序书；C# 更新器取代 PowerShell 脚本。
+
 ## [3.3.0] - 2026-10-03
 
 3.3.0：统一桌面与内部重构后的首个发布版本，详见 [v3.3.0](docs/releases/v3.3.0.md)。除 G9 名称解析行为外，保持 3.2.0 的 MCP 工具名称、参数类型、返回结构和错误约定；八版工具数仍为 57 / 58 / 60 / 60 / 60 / 62 / 477 / 488，V20/V21 lite 均为 63 项。`TiaSharedAdapterPaths` 默认关闭，其后的试验路径不在本版范围内；阶段 6 属于 4.0。
