@@ -71,6 +71,21 @@ def foundation_host_executable(exe=None):
     return Path(__file__).resolve().parents[2] / 'src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe'
 
 
+def engine_cross_check_environment(host, worker, catalog, environment):
+    root = Path(__file__).resolve().parents[2]
+    private = (root / 'bin-build/engine-compat').resolve()
+    host = Path(host).resolve()
+    require(host.name == 'TiaMcp.FoundationHost.exe' and
+            (host.is_relative_to(private) or host in [root / f'src/FoundationHost/bin/{configuration}/net10.0/TiaMcp.FoundationHost.exe'
+                                                     for configuration in ('Release', 'Debug')]),
+            'Engine cross-checks require a repository source or private compatibility host')
+    worker, catalog = Path(worker).resolve(), Path(catalog).resolve()
+    require(worker.is_relative_to(private) and worker.is_file() and catalog.is_file() and catalog.parent == worker.parent,
+            'Engine cross-checks require private compatibility worker/catalog output')
+    environment['TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY'] = str(private)
+    return environment
+
+
 def engine_fixture_evidence(worker, exe=None):
     if worker is None:
         return {}
@@ -169,6 +184,10 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
         env['TIA_MCP_PLC_WORKER_SDK_READY'] = '1' if sdk_ready else '0'
     if env_overrides:
         env.update(env_overrides)
+    env.pop('TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY', None)
+    if '--engine-worker' in args:
+        engine_cross_check_environment(args[0], args[args.index('--engine-worker') + 1],
+                                       args[args.index('--engine-catalog') + 1], env)
     process = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE, text=True, encoding='utf-8',
                                env=env, cwd=content_root, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))

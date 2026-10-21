@@ -205,7 +205,9 @@ namespace TiaOpenness.Shared
             {
                 foreach (var version in TiaVersionCatalog.Runnable)
                 {
-                    if (version.WorkerKind != "engine") continue;
+                    var workerRoot = FromAnchor(directory, "src/PlcWorker/bin/" + version.Key + "/" + configuration + "/net48");
+                    if (workerRoot != null) return workerRoot;
+                    if (version.EngineOutputDirectory == null) continue;
                     var root = FromAnchor(directory, "src/Engine/"
                         + version.EngineOutputDirectory + "/" + configuration + "/net48");
                     if (root != null) return root;
@@ -262,7 +264,9 @@ namespace TiaOpenness.Shared
             {
                 foreach (var sourceVersion in TiaVersionCatalog.Runnable)
                 {
-                    if (sourceVersion.WorkerKind != "engine") continue;
+                    if (SameRoot(FromAnchor(output, "src/PlcWorker/bin/" + sourceVersion.Key + "/" + configuration + "/net48"), root))
+                        return Combine(root, "src/FoundationHost/bin/" + configuration + "/net10.0/" + name);
+                    if (sourceVersion.EngineOutputDirectory == null) continue;
                     if (SameRoot(FromAnchor(output, "src/Engine/" + sourceVersion.EngineOutputDirectory + "/" + configuration + "/net48"), root))
                         return Combine(root, "src/FoundationHost/bin/" + configuration + "/net10.0/" + name);
                 }
@@ -285,8 +289,7 @@ namespace TiaOpenness.Shared
             public string RuntimeDirectory { get; private set; }
             public string Executable { get; private set; }
             public string VersionOption { get; private set; }
-            public string WorkerExecutable { get { return TiaVersionCatalog.Get(ReleaseKey).WorkerKind == "engine"
-                ? "TiaMcp.Engine.V" + ReleaseKey + ".exe" : "TiaMcp.PlcWorker." + ReleaseKey + ".exe"; } }
+            public string WorkerExecutable { get { return "TiaMcp.PlcWorker." + ReleaseKey + ".exe"; } }
             internal Product(string key, string executable, string option)
             {
                 ReleaseKey = key;
@@ -384,12 +387,14 @@ namespace TiaOpenness.Shared
 
         public static string EngineWorkerPath(string root, string releaseKey, string baseDirectory)
         {
-            var version = TiaVersionCatalog.RequireRunnable(releaseKey);
+            GetProduct(releaseKey);
             foreach (var configuration in new[] { "Release", "Debug" })
                 if (SameRoot(FromAnchor(new DirectoryInfo(baseDirectory), "src/FoundationHost/bin/" + configuration + "/net10.0"), root)
-                    || TiaVersionCatalog.Runnable.Any(source => source.WorkerKind == "engine"
+                    || TiaVersionCatalog.Runnable.Any(source => SameRoot(FromAnchor(new DirectoryInfo(baseDirectory),
+                        "src/PlcWorker/bin/" + source.Key + "/" + configuration + "/net48"), root))
+                    || TiaVersionCatalog.Runnable.Any(source => source.EngineOutputDirectory != null
                         && SameRoot(FromAnchor(new DirectoryInfo(baseDirectory), "src/Engine/" + source.EngineOutputDirectory + "/" + configuration + "/net48"), root)))
-                    return Combine(root, "src/Engine/" + version.EngineOutputDirectory + "/" + configuration + "/net48/" + GetProduct(releaseKey).WorkerExecutable);
+                    return Combine(root, "src/PlcWorker/bin/" + releaseKey + "/" + configuration + "/net48/" + GetProduct(releaseKey).WorkerExecutable);
             return WorkerPath(root, releaseKey);
         }
 

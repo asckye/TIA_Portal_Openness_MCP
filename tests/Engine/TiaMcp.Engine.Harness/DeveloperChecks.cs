@@ -568,20 +568,22 @@ internal static class DeveloperChecks
     private static JsonDocument ProductCatalog(Assembly server, string foundationHost, string bundleRoot, string outputPath)
     {
         string release = server.GetReferencedAssemblies().First(a => a.Name!.StartsWith("Siemens.Engineering", StringComparison.Ordinal)).Version!.Major.ToString();
-        var directory = Path.GetDirectoryName(Path.GetFullPath(outputPath))!;
-        Directory.CreateDirectory(directory);
-        var catalogPath = Path.Combine(directory, ".guard-engine-catalog-" + Guid.NewGuid().ToString("N") + ".json");
+        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(outputPath))!);
+        // The engine host oracle uses the private cross-check route: worker and catalog in its private output.
+        var worker = HostPortRunner.PrivateWorker(server);
+        var catalogPath = Path.Combine(Path.GetDirectoryName(worker)!, ".guard-engine-catalog-" + Guid.NewGuid().ToString("N") + ".json");
         try
         {
             // Export descriptors only. The host's --catalog path overlays the same
             // Foundation registrations as STDIO/HTTP, without launching a worker.
             server.GetType("TiaMcpServer.Cli.ToolCatalogExport", true)!.GetMethod("Write", All)!.Invoke(null, new object[] { catalogPath });
             string Quote(string value) => "\"" + Regex.Replace(Regex.Replace(value, @"(\\*)""", "$1$1\\\""), @"\\+$", "$0$0") + "\"";
-            var start = new ProcessStartInfo(Path.GetFullPath(foundationHost)) {
+            var start = new ProcessStartInfo(HostPortRunner.PrivateHost(foundationHost)) {
                 UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
                 Arguments = "--catalog --offline --profile full --release-key " + release + " --bundle-root " + Quote(Path.GetFullPath(bundleRoot))
-                    + " --engine-worker " + Quote(server.Location) + " --engine-catalog " + Quote(catalogPath)
+                    + " --engine-worker " + Quote(worker) + " --engine-catalog " + Quote(catalogPath)
             };
+            start.EnvironmentVariables[HostPortRunner.EngineCrossCheckVariable] = HostPortRunner.CompatibilityRoot(HostPortRunner.RepositoryRoot());
             using var process = Process.Start(start)!;
             var stdout = process.StandardOutput.ReadToEndAsync();
             var stderr = process.StandardError.ReadToEndAsync();

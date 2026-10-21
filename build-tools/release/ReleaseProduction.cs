@@ -284,7 +284,7 @@ internal static partial class ReleaseCommands
             var project = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/TiaMcp.Engine.Harness.csproj");
             RunReleaseRaw(dotnet, ["build", project, "-c", "Release", "-v:q", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false", "-p:NuGetAudit=false"], Path.Combine(outputDirectory, "build-harness.log"), runTemp, cliHome, apiRoot, null, "HTTP harness build");
         }
-        var engine = Path.Combine(Root, "runtime/v21/worker/TiaMcp.Engine.V21.exe");
+        var engine = Path.Combine(EngineCompatibilityDirectory(Root, "21"), "TiaMcp.Engine.V21.exe");
         if (File.Exists(engine))
         {
             RunReleaseTableStep("download-route", harness, [engine, "test-download-route", v21Api], outputDirectory, runTemp, cliHome, apiRoot);

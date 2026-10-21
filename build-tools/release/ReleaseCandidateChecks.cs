@@ -67,7 +67,7 @@ internal static partial class ReleaseCommands
         {
             foreach (var release in new[] { "20", "21" })
             {
-                var directory = Path.Combine(logs, "sdk-worker-v" + release);
+                var directory = Path.Combine(Root, "bin-build/engine-compat/candidate", Guid.NewGuid().ToString("N"), "v" + release);
                 var worker = Path.Combine(directory, $"TiaMcp.Engine.V{release}.exe");
                 var result = runIsolated("sdk-worker-build", dotnet,
                     ["build", Path.Combine(Root, $"src/Engine/TiaMcp.Engine.V{release}.csproj"), "-c", "Release", "-v:q", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false",
@@ -108,10 +108,13 @@ internal static partial class ReleaseCommands
                 args.AddRange(CaptureArgs(release, sourceLayout));
                 if (release is "20" or "21")
                 {
-                    var host = Path.Combine(Root, sourceLayout ? "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe" : $"runtime/v{release}/TiaMcp.FoundationHost.exe");
+                    var host = sourceLayout ? Path.Combine(Root, "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe")
+                        : Path.Combine(Path.GetDirectoryName(EngineCompatibilityDirectory(Root, release))!, "TiaMcp.FoundationHost.exe");
                     args.AddRange(["--engine-host", host, "--transport", transport]);
-                    if (responses || sourceLayout) args.AddRange(["--engine-worker", release + "=" + fixtureWorkers[release],
-                        "--engine-catalog", release + "=" + Path.Combine(Path.GetDirectoryName(fixtureWorkers[release])!, "tool-catalog.json")]);
+                    var worker = responses || sourceLayout ? fixtureWorkers[release]
+                        : Path.Combine(EngineCompatibilityDirectory(Root, release), $"TiaMcp.Engine.V{release}.exe");
+                    args.AddRange(["--engine-worker", release + "=" + worker,
+                        "--engine-catalog", release + "=" + Path.Combine(Path.GetDirectoryName(worker)!, "tool-catalog.json")]);
                 }
                 if (responses) args.AddRange(["--dotnet-root", Path.Combine(Root, "runtime/dotnet")]);
                 args.AddRange(["--output", perRelease]);
@@ -282,10 +285,10 @@ internal static partial class ReleaseCommands
             ZipFile.ExtractToDirectory(zip, input);
             var bundle = Path.Combine(input, Path.GetFileNameWithoutExtension(zip));
             if (!Directory.Exists(bundle)) throw new ReleaseException("Extracted candidate package root is missing: " + bundle);
+            // Both steps start each extracted host with its default worker, which is the production PlcWorker since P8-04j2.
+            // --plc-worker would make the script synthesize an SDK-only TIA installation, so the run would no longer be
+            // no-TIA (maintainer decision 2026-10-21). The -plc step stays until P8-04l merges the engine/PLC pairs.
             capture(script, ["capture", "--repo-root", bundle, "--packaged-no-tia", "--releases", "20", "21",
-                .. plc ? new[] { "--engine-host", Path.Combine(bundle, "runtime/v21/TiaMcp.FoundationHost.exe"),
-                    "--plc-worker", "20=" + Path.Combine(PlcReleaseInstallDirectory(bundle, "20"), "TiaMcp.PlcWorker.20.exe"),
-                    "--plc-worker", "21=" + Path.Combine(PlcReleaseInstallDirectory(bundle, "21"), "TiaMcp.PlcWorker.21.exe") } : [],
                 "--dotnet-root", Path.Combine(bundle, "runtime/dotnet"), "--temp-root", Path.Combine(releaseTemp, plc ? "packaged-response-temp-plc" : "packaged-response-temp"), "--output", responses]);
             foreach (var release in new[] { "20", "21" })
                 if (!File.Exists(Path.Combine(responses, release + ".json"))) throw new ReleaseException("Packaged response snapshot missing: V" + release);

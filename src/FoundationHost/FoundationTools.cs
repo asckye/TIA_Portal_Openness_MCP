@@ -129,6 +129,8 @@ internal sealed partial class FoundationTool : McpServerTool
     internal bool RequiresTia => RequiresProjectSession && definition.ResponseMember != "RuntimeQuery"
         && !TiaMcpServer.ModelContextProtocol.ToolTaxonomy.IsSafeWithoutTia(tool.Name);
     internal bool UsesProductionWorker => worker is IFoundationSessionWorker { Bundled: true };
+    internal bool IsRuntimeQuery => definition.ResponseMember == "RuntimeQuery";
+    internal bool UsesBundledPlcWorker => worker is WorkerClient { Bundled: true };
     internal Task PrepareReadiness(CancellationToken token)
         => worker is IFoundationWorkerReadiness readiness ? readiness.PrepareReadiness(token) : Task.CompletedTask;
     internal string? ApprovalIdentity => (worker as IFoundationSessionWorker)?.ApprovalIdentity;

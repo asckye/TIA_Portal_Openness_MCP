@@ -122,8 +122,25 @@ internal static partial class ReleaseCommands
         Wave();
         string host = Path.Combine(Root, "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe");
         string harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
-        string fixture(string release) => Path.Combine(Root, $"src/Engine/bin/check-all/TiaMcp.Engine.V{release}/sdk-{release}/Release/net48/TiaMcp.Engine.V{release}.exe");
-        string engine(string release) => Path.Combine(Root, "src/Engine", release == "20" ? "bin-v20" : "bin", "Release/net48/TiaMcp.Engine.V" + release + ".exe");
+        // The engine halves start FoundationHost through the private cross-check route, so the
+        // engine and SDK-fixture builds they use are staged byte for byte into the private
+        // compatibility output. Candidate builds only run under the harness and stay in place.
+        // Each copy is made once, by the first job that needs it, so a missing build output
+        // fails those jobs as before instead of the whole run.
+        var compatibilityRun = Path.GetFileName(output);
+        var engineWorkers = new Dictionary<string, Lazy<string>>();
+        var fixtureWorkers = new Dictionary<string, Lazy<string>>();
+        foreach (var key in new[] { "20", "21" })
+        {
+            var release = key;
+            engineWorkers[release] = new(() => StageCheckAllEngine(Root, compatibilityRun, release, "engine",
+                Path.Combine(Root, "src/Engine", release == "20" ? "bin-v20" : "bin", "Release/net48/TiaMcp.Engine.V" + release + ".exe")));
+            fixtureWorkers[release] = new(() => StageCheckAllEngine(Root, compatibilityRun, release, "sdk",
+                Path.Combine(Root, $"src/Engine/bin/check-all/TiaMcp.Engine.V{release}/sdk-{release}/Release/net48/TiaMcp.Engine.V{release}.exe")));
+        }
+        string fixture(string release) => fixtureWorkers[release].Value;
+        string engine(string release) => engineWorkers[release].Value;
+        var transportFixtures = Path.Combine(CheckAllEngineCompatibilityRoot(Root, compatibilityRun), "transport");
         string fixtureCatalog(string release) => Path.Combine(Path.GetDirectoryName(fixture(release))!, "tool-catalog.json");
         foreach (var release in new[] { "20", "21" })
         {
@@ -138,7 +155,7 @@ internal static partial class ReleaseCommands
             var release = key;
             Add("sdk-fixture-copy-v" + key, () =>
             {
-                var destination = Path.Combine(output, "sdk-fixtures", release); Directory.CreateDirectory(destination);
+                var destination = Path.Combine(transportFixtures, release); Directory.CreateDirectory(destination);
                 foreach (var path in Directory.EnumerateFiles(Path.GetDirectoryName(fixture(release))!)) File.Copy(path, Path.Combine(destination, Path.GetFileName(path)), true);
                 return new(0, "SDK fixture copied\n", "");
             }, ["fixture-catalog-v" + key]);
@@ -221,7 +238,7 @@ internal static partial class ReleaseCommands
             }
             var usageName = "transport-usage-v" + key;
             Add(usageName, () => Python(usageName, "scripts/checks/Test-FoundationTransport.py", "--fixture", Path.Combine(Root, "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe"),
-                "--host-exe", host, "--releases", key, "--sdk-fixture-root", Path.Combine(output, "sdk-fixtures"), "--temp-root", FastSuites.TemporaryDirectory(), "--output", Path.Combine(output, usageName)), ["sdk-fixture-copy-v20", "sdk-fixture-copy-v21"]);
+                "--host-exe", host, "--releases", key, "--sdk-fixture-root", transportFixtures, "--temp-root", FastSuites.TemporaryDirectory(), "--output", Path.Combine(output, usageName)), ["sdk-fixture-copy-v20", "sdk-fixture-copy-v21"]);
             if (key is "20" or "21")
             {
                 var plcName = CheckAllPlcSuccessor(usageName);
@@ -252,7 +269,7 @@ internal static partial class ReleaseCommands
                 var selected = mode; var name = "harness-v" + key + "-" + (mode.Length == 0 ? "http" : mode);
                 Add(name, () =>
                 {
-                    var copy = Path.Combine(Root, "bin-build/h", Guid.NewGuid().ToString("N")[..8]); Directory.CreateDirectory(copy);
+                    var copy = Path.Combine(CheckAllEngineCompatibilityRoot(Root, compatibilityRun), "harness", Guid.NewGuid().ToString("N")[..8]); Directory.CreateDirectory(copy);
                     foreach (var path in Directory.EnumerateFiles(Path.GetDirectoryName(engine(key))!)) File.Copy(path, Path.Combine(copy, Path.GetFileName(path)), true);
                     var copiedEngine = Path.Combine(copy, Path.GetFileName(engine(key)));
                     var result = CheckAllHarness(Isolated(name, harness, [copiedEngine, .. HarnessArguments(selected, key, targetApi)]), selected, key);

@@ -19,7 +19,7 @@
 本机使用 stdio，由客户端启动对应引擎，不需要 IP、密钥或手动启动 HTTP 服务。所选版本应与实际 TIA 和工程匹配，选择器不转换工程版本。
 
 4.0 的八版启动命令由统一产品表生成：`runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`。
-V20/V21 自动发现 `worker/TiaMcp.Engine.V20.exe` / `worker/TiaMcp.Engine.V21.exe` 及同目录的 `tool-catalog.json`；无需配置 worker 路径。参数包含 `--bundle-root <绝对包根>`、准确版本和 TIA 安装路径；缺少所选引擎时拒绝写入，不切换版本。工作台本身也接受 `--bundle-root <绝对包根>` 或 `TIA_MCP_BUNDLE_ROOT`：命令行优先，然后是环境变量，最后是正式安装/开发输出位置。根必须包含 `manifest/package-manifest.json`；显式根无效立即报错。
+八个版本都自动发现 `worker/TiaMcp.PlcWorker.<发布键>.exe`；无需配置 worker 路径。参数包含 `--bundle-root <绝对包根>`、准确版本和 TIA 安装路径；缺少所选版本的宿主或 worker 时拒绝写入，不切换版本。工作台本身也接受 `--bundle-root <绝对包根>` 或 `TIA_MCP_BUNDLE_ROOT`：命令行优先，然后是环境变量，最后是正式安装/开发输出位置。根必须包含 `manifest/package-manifest.json`；显式根无效立即报错。
 
 ## 虚拟机与宿主机，或两台电脑
 

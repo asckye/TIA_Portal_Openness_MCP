@@ -9,10 +9,35 @@ internal sealed record PlcReleaseJob(string Name, string Check, string Executabl
 
 internal static partial class ReleaseCommands
 {
-    // Keep the shipped engine's worker directory intact until P8-04j2. Both
-    // production payloads are included in the existing runtime hash inventories.
+    // One installed worker layout for every release.
     internal static string PlcReleaseInstallDirectory(string root, string key) =>
-        Path.Combine(root, "runtime/v" + key, key is "20" or "21" ? "plc-worker" : "worker");
+        Path.Combine(root, "runtime/v" + key, "worker");
+
+    internal static string EngineCompatibilityDirectory(string root, string key) =>
+        Path.Combine(root, "bin-build/engine-compat", "v" + key, "worker");
+
+    // The engine cross-checks keep their old packaged pair until P8-04l: the installed
+    // host's files beside the private engine worker directory. Only the repository's
+    // check scripts start this copy, through the private cross-check route.
+    internal static string StageEngineCompatibilityHost(string root, string key)
+    {
+        var installed = Path.Combine(root, "runtime", "v" + key);
+        var destination = Path.GetDirectoryName(EngineCompatibilityDirectory(root, key))!;
+        Directory.CreateDirectory(destination);
+        if (Directory.Exists(installed))
+            foreach (var file in Directory.EnumerateFiles(installed))
+                File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), true);
+        return Path.Combine(destination, "TiaMcp.FoundationHost.exe");
+    }
+
+    // FoundationHost reads this together with --engine-worker/--engine-catalog (HostOptions).
+    internal const string EngineCrossCheckVariable = "TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY";
+
+    internal static IDictionary<string, string?> WithEngineCrossCheck(IDictionary<string, string?> environment)
+    {
+        environment[EngineCrossCheckVariable] = Path.GetFullPath(Path.Combine(Root, "bin-build/engine-compat"));
+        return environment;
+    }
 
     internal static readonly string[] PlcReleaseGroups =
     ["functional", "worker-isolation", "approval", "ecosystem", "stability", "isolated-stability", "contracts", "responses"];
@@ -82,11 +107,26 @@ internal static partial class ReleaseCommands
 
     internal static void InstallReleasePlcWorker(string root, string key)
     {
+        if (!PlcWorkerFixtures.Keys.Contains(key, StringComparer.Ordinal)) throw new ReleaseException("Unknown PLC release: " + key);
         var source = Path.Combine(root, $"src/PlcWorker/bin/{key}/Release/net48");
         var destination = PlcReleaseInstallDirectory(root, key);
         if (!Directory.Exists(source)) throw new ReleaseException("Worker build output missing: " + source);
         Directory.CreateDirectory(destination);
-        foreach (var path in Directory.EnumerateFiles(source).Where(path => Path.GetExtension(path) is ".exe" or ".dll" or ".config"))
+        if ((File.GetAttributes(destination) & FileAttributes.ReparsePoint) != 0)
+            throw new ReleaseException("Worker staging must not be a reparse point: " + destination);
+        var payload = Directory.EnumerateFiles(source).Where(path => Path.GetExtension(path) is ".exe" or ".dll" or ".config").ToArray();
+        foreach (var path in payload)
+            if (Path.GetFileName(path).StartsWith("Siemens.Engineering", StringComparison.OrdinalIgnoreCase))
+                throw new ReleaseException("Siemens PublicAPI redistribution is forbidden: " + path);
+        if (payload.Count(path => Path.GetExtension(path) == ".exe") != 1 ||
+            !payload.Any(path => Path.GetFileName(path) == $"TiaMcp.PlcWorker.{key}.exe"))
+            throw new ReleaseException("Exactly one matching PLC executable is required: " + key);
+        // These directories are build staging owned by this checkout. An older
+        // engine's dependency closure must not survive beside the new worker.
+        var names = payload.Select(Path.GetFileName).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var old in Directory.EnumerateFiles(destination))
+            if (!names.Contains(Path.GetFileName(old))) File.Delete(old);
+        foreach (var path in payload)
         {
             if (Path.GetFileName(path).StartsWith("Siemens.Engineering", StringComparison.OrdinalIgnoreCase))
                 throw new ReleaseException("Siemens PublicAPI redistribution is forbidden: " + path);
@@ -96,6 +136,20 @@ internal static partial class ReleaseCommands
             Directory.EnumerateFiles(destination, "TiaMcp.Adapter.*.dll").Count() != 1 ||
             !File.Exists(Path.Combine(destination, $"TiaMcp.Adapter.{key}.dll")))
             throw new ReleaseException("Exactly one matching PLC worker/adapter is required: " + key);
+        if (key is "20" or "21")
+        {
+            var staging = Path.GetFullPath(Path.Combine(root, "runtime/v" + key, "plc-worker"));
+            var boundary = Path.GetFullPath(Path.Combine(root, "runtime")) + Path.DirectorySeparatorChar;
+            if (!staging.StartsWith(boundary, StringComparison.OrdinalIgnoreCase))
+                throw new ReleaseException("Legacy PLC staging escaped the runtime directory");
+            if (Directory.Exists(staging))
+            {
+                if ((File.GetAttributes(staging) & FileAttributes.ReparsePoint) != 0 || Directory.EnumerateDirectories(staging).Any())
+                    throw new ReleaseException("Unexpected legacy PLC staging directory: " + staging);
+                foreach (var file in Directory.EnumerateFiles(staging)) File.Delete(file);
+                Directory.Delete(staging);
+            }
+        }
     }
 
     // The same command inventory is used by preparation, branch-gate and the

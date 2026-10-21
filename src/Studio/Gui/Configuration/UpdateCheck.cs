@@ -196,6 +196,7 @@ namespace TiaMcpConfigurator
             var names = TiaMcp.Versioning.TiaVersionCatalog.Runnable
                 .Select(release => Path.GetFileNameWithoutExtension(TiaOpenness.Shared.BundleLayout.GetProduct(release.Key).Executable)).Distinct().ToList();
             names.AddRange(TiaMcp.Versioning.TiaVersionCatalog.Runnable.Select(release => Path.GetFileNameWithoutExtension(TiaOpenness.Shared.BundleLayout.GetProduct(release.Key).WorkerExecutable)).Distinct());
+            names.AddRange(new[] { "TiaMcp.Engine.V20", "TiaMcp.Engine.V21" });
             string boundary = string.IsNullOrWhiteSpace(root) ? null : Path.GetFullPath(root).TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
             foreach (string name in names.Distinct())
             foreach (var p in Process.GetProcessesByName(name))

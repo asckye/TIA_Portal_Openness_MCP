@@ -14,6 +14,66 @@ namespace TiaMcp.Updater.Tests
 {
     public sealed class UpdaterTests
     {
+        private static void PreviousEngineLayout(Fixture fixture, bool oldRecordOnly)
+        {
+            fixture.Write("manifest/delivery.json", "{\"release\":\"4.0.0\",\"package\":\"TIA_MCP_Delivery_v4.0.0_pre_engine\",\"engineRelease\":\"4.0.0\"}");
+            foreach (string key in new[] { "20", "21" })
+            {
+                foreach (string name in new[] { "TiaMcp.Engine.V" + key + ".exe", "TiaMcp.Engine.V" + key + ".exe.config",
+                    "tool-catalog.json", "Newtonsoft.Json.dll", "TiaMcp.Runtime.dll", "System.Text.Json.dll" })
+                    fixture.Write("runtime/v" + key + "/worker/" + name, "previous-engine-" + name);
+            }
+            var files = fixture.CurrentInventory();
+            fixture.Write("manifest/release-build.json", JsonSerializer.Serialize(new
+            { runtimeFiles = files.Where(row => row.Key.StartsWith("runtime/", StringComparison.Ordinal)).Select(row => new { path = row.Key, sha256 = row.Value }) }));
+            if (oldRecordOnly) File.Delete(Path.Combine(fixture.Root, "manifest/release-file-hashes.json"));
+            else fixture.Write("manifest/release-file-hashes.json", JsonSerializer.Serialize(new { files = fixture.CurrentInventory() }));
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void Previous_engine_layout_upgrades_to_exact_plc_worker_inventory_and_explicitly_rolls_back(bool oldRecordOnly)
+        {
+            using var fixture = new Fixture();
+            PreviousEngineLayout(fixture, oldRecordOnly);
+            var before = fixture.CurrentInventory();
+            Assert.Equal(0, fixture.Run(force: true));
+            Assert.False(fixture.Exists("manifest/release-build.json"));
+            using var rules = JsonDocument.Parse(File.ReadAllText(Path.Combine(Fixture.FindRepositoryRoot(), "scripts/operations/delivery-files.json")));
+            foreach (string key in new[] { "20", "21" })
+            {
+                string prefix = "runtime/v" + key + "/worker/";
+                var expected = rules.RootElement.GetProperty("requiredFiles").EnumerateArray().Select(row => row.GetString())
+                    .Where(path => path.StartsWith(prefix, StringComparison.Ordinal)).OrderBy(path => path).ToArray();
+                Assert.Equal(expected, fixture.CurrentInventory().Keys.Where(path => path.StartsWith(prefix, StringComparison.Ordinal)).OrderBy(path => path).ToArray());
+                Assert.Equal("fixture-worker", fixture.Text(prefix + "TiaMcp.PlcWorker." + key + ".exe"));
+                Assert.Equal("fixture", fixture.Text(prefix + "System.Text.Json.dll"));
+            }
+            Assert.Equal("kept", fixture.Text("data/config/user.json"));
+            Assert.Equal("unknown", fixture.Text("notes.txt"));
+            Assert.Equal(0, fixture.Run(rollback: true));
+            Assert.Equal(before.OrderBy(row => row.Key), fixture.CurrentInventory().OrderBy(row => row.Key));
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void Previous_engine_layout_is_restored_after_an_interrupted_plc_overlay(bool oldRecordOnly)
+        {
+            using var fixture = new Fixture();
+            PreviousEngineLayout(fixture, oldRecordOnly);
+            var before = fixture.CurrentInventory();
+            bool reachedWorker = false;
+            Assert.Throws<IOException>(() => fixture.Run(force: true, beforeDeployFile: path =>
+            {
+                if (path.StartsWith("runtime/v21/worker/", StringComparison.Ordinal))
+                { reachedWorker = true; throw new IOException("synthetic interrupted PLC replacement"); }
+            }));
+            Assert.True(reachedWorker);
+            Assert.Equal(before.OrderBy(row => row.Key), fixture.CurrentInventory().OrderBy(row => row.Key));
+        }
+
         [Theory]
         [InlineData("20")]
         [InlineData("21")]
@@ -59,7 +119,7 @@ namespace TiaMcp.Updater.Tests
                 Assert.False(fixture.Exists("runtime/tools/TiaMcp.PluginLauncher" + suffix));
         }
         [Fact] public void Self_and_root_launcher_are_replaced_and_user_data_is_preserved() { using (var f = new Fixture()) { Assert.Equal(0, f.Run()); Assert.Equal("new-launcher", f.Text("TiaOpenness.exe")); Assert.Equal("new-updater", f.Text("runtime/tools/TiaMcp.Updater.exe")); Assert.Equal("kept", f.Text("data/config/user.json")); Assert.Equal("unknown", f.Text("notes.txt")); Assert.False(f.Exists("TiaMcp.Updater.exe")); Assert.False(f.Exists("TiaMcp.Updater.exe.config")); Assert.False(f.Exists("scripts/operations/Update-Engine.ps1")); } }
-        [Fact] public void Upgrade_moves_engine_workers_and_removes_owned_legacy_entries()
+        [Fact] public void Upgrade_installs_plc_workers_and_removes_owned_legacy_entries()
         {
             using var f = new Fixture();
             Assert.Equal(0, f.Run());
@@ -67,8 +127,9 @@ namespace TiaMcp.Updater.Tests
             {
                 Assert.False(f.Exists("runtime/v" + key + "/TiaMcp.Engine.V" + key + ".exe"));
                 Assert.True(f.Exists("runtime/v" + key + "/TiaMcp.FoundationHost.exe"));
-                Assert.True(f.Exists("runtime/v" + key + "/worker/tool-catalog.json"));
-                Assert.Equal("new-engine" + key, f.Text("runtime/v" + key + "/worker/TiaMcp.Engine.V" + key + ".exe"));
+                Assert.True(f.Exists("runtime/v" + key + "/worker/TiaMcp.PlcWorker." + key + ".exe.config"));
+                Assert.Equal("fixture-worker", f.Text("runtime/v" + key + "/worker/TiaMcp.PlcWorker." + key + ".exe"));
+                Assert.False(f.Exists("runtime/v" + key + "/worker/TiaMcp.Engine.V" + key + ".exe"));
             }
             Assert.Equal("kept", f.Text("data/config/user.json"));
             Assert.Equal(0, f.Run(rollback: true));
@@ -264,8 +325,6 @@ namespace TiaMcp.Updater.Tests
                 AddText(archive, package + "/TiaOpenness.exe", "new-launcher");
                 AddFile(archive, package + "/runtime/tools/TiaMcp.Updater.exe", updater);
                 AddFile(archive, package + "/runtime/tools/TiaMcp.Updater.exe.config", updaterConfig);
-                AddText(archive, package + "/runtime/v20/worker/TiaMcp.Engine.V20.exe", "new-engine20");
-                AddText(archive, package + "/runtime/v21/worker/TiaMcp.Engine.V21.exe", "new-engine21");
                 AddDeliveryLayout((path, content) => AddText(archive, package + "/" + path, content));
             }
             byte[] bytes = File.ReadAllBytes(zipPath);
@@ -351,7 +410,6 @@ namespace TiaMcp.Updater.Tests
                     Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/manifest/delivery.json", "{\"release\":\"4.0.0\",\"package\":\"TIA_MCP_Delivery_v4.0.0_20261006\",\"engineRelease\":\"4.0.0\"}");
                     Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/manifest/package-manifest.json", "{}");
                     Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/TiaOpenness.exe", "new-launcher"); Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/runtime/tools/TiaMcp.Updater.exe", "new-updater"); Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/runtime/tools/TiaMcp.Updater.exe.config", "new-config");
-                    Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/runtime/v20/worker/TiaMcp.Engine.V20.exe", "new-engine20"); Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/runtime/v21/worker/TiaMcp.Engine.V21.exe", "new-engine21");
                     Fixture.AddDeliveryLayout((path, content) => Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/" + path, content));
                 }
                 return memory.ToArray();

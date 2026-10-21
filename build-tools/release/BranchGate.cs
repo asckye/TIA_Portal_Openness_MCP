@@ -84,11 +84,14 @@ internal static partial class ReleaseCommands
                 var api = ResolveReleaseApi(null, apiRoot, major);
                 Build($"src/Engine/TiaMcp.Engine.V{major}.csproj", [$"-p:SiemensEngineeringDirectory={api}"]);
                 var built = Path.Combine(Root, major == 20 ? "src/Engine/bin-v20/Release/net48" : "src/Engine/bin/Release/net48");
-                var runtime = Path.Combine(Root, $"runtime/v{major}/worker");
+                var runtime = EngineCompatibilityDirectory(Root, major.ToString(System.Globalization.CultureInfo.InvariantCulture));
                 Directory.CreateDirectory(runtime);
+                // Keep the old packaged pair for the engine cross-checks: the installed host's
+                // files next to the private engine worker directory, outside runtime/.
+                StageEngineCompatibilityHost(Root, major.ToString(System.Globalization.CultureInfo.InvariantCulture));
                 foreach (var file in Directory.EnumerateFiles(built).Where(file => Path.GetExtension(file) is ".exe" or ".dll" or ".config" && !Path.GetFileName(file).StartsWith("Siemens.Engineering", StringComparison.OrdinalIgnoreCase)))
                     File.Copy(file, Path.Combine(runtime, Path.GetFileName(file)), true);
-                RunBuildRaw(Path.Combine(runtime, $"TiaMcp.Engine.V{major}.exe"), ["--write-tool-catalog", Path.Combine(runtime, "tool-catalog.json")],
+                RunBuildRaw(Path.Combine(runtime, $"TiaMcp.Engine.V{major}.exe"), ["--bundle-root", Root, "--write-tool-catalog", Path.Combine(runtime, "tool-catalog.json")],
                     Path.Combine(logs, $"tool-catalog-v{major}.log"), temp, cli, apiRoot, nuget, "Engine worker catalog");
             }
             PreparePlcReleaseChecks(dotnet, apiRoot, nuget, logs, temp, cli, production: true);
@@ -97,7 +100,7 @@ internal static partial class ReleaseCommands
                 var majorLogs = Path.Combine(logs, "v" + major);
                 Directory.CreateDirectory(majorLogs);
                 var api = ResolveReleaseApi(null, apiRoot, major);
-                var exe = Path.Combine(Root, $"runtime/v{major}/worker/TiaMcp.Engine.V{major}.exe");
+                var exe = Path.Combine(EngineCompatibilityDirectory(Root, major.ToString(System.Globalization.CultureInfo.InvariantCulture)), $"TiaMcp.Engine.V{major}.exe");
                 // The other job's worker-robustness build rebuilds the development host; this job starts its own copy (see CopyDevelopmentHost).
                 var developmentHost = CopyDevelopmentHost(PrivateDevelopmentHostPath(temp, major));
                 VerifyNativeJit(dotnet, harness, exe, api, majorLogs, temp, cli, apiRoot, major, developmentHost);

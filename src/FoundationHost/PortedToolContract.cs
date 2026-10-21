@@ -54,6 +54,9 @@ internal static class PortedToolContract
             "ManagePlcExternalSources" => "P6-SOURCE", _ => null };
         if (candidate != null && BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, tool.Release, candidate) == BehaviorPolicy.SafeV4)
             return new FoundationV4Tool(tool, tool.Release, null);
+        // The readiness guard of a bridged call asks whether this target refuses its arguments by capability (P8-04j2).
+        // The answer depends only on the release, the tool and the arguments, so any registered instance answers it.
+        McpServer.PortedCapabilityRefusals[(tool.Release, tool.ProtocolTool.Name)] = tool.RefusesByCapability;
         return tool.CapabilityAdmission(McpServer.WrapTools(new[] { tool.ValidatedTool() }).Single());
     }
 
@@ -200,6 +203,10 @@ internal sealed partial class FoundationTool
 
     internal McpServerTool ValidatedTool() => new InfrastructureInputTool(this, portedDescriptor!);
     internal McpServerTool CapabilityAdmission(McpServerTool inner) => new CapabilityTool(this, inner);
+    // The same admission as CapabilityTool: only valid arguments reach the capability check.
+    internal bool RefusesByCapability(JsonElement arguments)
+        => McpServer.ToolInvoker.ValidateArguments(portedDescriptor!, arguments, tool.InputSchema) == null
+            && RefusePortedCapability(arguments.EnumerateObject().ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.Ordinal)) != null;
 
     private sealed class CapabilityTool(FoundationTool owner, McpServerTool inner) : McpServerTool
     {

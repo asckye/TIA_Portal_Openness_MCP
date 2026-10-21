@@ -79,6 +79,7 @@ def main():
     tracked = [name for name in tracked if name and (ROOT / name).is_file()]
     files = {name: (ROOT / name).read_bytes() for name in tracked}
     record_name, primary = read_build_record(files)
+    assert record_name == layout.MULTI_RECORD, 'Packaging requires the eight-release build record'
     records = {name: json.loads(files[f'manifest/{name}.json'].decode('utf-8-sig'))
                for name in ('release-build', 'configurator-build', 'multi-version-build') if f'manifest/{name}.json' in files}
     assert 'configurator-build' in records and 'multi-version-build' in records, 'Complete the eight-release/configurator build chain first'
@@ -110,6 +111,8 @@ def main():
         assert f'runtime/studio/bridge/adapters/v{key}/TiaOpenness.Openness.dll' in files
     for name in layout.load_delivery(ROOT)['requiredFiles']:
         assert name in files, 'Required delivery file missing: ' + name
+    files.pop(layout.ENGINE_RECORD, None)
+    assert not any('TiaMcp.Engine.V' in name for name in files if name.startswith('runtime/'))
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT).decode().strip()
     files['MULTIVERSION-BUILD.json'] = json.dumps({'commit': commit, 'tier': candidate['tier'], 'checksRan': candidate['checksRan'], 'checksSkipped': candidate['checksSkipped'], 'nativeAcceptance': 'NOT RUN for newly enabled targets', 'buildRecord': 'manifest/multi-version-build.json', 'toolMatrix': 'manifest/version-tools.json'}, indent=2).encode()
     args.output.parent.mkdir(parents=True, exist_ok=True)

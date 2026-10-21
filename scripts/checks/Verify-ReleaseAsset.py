@@ -184,7 +184,7 @@ class AssetChecks(unittest.TestCase):
         rules = (Path(__file__).resolve().parents[2] / layout.DELIVERY_RULES).read_bytes()
         self.tree = {layout.DELIVERY_RULES: rules, 'README.md': b'User documentation\n',
                      'Version.props': b'excluded compiler input', 'tools/source.cs': b'excluded source'}
-        self.runtime = {'runtime/v21/worker/TiaMcp.Engine.V21.exe': b'engine',
+        self.runtime = {'runtime/v21/worker/TiaMcp.PlcWorker.21.exe': b'engine',
                         'runtime/verification/NativeCallWeaver.dll': b'release-only verifier'}
         for name in json.loads(rules)['requiredFiles']:
             if name.startswith('runtime/'):
@@ -238,7 +238,7 @@ class AssetChecks(unittest.TestCase):
                 self.content[name] = self.runtime[name]
         multi['files'] = [{'path': name, 'sha256': sha(data)} for name, data in self.runtime.items()]
         self.tree.pop(layout.ENGINE_RECORD)
-        self.content.pop(layout.ENGINE_RECORD)
+        self.content.pop(layout.ENGINE_RECORD, None)
         data = json.dumps(multi).encode()
         self.tree[layout.MULTI_RECORD] = data
         self.content[layout.MULTI_RECORD] = data
@@ -251,7 +251,7 @@ class AssetChecks(unittest.TestCase):
     def test_multi_record_without_engine_record_verifies_exact_bytes(self):
         self.use_multi_record()
         self.assertEqual(self.verify()[0], 0)
-        self.content['runtime/v20/plc-worker/TiaMcp.PlcWorker.20.exe'] = b'changed'
+        self.content['runtime/v20/worker/TiaMcp.PlcWorker.20.exe'] = b'changed'
         self.assertEqual(self.verify()[0], 1)
 
     def test_multi_record_binding_and_missing_worker_evidence_fail(self):
@@ -259,7 +259,7 @@ class AssetChecks(unittest.TestCase):
         self.content[layout.MULTI_RECORD] += b' '
         self.assertEqual(self.verify()[0], 1)
         self.content[layout.MULTI_RECORD] = self.tree[layout.MULTI_RECORD]
-        del self.content['runtime/v21/plc-worker/TiaMcp.PlcWorker.21.exe']
+        del self.content['runtime/v21/worker/TiaMcp.PlcWorker.21.exe']
         self.assertEqual(self.verify()[0], 1)
 
     def test_missing_included_document_fails(self):
@@ -278,13 +278,13 @@ class AssetChecks(unittest.TestCase):
         self.assertEqual(self.verify()[0], 1)
 
     def test_missing_or_modified_binary_fails(self):
-        del self.content['runtime/v21/worker/TiaMcp.Engine.V21.exe']
+        del self.content['runtime/v21/worker/TiaMcp.PlcWorker.21.exe']
         self.assertEqual(self.verify()[0], 1)
-        self.content['runtime/v21/worker/TiaMcp.Engine.V21.exe'] = b'changed'
+        self.content['runtime/v21/worker/TiaMcp.PlcWorker.21.exe'] = b'changed'
         self.assertEqual(self.verify()[0], 1)
 
     def test_required_worker_catalog_cannot_be_omitted_from_inventory(self):
-        name = 'runtime/v21/worker/tool-catalog.json'
+        name = 'runtime/v21/worker/TiaMcp.PlcWorker.21.exe.config'
         del self.content[name]
         build = json.loads(self.tree['manifest/release-build.json'])
         build['runtimeFiles'] = [row for row in build['runtimeFiles'] if row['path'] != name]

@@ -46,7 +46,7 @@ namespace TiaMcp.Engine.Tests
         {
             Put(scratch, "manifest/package-manifest.json");
             string directory = Directory.CreateDirectory(At(scratch, "runtime/v21")).FullName;
-            string own = At(scratch, "runtime/v21/worker/TiaMcp.Engine.V21.exe");
+            string own = At(scratch, "runtime/v21/TiaMcp.FoundationHost.exe");
             string expected = BundleLayout.EngineExecutablePath(scratch, release, directory);
             Assert.Equal(expected, Assert.Throws<BundleResourceUnavailableException>(() => BundleLayout.RequireEngine(release, directory)).Resource);
             Put(scratch, expected.Substring(scratch.Length + 1).Replace('\\', '/'));
@@ -55,7 +55,7 @@ namespace TiaMcp.Engine.Tests
             int version = int.Parse(release);
             if (version >= 20)
             {
-                expected = BundleLayout.WorkerPath(scratch, release);
+                expected = BundleLayout.EngineExecutablePath(scratch, release, directory);
                 Put(scratch, expected.Substring(scratch.Length + 1).Replace('\\', '/'));
             }
             Assert.Equal(release == "21" ? null : expected, EngineRouter.FindSiblingExe(version, () => own));
@@ -94,11 +94,11 @@ namespace TiaMcp.Engine.Tests
         public void Unknown_outputs_cannot_route_without_an_explicit_bundle()
         {
             Put(scratch, "manifest/package-manifest.json");
-            Put(scratch, "runtime/v20/worker/TiaMcp.Engine.V20.exe");
+            Put(scratch, "runtime/v20/TiaMcp.FoundationHost.exe");
             string directory = Directory.CreateDirectory(At(scratch, "custom/bin/Release/net48")).FullName;
             string own = Path.Combine(directory, "engine.exe");
             Assert.Null(EngineRouter.FindSiblingExe(20, () => own));
-            Assert.Equal(At(scratch, "runtime/v20/worker/TiaMcp.Engine.V20.exe"), EngineRouter.FindSiblingExe(20, () => own, scratch));
+            Assert.Equal(At(scratch, "runtime/v20/TiaMcp.FoundationHost.exe"), EngineRouter.FindSiblingExe(20, () => own, scratch));
         }
 
         [Theory]

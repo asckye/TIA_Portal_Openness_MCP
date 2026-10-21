@@ -41,6 +41,7 @@ def engine_overrides(values, option):
 
 def engine_host_environment(args, release, workers, env_overrides):
     environment = dict(os.environ, **env_overrides)
+    environment.pop('TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY', None)
     environment.pop('TIA_MCP_ENGINE_WORKER_SDK_READY', None)
     environment.pop('TIA_MCP_PLC_WORKER_SDK_READY', None)
     if release in workers and not getattr(args, 'packaged_no_tia', False):
@@ -92,6 +93,11 @@ def engine_host_server(args, release, portal_root, profile, env_overrides):
     if transport == 'http':
         command += ['--http-prefix', f'http://127.0.0.1:{port}/', '--http-api-key', key]
     environment = engine_host_environment(args, release, dict(workers, **plc), env_overrides)
+    if release in workers:
+        spec = importlib.util.spec_from_file_location('resource_discovery', Path(__file__).with_name('Test-ResourceDiscovery.py'))
+        resources = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(resources)
+        resources.engine_cross_check_environment(command[0], workers[release], catalogs[release], environment)
     process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                text=True, encoding='utf-8', env=environment, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
     output, errors = queue.Queue(), []

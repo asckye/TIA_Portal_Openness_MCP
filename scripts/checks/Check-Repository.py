@@ -239,8 +239,8 @@ def check(root, no_binaries=False, package_mode=False):
         if 'repository' in row['consumers']:
             required(row['path'], row['repositoryLabel'])
     for major in (20, 21):
-        required(f'runtime/v{major}/worker/TiaMcp.Runtime.dll', 'runtime channel assembly')
-        required(f'runtime/v{major}/worker/TiaMcp.Adapter.{major}.dll', 'engine worker adapter')
+        required(f'runtime/v{major}/worker/TiaMcp.PlcWorker.{major}.exe', 'PLC worker executable')
+        required(f'runtime/v{major}/worker/TiaMcp.Adapter.{major}.dll', 'PLC worker adapter')
         required(f'runtime/v{major}/worker/TiaMcp.Adapters.Contracts.dll', 'adapter contracts assembly')
     for name in ('NativeCallWeaver.dll', 'NativeCallWeaver.deps.json', 'NativeCallWeaver.runtimeconfig.json', 'Mono.Cecil.dll'):
         required('runtime/verification/' + name, 'packaged native verifier')
@@ -322,7 +322,7 @@ def main():
     parser.add_argument('--self-test', action='store_true', help='Exercise retired product reference rejection and historical/namespace exemptions')
     parser.add_argument('--package-mode', action='store_true', help='Validate the runtime-only delivery, also detected when Version.props is absent')
     parser.add_argument('--no-binaries', action='store_true',
-                        help='source checkout without build outputs: skip the existence of runtime/*/TiaMcp.Engine.V21.exe and TiaOpenness.exe (not tracked since 2.8.1)')
+                        help='source checkout without build outputs: skip the existence of runtime/*/worker/TiaMcp.PlcWorker.21.exe and TiaOpenness.exe (not tracked since 2.8.1)')
     args = parser.parse_args()
     if args.self_test:
         script_names = ['scripts/old.ps1', 'hooks/old.PSM1', 'scripts/old.bat', 'scripts/old.cmd', 'scripts/current.py']

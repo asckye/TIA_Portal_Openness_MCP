@@ -135,6 +135,7 @@ def main():
     record_files = {name: (root / name).read_bytes() for name in (layout.ENGINE_RECORD, layout.MULTI_RECORD) if (root / name).is_file()}
     delivery = json.loads((root / 'manifest/delivery.json').read_text(encoding='utf-8-sig'))
     record_name, release_record = layout.release_record(record_files, delivery)
+    require(record_name == layout.MULTI_RECORD, 'Packaging requires the eight-release build record')
     _, metadata, inventory = read_build_record(record_files, delivery)
     multi_path = root / layout.MULTI_RECORD
     multi = json.loads(multi_path.read_text('utf-8-sig')) if delivery.get('multiVersionBuildSha256') else None
@@ -179,7 +180,7 @@ def main():
         require(not path.name.startswith('Siemens.Engineering'), f'PublicAPI must not be redistributed: {name}')
         files[name] = path.read_bytes()
     required_exes = ['TiaOpenness.exe', 'runtime/tools/TiaMcp.Updater.exe', 'runtime/tools/TiaMcp.Updater.exe.config',
-                     'runtime/v20/worker/TiaMcp.Engine.V20.exe', 'runtime/v21/worker/TiaMcp.Engine.V21.exe',
+                     'runtime/v20/worker/TiaMcp.PlcWorker.20.exe', 'runtime/v21/worker/TiaMcp.PlcWorker.21.exe',
                      'manifest/package-manifest.json']
     required_exes += layout.load_delivery(root)['requiredFiles']
     required_exes += ['runtime/tools/TiaMcp.WriteGuard.exe']
@@ -249,7 +250,7 @@ def main():
             require(checks.get('resourceDiscoveryPassed', 0) > 0, f'V{major} resource discovery validation missing')
         if 'engine-functional' in selected:
             require(checks.get('nativeExportRemotingPassed', 0) > 0, f'V{major} native export remoting validation missing')
-        proofs = [checks.get('localStability') or {}] if 'engine-stability' in selected else []
+        proofs = [multi['plcRuntimes'][f'V{major}'].get('localStability') or {}] if 'engine-stability' in selected else []
         isolation = checks.get('workerIsolation')
         if 'engine-worker-isolation' in selected:
             require(isinstance(isolation, dict), f'V{major} worker isolation proof missing')
@@ -260,7 +261,7 @@ def main():
         if 'engine-isolated-stability' in selected:
             require((checks.get('isolatedLocalStability') or {}).get('isolatedWorker') is True,
                     f'V{major} isolated stability proof missing')
-            proofs.append(checks['isolatedLocalStability'])
+            proofs.append(multi['plcRuntimes'][f'V{major}']['isolatedLocalStability'])
         if extended is not None and 'engine-stability' in selected:
             proofs.append(extended['runtimes'][f'V{major}'])
             if 'isolatedRuntimes' in extended:
@@ -269,13 +270,14 @@ def main():
                         f'V{major} extended isolated proof is not an isolated run')
                 proofs.append(isolated_extended)
         for stability in proofs:
-            require(stability.get('workerModel') == 'combined-host-supervised-worker' and stability.get('isolatedWorker') is True,
+            require(stability.get('workerModel') == 'foundation-host-plc-worker' and stability.get('isolatedWorker') is True,
                     f'V{major} stability proof must use FoundationHost and its session worker')
             require(stability.get('hostSha256') == sha(files[f'runtime/v{major}/TiaMcp.FoundationHost.exe']),
                     f'V{major} stability proof used a different Foundation host')
             require(stability.get('status') == 'passed' and stability.get('rounds', 0) >= 10,
                     f'V{major} local stability validation missing')
-            require(stability['runtimeSha256'] == sha(files[f'runtime/v{major}/worker/TiaMcp.Engine.V{major}.exe']),
+            require(stability['productionWorkerSha256'] == sha(files[f'runtime/v{major}/worker/TiaMcp.PlcWorker.{major}.exe'])
+                    and stability['runtimeSha256'] == multi['plcRuntimes'][f'V{major}']['sdkWorker']['sha256'],
                     f'V{major} stability test used a different runtime')
             for field, path in (('scriptSha256', 'scripts/checks/Test-LocalStability.py'),
                                 ('resourceHelperSha256', 'scripts/checks/Test-ResourceDiscovery.py')):
@@ -322,7 +324,7 @@ def main():
                 'docs/getting-started/cli.md', 'scripts/README.md',
                 'docs/guides/hmi/read-only-migration.md', 'docs/development/release-workflow.md',
                 'plugin/skill/SKILL.md', 'templates/project-blueprints/full_plc_hmi_project.json']
-    required += [f'runtime/v{major}/worker/TiaMcp.Runtime.dll' for major in (20, 21)]
+    required += [f'runtime/v{major}/worker/TiaMcp.PlcWorker.{major}.exe' for major in (20, 21)]
     required += [f'runtime/v{major}/worker/TiaMcp.Adapter.{major}.dll' for major in (20, 21)]
     required += [f'runtime/v{major}/worker/TiaMcp.Adapters.Contracts.dll' for major in (20, 21)]
     required += ['runtime/verification/' + name for name in ('NativeCallWeaver.dll', 'NativeCallWeaver.deps.json', 'NativeCallWeaver.runtimeconfig.json', 'Mono.Cecil.dll')]

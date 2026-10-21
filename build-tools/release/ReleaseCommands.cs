@@ -1208,7 +1208,7 @@ internal static partial class ReleaseCommands
     {
         return BuildReleasePipeline(options);
     }
-    private static void CleanLegacyEngineLayout(string key)
+    internal static void CleanLegacyEngineLayout(string key)
     {
         using var rules = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root, "scripts/operations/delivery-files.json")));
         var runtime = Path.GetFullPath(Path.Combine(Root, "runtime/v" + key));
@@ -1217,7 +1217,9 @@ internal static partial class ReleaseCommands
             if (!relative.StartsWith("runtime/v" + key + "/", StringComparison.Ordinal)) continue;
             if (IsDeliveryFile(relative, rules.RootElement)) continue;
             var file = Path.GetFullPath(Path.Combine(Root, relative));
-            if (!string.Equals(Path.GetDirectoryName(file), runtime, StringComparison.OrdinalIgnoreCase))
+            var parent = Path.GetDirectoryName(file);
+            if (!string.Equals(parent, runtime, StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(parent, Path.Combine(runtime, "worker"), StringComparison.OrdinalIgnoreCase))
                 throw new ReleaseException("Legacy engine cleanup escaped its runtime directory: " + relative);
             if (File.Exists(file)) File.Delete(file);
         }
@@ -1368,6 +1370,15 @@ internal static partial class ReleaseCommands
                     releaseRows.Add(new { releaseKey = key, profile = key is "20" or "21" ? "full-engine" : "plc-foundation", toolCount, nativeAcceptance = "NOT RUN" });
                 }
             }
+
+            var toolsList = Path.Combine(Root, "manifest/tools-list.json");
+            var packageName = $"TIA_MCP_Delivery_v{release}_{options.Get("ReleaseDate", DateTime.Now.ToString("yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture))}";
+            var generatedAt = JsonNode.Parse(File.ReadAllText(toolsList))!["generatedAt"]!.GetValue<string>();
+            var hostTools = WithIsolatedHost(runTemp, "plc-tools-list", approvalEnabled: false, _ =>
+                ProcessRunner.Run(Path.Combine(Root, "runtime/v21/TiaMcp.FoundationHost.exe"),
+                    ["--bundle-root", Root, "--release-key", "21", "--catalog", "--profile", "full", "--offline",
+                        "--catalog-tools-list", toolsList, "--catalog-package", packageName, "--catalog-generated-at", generatedAt], Root));
+            ProcessRunner.RequireSuccess(hostTools, "PLC host tools-list generation failed");
 
             var studioBuild = Path.Combine(Root, "src/Studio/Gui/bin/Release/net10.0-windows");
             if (!Directory.Exists(studioBuild)) throw new ReleaseException("Studio GUI build output missing: " + studioBuild);
@@ -1617,11 +1628,6 @@ internal static partial class ReleaseCommands
             if (engineReuse.Length != 0)
                 throw new ReleaseException("Full-engine inputs, binaries or audit evidence do not match: " + engineReuse + "; run build-release before multi-version completion");
             var deliveryPath = Path.Combine(Root, "manifest/delivery.json");
-            if (!File.Exists(deliveryPath)) throw new ReleaseException("Delivery record missing; run prepare-delivery before multi-version completion");
-            using var delivery = JsonDocument.Parse(File.ReadAllText(deliveryPath));
-            if (GetJsonString(delivery.RootElement, "release") != release || GetJsonString(delivery.RootElement, "fileVersion") != releaseFileVersion ||
-                !string.Equals(GetJsonString(delivery.RootElement, "engineBuildSha256"), ReleaseRecords.HashFile(engineRecordPath), StringComparison.OrdinalIgnoreCase))
-                throw new ReleaseException("Delivery does not bind the current engine record; run prepare-delivery before multi-version completion");
 
             if (plan.Includes("native-coverage"))
             {
@@ -1671,7 +1677,15 @@ internal static partial class ReleaseCommands
             WriteJson(recordPath, record);
             // The record's own PLC proof and shipped-engine copy must hold before the delivery binds it.
             using (var written = JsonDocument.Parse(File.ReadAllText(recordPath))) ReleaseRecords.AssertPlcProof(Root, written.RootElement, true);
+            // The package binds the eight-release record (P8-04j2): delivery is prepared here, after the record exists.
+            var prepareCode = RunSelfCommand(["prepare-delivery", "-Release", release, "-ReleaseDate", JsonString(engineRecord.RootElement, "releaseDate"), "-Tier", plan.Tier], "Eight-release delivery preparation");
+            if (prepareCode != 0) return prepareCode;
+            using (var delivery = JsonDocument.Parse(File.ReadAllText(deliveryPath)))
+                if (GetJsonString(delivery.RootElement, "release") != release || GetJsonString(delivery.RootElement, "fileVersion") != releaseFileVersion ||
+                    !string.Equals(GetJsonString(delivery.RootElement, "multiVersionBuildSha256"), ReleaseRecords.HashFile(recordPath), StringComparison.OrdinalIgnoreCase))
+                    throw new ReleaseException("Delivery does not bind the current eight-release record after delivery preparation");
             var deliveryNode = JsonNode.Parse(File.ReadAllText(deliveryPath))!.AsObject();
+            deliveryNode.Remove("engineBuildSha256");
             deliveryNode["configuratorBuildSha256"] = ReleaseRecords.HashFile(Path.Combine(Root, "manifest/configurator-build.json"));
             deliveryNode["multiVersionBuildSha256"] = ReleaseRecords.HashFile(recordPath);
             deliveryNode["releaseKeys"] = JsonSerializer.SerializeToNode(new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" });

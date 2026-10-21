@@ -57,7 +57,7 @@
 | 实际 TIA 工程记录 | 仅证明记录中的版本、工程、动作和输入曾得到该结果。 |
 | 工具/API 覆盖统计 | 描述清单或审计范围；不是所有 Siemens API 已封装、全部动作可执行或全部工具真机通过的承诺。 |
 
-本版记录以 [release-build.json](../../manifest/release-build.json) 和 [multi-version-build.json](../../manifest/multi-version-build.json) 为准。新增八版工作流的原生工程验收为 **NOT RUN**；旧版本实测不能自动继承为本版验收。实际历史与未解决问题见[真机证据索引](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md)和[已知限制](../troubleshooting/openness-limitations.md)。
+本版记录以 [multi-version-build.json](../../manifest/multi-version-build.json) 为准；V20/V21 引擎交叉检查的记录原样保存在其 `engineCompatibility` 段。新增八版工作流的原生工程验收为 **NOT RUN**；旧版本实测不能自动继承为本版验收。实际历史与未解决问题见[真机证据索引](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md)和[已知限制](../troubleshooting/openness-limitations.md)。
 
 **4.0.0-beta.1 预发布**：未在真实 TIA Portal 上验证。构建、离线套件和 CI 已通过；真机未验证的项目列在
 [发布说明](../releases/v4.0.0-beta.1.md#not-verified-on-a-real-tia-portal)生成的 “Not verified on a real TIA Portal” 清单中。

@@ -36,8 +36,8 @@ public sealed class SharedHostSessionTests
         if (plc) arguments.Add("--plc-worker");
         var options = Options.Parse(arguments.ToArray(), root);
         var data = Profile.Releases[release];
-        Assert.Equal(plc || !data.SharedSession, options.EngineWorkerExe == null);
-        Assert.Equal(plc, options.PlcWorker);
+        Assert.Null(options.EngineWorkerExe);
+        Assert.True(options.PlcWorker);
         using var session = await Host.CreateHostSession(options, false);
         Assert.Equal(data.Instructions, session.Instructions);
         Assert.NotEmpty(session.Tools);

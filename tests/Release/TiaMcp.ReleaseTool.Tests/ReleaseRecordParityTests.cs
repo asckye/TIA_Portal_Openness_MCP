@@ -10,21 +10,22 @@ public sealed class ReleaseRecordParityTests
     [Trait("Category", "ReleaseParity")]
     [InlineData("20")]
     [InlineData("21")]
-    public void PlcPreparationIsHashedWhileTheEngineRemainsACompletionInput(string key)
+    public void PlcWorkerIsHashedAndThePrivateEngineStaysOutsideTheRuntimeInventories(string key)
     {
         using var tree = new StaticTree();
-        var plc = $"runtime/v{key}/plc-worker/TiaMcp.PlcWorker.{key}.exe";
-        var engine = $"runtime/v{key}/worker/TiaMcp.Engine.V{key}.exe";
+        var plc = $"runtime/v{key}/worker/TiaMcp.PlcWorker.{key}.exe";
+        var engine = $"bin-build/engine-compat/v{key}/worker/TiaMcp.Engine.V{key}.exe";
         // GetRuntimeFiles reads every PlcWorker entry assembly's metadata, so the worker must be a real PE image.
         tree.Write(plc, "");
         File.WriteAllBytes(Path.Combine(tree.Root, plc), PackageDependencyTests.AssemblyBytes(plc, [], null));
+        // The still-built engine lives in the private cross-check output, outside both runtime inventories.
         tree.Write(engine, "engine");
         var prepared = ReleaseRecords.GetRuntimeFiles(tree.Root, prepared: true);
         Assert.Contains(prepared, row => row.Path == plc);
         Assert.DoesNotContain(prepared, row => row.Path == engine);
         var complete = ReleaseRecords.GetRuntimeFiles(tree.Root);
         Assert.Contains(complete, row => row.Path == plc);
-        Assert.Contains(complete, row => row.Path == engine);
+        Assert.DoesNotContain(complete, row => row.Path == engine);
         var hash = prepared.Single(row => row.Path == plc).Sha256;
         File.WriteAllBytes(Path.Combine(tree.Root, plc), PackageDependencyTests.AssemblyBytes(plc, [], null));
         Assert.NotEqual(hash, ReleaseRecords.GetRuntimeFiles(tree.Root, prepared: true).Single(row => row.Path == plc).Sha256);
@@ -284,7 +285,7 @@ public sealed class ReleaseRecordParityTests
             foreach (var relative in new[]
                      {
                          "runtime/tools/TiaMcp.WriteGuard.exe", "runtime/tools/TiaMcp.WriteGuard.dll",
-                         "runtime/v20/worker/TiaMcp.Engine.V20.exe", "runtime/verification/NativeCallWeaver.dll",
+                         "bin-build/engine-compat/v20/worker/TiaMcp.Engine.V20.exe", "runtime/verification/NativeCallWeaver.dll",
                          "runtime/studio/TiaOpenness.exe"
                      })
             {
@@ -296,7 +297,7 @@ public sealed class ReleaseRecordParityTests
             var prepared = ReleaseRecords.GetRuntimeFiles(root, prepared: true).Select(row => row.Path).ToHashSet(StringComparer.Ordinal);
             Assert.Contains("runtime/studio/TiaOpenness.exe", prepared);
             Assert.DoesNotContain("runtime/tools/TiaMcp.WriteGuard.exe", prepared);
-            Assert.DoesNotContain("runtime/v20/worker/TiaMcp.Engine.V20.exe", prepared);
+            Assert.DoesNotContain("bin-build/engine-compat/v20/worker/TiaMcp.Engine.V20.exe", prepared);
             Assert.DoesNotContain("runtime/verification/NativeCallWeaver.dll", prepared);
         }
         finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
@@ -320,7 +321,8 @@ public sealed class ReleaseRecordParityTests
         foreach (var key in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
         {
             required.Add($"runtime/v{key}/TiaMcp.FoundationHost.exe");
-            if (key is not ("20" or "21")) required.AddRange(dependencies.Select(name => $"runtime/v{key}/worker/{name}"));
+            // All eight releases install the PlcWorker dependency set in worker/ (P8-04j2).
+            required.AddRange(dependencies.Select(name => $"runtime/v{key}/worker/{name}"));
             required.Add($"runtime/v{key}/release-key.txt");
             required.Add($"runtime/v{key}/TiaMcp.FoundationHost.runtimeconfig.json");
             required.Add($"runtime/v{key}/TiaMcp.WorkerChannel.dll");

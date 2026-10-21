@@ -295,6 +295,15 @@ internal sealed class FoundationV4Tool : McpServerTool
                 if (!readiness["ready"]!.GetValue<bool>())
                     return Recorded(FoundationV4Result.ReadinessUnavailable(release, tool.Name, id, readiness));
             }
+            // V20/V21 with their bundled PlcWorker answer like the engine (P8-04j2): its session and process reads stopped at
+            // native admission without a ready TIA environment. A ready environment dispatches exactly as before.
+            else if (ReleaseCatalogData.Releases[release].MergeWorkerReadiness && inner is FoundationTool { IsRuntimeQuery: true, UsesBundledPlcWorker: true } runtimeQuery)
+            {
+                await runtimeQuery.PrepareReadiness(cancellationToken).ConfigureAwait(false);
+                if (!(readinessForTest?.Invoke() ?? FoundationPassiveDiagnostics.Readiness(release))["ready"]!.GetValue<bool>())
+                    return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
+                        HostBehavior.FailureError(TiaOpenness.Shared.HostFailureKind.Precondition, null, new Dictionary<string, JsonElement>()), true));
+            }
             bool preview = Candidate
                 && (!args.TryGetValue("mode", out var mode) || mode.GetString() != "apply");
             TiaOpenness.Shared.PendingApproval? pending = null;

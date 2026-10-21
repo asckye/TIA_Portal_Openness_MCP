@@ -9,6 +9,58 @@ public sealed class ReleaseValidationTests
 {
     [Fact]
     [Trait("Category", "Pipeline")]
+    public void EngineCapturesKeepPrivateProductionAndSdkWorkersWithBothHostLayouts()
+    {
+        using var tree = new StaticTree();
+        Directory.CreateDirectory(Path.Combine(tree.Root, "TIA_V20_PublicAPI/V20"));
+        Directory.CreateDirectory(Path.Combine(tree.Root, "TIA_V21_PublicAPI/V21/net48"));
+        var root = Repository.FindRoot();
+        var captures = new List<string[]>();
+        var steps = new HashSet<string> { "06-v4-contracts-capture", "07-v4-contracts-http", "07-engine-contracts-source-layout",
+            "08-v4-responses-capture", "09-v4-responses-http", "09-engine-responses-source-layout" };
+        ReleaseCommands.RunCandidateChecks(new("quick", ["engine-contracts", "engine-responses"], [], []),
+            tree.Root, tree.Root, tree.Root, tree.Root, "dotnet-double", "python-double", 1,
+            (name, action) => { if (steps.Contains(name)) action(); },
+            (_, args) => Assert.Equal("compare", args[0]),
+            (script, args) =>
+            {
+                Assert.Equal("capture", args[0]);
+                Assert.DoesNotContain("--plc-worker", args);
+                var release = args[Array.IndexOf(args, "--releases") + 1];
+                var worker = args[Array.IndexOf(args, "--engine-worker") + 1].Split('=', 2);
+                var catalog = args[Array.IndexOf(args, "--engine-catalog") + 1].Split('=', 2);
+                Assert.Equal(release, worker[0]); Assert.Equal(release, catalog[0]);
+                Assert.StartsWith(Path.GetFullPath(Path.Combine(root, "bin-build/engine-compat")), Path.GetFullPath(worker[1]));
+                Assert.Equal(Path.Combine(Path.GetDirectoryName(worker[1])!, "tool-catalog.json"), catalog[1]);
+                var output = args[Array.IndexOf(args, "--output") + 1];
+                bool source = output.Contains("source-layout", StringComparison.Ordinal);
+                var host = args[Array.IndexOf(args, "--engine-host") + 1];
+                Assert.Equal(source ? Path.Combine(root, "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe")
+                    : Path.Combine(Path.GetDirectoryName(ReleaseCommands.EngineCompatibilityDirectory(root, release))!, "TiaMcp.FoundationHost.exe"), host);
+                if (!source && script.Contains("Contracts", StringComparison.Ordinal))
+                    Assert.Equal(Path.Combine(ReleaseCommands.EngineCompatibilityDirectory(root, release), $"TiaMcp.Engine.V{release}.exe"), worker[1]);
+                else Assert.Contains("candidate", worker[1]);
+                Directory.CreateDirectory(output);
+                File.WriteAllText(Path.Combine(output, release + ".json"), "{}");
+                captures.Add(args);
+            },
+            (name, executable, args, _, _) =>
+            {
+                Assert.DoesNotContain("sdk-worker-build-plc", name);
+                if (executable == "dotnet-double")
+                {
+                    Assert.Contains("-p:TiaMcpEngineWorkerSdkFixture=true", args);
+                    Assert.Contains(args, arg => arg.StartsWith("-p:OutputPath=", StringComparison.Ordinal) && arg.Contains("engine-compat", StringComparison.Ordinal));
+                }
+                return new(0, "", "");
+            });
+        Assert.Equal(12, captures.Count);
+        foreach (var key in new[] { "20", "21" })
+            Assert.Equal(6, captures.Count(args => args[Array.IndexOf(args, "--releases") + 1] == key));
+    }
+
+    [Fact]
+    [Trait("Category", "Pipeline")]
     public void CandidateRetainsEngineStepsAndAddsBothPlcCaptureMatrices()
     {
         using var tree = new StaticTree();
@@ -63,7 +115,7 @@ public sealed class ReleaseValidationTests
     {
         using var tree = new StaticTree();
         foreach (var key in new[] { "20", "21" })
-            tree.Write($"source/candidate/runtime/v{key}/plc-worker/TiaMcp.PlcWorker.{key}.exe", "packaged-production-" + key);
+            tree.Write($"source/candidate/runtime/v{key}/worker/TiaMcp.PlcWorker.{key}.exe", "packaged-production-" + key);
         var zip = Path.Combine(tree.Root, "candidate.zip");
         System.IO.Compression.ZipFile.CreateFromDirectory(Path.Combine(tree.Root, "source"), zip);
         tree.Write("package-result.json", JsonSerializer.Serialize(new { path = zip }));
@@ -72,14 +124,11 @@ public sealed class ReleaseValidationTests
         {
             Assert.Contains("--packaged-no-tia", args); Assert.DoesNotContain("--engine-worker", args);
             extracted = args[Array.IndexOf(args, "--repo-root") + 1];
-            var workers = args.Select((value, index) => (value, index)).Where(pair => pair.value == "--plc-worker").Select(pair => args[pair.index + 1]).ToArray();
-            Assert.Equal(2, workers.Length);
-            foreach (var worker in workers)
-            {
-                var parts = worker.Split('=', 2);
-                Assert.StartsWith(extracted, parts[1]);
-                Assert.Equal("packaged-production-" + parts[0], File.ReadAllText(parts[1]));
-            }
+            // Maintainer decision 2026-10-21 (P8-04j2 D-1b): the -plc step starts each extracted host with its default worker,
+            // the packaged production PlcWorker; --plc-worker would synthesize an SDK-only TIA installation.
+            Assert.DoesNotContain("--plc-worker", args);
+            foreach (var key in new[] { "20", "21" })
+                Assert.Equal("packaged-production-" + key, File.ReadAllText(Path.Combine(extracted, $"runtime/v{key}/worker/TiaMcp.PlcWorker.{key}.exe")));
             var responses = args[Array.IndexOf(args, "--output") + 1]; Directory.CreateDirectory(responses);
             foreach (var key in new[] { "20", "21" }) File.WriteAllText(Path.Combine(responses, key + ".json"), "{}");
         }, (_, args) =>

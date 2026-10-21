@@ -10,6 +10,55 @@ public sealed class CheckAllTests
 {
     private static CommandResult Passed() => new(0, "passed\n", "");
 
+    [Theory]
+    [InlineData("20")]
+    [InlineData("21")]
+    public void EngineJobsStageExactBytesPrivatelyWithoutReplacingDeliveredPlcWorkers(string key)
+    {
+        using var tree = new StaticTree();
+        var source = tree.Write($"engine-source/TiaMcp.Engine.V{key}.exe", "engine bytes");
+        tree.Write("engine-source/tool-catalog.json", "catalog bytes");
+        tree.Write("engine-source/nested/dependency.dll", "dependency bytes");
+        var delivered = tree.Write($"runtime/v{key}/worker/TiaMcp.PlcWorker.{key}.exe", "delivered PLC bytes");
+        var deliveredHost = tree.Write($"runtime/v{key}/TiaMcp.FoundationHost.exe", "delivered host");
+        foreach (var variant in new[] { "engine", "sdk" })
+        {
+            var worker = ReleaseCommands.StageCheckAllEngine(tree.Root, "run", key, variant, source);
+            var directory = Path.GetFullPath(Path.Combine(tree.Root, "bin-build/engine-compat/check-all/run", "v" + key, variant));
+            Assert.Equal(Path.Combine(directory, $"TiaMcp.Engine.V{key}.exe"), Path.GetFullPath(worker));
+            Assert.Equal(ReleaseRecords.HashFile(source), ReleaseRecords.HashFile(worker));
+            Assert.Equal("catalog bytes", File.ReadAllText(Path.Combine(directory, "tool-catalog.json")));
+            Assert.Equal("dependency bytes", File.ReadAllText(Path.Combine(directory, "nested/dependency.dll")));
+            // The jobs keep the source host; nothing host-shaped is placed beside the private worker.
+            Assert.False(File.Exists(Path.Combine(Path.GetDirectoryName(directory)!, "TiaMcp.FoundationHost.exe")));
+        }
+        Assert.Equal("delivered PLC bytes", File.ReadAllText(delivered));
+        Assert.Equal("delivered host", File.ReadAllText(deliveredHost));
+        Assert.False(File.Exists(Path.Combine(tree.Root, $"runtime/v{key}/worker/TiaMcp.Engine.V{key}.exe")));
+        Assert.Throws<ReleaseException>(() => ReleaseCommands.StageCheckAllEngine(tree.Root, "run", key, "missing", Path.Combine(tree.Root, "missing/worker.exe")));
+    }
+
+    [Theory]
+    [InlineData("20")]
+    [InlineData("21")]
+    public void EngineCompatibilityHostIsACopyOfTheInstalledHostOutsideRuntime(string key)
+    {
+        using var tree = new StaticTree();
+        tree.Write($"runtime/v{key}/TiaMcp.FoundationHost.exe", "installed host");
+        tree.Write($"runtime/v{key}/release-key.txt", key);
+        var delivered = tree.Write($"runtime/v{key}/worker/TiaMcp.PlcWorker.{key}.exe", "delivered PLC bytes");
+        var host = ReleaseCommands.StageEngineCompatibilityHost(tree.Root, key);
+        Assert.Equal(Path.GetFullPath(Path.Combine(tree.Root, "bin-build/engine-compat", "v" + key, "TiaMcp.FoundationHost.exe")), Path.GetFullPath(host));
+        Assert.Equal(Path.GetDirectoryName(ReleaseCommands.EngineCompatibilityDirectory(tree.Root, key)), Path.GetDirectoryName(host));
+        Assert.Equal("installed host", File.ReadAllText(host));
+        Assert.Equal(key, File.ReadAllText(Path.Combine(Path.GetDirectoryName(host)!, "release-key.txt")));
+        // Only the host's own files are copied; the delivered PLC worker stays in runtime/.
+        Assert.False(Directory.Exists(Path.Combine(Path.GetDirectoryName(host)!, "worker", "TiaMcp.PlcWorker." + key + ".exe")));
+        Assert.Equal("delivered PLC bytes", File.ReadAllText(delivered));
+        var environment = ReleaseCommands.WithEngineCrossCheck(new Dictionary<string, string?>());
+        Assert.Equal(Path.GetFullPath(Path.Combine(Repository.FindRoot(), "bin-build/engine-compat")), environment[ReleaseCommands.EngineCrossCheckVariable]);
+    }
+
     [Fact]
     public void ScriptSuccessorsCoverEveryEngineJobExactlyOnce()
     {

@@ -15,15 +15,16 @@ internal static class FoundationHostChecks
     {
         string release = engine.GetReferencedAssemblies().First(a => a.Name!.StartsWith("Siemens.Engineering", StringComparison.Ordinal)).Version!.Major.ToString();
         string output = Path.Combine(Root, "bin-build", "foundation-host-check-" + Guid.NewGuid().ToString("N"));
-        string fixtures = Path.Combine(output, "workers"), directory = Path.Combine(fixtures, release);
+        string fixtures = Path.Combine(Root, "bin-build", "engine-compat", "transport", Guid.NewGuid().ToString("N")), directory = Path.Combine(fixtures, release);
         Directory.CreateDirectory(directory);
         foreach (string path in Directory.EnumerateFiles(Path.GetDirectoryName(engine.Location)!))
             if (new[] { ".exe", ".dll", ".config" }.Contains(Path.GetExtension(path)) && !Path.GetFileName(path).StartsWith("Siemens.Engineering", StringComparison.Ordinal))
                 File.Copy(path, Path.Combine(directory, Path.GetFileName(path)));
         engine.GetType("TiaMcpServer.Cli.ToolCatalogExport", true)!.GetMethod("Write", BindingFlags.Static | BindingFlags.NonPublic)!
             .Invoke(null, new object[] { Path.Combine(directory, "tool-catalog.json") });
-        string host = Environment.GetEnvironmentVariable("TIA_MCP_TEST_HOST_PATH")
-            ?? Path.Combine(Root, "src", "FoundationHost", "bin", "Release", "net10.0", "TiaMcp.FoundationHost.exe");
+        // The engine transport starts the host through the private cross-check route (HostPortRunner.PrivateHost).
+        string host = HostPortRunner.PrivateHost(Environment.GetEnvironmentVariable("TIA_MCP_TEST_HOST_PATH")
+            ?? Path.Combine(Root, "src", "FoundationHost", "bin", "Release", "net10.0", "TiaMcp.FoundationHost.exe"));
         return Process(Environment.GetEnvironmentVariable("TIA_MCP_TEST_PYTHON") ?? "python",
             Quote(Path.Combine(Root, "scripts", "checks", "Test-FoundationTransport.py")) + " --releases " + release
             + " --host-exe " + Quote(host) + " --sdk-fixture-root " + Quote(fixtures)

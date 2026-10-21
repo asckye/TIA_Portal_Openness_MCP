@@ -11,8 +11,8 @@ internal static class ReleaseRecords
     internal const string EnginePath = "manifest/release-build.json";
     internal const string MultiPath = "manifest/multi-version-build.json";
 
-    internal static string SelectPath(string root) => File.Exists(Path.Combine(root, EnginePath)) ? EnginePath
-        : File.Exists(Path.Combine(root, MultiPath)) ? MultiPath
+    internal static string SelectPath(string root) => File.Exists(Path.Combine(root, MultiPath)) ? MultiPath
+        : File.Exists(Path.Combine(root, EnginePath)) ? EnginePath
         : throw new ReleaseException("Release build record missing; run build-release or build-multi-version");
 
     internal static string InventoryProperty(string relative) => relative == EnginePath ? "runtimeFiles" : "files";
@@ -20,15 +20,15 @@ internal static class ReleaseRecords
 
     internal static string DeliveryBuildPath(string root, string release)
     {
-        var relative = SelectPath(root);
+        var relative = MultiPath;
         var path = Path.Combine(root, relative);
         using var build = JsonDocument.Parse(File.ReadAllText(path));
         if (GetString(build.RootElement, "release") != release || GetString(build.RootElement, "fileVersion") != ReleaseVersions.FileVersionOf(release))
             throw new ReleaseException("Release build record differs from the requested release");
         if (relative == MultiPath) AssertPlcProof(root, build.RootElement, true);
         foreach (var major in new[] { 20, 21 })
-            if (!File.Exists(Path.Combine(root, $"runtime/v{major}/worker/TiaMcp.Engine.V{major}.exe")))
-                throw new ReleaseException($"V{major} engine output missing; run build-release first");
+            if (!File.Exists(Path.Combine(root, $"runtime/v{major}/worker/TiaMcp.PlcWorker.{major}.exe")))
+                throw new ReleaseException($"V{major} PLC worker output missing; run build-multi-version first");
         return path;
     }
 
@@ -280,8 +280,8 @@ internal static class ReleaseRecords
                 var original = GetString(engine.GetProperty("runtimeFiles")[index], "path");
                 var mapped = original;
                 foreach (var key in new[] { "20", "21" })
-                    if (original.StartsWith($"runtime/v{key}/worker/", StringComparison.Ordinal))
-                        mapped = original.Replace($"runtime/v{key}/worker/", $"runtime/v{key}/plc-worker/", StringComparison.Ordinal)
+                    if (original.StartsWith($"bin-build/engine-compat/v{key}/", StringComparison.Ordinal))
+                        mapped = original.Replace($"bin-build/engine-compat/v{key}/", $"runtime/v{key}/", StringComparison.Ordinal)
                             .Replace($"TiaMcp.Engine.V{key}.exe", $"TiaMcp.PlcWorker.{key}.exe", StringComparison.Ordinal);
                 if (multi.TryGetProperty("files", out var inventory))
                 {
@@ -429,7 +429,7 @@ internal static class ReleaseRecords
                 var bundledRuntime = file.StartsWith(Path.Combine(runtime, "dotnet") + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
                 var allowed = BinaryExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase) || ext.Equals(".json", StringComparison.OrdinalIgnoreCase) || ext.Equals(".txt", StringComparison.OrdinalIgnoreCase) || bundledRuntime;
                 return allowed && !Path.GetFileName(file).Equals("README.md", StringComparison.OrdinalIgnoreCase) &&
-                       (!prepared || !System.Text.RegularExpressions.Regex.IsMatch(file, @"[\\/]runtime[\\/](verification|tools)[\\/]|[\\/]runtime[\\/](v20|v21)[\\/]worker[\\/]", System.Text.RegularExpressions.RegexOptions.IgnoreCase));
+                       (!prepared || !System.Text.RegularExpressions.Regex.IsMatch(file, @"[\\/]runtime[\\/](verification|tools)[\\/]|[\\/]runtime[\\/](v20|v21)[\\/]plc-worker[\\/]", System.Text.RegularExpressions.RegexOptions.IgnoreCase));
             })
             .Order(StringComparer.OrdinalIgnoreCase)
             .Select(file => new ReleaseArtifact(Relative(root, file), HashFile(file)))
@@ -534,7 +534,7 @@ internal static class ReleaseRecords
                     return $"V{major} session safety evidence incomplete";
             }
 
-            var roots = new[] { "runtime/v20", "runtime/v21", "runtime/tools", "runtime/verification" };
+            var roots = new[] { "bin-build/engine-compat/v20", "bin-build/engine-compat/v21", "runtime/tools", "runtime/verification" };
             var expected = Directory.Exists(Path.Combine(root, "runtime"))
                 ? roots.SelectMany(relative =>
                 {
@@ -602,7 +602,7 @@ internal static class ReleaseRecords
         foreach (var key in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
         {
             required.Add($"runtime/v{key}/TiaMcp.FoundationHost.exe");
-            if (key is not ("20" or "21")) required.AddRange(dependencies.Select(name => $"runtime/v{key}/worker/{name}"));
+            required.AddRange(dependencies.Select(name => $"runtime/v{key}/worker/{name}"));
             required.Add($"runtime/v{key}/release-key.txt");
             required.Add($"runtime/v{key}/TiaMcp.FoundationHost.runtimeconfig.json");
             required.Add($"runtime/v{key}/TiaMcp.WorkerChannel.dll");

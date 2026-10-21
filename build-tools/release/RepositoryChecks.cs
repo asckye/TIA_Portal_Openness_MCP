@@ -190,7 +190,7 @@ internal static class RepositoryChecks
             return (count, errors);
         }
         foreach (var row in SourceRoots.Load(root).RequiredFiles.Where(r => r.Consumers.Contains("repository"))) Required(row.Path, row.RepositoryLabel!);
-        foreach (var major in new[] { "20", "21" }) foreach (var name in new[] { "TiaMcp.Runtime.dll", "TiaMcp.Adapter." + major + ".dll", "TiaMcp.Adapters.Contracts.dll" }) Required($"runtime/v{major}/worker/{name}", "engine worker dependency");
+        foreach (var major in new[] { "20", "21" }) foreach (var name in new[] { "TiaMcp.PlcWorker." + major + ".exe", "TiaMcp.Adapter." + major + ".dll", "TiaMcp.Adapters.Contracts.dll" }) Required($"runtime/v{major}/worker/{name}", "PLC worker dependency");
         foreach (var name in new[] { "NativeCallWeaver.dll", "NativeCallWeaver.deps.json", "NativeCallWeaver.runtimeconfig.json", "Mono.Cecil.dll" }) Required("runtime/verification/" + name, "packaged native verifier");
         string[] dependencies = ["TiaMcp.WorkerChannel.dll", "System.Text.Json.dll", "System.Text.Encodings.Web.dll", "System.IO.Pipelines.dll", "Microsoft.Bcl.AsyncInterfaces.dll", "System.Buffers.dll", "System.Memory.dll", "System.Numerics.Vectors.dll", "System.Runtime.CompilerServices.Unsafe.dll", "System.Threading.Tasks.Extensions.dll"];
         foreach (var release in TiaFeatures.Releases)

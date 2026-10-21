@@ -28,13 +28,13 @@ public sealed class ReleaseRecordConsumerTests
     }
 
     [Fact]
-    public void PreferredEngineDoesNotFallBackWhenItsRecordIsDamaged()
+    public void PreferredMultiDoesNotFallBackWhenItsRecordIsDamaged()
     {
         using var tree = new StaticTree();
-        var (_, multi) = Records(tree);
-        tree.Write(ReleaseRecords.MultiPath, multi.ToJsonString());
-        tree.Write(ReleaseRecords.EnginePath, "{bad");
-        Assert.Equal(ReleaseRecords.EnginePath, ReleaseRecords.SelectPath(tree.Root));
+        var (engine, _) = Records(tree);
+        tree.Write(ReleaseRecords.EnginePath, engine.ToJsonString());
+        tree.Write(ReleaseRecords.MultiPath, "{bad");
+        Assert.Equal(ReleaseRecords.MultiPath, ReleaseRecords.SelectPath(tree.Root));
         // JsonDocument reports a malformed record with a JsonException subclass.
         Assert.ThrowsAny<JsonException>(() => ReleaseRecords.DeliveryFiles(tree.Root));
     }
@@ -61,8 +61,8 @@ public sealed class ReleaseRecordConsumerTests
         var (engine, multi) = Records(tree);
         var relative = multiOnly ? ReleaseRecords.MultiPath : ReleaseRecords.EnginePath;
         tree.Write(relative, (multiOnly ? multi : engine).ToJsonString());
-        foreach (var key in new[] { "20", "21" }) tree.Write($"runtime/v{key}/worker/TiaMcp.Engine.V{key}.exe", "default engine retained");
-        Assert.Equal(Path.Combine(tree.Root, relative), ReleaseRecords.DeliveryBuildPath(tree.Root, "4.0.0"));
+        tree.Write(ReleaseRecords.MultiPath, multi.ToJsonString());
+        Assert.Equal(Path.Combine(tree.Root, ReleaseRecords.MultiPath), ReleaseRecords.DeliveryBuildPath(tree.Root, "4.0.0"));
         Assert.Throws<ReleaseException>(() => ReleaseRecords.DeliveryBuildPath(tree.Root, "4.0.1"));
         tree.Write("CHANGELOG.md", "## [4.0.0]\n");
         tree.Write("manifest/configurator-build.json", "{\"testsPassed\":1,\"executable\":{\"path\":\"TiaOpenness.exe\",\"sha256\":\"unused in no-binaries\"}}");
@@ -73,9 +73,10 @@ public sealed class ReleaseRecordConsumerTests
             [ReleaseRecords.BindingProperty(relative)] = ReleaseRecords.HashFile(Path.Combine(tree.Root, relative)),
             ["configuratorBuildSha256"] = ReleaseRecords.HashFile(Path.Combine(tree.Root, "manifest/configurator-build.json"))
         };
+        delivery["multiVersionBuildSha256"] = ReleaseRecords.HashFile(Path.Combine(tree.Root, ReleaseRecords.MultiPath));
         tree.Write("manifest/delivery.json", delivery.ToJsonString());
         ReleaseCommands.ValidateBuildRecords(tree.Root, package: true, noBinaries: true, skipSourceHashes: true);
-        tree.Write(relative, (multiOnly ? multi : engine).ToJsonString() + " ");
+        tree.Write(ReleaseRecords.MultiPath, multi.ToJsonString() + " ");
         Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateBuildRecords(tree.Root, true, true, true));
     }
 
@@ -99,7 +100,7 @@ public sealed class ReleaseRecordConsumerTests
         tree.Write("manifest/tools-list.json", "{\"toolCount\":0,\"tools\":[]}");
         tree.Write("templates/project-blueprints/full_plc_hmi_project.json", "{\"requiredBundleFiles\":[]}");
         Assert.Empty(RepositoryChecks.Check(tree.Root, false, true).Errors);
-        File.Delete(Path.Combine(tree.Root, "runtime/v20/plc-worker/TiaMcp.PlcWorker.20.exe"));
+        File.Delete(Path.Combine(tree.Root, "runtime/v20/worker/TiaMcp.PlcWorker.20.exe"));
         Assert.Contains(RepositoryChecks.Check(tree.Root, false, true).Errors, error => error.Contains("recorded runtime", StringComparison.Ordinal));
     }
 
@@ -478,12 +479,16 @@ public sealed class ReleaseRecordConsumerTests
     public void DeliveryBindsAPreReleaseRecordByItsFileVersion(string release, string fileVersion, bool accepted)
     {
         using var tree = new StaticTree();
-        var (engine, _) = Records(tree);
-        engine["release"] = release;
-        engine["fileVersion"] = fileVersion;
-        tree.Write(ReleaseRecords.EnginePath, engine.ToJsonString());
-        foreach (var key in new[] { "20", "21" }) tree.Write($"runtime/v{key}/worker/TiaMcp.Engine.V{key}.exe", "default engine retained");
-        if (accepted) Assert.Equal(Path.Combine(tree.Root, ReleaseRecords.EnginePath), ReleaseRecords.DeliveryBuildPath(tree.Root, release));
+        // The package binds the eight-release record and its PlcWorkers (P8-04j2); Records writes both workers.
+        var (_, multi) = Records(tree);
+        // The record and its retained engine copy carry the same version (AssertPlcProof).
+        foreach (var record in new[] { multi, (JsonObject)multi["engineCompatibility"]! })
+        {
+            record["release"] = release;
+            record["fileVersion"] = fileVersion;
+        }
+        tree.Write(ReleaseRecords.MultiPath, multi.ToJsonString());
+        if (accepted) Assert.Equal(Path.Combine(tree.Root, ReleaseRecords.MultiPath), ReleaseRecords.DeliveryBuildPath(tree.Root, release));
         else Assert.Throws<ReleaseException>(() => ReleaseRecords.DeliveryBuildPath(tree.Root, release));
     }
 
@@ -497,9 +502,11 @@ public sealed class ReleaseRecordConsumerTests
         var profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var temp = Path.GetTempPath().TrimEnd('\\', '/');
         var runtimeFiles = new JsonArray();
+        // The built tree has a runtime directory; the still-built engine is in the private cross-check output (P8-04j2).
+        Directory.CreateDirectory(Path.Combine(tree.Root, "runtime"));
         foreach (var key in new[] { "20", "21" })
         {
-            var relative = $"runtime/v{key}/worker/TiaMcp.Engine.V{key}.exe";
+            var relative = $"bin-build/engine-compat/v{key}/worker/TiaMcp.Engine.V{key}.exe";
             tree.Write(relative, "engine " + key);
             runtimeFiles.Add(new JsonObject { ["path"] = relative, ["sha256"] = ReleaseRecords.HashFile(Path.Combine(tree.Root, relative)) });
         }
@@ -598,7 +605,7 @@ public sealed class ReleaseRecordConsumerTests
         foreach (var key in new[] { "20", "21" })
         {
             var runtime = new JsonObject { ["checks"] = new JsonObject() };
-            foreach (var (field, name) in new[] { ("worker", $"plc-worker/TiaMcp.PlcWorker.{key}.exe"), ("adapter", $"plc-worker/TiaMcp.Adapter.{key}.dll"), ("host", "TiaMcp.FoundationHost.exe") })
+            foreach (var (field, name) in new[] { ("worker", $"worker/TiaMcp.PlcWorker.{key}.exe"), ("adapter", $"worker/TiaMcp.Adapter.{key}.dll"), ("host", "TiaMcp.FoundationHost.exe") })
             {
                 var path = $"runtime/v{key}/{name}";
                 tree.Write(path, "synthetic " + key + field);

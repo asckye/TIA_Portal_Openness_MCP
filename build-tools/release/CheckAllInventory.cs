@@ -78,6 +78,23 @@ internal static partial class ReleaseCommands
                 throw new ReleaseException("Incomplete engine script successor pair: " + engine + " -> " + plc);
     }
 
+    internal static string CheckAllEngineCompatibilityRoot(string root, string run) =>
+        Path.Combine(root, "bin-build/engine-compat/check-all", run);
+
+    // Copies one engine build output unchanged into the private compatibility output. The
+    // jobs keep using the source FoundationHost; the staged bytes equal the built bytes, so
+    // their evidence hashes are keyed exactly as before.
+    internal static string StageCheckAllEngine(string root, string run, string release, string variant, string source)
+    {
+        if (!File.Exists(source)) throw new ReleaseException("Engine cross-check build output missing: " + source);
+        var destination = Path.Combine(CheckAllEngineCompatibilityRoot(root, run), "v" + release, variant);
+        CopyDirectoryContents(Path.GetDirectoryName(source)!, destination);
+        var worker = Path.Combine(destination, Path.GetFileName(source));
+        if (ReleaseRecords.HashFile(worker) != ReleaseRecords.HashFile(source))
+            throw new ReleaseException("Engine cross-check output differs from its build: " + worker);
+        return worker;
+    }
+
     private static string CheckAllPlcFixtureRoot => Path.GetFullPath(Path.Combine(Root, "bin-build", "check-plc-fixtures"));
     internal static string CheckAllPlcFixture(string release) => PlcWorkerFixtures.Candidate(release, "SOURCE", "current").Worker(CheckAllPlcFixtureRoot);
 

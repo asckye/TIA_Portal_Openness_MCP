@@ -173,7 +173,7 @@ namespace TiaMcpConfigurator
             // TIA Portal is found (an empty explicit SDK folder), so they do not depend on what this checkout's runtime/ holds or on
             // the machine (P8-90).
             string pickerRoot = Path.Combine(output, "picker-bundle-" + Guid.NewGuid().ToString("N"));
-            foreach (var relative in new[] { "manifest/package-manifest.json", "manifest/delivery.json", "runtime/v21/TiaMcp.FoundationHost.exe", "runtime/v21/worker/TiaMcp.Engine.V21.exe" })
+            foreach (var relative in new[] { "manifest/package-manifest.json", "manifest/delivery.json", "runtime/v21/TiaMcp.FoundationHost.exe", "runtime/v21/worker/TiaMcp.PlcWorker.21.exe" })
             {
                 string file = Path.Combine(pickerRoot, relative.Replace('/', Path.DirectorySeparatorChar));
                 Directory.CreateDirectory(Path.GetDirectoryName(file));

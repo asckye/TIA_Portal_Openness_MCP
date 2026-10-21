@@ -79,20 +79,36 @@ internal static class SharedReleaseHost
         return 0;
     }
 
-    private static Session CreateSession(HostOptions options, Func<IToolCatalogView, IToolCatalogView>? catalogForTest = null, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null)
+    // The installation that answers a not-ready environment. V20/V21 keep the engine's answer (P8-04j2): the engine located TIA
+    // from --tia-portal-location, TiaPortalLocation or the registry, so an explicit --public-api names only the worker's assemblies.
+    internal static (string? Directory, string? Source) ReadinessInstallation(HostOptions options)
     {
-        EngineHostConfiguration.ReleaseKey = options.ReleaseKey;
-        IFoundationSessionWorker worker = options.EngineWorkerExe != null
+        if (!ReleaseCatalogData.Releases[options.ReleaseKey].MergeWorkerReadiness || !options.PublicApiOption)
+            return (options.ApiDirectory, options.ApiDirectorySource);
+        string? installation = string.IsNullOrWhiteSpace(options.TiaPortalLocation) ? null
+            : TiaMcp.Versioning.TiaVersionCatalog.Get(options.ReleaseKey).FindApiDirectory(options.TiaPortalLocation);
+        return (installation, installation == null ? null : "host-option");
+    }
+
+    internal static IFoundationSessionWorker CreateWorker(HostOptions options) => options.EngineWorkerExe != null
             ? new EngineWorkerClient(options, File.Exists(options.EngineWorkerExe) ? EngineCatalog.Hash(options.EngineWorkerExe) : "")
             : new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, options.NativeEnabled, options.EngineTimeoutSeconds, options.WorkerTimeoutConfig)
                 { Bundled = options.BundledWorker, WithUi = options.WithUi, TiaPortalLocation = options.TiaPortalLocation,
                     SharedSession = ReleaseCatalogData.Releases[options.ReleaseKey].SharedSession };
+
+    private static Session CreateSession(HostOptions options, Func<IToolCatalogView, IToolCatalogView>? catalogForTest = null, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null)
+    {
+        EngineHostConfiguration.ReleaseKey = options.ReleaseKey;
+        IFoundationSessionWorker worker = CreateWorker(options);
         try
         {
             var data = ReleaseCatalogData.Releases[options.ReleaseKey];
             IReadOnlyList<McpServerTool>? roster = null;
+            Func<System.Text.Json.Nodes.JsonObject> production = () => FoundationPassiveDiagnostics.Readiness(options.ReleaseKey, options.ApiDirectory, options.ApiDirectorySource);
+            var (installation, installationSource) = ReadinessInstallation(options);
+            Func<System.Text.Json.Nodes.JsonObject> notReady = () => FoundationPassiveDiagnostics.Readiness(options.ReleaseKey, installation, installationSource);
             Func<System.Text.Json.Nodes.JsonObject> readiness = () => worker is WorkerClient plc
-                ? plc.Readiness(() => FoundationPassiveDiagnostics.Readiness(options.ReleaseKey, options.ApiDirectory, options.ApiDirectorySource))
+                ? plc.Readiness(production, notReady)
                 : ((EngineWorkerClient)worker).FoundationReadiness();
             var shared = LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled, options.ApiDirectory,
                 options.ApiDirectorySource, readiness, () => roster!, data.ExampleProfile, hostPorts: false);

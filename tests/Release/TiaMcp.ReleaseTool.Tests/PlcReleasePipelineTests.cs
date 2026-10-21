@@ -98,7 +98,7 @@ public sealed class PlcReleasePipelineTests
     [InlineData("19")]
     [InlineData("20")]
     [InlineData("21")]
-    public void ProductionInstallKeepsTheEnginePayloadAndRequiresTheMatchingAdapter(string key)
+    public void ProductionInstallRemovesTheEnginePayloadAndRequiresTheMatchingAdapter(string key)
     {
         using var tree = new StaticTree();
         var source = $"src/PlcWorker/bin/{key}/Release/net48/";
@@ -109,8 +109,8 @@ public sealed class PlcReleasePipelineTests
         ReleaseCommands.InstallReleasePlcWorker(tree.Root, key);
         var installed = ReleaseCommands.PlcReleaseInstallDirectory(tree.Root, key);
         Assert.Equal("production-plc", File.ReadAllText(Path.Combine(installed, $"TiaMcp.PlcWorker.{key}.exe")));
-        Assert.Equal("engine", File.ReadAllText(Path.Combine(tree.Root, $"runtime/v{key}/worker/TiaMcp.Engine.V{key}.exe")));
-        Assert.Equal(key is "20" or "21" ? "plc-worker" : "worker", Path.GetFileName(installed));
+        Assert.False(File.Exists(Path.Combine(tree.Root, $"runtime/v{key}/worker/TiaMcp.Engine.V{key}.exe")));
+        Assert.Equal("worker", Path.GetFileName(installed));
         tree.Write(source + "TiaMcp.Adapter.wrong.dll", "wrong adapter");
         Assert.Throws<ReleaseException>(() => ReleaseCommands.InstallReleasePlcWorker(tree.Root, key));
     }

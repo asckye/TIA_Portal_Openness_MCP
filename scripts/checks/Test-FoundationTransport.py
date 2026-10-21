@@ -16,6 +16,8 @@ from pathlib import Path
 import queue
 import re
 import socket
+import shutil
+import uuid
 import subprocess
 import tempfile
 import threading
@@ -213,7 +215,7 @@ def worker_handles(host_pid, worker_name=None):
 
 def engine_worker_exits_cleanly(key, env, fixture_root=None):
     # Without TIA the worker must leave through its normal path; a crash there leaves WER holding its files.
-    worker = (fixture_root / key / f'TiaMcp.Engine.V{key}.exe').resolve() if fixture_root else ROOT / f'runtime/v{key}/worker/TiaMcp.Engine.V{key}.exe'
+    worker = (fixture_root / key / f'TiaMcp.Engine.V{key}.exe').resolve() if fixture_root else ROOT / f'bin-build/engine-compat/v{key}/worker/TiaMcp.Engine.V{key}.exe'
     done = subprocess.run([str(worker), '--engine-worker', '--bundle-root', str(ROOT), '--tia-major-version', key],
                           input=b'', capture_output=True, env=dict(env, TIA_MCP_ENGINE_NONCE='0' * 64), timeout=120)
     assert done.returncode == 0, (key, done.returncode, done.stderr.decode('utf-8', 'replace')[-2000:])
@@ -225,18 +227,25 @@ def engine_transports(args, temp, counts):
         data.mkdir()
         env = dict(os.environ, TIA_MCP_DATA_DIRECTORY=str(data), TiaPortalLocation='')
         env.pop('TIA_MCP_ENGINE_WORKER_SDK_READY', None)
+        env.pop('TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY', None)
         engine_worker_exits_cleanly(key, env, args.sdk_fixture_root)
-        command = [str((args.host_exe or ROOT / f'runtime/v{key}/TiaMcp.FoundationHost.exe').resolve()),
+        # The engine cross-check keeps the old packaged pair: the installed host copy next to
+        # the engine worker in the private compatibility output (see engine_cross_check_environment).
+        default_host = ROOT / (f'runtime/v{key}/TiaMcp.FoundationHost.exe' if args.plc_worker
+                               else f'bin-build/engine-compat/v{key}/TiaMcp.FoundationHost.exe')
+        command = [str((args.host_exe or default_host).resolve()),
                    '--bundle-root', str(ROOT), '--release-key', key, '--profile', 'full']
-        if args.sdk_fixture_root:
-            directory = (args.sdk_fixture_root / key).resolve()
-            command += ['--engine-worker', str(directory / f'TiaMcp.Engine.V{key}.exe'),
-                        '--engine-catalog', str(directory / 'tool-catalog.json')]
+        directory = (args.sdk_fixture_root / key).resolve() if args.sdk_fixture_root else ROOT / f'bin-build/engine-compat/v{key}/worker'
+        command += ['--engine-worker', str(directory / f'TiaMcp.Engine.V{key}.exe'),
+                    '--engine-catalog', str(directory / 'tool-catalog.json')]
         if args.plc_worker:
             for flag in ('--engine-worker', '--engine-catalog'):
                 if flag in command:
                     index = command.index(flag); del command[index:index + 2]
             command += ['--plc-worker', '--worker-exe', str((ROOT / f'src/PlcWorker/bin/{key}/Release/net48/TiaMcp.PlcWorker.{key}.exe').resolve())]
+        else:
+            resources.engine_cross_check_environment(command[0], directory / f'TiaMcp.Engine.V{key}.exe',
+                                                   directory / 'tool-catalog.json', env)
         with (args.output / f'stdio-{key}.log').open('w', encoding='utf-8') as stderr:
             client = Stdio(command, env, stderr)
             try:
@@ -253,16 +262,23 @@ def engine_transports(args, temp, counts):
         with (args.output / f'http-{key}.log').open('w', encoding='utf-8') as stderr:
             http_command = command.copy()
             if args.engine_fixture:
-                fixture = args.engine_fixture.resolve()
+                if args.plc_worker:
+                    fixture = args.engine_fixture.resolve()
+                    catalog_path = temp / f'engine-fixture-catalog-{key}.json'
+                else:
+                    # The engine cross-check route only accepts private compatibility output.
+                    fixture_directory = ROOT / 'bin-build/engine-compat/transport' / uuid.uuid4().hex / key
+                    shutil.copytree(args.engine_fixture.resolve().parent, fixture_directory)
+                    fixture = fixture_directory / args.engine_fixture.name
+                    catalog_path = fixture_directory / 'tool-catalog.json'
                 (fixture.parent / f'TiaMcp.Adapter.{key}.dll').write_text('offline session fixture', encoding='utf-8')
-                catalog_source = (args.sdk_fixture_root / key / 'tool-catalog.json') if args.sdk_fixture_root else ROOT / f'runtime/v{key}/worker/tool-catalog.json'
+                catalog_source = (args.sdk_fixture_root / key / 'tool-catalog.json') if args.sdk_fixture_root else ROOT / f'bin-build/engine-compat/v{key}/worker/tool-catalog.json'
                 catalog = json.loads(catalog_source.read_text('utf-8'))
                 migrated = {tool for name, family in ported_families.families(ROOT).items() if name != 'F00' for tool in family['tools']}
                 catalog['tools'] = [row for row in catalog['tools'] if row['name'] not in migrated]
                 catalog['descriptors'] = [row for row in catalog['descriptors'] if row['name'] not in migrated]
                 catalog['unavailableTools'] = [row for row in catalog.get('unavailableTools', []) if row['tool']['name'] not in migrated]
                 catalog['workerSha256'] = hashlib.sha256(fixture.read_bytes()).hexdigest()
-                catalog_path = temp / f'engine-fixture-catalog-{key}.json'
                 catalog_path.write_text(json.dumps(catalog), encoding='utf-8')
                 for flag, value in (('--engine-worker', str(fixture)), ('--engine-catalog', str(catalog_path))):
                     if flag in http_command:

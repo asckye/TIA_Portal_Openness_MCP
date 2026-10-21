@@ -8,6 +8,7 @@ Console.OutputEncoding = new UTF8Encoding(false);
 Console.SetError(new StreamWriter(Console.OpenStandardError(), new UTF8Encoding(false)) { AutoFlush = true });
 try
 {
+    HostOptions.RejectEngineOptions(args, AppContext.BaseDirectory);
     var root = TiaOpenness.Shared.BundleLayout.ExtractRootOption(args, out args);
     TiaOpenness.Shared.BundleLayout.Initialize(AppContext.BaseDirectory, root);
 }

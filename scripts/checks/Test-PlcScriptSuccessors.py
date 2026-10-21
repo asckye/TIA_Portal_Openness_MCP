@@ -108,6 +108,47 @@ class PlcScriptSuccessorTests(unittest.TestCase):
         command = launches[-1]['command']
         self.assertEqual(command[command.index('--public-api') + 1], str(self.root.resolve()))
 
+    def engine_cross_check_scripts_keep_private_selection_and_original_evidence_keys(self):
+        # Called by test_stability_and_resources_forward_the_explicit_worker: the explicit engine
+        # worker reaches the host only through the repository's private cross-check route.
+        resources = load('Test-ResourceDiscovery')
+        host = self.root / 'src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe'
+        worker = self.root / 'bin-build/engine-compat/v21/worker/TiaMcp.Engine.V21.exe'
+        for path, value in ((host, b'host identity'), (worker, b'engine identity')):
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(value)
+        catalog = worker.with_name('tool-catalog.json')
+        catalog.write_text('{}', encoding='utf-8')
+        def intercept(command, **kwargs):
+            self.assertEqual(command[0], str(host))
+            self.assertEqual(command[command.index('--engine-worker') + 1], str(worker))
+            self.assertEqual(command[command.index('--engine-catalog') + 1], str(catalog))
+            self.assertNotIn('--plc-worker', command)
+            self.assertNotIn('--worker-exe', command)
+            self.assertEqual(kwargs['env']['TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY'],
+                             str(self.root / 'bin-build/engine-compat'))
+            self.assertEqual(kwargs['env']['TIA_MCP_ENGINE_WORKER_SDK_READY'], '1')
+            raise LaunchIntercepted
+        with patch.object(resources, '__file__', str(self.root / 'scripts/checks/Test-ResourceDiscovery.py')), \
+                patch.object(subprocess, 'Popen', side_effect=intercept) as launch:
+            with self.assertRaises(LaunchIntercepted):
+                with resources.server(host, self.api, 21, 'stdio', 'full', public_api=self.api,
+                                      engine_worker=worker, engine_catalog=catalog):
+                    pass
+            self.assertEqual(launch.call_count, 1)
+            self.assertEqual(resources.engine_fixture_evidence(worker, host), {
+                'hostSha256': hashlib.sha256(host.read_bytes()).hexdigest(),
+                'sdkWorkerSha256': hashlib.sha256(worker.read_bytes()).hexdigest(),
+                'workerModel': 'combined-host-supervised-worker'})
+            for wrong_host, wrong_worker in ((self.host, worker), (host, self.worker)):
+                with self.assertRaises(AssertionError):
+                    resources.engine_cross_check_environment(wrong_host, wrong_worker, catalog, {})
+        contracts = load('Snapshot-ToolContracts')
+        environment = contracts.engine_host_environment(argparse.Namespace(packaged_no_tia=True), '21', {'21': worker},
+            {'TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY': str(worker.parent)})
+        self.assertNotIn('TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY', environment)
+        self.assertNotIn('TIA_MCP_ENGINE_WORKER_SDK_READY', environment)
+
     def test_stability_and_resources_forward_the_explicit_worker(self):
         for script in ('Test-LocalStability', 'Test-ResourceDiscovery'):
             module = load(script)
@@ -121,6 +162,7 @@ class PlcScriptSuccessorTests(unittest.TestCase):
                     module.main()
             self.assertEqual(server.call_args.kwargs['plc_worker'], self.worker)
             self.assertIsNone(server.call_args.kwargs['engine_worker'])
+        self.engine_cross_check_scripts_keep_private_selection_and_original_evidence_keys()
 
     def test_stability_evidence_preserves_bounds_and_rekeys_runtime(self):
         module = load('Test-LocalStability')

@@ -1,3 +1,4 @@
+extern alias foundationhost;
 using TiaMcp.FoundationHost;
 using TiaOpenness.Shared;
 using System.Runtime.CompilerServices;
@@ -5,6 +6,7 @@ using Xunit;
 
 namespace TiaMcp.FoundationHost.Tests;
 
+[Collection(BundleSelectionCollection.Name)]
 public sealed class BundleRootTests : IDisposable
 {
     private readonly string scratch = Path.Combine(Path.GetTempPath(), "foundation bundle 中文 " + Guid.NewGuid().ToString("N"));
@@ -22,6 +24,8 @@ public sealed class BundleRootTests : IDisposable
     [InlineData("17")]
     [InlineData("18")]
     [InlineData("19")]
+    [InlineData("20")]
+    [InlineData("21")]
     public void Release_file_and_worker_override_are_preserved_under_the_selected_root(string release)
     {
         Put("manifest/package-manifest.json", "fixture");
@@ -54,18 +58,19 @@ public sealed class BundleRootTests : IDisposable
     [Theory]
     [InlineData("20")]
     [InlineData("21")]
-    public void Full_catalog_host_discovers_worker_and_catalog_without_path_options(string release)
+    public void Full_catalog_host_discovers_plc_worker_and_refuses_retired_options(string release)
     {
         Put("manifest/package-manifest.json", "fixture");
         Put("runtime/v" + release + "/release-key.txt", release);
         var options = HostOptions.Parse(new[] { "--profile", "full" }, At("runtime/v" + release));
-        Assert.Equal(At("runtime/v" + release + "/worker/TiaMcp.Engine.V" + release + ".exe"), options.EngineWorkerExe);
-        Assert.Equal(At("runtime/v" + release + "/worker/tool-catalog.json"), options.EngineCatalog);
-        Assert.Equal(scratch, BundleLayout.ResolveRoot(Path.GetDirectoryName(options.EngineWorkerExe)!, null, null));
+        Assert.Equal(At("runtime/v" + release + "/worker/TiaMcp.PlcWorker." + release + ".exe"), options.WorkerExe);
+        Assert.Null(options.EngineWorkerExe);
+        Assert.Null(options.EngineCatalog);
+        Assert.Equal(scratch, BundleLayout.ResolveRoot(Path.GetDirectoryName(options.WorkerExe)!, null, null));
         Assert.Throws<ArgumentException>(() => HostOptions.Parse(new[] { "--engine-worker", At("worker.exe") }, At("runtime/v" + release)));
-        options = HostOptions.Parse(new[] { "--engine-worker", At("custom.exe"), "--engine-catalog", At("custom.json") }, At("runtime/v" + release));
-        Assert.Equal(At("custom.exe"), options.EngineWorkerExe);
-        Assert.Equal(At("custom.json"), options.EngineCatalog);
+        var error = Assert.Throws<ArgumentException>(() => HostOptions.Parse(new[] { "--engine-worker", At("custom.exe"), "--engine-catalog", At("custom.json") }, At("runtime/v" + release)));
+        Assert.Contains("--release-key", error.Message);
+        Assert.Contains("--worker-exe", error.Message);
     }
 
     [Theory, InlineData("20"), InlineData("21")]
@@ -89,6 +94,98 @@ public sealed class BundleRootTests : IDisposable
         Assert.Equal(RepositoryRoot(), root);
         Assert.True(Directory.Exists(BundleLayout.RequirePath(root, "templates", true)));
         Assert.True(File.Exists(BundleLayout.RequirePath(root, "reference/siemens-openness/UPSTREAM.json")));
+    }
+
+    [Theory]
+    [InlineData("20")]
+    [InlineData("21")]
+    public async Task Packaged_host_refuses_engine_options_with_the_private_variable_set(string release)
+    {
+        Put("manifest/package-manifest.json", "fixture");
+        Put("runtime/v" + release + "/release-key.txt", release);
+        string packaged = At("runtime/v" + release);
+        var host = typeof(foundationhost::TiaMcp.FoundationHost.HostOptions).Assembly.Location;
+        foreach (string file in Directory.EnumerateFiles(Path.GetDirectoryName(host)!))
+            File.Copy(file, Path.Combine(packaged, Path.GetFileName(file)), true);
+        // A real checkout's private output with real engine-shaped files: only the host's own location differs.
+        string checkoutPrivate = Path.Combine(RepositoryRoot(), "bin-build", "engine-compat");
+        string probe = Path.Combine(checkoutPrivate, "packaged-refusal-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(probe);
+        try
+        {
+            File.WriteAllText(Path.Combine(probe, "TiaMcp.Engine.V" + release + ".exe"), "engine identity");
+            File.WriteAllText(Path.Combine(probe, "tool-catalog.json"), "{}");
+            foreach (var (variable, worker, catalog) in new[] {
+                // The packaged layout has no private output: variable set, nothing behind it.
+                (At("bin-build/engine-compat"), At("bin-build/engine-compat/v" + release + "/worker/TiaMcp.Engine.V" + release + ".exe"),
+                    At("bin-build/engine-compat/v" + release + "/worker/tool-catalog.json")),
+                (checkoutPrivate, Path.Combine(probe, "TiaMcp.Engine.V" + release + ".exe"), Path.Combine(probe, "tool-catalog.json")) })
+            {
+                var start = new System.Diagnostics.ProcessStartInfo(Environment.GetEnvironmentVariable("DOTNET_EXE") ?? "dotnet")
+                { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true };
+                foreach (var arg in new[] { Path.Combine(packaged, Path.GetFileName(host)), "--bundle-root", scratch,
+                    "--release-key", release, "--engine-worker", worker, "--engine-catalog", catalog })
+                    start.ArgumentList.Add(arg);
+                start.Environment[HostOptions.EngineCrossCheckVariable] = variable;
+                using var process = System.Diagnostics.Process.Start(start)!;
+                var output = process.StandardOutput.ReadToEndAsync();
+                var errors = process.StandardError.ReadToEndAsync();
+                await process.WaitForExitAsync();
+                Assert.Equal(64, process.ExitCode);
+                Assert.Empty(await output);
+                Assert.Contains("Engine worker options are retired", await errors);
+                Assert.Contains("--worker-exe", await errors);
+            }
+            string? previous = Environment.GetEnvironmentVariable(HostOptions.EngineCrossCheckVariable);
+            Environment.SetEnvironmentVariable(HostOptions.EngineCrossCheckVariable, checkoutPrivate);
+            try
+            {
+                Assert.Throws<ArgumentException>(() => foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(["--bundle-root", scratch,
+                    "--release-key", release, "--engine-worker", Path.Combine(probe, "TiaMcp.Engine.V" + release + ".exe"),
+                    "--engine-catalog", Path.Combine(probe, "tool-catalog.json")], packaged));
+            }
+            finally { Environment.SetEnvironmentVariable(HostOptions.EngineCrossCheckVariable, previous); }
+        }
+        finally { Directory.Delete(probe, true); }
+    }
+
+    [Theory]
+    [InlineData("20")]
+    [InlineData("21")]
+    public void Repository_cross_check_requires_source_host_and_private_output_and_selects_engine(string release)
+    {
+        Put("manifest/package-manifest.json", "fixture");
+        Put("src/FoundationHost/TiaMcp.FoundationHost.csproj", "fixture");
+        Put("bin-build/engine-compat/v" + release + "/worker/TiaMcp.Engine.V" + release + ".exe", "engine identity");
+        Put("bin-build/engine-compat/v" + release + "/worker/tool-catalog.json", "fixture");
+        string directory = At("src/FoundationHost/bin/Release/net10.0");
+        string worker = At("bin-build/engine-compat/v" + release + "/worker/TiaMcp.Engine.V" + release + ".exe");
+        string catalog = Path.Combine(Path.GetDirectoryName(worker)!, "tool-catalog.json");
+        string[] args = ["--bundle-root", scratch, "--release-key", release, "--engine-worker", worker, "--engine-catalog", catalog];
+        string? previous = Environment.GetEnvironmentVariable(HostOptions.EngineCrossCheckVariable);
+        try
+        {
+            Environment.SetEnvironmentVariable(HostOptions.EngineCrossCheckVariable, null);
+            Assert.Throws<ArgumentException>(() => foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(args, directory));
+            Environment.SetEnvironmentVariable(HostOptions.EngineCrossCheckVariable, At("bin-build/engine-compat"));
+            var options = foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(args, directory);
+            Assert.Equal(worker, options.EngineWorkerExe);
+            Assert.Equal(catalog, options.EngineCatalog);
+            Assert.False(options.PlcWorker);
+            using var client = foundationhost::TiaMcp.FoundationHost.SharedReleaseHost.CreateWorker(options);
+            Assert.IsType<foundationhost::TiaMcp.FoundationHost.EngineWorkerClient>(client);
+            // The release jobs' staged copy of the installed host beside the private worker.
+            Assert.Equal(worker, foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(args, At("bin-build/engine-compat/v" + release)).EngineWorkerExe);
+            Assert.Throws<ArgumentException>(() => foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(args, At("runtime/v" + release)));
+            Assert.Throws<ArgumentException>(() => foundationhost::TiaMcp.FoundationHost.HostOptions.Parse([.. args, "--plc-worker"], directory));
+            Assert.Throws<ArgumentException>(() => foundationhost::TiaMcp.FoundationHost.HostOptions.Parse([.. args, "--worker-exe", worker], directory));
+            Put("outside/worker.exe", "engine identity");
+            var outside = args.ToArray(); outside[Array.IndexOf(outside, "--engine-worker") + 1] = At("outside/worker.exe");
+            Assert.Throws<ArgumentException>(() => foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(outside, directory));
+            File.Delete(catalog);
+            Assert.Throws<ArgumentException>(() => foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(args, directory));
+        }
+        finally { Environment.SetEnvironmentVariable(HostOptions.EngineCrossCheckVariable, previous); }
     }
 
     private static string RepositoryRoot([CallerFilePath] string file = "") =>

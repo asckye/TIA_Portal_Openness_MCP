@@ -87,7 +87,7 @@ public sealed class PluginLauncherTests
         using var fixture = new LauncherFixture(); fixture.AddHost("16"); fixture.AddHost("21");
         Assert.Equal("19", fixture.Resolve(null, null, ["16", "19"]).Key);
         Assert.Equal("21", fixture.Resolve(null, null, []).Key);
-        File.Delete(Path.Combine(fixture.Bundle, "runtime/v21/worker/TiaMcp.Engine.V21.exe"));
+        File.Delete(Path.Combine(fixture.Bundle, "runtime/v21/worker/TiaMcp.PlcWorker.21.exe"));
         Assert.Equal("19", fixture.Resolve(null, null, []).Key);
         // A detected installation whose host is missing is an error, never a different release.
         Assert.Throws<BundleResourceUnavailableException>(() => fixture.Resolve(null, null, ["18"]));
@@ -194,8 +194,8 @@ public sealed class PluginLauncherTests
             CopyDirectory(Path.Combine(AppContext.BaseDirectory, "plugin-fixtures/host"), directory);
             File.Copy(Path.Combine(directory, "PluginHostFixture.exe"), Path.Combine(directory, "TiaMcp.FoundationHost.exe"), true);
             Directory.CreateDirectory(Path.Combine(directory, "worker"));
-            string worker = key is "20" or "21" ? "TiaMcp.Engine.V" + key : "TiaMcp.PlcWorker." + key;
-            File.WriteAllText(Path.Combine(directory, "worker", worker + ".exe"), "fixture worker marker");
+            // Every release, V20/V21 included since P8-04j2, runs its PlcWorker.
+            File.WriteAllText(Path.Combine(directory, "worker", "TiaMcp.PlcWorker." + key + ".exe"), "fixture worker marker");
         }
         internal string InvalidRoot(string kind)
         {

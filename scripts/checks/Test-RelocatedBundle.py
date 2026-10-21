@@ -4,7 +4,7 @@ Run from the source checkout with --bundle-root pointing at an extracted package
 The checker copies it to a path containing spaces and Chinese characters, applies
 a temporary read-only ACL, and enumerates every packaged product through MCP.
 Foundation hosts are explicitly started with --offline. V20/V21 run through their
-default engine workers over STDIO and local HTTP. A copied PublicAPI SDK-only fixture
+default PLC workers over STDIO and local HTTP. A copied PublicAPI SDK-only fixture
 resolves API assemblies; it contains no TIA executable and never connects to TIA or a
 PLC. The approval probe calls SaveProject and proves refusal before native dispatch.
 

@@ -95,6 +95,12 @@ namespace TiaMcpServer.Dispatch
                     { return McpServer.DiscloseTargets(McpServer.TargetFailure(ProtocolTool.Name, failure, false), ProtocolTool.Name, arguments); }
                     if (OpennessReadiness.Ready) return await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
                 }
+                // V20/V21 (P8-04j2): a ported capability refusal starts no native call, and the engine reported it before
+                // readiness. The bridge dispatches such a target so its own capability admission answers.
+                if (TiaMcp.FoundationHost.ReleaseCatalogData.Releases[McpServer.ReleaseKey].MergeWorkerReadiness && ProtocolTool.Name == "CallTool"
+                    && arguments.TryGetProperty("arguments", out var portedArguments) && portedArguments.ValueKind == JsonValueKind.Object
+                    && McpServer.PortedCapabilityRefusals.TryGetValue((McpServer.ReleaseKey, target), out var refuses) && refuses(portedArguments))
+                    return await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
 #endif
                 var cause = OpennessReadiness.Cause ?? "TIA Openness initialization has not completed.";
                 var fix = OpennessReadiness.FixEn ?? "Run `tia doctor` to inspect the TIA Openness installation.";
@@ -109,3 +115,14 @@ namespace TiaMcpServer.Dispatch
         }
     }
 }
+#if TIA_ENGINE_HOST
+
+namespace TiaMcpServer.ModelContextProtocol
+{
+    public static partial class McpServer
+    {
+        // Registered by the Foundation host's ported tools per release and tool: true when the target refuses these arguments by capability.
+        internal static System.Collections.Concurrent.ConcurrentDictionary<(string Release, string Tool), Func<JsonElement, bool>> PortedCapabilityRefusals { get; } = new();
+    }
+}
+#endif

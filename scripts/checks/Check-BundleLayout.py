@@ -9,10 +9,10 @@ MULTI_RECORD = 'manifest/multi-version-build.json'
 
 
 def release_record_path(names):
-    if ENGINE_RECORD in names:
-        return ENGINE_RECORD
     if MULTI_RECORD in names:
         return MULTI_RECORD
+    if ENGINE_RECORD in names:
+        return ENGINE_RECORD
     raise ValueError('Missing release build record (engine or eight-release)')
 
 
@@ -376,8 +376,8 @@ class LayoutChecks(unittest.TestCase):
         for key in ('20', '21'):
             runtime = dict(checks={})
             for field, path in (
-                    ('worker', f'runtime/v{key}/plc-worker/TiaMcp.PlcWorker.{key}.exe'),
-                    ('adapter', f'runtime/v{key}/plc-worker/TiaMcp.Adapter.{key}.dll'),
+                    ('worker', f'runtime/v{key}/worker/TiaMcp.PlcWorker.{key}.exe'),
+                    ('adapter', f'runtime/v{key}/worker/TiaMcp.Adapter.{key}.dll'),
                     ('host', f'runtime/v{key}/TiaMcp.FoundationHost.exe')):
                 runtime[field] = dict(path=path, sha256='a' * 64)
                 multi['files'].append(runtime[field].copy())
@@ -398,8 +398,8 @@ class LayoutChecks(unittest.TestCase):
                 self.assertEqual(record_inventory(record), record.get('runtimeFiles', record.get('files')))
                 with self.assertRaises(ValueError):
                     release_record(files, {binding: '0' * 64})
-        files = {ENGINE_RECORD: b'{bad', MULTI_RECORD: json.dumps(multi).encode()}
-        self.assertEqual(release_record_path(files), ENGINE_RECORD)
+        files = {MULTI_RECORD: b'{bad', ENGINE_RECORD: json.dumps(engine).encode()}
+        self.assertEqual(release_record_path(files), MULTI_RECORD)
         with self.assertRaises(ValueError):
             release_record(files)
         with self.assertRaises(ValueError):
@@ -543,7 +543,7 @@ class LayoutChecks(unittest.TestCase):
 
     def test_delivery_includes_runtime_resources_and_plugin(self):
         rules = load_delivery(ROOT)
-        for path in ('TiaOpenness.exe', 'runtime/v21/TiaMcp.FoundationHost.exe', 'runtime/v21/worker/TiaMcp.Engine.V21.exe',
+        for path in ('TiaOpenness.exe', 'runtime/v21/TiaMcp.FoundationHost.exe', 'runtime/v21/worker/TiaMcp.PlcWorker.21.exe',
                      'runtime/tools/TiaMcp.Updater.exe', 'runtime/tools/TiaMcp.Updater.exe.config',
                      'runtime/dotnet/LICENSE.txt', 'runtime/dotnet/ThirdPartyNotices.txt',
                      '.claude-plugin/plugin.json', 'hooks/hooks.json',

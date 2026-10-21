@@ -126,7 +126,7 @@ public sealed class PackageDependencyTests
 
     [Theory]
     [InlineData("runtime/v14sp1/worker/TiaMcp.PlcWorker.14sp1.exe")]
-    [InlineData("runtime/v20/worker/TiaMcp.Engine.V20.exe")]
+    [InlineData("runtime/v20/worker/TiaMcp.PlcWorker.20.exe")]
     [InlineData("runtime/studio/TiaOpenness.exe")]
     [InlineData("runtime/studio/bridge/TiaOpenness.Bridge.exe")]
     [InlineData("runtime/tools/TiaMcp.Updater.exe")]
