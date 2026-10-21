@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +19,7 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
 {
     private readonly Func<EnvironmentCheckContext> _context;
     private readonly Func<EnvironmentProbeSources> _sources;
-    private readonly Action<string> _fixMembership;
+    private readonly Func<string, string, DoctorRun?> _fixMembership;
     private readonly bool _allowFix;
     private int _busy;
     public Task Completion { get; private set; } = Task.CompletedTask;
@@ -26,15 +27,19 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
     public IReadOnlyList<EnvironmentGroup> Groups { get; private set; }
     public IReadOnlyList<string> LogTail { get; private set; } = [];
 
-    public EnvironmentCheckService() : this(EnvironmentServiceContext.Current, WindowsEnvironmentSources.Create, RunDoctorFix) { }
+    public EnvironmentCheckService() : this(EnvironmentServiceContext.Current, WindowsEnvironmentSources.Create, RunDoctorFix, true) { }
     internal EnvironmentCheckService(bool allowFix) : this(EnvironmentServiceContext.Current, WindowsEnvironmentSources.Create, RunDoctorFix, allowFix) { }
     internal EnvironmentCheckService(bool allowFix, Func<string> release) : this(() => EnvironmentServiceContext.Current(release()), WindowsEnvironmentSources.Create, RunDoctorFix, allowFix) { }
+    // A fix action that only receives the host path returns no doctor report; when it returns, the checks run again.
     public EnvironmentCheckService(Func<EnvironmentCheckContext> context, Func<EnvironmentProbeSources> sources, Action<string> fixMembership)
         : this(context, sources, fixMembership, true) { }
     internal EnvironmentCheckService(Func<EnvironmentCheckContext> context, Func<EnvironmentProbeSources> sources, Action<string> fixMembership, bool allowFix)
+        : this(context, sources, (host, _) => { fixMembership(host); return null; }, allowFix) { }
+    // runDoctor receives the host path and its release key and returns the doctor's exit code and output.
+    internal EnvironmentCheckService(Func<EnvironmentCheckContext> context, Func<EnvironmentProbeSources> sources, Func<string, string, DoctorRun?> runDoctor, bool allowFix)
     {
         _allowFix = allowFix;
-        _context = context; _sources = sources; _fixMembership = fixMembership;
+        _context = context; _sources = sources; _fixMembership = runDoctor;
         Groups = Group(WorkbenchEnvironmentChecks.Ids.Select(id => EnvironmentCheckCatalogue.Unchecked(id)).ToArray());
     }
 
@@ -92,18 +97,28 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
         if (Interlocked.CompareExchange(ref _busy, 1, 0) != 0) return LocalizedText.Empty;
         Completion = Task.Run(() =>
         {
+            IReadOnlyList<string> doctor = [];
             try
             {
                 var context = _context();
-                var host = EnvironmentBundleFiles.SelectHost(context.BundleRoot, context.ReleaseKey, File.Exists);
-                if (host == null) throw new FileNotFoundException(Loc.Current["Env.NoDoctorHost"]);
-                _fixMembership(host);
-                Findings = Capture(); Groups = Group(Findings.Select(EnvironmentCheckCatalogue.Row).ToArray());
+                var release = EnvironmentBundleFiles.SelectHostRelease(context.BundleRoot, context.ReleaseKey, File.Exists);
+                if (release == null) throw new FileNotFoundException(Loc.Current["Env.NoDoctorHost"]);
+                var run = _fixMembership(EnvironmentBundleFiles.Host(context.BundleRoot, release), release);
+                var report = run == null ? null : DoctorFixCommand.Parse(run.Output);
+                if (run != null)
+                {
+                    LogTail = doctor = DoctorTail(run, report);
+                    // Without the doctor's JSON object only the exit code is known.
+                    if (report == null) RequireDoctorSuccess(run.ExitCode);
+                }
+                Findings = Capture();
+                if (report is { } outcome) Findings = Findings.Select(f => f.Id == checkId ? FixOutcome(f, outcome) : f).ToArray();
+                Groups = Group(Findings.Select(EnvironmentCheckCatalogue.Row).ToArray());
             }
             catch (Exception ex)
             {
                 string error = new DiagnosticRedactor().Redact(ex.Message).Text;
-                LogTail = [error];
+                LogTail = [error, .. doctor];
                 Findings = Findings.Select(f => f.Id == checkId
                     ? new EnvironmentFinding(checkId, EnvironmentFindingStatus.Fail, "FixFailed", error) : f).ToArray();
                 Groups = Group(Findings.Select(EnvironmentCheckCatalogue.Row).ToArray());
@@ -113,21 +128,64 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
         return LocalizedText.Key("Env.FixStarted");
     }
 
-    private static void RunDoctorFix(string host)
+    // UAC can occur only after Fix is clicked. The prompt comes from the worker's own elevated net.exe, so the hidden doctor
+    // runs without a shell and its output is captured.
+    private static DoctorRun RunDoctorFix(string host, string releaseKey)
     {
-        // P8-04i adds the FoundationHost doctor verb. Until then its rejection must remain visible.
-        // UAC can occur only after Fix is clicked.
-        using var process = Process.Start(new ProcessStartInfo(host, "doctor --fix --logging 0")
-            { UseShellExecute = true, WindowStyle = ProcessWindowStyle.Hidden });
+        using var process = Process.Start(DoctorStartInfo(host, releaseKey));
         if (process == null) throw new InvalidOperationException(Loc.Current["Env.FixFailed"]);
+        var output = process.StandardOutput.ReadToEndAsync();
+        var errors = process.StandardError.ReadToEndAsync();
         process.WaitForExit();
-        RequireDoctorSuccess(process.ExitCode);
+        return new DoctorRun(process.ExitCode, output.GetAwaiter().GetResult(), errors.GetAwaiter().GetResult());
+    }
+
+    internal static ProcessStartInfo DoctorStartInfo(string host, string releaseKey)
+    {
+        var start = new ProcessStartInfo(host)
+        {
+            UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
+            StandardOutputEncoding = new UTF8Encoding(false), StandardErrorEncoding = new UTF8Encoding(false),
+        };
+        foreach (string argument in DoctorFixCommand.Arguments(releaseKey)) start.ArgumentList.Add(argument);
+        return start;
     }
 
     internal static void RequireDoctorSuccess(int exitCode)
     {
         if (exitCode != 0) throw new InvalidOperationException(Loc.Current.T("Env.DoctorFailed", exitCode));
     }
+
+    // The doctor's report lines (or its raw output without a report) and its error output, redacted.
+    internal static IReadOnlyList<string> DoctorTail(DoctorRun run, DoctorFixReport? report)
+    {
+        var redactor = new DiagnosticRedactor();
+        static IEnumerable<string> Lines(string text) => text.Replace("\r\n", "\n").Split('\n').Where(line => line.Length > 0);
+        return (report?.Lines ?? Lines(run.Output)).Concat(Lines(run.Errors))
+            .Select(line => redactor.Redact(line).Text).TakeLast(200).ToArray();
+    }
+
+    // Ready keeps the recheck; a join that waits for a new logon shows the sign-out guidance; anything else is a failed fix
+    // with its reason.
+    internal static EnvironmentFinding FixOutcome(EnvironmentFinding recheck, DoctorFixReport report)
+    {
+        string reason = new DiagnosticRedactor().Redact(report.Message ?? "").Text;
+        return report.State switch
+        {
+            DoctorFixState.Ready => recheck,
+            DoctorFixState.NeedsLogon => new EnvironmentFinding(recheck.Id, EnvironmentFindingStatus.Fail, "NewLogon", reason),
+            _ => new EnvironmentFinding(recheck.Id, EnvironmentFindingStatus.Fail, "FixFailed",
+                Loc.Current[FixFailureKey(report.Outcome)] + (reason.Length > 0 ? "\n" + reason : "")),
+        };
+    }
+
+    internal static string FixFailureKey(string? outcome) => outcome switch
+    {
+        "ElevationDeclined" => "Env.FixDeclined",
+        "MissingGroup" => "Env.FixGroupMissing",
+        "AddFailed" => "Env.FixAddFailed",
+        _ => "Env.FixFailed",
+    };
 
     private static IReadOnlyList<EnvironmentGroup> Group(IReadOnlyList<EnvironmentCheck> rows) =>
     [

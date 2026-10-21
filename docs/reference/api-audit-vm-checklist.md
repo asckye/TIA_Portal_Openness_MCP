@@ -1,6 +1,7 @@
 # API audit VM checklist
 
-Status: current · Source: the 2026-10-19 official-API audit and the P8-81a/P8-81b fix reports (2026-10-19/20).
+Status: current · Source: the 2026-10-19 official-API audit, the P8-81a/P8-81b fix reports (2026-10-19/20) and the P8-73b
+Workbench fix report (2026-10-21).
 
 The audit compared the repository with the Siemens SDK XML and the official Openness documentation. The items below depend on native
 TIA Portal behavior that neither the SDK XML nor the documentation states, so the offline checks cannot verify them. None of them has
@@ -9,7 +10,8 @@ been run on a real TIA Portal. Pre-release notes copy this list into their "Not 
 
 Every row names its source: the fix report and its VM item number, and the audit area file and finding id. The reports and the
 audit files are kept in the maintainer checkout and are not tracked: `bin-build/refactor/P8-81a-evidence/P8-81a.result.md` and
-`bin-build/refactor/P8-81b-evidence/P8-81b.result.md` ("VM checklist" sections), and `bin-build/refactor/api-audit/<area>.md`.
+`bin-build/refactor/P8-81b-evidence/P8-81b.result.md` ("VM checklist" sections), and `bin-build/refactor/api-audit/<area>.md`. The
+Workbench fix items come from `bin-build/refactor/P8-73b.result.md` and item O1 of `bin-build/refactor/P8-70-73-triage.md`.
 
 ## Online, download and simulation (fixed in P8-81a)
 
@@ -85,6 +87,18 @@ audit files are kept in the maintainer checkout and are not tracked: `bin-build/
     TIA allows one there) is listed by GetAllPlcSoftware and resolved by name; exact software lookup finds software below ungrouped
     devices.
 18. P8-81b VM item 18 · hardware.md H-03 (scaffold spec keys): `tia schema` shows the new spec lines on all eight releases.
+
+## Workbench environment fix (P8-73b)
+
+1. P8-73b VM item 1 · triage O1: on V14 SP1–V19, and on V20/V21 with `--plc-worker`, a Windows user who is not in
+   `Siemens TIA Openness` selects Fix on the Workbench environment page. The hidden `doctor --fix --json` gets the worker's elevated
+   `net.exe` UAC prompt in front of the Workbench, not only as a taskbar button. After approval the page shows "Added to group; sign
+   out and in" (`AddedPendingLogon`); after a Windows sign-out and sign-in the recheck passes.
+2. P8-73b VM item 2 · triage O1: declining that UAC prompt shows a failed fix with the declined reason (`ElevationDeclined`). A
+   second Fix after the add and before signing out shows the sign-out guidance (`PendingLogon`). The PlcWorker starts and runs the
+   repair while the current token lacks the group.
+3. P8-73b VM item 3 · triage O1: on V20/V21 without `--plc-worker` (engine worker), the fix result is the engine helper's bool
+   (`Unknown`), and the page shows the recheck that follows it.
 
 ## Other audit areas (fixes pending)
 

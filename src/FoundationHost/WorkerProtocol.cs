@@ -72,7 +72,7 @@ internal static class WorkerProtocol
     {
         if (operation.StartsWith("hardware-addressing.", StringComparison.Ordinal)) { HardwareAddressingWire.Validate(operation, result); return; }
         if (operation == "hardware-devices.HardwareDeviceCandidate") { CandidateWire.Device(result, arguments); return; }
-        if (TiaMcp.PlcWorker.WorkerOperations.IsFamilyOperation(operation)) { HardwareFamilyWire.Validate(operation, result); return; }
+        if (TiaMcp.PlcWorker.WorkerOperations.IsFamilyOperation(operation)) { HardwareFamilyWire.Validate(operation, arguments, result); return; }
         if (operation == TiaMcp.PlcWorker.WorkerOperations.CompileCandidate) { CandidateWire.Compile(result, arguments); return; }
         if (operation == TiaMcp.PlcWorker.WorkerOperations.SourceCandidate) { CandidateWire.Source(result, arguments); return; }
         if (operation == TiaMcp.PlcWorker.WorkerOperations.SaveCloseCandidate) { CandidateWire.SaveClose(result, arguments); return; }

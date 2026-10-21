@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json.Nodes;
 using TiaMcpServer.Cli;
 using Runtime = TiaMcpServer.Runtime;
 
@@ -90,52 +91,65 @@ namespace TiaMcp.FoundationHost
             return failed > 0 && done == 0 ? 2 : 0;
         }
 
-        private static int DoctorCli(string[] args, HostDoctorProbe probe)
+        private static int DoctorCli(string[] args, HostDoctorProbe probe) => Doctor(args, probe, Console.Out, Console.Error);
+
+        // Without --json the report goes to the output unchanged. With --json the same report lines, the check rows and the
+        // group repair outcome go into one JSON object instead; the exit code is the same in both modes.
+        internal static int Doctor(string[] args, IHostDoctorProbe probe, TextWriter output, TextWriter errors)
         {
             bool fix = Flag(args, "--fix");
+            bool json = Flag(args, "--json");
             bool zh = Runtime.EnvironmentDoctor.PreferChinese;
+            using var captured = new StringWriter();
+            TextWriter console = json ? captured : output;
+            var rows = new JsonArray();
+            var clients = new JsonArray();
+            string? logs = null, diagnostics = null;
 
-            Console.WriteLine(zh
+            console.WriteLine(zh
                 ? "tia doctor —— 环境体检" + (fix ? "（修复模式）" : "（只读；加 --fix 可自动把当前用户加入 Openness 组）")
                 : "tia doctor — environment check" + (fix ? " (fix mode)" : " (read-only; pass --fix to auto-add the Openness group)"));
 
             bool ready = true;
             try
             {
-                string logs = TiaOpenness.Shared.DataLocations.Current.LogDirectory(probe.Options.ReleaseKey);
-                Console.WriteLine("Logs: " + logs);
-                Console.WriteLine("Diagnostics: " + TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory);
+                logs = probe.LogDirectory();
+                console.WriteLine("Logs: " + logs);
+                diagnostics = probe.DiagnosticsDirectory();
+                console.WriteLine("Diagnostics: " + diagnostics);
             }
-            catch (IOException error) { Console.Error.WriteLine(error.Message); ready = false; }
+            catch (IOException error) { errors.WriteLine(error.Message); ready = false; }
 
-            void Line(bool ok, string name, string detail, string? fixHint)
+            void Line(string id, bool gating, bool ok, string name, string detail, string? fixHint)
             {
-                Console.WriteLine($"  [{(ok ? " ok " : "FAIL")}] {name}: {detail}");
+                console.WriteLine($"  [{(ok ? " ok " : "FAIL")}] {name}: {detail}");
                 if (!ok && !string.IsNullOrEmpty(fixHint))
-                    Console.WriteLine($"         {(zh ? "修法" : "fix")}: {fixHint}");
+                    console.WriteLine($"         {(zh ? "修法" : "fix")}: {fixHint}");
+                rows.Add(new JsonObject { ["id"] = id, ["ok"] = ok, ["gating"] = gating, ["name"] = name, ["detail"] = detail,
+                    ["fix"] = !ok && !string.IsNullOrEmpty(fixHint) ? fixHint : null });
             }
 
             var detected = probe.DetectedMajor;
-            int compiled = TiaMcp.Versioning.TiaVersionCatalog.Get(probe.Options.ReleaseKey).MajorVersion;
+            int compiled = TiaMcp.Versioning.TiaVersionCatalog.Get(probe.ReleaseKey).MajorVersion;
 
             int effective = compiled;
             bool supported = TiaMcp.Versioning.TiaVersionCatalog.Runnable.Any(v => v.MajorVersion == effective)
                 && (!detected.HasValue || TiaMcp.Versioning.TiaVersionCatalog.Runnable.Any(v => v.MajorVersion == detected.Value));
-            string selectedName = TiaMcp.Versioning.TiaVersionCatalog.Get(probe.Options.ReleaseKey).DisplayName;
-            Line(supported, "Engine version support", "Selected " + selectedName + "; detected " +
+            string selectedName = TiaMcp.Versioning.TiaVersionCatalog.Get(probe.ReleaseKey).DisplayName;
+            Line("release-support", true, supported, "Engine version support", "Selected " + selectedName + "; detected " +
                 (detected.HasValue ? detected.Value == effective ? selectedName : "V" + detected.Value : "unknown"),
                 "All eight releases use FoundationHost; select a supported --release-key.");
             ready &= supported;
 
             foreach (var c in probe.Checks())
             {
-                Line(c.Ok, c.Name(zh), c.Detail(zh), c.Fix(zh));
+                Line(c.Id, c.Gating, c.Ok, c.Name(zh), c.Detail(zh), c.Fix(zh));
                 if (c.Gating) ready &= c.Ok;
             }
 
             // Openness group is the one check that can also repair itself, so it stays here rather
             // than in the shared read-only set.
-            bool groupOk; string groupDetail;
+            bool groupOk; string groupDetail; string? failure = null;
             try
             {
                 groupOk = fix
@@ -148,9 +162,10 @@ namespace TiaMcp.FoundationHost
             catch (Exception ex)
             {
                 groupOk = false;
+                failure = ex.Message;
                 groupDetail = (zh ? "检查失败：" : "check failed: ") + ex.Message;
             }
-            Line(groupOk, zh ? "Openness 用户组" : "Openness user group", groupDetail,
+            Line("openness-group", true, groupOk, zh ? "Openness 用户组" : "Openness user group", groupDetail,
                 zh ? "运行 `tia doctor --fix`（会弹 UAC），或用 lusrmgr.msc 把当前 Windows 用户加入本地组 'Siemens TIA Openness'，然后注销重登。"
                    : "run `tia doctor --fix` (prompts UAC), or add your Windows user to the local group 'Siemens TIA Openness' (lusrmgr.msc) and sign out/in.");
             ready &= groupOk;
@@ -170,21 +185,36 @@ namespace TiaMcp.FoundationHost
                     : exeOk
                         ? (zh ? "已注册 tia-portal" : "tia-portal registered")
                         : (zh ? "已注册，但指向的引擎不存在：" + cmd : "registered, but the engine it points at is missing: " + cmd);
-                Console.WriteLine($"  [{mark}] {(zh ? "AI 客户端配置" : "AI host config")} — {h.Name}: {state}");
+                console.WriteLine($"  [{mark}] {(zh ? "AI 客户端配置" : "AI host config")} — {h.Name}: {state}");
                 if (present && !exeOk)
-                    Console.WriteLine("         " + (zh
+                    console.WriteLine("         " + (zh
                         ? $"修法: 运行 `tia config --host {h.Name.Split(' ')[0].ToLowerInvariant()}` 重新指向本交付包的引擎。"
                         : $"fix: run `tia config --host {h.Name.Split(' ')[0].ToLowerInvariant()}` to repoint it at this bundle's engine."));
+                clients.Add(new JsonObject { ["name"] = h.Name, ["registered"] = present, ["command"] = cmd, ["commandExists"] = exeOk });
             }
-            Console.WriteLine(zh
+            console.WriteLine(zh
                 ? "         （一次性写入所有检测到的客户端：tia config）"
                 : "         (register into all detected hosts with: tia config)");
 
-            Console.WriteLine(ready
+            console.WriteLine(ready
                 ? (zh ? "READY —— 环境正常。下一步：重启 AI 客户端，让它调用 InitializeEnvironment。"
                       : "READY — environment OK. Next: restart your AI client and ask it to call InitializeEnvironment.")
                 : (zh ? "NOT READY —— 请按上面的『修法』处理 FAIL 项，然后重新运行 tia doctor。"
                       : "NOT READY — fix the FAIL items above, then run `tia doctor` again."));
+            if (json)
+            {
+                var (outcome, code) = HostDoctorGroupOutcome.Classify(fix, groupOk, failure, probe.FixReportsOutcome);
+                var report = captured.ToString().Split('\n').Select(line => line.TrimEnd('\r')).ToList();
+                if (report.Count > 0 && report[^1].Length == 0) report.RemoveAt(report.Count - 1);
+                output.WriteLine(new JsonObject
+                {
+                    ["releaseKey"] = probe.ReleaseKey, ["fix"] = fix, ["ready"] = ready, ["logs"] = logs, ["diagnostics"] = diagnostics,
+                    ["checks"] = rows,
+                    ["group"] = new JsonObject { ["ok"] = groupOk, ["outcome"] = outcome, ["code"] = code, ["message"] = failure },
+                    ["clients"] = clients,
+                    ["report"] = new JsonArray(report.Select(line => (JsonNode?)JsonValue.Create(line)).ToArray()),
+                }.ToJsonString());
+            }
             return ready ? 0 : 2;
         }
 
@@ -214,7 +244,7 @@ namespace TiaMcp.FoundationHost
 
 USAGE
   TiaMcp.FoundationHost.exe <verb> [options] [--release-key KEY]
-  tia doctor [--fix]                                      Inspect installation, API, worker readiness,
+  tia doctor [--fix] [--json]                             Inspect installation, API, worker readiness,
                                                           .NET Framework, blocked files, group and AI host configs
   tia audit verify [--path ABSOLUTE_DIRECTORY]              Verify audit chains; JSON, exit 0 intact / 3 broken
   tia schema                                              Print the legacy spec field reference
@@ -231,6 +261,8 @@ RELEASES: 14sp1, 15.1, 16, 17, 18, 19, 20, 21. Original V14/V15 are unsupported.
   --bundle-root ABSOLUTE_PATH overrides TIA_MCP_BUNDLE_ROOT and installation anchors.
   doctor accepts --tia-portal-location PATH, --public-api PATH, --worker-exe PATH,
   --plc-worker and the worker timeout flags. --fix may prompt UAC; sign out/in afterwards.
+  doctor --json prints one JSON object instead of the report: ready, the checks, the group repair
+  outcome and the report lines; the exit codes do not change.
   help, version, schema, audit, config and install-plc-tools need no TIA installation.
 
 RETIRED PROJECT COMMANDS

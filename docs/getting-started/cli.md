@@ -29,7 +29,7 @@ tia audit verify
 
 | 命令 | 用途与输出 |
 |---|---|
-| `doctor [--fix]` | 本机安装、Openness API 与版本匹配、.NET Framework 4.8、Windows 网络来源标记、worker 启动就绪、用户组和 AI 客户端配置；输出可读体检报告 |
+| `doctor [--fix] [--json]` | 本机安装、Openness API 与版本匹配、.NET Framework 4.8、Windows 网络来源标记、worker 启动就绪、用户组和 AI 客户端配置；输出可读体检报告，`--json` 改为输出一个 JSON 对象 |
 | `audit verify [--path <绝对目录>]` | 输出审计链 JSON 报告；完整返回 0，损坏返回 3 |
 | `schema` | 原样输出旧版 JSON/YAML spec 字段参考，供维护已有 spec；新工程使用生成框架 |
 | `version` | 输出 `tia <程序集版本>` |
@@ -40,6 +40,22 @@ tia audit verify
 `config` 支持 Claude Desktop、Claude Code、Cursor、VS Code、Codex、Gemini CLI、Windsurf 和 Cline。默认只写入检测到的客户端，显式 `--host` 可指定目标；合并保留其他配置，修改前备份为 `.bak`。配置写入后重启 AI 客户端。
 
 `doctor` 默认只读。`--fix` 经现有 worker 用户组修复操作添加当前用户，可能弹出 UAC；完成后注销再登录。需要原生启动事实时使用 worker 观测，不连接 Portal 或打开工程。API 或 worker 无法启动时仍输出其余本机检查与修复提示。`--offline` 不启动 worker，不能执行用户组修复。非默认安装可传 `--tia-portal-location <安装目录>`；开发输出可传 `--public-api <准确版本的 API 目录>` 和 `--worker-exe <worker 路径>`。V20/V21 的过渡开关 `--plc-worker` 选择独立 PLC worker；不提供时仍用引擎 worker。
+
+`doctor --json` 不输出可读报告，改为在 stdout 输出一行 JSON 对象，退出码与不带 `--json` 时相同。字段：`releaseKey`、`fix`（是否带 `--fix`）、`ready`、`logs`、`diagnostics`；`checks` 为各检查行（`id`、`ok`、`gating`、`name`、`detail`、`fix`，文字与可读报告相同）；`group` 为用户组结果（`ok`、`outcome`、`code`、`message`）；`clients` 为 AI 客户端配置（`name`、`registered`、`command`、`commandExists`）；`report` 为可读报告的逐行文本。
+
+`group.outcome` 只在带 `--fix` 时给出，否则为 `null`：
+
+| `outcome` | `code` | 含义 |
+|---|---|---|
+| `Ready` | `null` | PlcWorker 修复后当前登录令牌已含该组 |
+| `PendingLogon` | `OPENNESS_GROUP_RELOGON_REQUIRED` | 用户已是组成员，令牌尚未生效；注销并重新登录 |
+| `AddedPendingLogon` | `OPENNESS_GROUP_ADDED_RELOGON_REQUIRED` | 已加入组；注销并重新登录后生效（`ready` 仍为 `false`，退出码 2） |
+| `ElevationDeclined` | `OPENNESS_GROUP_ELEVATION_DECLINED` | 拒绝了 UAC 管理员授权，未添加 |
+| `MissingGroup` | `OPENNESS_GROUP_MISSING` | 本机没有 `Siemens TIA Openness` 组；安装带 Openness 的 TIA Portal |
+| `AddFailed` | `OPENNESS_GROUP_ADD_FAILED` | 添加后仍不是组成员 |
+| `Unknown` | `null` | 修复失败但没有上述结果码（`message` 为原因），或 V20/V21 引擎 worker 的修复只返回布尔值（`ok` 为其结果，不区分是否待重新登录） |
+
+工作台的环境修复按钮运行所选版本随包宿主的 `doctor --fix --json --release-key <版本> --logging 0`，按 `group.outcome` 显示就绪、需注销重登或修复失败（附原因），并把报告行放入日志区；没有 JSON 对象时按退出码判断。
 
 `doctor` 显示实际日志与诊断目录。宿主启动及运行消息共用 `data/logs/<releaseKey>/TiaMcpServer-<processKey>.log`，工作台崩溃日志位于 `data/logs/studio`；进程键含 PID、启动 UTC、GUID。只读安装的普通日志回退到 `%TEMP%\TiaMcp\logs`。每次启动按用途保留最新 32 份，跳过锁定、活动进程和非产品文件；写入失败每用途每进程报告一次 `IO_FAILED`。
 

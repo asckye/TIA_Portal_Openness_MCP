@@ -21,7 +21,7 @@ internal sealed class HostCliOptions
         allowed.UnionWith(new[] { "--plc-worker", "--offline", "--with-ui", "--full", "--lite" });
         switch (verb)
         {
-            case "doctor": allowed.Add("--fix"); break;
+            case "doctor": allowed.UnionWith(new[] { "--fix", "--json" }); break;
             case "config": allowed.UnionWith(new[] { "--host", "--print" }); break;
             case "install-plc-tools": allowed.UnionWith(new[] { "--python", "--environment-path" }); break;
             case "audit": allowed.Add("--path"); break;

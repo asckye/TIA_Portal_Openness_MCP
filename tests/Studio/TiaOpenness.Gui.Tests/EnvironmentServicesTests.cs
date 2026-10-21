@@ -51,6 +51,123 @@ public sealed class EnvironmentServicesTests(WpfContext wpf)
         });
     }
 
+    public static TheoryData<string, bool, string?, string, string?> FixOutcomes() => new()
+    {
+        // outcome, group ok, result code, membership result after the fix, reason key of a failed fix
+        { "Ready", true, null, "Pass", null },
+        { "PendingLogon", false, "OPENNESS_GROUP_RELOGON_REQUIRED", "NewLogon", null },
+        { "AddedPendingLogon", false, "OPENNESS_GROUP_ADDED_RELOGON_REQUIRED", "NewLogon", null },
+        { "ElevationDeclined", false, "OPENNESS_GROUP_ELEVATION_DECLINED", "FixFailed", "Env.FixDeclined" },
+        { "MissingGroup", false, "OPENNESS_GROUP_MISSING", "FixFailed", "Env.FixGroupMissing" },
+        { "AddFailed", false, "OPENNESS_GROUP_ADD_FAILED", "FixFailed", "Env.FixAddFailed" },
+        // The engine helper's bool: the recheck decides on success.
+        { "Unknown", true, null, "Pass", null },
+        { "Unknown", false, null, "FixFailed", "Env.FixFailed" },
+    };
+
+    [Theory, MemberData(nameof(FixOutcomes))]
+    public async Task Doctor_fix_outcome_is_ready_new_logon_or_a_failure_with_its_reason(string outcome, bool groupOk, string? code, string expected, string? reasonKey)
+    {
+        using var fixture = new Fixture(); fixture.Context.ReleaseKey = "19";
+        string host = EnvironmentBundleFiles.Host(fixture.Root, "19");
+        Directory.CreateDirectory(Path.GetDirectoryName(host)!); File.WriteAllText(host, "fake doctor");
+        bool joined = false;
+        EnvironmentProbeSources Rechecked()
+        {
+            var sources = Sources();
+            sources.Doctor = () => new() { Checks = [new() { Id = "ENV-NETFX", Status = CheckStatus.Pass }, new() { Id = "TIA-GROUP", Status = joined ? CheckStatus.Pass : CheckStatus.Fail }], Installations = [new() { Version = "19" }] };
+            return sources;
+        }
+        string? message = code == null ? null : code + ": fixture result password=private-doctor";
+        string json = DoctorJson(outcome, groupOk, code, message);
+        (string Host, string Release)? invoked = null;
+        var service = new EnvironmentCheckService(() => fixture.Context, Rechecked, (path, release) =>
+        {
+            invoked = (path, release); joined = expected == "Pass";
+            return new DoctorRun(2, json, "worker note token=private-error\r\n");
+        }, true);
+        service.Recheck(); await service.Completion;
+        Assert.Equal("Fail", service.Findings.Single(f => f.Id == "membership").Result);
+        service.Fix("membership"); await service.Completion;
+        Assert.Equal((host, "19"), invoked);
+        var finding = service.Findings.Single(f => f.Id == "membership");
+        Assert.Equal(expected, finding.Result);
+        Assert.Equal(expected == "Pass" ? EnvironmentFindingStatus.Pass : EnvironmentFindingStatus.Fail, finding.Status);
+        Assert.Equal(new[] { "tia doctor — environment check (fix mode)", "  [FAIL] Openness user group: check failed: " + message, "worker note token=\"[REDACTED]\"" }
+            .Select(line => line.Replace("password=private-doctor", "password=\"[REDACTED]\"", StringComparison.Ordinal)), service.LogTail);
+        Assert.DoesNotContain("private-doctor", finding.Evidence);
+        if (expected == "NewLogon") Assert.StartsWith(code + ": fixture result", finding.Evidence);
+        Assert.Equal(reasonKey, expected == "FixFailed" ? EnvironmentCheckService.FixFailureKey(outcome) : null);
+        wpf.Run(() =>
+        {
+            foreach (var language in new[] { AppLanguage.English, AppLanguage.Chinese })
+            {
+                var previous = Loc.Current.Language;
+                try
+                {
+                    Loc.Current.Language = language;
+                    var mapped = EnvironmentCheckService.FixOutcome(finding, DoctorFixCommand.Parse(json)!);
+                    if (expected == "Pass") Assert.Same(finding, mapped);
+                    if (reasonKey != null)
+                    {
+                        Assert.StartsWith(Loc.Current[reasonKey], mapped.Evidence, StringComparison.Ordinal);
+                        if (code != null) Assert.Contains(code + ": fixture result", mapped.Evidence, StringComparison.Ordinal);
+                    }
+                    var row = EnvironmentCheckCatalogue.Row(mapped);
+                    Assert.Equal(Loc.Current[expected == "FixFailed" ? "Env.FixButton" : "Env.ManualButton"], row.FixAction.Resolve());
+                    if (expected == "NewLogon") Assert.Contains(Loc.Current["Env.FixLogon"], row.Detail.Resolve(), StringComparison.Ordinal);
+                    Assert.DoesNotContain("[Env.", row.Detail.Resolve(), StringComparison.Ordinal);
+                }
+                finally { Loc.Current.Language = previous; }
+            }
+        });
+    }
+
+    [Fact]
+    public async Task Doctor_output_without_a_report_falls_back_to_the_exit_code_and_keeps_the_output()
+    {
+        using var fixture = new Fixture(); fixture.Context.ReleaseKey = "21";
+        string host = EnvironmentBundleFiles.Host(fixture.Root, "21");
+        Directory.CreateDirectory(Path.GetDirectoryName(host)!); File.WriteAllText(host, "fake doctor");
+        var run = new DoctorRun(64, "", "ERROR: Unknown option for doctor: --json\r\n");
+        var service = new EnvironmentCheckService(() => fixture.Context, Sources, (_, _) => run, true);
+        service.Recheck(); await service.Completion;
+        service.Fix("membership"); await service.Completion;
+        var finding = service.Findings.Single(f => f.Id == "membership");
+        Assert.Equal("FixFailed", finding.Result);
+        Assert.Contains("64", finding.Evidence);
+        Assert.Equal(2, service.LogTail.Count);
+        Assert.Contains("64", service.LogTail[0]);
+        Assert.Equal("ERROR: Unknown option for doctor: --json", service.LogTail[1]);
+        run = new DoctorRun(0, "not a report\n", "");
+        service.Fix("membership"); await service.Completion;
+        Assert.Equal("Fail", service.Findings.Single(f => f.Id == "membership").Result);
+        Assert.Equal(new[] { "not a report" }, service.LogTail);
+    }
+
+    [Fact]
+    public void Doctor_fix_starts_the_host_without_a_shell_with_the_release_and_captured_output()
+    {
+        var start = EnvironmentCheckService.DoctorStartInfo(@"C:\bundle\runtime\v19\TiaMcp.FoundationHost.exe", "19");
+        Assert.Equal(@"C:\bundle\runtime\v19\TiaMcp.FoundationHost.exe", start.FileName);
+        Assert.False(start.UseShellExecute);
+        Assert.True(start.CreateNoWindow);
+        Assert.True(start.RedirectStandardOutput);
+        Assert.True(start.RedirectStandardError);
+        Assert.Equal("", start.Arguments);
+        Assert.Equal(DoctorFixCommand.Arguments("19"), start.ArgumentList);
+        Assert.Equal(new[] { "doctor", "--fix", "--json", "--release-key", "19", "--logging", "0" }, start.ArgumentList);
+    }
+
+    private static string DoctorJson(string outcome, bool groupOk, string? code, string? message) => new JsonObject
+    {
+        ["releaseKey"] = "19", ["fix"] = true, ["ready"] = false, ["logs"] = @"C:\data\logs\19", ["diagnostics"] = @"C:\data\diagnostics",
+        ["checks"] = new JsonArray(),
+        ["group"] = new JsonObject { ["ok"] = groupOk, ["outcome"] = outcome, ["code"] = code, ["message"] = message },
+        ["clients"] = new JsonArray(),
+        ["report"] = new JsonArray((JsonNode?)"tia doctor — environment check (fix mode)", (JsonNode?)("  [FAIL] Openness user group: check failed: " + message)),
+    }.ToJsonString();
+
     [Fact]
     public void Missing_framework_page_finding_explains_the_bilingual_install_fix()
     {

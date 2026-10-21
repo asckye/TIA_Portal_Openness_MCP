@@ -8,6 +8,7 @@
     <ProjectReference Include="../../../src/WorkerChannel/TiaMcp.WorkerChannel.csproj" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3" PrivateAssets="all" />
     <Compile Include="../../../src/PlcWorker/WorkerLaunchOptions.cs" Link="WorkerLaunchOptions.cs" />
+    <Compile Include="../../../src/Shared/WindowsOpennessGroup.cs" Link="WindowsOpennessGroup.cs" />
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(TiaMcpPlcWorkerSdkFixture)' == 'true'">
       <_Parameter1>TiaMcpPlcWorkerSdkFixture</_Parameter1><_Parameter2>true</_Parameter2>
     </AssemblyAttribute>

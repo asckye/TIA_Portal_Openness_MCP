@@ -32,9 +32,16 @@ namespace TiaOpenness.Core.Environment
 
         public static string SelectHost(string root, string releaseKey, Func<string, bool> exists)
         {
+            var key = SelectHostRelease(root, releaseKey, exists);
+            return key == null ? null : Host(root, key);
+        }
+
+        // The release key of the host SelectHost returns; the doctor fix passes it as --release-key.
+        public static string SelectHostRelease(string root, string releaseKey, Func<string, bool> exists)
+        {
             if (string.IsNullOrEmpty(root)) return null;
             var keys = string.IsNullOrEmpty(releaseKey) ? TiaVersionCatalog.Runnable.Select(v => v.Key) : new[] { releaseKey };
-            return keys.Select(key => Host(root, key)).FirstOrDefault(exists);
+            return keys.FirstOrDefault(key => exists(Host(root, key)));
         }
 
         public static IEnumerable<string> Required(string root, string key)

@@ -126,4 +126,9 @@
   <ItemGroup><Compile Include="../../../src/FoundationHost/FoundationSaveCloseCandidate.cs" Link="FoundationSaveCloseCandidate.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../../src/FoundationHost/FoundationSourceCandidate.cs" Link="FoundationSourceCandidate.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../../src/FoundationHost/FoundationCompileCandidate.cs" Link="FoundationCompileCandidate.cs" /></ItemGroup>
+  <!-- The Workbench's doctor fix command and the PlcWorker's group results, read against the host CLI. -->
+  <ItemGroup>
+    <Compile Include="../../../src/Studio/Gui/Services/DoctorFixCommand.cs" Link="Workbench/DoctorFixCommand.cs" />
+    <Compile Include="../../../src/Shared/WindowsOpennessGroup.cs" Link="Shared/WindowsOpennessGroup.cs" />
+  </ItemGroup>
 </Project>
