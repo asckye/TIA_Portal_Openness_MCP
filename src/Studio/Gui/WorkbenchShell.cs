@@ -166,7 +166,7 @@ public partial class MainWindow
         LogContent.Visibility = page == "Log" ? Visibility.Visible : Visibility.Collapsed;
         _model.IsConfigurationPage = page == "Mcp";
         ConfigurationHost.Visibility = page == "Mcp" ? Visibility.Visible : Visibility.Collapsed;
-        EngineeringPage.Visibility = page is "Engineering" or "Blocks" or "VersionControl" or "Log" ? Visibility.Visible : Visibility.Collapsed;
+        EngineeringPage.Visibility = page is "Engineering" or "Blocks" ? Visibility.Visible : Visibility.Collapsed;
         CallsContent.Visibility = page == "Calls" ? Visibility.Visible : Visibility.Collapsed;
         AuditContent.Visibility = page == "Audit" ? Visibility.Visible : Visibility.Collapsed;
         EnvironmentContent.Visibility = page == "Environment" ? Visibility.Visible : Visibility.Collapsed;
@@ -174,8 +174,8 @@ public partial class MainWindow
         else if (page == "Log") _model.IsLogTab = true;
         else if (page is "Engineering" or "Blocks") _model.IsBlocksTab = true;
         QueueControlSnapshot();
-        ((RadioButton)FindName("Rail" + (page is "Blocks" or "VersionControl" ? "Engineering" : page))).IsChecked = true;
-        if (page is "Engineering" or "Blocks" or "VersionControl")
+        ((RadioButton)FindName("Rail" + (page == "Blocks" ? "Engineering" : page))).IsChecked = true;
+        if (page is "Engineering" or "Blocks")
             ((RadioButton)FindName("Rail" + (page == "Engineering" ? "Overview" : page))).IsChecked = true;
         UpdateShell();
     }

@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Automation;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Threading;
 
 namespace TiaOpenness.Gui.Controls;
@@ -23,6 +24,19 @@ public static class ResponsiveLayout
         "Enabled", typeof(bool), typeof(ResponsiveLayout), new PropertyMetadata(false, Changed));
     public static bool GetEnabled(DependencyObject element) => (bool)element.GetValue(EnabledProperty);
     public static void SetEnabled(DependencyObject element, bool value) => element.SetValue(EnabledProperty, value);
+
+    // Compact pages let their lists grow inside one page viewport, including the 1200 px boundary layout.
+    // Spacious layouts retain finite list viewports and virtualization.
+    public static readonly DependencyProperty ScrollWholePageProperty = DependencyProperty.RegisterAttached(
+        "ScrollWholePage", typeof(bool), typeof(ResponsiveLayout),
+        new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.Inherits));
+    public static bool GetScrollWholePage(DependencyObject element) => (bool)element.GetValue(ScrollWholePageProperty);
+    public static void SetScrollWholePage(DependencyObject element, bool value) => element.SetValue(ScrollWholePageProperty, value);
+    private static readonly DependencyPropertyKey IsPageScrollingPropertyKey = DependencyProperty.RegisterAttachedReadOnly(
+        "IsPageScrolling", typeof(bool), typeof(ResponsiveLayout),
+        new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.Inherits));
+    public static readonly DependencyProperty IsPageScrollingProperty = IsPageScrollingPropertyKey.DependencyProperty;
+    public static bool GetIsPageScrolling(DependencyObject element) => (bool)element.GetValue(IsPageScrollingProperty);
     private static readonly DependencyProperty StateProperty = DependencyProperty.RegisterAttached(
         "State", typeof(State), typeof(ResponsiveLayout));
 
@@ -52,8 +66,10 @@ public static class ResponsiveLayout
         private GridLength _sideWidth, _gapWidth;
         private bool _collapsed, _changing;
         private bool _queued;
+        private bool _stacked;
+        private bool _pageScrolling;
 
-        internal bool Stacked => _scroll != null;
+        internal bool Stacked => _stacked;
 
         // Loaded and visibility changes arrive during tree walks, where the children cannot change yet.
         internal void Queue()
@@ -75,6 +91,22 @@ public static class ResponsiveLayout
             if (narrow && _collapsed) CollapseContext(false);
             if (_toggle != null) _toggle.Visibility = !narrow && grid.ActualWidth < 1232
                 && (_collapsed || _side?.Visibility == Visibility.Visible) ? Visibility.Visible : Visibility.Collapsed;
+            if (GetScrollWholePage(grid) && grid.ActualWidth <= StackBelowWidth + 0.5)
+            {
+                grid.SetValue(IsPageScrollingPropertyKey, true);
+                ScrollPage(narrow);
+                _pageScrolling = true;
+                return;
+            }
+            if (_pageScrolling)
+            {
+                var content = (Panel)_scroll!.Content;
+                foreach (var child in _children!) Move(child, content.Children, grid.Children);
+                grid.Children.Remove(_scroll);
+                _scroll = null;
+                _stacked = _pageScrolling = false;
+                grid.SetValue(IsPageScrollingPropertyKey, false);
+            }
             if (narrow != (_scroll != null))
             {
                 if (narrow) Stack();
@@ -86,8 +118,59 @@ public static class ResponsiveLayout
                     view.SetCurrentValue(FrameworkElement.HeightProperty, Math.Max(view.MinHeight, grid.ActualHeight));
         }
 
+        private void ScrollPage(bool narrow)
+        {
+            if (_scroll != null && narrow == _stacked) return;
+            Panel content;
+            if (narrow) content = new StackPanel();
+            else
+            {
+                var columns = new Grid();
+                foreach (var column in grid.ColumnDefinitions)
+                {
+                    var copy = new ColumnDefinition { MinWidth = column.MinWidth, MaxWidth = column.MaxWidth };
+                    // The context fold still controls the outer grid's column widths.
+                    BindingOperations.SetBinding(copy, ColumnDefinition.WidthProperty,
+                        new Binding(nameof(ColumnDefinition.Width)) { Source = column });
+                    columns.ColumnDefinitions.Add(copy);
+                }
+                foreach (var row in grid.RowDefinitions)
+                    columns.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto, MinHeight = row.MinHeight });
+                content = columns;
+            }
+
+            if (_scroll == null)
+            {
+                _children = grid.Children.Cast<UIElement>().Where(child => child != _toggle).ToList();
+                _scroll = new ScrollViewer { Content = content, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                    HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
+                Grid.SetColumnSpan(_scroll, grid.ColumnDefinitions.Count);
+                Grid.SetRowSpan(_scroll, Math.Max(1, grid.RowDefinitions.Count));
+                grid.Children.Add(_scroll);
+                MovePageChildren(grid, content);
+            }
+            else
+            {
+                var previous = (Panel)_scroll.Content;
+                // Retain the inherited context while the previous panel leaves the connected tree.
+                previous.DataContext = grid.DataContext;
+                _scroll.Content = content;
+                MovePageChildren(previous, content);
+                previous.ClearValue(FrameworkElement.DataContextProperty);
+            }
+            _stacked = narrow;
+        }
+
+        private void MovePageChildren(Panel previous, Panel content)
+        {
+            foreach (var child in _children!.OrderBy(child => child is FrameworkElement head && IsPageHead(head) ? 0 : 1)
+                .ThenBy(Grid.GetColumn).ThenBy(Grid.GetRow))
+                Move(child, previous.Children, content.Children);
+        }
+
         private void Stack()
         {
+            _stacked = true;
             _children = grid.Children.Cast<UIElement>().Where(child => child != _toggle).ToList();
             var stack = new StackPanel();
             _scroll = new ScrollViewer { Content = stack, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
@@ -127,6 +210,7 @@ public static class ResponsiveLayout
             _minimums.Clear();
             _heights.Clear();
             _scroll = null;
+            _stacked = false;
         }
 
         // A view between two parents would lose its inherited data context for a moment: its lists would drop

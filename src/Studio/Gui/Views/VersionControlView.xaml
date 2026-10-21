@@ -1,4 +1,5 @@
 <UserControl xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:views="clr-namespace:TiaOpenness.Gui.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="TiaOpenness.Gui.Views.VersionControlView" x:Name="PageRoot">
+  <Grid>
   <DockPanel>
     <Border DockPanel.Dock="Top" Style="{StaticResource Primer.PageHead}">
       <StackPanel>
@@ -6,7 +7,7 @@
         <TextBlock Text="{l:Tr Vc.Subtitle}" Style="{StaticResource Primer.PageSubtitle}" ToolTip="{l:Tr Vc.Subtitle}"/>
       </StackPanel>
     </Border>
-  <Grid ux:ResponsiveLayout.Enabled="True">
+  <Grid ux:ResponsiveLayout.Enabled="True" ux:ResponsiveLayout.ScrollWholePage="True">
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="*"/>
       <ColumnDefinition Width="20"/>
@@ -224,7 +225,8 @@
         </Grid>
       </Border>
     </Grid>
-    <views:EngineeringOptionsView x:Name="Options" Grid.ColumnSpan="3"/>
   </Grid>
   </DockPanel>
+  <views:EngineeringOptionsView x:Name="Options"/>
+  </Grid>
 </UserControl>

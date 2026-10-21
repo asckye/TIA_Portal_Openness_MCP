@@ -48,7 +48,7 @@
               <StackPanel x:Name="SiderMenu">
                 <TextBlock Text="{l:Tr Shell.GroupEngineering}" Style="{StaticResource Primer.MenuGroup}"/>
                 <RadioButton AutomationProperties.Name="{l:Tr Shell.Engineering}" x:Name="RailEngineering" Content="{l:Tr Shell.Engineering}" GroupName="Pages" ToolTip="Ctrl+2" AutomationProperties.AcceleratorKey="Ctrl+2" Tag="Engineering" ux:Ux.Icon="{DynamicResource Icon.Project}" Style="{StaticResource Primer.NavItem}" Click="OnRailClick"/>
-                <RadioButton AutomationProperties.Name="{l:Tr Shell.VersionControl}" x:Name="RailVersionControl" Content="{l:Tr Shell.VersionControl}" ToolTip="Ctrl+4" AutomationProperties.AcceleratorKey="Ctrl+4" Tag="VersionControl" GroupName="ProjectPages" ux:Ux.Icon="{DynamicResource Icon.Branch}" Style="{StaticResource Primer.NavItem}" Click="OnRailClick"/>
+                <RadioButton AutomationProperties.Name="{l:Tr Shell.VersionControl}" x:Name="RailVersionControl" Content="{l:Tr Shell.VersionControl}" ToolTip="Ctrl+4" AutomationProperties.AcceleratorKey="Ctrl+4" Tag="VersionControl" GroupName="Pages" ux:Ux.Icon="{DynamicResource Icon.Branch}" Style="{StaticResource Primer.NavItem}" Click="OnRailClick"/>
                 <TextBlock Text="{l:Tr Shell.GroupAi}" Style="{StaticResource Primer.MenuGroup}"/>
                 <RadioButton x:Name="RailCalls" AutomationProperties.Name="{l:Tr Shell.Calls}" GroupName="Pages" ToolTip="Ctrl+5" AutomationProperties.AcceleratorKey="Ctrl+5" Tag="Calls" ux:Ux.Icon="{DynamicResource Icon.Robot}" Style="{StaticResource Primer.NavItem}" Click="OnRailClick">
                   <DockPanel>
@@ -159,9 +159,9 @@
               <views:ProjectOperationsView x:Name="OperationsContent" Panel.ZIndex="1" Tag="{Binding Tag,ElementName=Root}"/>
               <views:BlocksView x:Name="BlocksContent" Grid.Row="1" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
               <views:EngineeringSideView x:Name="EngineeringSideContent" Grid.RowSpan="2" Grid.Column="2" Tag="{Binding Tag,ElementName=Root}"/>
-              <views:VersionControlView x:Name="VersionControlContent" Grid.RowSpan="2" Grid.ColumnSpan="3" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
-              <views:LogView x:Name="LogContent" Grid.RowSpan="2" Grid.ColumnSpan="3" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
             </Grid>
+            <views:VersionControlView x:Name="VersionControlContent" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
+            <views:LogView x:Name="LogContent" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
           </Grid>
         </Grid>
       </Grid>

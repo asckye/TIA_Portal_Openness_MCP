@@ -6,7 +6,10 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
+using TiaMcpConfigurator;
+using TiaOpenness.Contracts.Models;
 using TiaOpenness.Gui.Controls;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.Themes;
@@ -25,6 +28,219 @@ public sealed class WorkbenchNarrowLayoutTests(WpfContext wpf)
     private static readonly string[] Pages = ["Mcp", "Engineering", "VersionControl", "Calls", "Audit", "Environment", "Log"];
     // The screenshot set the maintainer reviews: MCP & clients, Project, Environment and AI calls.
     private static readonly string[] CapturedPages = ["Mcp", "Engineering", "Environment", "Calls"];
+
+    [Fact]
+    public void Sider_selects_only_the_current_page_after_leaving_version_control()
+    {
+        foreach (var language in new[] { AppLanguage.Chinese, AppLanguage.English })
+        foreach (var theme in new[] { AppTheme.Light, AppTheme.Dark })
+            wpf.RunWithLanguage(language, () =>
+            {
+                var previous = ThemeManager.Current.Theme;
+                ThemeManager.Current.Theme = theme;
+                var window = new MainWindow(ProjectPageTestSupport.Model(release: "21"), false,
+                    FeaturePageFixtures.Approvals(), new FeaturePageFixtures.Diagnostics());
+                try
+                {
+                    var host = WorkbenchRenderTests.CreateHost(window);
+                    var sider = (FrameworkElement)window.FindName("SiderMenu");
+                    void Selected(string page)
+                    {
+                        Settle(host, 1200, 780);
+                        var selected = Assert.Single(Descendants<RadioButton>(sider),
+                            item => Shown(item, sider) && item.IsChecked == true);
+                        Assert.Equal("Rail" + (page == "Blocks" ? "Engineering" : page), selected.Name);
+                    }
+                    foreach (string page in new[] { "Mcp", "Engineering", "Blocks", "Calls", "Audit", "Environment", "Log" })
+                    {
+                        window.Navigate("VersionControl"); Selected("VersionControl");
+                        window.Navigate(page); Selected(page);
+
+                        UnifiedDesktopTests.ClickControl((RadioButton)window.FindName("RailVersionControl"));
+                        Selected("VersionControl");
+                        UnifiedDesktopTests.ClickControl((RadioButton)window.FindName("Rail" + page));
+                        Selected(page);
+
+                        var shortcut = window.InputBindings.OfType<KeyBinding>().Single(binding => Equals(binding.CommandParameter, page));
+                        WorkbenchCommands.Navigate.Execute("VersionControl", host); Selected("VersionControl");
+                        Assert.Equal(ModifierKeys.Control, shortcut.Modifiers);
+                        Assert.Same(WorkbenchCommands.Navigate, shortcut.Command);
+                        WorkbenchCommands.Navigate.Execute(shortcut.CommandParameter, host); Selected(page);
+
+                        window.Navigate("VersionControl");
+                        window.OpenSettings();
+                        var drawer = (FrameworkElement)window.FindName("DrawerPanel");
+                        UnifiedDesktopTests.ClickControl(Descendants<Button>(drawer)
+                            .Single(button => AutomationProperties.GetName(button) == Loc.Current["Access.CloseDrawer"]));
+                        Selected("VersionControl");
+                        window.Navigate(page); Selected(page);
+                    }
+                }
+                finally { window.Close(); ThemeManager.Current.Theme = previous; }
+            });
+    }
+
+    [Theory]
+    [InlineData(640, 640)]
+    [InlineData(1024, 640)]
+    [InlineData(1200, 640)]
+    [InlineData(1200, 780)]
+    public void Environment_calls_and_version_control_have_one_vertical_scrollbar(int width, int height)
+    {
+        foreach (var language in new[] { AppLanguage.Chinese, AppLanguage.English })
+        foreach (var theme in new[] { AppTheme.Light, AppTheme.Dark })
+            wpf.RunWithLanguage(language, () =>
+            {
+                var previous = ThemeManager.Current.Theme;
+                ThemeManager.Current.Theme = theme;
+                var model = ProjectPageTestSupport.Model(release: "21");
+                var journal = new FeaturePageFixtures.Journal();
+                var call = journal.Calls[0];
+                journal.Replace(Enumerable.Range(0, 80).Select(i => call with
+                    { RequestId = "layout-call-" + i, JournalKey = "layout-call-" + i }).ToArray());
+                var environment = new FeaturePageFixtures.Environment();
+                environment.Replace(Enumerable.Range(0, 8).SelectMany(_ => environment.Groups).ToArray());
+                for (int i = 0; i < 80; i++)
+                {
+                    model.VersionControl.VcStatusItems.Add(new MappedObjectInfo
+                        { Name = "Layout_" + i, FilePath = "Layout_" + i + ".xml", CompareState = VcCompareState.Unequal });
+                    model.VersionControl.VcDiffLines.Add(new DiffLine { Text = "+ layout row " + i, Kind = DiffLineKind.Added });
+                }
+                var window = new MainWindow(model, false, FeaturePageFixtures.Approvals(), new FeaturePageFixtures.Diagnostics());
+                try
+                {
+                    window.ConfigureFeaturePages(journal, new FeaturePageFixtures.Audit(), environment,
+                        new FeaturePageFixtures.Notification(), () => FeaturePageFixtures.Now);
+                    var host = WorkbenchRenderTests.CreateHost(window, width, height);
+                    foreach (string page in new[] { "Environment", "Calls", "VersionControl" })
+                    {
+                        window.Navigate(page);
+                        // Exercise the initial layout and both directions across the stacking breakpoint.
+                        foreach (int layoutWidth in new[] { width, width == 1200 ? 640 : 1200, width })
+                        {
+                            host.Width = layoutWidth;
+                            Settle(host, layoutWidth, height);
+                            var root = PageRoot(window, page);
+                            string context = $"{page} {layoutWidth}x{height} {language} {theme}";
+                            var bar = Assert.Single(Descendants<ScrollBar>(root), scrollbar =>
+                                scrollbar.Orientation == Orientation.Vertical && Shown(scrollbar, host)
+                                && scrollbar.ActualWidth > 0 && scrollbar.ActualHeight > 0);
+                            var scroll = Descendants<ScrollViewer>(root).Single(viewer =>
+                                viewer.ComputedVerticalScrollBarVisibility == Visibility.Visible && Shown(viewer, host));
+                            Assert.True(scroll.ScrollableHeight > 0, context);
+                            Assert.True(bar.ActualWidth > 0, context);
+                            Assert.NotEqual(KeyboardNavigationMode.None, KeyboardNavigation.GetTabNavigation(scroll));
+                            foreach (var inner in Descendants<ScrollViewer>(scroll).Where(viewer => Shown(viewer, host)))
+                                Assert.True(inner.ScrollableHeight < 0.5, context + ": a list still has its own vertical viewport");
+                            ScrollBar.ScrollToTopCommand.Execute(null, scroll);
+                            Settle(host, layoutWidth, height);
+                            ScrollBar.PageDownCommand.Execute(null, scroll);
+                            Settle(host, layoutWidth, height);
+                            Assert.True(scroll.VerticalOffset > 0, context + ": keyboard PageDown did not scroll");
+                            ScrollBar.ScrollToBottomCommand.Execute(null, scroll);
+                            Settle(host, layoutWidth, height);
+                            Assert.InRange(scroll.ScrollableHeight - scroll.VerticalOffset, 0, 1);
+                        }
+                    }
+                }
+                finally { window.Close(); ThemeManager.Current.Theme = previous; }
+            });
+    }
+
+    [Theory]
+    [InlineData(640)]
+    [InlineData(1024)]
+    [InlineData(1200)]
+    public void Log_page_at_640_px_height_has_no_binding_errors(int width)
+    {
+        foreach (var language in new[] { AppLanguage.Chinese, AppLanguage.English })
+        foreach (var theme in new[] { AppTheme.Light, AppTheme.Dark })
+            wpf.RunWithLanguage(language, () =>
+            {
+                using var trace = new BindingPathTests.BindingTrace();
+                var previous = ThemeManager.Current.Theme;
+                ThemeManager.Current.Theme = theme;
+                var model = ProjectPageTestSupport.Model(results: true, release: "21");
+                var window = new MainWindow(model, false, FeaturePageFixtures.Approvals(), new FeaturePageFixtures.Diagnostics());
+                try
+                {
+                    var host = WorkbenchRenderTests.CreateHost(window, width, 640);
+                    window.Navigate("VersionControl"); Settle(host, width, 640);
+                    window.Navigate("Log"); Settle(host, width, 640);
+                    var list = (ListBox)ProjectPageTestSupport.Find(window, "LogList");
+                    Assert.NotEmpty(Descendants<ListBoxItem>(list));
+                    foreach (int count in new[] { 80, 1, 80 })
+                    {
+                        for (int i = 0; i < count; i++) model.Activity.Append("Layout log row " + i);
+                        Settle(host, width, 640);
+                        var scroll = Descendants<ScrollViewer>(list).Single();
+                        scroll.ScrollToHome(); Settle(host, width, 640);
+                        scroll.ScrollToEnd(); Settle(host, width, 640);
+                        model.Activity.ClearLog(); Settle(host, width, 640);
+                    }
+                    window.Navigate("Engineering"); Settle(host, width, 640);
+                    model.Activity.Append("Log reopened");
+                    window.Navigate("Log"); Settle(host, width, 640);
+                }
+                finally { window.Close(); ThemeManager.Current.Theme = previous; WpfContext.Drain(); }
+                Assert.True(string.IsNullOrWhiteSpace(trace.Text), trace.Text);
+            });
+    }
+
+    [Fact]
+    public void English_client_names_use_two_lines_at_1200_px_and_keep_equal_card_heights()
+    {
+        foreach (var theme in new[] { AppTheme.Light, AppTheme.Dark })
+            wpf.RunWithLanguage(AppLanguage.English, () =>
+            {
+                var previous = ThemeManager.Current.Theme;
+                ThemeManager.Current.Theme = theme;
+                string[] names = ["Claude Code", "Codex", "Gemini CLI", "Qwen", "Kimi", "Yuanbao", "DeepSeek", "GLM", "Grok",
+                    "Qwen Agent", "Cursor", "VS Code · Copilot", "A deliberately long client name that needs more than two lines"];
+                var clients = names.Select((name, i) => new ClientProfile("layout-" + i, name,
+                    @"C:\fixture\" + i + ".json", "layout fixture") { Detected = true }).ToList();
+                var preview = new ConfigurationPreview("21", @"C:\fixture\Portal V21", "127.0.0.1", false,
+                    false, true, "", "", clients);
+                var window = new MainWindow(ProjectPageTestSupport.Model(), false, FeaturePageFixtures.Approvals(),
+                    new FeaturePageFixtures.Diagnostics(), preview);
+                try
+                {
+                    window.ShowConfiguration(false);
+                    var host = WorkbenchRenderTests.CreateHost(window);
+                    var list = (ListBox)window.Configuration!.FindName("ClientChoices");
+                    Settle(host, 1200, 780);
+                    var rows = clients.Select((client, i) =>
+                        Assert.IsType<ListBoxItem>(list.ItemContainerGenerator.ContainerFromIndex(i))).ToArray();
+                    int wrapped = 0;
+                    foreach (var row in rows)
+                    {
+                        var name = Descendants<TextBlock>(row).Single(text => text.Name == "ClientName");
+                        Assert.Equal(((ClientProfile)row.DataContext).DisplayName, name.Text);
+                        Assert.Equal(TextWrapping.Wrap, name.TextWrapping);
+                        Assert.Equal(TextTrimming.CharacterEllipsis, name.TextTrimming);
+                        Assert.Equal(36, name.MaxHeight);
+                        // TextPointer also visits formatted lines hidden by trimming: measure the visible line boxes.
+                        Assert.InRange(name.ActualHeight, name.LineHeight, name.MaxHeight);
+                        int lines = (int)Math.Round(name.ActualHeight / name.LineHeight);
+                        Assert.InRange(lines, 1, 2);
+                        if (name.Text == "VS Code · Copilot") Assert.Equal(2, lines);
+                        if (lines == 2) wrapped++;
+                        var content = Assert.IsType<Grid>(VisualTreeHelper.GetParent(name));
+                        // Three em leaves a usable word-sized name column beside the English detection badge.
+                        Assert.InRange(name.ActualWidth, name.FontSize * 3, row.ActualWidth);
+                        Assert.InRange(content.ColumnDefinitions[0].ActualWidth,
+                            name.FontSize * 3 + name.Margin.Left + name.Margin.Right, content.ActualWidth);
+                        Assert.Equal(((ClientProfile)row.DataContext).Tooltip, content.ToolTip);
+                        var tile = Assert.IsType<Border>(row.Template.FindName("Tile", row));
+                        Assert.True(tile.ActualHeight >= name.ActualHeight + tile.BorderThickness.Top + tile.BorderThickness.Bottom);
+                    }
+                    Assert.True(wrapped > 0, "The 1200 px fixture must actually render a two-line name.");
+                    foreach (var group in rows.GroupBy(row => Math.Round(row.TranslatePoint(new Point(), list).Y)))
+                        Assert.InRange(group.Max(row => row.ActualHeight) - group.Min(row => row.ActualHeight), 0, 0.5);
+                }
+                finally { window.Close(); ThemeManager.Current.Theme = previous; }
+            });
+    }
 
     [Theory]
     [InlineData(1024, 640)]

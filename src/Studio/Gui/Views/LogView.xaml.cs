@@ -1,19 +1,28 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 using TiaOpenness.Gui.ViewModels;
 
 namespace TiaOpenness.Gui.Views;
 
 public partial class LogView : UserControl
 {
+    private bool _followQueued;
     public LogView() => InitializeComponent();
     private MainViewModel Model => (MainViewModel)DataContext;
     private void OnLogScrollChanged(object sender, ScrollChangedEventArgs e)
     {
-        if (e.OriginalSource is ScrollViewer scroll && e.ExtentHeightChange > 0
-            && scroll.VerticalOffset >= scroll.ExtentHeight - e.ExtentHeightChange - scroll.ViewportHeight - 2
-            && LogList.Items.Count > 0) LogList.ScrollIntoView(LogList.Items[^1]);
+        if (_followQueued || e.OriginalSource is not ScrollViewer scroll || e.ExtentHeightChange <= 0
+            || scroll.VerticalOffset < scroll.ExtentHeight - e.ExtentHeightChange - scroll.ViewportHeight - 2) return;
+        // ScrollChanged can arrive while a virtual row is being prepared. Follow after layout, so scrolling
+        // cannot recycle that row before its container style has replaced the theme's ancestor bindings.
+        _followQueued = true;
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
+        {
+            _followQueued = false;
+            if (LogList.Items.Count > 0) LogList.ScrollIntoView(LogList.Items[^1]);
+        }));
     }
     private void OnCopyLog(object sender, RoutedEventArgs e)
     {

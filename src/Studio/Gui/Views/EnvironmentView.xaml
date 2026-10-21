@@ -1,5 +1,5 @@
 <UserControl xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:controls="clr-namespace:TiaOpenness.Gui.Controls" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" x:Class="TiaOpenness.Gui.Views.EnvironmentView">
-  <Grid ux:ResponsiveLayout.Enabled="True">
+  <Grid ux:ResponsiveLayout.Enabled="True" ux:ResponsiveLayout.ScrollWholePage="True">
     <Grid.ColumnDefinitions>
       <ColumnDefinition/>
       <ColumnDefinition Width="16"/>
@@ -37,7 +37,7 @@
           </Border>
         </StackPanel>
       </Border>
-      <ScrollViewer x:Name="GroupsScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+      <ScrollViewer x:Name="GroupsScroll" Grid.Row="2" Style="{StaticResource Primer.PageListScroll}" HorizontalScrollBarVisibility="Disabled">
         <ItemsControl x:Name="GroupList" ItemsSource="{Binding EnvironmentGroups}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>

@@ -820,6 +820,14 @@
     </Setter>
   </Style>
   <!-- Ant List: the stock template paints a fixed white ground when disabled, which shows through behind a modal in dark. -->
+  <Style x:Key="Primer.PageListScroll" TargetType="ScrollViewer">
+    <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+    <Style.Triggers>
+      <Trigger Property="ux:ResponsiveLayout.IsPageScrolling" Value="True">
+        <Setter Property="VerticalScrollBarVisibility" Value="Disabled"/>
+      </Trigger>
+    </Style.Triggers>
+  </Style>
   <Style x:Key="Primer.List" TargetType="ListBox">
     <Setter Property="Foreground" Value="{DynamicResource Primer.text}"/>
     <Setter Property="Background" Value="Transparent"/>
@@ -838,6 +846,11 @@
         </ControlTemplate>
       </Setter.Value>
     </Setter>
+    <Style.Triggers>
+      <Trigger Property="ux:ResponsiveLayout.IsPageScrolling" Value="True">
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled"/>
+      </Trigger>
+    </Style.Triggers>
   </Style>
   <!--
     Ant Table row: colorSplit rule, rowHoverBg (colorFillAlter) and rowSelectedBg
@@ -1015,6 +1028,7 @@
           <Setter Property="Padding" Value="0"/>
           <Setter Property="Margin" Value="0"/>
           <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+          <Setter Property="VerticalContentAlignment" Value="Center"/>
           <Setter Property="Template">
             <Setter.Value>
               <ControlTemplate TargetType="ListBoxItem">
@@ -1952,7 +1966,7 @@
       <Setter.Value>
         <ControlTemplate TargetType="ListBoxItem">
           <!-- Ant small hoverable Card holding a Checkbox and the detection Badge. -->
-          <Border x:Name="Tile" Height="36" CornerRadius="{StaticResource Ui.Radius}" Background="{DynamicResource Primer.card}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="12,0">
+          <Border x:Name="Tile" MinHeight="36" CornerRadius="{StaticResource Ui.Radius}" Background="{DynamicResource Primer.card}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="12,0">
             <Grid>
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="20"/>
@@ -2028,8 +2042,8 @@
         <ColumnDefinition Width="*"/>
         <ColumnDefinition Width="Auto"/>
       </Grid.ColumnDefinitions>
-      <TextBlock Text="{Binding DisplayName}" FontSize="{DynamicResource Ui.FontSize.Control}" FontWeight="Normal" Margin="0,0,5,0"/>
-      <StackPanel Grid.Column="1" Orientation="Horizontal">
+      <TextBlock x:Name="ClientName" Text="{Binding DisplayName}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" LineHeight="18" LineStackingStrategy="BlockLineHeight" MaxHeight="36" FontSize="{DynamicResource Ui.FontSize.Control}" FontWeight="Normal" Margin="0,0,5,0"/>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
         <Ellipse Width="6" Height="6" Margin="0,0,5,0" Style="{StaticResource Primer.DetectionDot}"/>
         <TextBlock FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="Normal" Style="{StaticResource Primer.DetectionText}"/>
       </StackPanel>
@@ -2272,7 +2286,7 @@
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="controls:LogTailView">
-          <ScrollViewer x:Name="PART_ScrollViewer" CanContentScroll="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0">
+          <ScrollViewer x:Name="PART_ScrollViewer" CanContentScroll="True" VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}" HorizontalScrollBarVisibility="Disabled" Padding="0">
             <ItemsPresenter/>
           </ScrollViewer>
         </ControlTemplate>

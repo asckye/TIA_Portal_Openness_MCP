@@ -173,7 +173,7 @@ public class MainWindowTests(WpfContext wpf)
     /// means its binding did not resolve.
     /// </summary>
     [Theory]
-    [InlineData("Pages", 6)]
+    [InlineData("Pages", 7)]
     [InlineData("SyncDirection", 2)]
     public void Every_picker_group_has_one_and_only_one_choice(string group, int expectedSegments)
     {
