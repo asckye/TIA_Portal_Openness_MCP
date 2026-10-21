@@ -7,6 +7,8 @@
 
 现行实施：B1–B7 和 F19 样板已合并；旧版注册规则与 API 复核已合并。后续批次及验收状态以[重构计划](refactor-plan.md)为准。下方数量、源码定位和 API 调研保留 2026-10-08 的研究基线；现行范围只引用[生成目录](../reference/version-tool-catalog.md)。决定见 [ADR 0009](decisions/0009-port-v20-v21-tools-to-foundation-adapters.md)、[ADR 0012](decisions/0012-old-release-tool-registration.md)和 [ADR 0014](decisions/0014-tool-counts-follow-official-api.md)。
 
+2026-10-21 补注：下方批次工具表中的 `20/21` 是历史范围；现行八版批次准入按[协议规范第 11 节](design-spec/v4-protocol.md#11-批次与桥接)执行。
+
 ## 0. 摘要
 
 | 项 | 结论 |

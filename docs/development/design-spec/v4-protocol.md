@@ -500,7 +500,7 @@ PlanFile = {path, exists, byteLength|null, sha256|null}；PlanOperation = {tool,
 
 ### 9.5 批次计划（PreviewToolBatch / ApplyToolBatch）
 
-- `PreviewToolBatch(operations[1..50], expectedProject)`：只接受带布尔 `dryRun` 且分类为可批量写的工具，并强制 `dryRun: true`。逐项预览，遇到失败就停止，余下的项标为 `NOT_EXECUTED`。全部成功时签发令牌（两个 GUID 拼成的 64 位十六进制，有效期 10 分钟，只能用一次），返回 `data{token, expiresUtc, operations, items, executed:false, scope}`。
+- `PreviewToolBatch(operations[1..50], expectedProject)`：只接受 `BatchWrite: true` 且带布尔 `dryRun` 参数的工具，并强制 `dryRun: true`。准入规则见[第 11 节](#11-批次与桥接)。逐项预览，遇到失败就停止，余下的项标为 `NOT_EXECUTED`。全部成功时签发令牌（两个 GUID 拼成的 64 位十六进制，有效期 10 分钟，只能用一次），返回 `data{token, expiresUtc, operations, items, executed:false, scope}`。
 - `ApplyToolBatch(previewToken)`：取出令牌后立即作废（不存在时返回 `NOT_FOUND`）。批次中有 UI 工具时返回 `UNSUPPORTED_CAPABILITY`。复核绑定身份和全部预览，有变化时返回 `PLAN_STALE`（details.previewToken 中放令牌，details.planHash 为 null，见 API-22）。然后按顺序以 `dryRun: false` 执行，遇到失败或未知就停止，余下的项为 `NOT_EXECUTED`。不回滚（`data.rollbackPerformed: false`）。
 
 ### 9.6 生成计划（P8-31e）
@@ -556,9 +556,15 @@ V4 计划、审批和 PLAN_STALE 中的 `planHash`、`argumentsHash`、`inventor
 
 ## 11. 批次与桥接
 
+**批次准入**：V14 SP1–V21 的全部八个发布版本 MUST 使用同一份经过审核的 `ToolMetadata` 分类表。同一工具的 `BatchRead` 和 `BatchWrite` 标志在八版一致。只读批次 MUST 要求 `BatchRead: true`；预览批次 MUST 要求 `BatchWrite: true` 且带布尔 `dryRun` 参数。MUST NOT 仅凭 `READ`、`OFFLINE`、`WRITE` 或 `FILE` 类别推断准入。版本可用性、参数校验、UI 和嵌套编排限制仍然适用。
+
+2026-10-20 新开放的 `READ` 工具按纯读取标准审查：不改变绑定或会话状态，不改变工程、库或在线状态，不写文件，且执行成本有界。`READ` 工具仍可能因原生副作用、长耗时、挂起或崩溃风险、会话计划存储或导出内容分页而保持关闭。可能很慢的搜索与反射读取不会仅因标为 `READ` 就获准进入批次。4.0 未扩大 `OFFLINE`、`WRITE` 和 `FILE` 的准入范围。
+
+逐工具标志以 [`ToolMetadata` 表](../../../src/Logic/ModelContextProtocol/ToolMetadata.cs)为准。工具的版本可用性发布在[生成的版本工具目录](../../reference/version-tool-catalog.md)和[机器可读版本清单](../../../manifest/version-tools.json)中；这两份生成文件当前尚未列出 `BatchRead` 和 `BatchWrite`，不能用工具在目录中出现来判断批次准入。
+
 - **CallTool(name, arguments)**：在完整目录中查找工具。名称 MUST 精确匹配并区分大小写，包括桥接、预览和导出寄存排除名单。目标是 CallTool 本身时返回 `INVALID_ARGUMENT`（name）。目标属于其他发布版本时返回 `UNSUPPORTED_CAPABILITY`（capability = 工具名），目标完全未知时返回 `TOOL_NOT_FOUND`（MCP-11）。
 - **PreviewToolCall(name, arguments?)**：只做校验，不执行。参数错误时仍然返回 `ok: true`，错误放在 `data.validationError(s)` 中；没有绑定工程时返回 `PROJECT_NOT_BOUND`。
-- **RunReadOnlyToolBatch(operations[1..50], expectedProject?)**：只接受 READ 工具或 GetSessionState，不允许嵌套编排。
+- **RunReadOnlyToolBatch(operations[1..50], expectedProject?)**：只接受 `BatchRead: true` 的工具。`GetSessionState` 通过该标志获准进入只读批次。MUST NOT 嵌套编排，也不接受原生交叉引用查询或 `GetExportContent`。按输入顺序执行，不提供一致的原生快照。
 - **批次结果**：`data.items = [{index, target, result: Envelope}]`。index 从 0 开始连续递增，顺序与输入一致；`result` 是嵌套对象，**MUST NOT** 是字符串。另外还有 `data.rollbackPerformed: false`，以及在子结果无法读取时出现的 `row.outcomeUnknown: true`。
 - **聚合**（`V4Validation.Batch` + `BatchResult`）：
 
