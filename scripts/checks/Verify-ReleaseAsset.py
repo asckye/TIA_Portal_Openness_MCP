@@ -1,7 +1,8 @@
 """Verify a delivery ZIP against the Git checkout it claims to come from.
 
 The ZIP must equal the tag tree filtered by scripts/operations/delivery-files.json plus
-recorded runtime binaries, excluding runtime/verification/. No generated extras are allowed.
+recorded runtime binaries, excluding runtime/verification/, plus exactly the updater files the
+record binds in updaterFiles. No generated extras are allowed.
 The sidecar, tracked bytes, binary hashes and delivery package name are checked independently.
 
 Run locally by the .NET release tool before upload and by the "Verify published release" workflow after it.
@@ -136,11 +137,23 @@ def main():
     check(all(layout.delivered(n, rules) or n.startswith('runtime/verification/') for n in recorded),
           'Delivery rules exclude a recorded runtime dependency')
     recorded = {n: digest for n, digest in recorded.items() if layout.delivered(n, rules)}
-    check(runtime_in_zip == set(recorded), 'runtime inventory in ZIP differs from manifest/release-build.json: '
-          + ', '.join(sorted(runtime_in_zip ^ set(recorded))[:10]))
+    # The separately built updater: bound by the record's updaterFiles, never by its runtime inventory (P8-upd-bind).
+    updater = {}
+    try:
+        updater = {row['path']: row for row in layout.updater_inventory(build)}
+    except (ValueError, KeyError, TypeError) as error:
+        check(False, 'Invalid updater build record: ' + str(error))
+    check(not set(updater) & set(recorded), 'Updater files must not be part of the recorded runtime inventory')
+    check(all(layout.delivered(n, rules) for n in updater), 'Delivery rules exclude the recorded updater')
+    check(runtime_in_zip == set(recorded) | set(updater), 'runtime inventory in ZIP differs from the release build record (runtime inventory plus updaterFiles): '
+          + ', '.join(sorted(runtime_in_zip ^ (set(recorded) | set(updater)))[:10]))
     for path, expected in recorded.items():
         if path in content:
             check(sha(content[path]) == expected, f'runtime hash differs from release-build.json: {path}')
+    for path, row in updater.items():
+        if path in content:
+            check(sha(content[path]) == row['sha256'] and len(content[path]) == row['length'],
+                  f'updater differs from the release build record: {path}')
     exe = gui['executable']['path']
     if check(exe in content, f'{exe} missing from ZIP'):
         check(sha(content[exe]) == gui['executable']['sha256'], f'{exe} differs from manifest/configurator-build.json')
@@ -148,7 +161,7 @@ def main():
           'binaries are tracked in Git although the 2.8.1 policy keeps them out')
 
     # 4. Exact set equality also rejects verification tools, development files and old extras.
-    expected_files = tracked_set | set(recorded) | {exe}
+    expected_files = tracked_set | set(recorded) | set(updater) | {exe}
     check(set(content) == expected_files, 'ZIP file set differs from delivery set: '
           + ', '.join(sorted(set(content) ^ expected_files)[:20]))
     for name in content:
@@ -253,6 +266,77 @@ class AssetChecks(unittest.TestCase):
         self.assertEqual(self.verify()[0], 0)
         self.content['runtime/v20/worker/TiaMcp.PlcWorker.20.exe'] = b'changed'
         self.assertEqual(self.verify()[0], 1)
+
+    def bind_multi(self, multi):
+        data = json.dumps(multi).encode()
+        self.tree[layout.MULTI_RECORD] = data
+        self.content[layout.MULTI_RECORD] = data
+        delivery = json.loads(self.tree['manifest/delivery.json'])
+        delivery['multiVersionBuildSha256'] = sha(data)
+        self.tree['manifest/delivery.json'] = json.dumps(delivery).encode()
+        self.content['manifest/delivery.json'] = self.tree['manifest/delivery.json']
+
+    def use_recorded_updater(self):
+        """The real 4.x package: the eight-release record binds the updater in updaterFiles, outside its runtime inventory."""
+        self.use_multi_record()
+        multi = json.loads(self.tree[layout.MULTI_RECORD])
+        for name in layout.UPDATER_OUTPUTS:
+            self.runtime[name] = self.content[name] = b'built updater ' + name.encode()
+        multi['files'] = [row for row in multi['files'] if row['path'] not in layout.UPDATER_OUTPUTS]
+        multi['updaterFiles'] = [{'path': name, 'sha256': sha(self.runtime[name]), 'length': len(self.runtime[name])}
+                                 for name in sorted(layout.UPDATER_OUTPUTS)]
+        multi['engineCompatibility']['updaterFiles'] = [dict(row) for row in multi['updaterFiles']]
+        self.bind_multi(multi)
+        return multi
+
+    def test_package_with_the_recorded_updater_verifies(self):
+        self.use_recorded_updater()
+        self.assertEqual(self.verify()[0], 0)
+
+    def test_changed_updater_bytes_fail(self):
+        self.use_recorded_updater()
+        for name in layout.UPDATER_OUTPUTS:
+            with self.subTest(name=name):
+                original = self.content[name]
+                self.content[name] = original[:-1] + bytes([original[-1] ^ 1])
+                result, output = self.verify()
+                self.assertEqual(result, 1)
+                self.assertIn('updater differs from the release build record: ' + name, output)
+                self.content[name] = original
+        self.assertEqual(self.verify()[0], 0)
+
+    def test_missing_updater_record_fails(self):
+        multi = self.use_recorded_updater()
+        del multi['updaterFiles']
+        del multi['engineCompatibility']['updaterFiles']
+        self.bind_multi(multi)
+        result, output = self.verify()
+        self.assertEqual(result, 1)
+        self.assertIn('runtime inventory in ZIP differs', output)
+        self.assertIn('runtime/tools/TiaMcp.Updater.exe', output)
+
+    def test_updater_in_the_runtime_inventory_or_missing_from_the_zip_fails(self):
+        multi = self.use_recorded_updater()
+        multi['files'].append({'path': multi['updaterFiles'][0]['path'], 'sha256': multi['updaterFiles'][0]['sha256']})
+        self.bind_multi(multi)
+        result, output = self.verify()
+        self.assertEqual(result, 1)
+        self.assertIn('Invalid updater build record', output)
+        multi['files'].pop()
+        self.bind_multi(multi)
+        self.assertEqual(self.verify()[0], 0)
+        del self.content['runtime/tools/TiaMcp.Updater.exe.config']
+        result, output = self.verify()
+        self.assertEqual(result, 1)
+        self.assertIn('runtime/tools/TiaMcp.Updater.exe.config', output)
+
+    def test_extra_runtime_file_fails_with_the_recorded_updater(self):
+        self.use_recorded_updater()
+        self.content['runtime/tools/TiaMcp.Extra.exe'] = b'unrecorded'
+        result, output = self.verify()
+        self.assertEqual(result, 1)
+        self.assertIn('runtime inventory in ZIP differs', output)
+        self.assertIn('runtime/tools/TiaMcp.Extra.exe', output)
 
     def test_multi_record_binding_and_missing_worker_evidence_fail(self):
         self.use_multi_record()

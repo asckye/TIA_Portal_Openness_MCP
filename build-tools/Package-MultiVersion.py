@@ -32,10 +32,36 @@ def read_build_record(files):
     return layout.release_record(files, json.loads(files['manifest/delivery.json']))
 
 
+def updater_binaries(record, read):
+    """The updater bytes the record binds in updaterFiles, read from bin-build/updater; never from the runtime inventory."""
+    rows = layout.updater_inventory(record)
+    assert {row['path'] for row in rows} == set(layout.UPDATER_OUTPUTS), 'The release record does not bind the updater build output (updaterFiles)'
+    result = {}
+    for row in rows:
+        data = read(layout.UPDATER_OUTPUTS[row['path']])
+        assert sha(data) == row['sha256'] and len(data) == row['length'], 'Updater changed after testing: ' + row['path']
+        result[row['path']] = data
+    return result
+
+
 def self_test():
     import unittest
 
     class RuntimeInventoryTests(unittest.TestCase):
+        def test_updater_comes_from_its_recorded_build_output(self):
+            _, multi = layout.LayoutChecks.record_fixture()
+            built = {output: b'built ' + output.encode() for output in layout.UPDATER_OUTPUTS.values()}
+            multi['updaterFiles'] = [{'path': name, 'sha256': sha(built[output]), 'length': len(built[output])}
+                                     for name, output in sorted(layout.UPDATER_OUTPUTS.items())]
+            self.assertEqual(updater_binaries(multi, built.__getitem__), {name: built[output] for name, output in layout.UPDATER_OUTPUTS.items()})
+            changed = dict(built)
+            changed['bin-build/updater/TiaMcp.Updater.exe'] += b' changed'
+            with self.assertRaises(AssertionError):
+                updater_binaries(multi, changed.__getitem__)
+            del multi['updaterFiles']
+            with self.assertRaises(AssertionError):
+                updater_binaries(multi, built.__getitem__)
+
         def test_record_shapes_are_bound_and_preferred_before_inventory_is_read(self):
             engine, multi = layout.LayoutChecks.record_fixture()
             for name, record, binding in ((layout.ENGINE_RECORD, engine, 'engineBuildSha256'),
@@ -106,6 +132,7 @@ def main():
         data = path.read_bytes()
         assert sha(data) == row['sha256'], 'Binary changed after testing: ' + name
         files[name] = data
+    files.update(updater_binaries(primary, lambda relative: (ROOT / relative).read_bytes()))
     for key in multi['studioReleaseKeys']:
         assert f'runtime/v{key}/TiaMcp.FoundationHost.exe' in files
         assert f'runtime/studio/bridge/adapters/v{key}/TiaOpenness.Openness.dll' in files

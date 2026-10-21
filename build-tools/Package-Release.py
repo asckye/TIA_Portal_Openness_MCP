@@ -4,6 +4,7 @@ Since 2.8.1 the engine runtimes (runtime/v20, runtime/v21) and TiaOpenness.exe a
 the C# release tool produces them locally and records their hashes in manifest/release-build.json and
 manifest/configurator-build.json, which ARE committed. Packaging filters tracked files through
 scripts/operations/delivery-files.json, adds the recorded local binaries and refuses when a binary is missing or differs from its validated hash. The C# release command uploads the ZIP.
+The updater comes from bin-build/updater with the hashes the records bind in updaterFiles, outside the runtime inventory.
 """
 import argparse
 from collections import Counter
@@ -60,8 +61,54 @@ def read_build_record(files, delivery):
     return name, layout.shipped_engine_proof(record), layout.record_inventory(record)
 
 
+def check_updater(record, files):
+    """The package takes exactly the updater bytes the release record binds (updaterFiles), outside the runtime inventory."""
+    rows = layout.updater_inventory(record)
+    require({row['path'] for row in rows} == set(layout.UPDATER_OUTPUTS),
+            'The release record does not bind the updater build output (updaterFiles); run build-release')
+    for row in rows:
+        data = files.get(row['path'])
+        require(data is not None and sha(data) == row['sha256'] and len(data) == row['length'],
+                f"Updater build output differs from the validated release record: {layout.UPDATER_OUTPUTS[row['path']]}")
+
+
 def self_test():
     import unittest
+
+    class UpdaterChecks(unittest.TestCase):
+        def setUp(self):
+            _, self.record = layout.LayoutChecks.record_fixture()
+            self.files = {name: b'built ' + name.encode() for name in layout.UPDATER_OUTPUTS}
+            self.record['updaterFiles'] = [{'path': name, 'sha256': sha(data), 'length': len(data)} for name, data in sorted(self.files.items())]
+            self.record['engineCompatibility']['updaterFiles'] = [dict(row) for row in self.record['updaterFiles']]
+
+        def test_recorded_updater_bytes_are_packaged(self):
+            check_updater(self.record, self.files)
+
+        def test_mismatched_updater_bytes_are_refused(self):
+            for name in layout.UPDATER_OUTPUTS:
+                with self.subTest(name=name):
+                    files = dict(self.files)
+                    files[name] += b' changed'
+                    with self.assertRaisesRegex(RuntimeError, 'Updater build output differs'):
+                        check_updater(self.record, files)
+
+        def test_missing_updater_output_or_record_entry_is_refused(self):
+            files = dict(self.files)
+            del files['runtime/tools/TiaMcp.Updater.exe.config']
+            with self.assertRaisesRegex(RuntimeError, 'Updater build output differs'):
+                check_updater(self.record, files)
+            unbound = {key: value for key, value in self.record.items() if key != 'updaterFiles'}
+            with self.assertRaisesRegex(RuntimeError, 'does not bind the updater'):
+                check_updater(unbound, self.files)
+            self.record['updaterFiles'].pop()
+            with self.assertRaises(ValueError):
+                check_updater(self.record, self.files)
+
+        def test_updater_in_the_runtime_inventory_is_refused(self):
+            self.record['files'].append(dict(self.record['updaterFiles'][0]))
+            with self.assertRaisesRegex(ValueError, 'not the runtime inventory'):
+                check_updater(self.record, self.files)
 
     class RecordChecks(unittest.TestCase):
         def test_both_shapes_bind_before_packaging(self):
@@ -77,7 +124,8 @@ def self_test():
                 with self.assertRaises(ValueError):
                     read_build_record({name: data + b' '}, delivery)
 
-    return int(not unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromTestCase(RecordChecks)).wasSuccessful())
+    suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case) for case in (RecordChecks, UpdaterChecks))
+    return int(not unittest.TextTestRunner().run(suite).wasSuccessful())
 
 
 def validator_command(root, release_tool=None):
@@ -217,6 +265,8 @@ def main():
     runtime_inventory = {r['path'] for r in inventory}
     require(not (separately_built_updater & runtime_inventory), 'Updater files must come from the validated updater build output, not the runtime inventory')
     require(runtime_names == runtime_inventory | separately_built_updater, 'Runtime file inventory changed after validation')
+    # The bound record names the updater bytes build-release built and tested (P8-upd-bind); bin-build/updater must still hold them.
+    check_updater(release_record, files)
     for row in inventory:
         require(sha(files[row['path']]) == row['sha256'], f"Runtime changed: {row['path']}")
     source_names = layout.compiler_sources(root, files)

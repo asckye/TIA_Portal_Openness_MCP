@@ -846,6 +846,13 @@ internal static partial class ReleaseCommands
                 if (!File.Exists(path)) throw new ReleaseException("Runtime dependency missing: " + relative);
                 if (!string.Equals(ReleaseRecords.HashFile(path), row.Sha256, StringComparison.OrdinalIgnoreCase)) throw new ReleaseException("Runtime hash differs: " + relative);
             }
+        // The separately built updater is in neither runtime inventory; the bound record names it in updaterFiles (P8-upd-bind).
+        // Its shape is checked in every mode; with binaries a 4.x record must bind it and the bytes must match, from bin-build/updater
+        // in a repository and from runtime/tools in a package.
+        var updater = ReleaseRecords.UpdaterFiles(buildDoc.RootElement);
+        if (!noBinaries && (updater.Count != 0 || ReleaseRecords.RequiresPlcProof(buildDoc.RootElement)) &&
+            ReleaseRecords.UpdaterReason(root, buildDoc.RootElement, package) is { Length: > 0 } updaterReason)
+            throw new ReleaseException("Updater build output: " + updaterReason);
     }
 
     private static string? StrictRecordHash(string root, JsonElement record, string relative, string property)
@@ -1627,6 +1634,10 @@ internal static partial class ReleaseCommands
             var engineReuse = ReleaseRecords.EngineReuseReason(Root, release, engineRecord.RootElement, ReleaseRecords.GetSources(Root, "engine"), plan.Tier);
             if (engineReuse.Length != 0)
                 throw new ReleaseException("Full-engine inputs, binaries or audit evidence do not match: " + engineReuse + "; run build-release before multi-version completion");
+            // build-release recorded the updater it built and tested; the eight-release record binds the same bytes (P8-upd-bind).
+            var updaterReason = ReleaseRecords.UpdaterReason(Root, engineRecord.RootElement, package: false);
+            if (updaterReason.Length != 0)
+                throw new ReleaseException("Updater build output does not match the full-engine record: " + updaterReason + "; run build-release before multi-version completion");
             var deliveryPath = Path.Combine(Root, "manifest/delivery.json");
 
             if (plan.Includes("native-coverage"))
@@ -1661,6 +1672,8 @@ internal static partial class ReleaseCommands
             if (!SameArtifacts(files, ReleaseRecords.GetRuntimeFiles(Root))) throw new ReleaseException("Runtime files changed during multi-version audits; refusing to record results");
             engineReuse = ReleaseRecords.EngineReuseReason(Root, release, engineRecord.RootElement, ReleaseRecords.GetSources(Root, "engine"), plan.Tier);
             if (engineReuse.Length != 0) throw new ReleaseException("Full-engine inputs or evidence changed during multi-version audits: " + engineReuse);
+            updaterReason = ReleaseRecords.UpdaterReason(Root, engineRecord.RootElement, package: false);
+            if (updaterReason.Length != 0) throw new ReleaseException("Updater build output changed during multi-version audits: " + updaterReason);
             var record = new
             {
                 tier = plan.Tier, checkPlan = plan,
@@ -1671,12 +1684,18 @@ internal static partial class ReleaseCommands
                 studioReleaseKeys = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
                 nativeAcceptance = "NOT RUN", validation = validationAfter,
                 files = files.Select(row => new { path = row.Path, sha256 = row.Sha256, length = new FileInfo(Path.Combine(Root, row.Path)).Length }),
+                updaterFiles = engineRecord.RootElement.GetProperty("updaterFiles"),
                 sourceFiles = sources, validationInputs, validationArtifacts = pending.RootElement.GetProperty("evidence")
             };
             var recordPath = Path.Combine(Root, "manifest/multi-version-build.json");
             WriteJson(recordPath, record);
-            // The record's own PLC proof and shipped-engine copy must hold before the delivery binds it.
-            using (var written = JsonDocument.Parse(File.ReadAllText(recordPath))) ReleaseRecords.AssertPlcProof(Root, written.RootElement, true);
+            // The record's own PLC proof, shipped-engine copy and updater binding must hold before the delivery binds it.
+            using (var written = JsonDocument.Parse(File.ReadAllText(recordPath)))
+            {
+                ReleaseRecords.AssertPlcProof(Root, written.RootElement, true);
+                updaterReason = ReleaseRecords.UpdaterReason(Root, written.RootElement, package: false);
+                if (updaterReason.Length != 0) throw new ReleaseException("Eight-release record does not bind the tested updater: " + updaterReason);
+            }
             // The package binds the eight-release record (P8-04j2): delivery is prepared here, after the record exists.
             var prepareCode = RunSelfCommand(["prepare-delivery", "-Release", release, "-ReleaseDate", JsonString(engineRecord.RootElement, "releaseDate"), "-Tier", plan.Tier], "Eight-release delivery preparation");
             if (prepareCode != 0) return prepareCode;

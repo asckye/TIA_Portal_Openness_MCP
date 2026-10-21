@@ -125,6 +125,10 @@ internal static partial class ReleaseCommands
         RefreshPackageManifest(release, fileVersion, releaseDate, package);
         if (!SameArtifacts(sourceFiles, ReleaseRecords.GetSources(Root, "engine"))) throw new ReleaseException("Build inputs changed while validation was running; refusing to record results");
         if (!SameArtifacts(validationInputs, ReleaseRecords.GetValidationInputs(Root, "engine"))) throw new ReleaseException("Validation inputs changed during the build; refusing to record results");
+        var updaterFiles = ReleaseRecords.HashUpdaterOutput(Root);
+        if (!common.TryGetProperty("updaterFiles", out var builtUpdater) ||
+            !JsonElement.DeepEquals(builtUpdater, JsonSerializer.SerializeToElement(updaterFiles, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })))
+            throw new ReleaseException("Updater build output changed during validation; refusing to record results");
 
         // Same roots as ReleaseRecords' engine inventory check (the PowerShell Build-Release recorded these four only);
         // Foundation, Studio and bundled .NET runtimes belong to the multi-version record.
@@ -161,7 +165,7 @@ internal static partial class ReleaseCommands
                 versionPolicySdkPassed = GetJsonInt(common, "versionPolicySdkPassed"),
                 updaterPassed = GetJsonInt(common, "updaterPassed"), runtimes = runtimeRecords
             },
-            runtimeFiles, sourceFiles, validationInputs, validationArtifacts = artifacts
+            runtimeFiles, updaterFiles, sourceFiles, validationInputs, validationArtifacts = artifacts
         };
         WriteJson(Path.Combine(Root, "manifest/release-build.json"), record);
         // Completion binds the eight-release record before delivery preparation.
@@ -273,6 +277,8 @@ internal static partial class ReleaseCommands
         var updaterProject = Path.Combine(Root, "src/Updater/TiaMcp.Updater.csproj");
         RestoreBuildProject(dotnet, updaterProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
         RunBuildRaw(dotnet, ["build", updaterProject, "-c", "Release", "-f", "net48", "--no-restore", "-v:q"], Path.Combine(outputDirectory, "build-updater.log"), runTemp, cliHome, apiRoot, nuget, "Updater build");
+        // The package takes the updater from bin-build/updater, outside the runtime inventory; the record binds these bytes (P8-upd-bind).
+        var updaterFiles = ReleaseRecords.HashUpdaterOutput(Root);
         var harnessProject = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/TiaMcp.Engine.Harness.csproj");
         RestoreBuildProject(dotnet, harnessProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
         RunBuildRaw(dotnet, ["build", harnessProject, "-c", "Release", "--no-restore", "-v:q"], Path.Combine(outputDirectory, "build-harness.log"), runTemp, cliHome, apiRoot, nuget, "HTTP harness build");
@@ -303,7 +309,7 @@ internal static partial class ReleaseCommands
         }
         var common = new { diagnosticTests = diagnostics, crashEvidenceChecksPassed = crashEvidencePassed, writeGuardChecksPassed = writeGuardPassed, updaterPassed,
             nativeMcpSafetyChecksPassed = nativeMcpSafety, nativeSupervisorChecksPassed = (lifecycleMatch.Success ? int.Parse(lifecycleMatch.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) : 0),
-            offlinePassed, offlineV20Passed, keptCodePassed, keptCodeV20Passed, versionPolicySdkPassed = versionPolicyPassed };
+            offlinePassed, offlineV20Passed, keptCodePassed, keptCodeV20Passed, versionPolicySdkPassed = versionPolicyPassed, updaterFiles };
         WriteJson(Path.Combine(outputDirectory, "common.json"), common);
         using var result = JsonDocument.Parse(JsonSerializer.Serialize(common, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
         return result.RootElement.Clone();

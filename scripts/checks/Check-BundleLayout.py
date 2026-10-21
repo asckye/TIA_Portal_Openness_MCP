@@ -6,6 +6,10 @@ import re as _re
 
 ENGINE_RECORD = 'manifest/release-build.json'
 MULTI_RECORD = 'manifest/multi-version-build.json'
+# build-release builds and tests the net48 updater into bin-build/updater; the package carries it under runtime/tools.
+# It is in neither runtime inventory: the records bind exactly these files in updaterFiles (P8-upd-bind).
+UPDATER_OUTPUTS = {'runtime/tools/TiaMcp.Updater.exe': 'bin-build/updater/TiaMcp.Updater.exe',
+                   'runtime/tools/TiaMcp.Updater.exe.config': 'bin-build/updater/TiaMcp.Updater.exe.config'}
 
 
 def release_record_path(names):
@@ -29,6 +33,7 @@ def release_record(files, delivery=None):
             digest = hashlib.sha256(files['manifest/tools-list.json']).hexdigest()
             if any(runtime['toolsList']['sha256'] != digest for runtime in record['plcRuntimes'].values()):
                 raise ValueError('PLC tools-list changed after validation')
+    updater_inventory(record)
     return name, record
 
 
@@ -38,6 +43,26 @@ def record_inventory(record):
         raise ValueError('Duplicate runtime inventory paths')
     if any(not plain_path(row['path']) or not row['path'].startswith('runtime/') for row in rows):
         raise ValueError('Invalid runtime inventory path')
+    return rows
+
+
+def updater_inventory(record):
+    """The updater rows a record binds (package path, SHA-256, length); [] for a record written before the field
+    (3.x records predate the C# updater). Same rules as ReleaseRecords.UpdaterFiles in the release tool."""
+    if 'updaterFiles' not in record:
+        return []
+    rows = record['updaterFiles']
+    if (not isinstance(rows, list) or not all(isinstance(row, dict) for row in rows)
+            or sorted(str(row.get('path')) for row in rows) != sorted(UPDATER_OUTPUTS)
+            or not all(_re.fullmatch('[0-9a-f]{64}', str(row.get('sha256', ''))) and type(row.get('length')) is int
+                       and row['length'] > 0 for row in rows)):
+        raise ValueError('Invalid updater build record: updaterFiles must bind ' + ' and '.join(sorted(UPDATER_OUTPUTS))
+                         + ' with SHA-256 and length')
+    engine = record.get('engineCompatibility')
+    if isinstance(engine, dict) and 'updaterFiles' in engine and engine['updaterFiles'] != rows:
+        raise ValueError('Updater build record differs from the shipped-engine record')
+    if any(row.get('path') in UPDATER_OUTPUTS for key in ('runtimeFiles', 'files') for row in record.get(key) or []):
+        raise ValueError('Updater files must come from the validated updater build output, not the runtime inventory')
     return rows
 
 
@@ -404,6 +429,47 @@ class LayoutChecks(unittest.TestCase):
             release_record(files)
         with self.assertRaises(ValueError):
             release_record({})
+
+    @staticmethod
+    def updater_rows():
+        return [dict(path=name, sha256=hashlib.sha256(name.encode()).hexdigest(), length=len(name)) for name in sorted(UPDATER_OUTPUTS)]
+
+    def test_updater_record_binds_exactly_the_two_files_outside_the_runtime_inventory(self):
+        engine, multi = self.record_fixture()
+        self.assertEqual(updater_inventory(multi), [])
+        engine['updaterFiles'] = self.updater_rows()
+        multi['updaterFiles'] = self.updater_rows()
+        self.assertEqual(updater_inventory(engine), engine['updaterFiles'])
+        self.assertEqual(updater_inventory(multi), multi['updaterFiles'])
+        data = json.dumps(multi).encode()
+        self.assertEqual(release_record({MULTI_RECORD: data}, {'multiVersionBuildSha256': hashlib.sha256(data).hexdigest()}), (MULTI_RECORD, multi))
+        for mutation in ('missing-file', 'extra-file', 'bad-hash', 'zero-length', 'text-length', 'engine-copy-differs', 'in-runtime-inventory', 'not-a-list'):
+            with self.subTest(mutation=mutation):
+                _, record = self.record_fixture()
+                record['updaterFiles'] = self.updater_rows()
+                record['engineCompatibility']['updaterFiles'] = self.updater_rows()
+                rows = record['updaterFiles']
+                if mutation == 'missing-file':
+                    rows.pop()
+                elif mutation == 'extra-file':
+                    rows.append(dict(path='runtime/tools/Other.exe', sha256='c' * 64, length=1))
+                elif mutation == 'bad-hash':
+                    rows[0]['sha256'] = 'C' * 64
+                elif mutation == 'zero-length':
+                    rows[0]['length'] = 0
+                elif mutation == 'text-length':
+                    rows[0]['length'] = '12'
+                elif mutation == 'engine-copy-differs':
+                    record['engineCompatibility']['updaterFiles'][0]['sha256'] = 'd' * 64
+                elif mutation == 'in-runtime-inventory':
+                    record['files'].append(dict(rows[0]))
+                else:
+                    record['updaterFiles'] = {'path': rows[0]['path']}
+                with self.assertRaises(ValueError):
+                    updater_inventory(record)
+                data = json.dumps(record).encode()
+                with self.assertRaises(ValueError):
+                    release_record({MULTI_RECORD: data}, {'multiVersionBuildSha256': hashlib.sha256(data).hexdigest()})
 
     def test_plc_record_requires_every_selected_receipt_and_exact_hashes(self):
         _, multi = self.record_fixture()

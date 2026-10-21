@@ -6,10 +6,20 @@ namespace TiaMcp.ReleaseTool;
 
 internal sealed record ReleaseArtifact(string Path, string Sha256);
 
+internal sealed record UpdaterArtifact(string Path, string Sha256, long Length);
+
 internal static class ReleaseRecords
 {
     internal const string EnginePath = "manifest/release-build.json";
     internal const string MultiPath = "manifest/multi-version-build.json";
+
+    // build-release builds and tests the net48 updater into bin-build/updater; the package carries it under runtime/tools.
+    // It is in neither runtime inventory: the records bind exactly these files in updaterFiles (P8-upd-bind).
+    internal static readonly IReadOnlyDictionary<string, string> UpdaterOutputs = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["runtime/tools/TiaMcp.Updater.exe"] = "bin-build/updater/TiaMcp.Updater.exe",
+        ["runtime/tools/TiaMcp.Updater.exe.config"] = "bin-build/updater/TiaMcp.Updater.exe.config"
+    };
 
     internal static string SelectPath(string root) => File.Exists(Path.Combine(root, MultiPath)) ? MultiPath
         : File.Exists(Path.Combine(root, EnginePath)) ? EnginePath
@@ -46,10 +56,64 @@ internal static class ReleaseRecords
     {
         var relative = SelectPath(root);
         using var record = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, relative)));
-        if (relative == EnginePath) return EngineReuseReason(root, release, record.RootElement, GetSources(root, "engine"));
-        if (GetString(record.RootElement, "tier") != "full") return "full multi-version checks are required";
-        AssertPlcProof(root, record.RootElement, true);
-        return ReuseReason(root, record.RootElement, release, GetSources(root, "multi"), "files");
+        string reason;
+        if (relative == EnginePath) reason = EngineReuseReason(root, release, record.RootElement, GetSources(root, "engine"));
+        else
+        {
+            if (GetString(record.RootElement, "tier") != "full") return "full multi-version checks are required";
+            AssertPlcProof(root, record.RootElement, true);
+            reason = ReuseReason(root, record.RootElement, release, GetSources(root, "multi"), "files");
+        }
+        // The resumed package takes the updater from bin-build/updater; it must still be the recorded build.
+        return reason.Length != 0 ? reason : UpdaterReason(root, record.RootElement, package: false);
+    }
+
+    // The updater build output as the records bind it (package path, SHA-256, length).
+    internal static IReadOnlyList<UpdaterArtifact> HashUpdaterOutput(string root) => UpdaterOutputs.Keys.Order(StringComparer.Ordinal).Select(name =>
+    {
+        var path = Path.Combine(root, UpdaterOutputs[name].Replace('/', Path.DirectorySeparatorChar));
+        if (!File.Exists(path)) throw new ReleaseException("Updater build output missing: " + UpdaterOutputs[name]);
+        return new UpdaterArtifact(name, HashFile(path), new FileInfo(path).Length);
+    }).ToArray();
+
+    // The updater rows a record binds; none for a record written before the field (3.x records predate the C# updater).
+    // Same rules as updater_inventory in scripts/checks/Check-BundleLayout.py.
+    internal static IReadOnlyList<UpdaterArtifact> UpdaterFiles(JsonElement record)
+    {
+        if (!record.TryGetProperty("updaterFiles", out var rows)) return [];
+        ReleaseException Invalid() => new("Invalid updater build record: updaterFiles must bind " +
+            string.Join(" and ", UpdaterOutputs.Keys.Order(StringComparer.Ordinal)) + " with SHA-256 and length");
+        if (rows.ValueKind != JsonValueKind.Array || rows.EnumerateArray().Any(row => row.ValueKind != JsonValueKind.Object)) throw Invalid();
+        var result = rows.EnumerateArray().Select(row => new UpdaterArtifact(GetString(row, "path"), GetString(row, "sha256"),
+            row.TryGetProperty("length", out var length) && length.ValueKind == JsonValueKind.Number && length.TryGetInt64(out var value) ? value : 0)).ToArray();
+        if (!result.Select(row => row.Path).Order(StringComparer.Ordinal).SequenceEqual(UpdaterOutputs.Keys.Order(StringComparer.Ordinal), StringComparer.Ordinal) ||
+            result.Any(row => !System.Text.RegularExpressions.Regex.IsMatch(row.Sha256, @"\A[0-9a-f]{64}\z") || row.Length <= 0))
+            throw Invalid();
+        if (record.TryGetProperty("engineCompatibility", out var engine) && engine.ValueKind == JsonValueKind.Object &&
+            engine.TryGetProperty("updaterFiles", out var engineRows) && !JsonElement.DeepEquals(engineRows, rows))
+            throw new ReleaseException("Updater build record differs from the shipped-engine record");
+        foreach (var property in new[] { "runtimeFiles", "files" })
+            if (record.TryGetProperty(property, out var inventory) && inventory.ValueKind == JsonValueKind.Array &&
+                inventory.EnumerateArray().Any(row => row.ValueKind == JsonValueKind.Object && UpdaterOutputs.ContainsKey(GetString(row, "path"))))
+                throw new ReleaseException("Updater files must come from the validated updater build output, not the runtime inventory");
+        return result;
+    }
+
+    // "" when every recorded updater file is where this tree keeps it (bin-build/updater in a repository, runtime/tools in a package).
+    internal static string UpdaterReason(string root, JsonElement record, bool package)
+    {
+        IReadOnlyList<UpdaterArtifact> rows;
+        try { rows = UpdaterFiles(record); }
+        catch (ReleaseException ex) { return ex.Message; }
+        if (rows.Count == 0) return "updater build output not recorded (updaterFiles); run build-release";
+        foreach (var row in rows)
+        {
+            var relative = package ? row.Path : UpdaterOutputs[row.Path];
+            var path = Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar));
+            if (!File.Exists(path)) return "updater missing: " + relative;
+            if (new FileInfo(path).Length != row.Length || HashFile(path) != row.Sha256) return "updater changed after validation: " + relative;
+        }
+        return "";
     }
 
     internal static IReadOnlyList<ReleaseArtifact> DeliveryFiles(string root, bool boundOnly = false)
@@ -278,6 +342,8 @@ internal static class ReleaseRecords
             var status = "retained-engine-proof; no PLC counterpart";
             if (path is "release" or "fileVersion" or "tier" || path.StartsWith("checkPlan.", StringComparison.Ordinal))
             { counterpart = path; status = "equal"; }
+            // The updater build-release built and tested; the eight-release record binds the same rows at its top level (P8-upd-bind).
+            if (path.StartsWith("updaterFiles[", StringComparison.Ordinal)) { counterpart = path; status = "equal"; }
             var fileField = System.Text.RegularExpressions.Regex.Match(path, @"^runtimeFiles\[(\d+)\]\.(path|sha256|length)$");
             if (fileField.Success)
             {

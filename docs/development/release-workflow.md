@@ -6,6 +6,8 @@
 
 运行文件不提交 Git。交付的构建记录是 manifest/configurator-build.json 和 manifest/multi-version-build.json，manifest/delivery.json 绑定这两份的哈希。P8-04j2 起交付包不含 V20/V21 引擎：引擎交叉检查的记录 manifest/release-build.json 原样保存在 multi-version-build.json 的 `engineCompatibility` 段，本身不再交付。PublicAPI、个人密钥、私人 TIA 工程、设计交接和构建日志不分发，原始版权与许可证保留。
 
+更新器 `runtime/tools/TiaMcp.Updater.exe` 及 `.exe.config` 由 `build-release` 构建并测试到 `bin-build/updater/`，不属于任何运行文件清单。`build-release` 把两者的包内路径、SHA-256 和长度写入 manifest/release-build.json 的 `updaterFiles`；`build-multi-version -CompleteOnly` 核对磁盘字节后把同一行复制到 multi-version-build.json 顶层 `updaterFiles`，由 delivery.json 一并绑定，`compare-release-records` 要求两份相等。打包器只接受与记录一致的更新器字节，`validate-bundle` 带二进制时在仓库检查 `bin-build/updater/`、在包内检查 `runtime/tools/`，资产核验要求 ZIP 的运行文件恰为运行文件清单加记录的两个更新器文件。
+
 ## 交付清单与两种校验模式
 
 [`scripts/operations/delivery-files.json`](../../scripts/operations/delivery-files.json) 是唯一交付规则文件。
@@ -146,7 +148,7 @@ dotnet run --project build-tools/release -- release -Version X.Y.Z -Summary "Con
 4. 执行依赖实际二进制的仓库检查和严格包验证；构建后的路由/PLC 名称测试仍反射实际 V21 程序。检查通过后，正式运行才暂存明确路径并创建 `Release X.Y.Z: <summary>` 提交；`-DryRun` 在暂存前退出。
 
 5. Package-Release.py 在仓库核对完整提交树、全部构建记录和源码哈希，运行发布期 IL 校验，再按交付清单过滤，在实际暂存目录运行包模式严格检查，生成 ZIP、SHA-256 和 package-result.json。
-6. Verify-ReleaseAsset.py 独立验证 ZIP 等于交付清单过滤后的 tag 文件集加记录哈希的运行文件（排除 `runtime/verification/`）。
+6. Verify-ReleaseAsset.py 独立验证 ZIP 等于交付清单过滤后的 tag 文件集加记录哈希的运行文件（排除 `runtime/verification/`）和 `updaterFiles` 记录的更新器。
 7. 推送 master，等待 validate-bundle 与 offline-checks，通过后创建 annotated tag vX.Y.Z 并推送。
 
 Build-Release 的程序集反射检查和工具清单生成运行在 net48 TiaMcp.Engine.Harness harness modes 中；独立生成器和输入检查使用 .NET 10 C# file-based apps。工具矩阵在重新生成后可用 `Generate-ToolCapabilityMatrix.cs --check` 验证稳定字节。它们沿用 `manifest/release-build.json` 的既有字段和最小/精确检查计数。
