@@ -408,6 +408,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             if (sent && channel?.OutcomeUnknown == true) ex.Data["workerOutcomeUnknown"] = true;
             // Same mark as the engine client: a request over the worker frame was never sent.
             if (!sent && ex is ChannelLimitException) ex.Data["workerLimitBytes"] = ChannelLimits.RequestBytes;
+            if (TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.IsTimeout(ex) && operation == "project-lifecycle.ConnectIsolatedPortal")
+                ex.Data["sessionReason"] = TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ConfirmationReason;
             if (TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.IsTimeout(ex) && (operation == "Attach" || operation == WorkerOperations.SessionCandidate && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach"))
             {
                 int? selectedPid = operation == "Attach" ? (int?)arguments["processId"] : (int?)arguments["candidate"]?["Check"]?["Request"]?["ProcessId"];
@@ -473,13 +475,12 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         if (disconnectAcknowledgement != null) return disconnectAcknowledgement.DeepClone();
         bool unknown = ReleaseCatalogData.Releases[releaseKey].ExtendedWorkerStatus ? Poisoned : outcome.Poisoned;
         disconnecting = true;
-        HostSessionCall.Ended("disconnect");
         bool acquired = !ReferenceEquals(Held.Value, this);
         bool idle = !acquired || serial.Wait(0);
         try
         {
             if (process != null && (process.HasExited || channel?.CanDisconnect != true))
-                return TerminateForDisconnect();
+            { HostSessionCall.Ended("disconnect"); return TerminateForDisconnect(); }
             if (process == null) disconnectAcknowledgement = DisconnectContract.Idle();
             else
             {
@@ -489,8 +490,11 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                     wire = WorkerReplySpill.Read(TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory, wire, out _);
                     disconnectAcknowledgement = (JsonObject)DisconnectContract.Validate(JsonNode.Parse(wire), true, attachedProcessId, attachedProcessId.HasValue).DeepClone();
                 }
-                catch (Exception) /* swallow(teardown): an unacknowledged detach retains the unknown outcome and requires TIA restart */ { return TerminateForDisconnect(); }
+                catch (ChannelFailureException refused) when (DisconnectContract.Refused(refused))
+                { disconnecting = false; throw DisconnectContract.Refusal(refused); }
+                catch (Exception) /* swallow(teardown): an unacknowledged detach retains the unknown outcome and requires TIA restart */ { HostSessionCall.Ended("disconnect"); return TerminateForDisconnect(); }
             }
+            HostSessionCall.Ended("disconnect");
             approvalIdentity = new JsonObject(); attachedProcessId = null; ClearHostBinding();
             if (unknown) DisconnectContract.Recovery(disconnectAcknowledgement, false, priorUnknownRequestId);
             return disconnectAcknowledgement.DeepClone();

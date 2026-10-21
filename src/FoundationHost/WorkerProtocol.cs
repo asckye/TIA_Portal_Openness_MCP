@@ -9,6 +9,7 @@ internal sealed class WorkerOperationException(string message,int code,string ou
     internal string? EvidenceJson { get; }=evidenceJson;
     internal string? Parameter { get; }=ParameterFrom(evidenceJson);
     internal string? ExceptionType { get; }=FieldFrom(evidenceJson, "exceptionType");
+    internal string? Condition { get; }=FieldFrom(evidenceJson, "condition");
     internal bool KnownNoMutation { get; }=outcome is "rejected-before-operation" or "read-failed";
     internal static WorkerOperationException FromChannelFailure(TiaMcp.WorkerChannel.ChannelFailureException failure)
     {

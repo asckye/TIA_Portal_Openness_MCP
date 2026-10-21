@@ -138,6 +138,66 @@ public sealed class ReadOnlySourceContracts
         Excludes(Read("src/Adapters/Native/Online/OnlineDataAdapter.cs"), "TlsSelectionToApply(true,");
     }
 
+    // P8-81c (API audit 2026-10-19, session family): each fix keeps its exact shape in the adapter, Studio and host sources.
+    [Fact]
+    public void SessionAuditFixesKeepTheirExactShape()
+    {
+        var engine = Read("src/Adapters/Native/Session/PlcFoundationEngine.cs");
+        var guards = Read("src/Adapters/Native/Session/PortalSessionGuards.cs");
+        var lifecycle = Read("src/Adapters/Native/Session/ProjectLifecycleWorker.cs");
+        // F5: the primary-project precheck runs before the native Open/Create.
+        foreach (var entry in new[] { "public PlcMutationResult OpenProject(", "public PlcMutationResult CreateProject(" })
+        {
+            var body = EngineSources.BlockAfter(engine, entry);
+            Assert.True(body.IndexOf("RequireNoOpenProject(p, ", StringComparison.Ordinal) is >= 0 and var check
+                && check < body.IndexOf("if (!dryRun)", StringComparison.Ordinal), entry + " prechecks open projects before the native call");
+        }
+        Contains(EngineSources.BlockAfter(guards, "private void RequireNoOpenProject(TiaPortal connection, string operation)"), "connection.Projects.Any()", "connection.LocalSessions.Any()");
+        // F2: credentials become a SecureString UmacDelegate (and the V17+ Authentication answer) for the one call; no plain-text echo.
+        Contains(guards, "secret = EngineeringCredentialRules.ToSecureString(password!);", "credentials.SetPassword(secret);",
+            "internal UmacDelegate? Delegate => secret == null ? null : new UmacDelegate(Fill);", "portal.Authentication += handler;",
+            "portal.Authentication -= handler", "e.AuthenticationTypeProvider = AuthenticationTypeProvider.Credentials;", "public void Dispose() => secret?.Dispose();");
+        Contains(engine, "connection.Projects.Open(input, login.Delegate)", "using var login = UmacCredentialsFor(umacUserName, umacPassword, umacUserType, \"umacUserName\");");
+        Contains(lifecycle, "connection.Projects.Retrieve(file, directory, login.Delegate)", "connection.Projects.RetrieveWithUpgrade(file, directory, login.Delegate)");
+        Excludes(guards + engine + lifecycle, "WriteLine(password", "umacPassword +", "+ umacPassword", "password +", "UmacPassword +");
+        // F17: confirmations are refused by default, notifications logged, Disposed marks the session lost.
+        var confirmation = EngineSources.BlockAfter(guards, "private void OnPortalConfirmation(object? sender, ConfirmationEventArgs e)");
+        Contains(confirmation, "PortalDialogPolicy.RefusingChoice(offered)", "e.IsHandled = true;", "[\"answer\"] = refusal ?? \"unanswered\"");
+        Excludes(confirmation, "ConfirmationResult.Yes", "ConfirmationResult.Ok", "ConfirmationResult.YesToAll");
+        Contains(EngineSources.BlockAfter(guards, "private void OnPortalDisposed(object? sender, EventArgs e)"), "portalLost = true;");
+        Contains(engine, "RequirePortalAlive();", "ObservePortal(portal);");
+        Contains(lifecycle, "ObservePortal(portal);", "workerStartedPortal = true;");
+        // F18: one targeted lookup, never an enumeration of every process for attach.
+        Contains(guards, "TiaPortal.GetProcess(processId, ProcessLookupTimeout)");
+        Excludes(EngineSources.BlockAfter(engine, "public PlcConnectionResult Attach(int processId)"), "GetProcesses()");
+        // F13: SaveAs is refused for a non-Project instead of reporting success.
+        Contains(lifecycle, "var single = project as Project ?? throw new AdapterPreconditionException(");
+        Excludes(lifecycle, "(project as Project)?.SaveAs(directory);");
+        // F14: ShowInEditor only with a user interface.
+        Contains(Read("src/Adapters/Native/Engineering/EngineeringServices.cs"), "if (mode != TiaPortalMode.WithUserInterface)");
+        // F4 round 2: a failed CloseAndCommit is never mapped to a refusal; its outcome stays unknown.
+        Contains(Read("src/Adapters/Native/Session/ProjectMultiuserAdapter.cs"), "catch (Exception error) when (action != \"commit\" && OpennessRefusalMapping.Refusal(error, out _) != null)");
+        // F19: project-kind aliases follow PROJECT_BASE / PROJECT_MULTIUSER, never the Safety define.
+        foreach (var file in new[] { "src/Adapters/Native/Session/PlcFoundationEngine.cs", "src/Adapters/Native/Session/SessionCandidateAdapter.cs",
+            "src/Adapters/Native/Session/SaveCloseAdapter.cs", "src/Adapters/Native/Engineering/EngineeringServices.cs" })
+        {
+            var source = Read(file);
+            Contains(source, "#if PROJECT_BASE\nusing EngineeringProject = Siemens.Engineering.ProjectBase;");
+            Excludes(source, "#if PLC_SAFETY\nusing EngineeringProject", "#if PLC_SAFETY\n                localSession", "#if PLC_SAFETY\n            localSession");
+        }
+        // F15: the exclusive-access text names the running tool.
+        foreach (var file in new[] { "src/Shared/shared-native/WorkerSessionCallbacks.cs", "src/Adapters/Native/Hardware/HardwareNetworkPrimitives.cs", "src/Adapters/Native/Hardware/HardwareAddressingSteps.cs" })
+        { var source = Read(file); Excludes(source, "MCP: verifying a precise HMI operation"); Contains(source, "ExclusiveAccess(ExclusiveAccessText())"); }
+        // F3: the V20/V21 Studio bridge owns an MTA thread; the guard follows the release.
+        Contains(Read("src/Studio/Bridge/Program.cs"), "owner.SetApartmentState(System.Threading.ApartmentState.MTA);", "return key == \"20\" || key == \"21\";");
+        Contains(Read("src/Adapters/Policy/StudioThreadGuard.cs"), "apartment = PlcLifecyclePolicy.OwnerApartment(releaseKey);");
+        // F10-F12: Studio attaches only to an exact process, never starts TIA after a denial, keeps ownership, cleans its source.
+        var studio = Read("src/Adapters/Native/Studio/OpennessSession.cs");
+        Contains(studio, "if (processes.Count > 1)", "_portal = AttachExactly(processes[0]);", "catch (EngineeringSecurityException denied)",
+            "var primary = projects.Where(p => p.IsPrimary).ToList();", "if (_portal != null && _startedPortal && _project != null)", "string failed = DeleteTemporarySource(source);");
+        Excludes(studio, "TryAttach()", "_portal.Projects.SafeEnumerate().FirstOrDefault();", "source.GenerateBlocksFromSource();\n            source.Delete();");
+    }
+
     [Fact]
     public void DeviceWalksShareOneEnumerationIncludingTheUngroupedDevicesGroup()
     {

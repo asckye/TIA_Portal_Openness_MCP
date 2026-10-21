@@ -41,6 +41,9 @@ namespace TiaMcp.Adapters.Native.Hmi {
     }
 }
 namespace TiaMcp.Adapters {
+    internal static class OpennessRefusalMapping {
+        internal static T Run<T>(string operation, bool credentialsGiven, Func<T> call) => call();
+    }
     public sealed partial class PlcFoundationEngine {
         private Siemens.Engineering.TiaPortal? portal;
         private Siemens.Engineering.Project? project;
@@ -50,6 +53,11 @@ namespace TiaMcp.Adapters {
         private FakeCandidate? sessionCandidateAdapter;
         private DateTimeOffset? sessionCandidateStart;
         private sealed class FakeCandidate { public void VerifyOwnedState() { } }
+        // P8-81c stand-ins for PortalSessionGuards.cs (Siemens-typed, not linked here).
+        private bool workerStartedPortal;
+        public bool WorkerStartedPortal => workerStartedPortal;
+        private void ObservePortal(Siemens.Engineering.TiaPortal connection) { }
+        internal static string ExclusiveAccessText() => "TIA MCP: fixture is changing the project";
         public bool OwnsPortal => ownsPortal;
         public object? SaveCloseAdapter => saveCloseAdapter;
         public string[] NativeCalls => TiaMcpServer.ModelContextProtocol.InvocationJournal.Calls.ToArray();

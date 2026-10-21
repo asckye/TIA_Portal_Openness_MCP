@@ -88,7 +88,8 @@ internal static class FoundationV4Result
             readCancelled ? Execution.ReadOnly : HostBehavior.ExecutionOf(kind), HostBehavior.CompletenessOf(kind),
             HostBehavior.FailureError(kind, parameter, details,
                 exception.Data["foundationSuppressAdmissionDiagnostic"] is true ? null : HostBehavior.AdmissionDiagnostic(exception, worker?.Code, worker?.Outcome, worker?.ExceptionType),
-                reason, dispatched ? "tool-call" : "tool-queue"), true, kind == TiaOpenness.Shared.HostFailureKind.Unknown);
+                reason, dispatched ? "tool-call" : "tool-queue", worker?.Condition ?? TiaOpenness.Shared.HostFailurePolicy.Precondition(exception)?.Condition),
+            true, kind == TiaOpenness.Shared.HostFailureKind.Unknown);
     }
 
     internal static CallToolResult Worker(string release, Definition definition, string id, JsonObject args, JsonNode? raw, JsonNode? validated)

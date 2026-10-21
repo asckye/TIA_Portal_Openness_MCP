@@ -183,6 +183,28 @@ does not expose the reviewed path; it does not establish that Siemens has no V21
 product capability. V21's modular optional-product assemblies and installed
 components require their own exact SDK and acceptance evidence.
 
+## Session and project lifecycle (API audit 2026-10-19, P8-81c)
+
+Used since P8-81c, with the releases where the SDK has each member:
+
+| Official API | Releases | Use |
+|---|---|---|
+| `ProjectComposition.Open/OpenWithUpgrade/Retrieve/RetrieveWithUpgrade(..., UmacDelegate)`, `UmacCredentials` | 15.1-21 | Optional `umacUserName`/`umacPassword`/`umacUserType` on `OpenProject` (and its session candidate) and `RetrieveProjectArchive`. The password exists only as a `SecureString`; it is never logged, journaled, echoed, stored in results or audit records, or shown on the approval card. V14 SP1 has no UMAC overloads. |
+| `TiaPortal.Authentication` | 17-21 | Answered for the one open or retrieve call only when credentials were given. Without credentials no handler is installed; a refused protected project is `PRECONDITION_FAILED` naming the missing credentials. |
+| `TiaPortal.Confirmation`, `Notification`, `Disposed` | all eight | Confirmations are refused by default (Cancel, Abort, No, NoToAll in that order; never Yes/Ok) and recorded; notifications are recorded; `Disposed` marks the session lost. `GetPortalInfo` lists the records. |
+| `TiaPortal.GetProcess(int, TimeSpan)` | all eight | Targeted attach lookup with a 30-second timeout inside the host's attach budget. |
+| `EngineeringSecurityException`, `LicenseNotFoundException` (17-21), `MissingProductsException` (18-21), `Multiuser.MultiuserException` (17-21) | as listed | Explicit, non-poisoning `PRECONDITION_FAILED` conditions `openness-access-denied`, `license-not-found`, `missing-products`, `multiuser-refused` with guidance. |
+| Openness firewall AllowList (`HKLM\SOFTWARE\Siemens\Automation\Openness\AllowList`) | all eight | Read only by the Workbench check "Openness AllowList" (path, UTC modification date, Base64 SHA-256 per worker executable). Nothing writes the registry. |
+
+Official APIs in this family that no 4.0 tool uses:
+
+- Secondary (reference) projects: `ProjectOpenMode.Secondary` with `ProjectComposition.Open(FileInfo, UmacDelegate, ProjectOpenMode)` and the `Retrieve` overload with `ProjectOpenMode` (15.1-21). `CompareProjects` with `targetProjectName` therefore needs a second project opened outside the MCP.
+- `LocalSessionComposition.OpenServerProject` and `ProjectServer.CreateLocalSession`, `AddProjectToServer`, `DeleteLocalSessionFromServer`, `SetHostName`, `SetPort`, `SetProtocol` (17-21). `ManageMultiuserSession` does not claim them.
+- `ProjectBase.ExportProjectTexts(FileInfo, Language, IEnumerable<Language>, IEnumerable<TextCategory>, IEnumerable<IEngineeringObject>)` (21 only). `ExportProjectTexts` uses the culture-pair overload that exists on all eight releases.
+- The Workbench Studio session (`TiaOpenness.Bridge`) has no process picker: with several running TIA Portal processes it refuses and lists them instead of attaching to the first one.
+
+Not verified on a real TIA Portal: every row above. In particular the headless behaviour of a protected project without credentials, the dialog texts that reach the Confirmation handler, whether `UmacCredentials` is supplied in `AuthenticationEventArgs`, and whether a worker-started headless TIA Portal outlives the worker.
+
 ## Additional version-specific evidence boundaries
 
 - Classic HMI and Unified HMI use separate object models and dispatch paths. An

@@ -36413,7 +36413,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "17d06fcd4b5723b745307073436518a605d0bed3fd5990bb85229efd5c9ef787",
+      "descriptionSha256": "03967a83c4ab27aa01ded87fe3963c1beed265410d1cbfd551dc85fa50779ca9",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -36481,7 +36481,7 @@
           },
           "targetProjectName": {
             "default": "",
-            "description": "targetProjectName: exact name of the project to compare with.",
+            "description": "targetProjectName: exact name of another project already open in the same TIA Portal instance (opened outside the MCP).",
             "type": "string"
           },
           "targetSoftwarePath": {
@@ -46968,7 +46968,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "09040bb465684eb961c2812fc915566f2c4337b086f6235878781113d1396551",
+      "descriptionSha256": "8c34defadee0873c95970a9c943fdb1a219ef272ccb852a75f9762b57db901f4",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -49595,7 +49595,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "eba39dec72c5f9ac90ef503f6435686c2ef326fdfd97289ce516afc608a10811",
+      "descriptionSha256": "3d9d59505da9edbdf449e5da7014fbddca612ab700ae862772fd00ba1ac56d7c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -60099,7 +60099,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "38fbfe43196c88e6794a93a258eeece5c1fd7055e00c3f2e904df5d083fa33ea",
+      "descriptionSha256": "3dbfb02983f29a85ae508414afd4a1e20e2d2a432bb18bb0ef2659dda324e324",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -86242,7 +86242,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "f21752b5bd9524792350e345f1c5c5948af44d3489b57b4026b42d54b5ed2f7c",
+      "descriptionSha256": "3020a131ce31bf79ca1fcebc2c4bd65dd2a1f75a5cfb63bb0efacfa375ec8a7c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -289795,7 +289795,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "2e0b1de2099436b0c0590a5e08cf5cfb7682a188d673aeaef8137da935a302a5",
+      "descriptionSha256": "79ea0185ec5b12968939f9df3c6ec9fdca569405958967e7a8b47c1fe93f0a94",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

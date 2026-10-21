@@ -94,6 +94,10 @@ namespace TiaOpenness.Core.Environment
         public Func<int, string[]> PortOwners { get; set; }
         public Func<string, bool?> UrlReserved { get; set; }
         public Func<string, bool?> FirewallAllowed { get; set; }
+        // Openness firewall AllowList (read only): the entry for one application name, null when absent.
+        public Func<string, AllowListEntry> AllowListEntry { get; set; }
+        // UTC modification time and SHA-256 of a file, as the Openness firewall computes them.
+        public Func<string, KeyValuePair<DateTime, byte[]>> FileIdentity { get; set; }
     }
 
     public sealed class WorkbenchEnvironmentChecks
@@ -105,7 +109,7 @@ namespace TiaOpenness.Core.Environment
 
         public static IReadOnlyList<string> Ids => new[] { "installations", "membership", "openness-readiness", "framework", "runtime" }
             .Concat(TiaVersionCatalog.All.Select(v => "engine-" + v.Key))
-            .Concat(new[] { "data", "port", "url", "firewall", "confirmation" }).ToArray();
+            .Concat(new[] { "data", "port", "url", "firewall", "confirmation", "openness-allowlist" }).ToArray();
 
         public IReadOnlyList<EnvironmentFinding> Run()
         {
@@ -125,6 +129,7 @@ namespace TiaOpenness.Core.Environment
             try
             {
                 if (id == "confirmation") return Finding(EnvironmentFindingStatus.Guidance, "Guidance");
+                if (id == "openness-allowlist") return AllowList(Finding);
                 if (id == "openness-readiness")
                 {
                     if (doctor == null) return Finding(EnvironmentFindingStatus.Unknown, "Unknown", doctorError);
@@ -188,6 +193,31 @@ namespace TiaOpenness.Core.Environment
                     : Finding(EnvironmentFindingStatus.Unknown, "Unknown", context.HttpPrefix + "\n" + context.HttpConfigurationPath);
             }
             catch (Exception ex) { return Finding(EnvironmentFindingStatus.Unknown, "Unknown", ex.Message); }
+        }
+
+        // Every shipped worker executable must be on the Openness AllowList with its current path, date and hash; a rebuilt or
+        // updated worker is a new application for the firewall. Never writes the registry.
+        private EnvironmentFinding AllowList(Func<EnvironmentFindingStatus, string, string, EnvironmentFinding> finding)
+        {
+            if (string.IsNullOrEmpty(context.BundleRoot)) return finding(EnvironmentFindingStatus.Unknown, "Unknown", "");
+            if (sources.AllowListEntry == null || sources.FileIdentity == null)
+                return finding(EnvironmentFindingStatus.Unknown, "Unknown", "The Openness AllowList cannot be read on this platform.");
+            var workers = TiaVersionCatalog.Runnable.Select(v => Path.GetFullPath(TiaOpenness.Shared.BundleLayout.WorkerPath(context.BundleRoot, v.Key)))
+                .Distinct(StringComparer.OrdinalIgnoreCase).Where(sources.FileExists).ToArray();
+            if (workers.Length == 0) return finding(EnvironmentFindingStatus.Unknown, "Unknown", "No bundled worker executable is present.");
+            var lines = new List<string>();
+            var missing = new List<KeyValuePair<string, AllowListEntry>>();
+            foreach (var worker in workers)
+            {
+                var identity = sources.FileIdentity(worker);
+                var expected = OpennessAllowList.Expected(worker, identity.Key, identity.Value);
+                string name = Path.GetFileName(worker);
+                string state = OpennessAllowList.Compare(expected, sources.AllowListEntry(name));
+                lines.Add(name + ": " + (state == "match" ? "allowed" : state == "missing" ? "no AllowList entry" : "AllowList entry differs (" + state + ")"));
+                if (state != "match") missing.Add(new KeyValuePair<string, AllowListEntry>(name, expected));
+            }
+            if (missing.Count == 0) return finding(EnvironmentFindingStatus.Pass, "Pass", string.Join("\n", lines));
+            return finding(EnvironmentFindingStatus.Fail, "Fail", string.Join("\n", lines) + "\n" + OpennessAllowList.AdministratorSteps(missing));
         }
     }
 }

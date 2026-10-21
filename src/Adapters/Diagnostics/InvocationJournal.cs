@@ -11,16 +11,22 @@ namespace TiaMcp.Adapters.Diagnostics
         public static RequestScope BeginRequest(string id, string tool, string release)
             => new RequestScope(id, tool, release);
 
+        // The MCP tool of the request this owner thread is running (null outside a request), for user-facing TIA texts.
+        [ThreadStatic] private static string? currentTool;
+        public static string? CurrentTool => currentTool;
+
         // Adapter replies are internal DTOs, not MCP envelopes. Keep the paired
         // dispatch projection free of payloads; native rows retain their own evidence.
         public sealed class RequestScope : IDisposable
         {
             private readonly string id, tool, release;
+            private readonly string? previousTool;
             private readonly IDisposable correlation;
             private bool completed;
             internal RequestScope(string id, string tool, string release)
             {
                 this.id = id; this.tool = tool; this.release = release;
+                previousTool = currentTool; currentTool = tool;
                 correlation = TiaMcpServer.ModelContextProtocol.InvocationJournal.UseCorrelation(id);
                 Write("BEFORE");
             }
@@ -32,6 +38,7 @@ namespace TiaMcp.Adapters.Diagnostics
             public void Dispose()
             {
                 if (!completed) Write("INTERRUPTED");
+                currentTool = previousTool;
                 correlation.Dispose();
             }
         }

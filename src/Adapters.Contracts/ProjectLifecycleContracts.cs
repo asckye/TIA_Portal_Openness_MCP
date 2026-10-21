@@ -25,6 +25,10 @@ public sealed class ProjectRetrieveRequest
     public string DestinationDirectory { get; set; } = "";
     public bool Upgrade { get; set; }
     public bool DryRun { get; set; } = true;
+    // Optional UMAC credentials for a protected archive; converted to SecureString in the worker, never logged or echoed.
+    public string UmacUserName { get; set; } = "";
+    public string UmacPassword { get; set; } = "";
+    public string UmacUserType { get; set; } = "";
 }
 
 public sealed class ProjectSaveCopyResult : IWorkerOperationReply

@@ -25,7 +25,9 @@ internal sealed class ProjectLifecycleSessionTools
             + "and OpenProject then (correctly) refuses to touch their project, so the whole server is unusable "
             + "until they close it. Must be the FIRST connection tool in a fresh MCP process — calling it after "
             + "another connection leaves an orphaned portal process that later attaches steal. "
-            + "Afterwards use OpenProject / CreateProject as usual, then CloseProject and DisconnectPortal." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
+            + "Afterwards use OpenProject / CreateProject as usual; finish with SaveProject, CloseProject and DisconnectPortal, which disposes the instance this "
+            + "session started and refuses while a project is still open in it. A first start can wait for the TIA Portal Openness access dialog (Openness firewall)."
+            + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ConnectIsolatedPortalV4()
             => SessionToolContract.Run("ConnectIsolatedPortal", true, true, () => ConnectIsolated());
 

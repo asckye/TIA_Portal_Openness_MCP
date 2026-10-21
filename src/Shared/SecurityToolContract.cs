@@ -74,6 +74,13 @@ namespace TiaMcpServer.ModelContextProtocol
                     : status == "NotFound" ? new Error("The requested security target was not found.", new NotFoundDetails(null))
                     : new Error("Access to the security operation was denied.", new AccessDeniedDetails(tool, null));
             }
+            else if (success != true && status == "PreconditionFailed" && data["precondition"] is JsonValue)
+            {
+                // A documented Openness refusal (P8-81c F4) carries an explicit condition and never poisons the session.
+                outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted;
+                error = new Error(HostBehavior.SafeDiagnostic((string?)data["refusal"]) ?? "TIA Portal refused the operation.",
+                    new PreconditionFailedDetails((string?)data["precondition"], null));
+            }
             else if (success == true)
             { outcome = Outcome.Succeeded; execution = readOnly ? Execution.ReadOnly : Execution.Completed; }
             else if (readOnly)

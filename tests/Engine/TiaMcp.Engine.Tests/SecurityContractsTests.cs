@@ -73,7 +73,8 @@ namespace TiaMcpServer.Siemens.Services
             return response;
         }
         internal ResponseMessage ReadPortalInfo(bool processes, bool sessions, bool products) => SecurityServiceFixture.Invoke(processes, sessions, products);
-        internal ResponseMessage RetrieveProjectArchive(string path, string destination, bool upgrade, bool dryRun) => SecurityServiceFixture.Invoke(path, destination, upgrade, dryRun);
+        internal ResponseMessage RetrieveProjectArchive(string path, string destination, bool upgrade, bool dryRun,
+            string umacUserName = "", string umacPassword = "", string umacUserType = "") => SecurityServiceFixture.Invoke(path, destination, upgrade, dryRun);
         internal ResponseMessage ValidateAutomationContext(string plc, string hmi) => SecurityServiceFixture.Invoke(plc, hmi);
         internal T Primitive<T>(string kind, params string[] text) => throw new InvalidOperationException("Unexpected native scaffold primitive: " + kind);
         internal ResponseDeviceProbe AddDeviceWithFallback(string mlfb, string version, string name, string family) => throw new InvalidOperationException("Unexpected native device creation.");
@@ -243,6 +244,27 @@ namespace TiaMcp.Engine.Tests
             Assert.Equal(outcome == "unknown", (bool)body["meta"]!["requiresSessionReset"]!);
             if (json.Contains("applied")) Assert.Single(body["data"]!["applied"]!.AsArray());
             if (json.Contains("sha256")) Assert.Equal("evidence", (string?)body["data"]!["file"]!["sha256"]);
+        }
+
+        // P8-81c: a documented multiuser refusal is a non-poisoning precondition, except CloseAndCommit, whose failure stays unknown.
+        [Fact]
+        public void MultiuserRefusalsArePreconditionsButAFailedCommitStaysUnknown()
+        {
+            var refused = Body(SecurityToolContract.MapResult("ManageMultiuserSession", new ResponseMessage { Meta = JsonNode.Parse(
+                "{\"action\":\"connectServer\",\"dryRun\":false,\"operationSuccess\":false,\"apiCallSuccess\":false,\"mayHaveChanged\":false,\"mayHaveWrittenFiles\":false,"
+                + "\"status\":\"PreconditionFailed\",\"precondition\":\"multiuser-refused\",\"refusal\":\"The multiuser server refused the request (MultiuserException).\"}")!.AsObject() }, false, true));
+            Assert.Equal("rejected-before-operation", (string?)refused["meta"]!["outcome"]);
+            Assert.Equal("not-started", (string?)refused["meta"]!["execution"]);
+            Assert.False((bool)refused["meta"]!["requiresSessionReset"]!);
+            Assert.Equal("PRECONDITION_FAILED", (string?)refused["error"]!["code"]);
+            Assert.Equal("multiuser-refused", (string?)refused["error"]!["details"]!["condition"]);
+            // The adapter does not map a CloseAndCommit failure: it stays the step failure of an issued write.
+            var commit = Body(SecurityToolContract.MapResult("ManageMultiuserSession", new ResponseMessage { Meta = JsonNode.Parse(
+                "{\"action\":\"commit\",\"dryRun\":false,\"operationSuccess\":false,\"apiCallSuccess\":false,\"mayHaveChanged\":true,\"mayHaveWrittenFiles\":false,"
+                + "\"sessionClosed\":false,\"status\":\"ReadOrWriteFailed\"}")!.AsObject() }, false, true));
+            Assert.Equal("unknown", (string?)commit["meta"]!["outcome"]);
+            Assert.Equal("OUTCOME_UNKNOWN", (string?)commit["error"]!["code"]);
+            Assert.True((bool)commit["meta"]!["requiresSessionReset"]!);
         }
 
         [Fact]

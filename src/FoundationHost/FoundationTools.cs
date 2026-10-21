@@ -6,13 +6,16 @@ using ModelContextProtocol.Server;
 
 namespace TiaMcp.FoundationHost;
 
-internal sealed record Argument(string Name, string Type = "string", bool Required = true, object? Default = null);
+internal sealed record Argument(string Name, string Type = "string", bool Required = true, object? Default = null, string? Description = null);
 internal sealed record Definition(string Name, string Operation, string Description, Argument[] Arguments, string? ResponseMember = null);
 
 internal static class FoundationTools
 {
     private static Argument S(string name) => new(name);
     private static Argument Dry() => new("dryRun", "boolean", false, true);
+    private const string UmacUser = "umacUserName: UMAC user of a protected project; give it together with umacPassword. Empty for an unprotected project.";
+    private const string UmacPassword = "umacPassword: password of umacUserName. Converted to SecureString in the worker; never logged, journaled, echoed or shown on the approval card.";
+    private const string UmacType = "umacUserType: Project (default) or Global (UMAC server user); only together with umacUserName and umacPassword.";
     private static readonly Definition[] RenderDefinitions = {
         new("RenderPlcBlock", "RenderPlcBlock", "[L2][PLC-Software][FILE] Render one existing SimaticML block export as self-contained static HTML. Offline local files only; writes a new absolute .html path, never overwrites. No Siemens calls.", new[]{S("inputPath"),S("outputPath")}, "PlcRender"),
         new("RenderPlcProgramAtlas", "RenderPlcProgramAtlas", "[L2][PLC-Software][FILE] Render a block XML file or recursive export directory as a self-contained static HTML atlas with call links. Called-by counts include only atlas blocks. Offline local file output; never overwrites, no Siemens calls.", new[]{S("inputPath"),S("outputPath")}, "PlcRender"),
@@ -32,17 +35,17 @@ internal static class FoundationTools
         new("GetSoftwareTree","ReadSoftwareTree","[software-read-candidate] Ordinary PLC root/user block and type tree with exact addresses, including empty groups. System groups and software units excluded; incomplete traversal fails. Windows typed rebuild/native acceptance pending.",new[]{S("softwarePath")},"SoftwareRead"),
         new("GetBlockInfo","ReadBlockInfo","[v17-object-read-safe-v1; manual reconciliation pending] Read exact group-qualified block details; no fallback or write.",new[]{S("softwarePath"),S("blockPath")},"BlockInfo"),
         new("GetTypeInfo","ReadTypeInfo","[v17-object-read-safe-v1; manual reconciliation pending] Read exact group-qualified PLC type details; no fallback or write.",new[]{S("softwarePath"),S("typePath")},"TypeInfo"),
-        new("Connect", "Attach", "[v17-project-safe-v1] Explicit existing process ID required; no launch or process ownership. Repeated attach refused.", new[]{new Argument("processId","integer")},"Connection"),
+        new("Connect", "Attach", "[v17-project-safe-v1] Explicit existing process ID required; no launch or process ownership. Repeated attach refused. A first attach can wait for the TIA Portal Openness access dialog (Openness firewall); a denial (EngineeringSecurityException) is PRECONDITION_FAILED openness-access-denied with the AllowList steps.", new[]{new Argument("processId","integer")},"Connection"),
         new("GetProject", "ListProjects", "[v17-project-safe-v1] List projects and API-supported local sessions with exact file identities and attributes.", Array.Empty<Argument>(),"Projects"),
         new("AttachToOpenProject", "BindProject", "[v17-project-safe-v1] Bind an existing project/session only when both projectName and exact expectedProjectFile match; borrowed targets cannot be closed.",new[]{S("projectName"),S("expectedProjectFile")},"Bind"),
-        new("OpenProject","OpenProject","[v17-project-safe-v1] Preview opening an exact-version .ap file or API-supported .als local session. No replacement, upgrade, server-open or commit.",new[]{S("path"),Dry()},"ProjectMutation"),
-        new("CreateProject","CreateProject","[v17-project-safe-v1] Preview creation in an existing parent directory; no project/session replacement.",new[]{S("directoryPath"),S("projectName"),Dry()},"ProjectMutation"),
+        new("OpenProject","OpenProject","[v17-project-safe-v1] Preview opening an exact-version .ap file or API-supported .als local session. No replacement, upgrade, server-open or commit. Refused while the TIA instance already has an open project or local session.",new[]{S("path"),Dry(),new Argument("umacUserName","string",false,"",UmacUser),new Argument("umacPassword","string",false,"",UmacPassword),new Argument("umacUserType","string",false,"",UmacType)},"ProjectMutation"),
+        new("CreateProject","CreateProject","[v17-project-safe-v1] Preview creation in an existing parent directory; no project/session replacement. Refused while the TIA instance already has an open project or local session.",new[]{S("directoryPath"),S("projectName"),Dry()},"ProjectMutation"),
         new("SaveProject","SaveProject","[v17-project-safe-v1] Explicitly save the exact bound project/local session locally; no server commit. Preview by default.",new[]{Dry()},"ProjectMutation"),
         new("CloseProject","CloseProject","[v17-project-safe-v1] Close only an unmodified project/local session opened by this worker. No implicit save, discard, commit or TIA termination.",new[]{Dry()},"ProjectMutation"),
         new("GetProjectTree","ReadProjectTree","[v17-project-safe-v1] Actual device groups, devices, nested items and software, including ungrouped devices and exact software paths.",Array.Empty<Argument>(),"ProjectTree"),
         new("GetBlocks","ReadBlocks","[v17-read-safe-v1] V17 block fields and case-insensitive regex. Accepts unique PLC/device/group aliases or exact address; rejects ambiguity and unused path segments.",new[]{S("softwarePath"),new Argument("regexName","string",false,"")},"Items"),
         new("GetBlocksWithHierarchy","ReadBlockHierarchy","[v17-read-safe-v1] Actual nested block groups, including empty groups. Accepts unique PLC/device/group aliases or exact address; ambiguity is an error.",new[]{S("softwarePath")},"Root"),
-        new("Disconnect","Disconnect","[acknowledged-disconnect-candidate] End this worker session by detaching only a proven non-owning existing-process attachment. No project required; no save, project close, launch or automatic reconnect. Idle disconnect never starts a worker. An idle responsive worker can detach after an unknown outcome; an in-flight, unresponsive or lost worker is terminated with requiresTiaRestart=true. Subsequent Attach requires a new MCP session. Native acceptance NOT RUN.",Array.Empty<Argument>(),"Disconnect"),
+        new("Disconnect","Disconnect","[acknowledged-disconnect-candidate] End this worker session. An attached existing process is only detached; a TIA Portal this session started (ConnectIsolatedPortal) is disposed, which closes a headless instance, and is refused while a project is open in it (SaveProject and CloseProject first). No project required; no save, project close, launch or automatic reconnect. Idle disconnect never starts a worker. An idle responsive worker can detach after an unknown outcome; an in-flight, unresponsive or lost worker is terminated with requiresTiaRestart=true. Subsequent Attach requires a new MCP session. Native acceptance NOT RUN.",Array.Empty<Argument>(),"Disconnect"),
         new("GetTypes","ReadTypes","[v17-read-safe-v1] V17 type fields and case-insensitive regex. Accepts unique PLC/device/group aliases or exact address; rejects ambiguity and unused path segments.",new[]{S("softwarePath"),new Argument("regexName","string",false,"")},"Items"),
         new("GetPlcTagTables","ReadTagTableNames","[v17-read-safe-v1] V17 root-group tag-table name list. Accepts unique PLC/device/group aliases or exact address; native failures are errors, not empty success.",new[]{S("softwarePath")},"Items"),
         new("DeletePlcExternalSource","DeletePlcExternalSource","[bounded-delete-candidate] Delete one exact uniquely named ordinary offline PLC root external source. Empty groupPath only; no extension or case fallback. Preview complete inventory and session identity/hash; apply requires expectedPlanHash, confirm and expectedProjectFile. One native call, verified removal, unknown outcome poisons session. No generation, compilation, automatic save or rollback; filesystem/recovery effects and native acceptance unverified.",new[]{S("softwarePath"),S("groupPath"),S("externalSourceName"),Dry(),new Argument("expectedPlanHash","string",false,"")},"ExternalSourceDelete"),
@@ -86,7 +89,17 @@ internal static class FoundationTools
         }
         return definition.Name != "GetPlcWatchTables" || releaseKey != "14sp1";
     }
-    internal static IList<McpServerTool> Create(IFoundationWorker worker, string releaseKey) => Definitions.Where(d => Available(d, releaseKey)).Concat(RenderDefinitions).Select(d => (McpServerTool)new FoundationTool(d, worker)).ToArray();
+    internal static IList<McpServerTool> Create(IFoundationWorker worker, string releaseKey) => Definitions.Where(d => Available(d, releaseKey)).Select(d => ForRelease(d, releaseKey)).Concat(RenderDefinitions).Select(d => (McpServerTool)new FoundationTool(d, worker)).ToArray();
+    // UMAC-protected projects open through the UmacDelegate overloads of V15.1+ (API audit 2026-10-19, F2); V14 SP1 has none.
+    internal static Argument[] UmacArguments => Definitions.Single(d => d.Name == "OpenProject").Arguments
+        .Where(a => a.Name.StartsWith("umac", StringComparison.Ordinal)).ToArray();
+    internal static Definition ForRelease(Definition definition, string releaseKey)
+    {
+        if (definition.Name != "OpenProject") return definition;
+        return TiaMcp.Versioning.TiaVersionCatalog.Get(releaseKey).MajorVersion >= 15
+            ? definition with { Description = definition.Description + " Protected (UMAC) projects: pass umacUserName and umacPassword (umacUserType Project or Global); without them a protected project is refused as PRECONDITION_FAILED naming the missing credentials." }
+            : definition with { Arguments = definition.Arguments.Where(a => !a.Name.StartsWith("umac", StringComparison.Ordinal)).ToArray() };
+    }
     internal static IList<McpServerTool> Create(IFoundationWorker worker) => Definitions.Concat(RenderDefinitions).Select(d => (McpServerTool)new FoundationTool(d,worker)).ToArray();
 }
 
@@ -130,7 +143,7 @@ internal sealed partial class FoundationTool : McpServerTool
         this.definition=definition; this.worker=worker;
         this.stagingForTest=stagingForTest;
         var properties=new JsonObject();
-        foreach(var p in definition.Arguments) { var schema=new JsonObject { ["type"]=p.Type, ["description"]="Exact foundation argument: "+p.Name }; if(p.Type=="array") schema["items"]=new JsonObject { ["type"]="string" }; if(!p.Required) schema["default"]=JsonSerializer.SerializeToNode(p.Default); properties[p.Name]=schema; }
+        foreach(var p in definition.Arguments) { var schema=new JsonObject { ["type"]=p.Type, ["description"]=p.Description ?? "Exact foundation argument: "+p.Name }; if(p.Type=="array") schema["items"]=new JsonObject { ["type"]="string" }; if(!p.Required) schema["default"]=JsonSerializer.SerializeToNode(p.Default); properties[p.Name]=schema; }
         if (definition.Name == "StageImportFiles") properties["files"] = TiaMcp.Logic.ModelContextProtocol.ImportStagingSchema.Files();
         var schemaRoot=new JsonObject { ["type"]="object", ["properties"]=properties, ["additionalProperties"]=false, ["required"]=new JsonArray(definition.Arguments.Where(p=>p.Required).Select(p=>(JsonNode?)JsonValue.Create(p.Name)).ToArray()) };
         tool=new Tool { Name=definition.Name, Description=(IsNative ? "[PLC foundation; native unverified] " : "")+definition.Description, InputSchema=JsonSerializer.SerializeToElement(schemaRoot) };

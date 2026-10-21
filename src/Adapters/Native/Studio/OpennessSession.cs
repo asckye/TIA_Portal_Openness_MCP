@@ -46,6 +46,8 @@ namespace TiaOpenness.Openness
         private TiaPortal _portal;
         private Project _project;
         private bool _withUi;
+        // True only for a TIA Portal this session started; an attached instance belongs to the user (F11).
+        private bool _startedPortal;
 #if STUDIO_VCI
         private OpennessVersionControl _versionControl;
 #endif
@@ -124,14 +126,23 @@ namespace TiaOpenness.Openness
 
             if (attachToRunning)
             {
-                _portal = TryAttach();
-                if (_portal != null)
+                // F10: attach only to an exactly selected process. Several running instances are refused, never guessed;
+                // a failed or denied attach is reported and never followed by a silent new instance.
+                var processes = TiaPortal.GetProcesses();
+                if (processes.Count > 1)
+                    throw new InvalidOperationException("Several TIA Portal processes are running ("
+                        + string.Join("; ", processes.Select(p => "PID " + p.Id + ": " + (ProcessProject(p) ?? "no project")))
+                        + "). Studio attaches only to an exactly selected instance: close the other TIA Portal instances, or use an MCP session "
+                        + "(ConnectPortal with the processId) to select one.");
+                if (processes.Count == 1)
                 {
-                    Console.Error.WriteLine("[bridge] attached to a running TIA Portal");
+                    _portal = AttachExactly(processes[0]);
+                    _startedPortal = false;
+                    Console.Error.WriteLine("[bridge] attached to the running TIA Portal (PID " + processes[0].Id + ")");
                     Console.Error.Flush();
 
-                    // An attached instance keeps whatever project it already had open.
-                    _project = _portal.Projects.SafeEnumerate().FirstOrDefault();
+                    // An attached instance keeps its project; bind the primary one (secondary projects are read-only and hidden).
+                    _project = PrimaryProject(_portal);
                     if (_project != null) IndexProject();
                     return GetState();
                 }
@@ -147,30 +158,49 @@ namespace TiaOpenness.Openness
             _portal = new TiaPortal(withUserInterface
                 ? TiaPortalMode.WithUserInterface
                 : TiaPortalMode.WithoutUserInterface);
+            _startedPortal = true;
 
             return GetState();
         }
 
-        /// <summary>
-        /// Attaches to a running TIA Portal. Each attach can fail on its own (the instance may
-        /// be shutting down, or owned by another user), so failures are skipped rather than fatal.
-        /// </summary>
-        private static TiaPortal TryAttach()
+        private static string ProcessProject(TiaPortalProcess process)
         {
-            IList<TiaPortalProcess> processes;
-            try { processes = TiaPortal.GetProcesses(); }
-            catch (Exception) /* swallow(native-fallback): failed running-Portal discovery leaves Connect to its existing new-Portal startup path */ { return null; }
+            try { return process.ProjectPath?.FullName; }
+            catch (Exception) /* swallow(probe-optional): the refusal still lists the PID when the project path is unreadable */ { return null; }
+        }
 
-            foreach (var process in processes)
+        private static TiaPortal AttachExactly(TiaPortalProcess process)
+        {
+            try { return process.Attach(); }
+            catch (EngineeringSecurityException denied)
             {
-                try { return process.Attach(); }
-                catch (Exception) /* swallow(native-fallback): a shutting-down or inaccessible Portal instance leaves the next attachment candidate available */ { /* try the next instance */ }
+                throw new InvalidOperationException("TIA Portal Openness denied access to the bridge (EngineeringSecurityException). Allow it in the TIA Portal "
+                    + "Openness access dialog (Yes, or Yes to all), or have an administrator add it to HKLM\\SOFTWARE\\Siemens\\Automation\\Openness\\AllowList; "
+                    + "the Windows user must be a member of 'Siemens TIA Openness'. No other TIA Portal was started. TIA: " + denied.Message, denied);
             }
-            return null;
+        }
+
+        private static Project PrimaryProject(TiaPortal portal)
+        {
+            var projects = portal.Projects.SafeEnumerate().ToList();
+#if PROJECT_IS_PRIMARY
+            var primary = projects.Where(p => p.IsPrimary).ToList();
+            return primary.Count == 1 ? primary[0] : null;
+#else
+            return projects.Count == 1 ? projects[0] : null;
+#endif
         }
 
         public void Disconnect()
         {
+            // F11: a TIA Portal this session started closes with Dispose when it has no UI; never discard its project's changes.
+            if (_portal != null && _startedPortal && _project != null)
+            {
+                if (_project.IsModified)
+                    throw new InvalidOperationException("The project in the TIA Portal this Studio session started has unsaved changes. Save it, "
+                        + "or close it explicitly, before disconnecting; Studio never saves or discards changes on its own.");
+                _project.Close();
+            }
             _plcs.Clear();
             _hmis.Clear();
 #if STUDIO_VCI
@@ -185,6 +215,7 @@ namespace TiaOpenness.Openness
             try { _portal.Dispose(); }
             catch (Exception) /* swallow(teardown): the Portal may already have exited; disconnect still clears the local session reference */ { /* TIA may already be gone */ }
             _portal = null;
+            _startedPortal = false;
         }
 
         public SessionState GetState()
@@ -510,9 +541,24 @@ namespace TiaOpenness.Openness
             // Own only this temporary source; never delete a pre-existing project source.
             var name = "TIA_Studio_" + Guid.NewGuid().ToString("N") + extension;
             var source = plc.Software.ExternalSourceGroup.ExternalSources.CreateFromFile(name, path);
-            source.GenerateBlocksFromSource();
-            source.Delete();
+            // F12: the temporary source is removed after a failed generation too; a cleanup failure is reported on its own.
+            try { source.GenerateBlocksFromSource(); }
+            catch (Exception generation)
+            {
+                string failed = DeleteTemporarySource(source);
+                if (failed == null) throw;
+                throw new InvalidOperationException(generation.Message + " The temporary external source '" + name + "' could not be removed: " + failed, generation);
+            }
+            string cleanup = DeleteTemporarySource(source);
+            if (cleanup != null)
+                throw new InvalidOperationException("Blocks were generated from the source, but the temporary external source '" + name + "' could not be removed: " + cleanup);
             return Path.GetFileNameWithoutExtension(path);
+        }
+
+        private static string DeleteTemporarySource(PlcExternalSource source)
+        {
+            try { source.Delete(); return null; }
+            catch (Exception error) /* swallow(cleanup): the caller reports the leftover temporary source separately */ { return error.Message; }
         }
 
         // ---- tags ----------------------------------------------------------

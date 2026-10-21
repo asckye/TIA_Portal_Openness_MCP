@@ -92,11 +92,12 @@ namespace TiaMcp.Logic.V4
         }
 
         internal static Error FailureError(HostFailureKind kind, string? parameter,
-            IReadOnlyDictionary<string, JsonElement> evidence, string? nativeMessage = null, string? reason = null, string stage = "approval-precheck")
+            IReadOnlyDictionary<string, JsonElement> evidence, string? nativeMessage = null, string? reason = null, string stage = "approval-precheck",
+            string? condition = null)
             => kind switch
             {
                 HostFailureKind.Argument => new Error(nativeMessage ?? "The request argument was refused before operation.", new InvalidArgumentDetails(parameter ?? "arguments", Array.Empty<string>())),
-                HostFailureKind.Precondition => new Error(nativeMessage ?? "The request precondition failed before operation.", new PreconditionFailedDetails("native-admission", null, parameter)),
+                HostFailureKind.Precondition => new Error(nativeMessage ?? "The request precondition failed before operation.", new PreconditionFailedDetails(condition ?? "native-admission", null, parameter)),
                 HostFailureKind.Cancelled => new Error("Request cancelled before operation.", new CancelledDetails(stage)),
                 HostFailureKind.Unknown => new Error("The operation outcome is unknown; inspect the retained evidence before a new session.", new OutcomeUnknownDetails("tool-call", evidence, reason)),
                 HostFailureKind.InternalError => new Error("The host operation could not be completed.", new InternalErrorDetails(null)),

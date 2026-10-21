@@ -24,6 +24,8 @@ namespace TiaMcp.Logic.V4
             Text("copyPath"); Flag("confirmUpgrade");
             properties["mode"] = new JsonObject { ["type"] = "string", ["enum"] = new JsonArray("preview", "apply"), ["default"] = "preview" };
             Flag("confirm"); Text("expectedPlanHash"); Text("expectedProjectFile");
+            // Protected projects (V15.1+): credentials travel beside the reviewed request, never inside it, its plan or its hash.
+            if (Action(tool) == "open") { Text("umacUserName"); Text("umacPassword"); Text("umacUserType"); }
             return JsonSerializer.SerializeToElement(new JsonObject { ["type"] = "object", ["additionalProperties"] = false, ["properties"] = properties, ["required"] = required });
         }
     }

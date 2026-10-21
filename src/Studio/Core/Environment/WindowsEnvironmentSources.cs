@@ -24,7 +24,28 @@ namespace TiaOpenness.Core.Environment
             PortOwners = PortOwners,
             UrlReserved = UrlReserved,
             FirewallAllowed = FirewallAllowed,
+            AllowListEntry = ReadAllowListEntry,
+            FileIdentity = ReadFileIdentity,
         };
+
+        // Read only, 64-bit registry view (TIA Portal is a 64-bit application). A missing key is null; access errors propagate.
+        private static AllowListEntry ReadAllowListEntry(string application)
+        {
+            using (var root = Microsoft.Win32.RegistryKey.OpenBaseKey(Microsoft.Win32.RegistryHive.LocalMachine, Microsoft.Win32.RegistryView.Registry64))
+            using (var entry = root.OpenSubKey(OpennessAllowList.RegistryKey + "\\" + application + "\\Entry", false))
+            {
+                if (entry == null) return null;
+                return new AllowListEntry { Path = entry.GetValue("Path") as string, DateModified = entry.GetValue("DateModified") as string,
+                    FileHash = entry.GetValue("FileHash") as string };
+            }
+        }
+
+        private static System.Collections.Generic.KeyValuePair<DateTime, byte[]> ReadFileIdentity(string path)
+        {
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var sha = System.Security.Cryptography.SHA256.Create())
+                return new System.Collections.Generic.KeyValuePair<DateTime, byte[]>(File.GetLastWriteTimeUtc(path), sha.ComputeHash(stream));
+        }
 
         public static bool Writable(string directory)
         {

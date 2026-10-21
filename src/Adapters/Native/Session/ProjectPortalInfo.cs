@@ -57,14 +57,20 @@ namespace TiaMcp.Adapters
                     try { meta["textCategories"] = new HmiArray(HardwareGroupOperations.Items(project.TextCategories).Cast<TextCategory>().Select(c => (object?)new HmiObject { ["identifier"] = c.Identifier, ["name"] = c.Name }).ToArray()); }
                     catch (Exception ex) { meta["textCategoriesError"] = ex.GetBaseException().Message; }
 #endif
-                    #if PROJECT_HARDWARE_UTILITIES
+                    // F8: Project.HwUtilities (V14 SP1-V16) / ProjectBase.HwUtilities (V17+) exist on all eight releases.
                     try { meta["hardwareUtilities"] = new HmiArray(HardwareGroupOperations.Items(project.HwUtilities).Cast<HardwareUtility>().Select(u => (object?)new HmiObject { ["identifier"] = u.Identifier, ["utilityClass"] = u.GetType().Name }).ToArray()); }
                     catch (Exception ex) { meta["hardwareUtilitiesError"] = ex.GetBaseException().Message; }
+#if ENGINEERING_OBJECT_IDENTIFIER
                     try { meta["objectIdentifierProviderAvailable"] = project.GetService<ObjectIdentifierProvider>() != null; } catch (Exception ex) { meta["objectIdentifierProviderError"] = ex.GetBaseException().Message; }
+#else
+                    meta["objectIdentifierProviderNote"] = "ObjectIdentifierProvider exists in the V20 and V21 PublicAPI only.";
 #endif
                 }
+                // F17: TIA confirmations (refused by default), notifications and the Disposed event seen by this session.
+                meta["portalDialogs"] = new HmiArray(PortalDialogRecords().Select(r => (object?)new HmiObject(r.ToDictionary(p => p.Key,
+                    p => p.Value is string[] values ? new HmiArray(values.Cast<object?>().ToArray()) : p.Value))).ToArray());
                 meta["apiCallSuccess"] = true; meta["dataComplete"] = true;
-                meta["scope"] = "TiaPortalProcess snapshots (Id, Mode, Path, ProjectPath, AcquisitionTime, AttachedSessions with AccessLevel / TrustAuthority / UtilizationTime, InstalledSoftware with options), the bound process, ProjectBase.TextCategories and HwUtilities. Read-only.";
+                meta["scope"] = "TiaPortalProcess snapshots (Id, Mode, Path, ProjectPath, AcquisitionTime, AttachedSessions with AccessLevel / TrustAuthority / UtilizationTime, InstalledSoftware with options), the bound process, the project's HwUtilities (all releases), ProjectBase.TextCategories (V21), ObjectIdentifierProvider availability (V20/V21) and the TIA dialogs this session refused or logged. Read-only.";
                 return "Portal diagnostics read; no modification.";
             }, requiresProject: false);
 

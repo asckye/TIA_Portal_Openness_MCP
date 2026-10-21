@@ -18,8 +18,11 @@ internal sealed partial class FoundationTool
             var input = new SessionRequest { Action = SessionCandidateContract.Action(tool), ProcessId = args["processId"].GetInt32(),
                 ProcessStartUtc = SessionCandidateSession.Start(Text("processStartUtc")), ProjectPath = Text("projectPath"), StartNew = Flag("startNew"),
                 ReuseOpen = Flag("reuseOpen"), Upgrade = Text("upgrade", "reject"), CopyPath = Text("copyPath") };
+            var credentials = new JsonObject();
+            foreach (string key in new[] { "umacUserName", "umacPassword", "umacUserType" })
+                if (Text(key).Length != 0) credentials[key] = Text(key);
             var result = await Task.Run(() => FoundationCandidateSession.For(worker).Session(release, tool, id, input, Text("mode", "preview"), Flag("confirm"),
-                Text("expectedPlanHash"), Text("expectedProjectFile"), Flag("confirmUpgrade"), cancellationToken));
+                Text("expectedPlanHash"), Text("expectedProjectFile"), Flag("confirmUpgrade"), cancellationToken, credentials));
             return FoundationV4Result.ImportCandidate(result);
         }
         catch (SessionCandidateRejectionException error)
@@ -30,24 +33,26 @@ internal sealed partial class FoundationTool
 internal sealed partial class FoundationCandidateSession
 {
     private readonly SessionCandidateSession sessions = new();
-    internal Envelope Session(string release, string tool, string id, SessionRequest request, string mode, bool confirm, string hash, string project, bool confirmUpgrade, CancellationToken token)
+    internal Envelope Session(string release, string tool, string id, SessionRequest request, string mode, bool confirm, string hash, string project, bool confirmUpgrade, CancellationToken token,
+        JsonObject? credentials = null)
     {
         lock (serial)
         {
             if (poisoned) return SessionCandidateSession.Result(release, tool, id, null,
                 new Error("The candidate session must be rebuilt.", new SessionResetRequiredDetails("candidate-session-unknown")), Outcome.RejectedBeforeOperation, Execution.NotStarted);
-            var result = sessions.Run(new SessionProxy(worker, token), release, tool, id, request, mode, confirm, hash, project, confirmUpgrade);
+            var result = sessions.Run(new SessionProxy(worker, token, credentials), release, tool, id, request, mode, confirm, hash, project, confirmUpgrade);
             poisoned |= result.Meta.RequiresSessionReset;
             if (result.Meta.RequiresSessionReset && worker is WorkerClient native) native.InvalidateCandidateSession();
             return result;
         }
     }
-    private sealed class SessionProxy(IFoundationWorker worker, CancellationToken token) : ISessionCandidateAdapter, ISessionCandidateBoundary
+    private sealed class SessionProxy(IFoundationWorker worker, CancellationToken token, JsonObject? credentials = null) : ISessionCandidateAdapter, ISessionCandidateBoundary
     {
         private SessionCandidateReply Call(SessionCandidateCall candidate, string mode)
         {
             if (token.IsCancellationRequested) throw NotSent(token);
             var args = new JsonObject { ["candidate"] = JsonSerializer.SerializeToNode(candidate), ["mode"] = mode };
+            if (mode == "apply" && credentials != null) foreach (var pair in credentials) args[pair.Key] = pair.Value?.DeepClone();
             return CandidateWire.Session(worker.Call(WorkerOperations.SessionCandidate, args, token).GetAwaiter().GetResult(), args);
         }
         public SessionObservation Observe()

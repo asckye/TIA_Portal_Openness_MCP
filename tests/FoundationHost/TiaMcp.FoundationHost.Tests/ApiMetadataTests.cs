@@ -13,6 +13,7 @@ internal static class ApiMetadataTests
             var core=Path.Combine(apiRoot,directory,key=="21"?"Siemens.Engineering.Base.dll":"Siemens.Engineering.dll");
             CheckHardwareBranches(Path.Combine(apiRoot,directory),key,check);
             CheckHardwareAuditMembers(Path.Combine(apiRoot,directory),key,check);
+            CheckSessionAuditMembers(Path.Combine(apiRoot,directory),key,check);
             CheckSchemaFragments(Path.Combine(apiRoot,directory),key,check);
             CheckDownloadPrompts(Path.Combine(apiRoot,directory),key,check);
             CheckMembers(core,"Siemens.Engineering.Online.OnlineProvider",new[]{"State"},true,check);
@@ -173,7 +174,7 @@ internal static class ApiMetadataTests
             foreach(var pair in new Dictionary<string,string[]> {
                 ["ReadBlockInfo"]=new[]{"softwarePath","blockPath"},["ReadTypeInfo"]=new[]{"softwarePath","typePath"},
                 ["Attach"]=new[]{"processId"},["ListProjects"]=Array.Empty<string>(),
-                ["BindProject"]=new[]{"projectName","expectedProjectFile"},["OpenProject"]=new[]{"path","dryRun"},
+                ["BindProject"]=new[]{"projectName","expectedProjectFile"},["OpenProject"]=new[]{"path","dryRun","umacUserName","umacPassword","umacUserType"},
                 ["CreateProject"]=new[]{"directoryPath","projectName","dryRun"},["SaveProject"]=new[]{"dryRun"},["CloseProject"]=new[]{"dryRun"},["ReadProjectTree"]=Array.Empty<string>()})
             {
                 var method=type.GetMethods().Select(md.GetMethodDefinition).Single(m=>md.GetString(m.Name)==pair.Key);
@@ -354,6 +355,60 @@ internal static class ApiMetadataTests
         }
         check(Method("Siemens.Engineering.Cax.CaxProvider","Import",2)==(version>=19) && Method("Siemens.Engineering.Cax.CaxProvider","Import",3),
             key+" CaxProvider.Import TransferResult overload exists exactly on V19-V21 next to the log-file overload");
+    }
+
+    // P8-81c: every session define and refusal mapping follows the SDK of its release (API audit 2026-10-19, F2/F4/F7/F8/F17/F18/F19).
+    private static void CheckSessionAuditMembers(string directory,string key,Action<bool,string> check)
+    {
+        var types=new HashSet<string>(StringComparer.Ordinal);
+        var members=new HashSet<string>(StringComparer.Ordinal);
+        foreach(var dll in Directory.GetFiles(directory,"Siemens.Engineering*.dll"))
+        {
+            using var stream=File.OpenRead(dll); using var pe=new PEReader(stream);
+            if(!pe.HasMetadata) continue;
+            var md=pe.GetMetadataReader();
+            foreach(var handle in md.TypeDefinitions)
+            {
+                var type=md.GetTypeDefinition(handle);
+                string name=md.GetString(type.Namespace)+"."+md.GetString(type.Name);
+                types.Add(name);
+                foreach(var prop in type.GetProperties()) members.Add(name+"#P:"+md.GetString(md.GetPropertyDefinition(prop).Name));
+                foreach(var ev in type.GetEvents()) members.Add(name+"#E:"+md.GetString(md.GetEventDefinition(ev).Name));
+                foreach(var methodHandle in type.GetMethods())
+                {
+                    var method=md.GetMethodDefinition(methodHandle);
+                    members.Add(name+"#M:"+md.GetString(method.Name)+"/"+method.GetParameters().Select(md.GetParameter).Count(p=>p.SequenceNumber>0));
+                }
+            }
+        }
+        int version=key=="14sp1"?14:key=="15.1"?15:int.Parse(key);
+        string project=version<=16 ? "Siemens.Engineering.Project" : "Siemens.Engineering.ProjectBase";
+        const string Portal="Siemens.Engineering.TiaPortal", Projects="Siemens.Engineering.ProjectComposition";
+        check(members.Contains(Portal+"#E:Confirmation") && members.Contains(Portal+"#E:Notification") && members.Contains(Portal+"#E:Disposed"),
+            key+" TiaPortal.Confirmation/Notification/Disposed exist on every release (F17)");
+        check(members.Contains(Portal+"#E:Authentication")==(version>=17),key+" TiaPortal.Authentication exists exactly on V17-V21 (PROJECT_AUTHENTICATION_EVENT)");
+        check(members.Contains(Portal+"#M:GetProcess/2"),key+" TiaPortal.GetProcess(int, timeout) is the targeted lookup (F18)");
+        check(types.Contains("Siemens.Engineering.UmacDelegate")==(version>=15) && types.Contains("Siemens.Engineering.UmacCredentials")==(version>=15)
+            && members.Contains(Projects+"#M:Open/2")==(version>=15) && members.Contains(Projects+"#M:OpenWithUpgrade/2")==(version>=15)
+            && members.Contains(Projects+"#M:Retrieve/3")==(version>=15) && members.Contains(Projects+"#M:RetrieveWithUpgrade/3")==(version>=15),
+            key+" UmacDelegate overloads of Open/OpenWithUpgrade/Retrieve/RetrieveWithUpgrade exist exactly on V15.1-V21 (PROJECT_UMAC)");
+        check(types.Contains("Siemens.Engineering.EngineeringSecurityException"),key+" EngineeringSecurityException exists on every release");
+        check(types.Contains("Siemens.Engineering.LicenseNotFoundException")==(version>=17),key+" LicenseNotFoundException exists exactly on V17-V21 (OPENNESS_LICENSE_EXCEPTION)");
+        check(types.Contains("Siemens.Engineering.MissingProductsException")==(version>=18),key+" MissingProductsException exists exactly on V18-V21 (OPENNESS_MISSING_PRODUCTS)");
+        check(types.Contains("Siemens.Engineering.Multiuser.MultiuserException")==(version>=17),key+" MultiuserException exists exactly on V17-V21 (PROJECT_MULTIUSER)");
+        check(types.Contains("Siemens.Engineering.ProjectBase")==(version>=17) && members.Contains(Portal+"#P:LocalSessions")==(version>=17),
+            key+" ProjectBase and TiaPortal.LocalSessions exist exactly on V17-V21 (PROJECT_BASE / PROJECT_MULTIUSER)");
+        check(members.Contains(project+"#P:IsPrimary")==(version>=15),key+" IsPrimary exists exactly on V15.1-V21 (PROJECT_IS_PRIMARY)");
+        check(members.Contains(project+"#P:HwUtilities"),key+" "+project+".HwUtilities exists on every release (F8)");
+        check(types.Contains("Siemens.Engineering.ObjectIdentifierProvider")==(version>=20),key+" ObjectIdentifierProvider exists exactly on V20/V21");
+        check(members.Contains("Siemens.Engineering.Multiuser.LocalSession#P:MarkingService")==(version>=17)
+            && members.Contains("Siemens.Engineering.Multiuser.MarkingService#M:GetMarkings/0")==(version>=17),
+            key+" multiuser markings exist exactly on V17-V21 (PROJECT_MULTIUSER_MARKINGS, F7)");
+        check(members.Contains("Siemens.Engineering.Multiuser.ProjectServer#M:GetProjectServerGroups/0")==(version>=20),
+            key+" ProjectServer.GetProjectServerGroups exists exactly on V20/V21 (PROJECT_MULTIUSER_SERVER_GROUPS, F7)");
+        check(members.Contains("Siemens.Engineering.Project#M:SaveAs/1")==(version>=15),key+" Project.SaveAs exists exactly on V15.1-V21 (F13)");
+        check(members.Contains("Siemens.Engineering.TiaPortalProcess#P:Mode") && members.Contains("Siemens.Engineering.IShowable#M:ShowInEditor/0"),
+            key+" TiaPortalProcess.Mode guards IShowable.ShowInEditor (F14)");
     }
 
     private static void CheckHardwareBranches(string directory,string key,Action<bool,string> check)

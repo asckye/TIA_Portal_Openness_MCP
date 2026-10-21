@@ -1609,7 +1609,7 @@
           "targetProjectName": {
             "type": "string",
             "default": "\"\"",
-            "description": "targetProjectName: exact name of the project to compare with.",
+            "description": "targetProjectName: exact name of another project already open in the same TIA Portal instance (opened outside the MCP).",
             "value": ""
           },
           "targetSoftwarePath": {
@@ -16839,6 +16839,24 @@
             "default": "true",
             "description": "dryRun: true validates the archive and destination without retrieving, creating files or opening a project; false retrieves and binds the returned project.",
             "value": true
+          },
+          "umacUserName": {
+            "type": "string",
+            "default": "\"\"",
+            "description": "umacUserName: UMAC user of a protected archive; give it together with umacPassword. Empty for an unprotected archive.",
+            "value": ""
+          },
+          "umacPassword": {
+            "type": "string",
+            "default": "\"\"",
+            "description": "umacPassword: password of umacUserName. Converted to SecureString in the worker; never logged, journaled, echoed or shown on the approval card.",
+            "value": ""
+          },
+          "umacUserType": {
+            "type": "string",
+            "default": "\"\"",
+            "description": "umacUserType: Project (default) or Global (UMAC server user); only together with umacUserName and umacPassword.",
+            "value": ""
           }
         },
         "arguments": {
@@ -20714,7 +20732,7 @@
           "targetProjectName": {
             "type": "string",
             "default": "\"\"",
-            "description": "targetProjectName: exact name of the project to compare with.",
+            "description": "targetProjectName: exact name of another project already open in the same TIA Portal instance (opened outside the MCP).",
             "value": ""
           },
           "targetSoftwarePath": {
@@ -36563,6 +36581,24 @@
             "default": "true",
             "description": "dryRun: true validates the archive and destination without retrieving, creating files or opening a project; false retrieves and binds the returned project.",
             "value": true
+          },
+          "umacUserName": {
+            "type": "string",
+            "default": "\"\"",
+            "description": "umacUserName: UMAC user of a protected archive; give it together with umacPassword. Empty for an unprotected archive.",
+            "value": ""
+          },
+          "umacPassword": {
+            "type": "string",
+            "default": "\"\"",
+            "description": "umacPassword: password of umacUserName. Converted to SecureString in the worker; never logged, journaled, echoed or shown on the approval card.",
+            "value": ""
+          },
+          "umacUserType": {
+            "type": "string",
+            "default": "\"\"",
+            "description": "umacUserType: Project (default) or Global (UMAC server user); only together with umacUserName and umacPassword.",
+            "value": ""
           }
         },
         "arguments": {

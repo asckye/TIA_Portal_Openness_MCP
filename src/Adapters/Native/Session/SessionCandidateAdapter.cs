@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using Siemens.Engineering;
 using TiaMcp.Adapters.Contracts.Candidates;
-#if PLC_SAFETY
+#if PROJECT_BASE
 using EngineeringProject = Siemens.Engineering.ProjectBase;
 #else
 using EngineeringProject = Siemens.Engineering.Project;
@@ -34,6 +34,8 @@ namespace TiaMcp.Adapters.Native.Session
         private long epoch;
         public bool RequiresReset { get; private set; }
         public long WorkerEpoch { get; set; }
+        // UMAC credentials for the one open of the current Execute (V15.1+); never part of the reviewed request.
+        internal UmacLogin? Login { get; set; }
 
         public SessionCandidateAdapter(Func<TiaPortal?> portal, Func<EngineeringProject?> project, Func<SessionState> state,
             Action<TiaPortal, int, DateTimeOffset> attached, Action<EngineeringProject, bool> bound, Action checkThread,
@@ -64,7 +66,7 @@ namespace TiaMcp.Adapters.Native.Session
                     if (current.ProcessId == process.Id && portal() != null)
                     {
                         var paths = portal()!.Projects.Select(p => CandidatePrimitives.CanonicalProject(p.Path.FullName)).ToList();
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
                         paths.AddRange(portal()!.LocalSessions.Select(s => CandidatePrimitives.CanonicalProject(s.Project.Path.FullName)));
 #endif
                         row.ProjectFiles = paths.OrderBy(p => p, StringComparer.Ordinal).ToArray();
@@ -110,9 +112,10 @@ namespace TiaMcp.Adapters.Native.Session
         {
             checkThread();
             if (portal() != null || project() != null) CandidatePrimitives.Fail("precondition", "detached-session");
-            var selected = TiaPortal.GetProcesses().Single(p => p.Id == request.ProcessId);
+            var selected = TiaPortal.GetProcess(request.ProcessId, TimeSpan.FromSeconds(30))
+                ?? throw new InvalidOperationException("Selected TIA process was not found by this release's API.");
             if (Start(selected.Id) != request.ProcessStartUtc) CandidatePrimitives.Fail("identity", "process-id-start-time");
-            var handle = selected.Attach();
+            var handle = OpennessRefusalMapping.Run("attach", false, () => selected.Attach());
             nonOwningAttachment = handle;
             // Retain the handle even if post-attach observation fails. Never close an unknown project.
             attached(handle, request.ProcessId, request.ProcessStartUtc); Remember();
@@ -123,7 +126,7 @@ namespace TiaMcp.Adapters.Native.Session
             if (!request.ReuseOpen || project() != null) CandidatePrimitives.Fail("precondition", "explicit-unbound-borrowing");
             var p = portal() ?? throw new InvalidOperationException("No attached portal.");
             var matches = p.Projects.Cast<EngineeringProject>().Where(x => CandidatePrimitives.CanonicalProject(x.Path.FullName) == request.ProjectPath).ToList();
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
             matches.AddRange(p.LocalSessions.Select(s => s.Project).Where(x => CandidatePrimitives.CanonicalProject(x.Path.FullName) == request.ProjectPath));
 #endif
             if (matches.Count != 1) CandidatePrimitives.Fail("identity", "exact-open-project");
@@ -134,14 +137,28 @@ namespace TiaMcp.Adapters.Native.Session
             checkThread();
             var p = portal() ?? throw new InvalidOperationException("No attached portal.");
             if (project() != null || p.Projects.Any()) CandidatePrimitives.Fail("precondition", "empty-selected-process");
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
             if (p.LocalSessions.Any()) CandidatePrimitives.Fail("precondition", "empty-selected-process");
             if (Path.GetExtension(request.ProjectPath).StartsWith(".als", StringComparison.OrdinalIgnoreCase))
             { if (!localSessionOpenSupported) CandidatePrimitives.Fail("precondition", "local-session-execution-gate");
-                var session = p.LocalSessions.Open(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.GetFullPath(request.ProjectPath)))); bound(session.Project, true); Remember(); return; }
+                var session = OpennessRefusalMapping.Run("open", Login?.Given == true, () => p.LocalSessions.Open(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.GetFullPath(request.ProjectPath))))); bound(session.Project, true); Remember(); return; }
 #endif
-            var opened = request.Upgrade == "allow" ? p.Projects.OpenWithUpgrade(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.GetFullPath(request.CopyPath)))) : p.Projects.Open(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.GetFullPath(request.ProjectPath))));
+            var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.GetFullPath(request.Upgrade == "allow" ? request.CopyPath : request.ProjectPath)));
+            bool upgrade = request.Upgrade == "allow";
+#if PROJECT_UMAC
+            var login = Login;
+            var umac = login?.Delegate;
+            using (login != null ? login.Authenticate(p) : UmacLogin.Release.None)
+            {
+                var opened = OpennessRefusalMapping.Run("open", login?.Given == true, () => umac == null
+                    ? (upgrade ? p.Projects.OpenWithUpgrade(file) : p.Projects.Open(file))
+                    : (upgrade ? p.Projects.OpenWithUpgrade(file, umac) : p.Projects.Open(file, umac)));
+                bound(opened, true); Remember();
+            }
+#else
+            var opened = OpennessRefusalMapping.Run("open", false, () => upgrade ? p.Projects.OpenWithUpgrade(file) : p.Projects.Open(file));
             bound(opened, true); Remember();
+#endif
         }
         public void MarkUncertain() { RequiresReset = true; }
     }

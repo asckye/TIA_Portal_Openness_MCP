@@ -1,20 +1,20 @@
 {
   "package": "TIA_MCP_Delivery_v3.3.0_20261008",
-  "generatedAt": "2026-10-20T05:34:22.2574225+00:00",
+  "generatedAt": "2026-10-21T04:22:11.4745248+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "3.3.0.0",
   "exeSha256": "4606c257e73305a158d0773de88a267f48f11adc4eb7081afee2744a3529414d",
-  "workerSha256": "460f6c114e83f6554539ee62a897816ab46119d859cc51d652eba6dee458f51b",
+  "workerSha256": "4e0c0ea293baff65e7029213dc9d82b5a82299c2e3ee3e2bf39319b723104e45",
   "toolCount": 516,
   "note": "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2573,
+    "parameters": 2579,
     "parametersUndocumented": 853,
     "parametersFromVocabulary": 702,
     "toolsWithUndocumentedParameters": 205,
     "toolsWithEnumHints": 157,
     "enumHints": 241,
-    "defaultHints": 1420,
+    "defaultHints": 1426,
     "examplesCurated": 516,
     "recipes": 36
   },
@@ -4539,10 +4539,13 @@
       "parameters": [
         "path",
         "dryRun",
+        "umacUserName",
+        "umacPassword",
+        "umacUserType",
         "confirm",
         "expectedProjectFile"
       ],
-      "description": "[PLC foundation; native unverified][SESSION] [v17-project-safe-v1] Preview opening an exact-version .ap file or API-supported .als local session. No replacement, upgrade, server-open or commit. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"OpenProject\"), optionally operation or language.",
+      "description": "[PLC foundation; native unverified][SESSION] [v17-project-safe-v1] Preview opening an exact-version .ap file or API-supported .als local session. No replacement, upgrade, server-open or commit. Refused while the TIA instance already has an open project or local session. Protected (UMAC) projects: pass umacUserName and umacPassword (umacUserType Project or Global); without them a protected project is refused as PRECONDITION_FAILED naming the missing credentials. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"OpenProject\"), optionally operation or language.",
       "example": "{\"path\":\"\\u003Cexact caller-selected closed project file for this release\\u003E\",\"dryRun\":true,\"confirm\":false}"
     },
     {
@@ -5034,9 +5037,12 @@
         "archivePath",
         "destinationDirectory",
         "upgrade",
-        "dryRun"
+        "dryRun",
+        "umacUserName",
+        "umacPassword",
+        "umacUserType"
       ],
-      "description": "[L2][Project][WRITE] Retrieve an archive into a new absolute directory and bind returned project. Requires connected Portal with no open project/session; never closes existing projects. upgrade=false, dryRun=true. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Examples: GetToolUsage(toolName: \"RetrieveProjectArchive\"), optionally operation or language.",
+      "description": "[L2][Project][WRITE] Retrieve an archive into a new absolute directory and bind returned project. Requires connected Portal with no open project/session; never closes existing projects. upgrade=false, dryRun=true. Protected (UMAC) archives: pass umacUserName and umacPassword (umacUserType Project or Global); the password becomes a SecureString and is never logged, journaled or echoed. A documented TIA refusal (access denied, missing products, missing licence) is PRECONDITION_FAILED with its condition. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Examples: GetToolUsage(toolName: \"RetrieveProjectArchive\"), optionally operation or language.",
       "example": "{\"archivePath\":\"C:\\\\Examples\\\\Archive.zap21\",\"destinationDirectory\":\"C:\\\\Examples\\\\restored\",\"dryRun\":true}"
     },
     {
@@ -5587,7 +5593,7 @@
         "confirm",
         "expectedProjectFile"
       ],
-      "description": "[PLC foundation; native unverified][WRITE] [v17-project-safe-v1] Preview creation in an existing parent directory; no project/session replacement. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"CreateProject\"), optionally operation or language.",
+      "description": "[PLC foundation; native unverified][WRITE] [v17-project-safe-v1] Preview creation in an existing parent directory; no project/session replacement. Refused while the TIA instance already has an open project or local session. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"CreateProject\"), optionally operation or language.",
       "example": "{\"directoryPath\":\"\\u003Cexisting caller-selected project directory\\u003E\",\"projectName\":\"\\u003Cfresh caller-selected project name\\u003E\",\"dryRun\":true,\"confirm\":false}"
     },
     {
@@ -5749,7 +5755,7 @@
       "method": "FoundationV4Tool.InvokeAsync",
       "returnType": "CallToolResult",
       "parameters": [],
-      "description": "[PLC foundation; native unverified][SESSION] [acknowledged-disconnect-candidate] End this worker session by detaching only a proven non-owning existing-process attachment. No project required; no save, project close, launch or automatic reconnect. Idle disconnect never starts a worker. An idle responsive worker can detach after an unknown outcome; an in-flight, unresponsive or lost worker is terminated with requiresTiaRestart=true. Subsequent Attach requires a new MCP session. Native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"DisconnectPortal\"), optionally operation or language.",
+      "description": "[PLC foundation; native unverified][SESSION] [acknowledged-disconnect-candidate] End this worker session. An attached existing process is only detached; a TIA Portal this session started (ConnectIsolatedPortal) is disposed, which closes a headless instance, and is refused while a project is open in it (SaveProject and CloseProject first). No project required; no save, project close, launch or automatic reconnect. Idle disconnect never starts a worker. An idle responsive worker can detach after an unknown outcome; an in-flight, unresponsive or lost worker is terminated with requiresTiaRestart=true. Subsequent Attach requires a new MCP session. Native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"DisconnectPortal\"), optionally operation or language.",
       "example": "{}"
     },
     {
@@ -6922,7 +6928,7 @@
       "parameters": [
         "processId"
       ],
-      "description": "[PLC foundation; native unverified][SESSION] [v17-project-safe-v1] Explicit existing process ID required; no launch or process ownership. Repeated attach refused. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ConnectPortal\"), optionally operation or language.",
+      "description": "[PLC foundation; native unverified][SESSION] [v17-project-safe-v1] Explicit existing process ID required; no launch or process ownership. Repeated attach refused. A first attach can wait for the TIA Portal Openness access dialog (Openness firewall); a denial (EngineeringSecurityException) is PRECONDITION_FAILED openness-access-denied with the AllowList steps. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ConnectPortal\"), optionally operation or language.",
       "example": "{\"processId\":12345}"
     },
     {
@@ -6958,7 +6964,7 @@
       "method": "ConnectIsolatedPortalV4",
       "returnType": "CallToolResult",
       "parameters": [],
-      "description": "[L1][Portal][SESSION] Start a BRAND-NEW headless TIA Portal instance instead of attaching to a running one. It never attaches to, modifies or closes any TIA window or project the user already has open. USE THIS when the user is working in the TIA Portal UI: plain ConnectPortal attaches to their instance and OpenProject then (correctly) refuses to touch their project, so the whole server is unusable until they close it. Must be the FIRST connection tool in a fresh MCP process — calling it after another connection leaves an orphaned portal process that later attaches steal. Afterwards use OpenProject / CreateProject as usual, then CloseProject and DisconnectPortal. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ConnectIsolatedPortal\"), optionally operation or language.",
+      "description": "[L1][Portal][SESSION] Start a BRAND-NEW headless TIA Portal instance instead of attaching to a running one. It never attaches to, modifies or closes any TIA window or project the user already has open. USE THIS when the user is working in the TIA Portal UI: plain ConnectPortal attaches to their instance and OpenProject then (correctly) refuses to touch their project, so the whole server is unusable until they close it. Must be the FIRST connection tool in a fresh MCP process — calling it after another connection leaves an orphaned portal process that later attaches steal. Afterwards use OpenProject / CreateProject as usual; finish with SaveProject, CloseProject and DisconnectPortal, which disposes the instance this session started and refuses while a project is still open in it. A first start can wait for the TIA Portal Openness access dialog (Openness firewall). Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ConnectIsolatedPortal\"), optionally operation or language.",
       "example": "{}"
     },
     {
@@ -7127,7 +7133,7 @@
         "offset",
         "limit"
       ],
-      "description": "[L2][Project][READ] Native OFFLINE comparison: kind=software (exact softwarePath vs targetSoftwarePath in the bound project, or vs the CPU at targetDevicePath/targetItemPath in another open project targetProjectName), softwareToLibrary (softwarePath vs project library or exact targetLibraryName), hardware (devicePath/itemPath vs target device, same or other open project). Flattened result tree, summary of all states, non-identical records paginated. No online access; nothing modified. Examples: GetToolUsage(toolName: \"CompareProjects\"), optionally operation or language.",
+      "description": "[L2][Project][READ] Native OFFLINE comparison: kind=software (exact softwarePath vs targetSoftwarePath in the bound project, or vs the CPU at targetDevicePath/targetItemPath in another open project targetProjectName), softwareToLibrary (softwarePath vs project library or exact targetLibraryName), hardware (devicePath/itemPath vs target device, same or other open project). The cross-project mode (targetProjectName) needs a second project that was opened outside the MCP; no MCP tool opens a secondary project in 4.0. Flattened result tree, summary of all states, non-identical records paginated. No online access; nothing modified. Examples: GetToolUsage(toolName: \"CompareProjects\"), optionally operation or language.",
       "example": "{\"kind\":\"software\",\"softwarePath\":\"PLC_1\",\"targetSoftwarePath\":\"PLC_2\"}"
     },
     {

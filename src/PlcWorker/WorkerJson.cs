@@ -36,7 +36,17 @@ namespace TiaMcp.PlcWorker
 
         internal static string Serialize(object? value) => JsonSerializer.Serialize(value, Options);
 
-        internal static string Evidence(Exception cause) => Serialize(new {
+        internal static string Evidence(Exception cause)
+        {
+            string evidence = EvidenceCore(cause);
+            var condition = TiaOpenness.Shared.HostFailurePolicy.Precondition(cause)?.Condition;
+            if (condition == null) return evidence;
+            var node = System.Text.Json.Nodes.JsonNode.Parse(evidence)!.AsObject();
+            node["condition"] = condition;
+            return node.ToJsonString();
+        }
+
+        private static string EvidenceCore(Exception cause) => Serialize(new {
             exceptionType = (TiaOpenness.Shared.HostFailurePolicy.Precondition(cause) ?? cause).GetType().Name,
             parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(cause),
             isArgument = TiaOpenness.Shared.HostFailurePolicy.Precondition(cause)?.IsArgument,

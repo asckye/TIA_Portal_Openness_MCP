@@ -172,13 +172,14 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
         token.ThrowIfCancellationRequested();
         if (disconnectAcknowledgement != null) return disconnectAcknowledgement.DeepClone();
         disconnecting = true;
-        HostSessionCall.Ended("disconnect");
         bool acquired = !ReferenceEquals(Held.Value, this);
         bool idle = !acquired || serial.Wait(0);
         try
         {
-            if (!idle && process != null && channel?.CanDisconnect != true) return TerminateForDisconnect();
-            return await DisconnectIdle().ConfigureAwait(false);
+            if (!idle && process != null && channel?.CanDisconnect != true) { HostSessionCall.Ended("disconnect"); return TerminateForDisconnect(); }
+            var acknowledgement = await DisconnectIdle().ConfigureAwait(false);
+            HostSessionCall.Ended("disconnect");
+            return acknowledgement;
         }
         finally { if (idle && acquired) serial.Release(); }
     }
@@ -186,7 +187,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
     private async Task<JsonObject> DisconnectIdle()
     {
         bool unknown = Poisoned;
-        if (process != null && (process.HasExited || channel?.CanDisconnect != true)) return TerminateForDisconnect();
+        if (process != null && (process.HasExited || channel?.CanDisconnect != true)) { HostSessionCall.Ended("disconnect"); return TerminateForDisconnect(); }
         if (process == null) disconnectAcknowledgement = DisconnectContract.Idle();
         else
         {
@@ -197,7 +198,9 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
                 wire = WorkerReplySpill.Read(SpillsDirectory, wire, out _);
                 disconnectAcknowledgement = (JsonObject)DisconnectContract.Validate(JsonNode.Parse(wire), true, attachedProcessId, attachedProcessId.HasValue).DeepClone();
             }
-            catch (Exception) /* swallow(teardown): failed acknowledgement cannot release a lease or claim clean recovery */ { return TerminateForDisconnect(); }
+            catch (ChannelFailureException refused) when (DisconnectContract.Refused(refused))
+            { disconnecting = false; throw DisconnectContract.Refusal(refused); }
+            catch (Exception) /* swallow(teardown): failed acknowledgement cannot release a lease or claim clean recovery */ { HostSessionCall.Ended("disconnect"); return TerminateForDisconnect(); }
         }
         lock (stateSync) { binding = null; status["binding"] = null; status["session"] = null; attachedProcessId = null; }
         if (unknown) DisconnectContract.Recovery(disconnectAcknowledgement, false, priorUnknownRequestId);

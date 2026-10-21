@@ -14,7 +14,7 @@ namespace TiaMcp.Adapters
     public sealed partial class PlcFoundationEngine
     {
         private IDisposable HardwareEditAccess() => AcquireEngineeringEditAccess != null ? AcquireEngineeringEditAccess()
-            : HasEngineeringTransaction ? new EngineeringAmbientAccess() : Portal().ExclusiveAccess("MCP: verifying a precise HMI operation");
+            : HasEngineeringTransaction ? new EngineeringAmbientAccess() : Portal().ExclusiveAccess(ExclusiveAccessText());
         private static IEngineeringServiceProvider HardwareServiceProvider(object target)
             => target as IEngineeringServiceProvider ?? throw new NotSupportedException("Selected object is not a service provider.");
         private static bool HardwareDisposedOnly(Exception error) => error.GetBaseException().GetType().Name == "EngineeringObjectDisposedException";

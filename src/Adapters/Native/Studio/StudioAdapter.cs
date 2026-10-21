@@ -19,8 +19,8 @@ namespace TiaMcp.Adapters
 
         public StudioAdapter()
         {
-            guard = new StudioThreadGuard();
             ReleaseKey = CompiledReleaseKey();
+            guard = new StudioThreadGuard(ReleaseKey);
             ApiIdentity = OpennessReleaseContract.For(ReleaseKey).CoreAssemblyIdentity.FullName;
             session = new OpennessSession(TiaVersionCatalog.Get(ReleaseKey).ApiVersion);
         }

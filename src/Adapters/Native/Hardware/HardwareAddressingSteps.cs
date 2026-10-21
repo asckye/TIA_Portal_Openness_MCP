@@ -122,7 +122,7 @@ namespace TiaMcp.Adapters
             return RunHardwareAddressStep("SetDeviceAddress", meta => {
                 if (!HardwareAddressingPolicy.IoTypes.Contains(update.IoType)) throw new ArgumentException("Invalid ioType.");
                 if (update.StartAddress < 0) throw new ArgumentException("startAddress identifies the existing address (>= 0).");
-                using var access = dryRun ? null : AcquireEngineeringEditAccess != null ? AcquireEngineeringEditAccess() : Portal().ExclusiveAccess("MCP: verifying a precise HMI operation");
+                using var access = dryRun ? null : AcquireEngineeringEditAccess != null ? AcquireEngineeringEditAccess() : Portal().ExclusiveAccess(ExclusiveAccessText());
                 var item = ExactHardware(update.DevicePath, update.ItemPath) as DeviceItem
                     ?? throw new ArgumentException("itemPathJson must address a DeviceItem (non-empty itemPathJson).");
                 var wanted = (AddressIoType)Enum.Parse(typeof(AddressIoType), update.IoType);

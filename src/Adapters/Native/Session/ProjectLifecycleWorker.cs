@@ -50,8 +50,11 @@ public sealed partial class PlcFoundationEngine
         if (ProjectConnectionCreated == null)
             throw new InvalidOperationException("The shared process lease owner is unavailable for isolated creation.");
         ProjectClearConnectError?.Invoke();
-        portal = InvocationJournal.Native("TiaPortal.CreateIsolated", () => new TiaPortal(ProjectLaunchWithUserInterface
-            ? TiaPortalMode.WithUserInterface : TiaPortalMode.WithoutUserInterface));
+        portal = InvocationJournal.Native("TiaPortal.CreateIsolated", () => OpennessRefusalMapping.Run("start", false, () => new TiaPortal(ProjectLaunchWithUserInterface
+            ? TiaPortalMode.WithUserInterface : TiaPortalMode.WithoutUserInterface)));
+        ObservePortal(portal);
+        // This worker started the instance: Disconnect may dispose it once no project is open in it (F1).
+        workerStartedPortal = true;
         ProjectConnectionCreated(portal);
         ownsPortal = true;
         bool connected = portal != null;
@@ -68,7 +71,7 @@ public sealed partial class PlcFoundationEngine
         Check();
         lifecycle.Attached(processId);
         sessionCandidateStart = new DateTimeOffset(new DateTime(processStartTicks, DateTimeKind.Utc));
-        ownsPortal = true;
+        ownsPortal = true; workerStartedPortal = true;
     }
     public void RefreshProjectLifecyclePath()
     {
@@ -84,7 +87,7 @@ public sealed partial class PlcFoundationEngine
     public void AdoptProjectLifecycleRetrieved(object returned)
     {
         Check();
-#if PLC_SAFETY
+#if PROJECT_BASE
         project = returned as Siemens.Engineering.ProjectBase;
 #else
         project = returned as Siemens.Engineering.Project;
@@ -128,7 +131,10 @@ public sealed partial class PlcFoundationEngine
         if (dryRun) throw new ArgumentException("SaveProjectCopy has no native preview mode.");
         if (PlcB5Session.IsProjectNull()) return false;
         var directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path));
-        (project as Project)?.SaveAs(directory);
+        // Project.SaveAs exists on Project only; a multiuser project is refused before any native call (F13).
+        var single = project as Project ?? throw new AdapterPreconditionException("SaveProjectCopy needs a single-user project (Project.SaveAs); the bound "
+            + (project?.GetType().Name ?? "project") + " has no SaveAs. Nothing was saved.", isArgument: false);
+        single.SaveAs(directory);
         (ProjectSavedAs ?? throw new InvalidOperationException("Shared Save As binding callback unavailable."))();
         return true;
 #else
@@ -168,10 +174,21 @@ public sealed partial class PlcFoundationEngine
             var directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(request.DestinationDirectory));
             if (directory.Exists) throw new IOException("Destination must be new; merge/overwrite refused.");
             meta["dryRun"] = request.DryRun; meta["upgrade"] = request.Upgrade; meta["mayHaveWrittenFiles"] = false; meta["destination"] = directory.FullName;
+            using var login = UmacCredentialsFor(request.UmacUserName, request.UmacPassword, request.UmacUserType, "umacUserName");
+            meta["umacCredentialsGiven"] = login.Given;
             if (!request.DryRun)
             {
                 meta["mayHaveWrittenFiles"] = true;
-                var retrieved = request.Upgrade ? portal.Projects.RetrieveWithUpgrade(file, directory) : portal.Projects.Retrieve(file, directory);
+                object retrieved;
+                try { retrieved = RetrieveArchive(portal, file, directory, request.Upgrade, login); }
+                catch (AdapterPreconditionException refusal) when (refusal.Condition != null)
+                {
+                    // Documented refusal (F4): no project was opened; files may exist only in the new destination directory.
+                    meta["mayHaveWrittenFiles"] = Directory.Exists(directory.FullName); meta["mayHaveChanged"] = false;
+                    meta["operationSuccess"] = false; meta["apiCallSuccess"] = false;
+                    meta["status"] = "PreconditionFailed"; meta["precondition"] = refusal.Condition; meta["refusal"] = refusal.Message;
+                    return refusal.Message;
+                }
                 (ProjectRetrieved ?? throw new InvalidOperationException("Shared retrieval binding callback unavailable."))(retrieved);
                 meta["project"] = HmiScalar.Read(project!); meta["openedProject"] = true;
             }
@@ -182,6 +199,15 @@ public sealed partial class PlcFoundationEngine
         throw new NotSupportedException("ProjectComposition.Retrieve requires V15.1 or later.");
 #endif
     }
+#if PROJECT_EXCHANGE
+    private static object RetrieveArchive(TiaPortal connection, FileInfo file, DirectoryInfo directory, bool upgrade, UmacLogin login)
+    {
+        using (login.Authenticate(connection))
+            return OpennessRefusalMapping.Run("retrieve", login.Given, () => login.Delegate == null
+                ? (upgrade ? connection.Projects.RetrieveWithUpgrade(file, directory) : connection.Projects.Retrieve(file, directory))
+                : (upgrade ? connection.Projects.RetrieveWithUpgrade(file, directory, login.Delegate) : connection.Projects.Retrieve(file, directory, login.Delegate)));
+    }
+#endif
     internal void ProjectReleaseBinding()
         => (ProjectReleased ?? throw new InvalidOperationException("Shared session release callback unavailable."))();
     public SecurityResult ExecuteMultiuserSession(MultiuserRequest request)

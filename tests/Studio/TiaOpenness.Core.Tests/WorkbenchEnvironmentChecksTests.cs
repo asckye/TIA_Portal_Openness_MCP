@@ -58,6 +58,7 @@ public sealed class WorkbenchEnvironmentChecksTests
         else if (id == "port") fixture.Sources.PortOwners = _ => ["127.0.0.1:8765 PID=12 expected-host"];
         else if (id == "url") fixture.Sources.UrlReserved = _ => false;
         else if (id == "firewall") fixture.Sources.FirewallAllowed = _ => false;
+        else if (id == "openness-allowlist") fixture.Sources.AllowListEntry = _ => null;
         Assert.Equal(EnvironmentFindingStatus.Fail, fixture.Check(id).Status);
     }
 
@@ -72,7 +73,68 @@ public sealed class WorkbenchEnvironmentChecksTests
         else if (id == "port") fixture.Sources.PortOwners = _ => throw new UnauthorizedAccessException("denied");
         else if (id == "url") fixture.Sources.UrlReserved = _ => null;
         else if (id == "firewall") fixture.Sources.FirewallAllowed = _ => null;
+        else if (id == "openness-allowlist") fixture.Sources.AllowListEntry = _ => throw new UnauthorizedAccessException("denied");
         Assert.Equal(EnvironmentFindingStatus.Unknown, fixture.Check(id).Status);
+    }
+
+    // P8-81c F6: the Openness firewall AllowList check against a synthetic registry view (read only).
+    [Fact]
+    public void AllowList_values_follow_the_firewall_topic_format()
+    {
+        var entry = OpennessAllowList.Expected(@"C:\Program Files\CustomerApplication\bin\CustomerApplication.exe",
+            new DateTime(2025, 6, 10, 15, 9, 44, 406, DateTimeKind.Utc), Convert.FromBase64String("0rXRKUCNzMWHOMFrT52OwXzqJef10ran4UykTeBraaY="));
+        Assert.Equal("2025/06/10 15:09:44.406", entry.DateModified);
+        Assert.Equal("0rXRKUCNzMWHOMFrT52OwXzqJef10ran4UykTeBraaY=", entry.FileHash);
+        Assert.Equal(@"C:\Program Files\CustomerApplication\bin\CustomerApplication.exe", entry.Path);
+        Assert.Throws<ArgumentException>(() => OpennessAllowList.Expected("x.exe", new DateTime(2025, 6, 10, 15, 9, 44, DateTimeKind.Local), new byte[32]));
+        Assert.Equal(@"SOFTWARE\Siemens\Automation\Openness\AllowList", OpennessAllowList.RegistryKey);
+    }
+
+    [Theory]
+    [InlineData("match")] [InlineData("missing")] [InlineData("path")] [InlineData("date")] [InlineData("hash")]
+    public void AllowList_check_names_each_worker_and_the_administrator_steps(string state)
+    {
+        var fixture = new ProbeFixture();
+        string target = Path.GetFileName(fixture.Workers()[0]);
+        var allowed = fixture.Sources.AllowListEntry;
+        fixture.Sources.AllowListEntry = name =>
+        {
+            var entry = allowed(name);
+            if (name != target) return entry;
+            return state switch
+            {
+                "missing" => null,
+                "path" => new AllowListEntry { Path = entry.Path + ".old", DateModified = entry.DateModified, FileHash = entry.FileHash },
+                "date" => new AllowListEntry { Path = entry.Path, DateModified = "2020/01/01 00:00:00.000", FileHash = entry.FileHash },
+                "hash" => new AllowListEntry { Path = entry.Path, DateModified = entry.DateModified, FileHash = Convert.ToBase64String(new byte[32]) },
+                _ => entry,
+            };
+        };
+        var finding = fixture.Check("openness-allowlist");
+        Assert.Equal(state == "match" ? EnvironmentFindingStatus.Pass : EnvironmentFindingStatus.Fail, finding.Status);
+        foreach (var worker in fixture.Workers()) Assert.Contains(Path.GetFileName(worker), finding.Evidence);
+        if (state == "match") { Assert.DoesNotContain("Windows Registry Editor", finding.Evidence); return; }
+        Assert.Contains(target + ": " + (state == "missing" ? "no AllowList entry" : "AllowList entry differs (" + state + ")"), finding.Evidence);
+        Assert.Contains("[HKEY_LOCAL_MACHINE\\SOFTWARE\\Siemens\\Automation\\Openness\\AllowList\\" + target + "\\Entry]", finding.Evidence);
+        Assert.Contains("\"DateModified\"=\"2026/10/19 13:09:44.406\"", finding.Evidence);
+        Assert.Contains("\"FileHash\"=\"" + Convert.ToBase64String(ProbeFixture.Hash(target)) + "\"", finding.Evidence);
+        Assert.Contains("\"Path\"=\"" + fixture.Workers()[0].Replace("\\", "\\\\") + "\"", finding.Evidence);
+        // Only the differing worker needs new values.
+        Assert.DoesNotContain("AllowList\\" + Path.GetFileName(fixture.Workers()[1]) + "\\Entry]", finding.Evidence);
+    }
+
+    [Fact]
+    public void AllowList_check_never_guesses_without_a_bundle_or_a_registry_view()
+    {
+        var fixture = new ProbeFixture();
+        fixture.Sources.AllowListEntry = null;
+        Assert.Equal(EnvironmentFindingStatus.Unknown, fixture.Check("openness-allowlist").Status);
+        fixture = new ProbeFixture();
+        fixture.Sources.FileExists = _ => false;
+        Assert.Equal(EnvironmentFindingStatus.Unknown, fixture.Check("openness-allowlist").Status);
+        fixture = new ProbeFixture();
+        fixture.Context.BundleRoot = null;
+        Assert.Equal(EnvironmentFindingStatus.Unknown, fixture.Check("openness-allowlist").Status);
     }
 
     [Fact]
@@ -184,7 +246,13 @@ public sealed class WorkbenchEnvironmentChecksTests
             Doctor = () => Report, ListedGroupMember = () => false, FileExists = _ => true,
             Directories = directory => [Path.Combine(directory, "10.0.12")], Writable = _ => true,
             PortOwners = _ => [], UrlReserved = _ => true, FirewallAllowed = _ => true,
+            FileIdentity = path => new(Modified, Hash(path)),
+            AllowListEntry = name => OpennessAllowList.Expected(Workers().Single(w => Path.GetFileName(w) == name), Modified, Hash(Workers().Single(w => Path.GetFileName(w) == name))),
         };
+        public static readonly DateTime Modified = new(2026, 10, 19, 13, 9, 44, 406, DateTimeKind.Utc);
+        public static byte[] Hash(string path) => System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(Path.GetFileName(path)));
+        public string[] Workers() => TiaMcp.Versioning.TiaVersionCatalog.Runnable
+            .Select(v => Path.GetFullPath(TiaOpenness.Shared.BundleLayout.WorkerPath(Context.BundleRoot, v.Key))).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         public EnvironmentFinding Check(string id) => new WorkbenchEnvironmentChecks(Context, Sources).Run().Single(f => f.Id == id);
     }
 }

@@ -103,13 +103,13 @@ namespace TiaMcpServer.ModelContextProtocol
             => SecurityToolContract.Invoke("CompareLibraries", true, false,
                 () => _service.CompareLibraries(leftLibraryName,rightLibraryName,includeIdentical,maxDepth,offset,limit));
 
-        [McpServerTool(Name="CompareProjects"), Description("[L2][Project][READ] Native OFFLINE comparison: kind=software (exact softwarePath vs targetSoftwarePath in the bound project, or vs the CPU at targetDevicePath/targetItemPath in another open project targetProjectName), softwareToLibrary (softwarePath vs project library or exact targetLibraryName), hardware (devicePath/itemPath vs target device, same or other open project). Flattened result tree, summary of all states, non-identical records paginated. No online access; nothing modified.")]
+        [McpServerTool(Name="CompareProjects"), Description("[L2][Project][READ] Native OFFLINE comparison: kind=software (exact softwarePath vs targetSoftwarePath in the bound project, or vs the CPU at targetDevicePath/targetItemPath in another open project targetProjectName), softwareToLibrary (softwarePath vs project library or exact targetLibraryName), hardware (devicePath/itemPath vs target device, same or other open project). The cross-project mode (targetProjectName) needs a second project that was opened outside the MCP; no MCP tool opens a secondary project in 4.0. Flattened result tree, summary of all states, non-identical records paginated. No online access; nothing modified.")]
         public CallToolResult CompareProjects(
             string kind,
             string softwarePath="",
             string[] devicePath=null!,
             string[] itemPath=null!,
-            [Description("targetProjectName: exact name of the project to compare with.")] string targetProjectName="",
+            [Description("targetProjectName: exact name of another project already open in the same TIA Portal instance (opened outside the MCP).")] string targetProjectName="",
             string targetSoftwarePath="",
             [Description("targetDevicePath: JSON array naming the target station.")] string[] targetDevicePath=null!,
             [Description("targetItemPath: array of device-item names on the target.")] string[] targetItemPath=null!,

@@ -18,13 +18,13 @@ namespace TiaMcp.Adapters
                     saveCloseAdapter = new SaveCloseAdapter(() => portal, () => project,
                         () => new SessionState { ProcessId = lifecycle.ProcessId, ProcessStartUtc = lifecycle.ProcessId.HasValue ? sessionCandidateStart : null,
                             ProjectFile = lifecycle.ProjectFile, Ownership = project == null ? "none" : lifecycle.OwnsProject ? "owned" : "borrowed" },
-                        () => project, () => PlcDisconnectState.Supports(ownsPortal,sharedPortal), () => Check(true),
+                        () => project, () => PlcDisconnectState.Supports(ownsPortal,sharedPortal,workerStartedPortal), () => Check(true),
                         () => { project = null; lifecycle.Unbound(); sessionCandidateAdapter = null;
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
                             localSession = null;
 #endif
                         }, () => { throw new NotSupportedException("Foundation does not advertise SaveProjectCopy."); }, () => Disconnect(), worker: true
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
                         , local: () => localSession
 #endif
                         );

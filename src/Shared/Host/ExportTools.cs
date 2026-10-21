@@ -230,6 +230,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, data, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Execution.Unknown : write ? Execution.Completed : Execution.ReadOnly,
                     nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current: current);
             bool changed = Flag(data, "mayHaveChanged") == true || Flag(data, "mayHaveWrittenFiles") == true;
+            // A documented Openness refusal (P8-81c F4) carries an explicit condition and never poisons the session.
+            if ((string?)data["status"] == "PreconditionFailed" && data["precondition"] is JsonValue && success != true)
+            {
+                var refused = new Error(HostBehavior.SafeDiagnostic((string?)data["refusal"]) ?? "TIA Portal refused the operation.",
+                    new PreconditionFailedDetails((string?)data["precondition"], null));
+                return changed ? Result(tool, data, refused, Outcome.Failed, Execution.Completed, Completeness.None, current: current)
+                    : Reject(tool, refused, data, current);
+            }
             bool unknown = observation != null && observation.Issued > observation.Confirmed
                 || (string?)data["outcome"] == "unknown" || Flag(data, "outcomeUnknown") == true
                 || write && success == null
@@ -298,7 +306,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(admission, false, !write);
                 return Reject(tool, HostBehavior.FailureError(kind, admission.ParamName, Evidence(data),
-                    HostBehavior.AdmissionDiagnostic(admission)), data, current);
+                    HostBehavior.AdmissionDiagnostic(admission), condition: admission.Condition), data, current);
             }
             Error? error = null;
             for (Exception? cause = exception; cause != null; cause = cause.InnerException)

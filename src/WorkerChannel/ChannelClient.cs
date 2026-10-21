@@ -210,7 +210,7 @@ namespace TiaMcp.WorkerChannel
                     _ = task.ContinueWith(t => { _ = t.Exception; }, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
                     token.ThrowIfCancellationRequested();
                     throw new TimeoutException(firstAttach
-                        ? "Worker timed out; native outcome is unknown. A first attach from a new worker or build may be waiting for TIA Portal Openness access confirmation; choose ‘Yes’ or ‘Yes to all’ on the TIA machine."
+                        ? "Worker timed out; native outcome is unknown. A first attach or isolated start from a new worker or build may be waiting for TIA Portal Openness access confirmation (the Openness firewall dialog); choose ‘Yes’ or ‘Yes to all’ on the TIA machine, or have an administrator add the worker to the Openness AllowList (Workbench environment check ‘Openness AllowList’)."
                         : "Worker timed out; native outcome is unknown.");
                 }
                 cancel.Cancel();

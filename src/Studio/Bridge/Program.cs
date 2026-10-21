@@ -10,11 +10,42 @@ using TiaOpenness.Core.Rpc;
 
 namespace TiaOpenness.Bridge
 {
-    /// <summary>The native session and every dispatch stay on this process's STA main thread.</summary>
+    /// <summary>
+    /// The native session and every dispatch stay on one owner thread: the STA main thread for V14 SP1-V19, and a dedicated
+    /// MTA thread for V20/V21, matching the PlcWorker (API audit 2026-10-19, F3).
+    /// </summary>
     public static class Program
     {
         [STAThread]
         public static int Main(string[] args)
+        {
+            if (!MtaRelease(args)) return Run(args);
+            int result = 1;
+            Exception failure = null;
+            var owner = new System.Threading.Thread(() =>
+            {
+                try { result = Run(args); }
+                catch (Exception ex) { failure = ex; }
+            });
+            owner.SetApartmentState(System.Threading.ApartmentState.MTA);
+            owner.Start();
+            owner.Join();
+            if (failure != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
+            return result;
+        }
+
+        // Only an explicitly selected V20/V21 Openness version moves to MTA; anything else keeps the STA main thread.
+        internal static bool MtaRelease(string[] args)
+        {
+            try
+            {
+                var key = TiaMcp.Versioning.TiaVersionCatalog.FromApiVersion(GetValue(args, "--openness-version")).Key;
+                return key == "20" || key == "21";
+            }
+            catch (Exception) /* swallow(parse-fallback): an unknown or missing version keeps the STA thread; Run reports it */ { return false; }
+        }
+
+        private static int Run(string[] args)
         {
             // Redirected diagnostics must match BridgeClient's UTF-8 readers even
             // when the Windows console code page is GBK. Never emit a BOM on stdout.

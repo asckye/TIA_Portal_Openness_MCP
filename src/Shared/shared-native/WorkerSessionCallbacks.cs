@@ -61,7 +61,7 @@ namespace TiaMcp.Adapters
             ProjectValidationTree = () => EngineeringProjectMissing!() ? string.Empty : ReadProjectTree();
             AcquireEngineeringEditAccess = () => SessionCallbackPrimitives.EditAccess(portal != null,
                 () => VerifyWorkerBinding("Write"), () => HasEngineeringTransaction,
-                () => portal!.ExclusiveAccess("MCP: verifying a precise HMI operation"));
+                () => portal!.ExclusiveAccess(ExclusiveAccessText()));
             SharedFamilyMutationIdentity = expected =>
                 MutationIdentityPolicy.RequireSameProject(expected, ReadState().ProjectFile);
             SharedHardwareCandidateIdentity = path =>

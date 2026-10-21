@@ -49,6 +49,23 @@ internal sealed class ProjectMultiuserAdapter
         internal SecurityResult ManageMultiuserSession(string action = "read", string serverName = "", string projectName = "", string protocol = "Https", string host = "", int port = 0,
             string commitComment = "", int offset = 0, int limit = 100, bool confirmChange = false, bool dryRun = true)
             => engine.RunProjectLifecycleStep("ManageMultiuserSession", meta => {
+                try { return Multiuser(meta, action, serverName, projectName, protocol, host, port, commitComment, offset, limit, dryRun); }
+                // commit is excluded: the SDK does not say whether a failed CloseAndCommit committed or closed part of the session,
+                // so its failure keeps the unknown outcome (session reset required).
+                catch (Exception error) when (action != "commit" && OpennessRefusalMapping.Refusal(error, out _) != null)
+                {
+                    // Documented refusal (F4): MultiuserException, LicenseNotFoundException or EngineeringSecurityException; TIA made no change.
+                    var native = OpennessRefusalMapping.Refusal(error, out var code)!;
+                    var refusal = OpennessRefusals.Exception(code!, "multiuser", false, native);
+                    meta["mayHaveChanged"] = false; meta["operationSuccess"] = false; meta["apiCallSuccess"] = false;
+                    meta["status"] = "PreconditionFailed"; meta["precondition"] = code; meta["refusal"] = refusal.Message;
+                    return refusal.Message;
+                }
+            }, requiresProject: false);
+
+        private string Multiuser(HmiObject meta, string action, string serverName, string projectName, string protocol, string host, int port,
+            string commitComment, int offset, int limit, bool dryRun)
+        {
                 meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 Validate("action");
                 Validate("page");
@@ -91,7 +108,7 @@ internal sealed class ProjectMultiuserAdapter
                         var projects = server.GetServerProjects();
                         var rows = Page(projects.Select(p => (object?)HmiScalar.Read(p)).ToList(), offset, limit, meta);
                         meta["records"] = rows;
-#if PROJECT_MULTIUSER_MARKINGS
+#if PROJECT_MULTIUSER_SERVER_GROUPS
                         meta["serverGroups"] = new HmiArray(server.GetProjectServerGroups().Select(g => { ProjectServerGroup group = g; return (object?)group.Name; }).ToArray());
 #else
                         meta["serverGroups"] = null;
@@ -152,7 +169,7 @@ internal sealed class ProjectMultiuserAdapter
                         return "Local session committed and closed by the native CloseAndCommit; the MCP project binding was cleared. Re-open a session explicitly to continue.";
                     }
                 }
-            }, requiresProject: false);
+        }
 
 }
 #endif

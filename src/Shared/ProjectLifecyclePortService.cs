@@ -39,9 +39,15 @@ internal sealed class ProjectLifecyclePortService
         if (!dryRun) { arguments["confirm"] = true; arguments["expectedProjectFile"] = identity(); }
         return Invoke<ResponseMessage>("ArchiveSavedProject", arguments);
     }
-    internal ResponseMessage RetrieveProjectArchive(string archivePath, string destinationDirectory, bool upgrade, bool dryRun)
-        => Invoke<ResponseMessage>("RetrieveProjectArchive", new JsonObject { ["request"] = JsonSerializer.SerializeToNode(new ProjectRetrieveRequest {
-            ArchivePath = archivePath, DestinationDirectory = destinationDirectory, Upgrade = upgrade, DryRun = dryRun }) });
+    internal ResponseMessage RetrieveProjectArchive(string archivePath, string destinationDirectory, bool upgrade, bool dryRun,
+        string umacUserName = "", string umacPassword = "", string umacUserType = "")
+    {
+        // Validated before dispatch; the credentials go to the worker in memory only.
+        TiaMcp.Adapters.Contracts.EngineeringCredentialRules.ValidateUmacCredentials(umacUserName, umacPassword, umacUserType);
+        return Invoke<ResponseMessage>("RetrieveProjectArchive", new JsonObject { ["request"] = JsonSerializer.SerializeToNode(new ProjectRetrieveRequest {
+            ArchivePath = archivePath, DestinationDirectory = destinationDirectory, Upgrade = upgrade, DryRun = dryRun,
+            UmacUserName = umacUserName, UmacPassword = umacPassword, UmacUserType = umacUserType }) });
+    }
     internal ResponseMessage ReadPortalInfo(bool includeProcesses, bool includeSessions, bool includeProducts)
         => Invoke<ResponseMessage>("ReadPortalInfo", new JsonObject { ["includeProcesses"] = includeProcesses, ["includeSessions"] = includeSessions, ["includeProducts"] = includeProducts });
     internal ResponseMessage ValidateAutomationContext(string expectedPlcSoftwarePath, string expectedHmiSoftwarePath)

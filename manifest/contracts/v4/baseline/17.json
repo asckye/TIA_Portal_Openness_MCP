@@ -39122,7 +39122,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "17d06fcd4b5723b745307073436518a605d0bed3fd5990bb85229efd5c9ef787",
+      "descriptionSha256": "03967a83c4ab27aa01ded87fe3963c1beed265410d1cbfd551dc85fa50779ca9",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -39190,7 +39190,7 @@
           },
           "targetProjectName": {
             "default": "",
-            "description": "targetProjectName: exact name of the project to compare with.",
+            "description": "targetProjectName: exact name of another project already open in the same TIA Portal instance (opened outside the MCP).",
             "type": "string"
           },
           "targetSoftwarePath": {
@@ -49677,7 +49677,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "09040bb465684eb961c2812fc915566f2c4337b086f6235878781113d1396551",
+      "descriptionSha256": "8c34defadee0873c95970a9c943fdb1a219ef272ccb852a75f9762b57db901f4",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -52304,7 +52304,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "eba39dec72c5f9ac90ef503f6435686c2ef326fdfd97289ce516afc608a10811",
+      "descriptionSha256": "3d9d59505da9edbdf449e5da7014fbddca612ab700ae862772fd00ba1ac56d7c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -65442,7 +65442,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "38fbfe43196c88e6794a93a258eeece5c1fd7055e00c3f2e904df5d083fa33ea",
+      "descriptionSha256": "3dbfb02983f29a85ae508414afd4a1e20e2d2a432bb18bb0ef2659dda324e324",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -92883,7 +92883,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "f21752b5bd9524792350e345f1c5c5948af44d3489b57b4026b42d54b5ed2f7c",
+      "descriptionSha256": "3020a131ce31bf79ca1fcebc2c4bd65dd2a1f75a5cfb63bb0efacfa375ec8a7c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -397891,7 +397891,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "2e0b1de2099436b0c0590a5e08cf5cfb7682a188d673aeaef8137da935a302a5",
+      "descriptionSha256": "cee75f0dc602380e1fbd384a22dd8f019023f9204fa26d4247cb0801992911e0",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -397912,6 +397912,21 @@
           },
           "path": {
             "description": "Exact foundation argument: path",
+            "type": "string"
+          },
+          "umacPassword": {
+            "default": "",
+            "description": "umacPassword: password of umacUserName. Converted to SecureString in the worker; never logged, journaled, echoed or shown on the approval card.",
+            "type": "string"
+          },
+          "umacUserName": {
+            "default": "",
+            "description": "umacUserName: UMAC user of a protected project; give it together with umacPassword. Empty for an unprotected project.",
+            "type": "string"
+          },
+          "umacUserType": {
+            "default": "",
+            "description": "umacUserType: Project (default) or Global (UMAC server user); only together with umacUserName and umacPassword.",
             "type": "string"
           }
         },
@@ -431248,7 +431263,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "ff4ac7e5c7690dc5db1740353471d82e3ea6c6ae34683a8602a540d8cd8addbc",
+      "descriptionSha256": "670cb375e47f48a103cc3d3b9f9d437814d35d857975dedf2ec97dcbf2d81a8c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -431264,6 +431279,21 @@
             "default": true,
             "description": "dryRun: true validates the archive and destination without retrieving, creating files or opening a project; false retrieves and binds the returned project.",
             "type": "boolean"
+          },
+          "umacPassword": {
+            "default": "",
+            "description": "umacPassword: password of umacUserName. Converted to SecureString in the worker; never logged, journaled, echoed or shown on the approval card.",
+            "type": "string"
+          },
+          "umacUserName": {
+            "default": "",
+            "description": "umacUserName: UMAC user of a protected archive; give it together with umacPassword. Empty for an unprotected archive.",
+            "type": "string"
+          },
+          "umacUserType": {
+            "default": "",
+            "description": "umacUserType: Project (default) or Global (UMAC server user); only together with umacUserName and umacPassword.",
+            "type": "string"
           },
           "upgrade": {
             "default": false,

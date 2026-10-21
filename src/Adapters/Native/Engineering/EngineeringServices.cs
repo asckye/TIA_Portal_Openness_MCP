@@ -17,7 +17,7 @@ using TiaMcp.Adapters.Hardware;
 using TiaMcp.Adapters.Native.Plc;
 using TiaMcp.Adapters.Engineering;
 using static TiaMcp.Adapters.Hardware.HardwareAddressPrimitives;
-#if PLC_SAFETY
+#if PROJECT_BASE
 using EngineeringProject = Siemens.Engineering.ProjectBase;
 #else
 using EngineeringProject = Siemens.Engineering.Project;
@@ -135,6 +135,11 @@ namespace TiaMcp.Adapters
                 var target = ExactIdentifiableObject(kind, devicePath, itemPath, softwarePath, objectPath, meta);
                 meta["kind"] = kind; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["object"] = IdentifiedObjectRow(target);
                 IShowable showable = target as IShowable ?? throw new NotSupportedException(target.GetType().Name + " does not implement IShowable (Device and the STEP 7 blocks / types / tag tables / watch and force tables do).");
+                var mode = portal!.GetCurrentProcess().Mode;
+                meta["portalMode"] = mode.ToString();
+                if (mode != TiaPortalMode.WithUserInterface)
+                    throw new AdapterPreconditionException("ShowObjectInEditor needs a TIA Portal with user interface; this session's TIA Portal runs " + mode
+                        + ". Attach to a TIA Portal window (ConnectPortal) or start the isolated portal with the user interface.", isArgument: false);
                 if (dryRun) return "ShowInEditor preview; the TIA Portal UI was not touched.";
                 showable.ShowInEditor(); meta["apiCallSuccess"] = true;
                 return "IShowable.ShowInEditor invoked: the object is opened in the TIA Portal editor (UI only; no project change).";
@@ -232,7 +237,7 @@ namespace TiaMcp.Adapters
         private EngineeringProject ExactOpenProject(string projectName)
         {
             var candidates = portal!.Projects.Cast<EngineeringProject>()
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
                 .Concat(portal.LocalSessions.Select(s => (EngineeringProject)s.Project))
 #endif
                 .Where(p => p != null && string.Equals(p.Name, projectName, StringComparison.Ordinal)).Take(2).ToArray();

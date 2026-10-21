@@ -184,6 +184,8 @@ namespace TiaMcp.PlcWorker
             catch (Exception ex)
             {
                 var cause = ex is TargetInvocationException && ex.InnerException != null ? ex.InnerException : ex;
+                // A refused disconnect (owned portal with an open project, P8-81c F1) made no native call: the session stays usable.
+                if (disconnectAttempted && !disconnected && cause is AdapterPreconditionException && !engine.DisconnectAttempted) disconnectAttempted = false;
                 failureObserved?.Invoke(cause);
                 if (cause is WorkerPrimitiveFailureException primitiveFailure)
                     return ChannelResponse.Error(primitiveFailure.Failure);

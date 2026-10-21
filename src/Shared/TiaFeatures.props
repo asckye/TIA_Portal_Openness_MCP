@@ -38,9 +38,19 @@
     <DefineConstants Condition="'$(TiaReleaseKey)' == '21'">$(DefineConstants);ONLINE_ADDRESS_OVERLOAD;ONLINE_PASSWORD_SECURITY;ONLINE_PARAMETERS</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_EXCHANGE</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_MULTIUSER</DefineConstants>
-    <DefineConstants Condition="$([System.String]::Copy('|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_MULTIUSER_MARKINGS</DefineConstants>
+    <!-- MarkingService/Markings/Marking exist from V17; ProjectServer.GetProjectServerGroups and ProjectServerGroup from V20. -->
+    <DefineConstants Condition="$([System.String]::Copy('|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_MULTIUSER_MARKINGS</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_MULTIUSER_SERVER_GROUPS</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_TEXT_CATEGORIES</DefineConstants>
-    <DefineConstants Condition="$([System.String]::Copy('|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_HARDWARE_UTILITIES</DefineConstants>
+    <!-- ProjectBase (and TiaPortal.LocalSessions) exist from V17; V14 SP1-V16 bind Siemens.Engineering.Project. -->
+    <DefineConstants Condition="$([System.String]::Copy('|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_BASE</DefineConstants>
+    <!-- ProjectComposition.Open/OpenWithUpgrade/Retrieve*(..., UmacDelegate) and UmacCredentials exist from V15.1. -->
+    <DefineConstants Condition="$([System.String]::Copy('|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_UMAC</DefineConstants>
+    <!-- TiaPortal.Authentication / AuthenticationEventArgs exist from V17. -->
+    <DefineConstants Condition="$([System.String]::Copy('|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_AUTHENTICATION_EVENT</DefineConstants>
+    <!-- LicenseNotFoundException exists from V17, MissingProductsException from V18. -->
+    <DefineConstants Condition="$([System.String]::Copy('|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);OPENNESS_LICENSE_EXCEPTION</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);OPENNESS_MISSING_PRODUCTS</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);SECURITY_DEVICE_USERS</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);SECURITY_WATCH_WEB</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);SECURITY_SIMPLE_WEB</DefineConstants>
@@ -105,6 +115,8 @@
     <DefineConstants Condition="$([System.String]::Copy('|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_DOCUMENT_EXPORT</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Studio' Or '$(TiaFeatureProfile)' == 'Adapter'">
+    <!-- Project.IsPrimary exists from V15.1 (ProjectBase.IsPrimary from V17). -->
+    <DefineConstants Condition="$([System.String]::Copy('|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_IS_PRIMARY</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);STUDIO_VCI</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|16|17|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);STUDIO_VCI_INITIAL</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);STUDIO_VCI_MODERN</DefineConstants>

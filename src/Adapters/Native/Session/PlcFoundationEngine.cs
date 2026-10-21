@@ -15,7 +15,7 @@ using Siemens.Engineering.SW.Tags;
 using Siemens.Engineering.SW.Types;
 using TiaMcpServer.Siemens;
 using TiaMcp.Adapters.Contracts;
-#if PLC_SAFETY
+#if PROJECT_BASE
 using EngineeringProject = Siemens.Engineering.ProjectBase;
 #else
 using EngineeringProject = Siemens.Engineering.Project;
@@ -34,7 +34,7 @@ namespace TiaMcp.Adapters
         private TiaPortal? portal;
         private EngineeringProject? project;
         private readonly PlcLifecycleState lifecycle=new PlcLifecycleState();
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
         private Siemens.Engineering.Multiuser.LocalSession? localSession;
 #endif
         private bool disposed;
@@ -77,7 +77,7 @@ namespace TiaMcp.Adapters
         {
             Check(true);
             adopt(portal, project,
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
                 localSession,
 #else
                 null,
@@ -101,7 +101,7 @@ namespace TiaMcp.Adapters
             if(changed) { sessionCandidateAdapter=null; saveCloseAdapter=null; }
             sessionCandidateStart=state.ProcessId.HasValue ? new DateTimeOffset(new DateTime(processStartTicks,DateTimeKind.Utc)) : (DateTimeOffset?)null;
             portal=connection; project=boundProject; ownsPortal=ownedPortal; sharedPortal=true;
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
             localSession=session as Siemens.Engineering.Multiuser.LocalSession;
 #endif
         }
@@ -111,11 +111,11 @@ namespace TiaMcp.Adapters
             _resetWorkerFamilyState?.Invoke();
             portal=null; project=null; lifecycle.Detached();
             sessionCandidateAdapter=null; saveCloseAdapter=null; sessionCandidateStart=null;
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
             localSession=null;
 #endif
         }
-        private TiaPortal Portal() { Check(); sessionCandidateAdapter?.VerifyOwnedState(); disconnect.RequireActive(); return portal ?? throw new InvalidOperationException("Attach to an explicitly selected TIA process first."); }
+        private TiaPortal Portal() { Check(); sessionCandidateAdapter?.VerifyOwnedState(); disconnect.RequireActive(); RequirePortalAlive(); return portal ?? throw new InvalidOperationException("Attach to an explicitly selected TIA process first."); }
         private EngineeringProject Project() { Portal(); lifecycle.RequireBound(); return project ?? throw new InvalidOperationException("Bind, open or create an explicit project first."); }
 
         private void RequireHardwareCatalogBinding()
@@ -131,18 +131,18 @@ namespace TiaMcp.Adapters
             Check();
             disconnect.RequireActive();
             lifecycle.RequireAttach(processId);
-            var process = TiaPortal.GetProcesses().SingleOrDefault(p => p.Id == processId)
-                ?? throw new AdapterPreconditionException("Selected TIA process was not found by this release's API.","processId");
-            portal = process.Attach();
+            var process = FindProcess(processId);
+            portal = OpennessRefusalMapping.Run("attach", false, () => process.Attach());
+            ObservePortal(portal);
             lifecycle.Attached(processId);
-            ownsPortal=false;
+            ownsPortal=false; workerStartedPortal=false;
             return new PlcConnectionResult { AttemptedPids=new[]{processId} };
         }
         public PlcProjectDetails[] ListProjects()
         {
             var portal=Portal();
             var result=portal.Projects.Select(p=>ProjectDetails(p,false)).ToList();
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
             result.AddRange(portal.LocalSessions.Select(s=>ProjectDetails(s.Project,true)));
 #endif
             return result.ToArray();
@@ -163,7 +163,7 @@ namespace TiaMcp.Adapters
             try { MutationIdentityPolicy.RequireSameProject(expectedProjectFile,full); }
             catch(ArgumentException ex) { throw new AdapterPreconditionException(ex.Message,"expectedProjectFile",true,ex); }
             bool session=PlcLifecyclePolicy.IsSessionFile(ReleaseKey,full);
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
             if(session)
             {
                 localSession=portal!.LocalSessions.SingleOrDefault(s=>s.Project.Name==projectName && string.Equals(s.Project.Path.FullName,full,StringComparison.OrdinalIgnoreCase)) ?? throw new AdapterPreconditionException("The exact named local session is not open.","expectedProjectFile");
@@ -171,7 +171,10 @@ namespace TiaMcp.Adapters
             }
             else
 #endif
-                project=portal!.Projects.SingleOrDefault(p=>p.Name==projectName && string.Equals(p.Path.FullName,full,StringComparison.OrdinalIgnoreCase)) ?? throw new AdapterPreconditionException("The exact named project is not open.","expectedProjectFile");
+            {
+                project=portal!.Projects.SingleOrDefault(p=>p.Name==projectName && string.Equals(p.Path.FullName,full,StringComparison.OrdinalIgnoreCase));
+                if(project==null) { RequireVisibleProject(full); throw new AdapterPreconditionException("The exact named project is not open.","expectedProjectFile"); }
+            }
             lifecycle.Bound(full,false,session);
             if (_resetWorkerFamilyState != null) _resetWorkerFamilyState();
             else { hmiReadFault = null; _hmiTokenGeneration = Guid.NewGuid().ToString("N"); }
@@ -180,7 +183,8 @@ namespace TiaMcp.Adapters
 #endif
             return Mutation("BindProject",false);
         }
-        public PlcMutationResult OpenProject(string path, bool dryRun = true)
+        // UMAC credentials (V15.1+) are optional; the password is converted to SecureString here and never logged or echoed.
+        public PlcMutationResult OpenProject(string path, bool dryRun = true, string umacUserName = "", string umacPassword = "", string umacUserType = "")
         {
             var p = Portal();
             lifecycle.RequireUnbound();
@@ -190,19 +194,39 @@ namespace TiaMcp.Adapters
             if (!input.Exists) throw new AdapterPreconditionException("Project file does not exist.", "path", true, new FileNotFoundException());
             if (p.Projects.Any(x => string.Equals(x.Path.FullName, input.FullName, StringComparison.OrdinalIgnoreCase)))
                 throw new AdapterPreconditionException("Project is already open; bind it explicitly instead.","path");
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
             if(p.LocalSessions.Any(s=>string.Equals(s.Project.Path.FullName,input.FullName,StringComparison.OrdinalIgnoreCase))) throw new AdapterPreconditionException("Local session already open; bind it explicitly.","path");
 #endif
+            RequireNoOpenProject(p, "OpenProject");
+            using var login = UmacCredentialsFor(umacUserName, umacPassword, umacUserType, "umacUserName");
             if (!dryRun)
             {
-#if PLC_SAFETY
-                if(session) { localSession=p.LocalSessions.Open(input); project=localSession.Project; }
+#if PROJECT_MULTIUSER
+                if(session) { localSession=OpennessRefusalMapping.Run("open", login.Given, () => p.LocalSessions.Open(input)); project=localSession.Project; }
                 else
 #endif
-                    project=p.Projects.Open(input);
+                    project=OpenProjectFile(p, input, login);
                 lifecycle.Bound(project.Path.FullName,true,session);
             }
             var result=Mutation("OpenProject",dryRun); result.ProjectFile=dryRun ? input.FullName : project!.Path.FullName; return result;
+        }
+        private static UmacLogin UmacCredentialsFor(string userName, string password, string userType, string parameter)
+        {
+#if !PROJECT_UMAC
+            if (!string.IsNullOrEmpty(userName) || !string.IsNullOrEmpty(password) || !string.IsNullOrEmpty(userType))
+                throw new AdapterPreconditionException("UMAC credentials need the UmacDelegate overloads of V15.1 or later.", parameter);
+#endif
+            try { return new UmacLogin(userName, password, userType); }
+            catch (ArgumentException error) { throw new AdapterPreconditionException(error.Message, parameter, true, error); }
+        }
+        private static EngineeringProject OpenProjectFile(TiaPortal connection, FileInfo input, UmacLogin login)
+        {
+#if PROJECT_UMAC
+            using (login.Authenticate(connection))
+                return OpennessRefusalMapping.Run("open", login.Given, () => login.Delegate == null ? connection.Projects.Open(input) : connection.Projects.Open(input, login.Delegate));
+#else
+            return OpennessRefusalMapping.Run("open", login.Given, () => connection.Projects.Open(input));
+#endif
         }
         public PlcMutationResult CreateProject(string directoryPath, string projectName, bool dryRun = true)
         {
@@ -213,7 +237,8 @@ namespace TiaMcp.Adapters
             if (!parent.Exists || Directory.Exists(Path.Combine(parent.FullName, projectName)) || File.Exists(Path.Combine(parent.FullName, projectName)))
                 throw new AdapterPreconditionException("Use an existing parent directory and a new project name.",!parent.Exists ? "directoryPath" : "projectName");
             var expected=PlcLifecyclePolicy.CreationFile(ReleaseKey,parent.FullName,projectName);
-            if (!dryRun) { project = p.Projects.Create(parent, projectName); lifecycle.Bound(project.Path.FullName,true,false); }
+            RequireNoOpenProject(p, "CreateProject");
+            if (!dryRun) { project = OpennessRefusalMapping.Run("create", false, () => p.Projects.Create(parent, projectName)); lifecycle.Bound(project.Path.FullName,true,false); }
             var result=Mutation("CreateProject",dryRun); result.ProjectFile=dryRun ? expected : project!.Path.FullName; return result;
         }
         public PlcMutationResult SaveProject(bool dryRun = true)
@@ -222,7 +247,7 @@ namespace TiaMcp.Adapters
             var p = Project();
             if (!dryRun)
             {
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
                 if(localSession!=null) localSession.Save(); else
 #endif
                     ((Project)p).Save();
@@ -237,7 +262,7 @@ namespace TiaMcp.Adapters
             var file=p.Path.FullName;
             if (!dryRun)
             {
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
                 if(localSession!=null) { localSession.Close(); localSession=null; } else
 #endif
                     ((Project)p).Close();
@@ -246,7 +271,7 @@ namespace TiaMcp.Adapters
             var result=Mutation("CloseProject",dryRun); result.ProjectFile=file; return result;
         }
         public void UnbindProject() { Check(); lifecycle.Unbound(); project = null;
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
             localSession=null;
 #endif
         }
@@ -514,23 +539,40 @@ namespace TiaMcp.Adapters
                 foreach (var child in Messages(m.Messages, depth + 1, path)) yield return child;
             }
         }
+        // A portal this worker started is disposed (closing a headless TIA Portal) only when no project is open in it;
+        // an attached portal is only detached. The refusal comes before any native call and keeps the session usable.
         public PlcDisconnectResult Disconnect()
         {
             Check(true);
-            var result=disconnect.Execute(lifecycle.ProcessId,ownsPortal,()=>portal!.Dispose(),sharedPortal);
+            bool started = ownsPortal==true && workerStartedPortal && !sharedPortal && lifecycle.ProcessId.HasValue && disconnect.Result==null;
+            var result=disconnect.Execute(lifecycle.ProcessId,ownsPortal,()=>{ ReleasePortalEvents(); portal!.Dispose(); },sharedPortal,workerStartedPortal,
+                started && OwnedPortalHasOpenProjects());
             _resetWorkerFamilyState?.Invoke();
             portal=null; project=null; lifecycle.Detached();
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
             localSession=null;
 #endif
             return result;
         }
+        public bool DisconnectAttempted => disconnect.Attempted;
+        // Never throws: worker shutdown must finish. Never retries an attempted detach, including one whose acknowledgement
+        // was lost; an owned portal is disposed once.
         public void Dispose()
         {
             if (disposed) return;
-            Check(true);
-            // Never retry an attempted detach, including one whose acknowledgement was lost.
-            try { if (!disconnect.Attempted) Disconnect(); }
+            try
+            {
+                PlcLifecyclePolicy.RequireOwner(ReleaseKey, ownerThread);
+                try { if (!disconnect.Attempted) Disconnect(); }
+                // Shutdown with a project still open in a worker-started portal: dispose it once anyway.
+                catch (AdapterPreconditionException refused) when (!disconnect.Attempted)
+                {
+                    Console.Error.WriteLine("PlcWorker shutdown: " + refused.Message + " Disposing the TIA Portal this worker started once.");
+                    ShutdownPortal();
+                }
+            }
+            catch (Exception error) /* swallow(teardown): shutdown continues; the TIA Portal state needs inspection and the failure is reported on stderr */
+            { Console.Error.WriteLine("PlcWorker shutdown could not end the TIA Portal connection: " + error.GetBaseException().Message); }
             finally { disposed=true; }
         }
     }

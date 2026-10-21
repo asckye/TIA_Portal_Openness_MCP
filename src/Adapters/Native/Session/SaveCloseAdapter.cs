@@ -4,11 +4,13 @@ using System.IO;
 using System.Linq;
 using Siemens.Engineering;
 using TiaMcp.Adapters.Contracts.Candidates;
-#if PLC_SAFETY
+#if PROJECT_BASE
 using EngineeringProject = Siemens.Engineering.ProjectBase;
-using Siemens.Engineering.Multiuser;
 #else
 using EngineeringProject = Siemens.Engineering.Project;
+#endif
+#if PROJECT_MULTIUSER
+using Siemens.Engineering.Multiuser;
 #endif
 
 namespace TiaMcp.Adapters.Native.Session
@@ -36,19 +38,19 @@ namespace TiaMcp.Adapters.Native.Session
         private long epoch;
         public long WorkerEpoch { get; set; }
         public bool RequiresReset { get; private set; }
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
         private readonly Func<LocalSession?> local;
 #endif
         public SaveCloseAdapter(Func<TiaPortal?> portal, Func<EngineeringProject?> project, Func<SessionState> binding, Func<object?> generation,
             Func<bool> canDisconnect, Action checkThread, Action clearProject, Action savedCopy, Action detach, bool worker = false
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
             , Func<LocalSession?>? local = null
 #endif
             )
         {
             this.portal = portal; this.project = project; this.binding = binding; this.generation = generation; this.canDisconnect = canDisconnect;
             this.checkThread = checkThread; this.clearProject = clearProject; this.savedCopy = savedCopy; this.detach = detach; this.worker = worker;
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
             this.local = local ?? (() => null);
 #endif
         }
@@ -73,7 +75,7 @@ namespace TiaMcp.Adapters.Native.Session
             if (p == null) return result;
             state.ProjectFile = CandidatePrimitives.CanonicalProject(p.Path.FullName);
             bool present = connection != null && connection.Projects.Any(x => object.Equals(x, p));
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
             var session = local(); result.LocalSession = session != null;
             if (session != null) present = connection != null && connection.LocalSessions.Any(s => object.Equals(s, session) && object.Equals(s.Project, p));
             if (p is MultiuserProject && session == null) CandidatePrimitives.Fail("precondition", "exact-local-session-handle");
@@ -87,7 +89,7 @@ namespace TiaMcp.Adapters.Native.Session
         void ISaveCloseAdapter.Save()
         {
             checkThread();
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
             if (local() != null) { local()!.Save(); return; }
 #endif
             ((Project)project()!).Save();
@@ -95,7 +97,7 @@ namespace TiaMcp.Adapters.Native.Session
         void ISaveCloseAdapter.SaveCopy(string directory)
         {
             checkThread();
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
             ((Project)project()!).SaveAs(new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.GetFullPath(directory)))); savedCopy();
 #else
             throw new NotSupportedException("SaveProjectCopy is not advertised by this host.");
@@ -104,7 +106,7 @@ namespace TiaMcp.Adapters.Native.Session
         void ISaveCloseAdapter.Close()
         {
             checkThread();
-#if PLC_SAFETY
+#if PROJECT_MULTIUSER
             if (local() != null) local()!.Close(); else
 #endif
                 ((Project)project()!).Close();
