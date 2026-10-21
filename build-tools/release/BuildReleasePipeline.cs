@@ -823,7 +823,6 @@ internal static partial class ReleaseCommands
         File.WriteAllText(Path.Combine(host, "config/approval.settings"), $"enabled={approval.ToString().ToLowerInvariant()}\ntimeoutSeconds=120\n", new UTF8Encoding(false));
         var env = new Dictionary<string, string?>
         {
-            ["TIA_MCP_BUNDLE_ROOT"] = Root,
             ["TIA_MCP_DATA_DIRECTORY"] = host,
             ["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = Path.Combine(host, "diagnostics"),
             ["TIA_MCP_RELEASE_TEMP_ROOT"] = runTemp,
@@ -837,6 +836,8 @@ internal static partial class ReleaseCommands
         };
         // The harness starts this pipeline's private copy of the development host (see CopyDevelopmentHost).
         if (developmentHost is not null) env["TIA_MCP_TEST_HOST_PATH"] = developmentHost;
+        // Only a step that starts the private engine copy gets the checkout as bundle root (P8-04j2); see StartsPrivateEngine.
+        if (StartsPrivateEngine(executable, args)) env["TIA_MCP_BUNDLE_ROOT"] = Root;
         var result = inProcess is null ? CachedBuild(executable, args, () => ProcessRunner.Run(executable, args, Root, env), env) : inProcess(env);
         WriteLog(log, result);
         if (result.ExitCode == 0)
@@ -846,6 +847,16 @@ internal static partial class ReleaseCommands
         }
         else Console.Error.WriteLine($"Retained failed release check data ({name}): {host}");
         return result;
+    }
+
+    // The private engine copy and its host copy under bin-build/engine-compat lie outside every bundle anchor, so a step that
+    // starts them (the executable or an argument names that folder) runs with the checkout as bundle root. Every other step,
+    // among them the offline and Studio suites, the builds and the release's own child commands, selects its root itself.
+    internal static bool StartsPrivateEngine(string executable, IEnumerable<string> arguments)
+    {
+        static string Normal(string value) => value.Replace('\\', '/');
+        var compatibility = Normal(Path.GetFullPath(Path.Combine(Root, "bin-build", "engine-compat"))).TrimEnd('/') + "/";
+        return arguments.Prepend(executable).Any(value => Normal(value).Contains(compatibility, StringComparison.OrdinalIgnoreCase));
     }
 
     private static int RequireCount(string name, string text, string pattern, string? rule = null)

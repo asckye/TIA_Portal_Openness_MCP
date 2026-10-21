@@ -614,6 +614,34 @@ public sealed class ReleaseValidationTests
 
     [Fact]
     [Trait("Category", "Pipeline")]
+    public void OnlyStepsThatStartThePrivateEngineGetTheCheckoutAsBundleRoot()
+    {
+        // The release runs build-multi-version and build-release as isolated children. A bundle root in every isolated step reached
+        // the Studio Core tests and the offline suites there, which select their own roots (4.0.0-beta.1 release run).
+        var root = Repository.FindRoot();
+        var engine = Path.Combine(root, "bin-build", "engine-compat", "v21", "worker", "TiaMcp.Engine.V21.exe");
+        Assert.True(ReleaseCommands.StartsPrivateEngine(engine, ["--write-tool-catalog", Path.Combine(Path.GetDirectoryName(engine)!, "tool-catalog.json")]));
+        Assert.True(ReleaseCommands.StartsPrivateEngine("TiaMcp.Engine.Harness.exe", [engine.Replace('\\', '/'), "http"]));
+        Assert.True(ReleaseCommands.StartsPrivateEngine("python", ["Test-LocalStability.py", "--engine-worker", "21=" + engine.ToUpperInvariant()]));
+        Assert.True(ReleaseCommands.StartsPrivateEngine(Path.Combine(root, "bin-build", "engine-compat", "v20", "TiaMcp.FoundationHost.exe"), []));
+        // In-process suites, builds, the release's child commands and the installed hosts get no bundle root from the step.
+        Assert.False(ReleaseCommands.StartsPrivateEngine("dotnet", []));
+        Assert.False(ReleaseCommands.StartsPrivateEngine("dotnet", ["test", Path.Combine(root, "tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj"), "-c", "Release"]));
+        Assert.False(ReleaseCommands.StartsPrivateEngine("dotnet", [Path.Combine(root, "build-tools/release/bin/Release/net10.0/TiaMcp.ReleaseTool.dll"), "build-multi-version", "-PrepareOnly"]));
+        Assert.False(ReleaseCommands.StartsPrivateEngine(Path.Combine(root, "runtime", "v21", "TiaMcp.FoundationHost.exe"), ["--catalog", "--release-key", "21"]));
+        Assert.False(ReleaseCommands.StartsPrivateEngine(Path.Combine(root, "bin-build", "engine-compat-copy", "TiaMcp.Engine.V21.exe"), []));
+
+        var source = File.ReadAllText(Path.Combine(root, "build-tools/release/BuildReleasePipeline.cs"));
+        var start = source.IndexOf("private static CommandResult RunBuildIsolated(", StringComparison.Ordinal);
+        var end = source.IndexOf("internal static bool StartsPrivateEngine(", StringComparison.Ordinal);
+        Assert.True(start > 0 && end > start, "isolated step source not found");
+        var assignments = System.Text.RegularExpressions.Regex.Matches(source[start..end], "TIA_MCP_BUNDLE_ROOT\"\\]\\s*=[^;\\r\\n]*").Select(match => match.Value).ToArray();
+        Assert.Equal(new[] { "TIA_MCP_BUNDLE_ROOT\"] = Root" }, assignments);
+        Assert.Contains("if (StartsPrivateEngine(executable, args)) env[\"TIA_MCP_BUNDLE_ROOT\"] = Root;", source[start..end], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [Trait("Category", "Pipeline")]
     public void ParallelPipelinesHonorSerialAndBoundedLimits()
     {
         var directory = Path.Combine(Path.GetTempPath(), "release-pipeline-limit-" + Guid.NewGuid().ToString("N"));
