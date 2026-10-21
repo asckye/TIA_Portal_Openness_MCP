@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import sys
 import threading
 
 from offline_fixtures import fixture_directory
@@ -272,6 +273,9 @@ def suites(args):
 
 
 def main():
+    # The harness output is decoded with errors='replace'; a release run on a GBK console could not print the U+FFFD that
+    # a non-UTF-8 byte becomes, and the mode failed after the harness had passed (beta.1 release run, 2026-10-21).
+    sys.stdout.reconfigure(errors='replace')
     parser = argparse.ArgumentParser()
     parser.add_argument('--release', required=True, choices=('20', '21'))
     parser.add_argument('--mode', required=True, choices=MODES)
