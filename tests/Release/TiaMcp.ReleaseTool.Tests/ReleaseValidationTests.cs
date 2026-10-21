@@ -110,6 +110,24 @@ public sealed class ReleaseValidationTests
         Assert.Contains("09-packaged-responses-verify-plc", steps);
     }
 
+    // The beta.1 release run failed when its NuGet folder sat under bin-build/release-runs/<run>: the deepest package file needed 262
+    // characters. The CLI home now lives in the run's temp root, which keeps that file inside MAX_PATH.
+    [Fact]
+    public void ReleaseCliHomeKeepsTheDeepestPackageFileInsideMaxPath()
+    {
+        var runTemp = Path.Combine(Path.GetTempPath(), "tmr-" + Guid.NewGuid().ToString("N")[..8]);
+        try
+        {
+            var home = ReleaseCommands.ReleaseCliHome(runTemp);
+            Assert.True(Directory.Exists(home));
+            Assert.Equal(Path.GetFullPath(runTemp), Path.GetDirectoryName(Path.GetFullPath(home)));
+            var deepest = Path.Combine(home, ".nuget", "packages", "microsoft.extensions.dependencyinjection.abstractions", "10.0.0-preview.4.25258.110",
+                "lib", "net10.0", "Microsoft.Extensions.DependencyInjection.Abstractions.dll");
+            Assert.True(deepest.Length < 260, deepest.Length + " characters: " + deepest);
+        }
+        finally { if (Directory.Exists(runTemp)) Directory.Delete(runTemp, true); }
+    }
+
     [Fact]
     public void PackagedPlcResponsesUseTheExtractedProductionWorkersAndTheUnchangedVerifier()
     {

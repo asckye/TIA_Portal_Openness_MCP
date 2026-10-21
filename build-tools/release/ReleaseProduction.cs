@@ -263,8 +263,7 @@ internal static partial class ReleaseCommands
     {
         TestReleaseDocumentation(version, requireNewest: true);
         var outputDirectory = Path.Combine(Root, "bin-build/release-early-gates", Guid.NewGuid().ToString("N"));
-        var cliHome = Path.Combine(outputDirectory, "dotnet-home");
-        Directory.CreateDirectory(cliHome);
+        var cliHome = ReleaseCliHome(runTemp);
         RunReleaseCommand(["check-repository", "-NoBinaries"], "repository, links, bundle layout and delivery set", outputDirectory, runTemp, apiRoot);
         RunReleaseCommand(["check-dead-tool-references"], "dead tool references", outputDirectory, runTemp, apiRoot);
         RunReleaseCommand(["validate-bundle", "-Strict", "-NoBinaries", "-SkipSourceHashes", "-PendingRelease", version], "repository bundle validation before build", outputDirectory, runTemp, apiRoot);
@@ -324,13 +323,22 @@ internal static partial class ReleaseCommands
         ProcessRunner.RequireSuccess(result, name + " failed");
     }
 
+    // The run's .NET CLI home holds its fresh NuGet package folder. Under bin-build/release-runs/<run> the deepest package files
+    // passed MAX_PATH (262 characters for Microsoft.Extensions.DependencyInjection.Abstractions 10.0.0-preview.4) and MSBuild could not
+    // resolve them, so it lives in the run's short temp root, which is outside the repository and private to this run.
+    internal static string ReleaseCliHome(string runTemp)
+    {
+        var cliHome = Path.Combine(runTemp, "dotnet-home");
+        Directory.CreateDirectory(cliHome);
+        return cliHome;
+    }
+
     private static void RunReleaseCommand(string[] args, string description, string output, string runTemp, string apiRoot)
     {
         var dotnet = Environment.GetEnvironmentVariable("DOTNET_EXE") ?? "dotnet";
         var command = new List<string> { typeof(ReleaseCommands).Assembly.Location };
         command.AddRange(args);
-        var cliHome = Path.Combine(output, "dotnet-home");
-        Directory.CreateDirectory(cliHome);
+        var cliHome = ReleaseCliHome(runTemp);
         RunReleaseRaw(dotnet, command, Path.Combine(output, Regex.Replace(description, "[^A-Za-z0-9._-]", "_") + ".log"), runTemp, cliHome, apiRoot,
             Environment.GetEnvironmentVariable("TIA_MCP_OFFLINE_NUGET_CONFIG"), description);
     }
