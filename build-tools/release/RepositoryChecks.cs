@@ -155,6 +155,8 @@ internal static class RepositoryChecks
         }
         void Required(string name, string label)
         {
+            // Only the engine record may be absent, with the eight-release record (itself required) in its place.
+            if (name == ReleaseRecords.EnginePath && !File.Exists(Path.Combine(root, name))) name = ReleaseRecords.MultiPath;
             var target = Path.GetFullPath(Path.Combine(root, name));
             if (!Within(root, target)) errors.Add(label + ": external path: " + name);
             else if (noBinaries && (name.EndsWith(".exe", StringComparison.Ordinal) || name == "runtime/tools/TiaMcp.Updater.exe.config" || name.StartsWith("runtime/", StringComparison.Ordinal) && name != "runtime/README.md")) return;
@@ -182,9 +184,9 @@ internal static class RepositoryChecks
             // resource anchors would require assets that those releases never shipped.
             if (!oldTag) foreach (var name in BundleManifestRequirements.BundleResourcePaths) { Required(name, "bundle resource"); if (!rules.Resource(name)) errors.Add("Bundle resource excluded from delivery: " + name); }
             foreach (var name in Enumerate()) if (!rules.Delivered(name)) errors.Add("File outside delivery set: " + name);
-            if (!noBinaries) foreach (var record in new[] { ("manifest/release-build.json", "runtimeFiles"), ("manifest/multi-version-build.json", "files") })
-                foreach (var row in JsonNode.Parse(File.ReadAllText(Path.Combine(root, record.Item1)))![record.Item2]!.AsArray())
-                { var name = row!["path"]!.GetValue<string>(); if (rules.Delivered(name)) Required(name, "recorded runtime"); }
+            if (!noBinaries)
+                foreach (var row in ReleaseRecords.DeliveryFiles(root))
+                    if (rules.Delivered(row.Path)) Required(row.Path, "recorded runtime");
             return (count, errors);
         }
         foreach (var row in SourceRoots.Load(root).RequiredFiles.Where(r => r.Consumers.Contains("repository"))) Required(row.Path, row.RepositoryLabel!);

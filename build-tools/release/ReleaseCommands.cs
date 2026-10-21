@@ -43,9 +43,35 @@ internal static partial class ReleaseCommands
         "prepare-delivery" => PrepareDelivery(options),
         "build-release" => BuildRelease(options),
         "build-multi-version" => BuildMultiVersion(options),
+        "compare-release-records" => CompareReleaseRecords(options),
         "publish" => Publish(options),
         _ => throw new ReleaseException($"Unknown release command '{command}'.", 64)
     };
+
+    internal static int CompareReleaseRecords(Options options)
+    {
+        using var engine = JsonDocument.Parse(File.ReadAllText(options.Get("EngineRecord", Path.Combine(Root, ReleaseRecords.EnginePath))));
+        using var multi = JsonDocument.Parse(File.ReadAllText(options.Get("MultiRecord", Path.Combine(Root, ReleaseRecords.MultiPath))));
+        var rows = ReleaseRecords.Compare(engine.RootElement, multi.RootElement);
+        foreach (var row in rows) Console.WriteLine($"{row.EngineField} -> {row.MultiField ?? "(none)"}: {row.Status}");
+        Console.WriteLine($"Compared {rows.Count} fields; {rows.Count(row => row.Status is "missing" or "different")} missing/different; retained engine proofs are explicitly labelled.");
+        return rows.Any(row => row.Status is "missing" or "different") ? 1 : 0;
+    }
+
+    // The committed records keep their 3.x shape until a release chain rewrites them; the multi-version record then has no
+    // PLC proof to compare. The dry run says so; a record with the proof is compared with the same exit code. The real
+    // chains (02-compare-release-records, release) always compare the records they have just written.
+    internal static int DryRunRecordComparison(Options options)
+    {
+        var multiPath = options.Get("MultiRecord", Path.Combine(Root, ReleaseRecords.MultiPath));
+        using (var multi = JsonDocument.Parse(File.ReadAllText(multiPath)))
+            if (!multi.RootElement.TryGetProperty("plcRuntimes", out _))
+            {
+                Console.WriteLine("Record comparison: " + multiPath + " has no PLC proof (written before P8-04j1b); the candidate compares the records it writes (02-compare-release-records).");
+                return 0;
+            }
+        return CompareReleaseRecords(options);
+    }
 
     private static List<(string Name, string Exe, string[] Args)> PreflightChecks() =>
         [
@@ -311,7 +337,8 @@ internal static partial class ReleaseCommands
             Console.WriteLine($"Tier={plan.Tier}; checks selected: {string.Join(", ", plan.SelectedChecks)}; checks skipped: {string.Join(", ", plan.SkippedChecks)}");
             Console.WriteLine($"02: full engines -> multi-version completion; 04: ZIP parent + filename without extension; max parallelism={maxParallelism}.");
             Console.WriteLine("After step 04, selected checks run as bounded jobs; each snapshot comparison waits for its capture.");
-            return 0;
+            Console.WriteLine("02: compare-release-records (read-only comparison of the two current records)");
+            return DryRunRecordComparison(options);
         }
 
         var api = options.Get("PublicApiRoot") ?? throw new ReleaseException("-PublicApiRoot is required for a real reviewer chain");
@@ -488,6 +515,7 @@ internal static partial class ReleaseCommands
                 RunTool("build-multi-version", "-PublicApiRoot", api, "-CompleteOnly", "-Offline", "-Test", "-Dotnet", dotnet, "-Python", python, "-NuGetConfig", nugetConfig, "-MaxParallelism", maxParallelism.ToString(System.Globalization.CultureInfo.InvariantCulture));
             });
             RunStep("02-tier-record", () => WriteTierRecord(plan, passed: false, ReadCacheEvents(cacheRecords), options.Has("NoBuildCache")));
+            RunStep("02-compare-release-records", () => RunTool("compare-release-records"));
             RunStep("03-package-local", () => RunPython("build-tools/Package-Release.py", "--local", "--output-directory", output));
             RunStep("04-validate-bundle", () =>
             {
@@ -591,7 +619,9 @@ internal static partial class ReleaseCommands
                 foreach (var path in JsonStringArray(rules.RootElement.GetProperty("include"), "files").Concat(JsonStringArray(rules.RootElement.GetProperty("include"), "prefixes")))
                 {
                     if (noBinaries && (path == "TiaOpenness.exe" || path.StartsWith("runtime/", StringComparison.Ordinal) && path != "runtime/README.md")) continue;
-                    var file = Path.Combine(root, path.Replace('/', Path.DirectorySeparatorChar));
+                    // Only the engine record may be absent, with the eight-release record in its place; that record stays required.
+                    var resolved = path == ReleaseRecords.EnginePath && !File.Exists(Path.Combine(root, path)) ? ReleaseRecords.MultiPath : path;
+                    var file = Path.Combine(root, resolved.Replace('/', Path.DirectorySeparatorChar));
                     if (!File.Exists(file) && !Directory.Exists(file) && !GeneratedDeliveryResourceAvailable(root, path, package))
                         errors.Add("Missing delivery resource: " + path);
                 }
@@ -682,6 +712,8 @@ internal static partial class ReleaseCommands
         foreach (var name in names)
         {
             var path = Path.Combine(root, name.Replace('/', Path.DirectorySeparatorChar));
+            // The eight-release record, itself required, stands in for an absent engine record.
+            if (name == ReleaseRecords.EnginePath && !File.Exists(path) && File.Exists(Path.Combine(root, ReleaseRecords.MultiPath))) continue;
             if (!File.Exists(path)) throw new ReleaseException($"Required build record missing: {name}");
             using var json = JsonDocument.Parse(File.ReadAllText(path));
             if (json.RootElement.ValueKind != JsonValueKind.Object) throw new ReleaseException($"Build record must contain a JSON object: {name}");
@@ -738,16 +770,25 @@ internal static partial class ReleaseCommands
         return null;
     }
 
-    private static void ValidateBuildRecords(string root, bool package, bool noBinaries, bool skipSourceHashes)
+    internal static void ValidateBuildRecords(string root, bool package, bool noBinaries, bool skipSourceHashes)
     {
         if (!package)
             foreach (var relative in new[] { "build-tools/release/ReleaseTiers.cs", "build-tools/release/ReleaseCandidateChecks.cs", "build-tools/release/BuildOutputCache.cs", "build-tools/release/BranchGate.cs", "tests/Release/TiaMcp.ReleaseTool.Tests/BuildOutputCacheTests.cs",
                 "build-tools/release/release-checks.json", "scripts/checks/Test-ReleaseSmoke.py", "tests/Release/TiaMcp.ReleaseTool.Tests/ReleaseTierTests.cs" })
                 if (!File.Exists(Path.Combine(root, relative))) throw new ReleaseException("Required release tier file missing: " + relative);
         using var deliveryDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "manifest/delivery.json")));
-        using var buildDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "manifest/release-build.json")));
+        var buildRelative = ReleaseRecords.SelectPath(root);
+        using var buildDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, buildRelative)));
         using var configuratorDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "manifest/configurator-build.json")));
-        var delivery = deliveryDoc.RootElement; var build = buildDoc.RootElement; var configurator = configuratorDoc.RootElement;
+        var delivery = deliveryDoc.RootElement; var build = ReleaseRecords.ShippedEngineProof(buildDoc.RootElement); var configurator = configuratorDoc.RootElement;
+        ReleaseRecords.AssertBinding(root, delivery, buildRelative);
+        if (buildRelative == ReleaseRecords.EnginePath && JsonString(delivery, "multiVersionBuildSha256").Length != 0)
+        {
+            ReleaseRecords.AssertBinding(root, delivery, ReleaseRecords.MultiPath);
+            using var multi = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, ReleaseRecords.MultiPath)));
+            if (multi.RootElement.TryGetProperty("plcRuntimes", out _)) ReleaseRecords.AssertPlcProof(root, multi.RootElement, !noBinaries);
+        }
+        if (buildRelative == ReleaseRecords.MultiPath) ReleaseRecords.AssertPlcProof(root, buildDoc.RootElement, !noBinaries);
         var release = JsonString(delivery, "release");
         var engineRelease = JsonString(build, "release");
         var fileVersion = JsonString(build, "fileVersion");
@@ -780,14 +821,13 @@ internal static partial class ReleaseCommands
         if (bundleVersion != newest) throw new ReleaseException($"Version mismatch: CHANGELOG says {newest}, manifest bundleVersion says {bundleVersion}");
         var packageName = JsonString(manifest.RootElement, "packageName");
         if (ReleaseValidation.PackageNameError(packageName, newest) is { } packageError) throw new ReleaseException(packageError);
-        if (StrictRecordHash(root, delivery, "manifest/release-build.json", "engineBuildSha256") is { } engineHash) throw new ReleaseException(engineHash);
         if (StrictRecordHash(root, delivery, "manifest/configurator-build.json", "configuratorBuildSha256") is { } configHash) throw new ReleaseException(configHash);
         if (IntValue(configurator, "testsPassed") <= 0 && (!build.TryGetProperty("checkPlan", out _) || ReleasePlanFromRecord(build).Includes("gui-tests"))) throw new ReleaseException("Configurator test result missing");
         var executable = configurator.GetProperty("executable");
         if (!noBinaries && ReleaseRecords.HashFile(Path.Combine(root, JsonString(executable, "path"))) != JsonString(executable, "sha256")) throw new ReleaseException("Configurator EXE changed after validation");
         if (!package && !skipSourceHashes)
         {
-            foreach (var rows in new[] { TryArray(configurator, "sourceFiles"), TryArray(build, "sourceFiles"), TryArray(build, "validationInputs") })
+            foreach (var rows in new[] { TryArray(configurator, "sourceFiles"), TryArray(build, "sourceFiles"), TryArray(build, "validationInputs"), TryArray(buildDoc.RootElement, "sourceFiles"), TryArray(buildDoc.RootElement, "validationInputs") })
                 foreach (var row in rows)
                 {
                     var relative = JsonString(row, "path");
@@ -797,14 +837,14 @@ internal static partial class ReleaseCommands
                 }
         }
         if (!noBinaries)
-            foreach (var row in TryArray(build, "runtimeFiles"))
+            foreach (var row in ReleaseRecords.DeliveryFiles(root, boundOnly: true))
             {
-                var relative = JsonString(row, "path");
+                var relative = row.Path;
                 // The release-only IL verifier is recorded with the engine but never delivered (the former PowerShell validator skipped it in package mode).
                 if (package && relative.StartsWith("runtime/verification/", StringComparison.Ordinal)) continue;
                 var path = Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar));
                 if (!File.Exists(path)) throw new ReleaseException("Runtime dependency missing: " + relative);
-                if (!string.Equals(ReleaseRecords.HashFile(path), JsonString(row, "sha256"), StringComparison.OrdinalIgnoreCase)) throw new ReleaseException("Runtime hash differs: " + relative);
+                if (!string.Equals(ReleaseRecords.HashFile(path), row.Sha256, StringComparison.OrdinalIgnoreCase)) throw new ReleaseException("Runtime hash differs: " + relative);
             }
     }
 
@@ -1118,13 +1158,10 @@ internal static partial class ReleaseCommands
         if (!System.Text.RegularExpressions.Regex.IsMatch(releaseDate, "^\\d{8}$") || !DateTime.TryParseExact(releaseDate, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _))
             throw new ReleaseException("-ReleaseDate must be a valid yyyyMMdd date");
         ReleaseRecords.AssertRuntimePreparation(Root);
-        var buildPath = Path.Combine(Root, "manifest/release-build.json");
-        if (!File.Exists(buildPath)) throw new ReleaseException("Engine build record missing; run build-release after multi-version preparation");
+        var buildPath = ReleaseRecords.DeliveryBuildPath(Root, release);
+        var buildRelative = Path.GetRelativePath(Root, buildPath).Replace('\\', '/');
         using var build = JsonDocument.Parse(File.ReadAllText(buildPath));
         var fileVersion = ReleaseRecordsProperty(build.RootElement, "fileVersion");
-        if (ReleaseRecordsProperty(build.RootElement, "release") != release || fileVersion != ReleaseVersions.FileVersionOf(release)) throw new ReleaseException("Engine build record differs from the requested release; run build-release first");
-        foreach (var major in new[] { 20, 21 })
-            if (!File.Exists(Path.Combine(Root, $"runtime/v{major}/worker/TiaMcp.Engine.V{major}.exe"))) throw new ReleaseException($"V{major} engine output missing; run build-release first");
         var configuratorArgs = new List<string> { "build-configurator", "-Tier", ReleasePlan(options).Tier };
         if (ReleasePlan(options).Includes("gui-tests")) configuratorArgs.Add("-Test");
         var code = RunSelfCommand(configuratorArgs.ToArray(), "Configurator validation");
@@ -1135,7 +1172,7 @@ internal static partial class ReleaseCommands
         {
             ["release"] = release, ["releaseDate"] = releaseDate, ["package"] = package,
             ["engineRelease"] = release, ["fileVersion"] = fileVersion,
-            ["engineBuildSha256"] = ReleaseRecords.HashFile(buildPath),
+            [ReleaseRecords.BindingProperty(buildRelative)] = ReleaseRecords.HashFile(buildPath),
             ["configuratorBuildSha256"] = ReleaseRecords.HashFile(Path.Combine(Root, "manifest/configurator-build.json")),
             ["generatedAt"] = timestamp
         };
@@ -1533,6 +1570,9 @@ internal static partial class ReleaseCommands
                 }
             }
             if (test) AddPlcReleaseEvidence(evidencePaths, logs);
+            // Each PLC receipt keeps its log's SHA-256 and count lines; the log itself is bound here (validationArtifacts).
+            foreach (var log in ReleaseRecords.PlcProofLogs(Root, logs, ReleaseRecords.PlcProofPlan(plan, test)))
+                if (!evidencePaths.Contains(log, StringComparer.OrdinalIgnoreCase)) evidencePaths.Add(log);
 
             var preparedFiles = ReleaseRecords.GetRuntimeFiles(Root, prepared: true);
             var evidence = evidencePaths.Where(File.Exists).Order(StringComparer.OrdinalIgnoreCase)
@@ -1542,6 +1582,7 @@ internal static partial class ReleaseCommands
                 tier = plan.Tier, checkPlan = plan,
                 release, fileVersion = releaseFileVersion, publicApiRoot = api, test,
                 releases = releaseRows, validation = validationNode, sourceFiles = sources,
+                plcRuntimes = ReleaseRecords.PlcProof(Root, logs, ReleaseRecords.PlcProofPlan(plan, test)),
                 validationInputs, files = preparedFiles, evidence
             };
             using var preparedJson = JsonDocument.Parse(JsonSerializer.Serialize(prepared, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
@@ -1617,14 +1658,19 @@ internal static partial class ReleaseCommands
             var record = new
             {
                 tier = plan.Tier, checkPlan = plan,
-                createdAt = DateTimeOffset.UtcNow.ToString("o"), release, fileVersion = releaseFileVersion,
+                createdAt = DateTimeOffset.UtcNow.ToString("o"), release, fileVersion = releaseFileVersion, test,
                 releases = pending.RootElement.GetProperty("releases"),
+                plcRuntimes = ReleaseRecords.WithShippedToolsList(Root, pending.RootElement.GetProperty("plcRuntimes")),
+                engineCompatibility = engineRecord.RootElement,
                 studioReleaseKeys = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
-                nativeAcceptance = "NOT RUN", validation = validationAfter, files,
-                sourceFiles = sources, validationInputs
+                nativeAcceptance = "NOT RUN", validation = validationAfter,
+                files = files.Select(row => new { path = row.Path, sha256 = row.Sha256, length = new FileInfo(Path.Combine(Root, row.Path)).Length }),
+                sourceFiles = sources, validationInputs, validationArtifacts = pending.RootElement.GetProperty("evidence")
             };
             var recordPath = Path.Combine(Root, "manifest/multi-version-build.json");
             WriteJson(recordPath, record);
+            // The record's own PLC proof and shipped-engine copy must hold before the delivery binds it.
+            using (var written = JsonDocument.Parse(File.ReadAllText(recordPath))) ReleaseRecords.AssertPlcProof(Root, written.RootElement, true);
             var deliveryNode = JsonNode.Parse(File.ReadAllText(deliveryPath))!.AsObject();
             deliveryNode["configuratorBuildSha256"] = ReleaseRecords.HashFile(Path.Combine(Root, "manifest/configurator-build.json"));
             deliveryNode["multiVersionBuildSha256"] = ReleaseRecords.HashFile(recordPath);

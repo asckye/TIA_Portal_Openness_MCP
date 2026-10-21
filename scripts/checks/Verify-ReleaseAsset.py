@@ -104,19 +104,32 @@ def main():
     tracked_set = set(tracked)
 
     # 3. binaries against the committed build records
-    build = json.loads(committed('manifest/release-build.json').decode('utf-8-sig'))
+    record_name = layout.release_record_path(tree)
+    record_bytes = committed(record_name)
+    build = json.loads(record_bytes.decode('utf-8-sig'))
     gui = json.loads(committed('manifest/configurator-build.json').decode('utf-8-sig'))
     delivery_record = json.loads(committed('manifest/delivery.json').decode('utf-8-sig'))
-    check(sha(committed('manifest/release-build.json')) == delivery_record['engineBuildSha256'], 'Engine build record differs from delivery record')
+    binding = 'engineBuildSha256' if record_name == layout.ENGINE_RECORD else 'multiVersionBuildSha256'
+    check(sha(record_bytes) == delivery_record.get(binding), 'Release build record differs from delivery record')
+    if record_name == layout.MULTI_RECORD:
+        try:
+            layout.validate_plc_record(build)
+        except (ValueError, KeyError, TypeError) as error:
+            check(False, 'Invalid PLC release record: ' + str(error))
     check(sha(committed('manifest/configurator-build.json')) == delivery_record['configuratorBuildSha256'], 'Configurator build record differs from delivery record')
     runtime_in_zip = {n for n in content if n.startswith('runtime/') and n not in tracked_set}
-    recorded = {row['path']: row['sha256'] for row in build['runtimeFiles']}
-    check(len(recorded) == len(build['runtimeFiles']), 'Duplicate engine runtime inventory paths')
+    recorded = {row['path']: row['sha256'] for row in layout.record_inventory(build)}
+    check(len(recorded) == len(layout.record_inventory(build)), 'Duplicate engine runtime inventory paths')
     if delivery_record.get('multiVersionBuildSha256'):
         multi_bytes = committed('manifest/multi-version-build.json')
         check(sha(multi_bytes) == delivery_record['multiVersionBuildSha256'], 'Multi-version build record differs from delivery record')
         multi = json.loads(multi_bytes.decode('utf-8-sig'))
         check(multi['release'] == delivery_record['release'], 'Multi-version release mismatch')
+        if 'plcRuntimes' in multi:
+            try:
+                layout.validate_plc_record(multi)
+            except (ValueError, KeyError, TypeError) as error:
+                check(False, 'Invalid PLC multi-version record: ' + str(error))
         for row in multi['files']:
             check(row['path'] not in recorded or recorded[row['path']] == row['sha256'], 'Conflicting recorded runtime: ' + row['path'])
             recorded[row['path']] = row['sha256']
@@ -214,6 +227,40 @@ class AssetChecks(unittest.TestCase):
 
     def test_exact_filtered_tree_passes_without_source_or_verifier(self):
         self.assertEqual(self.verify()[0], 0)
+
+    def use_multi_record(self):
+        _, multi = layout.LayoutChecks.record_fixture()
+        for runtime in multi['plcRuntimes'].values():
+            for field in ('worker', 'adapter', 'host'):
+                name = runtime[field]['path']
+                self.runtime[name] = b'production PLC artifact'
+                runtime[field]['sha256'] = sha(self.runtime[name])
+                self.content[name] = self.runtime[name]
+        multi['files'] = [{'path': name, 'sha256': sha(data)} for name, data in self.runtime.items()]
+        self.tree.pop(layout.ENGINE_RECORD)
+        self.content.pop(layout.ENGINE_RECORD)
+        data = json.dumps(multi).encode()
+        self.tree[layout.MULTI_RECORD] = data
+        self.content[layout.MULTI_RECORD] = data
+        delivery = json.loads(self.tree['manifest/delivery.json'])
+        delivery.pop('engineBuildSha256')
+        delivery.update(release=multi['release'], fileVersion=multi['fileVersion'], multiVersionBuildSha256=sha(data))
+        self.tree['manifest/delivery.json'] = json.dumps(delivery).encode()
+        self.content['manifest/delivery.json'] = self.tree['manifest/delivery.json']
+
+    def test_multi_record_without_engine_record_verifies_exact_bytes(self):
+        self.use_multi_record()
+        self.assertEqual(self.verify()[0], 0)
+        self.content['runtime/v20/plc-worker/TiaMcp.PlcWorker.20.exe'] = b'changed'
+        self.assertEqual(self.verify()[0], 1)
+
+    def test_multi_record_binding_and_missing_worker_evidence_fail(self):
+        self.use_multi_record()
+        self.content[layout.MULTI_RECORD] += b' '
+        self.assertEqual(self.verify()[0], 1)
+        self.content[layout.MULTI_RECORD] = self.tree[layout.MULTI_RECORD]
+        del self.content['runtime/v21/plc-worker/TiaMcp.PlcWorker.21.exe']
+        self.assertEqual(self.verify()[0], 1)
 
     def test_missing_included_document_fails(self):
         del self.content['README.md']

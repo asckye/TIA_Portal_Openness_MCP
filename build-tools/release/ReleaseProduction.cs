@@ -117,6 +117,7 @@ internal static partial class ReleaseCommands
                 RunReleaseCommand(args.ToArray(), "multi-version completion", logRoot, runTemp, publicApiRoot);
             });
         ReleaseStageRunner.Invoke(stages);
+        RunReleaseCommand(["compare-release-records"], "release record comparison", logRoot, runTemp, publicApiRoot);
 
         RunReleaseCommand(["preflight"], "release preflight", logRoot, runTemp, publicApiRoot);
         RunReleaseCommand(["validate-bundle", "-Strict"], "strict delivery validation", logRoot, runTemp, publicApiRoot);
@@ -395,10 +396,7 @@ internal static partial class ReleaseCommands
 
     private static string BuildEngineReuseReason(string version)
     {
-        var path = Path.Combine(Root, "manifest/release-build.json");
-        if (!File.Exists(path)) return "release build record missing";
-        using var record = JsonDocument.Parse(File.ReadAllText(path));
-        return ReleaseRecords.EngineReuseReason(Root, version, record.RootElement, ReleaseRecords.GetSources(Root, "engine"));
+        return ReleaseRecords.ResumeReason(Root, version);
     }
 
     private static string BuildMultiReuseReason(string version)

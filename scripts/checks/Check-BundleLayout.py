@@ -1,6 +1,130 @@
 """Check the BCL resource table against Git and the C# bundle validator; no dotnet."""
 import argparse
 import json
+import hashlib
+import re as _re
+
+ENGINE_RECORD = 'manifest/release-build.json'
+MULTI_RECORD = 'manifest/multi-version-build.json'
+
+
+def release_record_path(names):
+    if ENGINE_RECORD in names:
+        return ENGINE_RECORD
+    if MULTI_RECORD in names:
+        return MULTI_RECORD
+    raise ValueError('Missing release build record (engine or eight-release)')
+
+
+def release_record(files, delivery=None):
+    """Select before parsing: a damaged preferred record must never trigger fallback."""
+    name = release_record_path(files)
+    record = json.loads(files[name].decode('utf-8-sig'))
+    binding = 'engineBuildSha256' if name == ENGINE_RECORD else 'multiVersionBuildSha256'
+    if delivery is not None and hashlib.sha256(files[name]).hexdigest() != delivery.get(binding):
+        raise ValueError('Build record differs from delivery: ' + name)
+    if name == MULTI_RECORD:
+        validate_plc_record(record)
+        if 'manifest/tools-list.json' in files:
+            digest = hashlib.sha256(files['manifest/tools-list.json']).hexdigest()
+            if any(runtime['toolsList']['sha256'] != digest for runtime in record['plcRuntimes'].values()):
+                raise ValueError('PLC tools-list changed after validation')
+    return name, record
+
+
+def record_inventory(record):
+    rows = record['runtimeFiles'] if 'runtimeFiles' in record else record['files']
+    if len({row['path'] for row in rows}) != len(rows):
+        raise ValueError('Duplicate runtime inventory paths')
+    if any(not plain_path(row['path']) or not row['path'].startswith('runtime/') for row in rows):
+        raise ValueError('Invalid runtime inventory path')
+    return rows
+
+
+def shipped_engine_proof(record):
+    # Until j2 the eight-release record retains the delivered engine's original
+    # evidence separately. It is never labelled as a PlcWorker check result.
+    return record.get('engineCompatibility', record)
+
+
+def plc_record_jobs(key):
+    jobs = {f'{name}-v{key}-plc': group for name, group in (
+        ('native-coverage', 'native-coverage'), ('adapter-native-coverage', 'native-coverage'),
+        ('jit-adapter-coverage', 'native-diagnostics'), ('engineering-api', 'plc-functional'),
+        ('worker-robustness', 'plc-worker-isolation'), ('engine-host', 'http-concurrency'),
+        ('native-safety', 'offline-suites'), ('worker-protocol', 'plc-worker-isolation'),
+        ('approval', 'plc-approval'), ('resources', 'resource-discovery'), ('ecosystem', 'plc-ecosystem'),
+        ('stability-c8', 'plc-stability'), ('stability-c16', 'plc-isolated-stability'),
+        ('usage', 'resource-discovery'), ('campaign-inputs', 'plc-functional'))}
+    modes = ['example-library-only', 'software-lookup-only', 'http', 'hmi-only', 'native-diagnostics-only',
+             'process-leases-only', 'native-export-only', 'hmi-snapshot-only', 'global-script-only',
+             'graphic-selection-only', 'runtime-settings-only', 'test-migration-read-assembly',
+             'test-ecosystem-assembly', 'descriptor-catalog-only', 'check-modes-self-test']
+    if key == '21':
+        modes += ['test-download-route', 'test-match-plc-name']
+    jobs.update({f'harness-v{key}-{mode}-plc': 'native-diagnostics' if mode == 'native-diagnostics-only' else 'plc-functional'
+                 for mode in modes})
+    jobs.update({f'{kind}{source}-{transport}-v{key}-plc': 'plc-' + kind
+                 for kind in ('contracts', 'responses') for source in ('', '-source') for transport in ('stdio', 'http')})
+    return jobs
+
+
+# A drive-letter or extended-length path; records ship in the package and must not name the build host's folders.
+LOCAL_PATH = _re.compile(r'(?:\\\\\?\\)?\b[A-Za-z]:[\\/]')
+
+
+def validate_plc_record(record):
+    engine = record['engineCompatibility']
+    if any(record[key] != engine[key] for key in ('release', 'fileVersion', 'tier', 'checkPlan')):
+        raise ValueError('Shipped-engine compatibility proof differs from eight-release record')
+    files = {row['path']: row['sha256'] for row in record_inventory(record)}
+    selected = set(record['checkPlan']['selectedChecks'])
+    # Without -Test the preparation runs only the PLC approval successors, and only for foundation-approval.
+    if record.get('test', True) is False:
+        selected = {'plc-approval'} if 'foundation-approval' in selected else set()
+    # Each receipt names its log, which the record binds in validationArtifacts with the same SHA-256.
+    bound = {row['path']: row['sha256'] for row in record.get('validationArtifacts', [])}
+    if LOCAL_PATH.search(json.dumps(record['plcRuntimes'])):
+        raise ValueError('PLC proof holds an absolute local path')
+    for key in ('20', '21'):
+        runtime = record['plcRuntimes']['V' + key]
+        for field in ('worker', 'adapter', 'host'):
+            row = runtime[field]
+            if files.get(row['path']) != row['sha256']:
+                raise ValueError('PLC artifact differs from runtime inventory: ' + field)
+        if not runtime['worker']['path'].endswith(f'/TiaMcp.PlcWorker.{key}.exe'):
+            raise ValueError('PLC evidence names another worker')
+        for field in ('catalog', 'toolsList', 'sdkWorker'):
+            if len(runtime[field]['sha256']) != 64:
+                raise ValueError('PLC catalog/SDK hash missing: ' + field)
+        checks = runtime['checks']
+        required = {name for name, group in plc_record_jobs(key).items() if group in selected
+                    or group == 'plc-approval' and 'foundation-approval' in selected
+                    or group == 'resource-discovery' and 'foundation-transport' in selected}
+        if not required <= set(checks):
+            raise ValueError('Missing PLC check receipts: ' + ', '.join(sorted(required - set(checks))))
+        for name, check in checks.items():
+            if (check.get('status') != 'passed' or not _re.fullmatch('[0-9a-f]{64}', str(check.get('sha256', '')))
+                    or not isinstance(check.get('length'), int) or check['length'] <= 0 or not isinstance(check.get('counts'), list)
+                    or check.get('path') != f'bin-build/multi-version/{name}.log' or bound.get(check['path']) != check['sha256']):
+                raise ValueError('Incomplete PLC check receipt: ' + name)
+        for name, group in (('localStability', 'plc-stability'), ('isolatedLocalStability', 'plc-isolated-stability')):
+            if group not in selected:
+                continue
+            proof = runtime[name]
+            if (proof.get('status') != 'passed' or proof.get('rounds', 0) < 10 or proof.get('isolatedWorker') is not True
+                    or proof.get('runtimeSha256') != runtime['sdkWorker']['sha256']
+                    or proof.get('sdkWorkerSha256') != runtime['sdkWorker']['sha256']
+                    or proof.get('productionWorkerSha256') != runtime['worker']['sha256']
+                    or proof.get('hostSha256') != runtime['host']['sha256']
+                    or proof.get('workerModel') != 'foundation-host-plc-worker'):
+                raise ValueError('PLC stability runtime/hash mismatch: ' + key)
+            runs = proof.get('runs', [])
+            if (len(runs) != 4 or {(r['transport'], r['profile']) for r in runs} !=
+                    {('stdio', 'full'), ('stdio', 'lite'), ('http', 'full'), ('http', 'lite')}
+                    or not all(r['unexpectedExits'] == 0 and r['unexpectedFailures'] == 0 and r['tiaConnected'] is False
+                               and r['unmatchedJournalEntries'] == 0 and r['measuredToolCalls'] > 0 for r in runs)):
+                raise ValueError('PLC stability matrix incomplete: ' + key)
 
 
 def release_checks(root, package, *records):
@@ -241,6 +365,97 @@ class LayoutChecks(unittest.TestCase):
         planted = 'runtime/v19/worker/Siemens.Collaboration.Net.dll'
         rules['exclude']['files'].remove(planted)
         self.assertTrue(any(planted in error for error in openness_group_delivery_errors(rules)))
+
+    @staticmethod
+    def record_fixture():
+        engine = dict(release='4.0.0', fileVersion='4.0.0.0', tier='package',
+                      checkPlan=dict(tier='package', selectedChecks=[], skippedChecks=[], changedPaths=[]),
+                      sourceFiles=[], validationInputs=[], runtimeFiles=[], validation={})
+        multi = {key: value for key, value in engine.items() if key != 'runtimeFiles'}
+        multi.update(files=[], engineCompatibility=engine, plcRuntimes={})
+        for key in ('20', '21'):
+            runtime = dict(checks={})
+            for field, path in (
+                    ('worker', f'runtime/v{key}/plc-worker/TiaMcp.PlcWorker.{key}.exe'),
+                    ('adapter', f'runtime/v{key}/plc-worker/TiaMcp.Adapter.{key}.dll'),
+                    ('host', f'runtime/v{key}/TiaMcp.FoundationHost.exe')):
+                runtime[field] = dict(path=path, sha256='a' * 64)
+                multi['files'].append(runtime[field].copy())
+            for field in ('catalog', 'toolsList', 'sdkWorker'):
+                runtime[field] = dict(path=field, sha256='b' * 64)
+            multi['plcRuntimes']['V' + key] = runtime
+        return engine, multi
+
+    def test_record_selection_binding_and_inventory_for_both_shapes(self):
+        engine, multi = self.record_fixture()
+        for name, record, binding in ((ENGINE_RECORD, engine, 'engineBuildSha256'),
+                                      (MULTI_RECORD, multi, 'multiVersionBuildSha256')):
+            with self.subTest(record=name):
+                data = json.dumps(record).encode()
+                files = {name: data}
+                delivery = {binding: hashlib.sha256(data).hexdigest()}
+                self.assertEqual(release_record(files, delivery), (name, record))
+                self.assertEqual(record_inventory(record), record.get('runtimeFiles', record.get('files')))
+                with self.assertRaises(ValueError):
+                    release_record(files, {binding: '0' * 64})
+        files = {ENGINE_RECORD: b'{bad', MULTI_RECORD: json.dumps(multi).encode()}
+        self.assertEqual(release_record_path(files), ENGINE_RECORD)
+        with self.assertRaises(ValueError):
+            release_record(files)
+        with self.assertRaises(ValueError):
+            release_record({})
+
+    def test_plc_record_requires_every_selected_receipt_and_exact_hashes(self):
+        _, multi = self.record_fixture()
+        multi['checkPlan']['selectedChecks'] = ['plc-functional']
+        with self.assertRaisesRegex(ValueError, 'Missing PLC check receipts'):
+            validate_plc_record(multi)
+        for key in ('20', '21'):
+            runtime = multi['plcRuntimes']['V' + key]
+            for name, group in plc_record_jobs(key).items():
+                if group == 'plc-functional':
+                    runtime['checks'][name] = self.receipt(multi, name)
+        validate_plc_record(multi)
+        receipt = multi['plcRuntimes']['V21']['checks']['harness-v21-http-plc']
+        for field, value in (('sha256', 'c' * 64), ('path', 'bin-build/multi-version/other.log'), ('counts', None), ('length', 0)):
+            original = receipt[field]
+            receipt[field] = value
+            with self.assertRaisesRegex(ValueError, 'Incomplete PLC check receipt'):
+                validate_plc_record(multi)
+            receipt[field] = original
+        row = next(row for row in multi['validationArtifacts'] if row['path'] == receipt['path'])
+        multi['validationArtifacts'].remove(row)
+        with self.assertRaisesRegex(ValueError, 'Incomplete PLC check receipt'):
+            validate_plc_record(multi)
+        multi['validationArtifacts'].append(row)
+        validate_plc_record(multi)
+        receipt['counts'] = ['COMPLETE: 1500 checks; evidence: D:\\Build\\checkout\\x']
+        with self.assertRaisesRegex(ValueError, 'absolute local path'):
+            validate_plc_record(multi)
+        receipt['counts'] = ['COMPLETE: 1500 checks']
+        multi['plcRuntimes']['V20']['worker']['sha256'] = '0' * 64
+        with self.assertRaisesRegex(ValueError, 'artifact differs'):
+            validate_plc_record(multi)
+
+    @staticmethod
+    def receipt(record, name):
+        sha256 = hashlib.sha256(name.encode()).hexdigest()
+        path = f'bin-build/multi-version/{name}.log'
+        record.setdefault('validationArtifacts', []).append(dict(path=path, sha256=sha256))
+        return dict(path=path, sha256=sha256, length=17, status='passed', counts=['COMPLETE: 1 checks passed'])
+
+    def test_record_without_test_flag_requires_only_the_approval_receipts(self):
+        _, multi = self.record_fixture()
+        multi['checkPlan']['selectedChecks'] = ['foundation-approval', 'plc-functional']
+        multi['test'] = False
+        with self.assertRaisesRegex(ValueError, 'Missing PLC check receipts'):
+            validate_plc_record(multi)
+        for key in ('20', '21'):
+            multi['plcRuntimes']['V' + key]['checks'][f'approval-v{key}-plc'] = self.receipt(multi, f'approval-v{key}-plc')
+        validate_plc_record(multi)
+        multi['test'] = True
+        with self.assertRaisesRegex(ValueError, 'Missing PLC check receipts'):
+            validate_plc_record(multi)
 
     def test_quick_package_requires_the_same_build_plan(self):
         policy = json.loads((ROOT / 'build-tools/release/release-checks.json').read_text('utf-8'))

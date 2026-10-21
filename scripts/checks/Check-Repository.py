@@ -15,6 +15,32 @@ layout = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(layout)
 
 
+def runtime_inventory(root):
+    files = {p: (root / p).read_bytes() for p in (layout.ENGINE_RECORD, layout.MULTI_RECORD) if (root / p).is_file()}
+    delivery = json.loads((root / 'manifest/delivery.json').read_text('utf-8-sig'))
+    name, record = layout.release_record(files, delivery)
+    rows = layout.record_inventory(record).copy()
+    if name == layout.ENGINE_RECORD and layout.MULTI_RECORD in files:
+        data = files[layout.MULTI_RECORD]
+        if layout.hashlib.sha256(data).hexdigest() != delivery.get('multiVersionBuildSha256'):
+            raise ValueError('Multi-version build record differs from delivery')
+        rows += layout.record_inventory(json.loads(data))
+    merged = {}
+    for row in rows:
+        if row['path'] in merged and merged[row['path']]['sha256'] != row['sha256']:
+            raise ValueError('Conflicting runtime inventories: ' + row['path'])
+        merged[row['path']] = row
+    return list(merged.values())
+
+
+def runtime_inventory_errors(root):
+    """The recorded runtime inventory, or one error line when a record or its delivery binding is not consistent."""
+    try:
+        return runtime_inventory(root), []
+    except (ValueError, KeyError, TypeError, json.JSONDecodeError) as error:
+        return [], [f'Recorded runtime inventory: {error}']
+
+
 def documents(root):
     for path in root.rglob('*.md'):
         if not SKIP.intersection(path.relative_to(root).parts):
@@ -157,6 +183,9 @@ def check(root, no_binaries=False, package_mode=False):
     def read(name):
         return json.loads((root / name).read_text(encoding='utf-8-sig'))
     def required(name, label):
+        # Only the engine record may be absent, with the eight-release record (itself required) in its place.
+        if name == layout.ENGINE_RECORD and not (root / name).is_file():
+            name = layout.MULTI_RECORD
         target = (root / name).resolve()
         if not target.is_relative_to(root.resolve()):
             errors.append(f'{label}: external path: {name}')
@@ -200,7 +229,8 @@ def check(root, no_binaries=False, package_mode=False):
             if path.is_file() and not layout.delivered(path.relative_to(root).as_posix(), rules):
                 errors.append('File outside delivery set: ' + path.relative_to(root).as_posix())
         if not no_binaries:
-            inventory = read('manifest/release-build.json')['runtimeFiles'] + read('manifest/multi-version-build.json')['files']
+            inventory, inventory_errors = runtime_inventory_errors(root)
+            errors.extend(inventory_errors)
             for row in inventory:
                 if layout.delivered(row['path'], rules):
                     required(row['path'], 'recorded runtime')
@@ -302,6 +332,7 @@ def main():
         product_name_self_test()
         archive_self_test()
         changelog_self_test()
+        release_record_self_test()
         return 0
     # Negative sentinel: a broken link and a traversal must fail; a valid file must pass.
     source = args.root / 'docs/README.md'
@@ -313,6 +344,39 @@ def main():
         print('[FAIL] ' + error)
     print(f'Checked {count} Markdown files and repository entrypoints; {len(errors)} issue(s).')
     return bool(errors)
+
+
+def release_record_self_test():
+    import shutil
+    import uuid
+    parent = ROOT / 'bin-build'
+    parent.mkdir(exist_ok=True)
+    root = parent / ('repository-record-' + uuid.uuid4().hex)
+    (root / 'manifest').mkdir(parents=True)
+    try:
+        engine, multi = layout.LayoutChecks.record_fixture()
+        for name, record, binding in ((layout.ENGINE_RECORD, engine, 'engineBuildSha256'),
+                                      (layout.MULTI_RECORD, multi, 'multiVersionBuildSha256')):
+            data = json.dumps(record).encode()
+            path = root / name
+            path.write_bytes(data)
+            (root / 'manifest/delivery.json').write_text(json.dumps({binding: layout.hashlib.sha256(data).hexdigest()}), encoding='utf-8')
+            assert runtime_inventory(root) == layout.record_inventory(record)
+            path.write_bytes(data + b' ')
+            try:
+                runtime_inventory(root)
+            except ValueError:
+                pass
+            else:
+                raise AssertionError('Modified build record was accepted')
+            # check() reports it as one error line, not a traceback.
+            inventory, errors = runtime_inventory_errors(root)
+            assert inventory == [] and len(errors) == 1 and 'differs from delivery' in errors[0], errors
+            path.unlink()
+    finally:
+        assert root.resolve().parent == parent.resolve()
+        shutil.rmtree(root)
+    print('Release record self-tests: 4 passed, 0 failed.')
 
 
 def contract_required_paths():

@@ -83,7 +83,7 @@ internal static class CatalogAudits
     }
     internal static JsonObject Usage(string root, string? inputsRoot = null, string? recordsPath = null)
     {
-        var input = inputsRoot ?? Path.Combine(root, "bin-build"); var matrix = Read(root, "manifest/version-tools.json")["releases"]!.AsObject(); var release = Text(Read(root, "manifest/release-build.json")["release"]);
+        var input = inputsRoot ?? Path.Combine(root, "bin-build"); var matrix = Read(root, "manifest/version-tools.json")["releases"]!.AsObject(); var release = Text(Read(root, ReleaseRecords.SelectPath(root))["release"]);
         var source = "src/Shared/ToolUsageData.json"; var catalog = Read(root, source);
         if (recordsPath is not null)
         {

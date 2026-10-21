@@ -55,6 +55,31 @@ def sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def read_build_record(files, delivery):
+    name, record = layout.release_record(files, delivery)
+    return name, layout.shipped_engine_proof(record), layout.record_inventory(record)
+
+
+def self_test():
+    import unittest
+
+    class RecordChecks(unittest.TestCase):
+        def test_both_shapes_bind_before_packaging(self):
+            engine, multi = layout.LayoutChecks.record_fixture()
+            for name, record, binding in ((layout.ENGINE_RECORD, engine, 'engineBuildSha256'),
+                                          (layout.MULTI_RECORD, multi, 'multiVersionBuildSha256')):
+                data = json.dumps(record).encode()
+                delivery = {binding: sha(data)}
+                selected, proof, inventory = read_build_record({name: data}, delivery)
+                self.assertEqual(selected, name)
+                self.assertEqual(proof, engine)
+                self.assertEqual(inventory, layout.record_inventory(record))
+                with self.assertRaises(ValueError):
+                    read_build_record({name: data + b' '}, delivery)
+
+    return int(not unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromTestCase(RecordChecks)).wasSuccessful())
+
+
 def validator_command(root, release_tool=None):
     dotnet = os.environ.get('DOTNET_EXE', 'dotnet')
     if release_tool is None:
@@ -73,6 +98,7 @@ def validator_command(root, release_tool=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--git', default='git')
+    parser.add_argument('--self-test', action='store_true')
     parser.add_argument('--release-tool', type=Path, help='Already-built release tool assembly; child validations never build the running tool')
     parser.add_argument('--output-directory', type=Path, help='Optional new local output directory; existing archives/stages are never overwritten')
     parser.add_argument('--local', action='store_true', help='Build a review-only bundle from this worktree without committing; all binary and validation gates still apply')
@@ -80,6 +106,8 @@ def main():
     parser.add_argument('--include-untracked', action='store_true', help='Dry run only: also preview new, non-ignored files awaiting review')
     parser.add_argument('--stage-directory', type=Path, help='Dry run only: copy the filtered tree into a new worktree-local directory')
     args = parser.parse_args()
+    if args.self_test:
+        return self_test()
     root = Path(__file__).resolve().parents[1]
     rules = layout.load_delivery(root)
 
@@ -104,16 +132,20 @@ def main():
             'Binaries must not be tracked in Git (2.8.1 policy): git rm --cached runtime/v20 runtime/v21 TiaOpenness.exe')
     # Local build outputs (ignored by Git): exactly the runtime inventory that Build-Release recorded plus the
     # configurator. Other local output files are excluded from the delivery package.
-    metadata = json.loads((root / 'manifest/release-build.json').read_text(encoding='utf-8-sig'))
+    record_files = {name: (root / name).read_bytes() for name in (layout.ENGINE_RECORD, layout.MULTI_RECORD) if (root / name).is_file()}
     delivery = json.loads((root / 'manifest/delivery.json').read_text(encoding='utf-8-sig'))
-    multi_path = root / 'manifest/multi-version-build.json'
+    record_name, release_record = layout.release_record(record_files, delivery)
+    _, metadata, inventory = read_build_record(record_files, delivery)
+    multi_path = root / layout.MULTI_RECORD
     multi = json.loads(multi_path.read_text('utf-8-sig')) if delivery.get('multiVersionBuildSha256') else None
     candidate = json.loads((root / 'manifest/package-manifest.json').read_text('utf-8-sig'))
     selected = layout.release_checks(root, candidate, metadata, multi)
     require(args.local or (candidate['tier'] == 'full' and candidate['checkStatus'] == 'passed'), 'Publication packaging requires passed tier=full checks')
     require(args.local or candidate.get('buildCacheEnabled') is False, 'Publication packaging requires a cold rebuild with -NoBuildCache')
-    inventory = metadata['runtimeFiles'].copy()
+    inventory = inventory.copy()
     if multi is not None:
+        if 'plcRuntimes' in multi:
+            layout.validate_plc_record(multi)
         require(sha(multi_path.read_bytes()) == delivery['multiVersionBuildSha256'], 'Multi-version build record changed after delivery preparation')
         require(multi['release'] == metadata['release'] and multi['fileVersion'] == metadata['fileVersion'], 'Multi-version binaries belong to another release')
         flags = ['configurationFunctionalTestsExecuted'] if 'gui-tests' in selected else []
@@ -161,9 +193,10 @@ def main():
             require(f'runtime/studio/bridge/adapters/v{key}/TiaOpenness.Openness.dll' in files, 'Studio adapter missing: ' + key)
     require(all(name in files for name in required_exes), 'A required runtime executable is missing')
 
-    metadata = json.loads(files['manifest/release-build.json'].decode('utf-8-sig'))
+    record_name, release_record = layout.release_record(files, delivery)
+    metadata = layout.shipped_engine_proof(release_record)
     delivery = json.loads(files['manifest/delivery.json'].decode('utf-8-sig'))
-    require(sha(files['manifest/release-build.json']) == delivery['engineBuildSha256'], 'Engine build record changed after delivery preparation')
+    layout.release_record(files, delivery)
     require(sha(files['manifest/configurator-build.json']) == delivery['configuratorBuildSha256'], 'Configurator build record changed after delivery preparation')
     require(delivery['engineRelease'] == metadata['release'] and delivery['fileVersion'] == metadata['fileVersion'], 'Engine version differs from delivery record')
     release, version, package = (delivery[k] for k in ('release', 'fileVersion', 'package'))
@@ -281,7 +314,7 @@ def main():
             data = data.decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
         require(sha(data) == row['sha256'], f"Configurator source changed: {row['path']}")
     require(not any(Path(n).suffix.lower() in ('.ps1', '.psm1', '.bat', '.cmd') for n in files), 'PowerShell, batch, and cmd files must not be shipped')
-    required = rules['include']['files'] + [layout.DELIVERY_RULES, 'docs/README.md',
+    required = [name for name in rules['include']['files'] if name != layout.ENGINE_RECORD or name in files] + [layout.DELIVERY_RULES, 'docs/README.md',
                 'TiaOpenness.exe', 'docs/getting-started/configuration.md',
                 'runtime/tools/TiaMcp.WriteGuard.exe', 'runtime/tools/TiaMcp.WriteGuard.dll',
                 'runtime/tools/TiaMcp.WriteGuard.deps.json', 'runtime/tools/TiaMcp.WriteGuard.runtimeconfig.json',
@@ -344,4 +377,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    raise SystemExit(main())

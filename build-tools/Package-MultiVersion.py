@@ -28,10 +28,25 @@ def runtime_path_allowed(name):
     return name.startswith('runtime/dotnet/') or Path(name).suffix.lower() in ('.exe', '.dll', '.config', '.json', '.txt')
 
 
+def read_build_record(files):
+    return layout.release_record(files, json.loads(files['manifest/delivery.json']))
+
+
 def self_test():
     import unittest
 
     class RuntimeInventoryTests(unittest.TestCase):
+        def test_record_shapes_are_bound_and_preferred_before_inventory_is_read(self):
+            engine, multi = layout.LayoutChecks.record_fixture()
+            for name, record, binding in ((layout.ENGINE_RECORD, engine, 'engineBuildSha256'),
+                                          (layout.MULTI_RECORD, multi, 'multiVersionBuildSha256')):
+                data = json.dumps(record).encode()
+                files = {name: data, 'manifest/delivery.json': json.dumps({binding: sha(data)}).encode()}
+                self.assertEqual(read_build_record(files), (name, record))
+                files[name] += b' '
+                with self.assertRaises(ValueError):
+                    read_build_record(files)
+
         def test_pinned_framework_metadata(self):
             self.assertTrue(runtime_path_allowed('runtime/dotnet/shared/Microsoft.NETCore.App/10.0.12/.version'))
 
@@ -63,23 +78,24 @@ def main():
     tracked = subprocess.check_output(['git', 'ls-files', '-z'], cwd=ROOT).decode('utf-8').split('\0')
     tracked = [name for name in tracked if name and (ROOT / name).is_file()]
     files = {name: (ROOT / name).read_bytes() for name in tracked}
-    for name in ('release-build', 'configurator-build', 'multi-version-build'):
-        assert f'manifest/{name}.json' in files, f'Missing {name} record; run the complete release build chain first'
-    records = {name: json.loads(files[f'manifest/{name}.json'].decode('utf-8-sig')) for name in ('release-build', 'configurator-build', 'multi-version-build')}
+    record_name, primary = read_build_record(files)
+    records = {name: json.loads(files[f'manifest/{name}.json'].decode('utf-8-sig'))
+               for name in ('release-build', 'configurator-build', 'multi-version-build') if f'manifest/{name}.json' in files}
+    assert 'configurator-build' in records and 'multi-version-build' in records, 'Complete the eight-release/configurator build chain first'
     multi = records['multi-version-build']
     candidate = json.loads((ROOT / 'manifest/package-manifest.json').read_text('utf-8-sig'))
-    selected = layout.release_checks(ROOT, candidate, records['release-build'], multi)
+    selected = layout.release_checks(ROOT, candidate, primary, multi)
     assert candidate['checkStatus'] == 'passed', 'Complete the candidate chain before packaging'
     if 'foundation-transport' in selected: assert multi['validation']['foundationTransportExecuted']
     if 'gui-tests' in selected: assert multi['validation']['studioFunctionalTestsExecuted']
     assert set(multi['studioReleaseKeys']) == {'14sp1', '15.1', '16', '17', '18', '19', '20', '21'}
-    for record in records.values():
+    for record in [*records.values(), layout.shipped_engine_proof(primary)]:
         for row in record['sourceFiles']:
             actual = files[row['path']]
             if not row['path'].lower().endswith(('.ttf', '.otf')):
                 actual = actual.decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
             assert sha(actual) == row['sha256'], 'Source changed after testing: ' + row['path']
-    binaries = multi['files'] + records['release-build']['runtimeFiles'] + [records['configurator-build']['executable']]
+    binaries = multi['files'] + layout.record_inventory(primary) + [records['configurator-build']['executable']]
     for row in binaries:
         name = row['path']
         path = (ROOT / name).resolve()
