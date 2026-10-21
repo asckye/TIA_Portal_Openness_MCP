@@ -43,10 +43,11 @@ public sealed class SharedClassificationTests
     }
 
     // One row per class of tool: a session read the review admits to read batches, a read and a file export the
-    // review keeps out of batches, a write the review admits to preview batches, and a Workbench read.
+    // review keeps out of batches, a read it admits (P8-82), a write the review admits to preview batches, and a Workbench read.
     [Theory]
     [InlineData("GetSessionState", "SESSION", true, false)]
-    [InlineData("ListPlcBlocks", "READ", false, false)]
+    [InlineData("TraceTagCause", "READ", false, false)]
+    [InlineData("ListPlcBlocks", "READ", true, false)]
     [InlineData("ExportPlcBlock", "FILE", false, false)]
     [InlineData("CreateProject", "WRITE", false, false)]
     [InlineData("DeletePlcBlock", "WRITE", false, true)]
