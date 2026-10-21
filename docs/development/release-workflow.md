@@ -4,13 +4,13 @@
 
 交付包 `TIA_MCP_Delivery_v<版本>_<YYYYMMDD>.zip` 包含 V14 SP1、V15.1、V16–V21 MCP 运行文件、工作台、Studio 及八版原生适配器，以及运行资源、用户文档、模板、插件和许可证。自 3.3.0 之后的下一个版本起，交付 ZIP 不再携带开发源码及构建工具。各发布键的工具范围不同，见[版本矩阵](../reference/version-tools.md)。每次发布同时上传 .sha256；GitHub 自动生成的源码压缩包不含运行二进制。
 
-运行文件不提交 Git。三份构建记录是 manifest/release-build.json、manifest/configurator-build.json、manifest/multi-version-build.json；manifest/delivery.json 绑定它们的哈希。PublicAPI、个人密钥、私人 TIA 工程、设计交接和构建日志不分发，原始版权与许可证保留。
+运行文件不提交 Git。交付的构建记录是 manifest/configurator-build.json 和 manifest/multi-version-build.json，manifest/delivery.json 绑定这两份的哈希。P8-04j2 起交付包不含 V20/V21 引擎：引擎交叉检查的记录 manifest/release-build.json 原样保存在 multi-version-build.json 的 `engineCompatibility` 段，本身不再交付。PublicAPI、个人密钥、私人 TIA 工程、设计交接和构建日志不分发，原始版权与许可证保留。
 
 ## 交付清单与两种校验模式
 
 [`scripts/operations/delivery-files.json`](../../scripts/operations/delivery-files.json) 是唯一交付规则文件。
 `include.files` 为精确路径，`include.prefixes` 为以 `/` 结尾的目录前缀，`exclude` 优先；未匹配的跟踪文件不交付。
-Python 打包器、资产核验、仓库/布局检查与 .NET release tool 校验器、更新器均读取它。运行文件仍只来自三份构建记录，
+Python 打包器、资产核验、仓库/布局检查与 .NET release tool 校验器、更新器均读取它。运行文件仍只来自构建记录，
 不会把磁盘上任意新文件塞入 ZIP。`runtime/verification/` 只用于发布前的 IL 验证，不分发。
 
 保留 BundleLayout 的九项资源、全部模板、生态与操作脚本、Claude Code 插件及其 skill、用户说明和许可证。
@@ -18,7 +18,7 @@ Python 桥接所用两个第三方项目只交付 `src`、PLC Tools 的八个 `p
 `tia install-plc-tools` 准备用户自己的 Python 3.12+ venv 和外部运行依赖，不再依赖未交付的本地项目打包元数据。
 字体、Studio、TiaGitAddIn、Siemens OPC UA、Eido 与嵌入官方代码示例的许可原文在 `docs/licenses/` 保留副本。
 
-三份构建记录供解包校验读取版本、依赖清单及 SHA-256，`delivery.json` 绑定记录哈希并供软件检查版本；
+交付的构建记录供解包校验读取版本、依赖清单及 SHA-256，`delivery.json` 绑定记录哈希并供软件检查版本；
 `tools-list.json` 用于包内入口及工具数量校验，`version-tools.json` 是用户版本矩阵入口。
 其他构建证据和 `RELEASE_STATUS.txt`、`release-file-hashes.json` 不进入新 ZIP。
 

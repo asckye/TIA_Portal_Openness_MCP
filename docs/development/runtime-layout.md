@@ -1,6 +1,6 @@
 # 运行时布局
 
-状态：现行 · 最后核对：2026-10-11，任务启动基线 master `578a05ee`
+状态：现行 · 最后核对：2026-10-21，master `62ebf86e`（worker、交付布局与 V20/V21 切换相关段落；其余段落为 2026-10-11，`578a05ee`）
 
 [重构计划](refactor-plan.md) · [引擎拆分设计](engine-decomposition.md) · [响应与异常设计](response-and-errors.md) · [验证分层](validation.md)
 
@@ -12,7 +12,7 @@ P2-05 的初始统计取自 2026-10-03，完成情况另行标明。
 
 V20/V21 宿主在 TIA 缺失、版本不匹配或 Openness 环境未就绪时仍提供诊断。需要 TIA 的调用在原生派发前返回 `RESOURCE_UNAVAILABLE`，V4 outcome 为 `rejected-before-operation`，execution 为 `not-started`。显式 CLI 动词保留各自的运行与退出码规则。
 
-八版产品统一由 `runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>` 启动（net10）。V14 SP1–V19 使用 PLC worker；V20/V21 使用完整引擎的 `--engine-worker` 模式，工具数量由以下目录块生成。
+八版产品统一由 `runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>` 启动（net10），并为每个 MCP 会话启动同一种 net48 worker `runtime/v<key>/worker/TiaMcp.PlcWorker.<key>.exe`（P8-04j2 起 V20/V21 也是如此）。worker 的 owner 线程在 V20/V21 为 MTA，在 V14 SP1–V19 为 STA（[`PlcLifecyclePolicy.OwnerApartment`](../../src/Adapters/Policy/PlcLifecyclePolicy.cs)、[`src/PlcWorker/Program.cs`](../../src/PlcWorker/Program.cs)）。工具数量由以下目录块生成。
 
 <!-- generated:tool-counts:begin -->
 由 `generate-tool-counts` 从 `manifest/version-tools.json` 和 `ToolProfiles.resx` 生成。以运行时 `tools/list` 为准。
@@ -29,28 +29,27 @@ V20/V21 宿主在 TIA 缺失、版本不匹配或 Openness 环境未就绪时仍
 | V21 | 511 | 84 |
 <!-- generated:tool-counts:end -->
 
-引擎的 stdio/HTTP 宿主与隔离 supervisor 已退役；引擎只接受 `--engine-worker`、`--write-tool-catalog <path>` 和 CLI 动词。无参数启动打印新用法并以 64 退出。
+交付包不再包含引擎：`TiaMcp.Engine.V20.exe`、`TiaMcp.Engine.V21.exe`、它们的 worker 文件和 `tool-catalog.json` 已从 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 的必需文件移入 `exclude` 与 `legacyCleanup` 规则，多版本打包器断言 `runtime/` 下没有引擎文件。引擎只作为私有兼容副本构建到 `bin-build/engine-compat`，供仓库交叉检查使用，直到 P8-04l 删除引擎。宿主在任何发布键上都以退出码 64 拒绝 `--engine-worker`、`--engine-catalog` 等 `--engine-*` 选项；只有仓库检查脚本把 `TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY` 设为该 checkout 的 `bin-build/engine-compat`、宿主从该 checkout 的源码构建或私有输出运行、且两个引擎文件都在私有输出中时才接受（[`HostOptions.cs`](../../src/FoundationHost/HostOptions.cs)），该变量不是对外选项。引擎原有的 stdio/HTTP 宿主与隔离 supervisor 早已退役。发布记录为 `manifest/multi-version-build.json`，引擎交叉检查的记录原样保存在其 `engineCompatibility` 段；`manifest/release-build.json` 不再交付。
 
-V20/V21 每个 MCP 会话拥有一个独立 engine worker：stdio 为一个会话、一个 worker；HTTP 的 N 个同时存活会话对应 N 个 worker，不另设会话数量上限，部署时需按 worker 内存和 TIA 实例数限制客户端并发。HTTP 启动校验使用的短期 probe 在监听前退出，每个 worker 都绑定宿主 job object，会话结束、超时或宿主退出时终止。Disconnect 只结束当前会话的原生连接，RestartOpennessWorker 只重启调用方 worker；新 HTTP 会话从未绑定状态开始。工具桥接、审批/故障键、预演计划、暂存归属和导出句柄访问按会话隔离；导出内容仍共用进程内的 32 句柄/8,000,000 字符容量限制，避免 HTTP 并发扩大缓存上限。`/mcp/health` 无需鉴权，含 fileVersion 和 full-engine profile；`/mcp/ready` 与 MCP 调用使用相同 Bearer 鉴权，只证明宿主已就绪。
+每个 MCP 会话拥有一个独立 worker（八版相同）：stdio 为一个会话、一个 worker；HTTP 的 N 个同时存活会话对应 N 个 worker，不另设会话数量上限，部署时需按 worker 内存和 TIA 实例数限制客户端并发。HTTP 启动校验使用的短期 probe 在监听前退出，每个 worker 都绑定宿主 job object，会话结束、超时或宿主退出时终止。Disconnect 只结束当前会话的原生连接，RestartOpennessWorker 只重启调用方 worker；新 HTTP 会话从未绑定状态开始。工具桥接、审批/故障键、预演计划、暂存归属和导出句柄访问按会话隔离；导出内容仍共用进程内的 32 句柄/8,000,000 字符容量限制，避免 HTTP 并发扩大缓存上限。`/mcp/health` 无需鉴权，含 fileVersion、releaseKey 和 profile 名（V20/V21 仍为 `full-engine`，P8-04n 统一对外呈现前保持不变）；`/mcp/ready` 与 MCP 调用使用相同 Bearer 鉴权，只证明宿主已就绪。
 
 ```text
-runtime/v20|v21/
+runtime/v<key>/        （八个发布键相同）
   TiaMcp.FoundationHost.exe + .dll/.deps.json/.runtimeconfig.json
   release-key.txt
   net10 dependencies
   worker/
-    TiaMcp.Engine.V20|V21.exe + .exe.config
-    TiaMcp.Adapter.20|21.dll + net48 dependencies
-    tool-catalog.json
+    TiaMcp.PlcWorker.<key>.exe + .exe.config
+    TiaMcp.Adapter.<key>.dll、TiaMcp.Adapters.Contracts.dll、TiaMcp.WorkerChannel.dll + net48 dependencies
 ```
 
-主机按所选发布键定位 worker 和构建时由同一织入二进制生成的目录，并验证 worker 哈希。net10 与 net48 依赖须分目录，不能混放。开发时仍可同时传入 `--engine-worker` 和 `--engine-catalog` 覆盖路径。审批管道仍绑定同一用户 SID 与 `approval.settings` 路径，V20/V21 的审批 host tag 保持 `engine`。更新器按 `scripts/operations/delivery-files.json` 校验全部必需入口并清理旧的 V20/V21 根目录引擎文件；用户数据和配置保持原位。
+宿主按所选发布键定位 `worker/TiaMcp.PlcWorker.<key>.exe`；显式 `--worker-exe` 选择开发 worker。工具目录由宿主自身生成，V20/V21 不再读取 `tool-catalog.json`。net10 与 net48 依赖须分目录，不能混放。审批管道仍绑定同一用户 SID 与 `approval.settings` 路径；审批请求、审计和调用日志的 host 标记沿用原值：`FoundationV4Tool` 执行的工具为 `foundation`，`src/EngineHost` 宿主流程（桥接、批次及其审批路径）为 `engine`，八版相同（[`ReleaseCatalogData.cs`](../../src/EngineHost/ReleaseCatalogData.cs)）。更新器按 `scripts/operations/delivery-files.json` 校验全部必需入口，并按 `legacyCleanup` 清理旧的 V20/V21 根目录引擎文件和 `worker/` 下的引擎文件；用户数据和配置保持原位。
 
 ## G7：运行时资源定位
 
 ### MCP 写操作审批（P6-44）
 
-完整引擎与 Foundation 的 MCP 写调用默认等待工作台批准；CLI 由本机用户直接执行。
+八版 Foundation 宿主的 MCP 写调用默认等待工作台批准；命令行由本机用户直接执行，不经审批。
 工作台标题栏 MCP 状态片的菜单可开关审批，设置页可选 60/120/300 秒，默认 120 秒。
 `data/config/approval.settings` 保存两行 `enabled=true|false` 与 `timeoutSeconds=1..3600`；缺失、损坏或不可读时开启审批。
 离线快照/测试可在专用 `TIA_MCP_DATA_DIRECTORY` 下显式设置 `enabled=false`，写结果会含
@@ -70,6 +69,7 @@ MCP 的 `SaveExportContent` 不能写 `approval.settings`、其常规短文件�
 重复、超时、格式异常、断连或无工作台均拒绝，工程动作尚未发出。完成通知只更新该请求的结果状态，不能授予批准。
 审批请求、决定、超时和开关变化写入现有审计链。批次逐项批准写项；只读项不入队。
 等待发生在专用 Openness 线程之外、动作调用之前；Foundation 主机在派发给 worker 前等待审批，原生执行截止预算不变。
+审批请求在预检前创建，审计先记录请求；确认时限在预检结束、开始等待时才计算，预检耗时不占用审批时间（P8-stab-1，`FoundationV4Tool`）。
 审批不改变 Siemens 调用序列、参数、线程归属或会话。
 
 ### 工作台控制通道（P8-20）
@@ -105,7 +105,7 @@ inspectionRules、blockFilter、blockSelection。预填由来源会话持有，`
 
 ### TIA 进程租约
 
-八版 MCP worker 在附着前共用 `PortalProcessLease`：V14 SP1–V19 的 PlcWorker 在负责原生调用的 STA 线程上预留，V20/V21 引擎 worker 保持现有 MTA 路径。
+八版 MCP worker 在附着前共用 `PortalProcessLease`：PlcWorker 在负责原生调用的 owner 线程上预留，该线程在 V14 SP1–V19 为 STA，在 V20/V21 为 MTA。
 租约目录使用上表的 `leases` 位置，文件名为 `<PID>-<进程 UTC 启动 ticks>.lease`，独占文件句柄覆盖连接生命周期。
 内容为 UTF-8：附着且空闲为 `IDLE\n`；可能调用原生 API 的请求在分发前写入并持久刷新 `BUSY\n`，已知结果返回后写入 IDLE；未知结果写入 `UNCERTAIN\n`。
 另一 worker 持有句柄时返回 `SessionBehavior.LeaseReserved`。独占打开成功后，RELEASED 或 IDLE 可接管；接管 IDLE 时 `ConnectPortal` 的结果 `data.previousOwnerEndedIdle=true`，不增加 V4 warning code。
@@ -115,7 +115,7 @@ MCP 会话结束（含未调用 `DisconnectPortal`）、stdio EOF、Ctrl+C、控
 worker 在原有 owner 线程上非拥有式分离并写入 `RELEASED\n`；不保存或关闭工程。仅请求仍在进行或等待超时才结束 worker。
 强制结束空闲 worker 时保留 IDLE，下次可接管；中断原生请求时保留 BUSY，未知结果退出时保留 UNCERTAIN。正常替换安装包不需要重启 TIA；只有中断的原生调用、未知结果（含旧 ACTIVE 的不确定性）需要重启。
 这些文件状态不增加 Siemens 调用，持久刷新的逐请求耗时记录在本任务的离线证据中。
-没有连接的 `AttachOpenProject` 及其他调用 adapter `Portal()` 的 Foundation 操作，在分发前返回类型化 `PRECONDITION_FAILED`，提示先调用 `ConnectPortal`，不锁住会话。全引擎工具保留自身的拒绝数据与元数据（包括交叉引用的 `queried=false`、`complete=false`）；仅已确认会把未连接误报为未知写入的旧包装器，在未发出 native 调用时把未知结果改为此连接前提拒绝。
+没有连接的 `AttachOpenProject` 及其他调用 adapter `Portal()` 的 Foundation 操作，在分发前返回类型化 `PRECONDITION_FAILED`，提示先调用 `ConnectPortal`，不锁住会话。V20/V21 专有工具保留自身的拒绝数据与元数据（包括交叉引用的 `queried=false`、`complete=false`）；仅已确认会把未连接误报为未知写入的旧包装器，在未发出 native 调用时把未知结果改为此连接前提拒绝。
 
 ### 安装根与开发输出
 
@@ -124,10 +124,10 @@ G7-1…G7-7 已完成。完整交付包可放在仓库之外；安装根不需�
 排除 `runtime/verification/`。交付包保留资源、用户文档、插件及桥接所用 Python 源码；开发源码、检查脚本和开发文档不分发，不能只复制 EXE。
 
 [`BundleLayout.cs`](../../src/Shared/BundleLayout.cs) 以 `manifest/package-manifest.json` 为根标记，
-维护资源相对路径和同级产品路由。公共实现由 `TiaMcp.Logic` 导出，两个引擎、Foundation 和 CLI 共用；
+维护资源相对路径和同级产品路由。公共实现由 `TiaMcp.Logic` 导出，Foundation 宿主（含命令行）与引擎兼容副本共用；
 Studio 与适配器的链接副本保留内部可见性，跨程序集通过 AppDomain 中的字符串共享启动时的选择。
 
-P6-37 的引擎、Foundation 和 CLI 都接受 `--bundle-root <absolute-path>` 与 `TIA_MCP_BUNDLE_ROOT`。
+P6-37 起 Foundation 宿主及其命令行子命令都接受 `--bundle-root <absolute-path>` 与 `TIA_MCP_BUNDLE_ROOT`。
 选择顺序为 **CLI → 环境变量 → 正式安装/开发锚点**；两项显式输入并存时 CLI 优先。
 相对路径或缺参数属于语法错误（CLI 退出 64）；目录不存在或缺根标记退出 70。
 显式根无效立即报 `RESOURCE_UNAVAILABLE`，不会尝试环境变量或其他根，不启动工具。
@@ -139,7 +139,8 @@ P6-37 的引擎、Foundation 和 CLI 都接受 `--bundle-root <absolute-path>` �
 |---|---|
 | 包根 | 自身含 `manifest/package-manifest.json` 的目录 |
 | MCP 安装输出 | `runtime/v14sp1`、`runtime/v15.1`、`runtime/v16`–`runtime/v21` |
-| 完整引擎开发输出 | `src/Engine/bin-v20/<configuration>/net48`、`src/Engine/bin/<configuration>/net48` |
+| PLC worker 开发输出 | `src/PlcWorker/bin/<发布键>/<configuration>/net48` |
+| 引擎开发输出（兼容副本，P8-04l 删除） | `src/Engine/bin-v20/<configuration>/net48`、`src/Engine/bin/<configuration>/net48` |
 | Foundation 开发输出 | `src/FoundationHost/bin/<configuration>/net10.0` |
 | 引擎测试宿主输出 | `tests/Engine/TiaMcp.Engine.Harness/bin/<configuration>/net48`；`tests/FoundationHost/TiaMcp.FoundationHost.Tests/bin/<configuration>/net10.0`；`tests/Engine/TiaMcp.Engine.Tests/bin/<configuration>/net10.0` |
 | Studio 安装输出（既有） | `runtime/studio`、`runtime/studio/bridge` |
@@ -169,18 +170,18 @@ P6-37 的引擎、Foundation 和 CLI 都接受 `--bundle-root <absolute-path>` �
 正式开发锚点使用对应 Release/Debug 输出。目标缺失即拒绝，不改用当前 EXE，也不接受任意 `bin` 或 `v数字` 目录。
 Foundation 保留 EXE 旁 `release-key.txt` 的版本选择/一致性校验，显式 `--worker-exe` 保持优先；
 默认 worker 位于选定根的 `runtime/v<key>/worker/TiaMcp.PlcWorker.<key>.exe`。
-引擎更新检查只把选定根下的正式 `runtime/v<key>` 输出认作安装；开发输出保持原有的非安装响应，
+`CheckProductUpdate` 只把选定根下的正式 `runtime/v<key>` 输出认作安装；开发输出保持原有的非安装响应，
 正式安装缺交付清单或 `runtime/tools/TiaMcp.Updater.exe` 时报告选定根下的预期路径。
 
 工作台（Studio）的配置页、客户端桥接与更新探测由 P6-38 改用同一规则：`BundleLayout.ResolveWorkbenchRoot` /
-`RequireWorkbenchRoot`（显式根、`TIA_MCP_BUNDLE_ROOT`、已知锚点；无效显式根不回退），引擎、bridge 与 adapter 位置取自产品表
-（`GetProduct`、`WorkbenchEnginePath`、`WorkbenchBridgePath`）；缺目标版本引擎即拒绝，源码 worktree 拒绝安装更新。
+`RequireWorkbenchRoot`（显式根、`TIA_MCP_BUNDLE_ROOT`、已知锚点；无效显式根不回退），宿主、bridge 与 adapter 位置取自产品表
+（`GetProduct`、`WorkbenchEnginePath`、`WorkbenchBridgePath`；方法名沿用旧称）；缺目标版本宿主即拒绝，源码 worktree 拒绝安装更新。
 Studio 的共享数据目录副本通过 `TIA_BUNDLE_LAYOUT_STUDIO` 使用 `FindWorkbenchRoot`，采用同一启动选择与 Workbench 锚点；原生路径选择不变。
 正式相邻 bridge/adapters 部署保持，`TiaSharedAdapterPaths` 默认 false，仍遵守 G3/J 原生验收边界。
 根启动器仍只启动 `runtime/studio/TiaOpenness.exe`。
 
-V21 生态目录查询仍读取两个完整引擎嵌入的 `TiaMcp.V21Ecosystem.json`，磁盘副本缺失不影响查询。
-[`reference/v21-ecosystem.json`](../../reference/v21-ecosystem.json) 是可编辑源，修改后须重建引擎。
+V21 生态目录查询读取宿主程序集 `TiaMcp.EngineHost` 嵌入的 `TiaMcp.V21Ecosystem.json`（引擎兼容副本嵌入同一文件），磁盘副本缺失不影响查询。
+[`reference/v21-ecosystem.json`](../../reference/v21-ecosystem.json) 是可编辑源，修改后须重建宿主。
 Python 解释器由 `TIA_MCP_PLC_TOOLS_PYTHON` 覆盖；缺省环境位于用户的 `TiaMcp/ecosystem-python`。
 这些生态工具属于 V20/V21，不加入 Foundation。
 
@@ -272,14 +273,14 @@ HMI 模板还要求 `--hmi-template-directory <absolute-directory>`，组件目�
 
 仓库模式核对代码表与跟踪文件；包模式从仓库运行校验器，按交付规则检查资源而不要求包内源码。
 检查器不证明运行时返回值、二进制完整性或西门子行为；`Check-Repository.py --no-binaries` 同时运行此检查。
-布局矩阵及调用方差分测试位于完整引擎的 [BundleLayoutTests.cs](../../tests/KeptCode/TiaMcp.KeptCode.Tests/BundleLayoutTests.cs)、
-[EcosystemTests.cs](../../tests/KeptCode/TiaMcp.KeptCode.Tests/EcosystemTests.cs)、
+布局矩阵及调用方差分测试位于保留代码套件的 [BundleLayoutTests.cs](../../tests/KeptCode/TiaMcp.KeptCode.Tests/BundleLayoutTests.cs)、
+[EcosystemTests.cs](../../tests/KeptCode/TiaMcp.KeptCode.Tests/EcosystemTests.cs)，引擎套件的
 [EngineBundleLayoutTests.cs](../../tests/Engine/TiaMcp.Engine.Tests/EngineBundleLayoutTests.cs) 和 Studio 的
 [Core 布局测试](../../tests/Studio/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs)、
 [GUI 布局测试](../../tests/Studio/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs)，覆盖安装、开发输出、worktree、CI、仅 runtime、嵌套暂存、
 空格/中文/尾分隔符、缺文件及显式覆盖。
 Foundation 的 [BundleRootTests.cs](../../tests/FoundationHost/TiaMcp.FoundationHost.Tests/BundleRootTests.cs)
-覆盖六个 release-key、相邻版本文件、默认 worker 及显式 `--worker-exe`。
+覆盖八个 release-key、相邻版本文件、默认 worker、显式 `--worker-exe`，以及 V20/V21 拒绝已退役的 `--engine-*` 选项。
 
 G7-1 已将 `GetOpennessGuidance`、`GetV21EcosystemCatalog` 和 bin 布局的 `CheckProductUpdate` 加入 P0-06。
 G7-3 的仓库外交付包比较保持原始响应一致（质量 PDF 因缺少 ReportLab 未验证）；G7-4 的九项重定位比较只存在时间字段差异。
@@ -306,7 +307,7 @@ G7-5 比较了 1,921 份 Studio 重定位结果；G7-6 在 V20/V21 各完成 75 
 
 ## 审计链与调用日志保留（P6-46）
 
-V20/V21 引擎与 Foundation MCP 宿主记录目录中分类为写操作的请求、开始和结束；结束保留 V4 的
+八版 Foundation MCP 宿主记录目录中分类为写操作的请求、开始和结束；结束保留 V4 的
 `meta.outcome`。预览仍按工具的写分类记录，只读工具不记录。CallTool 目标及批次写项分别记录；未执行项
 保留 `rejected-before-operation`，无法读取 V4 结果或调用异常离开边界时记 `unknown`。不记录参数、返回业务内容、
 凭据或原生对象。审批 API 提供 granted/denied/timeout 与开关变化，审批流程由 P6-44 接入。

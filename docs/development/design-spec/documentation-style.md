@@ -161,13 +161,13 @@ MCP 工具描述、参数说明和错误消息不属于本规范，它们的语�
 | MCP 宿主 | 宿主（MCP 宿主进程）；指程序时写 FoundationHost | MCP host；FoundationHost | `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>` | 主机、Foundation 主机、基础宿主、基础引擎、PLC 基础引擎、foundation host（小写）、LegacyHost（只作代码名） | 八个版本都用同一个宿主程序 |
 | 宿主机 | 宿主机 | host computer | 不适用 | 宿主、主机（指虚拟机外的电脑时） | 只指运行虚拟机的物理电脑，与“宿主”严格区分 |
 | worker | worker（总称） | worker | 不适用 | 工作进程、子进程（作术语时） | 由宿主为每个 MCP 会话启动的 net48 进程 |
-| PLC worker | PLC worker | PLC worker | `runtime/v<发布键>/worker/TiaMcp.PlcWorker.<发布键>.exe` | 基础 worker、Foundation worker（混用） | V14 SP1–V19，STA 线程 |
-| 引擎 worker | 引擎 worker | engine worker | `runtime/v20/worker/TiaMcp.Engine.V20.exe --engine-worker`（V21 同理） | 完整引擎（指运行形态时）、full engine、引擎宿主 | V20/V21，MTA 线程；同一 EXE 也是 V20/V21 的 CLI |
-| 引擎 | 引擎 | engine | `TiaMcp.Engine.V20.exe`、`TiaMcp.Engine.V21.exe` | 完整引擎 | 只指这两个程序（worker 模式和 CLI） |
-| V20/V21 专有工具 | V20/V21 专有工具 | V20/V21-only tools | 不适用 | 完整引擎工具 | 由引擎代码在引擎 worker 中执行，逐族移入 Foundation 适配器 |
+| PLC worker | PLC worker | PLC worker | `runtime/v<发布键>/worker/TiaMcp.PlcWorker.<发布键>.exe` | 基础 worker、Foundation worker（混用） | 八个版本；V14 SP1–V19 为 STA 线程，V20/V21 为 MTA 线程 |
+| 引擎 worker | 引擎 worker | engine worker | `TiaMcp.Engine.V20.exe --engine-worker`（V21 同理） | 完整引擎（指运行形态时）、full engine、引擎宿主 | 已退役：P8-04j2 起 V20/V21 也使用 PLC worker，交付包不含引擎；只在历史记录或仓库交叉检查中出现 |
+| 引擎 | 引擎 | engine | `TiaMcp.Engine.V20.exe`、`TiaMcp.Engine.V21.exe` | 完整引擎 | 只指这两个程序；不再交付，只作为 `bin-build/engine-compat` 下的兼容副本供仓库交叉检查，由 P8-04l 删除 |
+| V20/V21 专有工具 | V20/V21 专有工具 | V20/V21-only tools | 不适用 | 完整引擎工具 | 35 个能力族已移入 Foundation 适配器，原生调用在 PLC worker 中执行 |
 | Foundation 适配器 | Foundation 适配器 | Foundation adapters | `TiaMcp.Adapter.<发布键>.dll`、`src/Adapters` | 共享适配器、Foundation 代码（混用） | 按发布键编译八次 |
 | 能力族 | 能力族（F01–F35） | capability family | `PortedFamilies` | 族、工具族（混用） | 已移入适配器的称“已移植族” |
-| 工具目录 | 工具目录 | tool catalog | `tools/list`、`tool-catalog.json` | 工具清单（指运行时目录时） | lite 档、full 档 |
+| 工具目录 | 工具目录 | tool catalog | `tools/list` | 工具清单（指运行时目录时） | lite 档、full 档；V20/V21 的 `tool-catalog.json` 已随引擎退出交付包 |
 | lite 档 / full 档 | lite 档、full 档 | lite profile、full profile | `--profile full`、`TIA_MCP_PROFILE` | 精简模式、完整模式 | 只有 V20/V21 有 lite 档 |
 | MCP 会话 | MCP 会话 | MCP session | 不适用 | 连接、会话（与 TIA 会话混用时） | 每个 MCP 会话一个 worker |
 | 绑定 | 绑定（工程绑定） | binding | `ConnectPortal`、`AttachOpenProject` | 连接工程 | 先连接 TIA 进程，再附着工程 |

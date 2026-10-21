@@ -7,12 +7,12 @@
 - [新手使用指南](getting-started/beginners.zh-CN.md)：安装准备、本机或虚拟机连接、选择 PLC、Studio 操作和首次 SCL 导入编译。
 - [配置指南](getting-started/configuration.md)：客户端、连接方式、升级和排错。
 - [Claude Code 插件安装](getting-started/plugin.md)：安装插件、共用工作台交付包和选择 TIA 版本。
-- [CLI 指南](getting-started/cli.md)：V20/V21 的命令行生成、修改、导入导出和编译。
+- [CLI 指南](getting-started/cli.md)：八版宿主的诊断、配置、审计校验和伴随环境命令，以及已退役工程命令的替代入口。
 - [Studio](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/Studio/README.md)：共享 MCP 会话的工程操作页。
 
 ## 工具、版本与示例
 
-当前 4.0 产品入口为根 `TiaOpenness.exe` 和八版 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`；V20/V21 的完整工具目录由 `worker/` 子目录中的引擎 worker 提供。当前能力页说明 V4 结果、写入审批、审计位置和原生验收边界。
+当前 4.0 产品入口为根 `TiaOpenness.exe` 和八版 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`；八版宿主都为每个 MCP 会话启动 `worker/` 子目录中的 PLC worker，V20/V21 的完整工具目录也由该 worker 执行。当前能力页说明 V4 结果、写入审批、审计位置和原生验收边界。
 
 - [4.0 源码版本范围](reference/version-tools.md)（英文） · [生成的工具目录](reference/version-tool-catalog.md)（英文） · [生成的工具矩阵](reference/tool-matrix.md)
 - [当前能力与验收边界](reference/capabilities.md) · [运行时布局、日志和审计目录](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/runtime-layout.md)

@@ -4,13 +4,13 @@
 
 [当前交接](handoff.md) · [重构计划](refactor-plan.md) · [设计规范](design-spec/README.md) · [架构决策](decisions/README.md)
 
-本页说明后续方向。任务及状态只在重构计划维护；已合并实现见当前交接和 Git 历史。4.0 在阶段 7、8 完成并通过最终八版真机验收后发布，依据 [ADR 0013](decisions/0013-release-4-0-after-phases-7-and-8.md)。
+本页说明后续方向。任务及状态只在重构计划维护；已合并实现见当前交接和 Git 历史。4.0 在阶段 7、8 完成后发布，依据 [ADR 0013](decisions/0013-release-4-0-after-phases-7-and-8.md)；我们不做真机验收，4.0 先以 GitHub 预发布交给其他用户测试，见 [ADR 0020](decisions/0020-prereleases-tested-by-users.md)，正式版的放行条件尚待维护者决定。
 
 ## 八版统一架构
 
-八版使用 FoundationHost，每个 MCP 会话一个 worker，工具按各版官方 API 注册。B1–B7 和硬件地址样板已合并；剩余在线、运行时、Unified 和选件能力按[移植方案](phase8-port-plan.md)继续迁入 Foundation 适配器。所有族迁完后才退役引擎 worker，见 [ADR 0009](decisions/0009-port-v20-v21-tools-to-foundation-adapters.md)。数量不拉平，见 [ADR 0014](decisions/0014-tool-counts-follow-official-api.md)。
+八版使用 FoundationHost，每个 MCP 会话一个 PLC worker，工具按各版官方 API 注册。35 个能力族（B1–B12）已按[移植方案](phase8-port-plan.md)全部迁入 Foundation 适配器；P8-04j2 起 V20/V21 也使用 PLC worker，交付包不再包含引擎，引擎兼容副本由 P8-04l 删除，见 [ADR 0009](decisions/0009-port-v20-v21-tools-to-foundation-adapters.md)。数量不拉平，见 [ADR 0014](decisions/0014-tool-counts-follow-official-api.md)。
 
-2026-10-18 许可决定：六个 `Siemens.Collaboration.Net` 目标码程序集不得再分发。P8-76 从八版 PlcWorker 移除它们，改用公开 Windows API 查询当前令牌与本机直接组成员、经既有确认路径提权添加当前用户；加入后注销重登才生效。令牌继续决定就绪状态。引擎仍携带六个 DLL，待 P8-04l 删除；其残留继续阻塞 4.0 发布。结果文字与成员资格语义的审查见 [P8-04 设计](design/p8-04-engine-retirement.md)许可行及 `bin-build/refactor/P8-76.result.md`。
+2026-10-18 许可决定：六个 `Siemens.Collaboration.Net` 目标码程序集不得再分发。P8-76 从八版 PlcWorker 移除它们，改用公开 Windows API 查询当前令牌与本机直接组成员、经既有确认路径提权添加当前用户；加入后注销重登才生效。令牌继续决定就绪状态。交付包不再包含这六个程序集：`delivery-files.json` 的 `exclude` 规则对八个发布键都排除它们，`Check-BundleLayout.py` 检查这一点；P8-04j2 起交付包也不再含引擎。因此它们不再阻塞 4.0 交付。剩余的包引用只在引擎兼容副本的工程（`src/Engine/TiaMcp.Engine.V20.csproj`、`TiaMcp.Engine.V21.csproj`）中，随 P8-04l 删除。结果文字与成员资格语义的审查见 [P8-04 设计](design/p8-04-engine-retirement.md)许可行及 `bin-build/refactor/P8-76.result.md`。
 
 ## 工作台与工程生成
 

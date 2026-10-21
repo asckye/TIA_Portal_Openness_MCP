@@ -61,4 +61,4 @@ Release 构建没有关闭覆盖的开关。普通 Debug 编译保留原调试�
 
 ## 每会话 worker 与诊断
 
-八版由 FoundationHost 管理 MCP 传输、认证和诊断，每个会话拥有一个 worker。V20/V21 引擎 worker 使用协议 2 Engine 配置；旧隔离开关已删除。调用边界日志和 worker 故障处理分别提供定位证据和代次失效，不保证 TIA 服务端稳定。超时预算与不重放规则见 [ADR 0008](decisions/0008-worker-timeouts-and-faults.md)，恢复步骤见[worker 指南](../guides/openness-worker-isolation.md)。八版都使用 TIA 进程租约，见 [ADR 0011](decisions/0011-tia-process-lease-on-all-releases.md)。
+八版由 FoundationHost 管理 MCP 传输、认证和诊断，每个会话拥有一个 worker。P8-04j2 起八版都使用 PLC worker，经协议 2 的 `adapter.*` 调用；Engine 配置只留给仓库交叉检查的引擎兼容副本。旧隔离开关已删除。调用边界日志和 worker 故障处理分别提供定位证据和代次失效，不保证 TIA 服务端稳定。超时预算与不重放规则见 [ADR 0008](decisions/0008-worker-timeouts-and-faults.md)，恢复步骤见[worker 指南](../guides/openness-worker-isolation.md)。八版都使用 TIA 进程租约，见 [ADR 0011](decisions/0011-tia-process-lease-on-all-releases.md)。

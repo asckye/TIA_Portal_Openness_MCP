@@ -25,13 +25,13 @@
 
 1. 从[发布页](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest)下载交付包 ZIP 和同名 `.sha256`。GitHub 的 `Source code` 压缩包不含运行二进制。
 2. 完整解压，建议放在固定位置，例如 `D:\TIA-MCP`。打开后应能看见 `TiaOpenness.exe`、`runtime`、`docs`、`reference` 和 `manifest`。如果外面还有一层同名文件夹，继续进入这一层；下文的“包根目录”指能看见这些内容的文件夹。
-3. 在安装 TIA 的电脑上检查下面的依赖。不要只复制引擎或工作台的 EXE，它们需要同目录下的 DLL、适配器和示例文件。
+3. 在安装 TIA 的电脑上检查下面的依赖。不要只复制宿主或工作台的 EXE，它们需要同目录下的 DLL、适配器和示例文件。
 4. 用 TIA 打开一个练习工程，确认 TIA 自己能正常查看和编译。首次练习建议使用工程副本，并只打开这一份目标工程。
 
 | 使用内容 | 需要提前安装 |
 |---|---|
 | 所有真实工程操作 | 对应版本的 TIA Portal、TIA Openness，以及工程所需的 Siemens 产品和许可证 |
-| PLC worker 和 V20/V21 引擎 worker | .NET Framework 4.8（Windows 10 1903 及以后已自带，更早的系统需安装） |
+| 八版 PLC worker | .NET Framework 4.8（Windows 10 1903 及以后已自带，更早的系统需安装） |
 | 八版 MCP 宿主、工作台（包含配置页面） | 无需安装：.NET 10 运行时已随包附带（`runtime/dotnet`）；实际工程操作还需要对应 TIA/Openness |
 
 如需检查下载完整性，在 ZIP 所在文件夹运行下面的命令，把 `Hash` 与 `.sha256` 文件中的哈希值比较：
@@ -61,7 +61,7 @@ V14 SP1–V19 提供 PLC 基础工具；V20/V21 提供V20/V21，包含更多 HMI
 3. 选择 TIA 版本，选择 **自动检测**。没找到时，选择 **浏览**，选择 TIA 安装根目录，例如 `C:\Program Files\Siemens\Automation\Portal V21`，不要选它下面的 `Bin`。
 4. 在 AI 客户端卡片中，选择自己实际安装、准备使用的客户端。选择所选客户端的说明，确认卡片对应的软件；模型品牌名称不一定就是聊天网页或桌面 App。
 5. 完全退出该 AI 客户端，选择 **写入客户端配置**，查看写入结果。
-6. 重新启动 AI 客户端，新建会话。MCP 服务名是 `tia-portal`。客户端会自动启动对应引擎，本机模式不需要填写 IP、密钥或手动选择启动服务。
+6. 重新启动 AI 客户端，新建会话。MCP 服务名是 `tia-portal`。客户端会自动启动对应版本的宿主，本机模式不需要填写 IP、密钥或手动选择启动服务。
 
 ### 情况 B：TIA 在虚拟机，AI 在宿主机
 
@@ -210,12 +210,12 @@ V14 SP1 的生成 API 不返回生成对象列表，因此应查看导入前后�
 
 ### V20/V21 服务启动与隔离
 
-V20/V21 MCP 服务即使没有检测到 TIA、安装版本与引擎不匹配，或当前用户尚未加入 `Siemens TIA Openness` 组，也会保持服务启动，让 AI 读取诊断和工具目录。`InitializeEnvironment` 与环境诊断会说明原因和修复步骤；需要 TIA 的调用会返回 `RESOURCE_UNAVAILABLE`，并标记操作尚未开始。先按提示安装对应版本及 Openness，或把当前用户加入本机 Openness 组并注销、重新登录。
+V20/V21 MCP 服务即使没有检测到 TIA、安装版本与宿主不匹配，或当前用户尚未加入 `Siemens TIA Openness` 组，也会保持服务启动，让 AI 读取诊断和工具目录。`InitializeEnvironment` 与环境诊断会说明原因和修复步骤；需要 TIA 的调用会返回 `RESOURCE_UNAVAILABLE`，并标记操作尚未开始。先按提示安装对应版本及 Openness，或把当前用户加入本机 Openness 组并注销、重新登录。
 
-八个版本都由 FoundationHost 提供 MCP，每个 MCP 会话使用一个 worker。V14 SP1–V19 使用 PLC worker，V20/V21 使用引擎 worker；隔离开关 `--isolate-openness` 和 `--no-isolate-openness` 已删除。使用工作台生成的宿主命令，无需选择隔离模式。
+八个版本都由 FoundationHost 提供 MCP，每个 MCP 会话使用一个 PLC worker；隔离开关 `--isolate-openness` 和 `--no-isolate-openness` 已删除。使用工作台生成的宿主命令，无需选择隔离模式。
 
 worker 超时预算默认为 120 秒，每个代次的首次附着为 300 秒，编译、传输、导入导出、归档和库更新为 30 分钟。可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 设置分类预算，`--worker-timeout-seconds` 设置默认预算。派发前可以取消；派发后等待真实结果，超时或通道故障不会重放原生操作。
 
-V20/V21 用 `GetOpennessWorkerStatus` 查看 worker 代次、活动调用和故障。发生结果未知时先检查 TIA 工程及调用日志，再用 `DisconnectPortal` 恢复：空闲 worker 干净分离，忙碌或丢失的 worker 结束后须重启 TIA。也可显式使用 `RestartOpennessWorker` 重启当前会话的 worker；重新连接后必须再次绑定工程。详见[worker 与恢复](../guides/openness-worker-isolation.md)。
+用 `GetOpennessWorkerStatus` 查看 worker 代次、活动调用和故障（八个版本都提供，返回字段按版本略有不同）。发生结果未知时先检查 TIA 工程及调用日志，再用 `DisconnectPortal` 恢复：空闲 worker 干净分离，忙碌或丢失的 worker 结束后须重启 TIA。也可显式使用 `RestartOpennessWorker` 重启当前会话的 worker；重新连接后必须再次绑定工程。详见[worker 与恢复](../guides/openness-worker-isolation.md)。
 
-八版 MCP 均由 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>` 启动。V20/V21 的完整目录与引擎 worker 自动从 `worker/` 子目录加载，保持完整解压包即可。
+八版 MCP 均由 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>` 启动。宿主自动使用 `worker/` 子目录中的 PLC worker，保持完整解压包即可。

@@ -1,6 +1,6 @@
 # TIA VCI 看门狗
 
-此可选 .NET 10 file-based app 定期将已打开工程的 VCI 内容导出到专用 Git 工作区，写变更日志并创建本地提交。它仅用于 V20/V21 完整引擎路线，通过所选发布包的 FoundationHost 通信，不进入发布包。
+此可选 .NET 10 file-based app 定期将已打开工程的 VCI 内容导出到专用 Git 工作区，写变更日志并创建本地提交。它仅用于 V20/V21，通过所选发布包的 FoundationHost 通信，不进入发布包。
 
 1. 准备 Git、.NET 10、匹配版本的 TIA 和解压的发布包。
 2. 在 TIA 打开测试工程，建立 VCI 工作区映射；用当前宿主的 `GetToolUsage` 核对参数。

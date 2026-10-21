@@ -12,7 +12,7 @@
 | `TiaPortalOpenness.Offline.slnx` | 40 个不需要 Siemens 程序集的工程，包含 CI 离线套件和 Studio 客户端；完整构建需要 Windows/.NET 10 SDK |
 | `src/Shared/TiaPublicApi.props` | 按精确版本查找本机 PublicAPI 的共享路径表；由需要 SDK 的工程显式导入并由 .NET release tool 收录源码哈希 |
 | `Version.props` | 产品发布版本的唯一来源；引擎、基础宿主、Studio 显式导入，配置器构建脚本读取 |
-| `src/Engine`、`src/FoundationHost`、`src/PlcWorker` | V20/V21 引擎 worker 和 CLI、八版 FoundationHost 宿主、V14 SP1–V19 PLC worker |
+| `src/Engine`、`src/FoundationHost`、`src/PlcWorker` | V20/V21 引擎（不再交付，只构建为仓库交叉检查的兼容副本，P8-04l 删除）、八版 FoundationHost 宿主（含命令行）、八版 PLC worker |
 | `src/EngineHost` | V20/V21 宿主包装链库；宿主实现和链接源集中在这里 |
 | `src/Adapters`、`src/Adapters.Contracts`、`src/OnlineChannels`、`src/WorkerChannel` | 类型化适配器、契约、运行通道与进程通道 |
 | `src/Logic` | net48/net10.0 纯逻辑库；共享 XML/JSON Builders、MCP 策略和运行通道数据转换，不引用 Siemens 或 MCP SDK |
@@ -55,10 +55,10 @@ Siemens PublicAPI 是本机构建输入，默认查找仓库根目录下的八�
 
 引擎与 Studio 使用 [`BundleLayout.cs`](../../src/Shared/BundleLayout.cs) 从已知安装/开发输出定位
 含 `manifest/package-manifest.json` 的包根。完整包放在仓库外仍可使用，无需 `.git`。
-指南、Python 桥接和 CLI 模板相对包根读取；V21 生态目录直接嵌入 V20/V21 引擎，随包 JSON 仅是参考副本。
+指南、Python 桥接和 CLI 模板相对包根读取；V21 生态目录嵌入宿主程序集 `TiaMcp.EngineHost`（引擎兼容副本同样嵌入），随包 JSON 仅是参考副本。
 包根只由 `--bundle-root`、`TIA_MCP_BUNDLE_ROOT` 或已知安装锚点决定（见[运行时布局](runtime-layout.md)）；旧 `TIA_MCP_REPOSITORY_ROOT` 已删除。
 
-安装引擎在 `runtime/<RuntimeDirectory>`；Studio 在 `runtime/studio`，原生桥接及其按版本的适配器在
+安装的宿主在 `runtime/<RuntimeDirectory>`，PLC worker 在其 `worker` 子目录；Studio 在 `runtime/studio`，原生桥接及其按版本的适配器在
 `runtime/studio/bridge` 及其 `adapters` 子目录。版本路径取自 `TiaVersionCatalog`，生成的二进制不列入交付资源代码表。
 开发输出候选、各调用方保留到 4.0 的兼容回退及新增资源流程见[运行时布局](runtime-layout.md)。
 新增调用方复用解析器，不新增仓库结构探测。D334 只迁移源码目录及路径引用；产品入口与运行资源布局已由 P6-36～39 完成。
@@ -101,9 +101,9 @@ Siemens PublicAPI 是本机构建输入，默认查找仓库根目录下的八�
 开发目录只维护当前入口。已失效的源代码候选页、一次性日期审计、旧机器状态和重复交接页由 Git
 历史保存；其有效结论并入当前架构、验证或限制页。机器可读 API 证据与官方示例语料继续保留。
 
-## 完整引擎源码
+## 引擎源码
 
-`src/Engine` 中的 `ModelContextProtocol/Tools` 声明工具，
+`src/Engine` 只构建为仓库交叉检查的兼容副本，不进入交付包，由 P8-04l 删除。其中的 `ModelContextProtocol/Tools` 声明工具，
 纯算法位于 `src/Logic/ModelContextProtocol/Builders`，引擎的 `ModelContextProtocol/Builders`
 保留依赖工程环境或原生调用的编排；`Siemens/Portal` 放工程调用，`Siemens/Hmi`
 放 HMI 访问层；`Runtime` 是 PLC/OPC UA/Web API/Open Pipe 通道，`Cli` 是命令入口。

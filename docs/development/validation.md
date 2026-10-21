@@ -238,7 +238,7 @@ Python 副本为后续批次依赖与对拍保留；批 8 删除临时 job。
 |---|---|
 | `dotnet run scripts/checks/Test-FoundationProxyIdentity.cs -- -WorkDir bin-build/proxy-identity` | 修改外部源规划、删除、批量导入身份检查后；编译实际生产方法，以新建但值相等的 API 代理验证身份语义，不需要 TIA/SDK |
 | `python -X utf8 scripts/checks/Test-Ecosystem.py` | 更新固定的 siemens-plc-tools 来源或 Python 桥接后；使用已装离线依赖的 Python，运行 plc-code、plc-iol、plc-trace 上游单元测试，不配置 live 端点 |
-| `python scripts/checks/Test-ToolUsage.py --foundation-host <host> --engine-v20 <exe> --engine-v21 <exe> --harness <TiaMcp.Engine.Harness.exe> --public-api-root <SDK-root> --evidence <new-worktree-dir> --coverage-output <json>` | 按 CLAUDE.md，在 `reference/tool-examples` 改动并运行生成器后，使用已构建的八版运行包检查用法检索和功能；完整八版范围必需，不连接 TIA |
+| `python scripts/checks/Test-ToolUsage.py --foundation-host <host> --plc-worker 20=<PlcWorker 20 夹具> --plc-worker 21=<PlcWorker 21 夹具> --public-api-root <SDK-root> --evidence <新的仓库内目录> --coverage-output <json>` | 按 CLAUDE.md，在 `reference/tool-examples` 改动并运行生成器后，使用已构建的八版运行包检查用法检索和功能；完整八版范围必需，不连接 TIA。V20/V21 的 PlcWorker SDK 夹具由 `dotnet run --project build-tools/release -- build-plc-worker-fixtures -PublicApiRoot <SDK-root>` 生成，默认位于 `bin-build/plc-worker-fixtures/sdk/bin/<发布键>/Release/net48/TiaMcp.PlcWorker.<发布键>.exe`；`--evidence` 必须是仓库内的新目录 |
 
 旧 LegacyOffline/Passive Python 检查由 `foundation` xUnit 套件中的
 OfflineBlockComposition、OfflineXmlBuilder、OfflineComposition、OfflineLadder、PassiveHostDiagnostics
@@ -547,18 +547,21 @@ python scripts/checks/Snapshot-ToolContracts.py compare --baseline manifest/cont
 只报告。基线只检查输入契约，不检查返回结构或原生语义。基础宿主优先加载 `runtime/dotnet` 中的随包运行时；
 只用开发输出且本机缺少 ASP.NET Core 10 时，抓取前把 `DOTNET_ROOT`/`DOTNET_ROOT_X64` 指向私有运行时。
 
-返回结构另用当前 V4 的 `manifest/contracts/v4/responses` 守护。先在当前 worktree 依次构建 Release 的 V20、V21
-（指定对应 `SiemensEngineeringDirectory`），再构建 TiaMcp.Engine.Harness 和 LegacyHost；`--exe` 指向这些新产物：
+返回结构另用当前 V4 的 `manifest/contracts/v4/responses` 守护。P8-04j2 起 V20/V21 与其他六版一样经 FoundationHost 抓取：先构建 Release 的
+FoundationHost，再用 `dotnet run --project build-tools/release -- build-plc-worker-fixtures -PublicApiRoot <SDK-root>` 构建 V20/V21 的
+PlcWorker SDK 夹具；八版的 `--exe` 都指向同一个宿主，V20/V21 另用 `--plc-worker` 指定夹具（与发布链 PLC 后继作业的参数相同，见
+`build-tools/release/PlcReleaseChecks.cs`）。发布候选还用 `bin-build/engine-compat` 下的引擎兼容副本经 `--engine-worker`、`--engine-catalog`
+做交叉比较，由发布工具组装参数，不需要手工运行。
 
-V20/V21 的 `sdk-only-fixture` response capture 应提供 `--harness`。TiaMcp.Engine.Harness 仅在 `protocol-host` 模式处理测试用 readiness 标记，
-把该 capture 进程设为已就绪；脚本仍创建临时 SDK 安装布局并执行与真实 EXE 相同的工具调用清单。产品默认审批保持开启，
-写操作会在派发前被拒绝。该标记只由测试 harness 读取，不会放宽真实 EXE 的安装或用户组要求；`--packaged-no-tia` 仍验证真实 EXE 的拒绝路径。
+V20/V21 经 PlcWorker 夹具抓取时，脚本为宿主进程设置仅测试用的 `TIA_MCP_PLC_WORKER_SDK_READY=1`（`--packaged-no-tia` 时不设置），
+并创建临时 SDK 安装布局，执行与真实 EXE 相同的工具调用清单。产品默认审批保持开启，写操作会在派发前被拒绝。该标记只在带
+`TiaMcpPlcWorkerSdkFixture=true` 程序集元数据的夹具 worker 中生效（`src/WorkerChannel/WorkerFaultInjection.cs`），不会放宽交付 worker
+的安装或用户组要求；`--packaged-no-tia` 仍验证真实 EXE 的拒绝路径。
 
 ```powershell
-$engine = 'src/Engine'
-$harness = 'tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe'
-$legacy = 'src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe'
-python scripts/checks/Snapshot-ToolResponses.py capture --repo-root . --public-api-root <SDK-root> --harness $harness --dotnet-root <private-ASP.NET-Core-10-root> --exe "14sp1=$legacy" --exe "15.1=$legacy" --exe "16=$legacy" --exe "17=$legacy" --exe "18=$legacy" --exe "19=$legacy" --exe "20=$engine/bin-v20/Release/net48/TiaMcp.Engine.V20.exe" --exe "21=$engine/bin/Release/net48/TiaMcp.Engine.V21.exe" --temp-root bin-build/responses-temp --output bin-build/responses
+$hostExe = 'src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe'
+$fixtures = 'bin-build/plc-worker-fixtures/sdk/bin'
+python scripts/checks/Snapshot-ToolResponses.py capture --repo-root . --public-api-root <SDK-root> --dotnet-root <private-ASP.NET-Core-10-root> --exe "14sp1=$hostExe" --exe "15.1=$hostExe" --exe "16=$hostExe" --exe "17=$hostExe" --exe "18=$hostExe" --exe "19=$hostExe" --exe "20=$hostExe" --exe "21=$hostExe" --plc-worker "20=$fixtures/20/Release/net48/TiaMcp.PlcWorker.20.exe" --plc-worker "21=$fixtures/21/Release/net48/TiaMcp.PlcWorker.21.exe" --temp-root bin-build/responses-temp --output bin-build/responses
 python scripts/checks/Snapshot-ToolResponses.py compare --baseline manifest/contracts/v4/responses --current bin-build/responses
 ```
 
@@ -578,12 +581,13 @@ Release 构建中的每个宿主检查都使用该次运行 temp 目录下独立
 
 真实机器 campaign、VM MCP probe、生产 MCP 生命周期和 VCI watcher 在执行前会提示：写入 campaign 期间保持 Workbench 打开以批准调用，或在 MCP 菜单关闭审批；这些客户端不绕过审批。
 
-`Test-LocalStability.py` 对 V20/V21 的普通/隔离进程、两种传输和 full/lite
-组合执行正常调用与错误后的恢复检查。默认每组合 50 轮、HTTP 8 并发；
-实际范围和结果由完整构建记录保存。
+`Test-LocalStability.py` 对 V20/V21 的 FoundationHost 与会话 worker、两种传输和 full/lite
+组合执行正常调用与错误后的恢复检查。默认每组合 50 轮、HTTP 8 并发（发布链另以 `--concurrency 16` 运行隔离档）；
+实际范围和结果由完整构建记录保存。`--exe` 是宿主，worker 用 `--plc-worker`（交付路径的 PlcWorker SDK 夹具）或
+`--engine-worker` 加 `--engine-catalog`（只用于引擎兼容副本的交叉检查）二选一，脚本拒绝同时给出或都不给：
 
 ```powershell
-python scripts/checks/Test-LocalStability.py --exe runtime/v21/worker/TiaMcp.Engine.V21.exe --major 21 --public-api sdk/TIA_V21_PublicAPI/V21/net48 --host-harness tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe --rounds 50 --output bin-build/stability-v21
+python scripts/checks/Test-LocalStability.py --exe runtime/v21/TiaMcp.FoundationHost.exe --major 21 --public-api sdk/TIA_V21_PublicAPI/V21/net48 --host-harness tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe --plc-worker bin-build/plc-worker-fixtures/sdk/bin/21/Release/net48/TiaMcp.PlcWorker.21.exe --rounds 50 --output bin-build/stability-v21
 ```
 
 输出目录必须不存在。脚本仅清理它创建的服务，不连接 TIA，不解禁原生交叉引用。
@@ -611,12 +615,12 @@ CI 使用 `check-script-tool-calls` 检查 C# 与 JSON 计划，并暂时保留 
 python scripts/checks/Check-ScriptToolCalls.py --self-test
 python scripts/checks/Check-ScriptToolCalls.py
 dotnet run --project build-tools/release -- test-suites -Suite source-contracts
-python scripts/checks/Test-CampaignInputs.py --exe src/Engine/bin/Release/net48/TiaMcp.Engine.V21.exe --public-api <V21-net48-SDK> --host-harness tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe --major 21 --output bin-build/campaign-inputs
+python scripts/checks/Test-CampaignInputs.py --exe runtime/v21/TiaMcp.FoundationHost.exe --public-api <V21-net48-SDK> --plc-worker bin-build/plc-worker-fixtures/sdk/bin/21/Release/net48/TiaMcp.PlcWorker.21.exe --major 21 --output bin-build/campaign-inputs
 ```
 
-最后一个命令用离线 STDIO 目录和引擎的实际 `InputSchema` 读取已生成的 `plan_*.json` 并校验全部 campaign 输入，不再执行计划生成器，也不派发计划中的调用；输出目录必须不存在。显式参数拒绝与原生前置条件拒绝分别统计。campaign 的历史 ledger 只作为 V3 证据，工具名索引迁移不代表 V4 VM 验收。
+最后一个命令用离线 STDIO 目录和宿主的实际 `InputSchema` 读取已生成的 `plan_*.json` 并校验全部 campaign 输入，不再执行计划生成器，也不派发计划中的调用；输出目录必须不存在。显式参数拒绝与原生前置条件拒绝分别统计。campaign 的历史 ledger 只作为 V3 证据，工具名索引迁移不代表 V4 VM 验收。
 
-`check-all` 在 V20/V21 生产引擎上运行 `descriptor-catalog-only`、campaign 输入检查和全部八个 `*-candidate-only current` 分支。
+`check-all` 在 V20/V21 的引擎兼容副本上运行 `descriptor-catalog-only`、campaign 输入检查和全部八个 `*-candidate-only current` 分支，并在 FoundationHost 与 PlcWorker 上运行对应的后继作业（P8-04k3a、P8-04k3b）。
 审查者的 Harness 清单也包含 `descriptor-catalog-only`、`check-modes-self-test` 和两版 campaign 命令；生产模式不可用测试策略替代。
 execution 表必须与完整引擎目录及 host 声明的并集精确相等，逐项保留 ownership、名称及 SDK Tool 引用检查。
 campaign 每一步都进入 `inputs.json`；缺少工具的版本在计划中显式声明 `applicability.<release>.applicable=false` 和 `reason`，

@@ -16,7 +16,7 @@
 4. 选择实际使用的客户端卡片，完全退出该客户端，选择 **写入客户端配置** 并检查结果。
 5. 重启客户端、新建会话，使用服务 `tia-portal`。
 
-本机使用 stdio，由客户端启动对应引擎，不需要 IP、密钥或手动启动 HTTP 服务。所选版本应与实际 TIA 和工程匹配，选择器不转换工程版本。
+本机使用 stdio，由客户端启动对应版本的宿主，不需要 IP、密钥或手动启动 HTTP 服务。所选版本应与实际 TIA 和工程匹配，选择器不转换工程版本。
 
 4.0 的八版启动命令由统一产品表生成：`runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`。
 八个版本都自动发现 `worker/TiaMcp.PlcWorker.<发布键>.exe`；无需配置 worker 路径。参数包含 `--bundle-root <绝对包根>`、准确版本和 TIA 安装路径；缺少所选版本的宿主或 worker 时拒绝写入，不切换版本。工作台本身也接受 `--bundle-root <绝对包根>` 或 `TIA_MCP_BUNDLE_ROOT`：命令行优先，然后是环境变量，最后是正式安装/开发输出位置。根必须包含 `manifest/package-manifest.json`；显式根无效立即报错。
@@ -77,11 +77,11 @@
 
 ### MCP 会话与 worker
 
-八个版本都由 FoundationHost 提供 MCP，每个 MCP 会话使用一个 worker。V14 SP1–V19 使用 PLC worker，V20/V21 使用引擎 worker；隔离开关 `--isolate-openness` 和 `--no-isolate-openness` 已删除。使用工作台生成的宿主命令，无需选择隔离模式。
+八个版本都由 FoundationHost 提供 MCP，每个 MCP 会话使用一个 PLC worker（`runtime/v<发布键>/worker/TiaMcp.PlcWorker.<发布键>.exe`）；交付包不再包含 V20/V21 引擎。隔离开关 `--isolate-openness` 和 `--no-isolate-openness` 已删除。使用工作台生成的宿主命令，无需选择隔离模式。
 
 worker 超时预算默认为 120 秒，每个代次的首次附着为 300 秒，编译、传输、导入导出、归档和库更新为 30 分钟。可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 设置分类预算，`--worker-timeout-seconds` 设置默认预算。派发前可以取消；派发后等待真实结果，超时或通道故障不会重放原生操作。
 
-V20/V21 用 `GetOpennessWorkerStatus` 查看 worker 代次、活动调用和故障。发生结果未知时先检查 TIA 工程及调用日志，再用 `DisconnectPortal` 恢复：空闲 worker 干净分离，忙碌或丢失的 worker 结束后须重启 TIA。也可显式使用 `RestartOpennessWorker` 重启当前会话的 worker；重新连接后必须再次绑定工程。详见[worker 与恢复](../guides/openness-worker-isolation.md)。
+用 `GetOpennessWorkerStatus` 查看 worker 代次、活动调用和故障（八个版本都提供，返回字段按版本略有不同）。发生结果未知时先检查 TIA 工程及调用日志，再用 `DisconnectPortal` 恢复：空闲 worker 干净分离，忙碌或丢失的 worker 结束后须重启 TIA。也可显式使用 `RestartOpennessWorker` 重启当前会话的 worker；重新连接后必须再次绑定工程。详见[worker 与恢复](../guides/openness-worker-isolation.md)。
 
 ## 工具显示与示例
 
@@ -157,7 +157,7 @@ MCP 的 `WRITE` / `ONLINE-WRITE` 实际执行默认等待工作台审批后才�
 
 作为 Claude Code 插件使用时，还会运行随包的 `runtime/tools/TiaMcp.WriteGuard.exe`；它记录审计并按环境设置控制在线写入。普通 GUI/MCP 连接不等于加载了该插件。具体工具执行参数与结果解释仍以 `GetToolUsage` 为准。
 
-手动本机 V21 配置见 [cursor.example.json](cursor.example.json)，替换引擎绝对路径后使用。其他版本和远程模式优先由工作台生成，避免复制不匹配参数。
+手动本机 V21 配置见 [cursor.example.json](cursor.example.json)，替换 `TiaMcp.FoundationHost.exe` 的绝对路径后使用。其他版本和远程模式优先由工作台生成，避免复制不匹配参数。
 
 从源码构建时，兼容启动器位于 `src/Studio/Launcher/Launcher.cs`；构建入口与工作台资源位置见[仓库结构](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/repository-layout.md)。
 

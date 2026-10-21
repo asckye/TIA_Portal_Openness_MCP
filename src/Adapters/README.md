@@ -3,7 +3,7 @@
 Status: Current · Last checked: 2026-10-11, master `578a05ee`
 
 
-These eight peer projects compile native Foundation capabilities into version-specific typed libraries. FoundationHost uses the matching adapter through each session's worker on every release. V20/V21 retain an engine worker for capabilities still being ported. The old Studio extension surfaces remain until their retirement task. Each worker references exactly one selected adapter.
+These eight peer projects compile native Foundation capabilities into version-specific typed libraries. FoundationHost uses the matching adapter through each session's PLC worker on every release; since P8-04j2, V20/V21 use the PLC worker too. The old Studio extension surfaces remain until their retirement task. Each worker references exactly one selected adapter.
 Use `dotnet run --project build-tools/release -- build-multi-version` from the repository root to build, test and deploy
 the eight-version distribution. Native TIA acceptance remains pending.
 

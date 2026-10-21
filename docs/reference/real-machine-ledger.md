@@ -109,7 +109,7 @@ The current release property remains `workerIsolation.enabledByDefault=false` fo
 | P6-SOURCE PLC 路径/外部源 | **NOT RUN**；八版；G9 两版基线同时回放 | 唯一 PLC 空路径、多个 PLC 候选、非空错误名、结构名称映射和转义路径；读写选中同一目标；源导入/生成/删除顺序、精确名称/扩展名、缺失删除拒绝、批次故障；14sp1 observation 与其他版原生结果分列；切工程后缓存失效，未知写入不重放。 |
 | P6-COMPILE 编译/Safety | **NOT RUN**；八版普通 PLC；HMI/Safety 按能力 | 在线前提拒绝且无自动下线；每个编译入口目标范围和诊断树/根计数一致；本次 Safety 登录仅由本次结束，原有登录不退出；登录/编译/注销分别故障，保留清理证据及真实工程状态；不改变 MTA/STA。 |
 | P6-FALLBACK 原生回退 | **NOT RUN**；20/21 在线下载及 VCI；其他版共享 VCI 路径按能力 | ApplyConfiguration 失败后不下载或换路线；自动下线分支改为前置条件拒绝；传输/通道每个中断点记录调用是否发出与真实结果；unknown 要求重建会话、不自动重放；VCI 仅显式允许且证明只读对象失效时重取一次，已写或未知时停止。 |
-| P6-PRODUCT 新产品启动/绑定 | **NOT RUN**；八版引擎/宿主与 Studio | 仓库外完整包从根 TiaOpenness.exe 打开 Studio；选择版本启动正确新 EXE/worker/adapter；逐版 hello 身份与绑定、读取、显式断开；新目录日志可关联，安装目录只读；不借用历史机器/PID 授权。 |
+| P6-PRODUCT 新产品启动/绑定 | **NOT RUN**；八版宿主、PLC worker 与 Studio | 仓库外完整包从根 TiaOpenness.exe 打开 Studio；选择版本启动正确新 EXE/worker/adapter；逐版 hello 身份与绑定、读取、显式断开；新目录日志可关联，安装目录只读；不借用历史机器/PID 授权。 |
 
 ### 4.0 纳入与延期（P6-42）
 
@@ -138,7 +138,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 
 | 门槛 | 必须完成的机器步骤 |
 |---|---|
-| P6-PRODUCT（14sp1、15.1、16、17、18、19、20、21） | 用仓库外的完整 4.0 候选包启动根 `TiaOpenness.exe`；逐版选择对应 TIA；核对 hello 的 releaseKey 和新 Engine/worker/adapter 身份；连接该 VM 当前 TIA 进程并显式绑定测试工程副本；读取工程树和一个 PLC 对象；显式断开并确认本次 worker/桥接退出；检查新目录日志可关联、只读安装无包内写入，且不借用历史 PID/机器授权。 |
+| P6-PRODUCT（14sp1、15.1、16、17、18、19、20、21） | 用仓库外的完整 4.0 候选包启动根 `TiaOpenness.exe`；逐版选择对应 TIA；核对 hello 的 releaseKey 和新 FoundationHost/PlcWorker/adapter 身份；连接该 VM 当前 TIA 进程并显式绑定测试工程副本；读取工程树和一个 PLC 对象；显式断开并确认本次 worker/桥接退出；检查新目录日志可关联、只读安装无包内写入，且不借用历史 PID/机器授权。 |
 | P4-E1 / P4-E2 Foundation worker（14sp1、15.1、16） | 每版用该版本真实 TIA 打开工程副本；启动 net48 worker，核对协议 2 hello 身份；读 PLC 列表和块；核对错误后会话仍可用；显式断开并确认 worker 退出。 |
 | P4-F Studio bridge（14sp1、16、21） | 用 Studio 连接对应真实 TIA、打开工程副本、读取块列表、导出一个块；触发一次已处理错误并确认原错误文本及会话恢复；断开并确认桥接退出。 |
 | G3 / P4-G2 Studio 共享会话路径（八版） | 对 14sp1、15.1、16、17、18、19、20、21 分别用同版工程副本比较默认路径与 `TiaSharedAdapterPaths` 开启路径：附加/启动、打开/复用、保存/关闭/断开、PLC/HMI 导航、块/类型/变量表、SimaticML/源导入导出、软件/设备编译与 VCI（按版本/服务能力）；核对原生调用顺序、参数、STA、进度回调、错误/部分成功、句柄失效和清理。 |

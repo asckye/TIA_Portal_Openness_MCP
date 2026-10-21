@@ -1,6 +1,6 @@
 # Openness workers and recovery
 
-Every MCP session has a version-matched worker. All eight releases start `runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>`; V14 SP1–V19 use a PLC worker and V20/V21 use an engine worker. The host owns MCP transport, authentication, approvals and diagnostics. Workers serialize native calls on their owner thread: STA for V14 SP1–V19, MTA for V20/V21.
+Every MCP session has a version-matched worker. All eight releases start `runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>`, and the host starts the release's PLC worker, `runtime/v<key>/worker/TiaMcp.PlcWorker.<key>.exe`. The package no longer contains the V20/V21 engine. The host owns MCP transport, authentication, approvals and diagnostics. Workers serialize native calls on their owner thread: STA for V14 SP1–V19, MTA for V20/V21.
 
 `--isolate-openness` and `--no-isolate-openness` have been removed. Use the Workbench-generated FoundationHost command. Worker separation is part of the architecture and has no on/off switch.
 

@@ -37,13 +37,13 @@
 | V21 | 511 | 84 |
 <!-- generated:tool-counts:end -->
 
-V20/V21 默认使用 lite 档，其余通过 `FindTools` 查找、`CallTool` 调用，也可配置 `--profile full`。八版统一入口为 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`；V20/V21 自动发现 `worker/` 下的引擎与工具目录，八版共有工具采用同一份 Foundation 代码、参数和用法。准确范围见[逐版本工具说明](docs/reference/version-tools.md)及当前服务的 `tools/list`。V14 SP1、V15.1 不等于原版 V14、V15。
+V20/V21 默认使用 lite 档，其余通过 `FindTools` 查找、`CallTool` 调用，也可配置 `--profile full`。八版统一入口为 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`；宿主自动使用 `worker/` 下该版本的 PLC worker（V20/V21 的完整目录也由它执行），八版共有工具采用同一份 Foundation 代码、参数和用法。准确范围见[逐版本工具说明](docs/reference/version-tools.md)及当前服务的 `tools/list`。V14 SP1、V15.1 不等于原版 V14、V15。
 
 AI 调用不熟悉的工具时，用 `GetToolUsage(toolName, operation)` 获取本版参数、示例和结果解释；用 `language` 查编程语言示例，用 `exampleId` 取完整源码或调用序列。全部工具共用这套示例入口，官方 API 模式与本项目封装示例分别标明。
 
 ## 环境与验证
 
-按需安装对应版本的 TIA Portal、Openness 和许可证。工作台和宿主所需的 .NET 10 运行时已随包附带（`runtime/dotnet`）；Openness 桥接进程、PLC worker 及引擎 worker需要 .NET Framework 4.8（Windows 10 1903 及以后已自带）。具体文件位置见[运行目录](runtime/README.md)。
+按需安装对应版本的 TIA Portal、Openness 和许可证。工作台和宿主所需的 .NET 10 运行时已随包附带（`runtime/dotnet`）；Openness 桥接进程和 PLC worker 需要 .NET Framework 4.8（Windows 10 1903 及以后已自带）。具体文件位置见[运行目录](runtime/README.md)。
 
 八版本运行文件、工作台、协议、离线功能和官方 SDK/XSD 检查已有构建记录；新增功能的真实 TIA 工程验收仍为 **NOT RUN**。工具数量不等于完整覆盖所有 Siemens API，当前范围见[能力与验收说明](docs/reference/capabilities.md)。
 

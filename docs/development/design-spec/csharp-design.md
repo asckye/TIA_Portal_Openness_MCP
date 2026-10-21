@@ -266,8 +266,8 @@ Microsoft 基础：[托管与非托管线程（单元）](https://learn.microsof
 | 宿主 | 所属线程 | 位置 |
 |---|---|---|
 | PLC worker，V14 SP1–V19 | 进程主线程，`[STAThread]` | `src/PlcWorker/Program.cs`，`PlcLifecyclePolicy.OwnerApartment` |
-| PLC worker 的 V20/V21 构建（只作编译覆盖，不随包发布；P8-04 后启用） | `Main` 中新建的专用 MTA 线程 | 同上 |
-| 引擎 worker 与引擎 CLI，V20/V21 | MTA（`[MTAThread]`），Foundation 适配器与引擎代码共用这一线程，原生调用串行；`VerifyBinding` 拒绝非 MTA 线程 | `src/Engine/Program.cs`、`Portal.Binding.cs` |
+| PLC worker，V20/V21（P8-04j2 起随包发布并默认使用） | `Main` 中新建的专用 MTA 线程 | 同上 |
+| 引擎兼容副本，V20/V21（不随包发布，只供仓库交叉检查，P8-04l 删除） | MTA（`[MTAThread]`），Foundation 适配器与引擎代码共用这一线程，原生调用串行；`VerifyBinding` 拒绝非 MTA 线程 | `src/Engine/Program.cs`、`Portal.Binding.cs` |
 | Studio 桥接进程（迁移期遗留） | 进程 STA 主线程；`StudioThreadGuard` 拒绝跨线程与重入 | `src/Studio/Bridge/Program.cs`、`src/Adapters/Policy/StudioThreadGuard.cs` |
 
 | ID | 级别 | 规则 | 理由 | 依据 | 工具 |

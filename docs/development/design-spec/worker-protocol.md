@@ -4,7 +4,7 @@
 
 [架构概览](architecture.md) · [V4 协议](v4-protocol.md) · [历史适配器设计](../adapter-merge.md)
 
-本页承接阶段 4 设计中的协议 2 定义。线上协议以 `src/WorkerChannel` 的帧、状态机和各 profile 为准；MCP 对外信封与内部通道信封分开。Foundation 使用 `adapter.*`；V20/V21 引擎 worker 使用 Engine profile。旧引擎隔离协议已退役，旧 Studio profile 仅供待清理桥接使用。
+本页承接阶段 4 设计中的协议 2 定义。线上协议以 `src/WorkerChannel` 的帧、状态机和各 profile 为准；MCP 对外信封与内部通道信封分开。八版 PLC worker 使用 `adapter.*`（P8-04j2 起包括 V20/V21）；Engine profile 只供仓库交叉检查中的引擎兼容副本使用，P8-04l 删除。旧引擎隔离协议已退役，旧 Studio profile 仅供待清理桥接使用。
 
 ## 分帧与握手
 

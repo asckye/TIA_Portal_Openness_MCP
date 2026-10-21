@@ -1,6 +1,6 @@
 # 4.0 架构概览
 
-状态：现行 · 最后核对：2026-10-11，master `3a227657`
+状态：部分过时（第 2、3、4 节，第 5.1、5.2、6.2、6.3、7 节中关于 V20/V21 引擎 worker 的组件、执行位置、线程、租约与代码位置描述仍是 P8-04j2 之前的状态，待逐项核对后改写）· 最后核对：2026-10-21，master `62ebf86e`（第 1 节、第 2.1 节和第 9 节）；其余部分为 2026-10-11，`3a227657`
 
 [设计规范索引](README.md) · [架构决策记录](../decisions/README.md)
 
@@ -9,8 +9,8 @@
 ## 1 一页概览
 
 - 八个 TIA Portal 版本（发布键 `14sp1`、`15.1`、`16`、`17`、`18`、`19`、`20`、`21`）使用同一个 MCP 宿主程序：`runtime/v{发布键}/TiaMcp.FoundationHost.exe --release-key {发布键}`（net10，随包 .NET 10 运行时）。宿主负责 MCP 传输、工具目录、参数校验、预检、审批、审计、调用日志和 Openness 通道。
-- 宿主为每个 MCP 会话启动一个 worker 进程（net48）。V14 SP1–V19 是 PLC worker `runtime/v{发布键}/worker/TiaMcp.PlcWorker.{发布键}.exe`，在 STA 所属线程上调用 Openness；V20/V21 是引擎 worker `runtime/v20|v21/worker/TiaMcp.Engine.V20|V21.exe --engine-worker`，在一个 MTA 所属线程上同时承载 Foundation 适配器和引擎代码，共用一个 TIA 连接。
-- 八版共有的工具和已移植的能力族在八个版本上使用同一份 Foundation 适配器代码（`TiaMcp.Adapter.{发布键}.dll`，按发布键编译八次）。尚未移植的 V20/V21 专有工具仍由引擎代码在引擎 worker 中执行。
+- 宿主为每个 MCP 会话启动一个 worker 进程（net48）。自 P8-04j2（`62ebf86e`）起八个版本都是 PLC worker `runtime/v{发布键}/worker/TiaMcp.PlcWorker.{发布键}.exe`；所属线程在 V14 SP1–V19 为 STA，在 V20/V21 为 MTA（`src/Adapters/Policy/PlcLifecyclePolicy.cs`），同一会话的全部原生调用共用一个 TIA 连接。交付包不再包含 V20/V21 引擎；引擎只作为 `bin-build/engine-compat` 下的私有兼容副本供仓库交叉检查，直到 P8-04l 删除。
+- 八版共有的工具和已移植的能力族在八个版本上使用同一份 Foundation 适配器代码（`TiaMcp.Adapter.{发布键}.dll`，按发布键编译八次）。35 个能力族已全部移植，V20/V21 专有工具的原生调用也在 PLC worker 中执行。
 - 只有 worker 接触 Siemens 对象。worker 与宿主之间是 WorkerChannel 协议 2（行分隔 JSON-RPC 2.0，hello 握手核对 worker 与适配器的 SHA-256、PID 和启动 nonce，绑定纪元）。
 - 每个会话一条 Openness 通道（lane），原生调用在会话内串行；不调用 TIA 的工具走并发的本地通道，不等待正在运行的 TIA 调用。
 - 每个版本都用 TIA 进程租约把选定的 TIA 进程保留给一个 MCP 会话。越过原生调用后结果未知的写入会锁定会话，后续原生调用返回 `SESSION_RESET_REQUIRED`。
@@ -72,8 +72,8 @@ flowchart TB
 | 包根启动器 | `TiaOpenness.exe` | .NET Framework（csc 编译） | 打开 `runtime/studio/TiaOpenness.exe` |
 | 工作台 | `runtime/studio/TiaOpenness.exe` | net10 WPF | MCP 与客户端配置、工程操作页、AI 调用、审批、审计、环境检查、版本控制、设置 |
 | MCP 宿主 | `runtime/v{发布键}/TiaMcp.FoundationHost.exe` 及 `release-key.txt` | net10 | MCP 服务器入口，八个版本相同 |
-| PLC worker | `runtime/v{发布键}/worker/TiaMcp.PlcWorker.{发布键}.exe` | net48 | V14 SP1–V19 的 Openness 执行进程 |
-| 引擎 | `runtime/v20|v21/worker/TiaMcp.Engine.V20|V21.exe`，旁边是同一二进制生成的 `tool-catalog.json` | net48 | V20/V21 的 worker（`--engine-worker`）、目录导出（`--write-tool-catalog`）和 CLI（`gen`、`patch`、`compile`、`audit verify` 等）；无参数时打印用法并以 64 退出 |
+| PLC worker | `runtime/v{发布键}/worker/TiaMcp.PlcWorker.{发布键}.exe` | net48 | 八个版本的 Openness 执行进程 |
+| 引擎兼容副本 | `bin-build/engine-compat/v20|v21/`（不交付） | net48 | 只供仓库交叉检查；宿主仅在 `TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY` 指向该目录、且宿主与引擎文件都来自该 checkout 的构建输出时接受 `--engine-worker`、`--engine-catalog`，否则以 64 退出（`src/FoundationHost/HostOptions.cs`）；P8-04l 删除 |
 | Studio 桥接 | `runtime/studio/bridge/` 与 `bridge/adapters/v{发布键}/` | net48 | 迁移期遗留，见第 9 节 |
 | 更新器 | `runtime/tools/TiaMcp.Updater.exe` | net48 | 交付包更新与回滚 |
 | 写入防护钩子 | `runtime/tools/TiaMcp.WriteGuard.exe` | net10 | Claude Code 插件的写操作审计钩子 |
@@ -374,7 +374,7 @@ stateDiagram-v2
 | 工具目录、分类、执行位置、lite 档 | `src/Logic/ModelContextProtocol/ToolExecution.cs`、`ToolTaxonomy`、`ToolMetadata`、`ToolProfiles.resx`；`src/Shared/ToolUsageCatalog.cs` 与 `ToolUsageData.json`（由 `reference/tool-examples` 生成） |
 | 安装布局与数据目录 | `src/Shared/BundleLayout.cs`、`src/Shared/DataLocations.cs` |
 | 审批管道 | `src/Shared/ApprovalPipe.cs`、`ApprovalProtocol.cs`、`ApprovalSettings.cs`、`ApprovalResult.cs`；工作台 `src/Studio/Gui/Services/ApprovalService.cs` |
-| 审计链 | `src/Shared/AuditLog.cs`、`AuditInvocation.cs`、`AuditCli.cs`（引擎 CLI `audit verify`）；工作台 `AuditLogService.cs`、`AuditTailReader.cs` |
+| 审计链 | `src/Shared/AuditLog.cs`、`AuditInvocation.cs`、`AuditCli.cs`（宿主命令行 `audit verify`）；工作台 `AuditLogService.cs`、`AuditTailReader.cs` |
 | 调用日志与原生诊断 | `src/Shared/InvocationJournal.cs`、`NativeCallDiagnostics*.cs`、`build-tools/native-call-weaver` |
 | 工作台控制通道 | `src/Shared/WorkbenchControl{Pipe,Protocol,Frames}.cs`、`LocalPipeSecurity.cs`；`src/FoundationHost/WorkbenchControl{Client,Session,Tools}.cs`；`src/Studio/Gui/Control/` |
 | 操作端 | `src/Shared/OperatorPipe.cs`、`OperatorProtocol.cs`；`src/FoundationHost/OperatorEndpoint.cs`、`OperatorConnection.cs`、`HostRegistration.cs`、`SessionNotifications.cs`；工作台 `McpSessionClient.cs`、`McpProjectClient.cs`、`McpVersionControlClient.cs` |
@@ -409,12 +409,12 @@ stateDiagram-v2
 
 | 项目 | 状态 | 依据 |
 |---|---|---|
-| V20/V21 专有工具移入 Foundation 适配器 | B1–B6 与样板 F19 已合并（F01、F02、F03、F06、F08–F21、F23、F35）；B7–B12（Classic 与 Unified HMI、生命周期与安全、VCI、在线与下载、可选产品）仍在引擎中 | `PortedFamilies.cs`；[阶段 8 迁移方案](../phase8-port-plan.md) |
-| 引擎退役（P8-04） | 未开始；全部族移植后 V20/V21 改用 PLC worker | [重构计划](../refactor-plan.md)；[ADR 0009](../decisions/0009-port-v20-v21-tools-to-foundation-adapters.md) |
+| V20/V21 专有工具移入 Foundation 适配器 | 35 个族（B1–B12，含 B10a、B10b）已全部合并，V20/V21 的引擎实现已删除 | `PortedFamilies.cs`；[阶段 8 迁移方案](../phase8-port-plan.md) |
+| 引擎退役（P8-04） | 进行中：P8-04j2 已合并，V20/V21 默认使用 PLC worker，交付包不含引擎；引擎兼容副本由 P8-04l 删除，之后是 P8-04m、P8-04n | [重构计划](../refactor-plan.md)；[ADR 0009](../decisions/0009-port-v20-v21-tools-to-foundation-adapters.md) |
 | Studio 桥接与 Studio 适配器删除（P8-21f） | 未开始；V16–V19 版本控制页用桥接只读 VCI，禁用工作区到工程的同步 | `ReadOnlyVciBridge.cs`；工作台控制设计决定 4 |
 | 工作台控制端到端验收（P8-20e） | 未完成 | 工作台控制设计第 6 节 |
 | 生成记录与发布工具（P8-31e5）、SafeV4 规则（e6）、审批抽屉计划视图（h1） | 未实现 | [分阶段生成设计](../design/p8-31-staged-generation.md) 第 10 节 |
-| 真机验收 | 八版 D1 行为族、旧版启用的已移植族、V20/V21 在 Foundation 宿主上的验收（P7-07）均为 `NOT RUN`，集中在阶段 8 结束后一次进行 | 交接、真机台账；[ADR 0013](../decisions/0013-release-4-0-after-phases-7-and-8.md) |
+| 真机验收 | 八版 D1 行为族、旧版启用的已移植族、V20/V21 在 Foundation 宿主上的验收（P7-07）均为 `NOT RUN`；我们不做真机验收，4.0 以 GitHub 预发布交给其他用户测试，未验证项列在预发布说明中 | 交接、真机台账；[ADR 0020](../decisions/0020-prereleases-tested-by-users.md) |
 | `TiaSharedAdapterPaths` | 默认 `false`；引擎领域的共享原语路径在真机验收前不启用 | `src/Shared/TiaSharedAdapterPaths.props` |
 | PLC worker 调用超时 | P8-64 已消除：八版共用按类超时与配置覆盖；超预算仍为结果未知并锁定会话。预算见 [4.0 发布说明](../../releases/v4.0.0.md) | `src/FoundationHost/WorkerClient.cs`；[设计规范决定](README.md#决定摘要) |
 | Foundation 绑定快照生命周期 | 观测原语已有，worker 生命周期尚未接入；旧版附着仍只凭 PID | [版本框架](../unified-version-framework.md) |

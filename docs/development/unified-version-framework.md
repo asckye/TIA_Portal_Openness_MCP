@@ -10,8 +10,8 @@ The shared catalog uses `14sp1`, `15.1`, `16`, `17`, `18`, `19`, `20`, `21`.
 Original V14/V15 are excluded; service/minor keys are not numeric major-version aliases.
 All eight MCP/worker and Studio adapter targets have compiled against their matching
 PublicAPI inputs. Current build evidence is in
-[the multi-version record](../../manifest/multi-version-build.json) and
-[the full-engine record](../../manifest/release-build.json). New native acceptance is
+[the multi-version record](../../manifest/multi-version-build.json); its `engineCompatibility` section keeps
+the engine cross-check record, [the engine record](../../manifest/release-build.json), which is no longer delivered. New native acceptance is
 **NOT RUN**; older candidate notes saying references or Windows compilation were
 unavailable do not describe the current build.
 
@@ -24,15 +24,15 @@ does not translate XML, upgrade a project, or make its unavailable tools runnabl
 | Profile | Runtime contract |
 |---|---|
 | V14 SP1–V19 MCP | .NET 10 FoundationHost (bundled runtime) plus exact typed .NET Framework worker; advertises its supported subset |
-| V20/V21 MCP | FoundationHost (.NET 10) + engine workers (.NET Framework 4.8), full/lite catalogs and discovery bridge |
+| V20/V21 MCP | FoundationHost (.NET 10) + the same typed .NET Framework 4.8 PLC worker (since P8-04j2), full/lite catalogs and discovery bridge |
 | Studio, all eight releases | Workbench Engineering attaches to the selected MCP session through the operator pipe; the old bridge is pending retirement |
 
 All eight foundation workers and their adapters target .NET Framework 4.8.
 V14 SP1, V15.1 and V16 retain their exact original Siemens API identities;
 their net48 workers require the release-time checks in the
 [real-machine ledger](../reference/real-machine-ledger.md).
-The foundation worker serializes native calls on its owning STA; the V20/V21 engine worker uses its MTA owner thread and per-session worker channel contract. Do not merge these
-by replacing one tool's name or threading primitive.
+The PLC worker serializes native calls on its owner thread: STA on V14 SP1–V19 and MTA on V20/V21
+(`src/Adapters/Policy/PlcLifecyclePolicy.cs`). Do not change a release's owner apartment by replacing one tool's name or threading primitive.
 
 The catalog, environment facts, process arguments, diagnostics, dependency planning
 and tool-example data can be shared without Siemens references. Native algorithms

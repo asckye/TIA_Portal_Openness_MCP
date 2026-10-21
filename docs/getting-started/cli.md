@@ -39,7 +39,7 @@ tia audit verify
 
 `config` 支持 Claude Desktop、Claude Code、Cursor、VS Code、Codex、Gemini CLI、Windsurf 和 Cline。默认只写入检测到的客户端，显式 `--host` 可指定目标；合并保留其他配置，修改前备份为 `.bak`。配置写入后重启 AI 客户端。
 
-`doctor` 默认只读。`--fix` 经现有 worker 用户组修复操作添加当前用户，可能弹出 UAC；完成后注销再登录。需要原生启动事实时使用 worker 观测，不连接 Portal 或打开工程。API 或 worker 无法启动时仍输出其余本机检查与修复提示。`--offline` 不启动 worker，不能执行用户组修复。非默认安装可传 `--tia-portal-location <安装目录>`；开发输出可传 `--public-api <准确版本的 API 目录>` 和 `--worker-exe <worker 路径>`。V20/V21 的过渡开关 `--plc-worker` 选择独立 PLC worker；不提供时仍用引擎 worker。
+`doctor` 默认只读。`--fix` 经现有 worker 用户组修复操作添加当前用户，可能弹出 UAC；完成后注销再登录。需要原生启动事实时使用 worker 观测，不连接 Portal 或打开工程。API 或 worker 无法启动时仍输出其余本机检查与修复提示。`--offline` 不启动 worker，不能执行用户组修复。非默认安装可传 `--tia-portal-location <安装目录>`；开发输出可传 `--public-api <准确版本的 API 目录>` 和 `--worker-exe <worker 路径>`。八个版本都使用 PLC worker；已退役的 `--engine-worker`、`--engine-catalog` 等 `--engine-*` 选项会被拒绝，退出码为 64。
 
 `doctor --json` 不输出可读报告，改为在 stdout 输出一行 JSON 对象，退出码与不带 `--json` 时相同。字段：`releaseKey`、`fix`（是否带 `--fix`）、`ready`、`logs`、`diagnostics`；`checks` 为各检查行（`id`、`ok`、`gating`、`name`、`detail`、`fix`，文字与可读报告相同）；`group` 为用户组结果（`ok`、`outcome`、`code`、`message`）；`clients` 为 AI 客户端配置（`name`、`registered`、`command`、`commandExists`）；`report` 为可读报告的逐行文本。
 
@@ -53,7 +53,7 @@ tia audit verify
 | `ElevationDeclined` | `OPENNESS_GROUP_ELEVATION_DECLINED` | 拒绝了 UAC 管理员授权，未添加 |
 | `MissingGroup` | `OPENNESS_GROUP_MISSING` | 本机没有 `Siemens TIA Openness` 组；安装带 Openness 的 TIA Portal |
 | `AddFailed` | `OPENNESS_GROUP_ADD_FAILED` | 添加后仍不是组成员 |
-| `Unknown` | `null` | 修复失败但没有上述结果码（`message` 为原因），或 V20/V21 引擎 worker 的修复只返回布尔值（`ok` 为其结果，不区分是否待重新登录） |
+| `Unknown` | `null` | 修复失败但没有上述结果码（`message` 为原因） |
 
 工作台的环境修复按钮运行所选版本随包宿主的 `doctor --fix --json --release-key <版本> --logging 0`，按 `group.outcome` 显示就绪、需注销重登或修复失败（附原因），并把报告行放入日志区；没有 JSON 对象时按退出码判断。
 
@@ -69,7 +69,7 @@ Python 默认解释器为 `%LOCALAPPDATA%\TiaMcp\ecosystem-python\Scripts\python
 
 ## 退役的工程命令
 
-宿主不接受以下命令。V20/V21 引擎在删除前仍执行原有命令，并额外向 stderr 打印一行替代指引；stdout JSON 和退出码保持原样。
+宿主不接受以下命令，返回退出码 64 并提示改用 MCP 工具与工程生成框架。交付包不再包含 V20/V21 引擎，这些命令已没有其他入口。
 
 | 旧命令 | 替代入口 |
 |---|---|
@@ -89,4 +89,4 @@ worker 超时预算为：默认 120 秒，每个代次首次附着 300 秒，编
 
 MCP 的 `WRITE` / `ONLINE-WRITE` 实际执行默认须经工作台审批。`dryRun=true` 和候选工具 `mode=preview` 不等待审批。`SaveProject`、`SaveProjectCopy` 和 `CloseProject` 实际执行同样须审批；连接、附着、打开和分离不审批。拒绝、120 秒默认超时或工作台不可用会在派发前返回 `CONFIRMATION_REQUIRED`。审批、执行与响应共享 requestId。
 
-V20/V21 可用 `GetOpennessWorkerStatus` 查看代次与故障。`OUTCOME_UNKNOWN` 后先核对工程和调用日志，再用 `DisconnectPortal` 恢复，或显式调用 `RestartOpennessWorker`；重新连接后必须重新绑定工程。详见 [worker 与恢复](../guides/openness-worker-isolation.md)。
+八个版本都可用 `GetOpennessWorkerStatus` 查看代次与故障。`OUTCOME_UNKNOWN` 后先核对工程和调用日志，再用 `DisconnectPortal` 恢复，或显式调用 `RestartOpennessWorker`；重新连接后必须重新绑定工程。详见 [worker 与恢复](../guides/openness-worker-isolation.md)。
