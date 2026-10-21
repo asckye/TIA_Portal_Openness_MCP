@@ -66,7 +66,7 @@ cpu-plan.json 记录核掩码、队列容量、依赖、预测成本及 companio
 每项进程受整项 wall-clock deadline 保护：历史最大耗时的三倍，通常至少五分钟，构建和输出清单至少三十分钟；超时按 job 名失败并终止已记录成员的自有 job。Python 检查同样有外层 deadline，VSTest 原五分钟单项 hang 门槛保持。
 runner 在启动任何子进程前先将自身加入拥有的 Windows job；私有 runner、等待 launcher 和全部后代由内核继承所有权，命令另有嵌套 affinity job。系统 SDK 直接使用，不复制或探测 SDK 路径。job 启用 kill-on-close，禁用 BREAKAWAY_OK 与 SILENT_BREAKAWAY_OK；MSBuild 节点复用由 MSBUILDDISABLENODEREUSE=1 和 -nodeReuse:false 禁用。超时先在检查日志旁保存 job 成员的 PID、启动时间和映像路径，再 TerminateJobObject；不按进程名称或路径模式选择终止目标。
 受限核心数命令保留 runner 原有的 CLR 最小 worker 线程数（启动时实测并继承），避免 DOTNET_PROCESSOR_COUNT 缩小时同时饿死管道和 HTTP 回调；job 的 CPU 掩码、报告的处理器数、fixture 时限和断言不变，命令显式传入的线程池环境设置保留。cpu-plan.json 记录 sensitiveMinWorkerThreads。
-干净快照最多保留三个已完成且带本 worktree 所有权标记的目录，运行中的快照不删除。整树构建缓存因含源码路径、无跨快照命中而停止填充；七天未命中的缓存项和超过 10 GiB 的 LRU 项会清理。有效的 file-app 缓存继续使用。
+干净快照最多保留三个已完成且带本 worktree 所有权标记的目录，运行中的快照不删除。中断快照在属主进程退出或 PID 的启动时间不符时清理；无任何标记的旧快照仅在目录及所有后代的最新写入时间超过 24 小时后清理，其他 worktree 和本轮快照始终保留。整树构建缓存因含源码路径、无跨快照命中而停止填充；七天未命中的缓存项和超过 10 GiB 的 LRU 项会清理。有效的 file-app 缓存继续使用。
 
 各分片的 `producer-timings.tsv` 记录旧 CheckSuite producer 的名称（Base64）、执行秒数和原始行数，
 用于区分延迟枚举的实际工作与逐行 xUnit 的耗时；不缓存检查结果，也不改变执行顺序。

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 
 namespace TiaMcp.ReleaseTool;
@@ -25,7 +26,8 @@ internal static partial class ReleaseCommands
         var snapshot = CheckAllSnapshotPath(original, Guid.NewGuid().ToString("N")[..8]);
         var output = Path.GetFullPath(options.Get("OutputDirectory", Path.Combine(original, "bin-build/check-all/clean-" + Guid.NewGuid().ToString("N"))));
         Directory.CreateDirectory(Path.GetDirectoryName(snapshot)!);
-        PruneCheckAllSnapshots(original, 3);
+        WriteCheckAllSnapshotOwner(original, snapshot);
+        PruneCheckAllSnapshots(original, 3, snapshot);
         var history = Path.Combine(original, "bin-build/check-timings");
         CopyCheckAllHistory(history, Path.Combine(snapshot, "bin-build/check-timings"));
         // Git for Windows' clone transport invokes sh even for a local worktree,
@@ -66,7 +68,7 @@ internal static partial class ReleaseCommands
         {
             CopyCheckAllHistory(Path.Combine(snapshot, "bin-build/check-timings"), history);
             File.WriteAllText(Path.Combine(snapshot, "bin-build/check-all-snapshot.json"), JsonSerializer.Serialize(new { original, completedUtc = DateTime.UtcNow }) + "\n");
-            PruneCheckAllSnapshots(original, 3);
+            PruneCheckAllSnapshots(original, 3, snapshot);
             Console.WriteLine("Retained detached source checkout: " + snapshot);
         }
     }
@@ -90,19 +92,96 @@ internal static partial class ReleaseCommands
             if (info.Exists && (info.Attributes & FileAttributes.ReparsePoint) != 0) throw new ReleaseException("Linked check-all path: " + path);
     }
 
-    internal static void PruneCheckAllSnapshots(string root, int retained)
+    internal static void WriteCheckAllSnapshotOwner(string original, string snapshot)
+    {
+        var marker = Path.Combine(snapshot, "bin-build/check-all-snapshot.owner.json");
+        RequireCheckAllOwnedPath(Path.Combine(original, "bin-build/c"), marker);
+        RequireCheckAllOwnedPath(original, marker);
+        Directory.CreateDirectory(Path.GetDirectoryName(marker)!);
+        using var process = Process.GetCurrentProcess();
+        File.WriteAllText(marker, JsonSerializer.Serialize(new { original, processId = process.Id,
+            processStartUtc = process.StartTime.ToUniversalTime(), startedUtc = DateTime.UtcNow }) + "\n");
+    }
+
+    internal static void PruneCheckAllSnapshots(string root, int retained, string? currentSnapshot = null, Func<int, DateTime?>? findProcessStartUtc = null)
     {
         if (retained < 1) throw new ArgumentOutOfRangeException(nameof(retained));
-        var parent = Path.Combine(root, "bin-build/c"); if (!Directory.Exists(parent)) return;
-        var completed = Directory.EnumerateDirectories(parent).Where(path => File.Exists(Path.Combine(path, "bin-build/check-all-snapshot.json")))
-            .Where(path => System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(Path.Combine(path, "bin-build/check-all-snapshot.json")))!["original"]!.GetValue<string>() == root)
-            .OrderByDescending(path => File.GetLastWriteTimeUtc(Path.Combine(path, "bin-build/check-all-snapshot.json"))).ToArray();
-        foreach (var path in completed.Skip(retained))
+        var parent = Path.Combine(root, "bin-build/c");
+        var lookup = findProcessStartUtc ?? CheckAllProcessStartUtc;
+        var cutoff = DateTime.UtcNow.AddHours(-24);
+        var completed = new List<(string Path, DateTime CompletedUtc)>();
+        try
         {
-            RequireCheckAllOwnedPath(parent, path);
-            foreach (var directory in Directory.EnumerateDirectories(path, "*", SearchOption.AllDirectories)) RequireCheckAllOwnedPath(parent, directory);
+            if (!Directory.Exists(parent)) return;
+            RequireCheckAllOwnedPath(root, parent);
+            foreach (var path in Directory.GetDirectories(parent))
+            {
+                try
+                {
+                    RequireCheckAllOwnedPath(parent, path);
+                    var marker = Path.Combine(path, "bin-build/check-all-snapshot.json");
+                    var ownerMarker = Path.Combine(path, "bin-build/check-all-snapshot.owner.json");
+                    RequireCheckAllOwnedPath(parent, marker); RequireCheckAllOwnedPath(parent, ownerMarker);
+                    if (File.Exists(marker))
+                    {
+                        using var document = JsonDocument.Parse(File.ReadAllText(marker));
+                        if (document.RootElement.GetProperty("original").GetString() == root)
+                            completed.Add((path, File.GetLastWriteTimeUtc(marker)));
+                        continue;
+                    }
+                    if (IsCurrent(path)) continue;
+                    if (File.Exists(ownerMarker))
+                    {
+                        using var document = JsonDocument.Parse(File.ReadAllText(ownerMarker));
+                        var owner = document.RootElement;
+                        if (owner.GetProperty("original").GetString() != root) continue;
+                        int processId = owner.GetProperty("processId").GetInt32();
+                        var start = owner.GetProperty("processStartUtc").GetDateTime();
+                        if (processId <= 0 || start.Kind != DateTimeKind.Utc) throw new ReleaseException("Invalid check-all snapshot owner: " + ownerMarker);
+                        if (lookup(processId) == start) continue;
+                    }
+                    else if (CheckAllSnapshotNewestWriteUtc(parent, path) >= cutoff) continue;
+                    Delete(path);
+                }
+                catch (Exception ex) { Skipped(path, ex); }
+            }
+            foreach (var snapshot in completed.OrderByDescending(snapshot => snapshot.CompletedUtc).Skip(retained))
+            {
+                try { Delete(snapshot.Path); }
+                catch (Exception ex) { Skipped(snapshot.Path, ex); }
+            }
+        }
+        catch (Exception ex) { Skipped(parent, ex); }
+
+        bool IsCurrent(string path) => currentSnapshot != null && string.Equals(Path.GetFullPath(path), Path.GetFullPath(currentSnapshot), StringComparison.OrdinalIgnoreCase);
+        void Delete(string path)
+        {
+            if (IsCurrent(path)) return;
+            CheckAllSnapshotNewestWriteUtc(parent, path);
             Directory.Delete(path, true);
         }
+        static void Skipped(string path, Exception ex) => Console.WriteLine("Skipped check-all snapshot pruning: " + path + " (" + ex.Message.Replace('\r', ' ').Replace('\n', ' ') + ")");
+    }
+
+    private static DateTime? CheckAllProcessStartUtc(int processId)
+    {
+        try { using var process = Process.GetProcessById(processId); return process.StartTime.ToUniversalTime(); }
+        catch (ArgumentException) { return null; } // The process no longer exists; other lookup errors retain the snapshot.
+    }
+
+    private static DateTime CheckAllSnapshotNewestWriteUtc(string parent, string path)
+    {
+        RequireCheckAllOwnedPath(parent, path);
+        var directory = new DirectoryInfo(path);
+        var newest = directory.LastWriteTimeUtc;
+        foreach (var entry in directory.EnumerateFileSystemInfos())
+        {
+            RequireCheckAllOwnedPath(parent, entry.FullName);
+            if ((entry.Attributes & FileAttributes.ReparsePoint) != 0) throw new ReleaseException("Linked check-all path: " + entry.FullName);
+            var write = entry is DirectoryInfo ? CheckAllSnapshotNewestWriteUtc(parent, entry.FullName) : entry.LastWriteTimeUtc;
+            if (write > newest) newest = write;
+        }
+        return newest;
     }
 
     private static CommandResult CheckAllCachedBuild(Options options, CheckBuild[] builds, string output, string dotnet, string api, string nuget, int parallelism)

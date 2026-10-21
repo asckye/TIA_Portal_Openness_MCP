@@ -666,6 +666,184 @@ public sealed class CheckAllRound5Tests
     }
 
     [Fact]
+    public void SnapshotOwnerMarkerRecordsOriginalAndCurrentProcessIdentity()
+    {
+        using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
+        using var process = System.Diagnostics.Process.GetCurrentProcess();
+        var snapshot = ReleaseCommands.CheckAllSnapshotPath(root, "12345678");
+        var before = DateTime.UtcNow;
+        ReleaseCommands.WriteCheckAllSnapshotOwner(root, snapshot);
+        using var document = JsonDocument.Parse(File.ReadAllText(Path.Combine(snapshot, "bin-build/check-all-snapshot.owner.json")));
+        var owner = document.RootElement;
+        Assert.Equal(root, owner.GetProperty("original").GetString());
+        Assert.Equal(process.Id, owner.GetProperty("processId").GetInt32());
+        Assert.Equal(process.StartTime.ToUniversalTime(), owner.GetProperty("processStartUtc").GetDateTime());
+        Assert.Equal(DateTimeKind.Utc, owner.GetProperty("processStartUtc").GetDateTime().Kind);
+        Assert.Equal(DateTimeKind.Utc, owner.GetProperty("startedUtc").GetDateTime().Kind);
+        Assert.InRange(owner.GetProperty("startedUtc").GetDateTime(), before, DateTime.UtcNow);
+        Assert.False(File.Exists(Path.Combine(snapshot, "bin-build/check-all-snapshot.json")));
+    }
+
+    [Fact]
+    public void SnapshotRetentionDeletesUncompletedSnapshotsWhoseOwnersAreGone()
+    {
+        using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
+        var snapshot = SnapshotWithOwner(root, "gone", 42, DateTime.UtcNow.AddDays(-2));
+        var lookups = new List<int>();
+        ReleaseCommands.PruneCheckAllSnapshots(root, 3, findProcessStartUtc: processId => { lookups.Add(processId); return null; });
+        Assert.Equal(new[] { 42 }, lookups); Assert.False(Directory.Exists(snapshot));
+    }
+
+    [Fact]
+    public void SnapshotRetentionKeepsUncompletedSnapshotsOwnedByTheCurrentProcess()
+    {
+        using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
+        using var process = System.Diagnostics.Process.GetCurrentProcess();
+        var snapshot = SnapshotWithOwner(root, "alive", process.Id, process.StartTime.ToUniversalTime());
+        SetSnapshotWriteTimes(snapshot, DateTime.UtcNow.AddDays(-2));
+        ReleaseCommands.PruneCheckAllSnapshots(root, 3);
+        Assert.True(Directory.Exists(snapshot));
+    }
+
+    [Fact]
+    public void SnapshotRetentionDeletesUncompletedSnapshotsWhenProcessIdsAreReused()
+    {
+        using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
+        var start = DateTime.UtcNow.AddDays(-2);
+        var snapshot = SnapshotWithOwner(root, "reused", 42, start);
+        var lookups = new List<int>();
+        ReleaseCommands.PruneCheckAllSnapshots(root, 3, findProcessStartUtc: processId => { lookups.Add(processId); return start.AddTicks(1); });
+        Assert.Equal(new[] { 42 }, lookups); Assert.False(Directory.Exists(snapshot));
+    }
+
+    [Fact]
+    public void SnapshotRetentionKeepsFreshUnmarkedSnapshots()
+    {
+        using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
+        var snapshot = Path.Combine(root, "bin-build/c/fresh"); Directory.CreateDirectory(snapshot);
+        File.WriteAllText(Path.Combine(snapshot, "payload"), "fixture");
+        SetSnapshotWriteTimes(snapshot, DateTime.UtcNow.AddHours(-1));
+        ReleaseCommands.PruneCheckAllSnapshots(root, 3);
+        Assert.True(Directory.Exists(snapshot));
+    }
+
+    [Fact]
+    public void SnapshotRetentionDeletesUnmarkedSnapshotsOlderThanTwentyFourHours()
+    {
+        using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
+        var snapshot = Path.Combine(root, "bin-build/c/legacy");
+        var nested = Path.Combine(snapshot, "nested"); Directory.CreateDirectory(nested);
+        File.WriteAllText(Path.Combine(nested, "payload"), "fixture");
+        SetSnapshotWriteTimes(snapshot, DateTime.UtcNow.AddHours(-25));
+        ReleaseCommands.PruneCheckAllSnapshots(root, 3);
+        Assert.False(Directory.Exists(snapshot));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SnapshotRetentionKeepsUnmarkedSnapshotsWithRecentDescendants(bool recentDirectory)
+    {
+        using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
+        var snapshot = Path.Combine(root, "bin-build/c/legacy");
+        var nested = Path.Combine(snapshot, "nested"); Directory.CreateDirectory(nested);
+        var payload = Path.Combine(nested, "payload"); File.WriteAllText(payload, "fixture");
+        SetSnapshotWriteTimes(snapshot, DateTime.UtcNow.AddDays(-2));
+        if (recentDirectory) Directory.SetLastWriteTimeUtc(nested, DateTime.UtcNow);
+        else File.SetLastWriteTimeUtc(payload, DateTime.UtcNow);
+        Assert.True(Directory.GetLastWriteTimeUtc(snapshot) < DateTime.UtcNow.AddHours(-24));
+        ReleaseCommands.PruneCheckAllSnapshots(root, 3);
+        Assert.True(Directory.Exists(snapshot)); Assert.True(File.Exists(payload));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SnapshotRetentionKeepsSnapshotsOwnedByAnotherOriginal(bool completed)
+    {
+        using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
+        var snapshot = SnapshotWithOwner(root, "other", 42, DateTime.UtcNow.AddDays(-2), root + "-other");
+        if (completed) File.WriteAllText(Path.Combine(snapshot, "bin-build/check-all-snapshot.json"), JsonSerializer.Serialize(new { original = root + "-other" }));
+        SetSnapshotWriteTimes(snapshot, DateTime.UtcNow.AddDays(-2));
+        var lookups = new List<int>();
+        ReleaseCommands.PruneCheckAllSnapshots(root, 3, findProcessStartUtc: processId => { lookups.Add(processId); return null; });
+        Assert.Empty(lookups); Assert.True(Directory.Exists(snapshot));
+    }
+
+    [Fact]
+    public void SnapshotRetentionUsesCompletionMarkerTimesForOwnedSnapshots()
+    {
+        using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
+        var now = DateTime.UtcNow;
+        for (int i = 0; i < 5; i++)
+        {
+            var snapshot = SnapshotWithOwner(root, i.ToString(), 42, now.AddDays(-2));
+            SetSnapshotWriteTimes(snapshot, now.AddMinutes(-i));
+            var marker = Path.Combine(snapshot, "bin-build/check-all-snapshot.json");
+            File.WriteAllText(marker, JsonSerializer.Serialize(new { original = root, completedUtc = now.AddMinutes(-i) }));
+            File.SetLastWriteTimeUtc(marker, now.AddMinutes(i - 10));
+        }
+        var other = SnapshotWithOwner(root, "other", 42, now.AddDays(-2), root + "-other");
+        File.WriteAllText(Path.Combine(other, "bin-build/check-all-snapshot.json"), JsonSerializer.Serialize(new { original = root + "-other" }));
+        var lookups = new List<int>();
+        ReleaseCommands.PruneCheckAllSnapshots(root, 3, Path.Combine(root, "bin-build/c/4"), processId => { lookups.Add(processId); return null; });
+        Assert.Empty(lookups);
+        Assert.Equal(new[] { "2", "3", "4", "other" }, Directory.GetDirectories(Path.Combine(root, "bin-build/c")).Select(Path.GetFileName).Order());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SnapshotRetentionNeverDeletesTheCurrentSnapshot(bool completed)
+    {
+        using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
+        var current = SnapshotWithOwner(root, "current", 42, DateTime.UtcNow.AddDays(-2));
+        SetSnapshotWriteTimes(current, DateTime.UtcNow.AddDays(-2));
+        if (completed)
+        {
+            var marker = Path.Combine(current, "bin-build/check-all-snapshot.json");
+            File.WriteAllText(marker, JsonSerializer.Serialize(new { original = root })); File.SetLastWriteTimeUtc(marker, DateTime.UtcNow.AddDays(-2));
+        }
+        for (int i = 0; i < 3; i++)
+        {
+            var snapshot = SnapshotWithOwner(root, i.ToString(), 42, DateTime.UtcNow.AddDays(-2));
+            File.WriteAllText(Path.Combine(snapshot, "bin-build/check-all-snapshot.json"), JsonSerializer.Serialize(new { original = root }));
+        }
+        ReleaseCommands.PruneCheckAllSnapshots(root, 3, current, _ => null);
+        Assert.True(Directory.Exists(current)); Assert.Equal(4, Directory.GetDirectories(Path.Combine(root, "bin-build/c")).Length);
+    }
+
+    [Theory]
+    [InlineData("owner")]
+    [InlineData("completion")]
+    [InlineData("lookup")]
+    public void SnapshotRetentionContinuesPastInvalidMarkersAndProcessLookupFailures(string failure)
+    {
+        using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
+        var invalid = SnapshotWithOwner(root, "invalid", 41, DateTime.UtcNow.AddDays(-2));
+        if (failure != "lookup") File.WriteAllText(Path.Combine(invalid, "bin-build/check-all-snapshot" + (failure == "owner" ? ".owner" : "") + ".json"), "{invalid");
+        var stale = SnapshotWithOwner(root, "stale", 42, DateTime.UtcNow.AddDays(-2));
+        ReleaseCommands.PruneCheckAllSnapshots(root, 3, findProcessStartUtc: processId => processId == 41 ? throw new InvalidOperationException("Process start time unavailable") : null);
+        Assert.True(Directory.Exists(invalid)); Assert.False(Directory.Exists(stale));
+    }
+
+    private static string SnapshotWithOwner(string root, string name, int processId, DateTime processStartUtc, string? original = null)
+    {
+        var snapshot = Path.Combine(root, "bin-build/c", name);
+        var directory = Path.Combine(snapshot, "bin-build"); Directory.CreateDirectory(directory);
+        File.WriteAllText(Path.Combine(directory, "check-all-snapshot.owner.json"), JsonSerializer.Serialize(new { original = original ?? root,
+            processId, processStartUtc, startedUtc = DateTime.UtcNow.AddDays(-2) }));
+        return snapshot;
+    }
+
+    private static void SetSnapshotWriteTimes(string snapshot, DateTime time)
+    {
+        foreach (var file in Directory.EnumerateFiles(snapshot, "*", SearchOption.AllDirectories)) File.SetLastWriteTimeUtc(file, time);
+        foreach (var directory in Directory.EnumerateDirectories(snapshot, "*", SearchOption.AllDirectories)) Directory.SetLastWriteTimeUtc(directory, time);
+        Directory.SetLastWriteTimeUtc(snapshot, time);
+    }
+
+    [Fact]
     public void StaleCacheRetentionRemovesOldEntriesAndKeepsRecentHits()
     {
         using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
