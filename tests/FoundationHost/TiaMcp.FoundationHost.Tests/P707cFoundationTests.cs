@@ -14,7 +14,9 @@ public sealed class P707cFoundationTests
     [InlineData(null, true)]
     public void FileOnlyDocumentResultsRetainRawStateAndResetOnlyForUncertainty(string? state, bool reset)
     {
-        string root = Path.Combine(Path.GetTempPath(), "p707c-foundation-" + Guid.NewGuid().ToString("N"));
+        // A short root: the batch staging path adds about 135 characters, and the release run's isolated TEMP is 31 characters
+        // deeper than a user TEMP, which pushed the 32-hex root past the product's 259-character path bound.
+        string root = Path.Combine(Path.GetTempPath(), "p7c-" + Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(root);
         try
         {
