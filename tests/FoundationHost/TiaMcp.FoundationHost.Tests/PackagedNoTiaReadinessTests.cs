@@ -122,6 +122,10 @@ public sealed class PackagedNoTiaReadinessTests
         internal readonly WorkerClient Worker;
         internal Host(string release)
         {
+            // As EngineReleaseHost does before it builds the registry: the version policy that wraps the ported tools reads the
+            // process release key. Without it a V21 case depended on the key an earlier test left (the beta.1 release run failed
+            // the five V21 cases when a V20 test ran before them in the same shard).
+            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
             // The packaged layout's bundled worker path, with neither the worker nor any PublicAPI directory present.
             Worker = new WorkerClient(release, Path.Combine(scratch, "runtime", "v" + release, "worker", "TiaMcp.PlcWorker." + release + ".exe"), "", true)
             { Bundled = true, SharedSession = true };
