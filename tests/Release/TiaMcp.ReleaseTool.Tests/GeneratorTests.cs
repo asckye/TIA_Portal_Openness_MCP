@@ -307,6 +307,35 @@ public sealed class GeneratorTests
         }
         finally { Directory.Delete(input, true); }
     }
+    [Fact]
+    public void MultiVersionUsageAuditCountsOneReceiptPerReleaseAcrossIdenticalTransportConnections()
+    {
+        // The transport check writes one receipt per connection: stdio and two HTTP clients for each release.
+        var matrix = Read(Root, "manifest/version-tools.json")["releases"]!.AsObject();
+        JsonObject Receipt(string key) => new JsonObject { ["releaseKey"] = key, ["exampleCallsExecuted"] = false, ["allSourceTextRetrievedAndHashChecked"] = true,
+            ["registeredToolCount"] = Copy(matrix[key]!["toolCount"]!), ["checkedToolCount"] = Copy(matrix[key]!["toolCount"]!), ["tools"] = new JsonArray(Strings(matrix[key]!["tools"]).Select(n => (JsonNode)new JsonObject { ["toolName"] = n }).ToArray()), ["offlineCallExamplesExecuted"] = new JsonArray(),
+            ["inputSchemas"] = Read(Root, "manifest/contracts/v4/baseline/" + key + ".json")["tools"]!.AsArray().ToDictionary(t => Text(t!["name"]), t => t!["inputSchema"]!.DeepClone().AsObject()).ToJsonObject() };
+        var input = Path.Combine(Root, "bin-build", "usage-audit-" + Guid.NewGuid().ToString("N")); var receipts = Path.Combine(input, "receipts.json");
+        void Put(string relative, JsonNode value) { var path = Path.Combine(input, relative); Directory.CreateDirectory(Path.GetDirectoryName(path)!); File.WriteAllText(path, Encode(value), new UTF8Encoding(false)); }
+        try
+        {
+            var old = Keys.Take(6).ToArray();
+            Put("multi-version/transport/tool-usage.json", new JsonArray(old.Select(key => (JsonNode)Receipt(key)).Concat(old.SelectMany(key => new JsonNode[] { Receipt(key), Receipt(key) })).ToArray()));
+            foreach (var key in new[] { "20", "21" })
+            {
+                var plc = Receipt(key); plc["workerModel"] = "foundation-host-plc-worker"; foreach (var field in new[] { "hostSha256", "runtimeSha256", "sdkWorkerSha256" }) plc[field] = new string('0', 64);
+                Put($"multi-version/usage-v{key}-plc.json", new JsonArray(plc));
+            }
+            Put("receipts.json", new JsonArray(Keys.Select(key => (JsonNode)Receipt(key)).ToArray()));
+            Assert.Equal(Encode(CatalogAudits.Usage(Root, recordsPath: receipts)), Encode(CatalogAudits.Usage(Root, input)));
+            var different = Receipt("16"); different["checkedToolCount"] = 1;
+            Put("multi-version/transport/tool-usage.json", new JsonArray(old.Select(key => (JsonNode)Receipt(key)).Append(different).ToArray()));
+            Assert.Contains("same usage receipt: 16", Assert.Throws<ReleaseException>(() => CatalogAudits.Usage(Root, input)).Message);
+            Put("multi-version/transport/tool-usage.json", new JsonArray(old.Take(5).Select(key => (JsonNode)Receipt(key)).ToArray()));
+            Assert.Throws<ReleaseException>(() => CatalogAudits.Usage(Root, input));
+        }
+        finally { Directory.Delete(input, true); }
+    }
     [Theory]
     [InlineData("ApplyToolBatch", "previewToken", "token")]
     [InlineData("PatchPlcBlockDocument", "expectedDocumentHash", "expectedFingerprint")]

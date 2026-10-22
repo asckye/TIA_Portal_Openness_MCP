@@ -94,7 +94,15 @@ internal static class CatalogAudits
             Require(receipts.All(r => r!["allSourceTextRetrievedAndHashChecked"]!.GetValue<bool>()), "Source text hash check required for every release");
             return UsageFromRecords(root, matrix, catalog, receipts);
         }
-        var records = Read(input, "multi-version/transport/tool-usage.json").AsArray();
+        // Test-FoundationTransport.py writes one receipt per exercised connection (stdio and two HTTP clients per release).
+        // Every connection of a release must report the same receipt; the audit counts one per release.
+        var records = new JsonArray();
+        foreach (var connection in Read(input, "multi-version/transport/tool-usage.json").AsArray().GroupBy(row => Text(row!["releaseKey"]), StringComparer.Ordinal))
+        {
+            var first = connection.First()!;
+            Require(connection.All(row => JsonNode.DeepEquals(row, first)), "Every transport connection must report the same usage receipt: " + connection.Key);
+            records.Add(first.DeepClone());
+        }
         // P8-04l: the V20/V21 receipts are the PLC usage jobs' (the engine resource-discovery receipts retired with the engine).
         // Their host/worker identity fields are proven by the jobs and are not part of manifest/tool-usage-coverage.json,
         // whose committed bytes check-all's PLC usage audit reproduces from the same receipts.
