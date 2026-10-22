@@ -381,6 +381,8 @@ internal static class ReleaseRecords
     }
 
     private static readonly string[] BinaryExtensions = [".exe", ".dll", ".config"];
+    // The Workbench loads its bundled fonts from runtime/studio/Fonts (P8-80d); delivery requires them.
+    private static readonly string[] FontExtensions = [".ttf", ".otf"];
 
     internal static IReadOnlyList<ReleaseArtifact> GetSources(string root, string kind)
     {
@@ -435,7 +437,7 @@ internal static class ReleaseRecords
             {
                 var ext = Path.GetExtension(file);
                 var bundledRuntime = file.StartsWith(Path.Combine(runtime, "dotnet") + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
-                var allowed = BinaryExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase) || ext.Equals(".json", StringComparison.OrdinalIgnoreCase) || ext.Equals(".txt", StringComparison.OrdinalIgnoreCase) || bundledRuntime;
+                var allowed = BinaryExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase) || FontExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase) || ext.Equals(".json", StringComparison.OrdinalIgnoreCase) || ext.Equals(".txt", StringComparison.OrdinalIgnoreCase) || bundledRuntime;
                 return allowed && !Path.GetFileName(file).Equals("README.md", StringComparison.OrdinalIgnoreCase) &&
                        (!prepared || !System.Text.RegularExpressions.Regex.IsMatch(file, @"[\\/]runtime[\\/](verification|tools)[\\/]|[\\/]runtime[\\/](v20|v21)[\\/]plc-worker[\\/]", System.Text.RegularExpressions.RegexOptions.IgnoreCase));
             })

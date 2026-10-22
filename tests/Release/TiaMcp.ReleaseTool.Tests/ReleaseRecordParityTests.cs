@@ -33,6 +33,24 @@ public sealed class ReleaseRecordParityTests
 
     [Fact]
     [Trait("Category", "ReleaseParity")]
+    public void RuntimeInventoryRecordsTheWorkbenchFontPayload()
+    {
+        // delivery-files.json requires runtime/studio/Fonts/*.ttf, and packaging takes runtime files only from the inventory.
+        using var tree = new StaticTree();
+        tree.Write("runtime/studio/Fonts/MapleMono-CN-Regular.ttf", "font");
+        tree.Write("runtime/studio/Fonts/LICENSE.txt", "licence");
+        tree.Write("runtime/studio/Fonts/notes.md", "not a payload");
+        foreach (var prepared in new[] { true, false })
+        {
+            var files = ReleaseRecords.GetRuntimeFiles(tree.Root, prepared).Select(row => row.Path).ToArray();
+            Assert.Contains("runtime/studio/Fonts/MapleMono-CN-Regular.ttf", files);
+            Assert.Contains("runtime/studio/Fonts/LICENSE.txt", files);
+            Assert.DoesNotContain("runtime/studio/Fonts/notes.md", files);
+        }
+    }
+
+    [Fact]
+    [Trait("Category", "ReleaseParity")]
     public void EmptySourceHashMatchesSha256() =>
         Assert.Equal("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", HashText(""));
 

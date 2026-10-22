@@ -111,7 +111,8 @@ def exercise(client, key, logfile, expected_before):
     tools = client.call('tools/list', {})['tools']
     names = {t['name'] for t in tools}
     # check_usage reads the V4 envelope (Foundation plan fields are camelCase since P6-59).
-    USAGE_REPORTS.append(check_usage(lambda name, args: tool(client, name, args), tools, key))
+    # The release's usage audit requires every receipt to have retrieved and hash-checked the source texts, as Test-ToolUsage.py does.
+    USAGE_REPORTS.append(check_usage(lambda name, args: tool(client, name, args), tools, key, verify_documents=True))
     assert 'CallTool' in names and 'Bootstrap' not in names and 'Connect' not in names
     for name in names:
         refused = client.call('tools/call', {'name': name, 'arguments': {'__invalid': True}})

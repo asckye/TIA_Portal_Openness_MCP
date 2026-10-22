@@ -1650,7 +1650,7 @@ internal static partial class ReleaseCommands
                 ProcessRunner.RequireSuccess(usage, "All-release usage coverage failed");
                 validationAfter["toolUsageCoverageExecuted"] = true;
                 var receipts = new JsonArray();
-                var oldReceipts = JsonNode.Parse(File.ReadAllText(Path.Combine(logs, "transport/tool-usage.json")))!.AsArray();
+                var oldReceipts = CatalogAudits.OneReceiptPerRelease(JsonNode.Parse(File.ReadAllText(Path.Combine(logs, "transport/tool-usage.json")))!.AsArray());
                 foreach (var key in PlcWorkerFixtures.Keys)
                 {
                     var receipt = key is "20" or "21"
