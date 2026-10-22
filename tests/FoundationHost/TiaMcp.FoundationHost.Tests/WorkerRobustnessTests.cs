@@ -125,7 +125,9 @@ public sealed class WorkerRobustnessTests
             // PlcWorker rows spill into the data location, and parallel shard processes share this
             // output directory: give each such scope its own location, removed on disposal.
             dataDirectory = plcWorker ? Path.Combine(AppContext.BaseDirectory, "worker-fixture-data", "plc-" + Guid.NewGuid().ToString("N")) : null;
-            Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", dataDirectory ?? Path.Combine(AppContext.BaseDirectory, "worker-fixture-data"));
+            // The engine rows share one location per test process: parallel shard processes run from the same output directory,
+            // and a shared location let one process write audit records while another compared its audit files (beta.1 release run).
+            Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", dataDirectory ?? Path.Combine(AppContext.BaseDirectory, "worker-fixture-data", "p" + Environment.ProcessId));
             string exe = plcWorker ? Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
                 "tests/WorkerChannel/TiaMcp.PlcWorker.FaultFixture/bin/Release/net48/TiaMcp.PlcWorker.FaultFixture.exe")
                 : TiaMcp.Engine.Tests.Shared.TestPaths.WorkerFixture("TiaMcp.EngineWorker.FaultFixture", "TiaMcp.EngineWorker.FaultFixture.exe");
