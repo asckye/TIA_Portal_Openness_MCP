@@ -127,6 +127,31 @@ HTTP concurrency mode、默认审批门禁及其自测、两种快照的 `verify
 `-MaxParallelism` 控制检查并发；快照 compare 等待自己的 capture，失败停止新任务并等待已启动任务完成。
 比较时间必须同时记录冷/热缓存、机器空闲状态和 quick 的选择集合，不能将失败运行或 dry run 当成成功包时间。
 
+## 测试包（package-test）
+
+`package-test` 从当前 checkout 在几分钟内打出可安装的测试包，供他人试用尚未发布的构建。它不发布、不打 tag、不写入发布记录，也不改写跟踪文件；
+与 `run-release-build -Tier package` 不同，它不运行预检、严格验包、重定位或产品 smoke。
+
+```powershell
+# 打包已构建的产物：runtime/、根启动器和 bin-build/updater
+dotnet run --project build-tools/release -- package-test
+# 先增量构建产物（不运行测试），再打包
+dotnet run --project build-tools/release -- package-test -Build -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> [-OutputDirectory <dir>] [-BuildCacheDirectory <dir>]
+```
+
+- 不带 `-Build` 时，八个宿主、八个 PlcWorker、工作台、根启动器、更新器、写保护、插件启动器或捆绑 .NET 缺失，或早于最新的产品源码
+  （`src/`、`third_party/SiemensOpcUaModelled`、原生织入器、`Version.props`、`Directory.Build.props`、`global.json`，不含 bin/obj 与 Markdown）时拒绝，并列出文件和较新的源码。
+- `-Build` 复用发布链的构建步骤：原生织入器、`get-bundled-dotnet -Offline`、`build-plc-workers`、`build-studio -NoRecord`（含根启动器，不改写
+  `manifest/configurator-build.json`）、Foundation 宿主发布并按八个发布键安装、工作台 apphost、写保护、插件启动器和更新器，最后确认宿主与工作台加载捆绑 .NET。
+  不运行测试，不改版本或记录；默认使用 MSBuild 增量构建，`-BuildCacheDirectory` 启用构建缓存。构建前后比较全部跟踪文件，有改写即失败。
+  成功后 `bin-build/test-package-work/last-build.json` 记录开始时间和产物哈希，增量构建未重写的产物据此视为最新。
+- 内容为交付清单过滤后的跟踪文件（工作树中的内容）、磁盘上的运行文件和 `bin-build/updater` 的更新器，排除 `runtime/verification/`、`*.pdb` 与 Siemens PublicAPI（`Siemens.Engineering*`）；
+  交付规则已排除 `Siemens.Collaboration.*`，可再分发的 `Siemens.Simatic.S7.Webserver.API` 依赖和 Siemens 许可文本与正式包一样交付。
+  暂存目录运行不依赖记录的包检查：`validate-bundle -PackageMode -NoBinaries`，交付清单、包入口和蓝图列出的全部路径（含二进制）、包资源、测试策略程序集、
+  每个入口程序集的 Openness 组运行时、依赖闭包和 `check-bundle-layout`。绑定记录的运行文件哈希与版本检查不适用于测试包。
+- 默认输出到 `bin-build/test-packages/`：`TIA_MCP_TestPackage_v<版本标签>_<yyyyMMdd-HHmm>_<短提交>[-dirty].zip` 和同名 `.sha256`。
+  ZIP 根目录的 `TEST-PACKAGE.txt` 写明提交、工作树状态、构建时间和 “Test package - not a release; no release records are bound”。测试包不上传到 GitHub Release。
+
 ## 准备和执行
 
 在 Windows 的 master 工作区操作，审查全部改动，停止该安装目录下的 MCP 和 Studio 进程。需要 .NET 10 SDK、Git、Framework 开发环境、Python 和八版 SDK。设置 TIA_MCP_PLC_TOOLS_PYTHON 指向已有 PLC Tools 伴随环境。SDK 目录结构见[构建说明](../reference/version-tools.md#build-and-package)。

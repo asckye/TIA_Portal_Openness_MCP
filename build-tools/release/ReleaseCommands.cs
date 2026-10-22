@@ -45,6 +45,7 @@ internal static partial class ReleaseCommands
         "build-multi-version" => BuildMultiVersion(options),
         "compare-release-records" => CompareReleaseRecords(options),
         "publish" => Publish(options),
+        "package-test" => PackageTest(options),
         _ => throw new ReleaseException($"Unknown release command '{command}'.", 64)
     };
 
@@ -645,13 +646,7 @@ internal static partial class ReleaseCommands
         if (!package)
             foreach (var row in SourceRoots.Load(root).RequiredFiles.Where(row => row.RepositoryLabel == "runtime channel source"))
                 if (!File.Exists(Path.Combine(root, row.Path))) errors.Add("Missing runtime channel source: " + row.Path);
-        if (strict)
-        {
-            var assemblies = Directory.EnumerateFiles(root, "*.dll", SearchOption.TopDirectoryOnly)
-                .Concat(Directory.Exists(Path.Combine(root, "runtime")) ? Directory.EnumerateFiles(Path.Combine(root, "runtime"), "*.dll", SearchOption.AllDirectories) : []);
-            foreach (var assembly in assemblies)
-                if (System.Text.Encoding.UTF8.GetString(File.ReadAllBytes(assembly)).Contains("TiaMcpTestPolicy", StringComparison.Ordinal)) errors.Add("Test-only behavior policy assembly cannot enter a release bundle: " + assembly);
-        }
+        if (strict) errors.AddRange(TestPolicyAssemblyErrors(root));
         if (rules is not null)
         {
             var checkArgs = new List<string> { "-Root", root };
@@ -989,6 +984,8 @@ internal static partial class ReleaseCommands
             if (!match.Success || int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) < 157) throw new ReleaseException("Configurator tests did not report at least 157 checks");
             configurationPassed = int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
         }
+        // -NoRecord (package-test) builds the launcher without rewriting the tracked configurator record.
+        if (!options.Has("NoRecord"))
         {
             var inputs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var folder in new[] { "Gui", "Client", "Core", "Contracts", "Bridge" })
@@ -1032,6 +1029,7 @@ internal static partial class ReleaseCommands
         Environment.SetEnvironmentVariable("DOTNET_GENERATE_ASPNET_CERTIFICATE", "false");
         var configArgs = new List<string> { "build-configurator" };
         if (options.Has("Test") && !shared) configArgs.Add("-Test");
+        if (options.Has("NoRecord")) configArgs.Add("-NoRecord");
         if (options.Get("NuGetConfig") is { Length: > 0 } nugetConfig) configArgs.AddRange(["-NuGetConfig", nugetConfig]);
         var configCode = RunSelfCommand(configArgs.ToArray(), "Desktop launcher/configuration module build");
         if (configCode != 0) return configCode;

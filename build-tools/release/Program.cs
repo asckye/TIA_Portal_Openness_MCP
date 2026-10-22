@@ -9,7 +9,7 @@ internal static class Program
         "DryRun", "SkipBuild", "NoReuse", "EarlyGatesOnly", "DocumentationOnly", "SelfTest", "NoPush", "NoTag", "NoWait",
         "KillStrayEngine", "Resume", "NoRestore", "PrepareOnly", "CompleteOnly", "Offline", "Test", "Strict", "NoBinaries",
         "SkipSourceHashes", "PackageMode", "UseReferenceAssemblyPackage", "Rebuild", "FunctionsOnly", "PassThru", "SkipFullEngines",
-        "DraftOnly", "DeleteDraft", "NoBuildCache", "NoResultCache", "ResultCacheInventory", "CompileOnly", "NoBuild", "UpdateBaseline", "AllowGrowth", "Fix", "Check", "Clean", "Cold", "ProveEquivalence", "BuildOnly", "Initialize", "Complete", "GateOnly"
+        "DraftOnly", "DeleteDraft", "NoBuildCache", "NoResultCache", "ResultCacheInventory", "CompileOnly", "NoBuild", "UpdateBaseline", "AllowGrowth", "Fix", "Check", "Clean", "Cold", "ProveEquivalence", "BuildOnly", "Initialize", "Complete", "GateOnly", "Build", "NoRecord"
     };
 
     public static int Main(string[] args)
@@ -97,7 +97,7 @@ internal static class CommandLine
         "release", "build-release", "build-multi-version", "compare-release-records", "run-release-build", "branch-gate", "check-all", "build-tool", "cache-info", "cache-clear", "preflight", "prerequisites", "publish",
         "build-studio", "build-configurator", "build-plc-workers", "build-plc-worker-fixtures", "check-plc-workers", "build-solutions", "build-file-programs", "publish-vci-watch", "prepare-delivery", "get-bundled-dotnet", "validate-bundle", "test-suites", "host-parity",
         "check-analyzer-warnings", "check-ratchet", "check-envelope-rewrite", "check-adapter-boundary", "check-bundle-layout", "check-repository", "check-dead-tool-references", "check-tia-features", "check-script-tool-calls",
-        "generate-tool-counts", "generate-catalogs", "generate-tool-usage", "generate-release-migration", "audit-version-tools", "audit-tool-usage", "check-tools-list", "generate-prerelease-notes"
+        "generate-tool-counts", "generate-catalogs", "generate-tool-usage", "generate-release-migration", "audit-version-tools", "audit-tool-usage", "check-tools-list", "generate-prerelease-notes", "package-test"
     ];
 }
 

@@ -6,7 +6,7 @@
 
 | 分类 | 入口 | 用途 |
 |---|---|---|
-| 构建 | `dotnet run --project build-tools/release -- build-configurator` | 以 Framework csc 编译兼容启动器；`-Test` 需要 .NET 10 SDK，执行工作台配置测试并更新记录 |
+| 构建 | `dotnet run --project build-tools/release -- build-configurator` | 以 Framework csc 编译兼容启动器；`-Test` 需要 .NET 10 SDK，执行工作台配置测试并更新记录；`-NoRecord` 只构建、不写记录 |
 | 构建 | `dotnet run --project build-tools/release -- build-release` | 使用 Siemens PublicAPI 构建/验证两版引擎 |
 | 构建 | `dotnet run --project build-tools/release -- prepare-delivery` | 沿用已验证引擎，更新交付与 GUI 记录 |
 | 发布 | `dotnet run --project build-tools/release -- release` | 一键发布：前置检查 → 组件版本 → build-release / build-multi-version → 本地闸门 → 一次提交 → Package-Release → Verify-ReleaseAsset → 推送 → CI（API）→ tag → Publish-Release 上传 → 等验证工作流检查；先手写 CHANGELOG 条目与 `docs/releases/vX.md`（见[发布流程](../docs/development/release-workflow.md)） |
@@ -14,6 +14,7 @@
 | 发布 | [Package-Release.py](../build-tools/Package-Release.py)、`dotnet run --project build-tools/release -- publish` | 干净提交 + 本机二进制打包；本机建草稿 Release、上传 ZIP 与 `.sha256`、回读校验后发布（2.8.1 起二进制不入库、不再由 Actions 打包） |
 | 构建 | `dotnet run --project build-tools/release -- build-multi-version` / [Package-MultiVersion.py](../build-tools/Package-MultiVersion.py) | 八版本构建、功能验证和 API 对照；正式发布调用该构建，Package-MultiVersion 另用于本地开发包 |
 | 构建 | `dotnet run --project build-tools/release -- build-studio` | 构建 Studio、本地 Bridge 和八版本原生适配器；`-Test` 运行客户端及 WPF 功能测试，不启动 TIA |
+| 测试包 | `dotnet run --project build-tools/release -- package-test [-Build]` | 从当前 checkout 几分钟内打出可安装的测试包：不发布、不写发布记录、不运行测试；`-Build` 先增量构建产物（见[测试包](../docs/development/release-workflow.md#测试包package-test)） |
 | 检查 | `dotnet run --project build-tools/release -- check-repository`、`dotnet run --project build-tools/release -- validate-bundle`、[Verify-ReleaseAsset.py](checks/Verify-ReleaseAsset.py) | 文档/路径与交付内容校验（`-NoBinaries` / `--no-binaries` 用于没有二进制的源码 checkout）；ZIP 与提交树 + 清单哈希逐文件比对（本机上传前、`Verify published release` 工作流发布后各跑一次） |
 | 检查 | `dotnet run --project build-tools/release -- check-dead-tool-references` | 工具描述死引用检查 |
 | 手动检查 | [Check-LiteProfile.py](checks/Check-LiteProfile.py) | lite 清单专项检查，需已构建引擎与测试 harness；默认 CI/发布链不执行 |
