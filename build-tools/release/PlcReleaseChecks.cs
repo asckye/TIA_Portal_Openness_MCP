@@ -285,19 +285,53 @@ internal static partial class ReleaseCommands
     }
 
     internal static void RunPlcReleaseJobs(IEnumerable<PlcReleaseJob> jobs, string root, string logs,
-        Func<PlcReleaseJob, CommandResult> run, Action<string, string[]> compare, int rounds = 50)
+        Func<PlcReleaseJob, CommandResult> run, Action<string, string[]> compare, int rounds = 50, int parallelism = 1)
     {
-        foreach (var job in jobs)
+        var ordered = jobs.ToArray();
+        void Compare(PlcReleaseJob job)
         {
-            ValidatePlcReleaseJob(job, run(job), root, logs, rounds);
-            if (job.Mode != "capture") continue;
+            if (job.Mode != "capture") return;
             var kind = job.Check == "plc-contracts" ? "baseline" : "responses";
             var baseline = Path.Combine(root, "manifest/contracts/v4", kind);
             compare(job.Arguments[0], ["compare", "--baseline", baseline, "--current", job.Evidence, "--releases", job.Release]);
             if (!File.ReadAllBytes(Path.Combine(baseline, job.Release + ".json")).SequenceEqual(File.ReadAllBytes(Path.Combine(job.Evidence, job.Release + ".json"))))
                 throw new ReleaseException("PLC capture bytes differ: " + job.Name);
         }
+        if (parallelism <= 1)
+        {
+            foreach (var job in ordered)
+            {
+                ValidatePlcReleaseJob(job, run(job), root, logs, rounds);
+                Compare(job);
+            }
+            return;
+        }
+        // Release runs: the adapter inventory producers first, in table order (the harness and diagnostics jobs read their
+        // inventory); then the independent jobs of both releases in parallel, each in its own isolated host directory; then
+        // the stability soaks and the shared test-suites runs one at a time, as before. No new job starts after a failure,
+        // and every failure of the parallel stage is reported. The captures are compared in table order at the end.
+        var first = ordered.Where(IsPlcInventoryProducer).ToArray();
+        var exclusive = ordered.Where(job => !IsPlcInventoryProducer(job) && IsExclusivePlcJob(job)).ToArray();
+        var concurrent = ordered.Where(job => !IsPlcInventoryProducer(job) && !IsExclusivePlcJob(job)).ToArray();
+        foreach (var job in first) ValidatePlcReleaseJob(job, run(job), root, logs, rounds);
+        var failures = new System.Collections.Concurrent.ConcurrentQueue<Exception>();
+        Parallel.ForEach(concurrent, new ParallelOptions { MaxDegreeOfParallelism = parallelism }, (job, state) =>
+        {
+            if (!failures.IsEmpty) { state.Stop(); return; }
+            try { ValidatePlcReleaseJob(job, run(job), root, logs, rounds); }
+            catch (Exception ex) { failures.Enqueue(ex); state.Stop(); }
+        });
+        if (!failures.IsEmpty)
+            throw new ReleaseException(string.Join(Environment.NewLine, failures.Select(ex => ex.Message)));
+        foreach (var job in exclusive) ValidatePlcReleaseJob(job, run(job), root, logs, rounds);
+        foreach (var job in ordered) Compare(job);
     }
+
+    // Both coverage jobs and the JIT diagnostics job write the adapter inventory that the harness modes read.
+    internal static bool IsPlcInventoryProducer(PlcReleaseJob job) => job.Check == "native-coverage" || job.Name.StartsWith("jit-adapter-coverage-", StringComparison.Ordinal);
+
+    // Stability soaks measure growth over many rounds; test-suites runs are shared between jobs by argument identity.
+    internal static bool IsExclusivePlcJob(PlcReleaseJob job) => job.Check is "plc-stability" or "plc-isolated-stability" || job.Executable == "test-suites";
 
     private static void RunPlcReleaseChecks(ReleaseCheckPlan plan, Options options, string apiRoot, string logs,
         string temp, string cli, string dotnet, string python, string? nuget, int rounds = 50)
@@ -316,7 +350,7 @@ internal static partial class ReleaseCommands
             }
             var selectedPython = job.Check == "plc-ecosystem" ? Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON") ?? job.Executable : job.Executable;
             return RunBuildIsolated(selectedPython, job.Arguments, Path.Combine(logs, job.Name + ".log"), temp, cli, apiRoot, nuget, job.Check == "plc-approval", job.Name);
-        }, sharedRuns, logs), (script, args) => RunBuildRaw(python, [script, .. args], Path.Combine(logs, Path.GetFileNameWithoutExtension(script) + "-plc-compare.log"), temp, cli, apiRoot, nuget, "PLC snapshot comparison"), rounds);
+        }, sharedRuns, logs), (script, args) => RunBuildRaw(python, [script, .. args], Path.Combine(logs, Path.GetFileNameWithoutExtension(script) + "-plc-compare.log"), temp, cli, apiRoot, nuget, "PLC snapshot comparison"), rounds, Math.Min(6, GetMaxParallelism(options)));
         WriteJson(Path.Combine(logs, "plc-checks-result.json"), new { status = "passed", checks = jobs.Select(job => job.Name), sharedRuns, rounds,
             nativeTiaExecuted = false, workers = new[] { "20", "21" }.Select(key => new { releaseKey = key,
                 workerSha256 = ReleaseRecords.HashFile(ReleasePlcFixture(logs, key)),

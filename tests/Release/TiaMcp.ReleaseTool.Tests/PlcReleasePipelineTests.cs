@@ -136,6 +136,50 @@ public sealed class PlcReleasePipelineTests
         Assert.True(compared);
     }
 
+    private static PlcReleaseJob[] ParallelFixtureJobs() =>
+    [
+        new("native-coverage-v20-plc", "native-coverage", "dotnet", ["verify"], Release: "20"),
+        new("jit-adapter-coverage-v20-plc", "native-diagnostics", "dotnet", ["verify"], Release: "20"),
+        new("campaign-inputs-v20-plc", "plc-functional", "python", ["a"], Release: "20"),
+        new("campaign-inputs-v21-plc", "plc-functional", "python", ["b"], Release: "21"),
+        new("worker-protocol-v20-plc", "plc-worker-isolation", "python", ["c"], Mode: "x", Release: "20"),
+        new("engine-host-v20-plc", "http-concurrency", "test-suites", ["-Suite", "engine-host"], Release: "20"),
+        new("worker-robustness-v20-plc", "plc-worker-isolation", "test-suites", ["-Suite", "worker-robustness"], Release: "20"),
+        new("native-coverage-v21-plc", "native-coverage", "dotnet", ["verify"], Release: "21"),
+    ];
+
+    // P8-93 early (maintainer 2026-10-21): the release runs the independent PLC jobs in parallel, after the inventory producers
+    // and before the exclusive jobs, which keep their table order.
+    [Fact]
+    public void ParallelReleaseRunKeepsInventoryFirstAndExclusiveJobsLast()
+    {
+        using var tree = new StaticTree();
+        var jobs = ParallelFixtureJobs();
+        var order = new List<string>();
+        ReleaseCommands.RunPlcReleaseJobs(jobs, tree.Root, tree.Root, job => { lock (order) order.Add(job.Name); return new(0, "", ""); },
+            (_, _) => throw new InvalidOperationException("no capture in this fixture"), parallelism: 4);
+        Assert.Equal(jobs.Select(job => job.Name).Order(), order.Order());
+        Assert.Equal(["native-coverage-v20-plc", "jit-adapter-coverage-v20-plc", "native-coverage-v21-plc"], order.Take(3));
+        Assert.Equal(["engine-host-v20-plc", "worker-robustness-v20-plc"], order.Skip(order.Count - 2));
+        Assert.True(ReleaseCommands.IsExclusivePlcJob(new("stability-c8-v20-plc", "plc-stability", "python", ["d"])));
+        Assert.True(ReleaseCommands.IsExclusivePlcJob(new("stability-c16-v20-plc", "plc-isolated-stability", "python", ["d"])));
+    }
+
+    [Fact]
+    public void ParallelReleaseRunReportsFailuresAndStartsNoExclusiveJob()
+    {
+        using var tree = new StaticTree();
+        var ran = new List<string>();
+        var error = Assert.Throws<ReleaseException>(() => ReleaseCommands.RunPlcReleaseJobs(ParallelFixtureJobs(), tree.Root, tree.Root, job =>
+        {
+            lock (ran) ran.Add(job.Name);
+            return job.Name == "campaign-inputs-v21-plc" ? new(3, "", "failed PLC check") : new(0, "", "");
+        }, (_, _) => throw new InvalidOperationException(), parallelism: 4));
+        Assert.Contains("campaign-inputs-v21-plc", error.Message);
+        Assert.DoesNotContain("engine-host-v20-plc", ran);
+        Assert.DoesNotContain("worker-robustness-v20-plc", ran);
+    }
+
     [Fact]
     public void FailedSuccessorStopsThePipelineAndCannotProducePassedEvidence()
     {
