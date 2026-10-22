@@ -1,48 +1,188 @@
 {
-  "tier": "package",
-  "generatedAt": "2026-10-08T09:10:03.4346420\u002B00:00",
-  "testsPassed": 0,
+  "tier": "full",
+  "generatedAt": "2026-10-22T21:35:12.5700469\u002B00:00",
+  "testsPassed": 226,
   "realTiaAcceptance": "NOT PERFORMED; isolated client configuration and WPF tests only",
   "executable": {
     "path": "TiaOpenness.exe",
-    "sha256": "450f91e392eab4108c4339dbb68995e3ff7971a17418f894d5c0159f9e2fbd7c"
+    "sha256": "9b5b5f86145d1ee467b452b41c27f40b73dcde8580107cc2855db2e58deffb87"
   },
   "sourceFiles": [
     {
+      "path": "build-tools/release/AdapterBoundary.cs",
+      "sha256": "a56719dfa8ec9bd620616e1dbac486fd48bfaa2a0e40083a33035c734b21c3ee"
+    },
+    {
+      "path": "build-tools/release/AnalyzerWarnings.cs",
+      "sha256": "ea9b71ecac1f2c2da633cbd3c028c5fb0fd5d53f6273b8eb40094a8af60ecba4"
+    },
+    {
       "path": "build-tools/release/BranchGate.cs",
-      "sha256": "557a77a9d82c0fdb48faf34588f13b19ac6ce39a6b4084856a211b7bdf3803da"
+      "sha256": "7067e9dac4725e5a1119a2ee3981ee3d5adcb02d2c7d7664311bdfb0fa84ac5f"
     },
     {
       "path": "build-tools/release/BuildOutputCache.cs",
-      "sha256": "d1b84d4de067b2b337c343db54102b531d28fc1aed00356b615bf2114805ad46"
+      "sha256": "0c805e632e573a384dc3ea8d2dc44fe7ae4f91e7ddaefb98cd2d9203be775132"
     },
     {
       "path": "build-tools/release/BuildReleasePipeline.cs",
-      "sha256": "d20ca9721620242dcccbeef6e3ef065bc3807d106eb2e9df3988393847878152"
+      "sha256": "28aca05b19124aea98572abbd6d2285c59b03afee6d2160bf730036c60e3a1f1"
+    },
+    {
+      "path": "build-tools/release/BundleLayoutChecks.cs",
+      "sha256": "b23b0e006961e3265c7524d834c8aecd2420ec7c79de82f0272cbdf662b57874"
     },
     {
       "path": "build-tools/release/BundleManifestRequirements.cs",
-      "sha256": "20b1492164e0b375f2fd634dd3266dba09c57a37fccb09c3e6c43cbe6e5bd807"
+      "sha256": "a41b21fc32ae69ebf35b915bc947f85e2bbf8da8340d0aa7fdc8d5c15858c4b5"
+    },
+    {
+      "path": "build-tools/release/CatalogAudits.cs",
+      "sha256": "e0dea6b368ee51198ec95d1c946e735c595fd875fc8f84ddb7ec239e29bccea1"
+    },
+    {
+      "path": "build-tools/release/CatalogData.cs",
+      "sha256": "87c2e21b33c6eb999c9fb07fb9aaa94ac8079faf993049ecaace4368beeb59cb"
+    },
+    {
+      "path": "build-tools/release/CatalogGenerator.cs",
+      "sha256": "8f06fe758ade3a395ffbb4818485c53a83895ca1a4b1eaf929ff345843480124"
+    },
+    {
+      "path": "build-tools/release/check-build/CheckBuildTasks.cs",
+      "sha256": "e341986666e974f252271b6f4c5d2128ffba5baa4600c448d25f664b0a9c3c81"
+    },
+    {
+      "path": "build-tools/release/CheckAffinity.cs",
+      "sha256": "a970be4e3376dfce1ab7597251541d2e2e0ed7de960298af1d7a70d3bbd77c96"
+    },
+    {
+      "path": "build-tools/release/CheckAll.cs",
+      "sha256": "1773cd6d618fac385c2a12ea40057f77533faeacff6c753a7b41b7cd687f3499"
+    },
+    {
+      "path": "build-tools/release/CheckAllBuild.cs",
+      "sha256": "cfa14a593af1f83536f3e1fb4e7ace74825f7f780e8fd2c7d23ed5c5de897c45"
+    },
+    {
+      "path": "build-tools/release/CheckAllInputClosure.cs",
+      "sha256": "7d64d0c57f92458098d05d63bc63bb08c36e0d198ed340baf655c925019b3f8e"
+    },
+    {
+      "path": "build-tools/release/CheckAllInventory.cs",
+      "sha256": "2152d3c7a49caf7593ea8dc415c58913f588c8f8fe777a381f2a59861113ca0e"
+    },
+    {
+      "path": "build-tools/release/CheckAllLayout.cs",
+      "sha256": "ac394829a20daaedb8bda74bdb4ccb73205ccdeeaa8971f24cc8d1b091d78050"
+    },
+    {
+      "path": "build-tools/release/CheckAllResultCache.cs",
+      "sha256": "8d56682d4031ebe856643706c59adea9261f6dafa4f7e51a856e814732a6eb47"
+    },
+    {
+      "path": "build-tools/release/CheckAllWorkspace.cs",
+      "sha256": "c851b92840817a4dfe698707741b1a99af93f8b9fcab1ec7c6967848977c9cf5"
+    },
+    {
+      "path": "build-tools/release/CheckScheduler.cs",
+      "sha256": "e5575c54199b0e8712e8e00037556084f9e1837c966b8659bada0cb1d84450db"
+    },
+    {
+      "path": "build-tools/release/CommentHygiene.cs",
+      "sha256": "753a4ada807d7541993603655c22de50ae42fc542bee8141eeaa3e4d50314321"
+    },
+    {
+      "path": "build-tools/release/DeadToolReferences.cs",
+      "sha256": "4f7dca845c80bcbffb29edffeed03a19879501dd7c7a0f9a119d4a83e9309237"
+    },
+    {
+      "path": "build-tools/release/DeveloperBuilds.cs",
+      "sha256": "ddaa795f2679d5fbdc63fb07e1b99bd009d505df40076948deb16e419c826e0f"
+    },
+    {
+      "path": "build-tools/release/DocumentationLinks.cs",
+      "sha256": "a0dac4dfc298e91ecac4e24d549d5b3c34dff24c3844a6b0777f64fb6af5be0d"
+    },
+    {
+      "path": "build-tools/release/DotnetSuites.cs",
+      "sha256": "70b17a931f1bf913eb93f529697c53c49e7080ad8856b71bfaab9dce4ceb38d1"
+    },
+    {
+      "path": "build-tools/release/DotnetSuiteSelfTests.cs",
+      "sha256": "509af259355b12a9ad96066e84aa706e5e912f6397f2061924f307139b2b5cd4"
+    },
+    {
+      "path": "build-tools/release/EnvelopeRewrite.cs",
+      "sha256": "e7ba6a4bdd058214c1469f93cd034ebd032c12613af1fd9f550f6a43c542c78c"
+    },
+    {
+      "path": "build-tools/release/FastSuites.cs",
+      "sha256": "3a7859c1afc334c95d77da94e65597406214a5dc34da2320228bd94b37938086"
+    },
+    {
+      "path": "build-tools/release/GeneratorCommands.cs",
+      "sha256": "9a9fadaab3d973deb70d68095fce11f385e6a80cae461da2de0d7d7616087144"
+    },
+    {
+      "path": "build-tools/release/HostParity.cs",
+      "sha256": "27b0dbabf614e43be9d762cd01145b01124fee8cd0d2043981104170b5fce555"
+    },
+    {
+      "path": "build-tools/release/McpText.cs",
+      "sha256": "b6a3e4edea665374fa50fff5a50a951c20099bbd711a6a996dc2a7e9b25a6242"
+    },
+    {
+      "path": "build-tools/release/OpennessGroupRuntime.cs",
+      "sha256": "2819b2959c182c8a69efb3b76dba4f15b4d3a177918768123e77577b67e5e4d4"
+    },
+    {
+      "path": "build-tools/release/PackageDependencies.cs",
+      "sha256": "56db4149ce804a0dd17fb762f41fd2a78e2ef7d4dd1815e606b95943b15c76d2"
     },
     {
       "path": "build-tools/release/ParallelPipeline.cs",
       "sha256": "6049b0b4c21567532b40425588444aae00b7dc7cd3f55d238898c7e7df1484de"
     },
     {
+      "path": "build-tools/release/PlcReleaseChecks.cs",
+      "sha256": "0906afb13e9d91651af53a69cd842a53bb01239877d2c85592fee1b1afdffd2e"
+    },
+    {
+      "path": "build-tools/release/PlcWorkerFixtures.cs",
+      "sha256": "e5a2fc791b985e4bf2d711edd61275a426c89f4ff0b273f971a79a6185f9bbc9"
+    },
+    {
+      "path": "build-tools/release/PrereleaseNotes.cs",
+      "sha256": "1a1e7f9dc153e9ad9578a6de9243ac75832f98e6e8419d38cafb635d3ad134fd"
+    },
+    {
       "path": "build-tools/release/Program.cs",
-      "sha256": "89530618acf9ba2d867e648ceca7fb10bb26e7dc0209de247f16f32d4598ade9"
+      "sha256": "f4f02d71a440da2a1bee4393225bbdbebc6c395c09a75fe01c7b004afac00466"
+    },
+    {
+      "path": "build-tools/release/ProjectDependencies.cs",
+      "sha256": "98c7f53707a08529c83367a09862a6c816e523805bf965758be39b5b6fbb8e0f"
+    },
+    {
+      "path": "build-tools/release/RatchetChecks.cs",
+      "sha256": "c0b9e2fc5395a3d6f91f3488ee519fa1774d8a1dbe08085d7549554844fbc623"
     },
     {
       "path": "build-tools/release/ReleaseCandidateChecks.cs",
-      "sha256": "87bfded7332582c9ff10f06844c7505add6ec813126423dbff9b0c81d7f65278"
+      "sha256": "5f3bef01f3768064201aad2099466f643003869c56bba54338d46fd7a3e06946"
     },
     {
       "path": "build-tools/release/ReleaseCommands.cs",
-      "sha256": "83c9efd2a7ce3f2cbd4a56d2a02893d1ac2f455988212bac10a6809815c231e9"
+      "sha256": "9cf0593c6072295471453a28bc467e585200b73c57a365df398466cb5385b192"
     },
     {
       "path": "build-tools/release/ReleaseCommandTable.cs",
-      "sha256": "46ac075a3ac37ec9fb1794b362b4ad16ae148ad02037e6e6ccc50259f6a3b39f"
+      "sha256": "d98220df41050ca7cb1ac605a26b7f9779fa5682411a011284ff687f0b7f6be7"
+    },
+    {
+      "path": "build-tools/release/ReleaseMigrationGenerator.cs",
+      "sha256": "7551c223dcfc15cbd3375cdb6bd3b9cc731b9286bdffccb4d97b0df626667e09"
     },
     {
       "path": "build-tools/release/ReleasePrerequisites.cs",
@@ -50,15 +190,15 @@
     },
     {
       "path": "build-tools/release/ReleaseProduction.cs",
-      "sha256": "bc7a916b03a8ed0c6e18cbb8d0307db8079b414124c96d8ecf0399f2c16087f1"
+      "sha256": "6026470cc7bf41ae65a61063a5197a575d3c9eb1625d4d660c6f7c456a248e2f"
     },
     {
       "path": "build-tools/release/ReleasePublisher.cs",
-      "sha256": "c5972257242cff3b0245fbeadcb1ba05c12f57baa01bdc98de88dc58891c93ad"
+      "sha256": "02d4e8229cdd0a84a99753194573fbd1d2048036073a4cbded93b35170536402"
     },
     {
       "path": "build-tools/release/ReleaseRecords.cs",
-      "sha256": "4eb153dad76ce50e8f10f857611a98d7e615f96336e60951d281ed6cbae54207"
+      "sha256": "11329aca78a545435061c588793b7c820729c67d2a5ce2fa8d368c1fc4b4c113"
     },
     {
       "path": "build-tools/release/ReleaseRecordSnapshot.cs",
@@ -66,27 +206,91 @@
     },
     {
       "path": "build-tools/release/ReleaseStageRunner.cs",
-      "sha256": "c8e8dd28dd3920aeff030a462ac0c73166931aaf52e210f6226c2aa8ab00189c"
+      "sha256": "aea74c5da72220e3926c5a86bbae577fb0cc597cdb268ac65c350203c1cbde86"
     },
     {
       "path": "build-tools/release/ReleaseTiers.cs",
-      "sha256": "892d2ff9a98591c41bbc547faf4e25104dd48cd3fb54a42cf9465f89e1131520"
+      "sha256": "68371154fc7401855450830b11c4baa21bb8353241ce6d5c0c0a15cd29ac3891"
     },
     {
       "path": "build-tools/release/ReleaseValidation.cs",
-      "sha256": "4143413636f68756302c578a3caa2f04e5737404bcbf699d8bc1a9e992e23c1f"
+      "sha256": "a8314a349e777d9734f9e287caebda5460db6e9eefc89feb8e22f50cce4f4424"
+    },
+    {
+      "path": "build-tools/release/ReleaseVersions.cs",
+      "sha256": "82297e7881c9e36821a5d915ab3bbbc869c1326d808244df55980b16d9b0155c"
+    },
+    {
+      "path": "build-tools/release/RepositoryChecks.cs",
+      "sha256": "5801eeb723d321c23df88e5b0ff982df8a4adbf1815763d938d1ffa7cfbb418e"
+    },
+    {
+      "path": "build-tools/release/ResponseEnvelopes.cs",
+      "sha256": "46b3883b7acb75d1d7004b7377dc895421820298bc07aefb5cdc7b636f0bffcc"
+    },
+    {
+      "path": "build-tools/release/ScriptToolCalls.cs",
+      "sha256": "62078a0f90725bae14a8df54273694b0bf2ab0d5776b884d62736d05c556e79f"
+    },
+    {
+      "path": "build-tools/release/SourceCheck.cs",
+      "sha256": "6e532ae5a519ecae37725f623b42566eb4a28cbd5c374ecd330499bf83e45200"
     },
     {
       "path": "build-tools/release/SourceRoots.cs",
       "sha256": "b3f9edd328e20c8e20afd27a2421ce0bc62ea50bc91cbe803e34efe4f2d08a53"
     },
     {
+      "path": "build-tools/release/StaticChecks.cs",
+      "sha256": "104cce1bbe01908a916d0cde3481153550bf2d4be899ef110e5664e5b4260462"
+    },
+    {
+      "path": "build-tools/release/SuiteHang.cs",
+      "sha256": "18c58d9e18a2a37f8a022b71fa9e8b3bbadffa915cc66c11f8983f321f77e1fa"
+    },
+    {
+      "path": "build-tools/release/SuiteRunners.cs",
+      "sha256": "ec92e11626e5c4960e0aa4b0e82fcd38cbb6ab7a3fd973e073d6823ea7c922f6"
+    },
+    {
+      "path": "build-tools/release/SuiteSharding.cs",
+      "sha256": "43f5267d838c76042e43761654fe3ca4038dfd00fbd23eb5dc50c232dc7818bf"
+    },
+    {
+      "path": "build-tools/release/SwallowedExceptions.cs",
+      "sha256": "085acabdbb36df41e76549c5c0051402d804e9a9e711f06b9948caf399d70310"
+    },
+    {
+      "path": "build-tools/release/TestPackage.cs",
+      "sha256": "a7ed016bbbf09d9fc47fda481d304538874ca57ef1d13ce9083eea321a7febd7"
+    },
+    {
+      "path": "build-tools/release/TiaFeatures.cs",
+      "sha256": "ad68adbe6d38f39bf99e1f2effd94d22ae00417af19bf78b82566b42e1e57ab0"
+    },
+    {
+      "path": "build-tools/release/ToolCountGenerator.cs",
+      "sha256": "1af578fa5bf05717410c4e00a8bc5df9e8a3a73dc7753c11b395b92a3370d3bd"
+    },
+    {
+      "path": "build-tools/release/ToolsListChecks.cs",
+      "sha256": "54ae7636a54562b54c92269d583c7522aa21afba84af01b4ce6d75f1f89027e0"
+    },
+    {
+      "path": "build-tools/release/ToolUsageGenerator.cs",
+      "sha256": "763977c92f64e6d56435069aa7b54d349acd21d9abf285a47bae7f61ca72926d"
+    },
+    {
+      "path": "build-tools/release/VciWatchPublish.cs",
+      "sha256": "0ef38ace25856e598f53e525ec6db2ec2de2e86e8aa707d6653d435e23f93d57"
+    },
+    {
       "path": "src/Logic/Siemens/TiaVersionCatalog.cs",
-      "sha256": "f8484d9ada9f268d5e9888b9a9acffd803a165749cd32703a366be789b3b2f29"
+      "sha256": "2c3f89aaddf20807808ee3cd017b6b521ec6b09871854a917efc71132101a66a"
     },
     {
       "path": "src/Shared/BundleLayout.cs",
-      "sha256": "041280a2477f658d781b643a5c4b01c085bb97f4399642ca17928bff65ed4328"
+      "sha256": "1a30dea36390e91090bed1aee8f196531d5d087d4a9aaace4e5c47a3ed5462b6"
     },
     {
       "path": "src/Shared/LocalProcess.cs",
@@ -94,7 +298,7 @@
     },
     {
       "path": "src/Shared/OpennessEnvironment.cs",
-      "sha256": "792872f6310a7d98860508e585ddd9463baaada196cc6d3d38291b55fd673a42"
+      "sha256": "ed8150042db3dfc5214695ccf0de7cdf4cedf2bd2aec45b75a4840be727d3066"
     },
     {
       "path": "src/Shared/ProcessArguments.cs",
@@ -102,43 +306,31 @@
     },
     {
       "path": "src/Studio/Directory.Build.props",
-      "sha256": "b01102cd0d61526c97b7d323866b6f536026661ff6c930fdb41eaca6e618e372"
+      "sha256": "924f2e3a20437ecd71ea78d9a3c8117f02323f933f7a819ced219a00f84469b8"
     },
     {
-      "path": "src/Studio/Gui/Fonts/JetBrainsMono-Medium.ttf",
-      "sha256": "d16e6dc99672734698d629705f617c79f6eb6040f5113efe3a145204dc988109"
+      "path": "src/Studio/Gui/Fonts/LICENSE.txt",
+      "sha256": "eb2d28d2e565a0757e3d64e34ebb452e75a0cad87c0ab3faf4e08ba7596de902"
     },
     {
-      "path": "src/Studio/Gui/Fonts/JetBrainsMono-OFL.txt",
-      "sha256": "a76abf002c49097d146e86740a3105a5d00450b1592e820a1109a8c5680cd697"
+      "path": "src/Studio/Gui/Fonts/MapleMono-CN-Regular.ttf",
+      "sha256": "e6338c3dca9a3bed3fb81f43c8bb8feca3b6ad54829f5a3229527d030a321dbd"
     },
     {
-      "path": "src/Studio/Gui/Fonts/JetBrainsMono-Regular.ttf",
-      "sha256": "e6fd0d7e91550b3ed2b735d4312474362c4716edc4fc0577a0f61ed782d5aed1"
-    },
-    {
-      "path": "src/Studio/Gui/Fonts/NotoSansSC-Bold.otf",
-      "sha256": "c6cb5a93abaa9edc8ee7463b7ebb7f42d618d40e6ed2f7a5371c97b0b64767c0"
-    },
-    {
-      "path": "src/Studio/Gui/Fonts/NotoSansSC-OFL.txt",
-      "sha256": "6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2"
-    },
-    {
-      "path": "src/Studio/Gui/Fonts/NotoSansSC-Regular.otf",
-      "sha256": "faa6c9df652116dde789d351359f3d7e5d2285a2b2a1f04a2d7244df706d5ea9"
+      "path": "src/Studio/Gui/Fonts/MapleMono-CN-SemiBold.ttf",
+      "sha256": "320c87dc4134f0bc88ad878255af1f1957c9e7898e76638efc9a3cdf3868574e"
     },
     {
       "path": "src/Studio/Gui/Fonts/SOURCES.txt",
-      "sha256": "9de0ae95791048fbd756e0fd82a8dc16f55c272303661ba0bdf256d77d0958b8"
+      "sha256": "aab7c0926e5d470bbbac5dee615b90e78006dfbf6d974bc2323f93137e77a6ad"
     },
     {
       "path": "src/Studio/Launcher/Launcher.cs",
-      "sha256": "b8371a9cf5c26aa6eadb13c708874c9c31b952b06f7922a727dffbc532c4b973"
+      "sha256": "6d315b7876d0551edc29a869486ff8e92e02a94c3d570d34f1d8fb59553a6e81"
     },
     {
       "path": "src/Studio/Bridge/Program.cs",
-      "sha256": "c252708f07cdd42712284dfebe8049c44ceefa415b8fd58c2a5725b190c0ba05"
+      "sha256": "350c0c1ce2660dfb25420d2c10d646eb175991c0401217de52511ef32eb2c1fa"
     },
     {
       "path": "src/Studio/Bridge/TiaOpenness.Bridge.csproj",
@@ -146,11 +338,11 @@
     },
     {
       "path": "src/Studio/Client/BridgeClient.cs",
-      "sha256": "12d126ef6561368012a81e98e2e8e23bde8a85bd046634facfa874601cc71a1c"
+      "sha256": "b08b6cbeb23c797234af8bde30847504d8aee5dd6715d47054fcc72502e5135e"
     },
     {
       "path": "src/Studio/Client/TiaClient.cs",
-      "sha256": "d14f551e5948f90a9a3a94646f502f4723f6a1ba5473fcafb4ab8c3ee1fbd34d"
+      "sha256": "7853855f0ef39665c9aaf52d563431ce265be8201aa9969f1a6141b3b92a6790"
     },
     {
       "path": "src/Studio/Client/TiaOpenness.Client.csproj",
@@ -158,11 +350,15 @@
     },
     {
       "path": "src/Studio/Contracts/Models/Dto.cs",
-      "sha256": "818ace2de7e0f63e8fad0cdeea08673d7e100af60a1370b9d10bbb7521903e71"
+      "sha256": "d987081c0da01a7d305603bde989739e6d1fafd4679d9b664fe2120b059ee806"
     },
     {
       "path": "src/Studio/Contracts/Models/Enums.cs",
       "sha256": "6f788d91a37643860c612bbaba75bd6b7a09818a8d3df9a54867e9148e86783f"
+    },
+    {
+      "path": "src/Studio/Contracts/Models/OpennessInstallation.cs",
+      "sha256": "50b71fe604f3f6fc07c163a27d7a173d520ce18a47cf291fad25c22103f0e2c3"
     },
     {
       "path": "src/Studio/Contracts/Models/VersionControl.cs",
@@ -182,11 +378,11 @@
     },
     {
       "path": "src/Studio/Core/Abstractions/ITiaSession.cs",
-      "sha256": "4dedbda2fdd732f41d001e8e160f286c61d2512257bff8b27221af2489c19b99"
+      "sha256": "165858800f4981cdd75e85b1f2e62361988fbb8a370b8af369f8e708c24fb5ca"
     },
     {
       "path": "src/Studio/Core/Abstractions/IVersionControl.cs",
-      "sha256": "98896958190439fc74cb98a89ad52edc51e72e4eec64a322893dcc3b96cf4923"
+      "sha256": "22dbfb7280ced0d504352f953ccc916b6c23e60f302541c462354055d199b7bc"
     },
     {
       "path": "src/Studio/Core/Abstractions/SessionFactoryLoader.cs",
@@ -194,7 +390,7 @@
     },
     {
       "path": "src/Studio/Core/Abstractions/UnavailableSessionFactory.cs",
-      "sha256": "13e014aa270607ec4e1dbd9e4d9e9a95ddd2d4eb75082f248b6cf646e896a3ea"
+      "sha256": "1d5280c4b53862b5d3f474089807dbc021c7f9fb49d22f14937f44c1bf9f945b"
     },
     {
       "path": "src/Studio/Core/Adapters/AdapterSessionFactory.cs",
@@ -202,11 +398,11 @@
     },
     {
       "path": "src/Studio/Core/Adapters/AdapterTiaSession.cs",
-      "sha256": "2306ca36d9106e003687d30a2d8249c793f87affd2b34150fa5018f2885bd717"
+      "sha256": "887894d365790707fcb15427ef54cce0d99d95933624582395b5175cd6ae727e"
     },
     {
       "path": "src/Studio/Core/Adapters/BridgeChannel.cs",
-      "sha256": "9a9f23a06f09f37bd0f4b2c3934a23f6482d00496e41102baa33092a9f495144"
+      "sha256": "ab4ee7dcb130d5aeb89b7cee89957a5587448d29279d541c06bc4d5c7e16a4c1"
     },
     {
       "path": "src/Studio/Core/Adapters/SessionFactoryLoader.cs",
@@ -218,7 +414,7 @@
     },
     {
       "path": "src/Studio/Core/CallJournalReader.cs",
-      "sha256": "7b16b367202ba0407c779e3bee49cb126d44253ba45562745ec71fa37887889d"
+      "sha256": "fc7666133149b86210b5dfe3215ab908b369be410f089eb48619356e4536b6e5"
     },
     {
       "path": "src/Studio/Core/EngineToolResult.cs",
@@ -226,11 +422,15 @@
     },
     {
       "path": "src/Studio/Core/Environment/DiagnosticRedactor.cs",
-      "sha256": "0d855a9f239cc1453eba8621fd306c3fb04ad0c0f03ebdd1539da24fb7f8b794"
+      "sha256": "c2448d0585295610ce9d6d9416351066202524033f2bb649f3af497de8c8730a"
+    },
+    {
+      "path": "src/Studio/Core/Environment/OpennessAllowList.cs",
+      "sha256": "aaa2209829eff8fdc26b4b254278a76391190eaa99ffaa1df91bde4ba7e7b501"
     },
     {
       "path": "src/Studio/Core/Environment/OpennessAssemblyResolver.cs",
-      "sha256": "4c043f5aa7a0fb04e55da13533e6a99af83e06f594752d5d1cb07a9ea4711c92"
+      "sha256": "a7dccf289be0cf6251fd70e7dc8f83b8b0782c7db4e6c611c5fcae5472a64dc7"
     },
     {
       "path": "src/Studio/Core/Environment/OpennessDoctor.cs",
@@ -242,11 +442,15 @@
     },
     {
       "path": "src/Studio/Core/Environment/WindowsEnvironmentSources.cs",
-      "sha256": "60356398f6b9d7e2dd630059e3fa9777d5fc91f3257e8da5bd4fd633b7395750"
+      "sha256": "8218818ac737f3713a81df088b4ab391c7825422948944e5813d14547188221f"
     },
     {
       "path": "src/Studio/Core/Environment/WorkbenchEnvironmentChecks.cs",
-      "sha256": "9b7db069508bbe2e3376597a3534201c4adad3a7b23b176508c9bb6497ed5c64"
+      "sha256": "49e7200b69068ad87ac8685b7627f73f164b4267acd2effb335fb9d4327b355d"
+    },
+    {
+      "path": "src/Studio/Core/Environment/WorkbenchReleaseSelection.cs",
+      "sha256": "48ff0740a94fb659af15a7bdeb1454d038243c02b206d78bb0a8f5e9d989844a"
     },
     {
       "path": "src/Studio/Core/Inspection/GitWorkspaceDiff.cs",
@@ -258,27 +462,31 @@
     },
     {
       "path": "src/Studio/Core/Mock/MockTiaSession.cs",
-      "sha256": "c3c31df3589f90b07dd19ec3fe6dec7a7377ad91810290a94f8db4ad2e77b88a"
+      "sha256": "55d15734723280ce156a01445860cdcbafe0f4bbdec92b1bcabafaecbf0b6cf0"
     },
     {
       "path": "src/Studio/Core/Mock/MockVersionControl.cs",
-      "sha256": "8d49fce70badb8e3f7c1d651f96d9c9aa9130b4c006024b44e469b8bc0ea7079"
+      "sha256": "f475df6de2ca3f8ce859400188650e3f5f38eff9cfb3038602edfa752d472af1"
     },
     {
       "path": "src/Studio/Core/Rpc/BridgeChannel.cs",
-      "sha256": "ce7773dc8b60e5800be2f06af84cbdf397b6bae6857fd0a85017968fb0d04d3d"
+      "sha256": "d62e0d8dbf6ddfabbee227079d74232e1ac4d2c68b99772092be3289a9997252"
     },
     {
       "path": "src/Studio/Core/Rpc/RpcDispatcher.cs",
-      "sha256": "99b96dd4a3d536617d1992567dcb784cef2ea680b08a8caa8daab9f5d82872b9"
+      "sha256": "39fac6f197edad531a671b45dfb286a191f0c5e87ce9ecdbaf627e89e3eb3a8a"
+    },
+    {
+      "path": "src/Studio/Core/Rpc/VciReadOnlyBinding.cs",
+      "sha256": "6ca71db739866fbbdca188c75b8cc4c4eb2ba110a40b17283c008a88748ad4cc"
     },
     {
       "path": "src/Studio/Core/Rpc/VersionControlUnsupportedException.cs",
-      "sha256": "347762d674d706cb710f83b214e94d663d6c4cfc5d371483625037464d114608"
+      "sha256": "ec9cc5905c0f490c82d6925413168bf4cf4fd92b2fe10ddbaf2a873740d3b8f6"
     },
     {
       "path": "src/Studio/Core/TiaOpenness.Core.csproj",
-      "sha256": "5c52bf175329d141d1740319239930984e2802863d835d0ae142d64ea10c3e1f"
+      "sha256": "b29749ec607366f6fd296dcbab78eb87f08b59137a5cd1e732b1d609451bfa2b"
     },
     {
       "path": "src/Studio/Gui/App.xaml",
@@ -286,7 +494,7 @@
     },
     {
       "path": "src/Studio/Gui/App.xaml.cs",
-      "sha256": "95de8da09bed9e2362df0001ae4f2ac659866516315ab7db79323de599b61ca2"
+      "sha256": "8ce838e4c3f637a1c6d5dde136f55a95676ababdbd4f17a0691bfb8233b66b10"
     },
     {
       "path": "src/Studio/Gui/AssemblyInfo.cs",
@@ -294,11 +502,11 @@
     },
     {
       "path": "src/Studio/Gui/Common/Mvvm.cs",
-      "sha256": "94a24ca817a7f5e0bf434b33cfe3a995d100fa3d3dd095b0ab3ab9b8bec2a613"
+      "sha256": "2bd2b88dd09cc85f7c39083d1bdb22868226ceb04ce1f3ba0c948c92e6a5a634"
     },
     {
       "path": "src/Studio/Gui/ConfigurationPage.cs",
-      "sha256": "99335774283ec6a0bbd5c512c2b1126cdc8bfa1ab663171855b6ff9c55e11c05"
+      "sha256": "c15ca0432dc0587e300e2ccaf73c7bfe391b74209e1e80a73d3831bbff83b2a1"
     },
     {
       "path": "src/Studio/Gui/Configuration/ClientConfigurationChange.cs",
@@ -306,11 +514,11 @@
     },
     {
       "path": "src/Studio/Gui/Configuration/ClientProfiles.cs",
-      "sha256": "38f4f72f9590eb60a9c203d03d1452588ec6284160d1c9425606003bdff9dc9b"
+      "sha256": "ac43712994cc7093e7f68818e9508797abd4879c866e6b4bfbd1ca0c928268b6"
     },
     {
       "path": "src/Studio/Gui/Configuration/ConfigCore.cs",
-      "sha256": "fe53130641b56d526a78a89054c347902f8279f5e1940f0c01132e5634c5e581"
+      "sha256": "338c9d1965d110ee75531c19a243beea1757d33c659ce6debbe18be6aecaa4cf"
     },
     {
       "path": "src/Studio/Gui/Configuration/ConfigurationPreview.cs",
@@ -322,11 +530,11 @@
     },
     {
       "path": "src/Studio/Gui/Configuration/ConfigurationView.xaml",
-      "sha256": "fb9f3746600ddb141608c7e02c201d13078333cc38258183ce676ed2e61c81d3"
+      "sha256": "493fe450658066b35a729b8612c2edc81a58d363e2ada52ebefbb7d4857e49d5"
     },
     {
       "path": "src/Studio/Gui/Configuration/ConfigurationView.xaml.cs",
-      "sha256": "115936b5fd327f4dee313f05e14f8cfeaf89be6270d051da62c86b8b99745b2b"
+      "sha256": "270856f91c6ca4462f11982b209d8567d4da57da8aeea69d43fed7989f59ec28"
     },
     {
       "path": "src/Studio/Gui/Configuration/ModernJson.cs",
@@ -334,19 +542,51 @@
     },
     {
       "path": "src/Studio/Gui/Configuration/UpdateCheck.cs",
-      "sha256": "6f8f41787592641f9cf4807df917814c21b8abae6c4ca98965845fdf40ef8e00"
+      "sha256": "78eebb66c5ebf752a9d1679f90e8974b1afd8e60cf487ce5f08b291a51f2f09e"
+    },
+    {
+      "path": "src/Studio/Gui/Controls/AccessibleNameConverter.cs",
+      "sha256": "106db8af2e91b2536349349c3941b407b7dc99f3112b532180f21c2c05b229b4"
+    },
+    {
+      "path": "src/Studio/Gui/Controls/AccessibleStatus.cs",
+      "sha256": "b8a6a8abecd751da7f72ab33d76ecf55d43f5c9c10fe2333cd383162ca574965"
     },
     {
       "path": "src/Studio/Gui/Controls/BoolConverters.cs",
       "sha256": "00a98cd03993a181e87e29ee43eaa9bbd1249da4c4bd3bc8adce227b6290f8f2"
     },
     {
+      "path": "src/Studio/Gui/Controls/ContrastSelection.cs",
+      "sha256": "8f67e3d5be194e41a794c3c8796287dbc7728abfda521b3509d9c25a5f40ea6a"
+    },
+    {
       "path": "src/Studio/Gui/Controls/LogTailView.cs",
       "sha256": "f827ac7a93e73b1afc0081710de61d28e0059b288cea99b065c41eaed2047d56"
     },
     {
+      "path": "src/Studio/Gui/Controls/ModalPane.cs",
+      "sha256": "de475a748439f38b38c3fac327f38f107ba6eaa2cd1184219f95f910061ba316"
+    },
+    {
+      "path": "src/Studio/Gui/Controls/PageHeadPanel.cs",
+      "sha256": "d0c113cd8c4abdb597e0276423e8a720886e0184b3913ab76403489487daf154"
+    },
+    {
+      "path": "src/Studio/Gui/Controls/PrefillMarker.cs",
+      "sha256": "bee5481b85f86cb426a639afaa20df9f8ae194f1ff40bc7950a2cb9d1b4b6343"
+    },
+    {
+      "path": "src/Studio/Gui/Controls/ResponsiveLayout.cs",
+      "sha256": "519baec2237eea4afdd3405268d9a104c9b9fe7dff7d1bfb3392f69e18c62a2f"
+    },
+    {
       "path": "src/Studio/Gui/Controls/ResultPresentation.cs",
-      "sha256": "38ec42d4f3c3d0df2fa0c779d770b0a34a98cd28f9cb2d0cc6033cfa22bb5c42"
+      "sha256": "9a9b781a22586272568e47a7297bdb26a13304c2d1d9fb562dab44af8df79ea1"
+    },
+    {
+      "path": "src/Studio/Gui/Controls/ScrollCommandNameConverter.cs",
+      "sha256": "76eb1e04480da0c6155db3a711b4b95c46b79859b2b3f1defe4e6a9f933f8eab"
     },
     {
       "path": "src/Studio/Gui/Controls/TrackedTextBlock.cs",
@@ -354,7 +594,7 @@
     },
     {
       "path": "src/Studio/Gui/Controls/Ux.cs",
-      "sha256": "03d3f3e1851930f52931ff6fdb3f023cef905c4ddc685a1d723bc394d4c7a433"
+      "sha256": "7adb41a63db32df1c14b2cfcdca80d02baa86a0e6021aa04bce2d782c7044db9"
     },
     {
       "path": "src/Studio/Gui/Controls/WorkbenchCommands.cs",
@@ -362,11 +602,35 @@
     },
     {
       "path": "src/Studio/Gui/Controls/WorkbenchLogView.cs",
-      "sha256": "e4fff7cc4b83b3842596dab4038b58ec6efe6ab00c062b6fa810666e8714bde0"
+      "sha256": "0b448df1340640ea6ab059ae762de0eb7ab90238caa6737feba6fe768038e173"
     },
     {
       "path": "src/Studio/Gui/Controls/WorkbenchMessageBox.cs",
-      "sha256": "6c26671341815b8d6de256cc73432e17a668e2557c8bdefc6337edb61ded937b"
+      "sha256": "c68b2d2853abfc247164ccb9bf583801be962241eab4e9861f613a8611bf4e46"
+    },
+    {
+      "path": "src/Studio/Gui/Control/ControlArtifact.cs",
+      "sha256": "715e7e9a2a3d0463c4c6fd8c4dc40b066d07047d849cedabbdb6e2fbc1108cb4"
+    },
+    {
+      "path": "src/Studio/Gui/Control/ControlInputGuard.cs",
+      "sha256": "58bd9e3d49095da50bee67a666b1964de96a170ab037cc7c09d0d5047b359af9"
+    },
+    {
+      "path": "src/Studio/Gui/Control/IWorkbenchControlSurface.cs",
+      "sha256": "04cfd08d24b7a998a6a4fe02f4d3195b49ef8c47ea94d8095aa4f18c0b9b2180"
+    },
+    {
+      "path": "src/Studio/Gui/Control/PrefillRegistry.cs",
+      "sha256": "f825dd322eb10b5ee08c7575f4ae43f2bbde26d036227774fb4465713ba6ca70"
+    },
+    {
+      "path": "src/Studio/Gui/Control/WorkbenchControlLog.cs",
+      "sha256": "418e48a490639c5c5d35c64e133b9a59a906faa1b42fd9eb9abd95d5c14d7028"
+    },
+    {
+      "path": "src/Studio/Gui/Control/WorkbenchControlServer.cs",
+      "sha256": "0233d633811aa69269d53671439cffaaa861e38645bcf2fe58fca68245e9dc17"
     },
     {
       "path": "src/Studio/Gui/Localization/EngineResultText.cs",
@@ -382,43 +646,47 @@
     },
     {
       "path": "src/Studio/Gui/Localization/Strings.cs",
-      "sha256": "11bd090bae15eb8dca0c882d910372247cffabdf536c2a77666c37d221c85aa7"
+      "sha256": "cda170ac7e67ab089dcdbd74f5cbeb60c5ef26d2c4d5912367801bf4a7dae957"
     },
     {
       "path": "src/Studio/Gui/Localization/Strings.Engine.cs",
-      "sha256": "3cf2bad0894707bfdcd2eb297627afd7ad674dbaab32326127bc1a16c3270ee6"
+      "sha256": "01396840b9ba3fde7026d6d0efa3d6b4f892e3633d2e46ac1eebed3fd945d422"
     },
     {
       "path": "src/Studio/Gui/Localization/Strings.FeaturePages.cs",
-      "sha256": "26361b199231a0090706a17c3207eaa0b66d2b3ee1cca0f235c5caa1f06df1e1"
+      "sha256": "59bce4b3bbd21639d3be328466de3a58bcfdf62ae0a3e5c86008b79a066a2a91"
+    },
+    {
+      "path": "src/Studio/Gui/Localization/Strings.Layout.cs",
+      "sha256": "a2fb21f89d8e4167124adaa62b6d7efb1eb452b33f9041e814281de44840419c"
     },
     {
       "path": "src/Studio/Gui/Localization/Strings.ProjectPages.cs",
-      "sha256": "eee82c72df3086c7cbff250822fb8e0ee9c83128d13bed681e5c80a79742bbd2"
+      "sha256": "4c58cfbfd1633458662e0acc3ee767f44732fb16fc8793b375e470a06187338a"
     },
     {
       "path": "src/Studio/Gui/Localization/TrExtension.cs",
-      "sha256": "701476b29d5ed2a83d2e6f34377f194d8f00b2ac58a7cf8cc35495416d9a918e"
+      "sha256": "96c1a92c1a248162f6d11f6cacd6bff0f6cdb9054933e365ef992f545fc391d1"
     },
     {
       "path": "src/Studio/Gui/MainWindow.xaml",
-      "sha256": "5dc3416dabaf5ba819f8cc89f279bd7adf5ada05240c84fec1ddc907853e5f94"
+      "sha256": "228a85a9251f3be76b6d9156f4ffd1cbf1eec9735df54755dfa2f686ec105012"
     },
     {
       "path": "src/Studio/Gui/MainWindow.xaml.cs",
-      "sha256": "f8057109f5ef5b77cc07d1943eb12f57c6c627ad50daab3b5e988c4eb86ef22a"
+      "sha256": "6a855e90988587aa2096d114b5304a03049abcefc4c5faffc8c7aec791c83395"
     },
     {
       "path": "src/Studio/Gui/Services/ApprovalNotification.cs",
-      "sha256": "4ff897d32286a6065abffb6ecd1be48996c6a7116ac25f2bd60b81ed8d827085"
+      "sha256": "468ee20e43a85f6ea7f9d721c736f0ecd211a8eeec13140fb0f4ee64f77fcee0"
     },
     {
       "path": "src/Studio/Gui/Services/ApprovalService.cs",
-      "sha256": "d76c1db5a4e42f9677edbf3b20736bcd953e4718dec36b606408b42df00a6aac"
+      "sha256": "163a2b3831248e1f8ec87fb3d5cc7150ae305933dbb6a2b96ca061567a3696ad"
     },
     {
       "path": "src/Studio/Gui/Services/AtlasService.cs",
-      "sha256": "7ade4a442832282b05ff885c85c4a73d9370ef0966a42d7f7e78427b533b43f6"
+      "sha256": "3416ef30c263ed0a00362ccda04a0e1a8c5c3556cea72abec64df461e49e4c4c"
     },
     {
       "path": "src/Studio/Gui/Services/AuditLogService.cs",
@@ -426,11 +694,11 @@
     },
     {
       "path": "src/Studio/Gui/Services/AuditTailReader.cs",
-      "sha256": "cdea3cafea504e4651d64e89083c41530f76c265b632d68263ffbdef4bdfce42"
+      "sha256": "e702880a1a238354cc520178cf22df49c54a7b3f1752e8e75da93c5be76a70f5"
     },
     {
       "path": "src/Studio/Gui/Services/CallJournalService.cs",
-      "sha256": "a57c87d471a9233b68d0f5555cd6f6a5be005f485aa771a356c4f2dee147454d"
+      "sha256": "b2b5560b2d239b21c6f4764cd3bec66eedda71402aebc8f70c4e6ef29968cef6"
     },
     {
       "path": "src/Studio/Gui/Services/ChangeMonitor.cs",
@@ -441,12 +709,16 @@
       "sha256": "26eec5ffd43a3b1dc7d3dabac4c01e03fc00ea4159ff70d37737353974ba4647"
     },
     {
+      "path": "src/Studio/Gui/Services/DoctorFixCommand.cs",
+      "sha256": "986402d20f020349d24745d25c3e34e7d4089796e41b61b7d478ea3403804866"
+    },
+    {
       "path": "src/Studio/Gui/Services/EnvironmentCheckService.cs",
-      "sha256": "2d4d998f562fb9dcdf09b1b6e512ff00076ab973c6db79e7d1babad2abff36e4"
+      "sha256": "dabf5e57425ef480f96b5e305038b2cef56fb4ae5cda98d5d020d0fc40c675be"
     },
     {
       "path": "src/Studio/Gui/Services/FeatureContracts.cs",
-      "sha256": "bea0c57aa501dc1035ddc8837c1d96b449af733126e488feabc40c74558ca7a5"
+      "sha256": "403151bc953c247c472b59b0fd9b40f70d44dfb56ec5f4a0df37db8aef331219"
     },
     {
       "path": "src/Studio/Gui/Services/FeatureJson.cs",
@@ -454,23 +726,59 @@
     },
     {
       "path": "src/Studio/Gui/Services/IApprovalService.cs",
-      "sha256": "459243729d2d57408f357708a4cb061beee9d21d3a2c7bb714b17a78dc3d014d"
+      "sha256": "38aba5e64fe717867ef1126c5f774ff2958e76e65d8c0ef423ba460057458de7"
     },
     {
       "path": "src/Studio/Gui/Services/IAtlasService.cs",
-      "sha256": "4ffb9fb3af4bd8227b7b814e124b59303c4fc86c013b00b63f3713131495757f"
+      "sha256": "47092408dd075c32cf68542ca363b1ea3281ca44ee53da8ab67aa8c95e807b24"
     },
     {
       "path": "src/Studio/Gui/Services/IDiagnosticBundleService.cs",
-      "sha256": "e52adb7211165f596e6c2de3f860b74adb0cb0ad26553edba343dce7452f139f"
+      "sha256": "baede24a78fd9ffcac463bb969501946db9c1f1adffe5d228de56cd1c54743ce"
     },
     {
       "path": "src/Studio/Gui/Services/IDialogService.cs",
-      "sha256": "eb35f4f33c0add1ef597bc4ff4713c481c3eec1c0bd5811ee9e32fccd8f51233"
+      "sha256": "c809d3624b890136c757ca6f3c207e71e8164e3122ff560babbcf3ec86746e81"
+    },
+    {
+      "path": "src/Studio/Gui/Services/IMcpSessionClient.cs",
+      "sha256": "ec446f55de52ecd8208e009d996b40c586c4051ebb91a269850860cf8a561a71"
+    },
+    {
+      "path": "src/Studio/Gui/Services/IProjectClient.cs",
+      "sha256": "8dabe2c7a441d8ab65ce444c4de8b16af878e531f9bc20d3efb550ee57315fbb"
     },
     {
       "path": "src/Studio/Gui/Services/IStudioClient.cs",
-      "sha256": "be21f28cb0e36ac010d9a0cbe82798bb4127fd996c8fa18d545f43ec16719c6a"
+      "sha256": "ead204d4839571fc7e4e2b253058386a339d679977033de9e96a481f9f1e6874"
+    },
+    {
+      "path": "src/Studio/Gui/Services/IVersionControlClient.cs",
+      "sha256": "1ba02f6e6f061f0ee020c92754149d5dcc6f530c69ca07254ca55f9ec00dd894"
+    },
+    {
+      "path": "src/Studio/Gui/Services/McpAtlasService.cs",
+      "sha256": "999adc91af51c593cabdb075dd071e6a8abe971c6945db4d76a94ee6a39eac83"
+    },
+    {
+      "path": "src/Studio/Gui/Services/McpProjectClient.cs",
+      "sha256": "485f4c6dc69e7b4c626a424a508c33b87f91e1e9f2037d5fc33e4180f7f62a24"
+    },
+    {
+      "path": "src/Studio/Gui/Services/McpSessionClient.cs",
+      "sha256": "f4ffaf46eac1ab6dfc318f5d1601cd3898d8ad3ec08d104f2d4883bc8d876136"
+    },
+    {
+      "path": "src/Studio/Gui/Services/McpVersionControlClient.cs",
+      "sha256": "de82afe00ff998f6032accab468030ff2ca75c9bd760764ca71a33985e8575ac"
+    },
+    {
+      "path": "src/Studio/Gui/Services/OfflineSessionClient.cs",
+      "sha256": "fea4142f80ef277c3f73945c823ab0be811a0d8fb199acda47a33391178e756f"
+    },
+    {
+      "path": "src/Studio/Gui/Services/ReadOnlyVciBridge.cs",
+      "sha256": "e2353e8f3c06eb5205e92a7411a0f9175d9349420fba86d414192e61be15f272"
     },
     {
       "path": "src/Studio/Gui/Services/Stubs/ApprovalServiceStub.cs",
@@ -486,43 +794,51 @@
     },
     {
       "path": "src/Studio/Gui/Services/TiaExitEvidenceCollector.cs",
-      "sha256": "e79a15a81969eae0deafa20873c84e53114f7377727a14066b62f43c25058f60"
+      "sha256": "6084881d0dd7b4d92ab3e66817828f3229d3d0a9ffa9af433ed710189bdb6f28"
     },
     {
       "path": "src/Studio/Gui/Services/WorkbenchActivity.cs",
-      "sha256": "a365b25ffbeb0ec5227e8462f6a05c819d3fa9a6260787013aff1f755c269d32"
+      "sha256": "94e48d5344aace9053352454b1f637367d60ebeca8f762160dfa3e74d4a6a089"
     },
     {
       "path": "src/Studio/Gui/Services/WpfDialogService.cs",
-      "sha256": "69be1a2bc737083ff68b0c8d84ecdc2b5575cb24ece1e963e866afcae1d35769"
+      "sha256": "670528633c64067c17e0864549ee46609582f9f5abbd2cb8b488138f93ae5d2e"
     },
     {
       "path": "src/Studio/Gui/Settings/UiSettings.cs",
-      "sha256": "b78435a0500c6d02230004b9f3b3ece41089e024223c7570c9c111a51951e052"
+      "sha256": "7f733f14ce6f817bd8ed1dd7e30bb4ebb71ffa755c35d46e29d6a30e25883ebb"
     },
     {
       "path": "src/Studio/Gui/Themes/Icons.xaml",
-      "sha256": "33104d1cb9159ca3710e406a6ef13535b853e2bf75f91d8b441279e3613a7a49"
+      "sha256": "7c953d6c9cfcee357f40a16a94e8e23c69bfcdac5f3de24aea360a2dc61e2548"
     },
     {
       "path": "src/Studio/Gui/Themes/Palette.Dark.xaml",
-      "sha256": "be993c0de8085859ac6163e0b1379b724ed182f7849b1bac9ecc0a98fbfd2525"
+      "sha256": "de84be86d3066608ece477236c6cf878f7a8d71d8003ed0378fd784238e4f042"
+    },
+    {
+      "path": "src/Studio/Gui/Themes/Palette.HighContrast.xaml",
+      "sha256": "f323c616ade672c8fb9bd5b6015eb16d1788089edd2c5a325732e1d01432d586"
     },
     {
       "path": "src/Studio/Gui/Themes/Palette.Light.xaml",
-      "sha256": "94b8c1271819dbfa62d778a464da12e7a815a6430e84997166c2acffdd7ab72c"
+      "sha256": "56c331e7f42c3634b9381899bb296717a427f6900bf0aec9a94f15b54aca54fb"
     },
     {
       "path": "src/Studio/Gui/Themes/Primer.xaml",
-      "sha256": "2a70cd1a7ca012575d74e2aa3d3d3bc4f049c8a37dab7f6f6f76cb79aa51affb"
+      "sha256": "73377d31cfd016217335c76d9d64c16263a1b8401c0c7456186f79c5f0f3fd8a"
     },
     {
       "path": "src/Studio/Gui/Themes/ThemeManager.cs",
-      "sha256": "3a7144629623485e26dc164a0da34a00f9aa087cb0eebf1bf03971b8426b0a2a"
+      "sha256": "94bef9f391eae8cd1239f18b44cd97be42fb5d99809659c10888c559ef02c42f"
+    },
+    {
+      "path": "src/Studio/Gui/Themes/WorkbenchFonts.cs",
+      "sha256": "e3f10969e9f238e546ce8e5f0e9ba9e77dd9b22af48dc606f2f7311966cf0379"
     },
     {
       "path": "src/Studio/Gui/TiaOpenness.Gui.csproj",
-      "sha256": "be0f02413d58e0ab6c699896084e50af493e346e8f131d9d158dbb19478e1483"
+      "sha256": "56c76895f720ff27bedb7289ac068c0d9d3bd44b5af64e4f0c23bc3a092b9a9d"
     },
     {
       "path": "src/Studio/Gui/ViewModels/BlockNode.cs",
@@ -538,11 +854,11 @@
     },
     {
       "path": "src/Studio/Gui/ViewModels/EngineeringViewModel.cs",
-      "sha256": "9e6810fa3c7c9fdaa31676d84eed5f83cd6f0cc9a17b72909e2b6e57344e6e75"
+      "sha256": "4565159c6f0b7d03e0576cce1e6bdad30fa83292b10a753bf80634498cd89aac"
     },
     {
       "path": "src/Studio/Gui/ViewModels/FeaturePagesViewModel.cs",
-      "sha256": "2238097c16bc9f9be1f38db77b3b7bb1c519aba0bd52569619dba78caf1397e0"
+      "sha256": "55cd2ca3fa9764b22e3d29d9864191a71993bd06691d9ee7b5510f86d291e9fa"
     },
     {
       "path": "src/Studio/Gui/ViewModels/MainView.cs",
@@ -550,79 +866,83 @@
     },
     {
       "path": "src/Studio/Gui/ViewModels/MainViewModel.cs",
-      "sha256": "a86d70553cfc098759cfdd7b439302d1f6d800dab43026f0ed7bc0a8cad9dfe3"
+      "sha256": "24aa0ae3b38d202722267886b48add2e0862ab3b0139f07ca9c2221eeaa575b7"
+    },
+    {
+      "path": "src/Studio/Gui/ViewModels/McpSessionPanel.cs",
+      "sha256": "453a5162002da62533bcfe624bba73f267153ca5789fc20e04e1b27a06ffcc11"
     },
     {
       "path": "src/Studio/Gui/ViewModels/SessionViewModel.cs",
-      "sha256": "5a3da369311f0e173a37994bcdc2f5a95033255710421abab99c291516a589f9"
+      "sha256": "49e61400795f4bd712ed70d247653ccd5d2e17f39bef5d71a1adc3fe3ce4d112"
     },
     {
       "path": "src/Studio/Gui/ViewModels/VersionControlViewModel.cs",
-      "sha256": "d80165469a6414fc4d2c60f2cba665da98d726b3a39368f8941764dd821c6e52"
+      "sha256": "ba1272ba3d52989f1636562cc74c42f07a685c1e6bbe897e1635e4377ffbeb8d"
     },
     {
       "path": "src/Studio/Gui/Views/AiCallsView.xaml",
-      "sha256": "2c20fe7537fd24d2ffe890af35ed761f57a7accafcec8de7b219e33bd19f7cd0"
+      "sha256": "99d6af91574d85cf65e12aabe8fea4ac2ae47e167012306388d4cd6d13b52bf1"
     },
     {
       "path": "src/Studio/Gui/Views/AiCallsView.xaml.cs",
-      "sha256": "7cd32d8aab2262052fa1f81d371a406032a88484e352837514eedb451a13932f"
+      "sha256": "904368eaa808b2b7944e6c5bc799426fe131fd6dab442b15247aa5bac2bfc432"
     },
     {
       "path": "src/Studio/Gui/Views/ApprovalsDrawer.xaml",
-      "sha256": "c42ae3d0b1004b13d5511a34ebc41f681e6fdaf8f18fa2dfaafa783d473494ab"
+      "sha256": "1aa348d82b9381cb3bad0ff040c0259b2019715ee44b157d6fcb4b16a2e66ad1"
     },
     {
       "path": "src/Studio/Gui/Views/ApprovalsDrawer.xaml.cs",
-      "sha256": "74da9e62ff7952974e53feaf4c2cc85305c7c4f921d3c346d42661ed623da7ed"
+      "sha256": "5669a3a27885edff3869aac0cecc8c25344b25e9b60288b8a34708a1f9d9b803"
     },
     {
       "path": "src/Studio/Gui/Views/AtlasPresentation.cs",
-      "sha256": "b0656229dcca10efb639f9bb081841202952d193e8d5f804c0dcfa03d5fb0e46"
+      "sha256": "ffe7d7767389891018e492da9fa6a7f090cbc938bc40b359b99e5b1359dd4ab1"
     },
     {
       "path": "src/Studio/Gui/Views/AuditLogView.xaml",
-      "sha256": "2f693c28dbd3b32273f8b9a07551a994141364aee76bf9885d3685e468491f0f"
+      "sha256": "cf8aeb981c3f0bee5b998133baa29cef8f148242ea968617e4678fa3cc78cf5b"
     },
     {
       "path": "src/Studio/Gui/Views/AuditLogView.xaml.cs",
-      "sha256": "55a142992cc9b048a94df9cdf368f6d47776a634e0427bf54d5438fc22e59dad"
+      "sha256": "211943d003eaf8824caf773bb7cd2d0284b866aa9affbd2895c1191df7dbbd86"
     },
     {
       "path": "src/Studio/Gui/Views/BlocksView.xaml",
-      "sha256": "0f60aab5731046a53797412045bad730e580871d784f623aa45d828ace7b5935"
+      "sha256": "20e754abcd08c18a85a4218205718ef2633aaa13dbb8a6df808905877fa98ab6"
     },
     {
       "path": "src/Studio/Gui/Views/BlocksView.xaml.cs",
-      "sha256": "5304c1d3a959e2738cb7817881d5f1033abc02da3317c7a0c383331fc5f524be"
+      "sha256": "b469a49d437389b3073c3a7b760177c10b9fcf142a0031ce11e02d7030402ddf"
     },
     {
       "path": "src/Studio/Gui/Views/CallDetailDrawer.xaml",
-      "sha256": "1316d5836c9ecf25796552cc32536466ade74de9d3e2c27020dfdbe46006cda4"
+      "sha256": "facfcd63cbf832326b948b7747ce7dcd6c76db9e0b6e566c65796ec0dae20726"
     },
     {
       "path": "src/Studio/Gui/Views/CallDetailDrawer.xaml.cs",
-      "sha256": "afa2198a98d547d80fbfc2ac970c2bc6b2d015de73cd4d38d86e0a146bd7a24f"
+      "sha256": "a8f9be4029741b4e3629cc3a695e32be0aea3f9e6cab187b23cb551a18e0481f"
     },
     {
       "path": "src/Studio/Gui/Views/EngineeringOptionsView.xaml",
-      "sha256": "f38c4abb745ab128b5dfdd9718ebd2a5f8322e90d3cb74919130f88270cace19"
+      "sha256": "e9ffb9813877e12e7f362174c04dff6b2bcc15a2f8c878ee81e7e9381fc8db7d"
     },
     {
       "path": "src/Studio/Gui/Views/EngineeringOptionsView.xaml.cs",
-      "sha256": "3eacd0f6b327059ef2caa87ee21041e456ba2dde02b16e329cc61ef1fe5e7f28"
+      "sha256": "b1c6464aed4c87803e0a0085dc3d571557d29f68550e3d822bd9550f0f17c6cb"
     },
     {
       "path": "src/Studio/Gui/Views/EngineeringSideView.xaml",
-      "sha256": "5fc6706453e1d62e51ca5a24c105ee3537880c2387199d0f7653373e5ffadfe0"
+      "sha256": "b18a13172b6e88cb73cfb7eb2e78b6829f198164334fba0eb2efa05c9958e681"
     },
     {
       "path": "src/Studio/Gui/Views/EngineeringSideView.xaml.cs",
-      "sha256": "c5662adda985c04ff96f83b5bd2f3ff0e5ce98d430a30a8644ca3184a5ef5f85"
+      "sha256": "4dc8ac99b9a1386c32ed20a2999b454fcf931778cd275016e75e911de93a644d"
     },
     {
       "path": "src/Studio/Gui/Views/EnvironmentView.xaml",
-      "sha256": "331a58567ff7c5b8ca41d93b6d617acc991ff090918fff34554a71d10851e257"
+      "sha256": "c8f5e33b2c6a1fcf7369352675f202a96a5fa8b89408af98723c7bba9fe58482"
     },
     {
       "path": "src/Studio/Gui/Views/EnvironmentView.xaml.cs",
@@ -630,43 +950,47 @@
     },
     {
       "path": "src/Studio/Gui/Views/LogView.xaml",
-      "sha256": "0372c86f283de851b15eda6176cd467f20bb311da5931913db629a1e9c8ee514"
+      "sha256": "7d512857f50cff0670dd7a74f677c74a696503b20de2665bc427c98ecc706f91"
     },
     {
       "path": "src/Studio/Gui/Views/LogView.xaml.cs",
-      "sha256": "3b4ac6fcc8196fbf7ea16b133eb92068d5b7d6c50e4f9b471a84725e145b79e9"
+      "sha256": "e15d3c14e392bb932d71d0934fe15665cfb6b5e25d8c0bc7c9985ed18cde6e85"
     },
     {
       "path": "src/Studio/Gui/Views/ProjectOperationsView.xaml",
-      "sha256": "7d3e78f5c65b7e7f24cfc8caee5083700cb58518435114b6df3940048caffab9"
+      "sha256": "4b4b453c9b664ec78b7a51f364784b33f14cfef67bb031207e691ea182026086"
     },
     {
       "path": "src/Studio/Gui/Views/ProjectOperationsView.xaml.cs",
-      "sha256": "ac8174d5da312479b9f37f1095262c1a8563c772a93d29dd34bce13df005fbea"
+      "sha256": "c7aa088406e1f3088b2be26fb38ff6ed5aee030473898f7c7692401d30e324c5"
     },
     {
       "path": "src/Studio/Gui/Views/SettingsView.xaml",
-      "sha256": "3b826c055b0872cdb29159368186bb750fc5c3fd69b2014d264fd8d75bfaaa15"
+      "sha256": "aae73a5a8472c7c53d7c113895f325e992140689a1f312afd27d0541d5ccee7d"
     },
     {
       "path": "src/Studio/Gui/Views/SettingsView.xaml.cs",
-      "sha256": "5de02f9e079d3e06a06227ab4605446b28938df25ccb8e92341920a964c0ed0e"
+      "sha256": "1bdc8763f25fe189f3fe43b0935c181f86949d253815c4a8f3591ea53fcde9b6"
     },
     {
       "path": "src/Studio/Gui/Views/VersionControlView.xaml",
-      "sha256": "4b984cd4006bd5606e36578955ab0189a4dbacd4102859a1b662ee46a15507f8"
+      "sha256": "443bbf9e6a5517d3b7e619808bc0cc84e8b0f4453ec31d0d037c6f83c38857e8"
     },
     {
       "path": "src/Studio/Gui/Views/VersionControlView.xaml.cs",
-      "sha256": "3c1e5c4bc64b8fe808cdeb10f2041842e83bcf48afdc87b7d56b33ade46bce52"
+      "sha256": "b1d74ea490e7da844e5a5e432807e745308e7a51baab54a6a1230479fda8df4a"
+    },
+    {
+      "path": "src/Studio/Gui/WorkbenchControl.cs",
+      "sha256": "02a197ab2f2de409f27e4dcd4f78d42b50c9d27e1b769565067dcbf7ecadf738"
     },
     {
       "path": "src/Studio/Gui/WorkbenchFeaturePages.cs",
-      "sha256": "e5c2a830fe305e571bbe636256fc1e46c773915b468a959196806944793f89dc"
+      "sha256": "48713e6f39dbcf3d5ebcfa69c5832290fc61b5e9524847835530ef1afd4dd95b"
     },
     {
       "path": "src/Studio/Gui/WorkbenchShell.cs",
-      "sha256": "85d055b92b2803daa435d782588b77fbf7b98224b758cd8a644c9f43009d63bb"
+      "sha256": "daab160575349c1886e14c704d3afae3bf41b0811b63951f088ce0c3fb9ec06c"
     },
     {
       "path": "tests/Studio/Directory.Build.props",
@@ -674,15 +998,15 @@
     },
     {
       "path": "tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs",
-      "sha256": "b5495aa0e82bce5b79c8c7f3b39cd0e8d31e9e3bdddd99b8ea1e3d3ce1ac2d13"
+      "sha256": "301b8e1bb281a1255998e6dfbd3106781d85ac6ea2f44f9c78a6021b6d46c662"
     },
     {
       "path": "tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj",
-      "sha256": "43c3b7042daedce95436ddd89466ad6f052dc270752059289e38f0197d5cce18"
+      "sha256": "32d8e2d7bb872d57cc74d71dc0b8eb618a6f055bef9b74aada509be889e5dbdd"
     },
     {
       "path": "Version.props",
-      "sha256": "3e3efe162111072d1c20c90866499471d95575516ca721c30e8d09220d634d38"
+      "sha256": "cbdc5c95021fef08eaf454c70862081da8ba8136dc296c3825c71d5038e9a04b"
     }
   ]
 }
