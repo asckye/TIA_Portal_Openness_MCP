@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TiaOpenness.Shared;
 using TiaMcp.Logic.ModelContextProtocol;
+using TiaMcp.Logic.Generation;
 using Xunit;
 
 namespace TiaMcp.Engine.Tests
@@ -50,6 +52,107 @@ namespace TiaMcp.Engine.Tests
             var inlineDisplay = JsonNode.Parse(inline.ParametersJson)!;
             Assert.Equal(14, (int)inlineDisplay["sourceText"]!["byteLength"]!);
             Assert.NotNull(inlineDisplay["xmlContent"]!["sha256"]);
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void Large_argument_digests_are_repeatable_and_keep_raw_content_in_the_display(bool keyNoise)
+        {
+            string content = keyNoise ? string.Concat(Enumerable.Repeat("key=", 4194304 / 4)) : new string('x', 4194304);
+            var args = new JsonObject { ["files"] = new JsonArray(new JsonObject { ["fileName"] = "F.scl", ["kind"] = "scl", ["content"] = content }) };
+            var element = JsonSerializer.SerializeToElement(args);
+            // Measure one complete argument hash, with a generous budget below the old
+            // per-regex timeout. Parsing, display and the second hash are outside it.
+            var watch = Stopwatch.StartNew();
+            string digest = CanonicalJson.ArgumentHash(element);
+            watch.Stop();
+            Assert.True(watch.Elapsed < TimeSpan.FromSeconds(1), "4 MiB argument hash took " + watch.Elapsed);
+            Assert.Equal(digest, CanonicalJson.ArgumentHash(element));
+            string json = args.ToJsonString();
+            var first = PendingApproval.Create("fixture", "21", "StageImportFiles", json, "{}", 120);
+            var second = PendingApproval.Create("fixture", "21", "StageImportFiles", json, "{}", 120);
+            Assert.Equal(first.ArgumentDigest, second.ArgumentDigest);
+            Assert.Equal(first.InvocationArgumentsDigest, second.InvocationArgumentsDigest);
+            var display = JsonNode.Parse(first.ParametersJson)!["files"]![0]!;
+            Assert.Equal(Encoding.UTF8.GetByteCount(content), (int)display["byteLength"]!);
+            Assert.Equal(PendingApproval.Hash(content), (string)display["sha256"]!);
+            Assert.Null(display["content"]);
+            args["files"]![0]!["content"] = content.Substring(0, content.Length - 1) + "y";
+            Assert.NotEqual(digest, CanonicalJson.ArgumentHash(JsonSerializer.SerializeToElement(args)));
+            Assert.NotEqual(first.ArgumentDigest, PendingApproval.Create("fixture", "21", "StageImportFiles", args.ToJsonString(), "{}", 120).ArgumentDigest);
+        }
+
+        [Theory]
+        [InlineData(32)]
+        [InlineData(4194304)]
+        public void Password_and_named_secret_values_have_no_size_exemption_from_argument_redaction(int length)
+        {
+            var embedded = new JsonObject { ["password"] = new string('a', length), ["ordinary"] = "retained" };
+            var args = new JsonObject { ["password"] = new string('a', length),
+                ["properties"] = new JsonArray(new JsonObject { ["name"] = "clientSecret", ["value"] = new string('a', length) }),
+                ["propertiesJson"] = embedded.ToJsonString(), ["ordinary"] = "retained" };
+            string Digest() => CanonicalJson.ArgumentHash(JsonSerializer.SerializeToElement(args));
+            string digest = Digest();
+            var pending = PendingApproval.Create("fixture", "21", "AnyWrite", args.ToJsonString(), "{}", 120);
+            embedded["password"] = new string('b', length);
+            args["password"] = new string('b', length);
+            args["properties"]![0]!["value"] = new string('b', length);
+            args["propertiesJson"] = embedded.ToJsonString();
+            Assert.Equal(digest, Digest());
+            Assert.Equal(pending.ArgumentDigest, PendingApproval.Create("fixture", "21", "AnyWrite", args.ToJsonString(), "{}", 120).ArgumentDigest);
+            var redacted = CanonicalJson.RedactArguments(JsonSerializer.SerializeToElement(args));
+            Assert.Equal("••••", redacted.GetProperty("password").GetString());
+            Assert.Equal("••••", redacted.GetProperty("properties")[0].GetProperty("value").GetString());
+            Assert.Equal("••••", JsonNode.Parse(redacted.GetProperty("propertiesJson").GetString()!)!["password"]!.GetValue<string>());
+            Assert.Equal(new string('b', length), (string)args["password"]!);
+            args["ordinary"] = "changed";
+            Assert.NotEqual(digest, Digest());
+        }
+
+        [Theory]
+        [InlineData("Bearer private", "Bearer ••••")]
+        [InlineData("Basic private", "Basic ••••")]
+        [InlineData("password=private; ordinary=retained", "password=••••; ordinary=retained")]
+        [InlineData("client.key : private", "client.key : ••••")]
+        [InlineData("https://user:private@example.test/path", "https://••••@example.test/path")]
+        [InlineData("-----BEGIN RSA PRIVATE KEY-----\nprivate\n-----END RSA PRIVATE KEY-----", "••••")]
+        public void Short_free_text_is_redacted_in_direct_and_embedded_argument_strings(string text, string expected)
+        {
+            var args = new JsonObject { ["message"] = text, ["propertiesJson"] = new JsonObject { ["message"] = text }.ToJsonString() };
+            var redacted = CanonicalJson.RedactArguments(JsonSerializer.SerializeToElement(args));
+            Assert.Equal(expected, redacted.GetProperty("message").GetString());
+            Assert.Equal(expected, JsonNode.Parse(redacted.GetProperty("propertiesJson").GetString()!)!["message"]!.GetValue<string>());
+        }
+
+        [Fact]
+        public void Argument_text_bound_applies_inside_embedded_json_and_preserves_long_free_text()
+        {
+            string shortText = "password=private;" + new string('x', 4096 - "password=private;".Length);
+            string longText = shortText + "x";
+            var embedded = new JsonObject { ["short"] = shortText, ["long"] = longText };
+            var args = new JsonObject { ["propertiesJson"] = embedded.ToJsonString() };
+            var redacted = CanonicalJson.RedactArguments(JsonSerializer.SerializeToElement(args));
+            var result = JsonNode.Parse(redacted.GetProperty("propertiesJson").GetString()!)!;
+            Assert.StartsWith("password=••••;", (string)result["short"]!);
+            Assert.Equal(longText, (string)result["long"]!);
+            Assert.Equal(longText, (string)embedded["long"]!);
+        }
+
+        [Fact]
+        public void Argument_hash_handles_many_strings_and_deeply_nested_secrets()
+        {
+            var values = new JsonArray();
+            for (int i = 0; i < 1024; i++) values.Add(string.Concat(Enumerable.Repeat("x.", 2048)));
+            JsonNode nested = new JsonObject { ["password"] = "first-private" };
+            var secret = nested.AsObject();
+            for (int i = 0; i < 48; i++) nested = new JsonObject { ["child"] = nested };
+            var args = new JsonObject { ["values"] = values, ["nested"] = nested };
+            string digest = CanonicalJson.ArgumentHash(JsonSerializer.SerializeToElement(args));
+            secret["password"] = "second-private";
+            Assert.Equal(digest, CanonicalJson.ArgumentHash(JsonSerializer.SerializeToElement(args)));
+            values[1023] = "changed";
+            Assert.NotEqual(digest, CanonicalJson.ArgumentHash(JsonSerializer.SerializeToElement(args)));
         }
         private readonly string bundle = Path.Combine(Path.GetTempPath(), "tia-stg-" + Guid.NewGuid().ToString("N").Substring(0, 8));
         private ImportStagingStore Store(string release = "17") { Directory.CreateDirectory(bundle); return new ImportStagingStore(bundle, release, Guid.NewGuid().ToString("N")); }

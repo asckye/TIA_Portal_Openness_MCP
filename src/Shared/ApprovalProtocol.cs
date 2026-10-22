@@ -78,7 +78,7 @@ namespace TiaOpenness.Shared
 #if TIA_GENERATION_PLANNER
             var original = args;
 #endif
-            try { args = JsonNode.Parse(ApprovalDisplayPayload.Sanitize(args.ToJsonString()))!.AsObject(); }
+            try { args = JsonNode.Parse(ApprovalDisplayPayload.Sanitize(args.ToJsonString(), boundedText: true))!.AsObject(); }
             catch (Exception error) when (error is JsonException || error is InvalidOperationException)
             { return new JsonObject { ["displayUnavailable"] = true }; }
             JsonNode? Summarize(JsonNode? node, string key = "", int depth = 0)
@@ -122,7 +122,7 @@ namespace TiaOpenness.Shared
             string json = compact.ToJsonString();
             if (Encoding.UTF8.GetByteCount(json) > 64 * 1024)
                 compact = new JsonObject { ["displayTruncated"] = true, ["argumentByteLength"] = Encoding.UTF8.GetByteCount(args.ToJsonString()) };
-            try { return JsonNode.Parse(ApprovalDisplayPayload.Sanitize(compact.ToJsonString()))!.AsObject(); }
+            try { return JsonNode.Parse(ApprovalDisplayPayload.Sanitize(compact.ToJsonString(), boundedText: true))!.AsObject(); }
             catch (Exception error) when (error is JsonException || error is InvalidOperationException)
             { return new JsonObject { ["displayUnavailable"] = true }; }
         }
