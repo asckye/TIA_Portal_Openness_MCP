@@ -144,13 +144,15 @@
 <TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel4}" AutomationProperties.Name="{l:Tr Config.Port}" x:Name="ServerPort" Text="8765" FontFamily="{DynamicResource Ui.FontMono}" Style="{StaticResource Primer.MonoInput}"/></StackPanel>
                 </StackPanel>
               </Grid>
-              <WrapPanel x:Name="ServerActions" Grid.Row="4">
+              <Grid x:Name="ServerActions" Grid.Row="4">
+              <WrapPanel>
                 <Button AutomationProperties.Name="{l:Tr Config.Network}" x:Name="Network" Content="{l:Tr Config.Network}" Style="{StaticResource Primer.FormAction}" Margin="0,0,8,0"/>
                 <Grid>
                   <Button AutomationProperties.Name="{l:Tr Config.Start}" x:Name="StartServer" Content="{l:Tr Config.Start}" Style="{StaticResource Primer.FormRun}"/>
                   <Button AutomationProperties.Name="{l:Tr Config.Stop}" x:Name="StopServer" Content="{l:Tr Config.Stop}" Style="{StaticResource Primer.FormAction}" IsEnabled="False" Visibility="Collapsed"/>
                 </Grid>
               </WrapPanel>
+              </Grid>
             </Grid>
           </Border>
         </Grid>
