@@ -53,8 +53,8 @@ internal static partial class ReleaseCommands
             throw new ReleaseException("package-test refused: product outputs are missing or older than their sources. Run package-test -Build (or the release build) first." +
                 Environment.NewLine + string.Join(Environment.NewLine, problems.Select(problem => "  " + problem)));
 
-        var commit = GitText(Root, "rev-parse", "HEAD");
-        var dirty = GitText(Root, "status", "--porcelain").Length != 0;
+        var commit = TestPackageGitText(Root, "rev-parse", "HEAD");
+        var dirty = TestPackageGitText(Root, "status", "--porcelain").Length != 0;
         var name = TestPackageName(label, DateTime.Now, commit[..Math.Min(8, commit.Length)], dirty);
         Directory.CreateDirectory(output);
         var archive = Path.Combine(output, name + ".zip");
@@ -333,7 +333,7 @@ internal static partial class ReleaseCommands
         File.WriteAllText(Path.Combine(work, "last-build.json"), JsonSerializer.Serialize(new TestPackageStamp(startedUtc, files), new JsonSerializerOptions { WriteIndented = true }), new UTF8Encoding(false));
     }
 
-    private static string GitText(string root, params string[] arguments)
+    private static string TestPackageGitText(string root, params string[] arguments)
     {
         var result = ProcessRunner.Run("git", arguments, root);
         ProcessRunner.RequireSuccess(result, "git " + string.Join(' ', arguments));
