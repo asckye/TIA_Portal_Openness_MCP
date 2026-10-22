@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.Adapters.Contracts.Candidates;
+using TiaMcp.Logic.Generation;
 
 namespace TiaMcp.Logic.V4
 {
@@ -13,10 +12,7 @@ namespace TiaMcp.Logic.V4
     {
         private readonly Dictionary<string, Plan> plans = new Dictionary<string, Plan>(StringComparer.Ordinal);
         private readonly HashSet<string> consumed = new HashSet<string>(StringComparer.Ordinal);
-        private readonly byte[] secret = new byte[32];
         public bool RequiresSessionReset { get; private set; }
-        public CompileSession() { using var random = RandomNumberGenerator.Create(); random.GetBytes(secret); }
-        private string Credential(string password) { using var hmac = new HMACSHA256(secret); return CandidatePrimitives.ByteHash(hmac.ComputeHash(Encoding.UTF8.GetBytes(password))); }
         public Envelope Run(ICompileAdapter adapter, string release, string tool, string id, CompileRequest request, string password = "",
             string mode = "preview", bool confirm = false, string expectedPlanHash = "", string expectedProjectFile = "")
         {
@@ -33,7 +29,7 @@ namespace TiaMcp.Logic.V4
                 CompilePrimitives.Admission(check);
                 var b = before.Binding;
                 var identity = new PlanIdentity(b.ProcessId, b.ProcessStartUtc, b.ProjectFile, b.Epoch, null, Array.Empty<PlanFile>());
-                string argumentsHash = DeviceCreationSession.Hash(new { request, credential = Credential(password) }), inventoryHash = DeviceCreationSession.Hash(before);
+                string argumentsHash = DeviceCreationSession.Hash(CanonicalJson.RedactArguments(JsonSerializer.SerializeToElement(new { request, password }))), inventoryHash = DeviceCreationSession.Hash(before);
                 var calls = new List<string>(); bool login = request.PasswordProvided && before.SafetyPermission != "logged-on";
                 if (login) calls.Add("SafetyAdministration.LoginToSafetyOfflineProgram"); calls.Add("ICompilable.Compile");
                 if (login) calls.Add("SafetyAdministration.LogoffFromSafetyOfflineProgram");

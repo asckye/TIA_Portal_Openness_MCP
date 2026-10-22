@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.Adapters.Contracts.Candidates;
+using TiaMcp.Logic.Generation;
 
 namespace TiaMcp.Logic.V4
 {
@@ -13,10 +12,7 @@ namespace TiaMcp.Logic.V4
     {
         private readonly Dictionary<string, Plan> plans = new Dictionary<string, Plan>(StringComparer.Ordinal);
         private readonly HashSet<string> consumed = new HashSet<string>(StringComparer.Ordinal);
-        private readonly byte[] secret = new byte[32];
         public bool RequiresSessionReset { get; private set; }
-        public FallbackSession() { using var random = RandomNumberGenerator.Create(); random.GetBytes(secret); }
-        private string Credential(string value) { using var hmac = new HMACSHA256(secret); return CandidatePrimitives.ByteHash(hmac.ComputeHash(Encoding.UTF8.GetBytes(value))); }
         public Envelope Run(IFallbackAdapter adapter, string release, string tool, string id, FallbackRequest request, string credential = "",
             string mode = "preview", bool confirm = false, string expectedPlanHash = "", string expectedProjectFile = "")
         {
@@ -40,7 +36,7 @@ namespace TiaMcp.Logic.V4
                 if (request.Route.Length == 0 && mode == "preview") return Result(release, tool, id, data, null, Outcome.Succeeded, Execution.ReadOnly);
                 FallbackPrimitives.Admission(adapter, check); var b = before.Binding;
                 var identity = new PlanIdentity(b.ProcessId, b.ProcessStartUtc, b.ProjectFile, b.Epoch, null, Array.Empty<PlanFile>());
-                string argumentsHash = DeviceCreationSession.Hash(new { request, credential = Credential(credential) }), inventoryHash = DeviceCreationSession.Hash(before);
+                string argumentsHash = DeviceCreationSession.Hash(CanonicalJson.RedactArguments(JsonSerializer.SerializeToElement(new { request, credential }))), inventoryHash = DeviceCreationSession.Hash(before);
                 var route = before.Routes.Single(r => r.Id == request.Route);
                 var operations = new[] { new PlanOperation(tool, route.TargetId, JsonSerializer.SerializeToElement(new { route = route.Id, retryPolicy = "never",
                     refreshReadHandle = request.RefreshReadHandle, nativeCalls = route.NativeCalls })) };

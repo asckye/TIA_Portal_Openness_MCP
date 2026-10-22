@@ -395,6 +395,30 @@ public sealed class StagedGenerationTests
         Assert.Throws<InvalidOperationException>(() => GenerationStepApproval.Enter(approval, step, final));
     }
     [Theory, MemberData(nameof(Releases))]
+    public void Single_step_grant_uses_redacted_arguments_and_preserves_other_bindings(string release)
+    {
+        using var f = new Fixture(release); var plan = GenerationDocuments.Load<GenerationPlan>(f.Plan().ToJsonString());
+        var step = plan.Steps.First(s => s.Review != null);
+        step.Arguments["password"] = JsonSerializer.SerializeToElement("first-private-password");
+        step.ArgumentDigest = CanonicalJson.ArgumentHash(JsonSerializer.SerializeToElement(step.Arguments));
+        plan.PlanHash = GenerationDocuments.PlanHash(GenerationDocuments.Canonical(plan));
+        var pending = PendingApproval.Create("foundation", release, "ApplyGenerationPlan", "{}", "{}", 120);
+        pending.Kind = "plan"; pending.PlanJson = GenerationDocuments.Canonical(plan); pending.PlanHash = plan.PlanHash;
+        Assert.DoesNotContain("first-private-password", pending.PlanJson);
+        var approval = new ApprovalOutcome(pending, false, null);
+        string hash = new string('a', 64), previewId = Guid.NewGuid().ToString("N");
+        var final = StepReviewRules.FinalArguments(step, new JsonObject { ["planHash"] = hash });
+        final["password"] = "second-private-password";
+        using (GenerationStepApproval.Enter(approval, step, final, previewId, hash))
+            Assert.Null(GenerationStepApproval.Match(PendingApproval.Create("foundation", release, step.Tool, final.ToJsonString(), "{}", 120))!.Reason);
+        using (GenerationStepApproval.Enter(approval, step, final, previewId, hash))
+        {
+            var changed = final.DeepClone().AsObject(); changed["filePath"] = "C:/Other.scl";
+            Assert.Equal("denied", GenerationStepApproval.Match(PendingApproval.Create("foundation", release, step.Tool, changed.ToJsonString(), "{}", 120))!.Reason);
+        }
+        Assert.Equal("first-private-password", step.Arguments["password"].GetString());
+    }
+    [Theory, MemberData(nameof(Releases))]
     public void DeleteRuleUsesTheRunIdentityAndVerifiesSingleRemoval(string release)
     {
         using var f = new Fixture(release); var result = f.Apply(phases: GenerationPlanner.Phases.Where(p => p is not ("cleanup" or "save" or "record")).ToArray()); Assert.True((bool?)result["ok"]);

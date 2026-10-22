@@ -17,6 +17,7 @@ public sealed class CompileCandidateTests
             Compilable = true, OfflineState = "offline", SafetyPermission = "not-applicable" };
         internal CompileDiagnostics Diagnostics = new() { State = "Success" };
         internal string Fault = "";
+        internal string? LastPassword;
         internal readonly List<string> Trace = new();
         internal Action? Before, After, AfterLogin;
         internal bool Poisoned;
@@ -30,6 +31,7 @@ public sealed class CompileCandidateTests
         public void BeforeAction() { Trace.Add("before"); Before?.Invoke(); if (Fault == "before") throw new IOException(); }
         public void Login(string password)
         {
+            LastPassword = password;
             Trace.Add("login"); if (Fault == "login-before") throw new IOException(password);
             if (Fault == "login-no-effect") return;
             State.SafetyPermission = "logged-on"; AfterLogin?.Invoke(); if (Fault == "login-after" || Fault == "login-and-logout") throw new IOException(password);
@@ -52,6 +54,28 @@ public sealed class CompileCandidateTests
     private static Envelope Run(CompileSession s, Adapter a, CompileRequest r, string mode = "preview", string hash = "", string password = "", bool confirm = true)
         => s.Run(a, "21", r.Entry, "test", r, password, mode, confirm, hash, Project);
     private static string Hash(Envelope e) => e.Data!.Value.GetProperty("plan").GetProperty("hash").GetString()!;
+    [Fact]
+    public void Safety_password_is_excluded_from_preview_hash_and_reaches_login_unchanged()
+    {
+        var a = new Adapter(); a.State.SafetyPermission = "password-required";
+        var session = new CompileSession(); var request = Request(password: true);
+        var preview = Run(session, a, request, password: "first-private-password");
+        var changed = Run(session, a, request, password: "second-private-password");
+        Assert.True(preview.Ok); Assert.True(changed.Ok);
+        Assert.Equal(Hash(preview), Hash(changed));
+        Assert.Equal(preview.Data!.Value.GetProperty("plan").GetProperty("argumentsHash").GetString(),
+            changed.Data!.Value.GetProperty("plan").GetProperty("argumentsHash").GetString());
+        var result = Run(session, a, request, "apply", Hash(preview), "second-private-password");
+        Assert.True(result.Ok, V4Json.Serialize(result));
+        Assert.Equal("second-private-password", a.LastPassword);
+        Assert.Equal(new[] { "login", "compile", "logout" }, a.Trace.Where(t => t is "login" or "compile" or "logout"));
+        foreach (string password in new[] { "first-private-password", "second-private-password" })
+        {
+            string evidence = V4Json.Serialize(preview) + V4Json.Serialize(changed) + V4Json.Serialize(result);
+            Assert.DoesNotContain(password, evidence);
+            Assert.DoesNotContain(TiaOpenness.Shared.PendingApproval.Hash(password), evidence);
+        }
+    }
     [Theory]
     [InlineData("Success", Outcome.Succeeded)]
     [InlineData("Information", Outcome.Succeeded)]
@@ -230,16 +254,19 @@ public sealed class CompileCandidateTests
         Assert.Equal(JsonValueKind.Object, result.Data!.Value.GetProperty("observedState").GetProperty("binding").ValueKind); Assert.Equal(1, a.Trace.Count(t => t == "compile"));
     }
     [Fact]
-    public void HashIsCultureStableSecretSensitiveAndConfirmationIsExplicit()
+    public void HashIsCultureStableSecretIndependentAndConfirmationIsExplicit()
     {
         var a = new Adapter(); a.State.SafetyPermission = "password-required"; var s = new CompileSession(); var r = Request(password: true); var p = Run(s, a, r, password: "secret-a");
         var prior = System.Globalization.CultureInfo.CurrentCulture;
         try { System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("tr-TR");
             Assert.Equal(Hash(p), Hash(s.Run(a, "21", r.Entry, "other-id", r, "secret-a"))); }
         finally { System.Globalization.CultureInfo.CurrentCulture = prior; }
-        Assert.NotEqual(Hash(p), Hash(Run(s, a, r, password: "secret-b")));
-        Assert.Equal(ErrorCode.PlanStale, Run(s, a, r, "apply", Hash(p), "secret-b").Error!.Code);
         Assert.Equal(ErrorCode.ConfirmationRequired, Run(s, a, r, "apply", Hash(p), "secret-a", false).Error!.Code); Assert.DoesNotContain("compile", a.Trace);
+        Assert.Equal(Hash(p), Hash(Run(s, a, r, password: "secret-b")));
+        var result = Run(s, a, r, "apply", Hash(p), "secret-b");
+        Assert.True(result.Ok, V4Json.Serialize(result));
+        Assert.Equal("secret-b", a.LastPassword);
+        Assert.Equal(new[] { "login", "compile", "logout" }, a.Trace.Where(t => t is "login" or "compile" or "logout"));
     }
     [Fact]
     public void RequestMutationAndUnavailableOfflineProofRefuseBeforeCompile()

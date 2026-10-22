@@ -855,7 +855,7 @@ namespace TiaMcp.Logic.Generation
 
             private GenerationPlanStepsItem Step(string key, string phase, string op, string tool, Dictionary<string, JsonElement> arguments, string readback, string? contains = null, string? fingerprint = null)
                 => new GenerationPlanStepsItem { Key = key, Phase = phase, Op = op, Tool = tool, Arguments = arguments,
-                    ArgumentDigest = CanonicalJson.Hash(JsonSerializer.SerializeToElement(arguments)), Availability = GenerationAvailability.Get(machine.Target.Release, tool),
+                ArgumentDigest = CanonicalJson.ArgumentHash(JsonSerializer.SerializeToElement(arguments)), Availability = GenerationAvailability.Get(machine.Target.Release, tool),
                     Expect = new GenerationPlanStepsItemExpect { Readback = readback, Contains = contains, Fingerprint = fingerprint } };
 
             private void ProjectAndFinalActions(Dictionary<string, GenerationPlanStepsItem> steps)

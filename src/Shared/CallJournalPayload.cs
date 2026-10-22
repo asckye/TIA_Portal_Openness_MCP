@@ -23,6 +23,32 @@ namespace TiaOpenness.Shared
         public static string Redact(string json)
             => Bound(Sanitize(json));
 
+        // Hash inputs have no display limits. Only sensitive positions are replaced:
+        // replacing matching text elsewhere would make the digest depend on the secret.
+        public static JsonNode? RedactArguments(JsonNode? node)
+        {
+            if (node is JsonObject obj)
+            {
+                bool named = NamedSecret(obj);
+                var result = new JsonObject();
+                foreach (var pair in obj)
+                    result[pair.Key] = Sensitive(pair.Key) || named && pair.Key.Equals("value", StringComparison.OrdinalIgnoreCase)
+                        ? JsonValue.Create(Hidden) : RedactArguments(pair.Value);
+                return result;
+            }
+            if (node is JsonArray array) return new JsonArray(array.Select(RedactArguments).ToArray());
+            if (node is JsonValue value && value.TryGetValue<string>(out var text))
+            {
+                if (Embedded(text, out var embedded))
+                {
+                    var redacted = RedactArguments(embedded);
+                    return JsonNode.DeepEquals(embedded, redacted) ? node.DeepClone() : JsonValue.Create(redacted?.ToJsonString());
+                }
+                return JsonValue.Create(Text(text, new HashSet<string>(StringComparer.Ordinal), 0));
+            }
+            return node?.DeepClone();
+        }
+
         public static string Sanitize(string json)
         {
             try

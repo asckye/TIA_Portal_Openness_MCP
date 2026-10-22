@@ -124,6 +124,61 @@ namespace TiaMcp.Generation.Tests
             Assert.NotEqual(hash, GenerationDocuments.PlanHash(plan.ToJsonString()));
         }
 
+        [Fact]
+        public void Plan_and_step_digests_exclude_secrets_without_mutating_execution_arguments()
+        {
+            var plan = Object("plan"); var step = plan["steps"]![0]!;
+            step["arguments"]!["password"] = "first-private-password";
+            step["argumentDigest"] = CanonicalJson.ArgumentHash(JsonSerializer.SerializeToElement(step["arguments"]));
+            string hash = GenerationDocuments.PlanHash(plan.ToJsonString());
+            string digest = (string)step["argumentDigest"]!;
+            step["arguments"]!["password"] = "second-private-password";
+            Assert.Equal(digest, CanonicalJson.ArgumentHash(JsonSerializer.SerializeToElement(step["arguments"])));
+            Assert.Equal(hash, GenerationDocuments.PlanHash(plan.ToJsonString()));
+            var model = GenerationDocuments.Load<GenerationPlan>(plan.ToJsonString());
+            var canonical = GenerationDocuments.Canonical(model);
+            Assert.DoesNotContain("second-private-password", canonical);
+            Assert.DoesNotContain(CanonicalJson.HashBytes(Encoding.UTF8.GetBytes("second-private-password")), canonical);
+            Assert.Equal(hash, GenerationDocuments.PlanHash(canonical));
+            Assert.Equal("second-private-password", model.Steps[0].Arguments["password"].GetString());
+            step["arguments"]!["ordinary"] = "changed";
+            Assert.NotEqual(digest, CanonicalJson.ArgumentHash(JsonSerializer.SerializeToElement(step["arguments"])));
+            Assert.Contains(Assert.Throws<GenerationValidationException>(() => GenerationDocuments.PlanHash(plan.ToJsonString())).Errors,
+                error => error.Rule == "argument-digest");
+            step["argumentDigest"] = CanonicalJson.ArgumentHash(JsonSerializer.SerializeToElement(step["arguments"]));
+            Assert.NotEqual(hash, GenerationDocuments.PlanHash(plan.ToJsonString()));
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void Plan_hash_preserves_model_roundtrips_with_optional_defaults_and_embedded_secrets(bool secrets)
+        {
+            var plan = Object("plan");
+            Assert.False(plan.ContainsKey("objects")); Assert.False(plan.ContainsKey("adopt"));
+            if (secrets)
+            {
+                var step = plan["steps"]![0]!;
+                step["arguments"]!["propertiesJson"] = "{\"password\":\"private-password\",\"ordinary\":\"reviewed\"}";
+                step["arguments"]!["header"] = "Bearer private-token";
+                step["argumentDigest"] = CanonicalJson.ArgumentHash(JsonSerializer.SerializeToElement(step["arguments"]));
+            }
+            string original = plan.ToJsonString(), hash = GenerationDocuments.PlanHash(original);
+            var model = GenerationDocuments.Load<GenerationPlan>(original);
+            Assert.Empty(model.Objects); Assert.Empty(model.Adopt);
+            string canonical = GenerationDocuments.Canonical(model);
+            Assert.Equal(hash, GenerationDocuments.PlanHash(canonical));
+            Assert.Equal(canonical, GenerationDocuments.Canonical(GenerationDocuments.Load<GenerationPlan>(canonical)));
+            Assert.Equal(hash, GenerationDocuments.PlanHash(GenerationDocuments.Canonical(GenerationDocuments.Load<GenerationPlan>(canonical))));
+            plan["objects"] = new JsonArray(); plan["adopt"] = new JsonArray();
+            Assert.Equal(hash, GenerationDocuments.PlanHash(plan.ToJsonString()));
+            if (secrets)
+            {
+                Assert.DoesNotContain("private-password", canonical); Assert.DoesNotContain("private-token", canonical);
+                Assert.Contains("private-password", model.Steps[0].Arguments["propertiesJson"].GetString());
+            }
+        }
+
         [Theory]
         [InlineData("{{System.IO.File.Delete(device.id)}}")]
         [InlineData("{{upper(device.id + 'x')}}")]

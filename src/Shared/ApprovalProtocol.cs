@@ -49,14 +49,15 @@ namespace TiaOpenness.Shared
         internal static PendingApproval Create(string host, string release, string tool, string arguments,
             string? identity, int seconds, string? requestId = null)
         {
-            var args = JsonNode.Parse(arguments)!.AsObject();
+            var original = JsonNode.Parse(arguments)!.AsObject();
+            var args = ApprovalDisplayPayload.RedactArguments(original)!.AsObject();
             var target = JsonNode.Parse(identity ?? "{}")!.AsObject();
             foreach (string key in new[] { "expectedProjectFile", "projectFile", "projectPath", "projectName", "processId", "processStartUtc", "workspaceRoot" })
-                if (args[key] != null) target["requested:" + key] = args[key]!.DeepClone();
+                if (original[key] != null) target["requested:" + key] = original[key]!.DeepClone();
             string digest = Hash(Canonical(new JsonObject { ["releaseKey"] = release, ["tool"] = tool,
-                ["identity"] = target.DeepClone(), ["arguments"] = args.DeepClone() }));
+                ["identity"] = ApprovalDisplayPayload.RedactArguments(target), ["arguments"] = args.DeepClone() }));
             string? plan = args["expectedPlanHash"] is JsonValue value && value.TryGetValue<string>(out var hash) && IsHash(hash) ? hash : null;
-            var display = Display(args, tool);
+            var display = Display(original, tool);
             var objects = display.Where(p => p.Key.EndsWith("Path", StringComparison.Ordinal) || p.Key.EndsWith("Name", StringComparison.Ordinal)
                 || p.Key == "plc" || p.Key == "target").Select(p => p.Key + "=" + p.Value?.ToJsonString()).ToArray();
             return new PendingApproval { RequestId = requestId ?? Guid.NewGuid().ToString("N"), Host = host, ReleaseKey = release,
@@ -70,10 +71,16 @@ namespace TiaOpenness.Shared
                 Operations = new[] { new ApprovalAction { Tool = tool, Action = display["action"]?.ToString() ?? tool,
                     Target = string.Join(" · ", objects) } } };
         }
-        // The digest above binds the complete arguments. Human review never carries
+        // The digest above binds the redacted arguments. Human review never carries
         // file contents, and every display is bounded independently of the transport.
         private static JsonObject Display(JsonObject args, string tool)
         {
+#if TIA_GENERATION_PLANNER
+            var original = args;
+#endif
+            try { args = JsonNode.Parse(ApprovalDisplayPayload.Sanitize(args.ToJsonString()))!.AsObject(); }
+            catch (Exception error) when (error is JsonException || error is InvalidOperationException)
+            { return new JsonObject { ["displayUnavailable"] = true }; }
             JsonNode? Summarize(JsonNode? node, string key = "", int depth = 0)
             {
                 if (depth > 16) return JsonValue.Create("<display depth limit>");
@@ -110,7 +117,7 @@ namespace TiaOpenness.Shared
             }
 #if TIA_GENERATION_PLANNER
             // Download and upload prompts are answered during the native call; the approver sees every answer the call will give.
-            if (TiaMcpServer.Siemens.DownloadPromptPolicy.ApprovalPlan(tool, args) is JsonObject plan) compact["promptAnswerPlan"] = plan;
+            if (TiaMcpServer.Siemens.DownloadPromptPolicy.ApprovalPlan(tool, original) is JsonObject plan) compact["promptAnswerPlan"] = plan;
 #endif
             string json = compact.ToJsonString();
             if (Encoding.UTF8.GetByteCount(json) > 64 * 1024)
@@ -196,12 +203,14 @@ namespace TiaOpenness.Shared
             }
             var declared = JsonSerializer.SerializeToNode(step, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull });
-            if (!JsonNode.DeepEquals(approved, declared) || PendingApproval.Canonical(fixedArguments) != PendingApproval.Canonical(approved["arguments"])
-                || TiaMcp.Logic.Generation.CanonicalJson.Hash(JsonSerializer.SerializeToElement(fixedArguments)) != step.ArgumentDigest)
+            declared!["arguments"] = ApprovalDisplayPayload.RedactArguments(declared["arguments"]);
+            if (!JsonNode.DeepEquals(approved, declared)
+                || PendingApproval.Canonical(ApprovalDisplayPayload.RedactArguments(fixedArguments)) != PendingApproval.Canonical(approved["arguments"])
+                || TiaMcp.Logic.Generation.CanonicalJson.ArgumentHash(JsonSerializer.SerializeToElement(fixedArguments)) != step.ArgumentDigest)
                 throw new InvalidOperationException("Final arguments or review differ from the approved step.");
             var previous = Current.Value;
             Current.Value = new Grant { Release = approval.Request.ReleaseKey, Tool = step.Tool,
-                Digest = PendingApproval.Hash(PendingApproval.Canonical(arguments)), Approval = approval, SessionKey = sessionKey, RunId = runId };
+                Digest = PendingApproval.Hash(PendingApproval.Canonical(ApprovalDisplayPayload.RedactArguments(arguments))), Approval = approval, SessionKey = sessionKey, RunId = runId };
             return new Scope(() => Current.Value = previous);
         }
 #endif
@@ -210,7 +219,7 @@ namespace TiaOpenness.Shared
             var grant = Current.Value;
             return grant != null && (!grant.Used || dispatched) && ReferenceEquals(grant.SessionKey, sessionKey)
                 && grant.RunId == runId && grant.Release == release && grant.Tool == tool
-                && grant.Digest == PendingApproval.Hash(PendingApproval.Canonical(JsonNode.Parse(arguments)));
+                && grant.Digest == PendingApproval.Hash(PendingApproval.Canonical(ApprovalDisplayPayload.RedactArguments(JsonNode.Parse(arguments))));
         }
         internal static ApprovalOutcome? Match(PendingApproval request)
         {

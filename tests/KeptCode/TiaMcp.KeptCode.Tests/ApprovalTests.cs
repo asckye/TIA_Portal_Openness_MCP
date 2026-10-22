@@ -141,11 +141,11 @@ namespace TiaMcp.Engine.Tests
             Assert.Throws<System.Text.Json.JsonException>(() => V4Json.Deserialize<Error>("{\"code\":\"CONFIRMATION_REQUIRED\",\"message\":\"Refused.\",\"details\":{\"planHash\":null}}"));
         }
         [Fact]
-        public void Digest_binds_identity_and_all_arguments_and_redacts_display_only()
+        public void Digest_binds_identity_and_redacted_arguments_and_redacts_display_only()
         {
             var request = Request();
             Assert.DoesNotContain("private-input", request.ParametersJson);
-            Assert.NotEqual(request.ArgumentDigest, PendingApproval.Create("engine", "21", "WriteFixture", "{\"blockPath\":\"PLC/Block\",\"password\":\"changed\"}", "{\"projectFile\":\"P.ap21\",\"bindingEpoch\":1}", 3).ArgumentDigest);
+            Assert.Equal(request.ArgumentDigest, PendingApproval.Create("engine", "21", "WriteFixture", "{\"blockPath\":\"PLC/Block\",\"password\":\"changed\"}", "{\"projectFile\":\"P.ap21\",\"bindingEpoch\":1}", 3).ArgumentDigest);
             Assert.NotEqual(request.ArgumentDigest, PendingApproval.Create("engine", "21", "WriteFixture", "{\"blockPath\":\"PLC/Block\",\"password\":\"private-input\"}", "{\"projectFile\":\"Other.ap21\",\"bindingEpoch\":1}", 3).ArgumentDigest);
             Assert.Equal(PendingApproval.Create("engine", "21", "WriteFixture", "{\"a\":1,\"b\":2}", null, 3).PlanHash,
                 PendingApproval.Create("engine", "21", "WriteFixture", "{\"b\":2,\"a\":1}", null, 3).PlanHash);

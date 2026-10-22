@@ -224,7 +224,7 @@ namespace TiaMcp.Engine.Tests.Shared
                 "A_decision_cannot_authorize_another_request_or_plan",
                 "Applied_batch_gates_each_write_while_internal_previews_remain_read_only",
                 "Confirmation_details_are_closed_and_roundtrip",
-                "Digest_binds_identity_and_all_arguments_and_redacts_display_only",
+                "Digest_binds_identity_and_redacted_arguments_and_redacts_display_only",
                 "Pipe_decision_is_bound_once",
                 "Absent_and_timeout_are_not_started_and_audited"
             },

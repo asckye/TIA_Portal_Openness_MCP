@@ -185,7 +185,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (StepReviewRules.Supports(step)) validationArguments["expectedPlanHash"] = new string('0', 64);
                 var error = new InputSchema(tool.Tool.InputSchema).Validate(JsonSerializer.SerializeToElement(validationArguments), "arguments");
                 if (error != null) Unavailable(step.Phase, "Tool " + step.Tool + " cannot bind the planner arguments: " + error.Message);
-                step.ArgumentDigest = CanonicalJson.Hash(JsonSerializer.SerializeToElement(step.Arguments));
+                step.ArgumentDigest = CanonicalJson.ArgumentHash(JsonSerializer.SerializeToElement(step.Arguments));
             }
             bool changed;
             do
@@ -317,7 +317,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     using var deferredCancellation = McpServer.DeferGenerationCancellation();
                     Check(stored);
                     if (descriptor(step.Tool) == null || step.Availability.Tool != "present") throw new GenerationCallRejectionException(new Error("Step is unavailable on this release.", new UnsupportedCapabilityDetails(stored.Release, step.Tool, null)));
-                    if (CanonicalJson.Hash(JsonSerializer.SerializeToElement(step.Arguments)) != step.ArgumentDigest) throw new GenerationCallRejectionException(new Error("Approved step arguments changed.", new PlanStaleDetails(Digest(hash), "argument-digest")));
+                    if (CanonicalJson.ArgumentHash(JsonSerializer.SerializeToElement(step.Arguments)) != step.ArgumentDigest) throw new GenerationCallRejectionException(new Error("Approved step arguments changed.", new PlanStaleDetails(Digest(hash), "argument-digest")));
                     string requestId = Guid.NewGuid().ToString("N");
                     string? previewId = null, previewHash = null;
                     var finalArguments = JsonSerializer.SerializeToNode(step.Arguments)!.AsObject();

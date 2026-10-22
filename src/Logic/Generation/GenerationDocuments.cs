@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace TiaMcp.Logic.Generation
@@ -27,6 +28,7 @@ namespace TiaMcp.Logic.Generation
             var value = JsonSerializer.SerializeToElement(model, Options);
             GenerationSchemas.RequireValid(SchemaName(typeof(T)), value);
             ValidateSemantics(SchemaName(typeof(T)), value);
+            if (model is GenerationPlan) value = RedactedPlan(value);
             return Encoding.UTF8.GetString(CanonicalJson.Encode(value));
         }
 
@@ -44,6 +46,9 @@ namespace TiaMcp.Logic.Generation
             var value = CanonicalJson.Parse(json);
             GenerationSchemas.RequireValid("plan", value);
             ValidateSemantics("plan", value);
+            // Match Canonical(model), including defaults for omitted optional fields.
+            value = JsonSerializer.SerializeToElement(Deserialize<GenerationPlan>(value), Options);
+            value = RedactedPlan(value);
             using var stream = new System.IO.MemoryStream();
             using (var writer = new Utf8JsonWriter(stream))
             {
@@ -53,6 +58,14 @@ namespace TiaMcp.Logic.Generation
                 writer.WriteEndObject();
             }
             return CanonicalJson.HashBytes(CanonicalJson.Encode(CanonicalJson.Parse(stream.ToArray())));
+        }
+
+        private static JsonElement RedactedPlan(JsonElement value)
+        {
+            var plan = JsonNode.Parse(value.GetRawText())!.AsObject();
+            foreach (var step in plan["steps"]!.AsArray())
+                step!["arguments"] = TiaOpenness.Shared.ApprovalJournalPayload.RedactArguments(step["arguments"]);
+            return JsonSerializer.SerializeToElement(plan);
         }
 
         internal static T Deserialize<T>(JsonElement value)

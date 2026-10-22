@@ -47,6 +47,11 @@ namespace TiaMcp.Logic.Generation
         public static string Normalize(string json) => Utf8.GetString(Encode(Parse(json)));
         public static string Hash(JsonElement value) => "sha256:" + HashBytes(Encode(value));
 
+        public static JsonElement RedactArguments(JsonElement value) => JsonSerializer.SerializeToElement(
+            TiaOpenness.Shared.ApprovalJournalPayload.RedactArguments(System.Text.Json.Nodes.JsonNode.Parse(value.GetRawText())));
+
+        public static string ArgumentHash(JsonElement value) => Hash(RedactArguments(value));
+
         public static string HashBytes(byte[] bytes)
         {
             using var hash = SHA256.Create();

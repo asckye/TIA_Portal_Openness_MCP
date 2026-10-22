@@ -89,4 +89,6 @@ worker 超时预算为：默认 120 秒，每个代次首次附着 300 秒，编
 
 MCP 的 `WRITE` / `ONLINE-WRITE` 实际执行默认须经工作台审批。`dryRun=true` 和候选工具 `mode=preview` 不等待审批。`SaveProject`、`SaveProjectCopy` 和 `CloseProject` 实际执行同样须审批；连接、附着、打开和分离不审批。拒绝、120 秒默认超时或工作台不可用会在派发前返回 `CONFIRMATION_REQUIRED`。审批、执行与响应共享 requestId。
 
+审批和审计的参数摘要、包含参数的计划哈希都先排除密码、凭据、密钥和令牌，使用与调用日志一致的固定占位符。仅更换这些值不会改变摘要或使预览计划失效；实际调用仍接收原始值。非敏感参数与工程身份仍参与审批复核。详见[审批与审计配置](configuration.md#v4-结果审批与审计)。
+
 八个版本都可用 `GetOpennessWorkerStatus` 查看代次与故障。`OUTCOME_UNKNOWN` 后先核对工程和调用日志，再用 `DisconnectPortal` 恢复，或显式调用 `RestartOpennessWorker`；重新连接后必须重新绑定工程。详见 [worker 与恢复](../guides/openness-worker-isolation.md)。

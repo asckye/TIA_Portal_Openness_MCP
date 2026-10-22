@@ -11,6 +11,7 @@ public sealed class FallbackCandidateTests
     {
         internal readonly List<string> Trace = new();
         internal string Fault = "";
+        internal string? LastPassword;
         internal bool Poisoned;
         internal Action? Before;
         internal Action? After;
@@ -38,6 +39,7 @@ public sealed class FallbackCandidateTests
         }
         public FallbackNativeResult Execute(FallbackRequest request, FallbackAttempt a)
         {
+            LastPassword = request.Parameters.TryGetValue("password", out var password) ? password : null;
             Trace.Add("primitive"); Executions++;
             if (Fault == "not-issued") throw new IOException("no native call");
             if (Fault == "stale" && Refreshes == 0 || Fault == "stale-twice") throw new ReadHandleStaleException(true, true, new ObjectDisposedException("read-only workspace"));
@@ -59,6 +61,29 @@ public sealed class FallbackCandidateTests
     private static string Hash(Envelope e) => e.Data!.Value.GetProperty("plan").GetProperty("hash").GetString()!;
     private static Envelope Run(FallbackSession s, IFallbackAdapter a, FallbackRequest r, string mode = "preview", string hash = "", bool confirm = true, string credential = "")
         => s.Run(a, "21", r.Entry, "request", r, credential, mode, confirm, hash, Project);
+    [Fact]
+    public void Preview_excludes_nested_passwords_and_credentials_and_executes_the_current_value()
+    {
+        var a = new Adapter(); var session = new FallbackSession(); var request = Request();
+        request.Parameters["password"] = "first-private-password";
+        var preview = Run(session, a, request, credential: "first-private-credential");
+        request.Parameters["password"] = "second-private-password";
+        var changed = Run(session, a, request, credential: "second-private-credential");
+        Assert.True(preview.Ok); Assert.True(changed.Ok); Assert.Equal(Hash(preview), Hash(changed));
+        request.Parameters["flag"] = "false";
+        Assert.NotEqual(Hash(preview), Hash(Run(session, a, request, credential: "second-private-credential")));
+        Assert.Equal(ErrorCode.PlanStale, Run(session, a, request, "apply", Hash(preview), credential: "second-private-credential").Error!.Code);
+        Assert.DoesNotContain("native", a.Trace);
+        request.Parameters["flag"] = "true";
+        var result = Run(session, a, request, "apply", Hash(preview), credential: "second-private-credential");
+        Assert.True(result.Ok, V4Json.Serialize(result)); Assert.Equal("second-private-password", a.LastPassword);
+        foreach (string value in new[] { "first-private-password", "second-private-password", "first-private-credential", "second-private-credential" })
+        {
+            string evidence = V4Json.Serialize(preview) + V4Json.Serialize(changed) + V4Json.Serialize(result);
+            Assert.DoesNotContain(value, evidence);
+            Assert.DoesNotContain(TiaOpenness.Shared.PendingApproval.Hash(value), evidence);
+        }
+    }
     [Theory]
     [InlineData("DownloadPlc")][InlineData("DownloadPlcToFolder")][InlineData("CompilePlcSoftware")][InlineData("ExportPlcBlockDocuments")][InlineData("ImportPlcBlockDocuments")]
     [InlineData("ListVersionControlWorkspaces")][InlineData("GetVersionControlStatus")][InlineData("CreateVersionControlWorkspace")][InlineData("ConnectProjectToWorkspace")][InlineData("SynchronizeVersionControlWorkspace")]
@@ -144,12 +169,12 @@ public sealed class FallbackCandidateTests
         Assert.Equal(new[] { "observe" }, a.Trace); Assert.Contains("PLC_2", V4Json.Serialize(result));
     }
     [Fact]
-    public void HashIgnoresCultureCorrelationAndConfirmationButBindsSecretsAndArguments()
+    public void HashIgnoresCultureCorrelationConfirmationAndSecretsButBindsArguments()
     {
         var a = new Adapter(); var s = new FallbackSession(); var r = Request(); var p = Run(s, a, r, credential: "secret-a"); var prior = CultureInfo.CurrentCulture;
         try { CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("tr-TR"); Assert.Equal(Hash(p), Hash(s.Run(a, "21", r.Entry, "another", r, "secret-a"))); }
         finally { CultureInfo.CurrentCulture = prior; }
-        Assert.DoesNotContain("secret-a", V4Json.Serialize(p)); Assert.NotEqual(Hash(p), Hash(Run(s, a, r, credential: "secret-b")));
+        Assert.DoesNotContain("secret-a", V4Json.Serialize(p)); Assert.Equal(Hash(p), Hash(Run(s, a, r, credential: "secret-b")));
         Assert.Equal(ErrorCode.ConfirmationRequired, Run(s, a, r, "apply", Hash(p), false, "secret-a").Error!.Code);
         r.Parameters["flag"] = "false"; Assert.Equal(ErrorCode.PlanStale, Run(s, a, r, "apply", Hash(p), credential: "secret-a").Error!.Code); Assert.DoesNotContain("native", a.Trace);
     }

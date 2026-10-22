@@ -130,7 +130,7 @@ namespace TiaMcp.Logic.Generation
                 foreach (var dependency in step.GetProperty("dependsOn").EnumerateArray())
                     if (!known.Contains(dependency.GetString()!)) errors.Add(new GenerationValidationError(path + "/dependsOn", "dependency", "Dependencies must reference earlier steps; cycles and forward references are prohibited."));
                 known.Add(step.GetProperty("id").GetString()!);
-                if (CanonicalJson.Hash(step.GetProperty("arguments")) != step.GetProperty("argumentDigest").GetString()) errors.Add(new GenerationValidationError(path + "/argumentDigest", "argument-digest", "Argument digest does not match canonical arguments."));
+                if (CanonicalJson.ArgumentHash(step.GetProperty("arguments")) != step.GetProperty("argumentDigest").GetString()) errors.Add(new GenerationValidationError(path + "/argumentDigest", "argument-digest", "Argument digest does not match canonical arguments."));
                 if (step.GetProperty("availability").GetProperty("tool").GetString() != "present") errors.Add(new GenerationValidationError(path + "/availability/tool", "availability", "Executable steps must have a present tool; absent phases belong in unavailable."));
                 if (step.TryGetProperty("review", out var review) && review.GetProperty("mode").GetString() == "tool-preview")
                 {

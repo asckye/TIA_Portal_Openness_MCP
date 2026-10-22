@@ -1,3 +1,5 @@
+extern alias enginehost;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.Adapters;
@@ -111,5 +113,82 @@ public sealed class SessionAuditHostTests
         Assert.Equal(condition, details.Condition);
         Assert.Equal("native-admission", Assert.IsType<PreconditionFailedDetails>(
             HostBehavior.FailureError(HostFailureKind.Precondition, null, new Dictionary<string, JsonElement>()).Details).Condition);
+    }
+}
+
+[Collection(BundleSelectionCollection.Name)]
+public sealed class SensitiveArgumentDigestTests
+{
+    [Theory]
+    [InlineData("14sp1")] [InlineData("15.1")] [InlineData("16")] [InlineData("17")]
+    [InlineData("18")] [InlineData("19")] [InlineData("20")] [InlineData("21")]
+    public void Every_sensitive_tool_argument_is_excluded_from_approval_and_audit_digests(string release)
+    {
+        var parameters = enginehost::TiaMcpServer.ModelContextProtocol.PortedToolDeclarations.Methods(release)
+            .SelectMany(method => method.GetParameters().Where(p => p.ParameterType == typeof(string) && CallJournalPayload.Sensitive(p.Name!))
+                .Select(p => (Tool: method.GetCustomAttribute<ModelContextProtocol.Server.McpServerToolAttribute>()!.Name!, Parameter: p.Name!)))
+            .Concat(FoundationTools.Definitions.Select(d => FoundationTools.ForRelease(d, release))
+                .SelectMany(d => d.Arguments.Where(a => a.Type == "string" && CallJournalPayload.Sensitive(a.Name)).Select(a => (Tool: d.Name, Parameter: a.Name))))
+            .Distinct().ToArray();
+        Assert.NotEmpty(parameters);
+        var log = new AuditLog(Path.Combine(AppContext.BaseDirectory, "sensitive-digests", Guid.NewGuid().ToString("N")));
+        var journal = new List<string>();
+        TiaMcpServer.ModelContextProtocol.InvocationJournal.ConfigureOutput(journal.Add);
+        try
+        {
+            foreach (var parameter in parameters)
+                foreach (string secret in new[] { "weak-fixture-password", new string('x', 5000) + "private-suffix" })
+                {
+                    var args = new JsonObject { ["target"] = "reviewed-object", [parameter.Parameter] = secret };
+                    string original = args.ToJsonString();
+                    var first = PendingApproval.Create("foundation", release, parameter.Tool, original, "{}", 120);
+                    args[parameter.Parameter] = "another-password-of-a-different-length";
+                    var second = PendingApproval.Create("foundation", release, parameter.Tool, args.ToJsonString(), "{}", 120);
+                    Assert.Equal(first.ArgumentDigest, second.ArgumentDigest);
+                    Assert.Equal(first.InvocationArgumentsDigest, second.InvocationArgumentsDigest);
+                    Assert.Equal(first.PlanHash, second.PlanHash);
+                    args["target"] = "changed-object";
+                    Assert.NotEqual(first.ArgumentDigest, PendingApproval.Create("foundation", release, parameter.Tool, args.ToJsonString(), "{}", 120).ArgumentDigest);
+                    Assert.NotEqual(first.InvocationArgumentsDigest, PendingApproval.Create("foundation", release, parameter.Tool, args.ToJsonString(), "{}", 120).InvocationArgumentsDigest);
+                    var result = FoundationV4Result.Reject(release, parameter.Tool, first.RequestId,
+                        HostBehavior.Confirmation("denied", first.PlanHash, first.RequestId));
+                    string response = JsonSerializer.Serialize(result);
+                    log.Append("request", first.RequestId, first.Host, release, first.Tool, planHash: first.PlanHash);
+                    log.Approval(first.RequestId, first.Host, release, first.Tool, "denied", first.PlanHash);
+                    using (var span = TiaMcpServer.ModelContextProtocol.InvocationJournal.Observe(first.RequestId, first.Tool, first.Host, release, true, () => original))
+                        span.Complete(() => response);
+                    string evidence = JsonSerializer.Serialize(first) + response + string.Join("\n", journal)
+                        + string.Join("\n", log.Read().Select(AuditLog.Canonical));
+                    Assert.DoesNotContain(secret, evidence, StringComparison.Ordinal);
+                    Assert.DoesNotContain(PendingApproval.Hash(secret), evidence, StringComparison.Ordinal);
+                    Assert.DoesNotContain(PendingApproval.Hash(PendingApproval.Canonical(JsonNode.Parse(original))), evidence, StringComparison.Ordinal);
+                    Assert.Equal(secret, (string?)JsonNode.Parse(original)![parameter.Parameter]);
+                    journal.Clear();
+                }
+            Assert.True(log.Verify().Passed);
+            Assert.Equal(parameters.Length * 4, log.Read().Count);
+        }
+        finally { TiaMcpServer.ModelContextProtocol.InvocationJournal.ConfigureOutput(null); }
+    }
+
+    [Fact]
+    public void Nested_maps_embedded_json_and_unbounded_arguments_use_the_journal_sensitive_definition()
+    {
+        var args = new JsonObject { ["target"] = "secret-a", ["operations"] = new JsonArray(new JsonObject {
+            ["credentials"] = new JsonObject { ["user"] = "alice", ["password"] = "secret-a" },
+            ["attributes"] = new JsonArray(new JsonObject { ["name"] = "WebPassword", ["value"] = "secret-a" }),
+            ["propertiesJson"] = "{\"archivePassword\":\"secret-a\"}" }) };
+        JsonObject deep = args;
+        for (int i = 0; i < 20; i++) { var next = new JsonObject(); deep["child"] = next; deep = next; }
+        deep["password"] = "secret-a"; deep["ordinary"] = new string('n', 70000);
+        string json = args.ToJsonString();
+        var first = PendingApproval.Create("foundation", "21", "CallTool", json, "{}", 120);
+        var changed = JsonNode.Parse(json.Replace("secret-a", "secret-b"))!.AsObject();
+        changed["target"] = "secret-a";
+        Assert.Equal(first.ArgumentDigest, PendingApproval.Create("foundation", "21", "CallTool", changed.ToJsonString(), "{}", 120).ArgumentDigest);
+        deep["ordinary"] = new string('n', 70000) + "changed";
+        Assert.NotEqual(first.ArgumentDigest, PendingApproval.Create("foundation", "21", "CallTool", args.ToJsonString(), "{}", 120).ArgumentDigest);
+        Assert.Equal("secret-a", (string?)deep["password"]);
+        Assert.Equal(json, args.ToJsonString().Replace(new string('n', 70000) + "changed", new string('n', 70000)));
     }
 }

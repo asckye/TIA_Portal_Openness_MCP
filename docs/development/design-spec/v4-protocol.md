@@ -488,6 +488,10 @@ PlanFile = {path, exists, byteLength|null, sha256|null}；PlanOperation = {tool,
    - 用同样的参数在只读作用域内跑一次预览（`dryRun: true` 或 `mode: preview`）。预览阻止 apply 时返回 `PRECONDITION_FAILED`；预览失败时，把预览结果标记为 `rejected-before-operation` 并加上 `APPROVAL_PRECHECK_REFUSED` 后返回；预览报告“无效果”时直接返回预览结果，不再审批。
 2. **等待审批**（`WaitForApproval`）：创建 `PendingApproval{requestId, planHash（有计划时用计划哈希，否则用参数摘要）, argumentDigest, timeout}`，通过本机命名管道 `TiaMcp.Approval.v1.<hash>` 交给工作台。得到 granted、denied、timeout 或 workbench-unavailable 之一；后三者返回 `CONFIRMATION_REQUIRED`。
 3. **派发前复核**（在 Openness 通道内）：再次检查写栅栏和会话锁；`ApprovalStillMatches` 核对参数摘要与绑定身份，不一致时返回 `CONFIRMATION_REQUIRED/denied`；再次检查输入文件。
+
+审批和审计的参数摘要 MUST 在计算 SHA-256 前，按调用日志共用的 `CallJournalPayload` 敏感字段规则把密码、凭据、密钥和令牌替换为固定占位符 `••••`。此规则递归适用于参数对象、数组、名称/值属性表与嵌入 JSON；摘要不使用界面截断后的文本。审批卡 MUST 先脱敏，再生成长文本摘要，避免显示密码的无盐哈希。非敏感参数、发布键、工具和绑定身份仍参与摘要；获批后的复核及生成步骤的单次授权使用相同脱敏形式，实际操作接收原始值。
+
+生成步骤的 `argumentDigest` 和包含步骤参数的计划哈希同样排除敏感值，展示、返回的计划参数使用脱敏副本。编译及回退候选的预览计划原先还绑定密码的会话 HMAC；现在只绑定脱敏参数。因此，仅替换密码可继续使用已经预览、审批的计划；密码不属于人工审阅内容。这不改变工程身份、非敏感操作参数、一次性消费和原有预览检查。批次预览令牌仍引用宿主保存的原始调用，不提供替换密码的输入槽。
 4. **执行一次**：开始审计，执行，`ObserveSessionOutcome` 判断是否锁定会话，`FinishApproval` 附加恢复提示、`APPROVAL_DISABLED`，并把 `requestId` 改为审批请求的 ID，最后完成审计。
 5. 审批关闭时照常执行，加上 `APPROVAL_DISABLED`；工具自身的 confirm 和计划检查仍然生效。
 
