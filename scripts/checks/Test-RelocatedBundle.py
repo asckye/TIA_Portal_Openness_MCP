@@ -1040,6 +1040,10 @@ class RelocationCheckTests(unittest.TestCase):
 
 
 def main() -> int:
+    # Product messages can carry characters a GBK release console cannot print; the check had already passed when
+    # printing its PASS line failed (beta.1 release run 17, 2026-10-22).
+    sys.stdout.reconfigure(errors='replace')
+    sys.stderr.reconfigure(errors='replace')
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--bundle-root", type=Path)

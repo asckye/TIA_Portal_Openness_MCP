@@ -39,7 +39,13 @@ internal static partial class ReleaseCommands
                 : ProcessRunner.Run(executable, args, cwd ?? Root, env);
             if (executable == "test-suites") { Console.Write(result.StandardOutput); Console.Error.Write(result.StandardError); }
             if (activeLog.Value is { } log) File.AppendAllText(log, result.StandardOutput + result.StandardError, new System.Text.UTF8Encoding(false));
-            if (result.ExitCode == 0) Directory.Delete(root, true);
+            if (result.ExitCode == 0)
+            {
+                // A build server started by the step can still hold an analyzer it loaded from this folder; the step's result stands.
+                try { Directory.Delete(root, true); }
+                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+                { Console.Error.WriteLine($"warning: passed release check data ({name}) remains at {root}: {ex.Message}"); }
+            }
             else Console.Error.WriteLine($"Retained failed release check data ({name}): {root}");
             return result;
         }
