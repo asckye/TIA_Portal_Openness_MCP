@@ -43,57 +43,23 @@ internal static class ReleaseCommandTable
         new("plc-exchange-worker-v21", "test-suites -Suite plc-exchange-worker-v21", "plc-exchange-worker-v21.log", "minimum 128; zero skips", "plcExchangeV21Passed"),
         new("version-policy", "test-suites -Suite version-policy", "version-policy-sdk.log", "minimum 10", "versionPolicySdkPassed"),
         new("native-diagnostics-fixture", "Test-NativeDiagnostics.py --fixture", "native-diagnostics-tests.log", "behavior >= 36; rejection >= 5", "diagnosticTests"),
-        new("native-safety", "TiaMcp.Engine.Native.Tests.V{major}.exe --self-test", "native-safety-v{major}.log", "live TIA not run", "nativeHarness.safetyChecksPassed"),
-        new("example-library", "TiaMcp.Engine.Harness.exe example-library-only", "example-library-v{major}.log", "exit 0", "exampleLibrary"),
-        new("native-coverage", "NativeCallWeaver.dll verify engine", "native-coverage-v{major}.log", "complete inventory", "nativeDiagnostics"),
-        new("adapter-native-coverage", "NativeCallWeaver.dll verify adapter", "adapter-native-coverage-v{major}.log", "complete inventory", "nativeDiagnostics.adapter"),
-        new("native-diagnostics-jit", "TiaMcp.Engine.Harness.exe native-diagnostics-only", "native-jit-v{major}.log", "JIT + open generic equals inventory; adapter/native journals >= 8/3", "nativeDiagnostics"),
-        new("process-leases", "TiaMcp.Engine.Harness.exe process-leases-only", "process-leases-v{major}.log", "minimum 2", "sessionStability.processLeaseChecksPassed"),
-        new("worker-supervisor", "test-suites -Suite worker-robustness", "worker-supervisor-v{major}.log", "minimum 25; no TIA", "workerIsolation.faultChecksPassed"),
-        new("worker-protocol", "Test-FoundationTransport.py", "worker-protocol-v{major}.log", "minimum 58; no TIA", "workerIsolation.protocolChecksPassed"),
-        new("approval-safety", "Test-ReleaseApprovalGate.py --product engine", "approval-safety-v{major}.log", "exactly 7; no workbench/TIA", "approvalSafety"),
-        new("software-lookup", "TiaMcp.Engine.Harness.exe software-lookup-only", "software-lookup-v{major}.log", "minimum 45", "softwareLookupPassed"),
-        new("engineering-api", "TiaMcp.Engine.Harness.exe engineering-api-only", "engineering-api-v{major}.log", "V20 >= 2840; V21 >= 3126", "engineeringApiShapePassed"),
-        new("http-concurrency", "test-suites -Suite engine-host", "concurrency-v{major}.log", "registered TRX gate; Foundation lanes, approval and concurrent audit", "httpConcurrency"),
-        new("http", "TiaMcp.Engine.Harness.exe", "http-v{major}.log", "complete runtime regressions", "httpPassed"),
-        new("hmi", "TiaMcp.Engine.Harness.exe hmi-only", "hmi-v{major}.log", "18 assertions", "hmiPassed"),
-        new("resource-discovery", "Test-ResourceDiscovery.py", "resources-v{major}.log", "complete result", "resourceDiscoveryPassed"),
-        new("v21-ecosystem", "Test-V21Ecosystem.py", "v21-ecosystem-v{major}.log", "minimum 43; matching runtime hash; no TIA", "v21EcosystemAdapters"),
-        new("local-stability", "Test-LocalStability.py", "stability-v{major}.log", "four runs; matching host/worker hashes", "localStability"),
-        new("isolated-local-stability", "Test-LocalStability.py --concurrency 16", "isolated-stability-v{major}.log", "four session worker runs; matching host/worker hashes", "isolatedLocalStability"),
-        new("native-export", "TiaMcp.Engine.Harness.exe native-export-only", "native-export-v{major}.log", "complete result", "nativeExportRemotingPassed"),
-        new("hmi-snapshot", "TiaMcp.Engine.Harness.exe hmi-snapshot-only", "hmi-snapshot-v{major}.log", "complete result", "hmiSnapshotRemotingPassed"),
-        new("global-script", "TiaMcp.Engine.Harness.exe global-script-only", "global-script-v{major}.log", "V21 exactly 8", "globalScriptBridgePassed"),
-        new("graphic-selection", "TiaMcp.Engine.Harness.exe graphic-selection-only", "graphic-selection-v{major}.log", "minimum 8", "graphicSelectionPassed"),
-        new("runtime-settings", "TiaMcp.Engine.Harness.exe runtime-settings-only", "runtime-settings-v{major}.log", "V20 >= 8; V21 >= 9", "runtimeSettingsPassed"),
-        new("migration-assembly", "TiaMcp.Engine.Harness.exe test-migration-read-assembly", "assembly-v{major}.log", "exit 0", "migrationAssembly"),
-        new("ecosystem-assembly", "TiaMcp.Engine.Harness.exe test-ecosystem-assembly", "ecosystem-v{major}.log", "minimum 31", "ecosystemAssemblyPassed"),
-        new("download-route", "TiaMcp.Engine.Harness.exe test-download-route", "route-selection-v21.log", "exit 0", "downloadRouteSelection"),
-        new("match-plc-name", "TiaMcp.Engine.Harness.exe test-match-plc-name", "match-plc-name-v21.log", "exit 0", "matchPlcName"),
-        new("generate-tools-list", "TiaMcp.Engine.Harness.exe generate-tools-list", "tools-list.log", "compiled roster generated", "toolList"),
         new("tool-capability-matrix", "Generate-ToolCapabilityMatrix.cs", "tool-matrix.log", "generated bytes match", "toolCapabilityMatrix"),
         .. HarnessEntries(),
         .. PlcReleaseEntries()
     ];
 
+    // P8-04l: the engine harness entries retired with the engine; each mode runs as its PLC job.
     private static IEnumerable<ReleaseCommandSpec> HarnessEntries()
     {
-        var successors = ReleaseCommands.CheckAllHarnessSuccessors();
-        var decisions = ReleaseCommands.CheckAllHarnessD5();
-        var assertions = ReleaseCommands.CheckAllHarnessD5Assertions();
         foreach (var key in new[] { "20", "21" })
-        foreach (var mode in ReleaseCommands.CheckAllHarnessModes(key))
+        foreach (var mode in ReleaseCommands.CheckAllPlcHarnessModes(key))
         {
             string selected = mode.Length == 0 ? "http" : mode;
-            string engine = "harness-v" + key + "-" + selected;
-            yield return new(engine, "TiaMcp.Engine.Harness.exe <engine> " + mode, engine + ".log",
-                decisions.TryGetValue(engine, out var reason) ? "kept; D5: " + reason
-                    : assertions.TryGetValue(engine, out var remaining) ? "kept; " + remaining : "unchanged engine assertions", "harness." + engine);
-            if (successors.TryGetValue(engine, out var plc))
-                yield return new(plc, "Test-PlcHarness.py --release " + key + " --mode " + selected
-                    + " --host <FoundationHost> --worker <SDK-ready-PlcWorker> --harness <harness> --api <PublicAPI> --public-api-root <SDK-root> --output <fresh-output>"
-                    + (mode == "native-diagnostics-only" ? " --adapter-inventory <adapter-coverage.json>" : ""),
-                    plc + ".log", "same mode assertions on kept host/adapter/worker; original count gates retained", "harness." + plc);
+            string plc = ReleaseCommands.CheckAllPlcHarnessJob(key, mode);
+            yield return new(plc, "Test-PlcHarness.py --release " + key + " --mode " + selected
+                + " --host <FoundationHost> --worker <SDK-ready-PlcWorker> --harness <harness> --api <PublicAPI> --public-api-root <SDK-root> --output <fresh-output>"
+                + (mode == "native-diagnostics-only" ? " --adapter-inventory <adapter-coverage.json>" : ""),
+                plc + ".log", "mode assertions on the host/adapter/worker; the retired engine job's count gates retained", "harness." + plc);
         }
     }
 
@@ -103,5 +69,5 @@ internal static class ReleaseCommandTable
         "<worktree>", "<SDK-root>", "<logs>", "<temp>", "dotnet", "python")
         .Where(job => !job.Name.StartsWith("harness-", StringComparison.Ordinal))
         .Select(job => new ReleaseCommandSpec(job.Name, job.Executable + " " + string.Join(' ', job.Arguments), job.Name + ".log",
-            "same registered/count/evidence gates as engine successor; exact snapshot bytes; no TIA", "plcChecks." + job.Name));
+            "registered/count/evidence gates of the retired engine job; exact snapshot bytes; no TIA", "plcChecks." + job.Name));
 }

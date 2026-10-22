@@ -21,9 +21,6 @@ internal sealed record ReleaseCheckPolicy(string[] Checks, string[] Always, Rele
         var policy = JsonSerializer.Deserialize<ReleaseCheckPolicy>(File.ReadAllText(Path.Combine(root, "build-tools/release/release-checks.json")), JsonOptions)
             ?? throw new ReleaseException("Release check map is empty.");
         if (policy.IncludeSourceRoots) policy = policy with { Rules = [.. SourceRoots.Load(root).CheckRules(), .. policy.Rules] };
-        policy = policy with { Rules = policy.Rules.Select(rule => rule with { Checks = rule.Checks
-            .SelectMany(check => check.StartsWith("engine-", StringComparison.Ordinal) && policy.Checks.Contains("plc-" + check[7..], StringComparer.Ordinal)
-                ? new[] { check, "plc-" + check[7..] } : new[] { check }).Distinct(StringComparer.Ordinal).ToArray() }).ToArray() };
         policy.Validate();
         return policy;
     }

@@ -37,7 +37,6 @@ public sealed class UpdaterBindingTests
     [InlineData("hash-with-newline")]
     [InlineData("zero-length")]
     [InlineData("text-length")]
-    [InlineData("engine-copy-differs")]
     [InlineData("in-files-inventory")]
     [InlineData("in-runtime-inventory")]
     [InlineData("not-an-array")]
@@ -55,9 +54,8 @@ public sealed class UpdaterBindingTests
             case "hash-with-newline": rows[0]!["sha256"] = new string('a', 64) + "\n"; break;
             case "zero-length": rows[0]!["length"] = 0; break;
             case "text-length": rows[0]!["length"] = "12"; break;
-            case "engine-copy-differs": multi["engineCompatibility"]!["updaterFiles"]![0]!["sha256"] = new string('d', 64); break;
             case "in-files-inventory": multi["files"]!.AsArray().Add(rows[0]!.DeepClone()); break;
-            case "in-runtime-inventory": multi["engineCompatibility"]!.AsObject().Remove("updaterFiles"); multi["runtimeFiles"] = new JsonArray(rows[1]!.DeepClone()); break;
+            case "in-runtime-inventory": multi["runtimeFiles"] = new JsonArray(rows[1]!.DeepClone()); break;
             case "not-an-array": multi["updaterFiles"] = rows[0]!.DeepClone(); break;
         }
         Assert.Throws<ReleaseException>(() => Read(multi));
@@ -106,7 +104,6 @@ public sealed class UpdaterBindingTests
         // A 4.x record that ships binaries must bind the updater.
         var unbound = (JsonObject)multi.DeepClone();
         unbound.Remove("updaterFiles");
-        unbound["engineCompatibility"]!.AsObject().Remove("updaterFiles");
         Assert.Contains("not recorded", Assert.Throws<ReleaseException>(() => Validate(tree, unbound, noBinaries: false)).Message, StringComparison.Ordinal);
         // Without binaries the shape is still checked.
         var invalid = (JsonObject)multi.DeepClone();
@@ -121,7 +118,6 @@ public sealed class UpdaterBindingTests
         var rows = Rows("exe", "config");
         var engine = new JsonObject { ["release"] = "4.0.0", ["fileVersion"] = "4.0.0.0", ["tier"] = "package", ["updaterFiles"] = rows.DeepClone() };
         var multi = (JsonObject)engine.DeepClone();
-        multi["engineCompatibility"] = engine.DeepClone();
         multi["plcRuntimes"] = new JsonObject();
         var compared = Compare(engine, multi);
         Assert.Contains(compared, row => row.EngineField == "updaterFiles[0].sha256" && row.MultiField == "updaterFiles[0].sha256" && row.Status == "equal");
@@ -144,8 +140,6 @@ public sealed class UpdaterBindingTests
         var newline = (JsonObject)valid.DeepClone(); newline["updaterFiles"]![1]!["sha256"] = new string('b', 64) + "\n"; vectors.Add(newline);
         var fraction = (JsonObject)valid.DeepClone(); fraction["updaterFiles"]![0]!["length"] = 1.5; vectors.Add(fraction);
         var boolean = (JsonObject)valid.DeepClone(); boolean["updaterFiles"]![0]!["length"] = true; vectors.Add(boolean);
-        var engineless = (JsonObject)valid.DeepClone(); engineless["engineCompatibility"]!.AsObject().Remove("updaterFiles"); vectors.Add(engineless);
-        var differs = (JsonObject)valid.DeepClone(); differs["engineCompatibility"]!["updaterFiles"]![1]!["length"] = 99; vectors.Add(differs);
         var inventory = (JsonObject)valid.DeepClone(); inventory["files"]!.AsArray().Add(new JsonObject { ["path"] = Config, ["sha256"] = new string('c', 64) }); vectors.Add(inventory);
         var expected = vectors.Select(vector =>
         {
@@ -153,7 +147,7 @@ public sealed class UpdaterBindingTests
             try { ReleaseRecords.UpdaterFiles(doc.RootElement); return true; }
             catch (ReleaseException) { return false; }
         }).ToArray();
-        Assert.Equal([true, true, false, false, false, false, true, false, false], expected);
+        Assert.Equal([true, true, false, false, false, false, false], expected);
 
         using var tree = new StaticTree();
         var input = tree.Write("updater-vectors.json", vectors.ToJsonString());
@@ -172,7 +166,7 @@ public sealed class UpdaterBindingTests
     {
         var root = TiaMcp.BuildCommon.Repository.FindRoot();
         var pipeline = File.ReadAllText(Path.Combine(root, "build-tools/release/BuildReleasePipeline.cs"));
-        Assert.Contains("runtimeFiles, updaterFiles, sourceFiles, validationInputs, validationArtifacts = artifacts", pipeline, StringComparison.Ordinal);
+        Assert.Contains("runtimeFiles, updaterFiles, sourceFiles, validationInputs, validationArtifacts = Array.Empty<object>()", pipeline, StringComparison.Ordinal);
         Assert.Contains("versionPolicySdkPassed = versionPolicyPassed, updaterFiles };", pipeline, StringComparison.Ordinal);
         var commands = File.ReadAllText(Path.Combine(root, "build-tools/release/ReleaseCommands.cs"));
         Assert.Contains("updaterFiles = engineRecord.RootElement.GetProperty(\"updaterFiles\"),", commands, StringComparison.Ordinal);
@@ -196,11 +190,9 @@ public sealed class UpdaterBindingTests
         tree.Write(ReleaseRecords.UpdaterOutputs[Config], "built config");
     }
 
-    private static JsonObject Multi(JsonArray rows)
-    {
-        var engine = new JsonObject { ["release"] = "4.0.0", ["runtimeFiles"] = new JsonArray(), ["updaterFiles"] = rows.DeepClone() };
-        return new JsonObject { ["release"] = "4.0.0", ["files"] = new JsonArray(), ["updaterFiles"] = rows, ["engineCompatibility"] = engine };
-    }
+    // P8-04l: a 4.x eight-release record without an embedded engine record (engineCompatibility).
+    private static JsonObject Multi(JsonArray rows) =>
+        new() { ["release"] = "4.0.0", ["files"] = new JsonArray(), ["updaterFiles"] = rows };
 
     private static IReadOnlyList<UpdaterArtifact> Read(JsonObject record)
     {
@@ -246,7 +238,6 @@ public sealed class UpdaterBindingTests
         var multi = (JsonObject)engine.DeepClone();
         multi.Remove("runtimeFiles");
         multi["files"] = files;
-        multi["engineCompatibility"] = engine;
         multi["plcRuntimes"] = runtimes;
         tree.Write("CHANGELOG.md", "## [4.0.0]\n");
         tree.Write("TiaOpenness.exe", "launcher");

@@ -71,30 +71,6 @@ def foundation_host_executable(exe=None):
     return Path(__file__).resolve().parents[2] / 'src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe'
 
 
-def engine_cross_check_environment(host, worker, catalog, environment):
-    root = Path(__file__).resolve().parents[2]
-    private = (root / 'bin-build/engine-compat').resolve()
-    host = Path(host).resolve()
-    require(host.name == 'TiaMcp.FoundationHost.exe' and
-            (host.is_relative_to(private) or host in [root / f'src/FoundationHost/bin/{configuration}/net10.0/TiaMcp.FoundationHost.exe'
-                                                     for configuration in ('Release', 'Debug')]),
-            'Engine cross-checks require a repository source or private compatibility host')
-    worker, catalog = Path(worker).resolve(), Path(catalog).resolve()
-    require(worker.is_relative_to(private) and worker.is_file() and catalog.is_file() and catalog.parent == worker.parent,
-            'Engine cross-checks require private compatibility worker/catalog output')
-    environment['TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY'] = str(private)
-    return environment
-
-
-def engine_fixture_evidence(worker, exe=None):
-    if worker is None:
-        return {}
-    host = foundation_host_executable(exe)
-    return {'hostSha256': hashlib.sha256(host.read_bytes()).hexdigest(),
-            'sdkWorkerSha256': hashlib.sha256(worker.read_bytes()).hexdigest(),
-            'workerModel': 'combined-host-supervised-worker'}
-
-
 def plc_fixture_evidence(worker, exe):
     host = Path(exe) if Path(exe).name == 'TiaMcp.FoundationHost.exe' else foundation_host_executable(exe)
     worker_hash = hashlib.sha256(worker.read_bytes()).hexdigest()
@@ -103,25 +79,15 @@ def plc_fixture_evidence(worker, exe):
 
 
 def host_command(exe, portal_root, major, transport, profile, public_api=None, *,
-                 engine_worker=None, engine_catalog=None, plc_worker=None, bundle_root=None,
-                 port=0, key=''):
+                 plc_worker=None, bundle_root=None, port=0, key=''):
     """One launch contract for the shared server and transport lifetime probes."""
     exe = Path(exe).resolve()
-    worker, catalog = engine_worker, engine_catalog
-    require((worker is None) == (catalog is None), 'Both SDK worker and catalog are required')
-    require(plc_worker is None or worker is None, 'Select exactly one worker kind')
     if exe.name != 'TiaMcp.FoundationHost.exe':
-        if plc_worker is None:
-            worker = worker or exe
-            catalog = catalog or worker.with_name('tool-catalog.json')
         exe = foundation_host_executable(exe)
     args = [str(exe), '--bundle-root', str(bundle_root or Path(__file__).resolve().parents[2]),
             '--release-key', str(major)]
     if plc_worker is not None and profile in ('full', 'lite'):
         args += ['--profile', profile]
-    if worker is not None:
-        require(catalog is not None and catalog.is_file(), 'A freshly exported engine worker catalog is required')
-        args += ['--engine-worker', str(worker.resolve()), '--engine-catalog', str(catalog.resolve())]
     if plc_worker is not None:
         require(public_api is not None, 'PLC worker requires its PublicAPI')
         args += ['--plc-worker', '--worker-exe', str(plc_worker.resolve()), '--public-api', str(public_api.resolve())]
@@ -136,17 +102,16 @@ def host_command(exe, portal_root, major, transport, profile, public_api=None, *
 @contextmanager
 def server(exe, portal_root, major, transport, profile, harness=None, public_api=None,
            *, env_overrides=None, process_observer=None, evidence_directory=None,
-           engine_worker=None, engine_catalog=None, plc_worker=None, sdk_ready=True,
+           plc_worker=None, sdk_ready=True,
            rpc_timeout=25, startup_timeout=25, stdio_exit_timeout=3, sdk_installation=True):
     # HTTP configuration watchers must not observe other checks' mutable tree.
     with fixture_directory('host-content-root-') as content_root:
-        require((engine_worker is None) == (engine_catalog is None), 'Both SDK worker and catalog are required')
         inputs = dict(env_overrides=env_overrides, process_observer=process_observer,
-                      evidence_directory=evidence_directory, content_root=Path(content_root), engine_worker=engine_worker, engine_catalog=engine_catalog, plc_worker=plc_worker, sdk_ready=sdk_ready,
+                      evidence_directory=evidence_directory, content_root=Path(content_root), plc_worker=plc_worker, sdk_ready=sdk_ready,
                       rpc_timeout=rpc_timeout, startup_timeout=startup_timeout, stdio_exit_timeout=stdio_exit_timeout)
         # SDK workers resolve their assemblies from a TIA-free installation layout. The synthetic protocol worker of the
         # six old releases (sdk_installation=False) accepts exactly the four protocol-2 launch arguments, so it gets none.
-        if (engine_worker is not None or plc_worker is not None) and sdk_installation:
+        if plc_worker is not None and sdk_installation:
             require(public_api is not None, 'SDK worker checks require --public-api')
             with fixture_directory('engine-protocol-sdk-') as scratch:
                 portal_root = sdk_only_installation(public_api, major, Path(scratch))
@@ -160,7 +125,7 @@ def server(exe, portal_root, major, transport, profile, harness=None, public_api
 @contextmanager
 def _server(exe, portal_root, major, transport, profile, harness=None, public_api=None,
            *, env_overrides=None, process_observer=None, evidence_directory=None, content_root=None,
-           engine_worker=None, engine_catalog=None, plc_worker=None, sdk_ready=True,
+           plc_worker=None, sdk_ready=True,
            rpc_timeout=25, startup_timeout=25, stdio_exit_timeout=3):
     exe = Path(exe).resolve()
     if portal_root is not None: portal_root = Path(portal_root).resolve()
@@ -174,20 +139,12 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
     foundation = True
     bundle_root = (env_overrides or {}).get('TIA_MCP_BUNDLE_ROOT') or os.environ.get('TIA_MCP_BUNDLE_ROOT') or str(Path(__file__).resolve().parents[2])
     args = host_command(exe, portal_root, major, transport, profile, public_api,
-                        engine_worker=engine_worker, engine_catalog=engine_catalog, plc_worker=plc_worker,
-                        bundle_root=bundle_root, port=port, key=key)
+                        plc_worker=plc_worker, bundle_root=bundle_root, port=port, key=key)
     env = dict(os.environ, TIA_MCP_PROFILE=profile)
-    if engine_worker is not None:
-        env['TIA_MCP_ENGINE_WORKER_SDK_READY'] = '1'
     if plc_worker is not None:
-        env.pop('TIA_MCP_ENGINE_WORKER_SDK_READY', None)
         env['TIA_MCP_PLC_WORKER_SDK_READY'] = '1' if sdk_ready else '0'
     if env_overrides:
         env.update(env_overrides)
-    env.pop('TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY', None)
-    if '--engine-worker' in args:
-        engine_cross_check_environment(args[0], args[args.index('--engine-worker') + 1],
-                                       args[args.index('--engine-catalog') + 1], env)
     process = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE, text=True, encoding='utf-8',
                                env=env, cwd=content_root, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
@@ -293,17 +250,11 @@ def main():
     parser.add_argument('--major', required=True, type=int, choices=(20, 21))
     parser.add_argument('--host-harness', type=Path, help='Compatibility argument; MCP always runs in FoundationHost')
     parser.add_argument('--public-api', type=Path)
-    parser.add_argument('--engine-worker', type=Path, help='Explicitly marked SDK-only worker for offline usage examples')
-    parser.add_argument('--engine-catalog', type=Path)
     parser.add_argument('--plc-worker', type=Path)
     parser.add_argument('--usage-output', type=Path)
     parser.add_argument('--transport', nargs='+', choices=('stdio', 'http'), default=('stdio', 'http'))
     args = parser.parse_args()
-    if (args.engine_worker is None) != (args.engine_catalog is None):
-        parser.error('Both --engine-worker and --engine-catalog are required')
     if args.plc_worker is not None:
-        require(args.engine_worker is None and args.public_api is not None, 'PLC SDK worker requires PublicAPI and no engine worker')
-    if args.engine_worker is not None or args.plc_worker is not None:
         require(args.public_api is not None, 'SDK worker capture requires --public-api')
         with fixture_directory('resource-sdk-worker-') as scratch:
             args.portal_root = sdk_only_installation(args.public_api, args.major, Path(scratch))
@@ -320,7 +271,7 @@ def run(args):
             label = f'V{args.major} {transport} {profile}'
             with server(args.exe.resolve(), args.portal_root.resolve(), args.major,
                         transport, profile, args.host_harness, args.public_api,
-                        engine_worker=args.engine_worker, engine_catalog=args.engine_catalog, plc_worker=args.plc_worker) as (rpc, http, logs):
+                        plc_worker=args.plc_worker) as (rpc, http, logs):
                 initialized = rpc('initialize', params={'protocolVersion': '2024-11-05',
                     'capabilities': {}, 'clientInfo': {'name': 'resource-discovery-test', 'version': '1'}})
                 require('result' in initialized, 'Initialize failed')

@@ -8,7 +8,6 @@
     <AppHostDotNetSearch>AppRelative;EnvironmentVariable;Global</AppHostDotNetSearch>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../Engine/Cli/McpConfigInstaller.cs" Link="Cli/McpConfigInstaller.cs" />
     <Compile Include="../Shared/Host/InstallPlcToolsCommand.cs" Link="Cli/InstallPlcToolsCommand.cs" />
     <ProjectReference Include="../WorkerChannel/TiaMcp.WorkerChannel.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <ProjectReference Include="../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />

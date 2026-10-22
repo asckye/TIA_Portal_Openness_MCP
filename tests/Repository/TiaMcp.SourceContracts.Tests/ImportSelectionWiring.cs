@@ -78,10 +78,10 @@ public sealed class ImportSelectionWiring
     {
         Assert.True(File.Exists(Path.Combine(LOGIC, "ModelContextProtocol/Tools/ImportSelectionPolicy.cs")));
         Assert.False(File.Exists(Path.Combine(SRC, "ModelContextProtocol/Tools/ImportSelectionPolicy.cs")));
+        // P8-04l: the engine projects are deleted; the FoundationHost (all eight releases) references the policy library.
         foreach (var version in new[] { 20, 21 })
-        {
-            var project = Read(Path.Combine(SRC, string.Concat("TiaMcp.Engine.V", version, ".csproj")));
-            Assert.Contains("<ProjectReference Include=\"../Logic/TiaMcp.Logic.csproj\"", project, StringComparison.Ordinal);
-        }
+            Assert.False(File.Exists(Path.Combine(SRC, string.Concat("TiaMcp.Engine.V", version, ".csproj"))));
+        Assert.Contains("<ProjectReference Include=\"../Logic/TiaMcp.Logic.csproj\"",
+            File.ReadAllText(Path.Combine(SRC, "../FoundationHost/TiaMcp.FoundationHost.csproj")), StringComparison.Ordinal);
     }
 }

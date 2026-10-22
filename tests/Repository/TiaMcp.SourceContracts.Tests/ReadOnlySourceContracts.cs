@@ -80,8 +80,14 @@ public sealed class ReadOnlySourceContracts
     [Fact]
     public void DiagnosticStartupKeepsWorkerAvailableAndNonWorkerExitExplicit()
     {
-        var source = Sources.Member("Main");
-        Contains(source, "OpennessReadiness.Ready", "OpennessReadiness.MarkUnavailable", "if (options.EngineWorker)", "Worker.EngineWorkerHost.Run();", "Engine usage:", "Environment.ExitCode = 64;", "User is not in the required group 'Siemens TIA Openness'. Exiting.", "Environment.ExitCode = 2;", "OpennessReadiness.Guidance(false)");
+        // P8-04l: the engine entry point (src/Engine/Program.cs) is deleted; its engine-worker startup branch has no subject.
+        // The host entry refuses the retired engine options first and keeps explicit argument and bundle exit codes.
+        Assert.False(File.Exists(Path.Combine(Root, "src/Engine/Program.cs")));
+        var source = Read("src/FoundationHost/Program.cs");
+        Assert.True(source.IndexOf("HostOptions.RejectEngineOptions(args, AppContext.BaseDirectory);", StringComparison.Ordinal) is >= 0 and var reject
+            && reject < source.IndexOf("HostOptions.Parse(args, AppContext.BaseDirectory)", StringComparison.Ordinal));
+        Contains(source, "return 64;", "return 70;", "return 2;");
+        Excludes(source, "EngineWorkerHost", "--engine-worker");
         Assert.DoesNotMatch(@"Openness\.IsUserInGroup\s*\(", source);
     }
     [Fact]
@@ -95,7 +101,6 @@ public sealed class ReadOnlySourceContracts
         Contains(pipeline, "McpPromptRegistration.Configure(builder)");
         Excludes(registration, "catch", "GetTypes("); Contains(registration, "builder.WithPrompts(new[] {");
         Contains(program, "WithStdioServerTransport()", "WithHttpTransport(", "WorkerShutdown.StopAll");
-        Contains(Sources.Member("Main"), "Environment.ExitCode = 70;", "throw;");
         var containers = new List<string>(); var promptCount = 0;
         foreach (var text in Sources.Sources.Values)
         {
@@ -206,11 +211,11 @@ public sealed class ReadOnlySourceContracts
         Contains(walk, "internal static IEnumerable<Located> Walk(IEnumerable<Device>? root, IEnumerable<DeviceUserGroup>? groups, DeviceGroup? ungrouped,",
             "Group(group, Name(group, onError), 0, onError)", "Devices(ungrouped, onError)", "new Located(device, ungroupedName, true)",
             "internal const string UngroupedSegment = \"$ungrouped\";", "root.Concat(ungroupedDevices)");
-        // One source file, linked into every assembly that walks devices: adapter (all eight), Studio (all eight), engine V20/V21.
+        // One source file, linked into every assembly that walks devices: adapter (all eight) and Studio (all eight); the engine is deleted (P8-04l).
         Contains(Read("src/Adapters/build/Adapter.Sources.props"), "Adapters/Native/Hardware/ProjectDeviceWalk.cs");
         Contains(Read("src/Studio/Openness/Studio.Common.props"), "Adapters/Native/Hardware/ProjectDeviceWalk.cs");
         foreach (var engineProject in new[] { "src/Engine/TiaMcp.Engine.V20.csproj", "src/Engine/TiaMcp.Engine.V21.csproj" })
-            Contains(Read(engineProject), "../Adapters/Native/Hardware/ProjectDeviceWalk.cs");
+            Assert.False(File.Exists(Path.Combine(Root, engineProject)));
         const string Uses = "ProjectDeviceWalk.";
         var location = Read("src/Adapters/Native/Hardware/HardwareObjectLocation.cs");
         Contains(location, "ProjectDeviceWalk.FindDevice(project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, devicePath)",

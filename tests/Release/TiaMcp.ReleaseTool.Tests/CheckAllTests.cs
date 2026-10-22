@@ -10,57 +10,31 @@ public sealed class CheckAllTests
 {
     private static CommandResult Passed() => new(0, "passed\n", "");
 
-    [Theory]
-    [InlineData("20")]
-    [InlineData("21")]
-    public void EngineJobsStageExactBytesPrivatelyWithoutReplacingDeliveredPlcWorkers(string key)
+    // P8-04l: the engine and its private cross-check route are deleted. No release-chain source may build, stage or
+    // start an engine again (the updater and the delivery rules keep the legacy engine names for old installs).
+    [Fact]
+    public void EngineBuildsAndThePrivateCrossCheckRouteAreRetired()
     {
-        using var tree = new StaticTree();
-        var source = tree.Write($"engine-source/TiaMcp.Engine.V{key}.exe", "engine bytes");
-        tree.Write("engine-source/tool-catalog.json", "catalog bytes");
-        tree.Write("engine-source/nested/dependency.dll", "dependency bytes");
-        var delivered = tree.Write($"runtime/v{key}/worker/TiaMcp.PlcWorker.{key}.exe", "delivered PLC bytes");
-        var deliveredHost = tree.Write($"runtime/v{key}/TiaMcp.FoundationHost.exe", "delivered host");
-        foreach (var variant in new[] { "engine", "sdk" })
+        string root = Repository.FindRoot();
+        var sources = Directory.EnumerateFiles(Path.Combine(root, "build-tools/release"), "*.cs")
+            .Concat(new[] { "Snapshot-ToolContracts.py", "Snapshot-ToolResponses.py", "Test-ResourceDiscovery.py", "Test-LocalStability.py",
+                "Test-ReleaseApprovalGate.py", "Test-V21Ecosystem.py", "Test-ToolUsage.py", "Test-FoundationTransport.py", "Test-CampaignInputs.py" }
+                .Select(name => Path.Combine(root, "scripts/checks", name)))
+            .Concat(new[] { "build-tools/Package-Release.py", "build-tools/Package-MultiVersion.py", "scripts/checks/Check-BundleLayout.py",
+                "scripts/checks/Verify-ReleaseAsset.py" }.Select(name => Path.Combine(root, name))).ToArray();
+        Assert.Equal(sources.Length, sources.Count(File.Exists));
+        foreach (var path in sources)
         {
-            var worker = ReleaseCommands.StageCheckAllEngine(tree.Root, "run", key, variant, source);
-            var directory = Path.GetFullPath(Path.Combine(tree.Root, "bin-build/engine-compat/check-all/run", "v" + key, variant));
-            Assert.Equal(Path.Combine(directory, $"TiaMcp.Engine.V{key}.exe"), Path.GetFullPath(worker));
-            Assert.Equal(ReleaseRecords.HashFile(source), ReleaseRecords.HashFile(worker));
-            Assert.Equal("catalog bytes", File.ReadAllText(Path.Combine(directory, "tool-catalog.json")));
-            Assert.Equal("dependency bytes", File.ReadAllText(Path.Combine(directory, "nested/dependency.dll")));
-            // The jobs keep the source host; nothing host-shaped is placed beside the private worker.
-            Assert.False(File.Exists(Path.Combine(Path.GetDirectoryName(directory)!, "TiaMcp.FoundationHost.exe")));
+            var text = File.ReadAllText(path);
+            foreach (var retired in new[] { "bin-build/engine-compat", "TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY", "--engine-worker", "--engine-catalog",
+                "--write-tool-catalog", "src/Engine/TiaMcp.Engine.V", "\"engineCompatibility\"", "'engineCompatibility'", "engine_cross_check_environment" })
+                Assert.False(text.Contains(retired, StringComparison.Ordinal), Path.GetFileName(path) + " still names " + retired);
         }
-        Assert.Equal("delivered PLC bytes", File.ReadAllText(delivered));
-        Assert.Equal("delivered host", File.ReadAllText(deliveredHost));
-        Assert.False(File.Exists(Path.Combine(tree.Root, $"runtime/v{key}/worker/TiaMcp.Engine.V{key}.exe")));
-        Assert.Throws<ReleaseException>(() => ReleaseCommands.StageCheckAllEngine(tree.Root, "run", key, "missing", Path.Combine(tree.Root, "missing/worker.exe")));
-    }
-
-    [Theory]
-    [InlineData("20")]
-    [InlineData("21")]
-    public void EngineCompatibilityHostIsACopyOfTheInstalledHostOutsideRuntime(string key)
-    {
-        using var tree = new StaticTree();
-        tree.Write($"runtime/v{key}/TiaMcp.FoundationHost.exe", "installed host");
-        tree.Write($"runtime/v{key}/release-key.txt", key);
-        var delivered = tree.Write($"runtime/v{key}/worker/TiaMcp.PlcWorker.{key}.exe", "delivered PLC bytes");
-        var host = ReleaseCommands.StageEngineCompatibilityHost(tree.Root, key);
-        Assert.Equal(Path.GetFullPath(Path.Combine(tree.Root, "bin-build/engine-compat", "v" + key, "TiaMcp.FoundationHost.exe")), Path.GetFullPath(host));
-        Assert.Equal(Path.GetDirectoryName(ReleaseCommands.EngineCompatibilityDirectory(tree.Root, key)), Path.GetDirectoryName(host));
-        Assert.Equal("installed host", File.ReadAllText(host));
-        Assert.Equal(key, File.ReadAllText(Path.Combine(Path.GetDirectoryName(host)!, "release-key.txt")));
-        // Only the host's own files are copied; the delivered PLC worker stays in runtime/.
-        Assert.False(Directory.Exists(Path.Combine(Path.GetDirectoryName(host)!, "worker", "TiaMcp.PlcWorker." + key + ".exe")));
-        Assert.Equal("delivered PLC bytes", File.ReadAllText(delivered));
-        var environment = ReleaseCommands.WithEngineCrossCheck(new Dictionary<string, string?>());
-        Assert.Equal(Path.GetFullPath(Path.Combine(Repository.FindRoot(), "bin-build/engine-compat")), environment[ReleaseCommands.EngineCrossCheckVariable]);
+        Assert.Contains(ReleaseCommands.CheckAllRetiredHarnessModes, mode => mode == "engineering-api-only");
     }
 
     [Fact]
-    public void ScriptSuccessorsCoverEveryEngineJobExactlyOnce()
+    public void PlcScriptJobsCoverEveryRetiredEngineJobExactlyOnce()
     {
         var expected = new List<string> { "usage-audit" };
         foreach (var key in new[] { "20", "21" })
@@ -71,19 +45,22 @@ public sealed class CheckAllTests
             foreach (var family in new[] { "contracts", "responses", "transport-usage", "usage", "campaign-inputs", "approval", "resources", "ecosystem" })
                 expected.Add(family + "-v" + key);
         }
-        var mapping = ReleaseCommands.CheckAllScriptSuccessors();
-        Assert.Equal(33, mapping.Count);
-        Assert.Equal(expected.Order(), mapping.Keys.Order());
-        Assert.Equal(33, mapping.Values.Distinct().Count());
+        var plc = ReleaseCommands.CheckAllPlcScriptJobs();
+        Assert.Equal(33, plc.Count);
+        Assert.Equal(expected.Select(name => name + "-plc").Order(), plc.Order());
+        Assert.Equal(33, plc.Distinct().Count());
         foreach (var name in expected) Assert.Equal(name + "-plc", ReleaseCommands.CheckAllPlcSuccessor(name));
         Assert.Throws<ReleaseException>(() => ReleaseCommands.CheckAllPlcSuccessor("harness-v21-http"));
-        var jobs = mapping.SelectMany(pair => new[] { pair.Key, pair.Value }).Select(name => new CheckJob(name, Passed, [])).ToArray();
-        ReleaseCommands.ValidateCheckAllScriptSuccessors(jobs);
+        var jobs = plc.Select(name => new CheckJob(name, Passed, [])).ToArray();
+        ReleaseCommands.ValidateCheckAllPlcScriptJobs(jobs);
         foreach (var name in jobs.Select(job => job.Name))
         {
-            Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllScriptSuccessors(jobs.Where(job => job.Name != name).ToArray()));
-            Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllScriptSuccessors([.. jobs, new(name, Passed, [])]));
+            Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllPlcScriptJobs(jobs.Where(job => job.Name != name).ToArray()));
+            Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllPlcScriptJobs([.. jobs, new(name, Passed, [])]));
         }
+        // A retired engine half is refused even next to its PLC job.
+        foreach (var name in expected)
+            Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllPlcScriptJobs([.. jobs, new(name, Passed, [])]));
     }
 
     [Fact]
@@ -359,31 +336,31 @@ public sealed class CheckAllTests
     }
 
     [Fact]
-    public void HarnessSuccessorsAndD5PartitionEveryOriginalJobWithoutRetirement()
+    public void PlcHarnessJobsCoverEveryModeButTheRetiredEngineShapeRows()
     {
-        var expected = new[] { "20", "21" }.SelectMany(key => ReleaseCommands.CheckAllHarnessModes(key)
-            .Select(mode => "harness-v" + key + "-" + (mode.Length == 0 ? "http" : mode))).ToArray();
-        var mapping = ReleaseCommands.CheckAllHarnessSuccessors(); var d5 = ReleaseCommands.CheckAllHarnessD5();
-        Assert.Equal(34, expected.Length); Assert.Equal(32, mapping.Count); Assert.Equal(2, d5.Count);
-        Assert.Equal(expected.Order(), mapping.Keys.Concat(d5.Keys).Order());
-        Assert.Empty(mapping.Keys.Intersect(d5.Keys)); Assert.Equal(32, mapping.Values.Distinct().Count());
-        Assert.All(mapping, pair => Assert.Equal(pair.Key + "-plc", pair.Value));
-        Assert.All(d5, pair => { Assert.EndsWith("-engineering-api-only", pair.Key); Assert.Contains("D5", pair.Value); });
-        var assertions = ReleaseCommands.CheckAllHarnessD5Assertions();
-        Assert.Equal(8, assertions.Count);
-        Assert.All(assertions, pair => { Assert.Contains(pair.Key, mapping.Keys); Assert.StartsWith("D5:", pair.Value); });
-        var jobs = expected.SelectMany(name => mapping.TryGetValue(name, out var plc) ? new[] { name, plc } : new[] { name })
-            .Select(name => new CheckJob(name, Passed, [])).ToArray();
-        ReleaseCommands.ValidateCheckAllHarnessSuccessors(jobs);
-        foreach (var name in jobs.Select(job => job.Name))
+        var modes = new[] { "20", "21" }.SelectMany(key => ReleaseCommands.CheckAllHarnessModes(key).Select(mode => (key, mode))).ToArray();
+        Assert.Equal(34, modes.Length);
+        var expected = modes.Where(pair => pair.mode != "engineering-api-only")
+            .Select(pair => "harness-v" + pair.key + "-" + (pair.mode.Length == 0 ? "http" : pair.mode) + "-plc").ToArray();
+        var jobs = ReleaseCommands.CheckAllPlcHarnessJobs();
+        Assert.Equal(32, jobs.Count);
+        Assert.Equal(expected, jobs);
+        foreach (var key in new[] { "20", "21" })
         {
-            Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllHarnessSuccessors(jobs.Where(job => job.Name != name).ToArray()));
-            Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllHarnessSuccessors([.. jobs, new(name, Passed, [])]));
+            Assert.DoesNotContain("engineering-api-only", ReleaseCommands.CheckAllPlcHarnessModes(key));
+            Assert.Equal(ReleaseCommands.CheckAllHarnessModes(key).Length - 1, ReleaseCommands.CheckAllPlcHarnessModes(key).Length);
         }
-        var swapped = jobs.ToArray(); (swapped[1], swapped[2]) = (swapped[2], swapped[1]);
-        Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllHarnessSuccessors(swapped));
-        Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllHarnessSuccessors([.. jobs, new("harness-v21-engineering-api-only-plc", Passed, [])]));
-        Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllHarnessSuccessors([.. jobs, new("harness-v21-invented", Passed, [])]));
+        var scheduled = jobs.Select(name => new CheckJob(name, Passed, [])).ToArray();
+        ReleaseCommands.ValidateCheckAllPlcHarnessJobs(scheduled);
+        foreach (var name in jobs)
+        {
+            Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllPlcHarnessJobs(scheduled.Where(job => job.Name != name).ToArray()));
+            Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllPlcHarnessJobs([.. scheduled, new(name, Passed, [])]));
+        }
+        var swapped = scheduled.ToArray(); (swapped[1], swapped[2]) = (swapped[2], swapped[1]);
+        Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllPlcHarnessJobs(swapped));
+        foreach (var retired in new[] { "harness-v21-engineering-api-only-plc", "harness-v21-engineering-api-only", "harness-v21-http", "harness-v21-invented" })
+            Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllPlcHarnessJobs([.. scheduled, new(retired, Passed, [])]));
     }
 
     [Fact]
@@ -413,22 +390,6 @@ public sealed class CheckAllTests
         foreach (var broken in new[] { diagnostics.Replace("50 open", "49 open"), diagnostics.Replace("9 adapter integration", "7 adapter integration"),
             diagnostics.Replace("3 native journal", "2 native journal"), diagnostics.Replace("4 direct SDK", "3 direct SDK"), diagnostics.Replace("COMPLETE: 4 direct SDK guard checks passed", "") })
             Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateCheckAllPlcHarness(broken, Evidence("native-diagnostics-only"), "native-diagnostics-only", "21", host, worker, inventory));
-    }
-
-    [Fact]
-    public void CandidateHarnessBuildsSelectOneFamilyAndCannotOverwriteProduction()
-    {
-        var modes = ReleaseCommands.CheckAllCandidateModes(); Assert.Equal(8, modes.Length);
-        foreach (var release in new[] { "20", "21" })
-        foreach (var mode in modes)
-        {
-            var unit = ReleaseCommands.CheckAllCandidateBuild(release, mode);
-            Assert.Equal($"src/Engine/TiaMcp.Engine.V{release}.csproj", unit.Project);
-            Assert.StartsWith("candidate-", unit.Variant);
-            var policy = Assert.Single(unit.Properties);
-            Assert.DoesNotContain(",", policy);
-            Assert.Equal("-p:TiaMcpTestPolicy=P6-" + (mode == "save-close" ? "CLOSE" : mode.ToUpperInvariant()) + ":safe-v4", policy);
-        }
     }
 
     private static string[] MakeShards(string directory, params string[][] outcomes)

@@ -798,20 +798,6 @@ def capture_release(args, release, exe, public_api):
                     shutil.copy2(source, target)
             capture_args.engine_host = capture_exe
             capture_args.repo_root = scratch
-            workers = contracts.engine_overrides(args.engine_worker, '--engine-worker')
-            catalogs = contracts.engine_overrides(args.engine_catalog, '--engine-catalog')
-            if (release in workers) != (release in catalogs):
-                raise ValueError('EngineHost overrides require both worker and catalog for V' + release)
-            if release in workers:
-                worker_root = scratch / 'runtime' / ('v' + release) / 'worker'
-                shutil.copytree(workers[release].parent, worker_root, dirs_exist_ok=True, ignore=lambda _dir, names: {
-                    name for name in names if name.lower().startswith('siemens.engineering') and name.lower().endswith('.dll')})
-                worker_catalog = worker_root / 'tool-catalog.json'
-                shutil.copy2(catalogs[release], worker_catalog)
-                workers[release] = worker_root / workers[release].name
-                catalogs[release] = worker_catalog
-                capture_args.engine_worker = [key + '=' + str(path) for key, path in workers.items()]
-                capture_args.engine_catalog = [key + '=' + str(path) for key, path in catalogs.items()]
         server = (contracts.engine_host_server(capture_args, release, portal_root, 'full', env) if args.engine_host
                   else resources.server(capture_exe, portal_root, int(release), 'stdio', 'full',
                               harness, public_api, env_overrides=env
@@ -1548,13 +1534,13 @@ class RawResponseTests(unittest.TestCase):
 
     def test_packaged_no_tia_never_inherits_sdk_fixture_readiness(self):
         args = argparse.Namespace(packaged_no_tia=True)
-        inherited = {'TIA_MCP_ENGINE_WORKER_SDK_READY': '1'}
-        self.assertNotIn('TIA_MCP_ENGINE_WORKER_SDK_READY',
+        inherited = {'TIA_MCP_PLC_WORKER_SDK_READY': '1'}
+        self.assertNotIn('TIA_MCP_PLC_WORKER_SDK_READY',
                          contracts.engine_host_environment(args, '20', {'20': Path('worker.exe')}, inherited))
         args.packaged_no_tia = False
         self.assertEqual(contracts.engine_host_environment(args, '20', {'20': Path('worker.exe')}, inherited)
-                         ['TIA_MCP_ENGINE_WORKER_SDK_READY'], '1')
-        self.assertNotIn('TIA_MCP_ENGINE_WORKER_SDK_READY',
+                         ['TIA_MCP_PLC_WORKER_SDK_READY'], '1')
+        self.assertNotIn('TIA_MCP_PLC_WORKER_SDK_READY',
                          contracts.engine_host_environment(args, '21', {}, inherited))
 
     def test_frozen_snapshot_fields(self):
@@ -1834,9 +1820,7 @@ def main():
     capture_parser = commands.add_parser('capture')
     capture_parser.add_argument('--repo-root', required=True, type=Path)
     capture_parser.add_argument('--engine-host', type=Path, help='Capture 20/21 through FoundationHost with SDK fixture workers')
-    capture_parser.add_argument('--engine-worker', action='append', default=[], metavar='RELEASE=PATH')
     capture_parser.add_argument('--plc-worker', action='append', default=[], metavar='RELEASE=PATH')
-    capture_parser.add_argument('--engine-catalog', action='append', default=[], metavar='RELEASE=PATH')
     capture_parser.add_argument('--transport', choices=('stdio', 'http'), default='stdio', help='EngineHost transport')
     capture_parser.add_argument('--harness', type=Path,
                                 help='TiaMcp.Engine.Harness host harness for V20/V21 sdk-only captures (defaults to the built harness)')

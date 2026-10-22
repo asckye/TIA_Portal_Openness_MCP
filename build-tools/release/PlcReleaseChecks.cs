@@ -13,32 +13,6 @@ internal static partial class ReleaseCommands
     internal static string PlcReleaseInstallDirectory(string root, string key) =>
         Path.Combine(root, "runtime/v" + key, "worker");
 
-    internal static string EngineCompatibilityDirectory(string root, string key) =>
-        Path.Combine(root, "bin-build/engine-compat", "v" + key, "worker");
-
-    // The engine cross-checks keep their old packaged pair until P8-04l: the installed
-    // host's files beside the private engine worker directory. Only the repository's
-    // check scripts start this copy, through the private cross-check route.
-    internal static string StageEngineCompatibilityHost(string root, string key)
-    {
-        var installed = Path.Combine(root, "runtime", "v" + key);
-        var destination = Path.GetDirectoryName(EngineCompatibilityDirectory(root, key))!;
-        Directory.CreateDirectory(destination);
-        if (Directory.Exists(installed))
-            foreach (var file in Directory.EnumerateFiles(installed))
-                File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), true);
-        return Path.Combine(destination, "TiaMcp.FoundationHost.exe");
-    }
-
-    // FoundationHost reads this together with --engine-worker/--engine-catalog (HostOptions).
-    internal const string EngineCrossCheckVariable = "TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY";
-
-    internal static IDictionary<string, string?> WithEngineCrossCheck(IDictionary<string, string?> environment)
-    {
-        environment[EngineCrossCheckVariable] = Path.GetFullPath(Path.Combine(Root, "bin-build/engine-compat"));
-        return environment;
-    }
-
     internal static readonly string[] PlcReleaseGroups =
     ["functional", "worker-isolation", "approval", "ecosystem", "stability", "isolated-stability", "contracts", "responses"];
 
@@ -176,10 +150,9 @@ internal static partial class ReleaseCommands
             // Diagnostics consumes the inventory even in a quick native-diagnostics-only plan.
             jobs.Add(new("jit-adapter-coverage-v" + key + "-plc", "native-diagnostics", dotnet,
                 [weaver, "verify", Path.Combine(Path.GetDirectoryName(worker)!, "TiaMcp.Adapter." + key + ".dll"), inventory], Release: key));
-            foreach (var mode in CheckAllHarnessModes(key))
+            foreach (var mode in CheckAllPlcHarnessModes(key))
             {
-                var engine = "harness-v" + key + "-" + (mode.Length == 0 ? "http" : mode);
-                if (!CheckAllHarnessSuccessors().TryGetValue(engine, out var name)) continue; // Engine-only D5 remains in build-release.
+                var name = CheckAllPlcHarnessJob(key, mode);
                 var check = mode == "native-diagnostics-only" ? "native-diagnostics" : "plc-functional";
                 jobs.Add(new(name, check, python, [Path.Combine(root, "scripts/checks/Test-PlcHarness.py"),
                     "--release", key, "--mode", mode.Length == 0 ? "http" : mode, "--host", host, "--worker", worker,

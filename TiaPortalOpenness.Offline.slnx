@@ -23,7 +23,6 @@
     <Project Path="tests/WorkerChannel/TiaMcp.FoundationProgress.Tests/TiaMcp.FoundationProgress.Tests.csproj" />
     <Project Path="tests/FoundationHost/TiaMcp.EngineHost.Tests/TiaMcp.EngineHost.Tests.csproj" />
     <Project Path="tests/Engine/TiaMcp.SharedSession.Tests/TiaMcp.SharedSession.Tests.csproj" />
-    <Project Path="tests/WorkerChannel/TiaMcp.WorkerProgress.Tests/TiaMcp.WorkerProgress.Tests.csproj" />
     <Project Path="tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.Tests.csproj" />
     <Project Path="tests/Adapters/TiaMcp.Adapters.CompileCandidate.Tests/TiaMcp.Adapters.CompileCandidate.Tests.csproj" />
     <Project Path="tests/Adapters/TiaMcp.Adapters.FallbackNative.Tests/TiaMcp.Adapters.FallbackNative.Tests.csproj" />

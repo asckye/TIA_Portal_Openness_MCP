@@ -78,45 +78,9 @@ internal static partial class ReleaseCommands
             Build("tests/Engine/TiaMcp.Engine.Diagnostics.Tests/TiaMcp.Engine.Diagnostics.Tests.csproj");
             var fixture = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Diagnostics.Tests/bin/Release/net48/TiaMcp.Engine.Diagnostics.Tests.exe");
             VerifyDiagnosticFixture(python, fixture, Path.Combine(weaverOutput, "NativeCallWeaver.dll"), logs, temp, cli, apiRoot);
-            var harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
-            foreach (var major in new[] { 20, 21 })
-            {
-                var api = ResolveReleaseApi(null, apiRoot, major);
-                Build($"src/Engine/TiaMcp.Engine.V{major}.csproj", [$"-p:SiemensEngineeringDirectory={api}"]);
-                var built = Path.Combine(Root, major == 20 ? "src/Engine/bin-v20/Release/net48" : "src/Engine/bin/Release/net48");
-                var runtime = EngineCompatibilityDirectory(Root, major.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                Directory.CreateDirectory(runtime);
-                // Keep the old packaged pair for the engine cross-checks: the installed host's
-                // files next to the private engine worker directory, outside runtime/.
-                StageEngineCompatibilityHost(Root, major.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                foreach (var file in Directory.EnumerateFiles(built).Where(file => Path.GetExtension(file) is ".exe" or ".dll" or ".config" && !Path.GetFileName(file).StartsWith("Siemens.Engineering", StringComparison.OrdinalIgnoreCase)))
-                    File.Copy(file, Path.Combine(runtime, Path.GetFileName(file)), true);
-                RunBuildRaw(Path.Combine(runtime, $"TiaMcp.Engine.V{major}.exe"), ["--bundle-root", Root, "--write-tool-catalog", Path.Combine(runtime, "tool-catalog.json")],
-                    Path.Combine(logs, $"tool-catalog-v{major}.log"), temp, cli, apiRoot, nuget, "Engine worker catalog");
-            }
+            // P8-04l: the engine is deleted; the V20/V21 branch checks are the PLC jobs below (diagnostics/JIT, worker
+            // robustness and protocol, HTTP concurrency, approval, both soaks and the snapshot captures).
             PreparePlcReleaseChecks(dotnet, apiRoot, nuget, logs, temp, cli, production: true);
-            var jobs = new[] { 20, 21 }.Select(major => ("branch-v" + major, (Func<PipelineResult>)(() =>
-            {
-                var majorLogs = Path.Combine(logs, "v" + major);
-                Directory.CreateDirectory(majorLogs);
-                var api = ResolveReleaseApi(null, apiRoot, major);
-                var exe = Path.Combine(EngineCompatibilityDirectory(Root, major.ToString(System.Globalization.CultureInfo.InvariantCulture)), $"TiaMcp.Engine.V{major}.exe");
-                // The other job's worker-robustness build rebuilds the development host; this job starts its own copy (see CopyDevelopmentHost).
-                var developmentHost = CopyDevelopmentHost(PrivateDevelopmentHostPath(temp, major));
-                VerifyNativeJit(dotnet, harness, exe, api, majorLogs, temp, cli, apiRoot, major, developmentHost);
-                var faultResults = Path.Combine(majorLogs, "worker-fault-suites");
-                RunDotnetSuiteForRelease("worker-robustness", "worker-supervisor", dotnet, faultResults, majorLogs, temp, cli, apiRoot, nuget);
-                CheckReleaseCount("workerFaults", ReadSuitePassed(faultResults, "worker-robustness"), "Foundation worker fault coverage incomplete");
-                VerifyHttpConcurrency(dotnet, majorLogs, temp, cli, apiRoot, nuget, major);
-                var protocolWorker = PrepareReleaseSdkWorker(dotnet, api, major, majorLogs, temp, cli, apiRoot, nuget);
-                VerifyEngineApproval(python, exe, harness, api, majorLogs, temp, cli, apiRoot, major, protocolWorker);
-                foreach (var isolated in new[] { false, true }) VerifyStability(python, exe, harness, api, majorLogs, temp, cli, apiRoot, major, rounds.ToString(), isolated, protocolWorker);
-                RunBuildSpec("worker-protocol", python, [Path.Combine(Root, "scripts/checks/Test-FoundationTransport.py"),
-                    "--releases", major.ToString(), "--output", Path.Combine(majorLogs, "foundation-transport")], majorLogs, temp, cli, apiRoot, major);
-                RemoveDevelopmentHostCopy(developmentHost);
-                return new PipelineResult("branch-v" + major, 0, "Branch engine checks passed.\n", "");
-            }))).ToArray();
-            ParallelPipeline.Run(jobs, Path.Combine(logs, "pipeline"), GetMaxParallelism(options));
             var plcPlan = new ReleaseCheckPlan("quick",
                 ["native-coverage", "native-diagnostics", "http-concurrency", "plc-worker-isolation", "plc-approval",
                  "plc-stability", "plc-isolated-stability", "plc-contracts", "plc-responses"], [], []);

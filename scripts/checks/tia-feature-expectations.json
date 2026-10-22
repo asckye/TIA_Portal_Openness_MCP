@@ -600,40 +600,6 @@
     ]
   },
   {
-    "project": "src/Engine/TiaMcp.Engine.V20.csproj",
-    "properties": {},
-    "targetFramework": "net48",
-    "defineConstants": [
-      "PLC_HMI_UNIFIED",
-      "PLC_SOFTWARE_CROSS_REFERENCES",
-      "PLC_SOFTWARE_PROTECTION",
-      "PLC_SOURCE_RESULTS",
-      "PLC_SOURCE_TARGET",
-      "RELEASE",
-      "TIA_ENGINE_LOCAL_PRIMITIVES",
-      "TIA_ENGINE_PORTED",
-      "TIA_V20",
-      "TRACE"
-    ]
-  },
-  {
-    "project": "src/Engine/TiaMcp.Engine.V21.csproj",
-    "properties": {},
-    "targetFramework": "net48",
-    "defineConstants": [
-      "PLC_EXTERNAL_SOURCE_GROUP_RENAME",
-      "PLC_HMI_UNIFIED",
-      "PLC_SOFTWARE_CROSS_REFERENCES",
-      "PLC_SOFTWARE_PROTECTION",
-      "PLC_SOURCE_RESULTS",
-      "PLC_SOURCE_TARGET",
-      "RELEASE",
-      "TIA_ENGINE_LOCAL_PRIMITIVES",
-      "TIA_ENGINE_PORTED",
-      "TRACE"
-    ]
-  },
-  {
     "project": "src/PlcWorker/TiaMcp.PlcWorker.csproj",
     "properties": {
       "TiaReleaseKey": "14sp1"

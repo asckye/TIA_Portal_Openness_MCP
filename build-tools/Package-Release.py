@@ -1,6 +1,6 @@
 """Build the complete public delivery ZIP from the clean, committed tree plus the local build outputs.
 
-Since 2.8.1 the engine runtimes (runtime/v20, runtime/v21) and TiaOpenness.exe are not tracked in Git:
+Since 2.8.1 the runtimes (runtime/v20, runtime/v21 and the others) and TiaOpenness.exe are not tracked in Git:
 the C# release tool produces them locally and records their hashes in manifest/release-build.json and
 manifest/configurator-build.json, which ARE committed. Packaging filters tracked files through
 scripts/operations/delivery-files.json, adds the recorded local binaries and refuses when a binary is missing or differs from its validated hash. The C# release command uploads the ZIP.
@@ -58,7 +58,7 @@ def sha(data):
 
 def read_build_record(files, delivery):
     name, record = layout.release_record(files, delivery)
-    return name, layout.shipped_engine_proof(record), layout.record_inventory(record)
+    return name, record, layout.record_inventory(record)
 
 
 def check_updater(record, files):
@@ -80,7 +80,6 @@ def self_test():
             _, self.record = layout.LayoutChecks.record_fixture()
             self.files = {name: b'built ' + name.encode() for name in layout.UPDATER_OUTPUTS}
             self.record['updaterFiles'] = [{'path': name, 'sha256': sha(data), 'length': len(data)} for name, data in sorted(self.files.items())]
-            self.record['engineCompatibility']['updaterFiles'] = [dict(row) for row in self.record['updaterFiles']]
 
         def test_recorded_updater_bytes_are_packaged(self):
             check_updater(self.record, self.files)
@@ -119,7 +118,7 @@ def self_test():
                 delivery = {binding: sha(data)}
                 selected, proof, inventory = read_build_record({name: data}, delivery)
                 self.assertEqual(selected, name)
-                self.assertEqual(proof, engine)
+                self.assertEqual(proof, record)
                 self.assertEqual(inventory, layout.record_inventory(record))
                 with self.assertRaises(ValueError):
                     read_build_record({name: data + b' '}, delivery)
@@ -184,7 +183,10 @@ def main():
     delivery = json.loads((root / 'manifest/delivery.json').read_text(encoding='utf-8-sig'))
     record_name, release_record = layout.release_record(record_files, delivery)
     require(record_name == layout.MULTI_RECORD, 'Packaging requires the eight-release build record')
-    _, metadata, inventory = read_build_record(record_files, delivery)
+    _, _, inventory = read_build_record(record_files, delivery)
+    # P8-04l: the release-wide evidence (suite counts, compiler inputs) is the repository's release-build.json, which must
+    # belong to the eight-release record's release, check plan and updater build (no embedded engineCompatibility copy).
+    metadata = layout.release_build_record(root, release_record)
     multi_path = root / layout.MULTI_RECORD
     multi = json.loads(multi_path.read_text('utf-8-sig')) if delivery.get('multiVersionBuildSha256') else None
     candidate = json.loads((root / 'manifest/package-manifest.json').read_text('utf-8-sig'))
@@ -243,7 +245,7 @@ def main():
     require(all(name in files for name in required_exes), 'A required runtime executable is missing')
 
     record_name, release_record = layout.release_record(files, delivery)
-    metadata = layout.shipped_engine_proof(release_record)
+    metadata = layout.release_build_record(root, release_record)
     delivery = json.loads(files['manifest/delivery.json'].decode('utf-8-sig'))
     layout.release_record(files, delivery)
     require(sha(files['manifest/configurator-build.json']) == delivery['configuratorBuildSha256'], 'Configurator build record changed after delivery preparation')
@@ -283,36 +285,18 @@ def main():
         for suite, key in (('offline-v20', 'offlineV20Passed'),
                            ('kept-code', 'keptCodePassed'), ('kept-code-v20', 'keptCodeV20Passed')):
             require(metadata['validation'].get(key, 0) > 0, f'No {suite} suite result')
-    for major in ('V20', 'V21') if 'native-diagnostics' in selected else []:
-        proof = metadata['validation']['runtimes'][major].get('nativeDiagnostics', {})
-        require(proof.get('status') == 'passed' and proof.get('uncoveredSupportedBoundaries') == 0 and proof.get('sites', 0) > 1000,
-                f'{major}: missing native diagnostic coverage validation')
-        require(proof['jitPrepared'] + proof['openGenericWrappers'] == proof['sites'], f'{major}: wrapper inventory/JIT mismatch')
-        require(proof['scriptSha256'] == sha(files['scripts/checks/Test-NativeDiagnostics.py']), f'{major}: diagnostic test driver changed after validation')
     extended = json.loads(files['manifest/local-stability-extended.json'].decode('utf-8-sig')) if 'manifest/local-stability-extended.json' in files else None
-    if extended is not None and 'engine-stability' in selected:
+    if extended is not None and 'plc-stability' in selected:
         require(extended['release'] == release and extended['status'] == 'passed', 'Extended stability record does not match this release')
+    # P8-04l: the V20/V21 functional, diagnostics, resource and worker-isolation evidence is the eight-release record's PLC
+    # proof (validate_plc_record above); the soaks are checked here against the packaged host and worker.
     for major in (20, 21):
-        checks = metadata['validation']['runtimes'][f'V{major}']
-        if 'engine-functional' in selected:
-            require(checks['httpPassed'] > 0 and checks['hmiPassed'] > 0 and checks['migrationAssembly'] == 'passed', f'V{major} validation incomplete')
-        if 'resource-discovery' in selected:
-            require(checks.get('resourceDiscoveryPassed', 0) > 0, f'V{major} resource discovery validation missing')
-        if 'engine-functional' in selected:
-            require(checks.get('nativeExportRemotingPassed', 0) > 0, f'V{major} native export remoting validation missing')
-        proofs = [multi['plcRuntimes'][f'V{major}'].get('localStability') or {}] if 'engine-stability' in selected else []
-        isolation = checks.get('workerIsolation')
-        if 'engine-worker-isolation' in selected:
-            require(isinstance(isolation, dict), f'V{major} worker isolation proof missing')
-            require(isolation.get('faultChecksPassed', 0) >= 25 and isolation.get('protocolChecksPassed', 0) >= 58,
-                    f'V{major} worker fault/protocol validation incomplete')
-            require(isolation.get('protocolScriptSha256') == sha(files['scripts/checks/Test-FoundationTransport.py']),
-                    f'V{major} worker protocol script changed after validation')
-        if 'engine-isolated-stability' in selected:
-            require((checks.get('isolatedLocalStability') or {}).get('isolatedWorker') is True,
+        proofs = [multi['plcRuntimes'][f'V{major}'].get('localStability') or {}] if 'plc-stability' in selected else []
+        if 'plc-isolated-stability' in selected:
+            require((multi['plcRuntimes'][f'V{major}'].get('isolatedLocalStability') or {}).get('isolatedWorker') is True,
                     f'V{major} isolated stability proof missing')
             proofs.append(multi['plcRuntimes'][f'V{major}']['isolatedLocalStability'])
-        if extended is not None and 'engine-stability' in selected:
+        if extended is not None and 'plc-stability' in selected:
             proofs.append(extended['runtimes'][f'V{major}'])
             if 'isolatedRuntimes' in extended:
                 isolated_extended = extended['isolatedRuntimes'][f'V{major}']

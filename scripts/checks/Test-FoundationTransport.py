@@ -9,20 +9,16 @@ except ValueError:  # some Python builds cannot load wintypes outside Windows
     wintypes = None
 from tool_usage_checks import check_usage
 import json
-import hashlib
 import importlib.util
 import os
 from pathlib import Path
 import queue
 import re
 import socket
-import shutil
-import uuid
 import subprocess
 import tempfile
 import threading
 import time
-import ported_families
 import urllib.error
 import urllib.request
 
@@ -185,8 +181,8 @@ class ProcessEntry(ctypes.Structure):
                 ('szExeFile', ctypes.c_wchar * 260)]
 
 
-def worker_handles(host_pid, worker_name=None):
-    """Open a wait handle on every engine worker the host started."""
+def worker_handles(host_pid, worker_name):
+    """Open a wait handle on every session worker the host started."""
     kernel = ctypes.WinDLL('kernel32', use_last_error=True)
     kernel.CreateToolhelp32Snapshot.argtypes = [wintypes.DWORD, wintypes.DWORD]
     kernel.CreateToolhelp32Snapshot.restype = wintypes.HANDLE
@@ -202,8 +198,7 @@ def worker_handles(host_pid, worker_name=None):
     try:
         more = kernel.Process32FirstW(snapshot, ctypes.byref(entry))
         while more:
-            if entry.th32ParentProcessID == host_pid and (entry.szExeFile.lower().startswith('tiamcp.engine.')
-                    or worker_name and entry.szExeFile.lower() == worker_name.lower()):
+            if entry.th32ParentProcessID == host_pid and entry.szExeFile.lower() == worker_name.lower():
                 handle = kernel.OpenProcess(0x00101000, False, entry.th32ProcessID)
                 assert handle, ('Cannot query/wait on worker', entry.th32ProcessID, ctypes.get_last_error())
                 handles.append(handle)
@@ -211,147 +206,6 @@ def worker_handles(host_pid, worker_name=None):
     finally:
         kernel.CloseHandle(snapshot)
     return kernel, handles
-
-
-def engine_worker_exits_cleanly(key, env, fixture_root=None):
-    # Without TIA the worker must leave through its normal path; a crash there leaves WER holding its files.
-    worker = (fixture_root / key / f'TiaMcp.Engine.V{key}.exe').resolve() if fixture_root else ROOT / f'bin-build/engine-compat/v{key}/worker/TiaMcp.Engine.V{key}.exe'
-    done = subprocess.run([str(worker), '--engine-worker', '--bundle-root', str(ROOT), '--tia-major-version', key],
-                          input=b'', capture_output=True, env=dict(env, TIA_MCP_ENGINE_NONCE='0' * 64), timeout=120)
-    assert done.returncode == 0, (key, done.returncode, done.stderr.decode('utf-8', 'replace')[-2000:])
-
-
-def engine_transports(args, temp, counts):
-    for key in (key for key in args.releases if key in ('20', '21')):
-        data = temp / ('data-' + key)
-        data.mkdir()
-        env = dict(os.environ, TIA_MCP_DATA_DIRECTORY=str(data), TiaPortalLocation='')
-        env.pop('TIA_MCP_ENGINE_WORKER_SDK_READY', None)
-        env.pop('TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY', None)
-        engine_worker_exits_cleanly(key, env, args.sdk_fixture_root)
-        # The engine cross-check keeps the old packaged pair: the installed host copy next to
-        # the engine worker in the private compatibility output (see engine_cross_check_environment).
-        default_host = ROOT / (f'runtime/v{key}/TiaMcp.FoundationHost.exe' if args.plc_worker
-                               else f'bin-build/engine-compat/v{key}/TiaMcp.FoundationHost.exe')
-        command = [str((args.host_exe or default_host).resolve()),
-                   '--bundle-root', str(ROOT), '--release-key', key, '--profile', 'full']
-        directory = (args.sdk_fixture_root / key).resolve() if args.sdk_fixture_root else ROOT / f'bin-build/engine-compat/v{key}/worker'
-        command += ['--engine-worker', str(directory / f'TiaMcp.Engine.V{key}.exe'),
-                    '--engine-catalog', str(directory / 'tool-catalog.json')]
-        if args.plc_worker:
-            for flag in ('--engine-worker', '--engine-catalog'):
-                if flag in command:
-                    index = command.index(flag); del command[index:index + 2]
-            command += ['--plc-worker', '--worker-exe', str((ROOT / f'src/PlcWorker/bin/{key}/Release/net48/TiaMcp.PlcWorker.{key}.exe').resolve())]
-        else:
-            resources.engine_cross_check_environment(command[0], directory / f'TiaMcp.Engine.V{key}.exe',
-                                                   directory / 'tool-catalog.json', env)
-        with (args.output / f'stdio-{key}.log').open('w', encoding='utf-8') as stderr:
-            client = Stdio(command, env, stderr)
-            try:
-                counts[key] = exercise_engine(client, key)
-            finally:
-                if client.p.poll() is None:
-                    verify_owned_process_image(client.p)
-                    client.p.terminate(); client.p.wait(10)
-        if args.stdio_only:
-            continue
-        with socket.socket() as port:
-            port.bind(('127.0.0.1', 0)); number = port.getsockname()[1]
-        url = f'http://127.0.0.1:{number}'
-        with (args.output / f'http-{key}.log').open('w', encoding='utf-8') as stderr:
-            http_command = command.copy()
-            if args.engine_fixture:
-                if args.plc_worker:
-                    fixture = args.engine_fixture.resolve()
-                    catalog_path = temp / f'engine-fixture-catalog-{key}.json'
-                else:
-                    # The engine cross-check route only accepts private compatibility output.
-                    fixture_directory = ROOT / 'bin-build/engine-compat/transport' / uuid.uuid4().hex / key
-                    shutil.copytree(args.engine_fixture.resolve().parent, fixture_directory)
-                    fixture = fixture_directory / args.engine_fixture.name
-                    catalog_path = fixture_directory / 'tool-catalog.json'
-                (fixture.parent / f'TiaMcp.Adapter.{key}.dll').write_text('offline session fixture', encoding='utf-8')
-                catalog_source = (args.sdk_fixture_root / key / 'tool-catalog.json') if args.sdk_fixture_root else ROOT / f'bin-build/engine-compat/v{key}/worker/tool-catalog.json'
-                catalog = json.loads(catalog_source.read_text('utf-8'))
-                migrated = {tool for name, family in ported_families.families(ROOT).items() if name != 'F00' for tool in family['tools']}
-                catalog['tools'] = [row for row in catalog['tools'] if row['name'] not in migrated]
-                catalog['descriptors'] = [row for row in catalog['descriptors'] if row['name'] not in migrated]
-                catalog['unavailableTools'] = [row for row in catalog.get('unavailableTools', []) if row['tool']['name'] not in migrated]
-                catalog['workerSha256'] = hashlib.sha256(fixture.read_bytes()).hexdigest()
-                catalog_path.write_text(json.dumps(catalog), encoding='utf-8')
-                for flag, value in (('--engine-worker', str(fixture)), ('--engine-catalog', str(catalog_path))):
-                    if flag in http_command:
-                        http_command[http_command.index(flag) + 1] = value
-                    else:
-                        http_command += [flag, value]
-                config = data / 'config'
-                config.mkdir(exist_ok=True)
-                (config / 'approval.settings').write_text('enabled=false\ntimeoutSeconds=1\n', encoding='utf-8')
-            if args.plc_worker:
-                assert args.engine_fixture, 'PLC transport checks require the existing synthetic HTTP session fixture'
-                for flag in ('--engine-worker', '--engine-catalog'):
-                    if flag in http_command:
-                        index = http_command.index(flag); del http_command[index:index + 2]
-                for flag in ('--worker-exe', '--public-api'):
-                    if flag in http_command:
-                        index = http_command.index(flag); del http_command[index:index + 2]
-                http_command += ['--worker-exe', str(args.engine_fixture.resolve()), '--public-api', str(temp)]
-            process = subprocess.Popen(http_command + ['--transport', 'http', '--http-prefix', url + '/', '--http-api-key', 'fixture-key'],
-                                       env=env, cwd=temp, stdout=stderr, stderr=stderr)
-            try:
-                deadline = time.monotonic() + 60
-                while True:
-                    try:
-                        with Http(url).request('/mcp/health', auth=False) as response:
-                            health = json.load(response)
-                            assert health['releaseKey'] == key and health['fileVersion']
-                            assert health['profile'] == 'full-engine'
-                        break
-                    except urllib.error.URLError:
-                        assert process.poll() is None and time.monotonic() < deadline
-                        time.sleep(.1)
-                first, second = Http(url), Http(url)
-                try:
-                    first.request('/mcp/ready', auth=False)
-                    raise AssertionError('Unauthenticated readiness accepted')
-                except urllib.error.HTTPError as error:
-                    assert error.code == 401
-                with first.request('/mcp/ready') as response:
-                    assert json.load(response) == {'mcpHostReady': True, 'releaseKey': key, 'nativeAcceptance': 'NOT RUN'}
-                exercise_engine(first, key, close=False, ready=bool(args.engine_fixture))
-                exercise_engine(second, key, close=False, ready=bool(args.engine_fixture))
-                assert first.sid and second.sid and first.sid != second.sid
-                # Workers now start on first worker operation, for both worker products.
-                for client in (first, second):
-                    state = client.call('tools/call', {'name': 'GetSessionState', 'arguments': {}})
-                    if args.engine_fixture:
-                        assert state['structuredContent']['ok'] is True, state
-                kernel, handles = worker_handles(process.pid, args.engine_fixture.name if args.engine_fixture else None)
-                try:
-                    kernel.GetProcessId.argtypes = [wintypes.HANDLE]
-                    pids = [kernel.GetProcessId(handle) for handle in handles]
-                    assert len(pids) == 2 and len(set(pids)) == 2, ('Expected two session workers', pids)
-                    if args.engine_fixture:
-                        tool(first, 'ConnectPortal', {'processId': 123})
-                        tool(first, 'DisconnectPortal')
-                        tool(second, 'GetSessionState')
-                        tool(second, 'ListPortalProcessProjects')
-                    first.close()
-                    deadline = time.monotonic() + 10
-                    while sum(kernel.WaitForSingleObject(handle, 0) == 0 for handle in handles) != 1:
-                        assert time.monotonic() < deadline, 'Session deletion did not terminate exactly one worker'
-                        time.sleep(.05)
-                    # The remaining session's worker is still bound to the host job.
-                    verify_owned_process_image(process)
-                    process.kill(); process.wait(10)
-                    assert all(kernel.WaitForSingleObject(handle, 5000) == 0 for handle in handles), 'Engine worker outlived the killed host'
-                finally:
-                    for handle in handles:
-                        kernel.CloseHandle(handle)
-            finally:
-                verify_owned_process_image(process)
-                process.terminate(); process.wait(10)
 
 
 class SharedStdio:
@@ -401,7 +255,7 @@ def plc_transports(args, temp, counts):
         data.mkdir()
         env = dict(TIA_FIXTURE_LOG=str(logfile), TIA_MCP_DATA_DIRECTORY=str(data), TiaPortalLocation='')
         if full:
-            # Retain the engine branch's clean no-TIA worker EOF/exit assertion.
+            # The worker leaves through its normal path on a closed channel without TIA (no WER report holds its files).
             done = subprocess.run([str(worker), '--native-session', key, str(api.resolve()), '0' * 64],
                                   input=b'', capture_output=True, timeout=120,
                                   env=dict(os.environ, **env, TIA_MCP_PLC_WORKER_SDK_READY='0'))
@@ -516,10 +370,11 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--temp-root', type=Path, help='New worktree directory for retained fixture logs; avoids restricted system TEMP directories')
     parser.add_argument('--host-exe', type=Path, help='Fresh worktree Foundation host used for each exact release')
-    parser.add_argument('--sdk-fixture-root', type=Path, help='Fresh V20/V21 SDK fixture workers and catalogs; avoids stale packaged engines')
-    parser.add_argument('--engine-fixture', type=Path, help='LegacyHostTests fixture executable for successful native-shaped engine HTTP calls without TIA; stdio still uses the real no-TIA worker')
     parser.add_argument('--stdio-only', action='store_true', help='Run no HTTP/socket checks when network services are prohibited')
     args = parser.parse_args()
+    # P8-04l: V20/V21 run only on the PLC worker (the engine transport branch is retired).
+    if not args.plc_worker and set(args.releases) & {'20', '21'}:
+        parser.error('V20/V21 transport checks require --plc-worker')
     args.output.mkdir(parents=True, exist_ok=True)
     counts = {}
     worker_evidence = {}
@@ -597,8 +452,6 @@ def main():
                 finally:
                     verify_owned_process_image(p)
                     p.terminate(); p.wait(10)
-        if not args.plc_worker:
-            engine_transports(args, temp, counts)
     (args.output / 'tool-usage.json').write_text(json.dumps(USAGE_REPORTS, indent=2) + '\n', encoding='utf-8')
     report = {'stdioToolCounts': counts, 'httpSessions': 0 if args.stdio_only else len(args.releases) * 2,
               'unicodeRoundTrip': True, 'workerProtocol': 2,

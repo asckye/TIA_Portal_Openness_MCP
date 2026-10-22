@@ -262,30 +262,6 @@
       "-p:TestVciFamily=classic"
     ]
   },
-  "plc-exchange-v21": {
-    "project": "tests/Engine/TiaMcp.Engine.PlcExchange.Tests/TiaMcp.Engine.PlcExchange.Tests.csproj",
-    "minimumPassed": 125,
-    "maximumSkipped": 0,
-    "arguments": [
-      "-p:EngineRelease=21"
-    ],
-    "publicApiRoot": true,
-    "companions": [
-      "plc-exchange-worker-v21"
-    ]
-  },
-  "plc-exchange-v20": {
-    "project": "tests/Engine/TiaMcp.Engine.PlcExchange.Tests/TiaMcp.Engine.PlcExchange.Tests.csproj",
-    "minimumPassed": 125,
-    "maximumSkipped": 0,
-    "arguments": [
-      "-p:EngineRelease=20"
-    ],
-    "publicApiRoot": true,
-    "companions": [
-      "plc-exchange-worker-v20"
-    ]
-  },
   "engine-host": {
     "project": "tests/FoundationHost/TiaMcp.EngineHost.Tests/TiaMcp.EngineHost.Tests.csproj",
     "minimumPassed": 159,
@@ -294,7 +270,7 @@
   },
   "shared-session": {
     "project": "tests/Engine/TiaMcp.SharedSession.Tests/TiaMcp.SharedSession.Tests.csproj",
-    "minimumPassed": 53,
+    "minimumPassed": 6,
     "maximumSkipped": 0,
     "arguments": [],
     "companions": [
@@ -319,18 +295,9 @@
       "FullyQualifiedName~WorkerRobustnessTests"
     ]
   },
-  "worker-progress": {
-    "project": "tests/WorkerChannel/TiaMcp.WorkerProgress.Tests/TiaMcp.WorkerProgress.Tests.csproj",
-    "minimumPassed": 5,
-    "maximumSkipped": 0,
-    "arguments": [],
-    "companions": [
-      "worker-progress-foundation"
-    ]
-  },
   "shared-lifecycle": {
     "project": "tests/Engine/TiaMcp.SharedSession.Tests/TiaMcp.SharedSession.Tests.csproj",
-    "minimumPassed": 48,
+    "minimumPassed": 6,
     "maximumSkipped": 0,
     "arguments": [
       "--filter",

@@ -116,7 +116,8 @@ def main():
     if 'foundation-transport' in selected: assert multi['validation']['foundationTransportExecuted']
     if 'gui-tests' in selected: assert multi['validation']['studioFunctionalTestsExecuted']
     assert set(multi['studioReleaseKeys']) == {'14sp1', '15.1', '16', '17', '18', '19', '20', '21'}
-    for record in [*records.values(), layout.shipped_engine_proof(primary)]:
+    # P8-04l: release-build.json is one of the tracked records above; the eight-release record embeds no engine copy.
+    for record in records.values():
         for row in record['sourceFiles']:
             actual = files[row['path']]
             if not row['path'].lower().endswith(('.ttf', '.otf')):

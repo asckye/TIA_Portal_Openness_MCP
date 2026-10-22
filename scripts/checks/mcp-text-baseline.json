@@ -55,16 +55,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "03eae4e51f2cbc174bc90d5f1d942a17769d2937b76b410fde9347f991153a15",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2672,
-      "cjk": 32,
-      "literal": "\"没有完整PLC符号精确匹配；候选项只能用于人工/确定性规则确认，不能自动绑定。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "047e41041de0f9e0798c2dcf55f4154319459304b21efc70727c83fef4fd03ff",
       "path": "src/Logic/ModelContextProtocol/Builders/LadTextRenderer.cs",
       "line": 231,
@@ -105,43 +95,13 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "04f79ad28ac0323f1d787b537708591bfabe954754c7bff689e3ae710db38dcc",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 250,
-      "cjk": 20,
-      "literal": "\"- 该探针只做离线 JSON/布局质量检查，不连接 TIA，不写项目。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "04fb0d1fd747769f2e6ab97d4a23e639cdb6706ec7fd4f0ede5f146c81ff1c68",
-      "path": "src/Engine/Cli/CliProbes.cs",
-      "line": 1569,
-      "cjk": 2,
-      "literal": "\"PLC_1/PROFINET 接口_1\"",
-      "reason": "Existing TIA fixture names, interface paths and HMI label data for CLI probes.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "058233add0f5d873e9bcecc31e65ed3ec5a0fb8b5403a57334b5f036d2992b80",
       "path": "src/FoundationHost/HostDoctorProbe.cs",
-      "line": 63,
+      "line": 85,
       "cjk": 17,
       "literal": "\"请修复所选版本的 worker 与 Openness 安装，然后重新运行 `tia doctor`。\"",
       "reason": "P8-04i: NameZh/DetailZh/FixZh/recommendedFixZh values in the bilingual doctor result, now covering host and worker directories for all eight releases (maintainer 2026-10-18).",
       "dataCategory": "bilingual-table"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "0589d302468d54fdb7e9eff2345ce31f9369716eb6ed8c49a59af8c6e206ecdb",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 545,
-      "cjk": 21,
-      "literal": "\"- 只写 reports 目录下的临时探针文件，不修改工程、reference 或交付包。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -172,16 +132,6 @@
       "literal": "\" ⟨恒断·禁用本行⟩\"",
       "reason": "Existing Chinese annotations in the generated ladder-text document artifact.",
       "dataCategory": "report-artifact"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "07b62959c6c7b83df082bbb728f84d1d65f6d32795feb09482130dbcfcc4ad0b",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 455,
-      "cjk": 5,
-      "literal": "\"计数值限幅\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -216,21 +166,11 @@
     {
       "kind": "other-literal",
       "fingerprint": "0b7855e46d41611a0d56e41cffc06453afb39b0b8833d9531e1f03c2d8672c7c",
-      "path": "src/Engine/Cli/CliCommands.cs",
-      "line": 163,
+      "path": "src/FoundationHost/HostCliCommands.cs",
+      "line": 110,
       "cjk": 4,
       "literal": "\"（修复模式）\"",
       "reason": "Existing localized CLI console/doctor output; not MCP response text.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "0b7855e46d41611a0d56e41cffc06453afb39b0b8833d9531e1f03c2d8672c7c",
-      "path": "src/FoundationHost/HostCliCommands.cs",
-      "line": 99,
-      "cjk": 4,
-      "literal": "\"（修复模式）\"",
-      "reason": "P8-04i host CLI subset: localized console/doctor/help/config output ported from the engine CLI (maintainer D1 2026-10-13, output accepted 2026-10-18, allowlist growth approved 2026-10-18); not MCP response text; the engine copies leave with P8-04l.",
       "dataCategory": "cli-console"
     },
     {
@@ -270,16 +210,6 @@
       "literal": "\"报警摘要、确认入口和详细弹窗分层展示。\"",
       "reason": "Existing bilingual HMI component/action tables and generated catalog report data.",
       "dataCategory": "bilingual-table"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "0cec316d779683345b1fb86eeab04e6b94b74d00646528f57741d47f1fe0a586",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 1602,
-      "cjk": 32,
-      "literal": "\"参考项目包含完整Unified runtime结构，可用于提取画面分类、faceplate数量、图形资源和字体/样式基线。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -340,16 +270,6 @@
       "literal": "\"参考项目包含faceplate RDF，HMI模板体系应优先补充faceplate级别的参数接口和实例化规则。\"",
       "reason": "Existing generated HMI template reference report data.",
       "dataCategory": "report-artifact"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "11b8b8958ffdb3d837d41cdc6b6eee67525d064bc42c6fc57e213fa543bca343",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2725,
-      "cjk": 5,
-      "literal": "\"HMI_Data.总运行使能\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -441,16 +361,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "16f0e7e1b09f5e60b9a4be369170c14d705f8327b15b7562250ab1973f028759",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 369,
-      "cjk": 14,
-      "literal": "\"LAD电机控制功能块，包含中文块注释\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "1a2f3926a2633aad4ecedc39c4a8683076b34d6c8ecdf867ef3dfc1064fe2ec1",
       "path": "src/Shared/CompilerDiagnostics.cs",
       "line": 131,
@@ -468,16 +378,6 @@
       "literal": "\"导入顺序已明确：变量表先于画面\"",
       "reason": "Existing generated HMI import-preflight report data.",
       "dataCategory": "report-artifact"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "1aacaa026bf260b5decf85d1b9c5ef667453d28042321c2f3b75f828cc140f20",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2683,
-      "cjk": 23,
-      "literal": "\"确认该变量允许 HMI 读写；命令类变量还需要事件安全策略。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -501,32 +401,12 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "1b80467a70ebf22a6f6d512577947e9877bb3de43756881de2e77b917f169d85",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 544,
-      "cjk": 17,
-      "literal": "\"- 离线探针，不连接 TIA Portal，不打开工程，不导入 HMI 文件。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "1bed8e9df50efbfcb52b11bb5582212ace83d33dfbd65a0454ce299bde2ed364",
-      "path": "src/Engine/Cli/CliCommands.cs",
-      "line": 179,
+      "path": "src/FoundationHost/HostCliCommands.cs",
+      "line": 127,
       "cjk": 2,
       "literal": "\"修法\"",
       "reason": "Existing localized CLI console/doctor output; not MCP response text.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "1bed8e9df50efbfcb52b11bb5582212ace83d33dfbd65a0454ce299bde2ed364",
-      "path": "src/FoundationHost/HostCliCommands.cs",
-      "line": 115,
-      "cjk": 2,
-      "literal": "\"修法\"",
-      "reason": "P8-04i host CLI subset: localized console/doctor/help/config output ported from the engine CLI (maintainer D1 2026-10-13, output accepted 2026-10-18, allowlist growth approved 2026-10-18); not MCP response text; the engine copies leave with P8-04l.",
       "dataCategory": "cli-console"
     },
     {
@@ -548,16 +428,6 @@
       "literal": "\"当前库包缺少 PEData.plf、PEData.idx 或 XRef.db，优先检查参考库路径是否完整。\"",
       "reason": "Existing generated global-library package analysis report data.",
       "dataCategory": "report-artifact"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "1fa5cba74d6c4426c874a1775f0eb948b9c3e21979d5335ef31618fe3b748baf",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2513,
-      "cjk": 4,
-      "literal": "\"PID语义相关\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -661,16 +531,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "2480ccda5f14d7b59b200b01737588eeae6caa02c69e4b5e13cad5d36ed8de0d",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 372,
-      "cjk": 12,
-      "literal": "\"SCL计数功能块，包含中文块注释\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "2506d6a57c94e064a563ddc2a71ec22b3201734a456ed36005b7da3d8361da1e",
       "path": "src/Logic/ModelContextProtocol/Builders/HmiComponentCatalogAnalyzer.cs",
       "line": 33,
@@ -771,16 +631,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "264a3d0ae695e95c19ebf5d5660c51eb3a8306caec0c66eafe90ff1f0765e1e7",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2510,
-      "cjk": 6,
-      "literal": "\"PID|PV|SP|Kp|Ti|OUT|输出|给定|反馈\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "26f175558f10da5044d65ba4421bb62d67b3c29286731fcc4828b0b87f5ad652",
       "path": "src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs",
       "line": 144,
@@ -811,16 +661,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "28bdd687fd1a0da10efe1645fae06a236584323f9df85affc8e3f148f126b800",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 428,
-      "cjk": 29,
-      "literal": "\"LAD最小中文注释功能块：演示块注释、网络标题和网络注释可导入并读回。\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "293eb7b4fc619e0d1473f82f439ba5126b620e5da00916f538a6b85e0e339b45",
       "path": "src/Logic/ModelContextProtocol/Builders/HmiComponentCatalogAnalyzer.cs",
       "line": 31,
@@ -833,7 +673,7 @@
       "kind": "other-literal",
       "fingerprint": "296802b049b4e2c0fecf9588fe4f23e61dbcba4bf14b355d4a68d75369ce408c",
       "path": "src/Adapters/Native/Hmi/UnifiedHmiAdapter.cs",
-      "line": 2509,
+      "line": 2512,
       "cjk": 2,
       "literal": "\"通信\"",
       "reason": "Chinese TIA communication-service input recognition keyword.",
@@ -892,21 +732,11 @@
     {
       "kind": "other-literal",
       "fingerprint": "2ba80fe1aa5e5eb7b10ec50a9ec5e211259b0ef89eca7c0f3406cc66c32ddce7",
-      "path": "src/Engine/Cli/CliCommands.cs",
-      "line": 217,
+      "path": "src/FoundationHost/HostCliCommands.cs",
+      "line": 169,
       "cjk": 22,
       "literal": "\"运行 `tia doctor --fix`（会弹 UAC），或用 lusrmgr.msc 把当前 Windows 用户加入本地组 'Siemens TIA Openness'，然后注销重登。\"",
       "reason": "Existing localized CLI console/doctor output; not MCP response text.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "2ba80fe1aa5e5eb7b10ec50a9ec5e211259b0ef89eca7c0f3406cc66c32ddce7",
-      "path": "src/FoundationHost/HostCliCommands.cs",
-      "line": 154,
-      "cjk": 22,
-      "literal": "\"运行 `tia doctor --fix`（会弹 UAC），或用 lusrmgr.msc 把当前 Windows 用户加入本地组 'Siemens TIA Openness'，然后注销重登。\"",
-      "reason": "P8-04i host CLI subset: localized console/doctor/help/config output ported from the engine CLI (maintainer D1 2026-10-13, output accepted 2026-10-18, allowlist growth approved 2026-10-18); not MCP response text; the engine copies leave with P8-04l.",
       "dataCategory": "cli-console"
     },
     {
@@ -983,7 +813,7 @@
       "kind": "other-literal",
       "fingerprint": "2e179370e532ee470256a103df7f215f26e4fad78a5f03d679a1a63852aaf622",
       "path": "src/Adapters/Native/Hardware/HardwareDevices.cs",
-      "line": 681,
+      "line": 444,
       "cjk": 2,
       "literal": "\"Portrait 立式\"",
       "reason": "Chinese TIA orientation enumeration display value used for input matching.",
@@ -993,7 +823,7 @@
       "kind": "other-literal",
       "fingerprint": "2e179370e532ee470256a103df7f215f26e4fad78a5f03d679a1a63852aaf622",
       "path": "src/Adapters/Native/Hardware/HardwareDevices.cs",
-      "line": 684,
+      "line": 447,
       "cjk": 2,
       "literal": "\"Portrait 立式\"",
       "reason": "Chinese TIA orientation enumeration display value used for input matching.",
@@ -1028,16 +858,6 @@
       "literal": "\"确认路径指向全局库目录，或传入包含 System/XRef 子目录的库根目录。\"",
       "reason": "Existing generated global-library package analysis report data.",
       "dataCategory": "report-artifact"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "31cfa6e70d041c5f4b2261d6b2d9171792048440ded594ce8279f75343d97ac4",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 622,
-      "cjk": 67,
-      "literal": "@\"<?xml version=\"\"1.0\"\" encoding=\"\"utf-8\"\"?>\n<Document>\n  <Engineering version=\"\"V21\"\" />\n  <DocumentInfo><Created>2000-01-01T00:00:00.0000000Z</Created><ExportSetting>None</ExportSetting><InstalledProducts /></DocumentInfo>\n  <SW.Blocks.FB ID=\"\"0\"\">\n    <AttributeList>\n      <Interface>\n        <Sections xmlns=\"\"http://www.siemens.com/automation/Openness/SW/Interface/v5\"\">\n          <Section Name=\"\"Input\"\"><Member Name=\"\"ManualEnable\"\" Datatype=\"\"Bool\"\" /></Section>\n          <Section Name=\"\"Output\"\" />\n          <Section Name=\"\"InOut\"\"><Member Name=\"\"Motor\"\" Datatype=\"\"&quot;UDT_Motor&quot;\"\" /></Section>\n          <Section Name=\"\"Static\"\" />\n        </Sections>\n      </Interface>\n      <MemoryLayout>Optimized</MemoryLayout>\n      <Name>FB1_LAD_Motor</Name>\n      <Namespace />\n      <Number>1</Number>\n      <ProgrammingLanguage>LAD</ProgrammingLanguage>\n      <SetENOAutomatically>false</SetENOAutomatically>\n    </AttributeList>\n    <ObjectList>\n      <MultilingualText ID=\"\"A1\"\" CompositionName=\"\"Comment\"\"><ObjectList><MultilingualTextItem ID=\"\"A2\"\" CompositionName=\"\"Items\"\"><AttributeList><Culture>zh-CN</Culture><Text>LAD电机控制功能块，包含中文块注释、网络标题和网络说明。</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText>\n      <SW.Blocks.CompileUnit ID=\"\"1\"\" CompositionName=\"\"CompileUnits\"\">\n        <AttributeList>\n          <NetworkSource>\n            <FlgNet xmlns=\"\"http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5\"\">\n              <Parts>\n                <Access Scope=\"\"LocalVariable\"\" UId=\"\"21\"\"><Symbol><Component Name=\"\"ManualEnable\"\" /></Symbol></Access>\n                <Access Scope=\"\"LocalVariable\"\" UId=\"\"22\"\"><Symbol><Component Name=\"\"Motor\"\" /><Component Name=\"\"Start\"\" /></Symbol></Access>\n                <Access Scope=\"\"LocalVariable\"\" UId=\"\"23\"\"><Symbol><Component Name=\"\"Motor\"\" /><Component Name=\"\"Run\"\" /></Symbol></Access>\n                <Part Name=\"\"Contact\"\" UId=\"\"24\"\" />\n                <Part Name=\"\"Contact\"\" UId=\"\"25\"\" />\n                <Part Name=\"\"SCoil\"\" UId=\"\"26\"\" />\n              </Parts>\n              <Wires>\n                <Wire UId=\"\"27\"\"><Powerrail /><NameCon UId=\"\"24\"\" Name=\"\"in\"\" /></Wire>\n                <Wire UId=\"\"28\"\"><IdentCon UId=\"\"21\"\" /><NameCon UId=\"\"24\"\" Name=\"\"operand\"\" /></Wire>\n                <Wire UId=\"\"29\"\"><NameCon UId=\"\"24\"\" Name=\"\"out\"\" /><NameCon UId=\"\"25\"\" Name=\"\"in\"\" /></Wire>\n                <Wire UId=\"\"30\"\"><IdentCon UId=\"\"22\"\" /><NameCon UId=\"\"25\"\" Name=\"\"operand\"\" /></Wire>\n                <Wire UId=\"\"31\"\"><NameCon UId=\"\"25\"\" Name=\"\"out\"\" /><NameCon UId=\"\"26\"\" Name=\"\"in\"\" /></Wire>\n                <Wire UId=\"\"32\"\"><IdentCon UId=\"\"23\"\" /><NameCon UId=\"\"26\"\" Name=\"\"operand\"\" /></Wire>\n              </Wires>\n            </FlgNet>\n          </NetworkSource>\n          <ProgrammingLanguage>LAD</ProgrammingLanguage>\n        </AttributeList>\n        <ObjectList>\n          <MultilingualText ID=\"\"A3\"\" CompositionName=\"\"Comment\"\"><ObjectList><MultilingualTextItem ID=\"\"A4\"\" CompositionName=\"\"Items\"\"><AttributeList><Culture>zh-CN</Culture><Text>启动条件成立时置位运行状态。</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText>\n          <MultilingualText ID=\"\"A5\"\" CompositionName=\"\"Title\"\"><ObjectList><MultilingualTextItem ID=\"\"A6\"\" CompositionName=\"\"Items\"\"><AttributeList><Culture>zh-CN</Culture><Text>启动运行自保持</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText>\n        </ObjectList>\n      </SW.Blocks.CompileUnit>\n      <SW.Blocks.CompileUnit ID=\"\"2\"\" CompositionName=\"\"CompileUnits\"\">\n        <AttributeList>\n          <NetworkSource>\n            <FlgNet xmlns=\"\"http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5\"\">\n              <Parts>\n                <Access Scope=\"\"LocalVariable\"\" UId=\"\"21\"\"><Symbol><Component Name=\"\"Motor\"\" /><Component Name=\"\"Stop\"\" /></Symbol></Access>\n                <Access Scope=\"\"LocalVariable\"\" UId=\"\"22\"\"><Symbol><Component Name=\"\"Motor\"\" /><Component Name=\"\"Fault\"\" /></Symbol></Access>\n                <Access Scope=\"\"LocalVariable\"\" UId=\"\"23\"\"><Symbol><Component Name=\"\"ManualEnable\"\" /></Symbol></Access>\n                <Access Scope=\"\"LocalVariable\"\" UId=\"\"24\"\"><Symbol><Component Name=\"\"Motor\"\" /><Component Name=\"\"Run\"\" /></Symbol></Access>\n                <Part Name=\"\"Contact\"\" UId=\"\"25\"\" />\n                <Part Name=\"\"Contact\"\" UId=\"\"26\"\" />\n                <Part Name=\"\"Contact\"\" UId=\"\"27\"\"><Negated Name=\"\"operand\"\" /></Part>\n                <Part Name=\"\"O\"\" UId=\"\"28\"\"><TemplateValue Name=\"\"Card\"\" Type=\"\"Cardinality\"\">3</TemplateValue></Part>\n                <Part Name=\"\"RCoil\"\" UId=\"\"29\"\" />\n              </Parts>\n              <Wires>\n                <Wire UId=\"\"30\"\"><Powerrail /><NameCon UId=\"\"25\"\" Name=\"\"in\"\" /><NameCon UId=\"\"26\"\" Name=\"\"in\"\" /><NameCon UId=\"\"27\"\" Name=\"\"in\"\" /></Wire>\n                <Wire UId=\"\"31\"\"><IdentCon UId=\"\"21\"\" /><NameCon UId=\"\"25\"\" Name=\"\"operand\"\" /></Wire>\n                <Wire UId=\"\"32\"\"><IdentCon UId=\"\"22\"\" /><NameCon UId=\"\"26\"\" Name=\"\"operand\"\" /></Wire>\n                <Wire UId=\"\"33\"\"><IdentCon UId=\"\"23\"\" /><NameCon UId=\"\"27\"\" Name=\"\"operand\"\" /></Wire>\n                <Wire UId=\"\"34\"\"><NameCon UId=\"\"25\"\" Name=\"\"out\"\" /><NameCon UId=\"\"28\"\" Name=\"\"in1\"\" /></Wire>\n                <Wire UId=\"\"35\"\"><NameCon UId=\"\"26\"\" Name=\"\"out\"\" /><NameCon UId=\"\"28\"\" Name=\"\"in2\"\" /></Wire>\n                <Wire UId=\"\"36\"\"><NameCon UId=\"\"27\"\" Name=\"\"out\"\" /><NameCon UId=\"\"28\"\" Name=\"\"in3\"\" /></Wire>\n                <Wire UId=\"\"37\"\"><NameCon UId=\"\"28\"\" Name=\"\"out\"\" /><NameCon UId=\"\"29\"\" Name=\"\"in\"\" /></Wire>\n                <Wire UId=\"\"38\"\"><IdentCon UId=\"\"24\"\" /><NameCon UId=\"\"29\"\" Name=\"\"operand\"\" /></Wire>\n              </Wires>\n            </FlgNet>\n          </NetworkSource>\n          <ProgrammingLanguage>LAD</ProgrammingLanguage>\n        </AttributeList>\n        <ObjectList>\n          <MultilingualText ID=\"\"A7\"\" CompositionName=\"\"Comment\"\"><ObjectList><MultilingualTextItem ID=\"\"A8\"\" CompositionName=\"\"Items\"\"><AttributeList><Culture>zh-CN</Culture><Text>停止、故障或手动使能取消时复位运行状态。</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText>\n          <MultilingualText ID=\"\"A9\"\" CompositionName=\"\"Title\"\"><ObjectList><MultilingualTextItem ID=\"\"AA\"\" CompositionName=\"\"Items\"\"><AttributeList><Culture>zh-CN</Culture><Text>停止故障复位</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText>\n        </ObjectList>\n      </SW.Blocks.CompileUnit>\n    </ObjectList>\n  </SW.Blocks.FB>\n</Document>\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -1142,21 +962,11 @@
     {
       "kind": "other-literal",
       "fingerprint": "3b690741dc650011d394f3e2cc42ea7c5dab9a678ccf09cf818db0789d1c5d5b",
-      "path": "src/Engine/Cli/CliCommands.cs",
-      "line": 249,
+      "path": "src/FoundationHost/HostCliCommands.cs",
+      "line": 202,
       "cjk": 16,
       "literal": "\"NOT READY —— 请按上面的『修法』处理 FAIL 项，然后重新运行 tia doctor。\"",
       "reason": "Existing localized CLI console/doctor output; not MCP response text.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "3b690741dc650011d394f3e2cc42ea7c5dab9a678ccf09cf818db0789d1c5d5b",
-      "path": "src/FoundationHost/HostCliCommands.cs",
-      "line": 186,
-      "cjk": 16,
-      "literal": "\"NOT READY —— 请按上面的『修法』处理 FAIL 项，然后重新运行 tia doctor。\"",
-      "reason": "P8-04i host CLI subset: localized console/doctor/help/config output ported from the engine CLI (maintainer D1 2026-10-13, output accepted 2026-10-18, allowlist growth approved 2026-10-18); not MCP response text; the engine copies leave with P8-04l.",
       "dataCategory": "cli-console"
     },
     {
@@ -1202,21 +1012,11 @@
     {
       "kind": "other-literal",
       "fingerprint": "3e8871fd94440cad90602f87d8b1720e7bb24f3420bcf6f56a1069ea638376b3",
-      "path": "src/Engine/Cli/CliCommands.cs",
-      "line": 247,
+      "path": "src/FoundationHost/HostCliCommands.cs",
+      "line": 200,
       "cjk": 16,
       "literal": "\"READY —— 环境正常。下一步：重启 AI 客户端，让它调用 InitializeEnvironment。\"",
       "reason": "Existing localized CLI console/doctor output; not MCP response text.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "3e8871fd94440cad90602f87d8b1720e7bb24f3420bcf6f56a1069ea638376b3",
-      "path": "src/FoundationHost/HostCliCommands.cs",
-      "line": 184,
-      "cjk": 16,
-      "literal": "\"READY —— 环境正常。下一步：重启 AI 客户端，让它调用 InitializeEnvironment。\"",
-      "reason": "P8-04i host CLI subset: localized console/doctor/help/config output ported from the engine CLI (maintainer D1 2026-10-13, output accepted 2026-10-18, allowlist growth approved 2026-10-18); not MCP response text; the engine copies leave with P8-04l.",
       "dataCategory": "cli-console"
     },
     {
@@ -1248,16 +1048,6 @@
       "literal": "\"只在临时目录创建项目。\"",
       "reason": "Existing generated HMI import-preflight report data.",
       "dataCategory": "report-artifact"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "3fc0217394002fc74f361a692ef97f3a2ccdbdfdceba8f18f2c9f639ba998020",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2464,
-      "cjk": 8,
-      "literal": "\"完整PLC符号精确匹配\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -1309,16 +1099,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "43908aef574e54015bb4bf73b5ea1950c35e82a9ec6f4956bc8a7fbf76171e4d",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 434,
-      "cjk": 6,
-      "literal": "\"启动保持回路\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "43b996a13676b67563d765a29419e40b5b8916ad7271e8f71f37cb2cf19621ae",
       "path": "src/Logic/ModelContextProtocol/Builders/PlcTagTableXmlBuilder.cs",
       "line": 201,
@@ -1330,21 +1110,11 @@
     {
       "kind": "other-literal",
       "fingerprint": "449c4012288be8eab1689cd5b2004972f0ac433b8cdb30550a2050c67c783135",
-      "path": "src/Engine/Cli/CliCommands.cs",
-      "line": 214,
+      "path": "src/FoundationHost/HostCliCommands.cs",
+      "line": 166,
       "cjk": 4,
       "literal": "\"检查失败：\"",
       "reason": "Existing localized CLI console/doctor output; not MCP response text.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "449c4012288be8eab1689cd5b2004972f0ac433b8cdb30550a2050c67c783135",
-      "path": "src/FoundationHost/HostCliCommands.cs",
-      "line": 151,
-      "cjk": 4,
-      "literal": "\"检查失败：\"",
-      "reason": "P8-04i host CLI subset: localized console/doctor/help/config output ported from the engine CLI (maintainer D1 2026-10-13, output accepted 2026-10-18, allowlist growth approved 2026-10-18); not MCP response text; the engine copies leave with P8-04l.",
       "dataCategory": "cli-console"
     },
     {
@@ -1409,16 +1179,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "46a8fc531bd1afa090770a0b12ae1bfd9f590700ddf05a97871eeaf1af67c452",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 1608,
-      "cjk": 25,
-      "literal": "\"HMI Template Suite全局库目录存在，下一步应使用TIA Openness只读ProbeGlobalLibrary验证可见的库对象层级。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "471a0afb9b465c97bcb894bf39a6834a7f031ec108ccc43aefaf3e6511e64c93",
       "path": "src/Logic/ModelContextProtocol/Builders/ClassicHmiMinimalPackageBuilder.cs",
       "line": 386,
@@ -1459,34 +1219,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "47eb459b288d1c0b9da3fef649bd40cb7d6ef6419711c1890c2ad1ce63a9258a",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2470,
-      "cjk": 6,
-      "literal": "\"叶子名称匹配\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "47edd97fa32756e460c8c355010cffcf76e48475f8c9ccdf29ad3f2444671b88",
-      "path": "src/Engine/Cli/CliProbes.cs",
-      "line": 104,
-      "cjk": 1,
-      "literal": [
-        "$",
-        1,
-        [
-          "灯",
-          null,
-          ""
-        ]
-      ],
-      "reason": "Existing TIA fixture names, interface paths and HMI label data for CLI probes.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "47f555e20e82d35cf4736ce44303a299fa9128cb427eb66eb50b64baad0d147f",
       "path": "src/Logic/ModelContextProtocol/Builders/ReleaseDiagnosticReportBuilder.cs",
       "line": 48,
@@ -1508,31 +1240,11 @@
     {
       "kind": "other-literal",
       "fingerprint": "483ab1ef5e39449d2c986ed5bc86a4bc81a7277618f56367fe3ea567f07297bd",
-      "path": "src/Engine/Cli/CliCommands.cs",
-      "line": 209,
+      "path": "src/FoundationHost/HostCliCommands.cs",
+      "line": 160,
       "cjk": 7,
       "literal": "\"当前用户不在 'Siemens TIA Openness' 组\"",
       "reason": "Existing localized CLI console/doctor output; not MCP response text.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "483ab1ef5e39449d2c986ed5bc86a4bc81a7277618f56367fe3ea567f07297bd",
-      "path": "src/FoundationHost/HostCliCommands.cs",
-      "line": 146,
-      "cjk": 7,
-      "literal": "\"当前用户不在 'Siemens TIA Openness' 组\"",
-      "reason": "P8-04i host CLI subset: localized console/doctor/help/config output ported from the engine CLI (maintainer D1 2026-10-13, output accepted 2026-10-18, allowlist growth approved 2026-10-18); not MCP response text; the engine copies leave with P8-04l.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "49c6061092c6252d624f19ee90f898fa4891ad4e668852eae3a60959a1428edc",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2482,
-      "cjk": 7,
-      "literal": "\"名称关键词重合:\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
       "dataCategory": "cli-console"
     },
     {
@@ -1554,26 +1266,6 @@
       "literal": "\", 注释=\"",
       "reason": "Existing generated UDT XML probe report data.",
       "dataCategory": "report-artifact"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "4a57cbb5bfca1c79251efa747febf388335215610fa93ae06468f4e0a3164c7a",
-      "path": "src/Engine/Cli/HmiTemplateBuilder.cs",
-      "line": 1459,
-      "cjk": 27,
-      "literal": "\"中文说明：此变量来自显式映射文件，已先通过离线 PLC 导出符号预检。\"",
-      "reason": "Existing Chinese explanation stored in an explicit HMI mapping artifact.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "4be13face7eb4e54494b7ede93dad66ec4a01b84a8121f013713378dd7264ace",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2624,
-      "cjk": 34,
-      "literal": "\"本文件是显式映射文件骨架。只有 MappedPlcTag 非空的项才允许进入后续同步预检和绑定验证。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -1624,16 +1316,6 @@
       "literal": "\"Classic HMI tag 引用校验\"",
       "reason": "Existing generated offline HMI validation report data.",
       "dataCategory": "report-artifact"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "50ecd0e5b540eebcf38a25fdec6a2608b95aab517abd561856bfff6e5b8706de",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2720,
-      "cjk": 4,
-      "literal": "\"HMI_Data.大车向后\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -1697,26 +1379,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "565b086f9c170b6717d715808ff93c58db107c0c94bc8cedba5f8de62d72202f",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2675,
-      "cjk": 33,
-      "literal": "\"中文说明：该映射由确定性项目规则写入，已确认完整 PLC 符号存在且数据类型兼容。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "569313528448230f801aebd0009e1a683a0ba682b38d92723ae39d15455889fb",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 537,
-      "cjk": 12,
-      "literal": "\"故障状态输入，触发运行复位\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "5760bfe4b48740a06003849f8f3c946dcc5677e3ad206c95182e07ef4cfb2be5",
       "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 192,
@@ -1734,26 +1396,6 @@
       "literal": "\"所有 HMI tag、控件动态化和事件目标必须来自真实 PLC tag 或 DB 成员，不能凭空绑定 M 点。\"",
       "reason": "Existing generated readiness-gate report text and recognition keywords.",
       "dataCategory": "report-artifact"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "58ee483f4f1a91ea7340ca28285f07f86b4f3321502588b14a859d392213fcc5",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2719,
-      "cjk": 4,
-      "literal": "\"HMI_Data.大车向前\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "58ee483f4f1a91ea7340ca28285f07f86b4f3321502588b14a859d392213fcc5",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2726,
-      "cjk": 4,
-      "literal": "\"HMI_Data.大车向前\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -1783,26 +1425,6 @@
       "cjk": 19,
       "literal": "\"离线同步预检：不连接 TIA Portal，不打开工程，不导入 PLC/HMI 对象。\"",
       "reason": "Existing generated PLC/HMI synchronization precheck report data.",
-      "dataCategory": "report-artifact"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "5a0e71006abaa04a2be5cfc408ffb1c81772c901fa72cb6dc870cbb5ed74bbcd",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 1324,
-      "cjk": 1,
-      "literal": "\"5T车\"",
-      "reason": "Existing generated PLC fixture readiness report data.",
-      "dataCategory": "report-artifact"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "5a0e71006abaa04a2be5cfc408ffb1c81772c901fa72cb6dc870cbb5ed74bbcd",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2077,
-      "cjk": 1,
-      "literal": "\"5T车\"",
-      "reason": "Existing generated PLC fixture readiness report data.",
       "dataCategory": "report-artifact"
     },
     {
@@ -1847,26 +1469,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "5b039cbd1bbfe85d9aedf9fa592a2cce640ccdd1f0af93058296df9ff00fbf83",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 412,
-      "cjk": 12,
-      "literal": "\"停止按钮，优先切断运行保持\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "5b039cbd1bbfe85d9aedf9fa592a2cce640ccdd1f0af93058296df9ff00fbf83",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 535,
-      "cjk": 12,
-      "literal": "\"停止按钮，优先切断运行保持\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "5b24bf1882e48a0e4cc872fd9860cd35c2a3e1683fce4942786eb794574f9aac",
       "path": "src/Logic/ModelContextProtocol/Builders/PlcFcBlockXmlComposer.cs",
       "line": 134,
@@ -1887,16 +1489,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "5bb3215fbb6b2303cf7fd1593b8bd30c7d80dfb67938532a4ee98daed07dba80",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 454,
-      "cjk": 21,
-      "literal": "\"SCL最小中文注释功能：演示SCL网络中文标题和中文注释。\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "5cb24e3b82c769fa661463e52a73c73cc6529ca5647b009954d4eaba357b66ab",
       "path": "src/Logic/ModelContextProtocol/Builders/PlcBuilderToolJson.cs",
       "line": 461,
@@ -1904,26 +1496,6 @@
       "literal": "\"离线 XML 生成：不连接 TIA Portal，不打开项目，不导入 PLC 对象。\"",
       "reason": "Existing safety-description data in generated offline PLC XML artifact metadata.",
       "dataCategory": "report-artifact"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "5ccbf53071c51e88649ad2798327b5616192b2527d807601db8bd199cf611b90",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 251,
-      "cjk": 39,
-      "literal": "\"- 重叠、密度和文字溢出属于启发式警告；越界、重复名称、无效尺寸和执行 JSON 生成失败属于阻断错误。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "5d3b66cc29904afc669f356a5a2cffa501e03b05960cc79ec8813154226acb8e",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2488,
-      "cjk": 6,
-      "literal": "\"数据类型兼容\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -2057,16 +1629,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "661592280b7c68e82f06470c3e07cc6cfe1c94ca65ca5282100868ca5bafad46",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 353,
-      "cjk": 21,
-      "literal": "\"只写 reports 目录下的临时探针文件，不修改工程、reference 或交付包。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "67290b7340728131b2377220095fe21dd26f2977d6e3db92f200c25b4d9e6f0f",
       "path": "src/Logic/ModelContextProtocol/Builders/HmiComponentCatalogAnalyzer.cs",
       "line": 312,
@@ -2168,21 +1730,11 @@
     {
       "kind": "other-literal",
       "fingerprint": "6a4d270739a6daa5a1ab4b0fffd4db9684affcf4d28af045061ac5baeb017c17",
-      "path": "src/Engine/Cli/CliCommands.cs",
-      "line": 236,
+      "path": "src/FoundationHost/HostCliCommands.cs",
+      "line": 188,
       "cjk": 5,
       "literal": "\"AI 客户端配置\"",
       "reason": "Existing localized CLI console/doctor output; not MCP response text.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "6a4d270739a6daa5a1ab4b0fffd4db9684affcf4d28af045061ac5baeb017c17",
-      "path": "src/FoundationHost/HostCliCommands.cs",
-      "line": 173,
-      "cjk": 5,
-      "literal": "\"AI 客户端配置\"",
-      "reason": "P8-04i host CLI subset: localized console/doctor/help/config output ported from the engine CLI (maintainer D1 2026-10-13, output accepted 2026-10-18, allowlist growth approved 2026-10-18); not MCP response text; the engine copies leave with P8-04l.",
       "dataCategory": "cli-console"
     },
     {
@@ -2194,16 +1746,6 @@
       "literal": "\"离线生成和解析 StructuredText XML，不连接 TIA Portal，不导入 PLC 块。\"",
       "reason": "Existing generated structured-text XML probe report data.",
       "dataCategory": "report-artifact"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "6c309a00087a9474b894a3fcc3acc102ee720681528c6bf812ac6eca42303fa5",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 370,
-      "cjk": 7,
-      "literal": "\"启动运行自保持\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -2288,21 +1830,11 @@
     {
       "kind": "other-literal",
       "fingerprint": "725998329182b516e18e508065c9144e10b02288a7a09a8c06771baffa6e7189",
-      "path": "src/Engine/Cli/CliCommands.cs",
-      "line": 243,
+      "path": "src/FoundationHost/HostCliCommands.cs",
+      "line": 196,
       "cjk": 14,
       "literal": "\"         （一次性写入所有检测到的客户端：tia config）\"",
       "reason": "Existing localized CLI console/doctor output; not MCP response text.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "725998329182b516e18e508065c9144e10b02288a7a09a8c06771baffa6e7189",
-      "path": "src/FoundationHost/HostCliCommands.cs",
-      "line": 180,
-      "cjk": 14,
-      "literal": "\"         （一次性写入所有检测到的客户端：tia config）\"",
-      "reason": "P8-04i host CLI subset: localized console/doctor/help/config output ported from the engine CLI (maintainer D1 2026-10-13, output accepted 2026-10-18, allowlist growth approved 2026-10-18); not MCP response text; the engine copies leave with P8-04l.",
       "dataCategory": "cli-console"
     },
     {
@@ -2417,16 +1949,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "7cfb5efc30a407ca5ee971e01c858481b4d42e1e4f87e8fa0dd1a949c86bb051",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 411,
-      "cjk": 11,
-      "literal": "\"启动按钮，HMI 或现场按钮写入\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "7d6d2593d9fe8c2e5ee8a74caa81c1ebb0daf16ef940b31d9a17191679f5d0c0",
       "path": "src/Logic/ModelContextProtocol/Builders/LadTextRenderer.cs",
       "line": 165,
@@ -2458,21 +1980,11 @@
     {
       "kind": "other-literal",
       "fingerprint": "7f544931d29693c0659d3863050440df4dc86c2dc9c621b3e5bddccdf313efd8",
-      "path": "src/Engine/Cli/CliCommands.cs",
-      "line": 232,
+      "path": "src/FoundationHost/HostCliCommands.cs",
+      "line": 184,
       "cjk": 3,
       "literal": "\"未注册\"",
       "reason": "Existing localized CLI console/doctor output; not MCP response text.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "7f544931d29693c0659d3863050440df4dc86c2dc9c621b3e5bddccdf313efd8",
-      "path": "src/FoundationHost/HostCliCommands.cs",
-      "line": 169,
-      "cjk": 3,
-      "literal": "\"未注册\"",
-      "reason": "P8-04i host CLI subset: localized console/doctor/help/config output ported from the engine CLI (maintainer D1 2026-10-13, output accepted 2026-10-18, allowlist growth approved 2026-10-18); not MCP response text; the engine copies leave with P8-04l.",
       "dataCategory": "cli-console"
     },
     {
@@ -2525,16 +2037,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "824347c1b76ddd170431371cfca10768d1dee3435357a4c9dc90affedc1256e0",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2625,
-      "cjk": 23,
-      "literal": "\"候选 Candidates 不能自动绑定，必须人工确认或由确定性规则写入 MappedPlcTag。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "82fcfb0ba641cdded238632913f6fb5a756abdca6d0460f900701ae067bb86e4",
       "path": "src/Logic/ModelContextProtocol/Builders/HmiComponentCatalogAnalyzer.cs",
       "line": 312,
@@ -2570,16 +2072,6 @@
       "literal": "\"离线发布套件已通过；下一阶段应执行临时 TIA 工程导入、读回、SyntaxCheck/编译诊断验证。\"",
       "reason": "Existing generated release diagnostic report data.",
       "dataCategory": "report-artifact"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "85c0cd474be0aee8372a75a24aaea523ba2bf05bf5c95b54ba6683ff7a616937",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2676,
-      "cjk": 25,
-      "literal": "\"完整 PLC 符号已精确存在，可进入同步预检和临时项目绑定验证。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -2620,26 +2112,6 @@
       "literal": "\"mojibake/乱码\"",
       "reason": "Preserved Chinese/English discovery alias for the SCL source tool; search data, not MCP prose.",
       "dataCategory": "search-alias"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "894dc6606e553fddd305e2d3abf671a614147d7731e4e5eac36f16e34afe2809",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 352,
-      "cjk": 17,
-      "literal": "\"离线探针：不连接 TIA Portal，不打开工程，不导入 HMI 文件。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "897c7b9c950f05951d75efa3a3b3c057c601e8bf819b9d9dc1e730361f9a8ee1",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2682,
-      "cjk": 13,
-      "literal": "\"确认数据类型与 HMI 控件用途兼容。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -2760,16 +2232,6 @@
       "literal": "\"先补齐 PLC 符号或修正 HMI 变量表绑定，不要导入真实工程。\"",
       "reason": "Existing generated HMI package validation report data.",
       "dataCategory": "report-artifact"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "918faa89ec3909e53d313675615265a3dcae93f8d78b0be4916cbbbf4ca0d063",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 1593,
-      "cjk": 39,
-      "literal": "\"全局库应通过ProbeGlobalLibrary只读打开并列出MasterCopies/Types后，再决定是否增加导入工具；未完成Openness读回前不要承诺批量导入。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -2903,16 +2365,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "99c8b1b48b451913aba5cb0029c3a6dd118ce6ba1d0ebd32bccf59438d9a4d04",
-      "path": "src/Engine/Cli/CliProbes.cs",
-      "line": 102,
-      "cjk": 5,
-      "literal": "\"启动流水灯\"",
-      "reason": "Existing TIA fixture names, interface paths and HMI label data for CLI probes.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "9c285804b4a940f087ab913d2f64e5f54f83eb56f5a9ed31a3dbe8aed2f1e1c5",
       "path": "src/Logic/ModelContextProtocol/Builders/ClassicHmiMinimalPackageBuilder.cs",
       "line": 387,
@@ -3022,21 +2474,11 @@
     {
       "kind": "other-literal",
       "fingerprint": "a1b0a8a62946858ffc4006bbd53f40af873d69446474f163ecfc1cac90cea648",
-      "path": "src/Engine/Cli/CliCommands.cs",
-      "line": 216,
+      "path": "src/FoundationHost/HostCliCommands.cs",
+      "line": 168,
       "cjk": 3,
       "literal": "\"Openness 用户组\"",
       "reason": "Existing localized CLI console/doctor output; not MCP response text.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "a1b0a8a62946858ffc4006bbd53f40af873d69446474f163ecfc1cac90cea648",
-      "path": "src/FoundationHost/HostCliCommands.cs",
-      "line": 153,
-      "cjk": 3,
-      "literal": "\"Openness 用户组\"",
-      "reason": "P8-04i host CLI subset: localized console/doctor/help/config output ported from the engine CLI (maintainer D1 2026-10-13, output accepted 2026-10-18, allowlist growth approved 2026-10-18); not MCP response text; the engine copies leave with P8-04l.",
       "dataCategory": "cli-console"
     },
     {
@@ -3061,32 +2503,12 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "a3310a231f62154442bb3e710c98217bbcbf5d8bbcdb33e093e44fab8a304f5b",
-      "path": "src/Engine/Cli/CliProbes.cs",
-      "line": 440,
-      "cjk": 5,
-      "literal": "\"主画面_优化.xml\"",
-      "reason": "Existing TIA fixture names, interface paths and HMI label data for CLI probes.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "a358ff8411389c728ddb157435c1ad45c9cf0ebf6fe4817c5bcd828010b727ae",
-      "path": "src/Engine/Cli/CliCommands.cs",
-      "line": 234,
+      "path": "src/FoundationHost/HostCliCommands.cs",
+      "line": 186,
       "cjk": 3,
       "literal": "\"已注册 tia-portal\"",
       "reason": "Existing localized CLI console/doctor output; not MCP response text.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "a358ff8411389c728ddb157435c1ad45c9cf0ebf6fe4817c5bcd828010b727ae",
-      "path": "src/FoundationHost/HostCliCommands.cs",
-      "line": 171,
-      "cjk": 3,
-      "literal": "\"已注册 tia-portal\"",
-      "reason": "P8-04i host CLI subset: localized console/doctor/help/config output ported from the engine CLI (maintainer D1 2026-10-13, output accepted 2026-10-18, allowlist growth approved 2026-10-18); not MCP response text; the engine copies leave with P8-04l.",
       "dataCategory": "cli-console"
     },
     {
@@ -3121,16 +2543,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "a7e2cfe4cbe68197d27f85c394727145ba6e27ed79c06f547d04e8136caabd2e",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 434,
-      "cjk": 17,
-      "literal": "\"按下启动并且没有停止时，置位运行状态。\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "a9e749159b131da9b490d3bc77d4d2b98042e40f635bfae14c0505ed4329ebb0",
       "path": "src/Logic/ModelContextProtocol/Builders/HmiComponentCatalogAnalyzer.cs",
       "line": 18,
@@ -3142,21 +2554,11 @@
     {
       "kind": "other-literal",
       "fingerprint": "aa2ff94d5be8076571244ede18515f67bb670efd80f6f8d43e6310ca2814dad8",
-      "path": "src/Engine/Cli/CliCommands.cs",
-      "line": 163,
+      "path": "src/FoundationHost/HostCliCommands.cs",
+      "line": 110,
       "cjk": 14,
       "literal": "\"（只读；加 --fix 可自动把当前用户加入 Openness 组）\"",
       "reason": "Existing localized CLI console/doctor output; not MCP response text.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "aa2ff94d5be8076571244ede18515f67bb670efd80f6f8d43e6310ca2814dad8",
-      "path": "src/FoundationHost/HostCliCommands.cs",
-      "line": 99,
-      "cjk": 14,
-      "literal": "\"（只读；加 --fix 可自动把当前用户加入 Openness 组）\"",
-      "reason": "P8-04i host CLI subset: localized console/doctor/help/config output ported from the engine CLI (maintainer D1 2026-10-13, output accepted 2026-10-18, allowlist growth approved 2026-10-18); not MCP response text; the engine copies leave with P8-04l.",
       "dataCategory": "cli-console"
     },
     {
@@ -3191,26 +2593,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "ab8815054d8acc7fb9449d27b8d914c54d30a9dd2d37e7e76c7983c53409f8f0",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 538,
-      "cjk": 13,
-      "literal": "\"一秒节拍累计值，供HMI数值框显示\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "ac61e9e4c20ad9d51360dd7a242729610934e76b8a65bef4791b64d85fe1ce6e",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2503,
-      "cjk": 10,
-      "literal": "\"Axis|Gantry|Crane|大车|小车|行走|速度|位置\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "acd14e545eef46e2769edfcbac9c92716667e5e2f75e2f3960a7ad208d45d12b",
       "path": "src/Logic/ModelContextProtocol/Builders/ClassicHmiOfflineValidationSuite.cs",
       "line": 57,
@@ -3218,16 +2600,6 @@
       "literal": "\"PLC 符号清单提取\"",
       "reason": "Existing generated offline HMI validation report data.",
       "dataCategory": "report-artifact"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "ad92297458e09af0b7810db49beda95e821b18e0a015f1d97753d00d66d9001e",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 1596,
-      "cjk": 35,
-      "literal": "\"HMI控件绑定必须同时检查HMI变量和PLC变量/DB成员存在，避免出现只绑定HMI侧、PLC侧无变量的假同步。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -3258,16 +2630,6 @@
       "literal": "\"把现有模板扩展为 Header、Navigation、Dashboard、CommandPanel、AlarmBanner、PopupLauncher、ValueStepper 等组件契约。\"",
       "reason": "Existing bilingual HMI component/action tables and generated catalog report data.",
       "dataCategory": "bilingual-table"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "b0998f13b0e2f3442535af55991c9e521e509a6e324d6611832293c5a07fb5c8",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 371,
-      "cjk": 13,
-      "literal": "\"启动条件成立时置位运行状态\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -3382,21 +2744,11 @@
     {
       "kind": "other-literal",
       "fingerprint": "b59e91448803fb475f84877b4644c9ebb0714cdeca679694b721025cc71b6526",
-      "path": "src/Engine/Cli/CliCommands.cs",
-      "line": 163,
+      "path": "src/FoundationHost/HostCliCommands.cs",
+      "line": 110,
       "cjk": 4,
       "literal": "\"tia doctor —— 环境体检\"",
       "reason": "Existing localized CLI console/doctor output; not MCP response text.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "b59e91448803fb475f84877b4644c9ebb0714cdeca679694b721025cc71b6526",
-      "path": "src/FoundationHost/HostCliCommands.cs",
-      "line": 99,
-      "cjk": 4,
-      "literal": "\"tia doctor —— 环境体检\"",
-      "reason": "P8-04i host CLI subset: localized console/doctor/help/config output ported from the engine CLI (maintainer D1 2026-10-13, output accepted 2026-10-18, allowlist growth approved 2026-10-18); not MCP response text; the engine copies leave with P8-04l.",
       "dataCategory": "cli-console"
     },
     {
@@ -3458,16 +2810,6 @@
       "literal": "\"无法解析——\"",
       "reason": "Existing NameZh/DetailZh/FixZh values in the bilingual doctor result table.",
       "dataCategory": "bilingual-table"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "b978c10a10eea4abff869ba48ffb4849391472b6f592f75524de9baddc7ffd7a",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 1592,
-      "cjk": 41,
-      "literal": "\"HMI画面优化应优先抽象为JSON设计模板，不直接复制runtime RDF二进制文件；RDF只作为命名、布局复杂度和控件类型参考。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -3539,26 +2881,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "bea7a94caff7e2ba7a0e1dc50b2c00e6929cae6301717419647abe3fda3f4a30",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2493,
-      "cjk": 7,
-      "literal": "\"数据类型不匹配\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "c0715d716db1d8e91e640baedd375f28d7b91516674a59ff60287cb96b211fc0",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 1594,
-      "cjk": 31,
-      "literal": "\"在线监控只允许读取当前变量状态；监控表对象不得在线新增、删除或修改。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "c28b2f1988a3e9a3112716aec0cebbf27f6ce69c89f7011057c66cbb26a4aec2",
       "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 272,
@@ -3586,16 +2908,6 @@
       "dataCategory": "bilingual-table"
     },
     {
-      "kind": "other-literal",
-      "fingerprint": "c389b038c40d6d63dc39d0266f225c63a2478300d3558ac2be1623c4d110244f",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2499,
-      "cjk": 4,
-      "literal": "\"HMI相关DB/变量\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
-    },
-    {
       "kind": "description",
       "fingerprint": "c7a856cf8c4d76277234858023e449a7e5619175126e19903dfb9f60e8855d66",
       "path": "src/Shared/UnifiedHmiTools.cs",
@@ -3604,16 +2916,6 @@
       "literal": "\"tagTableName: target HMI tag table name (default '默认变量表')\"",
       "reason": "Quoted PLC/project symbols, built-in TIA object names or report notation; data remains in its original language.",
       "dataCategory": "project-content"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "c7b029c4bf9d8c9d454292d0a3c141679355c3da661014c54dc0e849da4783e4",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2718,
-      "cjk": 4,
-      "literal": "\"HMI_Data.大车复位\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -3768,21 +3070,11 @@
     {
       "kind": "other-literal",
       "fingerprint": "cdb3f7eb2e7aa4c21e30e9dd81604790a3e94f79b0e00d9fe7f02175c1c818aa",
-      "path": "src/Engine/Cli/CliCommands.cs",
-      "line": 208,
+      "path": "src/FoundationHost/HostCliCommands.cs",
+      "line": 159,
       "cjk": 7,
       "literal": "\"当前用户已在 'Siemens TIA Openness' 组\"",
       "reason": "Existing localized CLI console/doctor output; not MCP response text.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "cdb3f7eb2e7aa4c21e30e9dd81604790a3e94f79b0e00d9fe7f02175c1c818aa",
-      "path": "src/FoundationHost/HostCliCommands.cs",
-      "line": 145,
-      "cjk": 7,
-      "literal": "\"当前用户已在 'Siemens TIA Openness' 组\"",
-      "reason": "P8-04i host CLI subset: localized console/doctor/help/config output ported from the engine CLI (maintainer D1 2026-10-13, output accepted 2026-10-18, allowlist growth approved 2026-10-18); not MCP response text; the engine copies leave with P8-04l.",
       "dataCategory": "cli-console"
     },
     {
@@ -3807,16 +3099,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "ceedefa9809b1cceb61773e4b8cb541502ee75a9255269da2bd37976711db193",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 558,
-      "cjk": 22,
-      "literal": "\"- 离线自检通过后，仍需导入临时 Classic/Basic HMI 工程，读回 tags/items/bindings/events 并编译诊断。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "cf7ee8bcb3407cd44a2cc5b9049389ef89c94da1cc50d625510dfe6e39ab25a0",
       "path": "src/Logic/ModelContextProtocol/Builders/ReleaseReadinessGateBuilder.cs",
       "line": 46,
@@ -3827,26 +3109,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "d135d805b730cc720f0c4acbedb5768c02a5671ff5eff29e7be6f7bbcd1052e7",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 368,
-      "cjk": 11,
-      "literal": "\"启动按钮，HMI或现场按钮写入\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "d135d805b730cc720f0c4acbedb5768c02a5671ff5eff29e7be6f7bbcd1052e7",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 534,
-      "cjk": 11,
-      "literal": "\"启动按钮，HMI或现场按钮写入\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "d13fe12bc140c1bac661e28366545031dd121022dd1581bb24f1b6eae87f1692",
       "path": "src/Logic/ModelContextProtocol/Builders/PlcBuilderToolJson.cs",
       "line": 462,
@@ -3854,16 +3116,6 @@
       "literal": "\"本工具只返回 XML 字符串，不写工程、不写交付包。\"",
       "reason": "Existing safety-description data in generated offline PLC XML artifact metadata.",
       "dataCategory": "report-artifact"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "d1edc529005b75b88b573067444fcdd977f487d3a796c337c1c60703a3240ecb",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2506,
-      "cjk": 7,
-      "literal": "\"轴/运动语义相关\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -3887,16 +3139,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "d2bc149bbe73d83ebf66e4a4eb8981be781c77d33860a55461593b6eb50b2d18",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2677,
-      "cjk": 18,
-      "literal": "\"请确认候选后填写 MappedPlcTag；未填写时不会用于绑定。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "d2c79ba79416248a5483a8d202e5a2679cc76c983fa4500c6b8713900a1bccbf",
       "path": "src/Shared/CompilerDiagnostics.cs",
       "line": 131,
@@ -3914,16 +3156,6 @@
       "literal": "\"第二步实现 StructuredTextBuilder，只覆盖赋值、IF、调用、变量访问的最小集合。\"",
       "reason": "Existing generated PLC fixture readiness report data.",
       "dataCategory": "report-artifact"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "d47aec1fc5f9e81f24cea08b4b891811f6dc5250fd935b3faa0456b94ec6874c",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2475,
-      "cjk": 6,
-      "literal": "\"HMI名称叶子匹配\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -4007,16 +3239,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "da69974e2fd678896978054317c89507bce8517659033a578e3638051a63c3df",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 374,
-      "cjk": 10,
-      "literal": "\"定时器到达后计数加一\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "da92866fac4ceb972f56737b2700afd445fb8075740ba6708de5d4e730683515",
       "path": "src/Logic/ModelContextProtocol/Builders/HmiComponentCatalogAnalyzer.cs",
       "line": 37,
@@ -4067,32 +3289,12 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "ddbbd38bdfda37e40f8da2875d38d483b0d51d77e07e5d091ceb69b52861891a",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2727,
-      "cjk": 6,
-      "literal": "\"HMI_Data.大车频率给定\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "ded2067b6e37cf9fd05133bab2fdb307923d0514782429d46448a28d68278954",
-      "path": "src/Engine/Cli/CliCommands.cs",
-      "line": 235,
+      "path": "src/FoundationHost/HostCliCommands.cs",
+      "line": 187,
       "cjk": 12,
       "literal": "\"已注册，但指向的引擎不存在：\"",
       "reason": "Existing localized CLI console/doctor output; not MCP response text.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "ded2067b6e37cf9fd05133bab2fdb307923d0514782429d46448a28d68278954",
-      "path": "src/FoundationHost/HostCliCommands.cs",
-      "line": 172,
-      "cjk": 12,
-      "literal": "\"已注册，但指向的引擎不存在：\"",
-      "reason": "P8-04i host CLI subset: localized console/doctor/help/config output ported from the engine CLI (maintainer D1 2026-10-13, output accepted 2026-10-18, allowlist growth approved 2026-10-18); not MCP response text; the engine copies leave with P8-04l.",
       "dataCategory": "cli-console"
     },
     {
@@ -4104,26 +3306,6 @@
       "literal": "\"参数写入\"",
       "reason": "Existing bilingual HMI component/action tables and generated catalog report data.",
       "dataCategory": "bilingual-table"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "df4655f09d12aac30c9993523301173ad07521a3080ea5a772bb154df65e5d4d",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 413,
-      "cjk": 12,
-      "literal": "\"运行状态输出，供HMI指示灯显示\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "df4655f09d12aac30c9993523301173ad07521a3080ea5a772bb154df65e5d4d",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 536,
-      "cjk": 12,
-      "literal": "\"运行状态输出，供HMI指示灯显示\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -4199,34 +3381,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "e3cb8f336f1c3c3767ea57fdd913bd115abf29c7ca3f782c4689d44f2526793d",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2626,
-      "cjk": 22,
-      "literal": "\"确定性规则必须命中完整 PLC 符号、数据类型兼容，并记录 MappingSource/DeterministicRule。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "e406d3b950ffee3b69fb08ec9e02952854aa9c2488a844075fc5981ef11991b5",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 858,
-      "cjk": 44,
-      "literal": [
-        "$@",
-        1,
-        [
-          "<?xml version=\"\"1.0\"\" encoding=\"\"utf-8\"\"?>\n<Document>\n  <Engineering version=\"\"V21\"\" />\n  <DocumentInfo><Created>2000-01-01T00:00:00.0000000Z</Created><ExportSetting>None</ExportSetting><InstalledProducts /></DocumentInfo>\n  <SW.Blocks.FB ID=\"\"0\"\">\n    <AttributeList>\n      <Interface>\n        <Sections xmlns=\"\"http://www.siemens.com/automation/Openness/SW/Interface/v5\"\">\n          <Section Name=\"\"Input\"\" />\n          <Section Name=\"\"Output\"\" />\n          <Section Name=\"\"InOut\"\"><Member Name=\"\"Counter\"\" Datatype=\"\"Int\"\" /></Section>\n          <Section Name=\"\"Static\"\"><Member Name=\"\"Tick_1s\"\" Datatype=\"\"TON_TIME\"\" Version=\"\"1.0\"\"><AttributeList><BooleanAttribute Name=\"\"SetPoint\"\" SystemDefined=\"\"true\"\">true</BooleanAttribute></AttributeList></Member></Section>\n          <Section Name=\"\"Temp\"\" />\n          <Section Name=\"\"Constant\"\" />\n        </Sections>\n      </Interface>\n      <MemoryLayout>Optimized</MemoryLayout><Name>FB2_SCL_Count</Name><Namespace /><Number>2</Number><ProgrammingLanguage>SCL</ProgrammingLanguage><SetENOAutomatically>false</SetENOAutomatically>\n    </AttributeList>\n    <ObjectList>\n      <MultilingualText ID=\"\"B1\"\" CompositionName=\"\"Comment\"\"><ObjectList><MultilingualTextItem ID=\"\"B2\"\" CompositionName=\"\"Items\"\"><AttributeList><Culture>zh-CN</Culture><Text>SCL计数功能块，包含中文块注释、网络标题和网络说明。</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText>\n      <SW.Blocks.CompileUnit ID=\"\"1\"\" CompositionName=\"\"CompileUnits\"\">\n        <AttributeList><NetworkSource><StructuredText xmlns=\"\"http://www.siemens.com/automation/Openness/SW/NetworkSource/StructuredText/v4\"\">\n",
-          null,
-          "\n        </StructuredText></NetworkSource><ProgrammingLanguage>SCL</ProgrammingLanguage></AttributeList>\n        <ObjectList>\n          <MultilingualText ID=\"\"B3\"\" CompositionName=\"\"Comment\"\"><ObjectList><MultilingualTextItem ID=\"\"B4\"\" CompositionName=\"\"Items\"\"><AttributeList><Culture>zh-CN</Culture><Text>定时器到达后计数加一，达到上限后清零。</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText>\n          <MultilingualText ID=\"\"B5\"\" CompositionName=\"\"Title\"\"><ObjectList><MultilingualTextItem ID=\"\"B6\"\" CompositionName=\"\"Items\"\"><AttributeList><Culture>zh-CN</Culture><Text>一秒节拍计数</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText>\n        </ObjectList>\n      </SW.Blocks.CompileUnit>\n    </ObjectList>\n  </SW.Blocks.FB>\n</Document>"
-        ]
-      ],
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "e43b1b5ef063c9f292af87f8a239ca1aa042caf116733cf98b2b16c5a3396481",
       "path": "src/Logic/ModelContextProtocol/ToolTaxonomy.cs",
       "line": 92,
@@ -4262,16 +3416,6 @@
       "literal": "@\"(?i)(\\d+)\\s*(?:个\\s*)?(?:\"",
       "reason": "TIA diagnostic text recognition patterns, including Chinese source-language spellings; input data, not emitted prose.",
       "dataCategory": "project-content"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "e52d89dd7c59adc8d0e5d85d0780591c2c810964f4dd4881de800dfa68057ed9",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2681,
-      "cjk": 19,
-      "literal": "\"确认 PLC 符号完整路径存在，不能只确认根 DB 或块名。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -4312,16 +3456,6 @@
       "literal": "\"用于换型、点动、调试流程，事件按步骤推进。\"",
       "reason": "Existing bilingual HMI component/action tables and generated catalog report data.",
       "dataCategory": "bilingual-table"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "e8ccf9575a2a12e3c9228c78c0beddc6c5ca04cb9d2f7a658c37922d86d50af7",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 2684,
-      "cjk": 29,
-      "literal": "\"确认映射来源是人工确认或确定性项目规则，不是候选分数自动选择。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -4375,16 +3509,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "eaee992da5d61ea5c8d58cc2a56e533aea6e68873637ca15b97c08d2ae9679ef",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 1595,
-      "cjk": 27,
-      "literal": "\"强制表和强制相关服务保持不可见、不可调用、不可通过反射绕过。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "eb0992557c2ebe4480fb25122a13b7a37f9d1d075ab538c84f2c86654b777cda",
       "path": "src/Logic/ModelContextProtocol/Builders/HmiActionScriptRecipeBuilder.cs",
       "line": 247,
@@ -4416,8 +3540,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "f093763d27fa1890ba39aac2f925a8a5d7c1f49d461aa7919bfe56db8a9e0a5d",
-      "path": "src/Engine/Cli/CliCommands.cs",
-      "line": 239,
+      "path": "src/FoundationHost/HostCliCommands.cs",
+      "line": 191,
       "cjk": 15,
       "literal": [
         "$",
@@ -4433,24 +3557,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "f093763d27fa1890ba39aac2f925a8a5d7c1f49d461aa7919bfe56db8a9e0a5d",
-      "path": "src/FoundationHost/HostCliCommands.cs",
-      "line": 176,
-      "cjk": 15,
-      "literal": [
-        "$",
-        1,
-        [
-          "修法: 运行 `tia config --host ",
-          null,
-          "` 重新指向本交付包的引擎。"
-        ]
-      ],
-      "reason": "P8-04i host CLI subset: localized console/doctor/help/config output ported from the engine CLI (maintainer D1 2026-10-13, output accepted 2026-10-18, allowlist growth approved 2026-10-18); not MCP response text; the engine copies leave with P8-04l.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "f096dd2fd7331c0074e463bad7c601d2ba0dd6c5c482b85001b5ea0939ef8270",
       "path": "src/Logic/ModelContextProtocol/ToolTaxonomy.cs",
       "line": 120,
@@ -4458,16 +3564,6 @@
       "literal": "\"专用深度工具：按对象精确寻址的读写，默认 lite 配置不全部列出，经 FindTools + CallTool 调用\"",
       "reason": "Existing bilingual category, level and safety-mode table data used by tool discovery.",
       "dataCategory": "bilingual-table"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "f2f28bfc7f594ca14b027cb1e890b0647718a3330b95921cef5c960f36143d84",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 373,
-      "cjk": 6,
-      "literal": "\"一秒节拍计数\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -4508,16 +3604,6 @@
       "literal": "\"离线文件包校验：不连接 TIA Portal，不打开工程，不执行导入。\"",
       "reason": "Existing generated HMI package validation report data.",
       "dataCategory": "report-artifact"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "f4f913a39e732e7ad630093774c2f6dcb3c3827b4ddd537ce3f7d9fb42697eb4",
-      "path": "src/Engine/Cli/CliProbes.cs",
-      "line": 101,
-      "cjk": 5,
-      "literal": "\"MCP 流水灯验证\"",
-      "reason": "Existing TIA fixture names, interface paths and HMI label data for CLI probes.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",
@@ -4698,26 +3784,6 @@
       "literal": "\"安装 .NET Framework 4.8 运行时（Windows 10 1903 及以上、Windows 11 自带）。\"",
       "reason": "Existing NameZh/DetailZh/FixZh values in the bilingual doctor result table.",
       "dataCategory": "bilingual-table"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "fcf500d09a59fa523b4773616be593527cb48ccf00c7193cbf4cba3aa63c0407",
-      "path": "src/Engine/Cli/PlcHmiSyncXml.cs",
-      "line": 455,
-      "cjk": 18,
-      "literal": "\"将输入计数限制在0到100之间，避免HMI显示越界值。\"",
-      "reason": "Existing Chinese PLC names/comments and expected readback text in generated TIA XML fixtures.",
-      "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "fd14f40d4e02d2b24e4ad70d431b761af9562227a64b0dc80d50cc494b4ef6f0",
-      "path": "src/Engine/Cli/ReportBuilders.cs",
-      "line": 354,
-      "cjk": 25,
-      "literal": "\"验证 HMI 控件动态绑定和按钮事件引用的 HMI tag 是否在变量表 XML 中声明。\"",
-      "reason": "Existing generated report/mapping artifact text and TIA symbol/path data.",
-      "dataCategory": "cli-console"
     },
     {
       "kind": "other-literal",

@@ -9,6 +9,8 @@ namespace TiaMcp.FoundationHost.Tests;
 [Collection(BundleSelectionCollection.Name)]
 public sealed class BundleRootTests : IDisposable
 {
+    // The P8-04j2 private engine cross-check variable; the host no longer reads it (P8-04l).
+    private const string RetiredEngineCrossCheckVariable = "TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY";
     private readonly string scratch = Path.Combine(Path.GetTempPath(), "foundation bundle 中文 " + Guid.NewGuid().ToString("N"));
     private string At(string path) => Path.Combine(scratch, path.Replace('/', Path.DirectorySeparatorChar));
     private void Put(string path, string value)
@@ -126,7 +128,7 @@ public sealed class BundleRootTests : IDisposable
                 foreach (var arg in new[] { Path.Combine(packaged, Path.GetFileName(host)), "--bundle-root", scratch,
                     "--release-key", release, "--engine-worker", worker, "--engine-catalog", catalog })
                     start.ArgumentList.Add(arg);
-                start.Environment[HostOptions.EngineCrossCheckVariable] = variable;
+                start.Environment[RetiredEngineCrossCheckVariable] = variable;
                 using var process = System.Diagnostics.Process.Start(start)!;
                 var output = process.StandardOutput.ReadToEndAsync();
                 var errors = process.StandardError.ReadToEndAsync();
@@ -136,15 +138,15 @@ public sealed class BundleRootTests : IDisposable
                 Assert.Contains("Engine worker options are retired", await errors);
                 Assert.Contains("--worker-exe", await errors);
             }
-            string? previous = Environment.GetEnvironmentVariable(HostOptions.EngineCrossCheckVariable);
-            Environment.SetEnvironmentVariable(HostOptions.EngineCrossCheckVariable, checkoutPrivate);
+            string? previous = Environment.GetEnvironmentVariable(RetiredEngineCrossCheckVariable);
+            Environment.SetEnvironmentVariable(RetiredEngineCrossCheckVariable, checkoutPrivate);
             try
             {
                 Assert.Throws<ArgumentException>(() => foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(["--bundle-root", scratch,
                     "--release-key", release, "--engine-worker", Path.Combine(probe, "TiaMcp.Engine.V" + release + ".exe"),
                     "--engine-catalog", Path.Combine(probe, "tool-catalog.json")], packaged));
             }
-            finally { Environment.SetEnvironmentVariable(HostOptions.EngineCrossCheckVariable, previous); }
+            finally { Environment.SetEnvironmentVariable(RetiredEngineCrossCheckVariable, previous); }
         }
         finally { Directory.Delete(probe, true); }
     }
@@ -152,7 +154,7 @@ public sealed class BundleRootTests : IDisposable
     [Theory]
     [InlineData("20")]
     [InlineData("21")]
-    public void Repository_cross_check_requires_source_host_and_private_output_and_selects_engine(string release)
+    public void Repository_cross_check_route_is_retired_and_never_selects_an_engine(string release)
     {
         Put("manifest/package-manifest.json", "fixture");
         Put("src/FoundationHost/TiaMcp.FoundationHost.csproj", "fixture");
@@ -162,30 +164,24 @@ public sealed class BundleRootTests : IDisposable
         string worker = At("bin-build/engine-compat/v" + release + "/worker/TiaMcp.Engine.V" + release + ".exe");
         string catalog = Path.Combine(Path.GetDirectoryName(worker)!, "tool-catalog.json");
         string[] args = ["--bundle-root", scratch, "--release-key", release, "--engine-worker", worker, "--engine-catalog", catalog];
-        string? previous = Environment.GetEnvironmentVariable(HostOptions.EngineCrossCheckVariable);
+        string? previous = Environment.GetEnvironmentVariable(RetiredEngineCrossCheckVariable);
         try
         {
-            Environment.SetEnvironmentVariable(HostOptions.EngineCrossCheckVariable, null);
-            Assert.Throws<ArgumentException>(() => foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(args, directory));
-            Environment.SetEnvironmentVariable(HostOptions.EngineCrossCheckVariable, At("bin-build/engine-compat"));
-            var options = foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(args, directory);
-            Assert.Equal(worker, options.EngineWorkerExe);
-            Assert.Equal(catalog, options.EngineCatalog);
-            Assert.False(options.PlcWorker);
-            using var client = foundationhost::TiaMcp.FoundationHost.SharedReleaseHost.CreateWorker(options);
-            Assert.IsType<foundationhost::TiaMcp.FoundationHost.EngineWorkerClient>(client);
-            // The release jobs' staged copy of the installed host beside the private worker.
-            Assert.Equal(worker, foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(args, At("bin-build/engine-compat/v" + release)).EngineWorkerExe);
-            Assert.Throws<ArgumentException>(() => foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(args, At("runtime/v" + release)));
-            Assert.Throws<ArgumentException>(() => foundationhost::TiaMcp.FoundationHost.HostOptions.Parse([.. args, "--plc-worker"], directory));
-            Assert.Throws<ArgumentException>(() => foundationhost::TiaMcp.FoundationHost.HostOptions.Parse([.. args, "--worker-exe", worker], directory));
-            Put("outside/worker.exe", "engine identity");
-            var outside = args.ToArray(); outside[Array.IndexOf(outside, "--engine-worker") + 1] = At("outside/worker.exe");
-            Assert.Throws<ArgumentException>(() => foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(outside, directory));
-            File.Delete(catalog);
-            Assert.Throws<ArgumentException>(() => foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(args, directory));
+            // P8-04l: the private engine cross-check route is gone; the former variable, a source host and private
+            // engine output together no longer reach an engine worker.
+            foreach (var variable in new[] { null, At("bin-build/engine-compat") })
+            {
+                Environment.SetEnvironmentVariable(RetiredEngineCrossCheckVariable, variable);
+                foreach (var host in new[] { directory, At("bin-build/engine-compat/v" + release), At("runtime/v" + release) })
+                {
+                    var error = Assert.Throws<ArgumentException>(() => foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(args, host));
+                    Assert.Contains("Engine worker options are retired", error.Message);
+                    Assert.Contains("--worker-exe", error.Message);
+                }
+                Assert.Throws<ArgumentException>(() => foundationhost::TiaMcp.FoundationHost.HostOptions.Parse([.. args, "--plc-worker"], directory));
+            }
         }
-        finally { Environment.SetEnvironmentVariable(HostOptions.EngineCrossCheckVariable, previous); }
+        finally { Environment.SetEnvironmentVariable(RetiredEngineCrossCheckVariable, previous); }
     }
 
     private static string RepositoryRoot([CallerFilePath] string file = "") =>

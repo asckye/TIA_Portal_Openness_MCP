@@ -133,8 +133,6 @@ internal sealed class CheckAllResultCache
             if (closure != null && project == closure.Project && JsonNode.Parse(spec.Definition)!["variant"] is { } variant && row[1] != variant.GetValue<string>()) continue;
             trees["isolated/" + project + "/" + row[1]] = row[2];
             trees["ordinary/" + project + "/" + row[1]] = row[3];
-            if (row[1].StartsWith("sdk-", StringComparison.Ordinal) || row[1].StartsWith("candidate-", StringComparison.Ordinal))
-                trees["projected/" + project + "/" + row[1]] = Path.Combine(root, "src/Engine/bin/check-all", Path.GetFileNameWithoutExtension(project), row[1], "Release/net48");
         }
         if (spec.Family == "python")
         {

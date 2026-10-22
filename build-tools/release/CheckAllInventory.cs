@@ -7,51 +7,37 @@ namespace TiaMcp.ReleaseTool;
 
 internal static partial class ReleaseCommands
 {
-    // D5 preserves the composite engine service/registration graph until the
-    // maintainer assigns its assertions individually; it has no kept Portal.
-    internal static IReadOnlyDictionary<string, string> CheckAllHarnessD5() => new Dictionary<string, string>(StringComparer.Ordinal)
-    {
-        ["harness-v20-engineering-api-only"] = "2840 engine Portal/service/registration shape assertions; retained adapter API checks remain in foundation-api; individual D5 mapping required before P8-04l",
-        ["harness-v21-engineering-api-only"] = "3126 engine Portal/service/registration shape assertions; retained adapter API checks remain in foundation-api; individual D5 mapping required before P8-04l"
-    };
+    // P8-04l deleted the V20/V21 engine. Its harness modes, script jobs and candidate jobs no longer exist; the PLC jobs that
+    // replaced them (P8-04k3a/k3b) are the only jobs and keep their names. engineering-api-only was engine-only (D5, retired with
+    // the engine: 2840/3126 engine Portal/service/registration shape assertions); its adapter API checks run in foundation-api.
+    internal static readonly string[] CheckAllRetiredHarnessModes = ["engineering-api-only"];
 
-    internal static IReadOnlyDictionary<string, string> CheckAllHarnessSuccessors() => new[] { "20", "21" }
-        .SelectMany(key => CheckAllHarnessModes(key).Select(mode => "harness-v" + key + "-" + (mode.Length == 0 ? "http" : mode)))
-        .Where(name => !CheckAllHarnessD5().ContainsKey(name))
-        .ToDictionary(name => name, name => name + "-plc", StringComparer.Ordinal);
+    internal static string[] CheckAllPlcHarnessModes(string release) =>
+        CheckAllHarnessModes(release).Where(mode => !CheckAllRetiredHarnessModes.Contains(mode)).ToArray();
 
-    // These successor modes also contain assertions about deleted engine-only
-    // subjects. P8-04l must obtain D5 approval before removing their engine half.
-    internal static IReadOnlyDictionary<string, string> CheckAllHarnessD5Assertions() => new[] { "20", "21" }
-        .SelectMany(key => new[] {
-            new KeyValuePair<string, string>("harness-v" + key + "-software-lookup-only", "D5: Portal resolver/cache/IL and EmptyPlcGroupDeletion have no identical kept subject; adapter exact-selection and shared PlcListingRead assertions run in the successor"),
-            new KeyValuePair<string, string>("harness-v" + key + "-native-diagnostics-only", "D5: engine woven inventory, MigrationPages timer and in-process engine/adapter sink/projection identity disappear; adapter JIT/inventory/journal, host SDK guards and native reader run in the successor"),
-            new KeyValuePair<string, string>("harness-v" + key + "-example-library-only", "D5: PatchProject.ParsePatchSpec is retired with the engine CLI; kept V4 JSON parser null/malformed rejections run in the successor"),
-            new KeyValuePair<string, string>("harness-v" + key + "-descriptor-catalog-only", "D5: ConnectProject remains an engine-only retired alias; successor checks the host's exact descriptor/execution coverage plus its explicit removed-alias set")
-        }).ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
+    internal static string CheckAllPlcHarnessJob(string release, string mode) =>
+        "harness-v" + release + "-" + (mode.Length == 0 ? "http" : mode) + "-plc";
 
-    internal static void ValidateCheckAllHarnessSuccessors(IReadOnlyList<CheckJob> jobs)
+    internal static IReadOnlyList<string> CheckAllPlcHarnessJobs() => new[] { "20", "21" }
+        .SelectMany(key => CheckAllPlcHarnessModes(key).Select(mode => CheckAllPlcHarnessJob(key, mode))).ToArray();
+
+    // Every PLC harness job runs exactly once, in mode order; no other harness job (no engine half) is scheduled.
+    internal static void ValidateCheckAllPlcHarnessJobs(IReadOnlyList<CheckJob> jobs)
     {
         var names = jobs.Select(job => job.Name).ToArray();
-        var successors = CheckAllHarnessSuccessors(); var decisions = CheckAllHarnessD5();
-        var expected = successors.Keys.Concat(successors.Values).Concat(decisions.Keys).ToHashSet(StringComparer.Ordinal);
+        var expected = CheckAllPlcHarnessJobs();
         if (names.Any(name => name.StartsWith("harness-v", StringComparison.Ordinal) && !expected.Contains(name)))
-            throw new ReleaseException("Unknown engine harness successor job");
-        if (CheckAllHarnessD5Assertions().Any(pair => !successors.ContainsKey(pair.Key) || string.IsNullOrWhiteSpace(pair.Value)))
-            throw new ReleaseException("Unmapped engine-only harness assertion group");
-        foreach (var key in new[] { "20", "21" })
-        foreach (var mode in CheckAllHarnessModes(key))
-        {
-            string engine = "harness-v" + key + "-" + (mode.Length == 0 ? "http" : mode);
-            if (names.Count(name => name == engine) != 1 || successors.ContainsKey(engine) == decisions.ContainsKey(engine)
-                || (successors.TryGetValue(engine, out var plc) && (names.Count(name => name == plc) != 1
-                    || Array.IndexOf(names, plc) != Array.IndexOf(names, engine) + 1)))
-                throw new ReleaseException("Incomplete engine harness successor/D5 mapping: " + engine);
-        }
+            throw new ReleaseException("Unknown harness job (the engine harness is retired)");
+        var positions = expected.Select(name => (Name: name, Count: names.Count(candidate => candidate == name), Index: Array.IndexOf(names, name))).ToArray();
+        foreach (var position in positions)
+            if (position.Count != 1) throw new ReleaseException("Incomplete PLC harness job set: " + position.Name);
+        for (var index = 1; index < positions.Length; index++)
+            if (positions[index].Index < positions[index - 1].Index)
+                throw new ReleaseException("PLC harness jobs out of mode order: " + positions[index].Name);
     }
 
-    // P8-04l retires only the engine half of this bijection, after both halves pass.
-    internal static IReadOnlyDictionary<string, string> CheckAllScriptSuccessors()
+    // The script families whose engine halves P8-04l retired; each PLC job keeps the former name plus "-plc".
+    internal static IReadOnlyList<string> CheckAllPlcScriptJobs()
     {
         var names = new List<string>();
         foreach (var key in new[] { "20", "21" })
@@ -59,40 +45,26 @@ internal static partial class ReleaseCommands
             foreach (var concurrency in new[] { "8", "16" })
             foreach (var transport in new[] { "stdio", "http" })
             foreach (var profile in new[] { "full", "lite" })
-                names.Add($"stability-v{key}-c{concurrency}-{transport}-{profile}");
+                names.Add($"stability-v{key}-c{concurrency}-{transport}-{profile}-plc");
             foreach (var family in new[] { "contracts", "responses", "transport-usage", "usage", "campaign-inputs", "approval", "resources", "ecosystem" })
-                names.Add(family + "-v" + key);
+                names.Add(family + "-v" + key + "-plc");
         }
-        names.Add("usage-audit");
-        return names.ToDictionary(name => name, name => name + "-plc", StringComparer.Ordinal);
+        names.Add("usage-audit-plc");
+        return names;
     }
 
-    internal static string CheckAllPlcSuccessor(string engineJob) => CheckAllScriptSuccessors().TryGetValue(engineJob, out var successor)
-        ? successor : throw new ReleaseException("Unmapped engine script job: " + engineJob);
+    internal static string CheckAllPlcSuccessor(string retiredJob) => CheckAllPlcScriptJobs().Contains(retiredJob + "-plc", StringComparer.Ordinal)
+        ? retiredJob + "-plc" : throw new ReleaseException("Unmapped PLC script job: " + retiredJob);
 
-    internal static void ValidateCheckAllScriptSuccessors(IReadOnlyList<CheckJob> jobs)
+    // Every PLC script job runs exactly once and its retired engine half is not scheduled.
+    internal static void ValidateCheckAllPlcScriptJobs(IReadOnlyList<CheckJob> jobs)
     {
         var names = jobs.Select(job => job.Name).ToArray();
-        foreach (var (engine, plc) in CheckAllScriptSuccessors())
-            if (names.Count(name => name == engine) != 1 || names.Count(name => name == plc) != 1)
-                throw new ReleaseException("Incomplete engine script successor pair: " + engine + " -> " + plc);
-    }
-
-    internal static string CheckAllEngineCompatibilityRoot(string root, string run) =>
-        Path.Combine(root, "bin-build/engine-compat/check-all", run);
-
-    // Copies one engine build output unchanged into the private compatibility output. The
-    // jobs keep using the source FoundationHost; the staged bytes equal the built bytes, so
-    // their evidence hashes are keyed exactly as before.
-    internal static string StageCheckAllEngine(string root, string run, string release, string variant, string source)
-    {
-        if (!File.Exists(source)) throw new ReleaseException("Engine cross-check build output missing: " + source);
-        var destination = Path.Combine(CheckAllEngineCompatibilityRoot(root, run), "v" + release, variant);
-        CopyDirectoryContents(Path.GetDirectoryName(source)!, destination);
-        var worker = Path.Combine(destination, Path.GetFileName(source));
-        if (ReleaseRecords.HashFile(worker) != ReleaseRecords.HashFile(source))
-            throw new ReleaseException("Engine cross-check output differs from its build: " + worker);
-        return worker;
+        foreach (var plc in CheckAllPlcScriptJobs())
+        {
+            if (names.Count(name => name == plc) != 1) throw new ReleaseException("Incomplete PLC script job set: " + plc);
+            if (names.Contains(plc[..^"-plc".Length], StringComparer.Ordinal)) throw new ReleaseException("Retired engine job scheduled: " + plc[..^"-plc".Length]);
+        }
     }
 
     private static string CheckAllPlcFixtureRoot => Path.GetFullPath(Path.Combine(Root, "bin-build", "check-plc-fixtures"));
@@ -213,30 +185,12 @@ internal static partial class ReleaseCommands
         "descriptor-catalog-only", "check-modes-self-test",
         .. release == "21" ? new[] { "test-download-route", "test-match-plc-name" } : []];
 
-    private static string[] HarnessArguments(string mode, string key, string api) => mode switch
-    {
-        "" => [],
-        "hmi-only" => [mode, key, ((string?)System.Xml.Linq.XDocument.Load(Path.Combine(Root, "Version.props")).Root!.Element("PropertyGroup")!.Element("TiaMcpRelease")) + ".0"],
-        "example-library-only" or "process-leases-only" or "native-export-only" or "hmi-snapshot-only" or "test-match-plc-name" => [mode],
-        _ => [mode, api]
-    };
-
-    internal static string[] CheckAllCandidateModes() => ["device", "import", "session", "save-close", "compile", "fallback", "source", "export"];
-
-    internal static CheckBuild CheckAllCandidateBuild(string release, string mode)
-    {
-        var family = mode == "save-close" ? "CLOSE" : mode.ToUpperInvariant();
-        return new($"src/Engine/TiaMcp.Engine.V{release}.csproj", "candidate-" + mode + "-" + release,
-            ["-p:TiaMcpTestPolicy=P6-" + family + ":safe-v4"]);
-    }
-
     private static CommandResult CheckAllHarness(CommandResult result, string mode, string key)
     {
         if (result.ExitCode != 0) return result;
         switch (mode)
         {
             case "software-lookup-only": RequireCount("software lookup", result.StandardOutput, "COMPLETE: (\\d+) software lookup checks passed", "softwareLookup"); break;
-            case "engineering-api-only": RequireCount("engineering API", result.StandardOutput, "COMPLETE: (\\d+) engineering API checks passed", key == "20" ? "engineeringApiV20" : "engineeringApiV21"); break;
             case "": RequireCount("HTTP", result.StandardOutput, "COMPLETE: (\\d+) Foundation transport checks passed"); break;
             case "hmi-only": if (!Regex.IsMatch(result.StandardOutput, "(\\d+) HMI traversal assertions, 0 failed")) throw new ReleaseException("Incomplete HMI traversal"); break;
             case "process-leases-only": RequireCount("process leases", result.StandardOutput, "COMPLETE: (\\d+) process lease checks passed", "processLeases"); break;
@@ -263,22 +217,21 @@ internal static partial class ReleaseCommands
             GetJsonString(results, "CallTool") != "refused-before-dispatch") throw new ReleaseException("Default approval evidence mismatch");
     }
 
-    private static void ValidateCheckAllJit(string text, string? enginePath, string adapterPath)
+    private static void ValidateCheckAllJit(string text, string adapterPath)
     {
-        foreach (var (prefix, path) in enginePath == null ? new[] { ("adapter ", adapterPath) } : new[] { ("", enginePath), ("adapter ", adapterPath) })
+        using (var evidence = JsonDocument.Parse(File.ReadAllText(adapterPath)))
         {
-            using var evidence = JsonDocument.Parse(File.ReadAllText(path));
-            var match = Regex.Match(text, "COMPLETE: (\\d+) " + prefix + "native diagnostic wrappers JIT prepared; (\\d+) open generic wrappers");
+            var match = Regex.Match(text, "COMPLETE: (\\d+) adapter native diagnostic wrappers JIT prepared; (\\d+) open generic wrappers");
             if (!match.Success || int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) + int.Parse(match.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture) != GetJsonInt(evidence.RootElement, "count"))
-                throw new ReleaseException(prefix + "diagnostic wrapper JIT/inventory mismatch");
+                throw new ReleaseException("adapter diagnostic wrapper JIT/inventory mismatch");
         }
         RequireCount("adapter journal", text, "COMPLETE: (\\d+) adapter integration diagnostic checks passed", "adapterJournal");
         RequireCount("native journal", text, "COMPLETE: (\\d+) native journal reader checks passed", "nativeJournalReader");
     }
 
-    // A harness successor keeps its engine job's count gates (CheckAllHarness) and, like the script successors,
-    // proves which host and PlcWorker produced the result. Its native-diagnostics run has no engine inventory:
-    // the adapter JIT/inventory equality and both journal gates are the engine job's, plus all four SDK guards.
+    // A PLC harness job keeps the count gates of the retired engine job (CheckAllHarness) and, like the PLC script jobs,
+    // proves which host and PlcWorker produced the result. Its native-diagnostics run checks the adapter JIT/inventory
+    // equality, both journal gates and all four SDK guards.
     internal static void ValidateCheckAllPlcHarness(string text, string directory, string mode, string key, string host, string worker, string adapterInventory)
     {
         using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "result.json"))); var evidence = doc.RootElement;
@@ -290,7 +243,7 @@ internal static partial class ReleaseCommands
             || GetJsonString(evidence, "hostSha256") != ReleaseRecords.HashFile(host))
             throw new ReleaseException("PLC harness evidence mismatch: " + directory);
         if (mode != "native-diagnostics-only") return;
-        ValidateCheckAllJit(text, null, adapterInventory);
+        ValidateCheckAllJit(text, adapterInventory);
         if (RequireCount("SDK guard", text, "COMPLETE: (\\d+) direct SDK guard checks passed") != 4) throw new ReleaseException("SDK guard checks incomplete");
     }
 }

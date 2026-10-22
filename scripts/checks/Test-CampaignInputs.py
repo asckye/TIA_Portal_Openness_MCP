@@ -89,7 +89,6 @@ def main():
     parser.add_argument('--validator-self-test', action='store_true', help='Run the kept-validator self-tests of Test-CampaignInputs.cs')
     parser.add_argument('--exe', type=Path)
     parser.add_argument('--public-api', type=Path)
-    parser.add_argument('--host-harness', type=Path)
     parser.add_argument('--plc-worker', type=Path)
     parser.add_argument('--major', type=int, choices=(20, 21))
     parser.add_argument('--output', type=Path)
@@ -98,9 +97,10 @@ def main():
         return self_test()
     if args.validator_self_test:
         return subprocess.run(validator_base() + ['--self-test'], check=False, env=validator_environment()).returncode
-    if any(getattr(args, key) is None for key in ('exe', 'public_api', 'major', 'output')) or (args.plc_worker is None and args.host_harness is None):
-        parser.error('--exe, --public-api, --major, --output and either --host-harness or --plc-worker are required')
-    for key in ('exe', 'public_api', 'host_harness', 'output'):
+    # P8-04l: the engine harness route (script-inputs-only) is retired; the kept validator checks the host's served schemas.
+    if any(getattr(args, key) is None for key in ('exe', 'public_api', 'major', 'output', 'plc_worker')):
+        parser.error('--exe, --public-api, --major, --output and --plc-worker are required')
+    for key in ('exe', 'public_api', 'output'):
         if getattr(args, key) is not None:
             setattr(args, key, getattr(args, key).resolve())
     args.output.mkdir(parents=True, exist_ok=False)
@@ -120,7 +120,7 @@ def main():
             steps.append(dict(step, label=f'{source.name}:{index + 1}', negativeInput=negative,
                               applicability=applicability(step, catalogs)))
     with resources.server(args.exe, args.public_api, args.major, 'stdio', 'full',
-                          args.host_harness, args.public_api,
+                          None, args.public_api,
                           plc_worker=args.plc_worker,
                           env_overrides={'TIA_MCP_MAX_RESPONSE_CHARS': '2000000'}) as (rpc, _, _):
         tools = rpc('tools/list', 'catalog')['result']['tools']
@@ -130,15 +130,12 @@ def main():
     catalog.write_text(json.dumps(tools), encoding='utf-8')
     inputs.write_text(json.dumps(steps), encoding='utf-8')
     result = args.output / 'result.json'
-    command = (validator_command(args.major, catalog, inputs, result) if args.plc_worker else
-               [str(args.host_harness), str(args.exe), 'script-inputs-only', str(args.public_api),
-                str(catalog), str(inputs), str(result)])
-    process = subprocess.run(command, check=False, env=validator_environment() if args.plc_worker else None)
+    command = validator_command(args.major, catalog, inputs, result)
+    process = subprocess.run(command, check=False, env=validator_environment())
     summary = json.loads(result.read_text(encoding='utf-8'))
     code = check_summary(summary, len(steps), process.returncode)
-    if args.plc_worker:
-        summary.update(resources.plc_fixture_evidence(args.plc_worker, args.exe))
-        result.write_text(json.dumps(summary, indent=2) + '\n', encoding='utf-8')
+    summary.update(resources.plc_fixture_evidence(args.plc_worker, args.exe))
+    result.write_text(json.dumps(summary, indent=2) + '\n', encoding='utf-8')
     print(f'V{args.major}: {summary["passed"]} passed, {summary["failed"]} failed, '
           f'{summary["notApplicable"]} not applicable, {summary["explicitRejections"]} explicit rejections; '
           f'{summary["total"]} total')

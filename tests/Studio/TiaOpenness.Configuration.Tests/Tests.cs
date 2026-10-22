@@ -615,7 +615,12 @@ namespace TiaMcpConfigurator
                 Assert(launch == "-InstallRoot \"C:\\TIA MCP\" -WaitForPid 4242 -RelaunchConfigurator", "update: the bundled updater gets the install root, caller pid and relaunch switch");
                 Reject<InvalidOperationException>(() => UpdateCheck.Launch(delivery, 1), "update: launch boundary refuses a worktree or checkout");
                 Assert(UpdateCheck.UpdaterPath(delivery).EndsWith(@"runtime\tools\TiaMcp.Updater.exe"), "update: updater executable is selected from runtime/tools");
-                Assert(UpdateCheck.RunningEngines().All(x => new[] { "TiaMcp.Engine.V20.exe PID ", "TiaMcp.Engine.V21.exe PID ", "TiaMcp.FoundationHost.exe PID " }.Any(x.StartsWith)), "update: running engines are listed by pid (the updater refuses while any runs)");
+                // RunningEngines also lists every release's PlcWorker (the updater refuses while one runs), so another checkout's
+                // running worker is a valid machine-wide entry; the format stays "<name>.exe PID <id>" (P8-04l).
+                var runningPrefixes = new[] { "TiaMcp.Engine.V20.exe PID ", "TiaMcp.Engine.V21.exe PID ", "TiaMcp.FoundationHost.exe PID " }
+                    .Concat(TiaVersionCatalog.Runnable.Select(v => System.IO.Path.GetFileNameWithoutExtension(TiaOpenness.Shared.BundleLayout.GetProduct(v.Key).WorkerExecutable) + ".exe PID ")).ToArray();
+                Assert(runningPrefixes.Count(prefix => prefix.StartsWith("TiaMcp.PlcWorker.", StringComparison.Ordinal)) == 8, "update: the running-process list covers the eight PlcWorker names");
+                Assert(UpdateCheck.RunningEngines().All(x => runningPrefixes.Any(x.StartsWith)), "update: running engines are listed by pid (the updater refuses while any runs)");
                 WorkbenchUiTests(output);
                 if (passed < 182) throw new Exception("Expected at least 182 configuration checks.");
                 Console.WriteLine("Passed: " + passed); return 0;

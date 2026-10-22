@@ -107,31 +107,36 @@ public sealed partial class VersionCatalogWiring
     [Fact]
     public void GuardPrecedesResolutionAndNativeHost()
     {
-        var source = Sources.Member("Main");
-        var guard = Find(source, "TiaVersionCatalog.RequireMatchingEngine(tiaMajorVersion, EngineRouter.CompiledTiaMajorVersion)");
-        Assert.True(guard < Find(source, "AssemblyResolve += Engineering.Resolver"));
-        Assert.True(guard < Find(source, "Openness.Initialize("));
-        Assert.Contains("detected ?? EngineRouter.CompiledTiaMajorVersion", source, StringComparison.Ordinal);
+        // P8-04l: the engine Main (assembly resolver, Openness.Initialize) is deleted. The host keeps the release guard
+        // before the runnable check and before the API directory is resolved.
+        var source = ReadHost("HostOptions.cs");
+        var guard = Find(source, "TiaVersionCatalog.RequireMatchingEngine(release, packaged)");
+        Assert.True(guard < Find(source, "TiaVersionCatalog.RequireRunnable(release)"));
+        Assert.True(Find(source, "TiaVersionCatalog.RequireRunnable(release)") < Find(source, "version.FindApiDirectory("));
         Assert.DoesNotContain("assembly load will likely fail", source, StringComparison.Ordinal);
     }
 
     [Fact]
     public void DiagnosticsRemainReachable()
     {
-        var source = Sources.Member("Main");
-        Assert.True(Find(source, "CliOptions.IsInformationalCommand(args)") < Find(source, "CliOptions.ParseArgs(args)"));
-        Assert.True(Find(source, "string.Equals(args[0], \"doctor\"") < Find(source, "TiaVersionCatalog.RequireRunnable(tiaMajorVersion)"));
-        var doctor = Sources.Member("DoctorCli");
+        // P8-04l: the host CLI subset (D1) is the successor of the engine CLI; doctor runs before the server options are parsed.
+        var source = ReadHost("Program.cs");
+        Assert.True(Find(source, "HostCliOptions.IsCommand(args)") < Find(source, "HostOptions.Parse(args, AppContext.BaseDirectory)"));
+        var doctor = ReadHost("HostCliCommands.cs");
+        Assert.Contains("case \"doctor\":", doctor, StringComparison.Ordinal);
         Assert.Contains("ready &= supported;", doctor, StringComparison.Ordinal);
     }
 
     [Fact]
     public void RegistrationReusesSelectedVersion()
     {
-        var source = Split(Sources.Member("Config", signature: "string[] args"), "string exe =", 1)[0];
-        Assert.Contains("Engineering.TiaMajorVersion", source, StringComparison.Ordinal);
-        Assert.Contains("RequireMatchingEngine", source, StringComparison.Ordinal);
+        // P8-04l: the host config command writes the entry for the selected release key (no second detection).
+        var source = Split(ReadHost("HostCliCommands.cs"), "private static int Config(string[] args, string ver)", 2)[1];
+        source = Split(source, "internal static int WriteConfig(", 2)[0];
+        Assert.Contains("McpConfigInstaller.ExeForVersion(ver)", source, StringComparison.Ordinal);
         Assert.DoesNotContain("DetectTiaMajorVersion", source, StringComparison.Ordinal);
         Assert.DoesNotContain("Opt(args", source, StringComparison.Ordinal);
     }
+
+    private static string ReadHost(string name) => File.ReadAllText(Path.Combine(ROOT, "src/FoundationHost", name));
 }

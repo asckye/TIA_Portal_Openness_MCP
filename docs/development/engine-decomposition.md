@@ -169,17 +169,17 @@ CFC 已纳入 [Compare-NativeCallOrder.py](../../scripts/checks/Compare-NativeCa
 
 ### CLI 宿主与命令实现
 
-步骤 16 的 CLI 拆分保留 [Program.cs](../../src/Engine/Program.cs)
+步骤 16 的 CLI 拆分保留 Program.cs（`src/Engine/Program.cs`，P8-04l 已删除）
 中的参数分派、引擎路由、stdio/HTTP/隔离宿主启动及启动诊断。动词表与动词分派仍由
-[CliCommands.cs](../../src/Engine/Cli/CliCommands.cs) 提供。
+CliCommands.cs（`src/Engine/Cli/CliCommands.cs`，P8-04l 已删除） 提供。
 原有四个 `Program` partial 的方法原样归入以下内部静态类，命名空间仍为 `TiaMcpServer`：
 
 | 实现 | 文件 |
 |---|---|
-| HMI 模板与绑定验证 | [HmiTemplateBuilder.cs](../../src/Engine/Cli/HmiTemplateBuilder.cs) |
-| PLC/HMI 同步、XML 与结构化文本生成 | [PlcHmiSyncXml.cs](../../src/Engine/Cli/PlcHmiSyncXml.cs) |
-| CLI 探针与工程验证命令 | [CliProbes.cs](../../src/Engine/Cli/CliProbes.cs) |
-| 离线分析、预检查与报告构造 | [ReportBuilders.cs](../../src/Engine/Cli/ReportBuilders.cs) |
+| HMI 模板与绑定验证 | HmiTemplateBuilder.cs（`src/Engine/Cli/HmiTemplateBuilder.cs`，P8-04l 已删除） |
+| PLC/HMI 同步、XML 与结构化文本生成 | PlcHmiSyncXml.cs（`src/Engine/Cli/PlcHmiSyncXml.cs`，P8-04l 已删除） |
+| CLI 探针与工程验证命令 | CliProbes.cs（`src/Engine/Cli/CliProbes.cs`，P8-04l 已删除） |
+| 离线分析、预检查与报告构造 | ReportBuilders.cs（`src/Engine/Cli/ReportBuilders.cs`，P8-04l 已删除） |
 
 跨类调用显式限定声明类型，仅共享成员改为 `internal`；结构化文本委托随 XML 生成器迁移。
 这些类全部留在受原生调用织入的引擎程序集中。CLI 通过 `EngineServices.Get<T>()` 调用所属工具或服务；

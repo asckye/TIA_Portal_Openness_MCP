@@ -60,25 +60,6 @@ internal static partial class ReleaseCommands
         Func<string, string, IReadOnlyList<string>, bool, string?, CommandResult> runIsolated)
     {
         var snapshotArgs = new[] { "--repo-root", Root, "--public-api-root", api };
-        var harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
-        var fixtureWorkers = new Dictionary<string, string>(StringComparer.Ordinal);
-        // Response captures and the source-layout contract capture run the combined host with an SDK fixture worker.
-        if (plan.Includes("engine-responses") || plan.Includes("engine-contracts"))
-        {
-            foreach (var release in new[] { "20", "21" })
-            {
-                var directory = Path.Combine(Root, "bin-build/engine-compat/candidate", Guid.NewGuid().ToString("N"), "v" + release);
-                var worker = Path.Combine(directory, $"TiaMcp.Engine.V{release}.exe");
-                var result = runIsolated("sdk-worker-build", dotnet,
-                    ["build", Path.Combine(Root, $"src/Engine/TiaMcp.Engine.V{release}.csproj"), "-c", "Release", "-v:q", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false",
-                     "-p:TiaMcpEngineWorkerSdkFixture=true", "-p:AppendTargetFrameworkToOutputPath=false", $"-p:OutputPath={directory}",
-                     $"-p:SiemensEngineeringDirectory={ResolveReleaseApi(null, api, int.Parse(release, System.Globalization.CultureInfo.InvariantCulture))}", "-p:NuGetAudit=false"], true, Root);
-                ProcessRunner.RequireSuccess(result, "SDK fixture worker build");
-                result = runIsolated("sdk-worker-catalog", worker, ["--bundle-root", Root, "--write-tool-catalog", Path.Combine(directory, "tool-catalog.json")], true, Root);
-                ProcessRunner.RequireSuccess(result, "SDK fixture catalog generation");
-                fixtureWorkers.Add(release, worker);
-            }
-        }
         if (plan.Includes("plc-responses") || plan.Includes("plc-contracts"))
         {
             foreach (var release in new[] { "20", "21" })
@@ -96,26 +77,17 @@ internal static partial class ReleaseCommands
         {
             if (!File.Exists(path)) throw new ReleaseException(explanation + ": " + path);
         }
-        string[] CaptureArgs(string release, bool sourceLayout) => [.. snapshotArgs, "--releases", release, "--exe", release + "=" + Path.Combine(Root, $"runtime/v{release}/TiaMcp.FoundationHost.exe")];
-        void CaptureSnapshots(string script, string name, bool responses, string[] releases, string transport = "stdio", bool sourceLayout = false)
+        // The six Foundation releases capture through their installed hosts; V20/V21 capture in the PLC jobs below (P8-04l).
+        void CaptureSnapshots(string script, string name, bool responses, string[] releases)
         {
             var combined = Path.Combine(logs, name);
             Directory.CreateDirectory(combined);
             foreach (var release in releases)
             {
+                if (release is "20" or "21") throw new ReleaseException("V20/V21 snapshots are captured by the PLC jobs");
                 var perRelease = Path.Combine(logs, name + "-v" + release);
                 var args = new List<string> { "capture" };
-                args.AddRange(CaptureArgs(release, sourceLayout));
-                if (release is "20" or "21")
-                {
-                    var host = sourceLayout ? Path.Combine(Root, "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe")
-                        : Path.Combine(Path.GetDirectoryName(EngineCompatibilityDirectory(Root, release))!, "TiaMcp.FoundationHost.exe");
-                    args.AddRange(["--engine-host", host, "--transport", transport]);
-                    var worker = responses || sourceLayout ? fixtureWorkers[release]
-                        : Path.Combine(EngineCompatibilityDirectory(Root, release), $"TiaMcp.Engine.V{release}.exe");
-                    args.AddRange(["--engine-worker", release + "=" + worker,
-                        "--engine-catalog", release + "=" + Path.Combine(Path.GetDirectoryName(worker)!, "tool-catalog.json")]);
-                }
+                args.AddRange([.. snapshotArgs, "--releases", release, "--exe", release + "=" + Path.Combine(Root, $"runtime/v{release}/TiaMcp.FoundationHost.exe")]);
                 if (responses) args.AddRange(["--dotnet-root", Path.Combine(Root, "runtime/dotnet")]);
                 args.AddRange(["--output", perRelease]);
                 if (responses) args.AddRange(["--temp-root", Path.Combine(releaseTemp, "response-temp-v" + release)]);
@@ -132,32 +104,6 @@ internal static partial class ReleaseCommands
                 runStep("05-prompt-registration", () => ProcessRunner.RequireSuccess(runIsolated("prompt-registration", "test-suites",
                     ["-Suite", "prompt-registration", "-Dotnet", dotnet, "-ResultsDirectory", Path.Combine(logs, "prompt-registration-results")], false, Root), "prompt registration suite"));
                 return new PipelineResult("prompt-registration", 0, "Prompt registration passed." + Environment.NewLine, "");
-            }),
-            ("contracts", () =>
-            {
-                runStep("06-v4-contracts-capture", () => CaptureSnapshots("scripts/checks/Snapshot-ToolContracts.py", "contracts", responses: false, ["20", "21"]));
-                runStep("07-v4-contracts-compare", () => runPython("scripts/checks/Snapshot-ToolContracts.py", ["compare", "--baseline", "manifest/contracts/v4/baseline", "--current", Path.Combine(logs, "contracts"), "--releases", "20", "21"]));
-                runStep("07-v4-contracts-http", () => {
-                    CaptureSnapshots("scripts/checks/Snapshot-ToolContracts.py", "contracts-http", false, ["20", "21"], "http");
-                    runPython("scripts/checks/Snapshot-ToolContracts.py", ["compare", "--baseline", "manifest/contracts/v4/baseline", "--current", Path.Combine(logs, "contracts-http"), "--releases", "20", "21"]);
-                });
-                runStep("07-engine-contracts-source-layout", () => {
-                    CaptureSnapshots("scripts/checks/Snapshot-ToolContracts.py", "engine-contracts-source-layout", false, ["20", "21"], sourceLayout: true);
-                    runPython("scripts/checks/Snapshot-ToolContracts.py", ["compare", "--baseline", "manifest/contracts/v4/baseline", "--current", Path.Combine(logs, "engine-contracts-source-layout"), "--releases", "20", "21"]);
-                });
-                return new PipelineResult("contracts", 0, "Contract capture and comparison passed." + Environment.NewLine, "");
-            }),
-            ("responses", () =>
-            {
-                runStep("08-v4-responses-capture", () => CaptureSnapshots("scripts/checks/Snapshot-ToolResponses.py", "responses", responses: true, ["20", "21"]));
-                runStep("09-v4-responses-compare", () => runPython("scripts/checks/Snapshot-ToolResponses.py", ["compare", "--baseline", "manifest/contracts/v4/responses", "--current", Path.Combine(logs, "responses"), "--releases", "20", "21"]));
-                runStep("09-v4-responses-http", () => {
-                    CaptureSnapshots("scripts/checks/Snapshot-ToolResponses.py", "responses-http", true, ["20", "21"], "http");
-                    runPython("scripts/checks/Snapshot-ToolResponses.py", ["compare", "--baseline", "manifest/contracts/v4/responses", "--current", Path.Combine(logs, "responses-http"), "--releases", "20", "21"]);
-                });
-                runStep("09-engine-responses-source-layout", () => CaptureSnapshots("scripts/checks/Snapshot-ToolResponses.py", "engine-responses-source-layout", true, ["20", "21"], sourceLayout: true));
-                runStep("09-packaged-responses-verify", () => VerifyPackagedResponses(Root, output, logs, releaseTemp, runDefaults, runPython));
-                return new PipelineResult("responses", 0, "Response capture and comparison passed." + Environment.NewLine, "");
             }),
             ("relocated-bundle", () =>
             {
@@ -192,8 +138,7 @@ internal static partial class ReleaseCommands
 
         var names = new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            ["prompt-registration"] = "prompt-registration", ["contracts"] = "engine-contracts",
-            ["responses"] = "engine-responses", ["relocated-bundle"] = "relocation"
+            ["prompt-registration"] = "prompt-registration", ["relocated-bundle"] = "relocation"
         };
         var jobs = postValidation.Where(job => plan.Includes(names[job.Name])).ToList();
         foreach (var group in new[] { "plc-contracts", "plc-responses" }.Where(plan.Includes))
@@ -208,8 +153,9 @@ internal static partial class ReleaseCommands
                     VerifyPackagedResponses(Root, output, logs, releaseTemp, runDefaults, runPython, plc: true));
                 return new PipelineResult(selected, 0, "PLC snapshots and exact comparisons passed.\n", "");
             }));
-            var engineIndex = jobs.FindIndex(job => job.Name == (selected == "plc-contracts" ? "contracts" : "responses"));
-            jobs.Insert(engineIndex < 0 ? jobs.Count : engineIndex + 1, successor);
+            // Before the relocation check, in the order the retired engine steps had.
+            var relocation = jobs.FindIndex(job => job.Name == "relocated-bundle");
+            jobs.Insert(relocation < 0 ? jobs.Count : relocation, successor);
         }
         jobs.Add(("product-smoke", () =>
         {
@@ -285,9 +231,9 @@ internal static partial class ReleaseCommands
             ZipFile.ExtractToDirectory(zip, input);
             var bundle = Path.Combine(input, Path.GetFileNameWithoutExtension(zip));
             if (!Directory.Exists(bundle)) throw new ReleaseException("Extracted candidate package root is missing: " + bundle);
-            // Both steps start each extracted host with its default worker, which is the production PlcWorker since P8-04j2.
+            // The step starts each extracted host with its default worker, the production PlcWorker since P8-04j2.
             // --plc-worker would make the script synthesize an SDK-only TIA installation, so the run would no longer be
-            // no-TIA (maintainer decision 2026-10-21). The -plc step stays until P8-04l merges the engine/PLC pairs.
+            // no-TIA (maintainer decision 2026-10-21). P8-04l merged the former engine-group step into this one.
             capture(script, ["capture", "--repo-root", bundle, "--packaged-no-tia", "--releases", "20", "21",
                 "--dotnet-root", Path.Combine(bundle, "runtime/dotnet"), "--temp-root", Path.Combine(releaseTemp, plc ? "packaged-response-temp-plc" : "packaged-response-temp"), "--output", responses]);
             foreach (var release in new[] { "20", "21" })

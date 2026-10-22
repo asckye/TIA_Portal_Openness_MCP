@@ -29,7 +29,7 @@ internal sealed class StaticTree : IDisposable
 public sealed class StaticPolicyTests
 {
     [Fact]
-    public void StagedReleaseKeepsEngineStepsAndAddsPlcChecksWithoutTouchingTheRecordBinding()
+    public void StagedReleaseRunsThePlcChecksAndNoEngineStepWithoutTouchingTheRecordBinding()
     {
         var root = Repository.FindRoot();
         string Read(string name) => File.ReadAllText(Path.Combine(root, "build-tools/release", name));
@@ -39,17 +39,20 @@ public sealed class StaticPolicyTests
         Assert.Contains(".. PlcWorkerFixtures.Keys", multi);
         Assert.Contains("\"plcFoundationTransportExecuted\"", multi);
         Assert.Contains("ReleaseRecords.EngineReuseReason", multi);
-        Assert.Contains("\"Full-engine build\"", multi);
+        Assert.Contains("\"Release-wide build\"", multi);
+        Assert.DoesNotContain("engineCompatibility = ", multi);
         Assert.Contains("\"foundationApprovalSafetyChecksPassed\"] = 30", multi);
         var branch = Read("BranchGate.cs");
-        foreach (var check in new[] { "VerifyNativeJit", "VerifyEngineApproval", "VerifyStability", "VerifyHttpConcurrency" }) Assert.Contains(check, branch);
+        // P8-04l: the branch gate's engine halves are retired; the PLC plan below carries every V20/V21 check.
+        foreach (var check in new[] { "VerifyNativeJit", "VerifyEngineApproval", "VerifyStability", "VerifyHttpConcurrency", "TiaMcp.Engine.V" }) Assert.DoesNotContain(check, branch);
         Assert.Contains("PreparePlcReleaseChecks", branch);
         Assert.Contains("RunPlcReleaseChecks(plcPlan", branch);
-        foreach (var group in new[] { "plc-worker-isolation", "plc-approval", "plc-stability", "plc-isolated-stability", "plc-contracts", "plc-responses" }) Assert.Contains("\"" + group + "\"", branch);
+        foreach (var group in new[] { "native-coverage", "native-diagnostics", "http-concurrency", "plc-worker-isolation", "plc-approval", "plc-stability", "plc-isolated-stability", "plc-contracts", "plc-responses" }) Assert.Contains("\"" + group + "\"", branch);
         var candidate = Read("ReleaseCandidateChecks.cs");
         Assert.Contains("sdk-worker-build-plc-v", candidate);
         Assert.Contains("VerifyPackagedResponses(Root", candidate);
-        Assert.Contains("07-engine-contracts-source-layout", candidate);
+        Assert.DoesNotContain("07-engine-contracts-source-layout", candidate);
+        Assert.Contains("09-packaged-responses-verify-plc", candidate);
         Assert.Contains("RunPlcReleaseJobs", candidate);
     }
 
@@ -78,7 +81,7 @@ public sealed class StaticPolicyTests
         Assert.Contains("\"plc-script-self-tests\"", inventory);
         Assert.Contains("\"campaign-validator-self-tests\"", inventory);
         var jobs = File.ReadAllText(Path.Combine(root, "build-tools/release/CheckAll.cs"));
-        Assert.Contains("ValidateCheckAllScriptSuccessors(jobs)", jobs);
+        Assert.Contains("ValidateCheckAllPlcScriptJobs(jobs)", jobs);
         Assert.Contains("CatalogAudits.Usage(Root, recordsPath: records)", jobs);
         Assert.Contains("tool-usage-audit-plc.json", jobs);
         Assert.Contains("PLC usage audit differs from manifest/tool-usage-coverage.json", jobs);
@@ -155,7 +158,7 @@ public sealed class StaticPolicyTests
         foreach (var name in new[] { "pytest", "pytest-asyncio", "pytest-cov", "reportlab" }) Assert.Contains("\"" + name + "\"", installer);
     }
     [Fact]
-    public void Package_cli_targets_the_host_subset_and_both_engines_share_the_installer()
+    public void Package_cli_targets_the_host_subset_and_the_host_ships_the_installer()
     {
         var cli = new JsonObject();
         CatalogGenerator.WriteHostCli(cli);
@@ -165,8 +168,10 @@ public sealed class StaticPolicyTests
         Assert.Equal(new[] { "0", "2", "3", "4", "5", "64", "70" }, cli["exitCodes"]!.AsObject().Select(p => p.Key));
         Assert.Equal("rejected, doctor not ready or no successful config writes", (string?)cli["exitCodes"]?["2"]);
         Assert.Contains("install-plc-tools preserves pip's exit status.", (string?)cli["description"]);
-        foreach (var project in new[] { "src/FoundationHost/TiaMcp.FoundationHost.csproj", "src/Engine/TiaMcp.Engine.V20.csproj", "src/Engine/TiaMcp.Engine.V21.csproj" })
-            Assert.Contains("../Shared/Host/InstallPlcToolsCommand.cs", Source(project));
+        // P8-04l: the engine projects that also linked the installer are deleted; the host keeps it.
+        Assert.Contains("../Shared/Host/InstallPlcToolsCommand.cs", Source("src/FoundationHost/TiaMcp.FoundationHost.csproj"));
+        foreach (var project in new[] { "src/Engine/TiaMcp.Engine.V20.csproj", "src/Engine/TiaMcp.Engine.V21.csproj" })
+            Assert.False(File.Exists(Path.Combine(Root, project)));
         Assert.Contains("CatalogGenerator.WriteHostCli(cli)", Source("build-tools/release/ReleaseCommands.cs"));
     }
     [Fact]

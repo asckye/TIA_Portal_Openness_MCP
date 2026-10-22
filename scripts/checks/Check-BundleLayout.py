@@ -58,18 +58,19 @@ def updater_inventory(record):
                        and row['length'] > 0 for row in rows)):
         raise ValueError('Invalid updater build record: updaterFiles must bind ' + ' and '.join(sorted(UPDATER_OUTPUTS))
                          + ' with SHA-256 and length')
-    engine = record.get('engineCompatibility')
-    if isinstance(engine, dict) and 'updaterFiles' in engine and engine['updaterFiles'] != rows:
-        raise ValueError('Updater build record differs from the shipped-engine record')
     if any(row.get('path') in UPDATER_OUTPUTS for key in ('runtimeFiles', 'files') for row in record.get(key) or []):
         raise ValueError('Updater files must come from the validated updater build output, not the runtime inventory')
     return rows
 
 
-def shipped_engine_proof(record):
-    # Until j2 the eight-release record retains the delivered engine's original
-    # evidence separately. It is never labelled as a PlcWorker check result.
-    return record.get('engineCompatibility', record)
+def release_build_record(root, record):
+    """P8-04l: the eight-release record no longer embeds release-build.json (engineCompatibility). The repository's
+    release build record holds the release-wide suite counts and compiler inputs; it must belong to the same release,
+    check plan and updater build as the eight-release record."""
+    common = json.loads((root / ENGINE_RECORD).read_text(encoding='utf-8-sig'))
+    if any(common.get(key) != record.get(key) for key in ('release', 'fileVersion', 'tier', 'checkPlan', 'updaterFiles')):
+        raise ValueError('Release build record differs from the eight-release record')
+    return common
 
 
 def plc_record_jobs(key):
@@ -99,9 +100,7 @@ LOCAL_PATH = _re.compile(r'(?:\\\\\?\\)?\b[A-Za-z]:[\\/]')
 
 
 def validate_plc_record(record):
-    engine = record['engineCompatibility']
-    if any(record[key] != engine[key] for key in ('release', 'fileVersion', 'tier', 'checkPlan')):
-        raise ValueError('Shipped-engine compatibility proof differs from eight-release record')
+    # P8-04l: a 4.x eight-release record carries no engineCompatibility; its PLC proof is the V20/V21 evidence.
     files = {row['path']: row['sha256'] for row in record_inventory(record)}
     selected = set(record['checkPlan']['selectedChecks'])
     # Without -Test the preparation runs only the PLC approval successors, and only for foundation-approval.
@@ -222,8 +221,7 @@ def openness_group_delivery_errors(rules):
             if delivered(host, rules):
                 errors.append('Delivery policy permits retired host group dependency: ' + host)
             worker = f'runtime/v{key}/worker/{assembly}'
-            # V20/V21 retain the engine until P8-04l; do not silently exclude its dependencies.
-            if key not in ('20', '21') and delivered(worker, rules):
+            if delivered(worker, rules):
                 errors.append('Delivery policy permits retired PlcWorker group dependency: ' + worker)
     return errors
 
@@ -381,15 +379,17 @@ def check(root, tracked):
 
 
 class LayoutChecks(unittest.TestCase):
-    def test_openness_group_delivery_excludes_plc_and_host_but_retains_engine(self):
+    def test_openness_group_delivery_excludes_every_worker_and_host(self):
         rules = load_delivery(ROOT)
         self.assertEqual([], openness_group_delivery_errors(rules))
         for assembly in COLLABORATION_ASSEMBLIES:
-            for key in ('20', '21'):
-                self.assertTrue(delivered(f'runtime/v{key}/worker/{assembly}', rules))
-        planted = 'runtime/v19/worker/Siemens.Collaboration.Net.dll'
-        rules['exclude']['files'].remove(planted)
-        self.assertTrue(any(planted in error for error in openness_group_delivery_errors(rules)))
+            for key in ('14sp1', '15.1', '16', '17', '18', '19', '20', '21'):
+                self.assertFalse(delivered(f'runtime/v{key}/worker/{assembly}', rules))
+        # P8-04l: the engine is retired; the V20/V21 workers are refused like the other six.
+        for planted in ('runtime/v19/worker/Siemens.Collaboration.Net.dll', 'runtime/v21/worker/Siemens.Collaboration.Net.dll'):
+            changed = load_delivery(ROOT)
+            changed['exclude']['files'].remove(planted)
+            self.assertTrue(any(planted in error for error in openness_group_delivery_errors(changed)))
 
     @staticmethod
     def record_fixture():
@@ -397,7 +397,7 @@ class LayoutChecks(unittest.TestCase):
                       checkPlan=dict(tier='package', selectedChecks=[], skippedChecks=[], changedPaths=[]),
                       sourceFiles=[], validationInputs=[], runtimeFiles=[], validation={})
         multi = {key: value for key, value in engine.items() if key != 'runtimeFiles'}
-        multi.update(files=[], engineCompatibility=engine, plcRuntimes={})
+        multi.update(files=[], plcRuntimes={})
         for key in ('20', '21'):
             runtime = dict(checks={})
             for field, path in (
@@ -443,11 +443,10 @@ class LayoutChecks(unittest.TestCase):
         self.assertEqual(updater_inventory(multi), multi['updaterFiles'])
         data = json.dumps(multi).encode()
         self.assertEqual(release_record({MULTI_RECORD: data}, {'multiVersionBuildSha256': hashlib.sha256(data).hexdigest()}), (MULTI_RECORD, multi))
-        for mutation in ('missing-file', 'extra-file', 'bad-hash', 'zero-length', 'text-length', 'engine-copy-differs', 'in-runtime-inventory', 'not-a-list'):
+        for mutation in ('missing-file', 'extra-file', 'bad-hash', 'zero-length', 'text-length', 'in-runtime-inventory', 'not-a-list'):
             with self.subTest(mutation=mutation):
                 _, record = self.record_fixture()
                 record['updaterFiles'] = self.updater_rows()
-                record['engineCompatibility']['updaterFiles'] = self.updater_rows()
                 rows = record['updaterFiles']
                 if mutation == 'missing-file':
                     rows.pop()
@@ -459,8 +458,6 @@ class LayoutChecks(unittest.TestCase):
                     rows[0]['length'] = 0
                 elif mutation == 'text-length':
                     rows[0]['length'] = '12'
-                elif mutation == 'engine-copy-differs':
-                    record['engineCompatibility']['updaterFiles'][0]['sha256'] = 'd' * 64
                 elif mutation == 'in-runtime-inventory':
                     record['files'].append(dict(rows[0]))
                 else:
@@ -470,6 +467,29 @@ class LayoutChecks(unittest.TestCase):
                 data = json.dumps(record).encode()
                 with self.assertRaises(ValueError):
                     release_record({MULTI_RECORD: data}, {'multiVersionBuildSha256': hashlib.sha256(data).hexdigest()})
+
+    def test_release_build_record_must_belong_to_the_eight_release_record(self):
+        # P8-04l: the packager reads the repository's release-build.json instead of an embedded engine copy.
+        engine, multi = self.record_fixture()
+        engine['updaterFiles'] = self.updater_rows()
+        multi['updaterFiles'] = self.updater_rows()
+        directory = ROOT / 'bin-build' / ('release-record-' + uuid.uuid4().hex)
+        try:
+            (directory / 'manifest').mkdir(parents=True)
+            for name, change in (('equal', None), ('release', ('release', '4.0.1'))) + tuple(
+                    (field, (field, 'changed')) for field in ('fileVersion', 'tier', 'checkPlan')) + (('updater', ('updaterFiles', [])),):
+                with self.subTest(case=name):
+                    common = json.loads(json.dumps(engine))
+                    if change is not None:
+                        common[change[0]] = change[1]
+                    (directory / ENGINE_RECORD).write_text(json.dumps(common), encoding='utf-8')
+                    if change is None:
+                        self.assertEqual(release_build_record(directory, multi), common)
+                    else:
+                        with self.assertRaises(ValueError):
+                            release_build_record(directory, multi)
+        finally:
+            shutil.rmtree(directory, ignore_errors=True)
 
     def test_plc_record_requires_every_selected_receipt_and_exact_hashes(self):
         _, multi = self.record_fixture()
@@ -572,7 +592,7 @@ class LayoutChecks(unittest.TestCase):
             for extra in ('opcua', 'web'):
                 expected.update(d for d in project.get('optional-dependencies', {}).get(extra, []) if not d.startswith('plc-'))
         installer = (ROOT / 'src/Shared/Host/InstallPlcToolsCommand.cs').read_text(encoding='utf-8-sig')
-        for project in ('src/FoundationHost/TiaMcp.FoundationHost.csproj', 'src/Engine/TiaMcp.Engine.V20.csproj', 'src/Engine/TiaMcp.Engine.V21.csproj'):
+        for project in ('src/FoundationHost/TiaMcp.FoundationHost.csproj',):
             self.assertIn('../Shared/Host/InstallPlcToolsCommand.cs', (ROOT / project).read_text(encoding='utf-8-sig'))
         actual = re.search(r'ExternalPackages\s*=\s*\{(.*?)\n\s*\};', installer, re.S)
         self.assertIsNotNone(actual)

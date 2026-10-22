@@ -8,22 +8,22 @@ namespace TiaMcp.ReleaseTool.Tests;
 public sealed class ReleaseTierTests
 {
     [Fact]
-    public void EngineGroupsAlwaysSelectTheirPlcSuccessorsIncludingSourceRootRules()
+    public void NoEngineGroupRemainsAndEveryPlcGroupIsReachableIncludingSourceRootRules()
     {
         var policy = ReleaseCheckPolicy.Load(Root);
-        var engines = policy.Checks.Where(check => check.StartsWith("engine-", StringComparison.Ordinal)).ToArray();
-        Assert.Equal(8, engines.Length);
-        foreach (var engine in engines) Assert.Contains("plc-" + engine[7..], policy.Checks);
+        // P8-04l: the engine-* groups retired with the engine; their eight plc-* successors are the only groups left.
+        Assert.Empty(policy.Checks.Where(check => check.StartsWith("engine-", StringComparison.Ordinal)));
+        var plcGroups = new[] { "functional", "worker-isolation", "approval", "ecosystem", "stability", "isolated-stability", "contracts", "responses" }
+            .Select(name => "plc-" + name).ToArray();
+        foreach (var plc in plcGroups) Assert.Contains(plc, policy.Checks);
         foreach (var rule in policy.Rules)
         {
             var plan = policy.Select("quick", [rule.Path.EndsWith('/') ? rule.Path + "Example.cs" : rule.Path]);
-            foreach (var engine in engines)
-                Assert.Equal(plan.Includes(engine), plan.Includes("plc-" + engine[7..]));
+            policy.ValidatePlan(plan);
         }
-        foreach (var engine in engines)
+        foreach (var plc in plcGroups)
         {
             var plan = policy.Select("quick", ["src/PlcWorker/Program.cs"]);
-            var plc = "plc-" + engine[7..];
             Assert.Contains(plc, plan.SelectedChecks);
             Assert.Throws<ReleaseException>(() => policy.ValidatePlan(plan with {
                 SelectedChecks = plan.SelectedChecks.Where(check => check != plc).ToArray(),
@@ -59,7 +59,7 @@ public sealed class ReleaseTierTests
     [Theory]
     [InlineData("src/FoundationHost/Program.cs", "foundation-transport")]
     [InlineData("src/PlcWorker/Program.cs", "foundation-approval")]
-    [InlineData("src/Engine/Program.cs", "engine-responses")]
+    [InlineData("src/Engine/Program.cs", "plc-responses")]
     [InlineData("src/Studio/Gui/App.xaml.cs", "gui-tests")]
     [InlineData("scripts/checks/Snapshot-ToolResponses.py", "responses-self-test")]
     [InlineData("build-tools/release/SwallowedExceptions.cs", "swallowedexceptions-self-test")]
@@ -70,8 +70,8 @@ public sealed class ReleaseTierTests
     {
         var plan = ReleaseCheckPolicy.Load(Root).Select("quick", [path]);
         Assert.Contains(expected, plan.SelectedChecks);
-        if ((path.StartsWith("src/Engine/") || path.StartsWith("src/PlcWorker/"))) Assert.Contains("engine-stability", plan.SelectedChecks);
-        else Assert.Contains("engine-stability", plan.SkippedChecks);
+        if ((path.StartsWith("src/Engine/") || path.StartsWith("src/PlcWorker/"))) Assert.Contains("plc-stability", plan.SelectedChecks);
+        else Assert.Contains("plc-stability", plan.SkippedChecks);
     }
 
     [Fact]
@@ -80,11 +80,11 @@ public sealed class ReleaseTierTests
         var policy = ReleaseCheckPolicy.Load(Root);
         Assert.Equal(policy.Always.Order(), policy.Select("quick", ["docs/development/validation.md"]).SelectedChecks.Order());
         Assert.Empty(policy.Select("full", []).SkippedChecks);
-        Assert.Throws<ReleaseException>(() => policy.ValidatePlan(policy.Select("full", []) with { SkippedChecks = ["engine-stability"] }));
+        Assert.Throws<ReleaseException>(() => policy.ValidatePlan(policy.Select("full", []) with { SkippedChecks = ["plc-stability"] }));
         var quick = policy.Select("quick", ["src/Engine/Program.cs"]);
         Assert.Throws<ReleaseException>(() => policy.ValidatePlan(quick with {
-            SelectedChecks = quick.SelectedChecks.Where(check => check != "engine-approval").ToArray(),
-            SkippedChecks = [.. quick.SkippedChecks, "engine-approval"] }));
+            SelectedChecks = quick.SelectedChecks.Where(check => check != "plc-approval").ToArray(),
+            SkippedChecks = [.. quick.SkippedChecks, "plc-approval"] }));
     }
 
     [Theory]

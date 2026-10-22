@@ -5,8 +5,6 @@
     <Project Path="src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
     <Project Path="src/Logic/TiaMcp.Logic.csproj" />
     <Project Path="src/FoundationHost/TiaMcp.FoundationHost.csproj" />
-    <Project Path="src/Engine/TiaMcp.Engine.V20.csproj" />
-    <Project Path="src/Engine/TiaMcp.Engine.V21.csproj" />
   </Folder>
   <Folder Name="/PlcAdapters/">
     <Project Path="src/Adapters/V14Sp1/Adapter.14sp1.csproj">
@@ -59,8 +57,6 @@
     <Project Path="tests/WorkerChannel/TiaMcp.FoundationProgress.Tests/TiaMcp.FoundationProgress.Tests.csproj" />
     <Project Path="tests/FoundationHost/TiaMcp.EngineHost.Tests/TiaMcp.EngineHost.Tests.csproj" />
     <Project Path="tests/Engine/TiaMcp.SharedSession.Tests/TiaMcp.SharedSession.Tests.csproj" />
-    <Project Path="tests/WorkerChannel/TiaMcp.WorkerProgress.Tests/TiaMcp.WorkerProgress.Tests.csproj" />
-    <Project Path="tests/Engine/TiaMcp.Engine.PlcExchange.Tests/TiaMcp.Engine.PlcExchange.Tests.csproj" />
     <Project Path="tests/FoundationHost/TiaMcp.PlcExchange.Tests/TiaMcp.PlcExchange.Tests.csproj" />
     <Project Path="tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.Tests.csproj" />
     <Project Path="tests/Adapters/TiaMcp.Adapters.CompileCandidate.Tests/TiaMcp.Adapters.CompileCandidate.Tests.csproj" />

@@ -31,13 +31,13 @@ public sealed class PlcReleasePipelineTests
         using var tree = new StaticTree();
         var jobs = Jobs(tree.Root);
         Assert.Equal(jobs.Count, jobs.Select(job => job.Name).Distinct(StringComparer.Ordinal).Count());
-        foreach (var (engine, plc) in ReleaseCommands.CheckAllHarnessSuccessors())
+        foreach (var plc in ReleaseCommands.CheckAllPlcHarnessJobs())
         {
             var job = Assert.Single(jobs.Where(job => job.Name == plc));
             Assert.Contains("Test-PlcHarness.py", job.Arguments[0]);
             Assert.Contains("--worker", job.Arguments);
             Assert.DoesNotContain("--engine-worker", job.Arguments);
-            Assert.Equal(engine.Split('-')[1][1..], job.Release);
+            Assert.Equal(plc.Split('-')[1][1..], job.Release);
         }
         foreach (var group in ReleaseCommands.PlcReleaseGroups)
             foreach (var key in new[] { "20", "21" })

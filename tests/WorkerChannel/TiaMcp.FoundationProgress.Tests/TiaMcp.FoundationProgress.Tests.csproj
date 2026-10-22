@@ -7,6 +7,5 @@
   <ItemGroup>
     <ProjectReference Include="../../../src/WorkerChannel/TiaMcp.WorkerChannel.csproj" />
     <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
-    <Compile Include="../TiaMcp.WorkerProgress.Tests/ProgressTests.cs" Link="ProgressTests.cs" />
   </ItemGroup>
 </Project>

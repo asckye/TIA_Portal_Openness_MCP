@@ -122,72 +122,32 @@ internal static partial class ReleaseCommands
         Wave();
         string host = Path.Combine(Root, "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe");
         string harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
-        // The engine halves start FoundationHost through the private cross-check route, so the
-        // engine and SDK-fixture builds they use are staged byte for byte into the private
-        // compatibility output. Candidate builds only run under the harness and stay in place.
-        // Each copy is made once, by the first job that needs it, so a missing build output
-        // fails those jobs as before instead of the whole run.
-        var compatibilityRun = Path.GetFileName(output);
-        var engineWorkers = new Dictionary<string, Lazy<string>>();
-        var fixtureWorkers = new Dictionary<string, Lazy<string>>();
-        foreach (var key in new[] { "20", "21" })
-        {
-            var release = key;
-            engineWorkers[release] = new(() => StageCheckAllEngine(Root, compatibilityRun, release, "engine",
-                Path.Combine(Root, "src/Engine", release == "20" ? "bin-v20" : "bin", "Release/net48/TiaMcp.Engine.V" + release + ".exe")));
-            fixtureWorkers[release] = new(() => StageCheckAllEngine(Root, compatibilityRun, release, "sdk",
-                Path.Combine(Root, $"src/Engine/bin/check-all/TiaMcp.Engine.V{release}/sdk-{release}/Release/net48/TiaMcp.Engine.V{release}.exe")));
-        }
-        string fixture(string release) => fixtureWorkers[release].Value;
-        string engine(string release) => engineWorkers[release].Value;
-        var transportFixtures = Path.Combine(CheckAllEngineCompatibilityRoot(Root, compatibilityRun), "transport");
-        string fixtureCatalog(string release) => Path.Combine(Path.GetDirectoryName(fixture(release))!, "tool-catalog.json");
-        foreach (var release in new[] { "20", "21" })
-        {
-            var key = release;
-            Add("fixture-catalog-v" + key, () => Isolated("fixture-catalog-v" + key, fixture(key), ["--bundle-root", Root, "--write-tool-catalog", fixtureCatalog(key)]));
-            Add("production-catalog-v" + key, () => Isolated("production-catalog-v" + key, engine(key), ["--bundle-root", Root, "--write-tool-catalog", Path.Combine(Path.GetDirectoryName(engine(key))!, "tool-catalog.json")]));
-        }
-        foreach (var key in new[] { "20", "21" })
-        {
-            // Keep the transport helper's historical SDK-root layout; copies are
-            // private artifacts, never production binaries or manifest evidence.
-            var release = key;
-            Add("sdk-fixture-copy-v" + key, () =>
-            {
-                var destination = Path.Combine(transportFixtures, release); Directory.CreateDirectory(destination);
-                foreach (var path in Directory.EnumerateFiles(Path.GetDirectoryName(fixture(release))!)) File.Copy(path, Path.Combine(destination, Path.GetFileName(path)), true);
-                return new(0, "SDK fixture copied\n", "");
-            }, ["fixture-catalog-v" + key]);
-        }
         // Stability shares wall time, but no CPUs, with the general lane. The
         // Windows job includes the client, both hosts, workers and descendants.
         foreach (var release in new[] { "20", "21" })
         foreach (var concurrency in new[] { "8", "16" })
         foreach (var transport in new[] { "stdio", "http" })
         foreach (var profile in new[] { "full", "lite" })
-        foreach (var plc in new[] { false, true })
         {
-            var engineName = $"stability-v{release}-c{concurrency}-{transport}-{profile}";
-            var name = plc ? CheckAllPlcSuccessor(engineName) : engineName;
+            var name = CheckAllPlcSuccessor($"stability-v{release}-c{concurrency}-{transport}-{profile}");
             var key = release; var c = concurrency; var t = transport; var p = profile;
             Add(name, () =>
             {
                 var directory = Path.Combine(output, name);
-                var result = Python(name, "scripts/checks/Test-LocalStability.py", ["--exe", plc ? host : engine(key), "--major", key, "--host-harness", harness,
+                var result = Python(name, "scripts/checks/Test-LocalStability.py", ["--exe", host, "--major", key, "--host-harness", harness,
                     "--public-api", ResolveReleaseApi(null, api, int.Parse(key, System.Globalization.CultureInfo.InvariantCulture)),
-                    .. plc ? new[] { "--plc-worker", CheckAllPlcFixture(key) } : new[] { "--engine-worker", fixture(key), "--engine-catalog", fixtureCatalog(key) },
+                    "--plc-worker", CheckAllPlcFixture(key),
                     "--rounds", "50", "--concurrency", c, "--transports", t, "--profiles", p, "--output", directory]);
                 if (result.ExitCode == 0)
                 {
                     var evidence = JsonNode.Parse(File.ReadAllText(Path.Combine(directory, "result.json")))!;
                     if ((string?)evidence["status"] != "passed" || (int?)evidence["rounds"] != 50 || evidence["runs"]!.AsArray().Count != 1 ||
-                        (string?)evidence["runtimeSha256"] != ReleaseRecords.HashFile(plc ? CheckAllPlcFixture(key) : engine(key)) || (string?)evidence["hostSha256"] != ReleaseRecords.HashFile(host) ||
-                        (string?)evidence["sdkWorkerSha256"] != ReleaseRecords.HashFile(plc ? CheckAllPlcFixture(key) : fixture(key)))
+                        (string?)evidence["runtimeSha256"] != ReleaseRecords.HashFile(CheckAllPlcFixture(key)) || (string?)evidence["hostSha256"] != ReleaseRecords.HashFile(host) ||
+                        (string?)evidence["sdkWorkerSha256"] != ReleaseRecords.HashFile(CheckAllPlcFixture(key)))
                         throw new ReleaseException("Stability evidence mismatch");
                 }
                 return result;
-            }, plc ? null : ["fixture-catalog-v" + key, "production-catalog-v" + key]);
+            }, null);
             jobs[^1] = jobs[^1] with { Lane = "stability", Affinity = layout.Stability };
         }
         foreach (var (name, node) in catalog)
@@ -213,17 +173,17 @@ internal static partial class ReleaseCommands
         {
             var key = release;
             foreach (var kind in new[] { "contracts", "responses" })
-            foreach (var plc in (key is "20" or "21") ? new[] { false, true } : new[] { false })
             {
-                var category = kind; var engineName = category + "-v" + key;
-                var name = plc ? CheckAllPlcSuccessor(engineName) : engineName;
+                // V20/V21 capture through FoundationHost and the PLC SDK fixture (the engine halves are retired).
+                var plc = key is "20" or "21";
+                var category = kind;
+                var name = plc ? CheckAllPlcSuccessor(category + "-v" + key) : category + "-v" + key;
                 var captureDirectory = Path.Combine(output, plc ? category + "-plc" : category);
                 Add(name, () =>
                 {
                     var script = "scripts/checks/Snapshot-Tool" + (category == "contracts" ? "Contracts" : "Responses") + ".py";
                     var args = new List<string> { "capture", "--repo-root", Root, "--public-api-root", api, "--releases", key, "--exe", key + "=" + host, "--output", captureDirectory };
                     if (plc) args.AddRange(["--engine-host", host, "--plc-worker", key + "=" + CheckAllPlcFixture(key)]);
-                    else if (key is "20" or "21") args.AddRange(["--engine-host", host, "--engine-worker", key + "=" + fixture(key), "--engine-catalog", key + "=" + fixtureCatalog(key)]);
                     if (category == "responses") args.AddRange(["--temp-root", FastSuites.TemporaryDirectory()]);
                     var result = Python(name, script, args.ToArray());
                     if (result.ExitCode != 0) return result;
@@ -234,11 +194,9 @@ internal static partial class ReleaseCommands
                     if (result.ExitCode == 0 && !File.ReadAllBytes(old).SequenceEqual(File.ReadAllBytes(current)))
                         return result with { ExitCode = 1, StandardError = "Capture bytes differ: " + key };
                     return result;
-                }, !plc && (key is "20" or "21") ? ["fixture-catalog-v" + key] : null);
+                }, null);
             }
             var usageName = "transport-usage-v" + key;
-            Add(usageName, () => Python(usageName, "scripts/checks/Test-FoundationTransport.py", "--fixture", Path.Combine(Root, "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe"),
-                "--host-exe", host, "--releases", key, "--sdk-fixture-root", transportFixtures, "--temp-root", FastSuites.TemporaryDirectory(), "--output", Path.Combine(output, usageName)), ["sdk-fixture-copy-v20", "sdk-fixture-copy-v21"]);
             if (key is "20" or "21")
             {
                 var plcName = CheckAllPlcSuccessor(usageName);
@@ -247,10 +205,9 @@ internal static partial class ReleaseCommands
                     "--host-exe", host, "--releases", key, "--plc-sdk-worker", key + "=" + CheckAllPlcFixture(key),
                     "--public-api-root", api, "--temp-root", FastSuites.TemporaryDirectory(), "--output", Path.Combine(output, plcName)));
             }
+            else Add(usageName, () => Python(usageName, "scripts/checks/Test-FoundationTransport.py", "--fixture", Path.Combine(Root, "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe"),
+                "--host-exe", host, "--releases", key, "--temp-root", FastSuites.TemporaryDirectory(), "--output", Path.Combine(output, usageName)));
             var sourceUsageName = "usage-v" + key;
-            Add(sourceUsageName, () => Python(sourceUsageName, "scripts/checks/Test-ToolUsage.py", "--foundation-host", host, "--engine-host", host,
-                "--engine-v20", fixture("20"), "--engine-v21", fixture("21"), "--harness", harness, "--public-api-root", api,
-                "--releases", key, "--evidence", Path.Combine(Root, "bin-build/u", Guid.NewGuid().ToString("N")), "--coverage-output", Path.Combine(output, sourceUsageName + ".json")), ["fixture-catalog-v20", "fixture-catalog-v21"]);
             if (key is "20" or "21")
             {
                 var plcName = CheckAllPlcSuccessor(sourceUsageName);
@@ -259,115 +216,70 @@ internal static partial class ReleaseCommands
                     "--releases", key, "--evidence", Path.Combine(Root, "bin-build/u", Guid.NewGuid().ToString("N")),
                     "--coverage-output", Path.Combine(output, plcName + ".json")));
             }
+            else Add(sourceUsageName, () => Python(sourceUsageName, "scripts/checks/Test-ToolUsage.py", "--foundation-host", host, "--public-api-root", api,
+                "--releases", key, "--evidence", Path.Combine(Root, "bin-build/u", Guid.NewGuid().ToString("N")), "--coverage-output", Path.Combine(output, sourceUsageName + ".json")));
         }
         foreach (var release in new[] { "20", "21" })
         {
             var key = release;
             var targetApi = ResolveReleaseApi(null, api, int.Parse(key, System.Globalization.CultureInfo.InvariantCulture));
-            foreach (var mode in CheckAllHarnessModes(key))
+            foreach (var mode in CheckAllPlcHarnessModes(key))
             {
-                var selected = mode; var name = "harness-v" + key + "-" + (mode.Length == 0 ? "http" : mode);
-                Add(name, () =>
+                var selected = mode; var plcName = CheckAllPlcHarnessJob(key, mode);
+                Add(plcName, () =>
                 {
-                    var copy = Path.Combine(CheckAllEngineCompatibilityRoot(Root, compatibilityRun), "harness", Guid.NewGuid().ToString("N")[..8]); Directory.CreateDirectory(copy);
-                    foreach (var path in Directory.EnumerateFiles(Path.GetDirectoryName(engine(key))!)) File.Copy(path, Path.Combine(copy, Path.GetFileName(path)), true);
-                    var copiedEngine = Path.Combine(copy, Path.GetFileName(engine(key)));
-                    var result = CheckAllHarness(Isolated(name, harness, [copiedEngine, .. HarnessArguments(selected, key, targetApi)]), selected, key);
-                    if (result.ExitCode == 0 && selected == "native-diagnostics-only") ValidateCheckAllJit(result.StandardOutput,
-                        Path.Combine(output, "native-coverage-v" + key + ".json"), Path.Combine(output, "adapter-coverage-v" + key + ".json"));
+                    var inventory = Path.Combine(output, "adapter-coverage-v" + key + ".json");
+                    var result = CheckAllHarness(Python(plcName, "scripts/checks/Test-PlcHarness.py",
+                        "--release", key, "--mode", selected.Length == 0 ? "http" : selected,
+                        "--host", host, "--worker", CheckAllPlcFixture(key), "--harness", harness,
+                        "--api", targetApi, "--public-api-root", api, "--adapter-inventory", inventory,
+                        "--output", Path.Combine(output, plcName)), selected, key);
+                    if (result.ExitCode == 0)
+                        ValidateCheckAllPlcHarness(result.StandardOutput, Path.Combine(output, plcName), selected, key, host, CheckAllPlcFixture(key), inventory);
                     return result;
-                }, selected == "native-diagnostics-only" ? ["native-coverage-v" + key, "adapter-coverage-v" + key] : null);
-                if (CheckAllHarnessSuccessors().TryGetValue(name, out var plcName))
-                    Add(plcName, () =>
-                    {
-                        var inventory = Path.Combine(output, "adapter-coverage-v" + key + ".json");
-                        var result = CheckAllHarness(Python(plcName, "scripts/checks/Test-PlcHarness.py",
-                            "--release", key, "--mode", selected.Length == 0 ? "http" : selected,
-                            "--host", host, "--worker", CheckAllPlcFixture(key), "--harness", harness,
-                            "--api", targetApi, "--public-api-root", api, "--adapter-inventory", inventory,
-                            "--output", Path.Combine(output, plcName)), selected, key);
-                        if (result.ExitCode == 0)
-                            ValidateCheckAllPlcHarness(result.StandardOutput, Path.Combine(output, plcName), selected, key, host, CheckAllPlcFixture(key), inventory);
-                        return result;
-                    }, selected == "native-diagnostics-only" ? ["adapter-coverage-v" + key] : null);
+                }, selected == "native-diagnostics-only" ? ["adapter-coverage-v" + key] : null);
             }
-            var campaignName = "campaign-inputs-v" + key;
-            Add(campaignName, () => Python(campaignName, "scripts/checks/Test-CampaignInputs.py", "--exe", engine(key), "--major", key,
-                "--public-api", targetApi, "--host-harness", harness, "--output", Path.Combine(output, campaignName)), ["production-catalog-v" + key]);
-            var plcCampaignName = CheckAllPlcSuccessor(campaignName);
+            var plcCampaignName = CheckAllPlcSuccessor("campaign-inputs-v" + key);
             Add(plcCampaignName, () => Python(plcCampaignName, "scripts/checks/Test-CampaignInputs.py", "--exe", host, "--major", key,
                 "--public-api", targetApi, "--plc-worker", CheckAllPlcFixture(key), "--output", Path.Combine(output, plcCampaignName)));
-            var negativeName = "candidate-negative-v" + key;
-            Add(negativeName, () =>
+            // The adapter inventory the harness diagnostics job compares with: the PLC SDK fixture's adapter.
+            var coverageName = "adapter-coverage-v" + key;
+            Add(coverageName, () => Isolated(coverageName, dotnet, [Path.Combine(Root, "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll"), "verify",
+                Path.Combine(Path.GetDirectoryName(CheckAllPlcFixture(key))!, "TiaMcp.Adapter." + key + ".dll"), Path.Combine(output, coverageName + ".json")]));
+            var approvalName = CheckAllPlcSuccessor("approval-v" + key);
+            Add(approvalName, () =>
             {
-                var result = Isolated(negativeName, harness, [engine(key), "device-candidate-only", targetApi, "safe-v4"]);
-                return result.ExitCode != 0 && (result.StandardOutput + result.StandardError).Contains("CreateDevice selects exactly the expected method", StringComparison.Ordinal)
-                    ? new(0, result.StandardOutput + result.StandardError + "PASS wrong candidate policy selection exits nonzero\n", "")
-                    : new(1, result.StandardOutput, result.StandardError + "Wrong candidate policy was not rejected at method selection.\n");
-            });
-            foreach (var mode in CheckAllCandidateModes())
-            foreach (var policy in new[] { "current", "safe-v4" })
+                var result = Python(approvalName, "scripts/checks/Test-ReleaseApprovalGate.py", ["--product", "engine", "--major", key, "--exe", host,
+                    "--portal-root", targetApi, "--public-api", targetApi, "--host-harness", harness,
+                    "--plc-worker", CheckAllPlcFixture(key),
+                    "--temp-root", FastSuites.TemporaryDirectory(), "--output", Path.Combine(output, approvalName)]);
+                if (result.ExitCode == 0) ValidateCheckAllApproval(Path.Combine(output, approvalName, "result.json"));
+                return result;
+            }, null);
+            var resourceName = CheckAllPlcSuccessor("resources-v" + key);
+            Add(resourceName, () => Python(resourceName, "scripts/checks/Test-ResourceDiscovery.py", ["--exe", host, "--portal-root", targetApi, "--major", key,
+                "--plc-worker", CheckAllPlcFixture(key), "--public-api", targetApi, "--usage-output", Path.Combine(output, resourceName + ".json")]), null);
+            var ecosystemName = CheckAllPlcSuccessor("ecosystem-v" + key);
+            Add(ecosystemName, () =>
             {
-                var selectedMode = mode; var selectedPolicy = policy;
-                var name = $"candidate-v{key}-{mode}-{policy}";
-                Add(name, () =>
+                var evidenceDirectory = Path.Combine(output, ecosystemName);
+                var result = Python(ecosystemName, "scripts/checks/Test-V21Ecosystem.py", ["--exe", host, "--major", key, "--host-harness", harness, "--public-api", targetApi,
+                    "--schema-root", Path.Combine(Path.GetDirectoryName(ResolveReleaseApi(null, api, 21))!, "Schemas"), "--plc-worker", CheckAllPlcFixture(key), "--output", evidenceDirectory]);
+                if (result.ExitCode == 0)
                 {
-                    var unit = CheckAllCandidateBuild(key, selectedMode);
-                    var source = selectedPolicy == "current" ? engine(key)
-                        : Path.Combine(Root, "src/Engine/bin/check-all", Path.GetFileNameWithoutExtension(unit.Project), unit.Variant, $"Release/net48/TiaMcp.Engine.V{key}.exe");
-                    return Isolated(name, harness, [source, selectedMode + "-candidate-only", targetApi, selectedPolicy]);
-                });
-            }
-            foreach (var type in new[] { "native", "adapter" })
-            {
-                var name = type + "-coverage-v" + key; var selected = type;
-                Add(name, () => Isolated(name, dotnet, [Path.Combine(Root, "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll"), "verify",
-                    selected == "native" ? engine(key) : Path.Combine(Path.GetDirectoryName(engine(key))!, "TiaMcp.Adapter." + key + ".dll"), Path.Combine(output, name + ".json")]));
-            }
-            foreach (var plc in new[] { false, true })
-            {
-                var approvalName = plc ? CheckAllPlcSuccessor("approval-v" + key) : "approval-v" + key;
-                Add(approvalName, () =>
-                {
-                    var result = Python(approvalName, "scripts/checks/Test-ReleaseApprovalGate.py", ["--product", "engine", "--major", key, "--exe", plc ? host : engine(key),
-                        "--portal-root", targetApi, "--public-api", targetApi, "--host-harness", harness,
-                        .. plc ? new[] { "--plc-worker", CheckAllPlcFixture(key) } : new[] { "--engine-worker", fixture(key), "--engine-catalog", fixtureCatalog(key) },
-                        "--temp-root", FastSuites.TemporaryDirectory(), "--output", Path.Combine(output, approvalName)]);
-                    if (result.ExitCode == 0) ValidateCheckAllApproval(Path.Combine(output, approvalName, "result.json"));
-                    return result;
-                }, plc ? null : ["fixture-catalog-v" + key]);
-            }
-            foreach (var plc in new[] { false, true })
-            {
-                var resourceName = plc ? CheckAllPlcSuccessor("resources-v" + key) : "resources-v" + key;
-                Add(resourceName, () => Python(resourceName, "scripts/checks/Test-ResourceDiscovery.py", ["--exe", host, "--portal-root", targetApi, "--major", key,
-                    .. plc ? new[] { "--plc-worker", CheckAllPlcFixture(key) } : new[] { "--engine-worker", fixture(key), "--engine-catalog", fixtureCatalog(key) }, "--public-api", targetApi, "--usage-output", Path.Combine(output, resourceName + ".json")]), plc ? null : ["fixture-catalog-v" + key]);
-            }
-            foreach (var plc in new[] { false, true })
-            {
-                var ecosystemName = plc ? CheckAllPlcSuccessor("ecosystem-v" + key) : "ecosystem-v" + key;
-                Add(ecosystemName, () =>
-                {
-                    var evidenceDirectory = Path.Combine(output, ecosystemName);
-                    var result = Python(ecosystemName, "scripts/checks/Test-V21Ecosystem.py", ["--exe", plc ? host : engine(key), "--major", key, "--host-harness", harness, "--public-api", targetApi,
-                        "--schema-root", Path.Combine(Path.GetDirectoryName(ResolveReleaseApi(null, api, 21))!, "Schemas"), .. plc ? new[] { "--plc-worker", CheckAllPlcFixture(key) } : new[] { "--engine-worker", fixture(key), "--engine-catalog", fixtureCatalog(key) }, "--output", evidenceDirectory]);
-                    if (result.ExitCode == 0)
-                    {
-                        var evidencePath = Directory.EnumerateFiles(evidenceDirectory, "result.json", SearchOption.AllDirectories).Single();
-                        using var doc = JsonDocument.Parse(File.ReadAllText(evidencePath)); var evidence = doc.RootElement;
-                        CheckReleaseCount("v21Ecosystem", GetJsonInt(evidence, "checks"), "Ecosystem checks incomplete");
-                        if (GetJsonString(evidence, "status") != "passed" || GetJsonBool(evidence, "selfTestOnly") || GetJsonBool(evidence, "nativeTiaExecuted") || GetJsonString(evidence, "runtimeSha256") != ReleaseRecords.HashFile(plc ? CheckAllPlcFixture(key) : engine(key)) ||
-                            (plc && (GetJsonString(evidence, "hostSha256") != ReleaseRecords.HashFile(host) || GetJsonString(evidence, "sdkWorkerSha256") != ReleaseRecords.HashFile(CheckAllPlcFixture(key)))))
-                            throw new ReleaseException("Ecosystem evidence mismatch");
-                    }
-                    return result;
-                }, plc ? null : ["fixture-catalog-v" + key]);
-            }
+                    var evidencePath = Directory.EnumerateFiles(evidenceDirectory, "result.json", SearchOption.AllDirectories).Single();
+                    using var doc = JsonDocument.Parse(File.ReadAllText(evidencePath)); var evidence = doc.RootElement;
+                    CheckReleaseCount("v21Ecosystem", GetJsonInt(evidence, "checks"), "Ecosystem checks incomplete");
+                    if (GetJsonString(evidence, "status") != "passed" || GetJsonBool(evidence, "selfTestOnly") || GetJsonBool(evidence, "nativeTiaExecuted") || GetJsonString(evidence, "runtimeSha256") != ReleaseRecords.HashFile(CheckAllPlcFixture(key)) ||
+                        GetJsonString(evidence, "hostSha256") != ReleaseRecords.HashFile(host) || GetJsonString(evidence, "sdkWorkerSha256") != ReleaseRecords.HashFile(CheckAllPlcFixture(key)))
+                        throw new ReleaseException("Ecosystem evidence mismatch");
+                }
+                return result;
+            }, null);
         }
-        foreach (var plc in new[] { false, true })
         {
-            var auditName = plc ? CheckAllPlcSuccessor("usage-audit") : "usage-audit";
-            string UsageName(string key) => plc && (key is "20" or "21") ? CheckAllPlcSuccessor("usage-v" + key) : "usage-v" + key;
+            var auditName = CheckAllPlcSuccessor("usage-audit");
+            string UsageName(string key) => key is "20" or "21" ? CheckAllPlcSuccessor("usage-v" + key) : "usage-v" + key;
             Add(auditName, () =>
             {
                 var receipts = new JsonArray();
@@ -376,10 +288,10 @@ internal static partial class ReleaseCommands
                     var path = Path.Combine(output, UsageName(key) + ".json");
                     var captured = JsonNode.Parse(File.ReadAllText(path))!.AsArray();
                     var receipt = captured.Single()!.DeepClone().AsObject();
-                    if (plc && (key is "20" or "21"))
+                    if (key is "20" or "21")
                     {
-                        // A successor receipt must come from this host and PlcWorker. The audit row keeps the
-                        // engine receipt's fields, so the committed manifest bytes remain the comparison target.
+                        // A V20/V21 receipt must come from this host and PlcWorker. The audit row keeps the
+                        // committed receipt fields, so the committed manifest bytes remain the comparison target.
                         var worker = ReleaseRecords.HashFile(CheckAllPlcFixture(key));
                         if ((string?)receipt["runtimeSha256"] != worker || (string?)receipt["sdkWorkerSha256"] != worker ||
                             (string?)receipt["hostSha256"] != ReleaseRecords.HashFile(host) || (string?)receipt["workerModel"] != "foundation-host-plc-worker")
@@ -388,26 +300,21 @@ internal static partial class ReleaseCommands
                     }
                     receipts.Add(receipt);
                 }
-                var records = Path.Combine(output, plc ? "usage-receipts-plc.json" : "usage-receipts.json"); File.WriteAllText(records, receipts.ToJsonString());
-                var coverage = Isolated(plc ? auditName + "-coverage" : "usage-coverage", python, ["-X", "utf8", "-c",
+                var records = Path.Combine(output, "usage-receipts-plc.json"); File.WriteAllText(records, receipts.ToJsonString());
+                var coverage = Isolated(auditName + "-coverage", python, ["-X", "utf8", "-c",
                     "import importlib.util, json, sys\nfrom pathlib import Path\nscript = Path(sys.argv[1])\nsys.path.insert(0, str(script.parent))\nspec = importlib.util.spec_from_file_location('usage_coverage', script)\nmodule = importlib.util.module_from_spec(spec)\nspec.loader.exec_module(module)\nmodule.coverage(json.loads(Path(sys.argv[2]).read_text('utf-8')), Path(sys.argv[3]))\n",
-                    Path.Combine(Root, "scripts/checks/Test-ToolUsage.py"), records, Path.Combine(output, plc ? "tool-usage-coverage-plc.json" : "tool-usage-coverage.json")]);
+                    Path.Combine(Root, "scripts/checks/Test-ToolUsage.py"), records, Path.Combine(output, "tool-usage-coverage-plc.json")]);
                 if (coverage.ExitCode != 0) return coverage;
-                if (plc)
-                {
-                    var audit = CatalogJson.Encode(CatalogAudits.Usage(Root, recordsPath: records));
-                    File.WriteAllText(Path.Combine(output, "tool-usage-audit-plc.json"), audit);
-                    // The engine audit rewrites the manifest and the tracked-tree drift gate rejects any change;
-                    // the successor writes no tracked file, so it compares the committed bytes directly.
-                    if (!File.ReadAllBytes(Path.Combine(Root, "manifest/tool-usage-coverage.json")).AsSpan().SequenceEqual(System.Text.Encoding.UTF8.GetBytes(audit)))
-                        return new(1, coverage.StandardOutput, coverage.StandardError + "PLC usage audit differs from manifest/tool-usage-coverage.json\n");
-                    return new(0, coverage.StandardOutput + "PLC usage audit passed; eight receipts validated; manifest bytes match\n", coverage.StandardError);
-                }
-                return Tool(auditName, "audit-tool-usage", "-Records", records);
+                var audit = CatalogJson.Encode(CatalogAudits.Usage(Root, recordsPath: records));
+                File.WriteAllText(Path.Combine(output, "tool-usage-audit-plc.json"), audit);
+                // No tracked file is written; the audit is compared with the committed manifest bytes.
+                if (!File.ReadAllBytes(Path.Combine(Root, "manifest/tool-usage-coverage.json")).AsSpan().SequenceEqual(System.Text.Encoding.UTF8.GetBytes(audit)))
+                    return new(1, coverage.StandardOutput, coverage.StandardError + "PLC usage audit differs from manifest/tool-usage-coverage.json\n");
+                return new(0, coverage.StandardOutput + "PLC usage audit passed; eight receipts validated; manifest bytes match\n", coverage.StandardError);
             }, CatalogJson.Keys.Select(UsageName).ToArray());
         }
-        ValidateCheckAllScriptSuccessors(jobs);
-        ValidateCheckAllHarnessSuccessors(jobs);
+        ValidateCheckAllPlcScriptJobs(jobs);
+        ValidateCheckAllPlcHarnessJobs(jobs);
         Add("generate-release-migration", () => Tool("generate-release-migration", "generate-release-migration"));
         var scheduled = jobs.Select(job => job with
         {
@@ -529,9 +436,6 @@ internal static partial class ReleaseCommands
             units.Add(new("src/PlcWorker/TiaMcp.PlcWorker.csproj", "", ["-p:TiaReleaseKey=" + key,
                 "-p:SiemensEngineeringDirectory=" + Path.GetFullPath(Path.Combine(apiRoot, ReleaseCommands.PlcWorkerApi(key).Directory))]));
         units.AddRange(CheckAllPlcFixtureBuilds(apiRoot));
-        foreach (var key in new[] { "20", "21" }) units.Add(new($"src/Engine/TiaMcp.Engine.V{key}.csproj", "sdk-" + key, ["-p:TiaMcpEngineWorkerSdkFixture=true"]));
-        foreach (var key in new[] { "20", "21" })
-        foreach (var mode in CheckAllCandidateModes()) units.Add(CheckAllCandidateBuild(key, mode));
         foreach (var mode in new[] { "false", "true" })
         foreach (var project in new[] { "src/Studio/Bridge/TiaOpenness.Bridge.csproj", "src/Studio/Gui/TiaOpenness.Gui.csproj", "tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj", "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj" })
             units.Add(new(project, "", ["-p:TiaSharedAdapterPaths=" + mode]));

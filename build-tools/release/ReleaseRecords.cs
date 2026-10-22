@@ -21,6 +21,9 @@ internal static class ReleaseRecords
         ["runtime/tools/TiaMcp.Updater.exe.config"] = "bin-build/updater/TiaMcp.Updater.exe.config"
     };
 
+    // The release-wide outputs build-release records in release-build.json; every other runtime file is in the eight-release record.
+    internal static readonly string[] ReleaseBuildRuntimeRoots = ["runtime/tools", "runtime/verification"];
+
     internal static string SelectPath(string root) => File.Exists(Path.Combine(root, MultiPath)) ? MultiPath
         : File.Exists(Path.Combine(root, EnginePath)) ? EnginePath
         : throw new ReleaseException("Release build record missing; run build-release or build-multi-version");
@@ -41,10 +44,6 @@ internal static class ReleaseRecords
                 throw new ReleaseException($"V{major} PLC worker output missing; run build-multi-version first");
         return path;
     }
-
-    // The engine remains the delivered default in this stage. Preserve its exact
-    // evidence inside the eight-release record, explicitly separate from PLC proof.
-    internal static JsonElement ShippedEngineProof(JsonElement record) => record.TryGetProperty("engineCompatibility", out var proof) ? proof : record;
 
     internal static void AssertBinding(string root, JsonElement delivery, string relative)
     {
@@ -89,9 +88,6 @@ internal static class ReleaseRecords
         if (!result.Select(row => row.Path).Order(StringComparer.Ordinal).SequenceEqual(UpdaterOutputs.Keys.Order(StringComparer.Ordinal), StringComparer.Ordinal) ||
             result.Any(row => !System.Text.RegularExpressions.Regex.IsMatch(row.Sha256, @"\A[0-9a-f]{64}\z") || row.Length <= 0))
             throw Invalid();
-        if (record.TryGetProperty("engineCompatibility", out var engine) && engine.ValueKind == JsonValueKind.Object &&
-            engine.TryGetProperty("updaterFiles", out var engineRows) && !JsonElement.DeepEquals(engineRows, rows))
-            throw new ReleaseException("Updater build record differs from the shipped-engine record");
         foreach (var property in new[] { "runtimeFiles", "files" })
             if (record.TryGetProperty(property, out var inventory) && inventory.ValueKind == JsonValueKind.Array &&
                 inventory.EnumerateArray().Any(row => row.ValueKind == JsonValueKind.Object && UpdaterOutputs.ContainsKey(GetString(row, "path"))))
@@ -247,12 +243,10 @@ internal static class ReleaseRecords
     internal static bool RequiresPlcProof(JsonElement record) =>
         !TiaMcp.Versioning.ProductReleaseVersion.TryParse(GetString(record, "release"), out var version) || version is null || version.Major >= 4;
 
+    // P8-04l: a 4.x eight-release record no longer carries the engine record (engineCompatibility); its own PLC proof is
+    // the V20/V21 evidence.
     internal static void AssertPlcProof(string root, JsonElement record, bool binaries)
     {
-        if (!record.TryGetProperty("engineCompatibility", out var engine) ||
-            GetString(engine, "release") != GetString(record, "release") || GetString(engine, "fileVersion") != GetString(record, "fileVersion") ||
-            GetString(engine, "tier") != GetString(record, "tier") || !JsonElement.DeepEquals(engine.GetProperty("checkPlan"), record.GetProperty("checkPlan")))
-            throw new ReleaseException("Multi-version shipped-engine compatibility proof missing or version changed");
         var plan = PlcProofPlan(JsonSerializer.Deserialize<ReleaseCheckPlan>(record.GetProperty("checkPlan").GetRawText(),
             new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }) ?? throw new ReleaseException("Multi-version check plan missing"), RecordTest(record));
         var files = ReadRows(record, "files").ToDictionary(row => row.Path, StringComparer.Ordinal);
@@ -311,20 +305,12 @@ internal static class ReleaseRecords
 
     internal sealed record FieldComparison(string EngineField, string? MultiField, string Status);
 
-    internal static IReadOnlyList<FieldComparison> Compare(JsonElement engine, JsonElement multi)
+    // P8-04l: release-build.json records the release-wide build only (no engine). Its release, tier, check plan, updater and
+    // runtime rows must equal the eight-release record's; its other fields (release-wide suite counts, sources, inputs) are
+    // release-build.json evidence that the eight-release record does not repeat.
+    internal static IReadOnlyList<FieldComparison> Compare(JsonElement releaseBuild, JsonElement multi)
     {
         var rows = new List<FieldComparison>();
-        // The successors the multi-version record's own plan selected (AssertPlcProof's set); without a readable plan every one is expected.
-        var jobs = ReleaseCommands.PlcReleaseJobs("", "", "", "", "dotnet", "python");
-        ReleaseCheckPlan? plan = null;
-        try
-        {
-            if (multi.TryGetProperty("checkPlan", out var planElement))
-                plan = JsonSerializer.Deserialize<ReleaseCheckPlan>(planElement.GetRawText(), new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
-        }
-        catch (JsonException) { plan = null; }
-        var proofPlan = plan is null ? null : PlcProofPlan(plan, RecordTest(multi));
-        var selected = jobs.Where(job => proofPlan is null || ReleaseCommands.PlcReleaseSelected(proofPlan, job)).Select(job => job.Name).ToHashSet(StringComparer.Ordinal);
         void Walk(JsonElement value, string path)
         {
             if (value.ValueKind == JsonValueKind.Object)
@@ -338,82 +324,33 @@ internal static class ReleaseRecords
                 foreach (var item in value.EnumerateArray()) Walk(item, path + "[" + index++ + "]");
                 return;
             }
-            var counterpart = "engineCompatibility." + path;
-            var status = "retained-engine-proof; no PLC counterpart";
-            if (path is "release" or "fileVersion" or "tier" || path.StartsWith("checkPlan.", StringComparison.Ordinal))
-            { counterpart = path; status = "equal"; }
-            // The updater build-release built and tested; the eight-release record binds the same rows at its top level (P8-upd-bind).
-            if (path.StartsWith("updaterFiles[", StringComparison.Ordinal)) { counterpart = path; status = "equal"; }
+            string? counterpart = null;
+            var status = "release-build.json evidence; no eight-release counterpart";
+            if (path is "release" or "fileVersion" or "tier" || path.StartsWith("checkPlan.", StringComparison.Ordinal) ||
+                path.StartsWith("updaterFiles[", StringComparison.Ordinal)) { counterpart = path; status = "equal"; }
             var fileField = System.Text.RegularExpressions.Regex.Match(path, @"^runtimeFiles\[(\d+)\]\.(path|sha256|length)$");
             if (fileField.Success)
             {
                 var index = int.Parse(fileField.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
-                var original = GetString(engine.GetProperty("runtimeFiles")[index], "path");
-                var mapped = original;
-                foreach (var key in new[] { "20", "21" })
-                    if (original.StartsWith($"bin-build/engine-compat/v{key}/", StringComparison.Ordinal))
-                        mapped = original.Replace($"bin-build/engine-compat/v{key}/", $"runtime/v{key}/", StringComparison.Ordinal)
-                            .Replace($"TiaMcp.Engine.V{key}.exe", $"TiaMcp.PlcWorker.{key}.exe", StringComparison.Ordinal);
+                var original = GetString(releaseBuild.GetProperty("runtimeFiles")[index], "path");
+                counterpart = "files[" + original + "]";
+                status = "equal";
                 if (multi.TryGetProperty("files", out var inventory))
                 {
                     var rowIndex = 0;
                     foreach (var row in inventory.EnumerateArray())
                     {
-                        if (GetString(row, "path") == mapped)
-                        { counterpart = $"files[{rowIndex}]." + fileField.Groups[2].Value; status = mapped == original ? "equal" : "PLC counterpart"; break; }
+                        if (GetString(row, "path") == original) { counterpart = $"files[{rowIndex}]." + fileField.Groups[2].Value; break; }
                         rowIndex++;
                     }
                 }
             }
-            foreach (var key in new[] { "20", "21" })
-            {
-                var prefix = $"validation.runtimes.V{key}.";
-                if (path.StartsWith(prefix, StringComparison.Ordinal))
-                {
-                    var field = path[prefix.Length..].Split(new[] { '.', '[' })[0];
-                    var job = field switch
-                    {
-                        "httpPassed" => "harness-v" + key + "-http-plc",
-                        "hmiPassed" => "harness-v" + key + "-hmi-only-plc",
-                        "softwareLookupPassed" => "harness-v" + key + "-software-lookup-only-plc",
-                        "engineeringApiShapePassed" => "engineering-api-v" + key + "-plc",
-                        "resourceDiscoveryPassed" => "resources-v" + key + "-plc",
-                        "nativeExportRemotingPassed" => "harness-v" + key + "-native-export-only-plc",
-                        "hmiSnapshotRemotingPassed" => "harness-v" + key + "-hmi-snapshot-only-plc",
-                        "migrationAssembly" => "harness-v" + key + "-test-migration-read-assembly-plc",
-                        "approvalSafety" => "approval-v" + key + "-plc",
-                        "nativeDiagnostics" => "harness-v" + key + "-native-diagnostics-only-plc",
-                        "workerIsolation" => "worker-protocol-v" + key + "-plc",
-                        "v21EcosystemAdapters" => "ecosystem-v" + key + "-plc",
-                        _ => ""
-                    };
-                    // A quick or package plan skips the successor as it skips the engine check (the engine records 0,
-                    // "skipped" or a skipped status); the engine value stays as retained proof and is compared as such.
-                    if (job.Length != 0 && value.ValueKind != JsonValueKind.Null && !selected.Contains(job))
-                        status = "retained-engine-proof; PLC successor " + job + " not selected by the check plan";
-                    else if (job.Length != 0 && value.ValueKind != JsonValueKind.Null)
-                    { counterpart = $"plcRuntimes.V{key}.checks.{job}.counts"; status = "PLC successor receipt (count lines; log bound in validationArtifacts)"; }
-                }
-                foreach (var name in new[] { "localStability", "isolatedLocalStability" })
-                {
-                    var stabilityPrefix = $"validation.runtimes.V{key}.{name}";
-                    if (value.ValueKind == JsonValueKind.Null || path != stabilityPrefix && !path.StartsWith(stabilityPrefix + ".", StringComparison.Ordinal)) continue;
-                    var job = (name == "localStability" ? "stability-c8-v" : "stability-c16-v") + key + "-plc";
-                    var plcPath = $"plcRuntimes.V{key}.{name}" + path[stabilityPrefix.Length..];
-                    // The run matrix, status and identity fields are required of the PLC soak; per-sample detail (process and
-                    // worker samples, latencies, case tables) is measured per worker and is reported where the PLC soak lacks it.
-                    var gate = System.Text.RegularExpressions.Regex.IsMatch(path[stabilityPrefix.Length..],
-                        @"^\.(status|rounds|isolatedWorker|runtimeSha256|sdkWorkerSha256|hostSha256|workerModel|runs\[\d+\]\.(transport|profile|unexpectedExits|unexpectedFailures|unmatchedJournalEntries|measuredToolCalls|tiaConnected))$");
-                    if (!selected.Contains(job)) status = "retained-engine-proof; PLC successor " + job + " not selected by the check plan";
-                    else if (gate || TryField(multi, plcPath, out _)) { counterpart = plcPath; status = "PLC counterpart"; }
-                    else status = "retained-engine-proof; engine soak detail without PLC counterpart";
-                }
-            }
-            if (!TryField(multi, counterpart, out var actual)) rows.Add(new(path, counterpart, "missing"));
-            else if ((status == "equal" || status.StartsWith("retained", StringComparison.Ordinal)) && value.GetRawText() != actual.GetRawText()) rows.Add(new(path, counterpart, "different"));
+            if (counterpart is null) rows.Add(new(path, null, status));
+            else if (!TryField(multi, counterpart, out var actual)) rows.Add(new(path, counterpart, "missing"));
+            else if (value.GetRawText() != actual.GetRawText()) rows.Add(new(path, counterpart, "different"));
             else rows.Add(new(path, counterpart, status));
         }
-        Walk(engine, "");
+        Walk(releaseBuild, "");
         foreach (var key in new[] { "20", "21" })
             foreach (var field in new[] { "worker.path", "worker.sha256", "adapter.sha256", "host.sha256", "catalog.sha256", "toolsList.sha256", "checks" })
             {
@@ -541,17 +478,18 @@ internal static class ReleaseRecords
         catch { return "record or input is unreadable"; }
     }
 
+    // P8-04l: the four engine audit inputs (engine weave inventories and engine usage receipts) retired with the engine;
+    // the PLC inventories and usage receipts are bound by the eight-release record. Every artifact a release build record
+    // lists must still be under its release output with the recorded SHA-256.
     internal static string AuditEvidenceReason(string root, string release, JsonElement record)
     {
-        if (!record.TryGetProperty("validationArtifacts", out var rows) || rows.ValueKind != JsonValueKind.Array || rows.GetArrayLength() != 4)
-            return "full-engine audit evidence record missing; rebuild once";
+        if (!record.TryGetProperty("validationArtifacts", out var rows) || rows.ValueKind != JsonValueKind.Array)
+            return "release build evidence record missing; rebuild once";
         var prefix = $"bin-build/releases/v{release}/";
-        var expected = new[] { $"{prefix}v20/native-call-coverage-v20.json", $"{prefix}v20/tool-usage-v20.json", $"{prefix}v21/native-call-coverage-v21.json", $"{prefix}v21/tool-usage-v21.json" };
-        var actual = rows.EnumerateArray().Select(row => GetString(row, "path")).Order(StringComparer.Ordinal).ToArray();
-        if (!actual.SequenceEqual(expected.Order(StringComparer.Ordinal), StringComparer.Ordinal)) return "full-engine audit evidence inventory changed";
         foreach (var row in rows.EnumerateArray())
         {
             var relative = GetString(row, "path");
+            if (!relative.StartsWith(prefix, StringComparison.Ordinal)) return "audit evidence path escaped release output: " + relative;
             var path = Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar));
             if (!File.Exists(path)) return "audit evidence missing: " + relative;
             if (!string.Equals(HashFile(path), GetString(row, "sha256"), StringComparison.OrdinalIgnoreCase)) return "audit evidence changed: " + relative;
@@ -581,38 +519,18 @@ internal static class ReleaseRecords
             if (!record.TryGetProperty("validation", out var validation)) return "validation record missing";
             if (includes("offline-suites") && (GetInt(validation, "offlinePassed") <= 0 || GetInt(validation, "offlineV20Passed") <= 0 || GetInt(validation, "versionPolicySdkPassed") <= 0 ||
                 GetInt(validation, "keptCodePassed") <= 0 || GetInt(validation, "keptCodeV20Passed") <= 0 ||
-                GetInt(validation, "writeGuardPassed") < 3 || GetInt(validation, "crashEvidencePassed") < 7 || GetInt(validation, "updaterPassed") < 20))
+                GetInt(validation, "writeGuardPassed") < 3 || GetInt(validation, "crashEvidencePassed") < 7 || GetInt(validation, "updaterPassed") < 20 ||
+                // Formerly each engine runtime's sessionStability gate; the native MCP safety checks are release-wide.
+                GetInt(validation, "nativeMcpSafetyPassed") < 8))
                 return "offline validation missing";
-            foreach (var major in new[] { 20, 21 })
-            {
-                if (!validation.TryGetProperty("runtimes", out var runtimes) || !runtimes.TryGetProperty("V" + major, out var runtime)) return $"V{major} validation incomplete";
-                foreach (var name in new[] { "localStability", "isolatedLocalStability" })
-                {
-                    if (!includes(name == "localStability" ? "engine-stability" : "engine-isolated-stability")) continue;
-                    if (!runtime.TryGetProperty(name, out var stability) || GetString(stability, "status") != "passed" ||
-                        !stability.TryGetProperty("runs", out var runs) || runs.ValueKind != JsonValueKind.Array || runs.GetArrayLength() != 4)
-                        return $"V{major} validation incomplete";
-                    if (!GetBool(stability, "isolatedWorker") || GetString(stability, "workerModel") != "combined-host-supervised-worker" ||
-                        GetString(stability, "hostSha256").Length != 64 || GetString(stability, "sdkWorkerSha256").Length != 64) return $"V{major} validation incomplete";
-                }
-                if (includes("engine-approval") && (!runtime.TryGetProperty("approvalSafety", out var approval) || GetString(approval, "status") != "passed" ||
-                    GetInt(approval, "checksPassed") != 7 || !GetBool(approval, "defaultEnabled") ||
-                    !GetBool(approval, "directWriteRefusedBeforeDispatch") || !GetBool(approval, "callToolWriteRefusedBeforeDispatch") ||
-                    !GetBool(approval, "readSucceeded") || GetBool(approval, "workbenchConnected") || GetBool(approval, "tiaConnected")))
-                    return $"V{major} default-approval gate incomplete";
-                if (includes("offline-suites") && (!runtime.TryGetProperty("sessionStability", out var session) || GetInt(session, "nativeMcpSafetyChecksPassed") < 8 ||
-                    GetInt(session, "crashEvidenceChecksPassed") < 7 || GetBool(session, "nativeMcpExecuted")))
-                    return $"V{major} session safety evidence incomplete";
-            }
-
-            var roots = new[] { "bin-build/engine-compat/v20", "bin-build/engine-compat/v21", "runtime/tools", "runtime/verification" };
+            var roots = ReleaseBuildRuntimeRoots;
             var expected = Directory.Exists(Path.Combine(root, "runtime"))
                 ? roots.SelectMany(relative =>
                 {
                     var path = Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar));
                     return Directory.Exists(path) ? Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories) : [];
                 }).Where(path => Path.GetExtension(path) is ".exe" or ".dll" or ".config" ||
-                    Path.GetFileName(path) is "tool-catalog.json" or "release-key.txt" or "NativeCallWeaver.deps.json" or "NativeCallWeaver.runtimeconfig.json")
+                    Path.GetFileName(path) is "release-key.txt" or "NativeCallWeaver.deps.json" or "NativeCallWeaver.runtimeconfig.json")
                   .Select(path => Relative(root, path)).Order(StringComparer.Ordinal).ToArray()
                 : [];
             var recorded = ReadRows(record, "runtimeFiles").Select(row => row.Path).Order(StringComparer.Ordinal).ToArray();

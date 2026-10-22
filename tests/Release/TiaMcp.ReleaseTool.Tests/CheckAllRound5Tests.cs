@@ -8,16 +8,18 @@ namespace TiaMcp.ReleaseTool.Tests;
 public sealed class CheckAllRound5Tests
 {
     [Fact]
-    public void PlcHarnessJobsUseTheSdkFixtureAndKeepTheEngineJobsAdjacent()
+    public void PlcHarnessJobsUseTheSdkFixtureAndNoEngineHarnessJobRemains()
     {
         var root = Repository.FindRoot();
         var jobs = File.ReadAllText(Path.Combine(root, "build-tools/release/CheckAll.cs"));
-        Assert.Contains("CheckAllHarnessSuccessors().TryGetValue(name, out var plcName)", jobs);
+        Assert.Contains("var plcName = CheckAllPlcHarnessJob(key, mode);", jobs);
         Assert.Contains("scripts/checks/Test-PlcHarness.py", jobs);
         Assert.Contains("\"--worker\", CheckAllPlcFixture(key)", jobs);
         Assert.Contains("\"--api\", targetApi", jobs);
-        Assert.Contains("ValidateCheckAllHarnessSuccessors(jobs)", jobs);
-        Assert.Contains("CheckAllHarness(Isolated(name, harness, [copiedEngine", jobs);
+        Assert.Contains("ValidateCheckAllPlcHarnessJobs(jobs)", jobs);
+        // P8-04l: the engine harness jobs (a private engine copy under the harness) are retired.
+        Assert.DoesNotContain("copiedEngine", jobs);
+        Assert.DoesNotContain("CheckAllHarness(Isolated(", jobs);
         var harness = File.ReadAllText(Path.Combine(root, "tests/Engine/TiaMcp.Engine.Harness/Program.cs"));
         Assert.True(harness.IndexOf("RunPlcHarness(args)", StringComparison.Ordinal)
             < harness.IndexOf("EngineSurface.CheckHostRetirement", StringComparison.Ordinal));

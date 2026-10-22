@@ -55,7 +55,7 @@ internal static partial class ReleaseCommands
         using var multi = JsonDocument.Parse(File.ReadAllText(options.Get("MultiRecord", Path.Combine(Root, ReleaseRecords.MultiPath))));
         var rows = ReleaseRecords.Compare(engine.RootElement, multi.RootElement);
         foreach (var row in rows) Console.WriteLine($"{row.EngineField} -> {row.MultiField ?? "(none)"}: {row.Status}");
-        Console.WriteLine($"Compared {rows.Count} fields; {rows.Count(row => row.Status is "missing" or "different")} missing/different; retained engine proofs are explicitly labelled.");
+        Console.WriteLine($"Compared {rows.Count} fields; {rows.Count(row => row.Status is "missing" or "different")} missing/different; release-build.json-only evidence is explicitly labelled.");
         return rows.Any(row => row.Status is "missing" or "different") ? 1 : 0;
     }
 
@@ -332,11 +332,11 @@ internal static partial class ReleaseCommands
         {
             foreach (var step in steps)
             {
-                var check = step[..2] switch { "06" or "07" => "engine-contracts", "08" or "09" => "engine-responses", "10" => "relocation", _ => null };
+                var check = step[..2] switch { "06" or "07" => "plc-contracts", "08" or "09" => "plc-responses", "10" => "relocation", _ => null };
                 Console.WriteLine((check is null || plan.Includes(check) ? "DRY " : "SKIP ") + step);
             }
             Console.WriteLine($"Tier={plan.Tier}; checks selected: {string.Join(", ", plan.SelectedChecks)}; checks skipped: {string.Join(", ", plan.SkippedChecks)}");
-            Console.WriteLine($"02: full engines -> multi-version completion; 04: ZIP parent + filename without extension; max parallelism={maxParallelism}.");
+            Console.WriteLine($"02: release-wide checks (build-release) -> multi-version completion; 04: ZIP parent + filename without extension; max parallelism={maxParallelism}.");
             Console.WriteLine("After step 04, selected checks run as bounded jobs; each snapshot comparison waits for its capture.");
             Console.WriteLine("02: compare-release-records (read-only comparison of the two current records)");
             return DryRunRecordComparison(options);
@@ -775,7 +775,7 @@ internal static partial class ReleaseCommands
         var buildRelative = ReleaseRecords.SelectPath(root);
         using var buildDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, buildRelative)));
         using var configuratorDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "manifest/configurator-build.json")));
-        var delivery = deliveryDoc.RootElement; var build = ReleaseRecords.ShippedEngineProof(buildDoc.RootElement); var configurator = configuratorDoc.RootElement;
+        var delivery = deliveryDoc.RootElement; var build = buildDoc.RootElement; var configurator = configuratorDoc.RootElement;
         ReleaseRecords.AssertBinding(root, delivery, buildRelative);
         if (buildRelative == ReleaseRecords.EnginePath && JsonString(delivery, "multiVersionBuildSha256").Length != 0)
         {
@@ -835,7 +835,7 @@ internal static partial class ReleaseCommands
             foreach (var row in ReleaseRecords.DeliveryFiles(root, boundOnly: true))
             {
                 var relative = row.Path;
-                // The release-only IL verifier is recorded with the engine but never delivered (the former PowerShell validator skipped it in package mode).
+                // The release-only IL verifier is recorded by build-release but never delivered (the former PowerShell validator skipped it in package mode).
                 if (package && relative.StartsWith("runtime/verification/", StringComparison.Ordinal)) continue;
                 var path = Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar));
                 if (!File.Exists(path)) throw new ReleaseException("Runtime dependency missing: " + relative);
@@ -1107,7 +1107,7 @@ internal static partial class ReleaseCommands
         var output = Path.GetFullPath(options.Get("EvidenceDirectory", Path.Combine(Root, "bin-build/plc-adapter-workers")));
         Directory.CreateDirectory(output);
         var keys = options.All("ReleaseKeys").ToArray();
-        // 20/21 workers stay as compile coverage for the shared adapters the engine worker hosts; packaging skips them.
+        // All eight releases ship the PLC worker.
         if (keys.Length == 0) keys = ["14sp1", "15.1", "16", "17", "18", "19", "20", "21"];
         var results = new List<object>();
         foreach (var key in keys)
@@ -1151,7 +1151,7 @@ internal static partial class ReleaseCommands
             results.Add(new { releaseKey = key, targetFramework = "net48", referenceIdentity = System.Reflection.AssemblyName.GetAssemblyName(core).FullName, referenceSha256 = ReleaseRecords.HashFile(core), workerSha256 = ReleaseRecords.HashFile(worker), adapterSha256 = ReleaseRecords.HashFile(adapter), opennessGroupRuntime, compile = "passed", nativeAcceptance = "NOT RUN", nativeCallInstrumentation = "Adapter DLL weave and verify required by build", deployment = "Use build-multi-version", scope = "PLC foundation worker; full engines remain separate" });
             Console.WriteLine($"{key} worker + single adapter compiled; native acceptance NOT RUN; ready for foundation bundle tests");
         }
-        WriteJson(Path.Combine(output, "summary.json"), new { generatedAt = DateTimeOffset.UtcNow.ToString("o"), scope = "compile only; no worker/TIA launch, no change to full V20/V21 engines", results });
+        WriteJson(Path.Combine(output, "summary.json"), new { generatedAt = DateTimeOffset.UtcNow.ToString("o"), scope = "compile only; no worker/TIA launch", results });
         return 0;
     }
     private static int PrepareDelivery(Options options)
@@ -1606,7 +1606,7 @@ internal static partial class ReleaseCommands
             WriteJson(pendingPath, prepared);
             if (options.Has("PrepareOnly"))
             {
-                Console.WriteLine("Multi-version preparation passed; build/reuse the full engines, then run -CompleteOnly with the same -Test setting.");
+                Console.WriteLine("Multi-version preparation passed; run build-release, then -CompleteOnly with the same -Test setting.");
                 return 0;
             }
             if (!options.Has("SkipFullEngines"))
@@ -1615,8 +1615,8 @@ internal static partial class ReleaseCommands
                 var v21 = Path.Combine(api, "TIA_V21_PublicAPI/V21/net48");
                 var engineArgs = new List<string> { "build-release", "-V20ReferenceRoot", v20, "-V21ReferenceRoot", v21, "-Dotnet", dotnet, "-Python", python };
                 if (!string.IsNullOrWhiteSpace(nuget)) engineArgs.AddRange(["-NuGetConfig", nuget]);
-                var engineCode = RunSelfCommand(engineArgs.ToArray(), "Full-engine build");
-                if (engineCode != 0) throw new ReleaseException("Full-engine build failed");
+                var engineCode = RunSelfCommand(engineArgs.ToArray(), "Release-wide build");
+                if (engineCode != 0) throw new ReleaseException("Release-wide build (build-release) failed");
             }
             pending?.Dispose();
             pending = JsonDocument.Parse(File.ReadAllText(pendingPath));
@@ -1627,21 +1627,21 @@ internal static partial class ReleaseCommands
         using (pending)
         {
             var engineRecordPath = Path.Combine(Root, "manifest/release-build.json");
-            if (!File.Exists(engineRecordPath)) throw new ReleaseException("Full-engine build record missing; run build-release before multi-version completion");
+            if (!File.Exists(engineRecordPath)) throw new ReleaseException("Release build record (manifest/release-build.json) missing; run build-release before multi-version completion");
             using var engineRecord = JsonDocument.Parse(File.ReadAllText(engineRecordPath));
             var engineReuse = ReleaseRecords.EngineReuseReason(Root, release, engineRecord.RootElement, ReleaseRecords.GetSources(Root, "engine"), plan.Tier);
             if (engineReuse.Length != 0)
-                throw new ReleaseException("Full-engine inputs, binaries or audit evidence do not match: " + engineReuse + "; run build-release before multi-version completion");
+                throw new ReleaseException("Release build inputs, binaries or evidence do not match: " + engineReuse + "; run build-release before multi-version completion");
             // build-release recorded the updater it built and tested; the eight-release record binds the same bytes (P8-upd-bind).
             var updaterReason = ReleaseRecords.UpdaterReason(Root, engineRecord.RootElement, package: false);
             if (updaterReason.Length != 0)
-                throw new ReleaseException("Updater build output does not match the full-engine record: " + updaterReason + "; run build-release before multi-version completion");
+                throw new ReleaseException("Updater build output does not match the release build record: " + updaterReason + "; run build-release before multi-version completion");
             var deliveryPath = Path.Combine(Root, "manifest/delivery.json");
 
             if (plan.Includes("native-coverage"))
             {
             var audit = RunLoggedProcess(Dotnet, [typeof(ReleaseCommands).Assembly.Location, "audit-version-tools", "-PublicApiRoot", api], logs, "api-audit.log", null);
-            ProcessRunner.RequireSuccess(audit, "Per-version tool/API audit failed; build full engines first");
+            ProcessRunner.RequireSuccess(audit, "Per-version tool/API audit failed");
             }
             var validationAfter = JsonNode.Parse(validation.GetRawText())!.AsObject();
             if (test && plan.Includes("foundation-transport"))
@@ -1669,7 +1669,7 @@ internal static partial class ReleaseCommands
             if (!SameArtifacts(ReleaseRecords.ReadRows(pending.RootElement, "sourceFiles"), ReleaseRecords.GetSources(Root, "multi"))) throw new ReleaseException("Multi-version inputs changed during validation; refusing to record results");
             if (!SameArtifacts(files, ReleaseRecords.GetRuntimeFiles(Root))) throw new ReleaseException("Runtime files changed during multi-version audits; refusing to record results");
             engineReuse = ReleaseRecords.EngineReuseReason(Root, release, engineRecord.RootElement, ReleaseRecords.GetSources(Root, "engine"), plan.Tier);
-            if (engineReuse.Length != 0) throw new ReleaseException("Full-engine inputs or evidence changed during multi-version audits: " + engineReuse);
+            if (engineReuse.Length != 0) throw new ReleaseException("Release build inputs or evidence changed during multi-version audits: " + engineReuse);
             updaterReason = ReleaseRecords.UpdaterReason(Root, engineRecord.RootElement, package: false);
             if (updaterReason.Length != 0) throw new ReleaseException("Updater build output changed during multi-version audits: " + updaterReason);
             var record = new
@@ -1678,7 +1678,6 @@ internal static partial class ReleaseCommands
                 createdAt = DateTimeOffset.UtcNow.ToString("o"), release, fileVersion = releaseFileVersion, test,
                 releases = pending.RootElement.GetProperty("releases"),
                 plcRuntimes = ReleaseRecords.WithShippedToolsList(Root, pending.RootElement.GetProperty("plcRuntimes")),
-                engineCompatibility = engineRecord.RootElement,
                 studioReleaseKeys = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
                 nativeAcceptance = "NOT RUN", validation = validationAfter,
                 files = files.Select(row => new { path = row.Path, sha256 = row.Sha256, length = new FileInfo(Path.Combine(Root, row.Path)).Length }),
@@ -1687,7 +1686,7 @@ internal static partial class ReleaseCommands
             };
             var recordPath = Path.Combine(Root, "manifest/multi-version-build.json");
             WriteJson(recordPath, record);
-            // The record's own PLC proof, shipped-engine copy and updater binding must hold before the delivery binds it.
+            // The record's own PLC proof and updater binding must hold before the delivery binds it (P8-04l: no engine record copy).
             using (var written = JsonDocument.Parse(File.ReadAllText(recordPath)))
             {
                 ReleaseRecords.AssertPlcProof(Root, written.RootElement, true);

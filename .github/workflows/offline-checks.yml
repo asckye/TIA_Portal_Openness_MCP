@@ -176,7 +176,7 @@ jobs:
       - name: Build the development host that the host CLI tests start
         run: dotnet build src/FoundationHost/TiaMcp.FoundationHost.csproj -c Release
       - name: Foundation contracts and functional tests, runner ${{ matrix.runner }} of 4
-        run: dotnet run --project build-tools/release -- test-suites -Shards 8 -MaxParallelism 2 -RunnerIndex ${{ matrix.runner }} -RunnerCount 4 -ResultsDirectory bin-build/runner-results -Suite foundation -Suite engine-host -Suite shared-session -Suite shared-lifecycle -Suite worker-progress -Suite prompt-registration -Suite software-read -Suite special-export-shape -Suite device-add -Suite hardware-catalog -Suite diagnostic-membership -Suite adapter-contracts -Suite worker-channel -Suite compile-candidate -Suite compile-candidate-no-safety -Suite fallback-vci-modern -Suite fallback-vci-initial -Suite fallback-vci-classic -Suite workbench-control-protocol
+        run: dotnet run --project build-tools/release -- test-suites -Shards 8 -MaxParallelism 2 -RunnerIndex ${{ matrix.runner }} -RunnerCount 4 -ResultsDirectory bin-build/runner-results -Suite foundation -Suite engine-host -Suite shared-lifecycle-plc -Suite worker-progress-foundation -Suite prompt-registration -Suite software-read -Suite special-export-shape -Suite device-add -Suite hardware-catalog -Suite diagnostic-membership -Suite adapter-contracts -Suite worker-channel -Suite compile-candidate -Suite compile-candidate-no-safety -Suite fallback-vci-modern -Suite fallback-vci-initial -Suite fallback-vci-classic -Suite workbench-control-protocol
       - uses: actions/upload-artifact@v6
         if: always()
         with:
@@ -199,7 +199,7 @@ jobs:
           pattern: foundation-runner-*
           path: bin-build/runner-results
       - name: Registered suite gates over every runner's shards
-        run: dotnet run --project build-tools/release -- test-suites -Shards 8 -GateOnly -RunnerResults bin-build/runner-results -ResultsDirectory bin-build/test-results-fast -Suite foundation -Suite engine-host -Suite shared-session -Suite shared-lifecycle -Suite worker-progress -Suite prompt-registration -Suite software-read -Suite special-export-shape -Suite device-add -Suite hardware-catalog -Suite diagnostic-membership -Suite adapter-contracts -Suite worker-channel -Suite compile-candidate -Suite compile-candidate-no-safety -Suite fallback-vci-modern -Suite fallback-vci-initial -Suite fallback-vci-classic -Suite workbench-control-protocol
+        run: dotnet run --project build-tools/release -- test-suites -Shards 8 -GateOnly -RunnerResults bin-build/runner-results -ResultsDirectory bin-build/test-results-fast -Suite foundation -Suite engine-host -Suite shared-lifecycle-plc -Suite worker-progress-foundation -Suite prompt-registration -Suite software-read -Suite special-export-shape -Suite device-add -Suite hardware-catalog -Suite diagnostic-membership -Suite adapter-contracts -Suite worker-channel -Suite compile-candidate -Suite compile-candidate-no-safety -Suite fallback-vci-modern -Suite fallback-vci-initial -Suite fallback-vci-classic -Suite workbench-control-protocol
       - uses: actions/upload-artifact@v6
         if: always()
         with:

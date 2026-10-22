@@ -31,7 +31,7 @@ internal static partial class ReleaseCommands
         if (options.Has("EarlyGatesOnly"))
         {
             var releaseTemp = CreateReleaseTempRoot();
-            RunReleaseEarlyGates(version, python, v21, publicApiRoot, releaseTemp, nugetConfig);
+            RunReleaseEarlyGates(version, python, publicApiRoot, releaseTemp, nugetConfig);
             return 0;
         }
 
@@ -94,7 +94,7 @@ internal static partial class ReleaseCommands
             Console.WriteLine("WARNING docs/reference/capabilities.md does not mention " + version + " - add the release entry by hand");
         if (!File.ReadAllText(Path.Combine(Root, "docs/development/roadmap.md")).Contains(version, StringComparison.Ordinal))
             Console.WriteLine("WARNING docs/development/roadmap.md does not mention " + version + " - add the roadmap entry by hand");
-        RunReleaseEarlyGates(version, python, v21, publicApiRoot, runTemp, nugetConfig);
+        RunReleaseEarlyGates(version, python, publicApiRoot, runTemp, nugetConfig);
 
         var stages = new ReleaseBuildStages(
             Prepare: () =>
@@ -104,7 +104,7 @@ internal static partial class ReleaseCommands
                 if (nugetConfig is not null) args.AddRange(["-NuGetConfig", nugetConfig]);
                 RunReleaseCommand(args.ToArray(), "multi-version preparation", logRoot, runTemp, publicApiRoot);
             },
-            BuildEngines: () =>
+            BuildRelease: () =>
             {
                 var args = new List<string> { "build-release", "-V20ReferenceRoot", v20, "-V21ReferenceRoot", v21, "-Python", python, "-ReleaseDate", date, "-MaxParallelism", parallelism };
                 if (nugetConfig is not null) args.AddRange(["-NuGetConfig", nugetConfig]);
@@ -259,7 +259,7 @@ internal static partial class ReleaseCommands
         return GitAtRootText(root, git, ["rev-parse", "HEAD"]);
     }
 
-    private static void RunReleaseEarlyGates(string version, string python, string v21Api, string apiRoot, string runTemp, string? nugetConfig)
+    private static void RunReleaseEarlyGates(string version, string python, string apiRoot, string runTemp, string? nugetConfig)
     {
         TestReleaseDocumentation(version, requireNewest: true);
         var outputDirectory = Path.Combine(Root, "bin-build/release-early-gates", Guid.NewGuid().ToString("N"));
@@ -276,20 +276,7 @@ internal static partial class ReleaseCommands
         RunSuiteForReleaseGates("write-guard", python, outputDirectory, runTemp, cliHome, apiRoot, nugetConfig);
         RunSuiteForReleaseGates("crash-evidence", python, outputDirectory, runTemp, cliHome, apiRoot, nugetConfig);
         RunReleaseSpec("release approval gate self-test", python, [Path.Combine(Root, "scripts/checks/Test-ReleaseApprovalGate.py"), "--self-test"], outputDirectory, runTemp, cliHome, apiRoot);
-        var harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
-        if (!File.Exists(harness))
-        {
-            var dotnet = Environment.GetEnvironmentVariable("DOTNET_EXE") ?? "dotnet";
-            var project = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/TiaMcp.Engine.Harness.csproj");
-            RunReleaseRaw(dotnet, ["build", project, "-c", "Release", "-v:q", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false", "-p:NuGetAudit=false"], Path.Combine(outputDirectory, "build-harness.log"), runTemp, cliHome, apiRoot, null, "HTTP harness build");
-        }
-        var engine = Path.Combine(EngineCompatibilityDirectory(Root, "21"), "TiaMcp.Engine.V21.exe");
-        if (File.Exists(engine))
-        {
-            RunReleaseTableStep("download-route", harness, [engine, "test-download-route", v21Api], outputDirectory, runTemp, cliHome, apiRoot);
-            RunReleaseTableStep("match-plc-name", harness, [engine, "test-match-plc-name"], outputDirectory, runTemp, cliHome, apiRoot);
-        }
-        else Console.WriteLine("Existing V21 engine unavailable; production assembly fixtures run in build-release after compilation.");
+        // The V21 route-selection and PLC-name fixtures run as PLC harness jobs in the multi-version preparation (P8-04l).
     }
 
     private static void RunSuiteForReleaseGates(string suite, string python, string output, string runTemp, string cliHome, string apiRoot, string? nugetConfig)
@@ -313,13 +300,6 @@ internal static partial class ReleaseCommands
     private static void RunReleaseSpec(string name, string executable, IEnumerable<string> args, string output, string runTemp, string cliHome, string apiRoot)
     {
         var result = RunBuildIsolated(executable, args, Path.Combine(output, Regex.Replace(name, "[^A-Za-z0-9._-]", "_") + ".log"), runTemp, cliHome, apiRoot, null, false, name);
-        ProcessRunner.RequireSuccess(result, name + " failed");
-    }
-
-    private static void RunReleaseTableStep(string name, string executable, IEnumerable<string> args, string output, string runTemp, string cliHome, string apiRoot)
-    {
-        var spec = ReleaseCommandTable.Get(name);
-        var result = RunBuildIsolated(executable, args, Path.Combine(output, spec.LogFile), runTemp, cliHome, apiRoot, null, false, name);
         ProcessRunner.RequireSuccess(result, name + " failed");
     }
 

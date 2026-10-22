@@ -16,8 +16,8 @@ internal static partial class ReleaseCommands
         {
             ["nativeMcpSafety"] = (8, false), ["diagnosticBehavior"] = (36, false), ["diagnosticRejection"] = (5, false),
             ["nativeJournalReader"] = (3, false), ["adapterJournal"] = (8, false), ["processLeases"] = (2, false),
-            ["workerFaults"] = (25, false), ["workerProtocol"] = (58, false), ["approvalSafety"] = (7, true),
-            ["softwareLookup"] = (45, false), ["engineeringApiV20"] = (2840, false), ["engineeringApiV21"] = (3126, false),
+            ["workerProtocol"] = (58, false), ["approvalSafety"] = (7, true),
+            ["softwareLookup"] = (45, false),
             ["v21Ecosystem"] = (43, false), ["globalScriptV21"] = (8, true), ["graphicSelection"] = (8, false),
             ["runtimeSettingsV20"] = (8, false), ["runtimeSettingsV21"] = (9, false), ["ecosystem"] = (31, false)
         };
@@ -30,7 +30,8 @@ internal static partial class ReleaseCommands
 
         EnsureWindows("build-release");
         var v20Api = RequiredDirectory(options.Get("V20ReferenceRoot"), "-V20ReferenceRoot");
-        var v21Api = RequiredDirectory(options.Get("V21ReferenceRoot"), "-V21ReferenceRoot");
+        // Release callers still pass both reference roots; the V21 root is validated, the V20 root locates the SDK root.
+        _ = RequiredDirectory(options.Get("V21ReferenceRoot"), "-V21ReferenceRoot");
         var dotnet = options.Get("Dotnet", Dotnet);
         var python = options.Get("Python", Py);
         var nuget = options.Get("NuGetConfig") ?? Environment.GetEnvironmentVariable("TIA_MCP_OFFLINE_NUGET_CONFIG") ?? Environment.GetEnvironmentVariable("RestoreConfigFile");
@@ -46,16 +47,13 @@ internal static partial class ReleaseCommands
         var releaseVersion = ReleaseVersions.ReadVersionProps(Root);
         var release = releaseVersion.Label;
         var fileVersion = releaseVersion.FileVersion;
-        var pipelineMajor = int.Parse(options.Get("PipelineMajor", "0"), System.Globalization.CultureInfo.InvariantCulture);
-        if (pipelineMajor is not (0 or 20 or 21)) throw new ReleaseException("-PipelineMajor must be 0, 20 or 21");
-        if (pipelineMajor == 0) ReleaseRecords.AssertRuntimePreparation(Root);
+        ReleaseRecords.AssertRuntimePreparation(Root);
         var releaseDate = options.Get("ReleaseDate", DateTime.Now.ToString("yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture));
         if (!DateTime.TryParseExact(releaseDate, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _))
             throw new ReleaseException("-ReleaseDate must be a valid yyyyMMdd date");
 
         var package = $"TIA_MCP_Delivery_v{release}_{releaseDate}";
-        var sharedOut = Path.Combine(Root, "bin-build/releases", "v" + release);
-        var outputDirectory = pipelineMajor == 0 ? sharedOut : Path.Combine(sharedOut, "v" + pipelineMajor);
+        var outputDirectory = Path.Combine(Root, "bin-build/releases", "v" + release);
         Directory.CreateDirectory(outputDirectory);
         var runTempRoot = Path.GetFullPath(Environment.GetEnvironmentVariable("TIA_MCP_RELEASE_TEMP_ROOT") ?? Path.Combine(Path.GetTempPath(), "tmr-" + Guid.NewGuid().ToString("N")[..8]));
         var repoPrefix = Path.GetFullPath(Root).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
@@ -66,62 +64,13 @@ internal static partial class ReleaseCommands
         var cliHome = Path.Combine(outputDirectory, "dotnet-home");
         Directory.CreateDirectory(cliHome);
 
-        var sourceFiles = pipelineMajor == 0 ? ReleaseRecords.GetSources(Root, "engine") : [];
-        var validationInputs = pipelineMajor == 0 ? ReleaseRecords.GetValidationInputs(Root, "engine") : [];
-        var commonPath = Path.Combine(sharedOut, "common.json");
-        JsonElement common;
-        if (pipelineMajor == 0)
-        {
-            common = RunBuildReleaseCommon(options, dotnet, python, nuget, v20Api, apiRoot, sharedOut, runTemp, cliHome);
-        }
-        else
-        {
-            if (!File.Exists(commonPath)) throw new ReleaseException("Common build evidence missing; run build-release without -PipelineMajor first");
-            using var commonDoc = JsonDocument.Parse(File.ReadAllText(commonPath));
-            common = commonDoc.RootElement.Clone();
-        }
+        // P8-04l: the V20/V21 engine is deleted. build-release runs the release-wide checks and builds the shipped tools;
+        // the V20/V21 checks run on the PLC workers in build-multi-version (PlcReleaseChecks).
+        var sourceFiles = ReleaseRecords.GetSources(Root, "engine");
+        var validationInputs = ReleaseRecords.GetValidationInputs(Root, "engine");
+        var common = RunBuildReleaseCommon(options, dotnet, python, nuget, v20Api, apiRoot, outputDirectory, runTemp, cliHome);
 
-        var majors = pipelineMajor == 0 ? new[] { 20, 21 } : new[] { pipelineMajor };
-        var jobs = majors.Select(major => ($"release-v{major}", (Func<PipelineResult>)(() =>
-        {
-            var majorOut = Path.Combine(sharedOut, "v" + major);
-            var majorTemp = PipelineTempDirectory(runTemp, major);
-            var majorCliHome = Path.Combine(outputDirectory, "dotnet-home-v" + major);
-            Directory.CreateDirectory(majorOut);
-            Directory.CreateDirectory(majorTemp);
-            Directory.CreateDirectory(majorCliHome);
-            try
-            {
-                var developmentHost = CopyDevelopmentHost(PrivateDevelopmentHostPath(runTemp, major));
-                var record = RunBuildReleaseMajor(options, dotnet, python, nuget, major, major == 20 ? v20Api : v21Api,
-                    v21Api, apiRoot, release, fileVersion, common, majorOut, majorTemp, majorCliHome, developmentHost);
-                WriteJson(Path.Combine(majorOut, "pipeline-result.json"), record);
-                RemoveDevelopmentHostCopy(developmentHost);
-                return new PipelineResult("release-v" + major, 0, $"V{major} pipeline passed; logs: {majorOut}{Environment.NewLine}", "");
-            }
-            catch (Exception ex)
-            {
-                return new PipelineResult("release-v" + major, 1, "", ex.ToString());
-            }
-        }))).ToArray();
-        ParallelPipeline.Run(jobs, Path.Combine(outputDirectory, "pipeline-logs"), GetMaxParallelism(options));
-
-        if (pipelineMajor != 0)
-        {
-            Console.WriteLine($"V{pipelineMajor} pipeline passed; logs: {outputDirectory}");
-            return 0;
-        }
-
-        var runtimeRecords = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
-        foreach (var major in new[] { 20, 21 })
-        {
-            var path = Path.Combine(sharedOut, "v" + major, "pipeline-result.json");
-            if (!File.Exists(path)) throw new ReleaseException($"V{major} pipeline returned no validation record");
-            using var result = JsonDocument.Parse(File.ReadAllText(path));
-            runtimeRecords.Add("V" + major, result.RootElement.Clone());
-        }
-
-        RunShippedRuntimeChecks(dotnet, v21Api, apiRoot, package, sharedOut, runTemp, cliHome, ReleasePlan(options));
+        RunShippedRuntimeChecks(dotnet, apiRoot, package, outputDirectory, runTemp, cliHome);
         RefreshPackageManifest(release, fileVersion, releaseDate, package);
         if (!SameArtifacts(sourceFiles, ReleaseRecords.GetSources(Root, "engine"))) throw new ReleaseException("Build inputs changed while validation was running; refusing to record results");
         if (!SameArtifacts(validationInputs, ReleaseRecords.GetValidationInputs(Root, "engine"))) throw new ReleaseException("Validation inputs changed during the build; refusing to record results");
@@ -130,28 +79,16 @@ internal static partial class ReleaseCommands
             !JsonElement.DeepEquals(builtUpdater, JsonSerializer.SerializeToElement(updaterFiles, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })))
             throw new ReleaseException("Updater build output changed during validation; refusing to record results");
 
-        // Same roots as ReleaseRecords' engine inventory check (the PowerShell Build-Release recorded these four only);
-        // Foundation, Studio and bundled .NET runtimes belong to the multi-version record.
-        var runtimeFiles = new[] { "bin-build/engine-compat/v20", "bin-build/engine-compat/v21", "runtime/tools", "runtime/verification" }
+        // Same roots as ReleaseRecords' release-build inventory check; Foundation hosts, PLC workers, Studio and bundled
+        // .NET runtimes belong to the multi-version record.
+        var runtimeFiles = ReleaseRecords.ReleaseBuildRuntimeRoots
             .Select(relative => Path.Combine(Root, relative.Replace('/', Path.DirectorySeparatorChar)))
             .Where(Directory.Exists)
             .SelectMany(directory => Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories))
             .Where(path => Path.GetExtension(path) is ".exe" or ".dll" or ".config" ||
-                Path.GetFileName(path) is "tool-catalog.json" or "release-key.txt" or "NativeCallWeaver.deps.json" or "NativeCallWeaver.runtimeconfig.json")
+                Path.GetFileName(path) is "release-key.txt" or "NativeCallWeaver.deps.json" or "NativeCallWeaver.runtimeconfig.json")
             .Order(StringComparer.OrdinalIgnoreCase)
             .Select(path => new { path = Path.GetRelativePath(Root, path).Replace('\\', '/'), length = new FileInfo(path).Length, sha256 = ReleaseRecords.HashFile(path) }).ToArray();
-        var artifacts = new List<object>();
-        foreach (var major in new[] { 20, 21 })
-            foreach (var name in new[] { $"native-call-coverage-v{major}.json", $"tool-usage-v{major}.json" })
-            {
-                var path = Path.Combine(sharedOut, "v" + major, name);
-                if (!File.Exists(path))
-                {
-                    if (name.StartsWith("native-call-coverage", StringComparison.Ordinal) ? ReleasePlan(options).Includes("native-coverage") : ReleasePlan(options).Includes("resource-discovery")) throw new ReleaseException("Validation artifact missing: " + path);
-                    continue;
-                }
-                artifacts.Add(new { path = Path.GetRelativePath(Root, path).Replace('\\', '/'), sha256 = ReleaseRecords.HashFile(path) });
-            }
         var record = new
         {
             tier = ReleasePlan(options).Tier, checkPlan = ReleasePlan(options),
@@ -163,13 +100,17 @@ internal static partial class ReleaseCommands
                 writeGuardPassed = GetJsonInt(common, "writeGuardChecksPassed"),
                 crashEvidencePassed = GetJsonInt(common, "crashEvidenceChecksPassed"),
                 versionPolicySdkPassed = GetJsonInt(common, "versionPolicySdkPassed"),
-                updaterPassed = GetJsonInt(common, "updaterPassed"), runtimes = runtimeRecords
+                updaterPassed = GetJsonInt(common, "updaterPassed"),
+                // Formerly copied into each engine runtime's sessionStability; the checks are release-wide.
+                nativeMcpSafetyPassed = GetJsonInt(common, "nativeMcpSafetyChecksPassed"),
+                nativeSupervisorPassed = GetJsonInt(common, "nativeSupervisorChecksPassed"),
+                diagnosticTests = common.GetProperty("diagnosticTests")
             },
-            runtimeFiles, updaterFiles, sourceFiles, validationInputs, validationArtifacts = artifacts
+            runtimeFiles, updaterFiles, sourceFiles, validationInputs, validationArtifacts = Array.Empty<object>()
         };
         WriteJson(Path.Combine(Root, "manifest/release-build.json"), record);
         // Completion binds the eight-release record before delivery preparation.
-        Console.WriteLine($"Built and checked both runtimes: {fileVersion}. Review and commit changes, then run build-tools/Package-Release.py. Real TIA acceptance is separate.");
+        Console.WriteLine($"Built and checked the release-wide tools: {fileVersion}. The V20/V21 checks run on the PLC workers in build-multi-version. Real TIA acceptance is separate.");
         return 0;
     }
 
@@ -177,8 +118,8 @@ internal static partial class ReleaseCommands
     private static int BuildReleaseCompilation(Options options)
     {
         EnsureWindows("build-release -CompileOnly");
-        string v20 = RequiredDirectory(options.Get("V20ReferenceRoot"), "-V20ReferenceRoot");
-        string v21 = RequiredDirectory(options.Get("V21ReferenceRoot"), "-V21ReferenceRoot");
+        _ = RequiredDirectory(options.Get("V20ReferenceRoot"), "-V20ReferenceRoot");
+        _ = RequiredDirectory(options.Get("V21ReferenceRoot"), "-V21ReferenceRoot");
         string? nuget = options.Get("NuGetConfig") ?? Environment.GetEnvironmentVariable("RestoreConfigFile");
         if (string.IsNullOrWhiteSpace(nuget)) throw new ReleaseException("-CompileOnly requires an offline -NuGetConfig");
         nuget = Path.GetFullPath(nuget);
@@ -190,34 +131,21 @@ internal static partial class ReleaseCommands
         string weaver = Path.Combine(Root, "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll");
         if (options.Has("NoBuild"))
         {
-            foreach (var path in new[] { weaver, "src/Engine/bin-v20/Release/net48/TiaMcp.Engine.V20.exe", "src/Engine/bin/Release/net48/TiaMcp.Engine.V21.exe",
+            foreach (var path in new[] { weaver,
                 "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe", "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe" })
                 RequireFile(Path.IsPathRooted(path) ? path : Path.Combine(Root, path), "CompileOnly -NoBuild requires the completed check-all build graph");
             Console.WriteLine("PASS production compilation outputs from the completed build graph");
             return 0;
         }
-        void Build(string name, string project, string? api = null)
+        void Build(string name, string project)
         {
             var args = new List<string> { "build", project, "-c", "Release", "--disable-build-servers", "-m:1", "-nodeReuse:false",
                 "-p:UseSharedCompilation=false", "-p:NuGetAudit=false" };
-            if (api != null) { args.Add("-p:SiemensEngineeringDirectory=" + api); args.Add("-p:NativeCallWeaverPath=" + weaver); }
-            if (api != null && options.Get("SdkFixtureDirectory") is string fixtureRoot)
-            {
-                // Offline capture workers use the same compilation entry point and
-                // an isolated output; production worker binaries remain separate.
-                string release = name == "engine-v20" ? "20" : "21";
-                string fixture = Path.GetFullPath(Path.Combine(fixtureRoot, release));
-                args.Add("-p:TiaMcpEngineWorkerSdkFixture=true");
-                args.Add("-p:AppendTargetFrameworkToOutputPath=false");
-                args.Add("-p:OutputPath=" + fixture);
-            }
             var result = RunLoggedProcess(dotnet, args, logs, name + ".log", nuget);
             ProcessRunner.RequireSuccess(result, name + " compilation failed");
             Console.WriteLine("PASS " + name + " compilation; " + Path.Combine(logs, name + ".log"));
         }
         Build("native-call-weaver", "build-tools/native-call-weaver/NativeCallWeaver.csproj");
-        Build("engine-v20", "src/Engine/TiaMcp.Engine.V20.csproj", v20);
-        Build("engine-v21", "src/Engine/TiaMcp.Engine.V21.csproj", v21);
         Build("foundation-host", "src/FoundationHost/TiaMcp.FoundationHost.csproj");
         Build("http-tests", "tests/Engine/TiaMcp.Engine.Harness/TiaMcp.Engine.Harness.csproj");
         return 0;
@@ -315,288 +243,6 @@ internal static partial class ReleaseCommands
         return result.RootElement.Clone();
     }
 
-    // The V20 and V21 pipelines of build-release and branch-gate run in parallel. A suite build in one of them (worker-robustness and
-    // engine-host reference the Foundation host project) rebuilds src/FoundationHost/bin/Release while the other pipeline's harness starts
-    // that host, which then fails to load (P8-90). Each pipeline therefore takes its own copy of the development host once, before its
-    // first step and while no suite build runs, and its harness steps start that copy through TIA_MCP_TEST_HOST_PATH. The Python gates are
-    // unchanged: they start the packaged runtime/vK host. The shipped-runtime checks after both pipelines use the shared build again.
-    internal static string PipelineTempDirectory(string runTemp, int major) => Path.Combine(Path.GetFullPath(runTemp), "v" + major);
-
-    internal static string PrivateDevelopmentHostPath(string runTemp, int major) =>
-        Path.Combine(PipelineTempDirectory(runTemp, major), "development-host", "TiaMcp.FoundationHost.exe");
-
-    private static string CopyDevelopmentHost(string target)
-    {
-        var source = Path.Combine(Root, "src/FoundationHost/bin/Release/net10.0");
-        var directory = Path.GetDirectoryName(target)!;
-        lock (SuiteGate)
-        {
-            foreach (var name in new[] { "TiaMcp.FoundationHost.exe", "TiaMcp.FoundationHost.dll", "TiaMcp.FoundationHost.runtimeconfig.json", "TiaMcp.FoundationHost.deps.json" })
-                RequireFile(Path.Combine(source, name), "Development Foundation host has not been built");
-            if (Directory.Exists(directory)) Directory.Delete(directory, true);
-            foreach (var file in Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories))
-            {
-                var destination = Path.Combine(directory, Path.GetRelativePath(source, file));
-                Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
-                File.Copy(file, destination);
-            }
-        }
-        RequireFile(target, "Private development host copy missing");
-        return target;
-    }
-
-    private static void RemoveDevelopmentHostCopy(string developmentHost)
-    {
-        var directory = Path.GetDirectoryName(developmentHost)!;
-        try { Directory.Delete(directory, true); }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            Console.Error.WriteLine("WARNING private development host still in use (kept): " + directory + " (" + ex.Message + ")");
-        }
-    }
-
-    private static object RunBuildReleaseMajor(Options options, string dotnet, string python, string? nuget, int major, string api, string v21Api,
-        string apiRoot, string release, string fileVersion, JsonElement common, string outputDirectory, string runTemp, string cliHome, string developmentHost)
-    {
-        var plan = ReleasePlan(options);
-        var engineSource = Path.Combine(Root, "src/Engine");
-        var nativeProject = Path.Combine(Root, $"tests/Engine/TiaMcp.Engine.Native.Tests/V{major}/TiaMcp.Engine.Native.Tests.V{major}.csproj");
-        var project = Path.Combine(engineSource, $"TiaMcp.Engine.V{major}.csproj");
-        var harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
-        var weaver = Path.Combine(Root, "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll");
-        var packagedWeaver = Path.Combine(Root, "runtime/verification/NativeCallWeaver.dll");
-        RequireFile(harness, "HTTP harness has not been built");
-        RequireFile(weaver, "Native call weaver has not been built");
-        RequireFile(packagedWeaver, "Packaged native call weaver has not been built");
-        var properties = new[] { $"-p:SiemensEngineeringDirectory={api}" };
-
-        var mutexHash = SHA256.HashData(Encoding.UTF8.GetBytes(Path.GetFullPath(Root).ToLowerInvariant()));
-        var mutexName = "Local\\TIA-Release-" + Convert.ToHexString(mutexHash);
-        var nativeSafety = 0;
-        using (var buildMutex = new Mutex(false, mutexName))
-        {
-            var locked = false;
-            try
-            {
-                try { locked = buildMutex.WaitOne(); } catch (AbandonedMutexException) { locked = true; }
-                if (plan.Includes("offline-suites"))
-                {
-                    RestoreBuildProject(dotnet, nativeProject, nuget, outputDirectory, runTemp, cliHome, apiRoot, properties);
-                    RunBuildRaw(dotnet, ["build", nativeProject, "-c", "Release", "--no-restore", "-v:q", .. properties], Path.Combine(outputDirectory, $"native-build-v{major}.log"), runTemp, cliHome, apiRoot, nuget, $"V{major} native tests build");
-                    var nativeOutput = Path.Combine(Path.GetDirectoryName(nativeProject)!, "bin/Release/net48");
-                    var nativeExe = Path.Combine(nativeOutput, $"TiaMcp.Engine.Native.Tests.V{major}.exe");
-                    if (Directory.Exists(nativeOutput) && Directory.EnumerateFiles(nativeOutput, "Siemens.Engineering*.dll").Any())
-                        throw new ReleaseException("Native test harness must not copy Siemens assemblies locally");
-                    var nativeSafetyText = RunBuildSpec("native-safety", nativeExe, ["--self-test"], outputDirectory, runTemp, cliHome, apiRoot, major);
-                    nativeSafety = RequireCount("native safety", nativeSafetyText, "COMPLETE: (\\d+) native harness safety checks passed; live TIA tests NOT RUN");
-                }
-                RestoreBuildProject(dotnet, project, nuget, outputDirectory, runTemp, cliHome, apiRoot, properties);
-                RunBuildRaw(dotnet, ["build", project, "-c", "Release", "--no-restore", "-v:q", .. properties], Path.Combine(outputDirectory, $"build-v{major}.log"), runTemp, cliHome, apiRoot, nuget, $"V{major} engine build");
-
-                var built = Path.Combine(engineSource, major == 20 ? "bin-v20/Release/net48" : "bin/Release/net48");
-                var runtime = EngineCompatibilityDirectory(Root, major.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                Directory.CreateDirectory(runtime);
-                // Keep the old packaged pair for the engine cross-checks: the installed host's
-                // files next to the private engine worker directory, outside runtime/.
-                StageEngineCompatibilityHost(Root, major.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                var payload = Directory.EnumerateFiles(built).Where(path =>
-                {
-                    var extension = Path.GetExtension(path);
-                    var name = Path.GetFileName(path);
-                    return (extension is ".exe" or ".dll" or ".config") && !name.StartsWith("Siemens.Engineering", StringComparison.OrdinalIgnoreCase) &&
-                        (extension != ".exe" || name == $"TiaMcp.Engine.V{major}.exe") && (extension != ".config" || name == $"TiaMcp.Engine.V{major}.exe.config");
-                }).ToArray();
-                var names = payload.Select(Path.GetFileName).ToHashSet(StringComparer.OrdinalIgnoreCase);
-                foreach (var required in new[] { "TiaMcp.Runtime.dll", "TiaMcp.PlcSimAdvanced.dll", $"TiaMcp.Adapter.{major}.dll", "TiaMcp.Adapters.Contracts.dll" })
-                    if (!names.Contains(required)) throw new ReleaseException($"V{major} runtime dependency missing: {required}");
-                if (payload.Count(path => Path.GetFileName(path).StartsWith("TiaMcp.Adapter.", StringComparison.OrdinalIgnoreCase) && path.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) != 1)
-                    throw new ReleaseException($"V{major} must ship exactly its own shared adapter");
-                foreach (var old in Directory.EnumerateFiles(runtime).Where(path => Path.GetExtension(path) is ".exe" or ".dll" or ".config"))
-                    if (!names.Contains(Path.GetFileName(old))) throw new ReleaseException("Review obsolete runtime file: " + old);
-                foreach (var source in payload) File.Copy(source, Path.Combine(runtime, Path.GetFileName(source)), true);
-            }
-            finally { if (locked) buildMutex.ReleaseMutex(); }
-        }
-
-        var exe = Path.Combine(EngineCompatibilityDirectory(Root, major.ToString(System.Globalization.CultureInfo.InvariantCulture)), $"TiaMcp.Engine.V{major}.exe");
-        RequireFile(exe, "Built engine EXE missing");
-        RunBuildRaw(exe, ["--bundle-root", Root, "--write-tool-catalog", Path.Combine(Path.GetDirectoryName(exe)!, "tool-catalog.json")],
-            Path.Combine(outputDirectory, $"tool-catalog-v{major}.log"), runTemp, cliHome, apiRoot, nuget, $"V{major} worker catalog");
-        if (FileVersionInfo.GetVersionInfo(exe).FileVersion != fileVersion) throw new ReleaseException($"V{major} runtime version mismatch");
-        if (plan.Includes("engine-functional"))
-            RunBuildSpec("example-library", harness, [exe, "example-library-only"], outputDirectory, runTemp, cliHome, apiRoot, major, developmentHost: developmentHost);
-        JsonElement coverage = JsonSerializer.SerializeToElement(new { count = 0 });
-        Match nativeJit = Match.Empty;
-        if (plan.Includes("native-coverage") || plan.Includes("native-diagnostics"))
-        {
-            var coveragePath = Path.Combine(outputDirectory, $"native-call-coverage-v{major}.json");
-            RunBuildSpec("native-coverage", dotnet, [weaver, "verify", exe, coveragePath], outputDirectory, runTemp, cliHome, apiRoot, major);
-            using var coverageDoc = JsonDocument.Parse(File.ReadAllText(coveragePath));
-            coverage = coverageDoc.RootElement.Clone();
-            var adapterCoveragePath = Path.Combine(outputDirectory, $"adapter-native-call-coverage-v{major}.json");
-            var adapter = Path.Combine(EngineCompatibilityDirectory(Root, major.ToString(System.Globalization.CultureInfo.InvariantCulture)), $"TiaMcp.Adapter.{major}.dll");
-            RunBuildSpec("adapter-native-coverage", dotnet, [packagedWeaver, "verify", adapter, adapterCoveragePath], outputDirectory, runTemp, cliHome, apiRoot, major);
-            using var adapterCoverageDoc = JsonDocument.Parse(File.ReadAllText(adapterCoveragePath));
-            var adapterCoverage = adapterCoverageDoc.RootElement.Clone();
-
-            if (plan.Includes("native-diagnostics"))
-            {
-                nativeJit = VerifyNativeJit(dotnet, harness, exe, api, outputDirectory, runTemp, cliHome, apiRoot, major, developmentHost);
-            }
-        }
-        if (plan.Includes("http-concurrency"))
-        {
-            VerifyHttpConcurrency(dotnet, outputDirectory, runTemp, cliHome, apiRoot, nuget, major);
-        }
-        (string Worker, string Catalog)? protocolWorker = null;
-        (string Worker, string Catalog) ProtocolWorker() => protocolWorker ??= PrepareReleaseSdkWorker(dotnet, api, major,
-            outputDirectory, runTemp, cliHome, apiRoot, nuget);
-        var processLeases = 0;
-        if (plan.Includes("engine-functional"))
-        {
-            var leaseText = RunBuildSpec("process-leases", harness, [exe, "process-leases-only"], outputDirectory, runTemp, cliHome, apiRoot, major, developmentHost: developmentHost);
-            processLeases = RequireCount("process lease", leaseText, "COMPLETE: (\\d+) process lease checks passed", "processLeases");
-        }
-
-        var workerFaults = 0;
-        var workerProtocol = 0;
-        if (plan.Includes("engine-worker-isolation"))
-        {
-            var faultResults = Path.Combine(outputDirectory, "worker-fault-suites-v" + major);
-            RunDotnetSuiteForRelease("worker-robustness", "worker-supervisor", dotnet, faultResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
-            workerFaults = ReadSuitePassed(faultResults, "worker-robustness");
-            CheckReleaseCount("workerFaults", workerFaults, "Foundation worker fault coverage incomplete");
-            var protocolText = RunBuildSpec("worker-protocol", python, [Path.Combine(Root, "scripts/checks/Test-FoundationTransport.py"),
-                "--releases", major.ToString(), "--output", Path.Combine(outputDirectory, "foundation-transport")], outputDirectory, runTemp, cliHome, apiRoot, major);
-            workerProtocol = RequireCount("worker protocol", protocolText, "COMPLETE: (\\d+) Foundation transport checks passed", "workerProtocol");
-
-        }
-
-        JsonElement approval = default;
-        if (plan.Includes("engine-approval"))
-        {
-            approval = VerifyEngineApproval(python, exe, harness, api, outputDirectory, runTemp, cliHome, apiRoot, major, ProtocolWorker());
-        }
-
-        int software = 0, engineering = 0, http = 0, hmi = 0;
-        if (plan.Includes("engine-functional"))
-        {
-            var softwareText = RunBuildSpec("software-lookup", harness, [exe, "software-lookup-only", api], outputDirectory, runTemp, cliHome, apiRoot, major, developmentHost: developmentHost);
-            software = RequireCount("software lookup", softwareText, "COMPLETE: (\\d+) software lookup checks passed", "softwareLookup");
-            var engineeringText = RunBuildSpec("engineering-api", harness, [exe, "engineering-api-only", api], outputDirectory, runTemp, cliHome, apiRoot, major, developmentHost: developmentHost);
-            engineering = RequireCount("engineering API", engineeringText, "COMPLETE: (\\d+) engineering API checks passed", major == 20 ? "engineeringApiV20" : "engineeringApiV21");
-            var httpText = RunBuildSpec("http", harness, [exe], outputDirectory, runTemp, cliHome, apiRoot, major, developmentHost: developmentHost);
-            http = RequireCount("HTTP regression", httpText, "COMPLETE: (\\d+) Foundation transport checks passed");
-            var hmiText = RunBuildSpec("hmi", harness, [exe, "hmi-only", major.ToString(), fileVersion], outputDirectory, runTemp, cliHome, apiRoot, major, developmentHost: developmentHost);
-            var hmiMatch = Regex.Match(hmiText, "(\\d+) HMI traversal assertions, 0 failed");
-            if (!hmiMatch.Success) throw new ReleaseException("HMI traversal regression did not report complete success");
-            hmi = int.Parse(hmiMatch.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
-
-        }
-
-        var resources = 0;
-        if (plan.Includes("resource-discovery"))
-        {
-        var resourceWorker = ProtocolWorker();
-        var fixtureWorker = resourceWorker.Worker;
-        var fixtureCatalog = resourceWorker.Catalog;
-        var usagePath = Path.Combine(outputDirectory, $"tool-usage-v{major}.json");
-        var resourcesText = RunBuildSpec("resource-discovery", python, [Path.Combine(Root, "scripts/checks/Test-ResourceDiscovery.py"), "--exe", exe,
-            "--portal-root", api, "--major", major.ToString(), "--engine-worker", fixtureWorker, "--engine-catalog", fixtureCatalog,
-            "--public-api", api, "--usage-output", usagePath], outputDirectory, runTemp, cliHome, apiRoot, major);
-        resources = RequireCount("resource discovery", resourcesText, "COMPLETE: (\\d+) resource discovery checks passed");
-        }
-        JsonElement v21Ecosystem = default;
-        if (plan.Includes("engine-ecosystem"))
-        {
-            var schemas = Path.Combine(Path.GetDirectoryName(v21Api)!, "Schemas");
-            var ecosystemOut = Path.Combine(outputDirectory, "v21-ecosystem-v" + major + "-" + Guid.NewGuid().ToString("N"));
-            var ecosystemPython = Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON") ?? python;
-            RunBuildSpec("v21-ecosystem", ecosystemPython, [Path.Combine(Root, "scripts/checks/Test-V21Ecosystem.py"), "--exe", exe,
-                "--major", major.ToString(), "--host-harness", harness, "--public-api", api, "--schema-root", schemas, "--output", ecosystemOut,
-                "--engine-worker", ProtocolWorker().Worker, "--engine-catalog", ProtocolWorker().Catalog], outputDirectory, runTemp, cliHome, apiRoot, major);
-            var ecosystemFiles = Directory.Exists(ecosystemOut) ? Directory.GetFiles(ecosystemOut, "result.json", SearchOption.AllDirectories) : [];
-            if (ecosystemFiles.Length != 1) throw new ReleaseException("V21 ecosystem evidence missing or ambiguous");
-            using var v21EcosystemDoc = JsonDocument.Parse(File.ReadAllText(ecosystemFiles[0]));
-            v21Ecosystem = v21EcosystemDoc.RootElement.Clone();
-            CheckReleaseCount("v21Ecosystem", GetJsonInt(v21Ecosystem, "checks"), "V21 ecosystem adapter checks incomplete");
-            if (GetJsonString(v21Ecosystem, "status") != "passed" || GetJsonBool(v21Ecosystem, "selfTestOnly") || GetJsonBool(v21Ecosystem, "nativeTiaExecuted") ||
-                GetJsonString(v21Ecosystem, "runtimeSha256") != ReleaseRecords.HashFile(exe)) throw new ReleaseException("V21 ecosystem adapter evidence does not match the selected EXE");
-
-        }
-
-        var stabilityRounds = options.Get("LocalStabilityRounds", "50");
-        JsonElement stability = default, isolatedStability = default;
-        if (plan.Includes("engine-stability")) stability = VerifyStability(python, exe, harness, api, outputDirectory, runTemp, cliHome, apiRoot, major, stabilityRounds, false, ProtocolWorker());
-        if (plan.Includes("engine-isolated-stability")) isolatedStability = VerifyStability(python, exe, harness, api, outputDirectory, runTemp, cliHome, apiRoot, major, stabilityRounds, true, ProtocolWorker());
-
-        int nativeExport = 0, snapshot = 0, globalScripts = 0, graphic = 0, settings = 0, ecosystemCount = 0;
-        if (plan.Includes("engine-functional"))
-        {
-            var nativeExportText = RunBuildSpec("native-export", harness, [exe, "native-export-only"], outputDirectory, runTemp, cliHome, apiRoot, major, developmentHost: developmentHost);
-            nativeExport = RequireCount("native export remoting", nativeExportText, "COMPLETE: (\\d+) native export remoting checks passed");
-            var snapshotText = RunBuildSpec("hmi-snapshot", harness, [exe, "hmi-snapshot-only"], outputDirectory, runTemp, cliHome, apiRoot, major, developmentHost: developmentHost);
-            snapshot = RequireCount("HMI snapshot", snapshotText, "COMPLETE: (\\d+) HMI snapshot remoting checks passed");
-            var globalText = RunBuildSpec("global-script", harness, [exe, "global-script-only", api], outputDirectory, runTemp, cliHome, apiRoot, major, developmentHost: developmentHost);
-            globalScripts = RequireCount("global script bridge", globalText, "COMPLETE: (\\d+) global script bridge checks passed", major == 21 ? "globalScriptV21" : null);
-            var graphicText = RunBuildSpec("graphic-selection", harness, [exe, "graphic-selection-only", api], outputDirectory, runTemp, cliHome, apiRoot, major, developmentHost: developmentHost);
-            graphic = RequireCount("graphic selection", graphicText, "COMPLETE: (\\d+) graphical selection checks passed", "graphicSelection");
-            var settingsText = RunBuildSpec("runtime-settings", harness, [exe, "runtime-settings-only", api], outputDirectory, runTemp, cliHome, apiRoot, major, developmentHost: developmentHost);
-            settings = RequireCount("runtime settings", settingsText, "COMPLETE: (\\d+) runtime settings checks passed", major == 20 ? "runtimeSettingsV20" : "runtimeSettingsV21");
-            var migrationText = RunBuildSpec("migration-assembly", harness, [exe, "test-migration-read-assembly", api], outputDirectory, runTemp, cliHome, apiRoot, major, developmentHost: developmentHost);
-            if (!migrationText.Contains("migration assembly checks passed", StringComparison.OrdinalIgnoreCase)) throw new ReleaseException("Migration assembly file checks did not complete");
-            var ecosystemText = RunBuildSpec("ecosystem-assembly", harness, [exe, "test-ecosystem-assembly", api], outputDirectory, runTemp, cliHome, apiRoot, major, developmentHost: developmentHost);
-            ecosystemCount = RequireCount("ecosystem assembly", ecosystemText, "COMPLETE: (\\d+) ecosystem assembly checks passed", "ecosystem");
-
-        }
-
-        var categories = new Dictionary<string, int>(StringComparer.Ordinal);
-        if (coverage.TryGetProperty("sites", out var sites) && sites.ValueKind == JsonValueKind.Array)
-            foreach (var group in sites.EnumerateArray().GroupBy(site => GetJsonString(site, "category"), StringComparer.Ordinal)) categories[group.Key] = group.Count();
-        var nativeDiagnostics = new
-        {
-            status = plan.Includes("native-diagnostics") ? "passed" : "skipped", sites = GetJsonInt(coverage, "count"), categories, uncoveredSupportedBoundaries = 0,
-            coverageSha256 = File.Exists(Path.Combine(outputDirectory, $"native-call-coverage-v{major}.json")) ? ReleaseRecords.HashFile(Path.Combine(outputDirectory, $"native-call-coverage-v{major}.json")) : "",
-            instrumenterSha256 = GetJsonString(coverage, "instrumenterSha256"), jitPrepared = nativeJit.Success ? int.Parse(nativeJit.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) : 0,
-            openGenericWrappers = nativeJit.Success ? int.Parse(nativeJit.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture) : 0, fixture = common.GetProperty("diagnosticTests").Clone(),
-            scriptSha256 = ReleaseRecords.HashFile(Path.Combine(Root, "scripts/checks/Test-NativeDiagnostics.py")), liveTiaExecuted = false,
-            scope = "Engine-owned Openness call sites; not SDK/server internals or a native stability claim"
-        };
-        return new
-        {
-            httpPassed = http, hmiPassed = hmi, resourceDiscoveryPassed = resources, nativeExportRemotingPassed = nativeExport,
-            migrationAssembly = plan.Includes("engine-functional") ? "passed" : "skipped", realProjectAcceptance = "NOT PERFORMED for this release", hmiSnapshotRemotingPassed = snapshot,
-            softwareLookupPassed = software, engineeringApiShapePassed = engineering,
-            nativeHarness = new { compiled = plan.Includes("offline-suites"), safetyChecksPassed = nativeSafety, supervisorChecksPassed = GetJsonInt(common, "nativeSupervisorChecksPassed"), exeSha256 = plan.Includes("offline-suites") ? ReleaseRecords.HashFile(Path.Combine(Path.GetDirectoryName(nativeProject)!, $"bin/Release/net48/TiaMcp.Engine.Native.Tests.V{major}.exe")) : "", supervisorSha256 = ReleaseRecords.HashFile(Path.Combine(Root, "scripts/checks/Test-NativeLifecycle.py")), liveAcceptance = "NOT RUN; explicit opt-in required" },
-            // Without host paths (sampled process images), as in the PLC proof; no gate reads them (P8-04j1b D-8).
-            localStability = plan.Includes("engine-stability") ? ReleaseRecords.WithoutLocalPaths(Root, stability) : null,
-            v21EcosystemAdapters = plan.Includes("engine-ecosystem") ? (JsonElement?)v21Ecosystem : null,
-            isolatedLocalStability = plan.Includes("engine-isolated-stability") ? ReleaseRecords.WithoutLocalPaths(Root, isolatedStability) : null,
-            sessionStability = new { processLeaseChecksPassed = processLeases, nativeMcpSafetyChecksPassed = GetJsonInt(common, "nativeMcpSafetyChecksPassed"), crashEvidenceChecksPassed = GetJsonInt(common, "crashEvidenceChecksPassed"), nativeMcpExecuted = false },
-            nativeDiagnostics, workerIsolation = plan.Includes("engine-worker-isolation") ? new { enabledByDefault = true, faultChecksPassed = workerFaults, protocolChecksPassed = workerProtocol, nativeAcceptance = "NOT RUN", protocolScriptSha256 = ReleaseRecords.HashFile(Path.Combine(Root, "scripts/checks/Test-FoundationTransport.py")) } : null,
-            approvalSafety = plan.Includes("engine-approval") ? new { status = "passed", checksPassed = GetJsonInt(approval, "checksPassed"), defaultEnabled = true, directWriteRefusedBeforeDispatch = true, callToolWriteRefusedBeforeDispatch = true, readSucceeded = true, workbenchConnected = false, tiaConnected = false, scriptSha256 = ReleaseRecords.HashFile(Path.Combine(Root, "scripts/checks/Test-ReleaseApprovalGate.py")) } : null,
-            engineeringLiveEdits = "NOT TESTED; preview/API shape and offline behavior only",
-            unifiedGraphicLists = major == 21 ? "API present; native import not live-tested" : "not exposed by supplied V20 API",
-            globalScriptBridgePassed = globalScripts, graphicSelectionPassed = graphic, runtimeSettingsPassed = settings,
-            ecosystemAssemblyPassed = ecosystemCount, globalScriptNativeApiSignature = major == 21 ? "verified in referenced V21 DLL; live import not tested" : "not established; bridge checks only"
-        };
-    }
-
-    private static (string Worker, string Catalog) PrepareReleaseSdkWorker(string dotnet, string api, int major,
-        string outputDirectory, string runTemp, string cliHome, string apiRoot, string? nuget)
-    {
-        var fixtureDirectory = Path.Combine(Root, "bin-build/engine-compat/sdk", "v" + major, Guid.NewGuid().ToString("N"));
-        RunBuildRaw(dotnet, ["build", Path.Combine(Root, $"src/Engine/TiaMcp.Engine.V{major}.csproj"), "-c", "Release", "-v:q",
-            "-p:TiaMcpEngineWorkerSdkFixture=true", "-p:AppendTargetFrameworkToOutputPath=false",
-            $"-p:OutputPath={fixtureDirectory}", $"-p:SiemensEngineeringDirectory={api}"],
-            Path.Combine(outputDirectory, "resource-sdk-worker-build.log"), runTemp, cliHome, apiRoot, nuget, "Protocol SDK worker build");
-        var worker = Path.Combine(fixtureDirectory, $"TiaMcp.Engine.V{major}.exe");
-        var catalog = Path.Combine(fixtureDirectory, "tool-catalog.json");
-        RunBuildRaw(worker, ["--bundle-root", Root, "--write-tool-catalog", catalog],
-            Path.Combine(outputDirectory, "resource-sdk-worker-catalog.log"), runTemp, cliHome, apiRoot, nuget, "Protocol SDK worker catalog");
-        return (worker, catalog);
-    }
-
     private static JsonElement VerifyDiagnosticFixture(string python, string diagnosticFixture, string weaver, string outputDirectory, string runTemp, string cliHome, string apiRoot)
     {
         var diagnosticOut = Path.Combine(outputDirectory, "native-diagnostics-" + Guid.NewGuid().ToString("N"));
@@ -610,97 +256,26 @@ internal static partial class ReleaseCommands
         return diagnostics;
     }
 
-    private static void VerifyHttpConcurrency(string dotnet, string outputDirectory, string runTemp, string cliHome, string apiRoot, string? nuget, int major)
+    // The delivered tools-list comes from the installed V21 FoundationHost's product catalog (P8-04l: the engine oracle and
+    // its harness generator are gone; the host producer was byte-identical to it). The generator's undocumented-parameter
+    // ratchet is kept here: the count may not grow over the committed roster.
+    private static void RunShippedRuntimeChecks(string dotnet, string apiRoot, string package, string outputDirectory, string runTemp, string cliHome)
     {
-        var results = Path.Combine(outputDirectory, "concurrency-suites-v" + major);
-        RunDotnetSuiteForRelease("engine-host", "http-concurrency", dotnet, results, outputDirectory, runTemp, cliHome, apiRoot, nuget);
-        if (ReadSuitePassed(results, "engine-host") < 19) throw new ReleaseException("Foundation concurrency regression did not complete");
-    }
-
-    private static JsonElement VerifyEngineApproval(string python, string exe, string harness, string api, string outputDirectory, string runTemp, string cliHome, string apiRoot, int major, (string Worker, string Catalog) protocolWorker)
-    {
-        var approvalOut = Path.Combine(outputDirectory, "approval-default-v" + major + "-" + Guid.NewGuid().ToString("N"));
-        var approvalTemp = Path.Combine(runTemp, "approval-v" + major);
-        Directory.CreateDirectory(approvalTemp);
-        var approvalText = RunBuildSpec("approval-safety", python, [Path.Combine(Root, "scripts/checks/Test-ReleaseApprovalGate.py"), "--product", "engine", "--major", major.ToString(),
-            "--exe", exe, "--portal-root", api, "--host-harness", harness, "--public-api", api, "--temp-root", approvalTemp, "--output", approvalOut,
-            "--engine-worker", protocolWorker.Worker, "--engine-catalog", protocolWorker.Catalog], outputDirectory, runTemp, cliHome, apiRoot, major, approval: true);
-        using var approvalDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(approvalOut, "result.json")));
-        var approval = approvalDoc.RootElement.Clone();
-        CheckReleaseCount("approvalSafety", GetJsonInt(approval, "checksPassed"), "Default approval checks incomplete");
-        var approvalResults = approval.GetProperty("results");
-        if (GetJsonString(approval, "status") != "passed" || GetJsonInt(approval, "checksExpected") != 7 || GetJsonBool(approval, "workbenchConnected") ||
-            GetJsonBool(approval, "tiaConnected") || GetJsonString(approvalResults, "direct") != "refused-before-dispatch; read-succeeded" ||
-            GetJsonString(approvalResults, "CallTool") != "refused-before-dispatch") throw new ReleaseException($"V{major} default-approval gate result is invalid");
-        return approval;
-    }
-
-    private static JsonElement VerifyStability(string python, string exe, string harness, string api, string outputDirectory, string runTemp, string cliHome, string apiRoot, int major, string rounds, bool isolated, (string Worker, string Catalog) protocolWorker)
-    {
-        var output = Path.Combine(outputDirectory, (isolated ? "isolated-stability-v" : "stability-v") + major + "-" + Guid.NewGuid().ToString("N"));
-        RunBuildSpec(isolated ? "isolated-local-stability" : "local-stability", python,
-            [Path.Combine(Root, "scripts/checks/Test-LocalStability.py"), "--exe", exe, "--major", major.ToString(), "--host-harness", harness,
-             "--public-api", api, "--rounds", rounds, "--output", output,
-             "--engine-worker", protocolWorker.Worker, "--engine-catalog", protocolWorker.Catalog, "--concurrency", isolated ? "16" : "8"], outputDirectory, runTemp, cliHome, apiRoot, major);
-        using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "result.json")));
-        var result = doc.RootElement.Clone();
-        if (GetJsonString(result, "status") != "passed" || GetArrayLength(result, "runs") != 4 ||
-            (isolated && !GetJsonBool(result, "isolatedWorker")) || GetJsonString(result, "runtimeSha256") != ReleaseRecords.HashFile(exe) ||
-            GetJsonString(result, "hostSha256") != ReleaseRecords.HashFile(Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(exe))!, "TiaMcp.FoundationHost.exe")) ||
-            GetJsonString(result, "sdkWorkerSha256") != ReleaseRecords.HashFile(protocolWorker.Worker))
-            throw new ReleaseException("Local stability checks failed or used a different EXE");
-        return result;
-    }
-
-    private static Match VerifyNativeJit(string dotnet, string harness, string exe, string api, string outputDirectory, string runTemp, string cliHome, string apiRoot, int major,
-        string developmentHost)
-    {
-        var weaver = Path.Combine(Root, "runtime/verification/NativeCallWeaver.dll");
-        var coveragePath = Path.Combine(outputDirectory, $"jit-coverage-v{major}.json");
-        RunBuildSpec("native-coverage", dotnet, [weaver, "verify", exe, coveragePath], outputDirectory, runTemp, cliHome, apiRoot, major);
-        using var coverageDoc = JsonDocument.Parse(File.ReadAllText(coveragePath));
-        var coverage = coverageDoc.RootElement;
-        var adapterPath = Path.Combine(outputDirectory, $"jit-adapter-v{major}.json");
-        RunBuildSpec("adapter-native-coverage", dotnet, [weaver, "verify", Path.Combine(EngineCompatibilityDirectory(Root, major.ToString(System.Globalization.CultureInfo.InvariantCulture)), $"TiaMcp.Adapter.{major}.dll"), adapterPath], outputDirectory, runTemp, cliHome, apiRoot, major);
-        using var adapterDoc = JsonDocument.Parse(File.ReadAllText(adapterPath));
-        var adapterCoverage = adapterDoc.RootElement;
-        var nativeJitText = RunBuildSpec("native-diagnostics-jit", harness, [exe, "native-diagnostics-only", api], outputDirectory, runTemp, cliHome, apiRoot, major, developmentHost: developmentHost);
-        var nativeJit = Regex.Match(nativeJitText, "COMPLETE: (\\d+) native diagnostic wrappers JIT prepared; (\\d+) open generic wrappers");
-        if (!nativeJit.Success || int.Parse(nativeJit.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) + int.Parse(nativeJit.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture) != GetJsonInt(coverage, "count")) throw new ReleaseException("Diagnostic wrapper JIT/inventory mismatch");
-        var adapterJit = Regex.Match(nativeJitText, "COMPLETE: (\\d+) adapter native diagnostic wrappers JIT prepared; (\\d+) open generic wrappers");
-        if (!adapterJit.Success || int.Parse(adapterJit.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) + int.Parse(adapterJit.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture) != GetJsonInt(adapterCoverage, "count")) throw new ReleaseException("Adapter diagnostic wrapper JIT/inventory mismatch");
-        var adapterJournal = RequireCount("adapter journal", nativeJitText, "COMPLETE: (\\d+) adapter integration diagnostic checks passed", "adapterJournal");
-        var nativeJournal = RequireCount("native journal", nativeJitText, "COMPLETE: (\\d+) native journal reader checks passed", "nativeJournalReader");
-
-        return nativeJit;
-    }
-
-    private static void RunShippedRuntimeChecks(string dotnet, string v21Api, string apiRoot, string package, string outputDirectory, string runTemp, string cliHome, ReleaseCheckPlan plan)
-    {
-        var exe = Path.Combine(EngineCompatibilityDirectory(Root, "21"), "TiaMcp.Engine.V21.exe");
-        var harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
-        if (plan.Includes("engine-functional")) RunBuildSpec("download-route", harness, [exe, "test-download-route", v21Api], outputDirectory, runTemp, cliHome, apiRoot);
-        if (plan.Includes("engine-functional")) RunBuildSpec("match-plc-name", harness, [exe, "test-match-plc-name"], outputDirectory, runTemp, cliHome, apiRoot);
-        var foundationHost = Path.Combine(Root, "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe");
+        var foundationHost = Path.Combine(Root, "runtime/v21/TiaMcp.FoundationHost.exe");
+        RequireFile(foundationHost, "Installed V21 FoundationHost missing; run build-multi-version -PrepareOnly first");
         var toolsList = Path.Combine(Root, "manifest/tools-list.json");
-        var oracle = Path.Combine(outputDirectory, "tools-list-oracle.json");
+        var previous = Path.Combine(outputDirectory, "tools-list-previous.json");
+        File.Copy(toolsList, previous, true);
         var hostToolsList = Path.Combine(outputDirectory, "tools-list-host.json");
-        File.Copy(toolsList, oracle, true);
-        // Keep every existing generator assertion while the engine is still present.
-        RunBuildSpec("generate-tools-list", harness, [exe, "generate-tools-list", v21Api, oracle, package, foundationHost, Root], outputDirectory, runTemp, cliHome, apiRoot);
-        var generatedAt = JsonNode.Parse(File.ReadAllText(oracle))!["generatedAt"]!.GetValue<string>();
         string[] producer = ["--catalog", "--offline", "--profile", "full", "--release-key", "21", "--bundle-root", Root,
-            "--engine-worker", exe, "--engine-catalog", Path.Combine(Path.GetDirectoryName(exe)!, "tool-catalog.json"),
-            "--catalog-tools-list", hostToolsList, "--catalog-package", package, "--catalog-generated-at", generatedAt];
-        var producerLog = Path.Combine(outputDirectory, "host-tools-list.log");
-        // The engine oracle comparison is an engine cross-check: use the private route.
-        ProcessRunner.RequireSuccess(RunBuildIsolated(foundationHost, producer, producerLog, runTemp, cliHome, apiRoot, null, false,
-            Path.GetFileNameWithoutExtension(producerLog), env => ProcessRunner.Run(foundationHost, producer, Root, WithEngineCrossCheck(env))),
-            "Host tools-list producer failed; see " + producerLog);
-        if (!File.ReadAllBytes(hostToolsList).SequenceEqual(File.ReadAllBytes(oracle)))
-            throw new ReleaseException("Host tools-list producer differs from the engine oracle.");
-        // The oracle is compatibility evidence only. The installed PLC host owns the delivered tools-list.
-        RunBuildSpec("tool-capability-matrix", dotnet, ["run", Path.Combine(Root, "scripts/generate/Generate-ToolCapabilityMatrix.cs"), "--", "--tools-list", Path.Combine(Root, "manifest/tools-list.json"), "--out-file", Path.Combine(Root, "docs/reference/tool-matrix.md")], outputDirectory, runTemp, cliHome, apiRoot);
+            "--catalog-tools-list", hostToolsList, "--catalog-package", package, "--catalog-generated-at", DateTimeOffset.UtcNow.ToString("o")];
+        RunBuildRaw(foundationHost, producer, Path.Combine(outputDirectory, "host-tools-list.log"), runTemp, cliHome, apiRoot, null, "Host tools-list producer");
+        static int Undocumented(string path) => JsonNode.Parse(File.ReadAllText(path))?["callDiscipline"]?["parametersUndocumented"]?.GetValue<int>()
+            ?? throw new ReleaseException("tools-list callDiscipline.parametersUndocumented missing: " + path);
+        if (Undocumented(hostToolsList) > Undocumented(previous))
+            throw new ReleaseException($"Parameters without a [Description] went up from {Undocumented(previous)} to {Undocumented(hostToolsList)}");
+        File.Copy(hostToolsList, toolsList, true);
+        RunBuildSpec("tool-capability-matrix", dotnet, ["run", Path.Combine(Root, "scripts/generate/Generate-ToolCapabilityMatrix.cs"), "--", "--tools-list", toolsList, "--out-file", Path.Combine(Root, "docs/reference/tool-matrix.md")], outputDirectory, runTemp, cliHome, apiRoot);
     }
 
     private static void RefreshPackageManifest(string release, string fileVersion, string releaseDate, string package)
@@ -789,12 +364,11 @@ internal static partial class ReleaseCommands
     }
 
     private static string RunBuildSpec(string specName, string executable, IEnumerable<string> args, string outputDirectory, string runTemp, string cliHome, string apiRoot,
-        int? major = null, bool approval = false, string? developmentHost = null)
+        int? major = null, bool approval = false)
     {
         var spec = ReleaseCommandTable.Get(specName);
         var logName = major.HasValue ? spec.LogFile.Replace("{major}", major.Value.ToString(System.Globalization.CultureInfo.InvariantCulture), StringComparison.Ordinal) : spec.LogFile;
-        var result = RunBuildIsolated(executable, args, Path.Combine(outputDirectory, logName), runTemp, cliHome, apiRoot, null, approval, specName,
-            developmentHost: developmentHost);
+        var result = RunBuildIsolated(executable, args, Path.Combine(outputDirectory, logName), runTemp, cliHome, apiRoot, null, approval, specName);
         ProcessRunner.RequireSuccess(result, specName + " failed; see " + Path.Combine(outputDirectory, logName));
         return result.StandardOutput + result.StandardError;
     }
@@ -807,8 +381,7 @@ internal static partial class ReleaseCommands
     }
 
     private static CommandResult RunBuildIsolated(string executable, IEnumerable<string> arguments, string log, string runTemp, string cliHome,
-        string apiRoot, string? nuget, bool approval, string name, Func<IDictionary<string, string?>, CommandResult>? inProcess = null,
-        string? developmentHost = null)
+        string apiRoot, string? nuget, bool approval, string name, Func<IDictionary<string, string?>, CommandResult>? inProcess = null)
     {
         var args = arguments.ToList();
         if (Path.GetFileNameWithoutExtension(executable).Equals("dotnet", StringComparison.OrdinalIgnoreCase))
@@ -840,10 +413,6 @@ internal static partial class ReleaseCommands
             ["DOTNET_ADD_GLOBAL_TOOLS_TO_PATH"] = "false",
             ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0", ["MSBUILDDISABLENODEREUSE"] = "1", ["UseSharedCompilation"] = "false", ["NuGetAudit"] = "false"
         };
-        // The harness starts this pipeline's private copy of the development host (see CopyDevelopmentHost).
-        if (developmentHost is not null) env["TIA_MCP_TEST_HOST_PATH"] = developmentHost;
-        // Only a step that starts the private engine copy gets the checkout as bundle root (P8-04j2); see StartsPrivateEngine.
-        if (StartsPrivateEngine(executable, args)) env["TIA_MCP_BUNDLE_ROOT"] = Root;
         var result = inProcess is null ? CachedBuild(executable, args, () => ProcessRunner.Run(executable, args, Root, env), env) : inProcess(env);
         WriteLog(log, result);
         if (result.ExitCode == 0)
@@ -853,16 +422,6 @@ internal static partial class ReleaseCommands
         }
         else Console.Error.WriteLine($"Retained failed release check data ({name}): {host}");
         return result;
-    }
-
-    // The private engine copy and its host copy under bin-build/engine-compat lie outside every bundle anchor, so a step that
-    // starts them (the executable or an argument names that folder) runs with the checkout as bundle root. Every other step,
-    // among them the offline and Studio suites, the builds and the release's own child commands, selects its root itself.
-    internal static bool StartsPrivateEngine(string executable, IEnumerable<string> arguments)
-    {
-        static string Normal(string value) => value.Replace('\\', '/');
-        var compatibility = Normal(Path.GetFullPath(Path.Combine(Root, "bin-build", "engine-compat"))).TrimEnd('/') + "/";
-        return arguments.Prepend(executable).Any(value => Normal(value).Contains(compatibility, StringComparison.OrdinalIgnoreCase));
     }
 
     private static int RequireCount(string name, string text, string pattern, string? rule = null)

@@ -62,13 +62,21 @@ public class DotnetSuitesTests
     }
 
     [Fact]
-    public void Transitional_engine_selections_keep_the_engine_and_PlcWorker_gates()
+    public void Retired_engine_parents_leave_their_PlcWorker_successors_registered_with_their_gates()
     {
         string root = Repository.FindRoot();
         var catalog = DotnetSuites.LoadCatalog(Path.Combine(root, "tests/test-suites.json"), root, "windows");
-        foreach (var pair in new[] { ("shared-session", "shared-lifecycle-plc"), ("shared-lifecycle", "shared-lifecycle-plc"),
-            ("plc-exchange-v20", "plc-exchange-worker-v20"), ("plc-exchange-v21", "plc-exchange-worker-v21"),
+        // P8-04l: the engine parents plc-exchange-v20/v21 and worker-progress retired with the engine (D5);
+        // their successors stand alone with their own zero-skip gates.
+        foreach (var (retired, successor) in new[] { ("plc-exchange-v20", "plc-exchange-worker-v20"), ("plc-exchange-v21", "plc-exchange-worker-v21"),
             ("worker-progress", "worker-progress-foundation") })
+        {
+            Assert.Null(catalog[retired]);
+            Assert.Equal(new[] { successor }, DotnetSuites.WithCompanions(new[] { successor }, catalog));
+            Assert.Equal(0, (int?)catalog[successor]!["maximumSkipped"]);
+            Assert.NotNull(ReleaseCommandTable.Get(successor));
+        }
+        foreach (var pair in new[] { ("shared-session", "shared-lifecycle-plc"), ("shared-lifecycle", "shared-lifecycle-plc") })
         {
             Assert.Equal(new[] { pair.Item1, pair.Item2 }, DotnetSuites.WithCompanions(new[] { pair.Item1 }, catalog));
             Assert.Equal(0, (int?)catalog[pair.Item2]!["maximumSkipped"]);

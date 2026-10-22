@@ -29,7 +29,7 @@ internal static class AdapterSourceClosureTests
         files=files.Concat(primitives).ToArray();
         check(files.Length==files.Distinct(StringComparer.Ordinal).Count(),"Explicit adapter source inventory has no duplicates");
         CheckEvaluatedCompileItems(src,files,primitives,check);
-        CheckEnginePrimitiveSelection(src,primitives,check);
+        // P8-04l: the engine projects whose primitive selection this evaluated are deleted (TIA_ENGINE_LOCAL_PRIMITIVES has no consumer).
         var code=new Dictionary<string,string>(StringComparer.Ordinal);
         foreach(var path in files)
         {
@@ -72,38 +72,6 @@ internal static class AdapterSourceClosureTests
             var owned=studioMethods[entry.Key];
             var without=studioMethods.Where(x=>x.Key!=entry.Key).SelectMany(x=>x.Value).ToHashSet(StringComparer.Ordinal);
             check(owned.Except(without).Any(),"Omitting Studio native module is detected: "+entry.Key);
-        }
-    }
-    private static void CheckEnginePrimitiveSelection(string src,string[] primitives,Action<bool,string> check)
-    {
-        var viaLogic=new[]{"NativeInputPolicy.cs","HostFailurePolicy.cs","SessionBehavior.cs","NativePathSelection.cs","NativeExportPolicy.cs"};
-        foreach(var release in new[]{"20","21"})
-        foreach(var enabled in new[]{false,true})
-        {
-            var start=new ProcessStartInfo(Environment.GetEnvironmentVariable("DOTNET_HOST_PATH")??"dotnet")
-            {
-                WorkingDirectory=src,UseShellExecute=false,RedirectStandardOutput=true,RedirectStandardError=true,CreateNoWindow=true
-            };
-            foreach(var argument in new[]{"msbuild",Path.Combine(src,"Engine","TiaMcp.Engine.V"+release+".csproj"),
-                "-nologo","-p:TiaPortalLocation="+Path.Combine(src,"unused-evaluation-only"),
-                "-p:TiaSharedAdapterPaths="+enabled.ToString().ToLowerInvariant(),"-getItem:Compile","-getProperty:DefineConstants"})
-                start.ArgumentList.Add(argument);
-            using var process=Process.Start(start)??throw new InvalidOperationException("Could not evaluate engine primitive selection.");
-            var output=process.StandardOutput.ReadToEndAsync();
-            var error=process.StandardError.ReadToEndAsync();
-            if(!process.WaitForExit(60000))
-            {
-                process.Kill(entireProcessTree:true);
-                throw new TimeoutException("Engine primitive selection evaluation timed out.");
-            }
-            check(process.ExitCode==0,"Engine primitive selection evaluates: V"+release+" shared="+enabled+" "+error.GetAwaiter().GetResult());
-            using var result=JsonDocument.Parse(output.GetAwaiter().GetResult());
-            var compile=result.RootElement.GetProperty("Items").GetProperty("Compile").EnumerateArray();
-            foreach(var primitive in primitives)
-                check(compile.Count(item=>string.Equals(Path.GetFullPath(item.GetProperty("FullPath").GetString()!),primitive,StringComparison.OrdinalIgnoreCase))==(viaLogic.Contains(Path.GetFileName(primitive))||enabled?0:1),
-                    "Engine owns native primitives locally and pure behavior through Logic: V"+release+" shared="+enabled+" / "+Path.GetFileName(primitive));
-            var defines=result.RootElement.GetProperty("Properties").GetProperty("DefineConstants").GetString()!.Split(';');
-            check(defines.Contains("TIA_ENGINE_LOCAL_PRIMITIVES")==!enabled,"Engine-local namespace selection matches the source link: V"+release+" shared="+enabled);
         }
     }
     // Evaluation only: no targets, restore, native compiler, worker, or Siemens assembly load.

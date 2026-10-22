@@ -7,75 +7,45 @@ namespace TiaMcp.ReleaseTool.Tests;
 
 public sealed class ReleaseValidationTests
 {
+    // P8-04l: the engine candidate captures (steps 06-09 engine variants) are retired; a candidate plan selecting
+    // only the release-wide groups starts no snapshot capture and builds no worker.
     [Fact]
     [Trait("Category", "Pipeline")]
-    public void EngineCapturesKeepPrivateProductionAndSdkWorkersWithBothHostLayouts()
+    public void CandidateChecksBuildNoEngineAndCaptureV20V21OnlyThroughThePlcJobs()
     {
         using var tree = new StaticTree();
-        Directory.CreateDirectory(Path.Combine(tree.Root, "TIA_V20_PublicAPI/V20"));
-        Directory.CreateDirectory(Path.Combine(tree.Root, "TIA_V21_PublicAPI/V21/net48"));
-        var root = Repository.FindRoot();
-        var captures = new List<string[]>();
-        var steps = new HashSet<string> { "06-v4-contracts-capture", "07-v4-contracts-http", "07-engine-contracts-source-layout",
-            "08-v4-responses-capture", "09-v4-responses-http", "09-engine-responses-source-layout" };
-        ReleaseCommands.RunCandidateChecks(new("quick", ["engine-contracts", "engine-responses"], [], []),
+        var steps = new List<string>();
+        ReleaseCommands.RunCandidateChecks(new("quick", ["prompt-registration"], [], []),
             tree.Root, tree.Root, tree.Root, tree.Root, "dotnet-double", "python-double", 1,
-            (name, action) => { if (steps.Contains(name)) action(); },
-            (_, args) => Assert.Equal("compare", args[0]),
-            (script, args) =>
-            {
-                Assert.Equal("capture", args[0]);
-                Assert.DoesNotContain("--plc-worker", args);
-                var release = args[Array.IndexOf(args, "--releases") + 1];
-                var worker = args[Array.IndexOf(args, "--engine-worker") + 1].Split('=', 2);
-                var catalog = args[Array.IndexOf(args, "--engine-catalog") + 1].Split('=', 2);
-                Assert.Equal(release, worker[0]); Assert.Equal(release, catalog[0]);
-                Assert.StartsWith(Path.GetFullPath(Path.Combine(root, "bin-build/engine-compat")), Path.GetFullPath(worker[1]));
-                Assert.Equal(Path.Combine(Path.GetDirectoryName(worker[1])!, "tool-catalog.json"), catalog[1]);
-                var output = args[Array.IndexOf(args, "--output") + 1];
-                bool source = output.Contains("source-layout", StringComparison.Ordinal);
-                var host = args[Array.IndexOf(args, "--engine-host") + 1];
-                Assert.Equal(source ? Path.Combine(root, "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe")
-                    : Path.Combine(Path.GetDirectoryName(ReleaseCommands.EngineCompatibilityDirectory(root, release))!, "TiaMcp.FoundationHost.exe"), host);
-                if (!source && script.Contains("Contracts", StringComparison.Ordinal))
-                    Assert.Equal(Path.Combine(ReleaseCommands.EngineCompatibilityDirectory(root, release), $"TiaMcp.Engine.V{release}.exe"), worker[1]);
-                else Assert.Contains("candidate", worker[1]);
-                Directory.CreateDirectory(output);
-                File.WriteAllText(Path.Combine(output, release + ".json"), "{}");
-                captures.Add(args);
-            },
-            (name, executable, args, _, _) =>
-            {
-                Assert.DoesNotContain("sdk-worker-build-plc", name);
-                if (executable == "dotnet-double")
-                {
-                    Assert.Contains("-p:TiaMcpEngineWorkerSdkFixture=true", args);
-                    Assert.Contains(args, arg => arg.StartsWith("-p:OutputPath=", StringComparison.Ordinal) && arg.Contains("engine-compat", StringComparison.Ordinal));
-                }
-                return new(0, "", "");
-            });
-        Assert.Equal(12, captures.Count);
-        foreach (var key in new[] { "20", "21" })
-            Assert.Equal(6, captures.Count(args => args[Array.IndexOf(args, "--releases") + 1] == key));
+            (name, action) => steps.Add(name),
+            (_, _) => throw new InvalidOperationException("no comparison expected"),
+            (_, _) => throw new InvalidOperationException("no capture expected"),
+            (name, _, _, _, _) => throw new InvalidOperationException("no isolated build expected: " + name));
+        Assert.Contains("05-prompt-registration", steps);
+        Assert.DoesNotContain(steps, step => step.Contains("engine", StringComparison.Ordinal));
+        var source = File.ReadAllText(Path.Combine(Repository.FindRoot(), "build-tools/release/ReleaseCandidateChecks.cs"));
+        Assert.DoesNotContain("engine-contracts", source);
+        Assert.DoesNotContain("engine-responses", source);
+        Assert.Contains("\"plc-contracts\", \"plc-responses\"", source);
     }
 
     [Fact]
     [Trait("Category", "Pipeline")]
-    public void CandidateRetainsEngineStepsAndAddsBothPlcCaptureMatrices()
+    public void CandidateRunsBothPlcCaptureMatricesAndOnePackagedVerify()
     {
         using var tree = new StaticTree();
         Directory.CreateDirectory(Path.Combine(tree.Root, "TIA_V20_PublicAPI/V20"));
         Directory.CreateDirectory(Path.Combine(tree.Root, "TIA_V21_PublicAPI/V21/net48"));
         var root = Repository.FindRoot();
         var steps = new List<string>(); var builds = new List<string>(); var captures = new List<string>(); var comparisons = new List<string>();
-        ReleaseCommands.RunCandidateChecks(new("quick", ["engine-contracts", "engine-responses", "plc-contracts", "plc-responses"], [], []),
+        ReleaseCommands.RunCandidateChecks(new("quick", ["plc-contracts", "plc-responses"], [], []),
             tree.Root, tree.Root, tree.Root, tree.Root, "dotnet-double", "python-double", 1,
             (name, action) => { steps.Add(name); if (name is "plc-contracts" or "plc-responses") action(); },
             (script, args) =>
             {
                 Assert.Equal("compare", args[0]); Assert.Contains("--baseline", args);
                 comparisons.Add(args[Array.IndexOf(args, "--current") + 1]);
-            }, (_, _) => throw new InvalidOperationException("Unexpected engine capture action"),
+            }, (_, _) => throw new InvalidOperationException("Unexpected Foundation capture action"),
             (name, executable, args, defaults, cwd) =>
             {
                 if (executable == "dotnet-double")
@@ -101,13 +71,13 @@ public sealed class ReleaseValidationTests
                 }
                 return new(0, "", "");
             });
+        // P8-04l: no engine SDK worker is built; the PLC capture matrices and one packaged verify remain.
         Assert.Equal(2, builds.Count(name => name.StartsWith("sdk-worker-build-plc-v", StringComparison.Ordinal)));
-        Assert.Contains("sdk-worker-build", builds);
+        Assert.Equal(2, builds.Count);
         Assert.Equal(16, captures.Count); Assert.Equal(16, comparisons.Count);
-        Assert.Contains("07-engine-contracts-source-layout", steps);
-        Assert.Contains("09-engine-responses-source-layout", steps);
-        Assert.Contains("09-packaged-responses-verify", steps);
-        Assert.Contains("09-packaged-responses-verify-plc", steps);
+        Assert.DoesNotContain(steps, step => step.Contains("engine", StringComparison.Ordinal));
+        Assert.DoesNotContain("09-packaged-responses-verify", steps);
+        Assert.Equal(1, steps.Count(step => step == "09-packaged-responses-verify-plc"));
     }
 
     // The beta.1 release run failed when its NuGet folder sat under bin-build/release-runs/<run>: the deepest package file needed 262
@@ -177,9 +147,9 @@ public sealed class ReleaseValidationTests
         var verified = false;
         void Run()
         {
-            ReleaseCommands.RunCandidateChecks(new("quick", ["engine-responses"], [], []), directory, directory, directory,
+            ReleaseCommands.RunCandidateChecks(new("quick", ["plc-responses"], [], []), directory, directory, directory,
                 directory, "dotnet-test-double", "python-test-double", 1,
-                (name, action) => { steps.Add(name); if (name == "09-packaged-responses-verify") action(); },
+                (name, action) => { steps.Add(name); if (name == "09-packaged-responses-verify-plc") action(); },
                 (script, args) =>
                 {
                     Assert.Equal("scripts/checks/Snapshot-ToolResponses.py", script);
@@ -208,8 +178,8 @@ public sealed class ReleaseValidationTests
         if (failVerify) Assert.Throws<ReleaseException>(Run); else Run();
         Assert.True(verified);
         Assert.NotNull(bundle); Assert.False(Directory.Exists(bundle));
-        foreach (var step in new[] { "08-v4-responses-capture", "09-v4-responses-compare", "09-v4-responses-http",
-            "09-engine-responses-source-layout", "09-packaged-responses-verify" }) Assert.Contains(step, steps);
+        // P8-04l: the engine capture steps 06-09 retired; the PLC group and its packaged no-TIA verify remain.
+        Assert.Equal(new[] { "plc-responses", "09-packaged-responses-verify-plc" }, steps.Where(step => step is "plc-responses" || step.StartsWith("0", StringComparison.Ordinal)).ToArray());
     }
 
     [Theory]
@@ -551,27 +521,25 @@ public sealed class ReleaseValidationTests
     }
 
     [Fact]
-    public void ReleaseCommandTableKeepsHarnessEngineAndPlcBindingsAndD5Reasons()
+    public void ReleaseCommandTableBindsEveryPlcHarnessJobAndNoRetiredEngineStep()
     {
         var entries = ReleaseCommandTable.Entries.ToArray();
-        foreach (var (engine, plc) in ReleaseCommands.CheckAllHarnessSuccessors())
+        foreach (var plc in ReleaseCommands.CheckAllPlcHarnessJobs())
         {
-            int index = Array.FindIndex(entries, row => row.Name == engine);
-            Assert.True(index >= 0); Assert.Equal(plc, entries[index + 1].Name);
-            Assert.Contains("Test-PlcHarness.py", entries[index + 1].Command);
-            Assert.Contains("--worker <SDK-ready-PlcWorker>", entries[index + 1].Command);
-            Assert.Equal(plc + ".log", entries[index + 1].LogFile);
-            Assert.Equal("harness." + plc, entries[index + 1].RecordKey);
+            var entry = ReleaseCommandTable.Get(plc);
+            Assert.Contains("Test-PlcHarness.py", entry.Command);
+            Assert.Contains("--worker <SDK-ready-PlcWorker>", entry.Command);
+            Assert.Equal(plc + ".log", entry.LogFile);
+            Assert.Equal("harness." + plc, entry.RecordKey);
         }
-        foreach (var (engine, reason) in ReleaseCommands.CheckAllHarnessD5())
-        {
-            Assert.Contains(reason, ReleaseCommandTable.Get(engine).CountRule);
-            Assert.DoesNotContain(entries, row => row.Name == engine + "-plc");
-        }
-        foreach (var (engine, reason) in ReleaseCommands.CheckAllHarnessD5Assertions())
-            Assert.Contains(reason, ReleaseCommandTable.Get(engine).CountRule);
+        // P8-04l: the engine harness modes, the engine-only build-release steps and the engine D5 rows retired with the engine.
+        Assert.DoesNotContain(entries, row => row.Name.StartsWith("harness-v", StringComparison.Ordinal) && !row.Name.EndsWith("-plc", StringComparison.Ordinal));
+        foreach (var retired in new[] { "engineering-api", "native-safety", "native-coverage", "native-diagnostics-jit", "approval-safety", "local-stability",
+            "isolated-local-stability", "generate-tools-list", "download-route", "match-plc-name", "worker-supervisor", "http-concurrency" })
+            Assert.DoesNotContain(entries, row => row.Name == retired);
+        Assert.DoesNotContain(entries, row => row.Command.Contains("TiaMcp.Engine.Harness.exe <engine>", StringComparison.Ordinal));
         Assert.Contains("build-solutions", entries.Select(row => row.Name));
-        Assert.Equal("TiaMcp.Engine.Harness.exe engineering-api-only", ReleaseCommandTable.Get("engineering-api").Command);
+        Assert.Contains("tool-capability-matrix", entries.Select(row => row.Name));
     }
 
     [Fact]
@@ -603,59 +571,17 @@ public sealed class ReleaseValidationTests
 
     [Fact]
     [Trait("Category", "Pipeline")]
-    public void ParallelBuildReleasePipelinesStartTheirOwnDevelopmentHostCopies()
-    {
-        // A suite build in one pipeline rebuilds src/FoundationHost/bin/Release; the other pipeline's harness must not start that build (P8-90).
-        var runTemp = Path.Combine(Path.GetTempPath(), "tmr-" + Guid.NewGuid().ToString("N")[..8], "br");
-        var v20 = ReleaseCommands.PrivateDevelopmentHostPath(runTemp, 20);
-        var v21 = ReleaseCommands.PrivateDevelopmentHostPath(runTemp, 21);
-        Assert.NotEqual(v20, v21, StringComparer.OrdinalIgnoreCase);
-        foreach (var (major, host) in new[] { (20, v20), (21, v21) })
-        {
-            Assert.Equal("TiaMcp.FoundationHost.exe", Path.GetFileName(host));
-            Assert.StartsWith(ReleaseCommands.PipelineTempDirectory(runTemp, major) + Path.DirectorySeparatorChar, host, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain(Path.Combine("src", "FoundationHost", "bin"), host, StringComparison.OrdinalIgnoreCase);
-        }
-        Assert.False(ReleaseCommands.PipelineTempDirectory(runTemp, 20).StartsWith(ReleaseCommands.PipelineTempDirectory(runTemp, 21), StringComparison.OrdinalIgnoreCase)
-            || ReleaseCommands.PipelineTempDirectory(runTemp, 21).StartsWith(ReleaseCommands.PipelineTempDirectory(runTemp, 20), StringComparison.OrdinalIgnoreCase),
-            "The two pipeline folders must not contain each other.");
-
-        // Every harness step of a version pipeline starts that pipeline's copy; only the shipped-runtime checks after both pipelines use the shared build.
-        var source = File.ReadAllText(Path.Combine(Repository.FindRoot(), "build-tools/release/BuildReleasePipeline.cs"));
-        var start = source.IndexOf("private static object RunBuildReleaseMajor(", StringComparison.Ordinal);
-        var end = source.IndexOf("private static void RunShippedRuntimeChecks(", StringComparison.Ordinal);
-        Assert.True(start > 0 && end > start, "version pipeline source not found");
-        var harnessSteps = System.Text.RegularExpressions.Regex.Matches(source[start..end], "RunBuildSpec\\(\"[^\"]+\", harness, [^;]*;").Select(match => match.Value).ToArray();
-        Assert.True(harnessSteps.Length >= 14, "expected the version pipeline's harness steps, found " + harnessSteps.Length);
-        Assert.All(harnessSteps, step => Assert.Contains("developmentHost: developmentHost", step, StringComparison.Ordinal));
-    }
-
-    [Fact]
-    [Trait("Category", "Pipeline")]
-    public void OnlyStepsThatStartThePrivateEngineGetTheCheckoutAsBundleRoot()
+    public void NoIsolatedReleaseStepGetsTheCheckoutAsBundleRoot()
     {
         // The release runs build-multi-version and build-release as isolated children. A bundle root in every isolated step reached
-        // the Studio Core tests and the offline suites there, which select their own roots (4.0.0-beta.1 release run).
-        var root = Repository.FindRoot();
-        var engine = Path.Combine(root, "bin-build", "engine-compat", "v21", "worker", "TiaMcp.Engine.V21.exe");
-        Assert.True(ReleaseCommands.StartsPrivateEngine(engine, ["--write-tool-catalog", Path.Combine(Path.GetDirectoryName(engine)!, "tool-catalog.json")]));
-        Assert.True(ReleaseCommands.StartsPrivateEngine("TiaMcp.Engine.Harness.exe", [engine.Replace('\\', '/'), "http"]));
-        Assert.True(ReleaseCommands.StartsPrivateEngine("python", ["Test-LocalStability.py", "--engine-worker", "21=" + engine.ToUpperInvariant()]));
-        Assert.True(ReleaseCommands.StartsPrivateEngine(Path.Combine(root, "bin-build", "engine-compat", "v20", "TiaMcp.FoundationHost.exe"), []));
-        // In-process suites, builds, the release's child commands and the installed hosts get no bundle root from the step.
-        Assert.False(ReleaseCommands.StartsPrivateEngine("dotnet", []));
-        Assert.False(ReleaseCommands.StartsPrivateEngine("dotnet", ["test", Path.Combine(root, "tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj"), "-c", "Release"]));
-        Assert.False(ReleaseCommands.StartsPrivateEngine("dotnet", [Path.Combine(root, "build-tools/release/bin/Release/net10.0/TiaMcp.ReleaseTool.dll"), "build-multi-version", "-PrepareOnly"]));
-        Assert.False(ReleaseCommands.StartsPrivateEngine(Path.Combine(root, "runtime", "v21", "TiaMcp.FoundationHost.exe"), ["--catalog", "--release-key", "21"]));
-        Assert.False(ReleaseCommands.StartsPrivateEngine(Path.Combine(root, "bin-build", "engine-compat-copy", "TiaMcp.Engine.V21.exe"), []));
-
-        var source = File.ReadAllText(Path.Combine(root, "build-tools/release/BuildReleasePipeline.cs"));
+        // the Studio Core tests and the offline suites there, which select their own roots (4.0.0-beta.1 release run). P8-04l
+        // retired the private engine copy, the only step kind that needed the checkout as bundle root.
+        var source = File.ReadAllText(Path.Combine(Repository.FindRoot(), "build-tools/release/BuildReleasePipeline.cs"));
         var start = source.IndexOf("private static CommandResult RunBuildIsolated(", StringComparison.Ordinal);
-        var end = source.IndexOf("internal static bool StartsPrivateEngine(", StringComparison.Ordinal);
+        var end = source.IndexOf("private static int RequireCount(", StringComparison.Ordinal);
         Assert.True(start > 0 && end > start, "isolated step source not found");
-        var assignments = System.Text.RegularExpressions.Regex.Matches(source[start..end], "TIA_MCP_BUNDLE_ROOT\"\\]\\s*=[^;\\r\\n]*").Select(match => match.Value).ToArray();
-        Assert.Equal(new[] { "TIA_MCP_BUNDLE_ROOT\"] = Root" }, assignments);
-        Assert.Contains("if (StartsPrivateEngine(executable, args)) env[\"TIA_MCP_BUNDLE_ROOT\"] = Root;", source[start..end], StringComparison.Ordinal);
+        Assert.DoesNotContain("TIA_MCP_BUNDLE_ROOT", source[start..end], StringComparison.Ordinal);
+        Assert.DoesNotContain("StartsPrivateEngine", source, StringComparison.Ordinal);
     }
 
     [Fact]

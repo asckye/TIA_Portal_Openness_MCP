@@ -225,15 +225,15 @@ def run_engine(args) -> dict:
     exe, portal, api = args.exe.resolve(), args.portal_root.resolve(), args.public_api.resolve()
     harness = args.host_harness.resolve() if args.host_harness else None
     require(exe.is_file() and portal.is_dir() and (harness is None or harness.is_file()) and api.is_dir(), "Engine check input is missing")
-    require((args.plc_worker is not None) != (args.engine_worker is not None), "Select exactly one explicit SDK-only worker")
-    require((args.engine_worker is None) == (args.engine_catalog is None), "Engine SDK worker requires its catalog")
+    # P8-04l: the engine worker is retired; the V20/V21 gate runs FoundationHost with the explicit PLC SDK worker.
+    require(args.plc_worker is not None, "The explicit PLC SDK worker (--plc-worker) is required")
     count = 0
     results = {}
 
     direct_root, direct_env = fresh_data_root(args.temp_root, f"engine-v{args.major}-direct")
     with retained_on_failure(direct_root):
         with resources.server(exe, portal, args.major, "stdio", "full", harness, api,
-                              env_overrides=direct_env, engine_worker=args.engine_worker, engine_catalog=args.engine_catalog, plc_worker=args.plc_worker) as (rpc, _, _):
+                              env_overrides=direct_env, plc_worker=args.plc_worker) as (rpc, _, _):
             initialized = rpc("initialize", "init", {"protocolVersion": "2024-11-05", "capabilities": {},
                                                        "clientInfo": {"name": "release-approval-gate", "version": "1"}})
             require("result" in initialized, f"V{args.major}: direct host initialize failed")
@@ -251,7 +251,7 @@ def run_engine(args) -> dict:
     bridge_root, bridge_env = fresh_data_root(args.temp_root, f"engine-v{args.major}-calltool")
     with retained_on_failure(bridge_root):
         with resources.server(exe, portal, args.major, "stdio", "lite", harness, api,
-                              env_overrides=bridge_env, engine_worker=args.engine_worker, engine_catalog=args.engine_catalog, plc_worker=args.plc_worker) as (rpc, _, _):
+                              env_overrides=bridge_env, plc_worker=args.plc_worker) as (rpc, _, _):
             initialized = rpc("initialize", "init", {"protocolVersion": "2024-11-05", "capabilities": {},
                                                        "clientInfo": {"name": "release-approval-gate", "version": "1"}})
             require("result" in initialized, f"V{args.major}: CallTool host initialize failed")
@@ -372,8 +372,6 @@ def main() -> int:
     parser.add_argument("--exe", type=Path)
     parser.add_argument("--portal-root", type=Path)
     parser.add_argument("--host-harness", type=Path)
-    parser.add_argument('--engine-worker', type=Path, help='Explicit SDK-only worker for the combined net10 host')
-    parser.add_argument('--engine-catalog', type=Path)
     parser.add_argument('--plc-worker', type=Path)
     parser.add_argument("--public-api", type=Path)
     parser.add_argument("--runtime-root", type=Path)
@@ -394,7 +392,6 @@ def main() -> int:
     report = run_engine(args) if args.product == "engine" else run_foundation(args)
     if report["checksPassed"] != report["checksExpected"]:
         raise CheckFailure(f"Check count mismatch: {report}")
-    report.update(resources.engine_fixture_evidence(args.engine_worker or args.plc_worker, args.exe))
     if args.plc_worker is not None:
         report.update(resources.plc_fixture_evidence(args.plc_worker, args.exe))
     report["status"] = "passed"

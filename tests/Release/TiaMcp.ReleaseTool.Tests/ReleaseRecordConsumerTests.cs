@@ -162,18 +162,20 @@ public sealed class ReleaseRecordConsumerTests
     }
 
     [Fact]
-    public void MultiRecordKeepsEngineGatesSeparateFromPlcEvidence()
+    public void MultiRecordCarriesNoEngineCopyAndComparisonLabelsReleaseBuildEvidence()
     {
+        // P8-04l: the eight-release record no longer embeds release-build.json; its release-wide counts stay in that record.
         using var tree = new StaticTree();
         var (engine, multi) = Records(tree);
-        engine["validation"] = new JsonObject { ["offlinePassed"] = 123, ["engineOnlyD5"] = "kept" };
-        multi["engineCompatibility"] = engine.DeepClone();
-        using var doc = JsonDocument.Parse(multi.ToJsonString());
-        Assert.Equal(123, ReleaseRecords.ShippedEngineProof(doc.RootElement).GetProperty("validation").GetProperty("offlinePassed").GetInt32());
-        Assert.False(doc.RootElement.GetProperty("plcRuntimes").GetProperty("V20").TryGetProperty("offlinePassed", out _));
-        using var original = JsonDocument.Parse(engine.ToJsonString());
-        var comparisons = ReleaseRecords.Compare(original.RootElement, doc.RootElement);
-        Assert.Contains(comparisons, row => row.EngineField == "validation.engineOnlyD5" && row.Status.Contains("no PLC counterpart", StringComparison.Ordinal));
+        engine["validation"] = new JsonObject { ["offlinePassed"] = 123 };
+        Assert.False(multi.ContainsKey("engineCompatibility"));
+        Validate(tree.Root, multi);
+        var rows = Compare(engine, multi);
+        Assert.DoesNotContain(rows, row => row.Status is "missing" or "different");
+        var offline = Assert.Single(rows.Where(row => row.EngineField == "validation.offlinePassed"));
+        Assert.Null(offline.MultiField);
+        Assert.Contains("release-build.json evidence", offline.Status, StringComparison.Ordinal);
+        Assert.Contains(rows, row => row.EngineField == "release" && row.MultiField == "release" && row.Status == "equal");
     }
 
     [Fact]
@@ -233,8 +235,6 @@ public sealed class ReleaseRecordConsumerTests
         var plan = new ReleaseCheckPlan("quick", ["plc-stability"], [], []);
         multi["checkPlan"] = JsonSerializer.SerializeToNode(plan, JsonOptions);
         multi["tier"] = "quick";
-        multi["engineCompatibility"]!["checkPlan"] = multi["checkPlan"]!.DeepClone();
-        multi["engineCompatibility"]!["tier"] = "quick";
         foreach (var key in new[] { "20", "21" })
         {
             var runtime = multi["plcRuntimes"]!["V" + key]!;
@@ -283,50 +283,30 @@ public sealed class ReleaseRecordConsumerTests
     }
 
     [Fact]
-    public void ComparisonExpectsTheSuccessorsTheEightReleaseRecordsPlanSelected()
+    public void ComparisonRequiresTheSameReleasePlanUpdaterAndRuntimeFiles()
     {
         using var tree = new StaticTree();
         var (engine, multi) = Records(tree);
-        engine["validation"] = new JsonObject { ["runtimes"] = new JsonObject { ["V20"] = new JsonObject
-        { ["httpPassed"] = 0, ["migrationAssembly"] = "skipped", ["nativeDiagnostics"] = new JsonObject { ["status"] = "skipped" } } } };
-        multi["engineCompatibility"] = engine.DeepClone();
-        // Package tier: the engine skipped these checks and so did the PLC chain; the engine values stay retained proof.
-        var rows = Compare(engine, multi);
-        Assert.DoesNotContain(rows, row => row.Status is "missing" or "different");
-        Assert.Contains(rows, row => row.EngineField == "validation.runtimes.V20.httpPassed" && row.Status.Contains("harness-v20-http-plc not selected", StringComparison.Ordinal));
-        // A plan that selects the successor requires its receipt.
-        var plan = JsonSerializer.SerializeToNode(new ReleaseCheckPlan("quick", ["plc-functional"], [], []), JsonOptions);
-        foreach (var record in new[] { engine, multi, (JsonObject)multi["engineCompatibility"]! }) { record["checkPlan"] = plan!.DeepClone(); record["tier"] = "quick"; }
-        Assert.Contains(Compare(engine, multi), row => row.MultiField == "plcRuntimes.V20.checks.harness-v20-http-plc.counts" && row.Status == "missing");
-        multi["plcRuntimes"]!["V20"]!["checks"]!["harness-v20-http-plc"] = Receipt(multi, "harness-v20-http-plc", "COMPLETE: 1500\n");
-        Assert.Contains(Compare(engine, multi), row => row.EngineField == "validation.runtimes.V20.httpPassed" && row.Status.StartsWith("PLC successor receipt", StringComparison.Ordinal));
-    }
-
-    [Fact]
-    public void ComparisonRequiresTheSoakGatesAndReportsEngineSampleDetail()
-    {
-        using var tree = new StaticTree();
-        var (engine, multi) = Records(tree);
-        var plan = JsonSerializer.SerializeToNode(new ReleaseCheckPlan("quick", ["plc-stability"], [], []), JsonOptions);
-        engine["checkPlan"] = plan!.DeepClone();
-        engine["tier"] = "quick";
-        engine["validation"] = new JsonObject { ["runtimes"] = new JsonObject { ["V20"] = new JsonObject { ["localStability"] = new JsonObject
+        Assert.DoesNotContain(Compare(engine, multi), row => row.Status is "missing" or "different");
+        foreach (var field in new[] { "release", "fileVersion", "tier" })
         {
-            ["status"] = "passed", ["rounds"] = 50, ["engineCatalogSha256"] = new string('c', 64),
-            ["runs"] = new JsonArray(new JsonObject { ["transport"] = "stdio", ["unexpectedExits"] = 0, ["processSamples"] = new JsonArray(new JsonObject { ["privateMiB"] = 80 }) })
-        } } } };
-        multi["checkPlan"] = plan.DeepClone();
-        multi["tier"] = "quick";
-        multi["engineCompatibility"] = engine.DeepClone();
-        multi["plcRuntimes"]!["V20"]!["localStability"] = new JsonObject
-        { ["status"] = "passed", ["rounds"] = 50, ["runs"] = new JsonArray(new JsonObject { ["transport"] = "stdio", ["unexpectedExits"] = 0 }) };
-        var rows = Compare(engine, multi);
-        Assert.DoesNotContain(rows, row => row.Status is "missing" or "different");
-        Assert.Contains(rows, row => row.EngineField == "validation.runtimes.V20.localStability.runs[0].unexpectedExits" && row.MultiField == "plcRuntimes.V20.localStability.runs[0].unexpectedExits" && row.Status == "PLC counterpart");
-        Assert.Contains(rows, row => row.EngineField == "validation.runtimes.V20.localStability.runs[0].processSamples[0].privateMiB" && row.Status.Contains("soak detail", StringComparison.Ordinal));
-        Assert.Contains(rows, row => row.EngineField == "validation.runtimes.V20.localStability.engineCatalogSha256" && row.Status.Contains("soak detail", StringComparison.Ordinal));
-        multi["plcRuntimes"]!["V20"]!["localStability"]!["runs"]![0]!.AsObject().Remove("unexpectedExits");
-        Assert.Contains(Compare(engine, multi), row => row.MultiField == "plcRuntimes.V20.localStability.runs[0].unexpectedExits" && row.Status == "missing");
+            var changed = (JsonObject)engine.DeepClone(); changed[field] = "other";
+            Assert.Contains(Compare(changed, multi), row => row.EngineField == field && row.Status == "different");
+        }
+        var plan = (JsonObject)engine.DeepClone();
+        plan["checkPlan"] = JsonSerializer.SerializeToNode(new ReleaseCheckPlan("quick", ["plc-functional"], [], []), JsonOptions);
+        Assert.Contains(Compare(plan, multi), row => row.EngineField.StartsWith("checkPlan.", StringComparison.Ordinal) && row.Status == "different");
+        var updater = new JsonArray(new JsonObject { ["path"] = "runtime/tools/TiaMcp.Updater.exe", ["sha256"] = Hash("updater"), ["length"] = 7 });
+        var withUpdater = (JsonObject)engine.DeepClone(); withUpdater["updaterFiles"] = updater.DeepClone();
+        Assert.Contains(Compare(withUpdater, multi), row => row.EngineField.StartsWith("updaterFiles[", StringComparison.Ordinal) && row.Status == "missing");
+        multi["updaterFiles"] = updater.DeepClone();
+        Assert.DoesNotContain(Compare(withUpdater, multi), row => row.Status is "missing" or "different");
+        // A release-build runtime file must be in the eight-release inventory with the same bytes.
+        var file = (JsonObject)engine["runtimeFiles"]![0]!;
+        file["sha256"] = new string('0', 64);
+        Assert.Contains(Compare(engine, multi), row => row.EngineField == "runtimeFiles[0].sha256" && row.Status == "different");
+        file["path"] = "runtime/tools/Unrecorded.exe";
+        Assert.Contains(Compare(engine, multi), row => row.EngineField == "runtimeFiles[0].path" && row.Status == "missing");
     }
 
     [Fact]
@@ -371,7 +351,6 @@ public sealed class ReleaseRecordConsumerTests
         var enginePath = tree.Write(ReleaseRecords.EnginePath, engine.ToJsonString());
         var before = (JsonObject)multi.DeepClone();
         before.Remove("plcRuntimes");
-        before.Remove("engineCompatibility");
         var multiPath = tree.Write(ReleaseRecords.MultiPath, before.ToJsonString());
         var options = Options.Parse(["-EngineRecord", enginePath, "-MultiRecord", multiPath], new HashSet<string>());
         // A record written before the PLC proof: the command fails, the dry run names it and continues.
@@ -462,7 +441,7 @@ public sealed class ReleaseRecordConsumerTests
         var (engine, multi) = Records(tree);
         // A plan with a PLC group and foundation-approval: -Test runs every selected successor, without -Test only the approval ones.
         var plan = new ReleaseCheckPlan("quick", ["foundation-approval", "plc-worker-isolation"], [], []);
-        foreach (var record in new[] { multi, (JsonObject)multi["engineCompatibility"]!, engine })
+        foreach (var record in new[] { multi, engine })
         { record["checkPlan"] = JsonSerializer.SerializeToNode(plan, JsonOptions); record["tier"] = "quick"; }
         multi["test"] = test;
         foreach (var key in new[] { "20", "21" })
@@ -470,14 +449,6 @@ public sealed class ReleaseRecordConsumerTests
         if (test) Assert.Contains("worker-robustness-v20-plc", Assert.Throws<ReleaseException>(() => Validate(tree.Root, multi)).Message, StringComparison.Ordinal);
         else Validate(tree.Root, multi);
         Assert.Equal(test ? ["foundation-approval", "plc-worker-isolation"] : ["plc-approval"], ReleaseRecords.PlcProofPlan(plan, test).SelectedChecks);
-        // The comparison expects the same successors as AssertPlcProof.
-        engine["validation"] = new JsonObject { ["runtimes"] = new JsonObject { ["V20"] = new JsonObject
-        { ["workerIsolation"] = new JsonObject { ["protocolChecksPassed"] = 1500 }, ["approvalSafety"] = new JsonObject { ["checksPassed"] = 7 } } } };
-        multi["engineCompatibility"] = engine.DeepClone();
-        var rows = Compare(engine, multi);
-        Assert.Contains(rows, row => row.EngineField == "validation.runtimes.V20.approvalSafety.checksPassed" && row.Status.StartsWith("PLC successor receipt", StringComparison.Ordinal));
-        Assert.Contains(rows, row => row.EngineField == "validation.runtimes.V20.workerIsolation.protocolChecksPassed" &&
-            (test ? row.Status == "missing" : row.Status.Contains("worker-protocol-v20-plc not selected", StringComparison.Ordinal)));
         foreach (var key in new[] { "20", "21" })
             foreach (var name in new[] { "worker-robustness", "worker-protocol" })
                 multi["plcRuntimes"]!["V" + key]!["checks"]![name + "-v" + key + "-plc"] = Receipt(multi, name + "-v" + key + "-plc", "COMPLETE: 717 checks passed\n");
@@ -498,99 +469,60 @@ public sealed class ReleaseRecordConsumerTests
         using var tree = new StaticTree();
         // The package binds the eight-release record and its PlcWorkers (P8-04j2); Records writes both workers.
         var (_, multi) = Records(tree);
-        // The record and its retained engine copy carry the same version (AssertPlcProof).
-        foreach (var record in new[] { multi, (JsonObject)multi["engineCompatibility"]! })
-        {
-            record["release"] = release;
-            record["fileVersion"] = fileVersion;
-        }
+        multi["release"] = release;
+        multi["fileVersion"] = fileVersion;
         tree.Write(ReleaseRecords.MultiPath, multi.ToJsonString());
         if (accepted) Assert.Equal(Path.Combine(tree.Root, ReleaseRecords.MultiPath), ReleaseRecords.DeliveryBuildPath(tree.Root, release));
         else Assert.Throws<ReleaseException>(() => ReleaseRecords.DeliveryBuildPath(tree.Root, release));
     }
 
     [Fact]
-    public void EngineSoakResultsAreRecordedWithoutHostPathsAndStillPassTheEngineReuseGate()
+    public void ReleaseBuildRecordPassesTheReuseGateWithReleaseWideEvidenceOnly()
     {
+        // P8-04l: release-build.json holds the release-wide checks and tools; the engine runtimes, soaks and audit inputs are gone.
         using var tree = new StaticTree();
         var repository = TiaMcp.BuildCommon.Repository.FindRoot();
         tree.Write("build-tools/release/release-checks.json", File.ReadAllText(Path.Combine(repository, "build-tools/release/release-checks.json")));
         tree.Write("Version.props", "<Project />");
-        var profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var temp = Path.GetTempPath().TrimEnd('\\', '/');
         var runtimeFiles = new JsonArray();
-        // The built tree has a runtime directory; the still-built engine is in the private cross-check output (P8-04j2).
-        Directory.CreateDirectory(Path.Combine(tree.Root, "runtime"));
-        foreach (var key in new[] { "20", "21" })
+        foreach (var relative in new[] { "runtime/tools/TiaMcp.WriteGuard.exe", "runtime/verification/NativeCallWeaver.dll" })
         {
-            var relative = $"bin-build/engine-compat/v{key}/worker/TiaMcp.Engine.V{key}.exe";
-            tree.Write(relative, "engine " + key);
+            tree.Write(relative, "built " + relative);
             runtimeFiles.Add(new JsonObject { ["path"] = relative, ["sha256"] = ReleaseRecords.HashFile(Path.Combine(tree.Root, relative)) });
         }
-        // The soak as Test-LocalStability.py writes it: every sampled process image is an absolute path.
-        JsonElement Soak(string key, bool isolated)
-        {
-            var runs = new JsonArray();
-            foreach (var transport in new[] { "stdio", "http" })
-                foreach (var profileName in new[] { "full", "lite" })
-                    runs.Add(new JsonObject
-                    {
-                        ["transport"] = transport, ["profile"] = profileName, ["unexpectedExits"] = 0, ["unexpectedFailures"] = 0, ["unmatchedJournalEntries"] = 0,
-                        ["measuredToolCalls"] = 1050, ["tiaConnected"] = false,
-                        ["processSamples"] = new JsonArray(new JsonObject
-                        {
-                            ["image"] = Path.Combine(tree.Root, "runtime", "v" + key, "TiaMcp.FoundationHost.exe"),
-                            ["runtimeState"] = new JsonObject { ["image"] = @"\\?\" + Path.Combine(tree.Root, "runtime", "v" + key, "TiaMcp.FoundationHost.exe") }
-                        }),
-                        ["workerSamples"] = new JsonArray(new JsonObject { ["image"] = Path.Combine(temp, "tmr-1234", "TiaMcp.Engine.V" + key + ".exe") },
-                            new JsonObject { ["image"] = Path.Combine(profile, ".nuget", "x.exe") }, new JsonObject { ["image"] = @"E:\Other\Drive\worker.exe" })
-                    });
-            using var doc = JsonDocument.Parse(new JsonObject
-            {
-                ["status"] = "passed", ["rounds"] = 50, ["isolatedWorker"] = true, ["workerModel"] = "combined-host-supervised-worker",
-                ["runtimeSha256"] = Hash("engine " + key), ["hostSha256"] = Hash("host " + key), ["sdkWorkerSha256"] = Hash("sdk " + key),
-                ["scriptSha256"] = Hash("script"), ["resourceHelperSha256"] = Hash("helper"), ["concurrency"] = isolated ? 16 : 8, ["runs"] = runs
-            }.ToJsonString());
-            return doc.RootElement.Clone();
-        }
-        var runtimes = new JsonObject();
-        foreach (var key in new[] { "20", "21" })
-        {
-            // The calls BuildReleasePipeline makes for localStability and isolatedLocalStability.
-            var soak = Soak(key, false);
-            var stored = ReleaseRecords.WithoutLocalPaths(tree.Root, soak)!;
-            var isolated = ReleaseRecords.WithoutLocalPaths(tree.Root, Soak(key, true))!;
-            foreach (var field in new[] { "status", "workerModel", "runtimeSha256", "hostSha256", "sdkWorkerSha256", "scriptSha256", "resourceHelperSha256" })
-                Assert.Equal(soak.GetProperty(field).GetString(), stored[field]!.GetValue<string>());
-            Assert.Equal("./runtime/v" + key + "/TiaMcp.FoundationHost.exe", stored["runs"]![0]!["processSamples"]![0]!["image"]!.GetValue<string>().Replace('\\', '/'));
-            Assert.Equal(["%TEMP%/tmr-1234/TiaMcp.Engine.V" + key + ".exe", "%USERPROFILE%/.nuget/x.exe", "<local path>"],
-                stored["runs"]![0]!["workerSamples"]!.AsArray().Select(sample => sample!["image"]!.GetValue<string>().Replace('\\', '/')));
-            runtimes["V" + key] = new JsonObject { ["localStability"] = stored, ["isolatedLocalStability"] = isolated };
-        }
-        var plan = new ReleaseCheckPlan("quick", ["preflight", "binary-build", "product-smoke", "engine-stability", "engine-isolated-stability", "relocation", "package", "bundle-validation"], [], []);
         var policy = ReleaseCheckPolicy.Load(tree.Root);
+        var plan = new ReleaseCheckPlan("quick", ["preflight", "binary-build", "offline-suites", "native-coverage", "resource-discovery", "product-smoke", "relocation", "package", "bundle-validation"], [], []);
         plan = plan with { SkippedChecks = policy.Checks.Except(plan.SelectedChecks, StringComparer.Ordinal).ToArray() };
+        var validation = new JsonObject
+        {
+            ["offlinePassed"] = 303, ["offlineV20Passed"] = 303, ["keptCodePassed"] = 4854, ["keptCodeV20Passed"] = 4854, ["versionPolicySdkPassed"] = 10,
+            ["writeGuardPassed"] = 8, ["crashEvidencePassed"] = 7, ["updaterPassed"] = 33, ["nativeMcpSafetyPassed"] = 8
+        };
         var record = new JsonObject
         {
             ["tier"] = "quick", ["checkPlan"] = JsonSerializer.SerializeToNode(plan, JsonOptions), ["release"] = "4.0.0", ["fileVersion"] = "4.0.0.0",
-            ["validation"] = new JsonObject { ["runtimes"] = runtimes }, ["runtimeFiles"] = runtimeFiles,
+            ["validation"] = validation, ["runtimeFiles"] = runtimeFiles, ["validationArtifacts"] = new JsonArray(),
             ["sourceFiles"] = JsonSerializer.SerializeToNode(ReleaseRecords.GetSources(tree.Root, "engine").Select(row => new { path = row.Path, sha256 = row.Sha256 })),
             ["validationInputs"] = JsonSerializer.SerializeToNode(ReleaseRecords.GetValidationInputs(tree.Root, "engine").Select(row => new { path = row.Path, sha256 = row.Sha256 }))
         };
-        var written = record.ToJsonString();
-        foreach (var local in new[] { tree.Root, profile, temp })
-            Assert.DoesNotContain(local.Replace(@"\", @"\\", StringComparison.Ordinal), written, StringComparison.OrdinalIgnoreCase);
-        Assert.False(ReleaseRecords.HasLocalPath(written.Replace(@"\\", @"\", StringComparison.Ordinal)), written);
-        using var parsed = JsonDocument.Parse(written);
-        Assert.Equal("", ReleaseRecords.EngineReuseReason(tree.Root, "4.0.0", parsed.RootElement, ReleaseRecords.GetSources(tree.Root, "engine"), "quick"));
-        // The gate still refuses an incomplete soak after the path filter.
-        runtimes["V21"]!["isolatedLocalStability"]!["runs"]!.AsArray().RemoveAt(0);
-        using var incomplete = JsonDocument.Parse(record.ToJsonString());
-        Assert.Equal("V21 validation incomplete", ReleaseRecords.EngineReuseReason(tree.Root, "4.0.0", incomplete.RootElement, ReleaseRecords.GetSources(tree.Root, "engine"), "quick"));
-        // BuildReleasePipeline stores both engine soaks through the same filter.
+        string Reason()
+        {
+            using var parsed = JsonDocument.Parse(record.ToJsonString());
+            return ReleaseRecords.EngineReuseReason(tree.Root, "4.0.0", parsed.RootElement, ReleaseRecords.GetSources(tree.Root, "engine"), "quick");
+        }
+        Assert.Equal("", Reason());
+        // The release-wide native MCP safety count replaced each engine runtime's sessionStability gate.
+        validation["nativeMcpSafetyPassed"] = 7;
+        Assert.Equal("offline validation missing", Reason());
+        validation["nativeMcpSafetyPassed"] = 8;
+        tree.Write("runtime/tools/Unrecorded.dll", "new");
+        Assert.Equal("runtime inventory changed (added/removed binary)", Reason());
+        File.Delete(Path.Combine(tree.Root, "runtime/tools/Unrecorded.dll"));
+        record["validationArtifacts"] = new JsonArray(new JsonObject { ["path"] = "bin-build/releases/v4.0.0/missing.json", ["sha256"] = Hash("x") });
+        Assert.StartsWith("audit evidence missing", Reason(), StringComparison.Ordinal);
         var pipeline = File.ReadAllText(Path.Combine(repository, "build-tools/release/BuildReleasePipeline.cs"));
-        Assert.Contains("localStability = plan.Includes(\"engine-stability\") ? ReleaseRecords.WithoutLocalPaths(Root, stability) : null", pipeline, StringComparison.Ordinal);
-        Assert.Contains("isolatedLocalStability = plan.Includes(\"engine-isolated-stability\") ? ReleaseRecords.WithoutLocalPaths(Root, isolatedStability) : null", pipeline, StringComparison.Ordinal);
+        Assert.DoesNotContain("runtimes = runtimeRecords", pipeline, StringComparison.Ordinal);
+        Assert.Contains("nativeMcpSafetyPassed = GetJsonInt(common, \"nativeMcpSafetyChecksPassed\")", pipeline, StringComparison.Ordinal);
     }
 
     // A receipt as PlcProof writes it, with its log bound in the record's validationArtifacts.
@@ -637,7 +569,6 @@ public sealed class ReleaseRecordConsumerTests
         var multi = (JsonObject)engine.DeepClone();
         multi.Remove("runtimeFiles");
         multi["files"] = files;
-        multi["engineCompatibility"] = engine.DeepClone();
         multi["plcRuntimes"] = runtimes;
         return (engine, multi);
     }

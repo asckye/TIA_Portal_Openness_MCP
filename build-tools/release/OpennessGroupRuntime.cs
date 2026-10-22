@@ -32,9 +32,8 @@ internal static class OpennessGroupRuntime
             {
                 var host = $"runtime/v{key}/{assembly}";
                 if (delivered(host)) yield return "Delivery policy permits retired host group dependency: " + host;
-                // V20/V21 worker directories still contain the retiring engine until P8-04l.
                 var worker = $"runtime/v{key}/worker/{assembly}";
-                if (key is not ("20" or "21") && delivered(worker))
+                if (delivered(worker))
                     yield return "Delivery policy permits retired PlcWorker group dependency: " + worker;
             }
     }

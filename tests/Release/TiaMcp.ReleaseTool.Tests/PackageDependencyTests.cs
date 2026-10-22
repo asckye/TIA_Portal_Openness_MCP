@@ -12,13 +12,14 @@ namespace TiaMcp.ReleaseTool.Tests;
 public sealed class PackageDependencyTests
 {
     [Fact]
-    public void OpennessGroupDeliveryRulesExcludePlcAndHostButRetainTheRetiringEngine()
+    public void OpennessGroupDeliveryRulesExcludePlcHostAndTheRetiredEngineWorkerFolders()
     {
         var rules = DeliveryRules.Load(Repository.FindRoot(AppContext.BaseDirectory));
         Assert.Empty(OpennessGroupRuntime.DeliveryPolicyErrors(rules.Delivered));
+        // P8-04l: the engine's resolver folder retired; no V20/V21 worker delivers a collaboration assembly.
         foreach (var assembly in OpennessGroupRuntime.CollaborationAssemblies)
             foreach (var key in new[] { "20", "21" })
-                Assert.True(rules.Delivered($"runtime/v{key}/worker/{assembly}"));
+                Assert.False(rules.Delivered($"runtime/v{key}/worker/{assembly}"));
         const string planted = "runtime/v19/worker/Siemens.Collaboration.Net.dll";
         Assert.Contains(OpennessGroupRuntime.DeliveryPolicyErrors(path => path == planted || rules.Delivered(path)),
             error => error.Contains(planted, StringComparison.Ordinal));

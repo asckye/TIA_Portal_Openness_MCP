@@ -220,8 +220,7 @@ def run_profile(args, transport, profile, run_dir):
     started = time.monotonic()
     with resources.server(args.exe, args.public_api, args.major, transport, profile,
             args.host_harness, args.public_api, process_observer=owned.append,
-            evidence_directory=run_dir, engine_worker=args.engine_worker, engine_catalog=args.engine_catalog,
-            plc_worker=args.plc_worker,
+            evidence_directory=run_dir, plc_worker=args.plc_worker,
             env_overrides={'TIA_MCP_DATA_DIRECTORY': str(data.resolve()),
                            'TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES': '0',
                            'TIA_MCP_DIAGNOSTICS_DIRECTORY': str(diagnostics),
@@ -298,7 +297,7 @@ def run_profile(args, transport, profile, run_dir):
             else:
                 require(value.get('ok') is True and meta['outcome'] == 'succeeded', label + ': expected success: ' + json.dumps(value))
                 if expectation == 'state':
-                    unattached_state(value, args.engine_worker is not None or args.plc_worker is not None, logs)
+                    unattached_state(value, args.plc_worker is not None, logs)
                 if expectation in ('compatibility', 'bridge_success'):
                     evidence = value['data']['evidence']
                     require(evidence['engineMajor'] == args.major and evidence['nativeCrossReferencesEnabled'] is False
@@ -326,7 +325,7 @@ def run_profile(args, transport, profile, run_dir):
             execute(case, 'warm-' + str(index))
         samples.append(process_sample(owned[0]))
         state = document(rpc('tools/call', 'worker-state', {'name': 'GetOpennessWorkerStatus', 'arguments': {}}))['data']['evidence']['worker']
-        worker_pid = owned_worker_pid(owned[0].pid, args.engine_worker or args.plc_worker)
+        worker_pid = owned_worker_pid(owned[0].pid, args.plc_worker)
         if args.major in (20, 21):
             require(state['state'] == 'Ready' and worker_pid != owned[0].pid, 'Worker isolation not active')
         else:
@@ -348,7 +347,7 @@ def run_profile(args, transport, profile, run_dir):
                 require(rpc('ping', f'ping-{batch}').get('result') == {}, 'Ping failed after input errors')
                 recovered = document(rpc('tools/call', f'recovery-{batch}', {'name': 'GetSessionState', 'arguments': {}}))
                 require(recovered['ok'] is True, 'State failed after error batch')
-                unattached_state(recovered, args.engine_worker is not None or args.plc_worker is not None, logs)
+                unattached_state(recovered, args.plc_worker is not None, logs)
                 unknown = rpc('__soak_unknown_method__', f'unknown-{batch}')
                 require(unknown.get('error', {}).get('code') == -32601, 'Unknown method not rejected')
                 empty = rpc('resources/list', f'resources-{batch}')
@@ -441,7 +440,7 @@ def run_profile(args, transport, profile, run_dir):
             lanes[lane][key] -= 1
             outstanding[key] -= 1
     require(not any(outstanding.values()), 'Incomplete invocation after all responses returned')
-    if args.engine_worker is not None or args.plc_worker is not None:
+    if args.plc_worker is not None:
         # Typed workers journal implementation names separately from canonical tool projections.
         # Match only this owned child's paired projections, including lite CallTool targets.
         child_calls = {(row['id'], row['tool']) for _, row in projections
@@ -466,8 +465,6 @@ def main():
     parser.add_argument('--exe', type=Path, required=True)
     parser.add_argument('--public-api', type=Path, required=True)
     parser.add_argument('--host-harness', type=Path, help='Compatibility hash evidence; no engine MCP host is started')
-    parser.add_argument('--engine-worker', type=Path, help='Explicit SDK-only worker for the combined net10 host')
-    parser.add_argument('--engine-catalog', type=Path)
     parser.add_argument('--plc-worker', type=Path, help='Explicit PLC worker for the Foundation profile soak')
     parser.add_argument('--major', type=int, choices=(19, 20, 21), required=True)
     parser.add_argument('--rounds', type=int, default=50)
@@ -480,9 +477,8 @@ def main():
     parser.add_argument('--max-handle-growth', type=int, default=128)
     parser.add_argument('--output', type=Path, required=True, help='Fresh directory for evidence; existing directories are refused')
     args = parser.parse_args()
-    require((args.engine_worker is not None) != (args.plc_worker is not None), 'Select exactly one worker kind')
-    require((args.engine_worker is None) == (args.engine_catalog is None), 'Engine worker requires its catalog')
-    require(args.major != 19 or args.plc_worker is not None, 'V19 requires the PLC worker')
+    # P8-04l: the engine worker is retired; every soak runs FoundationHost with the explicit PLC worker.
+    require(args.plc_worker is not None, 'The PLC worker (--plc-worker) is required')
     require(WINDOWS, 'Windows .NET Framework test host required')
     require(1 <= args.rounds <= 10000 and 1 <= args.concurrency <= 32, 'Rounds 1..10000; concurrency 1..32')
     for name in ('exe', 'public_api', 'output'):
@@ -493,10 +489,8 @@ def main():
         'resourceHelperSha256': sha(Path(resources.__file__)),
         'scope': 'Actual MCP host methods / SDK dispatch with local and refused calls only; no TIA connection, no native crash/hang injection, no production bootstrap, no long-duration leak proof.',
         'rounds': args.rounds, 'isolatedWorker': True,
-        'workerModel': 'combined-host-supervised-worker', 'bounds': {'maxPrivateMiB': args.max_private_mib, 'maxHandleGrowth': args.max_handle_growth}, 'runs': []}
-    report.update(resources.engine_fixture_evidence(args.engine_worker, args.exe))
-    if args.plc_worker is not None:
-        report.update(resources.plc_fixture_evidence(args.plc_worker, args.exe))
+        'workerModel': 'foundation-host-plc-worker', 'bounds': {'maxPrivateMiB': args.max_private_mib, 'maxHandleGrowth': args.max_handle_growth}, 'runs': []}
+    report.update(resources.plc_fixture_evidence(args.plc_worker, args.exe))
     try:
         for transport in args.transports:
             for profile in args.profiles:

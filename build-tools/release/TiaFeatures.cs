@@ -14,7 +14,6 @@ internal static class TiaFeatures
         foreach (var folder in new[] { "src/Adapters", "src/Studio/Openness" })
             foreach (var directory in Directory.EnumerateDirectories(Path.Combine(root, folder), "V*").Order(StringComparer.Ordinal))
                 foreach (var path in Directory.EnumerateFiles(directory, "*.csproj").Order(StringComparer.Ordinal)) Add(path);
-        foreach (var path in Directory.EnumerateFiles(Path.Combine(root, "src/Engine"), "TiaMcp.Engine.V*.csproj").Order(StringComparer.Ordinal)) Add(path);
         foreach (var name in new[] { "src/PlcWorker/TiaMcp.PlcWorker.csproj", "tests/Engine/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj" })
             foreach (var release in Releases) Add(Path.Combine(root, name), new() { ["TiaReleaseKey"] = release });
         foreach (var path in Directory.EnumerateFiles(Path.Combine(root, "tests"), "*.csproj", SearchOption.AllDirectories).Order(StringComparer.Ordinal))

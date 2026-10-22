@@ -18,10 +18,10 @@ def helper(name):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--engine-host', type=Path, required=True)
+    parser.add_argument('--engine-host', type=Path, required=True, help='FoundationHost for V20/V21')
     parser.add_argument('--foundation-host', type=Path, help='Old-six FoundationHost (defaults to engine-host)')
-    parser.add_argument('--engine-worker', action='append', required=True)
-    parser.add_argument('--engine-catalog', action='append', required=True)
+    # P8-04l: V20/V21 run on the FoundationHost with an explicit PLC SDK worker (the engine fixtures are retired).
+    parser.add_argument('--plc-worker', action='append', required=True, metavar='RELEASE=PATH')
     parser.add_argument('--public-api-root', type=Path, required=True)
     parser.add_argument('--evidence', type=Path, required=True)
     parser.add_argument('--coverage-output', type=Path, required=True)

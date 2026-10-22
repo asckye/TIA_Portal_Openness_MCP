@@ -1,7 +1,7 @@
 """No-TIA regression tests for script successor wiring; every process launch is mocked."""
 import argparse
 import ast
-from contextlib import contextmanager, nullcontext
+from contextlib import contextmanager, nullcontext, redirect_stderr
 import hashlib
 import importlib.util
 import io
@@ -70,16 +70,15 @@ class PlcScriptSuccessorTests(unittest.TestCase):
         self.assertEqual(evidence, {'hostSha256': hashlib.sha256(self.host.read_bytes()).hexdigest(),
             'sdkWorkerSha256': hashlib.sha256(self.worker.read_bytes()).hexdigest(),
             'runtimeSha256': hashlib.sha256(self.worker.read_bytes()).hexdigest(), 'workerModel': 'foundation-host-plc-worker'})
-        catalog = self.root / 'tool-catalog.json'
-        catalog.write_text('{}', encoding='utf-8')
-        command = resources.host_command(self.host, None, 21, 'stdio', 'full',
-                                        engine_worker=self.worker, engine_catalog=catalog)
-        self.assertIn('--engine-worker', command)
-        self.assertIn('--engine-catalog', command)
-        self.assertNotIn('--plc-worker', command)
-        with self.assertRaises(AssertionError):
-            resources.host_command(self.host, None, 21, 'stdio', 'full', self.api,
-                                   engine_worker=self.worker, engine_catalog=catalog, plc_worker=self.worker)
+        # P8-04l: the engine worker route is retired; the helper has no engine options and a host started
+        # without --plc-worker gets no worker override (its default bundled PlcWorker).
+        with self.assertRaises(TypeError):
+            resources.host_command(self.host, None, 21, 'stdio', 'full', engine_worker=self.worker)
+        command = resources.host_command(self.host, None, 21, 'stdio', 'full')
+        for option in ('--engine-worker', '--engine-catalog', '--plc-worker', '--worker-exe'):
+            self.assertNotIn(option, command)
+        self.assertFalse(hasattr(resources, 'engine_cross_check_environment'))
+        self.assertFalse(hasattr(resources, 'engine_fixture_evidence'))
 
     def test_helper_readiness_and_cleanup_share_the_existing_context(self):
         resources = load('Test-ResourceDiscovery')
@@ -108,45 +107,21 @@ class PlcScriptSuccessorTests(unittest.TestCase):
         command = launches[-1]['command']
         self.assertEqual(command[command.index('--public-api') + 1], str(self.root.resolve()))
 
-    def engine_cross_check_scripts_keep_private_selection_and_original_evidence_keys(self):
-        # Called by test_stability_and_resources_forward_the_explicit_worker: the explicit engine
-        # worker reaches the host only through the repository's private cross-check route.
-        resources = load('Test-ResourceDiscovery')
-        host = self.root / 'src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe'
-        worker = self.root / 'bin-build/engine-compat/v21/worker/TiaMcp.Engine.V21.exe'
-        for path, value in ((host, b'host identity'), (worker, b'engine identity')):
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(value)
-        catalog = worker.with_name('tool-catalog.json')
-        catalog.write_text('{}', encoding='utf-8')
-        def intercept(command, **kwargs):
-            self.assertEqual(command[0], str(host))
-            self.assertEqual(command[command.index('--engine-worker') + 1], str(worker))
-            self.assertEqual(command[command.index('--engine-catalog') + 1], str(catalog))
-            self.assertNotIn('--plc-worker', command)
-            self.assertNotIn('--worker-exe', command)
-            self.assertEqual(kwargs['env']['TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY'],
-                             str(self.root / 'bin-build/engine-compat'))
-            self.assertEqual(kwargs['env']['TIA_MCP_ENGINE_WORKER_SDK_READY'], '1')
-            raise LaunchIntercepted
-        with patch.object(resources, '__file__', str(self.root / 'scripts/checks/Test-ResourceDiscovery.py')), \
-                patch.object(subprocess, 'Popen', side_effect=intercept) as launch:
-            with self.assertRaises(LaunchIntercepted):
-                with resources.server(host, self.api, 21, 'stdio', 'full', public_api=self.api,
-                                      engine_worker=worker, engine_catalog=catalog):
-                    pass
-            self.assertEqual(launch.call_count, 1)
-            self.assertEqual(resources.engine_fixture_evidence(worker, host), {
-                'hostSha256': hashlib.sha256(host.read_bytes()).hexdigest(),
-                'sdkWorkerSha256': hashlib.sha256(worker.read_bytes()).hexdigest(),
-                'workerModel': 'combined-host-supervised-worker'})
-            for wrong_host, wrong_worker in ((self.host, worker), (host, self.worker)):
-                with self.assertRaises(AssertionError):
-                    resources.engine_cross_check_environment(wrong_host, wrong_worker, catalog, {})
+    def retired_engine_options_are_refused(self):
+        # Called by test_stability_and_resources_forward_the_explicit_worker: no script accepts the retired
+        # engine options, and the snapshot environment never carries an engine readiness flag.
+        for script, argv in (('Test-LocalStability', ['--exe', str(self.host), '--public-api', str(self.api), '--major', '21',
+                                                      '--output', str(self.root / 'refused-stability')]),
+                             ('Test-ResourceDiscovery', ['--exe', str(self.host), '--public-api', str(self.api), '--major', '21',
+                                                         '--portal-root', str(self.api)])):
+            module = load(script)
+            with patch.object(sys, 'argv', [script, *argv, '--engine-worker', str(self.worker), '--engine-catalog', str(self.worker)]), \
+                    redirect_stderr(io.StringIO()), self.assertRaises(SystemExit), windows(module):
+                module.main()
         contracts = load('Snapshot-ToolContracts')
-        environment = contracts.engine_host_environment(argparse.Namespace(packaged_no_tia=True), '21', {'21': worker},
-            {'TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY': str(worker.parent)})
-        self.assertNotIn('TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY', environment)
+        environment = contracts.engine_host_environment(argparse.Namespace(packaged_no_tia=True), '21', {'21': self.worker},
+            {'TIA_MCP_PLC_WORKER_SDK_READY': '1'})
+        self.assertNotIn('TIA_MCP_PLC_WORKER_SDK_READY', environment)
         self.assertNotIn('TIA_MCP_ENGINE_WORKER_SDK_READY', environment)
 
     def test_stability_and_resources_forward_the_explicit_worker(self):
@@ -161,8 +136,8 @@ class PlcScriptSuccessorTests(unittest.TestCase):
                 with self.assertRaises(LaunchIntercepted):
                     module.main()
             self.assertEqual(server.call_args.kwargs['plc_worker'], self.worker)
-            self.assertIsNone(server.call_args.kwargs['engine_worker'])
-        self.engine_cross_check_scripts_keep_private_selection_and_original_evidence_keys()
+            self.assertNotIn('engine_worker', server.call_args.kwargs)
+        self.retired_engine_options_are_refused()
 
     def test_stability_evidence_preserves_bounds_and_rekeys_runtime(self):
         module = load('Test-LocalStability')
@@ -190,7 +165,7 @@ class PlcScriptSuccessorTests(unittest.TestCase):
         self.assertEqual(report['checksExpected'], 7)
         self.assertEqual(report['runtimeSha256'], hashlib.sha256(self.worker.read_bytes()).hexdigest())
         args = argparse.Namespace(exe=self.host, portal_root=self.api, public_api=self.api, host_harness=None,
-            plc_worker=self.worker, engine_worker=None, engine_catalog=None, temp_root=self.root, major=21)
+            plc_worker=self.worker, temp_root=self.root, major=21)
         with patch.object(module.resources, 'server', side_effect=LaunchIntercepted) as server, windows(module):
             with self.assertRaises(LaunchIntercepted):
                 module.run_engine(args)

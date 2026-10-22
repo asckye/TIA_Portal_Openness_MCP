@@ -120,7 +120,7 @@ def main():
     check(sha(committed('manifest/configurator-build.json')) == delivery_record['configuratorBuildSha256'], 'Configurator build record differs from delivery record')
     runtime_in_zip = {n for n in content if n.startswith('runtime/') and n not in tracked_set}
     recorded = {row['path']: row['sha256'] for row in layout.record_inventory(build)}
-    check(len(recorded) == len(layout.record_inventory(build)), 'Duplicate engine runtime inventory paths')
+    check(len(recorded) == len(layout.record_inventory(build)), 'Duplicate recorded runtime inventory paths')
     if delivery_record.get('multiVersionBuildSha256'):
         multi_bytes = committed('manifest/multi-version-build.json')
         check(sha(multi_bytes) == delivery_record['multiVersionBuildSha256'], 'Multi-version build record differs from delivery record')
@@ -285,7 +285,6 @@ class AssetChecks(unittest.TestCase):
         multi['files'] = [row for row in multi['files'] if row['path'] not in layout.UPDATER_OUTPUTS]
         multi['updaterFiles'] = [{'path': name, 'sha256': sha(self.runtime[name]), 'length': len(self.runtime[name])}
                                  for name in sorted(layout.UPDATER_OUTPUTS)]
-        multi['engineCompatibility']['updaterFiles'] = [dict(row) for row in multi['updaterFiles']]
         self.bind_multi(multi)
         return multi
 
@@ -308,7 +307,6 @@ class AssetChecks(unittest.TestCase):
     def test_missing_updater_record_fails(self):
         multi = self.use_recorded_updater()
         del multi['updaterFiles']
-        del multi['engineCompatibility']['updaterFiles']
         self.bind_multi(multi)
         result, output = self.verify()
         self.assertEqual(result, 1)
