@@ -180,21 +180,20 @@ public sealed class StaticPolicyTests
     [InlineData("third_party/SiemensOpcUaModelled/LICENSE.md", "SiemensOpcUaModelled-LICENSE.md")]
     [InlineData("third_party/eido-import-planner/LICENSE", "Eido-LICENSE.txt")]
     [InlineData("third_party/tia-openness-studio/LICENSE", "TiaOpennessStudio-LICENSE.txt")]
-    [InlineData("src/Studio/Gui/Fonts/JetBrainsMono-OFL.txt", "JetBrainsMono-OFL.txt")]
-    [InlineData("src/Studio/Gui/Fonts/NotoSansSC-OFL.txt", "NotoSansSC-OFL.txt")]
+    [InlineData("src/Studio/Gui/Fonts/LICENSE.txt", "MapleMono-CN-OFL.txt")]
     [InlineData("reference/siemens-code-snippets/LICENSE.md", "SiemensCodeSnippets-LICENSE.md")]
     public void ShippedLicensesMatchSources(string source, string copy) => Assert.Equal(Source(source), Source("docs/licenses/" + copy));
     [Fact]
     public void PrimerAndRetainedFontsAreRequiredByAllConsumers()
     {
-        string[] names = ["Themes/Primer.xaml", "Themes/Palette.Light.xaml", "Themes/Palette.Dark.xaml", "Controls/WorkbenchLogView.cs", "Controls/WorkbenchMessageBox.cs", "Controls/ResultPresentation.cs", "Controls/LogTailView.cs", "Fonts/JetBrainsMono-Regular.ttf", "Fonts/JetBrainsMono-Medium.ttf", "Fonts/JetBrainsMono-OFL.txt", "Fonts/NotoSansSC-Regular.otf", "Fonts/NotoSansSC-Bold.otf", "Fonts/NotoSansSC-OFL.txt"];
+        string[] names = ["Themes/Primer.xaml", "Themes/Palette.Light.xaml", "Themes/Palette.Dark.xaml", "Controls/WorkbenchLogView.cs", "Controls/WorkbenchMessageBox.cs", "Controls/ResultPresentation.cs", "Controls/LogTailView.cs", "Fonts/MapleMono-CN-Regular.ttf", "Fonts/MapleMono-CN-SemiBold.ttf", "Fonts/LICENSE.txt"];
         var policy = SourceRoots.Load(Root);
         foreach (var name in names)
         {
             Assert.True(File.Exists(Path.Combine(Root, "src/Studio/Gui", name)));
             foreach (var consumer in new[] { "bundle", "package", "repository" }) Assert.Contains("src/Studio/Gui/" + name, policy.RequiredPaths(consumer));
         }
-        Assert.Equal(new[] { "JetBrainsMono-Medium.ttf", "JetBrainsMono-Regular.ttf", "NotoSansSC-Bold.otf", "NotoSansSC-Regular.otf" }, Directory.EnumerateFiles(Path.Combine(Root, "src/Studio/Gui/Fonts")).Where(p => Path.GetExtension(p) is ".ttf" or ".otf").Select(Path.GetFileName).Order(StringComparer.Ordinal));
+        Assert.Equal(new[] { "MapleMono-CN-Regular.ttf", "MapleMono-CN-SemiBold.ttf" }, Directory.EnumerateFiles(Path.Combine(Root, "src/Studio/Gui/Fonts")).Where(p => Path.GetExtension(p) is ".ttf" or ".otf").Select(Path.GetFileName).Order(StringComparer.Ordinal));
         Assert.False(File.Exists(Path.Combine(Root, "docs/licenses/Manrope-OFL.txt")));
     }
     [Theory]

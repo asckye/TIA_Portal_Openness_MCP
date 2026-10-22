@@ -326,10 +326,10 @@ namespace TiaMcpConfigurator
                     "minimum window size keeps the three-column client layout");
                 NarrowWindowChecks(window, form, output);
                 window.Width = 1200; window.Height = 780;
-                var font = new System.Windows.Media.FontFamily(new Uri("pack://application:,,,/" + typeof(ConfigurationView).Assembly.GetName().Name + ";component/"), "./Fonts/#Noto Sans SC");
+                var font = new System.Windows.Media.FontFamily(new Uri(Path.Combine(AppContext.BaseDirectory, "Fonts") + Path.DirectorySeparatorChar), "./#Maple Mono CN");
                 System.Windows.Media.GlyphTypeface glyph;
                 Assert(new System.Windows.Media.Typeface(font, System.Windows.FontStyles.Normal, System.Windows.FontWeights.Normal, System.Windows.FontStretches.Normal).TryGetGlyphTypeface(out glyph)
-                    && glyph.FontUri.ToString().ToLowerInvariant().Contains("notosanssc"), "Noto Sans SC is loaded from the embedded font resource");
+                    && glyph.FontUri.ToString().ToLowerInvariant().Contains("maplemono-cn-regular.ttf"), "Maple Mono CN Regular is loaded from the bundled Fonts directory");
                 ThemeManager.Current.Theme = AppTheme.Dark;
                 Assert(((System.Windows.Media.SolidColorBrush)((System.Windows.Controls.Grid)window.FindName("Root")).Background).Color.ToString() == "#FF000000", "dark palette switches live");
                 ThemeManager.Current.Theme = AppTheme.Light;

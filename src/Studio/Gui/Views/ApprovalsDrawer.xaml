@@ -104,13 +104,18 @@
                 </DockPanel>
                 <ProgressBar Style="{StaticResource Primer.Progress}" Value="{Binding Percent, Mode=OneWay}" Tag="{Binding CountdownTone}" Margin="0,6,0,10"/>
               </StackPanel>
-              <WrapPanel HorizontalAlignment="Right">
-                <Button AutomationProperties.Name="{l:Tr Approval.Parameters}" Content="{l:Tr Approval.Parameters}" Style="{StaticResource Primer.Link}" Click="OnParameters"/>
-                <StackPanel Orientation="Horizontal" Visibility="{Binding Pending, Converter={StaticResource BoolToVisibility}}">
-                  <Button AutomationProperties.Name="{l:Tr Approval.Deny}" Content="{l:Tr Approval.Deny}" Style="{StaticResource Primer.Secondary}" IsEnabled="{Binding CanDecide}" Margin="8,0,0,0" Click="OnDeny"/>
-                  <Button AutomationProperties.Name="{l:Tr Approval.Approve}" x:Name="ApproveRequest" Content="{l:Tr Approval.Approve}" Style="{StaticResource Primer.Run}" IsEnabled="{Binding CanDecide}" Margin="8,0,0,0" Click="OnApprove"/>
-                </StackPanel>
-              </WrapPanel>
+              <StackPanel>
+                <Button AutomationProperties.Name="{l:Tr Approval.Parameters}" Content="{l:Tr Approval.Parameters}" Style="{StaticResource Primer.Link}" Click="OnParameters" HorizontalAlignment="Right"/>
+                <Grid Margin="0,8,0,0" Visibility="{Binding Pending, Converter={StaticResource BoolToVisibility}}">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="*"/>
+                  </Grid.ColumnDefinitions>
+                  <Button AutomationProperties.Name="{l:Tr Approval.Deny}" x:Name="DenyRequest" Content="{l:Tr Approval.Deny}" Style="{StaticResource Primer.Answer}" IsDefault="False" IsCancel="False" IsEnabled="{Binding CanDecide}" Click="OnDeny"/>
+                  <Button Grid.Column="2" AutomationProperties.Name="{l:Tr Approval.Approve}" x:Name="ApproveRequest" Content="{l:Tr Approval.Approve}" Style="{StaticResource Primer.Answer}" IsDefault="False" IsCancel="False" IsEnabled="{Binding CanDecide}" Click="OnApprove"/>
+                </Grid>
+              </StackPanel>
               <Border Padding="10,8" Margin="0,8,0,0" Visibility="{Binding HasNote, Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.Inset}">
                 <TextBlock Text="{Binding Note}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
               </Border>

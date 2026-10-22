@@ -9,14 +9,15 @@
     swap repaints the live window. Shadows are drawn as translucent layers rather than effects,
     and only on pop-ups; in-window panels keep a colorBorderSecondary outline instead.
   -->
+  <ResourceDictionary.MergedDictionaries>
+    <themes:WorkbenchFonts/>
+  </ResourceDictionary.MergedDictionaries>
   <ux:AccessibleNameConverter x:Key="Primer.AccessibleName"/>
   <ux:DisplayValueConverter x:Key="Primer.Value"/>
   <ux:EnumIndexConverter x:Key="Primer.EnumIndex"/>
   <ux:ScrollCommandNameConverter x:Key="Primer.ScrollCommandName"/>
 
   <!-- Seed and map tokens that are not colours. -->
-  <FontFamily x:Key="Ui.Font">Segoe UI, /TiaOpenness;component/Fonts/#Noto Sans SC</FontFamily>
-  <FontFamily x:Key="Ui.FontMono">/TiaOpenness;component/Fonts/#JetBrains Mono, Consolas</FontFamily>
   <!-- fontSizeSM -->
   <sys:Double x:Key="Ui.FontSize.Caption">12</sys:Double>
   <sys:Double x:Key="Ui.FontSize.Small">12</sys:Double>
@@ -169,6 +170,9 @@
     <Setter Property="Margin" Value="0,0,0,8"/>
   </Style>
   <Style x:Key="Ui.Window" TargetType="Window">
+    <Setter Property="Typography.StandardLigatures" Value="False"/>
+    <Setter Property="Typography.ContextualLigatures" Value="False"/>
+    <Setter Property="Typography.ContextualAlternates" Value="False"/>
     <Setter Property="Background" Value="{DynamicResource Primer.bg}"/>
     <Setter Property="Foreground" Value="{DynamicResource Primer.text}"/>
     <Setter Property="FontFamily" Value="{DynamicResource Ui.Font}"/>
@@ -421,6 +425,21 @@
     <Setter Property="ContentTemplate" Value="{StaticResource Primer.CommandText}"/>
     <Setter Property="Template" Value="{StaticResource Primer.ButtonTemplate}"/>
   </Style>
+  <!-- APR-04: equal secondary choices, with plain labels that wrap and grow together. -->
+  <Style x:Key="Primer.Answer" TargetType="Button" BasedOn="{StaticResource Primer.Secondary}">
+    <Setter Property="MinWidth" Value="120"/>
+    <Setter Property="VerticalAlignment" Value="Stretch"/>
+    <Setter Property="Padding" Value="16,6"/>
+    <Setter Property="IsDefault" Value="False"/>
+    <Setter Property="IsCancel" Value="False"/>
+    <Setter Property="ContentTemplate">
+      <Setter.Value>
+        <DataTemplate>
+          <TextBlock Text="{Binding}" TextWrapping="Wrap" TextTrimming="None" TextAlignment="Center"/>
+        </DataTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
   <!-- Primary button: blue-7 in light, dark colorPrimary in dark, white text. -->
   <Style x:Key="Primer.Run" TargetType="ButtonBase" BasedOn="{StaticResource Primer.Secondary}">
     <Setter Property="FocusVisualStyle" Value="{StaticResource Primer.Focus}"/>
@@ -498,6 +517,15 @@
     <Setter Property="MinHeight" Value="{StaticResource Ui.ControlHeight.Small}"/>
     <Setter Property="Padding" Value="8,0"/>
     <Setter Property="ux:Ux.CornerRadius" Value="{StaticResource Ui.Radius.Small}"/>
+  </Style>
+  <!-- Form-card actions keep the standard 32px target, with caption text and compact horizontal padding. -->
+  <Style x:Key="Primer.FormAction" TargetType="ButtonBase" BasedOn="{StaticResource Primer.Secondary}">
+    <Setter Property="FontSize" Value="{DynamicResource Ui.FontSize.Caption}"/>
+    <Setter Property="Padding" Value="8,0"/>
+  </Style>
+  <Style x:Key="Primer.FormRun" TargetType="ButtonBase" BasedOn="{StaticResource Primer.Run}">
+    <Setter Property="FontSize" Value="{DynamicResource Ui.FontSize.Caption}"/>
+    <Setter Property="Padding" Value="8,0"/>
   </Style>
   <Style x:Key="Primer.Run.Large" TargetType="ButtonBase" BasedOn="{StaticResource Primer.Run}">
     <Setter Property="MinHeight" Value="{StaticResource Ui.ControlHeight.Large}"/>
@@ -1185,8 +1213,8 @@
   </Style>
   <!-- Table header cell: colorText at weight 600. -->
   <Style x:Key="Primer.TableHeader" TargetType="TextBlock" BasedOn="{StaticResource Primer.Muted}">
-    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-    <Setter Property="TextWrapping" Value="NoWrap"/>
+    <Setter Property="TextTrimming" Value="None"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
     <Setter Property="Foreground" Value="{DynamicResource Primer.text}"/>
     <Setter Property="FontSize" Value="{DynamicResource Ui.FontSize.Caption}"/>
     <Setter Property="FontWeight" Value="SemiBold"/>
@@ -2093,12 +2121,12 @@
     <Setter Property="Background" Value="{DynamicResource Primer.warnBg}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource Ant.colorWarningBorder}"/>
   </Style>
-  <!-- The TIA installation and HTTP service form cards (vertical labels); 15px vertical padding inside the 1px card border. -->
+  <!-- The TIA/HTTP form cards retain 162px at the minimum page width, including a two-line path label. -->
   <Style x:Key="Primer.InstallationHalf" TargetType="Border" BasedOn="{StaticResource Primer.Container}">
-    <Setter Property="Padding" Value="20,15"/>
+    <Setter Property="Padding" Value="12,8"/>
   </Style>
   <Style x:Key="Primer.ServerHalf" TargetType="Border" BasedOn="{StaticResource Primer.Container}">
-    <Setter Property="Padding" Value="20,15"/>
+    <Setter Property="Padding" Value="12,8"/>
   </Style>
   <Style x:Key="Primer.Plain" TargetType="Border"/>
   <!-- Modal and Drawer mask: colorBgMask. -->
@@ -2545,6 +2573,7 @@
             <Trigger Property="IsChecked" Value="True">
               <Setter TargetName="Surface" Property="Background" Value="{DynamicResource Primer.cardSel}"/>
               <Setter TargetName="Bar" Property="Visibility" Value="Visible"/>
+              <Setter Property="FontWeight" Value="SemiBold"/>
               <Setter Property="Foreground" Value="{DynamicResource Primer.accent}"/>
             </Trigger>
             <Trigger Property="IsEnabled" Value="False">

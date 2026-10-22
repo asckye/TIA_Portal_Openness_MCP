@@ -1,8 +1,8 @@
 # 工作台偏差清单
 
-状态：现行 · 最后核对：2026-10-11，master `3a227657`；C.0 与 UI-31、UI-32、UI-33、UI-37、UI-39、UI-40 按 2026-10-18 的 P8-80 更新（含已批准的 Ant 布局）
+状态：现行 · 最后核对：2026-10-11，master `3a227657`；C.0 与 UI-31、UI-32、UI-33、UI-37、UI-39、UI-40 按 2026-10-18 的 P8-80 更新（含已批准的 Ant 布局）；UI-37 按 2026-10-22 的 ADR 0021 取代
 
-- 对照：[工作台界面设计规范](../workbench-ui.md) v0.2（项目红线 + WCAG 2.2 AA + Microsoft Windows 应用设计指南）；视觉层自 2026-10-18 起以 Ant Design v5 为规范，见 [C.0](#c0-ant-design-v5-视觉规范)。
+- 对照：[工作台界面设计规范](../workbench-ui.md) v0.3（项目红线 + WCAG 2.2 AA + Microsoft Windows 应用设计指南）；视觉层自 2026-10-18 起以 Ant Design v5 为规范，见 [C.0](#c0-ant-design-v5-视觉规范)。
 - 状态：按维护者 2026-10-11 的决定填写，默认采用各条建议。维护者另外确认以下各项在 4.0 前完成：高对比主题（UI-01）、UI Automation 名称（UI-02–UI-04）、焦点管理与访问键（UI-05、UI-18）、文字对比 4.5:1 并相应提高测试门槛（UI-08、UI-49）、较小的最小窗口（UI-13）、风险确认默认取消（UI-28）、可见的预填标记（UI-25）。“4.0 前 - P8-61”的条目由任务 P8-61 实施；状态取值见 [设计规范索引](../README.md)。本文不改代码。
 - 编号 UI-01…UI-49；无障碍条目在前（UI-01…UI-24），每条标注 WCAG 2.2 准则编号与级别。
 
@@ -14,10 +14,11 @@
 |---|---|---|
 | 4.0 前 - P8-61 | 32 | UI-01…UI-19、UI-25…UI-30、UI-33、UI-34、UI-35、UI-42、UI-47、UI-48、UI-49 |
 | 4.0 后 | 11 | UI-20、UI-21、UI-22、UI-23、UI-36、UI-38、UI-41、UI-43、UI-44、UI-45、UI-46 |
-| 有意偏差（已接受） | 6 | UI-24、UI-31、UI-32、UI-37、UI-39、UI-40 |
+| 有意偏差（已接受） | 5 | UI-24、UI-31、UI-32、UI-39、UI-40 |
+| 已由 ADR 取代 | 1 | UI-37（ADR 0021） |
 | 合计 | 49 | |
 
-按类别：无障碍 24 条（4.0 前 19、4.0 后 4、有意偏差 1）；审批与 AI 控制红线 6 条（均 4.0 前）；视觉体系 11 条（4.0 前 3、4.0 后 3、有意偏差 5）；状态与对话框 5 条（4.0 前 1、4.0 后 4）；本地化与文案 2 条（4.0 前）；测试与流程 1 条（4.0 前）。
+按类别：无障碍 24 条（4.0 前 19、4.0 后 4、有意偏差 1）；审批与 AI 控制红线 6 条（均 4.0 前）；视觉体系 11 条（4.0 前 3、4.0 后 3、有意偏差 4、已由 ADR 取代 1）；状态与对话框 5 条（4.0 前 1、4.0 后 4）；本地化与文案 2 条（4.0 前）；测试与流程 1 条（4.0 前）。
 
 成本估计：S ≤ 0.5 天，M 1–3 天，L > 3 天。4.0 前的 32 条中 S 级 18 条、S–M 或 M 级 13 条、M–L 级 1 条（UI-13）。
 
@@ -76,7 +77,7 @@ WCAG 2.2 A/AA 中按代码阅读存在不满足的准则共 17 条：A 级 9 条
 | UI-34 | 审批抽屉中的 DataGrid / TreeView 未套主题 | 无 | 4.0 前 | S–M | 4.0 前 - P8-61 |
 | UI-35 | 选项侧栏背后铺满不透明正文色 | 无 | 4.0 前 | S | 4.0 前 - P8-61 |
 | UI-36 | 字号 token 未使用，字号散落 | 无 | 4.0 后 | L | 4.0 后 |
-| UI-37 | 随包字体代替系统字体 | 无 | 保留 | 无 | 有意偏差（已接受） |
+| UI-37 | 随包 Noto Sans SC / JetBrains Mono 嵌入方案 | 无 | 由 ADR 0021 取代 | 无 | 已由 ADR 取代 |
 | UI-38 | 间距不在 4 epx 网格上 | 无 | 4.0 后 | M–L | 4.0 后 |
 | UI-39 | 圆角值（Ant 6 / 4 / 8） | 无 | 保留 | 无 | 有意偏差（已接受） |
 | UI-40 | 文字按钮政策；字形已统一为 Icon.* | 无 | 保留（政策） | 无 | 有意偏差（已接受） |
@@ -486,14 +487,13 @@ WCAG 2.2 A/AA 中按代码阅读存在不满足的准则共 17 条：A 级 9 条
 - **建议**：**4.0 后修改**；从现在起新代码 MUST 遵守 TYP-03。小于 12 px 的部分在 UI-17 中 4.0 前处理。
 - **状态**：4.0 后
 
-### UI-37 随包字体代替系统字体
+### UI-37 随包 Noto Sans SC / JetBrains Mono 嵌入方案（已取代）
 
-- **规则**：TYP-01；[Typography in Windows › Languages](https://learn.microsoft.com/en-us/windows/apps/design/signature-experiences/typography#languages)。
-- **位置**：`Primer.xaml:10-11`：`Segoe UI, Noto Sans SC`（随包 `Fonts/NotoSansSC-Regular.otf` 与 `-Bold.otf` 共约 16.9 MB）、`JetBrains Mono, Consolas`。Microsoft 建议 Segoe UI Variable + Microsoft YaHei UI。
-- **用户影响**：中文字形与其他 Windows 应用略有不同；包体增大。
-- **偏差理由**：交接设计指定；随包字体在 VM 与不同语言版本的 Windows 上字形一致，截图与验收证据稳定。Ant Design 建议使用平台字体，2026-10-18 改用 Ant 规范时维护者决定保留随包 Noto Sans SC 与 JetBrains Mono（`WorkbenchResourceTests` 固定字体链）。
-- **建议**：**有意偏差**；4.0 后评估改用系统字体。
-- **状态**：有意偏差（已接受）
+- **规则**：TYP-01、TYP-10、TYP-11；[ADR 0021](../../decisions/0021-workbench-eplanmcp-font-and-style.md)。
+- **原方案**：`Primer.xaml` 使用 Noto Sans SC（Regular、Bold）与 JetBrains Mono（Regular、Medium），编为 WPF Resource。2026-10-18 Ant 迁移时保留，旧测试固定了字体链和文件清单。
+- **替代方案**：维护者于 2026-10-22 决定对齐 EplanMCP Workbench：两个 font token 都私有加载 Maple Mono CN v7.9（Regular、SemiBold），文件与许可证原样放在可执行文件旁的 `Fonts/`，不安装、不嵌入；回退、布局余量和关闭连字成为规范正文要求。
+- **用户影响**：技术文本与界面使用相同字形；等宽拉丁文字较宽，布局可换行和增高；两个字重共约 37.2 MB。
+- **状态**：已由 ADR 0021 取代。字体与现行 TYP-01 一致，不再作为对现行规范的有意偏差。退休字体断言按 P8-80d follow-up 1 的维护者批准同步为 Maple Mono CN，保持检查强度；固定卡片高度断言仍保持不变。
 
 ### UI-38 间距不在 4 epx 网格上
 

@@ -1424,7 +1424,7 @@
       "repositoryLabel": "GUI entry"
     },
     {
-      "path": "src/Studio/Gui/Fonts/JetBrainsMono-Regular.ttf",
+      "path": "src/Studio/Gui/Fonts/MapleMono-CN-Regular.ttf",
       "consumers": [
         "repository",
         "bundle",
@@ -1433,7 +1433,7 @@
       "repositoryLabel": "GUI entry"
     },
     {
-      "path": "src/Studio/Gui/Fonts/JetBrainsMono-Medium.ttf",
+      "path": "src/Studio/Gui/Fonts/MapleMono-CN-SemiBold.ttf",
       "consumers": [
         "repository",
         "bundle",
@@ -1442,34 +1442,7 @@
       "repositoryLabel": "GUI entry"
     },
     {
-      "path": "src/Studio/Gui/Fonts/JetBrainsMono-OFL.txt",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
-      "repositoryLabel": "GUI entry"
-    },
-    {
-      "path": "src/Studio/Gui/Fonts/NotoSansSC-Regular.otf",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
-      "repositoryLabel": "GUI entry"
-    },
-    {
-      "path": "src/Studio/Gui/Fonts/NotoSansSC-Bold.otf",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
-      "repositoryLabel": "GUI entry"
-    },
-    {
-      "path": "src/Studio/Gui/Fonts/NotoSansSC-OFL.txt",
+      "path": "src/Studio/Gui/Fonts/LICENSE.txt",
       "consumers": [
         "repository",
         "bundle",

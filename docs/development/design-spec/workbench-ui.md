@@ -1,6 +1,6 @@
 # TIA 工作台（Workbench）界面设计规范
 
-状态：现行（v0.2）· 最后核对：2026-10-11，master `3a227657`
+状态：现行（v0.3）· 最后核对：2026-10-22，P8-80d
 
 [设计规范索引](README.md) · [工作台偏差清单](deviations/workbench.md)
 
@@ -120,7 +120,7 @@ Microsoft 新版设计指南以 WinUI 控件为例。下表说明工作台（WPF
 
 ## 4 字体
 
-- **TYP-01 · SHOULD** 界面字体：拉丁文用 Segoe UI Variable（不可用时 Segoe UI），简体中文用 Microsoft YaHei UI；等宽字体用 Cascadia Mono 或 Consolas。若保留随包字体（Noto Sans SC、JetBrains Mono），须在偏差清单记为有意偏差。理由：系统字体在各缩放下有最佳的微调与回退。依据：[Typography in Windows › Font / Fonts for non-Latin languages](https://learn.microsoft.com/en-us/windows/apps/design/signature-experiences/typography#languages)。
+- **TYP-01 · MUST** 界面文字与等宽文字统一使用 Maple Mono CN v7.9，只随包带 Regular 与 SemiBold（SIL OFL 1.1）。字体原样放在 Workbench 可执行文件旁的 `Fonts/`，以文件夹 base URI 私有加载，不安装、不作为 WPF Resource 嵌入。`Ui.Font` 回退为 Segoe UI Variable Text、Segoe UI、Microsoft YaHei UI；`Ui.FontMono` 回退为 Cascadia Mono、Consolas、Microsoft YaHei UI。目录缺失或未找到该字体时使用上述系统回退。理由：与 EplanMCP Workbench 的字体和观感一致，显式中文回退避免日文字形。依据：[ADR 0021](../decisions/0021-workbench-eplanmcp-font-and-style.md)；EplanMCP ADR-0017 第 4 条及 TYP-01。
 - **TYP-02 · MUST** 只使用下表的字号层级（附录 A.3 给出 token 名）。理由：清楚的层级帮助扫读；token 是文字缩放的接入点。依据：[Typography in Windows › Type ramp](https://learn.microsoft.com/en-us/windows/apps/design/signature-experiences/typography#type-ramp)。
 
   | 层级 | 字号 / 行高（epx） | 字重 | 工作台用途 |
@@ -141,6 +141,8 @@ Microsoft 新版设计指南以 WinUI 控件为例。下表说明工作台（WPF
 - **TYP-07 · SHOULD** 段落文字（说明、对话框正文）每行约 50–60 个拉丁字符（约 25–35 个汉字）；对话框宽度据此设定。理由：行过长难以阅读。依据：[Typography › Character count](https://learn.microsoft.com/en-us/windows/apps/design/signature-experiences/typography#character-count)。
 - **TYP-08 · MUST** 技术标识（MCP 工具名、V4 错误码、路径、哈希、请求 ID、参数名）用 Code 层级显示，原样不翻译。理由：用户要据此对照日志与文档。依据：[Writing style › Style conventions（Abbreviations）](https://learn.microsoft.com/en-us/windows/apps/design/style/writing-style#style-conventions)；项目规则。
 - **TYP-09 · SHOULD** 根元素的 `FrameworkElement.Language` 跟随界面语言（zh-CN / en-US）并在切换语言时更新，使中日韩字形选择与断行正确。理由：WPF 的字形选择与默认格式化依赖该属性。依据：[Globalization › Display text and fonts correctly](https://learn.microsoft.com/en-us/windows/apps/design/globalizing/globalizing-portal#guidelines-for-globalization)；另见 LOC-05。
+- **TYP-10 · MUST** 布局按 Maple Mono 的等宽拉丁字形留余量。文字控件用 `MinWidth` 替代会截断内容的固定 `Width`；页头动作、卡片、侧栏项、按钮、表头和 MCP 与客户端卡片可随可用宽度换行或增高。在 1024、1044×780、1200 与 1366 epx 下检查中英两种语言及浅深主题。现有布局断言不因换字体而放宽；冲突记录实测值交维护者决定。理由：原比例字体的宽度假设不再成立。依据：[ADR 0021](../decisions/0021-workbench-eplanmcp-font-and-style.md)；EplanMCP TYP-10。
+- **TYP-11 · MUST** 主窗口与全部 Workbench 窗口、对话框关闭 `Typography.StandardLigatures`、`Typography.ContextualLigatures` 和 `Typography.ContextualAlternates`。理由：`->`、`!=` 等技术文本必须按输入的字符显示。依据：[ADR 0021](../decisions/0021-workbench-eplanmcp-font-and-style.md)；EplanMCP TYP-11。
 
 ## 5 颜色与主题
 
@@ -179,7 +181,7 @@ Microsoft 新版设计指南以 WinUI 控件为例。下表说明工作台（WPF
 | Tooltip | `Ant.colorBgSpotlight` / `Ant.colorTextLightSolid` | colorBgSpotlight | 黑 85% + 白（15.3:1） | #424242 + 白（10.1:1） | `InfoColorKey` / `InfoTextColorKey` | 工具提示 | ≥ 4.5:1 |
 | Focus.Outer / Focus.Inner | `Primer.focusOuter` / `Primer.focusInner` | （2 px colorPrimary 环，代替 4 px #91CAFF 轮廓） | #1677FF / #FFFFFF（4.1:1） | #3C89E8 / #141414（5.2:1） | `WindowTextColorKey` / `WindowColorKey` | 焦点视觉（KEY-03） | 与相邻色 ≥ 3:1 |
 
-非颜色 token 在 `Themes/Primer.xaml`：字号 `Ui.FontSize.*`（12 / 14 / 16，标题 38 / 30 / 24 / 20 / 16）、行高 `Ui.LineHeight*`（22 / 20 / 24）、控件高度 `Ui.ControlHeight*`（32 / 24 / 40）、圆角 `Ui.Radius*`（6 / 2 / 4 / 8）、间距 `Ui.Space*`（4 / 8 / 12 / 16 / 20 / 24 / 32）。字体保留随包 Noto Sans SC（界面）与 JetBrains Mono（代码），见偏差 UI-37。
+非颜色 token 在 `Themes/Primer.xaml`：字号 `Ui.FontSize.*`（12 / 14 / 16，标题 38 / 30 / 24 / 20 / 16）、行高 `Ui.LineHeight*`（22 / 20 / 24）、控件高度 `Ui.ControlHeight*`（32 / 24 / 40）、圆角 `Ui.Radius*`（6 / 2 / 4 / 8）、间距 `Ui.Space*`（4 / 8 / 12 / 16 / 20 / 24 / 32）。字体 token `Ui.Font` 与 `Ui.FontMono` 都私有加载 Maple Mono CN，回退与交付要求见 TYP-01；原 UI-37 由 [ADR 0021](../decisions/0021-workbench-eplanmcp-font-and-style.md) 取代。
 
 ### 5.2 规则
 
@@ -207,7 +209,7 @@ Microsoft 新版设计指南以 WinUI 控件为例。下表说明工作台（WPF
 
 - **NAV-01 · MUST** 一级页面为扁平结构，不超过 7 个（现为 6 个）；二级页签只出现在“工程操作”下，不再加深。理由：少于 8 个的同级页适合扁平结构，层级越深越容易迷失。依据：[Navigation basics › Flat/lateral / General recommendations](https://learn.microsoft.com/en-us/windows/apps/design/basics/navigation-basics#use-the-right-structure)。
 - **NAV-02 · MUST** 所有导航（人点击、快捷键、AI 控制）只经过 `MainWindow.Navigate(page)` 一个入口。理由：守卫、快照与页签同步只在这一处实现。依据：项目规则（phase8 §1.2、§2.6）。
-- **NAV-03 · MUST** 当前位置始终可见：选中页签有非颜色的指示（≥ 2 px 下划线 + SemiBold）；标题栏显示页名；`Window.Title` 为“<页名> – TIA 工作台”。理由：用户与读屏都要知道当前所在页。依据：[Navigation basics › Clarity](https://learn.microsoft.com/en-us/windows/apps/design/basics/navigation-basics#principles-of-good-navigation)；[WCAG 2.2 › 2.4.2 Page Titled](https://www.w3.org/TR/WCAG22/#page-titled)（软件中可不适用，本项作为 SHOULD 级补充）。
+- **NAV-03 · MUST** 当前位置始终可见：选中侧栏项有非颜色的指示（3 epx 选中条 + SemiBold）；未选中项恢复 Regular；标题栏显示页名；`Window.Title` 为“<页名> – TIA 工作台”。理由：用户与读屏都要知道当前所在页。依据：[Navigation basics › Clarity](https://learn.microsoft.com/en-us/windows/apps/design/basics/navigation-basics#principles-of-good-navigation)；[WCAG 2.2 › 2.4.2 Page Titled](https://www.w3.org/TR/WCAG22/#page-titled)（软件中可不适用，本项作为 SHOULD 级补充）。
 - **NAV-04 · MUST** 页签在 UIA 中呈现为“一组可选项”：每项有名称、选中状态、序号与总数（`SizeOfSet` / `PositionInSet`）；页签组是一个 Tab 停靠点，组内用方向键切换。理由：读屏需要知道“第 2 项，共 6 项，已选中”。依据：[Keyboard interactions › Control group](https://learn.microsoft.com/en-us/windows/apps/develop/input/keyboard-interactions#control-group)；[NavigationView](https://learn.microsoft.com/en-us/windows/apps/develop/ui/controls/navigationview)。
 - **NAV-05 · MUST** 暂不可用的目的地保持可见但禁用，并说明原因（HelpText / ToolTip，例如“连接 TIA 项目后可用”）；指向它的快捷键给出可见反馈，而不是静默无效。理由：用户需要知道怎样才能到达。依据：[Navigation basics › Clarity](https://learn.microsoft.com/en-us/windows/apps/design/basics/navigation-basics#principles-of-good-navigation)。
 - **NAV-06 · SHOULD** 每页使用 §3.3 的页面骨架。理由：同样的结构降低学习成本。依据：[Navigation basics › Consistency](https://learn.microsoft.com/en-us/windows/apps/design/basics/navigation-basics#principles-of-good-navigation)。
@@ -263,7 +265,7 @@ Microsoft 新版设计指南以 WinUI 控件为例。下表说明工作台（WPF
 - **APR-01 · MUST** 每个写请求单独批准；没有“全部批准”或批量批准。理由：每次写入都要人看过目标与操作。依据：项目规则（`Shell.NoPendingDescription` 文案；phase8 §5.3、维护者决定 3）。
 - **APR-02 · MUST** 面板（人）发起的写请求自动打开对应审批卡，但仍须人单独点击“批准执行”；自动打开时焦点放在卡片标题，**MUST NOT** 放在“批准执行”或“拒绝”上。理由：同一条批准路径，没有第二条；避免回车即批。依据：项目规则（维护者决定 2026-10-08）；[Keyboard interactions › Initial focus](https://learn.microsoft.com/en-us/windows/apps/develop/input/keyboard-interactions#initial-focus)。
 - **APR-03 · MUST** 审批卡显示：客户端名（标注“未验证”）、传输方式、宿主 / 版本、目标项目、PLC、操作列表（动作 / 对象 / 工具）、风险标签（文字）、人 / AI 来源、剩余时间（文字 + 进度条），并可展开完整参数或生成计划。理由：人需要足够的信息作决定。依据：项目规则（phase8 §1.1、§5.3）；[Confirmations › Provide all the information](https://learn.microsoft.com/en-us/windows/win32/uxguide/mess-confirm)。
-- **APR-04 · MUST** “批准执行”与“拒绝”同尺寸、并列；“批准执行”可为强调样式，但两者都不是默认按钮；两者都受控制通道输入守卫保护（AI-02）。理由：减少误批。依据：项目规则（phase8 §2.7）。
+- **APR-04 · MUST** “批准执行”与“拒绝”使用相同的默认（secondary）样式，不用主要或危险样式；纯文本标签，不识别访问键；都不是默认或取消按钮（`IsDefault=False`、`IsCancel=False`）。两者并列放在等宽单元格，长标签换行，行高由较高者决定、两者一起增高；都受控制通道输入守卫保护（AI-02）。理由：两个选择视觉平等，避免误批。依据：[ADR 0021](../decisions/0021-workbench-eplanmcp-font-and-style.md)；EplanMCP ADR-0017 第 5 条与 APR-02。本文 APR-02 的自动打开与焦点规则照旧。
 - **APR-05 · MUST** 关闭审批：入口只在设置抽屉（状态栏的副本入口若保留，必须走同一确认）；确认对话框符合 DLG-02/03/04（标题“关闭写操作审批？”，提交按钮“关闭审批”，取消为默认并响应 Esc）；审批关闭期间状态栏持续显示带图标与文字的“审批已关”，变化时以 live region 播报。理由：关闭审批会让 AI 写入直接执行。依据：项目规则（phase8 §1.1 “关闭需确认覆盖层”、§4）；[Confirmations › Default values](https://learn.microsoft.com/en-us/windows/win32/uxguide/mess-confirm#guidelines)。
 - **APR-06 · MUST** 审批超时自动拒绝：剩余时间以文字显示，只在固定阈值（例如 30 秒、10 秒）播报，不逐秒播报；超时可在设置中调整（现为 60/120/300 秒）。超时属于安全设计中的时间限制，按 WCAG 2.2.1 的“必要”例外处理（见偏差清单）。理由：AI 客户端的调用本身有时限，延长会使请求失效。依据：项目规则；[WCAG 2.2 › 2.2.1 Timing Adjustable](https://www.w3.org/TR/WCAG22/#timing-adjustable)。
 - **APR-07 · MUST** 新的待批请求：窗口最小化时发系统通知；窗口可见时显示应用内提示并以 live region 播报；点击或按 Enter 打开审批抽屉；通知文字本地化。理由：请求会超时，人必须及时知道。依据：项目规则（phase8 §1.2）；[WCAG 2.2 › 4.1.3 Status Messages](https://www.w3.org/TR/WCAG22/#status-messages)。

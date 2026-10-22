@@ -74,12 +74,12 @@
             </Border>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,0,4">
               <Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=ReleaseFilter}" x:Name="ReleaseLabel" Content="{l:Tr Calls.ReleaseScope}" Target="{Binding ElementName=ReleaseFilter}" Style="{StaticResource Primer.FormLabel}" Visibility="Collapsed"/>
-              <ComboBox AutomationProperties.LabeledBy="{Binding ElementName=ReleaseLabel}" AutomationProperties.Name="{l:Tr Calls.ReleaseScope}" x:Name="ReleaseFilter" Style="{StaticResource Primer.Select}" Width="130" Height="30" SelectedIndex="{Binding ReleaseChoice}" ToolTip="{l:Tr Calls.ReleaseScope}" Margin="0,0,8,0">
+              <ComboBox AutomationProperties.LabeledBy="{Binding ElementName=ReleaseLabel}" AutomationProperties.Name="{l:Tr Calls.ReleaseScope}" x:Name="ReleaseFilter" Style="{StaticResource Primer.Select}" MinWidth="130" Height="30" SelectedIndex="{Binding ReleaseChoice}" ToolTip="{l:Tr Calls.ReleaseScope}" Margin="0,0,8,0">
                 <ComboBoxItem AutomationProperties.Name="{l:Tr Calls.AllReleases}" Content="{l:Tr Calls.AllReleases}"/>
                 <ComboBoxItem AutomationProperties.Name="{Binding ReleaseFilter}" Content="{Binding ReleaseFilter}"/>
               </ComboBox>
               <Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=SearchBox}" x:Name="AccessibleLabel1" Content="{l:Tr Calls.Search}" Target="{Binding ElementName=SearchBox}" Style="{StaticResource Primer.FormLabel}" Visibility="Collapsed"/>
-              <TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}" AutomationProperties.Name="{l:Tr Calls.Search}" x:Name="SearchBox" Width="220" Height="30" Style="{StaticResource Primer.Input}" Tag="{l:Tr Calls.Search}" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"/>
+              <TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}" AutomationProperties.Name="{l:Tr Calls.Search}" x:Name="SearchBox" MinWidth="220" Height="30" Style="{StaticResource Primer.Input}" Tag="{l:Tr Calls.Search}" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"/>
             </StackPanel>
           </WrapPanel>
           <Border Grid.Row="1" Style="{StaticResource Primer.ColumnHeaderStrip}">

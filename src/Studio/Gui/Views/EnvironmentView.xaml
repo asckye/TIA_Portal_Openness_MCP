@@ -96,12 +96,12 @@
       </Grid.RowDefinitions>
       <Border Style="{StaticResource Primer.Container}">
         <StackPanel>
-          <DockPanel Margin="0,0,0,10">
-            <ContentControl DockPanel.Dock="Right" Style="{StaticResource Primer.StatusChip}" Tag="{Binding DiagnosticTone}">
+          <ux:PageHeadPanel Margin="0,0,0,10" Spacing="8">
+            <TextBlock Text="{l:Tr Env.Diagnostics}" Style="{StaticResource Primer.ContainerTitle}"/>
+            <ContentControl Style="{StaticResource Primer.StatusChip}" Tag="{Binding DiagnosticTone}">
               <TextBlock Text="{Binding DiagnosticLabel}" Style="{StaticResource Primer.StatusText}"/>
             </ContentControl>
-            <TextBlock Text="{l:Tr Env.Diagnostics}" Style="{StaticResource Primer.ContainerTitle}"/>
-          </DockPanel>
+          </ux:PageHeadPanel>
           <TextBlock Text="{l:Tr Env.DiagnosticHelp}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}" TextWrapping="Wrap" Visibility="{Binding DiagnosticIdle, Converter={StaticResource BoolToVisibility}}"/>
           <TextBlock Text="{Binding DiagnosticStep}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Visibility="{Binding DiagnosticIdle, Converter={StaticResource BoolToVisibility}}"/>
           <StackPanel Visibility="{Binding DiagnosticRunning, Converter={StaticResource BoolToVisibility}}">

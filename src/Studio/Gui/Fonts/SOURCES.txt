@@ -1,10 +1,10 @@
-JetBrains Mono: https://github.com/JetBrains/JetBrainsMono/tree/master/fonts/ttf
-Downloaded 2026-10-03; the family licensed under SIL OFL 1.1.
+Maple Mono CN v7.9 (SIL Open Font License 1.1)
+Source: https://github.com/subframe7536/maple-font/releases/download/v7.9/MapleMono-CN.zip
+Archive SHA-256: cb1e79b2c23dff772ae351784ef2b84454a61b3920e9b20bd5db4bf207e4472d
 
-JetBrainsMono-Medium.ttf  d16e6dc99672734698d629705f617c79f6eb6040f5113efe3a145204dc988109
-JetBrainsMono-Regular.ttf  e6fd0d7e91550b3ed2b735d4312474362c4716edc4fc0577a0f61ed782d5aed1
-
-Noto Sans SC: https://github.com/notofonts/noto-cjk (Sans/SubsetOTF/SC)
-Downloaded 2026-10-05; licensed under SIL OFL 1.1.
-NotoSansSC-Regular.otf  faa6c9df652116dde789d351359f3d7e5d2285a2b2a1f04a2d7244df706d5ea9
-NotoSansSC-Bold.otf  c6cb5a93abaa9edc8ee7463b7ebb7f42d618d40e6ed2f7a5371c97b0b64767c0
+Regular and SemiBold copied without modification from the official release, via
+EplanMCP .local/fonts/maple-mono-cn-v7.9/fonts. Loaded privately, never installed
+or embedded as WPF Resources. File SHA-256:
+e6338c3dca9a3bed3fb81f43c8bb8feca3b6ad54829f5a3229527d030a321dbd  MapleMono-CN-Regular.ttf
+320c87dc4134f0bc88ad878255af1f1957c9e7898e76638efc9a3cdf3868574e  MapleMono-CN-SemiBold.ttf
+eb2d28d2e565a0757e3d64e34ebb452e75a0cad87c0ab3faf4e08ba7596de902  LICENSE.txt

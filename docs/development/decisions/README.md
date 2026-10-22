@@ -32,6 +32,7 @@
 | [0018](0018-workbench-ant-design.md) | 工作台界面采用 Ant Design v5 的视觉规范和布局 | 已采纳 | 2026-10-18 | — |
 | [0019](0019-incremental-check-all.md) | check-all 复用输入未变的上次通过结果 | 已采纳 | 2026-10-18 | — |
 | [0020](0020-prereleases-tested-by-users.md) | 我们不做真机验收，4.0 以 GitHub 预发布交给其他用户测试 | 已采纳 | 2026-10-20 | — |
+| [0021](0021-workbench-eplanmcp-font-and-style.md) | Workbench font and style aligned with the EplanMCP Workbench | 已采纳 | 2026-10-22 | — |
 
 ## 待补写的决定
 

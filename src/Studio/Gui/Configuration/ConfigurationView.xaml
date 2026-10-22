@@ -72,12 +72,11 @@
       </Border>
       <Border Grid.Row="4" Style="{StaticResource Primer.Plain}">
         <Grid>
-          <!-- Equal halves, but the service half keeps room for its two buttons in one row (English needs 269 px plus
-               the 20 px padding and 1 px border on both sides), so neither button is cut at the 614 px column of a 1200 px window. -->
+          <!-- Equal cards retain the 162px row; compact actions leave room for Maple Mono labels. -->
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="16"/>
-            <ColumnDefinition Width="*" MinWidth="312"/>
+            <ColumnDefinition Width="*"/>
           </Grid.ColumnDefinitions>
           <Border x:Name="InstallationCard" Style="{StaticResource Primer.InstallationHalf}" Grid.Column="0">
             <Grid>
@@ -92,11 +91,11 @@
                 <ContentControl x:Name="DetectionChip" DockPanel.Dock="Right" Style="{StaticResource Primer.StatusChip}">
                   <TextBlock x:Name="DetectionSource" Style="{StaticResource Primer.StatusText}"/>
                 </ContentControl>
-                <TextBlock Text="{l:Tr Config.Installation}" Style="{StaticResource Primer.ContainerTitle}"/>
+                <TextBlock Text="{l:Tr Config.Installation}" Style="{StaticResource Primer.ContainerTitle}" TextWrapping="Wrap"/>
               </DockPanel>
               <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="100"/>
+                  <ColumnDefinition Width="Auto" MinWidth="100"/>
                   <ColumnDefinition Width="10"/>
                   <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
@@ -110,8 +109,8 @@
                 </StackPanel>
               </Grid>
               <StackPanel Grid.Row="4" Orientation="Horizontal">
-                <Button AutomationProperties.Name="{l:Tr Config.Browse}" x:Name="BrowseTia" Content="{l:Tr Config.Browse}" Margin="0,0,8,0" Style="{StaticResource Primer.Secondary}"/>
-                <Button AutomationProperties.Name="{l:Tr Config.AutoDetect}" x:Name="DetectTia" Content="{l:Tr Config.AutoDetect}" Style="{StaticResource Primer.Secondary}"/>
+                <Button AutomationProperties.Name="{l:Tr Config.Browse}" x:Name="BrowseTia" Content="{l:Tr Config.Browse}" Margin="0,0,8,0" Style="{StaticResource Primer.FormAction}"/>
+                <Button AutomationProperties.Name="{l:Tr Config.AutoDetect}" x:Name="DetectTia" Content="{l:Tr Config.AutoDetect}" Style="{StaticResource Primer.FormAction}"/>
               </StackPanel>
             </Grid>
           </Border>
@@ -128,13 +127,13 @@
                 <ContentControl x:Name="ServiceStateChip" DockPanel.Dock="Right" Style="{StaticResource Primer.StatusChip}">
                   <TextBlock x:Name="ServiceStatusText" Style="{StaticResource Primer.StatusText}"/>
                 </ContentControl>
-                <TextBlock Text="{l:Tr Config.HttpService}" Style="{StaticResource Primer.ContainerTitle}"/>
+                <TextBlock Text="{l:Tr Config.HttpService}" Style="{StaticResource Primer.ContainerTitle}" TextWrapping="Wrap"/>
               </DockPanel>
               <Grid x:Name="AddressRow" Grid.Row="2">
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="*"/>
                   <ColumnDefinition Width="10"/>
-                  <ColumnDefinition Width="90"/>
+                  <ColumnDefinition Width="Auto" MinWidth="90"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel>
                   <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=ServerAddress}" x:Name="AccessibleLabel3" Content="{l:Tr Access.FieldConfigIpv4}" Target="{Binding ElementName=ServerAddress}" Style="{StaticResource Primer.FormLabel}"/>
@@ -145,19 +144,13 @@
 <TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel4}" AutomationProperties.Name="{l:Tr Config.Port}" x:Name="ServerPort" Text="8765" FontFamily="{DynamicResource Ui.FontMono}" Style="{StaticResource Primer.MonoInput}"/></StackPanel>
                 </StackPanel>
               </Grid>
-              <Grid x:Name="ServerActions" Grid.Row="4">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="Auto"/>
-                  <ColumnDefinition Width="8"/>
-                  <ColumnDefinition Width="Auto"/>
-                  <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Button AutomationProperties.Name="{l:Tr Config.Network}" x:Name="Network" Content="{l:Tr Config.Network}" Style="{StaticResource Primer.Secondary}"/>
-                <Grid Grid.Column="2">
-                  <Button AutomationProperties.Name="{l:Tr Config.Start}" x:Name="StartServer" Content="{l:Tr Config.Start}" Style="{StaticResource Primer.Run}"/>
-                  <Button AutomationProperties.Name="{l:Tr Config.Stop}" x:Name="StopServer" Content="{l:Tr Config.Stop}" Style="{StaticResource Primer.Secondary}" IsEnabled="False" Visibility="Collapsed"/>
+              <WrapPanel x:Name="ServerActions" Grid.Row="4">
+                <Button AutomationProperties.Name="{l:Tr Config.Network}" x:Name="Network" Content="{l:Tr Config.Network}" Style="{StaticResource Primer.FormAction}" Margin="0,0,8,0"/>
+                <Grid>
+                  <Button AutomationProperties.Name="{l:Tr Config.Start}" x:Name="StartServer" Content="{l:Tr Config.Start}" Style="{StaticResource Primer.FormRun}"/>
+                  <Button AutomationProperties.Name="{l:Tr Config.Stop}" x:Name="StopServer" Content="{l:Tr Config.Stop}" Style="{StaticResource Primer.FormAction}" IsEnabled="False" Visibility="Collapsed"/>
                 </Grid>
-              </Grid>
+              </WrapPanel>
             </Grid>
           </Border>
         </Grid>
@@ -170,17 +163,13 @@
             <RowDefinition Height="Auto"/>
           </Grid.RowDefinitions>
           <Border Style="{StaticResource Primer.HeaderStrip}">
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-              </Grid.ColumnDefinitions>
+            <StackPanel>
               <DockPanel>
                 <TextBlock Text="{l:Tr Mcp.Clients}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,0,4,0"/>
                 <TextBlock x:Name="ClientSelection" Focusable="True" AutomationProperties.Name="{l:Tr Config.ClientInstructionsCaption}" KeyDown="OnClientGuidanceKey" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}" Cursor="Hand"/>
               </DockPanel>
-              <TextBlock Grid.Column="1" Text="{l:Tr Mcp.ClientsNote}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
-            </Grid>
+              <TextBlock TextWrapping="Wrap" Margin="0,4,0,0" Text="{l:Tr Mcp.ClientsNote}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
+            </StackPanel>
           </Border>
           <ListBox x:Name="ClientChoices" AutomationProperties.Name="{l:Tr Mcp.Clients}" Grid.Row="1" Style="{StaticResource Primer.List}" SelectionMode="Multiple" ItemContainerStyle="{StaticResource Primer.ClientRow}" ItemTemplate="{StaticResource Primer.ClientContent}" Margin="10,10,10,4" Padding="0" VerticalAlignment="Top">
             <ListBox.ItemsPanel>

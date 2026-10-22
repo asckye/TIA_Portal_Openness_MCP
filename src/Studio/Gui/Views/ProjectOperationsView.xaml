@@ -10,7 +10,7 @@
         <StackPanel>
           <WrapPanel Margin="0,8,0,0">
             <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=SessionPicker}" x:Name="AccessibleLabel1" Content="{l:Tr Access.FieldSessionTitle}" Target="{Binding ElementName=SessionPicker}" Style="{StaticResource Primer.FormLabel}"/>
-<ComboBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}" AutomationProperties.Name="{l:Tr Session.Title}" x:Name="SessionPicker" ItemsSource="{Binding Panel.Sessions}" SelectedItem="{Binding Panel.Selected}" DisplayMemberPath="DisplayName" Width="320" Style="{StaticResource Primer.Select}"/></StackPanel>
+<ComboBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}" AutomationProperties.Name="{l:Tr Session.Title}" x:Name="SessionPicker" ItemsSource="{Binding Panel.Sessions}" SelectedItem="{Binding Panel.Selected}" DisplayMemberPath="DisplayName" MinWidth="320" Style="{StaticResource Primer.Select}"/></StackPanel>
             <Button AutomationProperties.Name="{l:Tr Session.Refresh}" Content="{l:Tr Session.Refresh}" Command="{Binding Panel.Refresh}" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
             <Button AutomationProperties.Name="{l:Tr Session.Attach}" Content="{l:Tr Session.Attach}" Command="{Binding Panel.Attach}" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
             <Button AutomationProperties.Name="{l:Tr Session.Create}" Content="{l:Tr Session.Create}" Command="{Binding Panel.Create}" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
@@ -73,7 +73,7 @@
           </WrapPanel>
         </StackPanel>
         <WrapPanel VerticalAlignment="Center" HorizontalAlignment="Right" MaxWidth="560">
-          <Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=SoftwarePicker}" x:Name="SoftwareLabel" Content="{l:Tr Access.Software}" Target="{Binding ElementName=SoftwarePicker}" Style="{StaticResource Primer.FormLabel}" VerticalAlignment="Center" Padding="0,0,8,0"/><ComboBox AutomationProperties.LabeledBy="{Binding ElementName=SoftwareLabel}" AutomationProperties.Name="{l:Tr Access.Software}" x:Name="SoftwarePicker" ItemsSource="{Binding Engineering.Devices}" SelectedItem="{Binding Engineering.SelectedDevice}" Style="{StaticResource Primer.Select}" VerticalAlignment="Center" Width="150">
+          <Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=SoftwarePicker}" x:Name="SoftwareLabel" Content="{l:Tr Access.Software}" Target="{Binding ElementName=SoftwarePicker}" Style="{StaticResource Primer.FormLabel}" VerticalAlignment="Center" Padding="0,0,8,0"/><ComboBox AutomationProperties.LabeledBy="{Binding ElementName=SoftwareLabel}" AutomationProperties.Name="{l:Tr Access.Software}" x:Name="SoftwarePicker" ItemsSource="{Binding Engineering.Devices}" SelectedItem="{Binding Engineering.SelectedDevice}" Style="{StaticResource Primer.Select}" VerticalAlignment="Center" MinWidth="150">
             <ComboBox.ItemTemplate>
               <DataTemplate>
                 <TextBlock>

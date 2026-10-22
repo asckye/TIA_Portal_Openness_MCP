@@ -80,12 +80,20 @@ F28 迁移后的 V19/V20/V21 PLC worker 也使用下表的 Esprima 3.0.5 和 Yam
 - [Provenance and archive hashes](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/tia-openness-studio/UPSTREAM.json); [integration and behavior](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/Studio/README.md). The full original source and complete Git history are retained as reference archives.
 - Runtime NuGet dependency: Newtonsoft.Json 13.0.3, MIT (already listed in this repository). Test-only: Microsoft.NET.Test.Sdk 17.12.0, xUnit 2.9.2 and Visual Studio runner 2.8.2.
 
-## Primer desktop fonts
+## Workbench desktop fonts
 
-JetBrains Mono (JetBrains) and Noto Sans SC (Noto CJK) are embedded in the WPF
-workbench under SIL Open Font License 1.1. Their original [JetBrains Mono license](JetBrainsMono-OFL.txt)
-and [Noto Sans SC license](NotoSansSC-OFL.txt) are included here. Source URLs and hashes
-remain in the source repository. Segoe UI is supplied by Windows. No fonts are installed system-wide.
+Maple Mono CN v7.9 (Regular and SemiBold) is distributed under SIL Open Font License 1.1,
+Copyright 2022 The Maple Mono Project Authors ([subframe7536/maple-font](https://github.com/subframe7536/maple-font))
+(see the complete [original license](MapleMono-CN-OFL.txt) for all upstream notices).
+The unmodified files come from the official
+[MapleMono-CN v7.9 release archive](https://github.com/subframe7536/maple-font/releases/download/v7.9/MapleMono-CN.zip),
+SHA-256 `cb1e79b2c23dff772ae351784ef2b84454a61b3920e9b20bd5db4bf207e4472d`.
+Both weights and `LICENSE.txt` are delivered in `runtime/studio/Fonts/`, next to the Workbench
+executable, and loaded privately. They are never installed system-wide or embedded as WPF Resources.
+Per-file SHA-256 values and provenance are recorded in `src/Studio/Gui/Fonts/SOURCES.txt` in the source repository.
+Segoe UI, Cascadia Mono, Consolas and Microsoft YaHei UI are supplied by Windows as fallbacks.
+The former [JetBrains Mono license](JetBrainsMono-OFL.txt) and [Noto Sans SC license](NotoSansSC-OFL.txt)
+remain as historical notices; those fonts are no longer shipped by the Workbench.
 
 ## Eido import dependency planner
 

@@ -12,22 +12,23 @@ public sealed class WorkbenchResourceTests(WpfContext wpf)
 {
     [Theory]
     [InlineData(400, "Regular")]
-    // Only Regular and Bold ship (2026-10-06, package size); medium text uses the nearest embedded face.
-    [InlineData(500, "Regular")]
-    [InlineData(600, "Bold")]
-    public void Chinese_faces_resolve_to_the_embedded_font(int weight, string face)
+    // Maple Mono CN ships Regular and SemiBold; WPF resolves medium (500) to the heavier real face, never a simulated one.
+    [InlineData(500, "SemiBold")]
+    [InlineData(600, "SemiBold")]
+    public void Chinese_faces_resolve_to_the_bundled_font(int weight, string face)
     {
         wpf.Run(() =>
         {
-            var family = new FontFamily(new Uri("pack://application:,,,/TiaOpenness;component/"), "./Fonts/#Noto Sans SC");
+            var folder = new Uri(Path.Combine(AppContext.BaseDirectory, "Fonts") + Path.DirectorySeparatorChar);
+            var family = new FontFamily(folder, "./#Maple Mono CN");
             var typeface = new Typeface(family, FontStyles.Normal, FontWeight.FromOpenTypeWeight(weight), FontStretches.Normal);
             Assert.True(typeface.TryGetGlyphTypeface(out var glyph));
-            Assert.EndsWith("notosanssc-" + face.ToLowerInvariant() + ".otf", glyph.FontUri.ToString().ToLowerInvariant());
+            Assert.EndsWith("maplemono-cn-" + face.ToLowerInvariant() + ".ttf", glyph.FontUri.ToString().ToLowerInvariant());
             Assert.Contains((int)'中', glyph.CharacterToGlyphMap.Keys);
             Assert.False(typeface.IsBoldSimulated);
             string chain = ((FontFamily)Application.Current.FindResource("Ui.Font")).Source;
-            Assert.Equal("Segoe UI, /TiaOpenness;component/Fonts/#Noto Sans SC", chain);
-            Assert.True(File.Exists(Path.Combine(AppContext.BaseDirectory, "Fonts", "NotoSansSC-OFL.txt")));
+            Assert.Equal("./#Maple Mono CN, Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI", chain);
+            Assert.True(File.Exists(Path.Combine(AppContext.BaseDirectory, "Fonts", "LICENSE.txt")));
         });
     }
 
