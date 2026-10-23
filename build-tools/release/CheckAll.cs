@@ -19,6 +19,8 @@ internal static partial class ReleaseCommands
             var result = ProcessRunner.Run(Dotnet, [typeof(ReleaseCommands).Assembly.Location, "check-all", .. options.Arguments()], worktree, forwardOutput: true);
             return result.ExitCode;
         }
+        // -NoBuildCache: no verified file-app or build cache reuse, and with it no result cache (a release may adopt only such a run).
+        if (options.Has("NoBuildCache")) Environment.SetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED", "1");
         int parallelism = FastSuites.CpuParallelism(Root, options);
         int shards = FastSuites.Positive(options, "Shards", 8);
         var api = RequiredDirectory(options.Get("PublicApiRoot"), "-PublicApiRoot");
@@ -52,6 +54,10 @@ internal static partial class ReleaseCommands
         var before = TrackedBytes();
         var timings = new List<CheckTiming>();
         var jobs = new List<CheckJob>();
+        var planned = new List<string>();
+        // The release may adopt this run (P8-93): bind the commit, the tree and every input before anything is regenerated.
+        var releaseEvidence = ReleaseEvidence.BeginSafely(() => ReleaseEvidence.Begin(Root, "git", options, ReleaseEvidence.ProbeExternal(Root, api, nuget, Dotnet, python, companionPython),
+            Environment.GetEnvironmentVariable, DateTimeOffset.UtcNow), DateTimeOffset.UtcNow);
         if (options.Get("BaselineReport") is { } timingBaseline)
             SuiteCosts.ImportReport(Path.GetDirectoryName(Path.GetFullPath(timingBaseline))!, Path.Combine(Root, "bin-build/check-timings"));
         var history = Path.Combine(Root, "bin-build/check-timings/check-costs.json");
@@ -91,6 +97,7 @@ internal static partial class ReleaseCommands
         void Wave()
         {
             if (jobs.Count == 0) return;
+            planned.AddRange(jobs.Select(job => job.Name));
             timings.AddRange(CheckScheduler.Run(jobs.ToArray(), parallelism, Path.Combine(output, "logs")));
             jobs.Clear();
         }
@@ -338,6 +345,7 @@ internal static partial class ReleaseCommands
             stabilityParallelism, sensitiveParallelism = sensitiveLanes.Count, sensitiveCores = System.Numerics.BitOperations.PopCount(layout.Sensitive), sensitiveMinWorkerThreads = CheckAffinity.BaselineWorkers, generalParallelism = parallelism, companionPython,
             checks = plan.Select(job => new { job.Name, job.Lane, job.SensitiveGroup, job.Slots, job.Exclusive, affinityMask = job.Affinity?.ToString("X"), job.EstimatedSeconds, timeoutSeconds = job.Timeout.TotalSeconds, criticalSeconds = priorities[job.Name], job.Dependencies,
                 resultCache = job.ResultCachePolicy ?? "always rerun: generated evidence, mutable machine inputs or aggregate gate" }) }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
+        planned.AddRange(plan.Select(job => job.Name));
         timings.AddRange(CheckScheduler.Run(plan, parallelism, Path.Combine(output, "logs"),
             lanes));
         return Finish();
@@ -361,8 +369,12 @@ internal static partial class ReleaseCommands
                 failed = timings.Count(row => !CheckTiming.Passed(row)), drift, checks = timings };
             File.WriteAllText(Path.Combine(output, "report.json"), JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }) + "\n");
             WriteTimingComparison(output, timings, options.Get("BaselineReport"), layout);
-            Console.WriteLine($"check-all: {report.passed} passed; {report.failed} failed/blocked; {report.wallSeconds:F3}s; report: {output}");
-            return report.failed == 0 && report.underThirtyMinutes ? 0 : 1;
+            var exitCode = report.failed == 0 && report.underThirtyMinutes ? 0 : 1;
+            string evidencePath;
+            try { evidencePath = ReleaseEvidence.Write(releaseEvidence, output, planned, timings, exitCode, report.wallSeconds, report.underThirtyMinutes, unexpected, DateTimeOffset.UtcNow); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { evidencePath = "not written (" + ex.Message + ")"; }
+            Console.WriteLine($"check-all: {report.passed} passed; {report.failed} failed/blocked; {report.wallSeconds:F3}s; report: {output}; release evidence: {evidencePath}");
+            return exitCode;
         }
     }
 

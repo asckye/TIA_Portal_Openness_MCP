@@ -159,7 +159,12 @@ internal static partial class ReleaseCommands
         Directory.CreateDirectory(suiteResults);
         int writeGuardPassed = 0, crashEvidencePassed = 0, offlinePassed = 0, offlineV20Passed = 0, keptCodePassed = 0, keptCodeV20Passed = 0, versionPolicyPassed = 0, updaterPassed = 0, nativeMcpSafety = 0;
         Match lifecycleMatch = Match.Empty;
-        if (plan.Includes("offline-suites"))
+        // An adopted publication (TIA_MCP_RELEASE_ADOPTION) takes this stage's suite counts from the verified evidence of its commit.
+        var adopted = ReleaseEvidence.LoadAdoption();
+        if (plan.Includes("offline-suites") && adopted is not null)
+            (writeGuardPassed, crashEvidencePassed, offlinePassed, offlineV20Passed, keptCodePassed, keptCodeV20Passed, versionPolicyPassed, updaterPassed, nativeMcpSafety, lifecycleMatch) =
+                AdoptedCommonValidation(adopted, dotnet, python, outputDirectory, runTemp, cliHome, apiRoot);
+        if (plan.Includes("offline-suites") && adopted is null)
         {
             RunBuildSpec("approval-gate-self-test", python, [Path.Combine(Root, "scripts/checks/Test-ReleaseApprovalGate.py"), "--self-test"], outputDirectory, runTemp, cliHome, apiRoot);
             var lifecycle = RunBuildSpec("native-supervisor", python, [Path.Combine(Root, "scripts/checks/Test-NativeLifecycle.py"), "--self-test"], outputDirectory, runTemp, cliHome, apiRoot);

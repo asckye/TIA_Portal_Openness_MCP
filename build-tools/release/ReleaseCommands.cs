@@ -25,6 +25,7 @@ internal static partial class ReleaseCommands
         "run-release-build" => RunReleaseBuild(options),
         "branch-gate" => BranchGate(options),
         "check-all" => CheckAll(options),
+        "check-release-evidence" => CheckReleaseEvidence(options),
         "build-tool" => BuildTool(options),
         "cache-info" => CacheInfo(options),
         "cache-clear" => CacheClear(options),
@@ -306,6 +307,10 @@ internal static partial class ReleaseCommands
         if (!ReleaseVersions.IsValid(version))
             throw new ReleaseException("-Version must be X.Y.Z, or X.Y.Z-beta.N / X.Y.Z-rc.N for a pre-release");
         if (options.Has("DryRun") && options.Has("EarlyGatesOnly")) throw new ReleaseException("-DryRun and -EarlyGatesOnly cannot be combined");
+        if (options.Has("BumpOnly") && (options.Has("DryRun") || options.Has("EarlyGatesOnly") || options.Has("AdoptEvidence")))
+            throw new ReleaseException("-BumpOnly cannot be combined with -DryRun, -EarlyGatesOnly or -AdoptEvidence");
+        if (options.Has("AdoptEvidence") && (options.Has("EarlyGatesOnly") || options.Has("Resume")))
+            throw new ReleaseException("-AdoptEvidence cannot be combined with -EarlyGatesOnly or -Resume; an adopted publication starts on the prep commit the evidence tested");
         var previousCache = Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED");
         Environment.SetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED", "1");
         try { return RunReleaseProduction(options); }
@@ -405,9 +410,11 @@ internal static partial class ReleaseCommands
         var harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
         var activeLog = new AsyncLocal<string?>();
         var failedHostDataRetained = false;
+        var logGate = new object();
         void RecordProcessOutput(CommandResult result)
         {
-            if (activeLog.Value is { } logPath) File.AppendAllText(logPath, result.StandardOutput + result.StandardError, new System.Text.UTF8Encoding(false));
+            // The candidate PLC captures of one step run side by side and append to the same step log.
+            if (activeLog.Value is { } logPath) lock (logGate) File.AppendAllText(logPath, result.StandardOutput + result.StandardError, new System.Text.UTF8Encoding(false));
         }
 
         void RestoreOriginal() => recordSnapshot.RestoreOriginal();
@@ -1418,7 +1425,7 @@ internal static partial class ReleaseCommands
             {
                 var suiteResults = Path.Combine(logs, "dotnet-suites");
                 Directory.CreateDirectory(suiteResults);
-                var suites = new[] { "foundation-api", "prompt-registration", "software-read", "special-export-shape", "device-add", "hardware-catalog", "diagnostic-membership" };
+                var suites = MultiVersionSuites;
                 var catalogPath = Path.Combine(Root, "tests/test-suites.json");
                 using var suiteCatalog = JsonDocument.Parse(File.ReadAllText(catalogPath));
                 foreach (var suite in suites)
@@ -1686,6 +1693,7 @@ internal static partial class ReleaseCommands
             };
             var recordPath = Path.Combine(Root, "manifest/multi-version-build.json");
             WriteJson(recordPath, record);
+            AnnotateAdoptedRecord(recordPath);
             // The record's own PLC proof and updater binding must hold before the delivery binds it (P8-04l: no engine record copy).
             using (var written = JsonDocument.Parse(File.ReadAllText(recordPath)))
             {

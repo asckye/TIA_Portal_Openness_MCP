@@ -233,7 +233,8 @@ internal static partial class ReleaseCommands
         var sdk = ProcessRunner.Run(dotnet, ["--version"], Root); ProcessRunner.RequireSuccess(sdk, "File app SDK version");
         var key = CheckAllScriptInputKey(Root, name, nuget, sdk.StandardOutput);
         var cache = new BuildOutputCache(Path.Combine(Root, "bin-build/check-script-cache"), name);
-        if (cache.Restore(key, destination))
+        var cacheDisabled = Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED") == "1";
+        if (!cacheDisabled && cache.Restore(key, destination))
         {
             File.WriteAllText(Path.Combine(output, "build", name + ".log"), "Identical file-app inputs and verified outputs: cache hit " + key + "\n");
             return new(0, name + ": verified file-app cache hit\n", "");
@@ -241,7 +242,7 @@ internal static partial class ReleaseCommands
         var result = ProcessRunner.Run(dotnet, ["build", Path.Combine(Root, "scripts/checks/" + name + ".cs"), "-c", "Release",
             "-o", destination, "-p:RestoreConfigFile=" + nuget, "-p:NuGetAudit=false", "-p:UseSharedCompilation=false", "-p:UseAppHost=false"], Root,
             logPath: Path.Combine(output, "build", name + ".log"));
-        if (result.ExitCode == 0) cache.Populate(key, destination);
+        if (result.ExitCode == 0 && !cacheDisabled) cache.Populate(key, destination);
         return result;
     }
 

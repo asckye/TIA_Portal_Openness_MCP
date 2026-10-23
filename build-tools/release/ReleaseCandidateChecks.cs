@@ -10,6 +10,8 @@ internal static partial class ReleaseCommands
         string output, string temp, string python)
     {
         var activeLog = new AsyncLocal<string?>();
+        // The PLC capture jobs of one step run side by side and append to the step's log.
+        var logGate = new object();
         void Step(string name, Action action)
         {
             activeLog.Value = Path.Combine(logs, name + ".log");
@@ -38,7 +40,7 @@ internal static partial class ReleaseCommands
             var result = executable == "test-suites" ? DotnetSuites.Run(Root, Options.Parse(args.ToArray(), new HashSet<string> { "SelfTest", "NoRestore" }), env)
                 : ProcessRunner.Run(executable, args, cwd ?? Root, env);
             if (executable == "test-suites") { Console.Write(result.StandardOutput); Console.Error.Write(result.StandardError); }
-            if (activeLog.Value is { } log) File.AppendAllText(log, result.StandardOutput + result.StandardError, new System.Text.UTF8Encoding(false));
+            if (activeLog.Value is { } log) lock (logGate) File.AppendAllText(log, result.StandardOutput + result.StandardError, new System.Text.UTF8Encoding(false));
             if (result.ExitCode == 0)
             {
                 // A build server started by the step can still hold an analyzer it loaded from this folder; the step's result stands.
@@ -152,9 +154,11 @@ internal static partial class ReleaseCommands
             var selected = group;
             var successor = (Name: selected, Run: (Func<PipelineResult>)(() =>
             {
+                // The eight captures of each group run side by side, as the preparation's PLC jobs do (P8-93): each has its own output,
+                // temp root and isolated data folder; every failure is reported and the comparisons follow in table order.
                 runStep(selected, () => RunPlcReleaseJobs(
                     PlcReleaseJobs(Root, api, logs, releaseTemp, dotnet, python).Where(job => job.Check == selected), Root, logs,
-                    job => runIsolated(job.Name, job.Executable, job.Arguments, true, Root), runPython));
+                    job => runIsolated(job.Name, job.Executable, job.Arguments, true, Root), runPython, parallelism: Math.Max(1, Math.Min(4, maxParallelism))));
                 if (selected == "plc-responses") runStep("09-packaged-responses-verify-plc", () =>
                     VerifyPackagedResponses(Root, output, logs, releaseTemp, runDefaults, runPython, plc: true));
                 return new PipelineResult(selected, 0, "PLC snapshots and exact comparisons passed.\n", "");

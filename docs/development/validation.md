@@ -51,6 +51,9 @@ Studio 测试收到既有的 bundle 根目录覆盖；bridge 载荷来自对应�
 `-BuildParallelism` 单独控制 MSBuild 并发，沙箱中可设为 1。`-BuildOnly` 只测生成与构建，用于无改动、单文件改动诊断，不能替代全集验收。
 每次 `-OutputDirectory` 必须使用新目录。报告保存每个进程的计时、日志、TRX 合并计数、源码漂移和三十分钟门槛（`underThirtyMinutes`）。
 全集低于三十分钟与检查通过是两个独立条件，任何一个不满足都返回非零状态。
+每次结束时另写 `release-evidence.json`：提交、tree id、开始时的工作树状态与全部输入文件 SHA-256、PublicAPI/NuGet 配置/SDK/Python/机器标识、
+运行模式、计划作业与每个作业的结果和日志哈希、注册套件计数及退出状态。`-NoBuildCache` 关闭文件程序构建缓存并随之关闭结果缓存；
+发布只采纳干净提交上 `-Clean`（或 `-Cold`）且带 `-NoBuildCache` 的完整通过运行，规则见[发布流程](release-workflow.md#采纳同一提交的-check-all-与-ci-证据-adoptevidence)。
 
 构建后的注册套件、Studio、静态检查、捕获、usage、Harness 和引擎检查进入同一依赖调度图。preflight 保留全部检查并引用图中相同检查的结果；ReleaseTool 的完整套件同时覆盖 Pipeline 子集，每轮全集只执行一次，避免重复运行；汇总在依赖结束后执行，失败的分片仍产生汇总。
 压测与其他检查同时运行，但通过 Windows job object 分别限定到互不相交的 CPU 核集合。默认预留 8 个逻辑核（小机器取三分之一）、最多四个压测进程；`-StabilityCores` 和 `-StabilityParallelism` 控制预留和并发。HTTP 夹具使用独立临时工作目录，避免 ASP.NET 配置文件监视器扫描整个 worktree；原句柄和内存界限保持不变。
