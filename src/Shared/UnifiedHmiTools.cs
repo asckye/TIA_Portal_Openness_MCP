@@ -382,15 +382,18 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "SetUnifiedHmiButtonEventScriptCode"), Description("[L2][HMI-Unified]Set ScriptCode on a Unified HMI button event ScriptDynamization. SyntaxCheck is OFF by default because on TIA V21 it can crash the Portal process and lose the script (issue #36); pass syntaxCheck=true only when you need that evidence. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult SetUnifiedHmiButtonEventScriptCodeV4(
+            RequestContext<CallToolRequestParams> context,
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
             [Description("screenName: target screen name")] string screenName,
             [Description("buttonName: HMI button item name")] string buttonName,
             [Description("eventType: enum value, e.g. Tapped, Down, Up")] string eventType,
             [Description("scriptCode: JavaScript code for the event")] string scriptCode,
-            [Description("globalDefinitionAreaScriptCode: omit to preserve existing global definitions; empty string explicitly clears them")] string? globalDefinitionAreaScriptCode = null,
-            [Description("async: omit to preserve the existing flag; false explicitly disables it")] bool? async = null,
+            [Description("globalDefinitionAreaScriptCode: omit to preserve existing global definitions; empty string explicitly clears them")] string globalDefinitionAreaScriptCode = "",
+            [Description("async: omit to preserve the existing flag; false explicitly disables it")] bool async = false,
             [Description("syntaxCheck: run TIA SyntaxCheck after writing. Default false - on TIA V21 this call can crash the Portal process (NonRecoverableException) and lose the just-written script. When false, no syntaxErrorCount is reported: absence means NOT CHECKED, never zero errors.")] bool syntaxCheck = false)
-            => UnifiedHmiContract.Run("SetUnifiedHmiButtonEventScriptCode", true, true, () => SetUnifiedHmiButtonEventScriptCode(hmiSoftwarePath, screenName, buttonName, eventType, scriptCode, globalDefinitionAreaScriptCode, async, syntaxCheck));
+            => UnifiedHmiContract.Run("SetUnifiedHmiButtonEventScriptCode", true, true, () => SetUnifiedHmiButtonEventScriptCode(hmiSoftwarePath, screenName, buttonName, eventType, scriptCode,
+                context.Params?.Arguments?.ContainsKey(nameof(globalDefinitionAreaScriptCode)) == true ? globalDefinitionAreaScriptCode : null,
+                context.Params?.Arguments?.ContainsKey(nameof(async)) == true ? async : (bool?)null, syntaxCheck));
 
         public ResponseMessage SetUnifiedHmiButtonEventScriptCode(string hmiSoftwarePath,
             string screenName,

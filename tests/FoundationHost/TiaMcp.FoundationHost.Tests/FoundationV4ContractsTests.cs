@@ -1,3 +1,4 @@
+extern alias enginehost;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -23,6 +24,47 @@ public sealed class FoundationV4ContractsTests
     }
     private static McpServerTool Tool(string name, FakeWorker? worker = null, string release = "19") =>
         LegacyHostToolRegistry.Create(worker ?? new FakeWorker(), release, false).Single(t => t.ProtocolTool.Name == name);
+
+    [Theory]
+    [InlineData("{}", null, null)]
+    [InlineData("{\"globalDefinitionAreaScriptCode\":\"\",\"async\":false}", "", false)]
+    [InlineData("{\"globalDefinitionAreaScriptCode\":\"const keep = 2;\",\"async\":true}", "const keep = 2;", true)]
+    [InlineData("{\"async\":false}", null, false)]
+    [InlineData("{\"globalDefinitionAreaScriptCode\":\"\"}", "", null)]
+    public async Task Script_options_keep_single_schema_types_and_preserve_omission(string options, string? globals, bool? async)
+    {
+        TiaMcp.Adapters.Contracts.UnifiedHmiRequest? dispatched = null;
+        int calls = 0;
+        var service = new enginehost::TiaMcpServer.Siemens.Services.UnifiedHmiService((operation, workerArguments) =>
+        {
+            Assert.Equal("hmi-unified.ExecuteUnifiedHmi", operation);
+            calls++;
+            dispatched = workerArguments["request"]!.Deserialize<TiaMcp.Adapters.Contracts.UnifiedHmiRequest>();
+            return new JsonObject { ["Value"] = new JsonObject { ["Meta"] = new JsonObject { ["operationSuccess"] = true } } };
+        }, () => "C:/Fixture/Project.ap21");
+        var tools = new enginehost::TiaMcpServer.ModelContextProtocol.UnifiedHmiTools(service);
+        var tool = McpServerTool.Create(tools.SetUnifiedHmiButtonEventScriptCodeV4);
+        var schema = tool.ProtocolTool.InputSchema;
+        var properties = schema.GetProperty("properties");
+        Assert.Equal("string", properties.GetProperty("globalDefinitionAreaScriptCode").GetProperty("type").GetString());
+        Assert.Equal("boolean", properties.GetProperty("async").GetProperty("type").GetString());
+        Assert.False(properties.TryGetProperty("context", out _));
+        var required = schema.GetProperty("required").EnumerateArray().Select(value => value.GetString()).ToArray();
+        Assert.DoesNotContain("globalDefinitionAreaScriptCode", required);
+        Assert.DoesNotContain("async", required);
+        var arguments = JsonNode.Parse(options)!.AsObject();
+        arguments["hmiSoftwarePath"] = "HMI";
+        arguments["screenName"] = "Main";
+        arguments["buttonName"] = "Start";
+        arguments["eventType"] = "Press";
+        arguments["scriptCode"] = "new code";
+        Assert.True((bool)Body(await tool.InvokeAsync(Request("SetUnifiedHmiButtonEventScriptCode", arguments.ToJsonString())))["ok"]!);
+        Assert.Equal(1, calls);
+        Assert.NotNull(dispatched);
+        Assert.Equal("new code", dispatched.ScriptCode);
+        Assert.Equal(globals, dispatched.GlobalDefinitionAreaScriptCode);
+        Assert.Equal(async, dispatched.Async);
+    }
 
     [Theory]
     [InlineData("19")]
