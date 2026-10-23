@@ -54,7 +54,7 @@ jobs:
             git merge-base --is-ancestor "$tag_commit" "$master" || { echo "Tag $tag ($tag_commit) is not on master" >&2; exit 1; }
           fi
           git worktree add tagtree "$tag_commit" --quiet
-          readarray -t delivery < <(python -c 'import json; d=json.load(open("tagtree/manifest/delivery.json", encoding="utf-8-sig")); print(d["release"]); print(d["package"])')
+          readarray -t delivery < <(python -c 'import json; d=json.load(open("tagtree/manifest/delivery.json", encoding="utf-8-sig")); print(d["release"]); print(d["package"])' | tr -d '\r')
           test "$tag" = "v${delivery[0]}" || { echo "Tag $tag does not match manifest release ${delivery[0]}" >&2; exit 1; }
           echo "package=${delivery[1]}" >> "$GITHUB_ENV"
       - name: Download the ZIP and its .sha256 from the release
