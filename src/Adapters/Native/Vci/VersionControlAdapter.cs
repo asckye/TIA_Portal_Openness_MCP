@@ -30,19 +30,12 @@ namespace TiaMcp.Adapters.Native.Vci
     //
     // A TIA project is a binary blob that Git cannot diff. VCI fixes that: a *workspace* is a
     // plain folder holding one text file per mapped object (.s7dcl / .xml), which IS diffable and
-    // commitable. Openness can create workspaces and synchronize in both directions, so the whole
-    // "export → commit → review → restore" loop can run unattended.
+    // commitable. Native Openness supports synchronization in both directions; this adapter exposes
+    // ProjectToWorkspace only and refuses WorkspaceToProject, including previews.
     //
-    // Mapping is available through Workspace.ConnectObject.
-    // MappedObjectComposition indeed exposes only Find, but the create path does not live on the
-    // composition: it is Workspace.ConnectObject(obj, relativeDir, fileName, fileFormat), with
-    // Workspace.GetSupportedFileFormats(obj) telling you whether an object can be mapped at all.
-    // ConnectProjectToWorkspace below uses both to put a WHOLE project under version control with
-    // no UI interaction; creation is on the workspace, not the mapped-object composition.
-    //
-    // The generic reflection tools cannot reach any of this: they navigate properties from an
-    // object, and VersionControlInterface is a *service*, so the traversal dead-ends immediately.
-    // Hence a purpose-built toolset.
+    // ExportObject writes new workspace files and creates their mappings (V20+).
+    // ConnectObject is for existing files and is not exposed by these tools. Older releases use
+    // WorkspaceMapping.Create followed by ProjectToWorkspace synchronization.
     internal sealed partial class VersionControlAdapter
     {
         private readonly Func<IEngineeringServiceProvider?> project;
@@ -456,10 +449,7 @@ namespace TiaMcp.Adapters.Native.Vci
         /// <summary>Pick the most Git-friendly of the formats VCI offers for an object.</summary>
         private static string? PreferredFormat(IList<string> formats)
         {
-            return formats.FirstOrDefault(f => f.IndexOf("s7dcl", StringComparison.OrdinalIgnoreCase) >= 0)
-                ?? formats.FirstOrDefault(f => f.IndexOf("simatic", StringComparison.OrdinalIgnoreCase) >= 0)
-                ?? formats.FirstOrDefault(f => f.IndexOf("xml", StringComparison.OrdinalIgnoreCase) >= 0)
-                ?? formats.FirstOrDefault();
+            return TiaMcp.Adapters.Native.Vci.VciExportPolicy.PreferredFormat(formats);
         }
 
         /// <summary>
@@ -682,7 +672,7 @@ namespace TiaMcp.Adapters.Native.Vci
                                 // Use the established root layout once. An exception can follow a partial
                                 // export, so never retry the same object with a different target directory.
                                 issued = true;
-                                PortVci.Export(ws, node.Obj, new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(wsRootPath)), flatName, fmt);
+                                PortVci.Export(ws, node.Obj, TiaMcp.Adapters.Native.Vci.VciExportPolicy.RootDirectory(), flatName, fmt);
                                 mapped++;
                                 lines.Add(node.Label + " | mapped | format=" + fmt +
                                           " | dir=<root> | file=" + flatName);

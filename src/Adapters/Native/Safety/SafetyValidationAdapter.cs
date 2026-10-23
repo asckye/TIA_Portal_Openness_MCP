@@ -251,6 +251,26 @@ namespace TiaMcp.Adapters.Native.Safety
                 if (action == "import") file = SafetyValidationPrimitives.InputFile(filePath);
                 if (action == "export") file = NativeFileOutput.Plan(filePath);
                 if (action == "export") { if (dryRun) return "Safety function export preview (SafetyFunction.Export XML); nothing written."; meta["mayHaveWrittenFiles"] = true; ExportFile(file!, r.ExportFlags, r.DocumentFlags, (f, o) => existing!.Export(f, o), (f, o, d) => existing!.Export(f, o, d), meta); return "Safety function exported and verified by size / SHA-256; project unchanged."; }
+                var traceChanges = new List<KeyValuePair<string, object>>();
+                if (action == "setTrace")
+                {
+                    var trace = existing!.TraceConfiguration;
+                    foreach (var pair in new[] { (Input: "pretriggerTime", Attribute: "PretriggerTime"), (Input: "recordingDuration", Attribute: "RecordingDuration"), (Input: "signals", Attribute: "Signals") })
+                    {
+                        if (r.Properties[pair.Input] is not object value) continue;
+                        var current = trace.GetAttribute(pair.Attribute) ?? throw new NotSupportedException("Trace attribute has no observable value/type: " + pair.Attribute);
+                        object? converted;
+                        if (pair.Input == "signals" && value is HmiArray signals)
+                        {
+                            var names = signals.Select(signal => signal?.GetValue<string>() ?? "").ToArray();
+                            converted = current is string[] ? (object)names : current is List<string> ? names.ToList()
+                                : throw new NotSupportedException("Unverified Signals attribute type: " + current.GetType().FullName);
+                        }
+                        else converted = HmiScalar.ConvertValue(value, current.GetType());
+                        if (converted == null || !current.GetType().IsInstanceOfType(converted)) throw new ArgumentException("Trace attribute value type mismatch: " + pair.Attribute);
+                        traceChanges.Add(new KeyValuePair<string, object>(pair.Attribute, converted));
+                    }
+                }
                 if (dryRun) return "Safety function " + action + " preview; nothing changed.";
                 meta["mayHaveChanged"] = true;
                 void ApplyProperties(SafetyFunction f)
@@ -267,10 +287,21 @@ namespace TiaMcp.Adapters.Native.Safety
                     case "setTrace":
                         meta["nativeSignature"] = "TraceConfiguration.IsTraced / SetAttribute(PretriggerTime | RecordingDuration | Signals)";
                         var trace = existing!.TraceConfiguration;
-                        if (r.Properties["isTraced"] is object traced) trace.IsTraced = traced.GetValue<bool>();
-                        if (r.Properties["pretriggerTime"] is object pre) trace.SetAttribute("PretriggerTime", HmiScalar.ConvertValue(pre, trace.GetAttribute("PretriggerTime")?.GetType() ?? typeof(int)));
-                        if (r.Properties["recordingDuration"] is object duration) trace.SetAttribute("RecordingDuration", HmiScalar.ConvertValue(duration, trace.GetAttribute("RecordingDuration")?.GetType() ?? typeof(int)));
-                        if (r.Properties["signals"] is HmiArray signals) trace.SetAttribute("Signals", signals.Select(s => s?.GetValue<string>() ?? "").ToList());
+                        if (r.Properties["isTraced"] is object traced)
+                        {
+                            bool expected = traced.GetValue<bool>();
+                            trace.IsTraced = expected;
+                            if (trace.IsTraced != expected) throw new InvalidOperationException("Trace IsTraced readback differs. Changes are not rolled back.");
+                        }
+                        foreach (var change in traceChanges)
+                        {
+                            trace.SetAttribute(change.Key, change.Value);
+                            var readback = trace.GetAttribute(change.Key);
+                            bool same = change.Value is IEnumerable<string> expectedSignals
+                                ? readback is IEnumerable<string> actualSignals && expectedSignals.SequenceEqual(actualSignals, StringComparer.Ordinal)
+                                : Equals(change.Value, readback);
+                            if (!same) throw new InvalidOperationException("Trace attribute readback differs: " + change.Key + ". Changes are not rolled back.");
+                        }
                         break;
                     case "import":
                         meta["nativeSignature"] = "SafetyFunctionComposition.Import(FileInfo, ImportOptions." + r.ImportOption + ")";

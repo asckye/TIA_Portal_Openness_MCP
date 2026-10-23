@@ -177,7 +177,7 @@ namespace TiaMcp.Adapters.Contracts
             ["GetOnlineDriveParameters"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
             ["ListDccCharts"] = new[] { "16", "17", "18", "19", "20", "21" },
             ["ListDriveObjects"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
-            ["ManageDcbLibraries"] = new[] { "18", "19", "20", "21" },
+            ["ManageDcbLibraries"] = new[] { "16", "17", "18", "19", "20", "21" },
             ["ManageDccBlock"] = new[] { "18", "19", "20", "21" },
             ["ManageDccChart"] = new[] { "16", "17", "18", "19", "20", "21" },
             ["ManageDccChartInterface"] = new[] { "18", "19", "20", "21" },

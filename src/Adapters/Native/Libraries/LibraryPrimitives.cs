@@ -59,6 +59,7 @@ namespace TiaMcp.Adapters
         }
         private static bool LibraryWriteProtected(GlobalLibrary library)
         {
+            if (library.IsReadOnly) return true;
 #if LIBRARY_V20
             return library.IsWriteProtected;
 #else
@@ -119,17 +120,6 @@ namespace TiaMcp.Adapters
                     ["backlink"] = new[] { "Parent", "Owner", "Project", "Portal", "Site", "Container", "Device", "AssignedHmiDevice" }.Contains(p.Name, StringComparer.OrdinalIgnoreCase) });
             result["propertySchema"] = properties;
             return result;
-        }
-        private static bool LibraryTrySetProperty(object target, string property, object? value)
-        {
-            try
-            {
-                var p = target.GetType().GetProperty(property, BindingFlags.Public | BindingFlags.Instance);
-                if (p == null || !p.CanWrite) return false;
-                p.SetValue(target, LibraryReflectionValues.CoerceReflectionValue(value, p.PropertyType));
-                return true;
-            }
-            catch /* swallow(native-fallback): unsupported property conversion or assignment reports false to the existing caller fallback */ { return false; }
         }
         private static object? MultilingualJson(MultilingualText? text)
         {

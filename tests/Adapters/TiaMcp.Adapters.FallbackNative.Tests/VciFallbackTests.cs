@@ -7,6 +7,35 @@ using Xunit;
 
 public sealed class VciFallbackTests
 {
+    [Theory]
+    [InlineData("Scl,SimaticML", "SimaticML")]
+    [InlineData("XML,S7DCL", "S7DCL")]
+    [InlineData("Scl,XML", "XML")]
+    [InlineData("Scl,Other", "Scl")]
+    public void All_mapping_paths_share_the_format_preference(string formats, string expected)
+        => Assert.Equal(expected, VciExportPolicy.PreferredFormat(formats.Split(',')));
+
+#if STUDIO_VCI_MODERN
+    [Fact]
+    public void ExportObject_receives_the_documented_root_relative_directory_and_chosen_format()
+    {
+        var world = new World { Formats = new[] { "Scl", "SimaticML" } };
+        var request = Request("ConnectProjectToWorkspace");
+        var adapter = Adapter(world, request);
+        adapter.MappingTargets = () => new[] { new VciMappingTarget {
+            Object = new Siemens.Engineering.SW.Blocks.PlcBlock(), Name = "Main", RelativePath = "PLC/Main" } };
+        var session = new FallbackSession();
+        request.Route = adapter.Observe().Routes.Single().Id;
+        var preview = Run(session, adapter, request);
+        Assert.True(preview.Ok);
+        var result = Run(session, adapter, request, "apply", Hash(preview));
+        Assert.True(result.Ok);
+        var exported = Assert.Single(world.Exports);
+        Assert.Equal(@"\", exported.Directory);
+        Assert.Equal("SimaticML", exported.Format);
+    }
+#endif
+
     private const string Project = "C:\\REVIEWED\\PROJECT.AP21";
     private static VciFallbackAdapter Adapter(World world, FallbackRequest request)
         => new(() => new SessionState { ProcessId = 123, ProcessStartUtc = DateTimeOffset.Parse("2026-10-03T00:00:00Z"), ProjectFile = Project, Epoch = 2, Ownership = "borrowed" }, () => world, () => { }, () => world.Poisoned = true, request);

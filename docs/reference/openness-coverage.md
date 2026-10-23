@@ -72,7 +72,7 @@ started by that check. **?** cells deliberately make no equivalent absence claim
 | Network interface/connection engineering | P | P | P | P | P | P | P | P |
 | CAx device exchange | B | B | B | B | B | B | I | I |
 | Project/global library engineering | B | B | B | B | B | B | P | P |
-| Version Control Interface through MCP | N | N | B | B | B | B | I | I |
+| Version Control Interface through MCP | N | N | P | P | P | P | P | P |
 | Classic HMI engineering | B | B | B | B | B | B | P | P |
 | Unified HMI engineering | ? | ? | ? | ? | ? | B | P | P |
 | PLC software-unit engineering | N | N | B | B | B | B | P | P |
@@ -87,7 +87,7 @@ started by that check. **?** cells deliberately make no equivalent absence claim
 
 `BuildPlcSymbolManifestFromPath` is an offline bounded extractor for native PLC tag-table and GlobalDB XML snapshots. Empty tag tables produce a valid file result with zero symbols; tag comments are ignored; user constants retain their raw value; system constants are omitted with an explicit warning. It does not certify the complete XML schema, import behavior, or program semantics.
 
-The ported catalog follows the 2026-10-09 maintainer decision: at least one implemented action must run on the selected API. PLC protection/instance DB creation start at V15.1; system block groups start at V14 SP1 with system type groups unavailable until V15.1, program updates/cross-references at V18, network domains at V16, transfer areas at V15.1, system diagnostics exchange at V17, and catalog device creation/certificate service objects at V18. Communication connections remain V21 only. Absent whole-tool API means no registration; partial tools keep their action refusals before any native call. `ManageDeviceUserGroup`, module insertion, older attribute-write overloads, Classic HMI compile and PLC-only reference seeding keep usable old-release paths. Foundation catalog search and exact device creation start at V18. Single watch-table export starts at V15.1. Schema fragment validation uses each selected release's local schemas; V14 SP1 validates Interface fragments and reports unsuffixed network fragments as skipped. Classic screen building starts at V18, CWC ZIP packaging at V17 (V16 remains uncertain and closed), and the HMI/PLC synchronization precheck suite at V19. ImportMasterCopyFromGlobalLibrary starts at V19. The six V21-only PLC builders are withheld from V14 SP1–V19; their V20/V21 registrations are unchanged. See the [per-pair recheck and VM acceptance list](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/phase8-port-plan.md).
+The ported catalog follows the 2026-10-09 maintainer decision: at least one implemented action must run on the selected API. PLC protection/instance DB creation start at V15.1; system block groups start at V14 SP1 with system type groups unavailable until V15.1, program updates/cross-references at V18, network domains at V16, transfer areas at V15.1, system diagnostics exchange at V17, and catalog device creation/certificate service objects at V18. Communication connections remain V21 only. Absent whole-tool API means no registration; partial tools keep their action refusals before any native call. `ManageDeviceUserGroup`, module insertion, older attribute-write overloads, Classic HMI compile and PLC-only reference seeding keep usable old-release paths. Foundation catalog search and exact device creation start at V18. Single watch-table export starts at V15.1. Schema fragment validation uses each selected release's local schemas; V14 SP1 validates Interface fragments and reports unsuffixed network fragments as skipped. Classic screen building starts at V18, CWC ZIP packaging at V17 (V16 remains uncertain and closed), and the HMI/PLC synchronization precheck suite at V19. ImportMasterCopyFromGlobalLibrary remains registered from V19 but refuses screen-item instantiation: the official API exposes no Unified ScreenItems.CreateFrom(MasterCopy). Use the documented screen XML/document import workflow instead. The six V21-only PLC builders are withheld from V14 SP1–V19; their V20/V21 registrations are unchanged. See the [per-pair recheck and VM acceptance list](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/phase8-port-plan.md).
 
 All eight-release native acceptance entries remain **NOT RUN**. The compiled
 adapters and functional/transport tests are separate evidence. Neither a build nor
@@ -323,3 +323,43 @@ These are bounded evidence summaries from the supplied API sets, source routes, 
 prior read-only reviews. They do not change the functional matrix or mark native
 acceptance complete; the actual release, action, project, and optional product must
 be recorded in the [real-machine ledger](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md).
+
+## Library, VCI, Safety and reflection audit (2026-10-19)
+
+P8-81f uses the eight supplied SDK XML sets and the local [library](../../reference/siemens-openness/skills/global-library/SKILL.md)
+and [Safety administration](../../reference/siemens-openness/skills/plc-safety-administration/SKILL.md) references. These are source-level
+API corrections; native behavior remains unverified. The following documented VCI APIs are outside the 4.0 tool surface and remain
+coverage work for 4.1:
+
+| Uncovered VCI operation | Official API | Releases |
+|---|---|---|
+| Language selection at creation | `WorkspaceComposition.Create(string, DirectoryInfo, CultureInfo)` | 18–21 |
+| Workspace / mapping deletion | `Workspace.Delete`; `WorkspaceMapping.Delete` / `MappedObject.Delete` | 16–21; legacy mapping 16–20, modern mapping 20–21 |
+| User-group creation | `WorkspaceUserGroupComposition.Create` | 16–21 |
+| Hierarchical child status | `ChildObjectsStateProvider.GetStatus`; `MappedObject.GetChildStatus` | 18–20; 20–21 |
+| Initialize an unknown, unmodified mapping's status | `IndividualObjectSynchronizationStatus.InitializeStatus` | 19–20 |
+| Connect an existing workspace file | `Workspace.ConnectObject` | 20–21 |
+| Library path / deletion policy | `Workspace.GlobalLibraryPath`, `DeleteUnusedTypeVersionFromLibrary` | 20–21 |
+| Library-instance update policy | `Workspace.UpdateLibraryInstancesInProject` | 20 |
+
+The registered synchronization tool refuses `WorkspaceToProject`, including preview. `ConnectProjectToWorkspace` creates files and
+mappings with `ExportObject` on V20/V21; its directory argument is relative to `RootPath`. All mapping paths share the same format
+preference (s7dcl, SimaticML, XML, then the first offered format). Actual returned format names and additional V18/V19 mappable kinds
+need native confirmation. The V16–V19 list remains limited to `PlcBlock`, `PlcType` and `PlcTagTable` until evidence supports more.
+
+DCB extension-library import is available on V16–V20 through `ProjectLibrary.ImportDcbLibrary(string)` and on V21 through
+`DcbLibraryImporter.ImportDcbLibrary(string)`. The service moved in V21; import is not a V21 addition. Drive-library reads start at V18.
+Unified screen items have no documented master-copy instantiation API; the exact-signature allow-list is empty and the existing
+import tool refuses without opening a library or modifying screen items.
+
+Safety dynamic attributes remain a native-confirmation item: `FOBNumber` is documented as `Int32`; the spellings and value types of
+`FOBCycleTime`, `FOBPhaseShift`, `FOBPriority`, `EnableConsistentUploadFromFCpu`, `EnableFCommunicationIdTag`, and V21 trace attributes
+`PretriggerTime`, `RecordingDuration`, `Signals` require confirmation. SDK XML documents `TraceConfiguration.IsTraced` only.
+`setTrace` now requires observable dynamic values/types before writing and verifies every readback; it does not establish that the
+attribute names or `Signals` representation are supported on any native build.
+
+Reflection dotted paths read CLR properties only. Dynamic engineering attributes are read through `InvokeObject` with `GetAttribute`
+and an exact attribute name. Classic tag tables traverse `TagFolder.TagTables` and nested `Folders`; Classic screen items are refused
+because they are not exposed by that Openness API. Service lookup uses exact full names or unique suffixes in Siemens assemblies and
+loads the documented V21 split assemblies before searching. Reflection writes to guarded Safety, SafetyValidation, protection, UMAC
+and other protected objects must use their dedicated tools; these restrictions do not add a replacement native engineering surface.

@@ -125,7 +125,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string updateCheckMode="ReportOutOfDateOnly",
             int maxItems=2000)
         => _library.CheckLibraryUpdates(libraryName,updateCheckMode,maxItems);
-        [McpServerTool(Name="SynchronizeLibrary"), Description("[L2][Library][WRITE] ILibrary-level operations on a selection (selection: [{\"type\":\"Folder/Type\"},{\"folder\":\"Folder\"}], {\"folder\":\"\"} = whole Types folder): updateLibrary (UpdateLibrary into targetLibraryName with forceUpdateMode/deleteUnusedVersionsMode/structureConflictResolutionMode; types matched by GUID), updateProject (UpdateProject into scopeSoftwarePaths scopes; a global library source synchronizes the project library first), harmonizeProject (HarmonizeProject with harmonizeOptions HarmonizeNames/HarmonizePaths; renames and moves instances) and cleanUp (ProjectLibrary.CleanUpLibrary with cleanUpMode PreserveDefaultVersionOfUnusedTypes/DeleteUnusedTypes, UserGlobalLibrary.CleanUpLibrary without mode). Real execution needs confirmChange=true; default dryRun=true; no save/compile/download. Current native policy; V4 native acceptance is pending.")]
+        [McpServerTool(Name="SynchronizeLibrary"), Description("[L2][Library][WRITE] ILibrary-level operations on a selection (selection: [{\"type\":\"Folder/Type\"},{\"folder\":\"Folder\"}], {\"folder\":\"\"} = whole Types folder): updateLibrary (UpdateLibrary into targetLibraryName with forceUpdateMode/deleteUnusedVersionsMode/structureConflictResolutionMode; types matched by GUID), updateProject (UpdateProject into scopeSoftwarePaths scopes; a global library source synchronizes the project library first; a project-library source applies only deleteUnusedVersionsMode and refuses non-default force/structure modes), harmonizeProject (HarmonizeProject with harmonizeOptions HarmonizeNames/HarmonizePaths; renames and moves instances) and cleanUp (ProjectLibrary.CleanUpLibrary with cleanUpMode PreserveDefaultVersionOfUnusedTypes/DeleteUnusedTypes, UserGlobalLibrary.CleanUpLibrary without mode). Real execution needs confirmChange=true; default dryRun=true; no save/compile/download. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult SynchronizeLibraryV4(
             [Description("action: the operation to perform - updateLibrary | updateProject | harmonizeProject | cleanUp.")] string action,
             [Description("selection: JSON array selecting the types / instances to synchronise (at least one type or folder; {folder: ''} selects the whole Types folder).")] LibrarySelection[] selection,
@@ -172,7 +172,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("leftLibraryName: global library on the left side of the comparison ('' = the project library).")] string leftLibraryName="",
             [Description("rightLibraryName: global library on the right side of the comparison ('' = the project library).")] string rightLibraryName="",
             [Description("leftVersion: version string of the left type (e.g. 'V1.0.0'; '' = default version).")] string leftVersion="",
-            [Description("rightVersion: version string of the right type (e.g. 'V1.0.1'; '' = default version).")] string rightVersion="",
+            [Description("rightVersion: version string of the right type (e.g. '1.0.1' (Major.Minor.Build, without a V prefix); '' = default version).")] string rightVersion="",
             bool includeIdentical=false,
             int offset=0,
             int limit=100)
@@ -194,7 +194,7 @@ namespace TiaMcpServer.ModelContextProtocol
             int offset=0,
             int limit=100)
         => _library.CompareLibraryObjects(kind,leftPath,rightPath,leftLibraryName,rightLibraryName,leftVersion,rightVersion,includeIdentical,offset,limit);
-        [McpServerTool(Name="ManageLibraryTypeVersion"), Description("[L2][Library][WRITE] Exact library type/version read/edit/release/setDefault/deleteVersion/updateInstances/discard/findInstances. Empty libraryName selects project library; otherwise unique already-open global library. typePath relative to TypeFolder. Release requires newVersion and official dependenciesMode. findInstances is read-only and requires exact targetSoftwarePath; discard removes the selected editable version. updateInstances requires exact targetSoftwarePath; native type update chooses its applicable versions, not necessarily version argument. dryRun=true default. No export, save, close or compile. Semantic validity/dependency impact determined by native TIA. Current native policy; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ManageLibraryTypeVersion"), Description("[L2][Library][WRITE] Exact library type/version read/edit/release/setDefault/deleteVersion/updateInstances/discard/findInstances. Empty libraryName selects project library; otherwise unique already-open global library. typePath relative to TypeFolder. edit/discard require the project library; STEP 7 edit also requires exact targetSoftwarePath with a single instance and uses Edit(instanceInfo), while HMI edit uses Edit(). Versions use Major.Minor.Build without a V prefix. Release requires newVersion and official dependenciesMode. findInstances is read-only and requires exact targetSoftwarePath; discard removes the selected editable version. updateInstances requires exact targetSoftwarePath; native type update chooses its applicable versions, not necessarily version argument. dryRun=true default. No export, save, close or compile. Semantic validity/dependency impact determined by native TIA. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult ManageLibraryTypeVersionV4(
             string typePath,
             string version,
@@ -368,15 +368,15 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportMasterCopyFromGlobalLibrary"), Description("[L2][HMI-Library] Import one MasterCopy from a TIA global library into a real Unified HMI screen and return ScreenItems readback evidence. This modifies the project, must be tried in a temporary project first, and reports failure unless the imported item is visible after readback. Current native policy; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "ImportMasterCopyFromGlobalLibrary"), Description("[L2][HMI-Library] Refused: no Openness API for screen-item instantiation from a master copy. Use the documented XML/document import path (ImportHmiScreen) with a target-release document. The exact-signature allow-list is empty; no library is opened and no screen item is modified. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult ImportMasterCopyFromGlobalLibraryV4(
             [Description("libraryPath: full path to .al21 file or its containing folder")] string libraryPath,
             [Description("masterCopyName: exact or suffix path/name from ProbeGlobalLibrary MasterCopies readback")] string masterCopyName,
             [Description("hmiSoftwarePath: real Unified HMI software path resolved from GetProjectTree, e.g. HMI_RT_1")] string hmiSoftwarePath,
             [Description("screenName: existing target Unified screen name; create it first with EnsureUnifiedHmiScreen if needed")] string screenName,
             [Description("importedItemName: optional expected item name after import; empty means use masterCopyName leaf")] string importedItemName = "",
-            [Description("left: optional Left coordinate applied after import when supported")] int left = 0,
-            [Description("top: optional Top coordinate applied after import when supported")] int top = 0)
+            [Description("left: retained input; master-copy screen-item instantiation is refused")] int left = 0,
+            [Description("top: retained input; master-copy screen-item instantiation is refused")] int top = 0)
             => LibraryToolContract.Run("ImportMasterCopyFromGlobalLibrary", true, true, () =>
             {
                 return ImportMasterCopyFromGlobalLibrary(libraryPath, masterCopyName, hmiSoftwarePath, screenName, importedItemName, left, top);

@@ -116,7 +116,7 @@ namespace TiaMcp.Adapters
                     var tableName = parts[1];
                     var sc = EngineeringPlcSession.GetSoftwareContainer(swPath);
                     if (sc?.Software == null) return null;
-                    return FindReflectionCollectionItem(sc.Software, new[] { "TagTables" }, tableName);
+                    return ReflectionScreenTraversal.FindTagTable(sc.Software, tableName);
                 }
 
                 case "hmitag":
@@ -131,7 +131,7 @@ namespace TiaMcp.Adapters
                     var tagName = parts[2];
                     var sc = EngineeringPlcSession.GetSoftwareContainer(swPath);
                     if (sc?.Software == null) return null;
-                    var table = FindReflectionCollectionItem(sc.Software, new[] { "TagTables" }, tableName);
+                    var table = ReflectionScreenTraversal.FindTagTable(sc.Software, tableName);
                     if (table == null) return null;
                     var tagsComp = table.GetType().GetProperty("Tags")?.GetValue(table);
                     if (tagsComp == null) return null;
@@ -185,6 +185,7 @@ namespace TiaMcp.Adapters
                     var itemName = parts[2];
                     var sc = EngineeringPlcSession.GetSoftwareContainer(swPath);
                     if (sc?.Software == null) return null;
+                    ReflectionScreenTraversal.RequireScreenItemsApi(sc.Software);
                     var screen = ReflectionScreenTraversal.FindByName(sc.Software, screenName);
                     if (screen == null) return null;
                     var itemsComp = screen.GetType().GetProperty("ScreenItems")?.GetValue(screen);
@@ -238,50 +239,6 @@ namespace TiaMcp.Adapters
             }
             else if (path.StartsWith("/", StringComparison.Ordinal)) throw new ArgumentException("Unsupported script path; use an exact module name or /Scripts/<name>.");
             return FindExistingByName(scripts, path);
-        }
-        private static object? FindReflectionCollectionItem(object root, string[] propertyHints, string wantedName)
-        {
-            try
-            {
-                var rootType = root.GetType();
-                foreach (var propName in propertyHints)
-                {
-                    object? collection = null;
-
-                    var prop = rootType.GetProperty(propName);
-                    if (prop != null)
-                    {
-                        collection = prop.GetValue(root);
-                    }
-                    else if (propName.EndsWith("Folder", StringComparison.OrdinalIgnoreCase))
-                    {
-                        var folder = rootType.GetProperty(propName)?.GetValue(root);
-                        if (folder != null)
-                        {
-                            collection = folder.GetType().GetProperty(propName.Replace("Folder", "s"))?.GetValue(folder);
-                        }
-                    }
-
-                    if (collection is System.Collections.IEnumerable enumerable)
-                    {
-                        foreach (var item in enumerable)
-                        {
-                            if (item == null) continue;
-                            var name = item.GetType().GetProperty("Name")?.GetValue(item)?.ToString();
-                            if (string.Equals(name, wantedName, StringComparison.OrdinalIgnoreCase))
-                            {
-                                return item;
-                            }
-                        }
-                    }
-                }
-            }
-            catch /* swallow(enumerate-optional): an unavailable candidate collection yields no matching library object */
-            {
-                // ignore
-            }
-
-            return null;
         }
     }
 }

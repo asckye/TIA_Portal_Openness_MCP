@@ -82,6 +82,8 @@
     <DefineConstants Condition="'$(TiaReleaseKey)' == '21'">$(DefineConstants);PLC_UNIT_GROUP_NAME</DefineConstants>
     <DefineConstants Condition="'$(TiaReleaseKey)' == '21'">$(DefineConstants);PLC_BLOCK_WRITE_PROTECTION</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);LIBRARY_V151</DefineConstants>
+    <!-- ProjectLibrary.ImportDcbLibrary moved to the DCC service in V21. -->
+    <DefineConstants Condition="$([System.String]::Copy('|16|17|18|19|20|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);LIBRARY_DCB_IMPORT</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);LIBRARY_V17</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);LIBRARY_V20</DefineConstants>
 

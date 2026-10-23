@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TiaMcp.Adapters.Contracts;
-using TiaMcp.Adapters.Native.Plc;
 
 namespace TiaMcp.Adapters.Libraries
 {
@@ -54,6 +53,26 @@ namespace TiaMcp.Adapters.Libraries
                     throw new PlcSoftwareException("NativeCrashRiskBlocked",
                         "V21 Unified ScriptModuleType.Name write blocked before any property setter: a reported native channel failure terminated TIA during this operation. " +
                         "No rename or automatic workaround was attempted. Retain the existing type name until the affected TIA build is diagnosed; do not retry via SetAttribute.");
+        }
+
+        internal const string ScreenItemMasterCopyRefusal = LibraryCapabilities.ScreenItemMasterCopyRefusal;
+
+        // The exact-signature allow-list starts empty. No screen object is accepted here, so an existing
+        // item cannot be mistaken for an import or repositioned, renamed or otherwise changed.
+        internal static GlobalLibraryImportEvidence RefuseScreenItemMasterCopyImport(string libraryPath, string masterCopyName,
+            string hmiSoftwarePath, string screenName, string importedItemName)
+            => new GlobalLibraryImportEvidence {
+                Ok = false, Message = "Global library MasterCopy import failed", Error = ScreenItemMasterCopyRefusal,
+                LibraryPath = libraryPath, MasterCopyName = masterCopyName, HmiSoftwarePath = hmiSoftwarePath,
+                ScreenName = screenName, ImportedItemName = importedItemName, Attempts = new List<string>(),
+                ReadbackItems = Array.Empty<string>(), Warnings = new List<string>(),
+                Raw = new Dictionary<string, object?> { ["mayHaveChanged"] = false, ["invocationAttempted"] = false }
+            };
+
+        internal static void ValidateProjectUpdateModes(bool projectLibrary, string forceUpdateMode, string structureConflictResolutionMode)
+        {
+            if (projectLibrary && (forceUpdateMode != "SetOnlyHigherUpdatedVersionAsDefault" || structureConflictResolutionMode != "RetainStructure"))
+                throw new NotSupportedException("ProjectLibrary.UpdateProject applies only deleteUnusedVersionsMode; non-default forceUpdateMode and structureConflictResolutionMode are unsupported.");
         }
 
         internal static void ValidateTypeWriteProtection(bool isWriteProtected)

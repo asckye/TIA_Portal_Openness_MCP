@@ -81,6 +81,17 @@ namespace TiaMcpServer.ModelContextProtocol
             data["evidence"] = evidence;
             bool? success = Flag(evidence, "operationSuccess") ?? Flag(evidence, "success") ?? Flag(data, "ok");
             if (Flag(data, "ok") == false) success = false;
+            const string screenItemRefusal = TiaMcp.Adapters.Contracts.LibraryCapabilities.ScreenItemMasterCopyRefusal;
+            var importRaw = data["raw"] as JsonObject;
+            bool refusedScreenItemImport = tool == "ImportMasterCopyFromGlobalLibrary" && response is ResponseGlobalLibraryImport
+                && Flag(data, "ok") == false && data["error"]?.ToString() == screenItemRefusal && importRaw != null
+                && Flag(importRaw, "invocationAttempted") == false && Flag(importRaw, "mayHaveChanged") == false
+                && Flag(evidence, "mayHaveChanged") != true && Flag(evidence, "mayHaveWrittenFiles") != true;
+            if (refusedScreenItemImport)
+            {
+                evidence["mayHaveChanged"] = false;
+                evidence["v4Rejection"] = "UNSUPPORTED_CAPABILITY";
+            }
             string? state = (evidence["transferResultState"] ?? evidence["nativeState"] ?? evidence["state"] ?? evidence["result"]?["state"])?.ToString();
             bool nativeKnown = NativeResultState.Classify(evidence, tool) != TiaMcp.Adapters.Contracts.NativeStateKind.Unexpected;
             if (state != null || evidence.ContainsKey("nativeState"))
@@ -120,7 +131,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     : status == "ALREADY_EXISTS" ? new AlreadyExistsDetails(null)
                     : status == "INVALID_ARGUMENT" ? new InvalidArgumentDetails("arguments", Array.Empty<string>())
                     : new PreconditionFailedDetails("engineering-before-operation", null);
-                error = new Error("The engineering request was rejected before execution.", details);
+                error = new Error(refusedScreenItemImport ? screenItemRefusal : "The engineering request was rejected before execution.", details);
             }
             else if (!writes) { outcome = Outcome.ReadFailed; error = NativeFailure(); }
             else if (succeeded > 0)

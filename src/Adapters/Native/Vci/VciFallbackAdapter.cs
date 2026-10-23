@@ -190,11 +190,11 @@ namespace TiaMcp.Adapters.Native.Vci
                         var formats = new[] { "xml" }; a.OperationIssued = true; var existing = w.Mappings.Find(target.Object);
 #endif
                         if (existing != null) { row["state"] = "already-mapped"; mappedParents.Add(target.Object); continue; }
-                        string format = formats.Contains("s7dcl") ? "s7dcl" : formats.Contains("xml") ? "xml" : formats[0];
+                        string format = TiaMcp.Adapters.Native.Vci.VciExportPolicy.PreferredFormat(formats)!;
                         string name = "object_" + CandidatePrimitives.ByteHash(System.Text.Encoding.UTF8.GetBytes(target.RelativePath + "\n" + target.Name));
                         row["execution"] = "unknown"; a.WriteIssued = true;
 #if STUDIO_VCI_MODERN
-                        var created = NativeVci.Export(w, target.Object, new DirectoryInfo(TiaOpenness.Shared.NativePathSelection.FullPath(root)), name, format);
+                        var created = NativeVci.Export(w, target.Object, TiaMcp.Adapters.Native.Vci.VciExportPolicy.RootDirectory(), name, format);
                         row["mappedObject"] = MappingId(created);
 #else
                         var created = w.Mappings.Create(name + ".xml", target.Object);

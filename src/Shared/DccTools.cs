@@ -179,7 +179,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 });
                 return _dcc.ManageDccChartPartition(devicePathJson,itemPathJson,chartPath,partitionName,action,propertiesJson,driveObjectNumber,driveObjectIndex,confirmDelete,dryRun);
             });
-        [McpServerTool(Name="ManageDcbLibraries"), Description("[L2][Hardware][WRITE] DCB libraries: read lists the DcbLibrary entries used by the drive object's charts (library name, version, DcbBlockType name / description); import calls the V21 DcbLibraryImporter.ImportDcbLibrary(filePath .zip) on the project library (DCB extension library; NotSupported on V20). Default preview; no save. Current native policy; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ManageDcbLibraries"), Description("[L2][Hardware][WRITE] DCB libraries: read lists the DcbLibrary entries used by the drive object's charts (library name, version, DcbBlockType name / description); import calls ProjectLibrary.ImportDcbLibrary(filePath .zip) on V16-V20 and the DcbLibraryImporter service on V21. Reading drive DCB libraries requires V18+; V16/V17 support import only. Default preview; no save. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult ManageDcbLibraries(
             [Description("action: the operation to perform - read | import.")] string action="read",
             string[] devicePath = null!,

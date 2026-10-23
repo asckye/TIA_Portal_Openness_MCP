@@ -415,7 +415,10 @@ namespace TiaMcp.Adapters.Native.Optional
                 using var access = write ? _session.AcquireHmiEditAccess() : null;
                 var file = HardwareServicesLogic.RequireExistingInputFile(filePath, "filePath"); meta["file"] = file.FullName;
 #if !OPTIONAL_V21
-                throw new PlcSoftwareException("NotSupportedOnVersion", "DcbLibraryImporter.ImportDcbLibrary is a V21 addition; absent on V20.");
+                if (!write) return "DCB extension library import preview; nothing imported into the project library.";
+                meta["mayHaveChanged"] = true; meta["nativeSignature"] = "ProjectLibrary.ImportDcbLibrary(string)";
+                _session.CurrentProject!.ProjectLibrary.ImportDcbLibrary(file.FullName);
+                return "DCB extension library imported into the project library; no save.";
 #else
                 var importer = (_session.CurrentProject!.ProjectLibrary as IEngineeringServiceProvider)?.GetService<DcbLibraryImporter>() ?? _session.CurrentProject.GetService<DcbLibraryImporter>()
                     ?? throw new PlcSoftwareException("NotSupportedOnVersion", "DcbLibraryImporter unavailable (SINAMICS DCC not installed).");

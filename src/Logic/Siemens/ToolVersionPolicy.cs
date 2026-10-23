@@ -61,7 +61,7 @@ namespace TiaMcpServer.Siemens
             string[]? v21Actions = null;
             string defaultAction = "read";
             if (name.Equals("ManageDcbLibraries", StringComparison.OrdinalIgnoreCase))
-            { allowed = new[] { "read", "import" }; v21Actions = new[] { "import" }; }
+            { allowed = new[] { "read", "import" }; v21Actions = Array.Empty<string>(); }
             if (name.Equals("ManageDriveHardwareModule", StringComparison.OrdinalIgnoreCase))
             { allowed = new[] { "read", "changeType", "setPositionNumber" }; v21Actions = new[] { "changeType", "setPositionNumber" }; }
             if (name.Equals("ManagePlcProtection", StringComparison.OrdinalIgnoreCase))

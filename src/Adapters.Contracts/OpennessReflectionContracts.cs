@@ -5,6 +5,55 @@ namespace TiaMcp.Adapters.Contracts
 {
     public static class OpennessReflectionPolicy
     {
+        // Reflection is not an alternate write route around confirmation/offline/incident guards.
+        // CLR getters and the existing read methods remain available.
+        public static string? GuardedWriteRefusal(string typeName, string method, int argumentCount)
+        {
+            if (method.StartsWith("Get", StringComparison.OrdinalIgnoreCase)
+                || method.StartsWith("get_", StringComparison.OrdinalIgnoreCase)
+                || method.StartsWith("Is", StringComparison.OrdinalIgnoreCase)
+                || method.StartsWith("Can", StringComparison.OrdinalIgnoreCase)
+                || method.Equals("ToString", StringComparison.OrdinalIgnoreCase) || method.Equals("Equals", StringComparison.OrdinalIgnoreCase)
+                || method.Equals("CheckValidity", StringComparison.OrdinalIgnoreCase)) return null;
+            if (method.Equals("ProtectProject", StringComparison.OrdinalIgnoreCase) || method.Equals("UnprotectProject", StringComparison.OrdinalIgnoreCase))
+                return "Project protection writes are not exposed through reflection. Use GetProjectProtection / ManageProjectUserManagement for the guarded project-protection surface.";
+            string? tool = null;
+            if (typeName.StartsWith("Siemens.Engineering.SafetyValidation.", StringComparison.Ordinal))
+                tool = "ManageSafetyActivationTest / ManageSafetyFunction / ManageSafetyFunctionCondition";
+            else if (typeName.StartsWith("Siemens.Engineering.Safety.", StringComparison.Ordinal))
+            {
+                if (typeName == "Siemens.Engineering.Safety.GlobalSettings")
+                {
+                    if (argumentCount == 0 && (method.Equals("SafetyModificationsPossible", StringComparison.OrdinalIgnoreCase) || method.Equals("GenerationOfDefaultFailsafeProgram", StringComparison.OrdinalIgnoreCase)
+                        || method.Equals("ManagementOfFailsafeInSoftwareUnitsEnvironment", StringComparison.OrdinalIgnoreCase) || method.Equals("UsernameForFChangeHistory", StringComparison.OrdinalIgnoreCase))) return null;
+                    tool = "ManageSafetyGlobalSettings";
+                }
+                else tool = typeName == "Siemens.Engineering.Safety.SafetyPrintout" ? "ExportSafetyPrintout" : "ManagePlcSafety";
+            }
+            else if (typeName.StartsWith("Siemens.Engineering.Umac.", StringComparison.Ordinal))
+                tool = "ManageProjectUserManagement / ManageUmcUsers / ManagePasswordPolicy";
+            else if (typeName.StartsWith("Siemens.Engineering.Security.", StringComparison.Ordinal))
+                tool = "ManagePlcCertificate / ManageSyslogServers / ManagePasswordPolicy";
+            else if (typeName.StartsWith("Siemens.Engineering.AdvancedProtection.", StringComparison.Ordinal)) tool = "GetProjectProtection";
+            else if (typeName.StartsWith("Siemens.Engineering.HW.DeviceUserGroup", StringComparison.Ordinal)) tool = "ManageDeviceUserGroup";
+            else if (typeName == "Siemens.Engineering.MC.Drives.SafetyAcceptanceTestProvider") tool = "ManageDriveSafetyAcceptanceTest";
+            else if (typeName == "Siemens.Engineering.MC.Drives.DFI.SafetyCommissioning" || typeName == "Siemens.Engineering.MC.Drives.DFI.FunctionInUse") tool = "ManageDriveFunctions";
+            else if (typeName == "Siemens.Engineering.SW.Blocks.PlcBlockProtectionProvider") tool = "ManagePlcBlockProtection";
+            else if (typeName == "Siemens.Engineering.SW.Blocks.PlcBlockWriteProtectionProvider") tool = "ManagePlcBlockWriteProtection";
+            else if (typeName == "Siemens.Engineering.HmiUnified.Library.ScriptModuleType") tool = "ManageLibraryType";
+            else if (typeName.StartsWith("Siemens.Engineering.HW.Features.", StringComparison.Ordinal))
+            {
+                string name = typeName.Substring("Siemens.Engineering.HW.Features.".Length);
+                if (name.StartsWith("PlcAccess", StringComparison.Ordinal) || name == "PlcMasterSecretConfigurator") tool = "ManagePlcProtection";
+                else if (name.IndexOf("PasswordPolicy", StringComparison.Ordinal) >= 0) tool = "ManagePasswordPolicy";
+                else if (name.IndexOf("UserManagement", StringComparison.Ordinal) >= 0 || name.StartsWith("User", StringComparison.Ordinal) || name.StartsWith("Role", StringComparison.Ordinal)) tool = "ManageDeviceUsers / ManageDeviceUserGroup";
+                else if (name.IndexOf("SysLog", StringComparison.OrdinalIgnoreCase) >= 0) tool = "ManageSyslogServers";
+                else if (name.IndexOf("Certificate", StringComparison.Ordinal) >= 0) tool = "ManagePlcCertificate";
+                else if (name.IndexOf("Watch", StringComparison.Ordinal) >= 0 || name.IndexOf("Force", StringComparison.Ordinal) >= 0) tool = "ManageWatchForceTableWebAccess";
+            }
+            return tool == null ? null : "Reflection writes to " + typeName + " are refused. Use the guarded " + tool + " tool.";
+        }
+
         public static string? ReflectionRefusal(string? service, string? method)
         {
             const string type = "Siemens.Engineering.CrossReference.CrossReferenceService";

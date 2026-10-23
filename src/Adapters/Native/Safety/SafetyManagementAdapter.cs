@@ -170,9 +170,19 @@ namespace TiaMcp.Adapters.Native.Safety
                 meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 bool writing = SafetyLogic.ValidateRequest(action, runtimeGroup, password, confirmSafetyChange, dryRun);
                 bool editsProgram = SafetyProgramEditingActions.Contains(action);
-                using var access = writing ? _session.AcquireHmiEditAccess() : null;
-                // Login/logoff/password administration do not change the F-program, so Offline is only demanded for program edits.
-                var plc = _session.ExactPlcForEngineering(softwarePath, writing && editsProgram);
+                using var access = writing && action != "createRuntimeGroup" ? _session.AcquireHmiEditAccess() : null;
+                var plc = _session.ExactPlcForEngineering(softwarePath, writing && SafetyLogic.RequiresOffline(action));
+                PlcBlock? mainBlock = null, instanceDb = null;
+                if (action == "createRuntimeGroup")
+                {
+                    if (!string.IsNullOrWhiteSpace(mainSafetyBlockPath)) mainBlock = _session.ExactMasterCopyPlcSource(softwarePath, mainSafetyBlockPath, true) as PlcBlock ?? throw new ArgumentException("mainSafetyBlockPath must identify a block.");
+                    if (!string.IsNullOrWhiteSpace(mainSafetyInstanceDbPath)) instanceDb = _session.ExactMasterCopyPlcSource(softwarePath, mainSafetyInstanceDbPath, true) as PlcBlock ?? throw new ArgumentException("mainSafetyInstanceDbPath must identify a block.");
+                    if (instanceDb == null && mainBlock != null && mainBlock is not FC)
+                        throw new ArgumentException("Create(name, mainSafetyBlock) requires an FC. An FB requires its instance DB.");
+                    if (instanceDb != null && (mainBlock is not FB || instanceDb is not InstanceDB idb || idb.InstanceOfName != mainBlock.Name))
+                        throw new ArgumentException("Create(name, FB, IDB) requires an FB and its own instance DB (InstanceOfName must match).");
+                }
+                using var creationAccess = writing && action == "createRuntimeGroup" ? _session.AcquireHmiEditAccess() : null;
                 var administration = RequireSafetyAdministration(softwarePath, plc);
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["passwordProvided"] = !string.IsNullOrEmpty(password);
                 meta["administration"] = new HmiObject
@@ -207,13 +217,6 @@ namespace TiaMcp.Adapters.Native.Safety
                 {
                     case "createRuntimeGroup":
                     {
-                        PlcBlock? mainBlock = null, instanceDb = null;
-                        if (!string.IsNullOrWhiteSpace(mainSafetyBlockPath)) mainBlock = _session.ExactMasterCopyPlcSource(softwarePath, mainSafetyBlockPath, true) as PlcBlock ?? throw new ArgumentException("mainSafetyBlockPath must identify a block.");
-                        if (!string.IsNullOrWhiteSpace(mainSafetyInstanceDbPath))
-                        {
-                            if (mainBlock == null) throw new ArgumentException("mainSafetyInstanceDbPath requires mainSafetyBlockPath (main safety FB).");
-                            instanceDb = _session.ExactMasterCopyPlcSource(softwarePath, mainSafetyInstanceDbPath, true) as PlcBlock ?? throw new ArgumentException("mainSafetyInstanceDbPath must identify a block.");
-                        }
                         meta["overload"] = mainBlock == null ? "Create(name): TIA generates main safety FB + IDB" : instanceDb == null ? "Create(name, mainSafetyFC)" : "Create(name, mainSafetyFB, mainSafetyIDB)";
                         if (!writing) return "Runtime group creation preview; no modification.";
                         meta["mayHaveChanged"] = true;
@@ -256,6 +259,16 @@ namespace TiaMcp.Adapters.Native.Safety
                         if (changes.Scalars.ContainsKey("SafetyModeCanBeDisabled") && !confirmSafetyChange) throw new ArgumentException("Changing SafetyModeCanBeDisabled requires confirmSafetyChange=true.");
                         var prepared = EngineeringScalarProperties.Prepare(typeof(SafetySettings), changes.Scalars);
                         var preparedNumbers = EngineeringScalarProperties.Prepare(typeof(AssignmentOfBlockNumbers), changes.BlockNumbers);
+                        AssignmentOfBlockNumbers? numbers = null;
+                        if (preparedNumbers.Count > 0)
+                        {
+                            numbers = settings.AssignmentOfBlockNumbers ?? throw new NotSupportedException("AssignmentOfBlockNumbers unavailable on this F-CPU.");
+                            var ranges = preparedNumbers.Where(p => p.Property.Name != "ManagementMode")
+                                .ToDictionary(p => p.Property.Name, p => Convert.ToInt32(p.Value));
+                            var order = new[] { "ManagementMode" }.Concat(SafetyLogic.OrderBlockNumberChanges(ranges,
+                                name => Convert.ToInt32(typeof(AssignmentOfBlockNumbers).GetProperty(name)!.GetValue(numbers)))).ToArray();
+                            preparedNumbers = preparedNumbers.OrderBy(p => Array.IndexOf(order, p.Property.Name)).ToList();
+                        }
                         SafetySystemVersion? version = null;
                         if (changes.SafetySystemVersion != null)
                         {
@@ -270,9 +283,8 @@ namespace TiaMcp.Adapters.Native.Safety
                         EngineeringScalarProperties.Apply(settings, prepared, meta);
                         if (preparedNumbers.Count > 0)
                         {
-                            var numbers = settings.AssignmentOfBlockNumbers ?? throw new NotSupportedException("AssignmentOfBlockNumbers unavailable on this F-CPU.");
-                            // ManagementMode first: fixed ranges are rejected natively while the F-system manages the numbers.
-                            EngineeringScalarProperties.Apply(numbers, preparedNumbers.OrderBy(p => p.Property.Name == "ManagementMode" ? 0 : 1).ToList(), meta);
+                            // ManagementMode first, then each prevalidated direction-aware range.
+                            EngineeringScalarProperties.Apply(numbers!, preparedNumbers, meta);
                         }
                         if (version != null) { meta["mayHaveChanged"] = true; settings.SafetySystemVersion = version; if (settings.SafetySystemVersion?.Value != version.Value) throw new InvalidOperationException("SafetySystemVersion readback differs."); }
                         ApplySafetyAttributes(settings, changes.Attributes, meta);
@@ -337,7 +349,7 @@ namespace TiaMcp.Adapters.Native.Safety
                         if (administration.IsSafetyOfflineProgramPasswordSet) throw new InvalidOperationException("A safety offline program password is already set; revoke it first.");
                         if (!writing) return "Set-password preview; no native call.";
                         meta["mayHaveChanged"] = true;
-                        using (var secure = PlcBlockServicesLogic.ToSecureString(password)) administration.SetSafetyOfflineProgramPassword(secure);
+                        ApplyPassword(() => { using var secure = PlcBlockServicesLogic.ToSecureString(password); administration.SetSafetyOfflineProgramPassword(secure); }, meta);
                         meta["apiCallSuccess"] = true;
                         if (!administration.IsSafetyOfflineProgramPasswordSet) throw new InvalidOperationException("SetSafetyOfflineProgramPassword returned but IsSafetyOfflineProgramPasswordSet is still false.");
                         break;
@@ -347,7 +359,7 @@ namespace TiaMcp.Adapters.Native.Safety
                         if (!administration.IsSafetyOfflineProgramPasswordSet) throw new InvalidOperationException("No safety offline program password is set.");
                         if (!writing) return "Revoke-password preview; no native call.";
                         meta["mayHaveChanged"] = true;
-                        using (var secure = PlcBlockServicesLogic.ToSecureString(password)) administration.RevokeSafetyOfflineProgramPassword(secure);
+                        ApplyPassword(() => { using var secure = PlcBlockServicesLogic.ToSecureString(password); administration.RevokeSafetyOfflineProgramPassword(secure); }, meta);
                         meta["apiCallSuccess"] = true;
                         if (administration.IsSafetyOfflineProgramPasswordSet) throw new InvalidOperationException("RevokeSafetyOfflineProgramPassword returned but the password is still set.");
                         break;
@@ -362,6 +374,16 @@ namespace TiaMcp.Adapters.Native.Safety
                     ? "Offline Safety engineering action completed; no F-compile, save or download. Collective/block F-signatures change only after an F-compile in TIA; safety acceptance is still required."
                     : "Safety administration action completed; no project content changed.";
             });
+
+        private static void ApplyPassword(Action apply, HmiObject meta)
+        {
+            try { apply(); }
+            catch (Exception error) when (SafetyLogic.IsPasswordRefusal(error) && !HmiReadSafety.ConnectionUnavailable(error))
+            {
+                meta["mayHaveChanged"] = false;
+                throw;
+            }
+        }
 
         private static void ApplySafetyAttributes(IEngineeringObject owner, HmiObject attributes, HmiObject meta)
         {

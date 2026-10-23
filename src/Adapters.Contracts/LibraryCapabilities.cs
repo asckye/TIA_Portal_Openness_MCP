@@ -4,6 +4,8 @@ namespace TiaMcp.Adapters.Contracts
 {
     public static class LibraryCapabilities
     {
+        public const string ScreenItemMasterCopyRefusal = "no Openness API for screen-item instantiation from a master copy. Use the documented XML/document import path (ImportHmiScreen) with a document exported for the target release.";
+
         public static string? Unsupported(string release, string operation, string action = "", string sourceKind = "",
             System.Collections.Generic.IEnumerable<string>? properties = null,
             string forceUpdateMode = "SetOnlyHigherUpdatedVersionAsDefault", string deleteUnusedVersionsMode = "DoNotDelete", string structureConflictResolutionMode = "RetainStructure")

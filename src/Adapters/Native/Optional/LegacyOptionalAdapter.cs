@@ -814,7 +814,21 @@ internal sealed class LegacyOptionalAdapter
 
     private string DcbLibraries(HmiObject meta)
     {
-        DccPolicy.ValidateLibraryRequest(_request.Action, _request.FilePath, _request.DryRun);
+        bool writing = DccPolicy.ValidateLibraryRequest(_request.Action, _request.FilePath, _request.DryRun);
+        if (_request.Action == "import")
+        {
+            var file = OptionalRules.RequireExistingInputFile(_request.FilePath, "filePath");
+            meta["file"] = file.FullName; meta["action"] = _request.Action; meta["dryRun"] = _request.DryRun;
+#if LIBRARY_DCB_IMPORT
+            if (!writing) return "DCB extension library import preview; nothing imported into the project library.";
+            using var access = Edit(true);
+            meta["mayHaveChanged"] = true; meta["nativeSignature"] = "ProjectLibrary.ImportDcbLibrary(string)";
+            _engine.PlcB5Session.CurrentProject!.ProjectLibrary.ImportDcbLibrary(file.FullName);
+            return "DCB extension library imported into the project library; no save.";
+#else
+            throw new NotSupportedException("ProjectLibrary.ImportDcbLibrary requires V16 or later; V21 uses DcbLibraryImporter.");
+#endif
+        }
         Page(Items(Get(Dcc(), "DcbLibraries")), meta);
         return "DCB libraries of the selected drive object read; no import.";
     }

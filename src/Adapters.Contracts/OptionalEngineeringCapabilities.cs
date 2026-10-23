@@ -50,8 +50,8 @@ public static class OptionalEngineeringCapabilities
             return "The requested optional-product service requires V21.";
         if (major < 21 && request.Operation == "ManageDriveHardwareModule" && request.Action != "read")
             return "DriveItemHardwareModule writes require V21.";
-        if (major < 21 && request.Operation == "ManageDcbLibraries" && request.Action != "read")
-            return "DcbLibraryImporter requires V21.";
+        if (major < 18 && request.Operation == "ManageDcbLibraries" && request.Action == "read")
+            return "Reading drive DCB libraries requires V18 or later; extension-library import is available from V16.";
         if (major < 21 && request.Operation == "ManageSivarcBlockDefinition" && request.Kind is "tagMemberSettings" or "commonParameters" or "blockParameter")
             return "SiVArc tag member configuration requires V21.";
         if (major < 18 && request.Operation == "ManageDccChart" && request.Action == "create")

@@ -20,6 +20,7 @@
     <Compile Include="../OpennessSessionFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/OpennessVersionControl.cs" Link="OpennessVersionControl.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Vci/VersionControlPrimitives.cs" Link="VersionControlPrimitives.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Vci/VciExportPolicy.cs" Link="VciExportPolicy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Plc/PlcBlockPrimitives.cs" Link="PlcBlockPrimitives.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/PlcNavigator.cs" Link="PlcNavigator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Hardware/ProjectDeviceWalk.cs" Link="ProjectDeviceWalk.cs" />

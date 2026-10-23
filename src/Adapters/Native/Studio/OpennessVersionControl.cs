@@ -236,7 +236,7 @@ namespace TiaOpenness.Openness
                 flat += "_" + BitConverter.ToString(digest, 0, 4).Replace("-", "").ToLowerInvariant();
             }
 #if STUDIO_VCI_MODERN
-            VersionControlPrimitives.Export(workspace, node.Object, new DirectoryInfo(TiaOpenness.Shared.NativePathSelection.FullPath(rootPath)), flat, format);
+            VersionControlPrimitives.Export(workspace, node.Object, TiaMcp.Adapters.Native.Vci.VciExportPolicy.RootDirectory(), flat, format);
 #else
             var mapping = Keep(Keep(workspace.Mappings).Create(flat + ".xml", node.Object));
             var service = Keep(mapping.GetService<IndividualObjectSynchronizationStatus>());
@@ -503,10 +503,7 @@ namespace TiaOpenness.Openness
         /// <summary>s7dcl is the reviewable text format; the others are fallbacks.</summary>
         private static string PreferredFormat(IList<string> formats)
         {
-            return formats.FirstOrDefault(f => f.IndexOf("s7dcl", StringComparison.OrdinalIgnoreCase) >= 0)
-                ?? formats.FirstOrDefault(f => f.IndexOf("simatic", StringComparison.OrdinalIgnoreCase) >= 0)
-                ?? formats.FirstOrDefault(f => f.IndexOf("xml", StringComparison.OrdinalIgnoreCase) >= 0)
-                ?? formats[0];
+            return TiaMcp.Adapters.Native.Vci.VciExportPolicy.PreferredFormat(formats)!;
         }
 
         // ---- service and lifetime ------------------------------------------

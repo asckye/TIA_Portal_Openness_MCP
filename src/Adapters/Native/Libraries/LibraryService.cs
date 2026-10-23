@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using TiaMcp.Adapters.Engineering;
 using Siemens.Engineering;
 using Siemens.Engineering.Library;
@@ -27,8 +26,10 @@ namespace TiaMcp.Adapters
             => RunEngineeringServicesStep("ManageLibraryTypeVersion", meta => {
                 if (!new[] { "read", "edit", "release", "setDefault", "deleteVersion", "updateInstances", "discard", "findInstances" }.Contains(action)) throw new ArgumentException("action must be one of: read/edit/release/setDefault/deleteVersion/updateInstances/discard/findInstances (case-sensitive).");
                 bool writing = action != "read" && action != "findInstances" && !dryRun;
-                using var access = writing ? HardwareEditAccess() : null;
+                using var access = writing && action != "edit" && action != "discard" ? HardwareEditAccess() : null;
                 var library = ExactOpenEngineeringLibrary(libraryName);
+                if ((action == "edit" || action == "discard") && library is not ProjectLibrary)
+                    throw new NotSupportedException("Library version edit/discard is supported only in the project library.");
                 var parts = PlcGroupOperations.Parts(typePath);
                 var folder = EngineeringLibraryFolder(library, string.Join("/", parts.Take(parts.Length - 1)), "TypeFolder");
                 var type = (LibraryType)(PlcGroupOperations.Find(PlcGroupOperations.Get(folder, "Types"), parts.Last()) ?? throw new InvalidOperationException("Exact library type not found."));
@@ -38,11 +39,21 @@ namespace TiaMcp.Adapters
                 meta["before"] = HardwareScalarEvidence.Read(selected); meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 meta["typePath"] = typePath; meta["libraryName"] = libraryName; meta["action"] = action;
 #if LIBRARY_V20
+                LibraryTypeInstanceInfo? editInstance = null;
                 CreateOrReleaseDependenciesMode mode = default;
 #endif
                 Version? releaseVersion = null;
                 IUpdateProjectScope? scope = null;
 #if LIBRARY_V20
+                if (action == "edit" && new[] { "codeBlock", "plcType", "plcDocument" }.Contains(LibraryTypeKind(type)))
+                {
+                    if (string.IsNullOrWhiteSpace(targetSoftwarePath)) throw new ArgumentException("STEP 7 type edit requires exact targetSoftwarePath containing a single instance of this version.");
+                    var search = EngineeringPlcSession.ResolveSoftwareContainerUncached(targetSoftwarePath)?.Software as IInstanceSearchScope
+                        ?? throw new NotSupportedException("Selected software does not support instance search.");
+                    var instances = selected.FindInstances(search).Take(2).ToArray();
+                    if (instances.Length != 1) throw new ArgumentException("STEP 7 type edit requires exactly one instance in targetSoftwarePath; found " + instances.Length + ". Use a software scope with a single matching instance; ambiguous edits are refused.");
+                    editInstance = instances[0];
+                }
                 if (action == "release")
                 {
                     mode = (CreateOrReleaseDependenciesMode)HardwareAddressingPolicy.ConvertValue(new HardwareScalar { Kind = "string", Text = dependenciesMode }, typeof(CreateOrReleaseDependenciesMode))!;
@@ -65,11 +76,12 @@ namespace TiaMcp.Adapters
                     return "Native instances found in selected software; scalar result scope only.";
                 }
                 if (!writing) return "Library version read/preview. No modification; native semantic/state checks run only on execution.";
+                using var editAccess = action == "edit" || action == "discard" ? HardwareEditAccess() : null;
                 meta["mayHaveChanged"] = true;
                 switch (action)
                 {
 #if LIBRARY_V20
-                    case "edit": selected = selected.Edit(); break;
+                    case "edit": selected = editInstance == null ? selected.Edit() : selected.Edit(editInstance); break;
                     case "discard": selected.Discard(); meta["discardedEditVersion"] = true; break;
                     case "release": selected.Release(mode, releaseVersion!, author, comment); break;
 #endif
@@ -450,6 +462,7 @@ namespace TiaMcp.Adapters
                     }
                     case "updateProject":
                     {
+                        LibraryPolicy.ValidateProjectUpdateModes(library is ProjectLibrary, forceUpdateMode, structureConflictResolutionMode);
                         var scopes = ResolveScopes(scopePaths, meta);
                         meta["modes"] = new Dictionary<string, object?> { ["forceUpdateMode"] = forceUpdateMode, ["deleteUnusedVersionsMode"] = deleteUnusedVersionsMode, ["structureConflictResolutionMode"] = structureConflictResolutionMode };
                         if (dryRun) return "UpdateProject preview; nothing changed (a global library source synchronizes the project library first).";
@@ -851,160 +864,7 @@ namespace TiaMcp.Adapters
             string importedItemName = "",
             int left = 0,
             int top = 0)
-        {
-            var attempts = new List<string>();
-            var warnings = new List<string>();
-            var raw = new Dictionary<string, object?>
-            {
-                ["timestamp"] = DateTime.Now.ToString("O"),
-                ["inputPath"] = libraryPath,
-                ["masterCopyName"] = masterCopyName,
-                ["hmiSoftwarePath"] = hmiSoftwarePath,
-                ["screenName"] = screenName,
-                ["left"] = left,
-                ["top"] = top
-            };
-
-            try
-            {
-                if (portal == null)
-                {
-                    return GlobalLibraryImportFailure("TIA Portal is not connected. Call ConnectPortal first.");
-                }
-
-                if ((project == null))
-                {
-                    return GlobalLibraryImportFailure("Project is null. Open or attach a temporary project first.");
-                }
-
-                if (string.IsNullOrWhiteSpace(masterCopyName))
-                {
-                    return GlobalLibraryImportFailure("masterCopyName is required and must come from ProbeGlobalLibrary readback.");
-                }
-
-                var resolved = ResolveGlobalLibraryFile(libraryPath);
-                raw["resolvedLibraryFile"] = resolved ?? "";
-                if (string.IsNullOrWhiteSpace(resolved) || !File.Exists(resolved))
-                {
-                    return GlobalLibraryImportFailure("Global library .al file not found.");
-                }
-
-                var globalLibraries = TryGetPropertyValue(portal, "GlobalLibraries");
-                raw["globalLibrariesType"] = globalLibraries?.GetType().FullName ?? "";
-                if (globalLibraries == null)
-                {
-                    return GlobalLibraryImportFailure("TiaPortal.GlobalLibraries property not found.");
-                }
-
-                var screen = ResolveLibraryHmiScreen(hmiSoftwarePath, screenName);
-                var screenItems = TryGetPropertyValue(screen, "ScreenItems");
-                if (screenItems == null)
-                {
-                    return GlobalLibraryImportFailure("Target screen has no ScreenItems collection.");
-                }
-
-                var before = ListNamedChildren(screenItems, 200);
-                raw["screenItemsBefore"] = LibraryList(before);
-
-                // Reuse a library already opened by the user or ManageGlobalLibrary and leave it open afterwards.
-                bool wasAlreadyOpen = false;
-                object? library = FindOpenGlobalLibraryByFile(globalLibraries, resolved!);
-                string? openError = null;
-                if (library != null) wasAlreadyOpen = true; else library = TryOpenGlobalLibrary(globalLibraries, resolved!, out openError);
-                if (library == null)
-                {
-                    return GlobalLibraryImportFailure(openError ?? "Failed to open global library.");
-                }
-
-                try
-                {
-                    var masterCopy = FindLibraryObjectByPathOrName(library, masterCopyName, attempts, "MasterCopies", "MasterCopyFolder", "MasterCopyFolders", "MasterCopyGroups", "Folders");
-                    if (masterCopy == null)
-                    {
-                        raw["libraryMembers"] = string.Join(" | ", LibraryReflectionValues.DescribeMembers(library, 160).Select(m => $"{m.Kind}:{m.Name}:{m.Type}"));
-                        return GlobalLibraryImportFailure("MasterCopy was not found by exact/suffix path or name.");
-                    }
-
-                    raw["masterCopyType"] = masterCopy.GetType().FullName ?? masterCopy.GetType().Name;
-                    raw["masterCopyMembers"] = new List<object?>(LibraryReflectionValues.DescribeMembers(masterCopy, 240)
-                        .Select(m => LibraryValue($"{m.Kind}:{m.Name}:{m.Type}:{m.Signature}"))
-                        .ToArray());
-                    raw["masterCopyAttributes"] = LibraryList(LibraryInterestingAttributes(masterCopy));
-                    var expectedName = string.IsNullOrWhiteSpace(importedItemName)
-                        ? LastPathSegment(masterCopyName)
-                        : importedItemName.Trim();
-
-                    object? imported = TryImportMasterCopyIntoScreen(screen, screenItems, masterCopy, expectedName, left, top, attempts);
-                    if (imported != null)
-                    {
-                        LibraryTrySetProperty(imported, "Left", left);
-                        LibraryTrySetProperty(imported, "Top", top);
-                        if (!string.IsNullOrWhiteSpace(expectedName))
-                            LibraryTrySetProperty(imported, "Name", expectedName);
-                    }
-
-                    var after = ListNamedChildren(screenItems, 500);
-                    raw["screenItemsAfter"] = LibraryList(after);
-                    var readbackName = ResolveImportedReadbackName(before, after, expectedName);
-                    var ok = !string.IsNullOrWhiteSpace(readbackName);
-                    if (!ok)
-                    {
-                        warnings.Add("Import attempts finished, but the target screen item was not visible in readback.");
-                        if (!attempts.Any(x => x.StartsWith("Try ", StringComparison.OrdinalIgnoreCase) || x.StartsWith("Try source ", StringComparison.OrdinalIgnoreCase)))
-                        {
-                            warnings.Add("No compatible public Openness import/copy method was found. The target ScreenItems collection exposed only create-style methods, and the MasterCopy object exposed no copy/instantiate method.");
-                        }
-                    }
-
-                    return new GlobalLibraryImportEvidence
-                    {
-                        Ok = ok,
-                        Message = ok
-                            ? "Global library MasterCopy imported and read back from target screen"
-                            : "Global library MasterCopy import did not produce screen-item readback evidence",
-                        LibraryPath = libraryPath,
-                        ResolvedLibraryFile = resolved,
-                        MasterCopyName = masterCopyName,
-                        HmiSoftwarePath = hmiSoftwarePath,
-                        ScreenName = screenName,
-                        ImportedItemName = readbackName ?? expectedName,
-                        Attempts = attempts,
-                        ReadbackItems = after,
-                        Warnings = warnings,
-                        Error = ok ? null : "No matching/new ScreenItems readback after import.",
-                        Raw = raw
-                    };
-                }
-                finally
-                {
-                    if (!wasAlreadyOpen) TryCloseOrDispose(library);
-                }
-            }
-            catch (Exception ex)
-            {
-                return GlobalLibraryImportFailure((FormatEngineeringException?.Invoke(ex) ?? ex.ToString()));
-            }
-
-            GlobalLibraryImportEvidence GlobalLibraryImportFailure(string error)
-            {
-                return new GlobalLibraryImportEvidence
-                {
-                    Ok = false,
-                    Message = "Global library MasterCopy import failed",
-                    LibraryPath = libraryPath,
-                    ResolvedLibraryFile = raw["resolvedLibraryFile"]?.ToString(),
-                    MasterCopyName = masterCopyName,
-                    HmiSoftwarePath = hmiSoftwarePath,
-                    ScreenName = screenName,
-                    ImportedItemName = importedItemName,
-                    Attempts = attempts,
-                    ReadbackItems = Array.Empty<string>(),
-                    Warnings = warnings,
-                    Error = error,
-                    Raw = raw
-                };
-            }
-        }
+            => LibraryPolicy.RefuseScreenItemMasterCopyImport(libraryPath, masterCopyName, hmiSoftwarePath, screenName, importedItemName);
 
         private static string? ResolveGlobalLibraryFile(string libraryPath)
         {
@@ -1199,417 +1059,6 @@ namespace TiaMcp.Adapters
             return Visit(root, "", 0);
         }
 
-        private object? TryImportMasterCopyIntoScreen(object screen, object screenItems, object masterCopy, string expectedName, int left, int top, List<string> attempts)
-        {
-            var targets = new[] { screenItems, screen }.Where(x => x != null).Distinct(EngineeringPlcSession.ReferenceEqualityComparer).ToArray();
-            var sourceArgs = new[] { masterCopy, TryGetPropertyValue(masterCopy, "Content"), TryGetPropertyValue(masterCopy, "Object") }
-                .Where(x => x != null)
-                .Distinct(EngineeringPlcSession.ReferenceEqualityComparer!)
-                .ToArray();
-
-            foreach (var target in targets)
-            {
-                attempts.Add("Target candidate methods on " + target.GetType().FullName + ": " + string.Join(" | ", DescribeMasterCopyCandidateMethods(target).Take(80)));
-                foreach (var method in target.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                             .Where(m => IsMasterCopyImportMethodName(m.Name)))
-                {
-                    var ps = method.GetParameters();
-                    foreach (var source in sourceArgs)
-                    {
-                        if (!CanAssignParameter(ps, source))
-                            continue;
-
-                        if (!TryBuildMasterCopyImportArgs(ps, source!, expectedName, left, top, out var args))
-                        {
-                            attempts.Add($"Skip {target.GetType().Name}.{method.Name}: unsupported parameters ({string.Join(", ", ps.Select(p => p.ParameterType.Name))})");
-                            continue;
-                        }
-
-                        try
-                        {
-                            attempts.Add($"Try {target.GetType().Name}.{method.Name}({string.Join(", ", ps.Select(p => p.ParameterType.Name))})");
-                            var result = method.Invoke(target, args);
-                            attempts.Add($"OK {target.GetType().Name}.{method.Name}: result={(result == null ? "<null>" : result.GetType().FullName)}");
-                            if (result != null) return result;
-                            var readback = FindExistingByName(screenItems, expectedName);
-                            if (readback != null) return readback;
-                        }
-                        catch (TargetInvocationException tie) when (tie.InnerException != null)
-                        {
-                            attempts.Add($"FAIL {target.GetType().Name}.{method.Name}: {tie.InnerException.GetType().FullName}: {tie.InnerException.Message}");
-                        }
-                        catch (Exception ex)
-                        {
-                            attempts.Add($"FAIL {target.GetType().Name}.{method.Name}: {ex.GetType().FullName}: {ex.Message}");
-                        }
-                    }
-                }
-            }
-
-            var extensionImported = TryImportMasterCopyViaExtensionMethods(screen, screenItems, masterCopy, expectedName, left, top, attempts);
-            if (extensionImported != null)
-                return extensionImported;
-
-            attempts.Add("Source candidate methods on " + masterCopy.GetType().FullName + ": " + string.Join(" | ", DescribeMasterCopyCandidateMethods(masterCopy).Take(120)));
-            foreach (var method in masterCopy.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                         .Where(m => IsMasterCopySourceMethodName(m.Name)))
-            {
-                var ps = method.GetParameters();
-                foreach (var target in targets)
-                {
-                    if (!CanAssignParameter(ps, target))
-                        continue;
-
-                    if (!TryBuildMasterCopySourceArgs(ps, target, screen, screenItems, expectedName, left, top, out var args))
-                    {
-                        attempts.Add($"Skip source {masterCopy.GetType().Name}.{method.Name}: unsupported parameters ({string.Join(", ", ps.Select(p => p.ParameterType.Name))})");
-                        continue;
-                    }
-
-                    try
-                    {
-                        attempts.Add($"Try source {masterCopy.GetType().Name}.{method.Name}({string.Join(", ", ps.Select(p => p.ParameterType.Name))})");
-                        var result = method.Invoke(masterCopy, args);
-                        attempts.Add($"OK source {masterCopy.GetType().Name}.{method.Name}: result={(result == null ? "<null>" : result.GetType().FullName)}");
-                        if (result != null) return result;
-                        var readback = FindExistingByName(screenItems, expectedName);
-                        if (readback != null) return readback;
-                    }
-                    catch (TargetInvocationException tie) when (tie.InnerException != null)
-                    {
-                        attempts.Add($"FAIL source {masterCopy.GetType().Name}.{method.Name}: {tie.InnerException.GetType().FullName}: {tie.InnerException.Message}");
-                    }
-                    catch (Exception ex)
-                    {
-                        attempts.Add($"FAIL source {masterCopy.GetType().Name}.{method.Name}: {ex.GetType().FullName}: {ex.Message}");
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        private object? TryImportMasterCopyViaExtensionMethods(object screen, object screenItems, object masterCopy, string expectedName, int left, int top, List<string> attempts)
-        {
-            var targets = new[] { screenItems, screen }.Where(x => x != null).Distinct(EngineeringPlcSession.ReferenceEqualityComparer).ToArray();
-            var sources = new[] { masterCopy, TryGetPropertyValue(masterCopy, "Content"), TryGetPropertyValue(masterCopy, "Object") }
-                .Where(x => x != null)
-                .Distinct(EngineeringPlcSession.ReferenceEqualityComparer!)
-                .ToArray();
-            var candidates = AppDomain.CurrentDomain.GetAssemblies()
-                .Where(a => (a.GetName().Name ?? "").StartsWith("Siemens.Engineering", StringComparison.OrdinalIgnoreCase))
-                .SelectMany(GetLoadableTypes)
-                .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Static))
-                .Where(m => m.IsDefined(typeof(ExtensionAttribute), false))
-                .Where(m => IsMasterCopyImportMethodName(m.Name) || IsMasterCopySourceMethodName(m.Name))
-                .Where(m => !m.ContainsGenericParameters)
-                .Take(300)
-                .ToList();
-
-            attempts.Add("Extension candidate methods: " + string.Join(" | ", candidates.Select(m => m.DeclaringType?.FullName + "." + m.Name + "(" + string.Join(", ", m.GetParameters().Select(p => p.ParameterType.FullName + " " + p.Name)) + ")").Take(120)));
-
-            foreach (var method in candidates)
-            {
-                var ps = method.GetParameters();
-                foreach (var target in targets)
-                foreach (var source in sources)
-                {
-                    if (!TryBuildMasterCopyExtensionArgs(ps, target, screen, screenItems, source!, expectedName, left, top, out var args))
-                        continue;
-
-                    try
-                    {
-                        attempts.Add($"Try extension {method.DeclaringType?.Name}.{method.Name}({string.Join(", ", ps.Select(p => p.ParameterType.Name))})");
-                        var result = method.Invoke(null, args);
-                        attempts.Add($"OK extension {method.DeclaringType?.Name}.{method.Name}: result={(result == null ? "<null>" : result.GetType().FullName)}");
-                        if (result != null) return result;
-                        var readback = FindExistingByName(screenItems, expectedName);
-                        if (readback != null) return readback;
-                    }
-                    catch (TargetInvocationException tie) when (tie.InnerException != null)
-                    {
-                        attempts.Add($"FAIL extension {method.DeclaringType?.Name}.{method.Name}: {tie.InnerException.GetType().FullName}: {tie.InnerException.Message}");
-                    }
-                    catch (Exception ex)
-                    {
-                        attempts.Add($"FAIL extension {method.DeclaringType?.Name}.{method.Name}: {ex.GetType().FullName}: {ex.Message}");
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        private static IEnumerable<Type> GetLoadableTypes(Assembly assembly)
-        {
-            try
-            {
-                return assembly.GetTypes();
-            }
-            catch (ReflectionTypeLoadException ex)
-            {
-                return ex.Types.Where(t => t != null)!;
-            }
-            catch
-            { /* swallow(probe-optional): Assemblies without readable type metadata contribute no extension-method candidates. */
-                return Array.Empty<Type>();
-            }
-        }
-
-        private static IEnumerable<string> DescribeMasterCopyCandidateMethods(object target)
-        {
-            return target.GetType()
-                .GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                .Where(m => IsMasterCopyImportMethodName(m.Name) || IsMasterCopySourceMethodName(m.Name) || m.Name.IndexOf("Create", StringComparison.OrdinalIgnoreCase) >= 0)
-                .Select(m => m.Name + "(" + string.Join(", ", m.GetParameters().Select(p => p.ParameterType.FullName + " " + p.Name)) + ") -> " + m.ReturnType.FullName)
-                .Distinct(StringComparer.OrdinalIgnoreCase);
-        }
-
-        private static bool IsMasterCopyImportMethodName(string name)
-        {
-            return name.Equals("CreateFrom", StringComparison.OrdinalIgnoreCase)
-                   || name.Equals("CreateFromMasterCopy", StringComparison.OrdinalIgnoreCase)
-                   || name.Equals("Import", StringComparison.OrdinalIgnoreCase)
-                   || name.Equals("ImportFrom", StringComparison.OrdinalIgnoreCase)
-                   || name.Equals("Paste", StringComparison.OrdinalIgnoreCase)
-                   || name.Equals("Insert", StringComparison.OrdinalIgnoreCase)
-                   || name.IndexOf("MasterCopy", StringComparison.OrdinalIgnoreCase) >= 0;
-        }
-
-        private static bool IsMasterCopySourceMethodName(string name)
-        {
-            return name.Equals("CopyTo", StringComparison.OrdinalIgnoreCase)
-                   || name.Equals("Copy", StringComparison.OrdinalIgnoreCase)
-                   || name.Equals("PasteTo", StringComparison.OrdinalIgnoreCase)
-                   || name.Equals("Instantiate", StringComparison.OrdinalIgnoreCase)
-                   || name.Equals("CreateInstance", StringComparison.OrdinalIgnoreCase)
-                   || name.Equals("InsertInto", StringComparison.OrdinalIgnoreCase)
-                   || name.Equals("ImportTo", StringComparison.OrdinalIgnoreCase)
-                   || name.IndexOf("Copy", StringComparison.OrdinalIgnoreCase) >= 0
-                   || name.IndexOf("Instantiate", StringComparison.OrdinalIgnoreCase) >= 0;
-        }
-
-        private static bool CanAssignParameter(ParameterInfo[] parameters, object? source)
-        {
-            if (parameters.Length == 0 || source == null) return false;
-            return parameters.Any(p => p.ParameterType.IsInstanceOfType(source));
-        }
-
-        private static bool TryBuildMasterCopyImportArgs(ParameterInfo[] parameters, object source, string expectedName, int left, int top, out object[] result)
-        {
-            result = Array.Empty<object>();
-            var args = new object?[parameters.Length];
-            var sourceUsed = false;
-
-            for (var i = 0; i < parameters.Length; i++)
-            {
-                var t = parameters[i].ParameterType;
-                var n = parameters[i].Name ?? string.Empty;
-
-                if (!sourceUsed && t.IsInstanceOfType(source))
-                {
-                    args[i] = source;
-                    sourceUsed = true;
-                }
-                else if (t == typeof(string))
-                {
-                    args[i] = expectedName;
-                }
-                else if (t == typeof(int))
-                {
-                    args[i] = n.IndexOf("top", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("y", StringComparison.OrdinalIgnoreCase) >= 0 ? top : left;
-                }
-                else if (t == typeof(uint))
-                {
-                    args[i] = (uint)Math.Max(0, n.IndexOf("top", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("y", StringComparison.OrdinalIgnoreCase) >= 0 ? top : left);
-                }
-                else if (t == typeof(double))
-                {
-                    args[i] = (double)(n.IndexOf("top", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("y", StringComparison.OrdinalIgnoreCase) >= 0 ? top : left);
-                }
-                else if (t == typeof(float))
-                {
-                    args[i] = (float)(n.IndexOf("top", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("y", StringComparison.OrdinalIgnoreCase) >= 0 ? top : left);
-                }
-                else if (t == typeof(bool))
-                {
-                    args[i] = false;
-                }
-                else if (t.IsEnum)
-                {
-                    args[i] = Enum.ToObject(t, 0);
-                }
-                else if (t.IsValueType)
-                {
-                    args[i] = Activator.CreateInstance(t);
-                }
-                else if (parameters[i].HasDefaultValue)
-                {
-                    args[i] = parameters[i].DefaultValue;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            if (!(sourceUsed)) return false;
-            result = Array.ConvertAll(args!, a => a!);
-            return true;
-        }
-
-        private static bool TryBuildMasterCopyExtensionArgs(ParameterInfo[] parameters, object target, object screen, object screenItems, object source, string expectedName, int left, int top, out object[] result)
-        {
-            result = Array.Empty<object>();
-            var args = new object?[parameters.Length];
-            var targetUsed = false;
-            var sourceUsed = false;
-
-            for (var i = 0; i < parameters.Length; i++)
-            {
-                var t = parameters[i].ParameterType;
-                var n = parameters[i].Name ?? string.Empty;
-
-                if (!targetUsed && t.IsInstanceOfType(target))
-                {
-                    args[i] = target;
-                    targetUsed = true;
-                }
-                else if (!targetUsed && t.IsInstanceOfType(screenItems))
-                {
-                    args[i] = screenItems;
-                    targetUsed = true;
-                }
-                else if (!targetUsed && t.IsInstanceOfType(screen))
-                {
-                    args[i] = screen;
-                    targetUsed = true;
-                }
-                else if (!sourceUsed && t.IsInstanceOfType(source))
-                {
-                    args[i] = source;
-                    sourceUsed = true;
-                }
-                else if (t == typeof(string))
-                {
-                    args[i] = expectedName;
-                }
-                else if (t == typeof(int))
-                {
-                    args[i] = n.IndexOf("top", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("y", StringComparison.OrdinalIgnoreCase) >= 0 ? top : left;
-                }
-                else if (t == typeof(uint))
-                {
-                    args[i] = (uint)Math.Max(0, n.IndexOf("top", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("y", StringComparison.OrdinalIgnoreCase) >= 0 ? top : left);
-                }
-                else if (t == typeof(double))
-                {
-                    args[i] = (double)(n.IndexOf("top", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("y", StringComparison.OrdinalIgnoreCase) >= 0 ? top : left);
-                }
-                else if (t == typeof(float))
-                {
-                    args[i] = (float)(n.IndexOf("top", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("y", StringComparison.OrdinalIgnoreCase) >= 0 ? top : left);
-                }
-                else if (t == typeof(bool))
-                {
-                    args[i] = false;
-                }
-                else if (t.IsEnum)
-                {
-                    args[i] = Enum.ToObject(t, 0);
-                }
-                else if (t.IsValueType)
-                {
-                    args[i] = Activator.CreateInstance(t);
-                }
-                else if (parameters[i].HasDefaultValue)
-                {
-                    args[i] = parameters[i].DefaultValue;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            if (!(targetUsed && sourceUsed)) return false;
-            result = Array.ConvertAll(args!, a => a!);
-            return true;
-        }
-
-        private static bool TryBuildMasterCopySourceArgs(ParameterInfo[] parameters, object target, object screen, object screenItems, string expectedName, int left, int top, out object[] result)
-        {
-            result = Array.Empty<object>();
-            var args = new object?[parameters.Length];
-            var targetUsed = false;
-
-            for (var i = 0; i < parameters.Length; i++)
-            {
-                var t = parameters[i].ParameterType;
-                var n = parameters[i].Name ?? string.Empty;
-
-                if (!targetUsed && t.IsInstanceOfType(target))
-                {
-                    args[i] = target;
-                    targetUsed = true;
-                }
-                else if (!targetUsed && t.IsInstanceOfType(screenItems))
-                {
-                    args[i] = screenItems;
-                    targetUsed = true;
-                }
-                else if (!targetUsed && t.IsInstanceOfType(screen))
-                {
-                    args[i] = screen;
-                    targetUsed = true;
-                }
-                else if (t == typeof(string))
-                {
-                    args[i] = expectedName;
-                }
-                else if (t == typeof(int))
-                {
-                    args[i] = n.IndexOf("top", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("y", StringComparison.OrdinalIgnoreCase) >= 0 ? top : left;
-                }
-                else if (t == typeof(uint))
-                {
-                    args[i] = (uint)Math.Max(0, n.IndexOf("top", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("y", StringComparison.OrdinalIgnoreCase) >= 0 ? top : left);
-                }
-                else if (t == typeof(double))
-                {
-                    args[i] = (double)(n.IndexOf("top", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("y", StringComparison.OrdinalIgnoreCase) >= 0 ? top : left);
-                }
-                else if (t == typeof(float))
-                {
-                    args[i] = (float)(n.IndexOf("top", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("y", StringComparison.OrdinalIgnoreCase) >= 0 ? top : left);
-                }
-                else if (t == typeof(bool))
-                {
-                    args[i] = false;
-                }
-                else if (t.IsEnum)
-                {
-                    args[i] = Enum.ToObject(t, 0);
-                }
-                else if (t.IsValueType)
-                {
-                    args[i] = Activator.CreateInstance(t);
-                }
-                else if (parameters[i].HasDefaultValue)
-                {
-                    args[i] = parameters[i].DefaultValue;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            if (!(targetUsed)) return false;
-            result = Array.ConvertAll(args!, a => a!);
-            return true;
-        }
-
         private List<string> ListNamedChildren(object collection, int limit)
         {
             var result = new List<string>();
@@ -1628,16 +1077,6 @@ namespace TiaMcp.Adapters
             return result;
         }
 
-        private static string? ResolveImportedReadbackName(List<string> before, List<string> after, string expectedName)
-        {
-            if (!string.IsNullOrWhiteSpace(expectedName) && after.Any(x => string.Equals(x, expectedName, StringComparison.OrdinalIgnoreCase)))
-                return after.First(x => string.Equals(x, expectedName, StringComparison.OrdinalIgnoreCase));
-
-            var added = after
-                .Where(x => !before.Contains(x, StringComparer.OrdinalIgnoreCase))
-                .ToList();
-            return added.Count == 1 ? added[0] : null;
-        }
 
         private static string LastPathSegment(string path)
         {

@@ -78,10 +78,10 @@ namespace TiaMcp.Engine.Tests
             TiaMcpServer.ModelContextProtocol.ToolBridgeProbes.VersionProbeCalls = 0;
             bool isV20 = EngineRouter.CompiledTiaMajorVersion == 20;
             var preflight = TiaMcpServer.ModelContextProtocol.McpServer.PreflightToolCall("ManageDcbLibraries", "{\"action\":\"import\"}");
-            check((preflight.Meta?["ok"]?.GetValue<bool?>() == true) != isV20, "preflight agrees with compiled adapter action gate");
+            check(preflight.Meta?["ok"]?.GetValue<bool?>() == true, "preflight agrees with compiled adapter action gate");
             var imported = TiaMcpServer.ModelContextProtocol.McpServer.CallTool("ManageDcbLibraries", new ToolArguments(JsonSerializer.Deserialize<JsonElement>("{\"action\":\"import\"}")));
-            check((imported.IsError != true) != isV20, "bridge agrees with compiled adapter action gate");
-            check(TiaMcpServer.ModelContextProtocol.ToolBridgeProbes.VersionProbeCalls == (isV20 ? 0 : 1), "denial happens before invoking mutation body");
+            check(imported.IsError != true, "bridge agrees with compiled adapter action gate");
+            check(TiaMcpServer.ModelContextProtocol.ToolBridgeProbes.VersionProbeCalls == 1, "supported import invokes mutation body once");
             var read = TiaMcpServer.ModelContextProtocol.McpServer.CallTool("ManageDcbLibraries", new ToolArguments(JsonSerializer.Deserialize<JsonElement>("{}")));
             check(read.IsError != true, "mixed-action read remains callable in both builds");
             int callsBeforeUnknown = TiaMcpServer.ModelContextProtocol.ToolBridgeProbes.VersionProbeCalls;
@@ -106,7 +106,7 @@ namespace TiaMcp.Engine.Tests
                 check(ToolVersionPolicy.CallProblem("20", tool, _ => "read").Length == 0, tool + " mixed read retained on V20");
                 check(ToolVersionPolicy.CallProblem("21", tool, _ => "futureAction").Length > 0, tool + " unknown action denied even on V21");
             }
-            check(ToolVersionPolicy.CallProblem("20", "managedcblibraries", _ => "IMPORT").Length > 0, "case normalization cannot bypass V20 import guard");
+            check(ToolVersionPolicy.CallProblem("20", "managedcblibraries", _ => "IMPORT").Length == 0, "case normalization retains V20 import admission");
             check(ToolVersionPolicy.CallProblem("21", "ManageDcbLibraries", _ => "import").Length == 0, "V21 DCB import retains native guard");
             foreach (var action in new[] { "changeType", "setPositionNumber" })
                 check(ToolVersionPolicy.CallProblem("20", "ManageDriveHardwareModule", _ => action).Length > 0, "V20 hardware module mutation denied: " + action);

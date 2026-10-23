@@ -288,6 +288,19 @@ namespace TiaMcp.Engine.Tests
             if (json.Contains("appliedProperties")) Assert.Single(body["data"]!["appliedProperties"]!.AsArray());
         }
         [Fact]
+        public void GuardedReflectionRefusalRetainsItsDedicatedToolPointer()
+        {
+            const string refusal = "Reflection writes are refused. Use the guarded ManagePlcSafety tool.";
+            var body = Body(HmiInspectionContract.Map("InvokeService", new ResponseObjectValue {
+                Message = refusal, Meta = new JsonObject { ["success"] = false, ["v4Rejection"] = "ACCESS_DENIED",
+                    ["invocationAttempted"] = false, ["mayHaveChanged"] = false, ["policyRefusal"] = refusal }
+            }, true, true));
+            Assert.Equal("rejected-before-operation", (string?)body["meta"]!["outcome"]);
+            Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
+            Assert.Equal(refusal, (string?)body["data"]!["policyRefusal"]);
+        }
+
+        [Fact]
         public void CursorIdentityAndObservationCompletenessStayIndependent()
         {
             var evidence = JsonNode.Parse("{\"success\":true,\"apiCallSuccess\":true,\"dataComplete\":false,\"collectionId\":\"snapshot\",\"pageIndex\":2,\"scope\":{\"project\":\"P\"},\"traversalComplete\":true,\"nextCursor\":null}")!.AsObject();

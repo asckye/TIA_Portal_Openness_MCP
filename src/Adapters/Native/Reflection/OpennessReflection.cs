@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Security;
 using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcp.Adapters.Reflection
@@ -166,13 +165,14 @@ namespace TiaMcp.Adapters.Reflection
 
         private OpennessObservation InvokeOnInstance(object instance, string resultKind, string resultPath, string methodName, HardwareScalar[]? args, bool allowWrite)
         {
-            var hardDenyReason = GetHardDeniedReflectionReason(instance, resultKind, resultPath, methodName);
+            var hardDenyReason = GetHardDeniedReflectionReason(instance, resultKind, resultPath, methodName, args?.Length ?? 0);
             if (!string.IsNullOrWhiteSpace(hardDenyReason))
             {
                 return new OpennessObservation
                 {
                     Message = hardDenyReason,
-                    Meta = ReflectionSession.Meta(false, ("v4Rejection", "ACCESS_DENIED")),
+                    Meta = ReflectionSession.Meta(false, ("v4Rejection", "ACCESS_DENIED"), ("invocationAttempted", false),
+                        ("mayHaveChanged", false), ("policyRefusal", hardDenyReason)),
                     ObjectKind = resultKind,
                     ObjectPath = resultPath
                 };
@@ -209,13 +209,8 @@ namespace TiaMcp.Adapters.Reflection
             bool invocationAttempted = false;
             try
             {
-                var t = instance.GetType();
-                var methods = t.GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                    .Where(m => !m.IsSpecialName && m.Name.Equals(methodName, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-
-                MethodInfo? mi = methods.FirstOrDefault(m => m.GetParameters().Length == argValues.Count);
-                if (mi == null)
+                using var binding = _session.BindMethod(instance, methodName, argValues);
+                if (binding == null)
                 {
                     return new OpennessObservation
                     {
@@ -226,41 +221,8 @@ namespace TiaMcp.Adapters.Reflection
                     };
                 }
 
-                var ps = mi.GetParameters();
-                var converted = new object?[ps.Length];
-                for (int i = 0; i < ps.Length; i++)
-                {
-                    var av = argValues[i];
-                    if (av == null) { converted[i] = null; continue; }
-                    var pt = ps[i].ParameterType;
-                    if (pt == typeof(string)) { converted[i] = av.ToString(); continue; }
-                    if (pt == typeof(int)) { converted[i] = Convert.ToInt32(av); continue; }
-                    if (pt == typeof(long)) { converted[i] = Convert.ToInt64(av); continue; }
-                    if (pt == typeof(double)) { converted[i] = Convert.ToDouble(av); continue; }
-                    if (pt == typeof(bool)) { converted[i] = Convert.ToBoolean(av); continue; }
-                    if (pt == typeof(System.IO.DirectoryInfo) && av is string directory) { converted[i] = new System.IO.DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(directory)); continue; }
-                    if (pt == typeof(System.IO.FileInfo) && av is string file) { converted[i] = new System.IO.FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(file)); continue; }
-                    // Convert enum parameters by name (PlcProtectionAccessLevel, ImportOptions, ...) and SecureString parameters from a
-                    // plain string (SetPassword / Protect / LoginToSafetyOfflineProgram) - the bridge could reach neither before.
-                    if (pt.IsEnum && av is string enumName) { converted[i] = Enum.Parse(pt, enumName, true); continue; }
-                    if (pt == typeof(SecureString) && av is string secret) { converted[i] = ReflectionSession.Secure(secret); continue; }
-                    if (pt == typeof(object)
-                        && methodName.Equals("SetAttribute", StringComparison.OrdinalIgnoreCase)
-                        && i == 1
-                        && argValues.Count >= 2
-                        && argValues[0] is string attrName)
-                    {
-                        var oldValue = instance.GetType()
-                            .GetMethod("GetAttribute", new[] { typeof(string) })
-                            ?.Invoke(instance, new object[] { attrName });
-                        converted[i] = oldValue == null ? av : _session.CoerceReflectionValue(av, oldValue.GetType());
-                        continue;
-                    }
-                    converted[i] = av;
-                }
-
                 invocationAttempted = true;
-                var result = mi.Invoke(instance, converted);
+                var result = binding.Method.Invoke(instance, binding.Arguments);
 
                 object? outValue = result;
                 if (result is IEnumerable enumerable && result is not string)
@@ -309,9 +271,14 @@ namespace TiaMcp.Adapters.Reflection
             }
         }
 
-        private static string? GetHardDeniedReflectionReason(object instance, string resultKind, string resultPath, string methodName)
+        private static string? GetHardDeniedReflectionReason(object instance, string resultKind, string resultPath, string methodName, int argumentCount)
         {
             var instanceType = instance.GetType().FullName ?? instance.GetType().Name;
+            for (var type = instance.GetType(); type != null; type = type.BaseType)
+            {
+                var refusal = OpennessReflectionPolicy.GuardedWriteRefusal(type.FullName ?? type.Name, methodName, argumentCount);
+                if (refusal != null) return refusal;
+            }
             var crossReferenceRefusal = ReflectionSession.ReflectionRefusal(instanceType, methodName);
             if (crossReferenceRefusal != null) return crossReferenceRefusal;
             var haystack = string.Join(" ", instanceType, resultKind ?? "", resultPath ?? "", methodName ?? "");

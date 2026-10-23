@@ -72,6 +72,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Collaboration/CollaborationBinding.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Collaboration/CollaborationEvidence.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VersionControlAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VciExportPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VersionControlFallback.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VersionControlWorker.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/LegacyVciPortPrimitives.cs" />

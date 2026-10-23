@@ -38,6 +38,7 @@ internal static class SafetyPolicy
             if (PasswordActions.Contains(action))
             {
                 if (string.IsNullOrEmpty(password)) throw new ArgumentException(action + " requires a nonempty password; it is passed to TIA only and never stored or logged.");
+                if (action == "setPassword" && password.Length > 30) throw new ArgumentException("Safety offline program password must contain 1..30 characters.");
                 if (password.Length > 256) throw new ArgumentException("Password exceeds 256 characters.");
             }
             else if (!string.IsNullOrEmpty(password)) throw new ArgumentException("password is only used by login/setPassword/revokePassword.");
@@ -45,6 +46,32 @@ internal static class SafetyPolicy
             if (ConfirmedActions.Contains(action) && !confirmSafetyChange)
                 throw new ArgumentException("Real " + action + " requires confirmSafetyChange=true besides dryRun=false.");
             return true;
+        }
+
+        internal static bool RequiresOffline(string action) => action == "setPassword" || action == "revokePassword"
+            || new[] { "createRuntimeGroup", "deleteRuntimeGroup", "updateRuntimeGroup", "updateSettings", "generateGlobalFIOStatusBlock", "cleanSystemGeneratedObjects", "generateBaseId" }.Contains(action);
+
+        internal static bool IsPasswordRefusal(Exception error)
+            => error is ArgumentException || error.GetType().FullName == "Siemens.Engineering.EngineeringSecurityException"
+                || error.GetType().FullName == "Siemens.Engineering.EngineeringPasswordPolicyViolationException"
+                || error.GetType().FullName == "Siemens.Engineering.EngineeringTargetInvocationException";
+
+        // Validate all effective ranges before any write, then choose each pair's safe setter order.
+        internal static string[] OrderBlockNumberChanges(IReadOnlyDictionary<string, int> requested, Func<string, int> current)
+        {
+            var order = new List<string>();
+            foreach (var kind in new[] { "DB", "FB", "FC" })
+            {
+                string from = "From" + kind, to = "To" + kind;
+                if (!requested.ContainsKey(from) && !requested.ContainsKey(to)) continue;
+                int oldFrom = current(from);
+                int newFrom = requested.TryGetValue(from, out var f) ? f : oldFrom;
+                int newTo = requested.TryGetValue(to, out var t) ? t : current(to);
+                if (newFrom > newTo) throw new ArgumentException(from + " must be <= " + to + "; no settings were written.");
+                foreach (var name in newFrom >= oldFrom ? new[] { to, from } : new[] { from, to })
+                    if (requested.ContainsKey(name)) order.Add(name);
+            }
+            return order.ToArray();
         }
 
         internal sealed class PrintoutRequest { public string Printer = ""; public string Option = ""; public string Layout = ""; public string Extension = ""; }

@@ -363,6 +363,26 @@ namespace TiaMcp.Engine.Tests
             Assert.Equal(0, library.Calls + sivarc.Calls + vci.Calls);
         }
         [Theory]
+        [InlineData(false, false, "rejected-before-operation", false)]
+        [InlineData(true, false, "unknown", true)]
+        [InlineData(false, true, "unknown", true)]
+        public void MasterCopyPolicyRefusalIsNotAnUnknownWrite(bool attempted, bool changed, string outcome, bool reset)
+        {
+            const string refusal = TiaMcp.Adapters.Contracts.LibraryCapabilities.ScreenItemMasterCopyRefusal;
+            var body = Body(LibraryToolContract.Map("ImportMasterCopyFromGlobalLibrary", new ResponseGlobalLibraryImport {
+                Ok = false, Error = refusal, Meta = new JsonObject { ["success"] = false },
+                Raw = new JsonObject { ["invocationAttempted"] = attempted, ["mayHaveChanged"] = changed }
+            }, true));
+            Assert.Equal(outcome, (string?)body["meta"]!["outcome"]);
+            Assert.Equal(reset, (bool)body["meta"]!["requiresSessionReset"]!);
+            if (!attempted && !changed)
+            {
+                Assert.Equal("not-started", (string?)body["meta"]!["execution"]);
+                Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]!["code"]);
+                Assert.Equal(refusal, (string?)body["error"]!["message"]);
+            }
+        }
+        [Theory]
         [InlineData("{\"success\":true}", false, "succeeded", "read-only", "complete")]
         [InlineData("{\"success\":true,\"dataComplete\":false}", false, "succeeded", "read-only", "partial")]
         [InlineData("{\"success\":true,\"groupsTruncated\":true}", false, "succeeded", "read-only", "partial")]

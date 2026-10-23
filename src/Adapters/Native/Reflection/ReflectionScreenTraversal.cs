@@ -10,6 +10,32 @@ namespace TiaMcp.Adapters.Reflection
     {
         private static readonly string[] ChildCollections = { "ScreenGroups", "Groups", "Folders" };
 
+        internal static object? FindTagTable(object software, string wantedName)
+        {
+            var root = ReadProperty(software, "TagFolder") ?? software;
+            return FindTagTableInFolder(root, wantedName, new HashSet<object>(ReferenceComparer.Instance));
+        }
+
+        private static object? FindTagTableInFolder(object folder, string wantedName, HashSet<object> visited)
+        {
+            if (!visited.Add(folder)) return null;
+            foreach (var table in ReadCollection(folder, "TagTables"))
+                if (string.Equals(ReadProperty(table, "Name")?.ToString(), wantedName, StringComparison.OrdinalIgnoreCase)) return table;
+            foreach (var child in ReadCollection(folder, "Folders"))
+            {
+                var found = FindTagTableInFolder(child, wantedName, visited);
+                if (found != null) return found;
+            }
+            return null;
+        }
+
+        internal static void RequireScreenItemsApi(object software)
+        {
+            for (var type = software.GetType(); type != null; type = type.BaseType)
+                if (type.FullName == "Siemens.Engineering.Hmi.HmiTarget")
+                    throw new NotSupportedException("screen items are not exposed by the Classic Openness API");
+        }
+
         internal static List<string> ListNames(object root)
         {
             var names = new List<string>();

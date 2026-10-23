@@ -65,6 +65,8 @@ namespace Siemens.Engineering.VersionControl
     {
         public VersionControlInterface Service = new();
         public readonly List<string> Trace = new();
+        public string[] Formats = new[] { "xml" };
+        public readonly List<(string Directory, string Format)> Exports = new();
         public string Fault = "";
         public int Reads;
         public int Services;
@@ -112,9 +114,9 @@ namespace TiaOpenness.Openness
         { m.World.Call("status"); var result = new IndividualObjectCompareResult { CompareState = m.State }; m.World.After("status"); return result; }
         public static void Synchronize(MappedObject m, SynchronizationMode mode)
         { m.World.Call("sync"); m.State = CompareState.Equal; m.World.After("sync"); }
-        public static string[] SupportedFormats(Workspace w, IEngineeringObject target) { w.World.Call("formats"); w.World.After("formats"); return new[] { "xml" }; }
+        public static string[] SupportedFormats(Workspace w, IEngineeringObject target) { w.World.Call("formats"); w.World.After("formats"); return w.World.Formats; }
         public static MappedObject? Find(MappedObjectComposition c, IEngineeringObject target) => c.FirstOrDefault(m => ReferenceEquals(m.Target, target));
         public static MappedObject Export(Workspace w, IEngineeringObject target, DirectoryInfo folder, string name, string format)
-        { w.World.Call("export"); var m = new MappedObject { World = w.World, Id = name, Target = target }; w.MappedObjects.Add(m); w.World.After("export"); return m; }
+        { w.World.Call("export"); w.World.Exports.Add((folder.ToString(), format)); var m = new MappedObject { World = w.World, Id = name, Target = target }; w.MappedObjects.Add(m); w.World.After("export"); return m; }
     }
 }

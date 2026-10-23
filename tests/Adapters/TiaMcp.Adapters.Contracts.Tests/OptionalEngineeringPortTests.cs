@@ -20,7 +20,7 @@ public sealed class OptionalEngineeringPortTests
             ["ManageSafetyGlobalSettings"] = 16, ["ListSafetyActivationTests"] = 21, ["ManageSafetyActivationTest"] = 21,
             ["ManageSafetyActivationTestGroup"] = 21, ["ManageSafetyFunction"] = 21, ["ManageSafetyFunctionCondition"] = 21,
             ["GetDccObject"] = 16, ["GetDriveParameters"] = 14, ["GetOnlineDriveParameters"] = 15, ["ListDccCharts"] = 16,
-            ["ListDriveObjects"] = 14, ["ManageDcbLibraries"] = 18, ["ManageDccBlock"] = 18, ["ManageDccChart"] = 16,
+            ["ListDriveObjects"] = 14, ["ManageDcbLibraries"] = 16, ["ManageDccBlock"] = 18, ["ManageDccChart"] = 16,
             ["ManageDccChartInterface"] = 18, ["ManageDccChartPartition"] = 18, ["ManageDccPin"] = 18,
             ["ManageDriveFunctions"] = 15, ["ManageDriveHardwareModule"] = 19, ["ManageDriveSafetyAcceptanceTest"] = 21,
             ["ManageDriveSecurity"] = 19, ["ManageDriveTelegrams"] = 14, ["ManageOnlineDriveFunctions"] = 15,

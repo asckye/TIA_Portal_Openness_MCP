@@ -63,17 +63,114 @@ namespace TiaMcp.Adapters.Reflection
         internal Type? FindTypeBySuffix(string typeSuffix)
         {
             if (string.IsNullOrWhiteSpace(typeSuffix)) return null;
+#if OPTIONAL_V21
+            // V21 split services must be searchable before their dedicated tool has loaded them.
+            foreach (var name in new[] { "Base", "Step7", "Safety", "SafetyValidation", "CFC", "DCC", "Sivarc",
+                "Startdrive", "TestSuite", "WinCC", "WinCCUnified", "WinCC.Extension", "TeamcenterGateway" })
+            {
+                try { Assembly.Load("Siemens.Engineering." + name); }
+                catch (Exception error) when (error is System.IO.FileNotFoundException || error is System.IO.FileLoadException || error is BadImageFormatException)
+                { /* swallow(probe-optional): an uninstalled split product supplies no service types. */ }
+            }
+#endif
             string suffix = typeSuffix.Trim();
+            var matches = new List<Type>();
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
+                var name = assembly.GetName().Name ?? "";
+                if (name != "Siemens.Engineering" && !name.StartsWith("Siemens.Engineering.", StringComparison.Ordinal)) continue;
                 Type[] types;
                 try { types = assembly.GetTypes(); }
-                catch /* swallow(probe-optional): unloadable assemblies cannot supply the optional service type */ { continue; }
+                catch (ReflectionTypeLoadException error)
+                { /* swallow(probe-optional): retain loadable service types when an optional dependency is absent. */
+                    types = error.Types.Where(t => t != null).Cast<Type>().ToArray(); }
                 foreach (var type in types)
-                    if ((type.FullName ?? type.Name).EndsWith(suffix, StringComparison.OrdinalIgnoreCase) || type.Name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)) return type;
+                {
+                    var fullName = type.FullName ?? type.Name;
+                    bool exactName = suffix.StartsWith("Siemens.Engineering.", StringComparison.OrdinalIgnoreCase);
+                    if (exactName ? fullName.Equals(suffix, StringComparison.OrdinalIgnoreCase)
+                        : fullName.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)) matches.Add(type);
+                }
             }
-            return null;
+            var distinct = matches.Distinct().ToArray();
+            if (distinct.Length > 1) throw new PlcSoftwareException("InvalidParams",
+                "Ambiguous Siemens service type '" + suffix + "'; use its exact full name: " + string.Join(", ", distinct.Select(t => t.FullName).OrderBy(n => n, StringComparer.Ordinal)));
+            return distinct.SingleOrDefault();
         }
+
+        internal sealed class MethodBinding : IDisposable
+        {
+            internal readonly MethodInfo Method;
+            internal readonly object?[] Arguments;
+            internal MethodBinding(MethodInfo method, object?[] arguments) { Method = method; Arguments = arguments; }
+            public void Dispose()
+            {
+                foreach (var secret in Arguments.OfType<SecureString>()) secret.Dispose();
+            }
+        }
+
+        internal MethodBinding? BindMethod(object instance, string methodName, IList<object?> values)
+        {
+            MethodBinding? selected = null;
+            try
+            {
+                foreach (var method in instance.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                    .Where(m => !m.IsSpecialName && !m.ContainsGenericParameters && m.Name.Equals(methodName, StringComparison.OrdinalIgnoreCase)
+                        && m.GetParameters().Length == values.Count))
+                {
+                    var parameters = method.GetParameters();
+                    var converted = new object?[values.Count];
+                    bool matches = false;
+                    try
+                    {
+                        for (int i = 0; i < values.Count; i++)
+                        {
+                            var type = parameters[i].ParameterType;
+                            if (type.IsByRef || parameters[i].IsOut) throw new ArgumentException("Reference/out arguments are unsupported.");
+                            object? value = values[i];
+                            if (type == typeof(object) && method.Name == "SetAttribute" && i == 1 && values[0] is string attribute)
+                            {
+                                var current = instance.GetType().GetMethod("GetAttribute", new[] { typeof(string) })?.Invoke(instance, new object[] { attribute });
+                                if (current != null) type = current.GetType();
+                            }
+                            if (value == null)
+                            {
+                                if (type.IsValueType && Nullable.GetUnderlyingType(type) == null) throw new ArgumentException("Null cannot bind a value parameter.");
+                                continue;
+                            }
+                            var target = Nullable.GetUnderlyingType(type) ?? type;
+                            converted[i] = target == typeof(System.IO.DirectoryInfo) && value is string directory
+                                ? new System.IO.DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(directory))
+                                : target == typeof(System.IO.FileInfo) && value is string file
+                                    ? new System.IO.FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(file))
+                                    : target == typeof(SecureString) && value is string secret ? Secure(secret)
+                                        : CoerceReflectionValue(value, target);
+                            if (!target.IsInstanceOfType(converted[i])) throw new ArgumentException("Argument cannot bind " + target.FullName);
+                        }
+                        matches = true;
+                    }
+                    catch (Exception error) when (error is ArgumentException || error is FormatException || error is OverflowException || error is InvalidCastException)
+                    { /* swallow(parse-fallback): a nonconvertible overload is not a callable candidate. */ }
+                    finally
+                    {
+                        if (!matches) foreach (var secret in converted.OfType<SecureString>()) secret.Dispose();
+                    }
+                    if (!matches) continue;
+                    var binding = new MethodBinding(method, converted);
+                    if (selected != null)
+                    {
+                        binding.Dispose();
+                        throw new AmbiguousMatchException("Ambiguous convertible overloads for '" + methodName + "'; invocation refused.");
+                    }
+                    selected = binding;
+                }
+                var result = selected;
+                selected = null;
+                return result;
+            }
+            finally { selected?.Dispose(); }
+        }
+
         internal object? TryGetService(object target, Type serviceType)
         {
             try

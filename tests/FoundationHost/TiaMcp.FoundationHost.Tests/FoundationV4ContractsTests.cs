@@ -42,9 +42,10 @@ public sealed class FoundationV4ContractsTests
 
     [Theory]
     // P8-81b H-05: CreateGsdDevice is registered only on V18-V21 (register only available tools), one tool less on V14 SP1-V17.
-    // P8-81e: master 6cf6b132 roster plus two graphics tools, minus pre-V19 DescribeHmiScreenItem.
-    [InlineData("14sp1", 279)] [InlineData("15.1", 319)] [InlineData("16", 347)]
-    [InlineData("17", 370)] [InlineData("18", 397)] [InlineData("19", 473)]
+    // P8-81e: plus two graphics tools on every release, minus DescribeHmiScreenItem before V19; P8-81f: plus ManageDcbLibraries
+    // on V16/V17 (master 6cf6b132 roster; confirmed by the formal captures).
+    [InlineData("14sp1", 279)] [InlineData("15.1", 319)] [InlineData("16", 348)]
+    [InlineData("17", 371)] [InlineData("18", 397)] [InlineData("19", 473)]
     public async Task EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection(string release, int count)
     {
         var worker = new FakeWorker();
