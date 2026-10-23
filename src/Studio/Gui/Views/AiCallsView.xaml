@@ -88,7 +88,7 @@
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="62"/>
                   <ColumnDefinition Width="10"/>
-                  <ColumnDefinition Width="1*"/>
+                  <ColumnDefinition Width="1*" MinWidth="51"/>
                   <ColumnDefinition Width="10"/>
                   <ColumnDefinition Width="1.4*"/>
                   <ColumnDefinition Width="10"/>
@@ -96,11 +96,11 @@
                   <ColumnDefinition Width="10"/>
                   <ColumnDefinition Width="90"/>
                   <ColumnDefinition Width="10"/>
-                  <ColumnDefinition Width="54"/>
+                  <ColumnDefinition Width="60"/>
                   <ColumnDefinition Width="10"/>
                   <ColumnDefinition Width="1.4*"/>
                   <ColumnDefinition Width="10"/>
-                  <ColumnDefinition Width="70"/>
+                  <ColumnDefinition Width="74"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Time}"/>
                 <TextBlock Grid.Column="2" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Host}"/>
@@ -121,7 +121,7 @@
                     <Grid.ColumnDefinitions>
                       <ColumnDefinition Width="62"/>
                       <ColumnDefinition Width="10"/>
-                      <ColumnDefinition Width="1*"/>
+                      <ColumnDefinition Width="1*" MinWidth="51"/>
                       <ColumnDefinition Width="10"/>
                       <ColumnDefinition Width="1.4*"/>
                       <ColumnDefinition Width="10"/>
@@ -129,11 +129,11 @@
                       <ColumnDefinition Width="10"/>
                       <ColumnDefinition Width="90"/>
                       <ColumnDefinition Width="10"/>
-                      <ColumnDefinition Width="54"/>
+                      <ColumnDefinition Width="60"/>
                       <ColumnDefinition Width="10"/>
                       <ColumnDefinition Width="1.4*"/>
                       <ColumnDefinition Width="10"/>
-                      <ColumnDefinition Width="70"/>
+                      <ColumnDefinition Width="74"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="{Binding Time}" Style="{StaticResource Primer.Mono.textFaint}"/>
                     <TextBlock Grid.Column="2" Text="{Binding Host}" Style="{StaticResource Primer.Muted}" ToolTip="{Binding Host}"/>

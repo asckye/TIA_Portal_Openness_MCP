@@ -17,10 +17,10 @@
               <ColumnDefinition Width="*"/>
               <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <DockPanel VerticalAlignment="Center" Margin="0,0,12,0">
-              <TextBlock DockPanel.Dock="Left" Text="{l:Tr Tree.ProgramBlocks}" Style="{StaticResource Primer.ContainerTitle}" AutomationProperties.HeadingLevel="Level2"/>
-              <TextBlock Text="{Binding Tag.BlocksSummary,ElementName=PageRoot}" Style="{StaticResource Primer.Muted}" Margin="12,0,0,0" ToolTip="{Binding Tag.BlocksSubtitle,ElementName=PageRoot}"/>
-            </DockPanel>
+            <WrapPanel VerticalAlignment="Center" Margin="0,0,12,0">
+              <TextBlock Text="{l:Tr Tree.ProgramBlocks}" Style="{StaticResource Primer.ContainerTitle}" AutomationProperties.HeadingLevel="Level2"/>
+              <TextBlock x:Name="BlocksSummary" Text="{Binding Tag.BlocksSummary,ElementName=PageRoot}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" TextTrimming="None" Margin="12,0,0,0" ToolTip="{Binding Tag.BlocksSubtitle,ElementName=PageRoot}"/>
+            </WrapPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal">
               <Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=ControlFilter}" x:Name="AccessibleLabel1" Content="{l:Tr Pages.Filter}" Target="{Binding ElementName=ControlFilter}" Style="{StaticResource Primer.FormLabel}" Visibility="Collapsed"/>
               <TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}" AutomationProperties.Name="{l:Tr Pages.Filter}" x:Name="ControlFilter" Text="{Binding Engineering.BlockFilter,UpdateSourceTrigger=PropertyChanged}" Tag="{l:Tr Pages.Filter}" Style="{StaticResource Primer.Input}" Width="200" VerticalAlignment="Center"/>
@@ -67,17 +67,17 @@
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="24"/>
               <ColumnDefinition Width="12"/>
-              <ColumnDefinition Width="1.5*"/>
+              <ColumnDefinition Width="1.5*" MinWidth="144"/>
               <ColumnDefinition Width="12"/>
-              <ColumnDefinition Width=".45*"/>
+              <ColumnDefinition Width=".45*" MinWidth="41"/>
               <ColumnDefinition Width="12"/>
               <ColumnDefinition Width=".45*"/>
               <ColumnDefinition Width="12"/>
               <ColumnDefinition Width=".6*"/>
               <ColumnDefinition Width="12"/>
-              <ColumnDefinition Width="1.4*"/>
+              <ColumnDefinition Width="1.4*" MinWidth="120"/>
               <ColumnDefinition Width="12"/>
-              <ColumnDefinition Width=".8*"/>
+              <ColumnDefinition Width=".8*" MinWidth="84"/>
             </Grid.ColumnDefinitions>
             <TextBlock Text="{l:Tr Primer.Name}" Style="{StaticResource Primer.TableHeader}" Grid.Column="2"/>
             <TextBlock Text="{l:Tr Primer.Type}" Style="{StaticResource Primer.TableHeader}" Grid.Column="4"/>
@@ -95,17 +95,17 @@
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="24"/>
                   <ColumnDefinition Width="12"/>
-                  <ColumnDefinition Width="1.5*"/>
+                  <ColumnDefinition Width="1.5*" MinWidth="144"/>
                   <ColumnDefinition Width="12"/>
-                  <ColumnDefinition Width=".45*"/>
+                  <ColumnDefinition Width=".45*" MinWidth="41"/>
                   <ColumnDefinition Width="12"/>
                   <ColumnDefinition Width=".45*"/>
                   <ColumnDefinition Width="12"/>
                   <ColumnDefinition Width=".6*"/>
                   <ColumnDefinition Width="12"/>
-                  <ColumnDefinition Width="1.4*"/>
+                  <ColumnDefinition Width="1.4*" MinWidth="120"/>
                   <ColumnDefinition Width="12"/>
-                  <ColumnDefinition Width=".8*"/>
+                  <ColumnDefinition Width=".8*" MinWidth="84"/>
                 </Grid.ColumnDefinitions>
                 <CheckBox AutomationProperties.Name="{Binding Name}" MinWidth="24" MinHeight="24" IsChecked="{Binding Selected}" Style="{StaticResource Primer.Checkbox}"/>
                 <TextBlock Grid.Column="2" Text="{Binding Name}" Style="{StaticResource Primer.Text}" FontWeight="SemiBold" ToolTip="{Binding Name}"/>
@@ -114,7 +114,7 @@
                 </Border>
                 <TextBlock Grid.Column="6" Text="{Binding Number}" Style="{StaticResource Primer.Mono.text}" TextAlignment="Right"/>
                 <TextBlock Grid.Column="8" Text="{Binding Language}" Style="{StaticResource Primer.Text}"/>
-                <TextBlock Grid.Column="10" Style="{StaticResource Primer.Muted}" Text="{Binding Path,Converter={StaticResource Primer.Value},ConverterParameter=group}" ToolTip="{Binding Path}"/>
+                <TextBlock Grid.Column="10" Style="{StaticResource Primer.Muted}" Text="{Binding Path,Converter={StaticResource Primer.Value},ConverterParameter=group}" TextWrapping="Wrap" TextTrimming="None" ToolTip="{Binding Path}"/>
                 <DockPanel Grid.Column="12">
                   <Ellipse Style="{StaticResource Primer.ConsistencyDot}"/>
                   <TextBlock Style="{StaticResource Primer.ConsistencyText}">

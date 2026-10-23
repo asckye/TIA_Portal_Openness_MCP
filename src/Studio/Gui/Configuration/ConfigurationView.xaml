@@ -8,66 +8,69 @@
     <Grid>
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" MinHeight="58"/>
-        <RowDefinition Height="16"/>
+        <RowDefinition Height="12"/>
         <RowDefinition Height="Auto"/>
-        <RowDefinition Height="16"/>
+        <RowDefinition Height="12"/>
         <RowDefinition Height="Auto" MinHeight="162"/>
-        <RowDefinition Height="16"/>
+        <RowDefinition Height="12"/>
         <RowDefinition Height="*"/>
       </Grid.RowDefinitions>
-      <!-- Ant PageHead: the mode Segmented wraps below the title when both do not fit on one line. -->
-      <ux:PageHeadPanel x:Name="PageHead" Title="{Binding ElementName=PageTitle}">
-        <StackPanel Margin="0">
-          <ux:TrackedTextBlock Tracking="0.14" x:Name="PageStep" FontFamily="{DynamicResource Ui.FontMono}" FontSize="{DynamicResource Ui.FontSize.Caption}" Foreground="{DynamicResource Primer.accent}" Visibility="Collapsed"/>
-          <ux:TrackedTextBlock Tracking="-0.02" x:Name="PageTitle" Height="26" LineHeight="29" LineStackingStrategy="BlockLineHeight" FontSize="{DynamicResource Ui.FontSize.Subtitle}" FontWeight="SemiBold" Margin="0"/>
-          <TextBlock x:Name="PageSubtitle" MinHeight="24" LineHeight="24" LineStackingStrategy="BlockLineHeight" FontSize="{DynamicResource Ui.FontSize.SmallTitle}" Margin="0,3,0,0" Style="{StaticResource Primer.Text.textMuted}" ToolTip="{Binding Text,RelativeSource={RelativeSource Self}}"/>
-        </StackPanel>
-        <Border Style="{StaticResource Primer.SegmentGroup}">
-          <StackPanel Orientation="Horizontal">
-            <RadioButton AutomationProperties.Name="{l:Tr Config.RemoteMode}" x:Name="RemoteNav" Style="{StaticResource Primer.Segment}" IsChecked="True" Content="{l:Tr Config.RemoteMode}" ToolTip="{l:Tr Config.RemoteNote}"/>
-            <RadioButton AutomationProperties.Name="{l:Tr Config.LocalMode}" x:Name="LocalNav" Style="{StaticResource Primer.Segment}" Content="{l:Tr Config.LocalMode}" ToolTip="{l:Tr Config.LocalNote}"/>
+      <!-- The subtitle uses the full page-head width; mode actions share only the title row. -->
+      <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <ux:PageHeadPanel x:Name="PageHead" Title="{Binding ElementName=PageTitle}">
+          <StackPanel Margin="0">
+            <ux:TrackedTextBlock Tracking="0.14" x:Name="PageStep" FontFamily="{DynamicResource Ui.FontMono}" FontSize="{DynamicResource Ui.FontSize.Caption}" Foreground="{DynamicResource Primer.accent}" Visibility="Collapsed"/>
+            <ux:TrackedTextBlock Tracking="-0.02" x:Name="PageTitle" Height="26" LineHeight="29" LineStackingStrategy="BlockLineHeight" FontSize="{DynamicResource Ui.FontSize.Subtitle}" FontWeight="SemiBold" Margin="0"/>
           </StackPanel>
-        </Border>
-      </ux:PageHeadPanel>
+          <Border Style="{StaticResource Primer.SegmentGroup}">
+            <StackPanel Orientation="Horizontal">
+              <RadioButton AutomationProperties.Name="{l:Tr Config.RemoteMode}" x:Name="RemoteNav" Style="{StaticResource Primer.Segment}" IsChecked="True" Content="{l:Tr Config.RemoteMode}" ToolTip="{l:Tr Config.RemoteNote}"/>
+              <RadioButton AutomationProperties.Name="{l:Tr Config.LocalMode}" x:Name="LocalNav" Style="{StaticResource Primer.Segment}" Content="{l:Tr Config.LocalMode}" ToolTip="{l:Tr Config.LocalNote}"/>
+            </StackPanel>
+          </Border>
+        </ux:PageHeadPanel>
+        <TextBlock x:Name="PageSubtitle" Grid.Row="1" MinHeight="24" LineHeight="24" LineStackingStrategy="BlockLineHeight" TextWrapping="Wrap" TextTrimming="None" FontSize="{DynamicResource Ui.FontSize.SmallTitle}" Margin="0,3,0,0" Style="{StaticResource Primer.Text.textMuted}" ToolTip="{Binding Text,RelativeSource={RelativeSource Self}}"/>
+      </Grid>
       <!-- Ant Steps: the three setup stages of this page. -->
       <Border x:Name="SetupSteps" Grid.Row="2" Style="{StaticResource Primer.Container}">
         <Grid>
           <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="1.4*"/>
+            <ColumnDefinition Width="32"/>
+            <ColumnDefinition Width="1.1*"/>
+            <ColumnDefinition Width="32"/>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
           </Grid.ColumnDefinitions>
-          <StackPanel Orientation="Horizontal">
-            <Border x:Name="Step1Icon" Style="{StaticResource Primer.StepIcon}" VerticalAlignment="Top">
+          <DockPanel>
+            <Border x:Name="Step1Icon" Style="{StaticResource Primer.StepIcon}" VerticalAlignment="Top" DockPanel.Dock="Left">
               <TextBlock Text="1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>
             <StackPanel Margin="8,0,0,0">
               <TextBlock Text="{l:Tr Config.Installation}" Style="{StaticResource Primer.Text.text}" FontSize="{DynamicResource Ui.FontSize.Large}"/>
-              <TextBlock Text="{l:Tr Config.StepInstallationHint}" Style="{StaticResource Primer.Muted}" Margin="0,2,0,0"/>
+              <TextBlock Text="{l:Tr Config.StepInstallationHint}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" TextTrimming="None" Margin="0,2,0,0"/>
             </StackPanel>
-          </StackPanel>
+          </DockPanel>
           <Border Grid.Column="1" Style="{StaticResource Primer.StepTail}"/>
-          <StackPanel Grid.Column="2" Orientation="Horizontal">
-            <Border x:Name="Step2Icon" Style="{StaticResource Primer.StepIcon}" VerticalAlignment="Top">
+          <DockPanel Grid.Column="2">
+            <Border x:Name="Step2Icon" Style="{StaticResource Primer.StepIcon}" VerticalAlignment="Top" DockPanel.Dock="Left">
               <TextBlock Text="2" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>
             <StackPanel Margin="8,0,0,0">
               <TextBlock Text="{l:Tr Config.HttpService}" Style="{StaticResource Primer.Text.text}" FontSize="{DynamicResource Ui.FontSize.Large}"/>
-              <TextBlock Text="{l:Tr Config.StepServiceHint}" Style="{StaticResource Primer.Muted}" Margin="0,2,0,0"/>
+              <TextBlock Text="{l:Tr Config.StepServiceHint}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" TextTrimming="None" Margin="0,2,0,0"/>
             </StackPanel>
-          </StackPanel>
+          </DockPanel>
           <Border Grid.Column="3" Style="{StaticResource Primer.StepTail}"/>
-          <StackPanel Grid.Column="4" Orientation="Horizontal">
-            <Border x:Name="Step3Icon" Style="{StaticResource Primer.StepIcon}" VerticalAlignment="Top">
+          <DockPanel Grid.Column="4">
+            <Border x:Name="Step3Icon" Style="{StaticResource Primer.StepIcon}" VerticalAlignment="Top" DockPanel.Dock="Left">
               <TextBlock Text="3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>
             <StackPanel Margin="8,0,0,0">
               <TextBlock Text="{l:Tr Mcp.Clients}" Style="{StaticResource Primer.Text.text}" FontSize="{DynamicResource Ui.FontSize.Large}"/>
-              <TextBlock Text="{l:Tr Config.StepClientsHint}" Style="{StaticResource Primer.Muted}" Margin="0,2,0,0"/>
+              <TextBlock Text="{l:Tr Config.StepClientsHint}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" TextTrimming="None" Margin="0,2,0,0"/>
             </StackPanel>
-          </StackPanel>
+          </DockPanel>
         </Grid>
       </Border>
       <Border Grid.Row="4" Style="{StaticResource Primer.Plain}">

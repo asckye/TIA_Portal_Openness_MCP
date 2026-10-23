@@ -4,7 +4,7 @@
       <TextBlock x:Name="ControlActivity" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
       <Grid Margin="0,0,0,18">
         <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="90"/>
+          <ColumnDefinition Width="Auto" MinWidth="90"/>
           <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -16,19 +16,19 @@
           <RowDefinition Height="Auto" MinHeight="24"/>
           <RowDefinition Height="Auto" MinHeight="24"/>
         </Grid.RowDefinitions>
-        <TextBlock Text="{l:Tr Calls.Time}" Style="{StaticResource Primer.Muted}"/>
+        <TextBlock Text="{l:Tr Calls.Time}" Style="{StaticResource Primer.Muted}" Margin="0,0,12,0"/>
         <TextBlock Grid.Column="1" Text="{Binding Record.Time, StringFormat=yyyy-MM-dd HH:mm:ss zzz}" Style="{StaticResource Primer.Mono}"/>
-        <TextBlock Grid.Row="1" Text="{l:Tr Calls.Host}" Style="{StaticResource Primer.Muted}"/>
+        <TextBlock Grid.Row="1" Text="{l:Tr Calls.Host}" Style="{StaticResource Primer.Muted}" Margin="0,0,12,0"/>
         <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Host}" Style="{StaticResource Primer.Text}"/>
-        <TextBlock Grid.Row="2" Text="{l:Tr Calls.ReadWrite}" Style="{StaticResource Primer.Muted}"/>
+        <TextBlock Grid.Row="2" Text="{l:Tr Calls.ReadWrite}" Style="{StaticResource Primer.Muted}" Margin="0,0,12,0"/>
         <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ReadWrite}" Style="{StaticResource Primer.ToneText}" Tag="{Binding WriteTone}"/>
-        <TextBlock Grid.Row="3" Text="{l:Tr Calls.Duration}" Style="{StaticResource Primer.Muted}"/>
+        <TextBlock Grid.Row="3" Text="{l:Tr Calls.Duration}" Style="{StaticResource Primer.Muted}" Margin="0,0,12,0"/>
         <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Duration}" Style="{StaticResource Primer.Mono}"/>
-        <TextBlock Grid.Row="4" Text="{l:Tr Calls.RequestId}" Style="{StaticResource Primer.Muted}"/>
+        <TextBlock Grid.Row="4" Text="{l:Tr Calls.RequestId}" Style="{StaticResource Primer.Muted}" Margin="0,0,12,0"/>
         <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Record.RequestId}" Style="{StaticResource Primer.Mono}"/>
-        <TextBlock Grid.Row="5" Text="{l:Tr Actor.Title}" Style="{StaticResource Primer.Muted}"/>
+        <TextBlock Grid.Row="5" Text="{l:Tr Actor.Title}" Style="{StaticResource Primer.Muted}" Margin="0,0,12,0"/>
         <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding Actor}" Style="{StaticResource Primer.Text}"/>
-        <TextBlock Grid.Row="6" Text="{l:Tr Calls.McpSession}" Style="{StaticResource Primer.Muted}"/>
+        <TextBlock Grid.Row="6" Text="{l:Tr Calls.McpSession}" Style="{StaticResource Primer.Muted}" Margin="0,0,12,0"/>
         <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Record.McpSession}" ToolTip="{Binding Record.McpSession}" Style="{StaticResource Primer.Mono}"/>
       </Grid>
       <DockPanel Margin="0,0,0,8">

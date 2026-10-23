@@ -123,17 +123,17 @@
               <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Border Style="{StaticResource Primer.HeaderStrip}">
-              <Grid>
-                <StackPanel Orientation="Horizontal">
+              <ux:PageHeadPanel>
+                <WrapPanel>
                   <TextBlock Text="{l:Tr Primer.MappedObjects}" Style="{StaticResource Primer.ContainerTitle}"/>
-                  <TextBlock Text="{Binding Tag.MappedMeta,ElementName=PageRoot}" Style="{StaticResource Primer.Muted}" Margin="10,0,0,0"/>
-                </StackPanel>
+                  <TextBlock x:Name="MappedMeta" Text="{Binding Tag.MappedMeta,ElementName=PageRoot}" Style="{StaticResource Primer.Muted}" Margin="10,0,0,0"/>
+                </WrapPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                   <CheckBox AutomationProperties.Name="{l:Tr Primer.All}" Content="{l:Tr Primer.All}" IsChecked="{Binding VersionControl.VcShowAll}" Click="OnMappedAll" ToolTip="{l:Tr Vc.ShowAll}" Style="{StaticResource Primer.Secondary}"/>
                   <Button AutomationProperties.Name="{Binding ElementName=PageRoot,Path=Tag.DifferenceLabel}" Content="{Binding ElementName=PageRoot,Path=Tag.DifferenceLabel}" ToolTip="{l:Tr Primer.Differ}" Tag="Unequal" Click="OnMappedFilter" Style="{StaticResource Primer.Secondary}" Margin="6,0,0,0"/>
                   <Button AutomationProperties.Name="{Binding ElementName=PageRoot,Path=Tag.MissingLabel}" Content="{Binding ElementName=PageRoot,Path=Tag.MissingLabel}" ToolTip="{l:Tr Primer.Missing}" Tag="WorkspaceFileMissing" Click="OnMappedFilter" Style="{StaticResource Primer.Secondary}" Margin="6,0,0,0"/>
                 </StackPanel>
-              </Grid>
+              </ux:PageHeadPanel>
             </Border>
             <Border Style="{StaticResource Primer.ColumnHeaderStrip}" Grid.Row="1">
               <Grid>

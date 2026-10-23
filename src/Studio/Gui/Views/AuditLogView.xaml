@@ -47,7 +47,7 @@
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="62"/>
                   <ColumnDefinition Width="10"/>
-                  <ColumnDefinition Width="1.1*"/>
+                  <ColumnDefinition Width="1.1*" MinWidth="116"/>
                   <ColumnDefinition Width="10"/>
                   <ColumnDefinition Width="1.6*"/>
                   <ColumnDefinition Width="10"/>
@@ -55,7 +55,7 @@
                   <ColumnDefinition Width="10"/>
                   <ColumnDefinition Width="70"/>
                   <ColumnDefinition Width="10"/>
-                  <ColumnDefinition Width="70"/>
+                  <ColumnDefinition Width="74"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="{l:Tr Calls.Time}" Style="{StaticResource Primer.TableHeader}" Margin="0"/>
                 <TextBlock Grid.Column="2" Text="{l:Tr Audit.Event}" Style="{StaticResource Primer.TableHeader}" Margin="0"/>
@@ -74,7 +74,7 @@
                     <Grid.ColumnDefinitions>
                       <ColumnDefinition Width="62"/>
                       <ColumnDefinition Width="10"/>
-                      <ColumnDefinition Width="1.1*"/>
+                      <ColumnDefinition Width="1.1*" MinWidth="116"/>
                       <ColumnDefinition Width="10"/>
                       <ColumnDefinition Width="1.6*"/>
                       <ColumnDefinition Width="10"/>
@@ -82,7 +82,7 @@
                       <ColumnDefinition Width="10"/>
                       <ColumnDefinition Width="70"/>
                       <ColumnDefinition Width="10"/>
-                      <ColumnDefinition Width="70"/>
+                      <ColumnDefinition Width="74"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="{Binding Time}" Style="{StaticResource Primer.Mono.textFaint}"/>
                     <TextBlock Grid.Column="2" Text="{Binding Type}" Style="{StaticResource Primer.ToneText}" Tag="{Binding Tone}" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold"/>
@@ -118,7 +118,7 @@
               <RowDefinition Height="Auto" MinHeight="38"/>
               <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <TextBlock Text="{l:Tr Audit.FileSize}" Style="{StaticResource Primer.Muted}"/>
+            <TextBlock Text="{l:Tr Audit.FileSize}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" TextTrimming="None"/>
             <Border Grid.Column="1" Padding="3" HorizontalAlignment="Left" VerticalAlignment="Center" Style="{StaticResource Primer.SegmentGroup}">
               <StackPanel Orientation="Horizontal">
                 <RadioButton AutomationProperties.Name="{l:Tr Audit.Size5}" x:Name="Size5" Tag="5" Content="{l:Tr Audit.Size5}" Style="{StaticResource Primer.Segment}" Padding="6,0" GroupName="AuditSize" Click="OnSize"/>

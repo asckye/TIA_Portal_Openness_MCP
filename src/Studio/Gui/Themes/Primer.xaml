@@ -2049,7 +2049,7 @@
       </DataTrigger>
     </Style.Triggers>
   </Style>
-  <!-- The card names keep their width: only a detected client spells out its Badge text; the others keep the grey dot and the card tooltip. -->
+  <!-- Detection sits below the name so every catalog word fits without sharing its line with the badge. -->
   <Style TargetType="TextBlock" BasedOn="{StaticResource Primer.Text}" x:Key="Primer.DetectionText">
     <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
     <Setter Property="TextWrapping" Value="NoWrap"/>
@@ -2066,14 +2066,17 @@
   </Style>
   <DataTemplate x:Key="Primer.ClientContent">
     <Grid ToolTip="{Binding Tooltip}">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="*"/>
-        <ColumnDefinition Width="Auto"/>
       </Grid.ColumnDefinitions>
-      <TextBlock x:Name="ClientName" Text="{Binding DisplayName}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" LineHeight="18" LineStackingStrategy="BlockLineHeight" MaxHeight="36" FontSize="{DynamicResource Ui.FontSize.Control}" FontWeight="Normal" Margin="0,0,5,0"/>
-      <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+      <TextBlock x:Name="ClientName" Text="{Binding DisplayName}" ToolTip="{Binding DisplayName}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" LineHeight="18" LineStackingStrategy="BlockLineHeight" MaxHeight="36" FontSize="{DynamicResource Ui.FontSize.Control}" FontWeight="Normal" Margin="0,0,5,0"/>
+      <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center">
         <Ellipse Width="6" Height="6" Margin="0,0,5,0" Style="{StaticResource Primer.DetectionDot}"/>
-        <TextBlock FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="Normal" Style="{StaticResource Primer.DetectionText}"/>
+        <TextBlock FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="Normal" LineHeight="14" LineStackingStrategy="BlockLineHeight" Style="{StaticResource Primer.DetectionText}"/>
       </StackPanel>
     </Grid>
   </DataTemplate>
@@ -2664,6 +2667,8 @@
   <!-- Statistic: secondary title above a 24px value. -->
   <Style x:Key="Primer.StatisticTitle" TargetType="TextBlock" BasedOn="{StaticResource Primer.Text}">
     <Setter Property="Foreground" Value="{DynamicResource Primer.textMuted}"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+    <Setter Property="TextTrimming" Value="None"/>
   </Style>
   <Style x:Key="Primer.StatisticValue" TargetType="TextBlock" BasedOn="{StaticResource Primer.Text}">
     <Setter Property="FontSize" Value="{DynamicResource Ui.FontSize.Heading}"/>

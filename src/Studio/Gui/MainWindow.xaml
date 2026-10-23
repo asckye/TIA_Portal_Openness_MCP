@@ -35,13 +35,14 @@
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
               </Grid.ColumnDefinitions>
               <Border VerticalAlignment="Center" Style="{StaticResource Primer.BrandDot}"/>
-              <TextBlock x:Name="BrandTitle" Grid.Column="1" Text="{l:Tr Shell.Brand}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10,0,8,0" FontSize="{DynamicResource Ui.FontSize.Large}"/>
-              <Border x:Name="BrandVersion" Grid.Column="2" Style="{StaticResource Primer.Chip}">
-                <TextBlock x:Name="RailVersion" Style="{StaticResource Primer.Mono.text}"/>
-              </Border>
+              <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
+                <TextBlock x:Name="BrandTitle" Text="{l:Tr Shell.Brand}" FontWeight="SemiBold" TextWrapping="NoWrap" FontSize="{DynamicResource Ui.FontSize.Large}"/>
+                <Border x:Name="BrandVersion" Style="{StaticResource Primer.Chip}" HorizontalAlignment="Left" Margin="0,2,0,0">
+                  <TextBlock x:Name="RailVersion" Style="{StaticResource Primer.Mono.text}"/>
+                </Border>
+              </StackPanel>
             </Grid>
             <Button x:Name="SiderToggle" DockPanel.Dock="Bottom" AutomationProperties.Name="{l:Tr Shell.CollapseMenu}" Content="{l:Tr Shell.CollapseMenu}" ux:Ux.Icon="{DynamicResource Icon.MenuFold}" Style="{StaticResource Primer.MenuButton}" Click="OnSiderToggle" Margin="4,4,4,8"/>
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
@@ -65,7 +66,7 @@
                     <Border x:Name="EnvironmentCountBadge" DockPanel.Dock="Right" Style="{StaticResource Primer.PendingCountBadge}" Tag="{Binding DataContext.EnvironmentAttentionCount,ElementName=EnvironmentContent}" Margin="6,0,0,0">
                       <TextBlock Text="{Binding DataContext.EnvironmentAttentionCount,ElementName=EnvironmentContent}" Style="{StaticResource Primer.CountText}"/>
                     </Border>
-                    <TextBlock Text="{l:Tr Shell.Environment}"/>
+                    <TextBlock Text="{l:Tr Shell.Environment}" TextWrapping="Wrap" TextTrimming="None"/>
                   </DockPanel>
                 </RadioButton>
                 <RadioButton AutomationProperties.Name="{l:Tr Tab.Log}" x:Name="RailLog" Content="{l:Tr Tab.Log}" GroupName="Pages" ToolTip="Ctrl+8" AutomationProperties.AcceleratorKey="Ctrl+8" Tag="Log" ux:Ux.Icon="{DynamicResource Icon.FileText}" Style="{StaticResource Primer.NavItem}" Click="OnRailClick"/>
