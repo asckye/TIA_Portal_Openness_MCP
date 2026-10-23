@@ -72,7 +72,7 @@ namespace TiaMcpServer.ModelContextProtocol
             "[L1][VersionControl] Synchronize a VCI workspace. ProjectToWorkspace exports project objects as text files. " +
             "This build refuses WorkspaceToProject, including previews; use TIA for reviewed file imports. " +
             "DEFAULTS TO dryRun=true: reports what would be exported. Status initialization and child status are not exposed. " +
-            "Current native policy; V4 native acceptance is pending.")]
+            "Current native policy; V4 native acceptance is pending." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult SynchronizeVersionControlWorkspaceV4(
             [Description("direction: 'ProjectToWorkspace' exports; this build refuses 'WorkspaceToProject'.")] string direction = "ProjectToWorkspace",
             [Description("workspaceName: which workspace. Empty = the first one in the project.")] string workspaceName = "",
