@@ -108,18 +108,19 @@ public sealed partial class PlcFoundationEngine
         if (request.DryRun != dryRun) throw new ArgumentException("Conflicting hardware security preview mode.");
         if (request.Operation == "ManagePlcProtection")
         {
+            request.NormalizedAction = PlcProtectionRules.NormalizeAction(request.Action);
 #if !SECURITY_MASTER_SECRET
-            if (PlcProtectionRules.MasterSecretActions.Contains(request.Action)) throw new NotSupportedException("PLC master secret requires V17 or later.");
+            if (PlcProtectionRules.MasterSecretActions.Contains(request.NormalizedAction)) throw new NotSupportedException("PLC master secret requires V17 or later.");
 #endif
 #if !SECURITY_ALL_CONFIGURATION
-            if (request.Action is "protectAllConfiguration" or "unprotectAllConfiguration") throw new NotSupportedException("All-configuration protection requires V21.");
+            if (request.NormalizedAction is "protectAllConfiguration" or "unprotectAllConfiguration") throw new NotSupportedException("All-configuration protection requires V21.");
 #endif
         }
         var security = new HardwareSecurityAdapter(new SecuritySession(this, request.Faults), request);
         switch (request.Operation)
         {
             case "GetPlcPutGetAccess": return security.GetPutGetAccess(request.DeviceName);
-            case "SetPlcPutGetAccess": return new SecurityDataResult(security.SetPutGetAccess(request.DeviceName, request.Enable));
+            case "SetPlcPutGetAccess": return new SecurityDataResult(security.SetPutGetAccess(request.DeviceName, request.Enable, request.DryRun));
 #if SECURITY_WATCH_WEB
             case "ManageWatchForceTableWebAccess": return security.ManageWatchForceTableWebAccess(request.DevicePath, request.ItemPath, request.Action, request.SoftwarePath, request.TableKind, request.TablePath, request.Access, request.ConfirmChange, request.DryRun);
 #endif

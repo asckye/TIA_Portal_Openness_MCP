@@ -47,6 +47,10 @@ internal static class HardwareFamilyWire
             || Exactly(reply, ("found", True), ("device", Text), ("deviceItem", Text), ("attributeName", Text), ("enabled", Flag), ("rawValue", Text)),
         "SetPlcPutGetAccess" => Exactly(reply, ("ok", False), ("failureCode", Text), ("message", Text))
             || Exactly(reply, ("ok", False), ("failureCode", Text), ("device", Text), ("message", Text))
+            || Exactly(reply, ("ok", False), ("failureCode", Text), ("mayHaveChanged", False), ("device", Text), ("message", Text))
+            || Exactly(reply, ("ok", False), ("failureCode", Text), ("mayHaveChanged", False), ("message", Text))
+            || Exactly(reply, ("ok", True), ("dryRun", True), ("mayHaveChanged", False), ("writeOutcomeKnown", True),
+                ("device", Text), ("attributeName", Text), ("before", Flag), ("requestedValue", Flag), ("message", Text))
             || Exactly(reply, ("ok", False), ("mayHaveChanged", True), ("writeOutcomeKnown", False), ("device", Text), ("attributeName", Text), ("message", Text))
             || Exactly(reply, ("ok", Flag), ("mayHaveChanged", True), ("writeOutcomeKnown", Flag), ("device", Text), ("deviceItem", Text),
                 ("attributeName", Text), ("before", Text), ("after", Text), ("note", Text)),

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Security;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Native.Hmi;
@@ -7,6 +8,11 @@ namespace TiaMcp.Adapters.Native.Security;
 
 internal static class SecurityRules
 {
+    internal static void RequireApprovedAttribute(string name, IEnumerable<string> approved)
+    {
+        try { SecurityAttributePolicy.RequireApproved(name, approved); }
+        catch (NotSupportedException error) { throw new PlcSoftwareException("NotSupportedOnVersion", error.Message); }
+    }
     internal static readonly string[] DeviceCategories = { "deviceRights", "roleDeviceRights" };
     internal static SecureString Secure(string password)
     {

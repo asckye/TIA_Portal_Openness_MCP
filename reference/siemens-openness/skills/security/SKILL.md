@@ -25,6 +25,14 @@ using Siemens.Engineering.Umac;
 
 - `Siemens.Engineering.Base.dll`
 
+## Local API audit notes (2026-10-22)
+
+This is a vendored Siemens reference; the upstream examples below are retained. The selected release's official SDK XML takes precedence:
+
+- In the CPU access-control example, use `accessControlProvider.PlcAccessControlConfiguration`, not `accessControlProvider.Configuration` (V19–V21).
+- `PlcMasterSecretConfigurator.MasterSecretConfiguration` (V17+) reports confidential PLC configuration protection: `None`, `WithoutPassword`, `WithPassword`; `WithPasswordAllDataProtection` is V21 only. This answers the checkbox question below at the API level; device/firmware behavior still needs native confirmation.
+- The access-level getter exception is an observation, not an XML guarantee. Keep reads guarded; an unreadable level must not suppress other protection state.
+
 ## Common Patterns
 
 ### Create UMAC Custom Role and Assign Device Function Rights

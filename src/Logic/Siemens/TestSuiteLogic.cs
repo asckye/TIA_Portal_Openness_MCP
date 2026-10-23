@@ -6,7 +6,7 @@ using System.Text.Json.Nodes;
 namespace TiaMcpServer.Siemens
 {
     // Pure logic (no Siemens dependency) for the TIA Portal Test Suite option package
-    // (Siemens.Engineering.TestSuite, identical on V20 / V21): style guide rule sets, application test cases and test sets,
+    // (Siemens.Engineering.TestSuite, V17+; system tests V18+, test sets V20+): style guide rule sets, application test cases and test sets,
     // system test cases; scope, execution, file exchange and library master copies.
     internal static class TestSuiteLogic
     {

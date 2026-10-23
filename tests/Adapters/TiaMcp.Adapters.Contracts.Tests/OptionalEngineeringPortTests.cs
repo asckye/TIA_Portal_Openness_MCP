@@ -48,7 +48,7 @@ public sealed class OptionalEngineeringPortTests
         request.Action = "changeNumber";
         Assert.NotNull(OptionalEngineeringCapabilities.Unsupported("14sp1", request));
         request.Action = "erase"; request.TelegramType = "SupplementaryTelegram";
-        Assert.Null(OptionalEngineeringCapabilities.Unsupported("14sp1", request));
+        Assert.Contains("PilotAccess", OptionalEngineeringCapabilities.Unsupported("14sp1", request));
         request.TelegramType = "AdditionalTelegram";
         Assert.NotNull(OptionalEngineeringCapabilities.Unsupported("14sp1", request));
         request.Operation = "GetDriveParameters"; request.Source = "write"; request.DriveObjectIndex = 1;
@@ -126,11 +126,12 @@ public sealed class OptionalEngineeringPortTests
     [InlineData("15.1", "ListDriveObjects", false, true, false, false)]
     [InlineData("16", "ListDccCharts", false, false, true, false)]
     [InlineData("17", "ListDccCharts", false, false, false, true)]
-    public void Unsupported_nested_reads_are_refused_before_selecting_the_drive(string release, string operation, bool extensions, bool dcc, bool blocks, bool libraries)
+    public void Optional_drive_includes_are_absent_and_unsupported_dcc_reads_refuse_before_dispatch(string release, string operation, bool extensions, bool dcc, bool blocks, bool libraries)
     {
         var request = new OptionalEngineeringRequest { Operation = operation, IncludeTechnologyExtensions = extensions,
             IncludeDcc = dcc, IncludeBlocks = blocks, IncludeLibraries = libraries };
-        Assert.NotNull(OptionalEngineeringCapabilities.Unsupported(release, request));
+        if (operation == "ListDriveObjects") Assert.Null(OptionalEngineeringCapabilities.Unsupported(release, request));
+        else Assert.NotNull(OptionalEngineeringCapabilities.Unsupported(release, request));
         Assert.Null(OptionalEngineeringCapabilities.Unsupported("18", request));
     }
 

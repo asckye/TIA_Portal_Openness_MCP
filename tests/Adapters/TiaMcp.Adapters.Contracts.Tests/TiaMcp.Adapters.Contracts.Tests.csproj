@@ -31,6 +31,7 @@
     <Compile Include="../../../src/Adapters/Native/Reflection/PropertyPathReader.cs" Link="Reflection/PropertyPathReader.cs" />
     <Compile Include="../../../src/Adapters/Native/Reflection/ReflectionScreenTraversal.cs" Link="Reflection/ReflectionScreenTraversal.cs" />
     <Compile Include="../../../src/Adapters/Native/Libraries/LibraryPolicy.cs" Link="Libraries/LibraryPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Optional/OptionalNativeOperations.cs" Link="OptionalNativeOperations.cs" />
     <Compile Include="../../../src/Adapters/Native/Optional/OptionalAssemblyAdmission.cs" Link="OptionalAssemblyAdmission.cs" />
     <Compile Include="../../../src/Adapters/Native/Session/MutationIdentityPolicy.cs" Link="MutationIdentityPolicy.cs" />
     <Compile Include="../../../src/Shared/SafetyPolicy.cs" Link="SafetyPolicy.cs" />

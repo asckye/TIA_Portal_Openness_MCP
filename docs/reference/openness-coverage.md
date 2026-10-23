@@ -3,6 +3,25 @@
 The eight local official PublicAPI XML sets are compared with compiled native-call inventories. No Siemens DLL or XML is redistributed.
 Current V4 registration is summarized in [the version matrix](version-tools.md). The [generated name catalog](version-tool-catalog.md) is a release-time record of the last built package; release validation regenerates it.
 
+## Security coverage deferred beyond 4.0
+
+The 2026-10-19 API audit (P8-81g, S-11) identified these documented members without tool actions. They remain uncovered in 4.0; tool descriptions disclose the limits.
+
+| Official member | Releases | Current tool coverage |
+|---|---|---|
+| `PlcAccessControlConfigurationProvider.PlcAccessControlConfiguration` setter | V19–V21 | `ManagePlcProtection` reads the mode only. |
+| `PlcAccessControlConfigurationProvider.UmcServerAddress` setter, `UmcServerId`, `UmcTrustedCertificateIds`, `UmcConnectionState` | V20–V21 | Address read only; the remaining UMC configuration is uncovered. |
+| `LocalCertificateManager.EnableGlobalCertificatesStore` setter | V16–V21 | `ManagePlcCertificate` lists its value only. |
+| `ProjectUser.SetName`, `Comment`, `SessionTimeOut` | V17–V21 | No rename/comment/timeout action. |
+| `ProjectUser.SetAliasName` / `AliasName` | V19–V21 | No alias action. |
+| `ProjectUser.ActivateRuntimeSessionTimeout` / `DeactivateRuntimeSessionTimeout` | V18–V21 | No timeout activation action. |
+| `CustomRole.SetName`, `Comment`, `SessionTimeOut`; `CustomDeviceFunctionRight.SetName` | V17–V21 | No rename or role timeout action. |
+| `WebserverUserPermissions2` | V18–V19 | Orphan enum: no documented consuming member. `ManageDeviceUsers` covers `WebserverUserPermissions`, not this enum. |
+
+S-4/S-5/S-6: no PUT/GET, certificate assignment or PLC syslog certificate dynamic attribute names have verified owner/type/write semantics. Their exact allow-lists start empty; these operations refuse until documented or VM-verified evidence is recorded. Typed certificate and syslog APIs remain available. `ProtectionProviderBase` describes block protection and is not a project-protection probe. On V17+ the project indicator follows `UmacConfigurator` availability and `EngineeringFunctionRights.Any()`; V15.1/V16 remain unknown.
+
+Native follow-up is recorded in the [API audit VM checklist](api-audit-vm-checklist.md). These limitations do not claim native acceptance.
+
 | Release | Domain signatures | Unique member names | Compiled direct references | Names requiring further review |
 |---|---:|---:|---:|---:|
 | 14sp1 | 847 | 825 | 98 | 727 |

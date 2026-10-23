@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 
 namespace TiaMcp.Adapters.Contracts;
 
@@ -10,6 +11,8 @@ public static class SecurityCapabilities
         int version = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release);
         if (operation == "ManagePlcProtection")
         {
+            action = PlcProtectionRules.Actions.FirstOrDefault(candidate =>
+                string.Equals(candidate, action.Trim(), StringComparison.OrdinalIgnoreCase)) ?? action;
             if (action is "protectAllConfiguration" or "unprotectAllConfiguration" && version < 21)
                 return "All-configuration protection requires V21.";
             if (Array.IndexOf(PlcProtectionRules.MasterSecretActions, action) >= 0 && version < 17)

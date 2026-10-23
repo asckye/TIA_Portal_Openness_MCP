@@ -28,14 +28,14 @@ internal sealed class HardwareSecurityPortService
     public JsonObject GetPutGetAccess(string devicePath)
         => !hasProject() ? new JsonObject { ["found"] = false, ["message"] = "No project open." }
             : Invoke(new HardwareSecurityRequest { Operation = "GetPlcPutGetAccess", DeviceName = devicePath }).AsObject();
-    public JsonObject SetPutGetAccess(string devicePath, bool enable)
+    public JsonObject SetPutGetAccess(string devicePath, bool enable, bool dryRun = true)
         => !hasProject() ? new JsonObject { ["ok"] = false, ["failureCode"] = "PROJECT_NOT_BOUND", ["message"] = "No project open." }
-            : Invoke(new HardwareSecurityRequest { Operation = "SetPlcPutGetAccess", DeviceName = devicePath, Enable = enable, Action = "set", DryRun = false }).AsObject();
+            : Invoke(new HardwareSecurityRequest { Operation = "SetPlcPutGetAccess", DeviceName = devicePath, Enable = enable, Action = "set", DryRun = dryRun }).AsObject();
     private ResponseMessage Run(HardwareSecurityRequest request, string devicePathJson, string itemPathJson)
     {
         if (request.Operation == "ManagePlcProtection" && (
-            (request.Action is "protectAllConfiguration" or "unprotectAllConfiguration" && HardwareContract.ReleaseKey != "21")
-            || (PlcProtectionRules.MasterSecretActions.Contains(request.Action) && HardwareContract.ReleaseKey is "15.1" or "16")))
+            (request.NormalizedAction is "protectAllConfiguration" or "unprotectAllConfiguration" && HardwareContract.ReleaseKey != "21")
+            || (PlcProtectionRules.MasterSecretActions.Contains(request.NormalizedAction) && HardwareContract.ReleaseKey is "15.1" or "16")))
             return new ResponseMessage { Message = "The requested PLC protection action is unavailable on this release.", Meta = new JsonObject { ["operationSuccess"] = false, ["mayHaveChanged"] = false, ["mayHaveWrittenFiles"] = false, ["status"] = "NotSupportedOnVersion" } };
         if (!hasProject()) return JsonSerializer.Deserialize<ResponseMessage>(HardwarePortPreconditions.NoProject(request.Operation).ToJsonString())!;
         Capture(request, "locator", () => { request.DevicePath = JsonSerializer.Deserialize<string[]>(devicePathJson)!; request.ItemPath = JsonSerializer.Deserialize<string[]>(itemPathJson)!; });

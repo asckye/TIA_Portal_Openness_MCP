@@ -8,7 +8,7 @@ internal sealed class ProjectProtectionTools
 {
     private readonly ProjectProtectionPortService _service;
     public ProjectProtectionTools(ProjectProtectionPortService service) => _service = service;
-        [McpServerTool(Name="GetProjectProtection"), Description("[L2][Security][READ] Read project protection indicators of the bound project: UMAC service availability (the only native indicator, no IsProtected scalar exists), UMAC object counts, anonymous user, password policy, UMC server configurator and advanced protection provider scalars. Never enables/disables protection.")]
+        [McpServerTool(Name="GetProjectProtection"), Description("[L2][Security][READ] Read project protection indicators of the bound project: UMAC availability plus EngineeringFunctionRights.Any() (projectProtectedFlag on V17+, unknown on V15.1/V16; no IsProtected scalar exists), UMAC object counts, anonymous user, password policy, UMC server configurator. ProtectionProviderBase concerns block protection and cannot detect project protection. Never enables/disables protection.")]
         public CallToolResult GetProjectProtection()
             => SecurityToolContract.Invoke("GetProjectProtection", true, false,
                 () => _service.ReadProjectProtection());

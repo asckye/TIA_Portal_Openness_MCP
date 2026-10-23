@@ -1,6 +1,6 @@
 # API audit VM checklist
 
-Status: current · Source: the 2026-10-19 official-API audit, the P8-81a/P8-81b/P8-81c/P8-81d fix reports (2026-10-19 to 21) and the
+Status: current · Source: the 2026-10-19 official-API audit, the P8-81a/P8-81b/P8-81c/P8-81d/P8-81g fix reports (2026-10-19 to 22) and the
 P8-73b Workbench fix report (2026-10-21).
 
 The audit compared the repository with the Siemens SDK XML and the official Openness documentation. The items below depend on native
@@ -194,3 +194,21 @@ audit area file and its finding id.
   (V15.1–V19).
 - libraries-vci-safety.md O-R4 (Appendix B R4): motor/encoder `ConfigurationEntry.Value` types.
 - libraries-vci-safety.md O-R5 (Appendix B R5): whether V14 SP1 `Startdrive.DriveObject` is an `IEngineeringService`.
+
+## Security and optional products (P8-81g)
+
+Source: `bin-build/refactor/P8-81g.result.md`, audit `libraries-vci-safety.md` Appendices A/B. No native test was run for these fixes.
+
+1. S-2: which releases/CPU firmware throw when `PlcProtectionAccessLevel` is read without a password; verify `accessLevelError` leaves master-secret/access-control reads available and suppresses the password-level warning.
+2. S-3: V20/V21 access-level and V18+ device/project user `SetPassword` policy refusals leave the password and project unchanged; other exceptions remain uncertain writes.
+3. S-4: exact PUT/GET owner, attribute name, Boolean type, ReadWrite access and uniqueness per release/CPU family. The allow-list stays empty until evidence exists; no fuzzy name matching or enum guessing.
+4. S-5: exact certificate assignment owner/name/type per release, and whether unassigning with null is supported. Assignment allow-list stays empty until evidence exists.
+5. S-6: exact syslog certificate attribute owner/name/type; whether trusted IDs are a collection and which conversions are supported. Dynamic reads/writes stay withheld until evidence exists; no official URL was verified.
+6. S-9/S-10: `UmacConfigurator.EngineeringFunctionRights.Any()` indicator on protected/unprotected projects (V17+); no project `ProtectionProviderBase` probe is made. V15.1/V16 flag remains unknown.
+7. S-13: UMC import/checkConsistency/synchronize authentication event timing/thread, late callbacks, retries and behavior without credentials (exception/hang/repeated challenge). The credential scope serializes callback use with disposal; native credential consumption after `SetPassword` still requires confirmation. Plain request strings remain in managed memory until GC.
+8. D1/G1/P1: V15.1–V19 `CanChangeTelegram(int)` then `TelegramNumber` setter and torque insertion/erase/change; V20/V21 negative matching Can* answers produce no write. Preserve the empty-telegram/existing-main crash guards.
+9. D2/D3: V19 `MC.Drives.ModuleAccessPoint` service owner; V18/V19 DCC `SetAsPredecessor` changes the runtime predecessor.
+10. D4/D5: V18/V19 SiVArc PLC block/library type references and root/nested target-group `CreateFrom` placement.
+11. D6/R5: V14 SP1 `Startdrive.DriveObject` service admission and UInt16 parameter lookup. PilotAccess reads stay exposed; writes remain refused pending evidence. No write preview claims support.
+12. R3/R4: V15.1–V19 SiVArc generation with different PLC software/device names and a configured HMI connection; motor/encoder ConfigurationEntry runtime types, conversion, and projection readback.
+13. Appendix B residual notes: V21 DcbLibraryImporter service owner (project library versus project) and V16/V17 DriveControlChart.Name setter behavior remain unverified. DCB import coverage is handled by P8-81f, not changed here.

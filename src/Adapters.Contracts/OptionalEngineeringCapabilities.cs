@@ -25,19 +25,16 @@ public static class OptionalEngineeringCapabilities
     public static string? Unsupported(string release, OptionalEngineeringRequest request)
     {
         int major = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release, System.Globalization.CultureInfo.InvariantCulture);
-        if (major == 14 && request.Operation == "ListDriveObjects" && request.IncludeFunctions)
-            return "DriveFunctionInterface requires V15.1 or later; set includeFunctions=false on this release.";
         if (major == 14 && request.DriveObjectIndex > 0)
             return "V14 SP1 exposes one DriveObject service per device item; select driveObjectIndex=0.";
+        if (major == 14 && (request.Operation == "ManageStartdriveParameter" && request.Action == "write"
+            || request.Operation == "ManageDriveTelegrams" && request.Action != "read"))
+            return "V14 SP1 Startdrive is PilotAccess (not available for public use); writes are refused pending VM evidence.";
         if (major == 14 && request.Operation == "ManageDriveTelegrams"
             && (request.Action is not ("read" or "erase") || request.Action == "erase" && request.TelegramType is not ("MainTelegram" or "SupplementaryTelegram")))
             return "V14 SP1 supports telegram read/erase only; the modern insertion/change overloads and telegram types are unavailable.";
         if (major < 20 && request.DriveObjectNumber != 0)
             return "DriveObjectNumber requires V20 or later; select driveObjectIndex on this release.";
-        if (major < 18 && request.Operation == "ListDriveObjects" && request.IncludeTechnologyExtensions)
-            return "TechnologyExtensionContainer requires V18 or later; set includeTechnologyExtensions=false on this release.";
-        if (major < 16 && request.Operation == "ListDriveObjects" && request.IncludeDcc)
-            return "DriveControlChartContainer requires V16 or later; set includeDcc=false on this release.";
         if (major < 18 && request.Operation == "ListDccCharts" && (request.IncludeLibraries || request.IncludeBlocks || request.IncludePins))
             return "DCC blocks, pins and DCB libraries require V18 or later; disable those include flags on this release.";
         if (major < 20 && request.Operation == "GetDriveParameters" && request.Source == "read")
@@ -81,8 +78,27 @@ public static class OptionalEngineeringCapabilities
             return "Telegram actor/sensor/encoder connections require V19; torque connections require V20.";
         if (major < 19 && request.Operation == "ManageDriveTelegrams" && request.TelegramType == "MainTelegram" && request.Action is "check" or "insert")
             return "The MainTelegram insertion overload requires V19 or later.";
-        if (major < 20 && request.Operation == "ManageDriveTelegrams" && request.TelegramType is "TorqueTelegram" or "EdgeTelegram")
-            return "Generic telegram insertion for the selected type requires V20 or later.";
+        if (major < 20 && request.Operation == "ManageDriveTelegrams" && request.TelegramType == "EdgeTelegram")
+            return "EdgeTelegram requires V20 or later; TorqueTelegram is available from V15.1.";
+        if (major < 17 && request.Operation == "ManageDriveFunctions" && request.Action == "setSimoGearMlfb")
+            return "DriveFunctionInterface.Commissioning.SetSimoGearMlfb requires V17 or later.";
+        if (major < 19 && request.Operation == "ManageDriveFunctions" && request.Action == "setMotorType"
+            && request.Inputs.TryGetValue(request.ValueJson, out var motor)
+            && motor.Properties.TryGetValue("motorType", out var motorType)
+            && new[] { "InductionMotor1LE1", "InductionMotor1PC1", "InductionMotor1PH4", "InductionMotor1LE5", "InductionMotor1PH7",
+                "InductionMotor1PH8", "NoEncoder1FG1GearedSynchronousMotor", "NoEncoder1FK7SynchronousMotor", "DriveCliqMotor", "DriveCliqMotorDataSet" }
+                .Contains(motorType.Text, StringComparer.Ordinal))
+            return "The selected MotorType requires V19 or later.";
+        if (request.Operation == "GenerateSivarc")
+        {
+            var options = request.GenerationOptions.Split(new[] { '|', ',' }, StringSplitOptions.RemoveEmptyEntries).Select(value => value.Trim()).ToArray();
+            if (major < 18 && options.Any(value => value is "UserCreatedRules" or "EnergySuiteRules" or "AllRules"))
+                return "The selected SiVArc generation option requires V18 or later.";
+            if (major < 20 && options.Contains("AdvancedTags", StringComparer.Ordinal))
+                return "SiVArc AdvancedTags generation requires V20 or later.";
+        }
+        if (major < 18 && request.Operation == "ManageDccChart" && request.Action == "showEditor")
+            return "DriveControlChart.ShowDccEditor requires V18 or later.";
         if (major < 20 && request.Operation == "ManageDriveFunctions" && request.Action is "activateFunction" or "deactivateFunction" or "setSIAxisType" or "setMotorCode")
             return "The requested drive function requires V20 or later.";
         if (major < 19 && request.Operation == "ManageDriveFunctions" && request.Action is "setEncoderType" or "setEquivalentCircuitDiagramData" or "updateCheckSums")

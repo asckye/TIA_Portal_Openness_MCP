@@ -25,7 +25,7 @@ namespace TiaMcpServer.Siemens
         internal static readonly string[] SyslogServerProperties = { "Name", "Address", "Port", "Tls", "Comment" };      // Security.SyslogServer
         internal static readonly string[] SyslogManagerProperties = { "EnableSystemLogging", "TransportProtocol" };      // HW.Features.SysLogConfigurationManager
         internal static readonly string[] SyslogTransportProtocols = { "None", "TLSServerAndClientAuthentication", "TLSOnlyServerAuthentication", "UDP" };
-        internal static readonly string[] SyslogPlcAttributes = { "SysLogAutoAcceptClient", "SysLogClientCertificateId", "SysLogTrustedCertificateIds" }; // dynamic attributes on the CPU item (official page)
+        internal static readonly string[] SyslogPlcAttributes = { "SysLogAutoAcceptClient", "SysLogClientCertificateId", "SysLogTrustedCertificateIds" }; // candidate names only; no official URL/type evidence, native writes refuse pending VM confirmation
         // TIA V21 evidence, 2026-09-18 (docs/reference/real-machine-ledger.md): SyslogServerComposition.Create(name) threw a message-less NonRecoverableException and the
         // TIA Portal V21 process exited, twice in a row. Real creation stays disabled until a precondition is known; preview works.
         internal const string ProjectSyslogCreateRefusal = "scope=project action=create is preview-only: Siemens.Engineering.Security.SyslogServerComposition.Create(name) crashed TIA Portal V21 twice on the reference project (2026-09-18, message-less NonRecoverableException, process gone). Create the server in the TIA UI (project security settings) and manage it here with read / update / assignModule / unassignModule / delete.";

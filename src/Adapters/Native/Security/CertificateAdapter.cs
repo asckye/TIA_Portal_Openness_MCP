@@ -39,6 +39,7 @@ namespace TiaMcp.Adapters.Native.Security
                 if (subjectAlternativeNames.Length > 0 && action != "create") throw new ArgumentException("subjectAlternativeNamesJson applies to action=create only.");
                 if (!string.IsNullOrEmpty(password) && action != "import") throw new ArgumentException("password applies to action=import only (CertificateComposition.Import(file, SecureString)); it is never echoed.");
                 if ((action == "create" || action == "template") && string.IsNullOrWhiteSpace(usage)) throw new ArgumentException("usage (" + string.Join("/", SecurityCatalog.CertificateUsages) + ") is required for template/create.");
+                if (action is "assign" or "unassign") SecurityRules.RequireApprovedAttribute(assignment, SecurityAttributePolicy.CertificateNames);
                 bool writing = action != "list" && action != "read" && action != "template" && !dryRun;
                 meta["passwordProvided"] = !string.IsNullOrEmpty(password);
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;

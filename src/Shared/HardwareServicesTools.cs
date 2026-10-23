@@ -32,7 +32,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
 
 
-        [McpServerTool(Name="ManageWatchForceTableWebAccess"), Description("[L2][Hardware][WRITE] Read/assign/unassign web-server access rules for PLC watch/force tables (WatchAndForceTableAccessManager on the exact CPU DeviceItem). read lists both rule sets. assign/unassign need softwarePath (exact PLC, must be Offline for a real run), tableKind watch|force, exact tablePath (group/table), access None|Read|Write and confirmChange=true. Existing rule with read-only Access is refused (unassign first). Default preview; readback verified; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ManageWatchForceTableWebAccess"), Description("[L2][Hardware][WRITE] Read/assign/unassign web-server access rules for PLC watch/force tables (WatchAndForceTableAccessManager on the exact CPU DeviceItem). read lists both rule sets. assign/unassign need softwarePath (exact PLC, must be Offline for a real run), tableKind watch|force, exact tablePath (group/table), access None|Read|Write and confirmChange=true. Default preview; readback verified; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManageWatchForceTableWebAccess(
             string[] devicePath,
             string[] itemPath,
@@ -62,7 +62,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
 
 
-        [McpServerTool(Name="ManagePlcProtection"), Description("[L2][Hardware][WRITE] Access level and confidential-configuration-data password of ONE CPU (PlcAccessLevelProvider / PlcMasterSecretConfigurator on the CPU device item; itemPath [] resolves the station's CPU). read reports accessLevel (FullAccess / ReadAccess / HMIAccess / NoAccess / FullAccessIncludingFailsafe), masterSecret (None = 'Protect confidential PLC configuration data' unchecked, WithoutPassword = checked without password, WithPassword, WithPasswordAllDataProtection) and the access-control mode. setAccessLevel accessLevel; setAccessPassword / resetAccessPassword accessLevel [+ password] (TIA only accepts passwords for levels less strict than the selected one); protectMasterSecret password; changeMasterSecret password newPassword; unprotectMasterSecret [password]; resetMasterSecret (certificates encrypted with it are lost); protectAllConfiguration [password]; unprotectAllConfiguration. Why: TIA V21 refuses the hardware download of an S7-1500 FW >= 2.9 CPU whose level is above FullAccess without a FullAccess password or whose confidential data has no password ('Hardware compilation completed with errors' - see CompileDevice). Passwords go in as SecureString and are never echoed; state read back (meta.before / after). Default preview; real change needs dryRun=false AND confirmChange=true; no compile / save / download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ManagePlcProtection"), Description("[L2][Hardware][WRITE] Access level and confidential-configuration-data password of ONE CPU (PlcAccessLevelProvider / PlcMasterSecretConfigurator on the CPU device item; itemPath [] resolves the station's CPU). read reports accessLevel (FullAccess / ReadAccess / HMIAccess / NoAccess / FullAccessIncludingFailsafe), masterSecret (None = 'Protect confidential PLC configuration data' unchecked, WithoutPassword = checked without password, WithPassword, WithPasswordAllDataProtection) and the access-control mode. setAccessLevel accessLevel; setAccessPassword / resetAccessPassword accessLevel [+ password] (TIA only accepts passwords for levels less strict than the selected one); protectMasterSecret password; changeMasterSecret password newPassword; unprotectMasterSecret [password]; resetMasterSecret (certificates encrypted with it are lost); protectAllConfiguration [password]; unprotectAllConfiguration. Why: TIA V21 refuses the hardware download of an S7-1500 FW >= 2.9 CPU whose level is above FullAccess without a FullAccess password or whose confidential data has no password ('Hardware compilation completed with errors' - see CompileDevice). Passwords go in as SecureString and are never echoed; state read back (meta.before / after). Access-control mode/UMC configuration writes are not covered in 4.0; see docs/reference/openness-coverage.md. Default preview; real change needs dryRun=false AND confirmChange=true; no compile / save / download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManagePlcProtection(
             [Description("devicePath: array naming the station, e.g. [\"PLC_1\"] (or [group, ..., station]).")] string[] devicePath,
             [Description("itemPath: array of device-item names down to the CPU; [] (default) resolves the station's CPU.")] string[] itemPath = null!,
@@ -78,7 +78,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 string itemPathJson = HardwareToolContract.Path(itemPath, "itemPath", rootAllowed: true, optional: true);
                 HardwareToolContract.Check(() =>
                 {
-                    HardwareServicesLogic.RequireOneOf(action, PlcProtectionLogic.Actions, "action");
+                    PlcProtectionLogic.NormalizeAction(action);
                     if (action != "read") HardwareToolContract.Confirm(dryRun, confirmChange);
                 });
                 return _hardware.ManagePlcProtection(devicePathJson,itemPathJson,action,accessLevel,password,newPassword,confirmChange,dryRun);
@@ -89,7 +89,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "GetPlcPutGetAccess"), Description(
             "[L2][Category:Hardware][PreCondition:ConnectPortal+OpenProject]" +
             " Read whether a CPU permits remote PUT/GET access — the precondition for GetPlcLiveValuesS7 on DB areas." +
-            " If enabled=false, S7 absolute reads of DBs will fail; enable with SetPlcPutGetAccess (then hardware DownloadPlc).")]
+            " Only exact documented or VM-verified attributes are read; the allow-list is currently empty, so this tool reports unavailable pending VM confirmation.")]
         public CallToolResult GetPlcPutGetAccess(
             [Description("devicePath: device name from GetProjectTree, e.g. 'PLC_1'.")] string devicePath)
             => HardwareToolContract.Invoke("GetPlcPutGetAccess", true, false, () =>
@@ -101,13 +101,14 @@ namespace TiaMcpServer.ModelContextProtocol
             "[L2][Category:Hardware][WRITE][PreCondition:ConnectPortal+OpenProject]" +
             " Enable or disable remote PUT/GET access on a CPU (the precondition for S7 DB reads)." +
             " This is a hardware-configuration change — you must run DownloadPlc afterwards for it to take effect on the live CPU." +
-            " Returns before/after readback evidence. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+            " Defaults to dryRun=true. Only exact approved ReadWrite Boolean attributes may be written; the allow-list is currently empty and writes refuse pending VM confirmation. Returns before/after evidence. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult SetPlcPutGetAccess(
             [Description("devicePath: device name from GetProjectTree, e.g. 'PLC_1'.")] string devicePath,
-            [Description("enable: true to permit remote PUT/GET access, false to forbid it.")] bool enable = true)
-            => HardwareToolContract.Invoke("SetPlcPutGetAccess", false, true, () =>
+            [Description("enable: true to permit remote PUT/GET access, false to forbid it.")] bool enable = true,
+            [Description("dryRun: true previews; false applies the approved attribute change.")] bool dryRun = true)
+            => HardwareToolContract.Invoke("SetPlcPutGetAccess", dryRun, true, () =>
             {
-                return SetPutGetAccessCore(devicePath, enable);
+                return SetPutGetAccessCore(devicePath, enable, dryRun);
             });
 
 
@@ -139,17 +140,17 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private ResponseJsonReport SetPutGetAccessCore(
             [Description("devicePath: device name from GetProjectTree, e.g. 'PLC_1'.")] string devicePath,
-            [Description("enable: true to permit remote PUT/GET access, false to forbid it.")] bool enable = true)
+            [Description("enable: true to permit remote PUT/GET access, false to forbid it.")] bool enable = true, bool dryRun = true)
         {
             try
             {
-                var data = _hardware.SetPutGetAccess(devicePath, enable);
+                var data = _hardware.SetPutGetAccess(devicePath, enable, dryRun);
                 bool ok = data["ok"]?.GetValue<bool>() ?? false;
                 return new ResponseJsonReport
                 {
                     Ok = ok,
                     Message = ok
-                        ? $"PUT/GET access on {devicePath} set to {enable}. Download hardware config to apply."
+                        ? (dryRun ? $"PUT/GET preview on {devicePath}; nothing changed." : $"PUT/GET access on {devicePath} set to {enable}. Download hardware config to apply.")
                         : (data["message"]?.ToString() ?? "SetPlcPutGetAccess failed."),
                     Data = data,
                     Meta = ResponseMeta.Basic(DateTime.Now, ok)

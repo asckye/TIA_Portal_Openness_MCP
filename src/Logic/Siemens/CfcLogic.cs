@@ -7,8 +7,8 @@ using System.Xml;
 
 namespace TiaMcpServer.Siemens
 {
-    // Pure logic (no Siemens dependency) for the CFC option package (Siemens.Engineering.CFC, identical on
-    // V20 / V21): ChartProvider XML (ZIP) exchange, chart passwords and the ChartProviderS7 instruction data export.
+    // Pure logic (no Siemens dependency) for the CFC option package (Siemens.Engineering.CFC, V18+;
+    // ExportInstructionData V19+): ChartProvider XML (ZIP) exchange, chart passwords and the ChartProviderS7 instruction data export.
     internal static class CfcLogic
     {
         internal static string RequireOneOf(string value, string[] allowed, string parameter) => ArgumentRules.RequireOneOf(value, allowed, parameter);

@@ -310,6 +310,18 @@ namespace TiaMcp.Adapters.Native.Optional
                 meta["checks"] = checks;
                 if (action == "check") return "Telegram feasibility checked with the native Can* methods; nothing changed.";
                 if (!r.Writes) return "Telegram " + action + " preview; nothing changed (native Can* results in checks).";
+                if (action == "insert")
+                {
+                    string check = type == TelegramType.AdditionalTelegram ? "canInsertAdditionalTelegram"
+                        : type == TelegramType.MainTelegram ? "canInsertMainTelegram"
+                        : type == TelegramType.SupplementaryTelegram ? "canInsertSupplementaryTelegram"
+                        : type == TelegramType.SafetyTelegram ? "canInsertSafetyTelegram"
+                        : type == TelegramType.TorqueTelegram ? "canInsertTorqueTelegram" : "canInsertTelegram";
+                    OptionalNativeOperations.RequireCanChange(checks[check]);
+                    if (type != TelegramType.AdditionalTelegram) OptionalNativeOperations.RequireCanChange(checks["canInsertTelegram"]);
+                }
+                if (action == "changeNumber") OptionalNativeOperations.RequireCanChange(checks["canChangeTelegram"]);
+                if (action == "changeSize") OptionalNativeOperations.RequireCanChange(checks["canChangeSize"]);
                 meta["mayHaveChanged"] = true;
                 switch (action)
                 {

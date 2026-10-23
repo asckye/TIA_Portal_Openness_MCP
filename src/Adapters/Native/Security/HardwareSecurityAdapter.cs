@@ -66,7 +66,6 @@ namespace TiaMcp.Adapters.Native.Security
                 }
                 var accessProperty = existing?.GetType().GetProperty("Access");
                 if (existing != null && Equals(accessProperty?.GetValue(existing), requested)) { meta["alreadyAssigned"] = true; return "Access rule already matches; nothing to change."; }
-                if (existing != null && accessProperty?.SetMethod?.IsPublic != true) throw new NotSupportedException("Existing rule Access is read-only; unassign first, then assign.");
                 if (dryRun) return "Assign preview; nothing changed.";
                 meta["mayHaveChanged"] = true;
                 if (existing is WatchTableAccessRule existingWatch) existingWatch.Access = requested;
@@ -80,14 +79,21 @@ namespace TiaMcp.Adapters.Native.Security
             });
 
 #endif
-        public HmiObject SetPutGetAccess(string devicePath, bool enable)
+        public HmiObject SetPutGetAccess(string devicePath, bool enable, bool dryRun = true)
         {
             // envelope: legacy-ok-only
             if (_session.IsProjectNull()) return new HmiObject { ["ok"] = false, ["failureCode"] = "PROJECT_NOT_BOUND", ["message"] = "No project open." };
             var device = _session.GetDevice(devicePath);
             if (device == null) return new HmiObject { ["ok"] = false, ["failureCode"] = "NOT_FOUND", ["device"] = devicePath, ["message"] = $"Device not found: '{devicePath}'." };
 
-            var (item, attrName) = _session.FindPutGetAttribute(device);
+            DeviceItem? item;
+            string? attrName;
+            try { (item, attrName) = _session.FindPutGetAttribute(device); }
+            catch (Exception error) when (error is NotSupportedException || error is InvalidOperationException)
+            {
+                return new HmiObject { ["ok"] = false, ["failureCode"] = "UNSUPPORTED_CAPABILITY", ["mayHaveChanged"] = false,
+                    ["device"] = device.Name, ["message"] = error.Message };
+            }
             if (item == null || attrName == null)
                 return new HmiObject
                 {
@@ -99,7 +105,22 @@ namespace TiaMcp.Adapters.Native.Security
                                   "CPU > Protection & Security > Connection mechanisms > 'Permit access with PUT/GET communication', then download hardware."
                 };
 
-            object? before = null; try { before = item.GetAttribute(attrName); } catch { /* swallow(probe-optional): Optional PUT/GET readback must not suppress the write attempt or its result. */ }
+            object? before;
+            try
+            {
+                before = item.GetAttribute(attrName);
+                var info = item.GetAttributeInfos().Single(i => i.Name == attrName);
+                SecurityAttributePolicy.RequireBooleanWrite(info.AccessMode.ToString(), before);
+            }
+            catch (Exception error)
+            {
+                return new HmiObject { ["ok"] = false, ["failureCode"] = "UNSUPPORTED_CAPABILITY", ["mayHaveChanged"] = false,
+                    ["message"] = error.Message };
+            }
+            if (dryRun) return new HmiObject { ["ok"] = true, ["dryRun"] = true, ["mayHaveChanged"] = false,
+                ["writeOutcomeKnown"] = true, ["device"] = device.Name, ["attributeName"] = attrName,
+                ["before"] = before, ["requestedValue"] = enable, ["message"] = "PUT/GET preview; nothing changed." };
+            using var access = _session.AcquireHmiEditAccess();
             try { item.SetAttribute(attrName, enable); }
             catch (Exception ex)
             {
@@ -149,7 +170,7 @@ namespace TiaMcp.Adapters.Native.Security
                     throw new NotSupportedException("PlcMasterSecretConfigurator is not available on this device item (needs an S7-1500 FW >= 2.9 / S7-1200 FW >= 4.5 CPU).");
                 if (act == "setAccessPassword" || act == "resetAccessPassword")
                 {
-                    var current = accessProvider!.PlcProtectionAccessLevel.ToString();
+                    var current = ((HmiObject)meta["before"]!)["accessLevel"]?.ToString() ?? "";
                     var warning = PlcProtectionRules.PasswordLevelWarning(current, level);
                     if (warning != null) meta["warning"] = warning;
                 }
@@ -169,7 +190,9 @@ namespace TiaMcp.Adapters.Native.Security
                         accessProvider!.PlcProtectionAccessLevel = (PlcProtectionAccessLevel)Enum.Parse(typeof(PlcProtectionAccessLevel), level);
                         break;
                     case "setAccessPassword":
-                        accessProvider!.SetPassword((PlcProtectionAccessLevel)Enum.Parse(typeof(PlcProtectionAccessLevel), level), secure!);
+                        if (!EngineeringCredentialRules.TrySetPassword(() => accessProvider!.SetPassword(
+                            (PlcProtectionAccessLevel)Enum.Parse(typeof(PlcProtectionAccessLevel), level), secure!), meta))
+                            return EngineeringCredentialRules.PasswordPolicyRefusal;
                         break;
                     case "resetAccessPassword":
                         accessProvider!.ResetPassword((PlcProtectionAccessLevel)Enum.Parse(typeof(PlcProtectionAccessLevel), level));
@@ -248,7 +271,9 @@ namespace TiaMcp.Adapters.Native.Security
         private static HmiObject ReadProtectionState(PlcAccessLevelProvider? access, object? secretValue, object? controlValue)
         {
             var state = new HmiObject();
-            state["accessLevel"] = access == null ? null : access.PlcProtectionAccessLevel.ToString();
+            state["accessLevel"] = null;
+            try { if (access != null) state["accessLevel"] = access.PlcProtectionAccessLevel.ToString(); }
+            catch (Exception error) { state["accessLevelError"] = error.GetBaseException().Message; }
             state["accessLevelProviderPresent"] = access != null;
 #if SECURITY_MASTER_SECRET
             var secret = (PlcMasterSecretConfigurator?)secretValue;

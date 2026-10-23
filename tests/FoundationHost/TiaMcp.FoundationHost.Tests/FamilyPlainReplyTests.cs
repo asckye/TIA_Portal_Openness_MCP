@@ -235,7 +235,7 @@ public sealed class FamilyPlainReplyTests
     {
         using var worker = Worker(release);
         var service = new HardwareSecurityPortService(Call(worker), () => true, () => @"C:\fixture\P.ap" + release);
-        var (read, written) = await Task.Run(() => (service.GetPutGetAccess("PLC_1"), service.SetPutGetAccess("PLC_1", true)));
+        var (read, written) = await Task.Run(() => (service.GetPutGetAccess("PLC_1"), service.SetPutGetAccess("PLC_1", true, dryRun: false)));
         Assert.True((bool)read["found"]!);
         Assert.True((bool)read["enabled"]!);
         Assert.Equal("PLC_1", (string?)read["device"]);

@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
+using TiaMcp.Adapters.Contracts;
 using Siemens.Engineering.HW;
 using TiaMcp.Adapters.Native.Hmi;
 namespace TiaMcp.Adapters.Native.Security;
@@ -8,31 +10,17 @@ public sealed class PutGetAccess
     private readonly PlcFoundationEngine engine;
     internal PutGetAccess(PlcFoundationEngine engine) => this.engine = engine;
     internal Device? GetDevice(string path) => engine.ResolveEngineeringDevice != null ? engine.ResolveEngineeringDevice(path) as Device : engine.SecurityLegacyDevice(path);
-        public static string NormalizeAttrName(string? n)
-            => new string((n ?? string.Empty).ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
-
-        // Locate the CPU DeviceItem + attribute controlling "Permit access with PUT/GET communication".
-        // The exact Openness attribute name varies by CPU/firmware, so match any attribute whose
-        // normalized (lowercase, alphanumeric-only) name contains "putget".
-        // NOTE: S7-1200 (e.g. 1211C V4.6) does not expose this attribute via Openness at all — neither
-        // enumerated by GetAttributeInfos() nor gettable by name — so this returns (null, null) there.
-        // Use DumpDeviceAttributes to see exactly what a given CPU exposes.
-        public static (DeviceItem? item, string? attrName) FindPutGetAttribute(Device device)
-        {
-            foreach (var root in device.DeviceItems)
-            {
-                foreach (var tup in PlcFoundationEngine.HardwareTraverseDeviceItems(root, root.Name))
-                {
-                    var it = tup.Item1;
-                    string[] names;
-                    try { names = it.GetAttributeInfos().Select(x => x.Name ?? string.Empty).ToArray(); }
-                    catch { /* swallow(enumerate-optional): Skip device items whose attribute inventory is unavailable while locating PUT/GET support. */ continue; }
-                    var match = names.FirstOrDefault(n => NormalizeAttrName(n).Contains("putget"));
-                    if (!string.IsNullOrEmpty(match)) return (it, match);
-                }
-            }
-            return (null, null);
-        }
+    // Exact names only. Enumeration failures make uniqueness unknowable and must refuse.
+    public static (DeviceItem? item, string? attrName) FindPutGetAttribute(Device device)
+    {
+        if (SecurityAttributePolicy.PutGetNames.Count == 0) throw new NotSupportedException(SecurityAttributePolicy.Unverified);
+        var candidates = new List<(DeviceItem Item, string Name)>();
+        foreach (var root in device.DeviceItems)
+            foreach (var row in PlcFoundationEngine.HardwareTraverseDeviceItems(root, root.Name))
+                foreach (var info in row.Item1.GetAttributeInfos()) candidates.Add((row.Item1, info.Name));
+        int selected = SecurityAttributePolicy.SelectExact(candidates.Select(row => row.Name), SecurityAttributePolicy.PutGetNames);
+        return candidates[selected];
+    }
 
         internal static bool AttrValueIsEnabled(object? v)
             => v is bool b ? b : (v?.ToString()?.Equals("True", StringComparison.OrdinalIgnoreCase) ?? false);
@@ -44,7 +32,13 @@ public sealed class PutGetAccess
             var device = GetDevice(devicePath);
             if (device == null) return new HmiObject { ["found"] = false, ["device"] = devicePath, ["message"] = $"Device not found: '{devicePath}'." };
 
-            var (item, attrName) = FindPutGetAttribute(device);
+            DeviceItem? item;
+            string? attrName;
+            try { (item, attrName) = FindPutGetAttribute(device); }
+            catch (Exception error) when (error is NotSupportedException || error is InvalidOperationException)
+            {
+                return new HmiObject { ["found"] = false, ["device"] = device.Name, ["message"] = error.Message };
+            }
             if (item == null || attrName == null)
                 return new HmiObject
                 {

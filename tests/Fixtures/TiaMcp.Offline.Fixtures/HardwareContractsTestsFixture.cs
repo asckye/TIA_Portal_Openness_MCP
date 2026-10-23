@@ -219,7 +219,7 @@ namespace TiaMcpServer.Siemens.Services
         public ResponseMessage CompileDevice(string devicePathJson, string itemPathJson) => Next();
         public ResponseMessage ManageHardwareUtilities(string action, string typeIdentifier, string devicePathJson, string itemPathJson, string filePath, string password, bool dryRun) => Next();
         public JsonObject GetPutGetAccess(string path) { Calls++; return new JsonObject { ["found"] = true, ["enabled"] = false }; }
-        public JsonObject SetPutGetAccess(string path, bool enabled) { Calls++; return new JsonObject { ["ok"] = true, ["mayHaveChanged"] = true, ["writeOutcomeKnown"] = true }; }
+        public JsonObject SetPutGetAccess(string path, bool enabled, bool dryRun = true) { Calls++; return new JsonObject { ["ok"] = true, ["mayHaveChanged"] = true, ["writeOutcomeKnown"] = true }; }
     }
 }
 

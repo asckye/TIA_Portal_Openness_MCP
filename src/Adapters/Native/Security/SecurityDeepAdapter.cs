@@ -45,7 +45,7 @@ namespace TiaMcp.Adapters.Native.Security
             var row = new HmiObject { ["enableSystemLogging"] = manager.EnableSystemLogging, ["transportProtocol"] = manager.TransportProtocol.ToString() };
             row["servers"] = new HmiArray(HardwareGroupOperations.Items(manager.SysLogServerConfiguration).Cast<SysLogServerConfiguration>()
                 .Select(s => (object?)new HmiObject { ["address"] = s.SysLogServerAddress, ["port"] = s.SysLogServerPort }).ToArray());
-            if (manager.OwnedBy is IEngineeringObject owner) row["attributes"] = _session.DynamicAttributes(owner, SecurityCatalog.SyslogPlcAttributes);
+            if (manager.OwnedBy is IEngineeringObject owner) row["attributes"] = _session.DynamicAttributes(owner, SecurityAttributePolicy.SyslogNames.ToArray());
             return row;
         }
 
@@ -57,6 +57,7 @@ namespace TiaMcp.Adapters.Native.Security
                 _session.Validate("syslog");
                 if (attributes.Count > 0 && (scope != "plc" || action != "update")) throw new ArgumentException("attributesJson (SysLogAutoAcceptClient / SysLogClientCertificateId / SysLogTrustedCertificateIds) applies to scope=plc action=update only.");
                 if (scope == "project" && action == "create" && !dryRun) throw new NotSupportedException(SecurityCatalog.ProjectSyslogCreateRefusal);
+                foreach (var attribute in attributes.Keys) SecurityRules.RequireApprovedAttribute(attribute, SecurityAttributePolicy.SyslogNames);
                 bool write = action != "read" && !dryRun;
                 using var access = write ? _session.AcquireHmiEditAccess() : null;
                 meta["scope"] = scope; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
@@ -65,7 +66,7 @@ namespace TiaMcp.Adapters.Native.Security
                     var owner = _session.ExactEngineeringHardware(devicePathJson, itemPathJson);
                     var manager = _session.RequireHardwareService<SysLogConfigurationManager>(owner, "itemPathJson");
                     meta["ownerPath"] = _session.HardwareOwnerPath(owner); meta["before"] = SyslogManagerRow(manager, meta);
-                    if (action == "read") { meta["apiCallSuccess"] = true; meta["dataComplete"] = true; meta["readScope"] = "EnableSystemLogging, TransportProtocol, SysLogServerConfiguration rows and the three official dynamic attributes of the CPU item (failures listed per name)."; return "PLC syslog configuration read; no modification."; }
+                    if (action == "read") { meta["apiCallSuccess"] = true; meta["dataComplete"] = true; meta["readScope"] = "EnableSystemLogging, TransportProtocol, SysLogServerConfiguration rows and approved dynamic attributes only; unverified certificate attributes are withheld pending VM confirmation."; return "PLC syslog configuration read; no modification."; }
                     var existing = string.IsNullOrEmpty(serverAddress) ? null : manager.SysLogServerConfiguration.Find(serverAddress);
                     if (action == "createServer" && existing != null) throw new InvalidOperationException("A syslog server with this address exists on the CPU: " + serverAddress);
                     if (action == "deleteServer" && existing == null) throw new PortalException(PortalErrorCode.NotFound, "No syslog server with address " + serverAddress + " on the CPU (SysLogServerConfigurationComposition.Find).");
@@ -95,7 +96,7 @@ namespace TiaMcp.Adapters.Native.Security
 #if SECURITY_PROJECT_SYSLOG
                 // scope=project: Siemens.Engineering.Security.SyslogServerProvider (project service), servers are global objects assignable to modules.
                 if (_session.IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "Attach a project first.");
-                var provider = _session.CurrentProject!.GetService<SyslogServerProvider>() ?? throw new NotSupportedException("SyslogServerProvider service unavailable on this project (project-global syslog servers need TIA V19 or later).");
+                var provider = _session.CurrentProject!.GetService<SyslogServerProvider>() ?? throw new NotSupportedException("SyslogServerProvider service unavailable on this project (project-global syslog servers need TIA V20 or later).");
                 SyslogServerComposition composition = provider.Servers;
                 Func<object> fresh = () => (_session.CurrentProject!.GetService<SyslogServerProvider>() ?? provider).Servers;
                 var servers = HardwareGroupOperations.Items(composition).Cast<SyslogServer>().ToArray(); meta["countBefore"] = servers.Length;
@@ -240,10 +241,10 @@ namespace TiaMcp.Adapters.Native.Security
         private UmcServerConfigurator RequireUmcServerConfigurator()
             => _session.CurrentProject!.GetService<UmcServerConfigurator>() ?? throw new NotSupportedException("UmcServerConfigurator service unavailable on this project (available on protected and unprotected projects from TIA V17; one preconfigured UMC server).");
         // UmcServer.GetUserByName / GetUserGroupByName raise the Authentication event; the credentials go in as SecureString and are never echoed.
-        private static EventHandler<UmcAuthenticationEventArgs>? UmcAuthenticationHandler(string serverUserName, SecureString? password, HmiObject meta)
+        private static EventHandler<UmcAuthenticationEventArgs>? UmcAuthenticationHandler(string serverUserName, EngineeringCredentialRules.AuthenticationScope? password, HmiObject meta)
         {
             if (password == null) return null;
-            return (sender, e) => { meta["authenticationEventRaised"] = true; e.UmcCredentials.Name = serverUserName; e.UmcCredentials.SetPassword(password); };
+            return (sender, e) => password.Use(secure => { meta["authenticationEventRaised"] = true; e.UmcCredentials.Name = serverUserName; e.UmcCredentials.SetPassword(secure); });
         }
 
         public SecurityResult ManageUmcUsers(string kind = "user", string action = "read", string name = "", string newName = "", string roleName = "",
@@ -255,7 +256,7 @@ namespace TiaMcp.Adapters.Native.Security
                 bool write = request.Writes && !dryRun;
                 using var access = write ? _session.AcquireHmiEditAccess() : null;
                 meta["kind"] = kind; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["credentialsProvided"] = !string.IsNullOrEmpty(serverPassword);
-                SecureString? secure = string.IsNullOrEmpty(serverPassword) ? null : EngineeringCredentialRules.ToSecureString(serverPassword);
+                EngineeringCredentialRules.AuthenticationScope? secure = string.IsNullOrEmpty(serverPassword) ? null : new EngineeringCredentialRules.AuthenticationScope(serverPassword);
                 try
                 {
                     if (kind == "server")

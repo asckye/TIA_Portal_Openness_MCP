@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security;
 using Siemens.Engineering;
-#if SECURITY_PROJECT_PROTECTION
-using Siemens.Engineering.AdvancedProtection;
-#endif
 #if SECURITY_UMAC
 using Siemens.Engineering.Umac;
 #endif
@@ -34,10 +31,11 @@ public sealed partial class PlcFoundationEngine
                 var projectRow = HmiScalar.Read(boundProject); meta["project"] = projectRow; complete &= projectRow["dataComplete"]!.GetValue<bool>();
                 meta["protectProjectMethodAvailable"] = boundProject.GetType().GetMethod("ProtectProject", new[] { typeof(string), typeof(SecureString) }) != null;
                 meta["projectProtectedFlag"] = null;
-                meta["note"] = "The Openness API exposes no project-level IsProtected scalar. Availability of the UmacConfigurator service is the only native indicator. ProjectBase.ProtectProject and ProtectionProviderBase.Protect/Unprotect are intentionally not exposed.";
+                meta["note"] = "The Openness API exposes no project-level IsProtected scalar. The projectProtectedFlag follows UmacConfigurator availability and EngineeringFunctionRights.Any() (reference/siemens-openness/skills/security/SKILL.md). ProtectionProviderBase is for block protection and cannot detect project protection. ProjectBase.ProtectProject is intentionally not exposed.";
 #if SECURITY_UMAC
                 var umac = boundProject.GetService<UmacConfigurator>();
                 meta["umacConfiguratorAvailable"] = umac != null;
+                meta["projectProtectedFlag"] = umac != null && umac.EngineeringFunctionRights.Any();
                 if (umac != null)
                 {
                     meta["counts"] = new HmiObject {
@@ -61,9 +59,7 @@ public sealed partial class PlcFoundationEngine
 #else
                 meta["umcServerConfiguratorAvailable"] = false;
 #endif
-                var provider = boundProject.GetService<ProtectionProviderBase>();
-                meta["advancedProtectionProviderAvailable"] = provider != null;
-                if (provider != null) meta["invalidPasswordCharacters"] = new string(provider.GetInvalidPasswordCharacters().ToArray());
+                meta["advancedProtectionProviderAvailable"] = null; // No documented project service; do not probe a block-protection base type.
                 meta["verificationCertificates"] = "Siemens.Engineering.Online.Security.VerificationCertificate is only reachable via TlsVerificationConfiguration.Certificates inside an online/download configuration callback; there is no project-level read.";
                 meta["apiCallSuccess"] = true; meta["dataComplete"] = complete;
                 return "Project protection indicators read; no protection state changed.";

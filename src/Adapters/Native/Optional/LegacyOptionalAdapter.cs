@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using Siemens.Engineering;
 using Siemens.Engineering.HW;
 using Siemens.Engineering.SW.Blocks;
@@ -40,19 +39,7 @@ internal sealed class LegacyOptionalAdapter
     private static HmiObject Row(object value) => HmiScalar.Read(value);
 
     private static object? Call(object target, string method, params object?[] arguments)
-    {
-        var candidates = target.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance)
-            .Where(m => m.Name == method && !m.ContainsGenericParameters && m.GetParameters().Length == arguments.Length)
-            .Where(m => m.GetParameters().Select((p, i) => arguments[i] == null ? !p.ParameterType.IsValueType
-                : p.ParameterType.IsInstanceOfType(arguments[i])).All(match => match)).ToArray();
-        if (candidates.Length != 1) throw new NotSupportedException("Exact official overload unavailable: " + target.GetType().FullName + "." + method);
-        try { return candidates[0].Invoke(target, arguments); }
-        catch (TargetInvocationException error)
-        {
-            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(error.InnerException ?? error).Throw();
-            throw;
-        }
-    }
+        => OptionalNativeOperations.Call(target, method, arguments);
 
     private static Type ApiType(string name) => typeof(IEngineeringObject).Assembly.GetType(name)
         ?? throw new NotSupportedException("Official API type unavailable on this release: " + name);
@@ -150,15 +137,22 @@ internal sealed class LegacyOptionalAdapter
         if (devices.Distinct(StringComparer.Ordinal).Count() != devices.Length) throw new ArgumentException("HMI device names repeat.");
         var paths = ExactPaths(_request.PlcSoftwarePathsJson);
         var plcs = paths.Select(p => _engine.PlcB5Session.ExactPlcForEngineering(p, !_request.DryRun).Name).ToArray();
+        var plcDevices = paths.Select(path => OptionalNativeOperations.OwningDeviceName(
+            _engine.PlcB5Session.ResolveSoftwareContainerUncached(path)?.Parent,
+            value => (value as IEngineeringObject)?.Parent,
+            value => value is Device owner ? owner.Name : null)).ToArray();
+        if (plcDevices.Distinct(StringComparer.Ordinal).Count() != plcDevices.Length)
+            throw new InvalidOperationException("Native PLC device names repeat (two PLC paths inside the same device).");
         var service = Sivarc();
 
+        meta["plcDeviceNames"] = new HmiArray(plcDevices);
         meta["hmiDeviceNames"] = new HmiArray(devices);
         meta["plcSoftwareNames"] = new HmiArray(plcs);
         meta["generationOptions"] = options.ToString();
         meta["dryRun"] = _request.DryRun;
         if (_request.DryRun) return "SiVArc native generation preview; nothing changed.";
         meta["mayHaveChanged"] = true;
-        var result = Call(service, "Generate", devices.Length == 1 ? (object)device.Name : devices, plcs, options)!;
+        var result = Call(service, "Generate", devices.Length == 1 ? (object)device.Name : devices, plcDevices, options)!;
         meta["result"] = Row(result);
         meta["generationPassed"] = Optional(result, "IsGenerationSuccessful");
         if (meta["generationPassed"] is false) meta["operationSuccess"] = false;
@@ -309,13 +303,13 @@ internal sealed class LegacyOptionalAdapter
         bool writing = SivarcPolicy.ValidateRuleRequest(_request.Category, _request.TablePath, _request.RulePath, _request.Kind, _request.Action,
             _request.PropertiesJson, _request.ReferencesJson, _request.DeviceSelectionJson, _request.MasterCopyPath, _request.CreateOption, _request.ConfirmDelete, _request.DryRun);
         using var access = Edit(writing);
-        var parts = Group.Parts(_request.RulePath);
+        var parts = Group.Parts(_request.RulePath, _request.Action == "createFromMasterCopy");
         var root = Rules();
         var table = _release is "15.1" or "16" or "17" ? root : Table(root, _request.TablePath);
-        var ownerPath = string.Join("/", parts.Take(parts.Length - 1));
+        var ownerPath = _request.Action == "createFromMasterCopy" ? _request.RulePath : string.Join("/", parts.Take(parts.Length - 1));
         var owner = RuleGroup(table, ownerPath);
         var collection = Get(owner, _request.Kind == "group" ? "Groups" : "Rules");
-        var target = Find(collection, parts.Last());
+        var target = _request.Action == "createFromMasterCopy" ? null : Find(collection, parts.Last());
         if (_request.Action == "read")
         {
             if (target == null) throw new PlcSoftwareException("NotFound", "SiVArc rule not found: " + _request.RulePath);
@@ -353,10 +347,11 @@ internal sealed class LegacyOptionalAdapter
 
     private object Reference(SivarcPolicy.Reference reference)
     {
-        if (reference.Kind == "block") return _engine.PlcB5Session.ExactMasterCopyPlcSource(reference.SoftwarePath, reference.Path, true);
+        if (reference.Kind == "plcBlock") return _engine.PlcB5Session.ExactMasterCopyPlcSource(reference.SoftwarePath, reference.Path, true) as CodeBlock
+            ?? throw new ArgumentException("Referenced block is not a CodeBlock: " + reference.Path);
         if (reference.Kind == "masterCopy") return _engine.PlcB5Session.ExactMasterCopy(reference.LibraryName, reference.Path);
         var library = _engine.ExactOpenEngineeringLibrary(reference.LibraryName);
-        if (reference.Kind == "type") return _engine.OptionalLibraryType(library, reference.Path);
+        if (reference.Kind == "libraryType") return _engine.OptionalLibraryType(library, reference.Path);
         return _engine.HmiLibraryFolder(library, reference.Path, reference.Kind == "masterCopyFolder" ? "MasterCopySystemFolder" : "LibraryTypeSystemFolder");
     }
 
@@ -419,14 +414,19 @@ internal sealed class LegacyOptionalAdapter
             OptionalEvidence.Safe(row, "telegramCount", () => Items(Get(drive, "Telegrams")).Length);
             OptionalEvidence.Safe(row, "securityAvailable", () => Optional(drive, "Security") != null);
             if (_request.IncludeTelegrams) OptionalEvidence.Safe(row, "telegrams", () => new HmiArray(Items(Get(drive, "Telegrams")).Select(v => (object?)Row(v)).ToArray()));
-            if (_request.IncludeFunctions) OptionalEvidence.Safe(row, "functionInterface", () => FunctionRow(Service(drive, "MC.Drives.DFI.DriveFunctionInterface")));
-            if (_request.IncludeTechnologyExtensions) OptionalEvidence.Safe(row, "technologyExtensions", () => new HmiArray(Items(Get(Service(drive, "MC.Drives.TechnologyExtensionContainer"), "TechnologyExtensions")).Select(v => (object?)Row(v)).ToArray()));
-            if (_request.IncludeDcc) OptionalEvidence.Safe(row, "dcc", () => DccSummary(Service(drive, "MC.Drives.Dcc.DriveControlChartContainer")));
+            if (_request.IncludeFunctions && _release != "14sp1") OptionalEvidence.Safe(row, "functionInterface", () => FunctionRow(Service(drive, "MC.Drives.DFI.DriveFunctionInterface")));
+            if (_request.IncludeTechnologyExtensions && _release is "18" or "19") OptionalEvidence.Safe(row, "technologyExtensions", () => new HmiArray(Items(Get(Service(drive, "MC.Drives.TechnologyExtensionContainer"), "TechnologyExtensions")).Select(v => (object?)Row(v)).ToArray()));
+            if (_request.IncludeDcc && _release is not ("14sp1" or "15.1")) OptionalEvidence.Safe(row, "dcc", () => DccSummary(Service(drive, "MC.Drives.Dcc.DriveControlChartContainer")));
             return (object?)row;
         }).ToArray());
         meta["expectedCount"] = objects.Length;
         meta["actualCount"] = objects.Length;
         meta["scope"] = "Available offline drive fields; select objects by composition index on this release.";
+        meta["unavailableIncludes"] = new HmiArray(new[] {
+            _request.IncludeFunctions && _release == "14sp1" ? "functionInterface requires V15.1" : null,
+            _request.IncludeTechnologyExtensions && _release is not ("18" or "19") ? "technologyExtensions requires V18" : null,
+            _request.IncludeDcc && _release is "14sp1" or "15.1" ? "dcc requires V16" : null
+        }.Where(note => note != null).Cast<object>().ToArray());
         meta["dataComplete"] = false;
         return "Startdrive objects read; no online drive access.";
     }
@@ -447,6 +447,7 @@ internal sealed class LegacyOptionalAdapter
         {
             bool online = _request.Operation == "GetOnlineDriveParameters";
             var selection = StartdrivePolicy.ValidateParametersRequest(online ? "write" : _request.Source, _request.NamesJson, _request.NumbersJson, _request.Offset, _request.Limit);
+            foreach (var number in selection.Numbers) OptionalNativeOperations.ParameterNumber(_release, number.Number);
             object parameterOwner;
             if (online)
             {
@@ -469,7 +470,7 @@ internal sealed class LegacyOptionalAdapter
                 meta["nextOffset"] = page.Length > _request.Limit ? _request.Offset + _request.Limit : (int?)null;
             }
             else parameters = selection.Names.Select(n => (Name: n, Parameter: Parameter(composition, n)))
-                .Concat(selection.Numbers.Select(n => (Name: n.Number + (n.ArrayIndex >= 0 ? "[" + n.ArrayIndex + "]" : ""), Parameter: Call(composition, "Find", n.Number, n.ArrayIndex))))
+                .Concat(selection.Numbers.Select(n => (Name: n.Number + (n.ArrayIndex >= 0 ? "[" + n.ArrayIndex + "]" : ""), Parameter: Call(composition, "Find", OptionalNativeOperations.ParameterNumber(_release, n.Number), n.ArrayIndex))))
                 .Where(p => { if (p.Parameter == null) missing.Add(p.Name); return p.Parameter != null; }).Select(p => p.Parameter!).ToArray();
             meta["records"] = new HmiArray(parameters.Select(p => (object?)ParameterRow(p, _request.IncludeValue, _request.IncludeBits, _request.IncludeEnumValues)).ToArray());
             meta["actualCount"] = parameters.Length;
@@ -540,7 +541,7 @@ internal sealed class LegacyOptionalAdapter
     {
         StartdrivePolicy.ValidateHardwareModuleRequest(_request.Action, _request.TypeIdentifier, _request.PositionNumber, _request.DryRun);
         var item = DriveItem();
-        var point = Service(item, "HW.ModuleAccessPoint");
+        var point = Service(item, "MC.Drives.ModuleAccessPoint");
         meta["deviceItem"] = item.Name;
         meta["moduleAccessPointHwIdentifiers"] = new HmiArray(Items(Get(point, "HwIdentifiers")).Select(v => Optional(v, "Identifier")).ToArray());
         meta["hardwareModule"] = null;
@@ -618,14 +619,14 @@ internal sealed class LegacyOptionalAdapter
             meta["checks"] = new HmiObject { ["mainTelegramPresent"] = true, ["canInsertMainTelegram"] = null };
             return "A main telegram already exists; no CanInsertMainTelegram or InsertMainTelegram call was issued.";
         }
-        string suffix = plan.TelegramType == "AdditionalTelegram" ? "AdditionalTelegram" : plan.TelegramType == "SupplementaryTelegram" ? "SupplementaryTelegram" : plan.TelegramType == "MainTelegram" ? "MainTelegram" : "SafetyTelegram";
+        string suffix = plan.TelegramType == "AdditionalTelegram" ? "AdditionalTelegram" : plan.TelegramType == "SupplementaryTelegram" ? "SupplementaryTelegram" : plan.TelegramType == "MainTelegram" ? "MainTelegram" : plan.TelegramType == "TorqueTelegram" ? "TorqueTelegram" : "SafetyTelegram";
         if (_request.Action is "check" or "insert")
         {
             var args = plan.TelegramType == "AdditionalTelegram" ? new object?[] { plan.InputSize, plan.OutputSize } : new object?[] { plan.TelegramNumber };
             var allowed = Call(composition, "CanInsert" + suffix, args);
             meta["canInsert"] = allowed;
             if (_request.Action == "check" || !plan.Writes) return "Drive telegram insertion checked; nothing changed.";
-            if (allowed is not true) throw new InvalidOperationException("Native CanInsert refused the telegram; no insertion attempted.");
+            OptionalNativeOperations.RequireCanChange(allowed);
             meta["mayHaveChanged"] = true;
             var inserted = Call(composition, "Insert" + suffix, args);
             meta["result"] = inserted == null || inserted is bool ? inserted : Row(inserted);
@@ -633,25 +634,39 @@ internal sealed class LegacyOptionalAdapter
         else
         {
             if (target == null) throw new PlcSoftwareException("NotFound", "Exact telegram not found.");
-            if (!plan.Writes) return "Drive telegram edit preview; nothing changed.";
-            meta["mayHaveChanged"] = true;
-            if (_request.Action == "erase") Call(composition, "EraseTelegram", type);
-            else if (_request.Action == "changeNumber") Call(target, "ChangeTelegram", plan.TelegramNumber, plan.KeepOriginalAddress);
-            else if (_request.Action == "changeSize") Call(target, "ChangeSize", EnumValue("Siemens.Engineering.HW.AddressIoType", plan.Direction), plan.Size, plan.KeepOriginalAddress);
+            if (_request.Action == "changeNumber")
+            {
+                OptionalNativeOperations.ChangeTelegramNumber(target, plan.TelegramNumber, plan.Writes, () => meta["mayHaveChanged"] = true);
+                if (!plan.Writes) return "Drive telegram edit preview; nothing changed.";
+            }
+            else if (_request.Action == "changeSize")
+            {
+                var direction = EnumValue("Siemens.Engineering.HW.AddressIoType", plan.Direction);
+                OptionalNativeOperations.RequireCanChange(Call(target, "CanChangeSize", direction, plan.Size, plan.KeepOriginalAddress));
+                if (!plan.Writes) return "Drive telegram edit preview; nothing changed.";
+                meta["mayHaveChanged"] = true;
+                Call(target, "ChangeSize", direction, plan.Size, plan.KeepOriginalAddress);
+            }
             else
             {
-                var technology = _engine.OptionalTechnology(plan.SoftwarePath, plan.ObjectPath, true);
-                var provider = Service(technology, plan.InterfaceKind == "encoder" ? "SW.TechnologicalObjects.Motion.EncoderHardwareConnectionProvider" : "SW.TechnologicalObjects.Motion.AxisHardwareConnectionProvider");
-                var connection = Get(provider, plan.InterfaceKind == "actor" ? "ActorInterface" : "SensorInterface");
-                if (plan.InterfaceKind == "sensor")
+                if (!plan.Writes) return "Drive telegram edit preview; nothing changed.";
+                meta["mayHaveChanged"] = true;
+                if (_request.Action == "erase") Call(composition, "EraseTelegram", type);
+                else
                 {
-                    var sensors = Items(connection);
-                    if (plan.SensorIndex >= sensors.Length) throw new ArgumentException("sensorIndex out of range: " + sensors.Length + " sensor interface(s).");
-                    connection = sensors[plan.SensorIndex];
+                    var technology = _engine.OptionalTechnology(plan.SoftwarePath, plan.ObjectPath, true);
+                    var provider = Service(technology, plan.InterfaceKind == "encoder" ? "SW.TechnologicalObjects.Motion.EncoderHardwareConnectionProvider" : "SW.TechnologicalObjects.Motion.AxisHardwareConnectionProvider");
+                    var connection = Get(provider, plan.InterfaceKind == "actor" ? "ActorInterface" : "SensorInterface");
+                    if (plan.InterfaceKind == "sensor")
+                    {
+                        var sensors = Items(connection);
+                        if (plan.SensorIndex >= sensors.Length) throw new ArgumentException("sensorIndex out of range: " + sensors.Length + " sensor interface(s).");
+                        connection = sensors[plan.SensorIndex];
+                    }
+                    if (plan.HasConnectOption) Call(connection, "Connect", target, EnumValue("Siemens.Engineering.MC.Drives.Enums.ConnectOption", plan.ConnectOption));
+                    else Call(connection, "Connect", target);
+                    meta["after"] = OptionalObjectAddress.Read(connection);
                 }
-                if (plan.HasConnectOption) Call(connection, "Connect", target, EnumValue("Siemens.Engineering.MC.Drives.Enums.ConnectOption", plan.ConnectOption));
-                else Call(connection, "Connect", target);
-                meta["after"] = OptionalObjectAddress.Read(connection);
             }
         }
         meta["after"] = new HmiArray(Items(Get(Drive(), "Telegrams")).Select(v => (object?)Row(v)).ToArray());
@@ -720,10 +735,11 @@ internal sealed class LegacyOptionalAdapter
                     EnumValue("Siemens.Engineering.MC.Drives.Enums.RotaryLinearFlag", plan.RotaryLinear), (ushort)plan.EncoderNumber }
                 : _request.Action.Contains("Motor") || _request.Action == "setEquivalentCircuitDiagramData" ? new object?[] { (ushort)plan.DataSet }
                 : new object?[] { (ushort)plan.EncoderNumber };
-            if (plan.Writes) meta["mayHaveChanged"] = true;
+            if (plan.Writes && _request.Action is "setMotorType" or "setEncoder") meta["mayHaveChanged"] = true;
             result = Call(projection, method, args);
             if (_request.Action == "setEncoderType")
             {
+                meta["mayHaveChanged"] = true;
                 var rotary = EnumValue("Siemens.Engineering.MC.Drives.Enums.RotaryLinearFlag", plan.RotaryLinear);
                 result = plan.HasAbsoluteIncremental ? Call(result!, "SetEncoderType", rotary,
                     EnumValue("Siemens.Engineering.MC.Drives.Enums.AbsoluteIncrementalFlag", plan.AbsoluteIncremental)) : Call(result!, "SetEncoderType", rotary);
@@ -732,12 +748,8 @@ internal sealed class LegacyOptionalAdapter
             {
                 var configuration = result!;
                 var entries = Items(Get(configuration, "RequiredConfigurationEntries")).Concat(Optional(configuration, "OptionalConfigurationEntries") is object optional ? Items(optional) : Array.Empty<object>()).ToArray();
-                foreach (var pair in plan.Entries)
-                {
-                    var entry = entries.SingleOrDefault(v => Name(v) == pair.Key || Convert.ToString(Get(v, "Number"), CultureInfo.InvariantCulture) == pair.Key)
-                        ?? throw new PlcSoftwareException("NotFound", "Configuration entry not found: " + pair.Key);
-                    entry.GetType().GetProperty("Value")!.SetValue(entry, pair.Value);
-                }
+                OptionalNativeOperations.ApplyConfigurationEntries(entries, plan.Entries, HmiScalar.ConvertValue,
+                    () => meta["mayHaveChanged"] = true);
                 result = _request.Action == "setEquivalentCircuitDiagramData" ? Call(configuration, "SetEquivalentCircuitDiagramData", plan.EquivalentCircuitDiagram)
                     : Call(projection, _request.Action == "projectEncoderConfiguration" ? "ProjectEncoderConfiguration" : "ProjectMotorConfiguration", configuration,
                         (ushort)(_request.Action == "projectEncoderConfiguration" ? plan.EncoderNumber : plan.DataSet));
@@ -949,6 +961,7 @@ internal sealed class LegacyOptionalAdapter
             }
             else target = _request.Operation == "ManageDccChart" && ((DccPolicy.ChartRequest)plan).AutoName ? Call(collection, "Create") : Call(collection, "Create", name);
         }
+        else if (_request.Action == "setAsPredecessor") Call(target!, "SetAsPredecessor");
         else if (_request.Operation == "ManageDccPin" && _request.Action is "publish" or "unpublish")
         {
             var published = _request.Action == "unpublish" ? Call(target!, "Unpublish")

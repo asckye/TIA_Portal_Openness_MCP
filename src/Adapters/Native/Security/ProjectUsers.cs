@@ -112,7 +112,10 @@ internal sealed class ProjectUsers
                     {
                         case "createUser": projectUsers.Create(name, secure!); break;
                         case "deleteUser": user!.Delete(); break;
-                        case "setUserPassword": user!.SetPassword(secure!); break;
+                        case "setUserPassword":
+                            if (!EngineeringCredentialRules.TrySetPassword(() => user!.SetPassword(secure!), meta))
+                                return EngineeringCredentialRules.PasswordPolicyRefusal;
+                            break;
                         case "activateUser": user!.Activate(); break;
                         case "deactivateUser": user!.Deactivate(); break;
                         case "assignRole": userRoles!.Add(role!); break;

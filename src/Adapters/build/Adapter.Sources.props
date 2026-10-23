@@ -19,6 +19,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Logic/Siemens/DownloadPromptPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Optional/OptionalAssemblyAdmission.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Optional/LegacyOptionalAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Optional/OptionalNativeOperations.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Optional/DccAdapter.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Optional/DccPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Optional/OptionalEngineeringAdapter.cs" />

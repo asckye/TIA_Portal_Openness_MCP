@@ -82,7 +82,9 @@ namespace TiaMcp.Adapters.Native.Security
                         meta["verifiedAbsent"] = true; _session.CountOnFresh(fresh, meta, "countAfter");
                         return "Device user deleted and count verified. No save/compile/download.";
                     case "setPassword":
-                        using (var secure = EngineeringCredentialRules.ToSecureString(password)) HardwareGroupOperations.Call(user!, "SetPassword", new[] { typeof(System.Security.SecureString) }, secure);
+                        using (var secure = EngineeringCredentialRules.ToSecureString(password))
+                            if (!EngineeringCredentialRules.TrySetPassword(() => HardwareGroupOperations.Call(user!, "SetPassword", new[] { typeof(System.Security.SecureString) }, secure), meta))
+                                return EngineeringCredentialRules.PasswordPolicyRefusal;
                         meta["passwordReadbackPossible"] = false;
                         break;
                     case "setPermissions":

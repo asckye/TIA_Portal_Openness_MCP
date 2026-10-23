@@ -605,23 +605,10 @@ namespace TiaMcp.Adapters.Native.Optional
                 meta["generationOptions"] = options.ToString(); meta["nativeSignature"] = devices.Length > 1 ? "Sivarc.Generate(IEnumerable<string>, IEnumerable<string>, GenerationOptions)" : "Sivarc.Generate(string, IEnumerable<string>, GenerationOptions)";
                 if (dryRun) return "SiVArc native generation preview; generation can create/update HMI objects according to rules and selected native options.";
                 meta["mayHaveChanged"] = true;
-                // Observed on TIA V21: TIA answered "PLC device '<name>' not found" for the software name AND the device name on a project whose
-                // HMI has no connection to the PLC (HmiSoftware.Connections empty) - the official page lists a configured PLC connection as a
-                // requirement. Try the software name first (the documented "PLC_1" form), then the owning device name, and report both.
-                SivarcGenerationResult result;
-                var attempts = new HmiArray();
-                try { result = devices.Length > 1 ? sivarc.Generate(devices, plcSoftwareNames, options) : sivarc.Generate(device.Name, plcSoftwareNames, options); attempts.Add(new HmiObject { ["plcs"] = "softwareNames", ["outcome"] = "returned" }); }
-                catch (EngineeringTargetInvocationException first) when (first.GetBaseException().Message.IndexOf("PLC device", StringComparison.OrdinalIgnoreCase) >= 0 && !plcs.SequenceEqual(plcSoftwareNames, StringComparer.Ordinal))
-                {
-                    attempts.Add(new HmiObject { ["plcs"] = "softwareNames", ["outcome"] = first.GetBaseException().Message });
-                    try { result = devices.Length > 1 ? sivarc.Generate(devices, plcs, options) : sivarc.Generate(device.Name, plcs, options); attempts.Add(new HmiObject { ["plcs"] = "deviceNames", ["outcome"] = "returned" }); }
-                    catch (EngineeringTargetInvocationException second) when (second.GetBaseException().Message.IndexOf("PLC device", StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        attempts.Add(new HmiObject { ["plcs"] = "deviceNames", ["outcome"] = second.GetBaseException().Message }); meta["attempts"] = attempts;
-                        throw new PlcSoftwareException("InvalidState", "SiVArc found the PLC neither as '" + string.Join(", ", plcSoftwareNames) + "' nor as '" + string.Join(", ", plcs) + "'. SiVArc lists the PLCs the HMI device is connected to (official requirement: an existing project connected to an HMI device and PLC configured) - check the HMI connection to this PLC (ListHmiConnections / EnsureUnifiedHmiConnection) and retry.");
-                    }
-                }
-                meta["attempts"] = attempts;
+                // Official SiVArc generation requires PLC device names and an existing HMI connection.
+                // Never retry a generation write with a guessed alternate software name.
+                SivarcGenerationResult result = devices.Length > 1 ? sivarc.Generate(devices, plcs, options) : sivarc.Generate(device.Name, plcs, options);
+                meta["attempts"] = new HmiArray(new object[] { new HmiObject { ["plcs"] = "deviceNames", ["outcome"] = "returned" } });
                 meta["result"] = new HmiObject { ["isGenerationSuccessful"] = result.IsGenerationSuccessful, ["errorCount"] = result.ErrorCount, ["warningCount"] = result.WarningCount, ["messages"] = SivarcMessageRows(result.Messages) };
                 meta["generationPassed"] = result.IsGenerationSuccessful; meta["apiCallSuccess"] = true;
                 if (!result.IsGenerationSuccessful) meta["operationSuccess"] = false;
