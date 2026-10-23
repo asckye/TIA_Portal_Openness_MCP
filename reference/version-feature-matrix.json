@@ -3553,7 +3553,6 @@
         "entries": [
           "DeleteHmiTag",
           "DescribeHmiScreen",
-          "DescribeHmiScreenItem",
           "DescribeHmiSoftware",
           "DescribeHmiTag",
           "DescribeHmiTagTable",
@@ -3580,11 +3579,13 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": [
+          "GetClassicHmiGlobalization",
           "GetClassicHmiScreenTree",
           "ListClassicHmiFaceplates",
           "ListClassicHmiScripts",
           "ManageClassicHmiCycle",
           "ManageClassicHmiFolder",
+          "ManageClassicHmiGraphic",
           "ManageClassicHmiScreenObject",
           "ManageClassicHmiScript",
           "ManageClassicHmiTextGraphicList"
@@ -4077,7 +4078,6 @@
         "entries": [
           "DeleteHmiTag",
           "DescribeHmiScreen",
-          "DescribeHmiScreenItem",
           "DescribeHmiSoftware",
           "DescribeHmiTag",
           "DescribeHmiTagTable",
@@ -4104,11 +4104,13 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": [
+          "GetClassicHmiGlobalization",
           "GetClassicHmiScreenTree",
           "ListClassicHmiFaceplates",
           "ListClassicHmiScripts",
           "ManageClassicHmiCycle",
           "ManageClassicHmiFolder",
+          "ManageClassicHmiGraphic",
           "ManageClassicHmiScreenObject",
           "ManageClassicHmiScript",
           "ManageClassicHmiTextGraphicList"
@@ -4466,6 +4468,7 @@
           "GetOnlineDriveParameters",
           "ListDccCharts",
           "ListDriveObjects",
+          "ManageDcbLibraries",
           "ManageDccChart",
           "ManageDriveFunctions",
           "ManageDriveTelegrams",
@@ -4645,7 +4648,6 @@
         "entries": [
           "DeleteHmiTag",
           "DescribeHmiScreen",
-          "DescribeHmiScreenItem",
           "DescribeHmiSoftware",
           "DescribeHmiTag",
           "DescribeHmiTagTable",
@@ -4672,11 +4674,13 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": [
+          "GetClassicHmiGlobalization",
           "GetClassicHmiScreenTree",
           "ListClassicHmiFaceplates",
           "ListClassicHmiScripts",
           "ManageClassicHmiCycle",
           "ManageClassicHmiFolder",
+          "ManageClassicHmiGraphic",
           "ManageClassicHmiScreenObject",
           "ManageClassicHmiScript",
           "ManageClassicHmiTextGraphicList"
@@ -5049,6 +5053,7 @@
           "GetOnlineDriveParameters",
           "ListDccCharts",
           "ListDriveObjects",
+          "ManageDcbLibraries",
           "ManageDccChart",
           "ManageDriveFunctions",
           "ManageDriveTelegrams",
@@ -5242,7 +5247,6 @@
         "entries": [
           "DeleteHmiTag",
           "DescribeHmiScreen",
-          "DescribeHmiScreenItem",
           "DescribeHmiSoftware",
           "DescribeHmiTag",
           "DescribeHmiTagTable",
@@ -5269,11 +5273,13 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": [
+          "GetClassicHmiGlobalization",
           "GetClassicHmiScreenTree",
           "ListClassicHmiFaceplates",
           "ListClassicHmiScripts",
           "ManageClassicHmiCycle",
           "ManageClassicHmiFolder",
+          "ManageClassicHmiGraphic",
           "ManageClassicHmiScreenObject",
           "ManageClassicHmiScript",
           "ManageClassicHmiTextGraphicList"
@@ -5877,7 +5883,6 @@
         "entries": [
           "DeleteHmiTag",
           "DescribeHmiScreen",
-          "DescribeHmiScreenItem",
           "DescribeHmiSoftware",
           "DescribeHmiTag",
           "DescribeHmiTagTable",
@@ -5904,11 +5909,13 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": [
+          "GetClassicHmiGlobalization",
           "GetClassicHmiScreenTree",
           "ListClassicHmiFaceplates",
           "ListClassicHmiScripts",
           "ManageClassicHmiCycle",
           "ManageClassicHmiFolder",
+          "ManageClassicHmiGraphic",
           "ManageClassicHmiScreenObject",
           "ManageClassicHmiScript",
           "ManageClassicHmiTextGraphicList"
@@ -6641,11 +6648,13 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": [
+          "GetClassicHmiGlobalization",
           "GetClassicHmiScreenTree",
           "ListClassicHmiFaceplates",
           "ListClassicHmiScripts",
           "ManageClassicHmiCycle",
           "ManageClassicHmiFolder",
+          "ManageClassicHmiGraphic",
           "ManageClassicHmiScreenObject",
           "ManageClassicHmiScript",
           "ManageClassicHmiTextGraphicList"

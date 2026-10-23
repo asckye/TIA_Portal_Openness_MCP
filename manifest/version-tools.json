@@ -5,7 +5,7 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 278,
+      "toolCount": 279,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -60,7 +60,6 @@
         "DeletePlcTagTable",
         "DeletePlcType",
         "DescribeHmiScreen",
-        "DescribeHmiScreenItem",
         "DescribeHmiSoftware",
         "DescribeHmiTag",
         "DescribeHmiTagTable",
@@ -93,6 +92,7 @@
         "GenerateErrorReport",
         "GeneratePlcDocumentation",
         "GeneratePlcSourceFromBlocks",
+        "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
         "GetDeviceAddressing",
         "GetDeviceAttributes",
@@ -198,6 +198,7 @@
         "ListTransferRoutes",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
+        "ManageClassicHmiGraphic",
         "ManageClassicHmiScreenObject",
         "ManageClassicHmiScript",
         "ManageClassicHmiTextGraphicList",
@@ -289,7 +290,7 @@
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 318,
+      "toolCount": 319,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -347,7 +348,6 @@
         "DeletePlcTagTable",
         "DeletePlcType",
         "DescribeHmiScreen",
-        "DescribeHmiScreenItem",
         "DescribeHmiSoftware",
         "DescribeHmiTag",
         "DescribeHmiTagTable",
@@ -387,6 +387,7 @@
         "GeneratePlcDocumentation",
         "GeneratePlcSourceFromBlocks",
         "GenerateSivarc",
+        "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
         "GetDeviceAddressing",
         "GetDeviceAttributes",
@@ -506,6 +507,7 @@
         "ListTransferRoutes",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
+        "ManageClassicHmiGraphic",
         "ManageClassicHmiScreenObject",
         "ManageClassicHmiScript",
         "ManageClassicHmiTextGraphicList",
@@ -613,7 +615,7 @@
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 346,
+      "toolCount": 348,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -673,7 +675,6 @@
         "DeletePlcTagTable",
         "DeletePlcType",
         "DescribeHmiScreen",
-        "DescribeHmiScreenItem",
         "DescribeHmiSoftware",
         "DescribeHmiTag",
         "DescribeHmiTagTable",
@@ -717,6 +718,7 @@
         "GeneratePlcDocumentation",
         "GeneratePlcSourceFromBlocks",
         "GenerateSivarc",
+        "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
         "GetDccObject",
         "GetDeviceAddressing",
@@ -846,9 +848,11 @@
         "ListVersionControlWorkspaces",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
+        "ManageClassicHmiGraphic",
         "ManageClassicHmiScreenObject",
         "ManageClassicHmiScript",
         "ManageClassicHmiTextGraphicList",
+        "ManageDcbLibraries",
         "ManageDccChart",
         "ManageDeviceUserGroup",
         "ManageDeviceUsers",
@@ -965,7 +969,7 @@
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 369,
+      "toolCount": 371,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1025,7 +1029,6 @@
         "DeletePlcTagTable",
         "DeletePlcType",
         "DescribeHmiScreen",
-        "DescribeHmiScreenItem",
         "DescribeHmiSoftware",
         "DescribeHmiTag",
         "DescribeHmiTagTable",
@@ -1076,6 +1079,7 @@
         "GeneratePlcDocumentation",
         "GeneratePlcSourceFromBlocks",
         "GenerateSivarc",
+        "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
         "GetDccObject",
         "GetDeviceAddressing",
@@ -1211,9 +1215,11 @@
         "ListVersionControlWorkspaces",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
+        "ManageClassicHmiGraphic",
         "ManageClassicHmiScreenObject",
         "ManageClassicHmiScript",
         "ManageClassicHmiTextGraphicList",
+        "ManageDcbLibraries",
         "ManageDccChart",
         "ManageDeviceUserGroup",
         "ManageDeviceUsers",
@@ -1340,7 +1346,7 @@
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 396,
+      "toolCount": 397,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1406,7 +1412,6 @@
         "DeletePlcTagTable",
         "DeletePlcType",
         "DescribeHmiScreen",
-        "DescribeHmiScreenItem",
         "DescribeHmiSoftware",
         "DescribeHmiTag",
         "DescribeHmiTagTable",
@@ -1459,6 +1464,7 @@
         "GeneratePlcLoadableFile",
         "GeneratePlcSourceFromBlocks",
         "GenerateSivarc",
+        "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
         "GetDccObject",
         "GetDeviceAddressing",
@@ -1597,6 +1603,7 @@
         "ManageCfcChartProtection",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
+        "ManageClassicHmiGraphic",
         "ManageClassicHmiScreenObject",
         "ManageClassicHmiScript",
         "ManageClassicHmiTextGraphicList",
@@ -1742,7 +1749,7 @@
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 471,
+      "toolCount": 473,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1888,6 +1895,7 @@
         "GeneratePlcLoadableFile",
         "GeneratePlcSourceFromBlocks",
         "GenerateSivarc",
+        "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
         "GetDccObject",
         "GetDeviceAddressing",
@@ -2048,6 +2056,7 @@
         "ManageCfcChartProtection",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
+        "ManageClassicHmiGraphic",
         "ManageClassicHmiScreenObject",
         "ManageClassicHmiScript",
         "ManageClassicHmiTextGraphicList",
@@ -2237,9 +2246,7 @@
         "AuditEngineeringExports",
         "BindUnifiedHmiTagDynamization",
         "BuildAndImportPlcArtifact",
-        "BuildClassicHmiMinimalPackage",
         "BuildClassicHmiScreen",
-        "BuildClassicHmiTagTable",
         "BuildDeviceAmlDocument",
         "BuildFlgNetCall",
         "BuildPlcGlobalDb",
@@ -2374,6 +2381,7 @@
         "GeneratePlcLoadableFile",
         "GeneratePlcSourceFromBlocks",
         "GenerateSivarc",
+        "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
         "GetDccObject",
         "GetDeviceAddressing",
@@ -2540,6 +2548,7 @@
         "ManageCfcChartProtection",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
+        "ManageClassicHmiGraphic",
         "ManageClassicHmiScreenObject",
         "ManageClassicHmiScript",
         "ManageClassicHmiTextGraphicList",
@@ -3238,8 +3247,8 @@
     }
   },
   "groupCounts": {
-    "all-releases": 277,
-    "shared-subset": 219,
+    "all-releases": 278,
+    "shared-subset": 218,
     "release-only": 20
   },
   "tools": [
@@ -3468,10 +3477,9 @@
     {
       "name": "BuildClassicHmiMinimalPackage",
       "releases": [
-        "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "release-only",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3488,10 +3496,9 @@
     {
       "name": "BuildClassicHmiTagTable",
       "releases": [
-        "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "release-only",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -4409,16 +4416,11 @@
     {
       "name": "DescribeHmiScreenItem",
       "releases": [
-        "14sp1",
-        "15.1",
-        "16",
-        "17",
-        "18",
         "19",
         "20",
         "21"
       ],
-      "group": "all-releases",
+      "group": "shared-subset",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -5316,9 +5318,16 @@
     {
       "name": "GetClassicHmiGlobalization",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
         "21"
       ],
-      "group": "release-only",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -7626,9 +7635,16 @@
     {
       "name": "ManageClassicHmiGraphic",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
         "21"
       ],
-      "group": "release-only",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -7687,6 +7703,8 @@
     {
       "name": "ManageDcbLibraries",
       "releases": [
+        "16",
+        "17",
         "18",
         "19",
         "20",

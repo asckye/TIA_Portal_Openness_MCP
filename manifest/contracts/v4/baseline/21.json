@@ -70643,7 +70643,7 @@
           },
           "rightVersion": {
             "default": "",
-            "description": "rightVersion: version string of the right type (e.g. 'V1.0.1'; '' = default version).",
+            "description": "rightVersion: version string of the right type (e.g. '1.0.1' (Major.Minor.Build, without a V prefix); '' = default version).",
             "type": "string"
           }
         },
@@ -92938,7 +92938,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "477b0e69366e85be8a534fd3dd413aaceee95790d657d86fd8e27be8d0474ad8",
+      "descriptionSha256": "a80f0b581ad11630703eb14a5189ba9e0f56fe26e76adad5f4ce7321450fb472",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -110030,7 +110030,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "73f5aff40f398a3e75862206f2b896264fa096760d5f8b911a9f4f1fa01e9af1",
+      "descriptionSha256": "d6636d86b59487eaab53451b62e7d40dc92d4bb92b37559dbad8700ffee52e45",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -127032,7 +127032,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "f1d64057468f43455fe9e7d610be475b280de9559d3c40ada92ac1428755d021",
+      "descriptionSha256": "28a53b9477a62794bff76c283145f4c73bca295677672efaec1cbe8cbe7da912",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -132249,7 +132249,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "27ec4058e631295921c648f3b2ea006409fd70f679a42a17555137d47f70e1ac",
+      "descriptionSha256": "188231bfb00bc5a58b74287fd2b150b743de0aadd0b8abc4439f95706f56d31c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -132259,7 +132259,7 @@
             "type": "integer"
           },
           "objectKind": {
-            "description": "Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts",
+            "description": "Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTagTable|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts",
             "enum": [
               "Project",
               "Portal",
@@ -132269,6 +132269,7 @@
               "Block",
               "Type",
               "HmiScreen",
+              "HmiTagTable",
               "HmiTag",
               "HmiScreenItem",
               "HmiScriptModule",
@@ -136197,7 +136198,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "a24ef5d4705cb4bf0cc6b551e6747a201651ddac1f9f560579cd5c16b4ef7bc0",
+      "descriptionSha256": "fec9c4b7abd439aecf339ae3b1c05f99b7aebdab8b46095b7bfef0d09db26756",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -136226,7 +136227,7 @@
             "type": "string"
           },
           "serviceTypeSuffix": {
-            "description": "Service type suffix, e.g. PlcChecksumProvider or ICompilable",
+            "description": "Exact Siemens.Engineering service type name or unique suffix, e.g. PlcChecksumProvider or ICompilable",
             "type": "string"
           },
           "softwarePath": {
@@ -153275,7 +153276,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "068d7e0018f81a59fc6231f56ef07ca6d699b891e5c1c739f56834182d479487",
+      "descriptionSha256": "eae07c4a0c3ac78358459797c63bd9f3b32e343f9456744cb305ea98c079bdde",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -154578,7 +154579,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e851ebbecba02a801370dfa7afc737b0125d72d3cd289ce3300893615c90b86c",
+      "descriptionSha256": "27df25345e352a84ba33d0b9e5cc4804b47ba1e4aeb858a51e05143ad3606dcd",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -157199,7 +157200,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "9c1d83b471a57716af946ce01a48712a34a5857a73914a86a541c4da4afe7557",
+      "descriptionSha256": "4aa940521112937d1b83a00ed85662e25acf9d5d46431ec90e03a287318e62e7",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -157232,7 +157233,7 @@
           },
           "text": {
             "default": "",
-            "description": "text: optional button/display text",
+            "description": "text: omit here; non-empty text refuses, use SetUnifiedMultilingualProperty with a culture.  optional button/display text",
             "type": "string"
           },
           "top": {
@@ -169190,7 +169191,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "730b44332b9da0490326eb85ee094fc699accc74312744a63521a9519e3077a7",
+      "descriptionSha256": "dce984f6e411e798be93f9abe9ea9be2f672a264002eb44c76c55bcc7b0b1705",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -169220,6 +169221,11 @@
             "default": "",
             "description": "moduleName: exact name of the global script module.",
             "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "overwrite: default false; native packages with unverified identities refuse nonempty targets before Import.",
+            "type": "boolean"
           },
           "softwarePath": {
             "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
@@ -170512,7 +170518,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "f1e6fe4a97301e057370e85078e7d5c26325063fd0684f4139eb38ad06590492",
+      "descriptionSha256": "edd4fcbedbd19fc9ffc2e59965a1d70b5b6d922e87612a48d3e2c61541b4c205",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -170544,6 +170550,11 @@
             "default": "",
             "description": "fileName: file name (with extension) inside the export / import folder.",
             "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "overwrite: default false; native packages with unverified identities refuse nonempty targets before Import.",
+            "type": "boolean"
           },
           "softwarePath": {
             "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
@@ -177048,12 +177059,22 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "7ee74d451c6fb2de8de8803d3a22e221ef993b1bd48395f9ab7ed91c8c2bd152",
+      "descriptionSha256": "87a87b95586c23860d9ab433bf5ff7be3e640f78d3f28c95187b7239a8532fa7",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "connectionName": {
             "description": "connectionName: the HMI connection name to export",
+            "type": "string"
+          },
+          "exportOptions": {
+            "default": "WithDefaults",
+            "description": "exportOptions: None | WithDefaults (default) | WithReadOnly.",
+            "enum": [
+              "None",
+              "WithDefaults",
+              "WithReadOnly"
+            ],
             "type": "string"
           },
           "exportPath": {
@@ -178351,12 +178372,22 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "70c1d5b6b42ea03a78fda1b5bd328d72e3b0e34aff31ad18080570cd5eb1fda8",
+      "descriptionSha256": "986220f61b406032652ab77dda63509ac6e1d7bc984f3694d0e583c39bdeb8cb",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "exportDir": {
             "description": "exportDir: directory to write exported files into",
+            "type": "string"
+          },
+          "exportOptions": {
+            "default": "WithDefaults",
+            "description": "exportOptions: None | WithDefaults (default) | WithReadOnly.",
+            "enum": [
+              "None",
+              "WithDefaults",
+              "WithReadOnly"
+            ],
             "type": "string"
           },
           "exportScreens": {
@@ -179659,10 +179690,20 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "abec2c76b6f35da41ff4f29a3bcc80f4143dc4583563448ae94c68c7369581c7",
+      "descriptionSha256": "e7c6d13551ecf280e7505e89fc24287a2fbed437da71b4a1fe00312e13eb8ae2",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "exportOptions": {
+            "default": "WithDefaults",
+            "description": "exportOptions: None | WithDefaults (default) | WithReadOnly.",
+            "enum": [
+              "None",
+              "WithDefaults",
+              "WithReadOnly"
+            ],
+            "type": "string"
+          },
           "exportPath": {
             "description": "exportPath: full file path to write to (e.g. C:\\\\temp\\\\screen.xml)",
             "examples": [
@@ -180971,10 +181012,20 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "4ddca3830694335c35f778288a48ff96e4299b00b60c1fc8aecc12bc0549544c",
+      "descriptionSha256": "ce6b9a02166b0f5c0f7e42ace9ce72c4a03357cc37c2065a2a577cf734494fd2",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "exportOptions": {
+            "default": "WithDefaults",
+            "description": "exportOptions: None | WithDefaults (default) | WithReadOnly.",
+            "enum": [
+              "None",
+              "WithDefaults",
+              "WithReadOnly"
+            ],
+            "type": "string"
+          },
           "exportPath": {
             "description": "exportPath: full file path to write to (e.g. C:\\\\temp\\\\tagtable.xml)",
             "type": "string"
@@ -216606,7 +216657,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "5c6537023ac93fc5ce4aaa7eaa5fe0a1de87b458e2d63d8913b027a81d626bf8",
+      "descriptionSha256": "5760080dbbc2491c5d03276e616ab180a2cf1a1d1b51e9324bbed1b51e1777a8",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -248038,12 +248089,12 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "6f346cc3ed5145ab244396ec4f3daffd45fe473cadb34023730ba64990121dac",
+      "descriptionSha256": "7bfd53a9ea8402e9fa9b395cd755d11a877213891a1b40fc11cfed508875c804",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "objectKind": {
-            "description": "Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts",
+            "description": "Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTagTable|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts",
             "enum": [
               "Project",
               "Portal",
@@ -248053,6 +248104,7 @@
               "Block",
               "Type",
               "HmiScreen",
+              "HmiTagTable",
               "HmiTag",
               "HmiScreenItem",
               "HmiScriptModule",
@@ -271629,7 +271681,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "0913dc22da8151a8530d8e91cf739c906d0247a147105d94cb3bdcdaf3fad3e1",
+      "descriptionSha256": "9f628c797e5bb9df5b3f7ae05576e7f6dd56deff27c9e2329658566f1be03887",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -286029,7 +286081,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "8c81e375a6ef155a843aa48ffde4b8b79827e7955ff8ed3c4af693fc5680a2a3",
+      "descriptionSha256": "cdfa4da5411ac163abd2f51abd11aa556cca4fd6a634a5716e94f8ca3a2f5f97",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -320203,7 +320255,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "5140a175d75e366ab86f762376c30456addf0058c8b0af4b7aa156a218cd6e2c",
+      "descriptionSha256": "dcce859961d497367468e9c545cce8437e9b263fb26722e32fd55d8eeebfcc39",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -325517,7 +325569,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "44be6436d3d639136cc645ab5fd0e2f621e76357332361e8697077d3c1fea586",
+      "descriptionSha256": "dcdb1caa5fec11f9f39e2df5cc62a09fe674072e5ca93a58b729ad0074cfa5dd",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -333314,13 +333366,18 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "2e0ce554901d2b8409dc1f939ae75163667559e8a89ba1ed08455f6e481be306",
+      "descriptionSha256": "9a994fc4d7e5d865566232adda40c27ff33e08d9268e4650ec823ac7ed12aa95",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "importPath": {
             "description": "importPath: full file path of exported HMI connection XML",
             "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.",
+            "type": "boolean"
           },
           "softwarePath": {
             "description": "softwarePath: path in the project structure to the HMI software",
@@ -334612,7 +334669,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e889415d7c455508765381f351ea30349ccdb7fecbd4ee2653a142f34d41e010",
+      "descriptionSha256": "719b8d7145e78816c60d6c6dcd8a97d3bb39edb51cd10fd565ebf09957b175eb",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -334629,6 +334686,11 @@
               "C:\\Temp\\Screen_1.xml"
             ],
             "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.",
+            "type": "boolean"
           },
           "softwarePath": {
             "description": "softwarePath: path in the project structure to the HMI software",
@@ -335924,7 +335986,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "a14945a1393c06a8a4c7ca97ce1a0f98e6d75811bc1d1d5d8d2e64da5e178e35",
+      "descriptionSha256": "b7eb9b0414bab66c8580ce8a15a20176210669ab34796a6709b5db0cd94c1185",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -335937,8 +335999,8 @@
             "type": "string"
           },
           "overwrite": {
-            "default": true,
-            "description": "overwrite: true=Override (default)",
+            "default": false,
+            "description": "overwrite: default false (ImportOptions.None); true explicitly selects Override",
             "type": "boolean"
           },
           "regexName": {
@@ -337237,7 +337299,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "f69cf89af3799d09ff636bab4a9556b5f4346f40edeedc83d89cbdd9da4c58fb",
+      "descriptionSha256": "e035ea3de43211aa0f0e6fe3412f6cd57e9e3d0c18018aee77c62a7e096d51da",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -337254,6 +337316,11 @@
               "C:\\Temp\\HmiTags.xml"
             ],
             "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.",
+            "type": "boolean"
           },
           "softwarePath": {
             "description": "softwarePath: path in the project structure to the HMI software",
@@ -338549,7 +338616,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "7c7e9c7d2782e49442a658041064b4ec31289dcb0dd304a61ae5df96c5315d7c",
+      "descriptionSha256": "1ca2559e94702a70968feb1d990068584f8bd0f5f61ecd2875c10393275ef5ee",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -338562,8 +338629,8 @@
             "type": "string"
           },
           "overwrite": {
-            "default": true,
-            "description": "overwrite: true=Override (default)",
+            "default": false,
+            "description": "overwrite: default false (ImportOptions.None); true explicitly selects Override",
             "type": "boolean"
           },
           "regexName": {
@@ -341209,7 +341276,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "c2f4adac3ee002c2c0d3b3cdd518ec655b0f132d97d2559a7c9914d3d3a7de4e",
+      "descriptionSha256": "fe65ec025a139129e4b5dcd9609918ce2bd2d61b72cc07134eeb4e2b298d0b27",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -341224,7 +341291,7 @@
           },
           "left": {
             "default": 0,
-            "description": "left: optional Left coordinate applied after import when supported",
+            "description": "left: retained input; master-copy screen-item instantiation is refused",
             "type": "integer"
           },
           "libraryPath": {
@@ -341241,7 +341308,7 @@
           },
           "top": {
             "default": 0,
-            "description": "top: optional Top coordinate applied after import when supported",
+            "description": "top: retained input; master-copy screen-item instantiation is refused",
             "type": "integer"
           }
         },
@@ -363705,7 +363772,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "3d77e57b029c132f6995b2f8fb26bf19de52c4bb8a84e566208aef037c715540",
+      "descriptionSha256": "28ac1ba6b72bee8edac9518da88634079c97a39acddc1a674ad6a62e5ac836a2",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -363728,6 +363795,11 @@
           "filePath": {
             "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
             "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "overwrite: default false; native packages with unverified identities refuse nonempty targets before Import.",
+            "type": "boolean"
           },
           "softwarePath": {
             "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
@@ -365046,6 +365118,11 @@
           "dryRun": {
             "default": true,
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "overwrite: default false; native packages with unverified identities refuse nonempty targets before Import.",
             "type": "boolean"
           },
           "softwarePath": {
@@ -370279,7 +370356,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "772f0f84438bd1c63d8e7ba09183c5b9c9cc555ece5a49ca5e51765afb0a83dd",
+      "descriptionSha256": "1ee5eb45db439386c64aa5de55b5eb0bb9a331be0b94e4ccdceb5362466e98d2",
       "inputSchema": {
         "$defs": {
           "recursive0": {
@@ -370367,7 +370444,7 @@
             "type": "string"
           },
           "objectKind": {
-            "description": "Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts",
+            "description": "Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTagTable|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts",
             "enum": [
               "Project",
               "Portal",
@@ -370377,6 +370454,7 @@
               "Block",
               "Type",
               "HmiScreen",
+              "HmiTagTable",
               "HmiTag",
               "HmiScreenItem",
               "HmiScriptModule",
@@ -371680,7 +371758,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "37722fba93822f7a2bf605be35840ef89c3b54ff4852ebf4776e8a4e24a8866c",
+      "descriptionSha256": "6582cc313fa97fdc8d8f508940242d418122ff6b2a71cdc949d56d154c2c9ec9",
       "inputSchema": {
         "$defs": {
           "recursive0": {
@@ -371787,7 +371865,7 @@
             "type": "string"
           },
           "serviceTypeSuffix": {
-            "description": "Service type suffix, e.g. PlcChecksumProvider or ICompilable",
+            "description": "Exact Siemens.Engineering service type name or unique suffix, e.g. PlcChecksumProvider or ICompilable",
             "type": "string"
           },
           "softwarePath": {
@@ -382684,7 +382762,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "86d1286fe98900a97969746266c74e93c59c1a61a1c83768fa145708137d1495",
+      "descriptionSha256": "80ddbcd90d30f903560a3432d434aeabcd7794c8ffa75900cbb5bae7d837ef3d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -394440,7 +394518,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "abfb20b555753cef9e740bcfc0ad5b7cfd102a8eb4960cebfb4fdc47aec08394",
+      "descriptionSha256": "51a4b88f4e63f3a67ecc244decb55acb93455a5b28d419b6f0faf7098ed9ce11",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -394455,7 +394533,7 @@
             "type": "integer"
           },
           "objectKind": {
-            "description": "Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts",
+            "description": "Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTagTable|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts",
             "enum": [
               "Project",
               "Portal",
@@ -394465,6 +394543,7 @@
               "Block",
               "Type",
               "HmiScreen",
+              "HmiTagTable",
               "HmiTag",
               "HmiScreenItem",
               "HmiScriptModule",
@@ -432276,7 +432355,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "4e4479abe0c8c1d05a6327f87eb6c8193f38bdb3849f21b4b7152705c8034393",
+      "descriptionSha256": "d32b2f38876f89098ce720b07ee05a1b9c5e0886be7b411cd4e6ef82c6113ea5",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -434945,6 +435024,16 @@
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
+          "exportOptions": {
+            "default": "WithDefaults",
+            "description": "exportOptions: None | WithDefaults (default) | WithReadOnly.",
+            "enum": [
+              "None",
+              "WithDefaults",
+              "WithReadOnly"
+            ],
+            "type": "string"
+          },
           "filePath": {
             "default": "",
             "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
@@ -437592,7 +437681,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "4b13488b485871d612e6ecc58363a0d387d610b15df1259f483f5fcb96ccdbc3",
+      "descriptionSha256": "3471e4d5552b9ef0aa0ba8e5b1657494813b3dbe096b3b7e02e2e01e9c8ac8b1",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -437617,6 +437706,16 @@
             "default": true,
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
+          },
+          "exportOptions": {
+            "default": "WithDefaults",
+            "description": "exportOptions: None | WithDefaults (default) | WithReadOnly.",
+            "enum": [
+              "None",
+              "WithDefaults",
+              "WithReadOnly"
+            ],
+            "type": "string"
           },
           "filePath": {
             "default": "",
@@ -438926,7 +439025,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "0ccf5a422b2fd51a9a5424b75e2ee2b9dbd1165292ea3c62534a802195b8311e",
+      "descriptionSha256": "db85ae7ac10122d17c752260b5cfe372fd21168aad90744873abad0fe0b631bf",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -438950,6 +439049,16 @@
             "default": true,
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
+          },
+          "exportOptions": {
+            "default": "WithDefaults",
+            "description": "exportOptions: None | WithDefaults (default) | WithReadOnly.",
+            "enum": [
+              "None",
+              "WithDefaults",
+              "WithReadOnly"
+            ],
+            "type": "string"
           },
           "filePath": {
             "default": "",
@@ -440318,6 +440427,16 @@
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
+          "exportOptions": {
+            "default": "WithDefaults",
+            "description": "exportOptions: None | WithDefaults (default) | WithReadOnly.",
+            "enum": [
+              "None",
+              "WithDefaults",
+              "WithReadOnly"
+            ],
+            "type": "string"
+          },
           "filePath": {
             "default": "",
             "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
@@ -441679,6 +441798,16 @@
           "entryName": {
             "default": "",
             "description": "entryName: exact name of the entry inside the composition.",
+            "type": "string"
+          },
+          "exportOptions": {
+            "default": "WithDefaults",
+            "description": "exportOptions: None | WithDefaults (default) | WithReadOnly.",
+            "enum": [
+              "None",
+              "WithDefaults",
+              "WithReadOnly"
+            ],
             "type": "string"
           },
           "filePath": {
@@ -444394,7 +444523,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "515a882d736ea9ad2906f700667b31283135878cabf9aaf22624a82c72df09a9",
+      "descriptionSha256": "4f1ee36ff564699b78ac1f5dcf728bcf4a9beb15a14ecf8eb3dca84a20d4ab0a",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -455317,7 +455446,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "a280d52b85f96560743dc2fd40206daf772bc34aa56a9bbc3e3c55b0408be311",
+      "descriptionSha256": "3922e1592dcaa057d6b9c3be3e1313f63637af299c65d85dcedbe1ec79caa125",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -474267,7 +474396,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "2150e34ff5bf83180eb9e89dd223ac5f97f5e83bc3fce7a5152b973f6d66ea20",
+      "descriptionSha256": "c4737500f395faf9f93e16e92d2d22d2255d373fdd4fb0277570d0c52bd44f3e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -492037,7 +492166,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "0267f7c1feae40ea58e6c5ea1037db81150a77ca86fda8dd369ef1bb787c1d37",
+      "descriptionSha256": "8c14e32381d71535054c8e249c5959904cd66e011989ce1b8175accfe0eb9b31",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -498925,7 +499054,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "a7331fa79d7a518dace120f698618ff10550c59a01f6af7913d420304e73ce6b",
+      "descriptionSha256": "6c04fc347931fb9413fd22c8d7a39a94cb2e9402260c969c975bfb546900167d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -500292,7 +500421,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "16cccc187d8d19de5d6d8a8a05b5df69ead1ea6e0590c550c43cb9b5c34f0cfd",
+      "descriptionSha256": "32b18afc7e65ea9150f0cfdd86519138795cefd96d6b5eb8ea957e642a5076fe",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -513818,7 +513947,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "95b4c6f3189b487d3476ba01b98d05347b7e712514194bc36052f82045b8b8b1",
+      "descriptionSha256": "a01d5fbdf1fde63fa301286ade45381f4e3863f29945916f75ff14061bb0cad0",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -517891,7 +518020,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "22b9c153fc248b2ec87dd8d8c7fa2eb0a634ca92c20e0cda560e6d5caf149953",
+      "descriptionSha256": "5ab666d94319a39729b6a3c0924df2baafc6cc005088de26ed0c9b34733c5893",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -531586,7 +531715,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "0fa525f70fce72d4083bdf5cb2bb99be9a7f20f27d74802a5833d4437bb4f2d2",
+      "descriptionSha256": "8ebbb6d5631f2719823c39da8e74c270289741748c224fac80157e0692ecfc91",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -542818,7 +542947,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "82901fdbb687aa55d258d3a620a0ed4ccb9a5a6d6a54e38b7591b7fb40f94bce",
+      "descriptionSha256": "4928858bc360062f29579c6f8c249bffd652ded495771dfbf7b64407ee480783",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -560503,7 +560632,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "b8557685666b71d708271c62c1fd7dc89923bd17fce489f8c193c61e02c3411b",
+      "descriptionSha256": "fddf99e64cb2625c04fba41c4a5cde8c79cd86bce0c98a3e817a45977dad39a5",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -638681,13 +638810,18 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "3bacea8bc74bc566dfe1a008089dd0a6eb1d5315585d899f4f95eba68566808a",
+      "descriptionSha256": "d47bca05c6c982c0443e8edf94cf448670bce96a879422592a1876c566c086ea",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "devicePath": {
             "description": "devicePath: device name from GetProjectTree, e.g. 'PLC_1'.",
             "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true previews; false applies the approved attribute change.",
+            "type": "boolean"
           },
           "enable": {
             "default": true,
@@ -645293,7 +645427,7 @@
         "properties": {
           "async": {
             "default": false,
-            "description": "async: whether the script is async",
+            "description": "async: omit to preserve the existing flag; false explicitly disables it",
             "type": "boolean"
           },
           "buttonName": {
@@ -645306,7 +645440,7 @@
           },
           "globalDefinitionAreaScriptCode": {
             "default": "",
-            "description": "globalDefinitionAreaScriptCode: optional global definitions for the script",
+            "description": "globalDefinitionAreaScriptCode: omit to preserve existing global definitions; empty string explicitly clears them",
             "type": "string"
           },
           "hmiSoftwarePath": {
@@ -646615,7 +646749,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "50f673cbd6a45fdc45b5cb7468497fa54f0e16fcf3b2b3553d9894d582da3a03",
+      "descriptionSha256": "c6718e22256d1f0a8795bbafea4758f6800598de603e1661db22c2fb8b780726",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -653348,7 +653482,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "88ed6a5ba2734dd243a28d34567fa7942441f7c23937b4dd5111d5e739e4273d",
+      "descriptionSha256": "978090b07651eb612c2ee575845f629781b5284a0b338a53c88ed3cd94075668",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -663831,7 +663965,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "6d8b10e583b0e1ec24a1e1432eef95217cc33f436cb3c825b3f0845877943969",
+      "descriptionSha256": "621da941057502d77891a2a00b3ae0f719fab87a1cf3e8bc1f8645a89b06cb4c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -665241,7 +665375,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "03fe32b74e197a548346b0681ad973c559a5e96644d0ce33ee561e994bbc4385",
+      "descriptionSha256": "791599ef963b557fd25f3969c81274e2b91361209e020133173e19ca654b3a48",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -665252,7 +665386,7 @@
           },
           "direction": {
             "default": "ProjectToWorkspace",
-            "description": "direction: 'ProjectToWorkspace' (export, for committing) or 'WorkspaceToProject' (import, for restoring).",
+            "description": "direction: 'ProjectToWorkspace' exports; this build refuses 'WorkspaceToProject'.",
             "type": "string"
           },
           "dryRun": {

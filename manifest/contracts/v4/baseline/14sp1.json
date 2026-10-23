@@ -269,7 +269,6 @@
       "entries": [
         "DeleteHmiTag",
         "DescribeHmiScreen",
-        "DescribeHmiScreenItem",
         "DescribeHmiSoftware",
         "DescribeHmiTag",
         "DescribeHmiTagTable",
@@ -296,11 +295,13 @@
     },
     {
       "entries": [
+        "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
         "ListClassicHmiFaceplates",
         "ListClassicHmiScripts",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
+        "ManageClassicHmiGraphic",
         "ManageClassicHmiScreenObject",
         "ManageClassicHmiScript",
         "ManageClassicHmiTextGraphicList"
@@ -71879,1314 +71880,6 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "634c23dead7ba40e1bd9f3abc94c8955639abb216fcadbb40061c4323a27eabe",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "itemName": {
-            "description": "itemName: widget name, e.g. 'BTN_Start'",
-            "type": "string"
-          },
-          "maxMembers": {
-            "default": 200,
-            "description": "maxMembers: max member count",
-            "type": "integer"
-          },
-          "screenName": {
-            "description": "screenName: screen name, e.g. 'Main'",
-            "type": "string"
-          },
-          "softwarePath": {
-            "description": "softwarePath: HMI software path, e.g. 'HMI_RT_1'",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath",
-          "screenName",
-          "itemName"
-        ],
-        "type": "object"
-      },
-      "name": "DescribeHmiScreenItem",
-      "outputSchema": {
-        "properties": {
-          "data": {
-            "type": [
-              "object",
-              "null"
-            ]
-          },
-          "error": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "ACCESS_DENIED"
-                  },
-                  "details": {
-                    "properties": {
-                      "operation": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      },
-                      "target": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "operation",
-                      "target"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "ALREADY_EXISTS"
-                  },
-                  "details": {
-                    "properties": {
-                      "target": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "target"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "AUTHENTICATION_REQUIRED"
-                  },
-                  "details": {
-                    "properties": {
-                      "capability": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "capability"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "CANCELLED"
-                  },
-                  "details": {
-                    "properties": {
-                      "stage": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "stage"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "COMPILE_ERRORS"
-                  },
-                  "details": {
-                    "properties": {
-                      "errorCount": {
-                        "minimum": 0,
-                        "type": "integer"
-                      },
-                      "errors": {
-                        "items": {
-                          "properties": {
-                            "description": {
-                              "type": [
-                                "string",
-                                "null"
-                              ]
-                            },
-                            "path": {
-                              "type": [
-                                "string",
-                                "null"
-                              ]
-                            }
-                          },
-                          "required": [
-                            "path",
-                            "description"
-                          ],
-                          "type": "object"
-                        },
-                        "type": "array"
-                      },
-                      "warningCount": {
-                        "minimum": 0,
-                        "type": "integer"
-                      }
-                    },
-                    "required": [
-                      "errorCount",
-                      "warningCount",
-                      "errors"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "CONFIRMATION_REQUIRED"
-                  },
-                  "details": {
-                    "properties": {
-                      "planHash": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      },
-                      "reason": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      },
-                      "requestId": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "reason",
-                      "planHash",
-                      "requestId"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "IDENTITY_MISMATCH"
-                  },
-                  "details": {
-                    "properties": {
-                      "actual": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      },
-                      "expected": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      },
-                      "target": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "target",
-                      "expected",
-                      "actual"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "INTERNAL_ERROR"
-                  },
-                  "details": {
-                    "properties": {
-                      "diagnosticId": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "diagnosticId"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "INVALID_ARGUMENT"
-                  },
-                  "details": {
-                    "properties": {
-                      "allowedValues": {
-                        "items": {
-                          "type": [
-                            "string",
-                            "null"
-                          ]
-                        },
-                        "type": "array"
-                      },
-                      "parameter": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      },
-                      "parameters": {
-                        "items": {
-                          "type": [
-                            "string",
-                            "null"
-                          ]
-                        },
-                        "type": "array"
-                      }
-                    },
-                    "required": [
-                      "parameter",
-                      "allowedValues",
-                      "parameters"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "IO_FAILED"
-                  },
-                  "details": {
-                    "properties": {
-                      "operation": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      },
-                      "path": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "operation",
-                      "path"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "LIMIT_EXCEEDED"
-                  },
-                  "details": {
-                    "properties": {
-                      "actual": {
-                        "anyOf": [
-                          {
-                            "minimum": 0,
-                            "type": "integer"
-                          },
-                          {
-                            "type": "null"
-                          }
-                        ]
-                      },
-                      "limit": {
-                        "anyOf": [
-                          {
-                            "minimum": 0,
-                            "type": "integer"
-                          },
-                          {
-                            "type": "null"
-                          }
-                        ]
-                      },
-                      "parameter": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "parameter",
-                      "limit",
-                      "actual"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "NATIVE_OPERATION_FAILED"
-                  },
-                  "details": {
-                    "properties": {
-                      "evidence": {
-                        "type": "object"
-                      },
-                      "nativeCode": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      },
-                      "nativeMessage": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "nativeCode",
-                      "nativeMessage",
-                      "evidence"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "NOT_EXECUTED"
-                  },
-                  "details": {
-                    "properties": {
-                      "causeIndex": {
-                        "anyOf": [
-                          {
-                            "minimum": 0,
-                            "type": "integer"
-                          },
-                          {
-                            "type": "null"
-                          }
-                        ]
-                      }
-                    },
-                    "required": [
-                      "causeIndex"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "NOT_FOUND"
-                  },
-                  "details": {
-                    "properties": {
-                      "target": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "target"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "OFFLINE_REQUIRED"
-                  },
-                  "details": {
-                    "properties": {
-                      "targets": {
-                        "items": {
-                          "type": [
-                            "string",
-                            "null"
-                          ]
-                        },
-                        "type": "array"
-                      }
-                    },
-                    "required": [
-                      "targets"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "OUTCOME_UNKNOWN"
-                  },
-                  "details": {
-                    "properties": {
-                      "evidence": {
-                        "type": "object"
-                      },
-                      "reason": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      },
-                      "stage": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "stage",
-                      "evidence",
-                      "reason"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "PARTIAL_FAILURE"
-                  },
-                  "details": {
-                    "properties": {
-                      "failed": {
-                        "minimum": 0,
-                        "type": "integer"
-                      },
-                      "notExecuted": {
-                        "minimum": 0,
-                        "type": "integer"
-                      },
-                      "succeeded": {
-                        "minimum": 0,
-                        "type": "integer"
-                      }
-                    },
-                    "required": [
-                      "succeeded",
-                      "failed",
-                      "notExecuted"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "PLAN_STALE"
-                  },
-                  "details": {
-                    "properties": {
-                      "planHash": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      },
-                      "previewToken": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      },
-                      "reason": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "planHash",
-                      "reason",
-                      "previewToken"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "PRECONDITION_FAILED"
-                  },
-                  "details": {
-                    "properties": {
-                      "condition": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      },
-                      "parameter": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      },
-                      "target": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "condition",
-                      "target",
-                      "parameter"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "PROJECT_NOT_BOUND"
-                  },
-                  "details": {
-                    "properties": {},
-                    "required": [],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "RESOURCE_UNAVAILABLE"
-                  },
-                  "details": {
-                    "properties": {
-                      "resource": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "resource"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "SESSION_RESET_REQUIRED"
-                  },
-                  "details": {
-                    "properties": {
-                      "reason": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "reason"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "TARGET_AMBIGUOUS"
-                  },
-                  "details": {
-                    "properties": {
-                      "candidates": {
-                        "items": {
-                          "type": [
-                            "string",
-                            "null"
-                          ]
-                        },
-                        "type": "array"
-                      },
-                      "target": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "target",
-                      "candidates"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "TIMEOUT"
-                  },
-                  "details": {
-                    "properties": {
-                      "stage": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "stage"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "TOOL_NOT_FOUND"
-                  },
-                  "details": {
-                    "properties": {
-                      "tool": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "tool"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "const": "UNSUPPORTED_CAPABILITY"
-                  },
-                  "details": {
-                    "properties": {
-                      "action": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      },
-                      "capability": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      },
-                      "releaseKey": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "releaseKey",
-                      "capability",
-                      "action"
-                    ],
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              },
-              {
-                "properties": {
-                  "code": {
-                    "minLength": 1,
-                    "not": {
-                      "enum": [
-                        "ACCESS_DENIED",
-                        "ALREADY_EXISTS",
-                        "AUTHENTICATION_REQUIRED",
-                        "CANCELLED",
-                        "COMPILE_ERRORS",
-                        "CONFIRMATION_REQUIRED",
-                        "IDENTITY_MISMATCH",
-                        "INTERNAL_ERROR",
-                        "INVALID_ARGUMENT",
-                        "IO_FAILED",
-                        "LIMIT_EXCEEDED",
-                        "NATIVE_OPERATION_FAILED",
-                        "NOT_EXECUTED",
-                        "NOT_FOUND",
-                        "OFFLINE_REQUIRED",
-                        "OUTCOME_UNKNOWN",
-                        "PARTIAL_FAILURE",
-                        "PLAN_STALE",
-                        "PRECONDITION_FAILED",
-                        "PROJECT_NOT_BOUND",
-                        "RESOURCE_UNAVAILABLE",
-                        "SESSION_RESET_REQUIRED",
-                        "TARGET_AMBIGUOUS",
-                        "TIMEOUT",
-                        "TOOL_NOT_FOUND",
-                        "UNSUPPORTED_CAPABILITY"
-                      ]
-                    },
-                    "type": "string"
-                  },
-                  "details": {
-                    "type": "object"
-                  },
-                  "message": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "code",
-                  "message",
-                  "details"
-                ],
-                "type": "object"
-              }
-            ]
-          },
-          "meta": {
-            "properties": {
-              "behaviorPolicy": {
-                "enum": [
-                  "not-applicable",
-                  "current",
-                  "safe-v4"
-                ],
-                "type": "string"
-              },
-              "completeness": {
-                "enum": [
-                  "complete",
-                  "partial",
-                  "none",
-                  "unknown"
-                ],
-                "type": "string"
-              },
-              "execution": {
-                "enum": [
-                  "not-started",
-                  "read-only",
-                  "completed",
-                  "partial",
-                  "unknown"
-                ],
-                "type": "string"
-              },
-              "outcome": {
-                "enum": [
-                  "succeeded",
-                  "rejected-before-operation",
-                  "read-failed",
-                  "failed",
-                  "partial",
-                  "unknown"
-                ],
-                "type": "string"
-              },
-              "paging": {
-                "properties": {
-                  "complete": {
-                    "type": "boolean"
-                  },
-                  "cursor": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "limit": {
-                    "minimum": 0,
-                    "type": "integer"
-                  },
-                  "mode": {
-                    "enum": [
-                      "offset",
-                      "cursor"
-                    ],
-                    "type": "string"
-                  },
-                  "nextCursor": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "nextOffset": {
-                    "anyOf": [
-                      {
-                        "minimum": 0,
-                        "type": "integer"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "offset": {
-                    "anyOf": [
-                      {
-                        "minimum": 0,
-                        "type": "integer"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "total": {
-                    "anyOf": [
-                      {
-                        "minimum": 0,
-                        "type": "integer"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "unit": {
-                    "enum": [
-                      "items",
-                      "utf16"
-                    ],
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "mode",
-                  "offset",
-                  "limit",
-                  "nextOffset",
-                  "cursor",
-                  "nextCursor",
-                  "total",
-                  "complete",
-                  "unit"
-                ],
-                "type": [
-                  "object",
-                  "null"
-                ]
-              },
-              "releaseKey": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "requestId": {
-                "minLength": 1,
-                "type": "string"
-              },
-              "requiresSessionReset": {
-                "type": "boolean"
-              },
-              "timestamp": {
-                "format": "date-time",
-                "type": "string"
-              },
-              "tool": {
-                "minLength": 1,
-                "type": "string"
-              },
-              "warnings": {
-                "items": {
-                  "properties": {
-                    "code": {
-                      "minLength": 1,
-                      "type": "string"
-                    },
-                    "details": {
-                      "type": "object"
-                    },
-                    "message": {
-                      "minLength": 1,
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message",
-                    "details"
-                  ],
-                  "type": "object"
-                },
-                "type": "array"
-              }
-            },
-            "required": [
-              "timestamp",
-              "releaseKey",
-              "tool",
-              "requestId",
-              "outcome",
-              "execution",
-              "requiresSessionReset",
-              "behaviorPolicy",
-              "completeness",
-              "paging",
-              "warnings"
-            ],
-            "type": "object"
-          },
-          "ok": {
-            "type": "boolean"
-          },
-          "schemaVersion": {
-            "const": 4,
-            "type": "integer"
-          }
-        },
-        "required": [
-          "schemaVersion",
-          "ok",
-          "data",
-          "error",
-          "meta"
-        ],
-        "type": "object"
-      }
-    },
-    {
-      "annotations": {
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false,
-        "readOnlyHint": true
-      },
       "descriptionSha256": "8172938ed085d16ca9834fbb28b95ec7ca0f08c73e0cc837072fcd93fde2e7f0",
       "inputSchema": {
         "additionalProperties": false,
@@ -77096,7 +75789,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "7620ecfc1f8e334cfd0eaea28bb2d07d5407f267998f3a8a222a9c0f8e4a317c",
+      "descriptionSha256": "5836e13c52af837af7fd824416afe66d8d15f3d3c154eb9d18587b2c4a55c8e5",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -77106,7 +75799,7 @@
             "type": "integer"
           },
           "objectKind": {
-            "description": "Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts",
+            "description": "Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTagTable|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts",
             "enum": [
               "Project",
               "Portal",
@@ -77116,6 +75809,7 @@
               "Block",
               "Type",
               "HmiScreen",
+              "HmiTagTable",
               "HmiTag",
               "HmiScreenItem",
               "HmiScriptModule",
@@ -81044,7 +79738,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "59bffa6bf335f5a2c06336d5dbdd4c765cac18a4bc3758878cd7c53523369d85",
+      "descriptionSha256": "288d0f5d142762260ec562b18568c8dc2a2a746ac2ce659cc893f0f6da154753",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -81073,7 +79767,7 @@
             "type": "string"
           },
           "serviceTypeSuffix": {
-            "description": "Service type suffix, e.g. PlcChecksumProvider or ICompilable",
+            "description": "Exact Siemens.Engineering service type name or unique suffix, e.g. PlcChecksumProvider or ICompilable",
             "type": "string"
           },
           "softwarePath": {
@@ -91419,12 +90113,22 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e3b9a67a524329691455a96849c17d82d05db92fc320602a652c2b8861e1782d",
+      "descriptionSha256": "e109066cf5ff022d97278d2fcabbf6da2f107ca3793abf3ddbd67611915d6dae",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "connectionName": {
             "description": "connectionName: the HMI connection name to export",
+            "type": "string"
+          },
+          "exportOptions": {
+            "default": "WithDefaults",
+            "description": "exportOptions: None | WithDefaults (default) | WithReadOnly.",
+            "enum": [
+              "None",
+              "WithDefaults",
+              "WithReadOnly"
+            ],
             "type": "string"
           },
           "exportPath": {
@@ -92722,12 +91426,22 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "858dabff1a3eed693169cd533e2328f0248eae8c810b62b40229d04f824b908c",
+      "descriptionSha256": "78d8e9097886d04e2813b29347e6b58ad1717bf743c49cae48c7ead6acb4ccd4",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "exportDir": {
             "description": "exportDir: directory to write exported files into",
+            "type": "string"
+          },
+          "exportOptions": {
+            "default": "WithDefaults",
+            "description": "exportOptions: None | WithDefaults (default) | WithReadOnly.",
+            "enum": [
+              "None",
+              "WithDefaults",
+              "WithReadOnly"
+            ],
             "type": "string"
           },
           "exportScreens": {
@@ -94030,10 +92744,20 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "9ab887b7154e52ebd357e68f21bf77b46cb0a0640ba3e524f424ee0120f3d434",
+      "descriptionSha256": "3caf098c4cd5f7e2483245a6d7435592c92fd4b185780063b98b5d4f43908f68",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "exportOptions": {
+            "default": "WithDefaults",
+            "description": "exportOptions: None | WithDefaults (default) | WithReadOnly.",
+            "enum": [
+              "None",
+              "WithDefaults",
+              "WithReadOnly"
+            ],
+            "type": "string"
+          },
           "exportPath": {
             "description": "exportPath: full file path to write to (e.g. C:\\\\temp\\\\screen.xml)",
             "examples": [
@@ -95342,10 +94066,20 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e94523fc20085674904cf0ae7c549b20bdca31814f6ff520373c73d97de9879f",
+      "descriptionSha256": "c5f279abdacc8e4c5b394e477831b0f9dae5fb737d00ab86ae5f6f96aa46fe29",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "exportOptions": {
+            "default": "WithDefaults",
+            "description": "exportOptions: None | WithDefaults (default) | WithReadOnly.",
+            "enum": [
+              "None",
+              "WithDefaults",
+              "WithReadOnly"
+            ],
+            "type": "string"
+          },
           "exportPath": {
             "description": "exportPath: full file path to write to (e.g. C:\\\\temp\\\\tagtable.xml)",
             "type": "string"
@@ -113843,6 +112577,1311 @@
         "type": "object"
       },
       "name": "GeneratePlcSourceFromBlocks",
+      "outputSchema": {
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "ACCESS_DENIED"
+                  },
+                  "details": {
+                    "properties": {
+                      "operation": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "target": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "operation",
+                      "target"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "ALREADY_EXISTS"
+                  },
+                  "details": {
+                    "properties": {
+                      "target": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "target"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "AUTHENTICATION_REQUIRED"
+                  },
+                  "details": {
+                    "properties": {
+                      "capability": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "capability"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "CANCELLED"
+                  },
+                  "details": {
+                    "properties": {
+                      "stage": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "stage"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "COMPILE_ERRORS"
+                  },
+                  "details": {
+                    "properties": {
+                      "errorCount": {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "errors": {
+                        "items": {
+                          "properties": {
+                            "description": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "path": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "path",
+                            "description"
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "warningCount": {
+                        "minimum": 0,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "errorCount",
+                      "warningCount",
+                      "errors"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "CONFIRMATION_REQUIRED"
+                  },
+                  "details": {
+                    "properties": {
+                      "planHash": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "reason": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "requestId": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "reason",
+                      "planHash",
+                      "requestId"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "IDENTITY_MISMATCH"
+                  },
+                  "details": {
+                    "properties": {
+                      "actual": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "expected": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "target": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "target",
+                      "expected",
+                      "actual"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "INTERNAL_ERROR"
+                  },
+                  "details": {
+                    "properties": {
+                      "diagnosticId": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "diagnosticId"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "INVALID_ARGUMENT"
+                  },
+                  "details": {
+                    "properties": {
+                      "allowedValues": {
+                        "items": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "type": "array"
+                      },
+                      "parameter": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "parameters": {
+                        "items": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "parameter",
+                      "allowedValues",
+                      "parameters"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "IO_FAILED"
+                  },
+                  "details": {
+                    "properties": {
+                      "operation": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "path": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "operation",
+                      "path"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "LIMIT_EXCEEDED"
+                  },
+                  "details": {
+                    "properties": {
+                      "actual": {
+                        "anyOf": [
+                          {
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "limit": {
+                        "anyOf": [
+                          {
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "parameter": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "parameter",
+                      "limit",
+                      "actual"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "NATIVE_OPERATION_FAILED"
+                  },
+                  "details": {
+                    "properties": {
+                      "evidence": {
+                        "type": "object"
+                      },
+                      "nativeCode": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "nativeMessage": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "nativeCode",
+                      "nativeMessage",
+                      "evidence"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "NOT_EXECUTED"
+                  },
+                  "details": {
+                    "properties": {
+                      "causeIndex": {
+                        "anyOf": [
+                          {
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "causeIndex"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "NOT_FOUND"
+                  },
+                  "details": {
+                    "properties": {
+                      "target": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "target"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "OFFLINE_REQUIRED"
+                  },
+                  "details": {
+                    "properties": {
+                      "targets": {
+                        "items": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "targets"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "OUTCOME_UNKNOWN"
+                  },
+                  "details": {
+                    "properties": {
+                      "evidence": {
+                        "type": "object"
+                      },
+                      "reason": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "stage": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "stage",
+                      "evidence",
+                      "reason"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "PARTIAL_FAILURE"
+                  },
+                  "details": {
+                    "properties": {
+                      "failed": {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "notExecuted": {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "succeeded": {
+                        "minimum": 0,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "succeeded",
+                      "failed",
+                      "notExecuted"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "PLAN_STALE"
+                  },
+                  "details": {
+                    "properties": {
+                      "planHash": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "previewToken": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "reason": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "planHash",
+                      "reason",
+                      "previewToken"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "PRECONDITION_FAILED"
+                  },
+                  "details": {
+                    "properties": {
+                      "condition": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "parameter": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "target": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "condition",
+                      "target",
+                      "parameter"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "PROJECT_NOT_BOUND"
+                  },
+                  "details": {
+                    "properties": {},
+                    "required": [],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "RESOURCE_UNAVAILABLE"
+                  },
+                  "details": {
+                    "properties": {
+                      "resource": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "resource"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "SESSION_RESET_REQUIRED"
+                  },
+                  "details": {
+                    "properties": {
+                      "reason": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "reason"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "TARGET_AMBIGUOUS"
+                  },
+                  "details": {
+                    "properties": {
+                      "candidates": {
+                        "items": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "type": "array"
+                      },
+                      "target": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "target",
+                      "candidates"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "TIMEOUT"
+                  },
+                  "details": {
+                    "properties": {
+                      "stage": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "stage"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "TOOL_NOT_FOUND"
+                  },
+                  "details": {
+                    "properties": {
+                      "tool": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "tool"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "UNSUPPORTED_CAPABILITY"
+                  },
+                  "details": {
+                    "properties": {
+                      "action": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "capability": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "releaseKey": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "releaseKey",
+                      "capability",
+                      "action"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "minLength": 1,
+                    "not": {
+                      "enum": [
+                        "ACCESS_DENIED",
+                        "ALREADY_EXISTS",
+                        "AUTHENTICATION_REQUIRED",
+                        "CANCELLED",
+                        "COMPILE_ERRORS",
+                        "CONFIRMATION_REQUIRED",
+                        "IDENTITY_MISMATCH",
+                        "INTERNAL_ERROR",
+                        "INVALID_ARGUMENT",
+                        "IO_FAILED",
+                        "LIMIT_EXCEEDED",
+                        "NATIVE_OPERATION_FAILED",
+                        "NOT_EXECUTED",
+                        "NOT_FOUND",
+                        "OFFLINE_REQUIRED",
+                        "OUTCOME_UNKNOWN",
+                        "PARTIAL_FAILURE",
+                        "PLAN_STALE",
+                        "PRECONDITION_FAILED",
+                        "PROJECT_NOT_BOUND",
+                        "RESOURCE_UNAVAILABLE",
+                        "SESSION_RESET_REQUIRED",
+                        "TARGET_AMBIGUOUS",
+                        "TIMEOUT",
+                        "TOOL_NOT_FOUND",
+                        "UNSUPPORTED_CAPABILITY"
+                      ]
+                    },
+                    "type": "string"
+                  },
+                  "details": {
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "meta": {
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ],
+                "type": "string"
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ],
+                "type": "string"
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ],
+                "type": "string"
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ],
+                "type": "string"
+              },
+              "paging": {
+                "properties": {
+                  "complete": {
+                    "type": "boolean"
+                  },
+                  "cursor": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "limit": {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "mode": {
+                    "enum": [
+                      "offset",
+                      "cursor"
+                    ],
+                    "type": "string"
+                  },
+                  "nextCursor": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "nextOffset": {
+                    "anyOf": [
+                      {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "offset": {
+                    "anyOf": [
+                      {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "total": {
+                    "anyOf": [
+                      {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "unit": {
+                    "enum": [
+                      "items",
+                      "utf16"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "mode",
+                  "offset",
+                  "limit",
+                  "nextOffset",
+                  "cursor",
+                  "nextCursor",
+                  "total",
+                  "complete",
+                  "unit"
+                ],
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "format": "date-time",
+                "type": "string"
+              },
+              "tool": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "properties": {
+                    "code": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "details"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "descriptionSha256": "52bcf6bff0938856d64b400b0feb4ad752a7691f24e0cc7d9f9adb52ebb06919",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "default": 100,
+            "description": "limit: items per page.",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetClassicHmiGlobalization",
       "outputSchema": {
         "properties": {
           "data": {
@@ -142566,12 +142605,12 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "5f80df7771ae99811403b8a0a5e5c8f88f4060e5bdff931bfeceb29832ce4ae8",
+      "descriptionSha256": "a573c06949f14675b028153d7b6418e1f776fde3839ebad89d7d5a367500f8d7",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "objectKind": {
-            "description": "Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts",
+            "description": "Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTagTable|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts",
             "enum": [
               "Project",
               "Portal",
@@ -142581,6 +142620,7 @@
               "Block",
               "Type",
               "HmiScreen",
+              "HmiTagTable",
               "HmiTag",
               "HmiScreenItem",
               "HmiScriptModule",
@@ -186930,13 +186970,18 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "555e160f0b01a36b7a5db9863867397055923836c8efbb68c8026f8843e056c8",
+      "descriptionSha256": "4b2bd80bf9682fafddcee1954a00e1287c143c9e4bdd00aa973e516052c5e931",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "importPath": {
             "description": "importPath: full file path of exported HMI connection XML",
             "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.",
+            "type": "boolean"
           },
           "softwarePath": {
             "description": "softwarePath: path in the project structure to the HMI software",
@@ -188228,7 +188273,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "754a919d8558cb7db12db6a4513475b4d8da812c89393dbb947de558e2a8f0e5",
+      "descriptionSha256": "6fe5f0cde37b1c8521396a763e3385d9403ec4badd9e859e5f1bb97ab943c7eb",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -188245,6 +188290,11 @@
               "C:\\Temp\\Screen_1.xml"
             ],
             "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.",
+            "type": "boolean"
           },
           "softwarePath": {
             "description": "softwarePath: path in the project structure to the HMI software",
@@ -189540,7 +189590,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "8ac11c76c5d88f0693aa6a0fc712a698db02e6685cc5c2326c2ed75faea24779",
+      "descriptionSha256": "7d8ca479dd30eb0260d74791797146f98c1e89a01f2a78c24fa5c13e3e0e5fab",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -189553,8 +189603,8 @@
             "type": "string"
           },
           "overwrite": {
-            "default": true,
-            "description": "overwrite: true=Override (default)",
+            "default": false,
+            "description": "overwrite: default false (ImportOptions.None); true explicitly selects Override",
             "type": "boolean"
           },
           "regexName": {
@@ -190853,7 +190903,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "6b56065be8783277c000a1ad19931774c8fcc9c43d15e650c5fe60e531cb5251",
+      "descriptionSha256": "2fe1d58f00442c8480e90cf7d7239e3b2bc6bde2bdc5fa4d6f4e45f9d1ff5e5c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -190870,6 +190920,11 @@
               "C:\\Temp\\HmiTags.xml"
             ],
             "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.",
+            "type": "boolean"
           },
           "softwarePath": {
             "description": "softwarePath: path in the project structure to the HMI software",
@@ -192165,7 +192220,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "326308912d2589153ad946ea07807547073b71dde7647490382daa68dac03a79",
+      "descriptionSha256": "1d7416f50635c406bcca7bbdbda511d945cd815ee3aadb2324d609e16be1aae5",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -192178,8 +192233,8 @@
             "type": "string"
           },
           "overwrite": {
-            "default": true,
-            "description": "overwrite: true=Override (default)",
+            "default": false,
+            "description": "overwrite: default false (ImportOptions.None); true explicitly selects Override",
             "type": "boolean"
           },
           "regexName": {
@@ -209368,7 +209423,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "ec99bc73e273f9264b9154962b3e7ecc585c601d2f28c5959036bc3c54aadaf5",
+      "descriptionSha256": "8d25d74f2e9a9cf1f950041b3b2eacddfff4f51a9ed7f802b298247256b55a2b",
       "inputSchema": {
         "$defs": {
           "recursive0": {
@@ -209456,7 +209511,7 @@
             "type": "string"
           },
           "objectKind": {
-            "description": "Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts",
+            "description": "Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTagTable|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts",
             "enum": [
               "Project",
               "Portal",
@@ -209466,6 +209521,7 @@
               "Block",
               "Type",
               "HmiScreen",
+              "HmiTagTable",
               "HmiTag",
               "HmiScreenItem",
               "HmiScriptModule",
@@ -210769,7 +210825,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "63fb1a60bd708662616bd543381c13d139421ca540390f5f41979b14dfa5c894",
+      "descriptionSha256": "7a1865fc7b4da61ccd381e7d1883a40458be4789365ac0a3ba7e4597d94c2eff",
       "inputSchema": {
         "$defs": {
           "recursive0": {
@@ -210876,7 +210932,7 @@
             "type": "string"
           },
           "serviceTypeSuffix": {
-            "description": "Service type suffix, e.g. PlcChecksumProvider or ICompilable",
+            "description": "Exact Siemens.Engineering service type name or unique suffix, e.g. PlcChecksumProvider or ICompilable",
             "type": "string"
           },
           "softwarePath": {
@@ -219121,7 +219177,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "b596225bcf1da1790bf83ad752b48f69e7bfd4876707a21ae77be8422906fe67",
+      "descriptionSha256": "5ceaf0efcf3ff01226c6491a4206d112f66048f6c08bc29cc8d2f752c0e91533",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -229572,7 +229628,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "f8bb9692e799e4e64c69326ab5e17f241b8c68c6085b2bb123eeb2e0c5a9e27b",
+      "descriptionSha256": "5883056be56a999149f66d2b76a3ef65c892e0600e779924679fc7ff6edbe57f",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -229587,7 +229643,7 @@
             "type": "integer"
           },
           "objectKind": {
-            "description": "Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts",
+            "description": "Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTagTable|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts",
             "enum": [
               "Project",
               "Portal",
@@ -229597,6 +229653,7 @@
               "Block",
               "Type",
               "HmiScreen",
+              "HmiTagTable",
               "HmiTag",
               "HmiScreenItem",
               "HmiScriptModule",
@@ -250383,6 +250440,16 @@
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
+          "exportOptions": {
+            "default": "WithDefaults",
+            "description": "exportOptions: None | WithDefaults (default) | WithReadOnly.",
+            "enum": [
+              "None",
+              "WithDefaults",
+              "WithReadOnly"
+            ],
+            "type": "string"
+          },
           "filePath": {
             "default": "",
             "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
@@ -253030,7 +253097,1351 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "8c2363c84051eba3e493580963ff2acfe4fa80fb29cb4196fae2afcc9fff32b8",
+      "descriptionSha256": "0fe235cc4fcfee2bf1ea7d9ba116f747201e68c9453369892feff39c30e91746",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "default": "list",
+            "description": "action: the operation to perform - list | read | export | import | delete.",
+            "enum": [
+              "list",
+              "read",
+              "export",
+              "import",
+              "delete"
+            ],
+            "type": "string"
+          },
+          "confirmDelete": {
+            "default": false,
+            "description": "confirmDelete: must be true together with dryRun=false to delete; keep false until the user agreed to that deletion.",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "exportOptions": {
+            "default": "WithDefaults",
+            "description": "exportOptions: None | WithDefaults (default) | WithReadOnly.",
+            "enum": [
+              "None",
+              "WithDefaults",
+              "WithReadOnly"
+            ],
+            "type": "string"
+          },
+          "filePath": {
+            "default": "",
+            "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
+            "type": "string"
+          },
+          "importOptions": {
+            "default": "None",
+            "description": "importOptions: import option - None | Override.",
+            "enum": [
+              "None",
+              "Override"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "default": "",
+            "description": "name: exact name of the object (case-sensitive).",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ManageClassicHmiGraphic",
+      "outputSchema": {
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "ACCESS_DENIED"
+                  },
+                  "details": {
+                    "properties": {
+                      "operation": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "target": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "operation",
+                      "target"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "ALREADY_EXISTS"
+                  },
+                  "details": {
+                    "properties": {
+                      "target": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "target"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "AUTHENTICATION_REQUIRED"
+                  },
+                  "details": {
+                    "properties": {
+                      "capability": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "capability"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "CANCELLED"
+                  },
+                  "details": {
+                    "properties": {
+                      "stage": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "stage"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "COMPILE_ERRORS"
+                  },
+                  "details": {
+                    "properties": {
+                      "errorCount": {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "errors": {
+                        "items": {
+                          "properties": {
+                            "description": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "path": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "path",
+                            "description"
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "warningCount": {
+                        "minimum": 0,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "errorCount",
+                      "warningCount",
+                      "errors"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "CONFIRMATION_REQUIRED"
+                  },
+                  "details": {
+                    "properties": {
+                      "planHash": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "reason": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "requestId": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "reason",
+                      "planHash",
+                      "requestId"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "IDENTITY_MISMATCH"
+                  },
+                  "details": {
+                    "properties": {
+                      "actual": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "expected": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "target": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "target",
+                      "expected",
+                      "actual"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "INTERNAL_ERROR"
+                  },
+                  "details": {
+                    "properties": {
+                      "diagnosticId": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "diagnosticId"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "INVALID_ARGUMENT"
+                  },
+                  "details": {
+                    "properties": {
+                      "allowedValues": {
+                        "items": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "type": "array"
+                      },
+                      "parameter": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "parameters": {
+                        "items": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "parameter",
+                      "allowedValues",
+                      "parameters"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "IO_FAILED"
+                  },
+                  "details": {
+                    "properties": {
+                      "operation": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "path": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "operation",
+                      "path"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "LIMIT_EXCEEDED"
+                  },
+                  "details": {
+                    "properties": {
+                      "actual": {
+                        "anyOf": [
+                          {
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "limit": {
+                        "anyOf": [
+                          {
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "parameter": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "parameter",
+                      "limit",
+                      "actual"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "NATIVE_OPERATION_FAILED"
+                  },
+                  "details": {
+                    "properties": {
+                      "evidence": {
+                        "type": "object"
+                      },
+                      "nativeCode": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "nativeMessage": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "nativeCode",
+                      "nativeMessage",
+                      "evidence"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "NOT_EXECUTED"
+                  },
+                  "details": {
+                    "properties": {
+                      "causeIndex": {
+                        "anyOf": [
+                          {
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "causeIndex"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "NOT_FOUND"
+                  },
+                  "details": {
+                    "properties": {
+                      "target": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "target"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "OFFLINE_REQUIRED"
+                  },
+                  "details": {
+                    "properties": {
+                      "targets": {
+                        "items": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "targets"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "OUTCOME_UNKNOWN"
+                  },
+                  "details": {
+                    "properties": {
+                      "evidence": {
+                        "type": "object"
+                      },
+                      "reason": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "stage": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "stage",
+                      "evidence",
+                      "reason"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "PARTIAL_FAILURE"
+                  },
+                  "details": {
+                    "properties": {
+                      "failed": {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "notExecuted": {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "succeeded": {
+                        "minimum": 0,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "succeeded",
+                      "failed",
+                      "notExecuted"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "PLAN_STALE"
+                  },
+                  "details": {
+                    "properties": {
+                      "planHash": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "previewToken": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "reason": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "planHash",
+                      "reason",
+                      "previewToken"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "PRECONDITION_FAILED"
+                  },
+                  "details": {
+                    "properties": {
+                      "condition": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "parameter": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "target": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "condition",
+                      "target",
+                      "parameter"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "PROJECT_NOT_BOUND"
+                  },
+                  "details": {
+                    "properties": {},
+                    "required": [],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "RESOURCE_UNAVAILABLE"
+                  },
+                  "details": {
+                    "properties": {
+                      "resource": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "resource"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "SESSION_RESET_REQUIRED"
+                  },
+                  "details": {
+                    "properties": {
+                      "reason": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "reason"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "TARGET_AMBIGUOUS"
+                  },
+                  "details": {
+                    "properties": {
+                      "candidates": {
+                        "items": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "type": "array"
+                      },
+                      "target": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "target",
+                      "candidates"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "TIMEOUT"
+                  },
+                  "details": {
+                    "properties": {
+                      "stage": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "stage"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "TOOL_NOT_FOUND"
+                  },
+                  "details": {
+                    "properties": {
+                      "tool": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "tool"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "UNSUPPORTED_CAPABILITY"
+                  },
+                  "details": {
+                    "properties": {
+                      "action": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "capability": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "releaseKey": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "releaseKey",
+                      "capability",
+                      "action"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "minLength": 1,
+                    "not": {
+                      "enum": [
+                        "ACCESS_DENIED",
+                        "ALREADY_EXISTS",
+                        "AUTHENTICATION_REQUIRED",
+                        "CANCELLED",
+                        "COMPILE_ERRORS",
+                        "CONFIRMATION_REQUIRED",
+                        "IDENTITY_MISMATCH",
+                        "INTERNAL_ERROR",
+                        "INVALID_ARGUMENT",
+                        "IO_FAILED",
+                        "LIMIT_EXCEEDED",
+                        "NATIVE_OPERATION_FAILED",
+                        "NOT_EXECUTED",
+                        "NOT_FOUND",
+                        "OFFLINE_REQUIRED",
+                        "OUTCOME_UNKNOWN",
+                        "PARTIAL_FAILURE",
+                        "PLAN_STALE",
+                        "PRECONDITION_FAILED",
+                        "PROJECT_NOT_BOUND",
+                        "RESOURCE_UNAVAILABLE",
+                        "SESSION_RESET_REQUIRED",
+                        "TARGET_AMBIGUOUS",
+                        "TIMEOUT",
+                        "TOOL_NOT_FOUND",
+                        "UNSUPPORTED_CAPABILITY"
+                      ]
+                    },
+                    "type": "string"
+                  },
+                  "details": {
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "meta": {
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ],
+                "type": "string"
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ],
+                "type": "string"
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ],
+                "type": "string"
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ],
+                "type": "string"
+              },
+              "paging": {
+                "properties": {
+                  "complete": {
+                    "type": "boolean"
+                  },
+                  "cursor": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "limit": {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "mode": {
+                    "enum": [
+                      "offset",
+                      "cursor"
+                    ],
+                    "type": "string"
+                  },
+                  "nextCursor": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "nextOffset": {
+                    "anyOf": [
+                      {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "offset": {
+                    "anyOf": [
+                      {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "total": {
+                    "anyOf": [
+                      {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "unit": {
+                    "enum": [
+                      "items",
+                      "utf16"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "mode",
+                  "offset",
+                  "limit",
+                  "nextOffset",
+                  "cursor",
+                  "nextCursor",
+                  "total",
+                  "complete",
+                  "unit"
+                ],
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "format": "date-time",
+                "type": "string"
+              },
+              "tool": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "properties": {
+                    "code": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "details"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "descriptionSha256": "52460ec0635b3bc6fcf2ec72eba59fd3fde1fc7369019f7bbf1b1933c12b5025",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -253054,6 +254465,16 @@
             "default": true,
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
+          },
+          "exportOptions": {
+            "default": "WithDefaults",
+            "description": "exportOptions: None | WithDefaults (default) | WithReadOnly.",
+            "enum": [
+              "None",
+              "WithDefaults",
+              "WithReadOnly"
+            ],
+            "type": "string"
           },
           "filePath": {
             "default": "",
@@ -254422,6 +255843,16 @@
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
+          "exportOptions": {
+            "default": "WithDefaults",
+            "description": "exportOptions: None | WithDefaults (default) | WithReadOnly.",
+            "enum": [
+              "None",
+              "WithDefaults",
+              "WithReadOnly"
+            ],
+            "type": "string"
+          },
           "filePath": {
             "default": "",
             "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
@@ -255783,6 +257214,16 @@
           "entryName": {
             "default": "",
             "description": "entryName: exact name of the entry inside the composition.",
+            "type": "string"
+          },
+          "exportOptions": {
+            "default": "WithDefaults",
+            "description": "exportOptions: None | WithDefaults (default) | WithReadOnly.",
+            "enum": [
+              "None",
+              "WithDefaults",
+              "WithReadOnly"
+            ],
             "type": "string"
           },
           "filePath": {
@@ -270599,7 +272040,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "92844c9870896b56fc9e2906bca11b69e12ac2e6189efb0a472d512c486df7a2",
+      "descriptionSha256": "fdc0a122b666187993cb941d49bbc0ee11f7390fadf9ae383c91c98f0e22c520",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -356187,7 +357628,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "a8fbdf5e5fe847ee6ebbe327cfc00739e33df426162f76721430a42d0ed2e069",
+      "descriptionSha256": "eb674b4027d3821152e29bd3879ee2e7f524cfcd85bee4929850e18057cc6360",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

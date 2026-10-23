@@ -6465,16 +6465,6 @@
     },
     {
       "releaseKey": "14sp1",
-      "entry": "DescribeHmiScreenItem",
-      "family": "F24",
-      "example": {
-        "softwarePath": "HMI_RT_1",
-        "screenName": "Overview",
-        "itemName": "StatusText"
-      }
-    },
-    {
-      "releaseKey": "14sp1",
       "entry": "ListHmiScreens",
       "family": "F24",
       "example": {
@@ -6512,7 +6502,8 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "screenName": "Screen_1",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -6522,7 +6513,8 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "tagTableName": "Default tag table",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -6532,7 +6524,8 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "connectionName": "PLC_Connection",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -6541,7 +6534,8 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "exportDir": "C:\\Examples\\exports"
+        "exportDir": "C:\\Examples\\exports",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -6657,6 +6651,17 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "ManageClassicHmiGraphic",
+      "family": "F25",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "list"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "ListClassicHmiScripts",
       "family": "F25",
       "example": {
@@ -6696,6 +6701,14 @@
         "action": "read",
         "confirmDelete": false,
         "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetClassicHmiGlobalization",
+      "family": "F25",
+      "example": {
+        "softwarePath": "HMI_RT_1"
       }
     },
     {
@@ -8132,7 +8145,8 @@
       "entry": "SetPlcPutGetAccess",
       "family": "F07",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": "PLC_1",
+        "dryRun": true
       }
     },
     {
@@ -8779,16 +8793,6 @@
     },
     {
       "releaseKey": "15.1",
-      "entry": "DescribeHmiScreenItem",
-      "family": "F24",
-      "example": {
-        "softwarePath": "HMI_RT_1",
-        "screenName": "Overview",
-        "itemName": "StatusText"
-      }
-    },
-    {
-      "releaseKey": "15.1",
       "entry": "ListHmiScreens",
       "family": "F24",
       "example": {
@@ -8826,7 +8830,8 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "screenName": "Screen_1",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -8836,7 +8841,8 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "tagTableName": "Default tag table",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -8846,7 +8852,8 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "connectionName": "PLC_Connection",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -8855,7 +8862,8 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "exportDir": "C:\\Examples\\exports"
+        "exportDir": "C:\\Examples\\exports",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -8971,6 +8979,17 @@
     },
     {
       "releaseKey": "15.1",
+      "entry": "ManageClassicHmiGraphic",
+      "family": "F25",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "list"
+      }
+    },
+    {
+      "releaseKey": "15.1",
       "entry": "ListClassicHmiScripts",
       "family": "F25",
       "example": {
@@ -9010,6 +9029,14 @@
         "action": "read",
         "confirmDelete": false,
         "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetClassicHmiGlobalization",
+      "family": "F25",
+      "example": {
+        "softwarePath": "HMI_RT_1"
       }
     },
     {
@@ -10526,6 +10553,21 @@
     },
     {
       "releaseKey": "16",
+      "entry": "ManageDcbLibraries",
+      "family": "F31",
+      "example": {
+        "dryRun": true,
+        "action": "read",
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
       "entry": "ManageDccChart",
       "family": "F31",
       "example": {
@@ -10749,7 +10791,8 @@
       "entry": "SetPlcPutGetAccess",
       "family": "F07",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": "PLC_1",
+        "dryRun": true
       }
     },
     {
@@ -11490,16 +11533,6 @@
     },
     {
       "releaseKey": "16",
-      "entry": "DescribeHmiScreenItem",
-      "family": "F24",
-      "example": {
-        "softwarePath": "HMI_RT_1",
-        "screenName": "Overview",
-        "itemName": "StatusText"
-      }
-    },
-    {
-      "releaseKey": "16",
       "entry": "ListHmiScreens",
       "family": "F24",
       "example": {
@@ -11537,7 +11570,8 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "screenName": "Screen_1",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -11547,7 +11581,8 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "tagTableName": "Default tag table",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -11557,7 +11592,8 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "connectionName": "PLC_Connection",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -11566,7 +11602,8 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "exportDir": "C:\\Examples\\exports"
+        "exportDir": "C:\\Examples\\exports",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -11682,6 +11719,17 @@
     },
     {
       "releaseKey": "16",
+      "entry": "ManageClassicHmiGraphic",
+      "family": "F25",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "list"
+      }
+    },
+    {
+      "releaseKey": "16",
       "entry": "ListClassicHmiScripts",
       "family": "F25",
       "example": {
@@ -11721,6 +11769,14 @@
         "action": "read",
         "confirmDelete": false,
         "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetClassicHmiGlobalization",
+      "family": "F25",
+      "example": {
+        "softwarePath": "HMI_RT_1"
       }
     },
     {
@@ -13385,6 +13441,21 @@
     },
     {
       "releaseKey": "17",
+      "entry": "ManageDcbLibraries",
+      "family": "F31",
+      "example": {
+        "dryRun": true,
+        "action": "read",
+        "devicePath": [
+          "&lt;exact drive device&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact drive/control unit item&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
       "entry": "ManageDccChart",
       "family": "F31",
       "example": {
@@ -13708,7 +13779,8 @@
       "entry": "SetPlcPutGetAccess",
       "family": "F07",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": "PLC_1",
+        "dryRun": true
       }
     },
     {
@@ -14486,16 +14558,6 @@
     },
     {
       "releaseKey": "17",
-      "entry": "DescribeHmiScreenItem",
-      "family": "F24",
-      "example": {
-        "softwarePath": "HMI_RT_1",
-        "screenName": "Overview",
-        "itemName": "StatusText"
-      }
-    },
-    {
-      "releaseKey": "17",
       "entry": "ListHmiScreens",
       "family": "F24",
       "example": {
@@ -14533,7 +14595,8 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "screenName": "Screen_1",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -14543,7 +14606,8 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "tagTableName": "Default tag table",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -14553,7 +14617,8 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "connectionName": "PLC_Connection",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -14562,7 +14627,8 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "exportDir": "C:\\Examples\\exports"
+        "exportDir": "C:\\Examples\\exports",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -14678,6 +14744,17 @@
     },
     {
       "releaseKey": "17",
+      "entry": "ManageClassicHmiGraphic",
+      "family": "F25",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "list"
+      }
+    },
+    {
+      "releaseKey": "17",
       "entry": "ListClassicHmiScripts",
       "family": "F25",
       "example": {
@@ -14717,6 +14794,14 @@
         "action": "read",
         "confirmDelete": false,
         "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetClassicHmiGlobalization",
+      "family": "F25",
+      "example": {
+        "softwarePath": "HMI_RT_1"
       }
     },
     {
@@ -16978,7 +17063,8 @@
       "entry": "SetPlcPutGetAccess",
       "family": "F07",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": "PLC_1",
+        "dryRun": true
       }
     },
     {
@@ -17837,16 +17923,6 @@
     },
     {
       "releaseKey": "18",
-      "entry": "DescribeHmiScreenItem",
-      "family": "F24",
-      "example": {
-        "softwarePath": "HMI_RT_1",
-        "screenName": "Overview",
-        "itemName": "StatusText"
-      }
-    },
-    {
-      "releaseKey": "18",
       "entry": "ListHmiScreens",
       "family": "F24",
       "example": {
@@ -17884,7 +17960,8 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "screenName": "Screen_1",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -17894,7 +17971,8 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "tagTableName": "Default tag table",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -17904,7 +17982,8 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "connectionName": "PLC_Connection",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -17913,7 +17992,8 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "exportDir": "C:\\Examples\\exports"
+        "exportDir": "C:\\Examples\\exports",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -18029,6 +18109,17 @@
     },
     {
       "releaseKey": "18",
+      "entry": "ManageClassicHmiGraphic",
+      "family": "F25",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "list"
+      }
+    },
+    {
+      "releaseKey": "18",
       "entry": "ListClassicHmiScripts",
       "family": "F25",
       "example": {
@@ -18068,6 +18159,14 @@
         "action": "read",
         "confirmDelete": false,
         "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetClassicHmiGlobalization",
+      "family": "F25",
+      "example": {
+        "softwarePath": "HMI_RT_1"
       }
     },
     {
@@ -20446,7 +20545,8 @@
       "entry": "SetPlcPutGetAccess",
       "family": "F07",
       "example": {
-        "devicePath": "PLC_1"
+        "devicePath": "PLC_1",
+        "dryRun": true
       }
     },
     {
@@ -21416,7 +21516,7 @@
       "entry": "DescribeHmiScreenItem",
       "family": "F24",
       "example": {
-        "softwarePath": "HMI_RT_1",
+        "softwarePath": "HMI_Unified_1",
         "screenName": "Overview",
         "itemName": "StatusText"
       }
@@ -21460,7 +21560,8 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "screenName": "Screen_1",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -21470,7 +21571,8 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "tagTableName": "Default tag table",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -21480,7 +21582,8 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "connectionName": "PLC_Connection",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -21489,7 +21592,8 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "exportDir": "C:\\Examples\\exports"
+        "exportDir": "C:\\Examples\\exports",
+        "exportOptions": "WithDefaults"
       }
     },
     {
@@ -22553,6 +22657,17 @@
     },
     {
       "releaseKey": "19",
+      "entry": "ManageClassicHmiGraphic",
+      "family": "F25",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "list"
+      }
+    },
+    {
+      "releaseKey": "19",
       "entry": "ListClassicHmiScripts",
       "family": "F25",
       "example": {
@@ -22592,6 +22707,14 @@
         "action": "read",
         "confirmDelete": false,
         "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetClassicHmiGlobalization",
+      "family": "F25",
+      "example": {
+        "softwarePath": "HMI_RT_1"
       }
     },
     {
@@ -24230,48 +24353,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "BuildClassicHmiMinimalPackage",
-        "currentName": "BuildClassicHmiMinimalPackage",
-        "sourceName": "BuildClassicHmiMinimalPackage",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "package": {
-            "name": "Example",
-            "screenDesign": {
-              "screen": {
-                "name": "Overview",
-                "width": 800,
-                "height": 480
-              },
-              "items": [
-                {
-                  "type": "Text",
-                  "name": "StatusText",
-                  "left": 20,
-                  "top": 20,
-                  "width": 160,
-                  "height": 40,
-                  "text": "Ready"
-                }
-              ]
-            },
-            "tagTable": {
-              "name": "ExampleTags",
-              "tags": [
-                {
-                  "name": "Ready",
-                  "dataType": "Bool",
-                  "length": "1"
-                }
-              ]
-            }
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "BuildClassicHmiScreen",
         "currentName": "BuildClassicHmiScreen",
         "sourceName": "BuildClassicHmiScreenXml",
@@ -24294,27 +24375,6 @@
                 "width": 160,
                 "height": 40,
                 "text": "Ready"
-              }
-            ]
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildClassicHmiTagTable",
-        "currentName": "BuildClassicHmiTagTable",
-        "sourceName": "BuildClassicHmiTagTableXml",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "table": {
-            "name": "ExampleTags",
-            "tags": [
-              {
-                "name": "Ready",
-                "dataType": "Bool",
-                "length": "1"
               }
             ]
           }
@@ -26454,6 +26514,18 @@
           ],
           "generationOptions": "None",
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetClassicHmiGlobalization",
+        "currentName": "GetClassicHmiGlobalization",
+        "sourceName": "ReadClassicHmiGlobalization",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1"
         },
         "envelopeVersion": 4
       },
@@ -28747,6 +28819,21 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageClassicHmiGraphic",
+        "currentName": "ManageClassicHmiGraphic",
+        "sourceName": "ManageClassicHmiGraphic",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "list"
         },
         "envelopeVersion": 4
       },
@@ -42629,20 +42716,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "DescribeHmiScreenItem",
-        "currentName": "DescribeHmiScreenItem",
-        "sourceName": "DescribeHmiScreenItem",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "HMI_RT_1",
-          "screenName": "Overview",
-          "itemName": "StatusText"
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "DescribeHmiSoftware",
         "currentName": "DescribeHmiSoftware",
         "sourceName": "DescribeHmiSoftware",
@@ -42860,7 +42933,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -42873,7 +42947,8 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDir": "C:\\Examples\\exports"
+          "exportDir": "C:\\Examples\\exports",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -42887,7 +42962,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "screenName": "Screen_1",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -42901,7 +42977,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "Default tag table",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -43922,6 +43999,21 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageClassicHmiGraphic",
+        "currentName": "ManageClassicHmiGraphic",
+        "sourceName": "ManageClassicHmiGraphic",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "list"
         },
         "envelopeVersion": 4
       },
@@ -45747,6 +45839,18 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetClassicHmiGlobalization",
+        "currentName": "GetClassicHmiGlobalization",
+        "sourceName": "ReadClassicHmiGlobalization",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1"
+        },
         "envelopeVersion": 4
       },
       {
@@ -47688,20 +47792,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "DescribeHmiScreenItem",
-        "currentName": "DescribeHmiScreenItem",
-        "sourceName": "DescribeHmiScreenItem",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "HMI_RT_1",
-          "screenName": "Overview",
-          "itemName": "StatusText"
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "DescribeHmiSoftware",
         "currentName": "DescribeHmiSoftware",
         "sourceName": "DescribeHmiSoftware",
@@ -47951,7 +48041,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -47964,7 +48055,8 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDir": "C:\\Examples\\exports"
+          "exportDir": "C:\\Examples\\exports",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -47978,7 +48070,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "screenName": "Screen_1",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -47992,7 +48085,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "Default tag table",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -49164,6 +49258,21 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageClassicHmiGraphic",
+        "currentName": "ManageClassicHmiGraphic",
+        "sourceName": "ManageClassicHmiGraphic",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "list"
         },
         "envelopeVersion": 4
       },
@@ -51189,6 +51298,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetClassicHmiGlobalization",
+        "currentName": "GetClassicHmiGlobalization",
+        "sourceName": "ReadClassicHmiGlobalization",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetClassicHmiScreenTree",
         "currentName": "GetClassicHmiScreenTree",
         "sourceName": "ReadClassicHmiScreenTree",
@@ -52183,7 +52304,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": "PLC_1",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -53326,20 +53448,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "DescribeHmiScreenItem",
-        "currentName": "DescribeHmiScreenItem",
-        "sourceName": "DescribeHmiScreenItem",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "HMI_RT_1",
-          "screenName": "Overview",
-          "itemName": "StatusText"
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "DescribeHmiSoftware",
         "currentName": "DescribeHmiSoftware",
         "sourceName": "DescribeHmiSoftware",
@@ -53631,7 +53739,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -53644,7 +53753,8 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDir": "C:\\Examples\\exports"
+          "exportDir": "C:\\Examples\\exports",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -53658,7 +53768,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "screenName": "Screen_1",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -53672,7 +53783,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "Default tag table",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -54931,6 +55043,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageClassicHmiGraphic",
+        "currentName": "ManageClassicHmiGraphic",
+        "sourceName": "ManageClassicHmiGraphic",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "list"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageClassicHmiScreenObject",
         "currentName": "ManageClassicHmiScreenObject",
         "sourceName": "ManageClassicHmiScreenObject",
@@ -54976,6 +55103,25 @@
           "action": "read",
           "confirmDelete": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDcbLibraries",
+        "currentName": "ManageDcbLibraries",
+        "sourceName": "ManageDcbLibraries",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "read",
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -57129,6 +57275,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetClassicHmiGlobalization",
+        "currentName": "GetClassicHmiGlobalization",
+        "sourceName": "ReadClassicHmiGlobalization",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetClassicHmiScreenTree",
         "currentName": "GetClassicHmiScreenTree",
         "sourceName": "ReadClassicHmiScreenTree",
@@ -58215,7 +58373,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": "PLC_1",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -59370,20 +59529,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "DescribeHmiScreenItem",
-        "currentName": "DescribeHmiScreenItem",
-        "sourceName": "DescribeHmiScreenItem",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "HMI_RT_1",
-          "screenName": "Overview",
-          "itemName": "StatusText"
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "DescribeHmiSoftware",
         "currentName": "DescribeHmiSoftware",
         "sourceName": "DescribeHmiSoftware",
@@ -59734,7 +59879,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -59747,7 +59893,8 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDir": "C:\\Examples\\exports"
+          "exportDir": "C:\\Examples\\exports",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -59761,7 +59908,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "screenName": "Screen_1",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -59775,7 +59923,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "Default tag table",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -61101,6 +61250,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageClassicHmiGraphic",
+        "currentName": "ManageClassicHmiGraphic",
+        "sourceName": "ManageClassicHmiGraphic",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "list"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageClassicHmiScreenObject",
         "currentName": "ManageClassicHmiScreenObject",
         "sourceName": "ManageClassicHmiScreenObject",
@@ -61146,6 +61310,25 @@
           "action": "read",
           "confirmDelete": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDcbLibraries",
+        "currentName": "ManageDcbLibraries",
+        "sourceName": "ManageDcbLibraries",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "read",
+          "devicePath": [
+            "&lt;exact drive device&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact drive/control unit item&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -63419,6 +63602,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetClassicHmiGlobalization",
+        "currentName": "GetClassicHmiGlobalization",
+        "sourceName": "ReadClassicHmiGlobalization",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetClassicHmiScreenTree",
         "currentName": "GetClassicHmiScreenTree",
         "sourceName": "ReadClassicHmiScreenTree",
@@ -64569,7 +64764,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": "PLC_1",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -65836,20 +66032,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "DescribeHmiScreenItem",
-        "currentName": "DescribeHmiScreenItem",
-        "sourceName": "DescribeHmiScreenItem",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "HMI_RT_1",
-          "screenName": "Overview",
-          "itemName": "StatusText"
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "DescribeHmiSoftware",
         "currentName": "DescribeHmiSoftware",
         "sourceName": "DescribeHmiSoftware",
@@ -66216,7 +66398,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -66229,7 +66412,8 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDir": "C:\\Examples\\exports"
+          "exportDir": "C:\\Examples\\exports",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -66243,7 +66427,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "screenName": "Screen_1",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -66257,7 +66442,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "Default tag table",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -67646,6 +67832,21 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageClassicHmiGraphic",
+        "currentName": "ManageClassicHmiGraphic",
+        "sourceName": "ManageClassicHmiGraphic",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "list"
         },
         "envelopeVersion": 4
       },
@@ -70219,6 +70420,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetClassicHmiGlobalization",
+        "currentName": "GetClassicHmiGlobalization",
+        "sourceName": "ReadClassicHmiGlobalization",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetClassicHmiScreenTree",
         "currentName": "GetClassicHmiScreenTree",
         "sourceName": "ReadClassicHmiScreenTree",
@@ -71381,7 +71594,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": "PLC_1",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -73061,7 +73275,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "HMI_RT_1",
+          "softwarePath": "HMI_Unified_1",
           "screenName": "Overview",
           "itemName": "StatusText"
         },
@@ -73631,7 +73845,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -73644,7 +73859,8 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDir": "C:\\Examples\\exports"
+          "exportDir": "C:\\Examples\\exports",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -73658,7 +73874,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "screenName": "Screen_1",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -73672,7 +73889,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "Default tag table",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -75152,6 +75370,21 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageClassicHmiGraphic",
+        "currentName": "ManageClassicHmiGraphic",
+        "sourceName": "ManageClassicHmiGraphic",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "list"
         },
         "envelopeVersion": 4
       },
@@ -77991,6 +78224,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetClassicHmiGlobalization",
+        "currentName": "GetClassicHmiGlobalization",
+        "sourceName": "ReadClassicHmiGlobalization",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetClassicHmiScreenTree",
         "currentName": "GetClassicHmiScreenTree",
         "sourceName": "ReadClassicHmiScreenTree",
@@ -79435,7 +79680,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": "PLC_1",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -80305,48 +80551,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "BuildClassicHmiMinimalPackage",
-        "currentName": "BuildClassicHmiMinimalPackage",
-        "sourceName": "BuildClassicHmiMinimalPackage",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "package": {
-            "name": "Example",
-            "screenDesign": {
-              "screen": {
-                "name": "Overview",
-                "width": 800,
-                "height": 480
-              },
-              "items": [
-                {
-                  "type": "Text",
-                  "name": "StatusText",
-                  "left": 20,
-                  "top": 20,
-                  "width": 160,
-                  "height": 40,
-                  "text": "Ready"
-                }
-              ]
-            },
-            "tagTable": {
-              "name": "ExampleTags",
-              "tags": [
-                {
-                  "name": "Ready",
-                  "dataType": "Bool",
-                  "length": "1"
-                }
-              ]
-            }
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "BuildClassicHmiScreen",
         "currentName": "BuildClassicHmiScreen",
         "sourceName": "BuildClassicHmiScreenXml",
@@ -80369,27 +80573,6 @@
                 "width": 160,
                 "height": 40,
                 "text": "Ready"
-              }
-            ]
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildClassicHmiTagTable",
-        "currentName": "BuildClassicHmiTagTable",
-        "sourceName": "BuildClassicHmiTagTableXml",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "table": {
-            "name": "ExampleTags",
-            "tags": [
-              {
-                "name": "Ready",
-                "dataType": "Bool",
-                "length": "1"
               }
             ]
           }
@@ -82402,6 +82585,18 @@
           ],
           "generationOptions": "None",
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetClassicHmiGlobalization",
+        "currentName": "GetClassicHmiGlobalization",
+        "sourceName": "ReadClassicHmiGlobalization",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1"
         },
         "envelopeVersion": 4
       },
@@ -84543,6 +84738,21 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageClassicHmiGraphic",
+        "currentName": "ManageClassicHmiGraphic",
+        "sourceName": "ManageClassicHmiGraphic",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "list"
         },
         "envelopeVersion": 4
       },
