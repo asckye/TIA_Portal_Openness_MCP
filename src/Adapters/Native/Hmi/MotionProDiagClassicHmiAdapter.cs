@@ -53,18 +53,18 @@ namespace TiaMcp.Adapters.Native.Hmi
             meta["apiCallSuccess"] = true; meta["dataComplete"] = offset == 0 && rows.Length == items.Length && rows.All(r => r!.Field("dataComplete")?.GetValue<bool>() != false);
             return meta;
         }
-        private static string ClassicExport(object target, string filePath, HmiObject meta, bool dryRun)
+        private static string ClassicExport(object target, string filePath, HmiObject meta, bool dryRun, ExportOptions exportOption)
         {
             var file = PlcSourceFileOutput.Plan(filePath);
             var signature = new[] { typeof(FileInfo), typeof(ExportOptions) };
             if (target.GetType().GetMethod("Export", signature) == null) throw new NotSupportedException("Native Export(FileInfo, ExportOptions) unavailable on " + target.GetType().FullName + ".");
             if (dryRun) return "Native export preview; no file written.";
             meta["mayHaveWrittenFiles"] = true;
-            PlcGroupOperations.Call(target, "Export", signature, file, ExportOptions.None);
+            PlcGroupOperations.Call(target, "Export", signature, file, exportOption);
             meta["file"] = PlcSourceFileOutput.Verify(file); meta["apiCallSuccess"] = true;
             return "Native XML export written and hashed; content semantics not verified.";
         }
-        private static string ClassicImport(object composition, string filePath, string importOptions, bool confirmDelete, HmiObject meta, bool writing)
+        private static string ClassicImport(object composition, string filePath, string importOptions, bool confirmDelete, HmiObject meta, bool writing, string objectType)
         {
             var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath));
             if (!file.Exists) throw new FileNotFoundException("Import input not found.");
@@ -73,6 +73,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             var signature = new[] { typeof(FileInfo), typeof(ImportOptions) };
             if (composition.GetType().GetMethod("Import", signature) == null) throw new NotSupportedException("Native Import(FileInfo, ImportOptions) unavailable on " + composition.GetType().FullName + ".");
             meta["importOptions"] = options.ToString();
+            HmiExchangePolicy.BeforeImport(composition, filePath, objectType, options == ImportOptions.Override);
             if (!writing) return "Native import preview; no changes.";
             meta["mayHaveChanged"] = true;
             var result = PlcGroupOperations.Call(composition, "Import", signature, file, options);
@@ -129,8 +130,10 @@ namespace TiaMcp.Adapters.Native.Hmi
             });
 
         public HmiMessage ManageClassicHmiScript(string softwarePath, string scriptPath, string action, string filePath = "", string importOptions = "None",
-            string attributesJson = "{}", bool confirmDelete = false, bool dryRun = true)
+            string attributesJson = "{}", bool confirmDelete = false, bool dryRun = true, string exportOptions = "WithDefaults")
             => RunTool("ManageClassicHmiScript", meta => {
+                var exportOption = (ExportOptions)Enum.Parse(typeof(ExportOptions), HmiExchangePolicy.ExportOption(exportOptions));
+                meta["exportOptions"] = exportOptions;
                 Logic.RequireAction(action, Logic.ScriptActions);
                 bool write = action != "read" && action != "export";
                 bool writing = write && !dryRun;
@@ -141,7 +144,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     _session.Attributes(attributesJson, false);
                     var folder = ClassicScriptFolder(hmi, PlcGroupOperations.Parts(scriptPath, true));
-                    return ClassicImport(PlcGroupOperations.Get(folder, "VBScripts"), filePath, importOptions, confirmDelete, meta, writing);
+                    return ClassicImport(PlcGroupOperations.Get(folder, "VBScripts"), filePath, importOptions, confirmDelete, meta, writing, "Hmi.RuntimeScripting.VBScript");
                 }
                 var (folderPath, name) = Logic.SplitObjectPath(scriptPath);
                 var parent = ClassicScriptFolder(hmi, folderPath);
@@ -179,10 +182,10 @@ namespace TiaMcp.Adapters.Native.Hmi
                             // Typed VBScript.Export(FileInfo, ExportOptions).
                             var file = PlcSourceFileOutput.Plan(filePath);
                             if (dryRun) return "Native export preview; no file written.";
-                            meta["mayHaveWrittenFiles"] = true; typedScript.Export(file, ExportOptions.None); meta["apiCallSuccess"] = true; meta["file"] = PlcSourceFileOutput.Verify(file);
+                            meta["mayHaveWrittenFiles"] = true; typedScript.Export(file, exportOption); meta["apiCallSuccess"] = true; meta["file"] = PlcSourceFileOutput.Verify(file);
                             return "VB script exported to a new XML file and hashed; no project change.";
                         }
-                        return ClassicExport(script, filePath, meta, dryRun);
+                        return ClassicExport(script, filePath, meta, dryRun, exportOption);
                     case "delete":
                         _session.Attributes(attributesJson, false); meta["before"] = ClassicRow(script, scriptPath);
                         if (script is global::Siemens.Engineering.Hmi.RuntimeScripting.VBScript deletable && scripts is global::Siemens.Engineering.Hmi.RuntimeScripting.VBScriptComposition typedScripts)
@@ -200,8 +203,10 @@ namespace TiaMcp.Adapters.Native.Hmi
             });
 
         public HmiMessage ManageClassicHmiCycle(string softwarePath, string action, string cycleName = "", string filePath = "", string importOptions = "None",
-            string attributesJson = "{}", int offset = 0, int limit = 100, bool confirmDelete = false, bool dryRun = true)
+            string attributesJson = "{}", int offset = 0, int limit = 100, bool confirmDelete = false, bool dryRun = true, string exportOptions = "WithDefaults")
             => RunTool("ManageClassicHmiCycle", meta => {
+                var exportOption = (ExportOptions)Enum.Parse(typeof(ExportOptions), HmiExchangePolicy.ExportOption(exportOptions));
+                meta["exportOptions"] = exportOptions;
                 Logic.RequireAction(action, Logic.CycleActions); Logic.RequirePagination(offset, limit);
                 bool write = action != "read" && action != "export";
                 bool writing = write && !dryRun;
@@ -210,7 +215,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var cycles = hmi.Cycles ?? throw new NotSupportedException("Cycles composition unavailable.");
                 meta["softwarePath"] = softwarePath; meta["cycleName"] = cycleName; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 meta["nativeLimits"] = "CycleComposition exposes no Create; new cycles arrive only through native XML Import. Cycle time/unit are dynamic attributes (see schema).";
-                if (action == "import") { _session.Attributes(attributesJson, false); return ClassicImport(cycles, filePath, importOptions, confirmDelete, meta, writing); }
+                if (action == "import") { _session.Attributes(attributesJson, false); return ClassicImport(cycles, filePath, importOptions, confirmDelete, meta, writing, "Hmi.Cycle.Cycle"); }
                 if (action == "read" && cycleName == "")
                 {
                     _session.Attributes(attributesJson, false);
@@ -224,7 +229,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 switch (action)
                 {
                     case "read": _session.Attributes(attributesJson, false); meta["cycle"] = ClassicRow(cycle); meta["apiCallSuccess"] = true; meta["dataComplete"] = meta["cycle"]!.Field("dataComplete")!.DeepClone(); return "Cycle read.";
-                    case "export": _session.Attributes(attributesJson, false); return ClassicExport(cycle, filePath, meta, dryRun);
+                    case "export": _session.Attributes(attributesJson, false); return ClassicExport(cycle, filePath, meta, dryRun, exportOption);
                     case "delete":
                         _session.Attributes(attributesJson, false); meta["before"] = ClassicRow(cycle);
                         if (system) throw new InvalidOperationException("System cycles cannot be deleted.");
@@ -236,8 +241,10 @@ namespace TiaMcp.Adapters.Native.Hmi
             });
 
         public HmiMessage ManageClassicHmiTextGraphicList(string softwarePath, string listKind, string action, string listName = "", string compositionName = "", string entryName = "",
-            string typeName = "", string filePath = "", string importOptions = "None", string attributesJson = "{}", int offset = 0, int limit = 100, bool confirmDelete = false, bool dryRun = true)
+            string typeName = "", string filePath = "", string importOptions = "None", string attributesJson = "{}", int offset = 0, int limit = 100, bool confirmDelete = false, bool dryRun = true, string exportOptions = "WithDefaults")
             => RunTool("ManageClassicHmiTextGraphicList", meta => {
+                var exportOption = (ExportOptions)Enum.Parse(typeof(ExportOptions), HmiExchangePolicy.ExportOption(exportOptions));
+                meta["exportOptions"] = exportOptions;
                 Logic.RequireAction(action, Logic.ListActions); Logic.RequirePagination(offset, limit);
                 if (!Logic.ListKinds.ContainsKey(listKind)) throw new ArgumentException("listKind must be text/graphic.");
                 bool write = action is "createEntry" or "deleteEntry" or "import" or "delete" or "setAttributes";
@@ -248,7 +255,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var lists = PlcGroupOperations.Get(hmi, property);
                 meta["softwarePath"] = softwarePath; meta["listKind"] = listKind; meta["listName"] = listName; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 meta["nativeLimits"] = "Text/graphic list compositions expose no Create; new lists arrive only through native XML Import. Entries are reachable only as compositions advertised by GetCompositionInfos.";
-                if (action == "import") { _session.Attributes(attributesJson, false); return ClassicImport(lists, filePath, importOptions, confirmDelete, meta, writing); }
+                if (action == "import") { _session.Attributes(attributesJson, false); return ClassicImport(lists, filePath, importOptions, confirmDelete, meta, writing, listKind == "text" ? "Hmi.TextGraphicList.TextList" : "Hmi.TextGraphicList.GraphicList"); }
                 if (action == "read" && listName == "")
                 {
                     _session.Attributes(attributesJson, false);
@@ -265,7 +272,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                         var row = ClassicRow(list); row["compositions"] = new HmiArray(HmiDynamic.CompositionNames(list).Select(n => (object)n).ToArray());
                         meta["list"] = row; meta["apiCallSuccess"] = true; meta["dataComplete"] = row["dataComplete"]!.DeepClone();
                         return "List read with advertised compositions; use readEntries with a compositionName.";
-                    case "export": _session.Attributes(attributesJson, false); return ClassicExport(list, filePath, meta, dryRun);
+                    case "export": _session.Attributes(attributesJson, false); return ClassicExport(list, filePath, meta, dryRun, exportOption);
                     case "delete": _session.Attributes(attributesJson, false); meta["before"] = ClassicRow(list); return ClassicDelete(list, lists, listName, confirmDelete, meta, writing);
                     case "setAttributes": return ClassicSetAttributes(list, attributesJson, meta, writing);
                 }
@@ -307,12 +314,10 @@ namespace TiaMcp.Adapters.Native.Hmi
         public HmiMessage ReadClassicHmiGlobalization(string softwarePath, int offset = 0, int limit = 100)
             => RunTool("GetClassicHmiGlobalization", meta => {
                 Logic.RequirePagination(offset, limit);
-                var hmi = _session.ExactClassicHmi(softwarePath);
-                var provider = RequireOfficialService(hmi, Logic.GraphicsProvider);
-                var graphics = PlcGroupOperations.Get(provider, "Graphics");
-                meta["softwarePath"] = softwarePath; meta["provider"] = provider.GetType().FullName;
+                var graphics = _session.ClassicGraphics();
+                meta["softwarePath"] = softwarePath; meta["provider"] = "Project graphics";
                 ClassicPage(meta, PlcGroupOperations.Items(graphics).ToArray(), offset, limit, g => ClassicRow(g));
-                meta["scope"] = "Multilingual graphics of the classic HMI GraphicsProvider: names, CLR scalars and advertised attributes. Image bytes are not read.";
+                meta["scope"] = "Project multilingual graphics: names, CLR scalars and advertised attributes. Image bytes are not read.";
                 return "Classic HMI multilingual graphics listed; live pagination.";
             });
 

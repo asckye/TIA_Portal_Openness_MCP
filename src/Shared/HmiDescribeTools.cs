@@ -190,7 +190,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
 
 
-        [McpServerTool(Name = "DescribeHmiScreenItem"), Description("[L2][HMI]Describe one HMI screen item (widget) by name under an HMI screen.")]
+        [McpServerTool(Name = "DescribeHmiScreenItem"), Description("[L2][HMI]V19-V21 WinCC Unified only. Classic WinCC refuses with UNSUPPORTED_CAPABILITY; use ExportHmiScreen for classic screen XML. Describe one HMI screen item (widget) by name under an HMI screen.")]
         public CallToolResult DescribeHmiScreenItemV4(
             [Description("softwarePath: HMI software path, e.g. 'HMI_RT_1'")] string softwarePath,
             [Description("screenName: screen name, e.g. 'Main'")] string screenName,

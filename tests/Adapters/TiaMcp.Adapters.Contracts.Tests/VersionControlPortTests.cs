@@ -13,10 +13,10 @@ public sealed class VersionControlPortTests
     [InlineData("18")]
     [InlineData("19")]
     [InlineData("20")]
-    public void A_release_without_the_graphics_provider_withholds_globalization(string release)
+    public void Project_graphics_keep_globalization_available_before_the_graphics_provider(string release)
     {
-        Assert.False(PortedFamilies.Available(release, "GetClassicHmiGlobalization"));
-        Assert.Contains("GetClassicHmiGlobalization", PortedFamilies.Withheld(release));
+        Assert.True(PortedFamilies.Available(release, "GetClassicHmiGlobalization"));
+        Assert.DoesNotContain("GetClassicHmiGlobalization", PortedFamilies.Withheld(release));
         Assert.True(PortedFamilies.Available("21", "GetClassicHmiGlobalization"));
         Assert.DoesNotContain("GetClassicHmiGlobalization", PortedFamilies.Withheld("21"));
     }

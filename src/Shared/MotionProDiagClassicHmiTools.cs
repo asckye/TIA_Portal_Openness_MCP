@@ -34,9 +34,10 @@ namespace TiaMcpServer.ModelContextProtocol
             string importOptions="None",
             AttributeMap<Scalar> attributes = null!,
             bool confirmDelete=false,
-            bool dryRun=true)
+            bool dryRun=true,
+            [Description("exportOptions: None | WithDefaults (default) | WithReadOnly.")] string exportOptions = "WithDefaults")
             => ClassicMotionToolContract.Invoke("ManageClassicHmiScript", dryRun || action == "read", action != "read",
-                () => _motionProDiagClassicHmi.ManageClassicHmiScript(softwarePath,scriptPath,action,filePath,importOptions,ClassicMotionToolContract.Json(attributes),confirmDelete,dryRun));
+                () => _motionProDiagClassicHmi.ManageClassicHmiScript(softwarePath,scriptPath,action,filePath,importOptions,ClassicMotionToolContract.Json(attributes),confirmDelete,dryRun,exportOptions));
         [McpServerTool(Name="ManageClassicHmiCycle"), Description("[L2][HMI-Classic][WRITE] Classic HMI cycles: read (all or exact cycleName with advertised time/unit attributes), export (new XML file), import (Override needs confirmDelete=true), delete (confirmDelete=true; system cycles refused), setAttributes (readback verified). CycleComposition has no native Create. Default preview; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManageClassicHmiCycle(
             string softwarePath,
@@ -48,9 +49,10 @@ namespace TiaMcpServer.ModelContextProtocol
             int offset=0,
             int limit=100,
             bool confirmDelete=false,
-            bool dryRun=true)
+            bool dryRun=true,
+            [Description("exportOptions: None | WithDefaults (default) | WithReadOnly.")] string exportOptions = "WithDefaults")
             => ClassicMotionToolContract.Invoke("ManageClassicHmiCycle", dryRun || action == "read", action != "read",
-                () => _motionProDiagClassicHmi.ManageClassicHmiCycle(softwarePath,action,cycleName,filePath,importOptions,ClassicMotionToolContract.Json(attributes),offset,limit,confirmDelete,dryRun));
+                () => _motionProDiagClassicHmi.ManageClassicHmiCycle(softwarePath,action,cycleName,filePath,importOptions,ClassicMotionToolContract.Json(attributes),offset,limit,confirmDelete,dryRun,exportOptions));
         [McpServerTool(Name="ManageClassicHmiTextGraphicList"), Description("[L2][HMI-Classic][WRITE] Classic HMI text/graphic lists (listKind text/graphic): read (all or exact listName with advertised compositions), readEntries/createEntry/deleteEntry through an advertised compositionName (typeName from GetCreationInfos), export, import (Override needs confirmDelete=true), delete (confirmDelete=true), setAttributes. No native list Create; new lists arrive by XML import. Default preview; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManageClassicHmiTextGraphicList(
             string softwarePath,
@@ -66,10 +68,11 @@ namespace TiaMcpServer.ModelContextProtocol
             int offset=0,
             int limit=100,
             bool confirmDelete=false,
-            bool dryRun=true)
+            bool dryRun=true,
+            [Description("exportOptions: None | WithDefaults (default) | WithReadOnly.")] string exportOptions = "WithDefaults")
             => ClassicMotionToolContract.Invoke("ManageClassicHmiTextGraphicList", dryRun || action == "read" || action == "readEntries", action != "read" && action != "readEntries",
-                () => _motionProDiagClassicHmi.ManageClassicHmiTextGraphicList(softwarePath,listKind,action,listName,compositionName,entryName,typeName,filePath,importOptions,ClassicMotionToolContract.Json(attributes),offset,limit,confirmDelete,dryRun));
-        [McpServerTool(Name="GetClassicHmiGlobalization"), Description("[L2][HMI-Classic][READ] Classic HMI multilingual graphics via the native GraphicsProvider service: names, scalar properties and advertised attributes with live pagination. NotSupported on V20 (service type absent). Image bytes are not read.")]
+                () => _motionProDiagClassicHmi.ManageClassicHmiTextGraphicList(softwarePath,listKind,action,listName,compositionName,entryName,typeName,filePath,importOptions,ClassicMotionToolContract.Json(attributes),offset,limit,confirmDelete,dryRun,exportOptions));
+        [McpServerTool(Name="GetClassicHmiGlobalization"), Description("[L2][HMI-Classic][READ] Project multilingual graphics via project.Graphics (V14 SP1-V20) or project GraphicsProvider (V21): names, scalar properties and advertised attributes with live pagination. softwarePath is retained for compatibility; no classic device is required. Image bytes are not read.")]
         public CallToolResult GetClassicHmiGlobalization(string softwarePath,int offset=0,int limit=100)
             => ClassicMotionToolContract.Invoke("GetClassicHmiGlobalization", true, false,
                 () => _motionProDiagClassicHmi.ReadClassicHmiGlobalization(softwarePath,offset,limit));

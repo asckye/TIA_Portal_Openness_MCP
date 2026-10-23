@@ -32,20 +32,26 @@ namespace TiaMcpServer.ModelContextProtocol
                 Exception cause = ex;
                 while (cause.InnerException != null) cause = cause.InnerException;
                 var evidence = new JsonObject { ["exceptionType"] = cause.GetType().Name };
-                var rejection = cause is PortalException portal ? Rejection(portal.Code.ToString()) : null;
+                var rejection = cause is PortalException portal ? Rejection(portal.Code.ToString(), portal.Message)
+                    : cause is NotSupportedException ? Rejection("NotSupportedOnVersion", cause.Message)
+                    : cause is ArgumentException ? Rejection("InvalidParams") : null;
                 var outcome = rejection != null ? Outcome.RejectedBeforeOperation : writes ? Outcome.Unknown : Outcome.ReadFailed;
                 return Result(tool, new JsonObject { ["evidence"] = evidence }, rejection ?? Failure(outcome, evidence),
                     outcome, outcome == Outcome.RejectedBeforeOperation ? Completeness.None : Completeness.Unknown, writes, current);
             }
         }
 
-        private static Error? Rejection(string? status)
+        private static Error? Rejection(string? status, string? message = null)
         {
-            ErrorDetails? details = status == "InvalidState" ? new ProjectNotBoundDetails()
+            ErrorDetails? details = status == "InvalidState" && message?.StartsWith("HMI import target already exists:", StringComparison.Ordinal) == true
+                ? new PreconditionFailedDetails(message, null)
+                : status == "InvalidState" ? new ProjectNotBoundDetails()
+                : status == "InvalidParams" ? new InvalidArgumentDetails("arguments", Array.Empty<string>())
+                : status == "ImportTargetExists" ? new PreconditionFailedDetails("HMI import target already exists; set overwrite=true explicitly.", null)
                 : status == "NotFound" ? new NotFoundDetails(null)
                 : status == "NotSupportedOnVersion" ? new UnsupportedCapabilityDetails(McpServer.ReleaseKey, "HMI exchange", null)
                 : status == "HmiReadSessionBlocked" ? new SessionResetRequiredDetails("HMI read session is blocked.") : null;
-            return details == null ? null : new Error("The HMI request could not start.", details);
+            return details == null ? null : new Error(status == "NotSupportedOnVersion" && message != null ? message : "The HMI request could not start.", details);
         }
 
         internal static CallToolResult Map(string tool, object response, bool writes, bool current)
@@ -74,7 +80,7 @@ namespace TiaMcpServer.ModelContextProtocol
             bool unknownWrite = writes && (Flag("writeOutcomeUnknown") == true || Flag("requiresSessionReset") == true
                 || Flag("verifiedAbsent") == false || (success != true && changed && Flag("nativeSuccess") != true)
                 || (success != true && files && Flag("apiCallSuccess") != true && Flag("partialArtifactExists") != true));
-            var rejection = Rejection(status);
+            var rejection = Flag("importOverwriteRefused") == true ? Rejection("ImportTargetExists") : Rejection(status);
             Outcome outcome;
             Error? error = null;
             if (status == "HmiReadSessionBlocked" || rejection != null && !changed && !files)
@@ -299,21 +305,23 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportHmiScreen"), Description("[L2][HMI]Export one HMI screen to a file (best-effort; requires Openness export support) Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ExportHmiScreen"), Description("[L2][HMI]Export one HMI screen to a file (Classic WinCC only; default exportOptions=WithDefaults) Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ExportHmiScreenV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("screenName: the screen name to export")] string screenName,
-            [Description("exportPath: full file path to write to (e.g. C:\\\\temp\\\\screen.xml)")] string exportPath)
-            => HmiExchangeContract.Run("ExportHmiScreen", true, true, () => ExportHmiScreen(softwarePath, screenName, exportPath));
+            [Description("exportPath: full file path to write to (e.g. C:\\\\temp\\\\screen.xml)")] string exportPath,
+            [Description("exportOptions: None | WithDefaults (default) | WithReadOnly.")] string exportOptions = "WithDefaults")
+            => HmiExchangeContract.Run("ExportHmiScreen", true, true, () => ExportHmiScreen(softwarePath, screenName, exportPath, exportOptions));
 
         public ResponseExportFile ExportHmiScreen(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("screenName: the screen name to export")] string screenName,
-            [Description("exportPath: full file path to write to (e.g. C:\\\\temp\\\\screen.xml)")] string exportPath)
+            [Description("exportPath: full file path to write to (e.g. C:\\\\temp\\\\screen.xml)")] string exportPath,
+            [Description("exportOptions: None | WithDefaults (default) | WithReadOnly.")] string exportOptions = "WithDefaults")
         {
             try
             {
-                var export = _service.ExportHmiScreen(softwarePath, screenName, exportPath);
+                var export = _service.ExportHmiScreen(softwarePath, screenName, exportPath, exportOptions);
                 return new ResponseExportFile
                 {
                     Message = export["success"]!.GetValue<bool>() ? "Native export completed" : "Native export failed or unsupported",
@@ -331,21 +339,23 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportHmiTagTable"), Description("[L2][HMI]Export one HMI tag table to a file (best-effort; requires Openness export support) Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ExportHmiTagTable"), Description("[L2][HMI]Export one HMI tag table to a file (Classic WinCC only; default exportOptions=WithDefaults) Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ExportHmiTagTableV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("tagTableName: the tag table name to export")] string tagTableName,
-            [Description("exportPath: full file path to write to (e.g. C:\\\\temp\\\\tagtable.xml)")] string exportPath)
-            => HmiExchangeContract.Run("ExportHmiTagTable", true, true, () => ExportHmiTagTable(softwarePath, tagTableName, exportPath));
+            [Description("exportPath: full file path to write to (e.g. C:\\\\temp\\\\tagtable.xml)")] string exportPath,
+            [Description("exportOptions: None | WithDefaults (default) | WithReadOnly.")] string exportOptions = "WithDefaults")
+            => HmiExchangeContract.Run("ExportHmiTagTable", true, true, () => ExportHmiTagTable(softwarePath, tagTableName, exportPath, exportOptions));
 
         public ResponseExportFile ExportHmiTagTable(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("tagTableName: the tag table name to export")] string tagTableName,
-            [Description("exportPath: full file path to write to (e.g. C:\\\\temp\\\\tagtable.xml)")] string exportPath)
+            [Description("exportPath: full file path to write to (e.g. C:\\\\temp\\\\tagtable.xml)")] string exportPath,
+            [Description("exportOptions: None | WithDefaults (default) | WithReadOnly.")] string exportOptions = "WithDefaults")
         {
             try
             {
-                var export = _service.ExportHmiTagTable(softwarePath, tagTableName, exportPath);
+                var export = _service.ExportHmiTagTable(softwarePath, tagTableName, exportPath, exportOptions);
                 return new ResponseExportFile
                 {
                     Message = export["success"]!.GetValue<bool>() ? "Native export completed" : "Native export failed or unsupported",
@@ -363,21 +373,23 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportHmiConnection"), Description("[L2][HMI]Export one HMI connection to a file (best-effort; Classic/Unified via reflection) Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ExportHmiConnection"), Description("[L2][HMI]Export one HMI connection to a file (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ExportHmiConnectionV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("connectionName: the HMI connection name to export")] string connectionName,
-            [Description("exportPath: full file path to write to (e.g. C:\\\\temp\\\\connection.xml)")] string exportPath)
-            => HmiExchangeContract.Run("ExportHmiConnection", true, true, () => ExportHmiConnection(softwarePath, connectionName, exportPath));
+            [Description("exportPath: full file path to write to (e.g. C:\\\\temp\\\\connection.xml)")] string exportPath,
+            [Description("exportOptions: None | WithDefaults (default) | WithReadOnly.")] string exportOptions = "WithDefaults")
+            => HmiExchangeContract.Run("ExportHmiConnection", true, true, () => ExportHmiConnection(softwarePath, connectionName, exportPath, exportOptions));
 
         public ResponseExportFile ExportHmiConnection(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("connectionName: the HMI connection name to export")] string connectionName,
-            [Description("exportPath: full file path to write to (e.g. C:\\\\temp\\\\connection.xml)")] string exportPath)
+            [Description("exportPath: full file path to write to (e.g. C:\\\\temp\\\\connection.xml)")] string exportPath,
+            [Description("exportOptions: None | WithDefaults (default) | WithReadOnly.")] string exportOptions = "WithDefaults")
         {
             try
             {
-                var export = _service.ExportHmiConnection(softwarePath, connectionName, exportPath);
+                var export = _service.ExportHmiConnection(softwarePath, connectionName, exportPath, exportOptions);
                 return new ResponseExportFile
                 {
                     Message = export["success"]!.GetValue<bool>() ? "Native export completed" : "Native export failed or unsupported",
@@ -395,23 +407,25 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportHmiProgram"), Description("[L2][HMI]Batch export HMI screens/tagtables into a directory (best-effort) Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ExportHmiProgram"), Description("[L2][HMI]Batch export classic WinCC screens/tagtables into a directory; default exportOptions=WithDefaults Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ExportHmiProgramV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("exportDir: directory to write exported files into")] string exportDir,
             [Description("exportScreens: default true")] bool exportScreens = true,
-            [Description("exportTagTables: default true")] bool exportTagTables = true)
-            => HmiExchangeContract.Run("ExportHmiProgram", true, true, () => ExportHmiProgram(softwarePath, exportDir, exportScreens, exportTagTables));
+            [Description("exportTagTables: default true")] bool exportTagTables = true,
+            [Description("exportOptions: None | WithDefaults (default) | WithReadOnly.")] string exportOptions = "WithDefaults")
+            => HmiExchangeContract.Run("ExportHmiProgram", true, true, () => ExportHmiProgram(softwarePath, exportDir, exportScreens, exportTagTables, exportOptions));
 
         public ResponseBatchExport ExportHmiProgram(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("exportDir: directory to write exported files into")] string exportDir,
             [Description("exportScreens: default true")] bool exportScreens = true,
-            [Description("exportTagTables: default true")] bool exportTagTables = true)
+            [Description("exportTagTables: default true")] bool exportTagTables = true,
+            [Description("exportOptions: None | WithDefaults (default) | WithReadOnly.")] string exportOptions = "WithDefaults")
         {
             try
             {
-                var res = _service.ExportHmiProgram(softwarePath, exportDir, exportScreens, exportTagTables);
+                var res = _service.ExportHmiProgram(softwarePath, exportDir, exportScreens, exportTagTables, exportOptions);
                 if (res != null)
                 {
                     return new ResponseBatchExport
@@ -430,21 +444,23 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportHmiScreen"), Description("[L2][HMI]Import one HMI screen XML file into an HMI program (best-effort; Classic/Unified via reflection) Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ImportHmiScreen"), Description("[L2][HMI]Import one HMI screen XML file into an HMI program (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ImportHmiScreenV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("folderPath: optional screen group path inside HMI (use empty for root)")] string folderPath,
-            [Description("importPath: full file path of exported screen XML")] string importPath)
-            => HmiExchangeContract.Run("ImportHmiScreen", true, true, () => ImportHmiScreen(softwarePath, folderPath, importPath));
+            [Description("importPath: full file path of exported screen XML")] string importPath,
+            [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false)
+            => HmiExchangeContract.Run("ImportHmiScreen", true, true, () => ImportHmiScreen(softwarePath, folderPath, importPath, overwrite));
 
         public ResponseMessage ImportHmiScreen(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("folderPath: optional screen group path inside HMI (use empty for root)")] string folderPath,
-            [Description("importPath: full file path of exported screen XML")] string importPath)
+            [Description("importPath: full file path of exported screen XML")] string importPath,
+            [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false)
         {
             try
             {
-                _service.ImportHmiScreen(softwarePath, folderPath, importPath);
+                _service.ImportHmiScreen(softwarePath, folderPath, importPath, overwrite);
                 return new ResponseMessage
                 {
                     Message = $"HMI screen imported from '{importPath}'" + (_service.LastImportNotes != null ? " - " + _service.LastImportNotes : ""),
@@ -461,21 +477,23 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportHmiTagTable"), Description("[L2][HMI]Import one HMI tag table XML file into an HMI program (best-effort; Classic/Unified via reflection) Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ImportHmiTagTable"), Description("[L2][HMI]Import one HMI tag table XML file into an HMI program (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ImportHmiTagTableV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("folderPath: optional tag table group path inside HMI (use empty for root)")] string folderPath,
-            [Description("importPath: full file path of exported tag table XML")] string importPath)
-            => HmiExchangeContract.Run("ImportHmiTagTable", true, true, () => ImportHmiTagTable(softwarePath, folderPath, importPath));
+            [Description("importPath: full file path of exported tag table XML")] string importPath,
+            [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false)
+            => HmiExchangeContract.Run("ImportHmiTagTable", true, true, () => ImportHmiTagTable(softwarePath, folderPath, importPath, overwrite));
 
         public ResponseMessage ImportHmiTagTable(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("folderPath: optional tag table group path inside HMI (use empty for root)")] string folderPath,
-            [Description("importPath: full file path of exported tag table XML")] string importPath)
+            [Description("importPath: full file path of exported tag table XML")] string importPath,
+            [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false)
         {
             try
             {
-                _service.ImportHmiTagTable(softwarePath, folderPath, importPath);
+                _service.ImportHmiTagTable(softwarePath, folderPath, importPath, overwrite);
                 return new ResponseMessage
                 {
                     Message = $"HMI tag table imported from '{importPath}'",
@@ -492,19 +510,21 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportHmiConnection"), Description("[L2][HMI]Import one HMI connection XML file into an HMI program (best-effort; Classic/Unified via reflection) Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ImportHmiConnection"), Description("[L2][HMI]Import one HMI connection XML file into an HMI program (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ImportHmiConnectionV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("importPath: full file path of exported HMI connection XML")] string importPath)
-            => HmiExchangeContract.Run("ImportHmiConnection", true, true, () => ImportHmiConnection(softwarePath, importPath));
+            [Description("importPath: full file path of exported HMI connection XML")] string importPath,
+            [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false)
+            => HmiExchangeContract.Run("ImportHmiConnection", true, true, () => ImportHmiConnection(softwarePath, importPath, overwrite));
 
         public ResponseMessage ImportHmiConnection(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("importPath: full file path of exported HMI connection XML")] string importPath)
+            [Description("importPath: full file path of exported HMI connection XML")] string importPath,
+            [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false)
         {
             try
             {
-                _service.ImportHmiConnection(softwarePath, importPath);
+                _service.ImportHmiConnection(softwarePath, importPath, overwrite);
                 return new ResponseMessage
                 {
                     Message = $"HMI connection imported from '{importPath}'",
@@ -521,13 +541,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportHmiScreensFromDirectory"), Description("[L2][HMI]Batch import HMI screen .xml files from a directory (best-effort) Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ImportHmiScreensFromDirectory"), Description("[L2][HMI]Batch import classic WinCC screen .xml files; overwrite defaults false, unresolved folders refuse Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ImportHmiScreensFromDirectoryV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("folderPath: optional screen group path inside HMI (use empty for root)")] string folderPath,
             [Description("dir: directory containing exported screen XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
-            [Description("overwrite: true=Override (default)")] bool overwrite = true)
+            [Description("overwrite: default false (ImportOptions.None); true explicitly selects Override")] bool overwrite = false)
             => HmiExchangeContract.Run("ImportHmiScreensFromDirectory", true, true, () => ImportHmiScreensFromDirectory(softwarePath, folderPath, dir, regexName, overwrite));
 
         public ResponseImportBatch ImportHmiScreensFromDirectory(
@@ -535,7 +555,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("folderPath: optional screen group path inside HMI (use empty for root)")] string folderPath,
             [Description("dir: directory containing exported screen XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
-            [Description("overwrite: true=Override (default)")] bool overwrite = true)
+            [Description("overwrite: default false (ImportOptions.None); true explicitly selects Override")] bool overwrite = false)
         {
             try
             {
@@ -554,13 +574,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportHmiTagTablesFromDirectory"), Description("[L2][HMI]Batch import HMI tag table .xml files from a directory (best-effort) Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ImportHmiTagTablesFromDirectory"), Description("[L2][HMI]Batch import classic WinCC tag table .xml files; overwrite defaults false, unresolved folders refuse Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ImportHmiTagTablesFromDirectoryV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("folderPath: optional tag table group path inside HMI (use empty for root)")] string folderPath,
             [Description("dir: directory containing exported tag table XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
-            [Description("overwrite: true=Override (default)")] bool overwrite = true)
+            [Description("overwrite: default false (ImportOptions.None); true explicitly selects Override")] bool overwrite = false)
             => HmiExchangeContract.Run("ImportHmiTagTablesFromDirectory", true, true, () => ImportHmiTagTablesFromDirectory(softwarePath, folderPath, dir, regexName, overwrite));
 
         public ResponseImportBatch ImportHmiTagTablesFromDirectory(
@@ -568,7 +588,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("folderPath: optional tag table group path inside HMI (use empty for root)")] string folderPath,
             [Description("dir: directory containing exported tag table XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
-            [Description("overwrite: true=Override (default)")] bool overwrite = true)
+            [Description("overwrite: default false (ImportOptions.None); true explicitly selects Override")] bool overwrite = false)
         {
             try
             {

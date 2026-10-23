@@ -22,9 +22,7 @@ namespace TiaMcpServer.Siemens
                 ["ManagePlcBlockWriteProtection"] = "PlcBlockWriteProtectionProvider",
                 ["ManageDriveSafetyAcceptanceTest"] = "SafetyAcceptanceTestProvider",
                 ["ManageSivarcScreenLayout"] = "SiVArc LayoutData",
-                ["ManageClassicHmiGraphic"] = "GraphicsProvider",
                 ["BindUnifiedHmiButtonPressedTag"] = "HmiButton.PressedStateTags",
-                ["GetClassicHmiGlobalization"] = "GraphicsProvider",
                 ["UploadDeviceParameters"] = "ParameterUploadProvider"
             };
 

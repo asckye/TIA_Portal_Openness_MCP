@@ -252,6 +252,18 @@ namespace TiaMcp.Engine.Tests
         }
 
         [Fact]
+        public void PreservedScriptOptionsAreNotReportedAsFailedSetters()
+        {
+            var response = new ResponseMessage { Meta = new JsonObject {
+                ["operationSuccess"] = true, ["mayHaveChanged"] = true, ["setScriptCode"] = true,
+                ["setGlobalDefinitionAreaScriptCode"] = null, ["setAsync"] = null } };
+            var body = Body(UnifiedHmiContract.Map("SetUnifiedHmiButtonEventScriptCode", response, true, true));
+            Assert.True((bool)body["ok"]!);
+            Assert.Equal("succeeded", (string?)body["meta"]!["outcome"]);
+            Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
+        }
+
+        [Fact]
         public void ControlDtosPreserveBuilderFieldsAndNarrowKinds()
         {
             const string json = """{"screen":{"name":"Main","width":800,"height":480,"properties":{"BackColor":"0xFFFFFFFF"}},"items":[{"type":"Text","name":"Caption","left":12,"top":24,"width":80,"height":30,"text":"","culture":"en-US","textProperty":"ToolTipText","font":{"Size":14},"content":{"Alignment":"Left"},"padding":{"Left":2},"properties":{"Visible":true}},{"type":"Rectangle","name":"Background"}]}""";

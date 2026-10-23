@@ -69,14 +69,18 @@ internal static class ClassicHmiFoldersShapeChecks
         Property(wincc,script+"VBScriptFolder","Name","String"); Property(wincc,script+"VBScriptFolder","VBScripts","VBScriptComposition"); Property(wincc,script+"VBScriptFolder","Folders","VBScriptUserFolderComposition");
         Method(wincc,script+"VBScriptUserFolder","Delete",Type.EmptyTypes,"Void"); Method(wincc,script+"VBScriptUserFolderComposition","Create",new[]{text},"VBScriptUserFolder"); Method(wincc,script+"VBScriptUserFolderComposition","Find",new[]{text},"VBScriptUserFolder");
         Property(wincc,script+"VBScript","Name","String"); Method(wincc,script+"VBScript","Export",new[]{file,exportOptions},"Void"); Method(wincc,script+"VBScript","Delete",Type.EmptyTypes,"Void"); Method(wincc,script+"VBScriptComposition","Find",new[]{text},"VBScript");
-        // ---- multilingual graphics (V21) ----
-        if(v20) { Console.WriteLine("CAPABILITY GraphicsProvider absent on V20 (ManageClassicHmiGraphic and GetClassicHmiGlobalization are not registered there)"); check(wincc.GetType(glob+"GraphicsProvider")==null,"V20 has no GraphicsProvider"); }
+        // ---- project multilingual graphics ----
+        if(v20)
+        {
+            check(wincc.GetType(glob+"GraphicsProvider")==null,"V20 has no GraphicsProvider");
+            Property(core,"Siemens.Engineering.ProjectBase","Graphics","MultiLingualGraphicComposition");
+        }
         else
         {
             check(engineeringService.IsAssignableFrom(T(wincc,glob+"GraphicsProvider")),"GraphicsProvider is an IEngineeringService"); Property(wincc,glob+"GraphicsProvider","Graphics","MultiLingualGraphicComposition");
-            Property(wincc,glob+"MultiLingualGraphic","Name","String"); Method(wincc,glob+"MultiLingualGraphic","Export",new[]{file,exportOptions},"Void"); Method(wincc,glob+"MultiLingualGraphic","Delete",Type.EmptyTypes,"Void");
-            Method(wincc,glob+"MultiLingualGraphicComposition","Find",new[]{text},"MultiLingualGraphic"); Method(wincc,glob+"MultiLingualGraphicComposition","Import",new[]{file,importOptions});
         }
+        Property(wincc,glob+"MultiLingualGraphic","Name","String"); Method(wincc,glob+"MultiLingualGraphic","Export",new[]{file,exportOptions},"Void"); Method(wincc,glob+"MultiLingualGraphic","Delete",Type.EmptyTypes,"Void");
+        Method(wincc,glob+"MultiLingualGraphicComposition","Find",new[]{text},"MultiLingualGraphic"); Method(wincc,glob+"MultiLingualGraphicComposition","Import",new[]{file,importOptions});
         // ---- classic library type subclasses ----
         foreach(var t in new[]{screen+"ScreenLibraryType",screen+"StyleLibraryType",screen+"StyleSheetLibraryType",tag+"HmiUdtLibraryType",hmi+"Faceplate.FaceplateLibraryType",script+"VBScriptLibraryType",script+"CScriptLibraryType"}) { check(T(wincc,t).IsSubclassOf(T(core,"Siemens.Engineering.Library.Types.LibraryType")),t+" derives from LibraryType"); Property(wincc,t,"Name","String"); }
         // 2.7.38: the Unified script-module library type (2.7.37 real project: 8 of them in the SICAR / LAF libraries) and the base class itself for Unified faceplates / graphics

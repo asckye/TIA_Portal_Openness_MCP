@@ -289,9 +289,9 @@ namespace TiaMcpServer.Siemens.Services
         internal int Calls;
         internal ResponseMessage Next() { Calls++; return new ResponseMessage { Message = "fixture", Meta = new JsonObject { ["success"] = true } }; }
         public ResponseMessage ReadClassicHmiScreenTree(string softwarePath, string kind="all", string folderPath="", int maxDepth=4) => Next();
-        public ResponseMessage ManageClassicHmiScreenObject(string softwarePath, string objectKind, string objectPath="", string action="read", string filePath="", string importOptions="None", bool confirmDelete=false, bool dryRun=true) => Next();
+        public ResponseMessage ManageClassicHmiScreenObject(string softwarePath, string objectKind, string objectPath="", string action="read", string filePath="", string importOptions="None", bool confirmDelete=false, bool dryRun=true, string exportOptions="WithDefaults") => Next();
         public ResponseMessage ManageClassicHmiFolder(string softwarePath, string folderKind, string folderPath="", string action="read", string newName="", bool confirmDelete=false, bool dryRun=true) => Next();
-        public ResponseMessage ManageClassicHmiGraphic(string softwarePath, string action="list", string name="", string filePath="", string importOptions="None", bool confirmDelete=false, bool dryRun=true) => Next();
+        public ResponseMessage ManageClassicHmiGraphic(string softwarePath, string action="list", string name="", string filePath="", string importOptions="None", bool confirmDelete=false, bool dryRun=true, string exportOptions="WithDefaults") => Next();
     }
     internal sealed class MotionProDiagClassicHmiService
     {
@@ -302,9 +302,9 @@ namespace TiaMcpServer.Siemens.Services
         public ResponseMessage ManageMotionAxis(string softwarePath, string objectPath, string action, string aspect="", string name="", string targetJson="{}", string propertiesJson="{}", int sensorIndex=0, bool confirmDelete=false, bool dryRun=true) { LastTarget = targetJson; return Next(); }
         public ResponseMessage ManagePlcSupervision(string softwarePath, string action, string blockPath="", string providerKind="supervision", string compositionName="", string entryName="", string typeName="", string filePath="", string attributesJson="{}", int offset=0, int limit=100, bool confirmDelete=false, bool dryRun=true) => Next();
         public ResponseMessage ReadClassicHmiScripts(string softwarePath,string folderPath="",int offset=0,int limit=100) => Next();
-        public ResponseMessage ManageClassicHmiScript(string softwarePath, string scriptPath, string action, string filePath="", string importOptions="None", string attributesJson="{}", bool confirmDelete=false, bool dryRun=true) => Next();
-        public ResponseMessage ManageClassicHmiCycle(string softwarePath, string action, string cycleName="", string filePath="", string importOptions="None", string attributesJson="{}", int offset=0, int limit=100, bool confirmDelete=false, bool dryRun=true) => Next();
-        public ResponseMessage ManageClassicHmiTextGraphicList(string softwarePath, string listKind, string action, string listName="", string compositionName="", string entryName="", string typeName="", string filePath="", string importOptions="None", string attributesJson="{}", int offset=0, int limit=100, bool confirmDelete=false, bool dryRun=true) => Next();
+        public ResponseMessage ManageClassicHmiScript(string softwarePath, string scriptPath, string action, string filePath="", string importOptions="None", string attributesJson="{}", bool confirmDelete=false, bool dryRun=true, string exportOptions="WithDefaults") => Next();
+        public ResponseMessage ManageClassicHmiCycle(string softwarePath, string action, string cycleName="", string filePath="", string importOptions="None", string attributesJson="{}", int offset=0, int limit=100, bool confirmDelete=false, bool dryRun=true, string exportOptions="WithDefaults") => Next();
+        public ResponseMessage ManageClassicHmiTextGraphicList(string softwarePath, string listKind, string action, string listName="", string compositionName="", string entryName="", string typeName="", string filePath="", string importOptions="None", string attributesJson="{}", int offset=0, int limit=100, bool confirmDelete=false, bool dryRun=true, string exportOptions="WithDefaults") => Next();
         public ResponseMessage ReadClassicHmiGlobalization(string softwarePath,int offset=0,int limit=100) => Next();
         public ResponseMessage ReadClassicHmiFaceplates(string kind="faceplate", string libraryName="", string folderPath="", int offset=0, int limit=100) => Next();
         public ResponseMessage ExportPlcProDiagInfo(string softwarePath, string blockPath, string directoryPath, string unitName="", string unitKind="unit", bool dryRun=true) => Next();

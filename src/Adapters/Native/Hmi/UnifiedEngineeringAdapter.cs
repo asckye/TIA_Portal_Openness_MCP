@@ -11,7 +11,7 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public UnifiedEngineeringAdapter(IUnifiedSession session) => _session = session;
 
-        public HmiMessage ImportUnifiedEngineeringList(string softwarePath, string category, string filePath, string expectedNamesJson, bool dryRun = true)
+        public HmiMessage ImportUnifiedEngineeringList(string softwarePath, string category, string filePath, string expectedNamesJson, bool dryRun = true, bool overwrite = false)
             => _session.RunHmiStepTool("ImportUnifiedEngineeringList", meta => {
                 if (category != "textLists" && category != "graphicLists") throw new ArgumentException("category must be textLists or graphicLists.");
                 var names = UnifiedRequestValues.Parse(expectedNamesJson)?.Array().Select(n => n!.GetValue<string>()).ToArray() ?? throw new ArgumentException("expectedNamesJson must be an array.");
@@ -24,6 +24,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (collection.GetType().GetMethod("Import", new[] { typeof(System.IO.DirectoryInfo), typeof(string) }) == null) throw new NotSupportedException("Native list Import(DirectoryInfo,string) unavailable.");
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["expectedCount"] = names.Length;
                 meta["scope"] = "Native file import; expected list-name presence only. File can also affect other lists. Full entries/bindings are not independently verified.";
+                HmiExchangePolicy.BeforeOpaqueImport(collection, overwrite, meta);
                 if (dryRun) return "Native text/graphic list import preview; no changes.";
                 meta["mayHaveChanged"] = true;
                 var ok = PlcGroupOperations.Call(collection, "Import", new[] { typeof(System.IO.DirectoryInfo), typeof(string) }, file.Directory!, file.Name);

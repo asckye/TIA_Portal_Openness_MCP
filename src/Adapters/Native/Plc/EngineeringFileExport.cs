@@ -8,7 +8,7 @@ namespace TiaMcp.Adapters.Native.Plc
 {
     public static class EngineeringFileExport
     {
-        public static Dictionary<string, object?> Export(object target, string path, bool overwrite, Action<Exception> recordFailure)
+        public static Dictionary<string, object?> Export(object target, string path, bool overwrite, Action<Exception> recordFailure, string? exportOptions = null)
         {
             var result = new Dictionary<string, object?> { ["success"] = false, ["capability"] = "unsupported",
                 ["targetReplaced"] = false, ["recoveryRequired"] = false, ["validation"] = "Not performed" };
@@ -20,10 +20,13 @@ namespace TiaMcp.Adapters.Native.Plc
                     .Where(m => m.Name == "Export" && !m.ContainsGenericParameters)
                     .Where(m => { var p = m.GetParameters(); return p.Length >= 1 && p[0].ParameterType == typeof(FileInfo) &&
                         (p.Length == 1 || p.Length == 2 && p[1].ParameterType.IsEnum && Enum.GetNames(p[1].ParameterType).Contains("None")); }).ToList();
-                var method = candidates.FirstOrDefault(m => m.GetParameters().Length == 1)
-                    ?? candidates.FirstOrDefault(m => m.GetParameters()[1].ParameterType.FullName == "Siemens.Engineering.ExportOptions")
-                    ?? (candidates.Count == 1 ? candidates[0] : null);
+                var method = exportOptions == null ? candidates.FirstOrDefault(m => m.GetParameters().Length == 1)
+                    ?? candidates.FirstOrDefault(m => m.GetParameters().Length == 2 && m.GetParameters()[1].ParameterType.FullName == "Siemens.Engineering.ExportOptions")
+                    : candidates.FirstOrDefault(m => m.GetParameters().Length == 2 && m.GetParameters()[1].ParameterType.FullName == "Siemens.Engineering.ExportOptions");
+                method ??= exportOptions == null ? (candidates.Count == 1 ? candidates[0] : null) : null;
                 if (method == null) { result["error"] = "No unambiguous supported native Export(FileInfo[, options=None]) API."; return result; }
+                if (exportOptions != null && !Enum.GetNames(method.GetParameters()[1].ParameterType).Contains(exportOptions, StringComparer.Ordinal))
+                    throw new ArgumentException("Unsupported exportOptions: " + exportOptions);
                 result["capability"] = "supported";
                 var destination = Path.GetFullPath(path);
                 result["path"] = destination;
@@ -32,7 +35,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 temporary = Path.Combine(Path.GetDirectoryName(destination)!, ".tia-export-" + Guid.NewGuid().ToString("N") + Path.GetExtension(destination));
                 result["temporaryPath"] = temporary;
                 var args = method.GetParameters().Length == 1 ? new object[] { new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(temporary)) }
-                    : new object[] { new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(temporary)), Enum.Parse(method.GetParameters()[1].ParameterType, "None") };
+                    : new object[] { new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(temporary)), Enum.Parse(method.GetParameters()[1].ParameterType, exportOptions ?? "None") };
                 method.Invoke(target, args);
                 var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(temporary));
                 if (!file.Exists || file.Length == 0) throw new IOException("Native export produced no non-empty file.");

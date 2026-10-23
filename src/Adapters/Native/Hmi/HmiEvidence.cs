@@ -12,7 +12,7 @@ namespace TiaMcp.Adapters.Native.Hmi
 {
     internal static class HmiFiles
     {
-        internal static HmiObject Export(object target, string path) => new HmiObject(EngineeringFileExport.Export(target, path, true, HmiValues.ExportFailure ?? throw new InvalidOperationException("HMI export failure recorder unavailable.")));
+        internal static HmiObject Export(object target, string path, string exportOptions = "WithDefaults") => new HmiObject(EngineeringFileExport.Export(target, path, true, HmiValues.ExportFailure ?? throw new InvalidOperationException("HMI export failure recorder unavailable."), HmiExchangePolicy.ExportOption(exportOptions)));
         internal static FileInfo RequireExistingInputFile(string path, string parameter)
         {
             if (string.IsNullOrWhiteSpace(path) || !Path.IsPathRooted(path)) throw new ArgumentException(parameter + " must be an absolute file path.");

@@ -89,6 +89,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/HmiAccessPrimitives.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/HmiExactAccess.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/HmiExchangeAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/HmiExchangePolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/HmiInspectionPortAdapter.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/HmiReadSafety.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/HmiScreenTraversal.cs" />

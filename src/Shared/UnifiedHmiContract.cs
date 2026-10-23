@@ -32,6 +32,11 @@ namespace TiaMcpServer.ModelContextProtocol
             int? offset = null, int? limit = null)
         {
             try { return Map(tool, operation(), writes, current, offset, limit); }
+            catch (Exception error) when (tool == "EnsureUnifiedHmiConnection" && error.GetBaseException() is NotSupportedException)
+            {
+                return Result(tool, null, new Error(error.GetBaseException().Message,
+                    new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null)), Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
+            }
             catch (Exception) /* swallow(privacy): escaped writes have no confirmed outcome; diagnostics stay in the existing log */
             {
                 return Result(tool, null, writes ? Unknown(new JsonObject()) : NativeFailure(new JsonObject()),
@@ -69,10 +74,18 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, data, new Error("The HMI session requires an explicit rebind.", new SessionResetRequiredDetails("HMI read session blocked")),
                     Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             if (status == "InvalidState" && !evidence.ContainsKey("apiCallSuccess")) rejection = "PROJECT_NOT_BOUND";
-            if (rejection != null)
-                return Result(tool, data, new Error("The HMI request was rejected before the operation.",
-                    rejection == "PROJECT_NOT_BOUND" ? (ErrorDetails)new ProjectNotBoundDetails() : new NotFoundDetails(null)),
+            var failureCode = evidence["v4FailureCode"]?.ToString();
+            if (rejection != null || failureCode != null && Flag(evidence, "mayHaveChanged") != true)
+            {
+                var code = rejection ?? failureCode;
+                ErrorDetails details = code == "PROJECT_NOT_BOUND" ? new ProjectNotBoundDetails()
+                    : code == "UNSUPPORTED_CAPABILITY" || code == "NotSupportedOnVersion" ? new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null)
+                    : code == "INVALID_ARGUMENT" || code == "InvalidParams" ? new InvalidArgumentDetails("arguments", Array.Empty<string>())
+                    : code == "NOT_FOUND" || code == "NotFound" ? new NotFoundDetails(null)
+                    : new PreconditionFailedDetails(evidence["error"]?.ToString(), null);
+                return Result(tool, data, new Error("The HMI request was rejected before the operation.", details),
                     Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
+            }
             if (evidence["applyStatus"]?.ToString() == "rejected")
                 return Result(tool, data, McpServer.InvalidInput("actionKind"), Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             if (tool == "ManageUnifiedListEntries" && evidence["action"]?.ToString() != "read" && Flag(evidence, "entriesSupported") == false)

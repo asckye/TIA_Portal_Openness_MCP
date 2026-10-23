@@ -249,6 +249,58 @@ Official APIs in this family that no 4.0 tool uses:
 
 Not verified on a real TIA Portal: every row above; the VM checklist names the native behaviours each fix depends on.
 
+## HMI API audit (2026-10-19, P8-81e)
+
+Classic XML imports default to `overwrite=false` (`ImportOptions.None`), check the
+exported target names before calling Import, and refuse a missing folder instead of
+falling back to the root. Explicit `overwrite=true` selects Override. Existing
+Manage tools retain the equivalent `importOptions=None/Override` choice and require
+`confirmDelete=true` for Override. Native Unified package imports also default to
+`overwrite=false`: because their complete identities are not parsed offline, a
+nonempty target is refused unless replacement is explicitly authorized. Expected
+names are readback hints and cannot authorize additional names in a package.
+
+Classic XML export tools and Manage export actions default to
+`ExportOptions.WithDefaults`; `exportOptions` also accepts `None` and `WithReadOnly`.
+The chosen option remains in the request and any approval hash. Unified directory
+exports have no ExportOptions overload in the SDK and retain their documented
+native directory API.
+
+| Official API / finding | Releases | 4.0 boundary |
+|---|---|---|
+| Classic Screen/TagTable/Connection XML exchange (F1, F2, F10, F11) | all eight | Classic targets only. Unified refuses with `UNSUPPORTED_CAPABILITY` and directs callers to the supported Unified directory exchange tools. Existing targets and unresolved folders refuse before native Import. |
+| Unified `HmiScreen.ScreenItems` / `DescribeHmiScreenItem` (F3) | 19–21 | Registered only on these releases. Classic WinCC has no ScreenItems API; use `ExportHmiScreen` XML for its item content. |
+| Project multilingual graphics (F4) | all eight | V14 SP1–V16: `Project.Graphics`; V17–V20: inherited `ProjectBase.Graphics`; V21: `project.GetService<GraphicsProvider>().Graphics`. `ManageClassicHmiGraphic` and `GetClassicHmiGlobalization` are project-wide; softwarePath remains a compatibility parameter. |
+| Unified `Tags.Create(name, tagTableName)` (F5) | 19–21 | Uses the device Tags composition and the requested table's actual Name; verifies `TagTableName`. Device-wide tag-name conflicts name the owning table. No alternate overload is attempted after a failure. |
+| `IHmiScript.ScriptCode`, `GlobalDefinitionAreaScriptCode`, `Async` (F6) | 19–21 | An omitted globals/Async value is preserved. Empty globals and false Async are explicit changes. SyntaxCheck remains opt-in. |
+| Multilingual captions (F7) | 19–21 | Nonempty `EnsureUnifiedHmiScreenItem.text` refuses before changes because this endpoint has no culture. Use `SetUnifiedMultilingualProperty` with an explicit culture. Requested geometry must be written and read back or the call fails. |
+| Unified tags and connections (F8) | 19–21 | Tags use documented properties and typed scalar conversion. Connection Ensure verifies an existing exact partner/driver/address; automatic configuration refuses until values are verified. No DriverProperties substring writes or setters for read-only Partner/Station/Node. The start/stop shortcut stops on connection failure. |
+| Unified dynamizations (F9) | 19–21; Expression/TagParameter 20–21 | Exact types from the shared documented kind table only, including Script.ScriptDynamization and Flashing.FlashingDynamization. No substring/type-order search. |
+| Screen and tag-table identity (F12) | classic all eight; Unified 19–21 | Exact paths or unique names; ambiguous names refuse. Legacy and exact tag-table exchange share one resolver. Missing parents do not become root creates. |
+| Classic screen / tag-table Delete and single-tag XML exchange (F13) | SDK: all eight | Not exposed in 4.0. `ManageClassicHmiScreenObject` covers popup/template/slidein/overview/globalElements only; `DeleteHmiTag` deletes individual tags. |
+| Nested Unified runtime settings (F14) | root/nested families differ by release | 4.0 exposes root scalars only. MaxLoginRuntimeSettings, OpcUaServerRuntimeSettings, ProcessDiagnosticsRuntimeSettings, HmiReportingSettings, RuntimeResourceSettings and LanguageAndFonts are not exposed; neither are the V20+ Telemetry/UPSS/tag settings or V21 exclusive-operation settings. |
+| Unified collection contract (F15) | 19–21 | Every gate follows the supplied SDKs. There is no V16–V18 contract or speculative HmiTags/HmiTagTables alias. |
+| `BuildClassicHmiTagTable`, `BuildClassicHmiMinimalPackage` | 21 only | Withdrawn from V20: their V21 XML header is outside V20's HMI import window and is not rewritten by import. |
+
+Evidence is the per-release official PublicAPI XML, including V21
+`Siemens.Engineering.Base.xml`, `Siemens.Engineering.WinCC.xml` and
+`Siemens.Engineering.WinCCUnified.xml`. The official V21 examples for
+[project graphics](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/export/import/import/export-of-project-data/project-graphics/exporting-all-graphics-of-a-project?contentId=Px1AGQqehconPuADamuypQ),
+[tag creation](https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/tags/tags.create?contentId=cPRa9QLNbXGdPkNx2KVPdg)
+and [connection properties](https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/connections/accessing-connection-properties?contentId=QHUB47YCl~QPv3cdmf1TnA)
+were recorded by the audit. No native acceptance is claimed.
+
+VM/prerelease checklist: graphics import/export/delete on a pre-V21 release and on
+V21 (including companion image files); non-default Unified tag-table creation and
+device-wide duplicate names; driver-specific CommunicationDriver values and
+InitialAddress key/value strings (including rack/slot) and exact Partner readback;
+supported script/dynamization kinds on each Unified release; multilingual HTML
+normalization and explicit language readback; classic import size/number/device-type
+restrictions and partial-failure evidence. The legacy start/stop shortcut also needs
+caption-language selection and V19/V20 pressed-state behavior confirmed; unknown
+properties are refused and incomplete steps are reported. None of these checks was
+run against TIA Portal, a PLC or a VM in this worktree.
+
 ## Additional version-specific evidence boundaries
 
 - Classic HMI and Unified HMI use separate object models and dispatch paths. An

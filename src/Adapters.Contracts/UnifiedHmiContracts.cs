@@ -34,8 +34,8 @@ namespace TiaMcp.Adapters.Contracts
         public string EventType { get; set; } = "";
         public int MaxMembers { get; set; }
         public string ScriptCode { get; set; } = "";
-        public string GlobalDefinitionAreaScriptCode { get; set; } = "";
-        public bool Async { get; set; }
+        public string? GlobalDefinitionAreaScriptCode { get; set; }
+        public bool? Async { get; set; }
         public bool SyntaxCheck { get; set; }
         public string PropertyName { get; set; } = "";
         public string DynamizationType { get; set; } = "";

@@ -95,40 +95,49 @@ namespace TiaMcp.Adapters.Native.Hmi
             return _session.TryListNamesFromCollection(connections, Array.Empty<string>(), "Connections");
         }
 
-        public HmiObject ExportHmiScreen(string softwarePath, string screenName, string exportPath)
+        public HmiObject ExportHmiScreen(string softwarePath, string screenName, string exportPath, string exportOptions = "WithDefaults")
         {
             if (_session.IsProjectNull()) throw new PlcSoftwareException("InvalidState", "Project is null");
+            HmiExchangePolicy.ExportOption(exportOptions);
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
             if (softwareContainer?.Software == null) throw new PlcSoftwareException("NotFound", $"HMI software not found: {softwarePath}");
+
+            HmiExchangePolicy.RequireClassic(softwareContainer.Software);
 
             var screen = HmiExactAccess.Screen(softwareContainer.Software, screenName);
             if (screen == null) throw new PlcSoftwareException("NotFound", $"HMI screen not found: {screenName}");
 
-            var export = HmiFiles.Export(screen, exportPath);
+            var export = HmiFiles.Export(screen, exportPath, exportOptions);
             export["operationSuccess"] = export["success"]?.DeepClone();
             return export;
         }
 
-        public HmiObject ExportHmiTagTable(string softwarePath, string tagTableName, string exportPath)
+        public HmiObject ExportHmiTagTable(string softwarePath, string tagTableName, string exportPath, string exportOptions = "WithDefaults")
         {
             if (_session.IsProjectNull()) throw new PlcSoftwareException("InvalidState", "Project is null");
+            HmiExchangePolicy.ExportOption(exportOptions);
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
             if (softwareContainer?.Software == null) throw new PlcSoftwareException("NotFound", $"HMI software not found: {softwarePath}");
+
+            HmiExchangePolicy.RequireClassic(softwareContainer.Software);
 
             var sw = softwareContainer.Software;
             var table = _session.TryFindHmiTagTable(sw, tagTableName);
             if (table == null) throw new PlcSoftwareException("NotFound", $"HMI tag table not found: {tagTableName}");
 
-            var export = HmiFiles.Export(table, exportPath);
+            var export = HmiFiles.Export(table, exportPath, exportOptions);
             export["operationSuccess"] = export["success"]?.DeepClone();
             return export;
         }
 
-        public HmiObject ExportHmiConnection(string softwarePath, string connectionName, string exportPath)
+        public HmiObject ExportHmiConnection(string softwarePath, string connectionName, string exportPath, string exportOptions = "WithDefaults")
         {
             if (_session.IsProjectNull()) throw new PlcSoftwareException("InvalidState", "Project is null");
+            HmiExchangePolicy.ExportOption(exportOptions);
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
             if (softwareContainer?.Software == null) throw new PlcSoftwareException("NotFound", $"HMI software not found: {softwarePath}");
+
+            HmiExchangePolicy.RequireClassic(softwareContainer.Software);
 
             var sw = softwareContainer.Software;
             var connections = TryGetPropertyValue(sw, "Connections");
@@ -137,12 +146,12 @@ namespace TiaMcp.Adapters.Native.Hmi
             var connection = _session.FindExistingByName(connections, connectionName);
             if (connection == null) throw new PlcSoftwareException("NotFound", $"HMI connection not found: {connectionName}");
 
-            var export = HmiFiles.Export(connection, exportPath);
+            var export = HmiFiles.Export(connection, exportPath, exportOptions);
             export["operationSuccess"] = export["success"]?.DeepClone();
             return export;
         }
 
-        public HmiExportProgram? ExportHmiProgram(string softwarePath, string exportDir, bool exportScreens = true, bool exportTagTables = true)
+        public HmiExportProgram? ExportHmiProgram(string softwarePath, string exportDir, bool exportScreens = true, bool exportTagTables = true, string exportOptions = "WithDefaults")
         {
             if (_session.IsProjectNull()) return null;
 
@@ -150,6 +159,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             var failed = new List<string>();
             var items = new HmiArray();
 
+            HmiExchangePolicy.ExportOption(exportOptions);
+            HmiExchangePolicy.RequireClassic(_session.ResolveHmiSoftwareOrThrow(softwarePath));
             Directory.CreateDirectory(exportDir);
 
             if (exportScreens)
@@ -159,7 +170,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     var safe = _session.MakeSafeFileName(s);
                     var outPath = Path.Combine(exportDir, $"screen_{safe}.xml");
-                    try { var result = ExportHmiScreen(softwarePath, s, outPath); if (result["success"]!.GetValue<bool>()) exported.Add(outPath); else failed.Add(result.ToJsonString()); items.Add(new HmiObject { ["target"] = "screen:" + s, ["evidence"] = result.DeepClone() }); }
+                    try { var result = ExportHmiScreen(softwarePath, s, outPath, exportOptions); if (result["success"]!.GetValue<bool>()) exported.Add(outPath); else failed.Add(result.ToJsonString()); items.Add(new HmiObject { ["target"] = "screen:" + s, ["evidence"] = result.DeepClone() }); }
                     catch (PlcSoftwareException) { /* swallow(native-fallback): batch export records the failed object and continues with remaining entries */ failed.Add($"screen:{s}"); items.Add(new HmiObject { ["target"] = "screen:" + s, ["evidence"] = new HmiObject { ["operationSuccess"] = false } }); }
                 }
             }
@@ -171,7 +182,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     var safe = _session.MakeSafeFileName(t);
                     var outPath = Path.Combine(exportDir, $"tagtable_{safe}.xml");
-                    try { var result = ExportHmiTagTable(softwarePath, t, outPath); if (result["success"]!.GetValue<bool>()) exported.Add(outPath); else failed.Add(result.ToJsonString()); items.Add(new HmiObject { ["target"] = "tagtable:" + t, ["evidence"] = result.DeepClone() }); }
+                    try { var result = ExportHmiTagTable(softwarePath, t, outPath, exportOptions); if (result["success"]!.GetValue<bool>()) exported.Add(outPath); else failed.Add(result.ToJsonString()); items.Add(new HmiObject { ["target"] = "tagtable:" + t, ["evidence"] = result.DeepClone() }); }
                     catch (PlcSoftwareException) { /* swallow(native-fallback): batch export records the failed object and continues with remaining entries */ failed.Add($"tagtable:{t}"); items.Add(new HmiObject { ["target"] = "tagtable:" + t, ["evidence"] = new HmiObject { ["operationSuccess"] = false } }); }
                 }
             }
@@ -179,7 +190,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             return new HmiExportProgram { Exported = exported, Failed = failed, Items = items };
         }
 
-        public void ImportHmiScreen(string softwarePath, string folderPath, string importPath)
+        public void ImportHmiScreen(string softwarePath, string folderPath, string importPath, bool overwrite = false)
         {
             if (_session.IsProjectNull()) throw new PlcSoftwareException("InvalidState", "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
 
@@ -187,30 +198,20 @@ namespace TiaMcp.Adapters.Native.Hmi
             if (softwareContainer?.Software == null) throw new PlcSoftwareException("NotFound", $"HMI software not found: {softwarePath}");
 
             LastImportNotes = null;
+            HmiExchangePolicy.RequireClassic(softwareContainer.Software);
             try
             {
                 var sw = softwareContainer.Software;
                 GuardClassicScreenSize(sw, importPath);
 
-                // Resolve screen folder then groups by folderPath
-                object rootGroup = TryGetPropertyValue(sw, "ScreenFolder") ?? sw;
-                var group = _session.TryResolveChildGroupByPath(rootGroup, folderPath) ?? rootGroup;
+                object rootGroup = TryGetPropertyValue(sw, "ScreenFolder")
+                    ?? throw new PlcSoftwareException("NotFound", "ScreenFolder unavailable.");
+                var group = HmiExchangePolicy.Folder(rootGroup, folderPath);
+                var screens = TryGetPropertyValue(group, "Screens")
+                    ?? throw new PlcSoftwareException("NotFound", "Screens collection unavailable: " + folderPath);
+                HmiExchangePolicy.BeforeImport(screens, importPath, "Hmi.Screen.Screen", overwrite);
 
-                // Locate screens collection: group.Screens OR group.ScreenFolder.Screens
-                var screens = TryGetPropertyValue(group, "Screens");
-                if (screens == null)
-                {
-                    var nestedFolder = TryGetPropertyValue(group, "ScreenFolder");
-                    if (nestedFolder != null)
-                    {
-                        screens = TryGetPropertyValue(nestedFolder, "Screens");
-                    }
-                }
-
-                if (screens == null)
-                    throw new PlcSoftwareException("NotFound", $"Screens collection not found. swType={sw.GetType().FullName} groupType={group.GetType().FullName}");
-
-                if (_session.TryImportEngineeringObjectIntoCollection(screens, importPath, out _, out var err))
+                if (_session.TryImportEngineeringObjectIntoCollection(screens, importPath, out _, out var err, overwrite))
                     return;
 
                 // A failed native call can already have modified the project. Its error text is not
@@ -275,7 +276,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             if (deviceWidth == null)
             {
                 // A fresh classic panel has no screen and no display attribute; the hardware catalog description of its head item
-                // carries the display ("7" TFT 显示屏，800 x 480 像素").
+                // carries the display ("7" TFT 鏄剧ず灞忥紝800 x 480 鍍忕礌").
                 var resolution = TryReadPanelResolutionFromCatalog(hmiSoftware);
                 if (resolution != null) { deviceWidth = resolution.Value.width; deviceHeight = resolution.Value.height; source = "hardware catalog description"; }
             }
@@ -307,7 +308,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                     var entryIdentifier = TryGetPropertyValue(entry, "TypeIdentifier")?.ToString();
                     if (!string.Equals(entryIdentifier, typeIdentifier, StringComparison.OrdinalIgnoreCase)) continue;
                     var description = TryGetPropertyValue(entry, "Description")?.ToString() ?? "";
-                    var match = Regex.Match(description, @"(\d{3,4})\s*[x×X]\s*(\d{3,4})");
+                    var match = Regex.Match(description, @"(\d{3,4})\s*[x脳X]\s*(\d{3,4})");
                     if (match.Success) return (int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture), int.Parse(match.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture));
                 }
             }
@@ -325,31 +326,25 @@ namespace TiaMcp.Adapters.Native.Hmi
                     if (child != null) foreach (var screen in EnumerateClassicScreens(child, depth + 1)) yield return screen;
         }
 
-        public void ImportHmiTagTable(string softwarePath, string folderPath, string importPath)
+        public void ImportHmiTagTable(string softwarePath, string folderPath, string importPath, bool overwrite = false)
         {
             if (_session.IsProjectNull()) throw new PlcSoftwareException("InvalidState", "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
 
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
             if (softwareContainer?.Software == null) throw new PlcSoftwareException("NotFound", $"HMI software not found: {softwarePath}");
 
+            HmiExchangePolicy.RequireClassic(softwareContainer.Software);
             try
             {
                 var sw = softwareContainer.Software;
 
                 var tagRoot = _session.TryGetHmiTagRoot(sw);
+                var group = HmiExchangePolicy.Folder(tagRoot, folderPath);
+                var tables = TryGetPropertyValue(group, "TagTables")
+                    ?? throw new PlcSoftwareException("NotFound", "TagTables collection unavailable: " + folderPath);
+                HmiExchangePolicy.BeforeImport(tables, importPath, "Hmi.Tag.TagTable", overwrite);
 
-                var group = _session.TryResolveChildGroupByPath(tagRoot, folderPath) ?? tagRoot;
-
-                var tables = TryGetPropertyValue(group, "TagTables");
-                if (tables == null)
-                {
-                    tables = _session.TryGetHmiTagTablesCollection(sw);
-                }
-
-                if (tables == null)
-                    throw new PlcSoftwareException("NotFound", $"TagTables collection not found. swType={sw.GetType().FullName} groupType={group.GetType().FullName}");
-
-                if (_session.TryImportEngineeringObjectIntoCollection(tables, importPath, out _, out var err))
+                if (_session.TryImportEngineeringObjectIntoCollection(tables, importPath, out _, out var err, overwrite))
                     return;
 
                 throw new PlcSoftwareException("ImportFailed", err ?? "ImportHmiTagTable failed");
@@ -364,13 +359,14 @@ namespace TiaMcp.Adapters.Native.Hmi
             }
         }
 
-        public void ImportHmiConnection(string softwarePath, string importPath)
+        public void ImportHmiConnection(string softwarePath, string importPath, bool overwrite = false)
         {
             if (_session.IsProjectNull()) throw new PlcSoftwareException("InvalidState", "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
 
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
             if (softwareContainer?.Software == null) throw new PlcSoftwareException("NotFound", $"HMI software not found: {softwarePath}");
 
+            HmiExchangePolicy.RequireClassic(softwareContainer.Software);
             try
             {
                 var sw = softwareContainer.Software;
@@ -378,7 +374,9 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (connections == null)
                     throw new PlcSoftwareException("NotFound", $"Connections collection not found. swType={sw.GetType().FullName}");
 
-                if (_session.TryImportEngineeringObjectIntoCollection(connections, importPath, out _, out var err))
+                HmiExchangePolicy.BeforeImport(connections, importPath, "Hmi.Communication.Connection", overwrite);
+
+                if (_session.TryImportEngineeringObjectIntoCollection(connections, importPath, out _, out var err, overwrite))
                     return;
 
                 throw new PlcSoftwareException("ImportFailed", err ?? "ImportHmiConnection failed");
@@ -398,13 +396,15 @@ namespace TiaMcp.Adapters.Native.Hmi
             var evidence = new HmiObject { ["operationSuccess"] = success };
             if (status != null) evidence["status"] = status;
             if (exception is PlcSoftwareException portal && (portal.Code == "InvalidState" || portal.Code == "NotFound"))
-                evidence["status"] = portal.Code.ToString();
+                evidence["status"] = portal.Code == "InvalidState" && portal.Message.StartsWith("HMI import target already exists:", StringComparison.Ordinal)
+                    ? "ImportTargetExists" : portal.Code.ToString();
             if (exception != null) evidence["exceptionType"] = exception.GetType().Name;
             return new HmiObject { ["target"] = target, ["evidence"] = evidence };
         }
 
-        public HmiImportBatch ImportHmiScreensFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = true)
+        public HmiImportBatch ImportHmiScreensFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = false)
         {
+            if (!_session.IsProjectNull()) HmiExchangePolicy.RequireClassic(_session.ResolveHmiSoftwareOrThrow(softwarePath));
             var imported = new List<string>();
             var failed = new List<HmiImportFailure>();
             var items = new HmiArray();
@@ -438,7 +438,7 @@ namespace TiaMcp.Adapters.Native.Hmi
 
                     try
                     {
-                        ImportHmiScreen(softwarePath, folderPath, file);
+                        ImportHmiScreen(softwarePath, folderPath, file, overwrite);
                         imported.Add(name);
                         items.Add(ImportItem(file, true));
                     }
@@ -461,8 +461,9 @@ namespace TiaMcp.Adapters.Native.Hmi
             }
         }
 
-        public HmiImportBatch ImportHmiTagTablesFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = true)
+        public HmiImportBatch ImportHmiTagTablesFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = false)
         {
+            if (!_session.IsProjectNull()) HmiExchangePolicy.RequireClassic(_session.ResolveHmiSoftwareOrThrow(softwarePath));
             var imported = new List<string>();
             var failed = new List<HmiImportFailure>();
             var items = new HmiArray();
@@ -496,7 +497,7 @@ namespace TiaMcp.Adapters.Native.Hmi
 
                     try
                     {
-                        ImportHmiTagTable(softwarePath, folderPath, file);
+                        ImportHmiTagTable(softwarePath, folderPath, file, overwrite);
                         imported.Add(name);
                         items.Add(ImportItem(file, true));
                     }

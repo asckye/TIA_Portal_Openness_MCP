@@ -293,7 +293,9 @@ namespace TiaMcp.Adapters.Native.Hmi
             }
 
             var sw = sc.Software;
-            var screen = HmiScreenTraversal.FindByName(sw, screenName);
+            if (sw is HmiTarget)
+                throw new PlcSoftwareException("NotSupportedOnVersion", "Classic WinCC does not expose ScreenItems. Use ExportHmiScreen to inspect the screen XML.");
+            var screen = HmiExactAccess.Screen(sw, screenName);
             if (screen == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。

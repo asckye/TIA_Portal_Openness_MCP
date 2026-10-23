@@ -18,22 +18,23 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public UnifiedEngineeringTools(UnifiedEngineeringService service) => _service = service;
 
-        [McpServerTool(Name="ImportUnifiedEngineeringList"), Description("[L2][HMI-Unified][WRITE] Native import of textLists/graphicLists from a server-side file using Import(DirectoryInfo,string). expectedNames is an array of exact list names checked after import. dryRun=true default. Entire file is imported and may affect additional lists; readback verifies names, not all entries. No explicit save/compile/download. API availability differs by version. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ImportUnifiedEngineeringList"), Description("[L2][HMI-Unified][WRITE] Native import of textLists/graphicLists from a server-side file using Import(DirectoryInfo,string). expectedNames is an array of exact list names checked after import. dryRun=true and overwrite=false default; nonempty targets require explicit overwrite=true because complete file identities are not verified. Entire file is imported and may affect additional lists; readback verifies names, not all entries. No explicit save/compile/download. API availability differs by version. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ImportUnifiedEngineeringListV4(
             string softwarePath,
             string category,
             string filePath,
             [Description("expectedNames: Array of names expected after the import (verified).")] string[] expectedNames,
-            bool dryRun=true)
-            => HmiInspectionContract.Run("ImportUnifiedEngineeringList", !dryRun, true, () => ImportUnifiedEngineeringList(softwarePath, category, filePath, V4Json.Serialize(expectedNames), dryRun));
+            bool dryRun=true,
+            [Description("overwrite: default false; native packages with unverified identities refuse nonempty targets before Import.")] bool overwrite = false)
+            => HmiInspectionContract.Run("ImportUnifiedEngineeringList", !dryRun, true, () => ImportUnifiedEngineeringList(softwarePath, category, filePath, V4Json.Serialize(expectedNames), dryRun, overwrite));
 
         public ResponseMessage ImportUnifiedEngineeringList(
             string softwarePath,
             string category,
             string filePath,
             [Description("expectedNamesJson: JSON array of names expected after the import (verified).")] string expectedNamesJson,
-            bool dryRun=true)
-        => _service.ImportUnifiedEngineeringList(softwarePath,category,filePath,expectedNamesJson,dryRun);
+            bool dryRun=true, bool overwrite = false)
+        => _service.ImportUnifiedEngineeringList(softwarePath,category,filePath,expectedNamesJson,dryRun,overwrite);
 
         [McpServerTool(Name="ListUnifiedEngineeringObjects"), Description("[L2][HMI-Unified][READ] Read paginated public scalar properties for alarmClasses/discreteAlarms/analogAlarms/alarmLogs/dataLogs/textLists/graphicLists/systemTags/systemTextLists/auditTrails/opcUaAlarmTypes. Optional exact name. Returns counts, nextOffset, field failures and excluded complex properties. Not a complete export of entries or bindings; live pagination requires unchanged collection.")]
         public CallToolResult ReadUnifiedEngineeringObjectsV4(string softwarePath,string category,string name="",int offset=0,int limit=100)

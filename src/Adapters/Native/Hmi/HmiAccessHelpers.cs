@@ -78,36 +78,17 @@ internal static string? TryGetName(object? o)
 
 public static object TryGetHmiTagRoot(object hmiSoftware)
         {
-            return TryGetPropertyValue(hmiSoftware,
-                       "TagTableFolder",
-                       "TagFolder",
-                       "HmiTagTableFolder",
-                       "HmiTagFolder",
-                       "TagTableGroup",
-                       "HmiTagTableGroup")
-                   ?? hmiSoftware;
+            return TryGetPropertyValue(hmiSoftware, "TagFolder") ?? hmiSoftware;
         }
 
 public static object? TryGetHmiTagTablesCollection(object hmiSoftware)
         {
-            var root = TryGetHmiTagRoot(hmiSoftware);
-            return TryGetPropertyValue(root,
-                       "TagTables",
-                       "HmiTagTables",
-                       "Tables")
-                   ?? TryGetPropertyValue(hmiSoftware,
-                       "TagTables",
-                       "HmiTagTables",
-                       "Tables");
+            return TryGetPropertyValue(TryGetHmiTagRoot(hmiSoftware), "TagTables");
         }
 
 public static object? TryFindHmiTagTable(object hmiSoftware, string tagTableName)
         {
-            var root = TryGetHmiTagRoot(hmiSoftware);
-            return TryFindByNameInCollection(root, new[] { "TagTables", "HmiTagTables", "Tables" }, tagTableName)
-                   ?? TryFindByNameInCollection(hmiSoftware, new[] { "TagTables", "HmiTagTables", "Tables" }, tagTableName)
-                   ?? FindExistingByName(TryGetHmiTagTablesCollection(hmiSoftware) ?? root, tagTableName)
-                   ?? (root == null ? null : EnumerateHmiTagTablesRecursive(root).FirstOrDefault(t => string.Equals(TryGetName(t)?.Trim(), tagTableName, StringComparison.OrdinalIgnoreCase)));
+            return HmiExchangePolicy.TagTable(hmiSoftware, tagTableName);
         }
 
 public static IEnumerable<object> EnumerateHmiTagTablesRecursive(object folder, int depth = 0)
@@ -142,7 +123,7 @@ public static object? FindExistingByName(object compositionOrEnumerable, string 
             return null;
         }
 
-internal static bool TryImportEngineeringObjectIntoCollection(object collection, string importPath, out string? importedName, out string? error, Action? beforeImport = null)
+internal static bool TryImportEngineeringObjectIntoCollection(object collection, string importPath, out string? importedName, out string? error, Action? beforeImport = null, bool overwrite = false)
         {
             importedName = null;
             error = null;
@@ -163,17 +144,7 @@ internal static bool TryImportEngineeringObjectIntoCollection(object collection,
                 if (m2 != null)
                 {
                     beforeImport?.Invoke();
-                    var list = m2.Invoke(collection, new object[] { fi, ImportOptions.Override });
-                    importedName = BestEffortExtractFirstName(list) ?? Path.GetFileNameWithoutExtension(importPath);
-                    return true;
-                }
-
-                // Import(FileInfo)
-                var m1 = t.GetMethod("Import", new[] { typeof(FileInfo) });
-                if (m1 != null)
-                {
-                    beforeImport?.Invoke();
-                    var list = m1.Invoke(collection, new object[] { fi });
+                    var list = m2.Invoke(collection, new object[] { fi, overwrite ? ImportOptions.Override : ImportOptions.None });
                     importedName = BestEffortExtractFirstName(list) ?? Path.GetFileNameWithoutExtension(importPath);
                     return true;
                 }

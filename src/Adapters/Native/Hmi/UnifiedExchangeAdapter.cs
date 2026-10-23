@@ -25,28 +25,9 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         // Tag tables live at the root or inside nested TagTableGroups; accept an absolute /Group/Sub/Table path or a unique table name.
         private static HmiTagTable? FindUnifiedTagTable(HmiSoftware hmi, string nameOrPath)
-        {
-            if (nameOrPath.StartsWith("/", StringComparison.Ordinal))
-            {
-                var parts = nameOrPath.Substring(1).Split('/');
-                if (parts.Length == 0 || parts.Any(string.IsNullOrEmpty)) throw new ArgumentException("Invalid absolute tag table path.");
-                HmiTagTableGroup? group = null;
-                for (int i = 0; i < parts.Length - 1; i++)
-                    group = (group == null ? hmi.TagTableGroups : group.Groups).Find(parts[i]) ?? throw new PlcSoftwareException("NotFound", "Tag table group not found: " + parts[i]);
-                return (group == null ? hmi.TagTables : group.TagTables).Find(parts[parts.Length - 1]);
-            }
-            var matches = new List<HmiTagTable>();
-            void Walk(HmiTagTableComposition tables, HmiTagTableGroupComposition groups)
-            {
-                foreach (var table in tables) if (string.Equals(table.Name, nameOrPath, StringComparison.OrdinalIgnoreCase)) matches.Add(table);
-                foreach (var group in groups) { if (matches.Count > 1) return; Walk(group.TagTables, group.Groups); }
-            }
-            Walk(hmi.TagTables, hmi.TagTableGroups);
-            if (matches.Count > 1) throw new InvalidOperationException("Ambiguous tag table name; use an absolute /Group/Table path: " + nameOrPath);
-            return matches.SingleOrDefault();
-        }
+            => (HmiTagTable?)HmiExchangePolicy.TagTable(hmi, nameOrPath);
 
-        public HmiMessage ExchangeUnifiedTags(string softwarePath, string action, string directory, string tagTable = "", string fileName = "", string expectedTagNamesJson = "[]", bool dryRun = true)
+        public HmiMessage ExchangeUnifiedTags(string softwarePath, string action, string directory, string tagTable = "", string fileName = "", string expectedTagNamesJson = "[]", bool dryRun = true, bool overwrite = false)
             => _session.RunHmiStepTool("ExchangeUnifiedTags", meta => {
                 if (!UnifiedExchangeLogic.ExchangeActions.Contains(action)) throw new ArgumentException("action must be export or import.");
                 bool exporting = action == "export";
@@ -80,6 +61,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 meta["importCandidates"] = UnifiedExchangeLogic.ListImportCandidates(dir, new[] { ".hmi.yml" });
                 if (((HmiArray)meta["importCandidates"]!).Count == 0) throw new FileNotFoundException("No *.hmi.yml file in the import directory.");
                 meta["expectedCount"] = expected.Length;
+                HmiExchangePolicy.BeforeOpaqueImport(hmi.Tags, overwrite, meta);
                 if (dryRun) return "Unified tag import preview; no changes.";
                 meta["mayHaveChanged"] = true;
                 bool ok = name.Length == 0 ? tags.Import(dir) : tags.Import(dir, name);
@@ -93,7 +75,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 return "Native tag import returned true" + (expected.Length > 0 ? " and every expected tag name is present" : "") + "; tag properties are not independently compared. No save/compile/download.";
             });
 
-        public HmiMessage ExchangeUnifiedScriptModules(string softwarePath, string action, string directory, string moduleName = "", string fileName = "", bool dryRun = true)
+        public HmiMessage ExchangeUnifiedScriptModules(string softwarePath, string action, string directory, string moduleName = "", string fileName = "", bool dryRun = true, bool overwrite = false)
             => _session.RunHmiStepTool("ExchangeUnifiedScriptModules", meta => {
                 if (!UnifiedExchangeLogic.ExchangeActions.Contains(action)) throw new ArgumentException("action must be export or import.");
                 bool exporting = action == "export";
@@ -119,6 +101,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                     return "Unified script module(s) exported by TIA and hashed; script content not parsed. No project change.";
                 }
                 meta["importCandidates"] = UnifiedExchangeLogic.ListImportCandidates(dir, new[] { ".js", ".yml", ".json" });
+                HmiExchangePolicy.BeforeOpaqueImport(modules, overwrite, meta);
                 if (dryRun) return "Unified script module import preview; no changes.";
                 meta["mayHaveChanged"] = true;
                 bool ok = name.Length == 0 ? modules.Import(dir) : modules.Import(dir, name);
@@ -129,7 +112,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 return "Native script module import returned true; module names listed, script bodies not compared. No save/compile/download.";
             });
 
-        public HmiMessage ImportUnifiedOpcUaAlarms(string softwarePath, string connectionName, string action = "read", string xmlPath = "", string displayName = "", bool dryRun = true)
+        public HmiMessage ImportUnifiedOpcUaAlarms(string softwarePath, string connectionName, string action = "read", string xmlPath = "", string displayName = "", bool dryRun = true, bool overwrite = false)
             => _session.RunHmiStepTool("ImportUnifiedOpcUaAlarms", meta => {
                 if (!UnifiedExchangeLogic.OpcUaAlarmActions.Contains(action)) throw new ArgumentException("action must be read or import.");
                 if (string.IsNullOrWhiteSpace(connectionName)) throw new ArgumentException("Exact HMI connection name required.");
@@ -155,6 +138,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 }
                 if (action == "read") { meta["apiCallSuccess"] = true; return "OPC UA alarm display names read" + (string.IsNullOrWhiteSpace(displayName) ? "" : " and node id resolved") + "; no change."; }
                 meta["xmlPath"] = xml;
+                HmiExchangePolicy.BeforeOpaqueImport(service.DisplayNames ?? Array.Empty<string>(), overwrite, meta);
                 if (dryRun) return "OPC UA alarm import preview; native Import not called.";
                 meta["mayHaveChanged"] = true;
                 bool ok = service.Import(xml);

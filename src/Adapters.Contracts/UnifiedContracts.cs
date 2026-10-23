@@ -19,6 +19,7 @@ namespace TiaMcp.Adapters.Contracts
         public int Offset { get; set; }
         public int Limit { get; set; }
         public string PropertiesJson { get; set; } = "";
+        public bool Overwrite { get; set; }
         public bool DryRun { get; set; }
         public string Property { get; set; } = "";
         public string Culture { get; set; } = "";

@@ -87,7 +87,8 @@ namespace TiaMcp.Adapters
                 HmiValues.ExportFailure = previousExportFailure;
             }
             reply.MayHaveChanged = session.MayHaveChanged;
-            if (reply.Value is HmiMessage message) reply.RequiresSessionReset = message.Meta.TryGetValue("requiresExplicitRebind", out var reset) && reset is true;
+            if (reply.Value is HmiMessage message) reply.RequiresSessionReset = message.Meta.TryGetValue("requiresExplicitRebind", out var reset) && reset is true
+                || session.MayHaveChanged && message.Meta.TryGetValue("operationSuccess", out var success) && success is false;
             return reply;
         }
     }

@@ -87,6 +87,30 @@ namespace PlcExchangeTests
             return result.StructuredContent!.AsObject();
         }
         [Fact]
+        public void ClassicXmlExportsExposeTheOfficialDefaultAndExplicitOption()
+        {
+            foreach (string tool in new[] { "ExportHmiScreen", "ExportHmiTagTable", "ExportHmiConnection", "ExportHmiProgram" })
+            {
+                var parameter = Method(tool).GetParameters().Single(p => p.Name == "exportOptions");
+                Assert.Equal(typeof(string), parameter.ParameterType);
+                Assert.Equal("WithDefaults", parameter.DefaultValue);
+            }
+        }
+
+        [Fact]
+        public void HmiImportsRequireExplicitOverwrite()
+        {
+            foreach (string tool in new[] { "ImportHmiScreen", "ImportHmiTagTable", "ImportHmiConnection",
+                "ImportHmiScreensFromDirectory", "ImportHmiTagTablesFromDirectory", "ExchangeUnifiedTags",
+                "ExchangeUnifiedScriptModules", "ImportUnifiedOpcUaAlarms" })
+            {
+                var parameter = Method(tool).GetParameters().Single(p => p.Name == "overwrite");
+                Assert.Equal(typeof(bool), parameter.ParameterType);
+                Assert.Equal(false, parameter.DefaultValue);
+            }
+        }
+
+        [Fact]
         public void AllSeventeenEntriesHaveOneReviewedNameAndEnvelope()
         {
             Assert.Equal(Names.OrderBy(n => n), Methods().Keys.OrderBy(n => n));

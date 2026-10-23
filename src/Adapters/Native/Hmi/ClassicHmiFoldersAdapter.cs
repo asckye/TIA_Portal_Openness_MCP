@@ -25,7 +25,7 @@ namespace TiaMcp.Adapters.Native.Hmi
     // "Exporting / Importing a slide-in screen", "Exporting screen templates from a folder" / "Deleting a screen template from a
     // folder", "Deleting a user-defined folder of an HMI device", "Creating user-defined folders for HMI tags", "Exporting VB scripts
     // from a folder", "Exporting/importing graphics". Everything is the official V20/V21 Siemens.Engineering.Hmi API; the
-    // GraphicsProvider service (multilingual graphics) is V21 only. The reference project's HMI is Unified, so these tools were
+    // V21 uses the project GraphicsProvider; earlier releases expose project.Graphics. The reference project's HMI is Unified, so these tools were
     // verified by shape checks and by their Unified refusal on TIA Portal V21 (2026-09-19);
     // see docs/reference/real-machine-ledger.md for the native acceptance scope.
     internal sealed class ClassicHmiFoldersAdapter
@@ -122,8 +122,10 @@ namespace TiaMcp.Adapters.Native.Hmi
             });
 
         // ---- ManageClassicHmiScreenObject ------------------------------------------------------------------------------------------------
-        public HmiMessage ManageClassicHmiScreenObject(string softwarePath, string objectKind, string objectPath = "", string action = "read", string filePath = "", string importOptions = "None", bool confirmDelete = false, bool dryRun = true)
+        public HmiMessage ManageClassicHmiScreenObject(string softwarePath, string objectKind, string objectPath = "", string action = "read", string filePath = "", string importOptions = "None", bool confirmDelete = false, bool dryRun = true, string exportOptions = "WithDefaults")
             => RunTool("ManageClassicHmiScreenObject", meta => {
+                var exportOption = (ExportOptions)Enum.Parse(typeof(ExportOptions), HmiExchangePolicy.ExportOption(exportOptions));
+                meta["exportOptions"] = exportOptions;
                 bool writing = Logic.ValidateObjectRequest(objectKind, objectPath, action, filePath, importOptions, confirmDelete, dryRun);
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 var hmi = _session.ExactClassicHmi(softwarePath);
@@ -132,13 +134,16 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     var file = PlcSourceFileOutput.Plan(filePath);
                     if (dryRun) return label + " export preview; no file written.";
-                    meta["mayHaveWrittenFiles"] = true; export(file, ExportOptions.None); meta["apiCallSuccess"] = true; meta["file"] = PlcSourceFileOutput.Verify(file);
+                    meta["mayHaveWrittenFiles"] = true; export(file, exportOption); meta["apiCallSuccess"] = true; meta["file"] = PlcSourceFileOutput.Verify(file);
                     return label + " exported to a new XML file and hashed; no project change.";
                 }
-                string Import(Func<FileInfo, ImportOptions, object?> import, string label)
+                string Import(Func<FileInfo, ImportOptions, object?> import, string label, object? collection = null, string objectType = "")
                 {
                     var source = HmiFiles.RequireExistingInputFile(filePath, "filePath"); meta["sourceFile"] = HmiFiles.FileRow(source);
                     var options = (ImportOptions)Enum.Parse(typeof(ImportOptions), importOptions); meta["importOptions"] = options.ToString();
+                    if (collection == null && options == ImportOptions.None)
+                        throw new PlcSoftwareException("InvalidState", "The singleton HMI target already exists; select importOptions=Override and confirmDelete=true explicitly.");
+                    if (collection != null) HmiExchangePolicy.BeforeImport(collection, filePath, objectType, options == ImportOptions.Override);
                     if (!writing) return label + " import preview; no changes.";
                     meta["mayHaveChanged"] = true; var imported = import(source, options); meta["apiCallSuccess"] = true; meta["imported"] = ImportedNames(imported);
                     return label + " imported (native result attached); project not saved / compiled.";
@@ -159,7 +164,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     ScreenSlideinSystemFolder folder = hmi.ScreenSlideinFolder ?? throw new NotSupportedException("ScreenSlideinFolder unavailable on this HMI device.");
                     ScreenSlideinComposition slideins = folder.ScreenSlideins;
-                    if (action == "import") return Import((f, o) => slideins.Import(f, o), "Slide-in screen");
+                    if (action == "import") return Import((f, o) => slideins.Import(f, o), "Slide-in screen", slideins, "Hmi.Screen.ScreenSlidein");
                     var type = (SlideinType)Enum.Parse(typeof(SlideinType), objectPath);
                     ScreenSlidein slidein = slideins.Find(type) ?? throw new PlcSoftwareException("NotFound", "Slide-in screen not found for SlideinType " + objectPath + " (present: " + string.Join(", ", PlcGroupOperations.Items(slideins).Cast<ScreenSlidein>().Select(s => s.SlideinType.ToString())) + ").");
                     meta["object"] = SlideinRow(slidein);
@@ -173,7 +178,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     ScreenPopupFolder folder = ExactPopupFolder(hmi, folderPath); ScreenPopupComposition popups = folder.ScreenPopups;
                     meta["folder"] = folder.Name;
-                    if (action == "import") return Import((f, o) => popups.Import(f, o), "Pop-up screen");
+                    if (action == "import") return Import((f, o) => popups.Import(f, o), "Pop-up screen", popups, "Hmi.Screen.ScreenPopup");
                     ScreenPopup popup = popups.Find(name) ?? throw new PlcSoftwareException("NotFound", "Pop-up screen not found: " + objectPath);
                     meta["object"] = new HmiObject { ["name"] = popup.Name, ["screenClass"] = popup.GetType().Name };
                     if (action == "read") return "Pop-up screen read; export it for its content.";
@@ -186,7 +191,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 }
                 ScreenTemplateFolder templateFolder = ExactTemplateFolder(hmi, folderPath); ScreenTemplateComposition templates = templateFolder.ScreenTemplates;
                 meta["folder"] = templateFolder.Name;
-                if (action == "import") return Import((f, o) => templates.Import(f, o), "Screen template");
+                if (action == "import") return Import((f, o) => templates.Import(f, o), "Screen template", templates, "Hmi.Screen.ScreenTemplate");
                 ScreenTemplate template = templates.Find(name) ?? throw new PlcSoftwareException("NotFound", "Screen template not found: " + objectPath);
                 meta["object"] = new HmiObject { ["name"] = template.Name, ["screenClass"] = template.GetType().Name };
                 if (action == "read") return "Screen template read; export it for its content.";
@@ -268,22 +273,20 @@ namespace TiaMcp.Adapters.Native.Hmi
             });
 
         // ---- ManageClassicHmiGraphic (V21 GraphicsProvider) ----------------------------------------------------------------------------------
-        public HmiMessage ManageClassicHmiGraphic(string softwarePath, string action = "list", string name = "", string filePath = "", string importOptions = "None", bool confirmDelete = false, bool dryRun = true)
+        public HmiMessage ManageClassicHmiGraphic(string softwarePath, string action = "list", string name = "", string filePath = "", string importOptions = "None", bool confirmDelete = false, bool dryRun = true, string exportOptions = "WithDefaults")
             => RunTool("ManageClassicHmiGraphic", meta => {
+                var exportOption = (ExportOptions)Enum.Parse(typeof(ExportOptions), HmiExchangePolicy.ExportOption(exportOptions));
+                meta["exportOptions"] = exportOptions;
                 bool writing = Logic.ValidateGraphicRequest(action, name, filePath, importOptions, confirmDelete, dryRun);
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
-                var hmi = _session.ExactClassicHmi(softwarePath);
                 meta["softwarePath"] = softwarePath; meta["action"] = action; meta["name"] = name; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
-#if !HMI_GRAPHICS_PROVIDER
-                throw new NotSupportedException("GraphicsProvider (multilingual graphics) exists in the V21 PublicAPI only.");
-#else
-                GraphicsProvider provider = hmi.GetService<GraphicsProvider>() ?? throw new NotSupportedException("GraphicsProvider unavailable on this HMI device.");
-                MultiLingualGraphicComposition graphics = provider.Graphics;
+                MultiLingualGraphicComposition graphics = _session.ClassicGraphics();
                 if (action == "list") { meta["records"] = new HmiArray(PlcGroupOperations.Items(graphics).Cast<MultiLingualGraphic>().Take(1000).Select(g => (object)new HmiObject { ["name"] = g.Name }).ToArray()); meta["count"] = graphics.Count; meta["apiCallSuccess"] = true; return "Multilingual graphics listed; image bytes are not read."; }
                 if (action == "import")
                 {
                     var source = HmiFiles.RequireExistingInputFile(filePath, "filePath"); meta["sourceFile"] = HmiFiles.FileRow(source);
                     var options = (ImportOptions)Enum.Parse(typeof(ImportOptions), importOptions);
+                    HmiExchangePolicy.BeforeImport(graphics, filePath, "Hmi.Globalization.MultiLingualGraphic", options == ImportOptions.Override);
                     if (!writing) return "Graphics import preview; no changes.";
                     meta["mayHaveChanged"] = true; var imported = graphics.Import(source, options); meta["apiCallSuccess"] = true; meta["imported"] = ImportedNames(imported);
                     return "Multilingual graphics imported; project not saved.";
@@ -295,15 +298,14 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     var file = PlcSourceFileOutput.Plan(filePath);
                     if (dryRun) return "Graphic export preview; no file written.";
-                    meta["mayHaveWrittenFiles"] = true; graphic.Export(file, ExportOptions.None); meta["apiCallSuccess"] = true; meta["file"] = PlcSourceFileOutput.Verify(file);
+                    meta["mayHaveWrittenFiles"] = true; graphic.Export(file, exportOption); meta["apiCallSuccess"] = true; meta["file"] = PlcSourceFileOutput.Verify(file);
                     return "Multilingual graphic exported (XML plus image files beside it); no project change.";
                 }
                 if (!writing) return "Graphic deletion preview; no changes.";
                 meta["mayHaveChanged"] = true; graphic.Delete(); meta["apiCallSuccess"] = true;
-                if (provider.Graphics.Find(name) != null) throw new InvalidOperationException("Graphic remains after Delete.");
+                if (graphics.Find(name) != null) throw new InvalidOperationException("Graphic remains after Delete.");
                 meta["verifiedAbsent"] = true;
                 return "Multilingual graphic deleted and absence verified; project not saved.";
-#endif
             });
         private HmiMessage RunTool(string tool, Func<HmiObject, string> action, bool requiresProject = true)
             => _session.RunHmiStepTool(tool, meta => _session.Capture(meta, action), requiresProject);

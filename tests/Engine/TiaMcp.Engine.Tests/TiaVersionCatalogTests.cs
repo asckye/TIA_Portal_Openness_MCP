@@ -118,16 +118,22 @@ namespace TiaMcp.Engine.Tests
             }
             check(OpennessReleaseContract.For("14sp1").SoftwareContainerType.EndsWith("HW.Features.SoftwareContainer"), "SP1 concrete service boundary");
             check(OpennessReleaseContract.For("14sp1").TagConstantCollections.SequenceEqual(new[] { "UserConstants", "SystemConstants" }), "SP1 constants split");
-            check(OpennessReleaseContract.For("16").UnifiedCollection("Tags") == "HmiTags" && OpennessReleaseContract.For("17").UnifiedCollection("Tags") == "Tags", "Unified V16-to-V17 rename");
+            foreach (var key in new[] { "16", "17", "18" })
+            {
+                try { OpennessReleaseContract.For(key).UnifiedCollection("Tags"); check(false, "undocumented Unified contract refused on " + key); }
+                catch (NotSupportedException) { check(true, "undocumented Unified contract refused on " + key); }
+                try { OpennessReleaseContract.For(key).ResolveUnifiedCollection("Tags", new[] { "Tags", "HmiTags" }); check(false, "Unified collection resolution refused on " + key); }
+                catch (NotSupportedException) { check(true, "Unified collection resolution refused on " + key); }
+            }
             foreach (var logical in new[] { "Tags", "TagTables", "Connections", "SystemTags" })
             {
-                check(OpennessReleaseContract.For("16").ResolveUnifiedCollection(logical, new[] { "Hmi" + logical }) == "Hmi" + logical, "manual V16 alias " + logical);
-                check(OpennessReleaseContract.For("16").ResolveUnifiedCollection(logical, new[] { logical }) == logical, "V19-hosted V16 compatibility alias " + logical);
-                check(OpennessReleaseContract.For("17").ResolveUnifiedCollection(logical, new[] { logical }) == logical, "V17 renamed alias " + logical);
+                check(OpennessReleaseContract.For("19").UnifiedCollection(logical) == logical && OpennessReleaseContract.For("19").ResolveUnifiedCollection(logical, new[] { logical, "Hmi" + logical }) == logical, "documented V19 collection without alias guessing " + logical);
+                check(OpennessReleaseContract.For("20").UnifiedCollection(logical) == logical && OpennessReleaseContract.For("20").ResolveUnifiedCollection(logical, new[] { logical }) == logical, "documented V20 collection " + logical);
+                check(OpennessReleaseContract.For("21").UnifiedCollection(logical) == logical && OpennessReleaseContract.For("21").ResolveUnifiedCollection(logical, new[] { logical }) == logical, "documented V21 collection " + logical);
             }
-            try { OpennessReleaseContract.For("16").ResolveUnifiedCollection("Tags", new[] { "Tags", "HmiTags" }); check(false, "ambiguous Unified aliases refused"); }
-            catch (System.Reflection.AmbiguousMatchException) { check(true, "ambiguous Unified aliases refused"); }
-            try { OpennessReleaseContract.For("16").ResolveUnifiedCollection("Tags", Array.Empty<string>()); check(false, "missing Unified properties not interpreted as empty collections"); }
+            try { OpennessReleaseContract.For("19").ResolveUnifiedCollection("Tags", new[] { "HmiTags" }); check(false, "undocumented Unified alias refused"); }
+            catch (MissingMemberException) { check(true, "undocumented Unified alias refused"); }
+            try { OpennessReleaseContract.For("19").ResolveUnifiedCollection("Tags", Array.Empty<string>()); check(false, "missing Unified properties not interpreted as empty collections"); }
             catch (MissingMemberException) { check(true, "missing Unified properties not interpreted as empty collections"); }
             check(OpennessReleaseContract.PublicApiKey(@"C:\Portal V15\PublicAPI\V14 SP1\Siemens.Engineering.dll") == "14sp1", "API identity differs from host install");
             check(OpennessReleaseContract.PublicApiKey("/PublicAPI/V15.1/Siemens.Engineering.dll") == "15.1", "minor API identity retained");

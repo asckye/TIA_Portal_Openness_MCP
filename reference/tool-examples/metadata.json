@@ -251,7 +251,7 @@
       "resultReading": "Read ok, error, meta.outcome, meta.execution and meta.completeness; independent quality and native evidence remain in data."
     },
     "ExchangeUnifiedScriptModules": {
-      "input": "Global module exchange uses a directory package exported by the selected TIA release. Keep the .hmi.js, .hmi.yml and companion files together. moduleName is for export only.",
+      "input": "overwrite defaults false; existing targets refuse before native Import. Explicit true permits replacement. Native Unified packages are opaque: a nonempty target is refused unless overwrite=true; expected-name arrays do not prove all file identities.",
       "result": "For import, inspect data.nativeSuccess and reported post-import module names. A successful native import is not independent content or compilation verification.",
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/global-script/import-of-global-script"
@@ -259,7 +259,7 @@
       "profile": "full-engine"
     },
     "SetUnifiedHmiButtonEventScriptCode": {
-      "input": "scriptCode is the handler body of the named button/event; globalDefinitionAreaScriptCode is that handler's global definition area, not a global module package.",
+      "input": "scriptCode is the handler body of the named button/event; globalDefinitionAreaScriptCode is that handler's global definition area, not a global module package. Omit globalDefinitionAreaScriptCode and async to preserve current values; an empty string and false are explicit updates.",
       "result": "A missing data.syntaxErrorCount means the optional native syntax check was not run. Inspect the V4 write result and a separate HMI compile result.",
       "profile": "full-engine"
     },
@@ -549,6 +549,65 @@
       "input": "This is an offline renderer for an existing SimaticML XML export; it makes no TIA or PLC call. It writes a new self-contained HTML file and refuses to overwrite an existing output. FBD is shown as a labelled LAD-equivalent drawing; this is a static view, not an editable engineering canvas or online power-flow view. The program atlas counts callers only within the input atlas. If an export is needed, use the selected release's read-only export example first. Repository sample exports have no attributable native provenance; native acceptance remains NOT RUN.",
       "result": "Read the V4 envelope first. Inspect data.outputPath, mediaType, byteLength, sha256 and rendered block/network counts. A partial file is retained and reported; an existing output is refused.",
       "sourceUrls": []
+    },
+    "ImportHmiScreen": {
+      "input": "overwrite defaults false; existing targets refuse before native Import. Explicit true permits replacement. Native Unified packages are opaque: a nonempty target is refused unless overwrite=true; expected-name arrays do not prove all file identities."
+    },
+    "ImportHmiTagTable": {
+      "input": "overwrite defaults false; existing targets refuse before native Import. Explicit true permits replacement. Native Unified packages are opaque: a nonempty target is refused unless overwrite=true; expected-name arrays do not prove all file identities."
+    },
+    "ImportHmiConnection": {
+      "input": "overwrite defaults false; existing targets refuse before native Import. Explicit true permits replacement. Native Unified packages are opaque: a nonempty target is refused unless overwrite=true; expected-name arrays do not prove all file identities."
+    },
+    "ImportHmiScreensFromDirectory": {
+      "input": "overwrite defaults false; existing targets refuse before native Import. Explicit true permits replacement. Native Unified packages are opaque: a nonempty target is refused unless overwrite=true; expected-name arrays do not prove all file identities."
+    },
+    "ImportHmiTagTablesFromDirectory": {
+      "input": "overwrite defaults false; existing targets refuse before native Import. Explicit true permits replacement. Native Unified packages are opaque: a nonempty target is refused unless overwrite=true; expected-name arrays do not prove all file identities."
+    },
+    "ExchangeUnifiedTags": {
+      "input": "overwrite defaults false; existing targets refuse before native Import. Explicit true permits replacement. Native Unified packages are opaque: a nonempty target is refused unless overwrite=true; expected-name arrays do not prove all file identities."
+    },
+    "ImportUnifiedOpcUaAlarms": {
+      "input": "overwrite defaults false; existing targets refuse before native Import. Explicit true permits replacement. Native Unified packages are opaque: a nonempty target is refused unless overwrite=true; expected-name arrays do not prove all file identities."
+    },
+    "ImportUnifiedEngineeringList": {
+      "input": "overwrite defaults false; existing targets refuse before native Import. Explicit true permits replacement. Native Unified packages are opaque: a nonempty target is refused unless overwrite=true; expected-name arrays do not prove all file identities."
+    },
+    "ExportHmiScreen": {
+      "input": " HMI XML exportOptions defaults WithDefaults; None and WithReadOnly are explicit choices and are retained in request/approval arguments."
+    },
+    "ExportHmiTagTable": {
+      "input": " HMI XML exportOptions defaults WithDefaults; None and WithReadOnly are explicit choices and are retained in request/approval arguments."
+    },
+    "ExportHmiConnection": {
+      "input": " HMI XML exportOptions defaults WithDefaults; None and WithReadOnly are explicit choices and are retained in request/approval arguments."
+    },
+    "ExportHmiProgram": {
+      "input": " HMI XML exportOptions defaults WithDefaults; None and WithReadOnly are explicit choices and are retained in request/approval arguments."
+    },
+    "ManageClassicHmiScreenObject": {
+      "input": " HMI XML exportOptions defaults WithDefaults; None and WithReadOnly are explicit choices and are retained in request/approval arguments."
+    },
+    "ManageClassicHmiGraphic": {
+      "input": " HMI XML exportOptions defaults WithDefaults; None and WithReadOnly are explicit choices and are retained in request/approval arguments."
+    },
+    "ManageClassicHmiScript": {
+      "input": " HMI XML exportOptions defaults WithDefaults; None and WithReadOnly are explicit choices and are retained in request/approval arguments."
+    },
+    "ManageClassicHmiCycle": {
+      "input": " HMI XML exportOptions defaults WithDefaults; None and WithReadOnly are explicit choices and are retained in request/approval arguments."
+    },
+    "ManageClassicHmiTextGraphicList": {
+      "input": " HMI XML exportOptions defaults WithDefaults; None and WithReadOnly are explicit choices and are retained in request/approval arguments."
+    },
+    "DescribeHmiScreenItem": {
+      "input": "Registered on V19-V21 for Unified screen items. Classic HMI returns UNSUPPORTED_CAPABILITY; use ExportHmiScreen XML.",
+      "profile": "full-engine"
+    },
+    "EnsureUnifiedHmiConnection": {
+      "input": "Verifies a preconfigured connection using documented readback properties. Unknown driver strings, InitialAddress syntax and read-only Partner/Station/Node are not guessed. Use ManageUnifiedEngineeringObject with verified explicit values or configure in TIA.",
+      "profile": "full-engine"
     }
   }
 }

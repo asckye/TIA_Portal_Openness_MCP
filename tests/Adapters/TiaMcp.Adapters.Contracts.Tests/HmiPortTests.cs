@@ -12,13 +12,13 @@ public sealed class HmiPortTests
         select new object[] { release, tool, family.Name };
 
     [Theory, MemberData(nameof(ReleasesAndTools))]
-    public void Registration_and_graphics_refusal_follow_the_official_release(string release, string tool, string family)
+    public void Registration_and_screen_item_refusal_follow_the_official_release(string release, string tool, string family)
     {
-        bool expected = tool is "ManageClassicHmiGraphic" or "GetClassicHmiGlobalization" ? release == "21" : true;
+        bool expected = tool != "DescribeHmiScreenItem" || release is "19" or "20" or "21";
         Assert.Equal(expected, PortedFamilies.Available(release, tool));
         Assert.Equal(family, PortedFamilies.ForTool(tool).Name);
-        bool missingGraphics = (tool is "ManageClassicHmiGraphic" or "GetClassicHmiGlobalization") && release != "21";
-        Assert.Equal(missingGraphics, HmiCapabilities.Unsupported(release, tool) != null);
+        bool missingScreenItems = tool == "DescribeHmiScreenItem" && release is not ("19" or "20" or "21");
+        Assert.Equal(missingScreenItems, HmiCapabilities.Unsupported(release, tool) != null);
     }
 
     [Fact]

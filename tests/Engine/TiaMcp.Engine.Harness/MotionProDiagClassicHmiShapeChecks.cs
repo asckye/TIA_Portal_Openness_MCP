@@ -106,7 +106,7 @@ internal static class MotionProDiagClassicHmiShapeChecks
             var c=T(wincc,"Siemens.Engineering.Hmi.TextGraphicList."+list+"Composition"); Method(c,"Import",typeof(System.IO.FileInfo),importOptions);
             check(c.GetMethod("Create",new[]{typeof(string)})==null,list+"Composition has no Create(string)");
         }
-        var graphics=Optional(wincc,"Siemens.Engineering.Hmi.Globalization.GraphicsProvider","GetClassicHmiGlobalization is not registered on V20.");
+        var graphics=Optional(wincc,"Siemens.Engineering.Hmi.Globalization.GraphicsProvider","ProjectBase.Graphics supplies project graphics on V20.");
         if(graphics!=null) { Service(graphics); Property(graphics,"Graphics"); Property(T(wincc,"Siemens.Engineering.Hmi.Globalization.MultiLingualGraphic"),"Name"); }
         var libraryType=T(core,"Siemens.Engineering.Library.Types.LibraryType"); Property(libraryType,"Versions");
         foreach(var kind in new[]{"Siemens.Engineering.Hmi.Faceplate.FaceplateLibraryType","Siemens.Engineering.Hmi.RuntimeScripting.VBScriptLibraryType","Siemens.Engineering.Hmi.RuntimeScripting.CScriptLibraryType"})
@@ -218,9 +218,9 @@ internal static class MotionProDiagClassicHmiShapeChecks
                     var catalog = catalogType.GetProperty("Engine", all)!.GetValue(null)!;
                     var catalogNames = ((System.Collections.IEnumerable)catalogType.GetProperty("All", all)!.GetValue(catalog)!).Cast<object>()
                         .Select(entry => (string)entry.GetType().GetProperty("Key")!.GetValue(entry)!);
-                    check(!catalogNames.Contains(name, StringComparer.Ordinal), name + " is not registered on V20 because GraphicsProvider is absent");
+                    check(catalogNames.Contains(name, StringComparer.Ordinal), name + " is registered on V20 through project graphics");
                 }
-                else check(response.IsError == true && (bool?)body["ok"] == false
+                check(response.IsError == true && (bool?)body["ok"] == false
                     && (string?)body["error"]?["code"] == "PROJECT_NOT_BOUND"
                     && (string?)body["meta"]?["tool"] == name
                     && (string?)body["meta"]?["outcome"] == "rejected-before-operation"

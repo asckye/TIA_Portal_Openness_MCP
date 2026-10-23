@@ -131,6 +131,18 @@ namespace TiaMcp.Engine.Tests
         }
 
         [Fact]
+        public void ClassicScreenItemsRefuseWithTheExportAlternative()
+        {
+            var result = HmiInspectionContract.Run("DescribeHmiScreenItem", false, false,
+                () => throw new TiaMcpServer.Siemens.PortalException(TiaMcpServer.Siemens.PortalErrorCode.NotSupportedOnVersion,
+                    "Classic WinCC has no ScreenItems; use ExportHmiScreen."));
+            var body = result.StructuredContent!;
+            Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]!["code"]);
+            Assert.Contains("ExportHmiScreen", body["error"]!["message"]!.GetValue<string>());
+            Assert.Equal("not-started", (string?)body["meta"]!["execution"]);
+        }
+
+        [Fact]
         public async Task BranchLimitUsesTheSharedDomainContractAndAllCallPaths()
         {
             string Steps(int count) => "[" + string.Join(",", Enumerable.Repeat("{\"index\":0}", count)) + "]";
@@ -371,7 +383,7 @@ namespace TiaMcpServer.Siemens.Services
     {
         internal int Calls;
         internal string? LastInput;
-        public ResponseMessage ImportUnifiedEngineeringList(string softwarePath, string category, string filePath, string expectedNamesJson, bool dryRun = true)
+        public ResponseMessage ImportUnifiedEngineeringList(string softwarePath, string category, string filePath, string expectedNamesJson, bool dryRun = true, bool overwrite = false)
         { Calls++; LastInput = expectedNamesJson; return new ResponseMessage { Meta = ResponseMeta.Unstamped(true) }; }
         public ResponseMessage ReadUnifiedEngineeringObjects(string softwarePath, string category, string name = "", int offset = 0, int limit = 100)
         { Calls++;  return new ResponseMessage { Meta = ResponseMeta.Unstamped(true) }; }

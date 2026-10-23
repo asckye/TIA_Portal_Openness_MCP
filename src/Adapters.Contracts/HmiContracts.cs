@@ -14,6 +14,7 @@ namespace TiaMcp.Adapters.Contracts
         public string TagName { get; set; } = "";
         public string ItemName { get; set; } = "";
         public string ExportPath { get; set; } = "";
+        public string ExportOptions { get; set; } = "WithDefaults";
         public string ConnectionName { get; set; } = "";
         public string ExportDir { get; set; } = "";
         public bool ExportScreens { get; set; }
@@ -85,7 +86,7 @@ namespace TiaMcp.Adapters.Contracts
     public static class HmiCapabilities
     {
         public static string? Unsupported(string release, string tool)
-            => tool == "ManageClassicHmiGraphic" && release != "21" || tool == "GetClassicHmiGlobalization" && release != "21"
-                ? "GraphicsProvider (multilingual graphics) exists in the V21 PublicAPI only." : null;
+            => tool == "DescribeHmiScreenItem" && release != "19" && release != "20" && release != "21"
+                ? "ScreenItems are exposed only by WinCC Unified on V19-V21; use ExportHmiScreen for classic screen content." : null;
     }
 }

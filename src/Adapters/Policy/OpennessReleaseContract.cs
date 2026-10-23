@@ -59,16 +59,15 @@ namespace TiaMcpServer.Siemens
 
         internal string UnifiedCollection(string logicalName)
         {
-            if (new[] { "14", "14sp1", "15", "15.1" }.Contains(Key))
+            if (!new[] { "19", "20", "21" }.Contains(Key))
                 throw new NotSupportedException("No documented Unified API contract for " + Key + ".");
             if (!new[] { "Tags", "TagTables", "SystemTags", "Connections" }.Contains(logicalName))
                 throw new ArgumentException("Unknown Unified collection: " + logicalName);
-            return Key == "16" ? "Hmi" + logicalName : logicalName;
+            return logicalName;
         }
 
-        // The manual's V16 spelling is not present in every V16-identity DLL:
-        // compatibility DLLs shipped in V19 expose the renamed properties.
-        // Feed only metadata from an independently identity-validated SDK type.
+        // Only the V19-V21 SDKs expose Unified. Require the documented property
+        // from an independently identity-validated SDK type, without aliases.
         internal string ResolveUnifiedCollection(string logicalName, System.Collections.Generic.IEnumerable<string> publicProperties)
         {
             var documented = UnifiedCollection(logicalName);

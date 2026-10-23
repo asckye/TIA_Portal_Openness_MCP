@@ -18,7 +18,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var cause = exception;
                 while (cause.InnerException != null) cause = cause.InnerException;
-                Error? rejection = cause is PortalException portal ? Rejection(portal.Code.ToString()) : null;
+                Error? rejection = cause is PortalException portal ? Rejection(portal.Code.ToString(), portal.Message) : null;
                 return Result(tool, null, rejection ?? Failure(writes), rejection != null ? Outcome.RejectedBeforeOperation
                     : writes ? Outcome.Unknown : Outcome.ReadFailed, rejection != null ? Completeness.None : Completeness.Unknown, writes, current);
             }
@@ -29,7 +29,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static int? Number(JsonObject obj, string key)
             => obj[key] is JsonValue value && value.TryGetValue<int>(out var number) ? number : (int?)null;
 
-        private static Error? Rejection(string status)
+        private static Error? Rejection(string status, string? message = null)
         {
             ErrorDetails? details = status == "PROJECT_NOT_BOUND" ? new ProjectNotBoundDetails()
                 : status == "HmiReadSessionBlocked" ? new SessionResetRequiredDetails("HMI read connection failure")
@@ -38,7 +38,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 : status == "NotSupportedOnVersion" || status == "UNSUPPORTED_CAPABILITY" ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, "HMI/reflection", null)
                 : status == "NativeCrashRiskBlocked" || status == "ACCESS_DENIED" ? new AccessDeniedDetails("reflection", null)
                 : status == "PRECONDITION_FAILED" ? new PreconditionFailedDetails("HMI/reflection admission", null) : null;
-            return details == null ? null : new Error("The request could not be admitted; inspect the retained evidence.", details);
+            return details == null ? null : new Error(status == "NotSupportedOnVersion" && message != null ? message : "The request could not be admitted; inspect the retained evidence.", details);
         }
 
         private static Error Failure(bool writes) => writes
