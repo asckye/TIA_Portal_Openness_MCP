@@ -3,6 +3,7 @@ using TiaMcp.FoundationHost;
 using HostOptions = TiaMcp.FoundationHost.HostOptions;
 
 using var stabilityTelemetry = LocalStabilityTelemetry.Start();
+LocalStabilityTelemetry.StartupStage("program.begin");
 HostOptions options;
 Console.OutputEncoding = new UTF8Encoding(false);
 Console.SetError(new StreamWriter(Console.OpenStandardError(), new UTF8Encoding(false)) { AutoFlush = true });
@@ -31,7 +32,9 @@ try { options = HostOptions.Parse(args, AppContext.BaseDirectory); }
 catch (ArgumentException ex) { Console.Error.WriteLine(ex.Message); return 2; }
 TiaOpenness.Shared.DataLocations.InitializeHost(options.ReleaseKey);
 TiaOpenness.Shared.DataLocations.PruneLogsAtStartup();
+LocalStabilityTelemetry.StartupStage("program.logging.begin");
 var fileLogger = new HostFileLogger(options.ReleaseKey);
 fileLogger.Write("TiaMcpServer.log", DateTimeOffset.UtcNow.ToString("O") + " release=" + options.ReleaseKey);
+LocalStabilityTelemetry.StartupStage("program.logging.end");
 
 return await SharedReleaseHost.Run(options, fileLogger);

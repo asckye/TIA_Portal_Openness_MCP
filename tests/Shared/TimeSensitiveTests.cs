@@ -72,6 +72,7 @@ namespace TiaMcp.Engine.Tests.Shared
         public static readonly IReadOnlyDictionary<string, string[]> Methods = new Dictionary<string, string[]>(StringComparer.Ordinal)
         {
             ["EngineHttpSessionTests"] = new[] {
+                "Http_listens_under_cpu_pressure_before_constructing_session_tools",
                 "Production_catalog_rejects_fixture_tools_and_startup_reports_stderr",
                 "Unknown_outcome_can_disconnect_and_a_new_session_can_acquire_the_same_lease",
                 "Http_session_end_without_disconnect_releases_its_attached_worker",
@@ -85,6 +86,7 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Shutdown_drains_an_open_http_request_and_stops_its_session_worker"
             },
             ["EngineHttpSessionTestsPlc"] = new[] {
+                "Http_listens_under_cpu_pressure_before_constructing_session_tools",
                 "Production_catalog_rejects_fixture_tools_and_startup_reports_stderr",
                 "Unknown_outcome_can_disconnect_and_a_new_session_can_acquire_the_same_lease",
                 "Http_session_end_without_disconnect_releases_its_attached_worker",

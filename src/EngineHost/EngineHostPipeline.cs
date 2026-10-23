@@ -227,8 +227,11 @@ namespace TiaMcp.FoundationHost
         public void Dispose() { TiaOpenness.Shared.GenerationWriteFence.Shutdown(context.Worker.SessionKey); context.Ended = true; context.Exports.Dispose(); stagingLifetime.Dispose(); }
 
         public void RegisterHandlers(IMcpServerBuilder builder)
+            => RegisterHandlers(builder, EngineHostConfiguration.ReleaseKey);
+
+        internal static void RegisterHandlers(IMcpServerBuilder builder, string releaseKey)
         {
-            if (!ReleaseCatalogData.Releases[EngineHostConfiguration.ReleaseKey].RegisterDiscoveryHandlers) return;
+            if (!ReleaseCatalogData.Releases[releaseKey].RegisterDiscoveryHandlers) return;
             McpPromptRegistration.Configure(builder);
             builder.WithListResourcesHandler((_, token) => { token.ThrowIfCancellationRequested(); return new ValueTask<ListResourcesResult>(new ListResourcesResult { Resources = Array.Empty<Resource>() }); });
             builder.WithListResourceTemplatesHandler((_, token) => { token.ThrowIfCancellationRequested(); return new ValueTask<ListResourceTemplatesResult>(new ListResourceTemplatesResult { ResourceTemplates = Array.Empty<ResourceTemplate>() }); });

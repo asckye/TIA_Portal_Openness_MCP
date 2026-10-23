@@ -15,6 +15,17 @@ public sealed class EngineHttpSessionTestsPlc : EngineHttpSessionTestsCases { pr
 public abstract class EngineHttpSessionTestsCases
 {
     protected abstract bool PlcWorker { get; }
+    [Theory, InlineData("20"), InlineData("21")]
+    public async Task Http_listens_under_cpu_pressure_before_constructing_session_tools(string release)
+    {
+        using var host = await Fixture.Start(PlcWorker, release, startupPressure: true);
+        Assert.True(host.StartupElapsed < TimeSpan.FromSeconds(10), host.StartupDiagnostics());
+        // Health must precede catalog construction. Release the catalog barrier, then prove initialize still builds usable tools.
+        await host.ReleaseCatalog();
+        using var session = new Session(host.Url); await session.Initialize();
+        await session.Tool("GetSessionState"); await session.End();
+    }
+
     [Fact]
     public async Task Production_catalog_rejects_fixture_tools_and_startup_reports_stderr()
     {
@@ -262,9 +273,27 @@ public abstract class EngineHttpSessionTestsCases
     }
 
     private sealed class Fixture(Process process, string url, string directory, string image,
-        System.Threading.Channels.Channel<string> budgetReplies) : IDisposable
+        System.Threading.Channels.Channel<string> budgetReplies, Stopwatch startup) : IDisposable
     {
         private readonly Task exited = process.WaitForExitAsync();
+        internal TimeSpan StartupElapsed => startup.Elapsed;
+        internal string StartupDiagnostics() => $"Fixture host startup after {startup.Elapsed.TotalMilliseconds:F0} ms (pid={process.Id}, url={Url}).\n"
+            + string.Join("\n", new[] { "host.log", "host-error.log", "host-telemetry.jsonl.startup" }.Select(name =>
+                name + ":\n" + LogTail(Path.Combine(directory, name))));
+        private static string LogTail(string path)
+        {
+            if (!File.Exists(path)) return "(no log)";
+            // A timeout can race the redirected-output callbacks; diagnostics must let them keep appending.
+            using var reader = new StreamReader(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete));
+            var lines = new Queue<string>();
+            while (reader.ReadLine() is { } line) { lines.Enqueue(line); if (lines.Count > 30) lines.Dequeue(); }
+            return string.Join("\n", lines);
+        }
+        internal async Task ReleaseCatalog()
+        {
+            await process.StandardInput.WriteLineAsync(FixtureStartupPressure.ReleaseCommand);
+            await process.StandardInput.FlushAsync();
+        }
         // shortTimeout hosts start every worker under the production budgets; the scaled {"default":0.5} applies only between
         // UseScaledBudgets(true) and UseScaledBudgets(false). The reply names the default the host applied.
         internal async Task UseScaledBudgets(bool scaled)
@@ -276,7 +305,7 @@ public abstract class EngineHttpSessionTestsCases
         }
         internal string Url { get; private set; } = url;
         internal string DataDirectory => directory;
-        internal static async Task<Fixture> Start(bool plcWorker, string release, bool shortTimeout = false, bool gracefulShutdown = false, bool invalidCatalog = false)
+        internal static async Task<Fixture> Start(bool plcWorker, string release, bool shortTimeout = false, bool gracefulShutdown = false, bool invalidCatalog = false, bool startupPressure = false)
         {
             string root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
             string directory = Path.Combine(root, "bin-build", "P7-07a-tests", Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
@@ -301,6 +330,11 @@ public abstract class EngineHttpSessionTestsCases
             var start = new ProcessStartInfo(exe) {
                 WorkingDirectory = directory, UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true, RedirectStandardInput = true };
             start.ArgumentList.Add("--foundation-http-fixture");
+            if (startupPressure)
+            {
+                start.ArgumentList.Add("--fixture-startup-pressure");
+                start.Environment["DOTNET_PROCESSOR_COUNT"] = "2";
+            }
             foreach (string arg in new[] { "--bundle-root", root, "--release-key", release, "--transport", "http", "--http-prefix", url + "/", "--http-api-key", "fixture-key", "--profile", "full" }) start.ArgumentList.Add(arg);
             foreach (string arg in plcWorker ? new[] { "--plc-worker", "--worker-exe", exe, "--public-api", AppContext.BaseDirectory }
                 : new[] { "--engine-worker", exe, "--engine-catalog", catalog }) start.ArgumentList.Add(arg);
@@ -316,8 +350,10 @@ public abstract class EngineHttpSessionTestsCases
             // Release checks set their own diagnostics root; the journal assertions read this host's data directory.
             start.Environment["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = Path.Combine(directory, "diagnostics");
             start.Environment["Logging__LogLevel__Microsoft.Hosting.Lifetime"] = "Information";
+            start.Environment["TIA_MCP_TEST_STABILITY_TELEMETRY"] = Path.Combine(directory, "host-telemetry.jsonl");
             string config = Path.Combine(directory, "config"); Directory.CreateDirectory(config);
             new ApprovalSettings(false, 1).Save(Path.Combine(config, "approval.settings"));
+            var startup = Stopwatch.StartNew();
             var process = Process.Start(start)!;
             var budgetReplies = System.Threading.Channels.Channel.CreateUnbounded<string>();
             process.OutputDataReceived += (_, e) => {
@@ -336,7 +372,7 @@ public abstract class EngineHttpSessionTestsCases
                     listening.TrySetResult(endpoint.GetLeftPart(UriPartial.Authority));
             };
             process.BeginOutputReadLine(); process.BeginErrorReadLine();
-            var fixture = new Fixture(process, url, directory, exe, budgetReplies);
+            var fixture = new Fixture(process, url, directory, exe, budgetReplies, startup);
             try
             {
                 using var client = new HttpClient(new HttpClientHandler { UseProxy = false }) { Timeout = TimeSpan.FromSeconds(1) };
@@ -350,12 +386,12 @@ public abstract class EngineHttpSessionTestsCases
                         var health = client.GetAsync(fixture.Url + "/mcp/health");
                         if (await Task.WhenAny(health, fixture.exited) == fixture.exited) await fixture.RequireRunning();
                         using var response = await health;
-                        if (response.IsSuccessStatusCode) return fixture;
+                        if (response.IsSuccessStatusCode) { startup.Stop(); return fixture; }
                     }
                     catch (Exception error) when (error is HttpRequestException or TaskCanceledException) { }
                     await Task.Delay(50);
                 }
-                throw new TimeoutException("Fixture host did not listen.");
+                throw new TimeoutException("Fixture host did not listen. " + fixture.StartupDiagnostics());
             }
             catch { fixture.Dispose(); throw; }
         }
@@ -363,8 +399,7 @@ public abstract class EngineHttpSessionTestsCases
         {
             if (!process.HasExited) return;
             await exited.WaitAsync(TimeSpan.FromSeconds(5)); // Drain redirected stderr before reporting the startup error.
-            throw new InvalidOperationException("Fixture host exited " + process.ExitCode + ": "
-                + (File.Exists(Path.Combine(directory, "host-error.log")) ? File.ReadAllText(Path.Combine(directory, "host-error.log")) : "(no stderr)"));
+            throw new InvalidOperationException("Fixture host exited " + process.ExitCode + ": " + StartupDiagnostics());
         }
         internal void Stop() => process.StandardInput.Close();
         internal async Task<bool> WaitForExit(TimeSpan timeout)

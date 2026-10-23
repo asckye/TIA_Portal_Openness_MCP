@@ -22,7 +22,17 @@ internal static class SharedReleaseHost
 
     private static async Task<int> RunCore(HostOptions options, HostFileLogger logger, Func<IToolCatalogView, IToolCatalogView>? catalogForTest, CancellationToken stoppingToken, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null)
     {
+        if (options.Transport == "http" && !options.CatalogOnly && options.HostCommand == null)
+        {
+            // HTTP discovery metadata is release data; only an initialized MCP session needs a tool catalog and worker client.
+            // Constructing and discarding a probe here put cold schema generation ahead of Kestrel on every launch.
+            EngineHostConfiguration.ReleaseKey = options.ReleaseKey;
+            await RunHttp(options, logger, catalogForTest, stoppingToken, toolsForTest);
+            return 0;
+        }
+        LocalStabilityTelemetry.StartupStage("host.catalog.begin");
         using var session = CreateSession(options, catalogForTest, toolsForTest);
+        LocalStabilityTelemetry.StartupStage("host.catalog.end");
         var pipeline = session.Pipeline;
         if (options.CatalogOnly)
         {
@@ -48,6 +58,7 @@ internal static class SharedReleaseHost
             return 0;
         }
         await using var operatorEndpoint = OperatorEndpoint.Start(options, async token => await CreateHostSessionCore(options, true, catalogForTest, token, toolsForTest));
+        LocalStabilityTelemetry.StartupStage("host.operator.started");
         using var operatorStopping = stoppingToken.Register(() => operatorEndpoint?.Stop());
         if (options.Transport == "operator")
         {
@@ -55,13 +66,6 @@ internal static class SharedReleaseHost
             await operatorEndpoint!.Completion;
             return 0;
         }
-        if (options.Transport == "http")
-        {
-            // Build the host catalog before listening; each MCP session starts its worker on demand.
-            session.Dispose();
-            await RunHttp(options, logger, pipeline, operatorEndpoint, catalogForTest, stoppingToken, toolsForTest);
-        }
-        else
         {
             using var engineContext = pipeline.EnterSession();
             using var hostSession = CreateHostSession(options, session);
@@ -100,6 +104,7 @@ internal static class SharedReleaseHost
     {
         EngineHostConfiguration.ReleaseKey = options.ReleaseKey;
         IFoundationSessionWorker worker = CreateWorker(options);
+        LocalStabilityTelemetry.StartupStage("session.worker.created");
         try
         {
             var data = ReleaseCatalogData.Releases[options.ReleaseKey];
@@ -112,10 +117,13 @@ internal static class SharedReleaseHost
                 : ((EngineWorkerClient)worker).FoundationReadiness();
             var shared = LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled, options.ApiDirectory,
                 options.ApiDirectorySource, readiness, () => roster!, data.ExampleProfile, hostPorts: false);
+            LocalStabilityTelemetry.StartupStage("session.registry.created");
             if (toolsForTest != null) shared = toolsForTest(worker, shared);
             var services = FoundationHostPorts.CreateServices(worker, options.ReleaseKey, readiness, options.ApiDirectory);
+            LocalStabilityTelemetry.StartupStage("session.services.created");
             var pipeline = new EngineHostPipeline("", options.EngineWorkerExe ?? options.WorkerExe, options.ReleaseKey, services,
                 data.HasLite ? options.Profile : "full", shared, data.LiteNames.ToHashSet(StringComparer.Ordinal), catalogForTest);
+            LocalStabilityTelemetry.StartupStage("session.pipeline.created");
             services.Roster = () => roster!;
             services.ResetExports = pipeline.ResetExports;
             roster = pipeline.AllTools;
@@ -164,16 +172,21 @@ internal static class SharedReleaseHost
         }
     }
 
-    private static async Task RunHttp(HostOptions options, HostFileLogger logger, EngineHostPipeline probe, OperatorEndpoint? operatorEndpoint,
+    private static async Task RunHttp(HostOptions options, HostFileLogger logger,
         Func<IToolCatalogView, IToolCatalogView>? catalogForTest, CancellationToken stoppingToken, Func<IFoundationSessionWorker, IReadOnlyList<McpServerTool>, IReadOnlyList<McpServerTool>>? toolsForTest = null)
     {
+        await using var operatorEndpoint = OperatorEndpoint.Start(options, async token => await CreateHostSessionCore(options, true, catalogForTest, token, toolsForTest));
+        using var operatorStopping = stoppingToken.Register(() => operatorEndpoint?.Stop());
+        LocalStabilityTelemetry.StartupStage("host.operator.started");
+        LocalStabilityTelemetry.StartupStage("http.builder.begin");
         var builder = WebApplication.CreateBuilder(HttpHostOptions.Create());
+        LocalStabilityTelemetry.StartupStage("http.builder.end");
         builder.Logging.ClearProviders();
         builder.Logging.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace);
         builder.Logging.AddProvider(logger);
         builder.Logging.SetMinimumLevel(LogLevel.Warning);
         builder.WebHost.UseSetting("urls", options.HttpPrefix);
-        var mcp = builder.Services.AddMcpServer(o => o.ServerInstructions = probe.Instructions).WithHttpTransport(o => {
+        var mcp = builder.Services.AddMcpServer(o => o.ServerInstructions = ReleaseCatalogData.Releases[options.ReleaseKey].Instructions).WithHttpTransport(o => {
             o.ConfigureSessionOptions = (context, server, token) => {
                 var session = CreateSession(options, catalogForTest, toolsForTest);
                 var hostSession = CreateHostSession(options, session);
@@ -200,8 +213,9 @@ internal static class SharedReleaseHost
                 await server.RunAsync(token);
             };
         });
-        probe.RegisterHandlers(mcp);
+        EngineHostPipeline.RegisterHandlers(mcp, options.ReleaseKey);
         var app = builder.Build();
+        LocalStabilityTelemetry.StartupStage("http.app.built");
         app.Use(async (context, next) => {
             if (context.Request.Path == "/mcp/health") { await next(context); return; }
             if (!CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(context.Request.Headers.Authorization.ToString()), Encoding.UTF8.GetBytes("Bearer " + options.ApiKey)))
@@ -212,6 +226,8 @@ internal static class SharedReleaseHost
         app.MapGet("/mcp/health", () => new { status = "ok", fileVersion = typeof(HostOptions).Assembly.GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute>().Single(attribute => attribute.Key == "TiaMcpRelease").Value, releaseKey = options.ReleaseKey, profile = ReleaseCatalogData.Releases[options.ReleaseKey].ProfileName });
         app.MapGet("/mcp/ready", () => new { mcpHostReady = true, releaseKey = options.ReleaseKey, nativeAcceptance = "NOT RUN" });
         using var stopping = app.Lifetime.ApplicationStopping.Register(WorkerShutdown.StopAll);
+        using var started = app.Lifetime.ApplicationStarted.Register(() => LocalStabilityTelemetry.StartupStage("http.listening"));
+        LocalStabilityTelemetry.StartupStage("http.run.begin");
         await ((IHost)app).RunAsync(stoppingToken);
     }
 

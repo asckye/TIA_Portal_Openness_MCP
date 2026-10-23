@@ -9,6 +9,7 @@ internal sealed class LocalStabilityTelemetry : IDisposable
     private readonly Timer timer;
     private readonly string path;
     private readonly object sync = new();
+    private static readonly object StartupSync = new();
     private LocalStabilityTelemetry(string path)
     {
         this.path = path; Directory.CreateDirectory(Path.GetDirectoryName(path)!);
@@ -16,6 +17,17 @@ internal sealed class LocalStabilityTelemetry : IDisposable
     }
     internal static LocalStabilityTelemetry? Start() => Environment.GetEnvironmentVariable("TIA_MCP_TEST_STABILITY_TELEMETRY") is { Length: > 0 } path
         ? new(Path.GetFullPath(path)) : null;
+    internal static void StartupStage(string stage)
+    {
+        if (Environment.GetEnvironmentVariable("TIA_MCP_TEST_STABILITY_TELEMETRY") is not { Length: > 0 } path) return;
+        using var process = Process.GetCurrentProcess();
+        lock (StartupSync) File.AppendAllText(path + ".startup", JsonSerializer.Serialize(new {
+            pid = process.Id,
+            stage, elapsedMs = (DateTime.UtcNow - process.StartTime.ToUniversalTime()).TotalMilliseconds,
+            cpuMs = process.TotalProcessorTime.TotalMilliseconds, threadPoolThreads = ThreadPool.ThreadCount,
+            pending = ThreadPool.PendingWorkItemCount
+        }) + "\n");
+    }
     private void Sample()
     {
         lock (sync)
