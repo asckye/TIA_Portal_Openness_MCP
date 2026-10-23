@@ -27,7 +27,8 @@ internal static class FoundationHostPorts
         => McpServer.GenerationFenceRefusal(name, arguments, dispatched, write: true);
     internal static IDisposable GenerationRequest(RequestContext<ModelContextProtocol.Protocol.CallToolRequestParams> request, CancellationToken token)
         => McpServer.UseProgressRequest(request, token);
-    internal static ModelContextProtocol.Protocol.CallToolResult? BeforeDispatch() => McpServer.FoundationBeforeDispatch?.Invoke();
+    internal static Task<ModelContextProtocol.Protocol.CallToolResult?> BeforeDispatchAsync()
+        => McpServer.FoundationBeforeDispatch?.Invoke() ?? Task.FromResult<ModelContextProtocol.Protocol.CallToolResult?>(null);
     internal static IReadOnlyList<McpServerTool> Create(IFoundationWorker worker, string release,
         IReadOnlyList<McpServerTool> shared, Func<JsonObject> readiness, string? apiDirectory)
     {
@@ -192,7 +193,7 @@ internal static class FoundationHostPorts
                 case "session.ValidateAutomationContext": return await ReadFacts();
                 case "session.ConnectPortal":
                     if (profile.NativeObservations) return await ReadFacts();
-                    var connected = McpServer.ToolInvoker.Invoke("ConnectPortal", McpServer.EmptyArguments(), false).Result;
+                    var connected = (await McpServer.ToolInvoker.InvokeAsync("ConnectPortal", McpServer.EmptyArguments(), false).ConfigureAwait(false)).Result;
                     return JsonValue.Create((bool?)connected.StructuredContent?["ok"] == true);
                 default: throw new NotSupportedException("This observation is unavailable on release " + release + ": " + operation);
             }

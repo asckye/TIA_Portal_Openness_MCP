@@ -202,6 +202,112 @@ public sealed partial class PipelineTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public async Task Async_bridge_keeps_approval_lane_journal_and_audit_order_across_yields()
+    {
+        using var fixture = new Fixture();
+        string root = Path.Combine(AppContext.BaseDirectory, "bridge-audit", Guid.NewGuid().ToString("N"));
+        var log = new AuditLog(root); using var audit = AuditInvocation.UseLog(log);
+        var events = new List<string>(); var journal = new List<JsonNode>();
+        fixture.Worker.Yield = true; fixture.Worker.Event = events.Add;
+        InvocationJournal.ConfigureOutput(row => journal.Add(JsonNode.Parse(row)!));
+        fixture.Wait = async (pending, _, _) => {
+            Assert.Equal(0, fixture.Worker.Acquired);
+            events.Add("approval"); await Task.Yield(); return new ApprovalOutcome(pending, false, null, delegated: true);
+        };
+        bool context = McpServer.EnterMcpApprovalContext();
+        try
+        {
+            var result = await McpServer.CallToolAsync("SaveProject", McpServer.EmptyArguments());
+            Assert.True((bool?)result.StructuredContent?["ok"]);
+            Assert.Equal(new[] { "status", "approval", "lane", "status", "invoke" }, events);
+            Assert.Equal(1, fixture.Worker.Acquired);
+            Assert.Equal(new[] { "worker:SaveProject:BEFORE", "worker:SaveProject:RETURNED" },
+                journal.Select(row => (string?)row["tool"] + ":" + (string?)row["phase"]));
+            Assert.Equal(new[] { "request", "start", "end" }, log.Read().Select(row => row.Event));
+            Assert.All(log.Read(), row => Assert.Equal((string?)result.StructuredContent?["meta"]?["requestId"], row.RequestId));
+            Assert.True(log.Verify().Passed);
+            using var released = await fixture.Worker.Acquire(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(5));
+        }
+        finally
+        {
+            McpServer.LeaveMcpApprovalContext(context);
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public async Task Async_bridge_cancellation_while_waiting_for_the_target_lane_stays_tool_queue()
+    {
+        using var fixture = new Fixture();
+        using var held = await fixture.Worker.Acquire(CancellationToken.None);
+        using var cancellation = new CancellationTokenSource();
+        using var request = McpServer.UseProgressRequest(new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
+            Params = new() { Name = "CallTool" }
+        }, cancellation.Token);
+        var pending = McpServer.CallToolAsync("GetSessionState", McpServer.EmptyArguments());
+        Assert.False(pending.IsCompleted);
+        cancellation.Cancel();
+        var result = await pending.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal("CANCELLED", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Equal("tool-queue", (string?)result.StructuredContent?["error"]?["details"]?["stage"]);
+        Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
+        Assert.Empty(fixture.Worker.Calls);
+    }
+
+    [Fact]
+    public async Task CatalogTool_returns_an_incomplete_task_and_waits_for_its_foundation_target()
+    {
+        using var fixture = new Fixture();
+        var target = new PendingFoundationTool();
+        var catalog = new SharedToolCatalog(fixture.Catalog, new[] { target }, new HashSet<string>());
+        using var lifetime = new ImportStagingHostLifetime();
+        var invoker = new WorkerToolInvoker(catalog, fixture.Worker, lifetime, new[] { target });
+        McpServer.ConfigureToolBridge(catalog, invoker, () => false, new HashSet<string>());
+        var tool = invoker.CreateTool(catalog.Find("CallTool")!);
+        var returned = new TaskCompletionSource<Task<CallToolResult>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var thread = new Thread(() => {
+            try
+            {
+                var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
+                    Params = new() { Name = "CallTool", Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>("{\"name\":\"GetSessionState\",\"arguments\":{}}") }
+                };
+                // SerializedCallTool supplies this context on the production path.
+                using var progressRequest = McpServer.UseProgressRequest(request, CancellationToken.None);
+                returned.SetResult(tool.InvokeAsync(request).AsTask());
+            }
+            catch (Exception error) { returned.TrySetException(error); }
+        }) { IsBackground = true };
+        thread.Start();
+        try
+        {
+            await target.Started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            var pending = await returned.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.False(pending.IsCompleted);
+            var expected = McpServer.V4Result("GetSessionState", new JsonObject { ["fixture"] = true });
+            target.Completion.SetResult(expected);
+            Assert.Same(expected, await pending.WaitAsync(TimeSpan.FromSeconds(5)));
+        }
+        finally
+        {
+            target.Completion.TrySetResult(McpServer.V4Result("GetSessionState", new JsonObject()));
+            Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
+        }
+    }
+
+    private sealed class PendingFoundationTool : McpServerTool
+    {
+        internal readonly TaskCompletionSource Started = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal readonly TaskCompletionSource<CallToolResult> Completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public override Tool ProtocolTool { get; } = new() { Name = "GetSessionState",
+            InputSchema = JsonSerializer.SerializeToElement(new { type = "object", properties = new { }, additionalProperties = false }) };
+        public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
+        {
+            Started.SetResult();
+            return await Completion.Task;
+        }
+    }
+
+    [Fact]
     public async Task LocalToolsStayBelow100MsP95DuringA60SecondWorkerCall()
     {
         using var fixture = new Fixture();
@@ -296,6 +402,8 @@ public sealed partial class PipelineTests(ITestOutputHelper output)
     private sealed class Worker : IEngineWorker
     {
         internal bool Unknown, Native, Limited;
+        internal bool Yield;
+        internal Action<string>? Event;
         internal bool Ready = true;
         internal int Acquired;
         internal bool? RestartConfirmed;
@@ -307,12 +415,23 @@ public sealed partial class PipelineTests(ITestOutputHelper output)
         public object SessionKey { get; set; } = new();
         public JsonObject Snapshot() => new() { ["readiness"] = new JsonObject { ["ready"] = Ready, ["cause"] = "fixture-worker-cause",
             ["recommendedFix"] = "fixture-worker-fix", ["recommendedFixZh"] = "fixture-worker-fix-zh" } };
-        public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());
+        public async Task<JsonObject> Status(CancellationToken token)
+        {
+            Event?.Invoke("status");
+            if (Yield) await Task.Yield();
+            return Snapshot();
+        }
         public Task<JsonObject> Restart(bool confirmed, CancellationToken token) { RestartConfirmed = confirmed; return Task.FromResult(new JsonObject { ["success"] = true }); }
         private readonly SemaphoreSlim gate = new(1, 1);
-        public async Task<IDisposable> Acquire(CancellationToken token) { await gate.WaitAsync(token); Acquired++; return new Lane(gate); }
+        public async Task<IDisposable> Acquire(CancellationToken token)
+        {
+            if (Yield) await Task.Yield();
+            await gate.WaitAsync(token); Acquired++; Event?.Invoke("lane"); return new Lane(gate);
+        }
         public async Task<EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token)
         {
+            Event?.Invoke("invoke");
+            if (Yield) await Task.Yield();
             Calls.Add(name); Started.TrySetResult();
             if (Hold != null) await Hold.Task;
             var error = Limited ? new Error("limit", new LimitExceededDetails("response", 16 * 1024 * 1024, null))

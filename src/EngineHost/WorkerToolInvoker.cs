@@ -36,9 +36,26 @@ namespace TiaMcp.FoundationHost
                 typeof(RuntimeTools), typeof(RuntimeChannelTools), typeof(PlcSimAdvancedTools) }
                 .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance))
                 .Where(m => m.GetCustomAttribute<McpServerToolAttribute>() != null)
-                .ToDictionary(m => m.GetCustomAttribute<McpServerToolAttribute>()!.Name ?? m.Name, StringComparer.Ordinal);
+                .ToDictionary(m => m.GetCustomAttribute<McpServerToolAttribute>()!.Name ?? m.Name, AsyncImplementation, StringComparer.Ordinal);
             foreach (var tool in catalog.All.Values.Where(t => t.Execution == "host"))
                 if (!local.ContainsKey(tool.Name)) throw new InvalidOperationException("Missing host tool implementation: " + tool.Name);
+        }
+
+        private static MethodInfo AsyncImplementation(MethodInfo method)
+        {
+            var dispatch = method.GetCustomAttribute<AsyncDispatchAttribute>();
+            if (dispatch == null) return method;
+            var parameters = method.GetParameters();
+            var implementation = method.DeclaringType!.GetMethod(dispatch.MethodName,
+                BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, null,
+                parameters.Select(p => p.ParameterType).ToArray(), null);
+            if (implementation == null || implementation.IsStatic != method.IsStatic
+                || implementation.ReturnType != typeof(Task<CallToolResult>)
+                || implementation.GetCustomAttribute<McpServerToolAttribute>() != null
+                || !implementation.GetParameters().Select(p => (p.Name, p.HasDefaultValue, p.DefaultValue))
+                    .SequenceEqual(parameters.Select(p => (p.Name, p.HasDefaultValue, p.DefaultValue))))
+                throw new InvalidOperationException("Invalid asynchronous host tool implementation: " + method.Name);
+            return implementation;
         }
 
         public Error? Bind(string name, ToolArguments arguments, out IBoundToolCall? call)
@@ -101,34 +118,38 @@ namespace TiaMcp.FoundationHost
         }
 
         public ToolInvocationResult Invoke(string name, ToolArguments arguments, bool preview)
+            => InvokeAsync(name, arguments, preview).GetAwaiter().GetResult();
+
+        public Task<ToolInvocationResult> InvokeAsync(string name, ToolArguments arguments, bool preview)
         {
             var error = Bind(name, arguments, out var call);
-            return error == null ? call!.Invoke(preview) : new ToolInvocationResult(McpServer.V4Reject(name, error), false);
+            return error == null ? call!.InvokeAsync(preview) : Task.FromResult(new ToolInvocationResult(McpServer.V4Reject(name, error), false));
         }
 
         public McpServerTool CreateTool(ToolDescriptor tool) => new InfrastructureInputTool(new CatalogTool(this, tool), tool);
 
-        private ToolInvocationResult Dispatch(ToolDescriptor tool, ToolArguments arguments, bool preview)
+        private async Task<ToolInvocationResult> DispatchAsync(ToolDescriptor tool, ToolArguments arguments, bool preview)
         {
             if (tool.Execution == "foundation")
             {
                 var request = new RequestContext<CallToolRequestParams>(McpServer.CurrentCallServer!) {
                     Params = new CallToolRequestParams { Name = tool.Name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.Json.GetRawText()) }
                 };
-                return new ToolInvocationResult(shared[tool.Name].InvokeAsync(request, McpServer.WorkerDispatchCancellation).GetAwaiter().GetResult(), false);
+                return new ToolInvocationResult(await shared[tool.Name].InvokeAsync(request, McpServer.WorkerDispatchCancellation).ConfigureAwait(false), false);
             }
             if (tool.Execution == "worker")
             {
                 if (worker.Faulted) return new ToolInvocationResult(McpServer.V4Reject(tool.Name, HostBehavior.SessionReset()), false);
                 var token = McpServer.WorkerDispatchCancellation;
                 using var progress = (worker as IEngineWorkerProgress)?.UseProgress(preview ? null : McpServer.WorkerProgressRelay());
-                using var lane = TiaMcpServer.Dispatch.ToolDispatchLanes.Enter(tool.Name, token);
+                using var lane = await TiaMcpServer.Dispatch.ToolDispatchLanes.Acquire(tool.Name, token).ConfigureAwait(false);
+                TiaMcpServer.Dispatch.ToolDispatchLanes.Activate(lane);
                 string id = TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? InvocationJournal.CorrelationId;
                 string phase = "THREW";
                 InvocationJournal.Write(id, "worker:" + tool.Name, "BEFORE");
                 try
                 {
-                    var reply = worker.Invoke(id, tool.Name, JsonNode.Parse(arguments.Json.GetRawText())!.AsObject(), preview, token).GetAwaiter().GetResult();
+                    var reply = await worker.Invoke(id, tool.Name, JsonNode.Parse(arguments.Json.GetRawText())!.AsObject(), preview, token).ConfigureAwait(false);
                     if (reply.NativeCallIssued) InvocationJournal.NativeCallStarted();
                     McpServer.ObserveWorkerReply(tool.Name, reply);
                     phase = "RETURNED";
@@ -144,7 +165,7 @@ namespace TiaMcp.FoundationHost
             try
             {
                 object? result = method.Invoke(method.IsStatic ? null : LocalTarget(method.DeclaringType!), values);
-                if (result is Task task) { task.GetAwaiter().GetResult(); result = task.GetType().GetProperty("Result")?.GetValue(task); }
+                if (result is Task task) { await task.ConfigureAwait(false); result = task.GetType().GetProperty("Result")?.GetValue(task); }
                 return new ToolInvocationResult(McpServer.ToolResult(result), false);
             }
             catch (Exception error) { return new ToolInvocationResult(McpServer.TargetFailure(tool.Name, error, false), false); }
@@ -152,16 +173,17 @@ namespace TiaMcp.FoundationHost
 
         private sealed class BoundCall(WorkerToolInvoker owner, ToolDescriptor tool, ToolArguments arguments) : IBoundToolCall
         {
-            public ToolInvocationResult Invoke(bool preview) => owner.Dispatch(tool, arguments, preview);
+            public ToolInvocationResult Invoke(bool preview) => InvokeAsync(preview).GetAwaiter().GetResult();
+            public Task<ToolInvocationResult> InvokeAsync(bool preview) => owner.DispatchAsync(tool, arguments, preview);
         }
         private sealed class CatalogTool(WorkerToolInvoker owner, ToolDescriptor tool) : McpServerTool
         {
             public override Tool ProtocolTool => tool.Tool;
-            public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
+            public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                return new ValueTask<CallToolResult>(owner.Dispatch(tool, new ToolArguments(JsonSerializer.SerializeToElement(
-                    request.Params?.Arguments ?? new Dictionary<string, JsonElement>())), McpServer.IsReadOnlyApprovalPreview).Result);
+                return (await owner.DispatchAsync(tool, new ToolArguments(JsonSerializer.SerializeToElement(
+                    request.Params?.Arguments ?? new Dictionary<string, JsonElement>())), McpServer.IsReadOnlyApprovalPreview).ConfigureAwait(false)).Result;
             }
         }
     }

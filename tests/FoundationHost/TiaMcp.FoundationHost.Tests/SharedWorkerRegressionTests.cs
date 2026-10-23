@@ -224,15 +224,89 @@ public sealed class SharedWorkerRegressionTests
         var properties = target.ProtocolTool.InputSchema.GetProperty("properties");
         if (properties.TryGetProperty("mode", out _)) arguments["mode"] = "preview";
         if (properties.TryGetProperty("dryRun", out _)) arguments["dryRun"] = true;
+        var elapsed = Stopwatch.StartNew();
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-        var result = await Task.Run(() => {
+        string? deadlinePool = null;
+        using var deadlineRegistration = deadline.Token.Register(() => Volatile.Write(ref deadlinePool, PoolState()));
+        var result = await Task.Run(async () => {
             using var context = pipeline.EnterSession();
             using var request = Server.UseProgressRequest(Request("CallTool"), deadline.Token);
-            return Server.CallTool("CompileDevice", new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.SerializeToElement(arguments)));
+            return await Server.CallToolAsync("CompileDevice", new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.SerializeToElement(arguments)));
         });
-        Assert.False(deadline.IsCancellationRequested);
+        Assert.False(deadline.IsCancellationRequested, "deadlinePool=" + Volatile.Read(ref deadlinePool) + "; returnedPool=" + PoolState()
+            + "; elapsedMs=" + elapsed.Elapsed.TotalMilliseconds + "; worker=" + engine.Snapshot().ToJsonString());
         Assert.NotEqual("CANCELLED", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.True((bool?)engine.Snapshot()["readiness"]?["ready"], result.StructuredContent?.ToJsonString());
+    }
+
+    private static string PoolState()
+    {
+        ThreadPool.GetAvailableThreads(out int available, out _);
+        ThreadPool.GetMaxThreads(out int maximum, out _);
+        return "threads=" + ThreadPool.ThreadCount + ", pending=" + ThreadPool.PendingWorkItemCount + ", busy=" + (maximum - available);
+    }
+
+    [Theory, InlineData("20"), InlineData("21")]
+    public async Task Cold_bridge_call_completes_on_a_pool_capped_at_four_threads(string release)
+    {
+        string executable = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
+        var start = new ProcessStartInfo(executable) { UseShellExecute = false, CreateNoWindow = true,
+            RedirectStandardOutput = true, RedirectStandardError = true, WorkingDirectory = AppContext.BaseDirectory };
+        start.ArgumentList.Add("--bridge-pool-probe"); start.ArgumentList.Add(release);
+        start.Environment["DOTNET_PROCESSOR_COUNT"] = "2";
+        start.Environment["DOTNET_ThreadPool_ForceMinWorkerThreads"] = "4";
+        start.Environment["DOTNET_ThreadPool_ForceMaxWorkerThreads"] = "4";
+        using var child = Process.Start(start)!;
+        var stdout = child.StandardOutput.ReadToEndAsync(); var stderr = child.StandardError.ReadToEndAsync();
+        try { await child.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(60)); }
+        finally
+        {
+            if (!child.HasExited)
+            {
+                string root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory) + Path.DirectorySeparatorChar;
+                Assert.True(Path.GetFullPath(executable).StartsWith(root, StringComparison.OrdinalIgnoreCase));
+                Assert.Equal(Path.GetFullPath(executable), child.MainModule!.FileName, ignoreCase: true);
+                WorkerShutdown.KillOwned(child);
+                Assert.True(child.WaitForExit(5000));
+            }
+        }
+        string result = await stdout; string errors = await stderr;
+        Assert.True(child.ExitCode == 0, result + errors);
+        var probe = JsonNode.Parse(result)!;
+        Assert.Equal(4, (int?)probe["maximumWorkers"]);
+        Assert.True((bool?)probe["ready"], result);
+        Assert.NotEqual("CANCELLED", (string?)probe["result"]?["error"]?["code"]);
+        // This fixture has no bound project; completion and readiness are independent of the target's precondition result.
+        Assert.IsType<JsonObject>(probe["result"]);
+    }
+
+    internal static async Task<int> RunBridgePoolProbeAsync(string release)
+    {
+        ThreadPool.GetMaxThreads(out int maximum, out _);
+        Assert.Equal(4, maximum);
+        using var fixture = new Fixture(release);
+        using var engine = fixture.Engine();
+        var inner = foundationhost::TiaMcp.FoundationHost.PortedToolContract.Create(engine, release)
+            .OfType<foundationhost::TiaMcp.FoundationHost.FoundationTool>().Single(t => t.ProtocolTool.Name == "CompileDevice");
+        var target = new foundationhost::TiaMcp.FoundationHost.FoundationV4Tool(inner, release, null,
+            readinessForTest: () => new JsonObject { ["ready"] = true });
+        var services = foundationhost::TiaMcp.FoundationHost.FoundationHostPorts.CreateServices(engine, release,
+            () => new JsonObject { ["ready"] = true }, AppContext.BaseDirectory);
+        using var pipeline = new Pipeline(release, services, new McpServerTool[] { target });
+        Assert.Null(engine.OperatorSnapshot()["pid"]);
+        var arguments = new JsonObject { ["devicePath"] = new JsonArray("PLC1") };
+        var properties = target.ProtocolTool.InputSchema.GetProperty("properties");
+        if (properties.TryGetProperty("mode", out _)) arguments["mode"] = "preview";
+        if (properties.TryGetProperty("dryRun", out _)) arguments["dryRun"] = true;
+        var result = await Task.Run(async () => {
+            var request = Request("CallTool");
+            request.Params = new() { Name = "CallTool", Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
+                new JsonObject { ["name"] = "CompileDevice", ["arguments"] = arguments }.ToJsonString()) };
+            return await pipeline.AllTools.Single(t => t.ProtocolTool.Name == "CallTool").InvokeAsync(request);
+        });
+        Console.WriteLine(new JsonObject { ["maximumWorkers"] = maximum, ["ready"] = engine.Snapshot()["readiness"]?["ready"]?.DeepClone(),
+            ["result"] = result.StructuredContent?.DeepClone() }.ToJsonString());
+        return 0;
     }
 
     [Fact]

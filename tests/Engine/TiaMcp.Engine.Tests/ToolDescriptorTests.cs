@@ -133,6 +133,9 @@ namespace TiaMcp.Engine.Tests
             internal readonly CallToolResult Result = McpServer.V4Result("DescriptorProbe", new JsonObject { ["fixture"] = true });
             public Error? Bind(string name, ToolArguments arguments, out IBoundToolCall? call) { Bindings++; call = this; return null; }
             public ToolInvocationResult Invoke(string name, ToolArguments arguments, bool preview) => Invoke(preview);
+            public System.Threading.Tasks.Task<ToolInvocationResult> InvokeAsync(string name, ToolArguments arguments, bool preview)
+                => System.Threading.Tasks.Task.FromResult(Invoke(name, arguments, preview));
+            public System.Threading.Tasks.Task<ToolInvocationResult> InvokeAsync(bool preview) => System.Threading.Tasks.Task.FromResult(Invoke(preview));
             public ToolInvocationResult Invoke(bool preview) { Invocations++; return new ToolInvocationResult(Result, false); }
             public Error? ValidateArguments(ToolDescriptor tool, JsonElement arguments, JsonElement schema, bool typedFamiliesOnly = false) => null;
             public McpServerTool CreateTool(ToolDescriptor tool) => new DescriptorRuntimeTool(tool.Tool);

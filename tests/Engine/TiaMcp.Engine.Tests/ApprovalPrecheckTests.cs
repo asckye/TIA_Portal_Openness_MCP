@@ -22,11 +22,12 @@ namespace TiaMcp.Engine.Tests
         public static class Probe
         {
             internal static int Previews, Writes;
+            internal static Action? OnWrite;
             internal static string Fault = "";
             [McpServerTool(Name = "CreatePlcTag"), ToolClassification("L1", "PLC-Software", "WRITE", batchWrite: true)]
             public static CallToolResult Write(string condition = "", bool dryRun = true)
             {
-                if (dryRun) Previews++; else Writes++;
+                if (dryRun) Previews++; else { Writes++; OnWrite?.Invoke(); }
                 if (condition == "cancel") throw new OperationCanceledException();
                 if (condition == "no-effect") return McpServer.V4Result("CreatePlcTag", new JsonObject {
                     ["status"] = "not-found-not-deleted", ["attempted"] = false, ["executed"] = false,
@@ -178,6 +179,43 @@ namespace TiaMcp.Engine.Tests
             }
             finally { McpServer.LeaveMcpApprovalContext(context); McpServer.ApprovalSessionKeyForTests = key; settings.Save(ApprovalSettings.SettingsPath); }
         }
+        [Fact]
+        public async Task Async_bridge_in_native_build_finishes_synchronously_on_the_calling_thread_after_approval()
+        {
+            using var fixture = new InfrastructureContractsTests(); Configure();
+            var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath); var wait = McpServer.ApprovalWaitOverrideForTests;
+            bool context = McpServer.EnterMcpApprovalContext();
+            int owner = Thread.CurrentThread.ManagedThreadId, targetThread = 0, approvalThread = 0;
+            using var requested = new ManualResetEventSlim();
+            var approved = new TaskCompletionSource<ApprovalOutcome>(TaskCreationOptions.RunContinuationsAsynchronously);
+            PendingApproval? pending = null;
+            var completion = new Thread(() => {
+                if (!requested.Wait(TimeSpan.FromSeconds(5)) || pending == null)
+                { approved.TrySetException(new TimeoutException("Approval was not requested.")); return; }
+                approvalThread = Thread.CurrentThread.ManagedThreadId;
+                approved.SetResult(new ApprovalOutcome(pending!, true, null));
+            }) { IsBackground = true };
+            completion.Start();
+            try
+            {
+                new ApprovalSettings(true, 1).Save(ApprovalSettings.SettingsPath);
+                Probe.OnWrite = () => targetThread = Thread.CurrentThread.ManagedThreadId;
+                McpServer.ApprovalWaitOverrideForTests = (request, _, _) => { pending = request; requested.Set(); return approved.Task; };
+                var call = McpServer.CallToolAsync("CreatePlcTag", Args("{\"dryRun\":false}"));
+                Assert.True(call.IsCompleted);
+                Assert.True((bool?)McpServer.ResultBody(await call)?["ok"]);
+                Assert.Equal(owner, targetThread); Assert.NotEqual(owner, approvalThread);
+                Assert.Equal(1, Probe.Previews); Assert.Equal(1, Probe.Writes);
+            }
+            finally
+            {
+                requested.Set();
+                Assert.True(completion.Join(TimeSpan.FromSeconds(5)));
+                Probe.OnWrite = null; McpServer.LeaveMcpApprovalContext(context);
+                McpServer.ApprovalWaitOverrideForTests = wait; settings.Save(ApprovalSettings.SettingsPath);
+            }
+        }
+
         [Fact]
         public void Warm_fixture_reports_added_preview_latency()
         {

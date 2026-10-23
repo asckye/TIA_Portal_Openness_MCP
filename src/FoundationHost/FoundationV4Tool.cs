@@ -380,7 +380,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                     HostBehavior.SessionReset(), true));
             if (write && FoundationHostPorts.GenerationFence(tool.Name, JsonSerializer.Serialize(args), dispatched: true) is { } dispatchFenced)
                 return Recorded(dispatchFenced);
-            if (FoundationHostPorts.BeforeDispatch() is { } batchRefusal) return Recorded(batchRefusal);
+            if (await FoundationHostPorts.BeforeDispatchAsync().ConfigureAwait(false) is { } batchRefusal) return Recorded(batchRefusal);
             if (approval != null && !approval.Disabled && pending!.ArgumentDigest != TiaOpenness.Shared.PendingApproval.Create(ReleaseCatalogData.Releases[release].FoundationInvocationTag, release, tool.Name,
                     JsonSerializer.Serialize(args), (inner as FoundationTool)?.ApprovalIdentity, settings.TimeoutSeconds).ArgumentDigest)
             {

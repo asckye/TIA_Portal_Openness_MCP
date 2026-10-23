@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
@@ -10,6 +11,35 @@ using TiaMcp.Logic.V4.Inputs;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
+    [AttributeUsage(AttributeTargets.Method)]
+    internal sealed class AsyncDispatchAttribute : System.Attribute
+    {
+        internal string MethodName { get; }
+        internal AsyncDispatchAttribute(string methodName) { MethodName = methodName; }
+    }
+
+    // Native builds must finish every wait on the caller's thread before continuing to Openness.
+    internal static class BridgeWait
+    {
+        internal static Task<T> On<T>(Task<T> task)
+        {
+#if TIA_ENGINE_HOST
+            return task;
+#else
+            return Task.FromResult(task.GetAwaiter().GetResult());
+#endif
+        }
+        internal static Task On(Task task)
+        {
+#if TIA_ENGINE_HOST
+            return task;
+#else
+            task.GetAwaiter().GetResult();
+            return Task.CompletedTask;
+#endif
+        }
+    }
+
     internal sealed class ToolDescriptor
     {
         public string Name { get; }
@@ -81,6 +111,7 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         public Error? Bind(string name, ToolArguments arguments, out IBoundToolCall? call);
         public ToolInvocationResult Invoke(string name, ToolArguments arguments, bool preview);
+        public Task<ToolInvocationResult> InvokeAsync(string name, ToolArguments arguments, bool preview);
         public Error? ValidateArguments(ToolDescriptor tool, JsonElement arguments, JsonElement schema, bool typedFamiliesOnly = false);
         public McpServerTool CreateTool(ToolDescriptor tool);
     }
@@ -88,6 +119,7 @@ namespace TiaMcpServer.ModelContextProtocol
     internal interface IBoundToolCall
     {
         public ToolInvocationResult Invoke(bool preview);
+        public Task<ToolInvocationResult> InvokeAsync(bool preview);
     }
 
     internal sealed class ToolInvocationResult

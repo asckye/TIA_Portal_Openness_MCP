@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading.Tasks;
 using ModelContextProtocol.Protocol;
 using TiaMcp.Logic.V4;
 using TiaMcp.Logic.V4.Inputs;
@@ -270,17 +271,24 @@ namespace TiaMcpServer.ModelContextProtocol
 
 #if !TIA_ENGINE_PORTED
         [McpServerTool(Name = "CallTool"), Description("[L0][Meta] Invoke a tool in the full version-gated catalog. arguments must be an object matching the target inputSchema. Returns the target result unchanged; dispatch failures use the V4 envelope. Nested orchestration is refused.")]
+        [AsyncDispatch(nameof(CallToolAsync))]
         public static CallToolResult CallTool(
             [Description("Exact currently registered tool name from FindTools.")] string name,
             [Description("Target arguments as an object. Omit for a tool with no arguments; strings and null are invalid.")] ToolArguments? arguments = null)
-            => CallToolCore(name, arguments);
+            => CallToolAsync(name, arguments).GetAwaiter().GetResult();
 #endif
+
+        internal static Task<CallToolResult> CallToolAsync(string name, ToolArguments? arguments = null)
+            => CallToolCoreAsync(name, arguments);
 
         internal static CallToolResult DispatchNestedTool(string name, ToolArguments? arguments) => CallToolCore(name, arguments);
         internal static CallToolResult DispatchGenerationStep(string name, ToolArguments arguments, Func<CallToolResult?> beforeDispatch)
             => CallToolCore(name, arguments, beforeDispatch);
 
         private static CallToolResult CallToolCore(string name, ToolArguments? arguments, Func<CallToolResult?>? beforeDispatch = null)
+            => CallToolCoreAsync(name, arguments, beforeDispatch == null ? null : () => Task.FromResult(beforeDispatch())).GetAwaiter().GetResult();
+
+        private static async Task<CallToolResult> CallToolCoreAsync(string name, ToolArguments? arguments, Func<Task<CallToolResult?>>? beforeDispatch = null)
         {
 #if TIA_ENGINE_HOST
             if (CatalogView.Find(name)?.Execution == "foundation" && (!TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(name)
@@ -295,11 +303,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     var fields = TargetInputError(name, input, rejected);
                     if (!ReferenceEquals(fields, rejected))
                         return FinishApproval(V4TargetReject(name, fields, CurrentBehaviorTargets("CallTool", JsonSerializer.SerializeToElement(new { name }))), null);
-                    return ToolInvoker.Invoke(name, input, ApprovalPreviewDepth.Value > 0).Result;
+                    return (await BridgeWait.On(ToolInvoker.InvokeAsync(name, input, ApprovalPreviewDepth.Value > 0)).ConfigureAwait(false)).Result;
                 }
                 var previous = FoundationBeforeDispatch;
                 FoundationBeforeDispatch = beforeDispatch;
-                try { return ToolInvoker.Invoke(name, arguments ?? EmptyArguments(), ApprovalPreviewDepth.Value > 0).Result; }
+                try { return (await BridgeWait.On(ToolInvoker.InvokeAsync(name, arguments ?? EmptyArguments(), ApprovalPreviewDepth.Value > 0)).ConfigureAwait(false)).Result; }
                 finally { FoundationBeforeDispatch = previous; }
             }
 #endif
@@ -325,8 +333,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (string.Equals(name, "CallTool", StringComparison.Ordinal))
                 return AuditBridgeResult(audit, V4Reject("CallTool", InvalidInput("name")), disabled);
             bool issued = false;
-            try { return AuditBridgeResult(audit, ApprovedBridgeCall(name, (arguments ?? EmptyArguments()).Json.GetRawText(),
-                () => { issued = true; return call!.Invoke(ApprovalPreviewDepth.Value > 0).Result; }, beforeDispatch), disabled); }
+            try { return AuditBridgeResult(audit, await BridgeWait.On(ApprovedBridgeCallAsync(name, (arguments ?? EmptyArguments()).Json.GetRawText(),
+                async () => { issued = true; return (await BridgeWait.On(call!.InvokeAsync(ApprovalPreviewDepth.Value > 0)).ConfigureAwait(false)).Result; }, beforeDispatch)).ConfigureAwait(false), disabled); }
             catch (OperationCanceledException) when (!issued) /* swallow(privacy): typed cancellation before dispatch does not expose exception text */
             { return AuditBridgeResult(audit, V4TargetReject(name, new Error("The request was cancelled before dispatch.",
                 new CancelledDetails("tool-queue")), CurrentBehaviorTargets(name, (arguments ?? EmptyArguments()).Json)), disabled); }
@@ -369,8 +377,8 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
 #if TIA_ENGINE_HOST
-        private static readonly System.Threading.AsyncLocal<Func<CallToolResult?>?> FoundationChecks = new();
-        internal static Func<CallToolResult?>? FoundationBeforeDispatch { get => FoundationChecks.Value; set => FoundationChecks.Value = value; }
+        private static readonly System.Threading.AsyncLocal<Func<Task<CallToolResult?>>?> FoundationChecks = new();
+        internal static Func<Task<CallToolResult?>>? FoundationBeforeDispatch { get => FoundationChecks.Value; set => FoundationChecks.Value = value; }
 #endif
 
         internal static void ValidateCallerInputFiles(string tool, string arguments)
@@ -494,15 +502,19 @@ namespace TiaMcpServer.ModelContextProtocol
 
 #if !TIA_ENGINE_PORTED
         [McpServerTool(Name = "PreviewToolCall"), Description("[L0][Meta][SESSION] Validate a planned call against the target inputSchema and version gates without executing it. Returns signature, prerequisites and a worked example. No native calls.")]
+        [AsyncDispatch(nameof(PreviewToolCallAsync))]
         public static CallToolResult PreviewToolCall(
             [Description("Exact currently registered tool name.")] string name,
             [Description("Planned arguments as an object; omit for a no-argument tool.")] ToolArguments? arguments = null)
+            => PreviewToolCallAsync(name, arguments).GetAwaiter().GetResult();
+
+        internal static async Task<CallToolResult> PreviewToolCallAsync(string name, ToolArguments? arguments = null)
         {
             var args = arguments ?? EmptyArguments();
             var error = ToolInvoker.Bind(name, args, out _);
             if (error != null) error = TargetInputError(name, args, error);
             if (error != null && (error.Code != ErrorCode.InvalidArgument || CatalogView.Find(name) == null)) return V4Reject("PreviewToolCall", error);
-            var report = PreflightToolCall(name, args.Json.GetRawText());
+            var report = await BridgeWait.On(PreflightToolCallAsync(name, args.Json.GetRawText())).ConfigureAwait(false);
             if (error != null)
             {
                 report.Meta!["validationError"] = JsonSerializer.SerializeToNode(error, V4BindingJson);
@@ -520,6 +532,9 @@ namespace TiaMcpServer.ModelContextProtocol
 #endif
 
         public static ResponseStringList PreflightToolCall(string name, string argumentsJson)
+            => PreflightToolCallAsync(name, argumentsJson).GetAwaiter().GetResult();
+
+        internal static async Task<ResponseStringList> PreflightToolCallAsync(string name, string argumentsJson)
         {
             string target = (name ?? "").Trim();
             // envelope: legacy-stamp-then-verdict
@@ -605,8 +620,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (usageNotes["nativeReadsPossible"] != null) meta["nativeReadsPossible"] = usageNotes["nativeReadsPossible"]!.DeepClone();
             meta["usageTool"] = new JsonObject { ["name"] = "GetToolUsage", ["arguments"] = new JsonObject { ["toolName"] = canonical } };
 
-            bool? connected = null; string? project = null;
-            ReadSessionState(ref connected, ref project);
+            var (connected, project) = await BridgeWait.On(BridgeSessionStateAsync()).ConfigureAwait(false);
             bool needsProject = PreflightLogic.NeedsProject(op.Operation, canonical);
             bool projectBound = !string.IsNullOrWhiteSpace(project) && project != "-";
             bool? prerequisitesOk = connected == null ? (bool?)null : !needsProject || (connected == true && projectBound);
@@ -677,6 +691,20 @@ namespace TiaMcpServer.ModelContextProtocol
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0040",
             Justification = "Optional partial hooks require implicit accessibility to remain erasable.")]
         static partial void ReadSessionState(ref bool? connected, ref string? project);
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0040",
+            Justification = "Optional partial hooks require implicit accessibility to remain erasable.")]
+        static partial void ReadSessionStateAsync(ref Task<(bool? Connected, string? Project)>? pending);
+
+        private static Task<(bool? Connected, string? Project)> BridgeSessionStateAsync()
+        {
+            Task<(bool? Connected, string? Project)>? pending = null;
+            ReadSessionStateAsync(ref pending);
+            if (pending != null) return pending;
+            bool? connected = null; string? project = null;
+            ReadSessionState(ref connected, ref project);
+            return Task.FromResult((connected, project));
+        }
 
         /// <summary>Build gate (TiaMcp.Engine.Harness generate-tools-list mode): every example in ToolExamples must fit a real tool, spelled exactly.</summary>
         public static IReadOnlyList<string> ValidateToolExamples()

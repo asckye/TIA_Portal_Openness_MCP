@@ -94,6 +94,7 @@ internal static class DomainShapeProgram
             Name = name; Path = arguments.Json.GetProperty("devicePath").GetString();
             return new ToolInvocationResult(new CallToolResult { StructuredContent = new JsonObject { ["data"] = Data } }, false);
         }
+        public Task<ToolInvocationResult> InvokeAsync(string name, ToolArguments arguments, bool preview) => Task.FromResult(Invoke(name, arguments, preview));
         public Error? Bind(string name, ToolArguments arguments, out IBoundToolCall? call) => throw new NotSupportedException();
         public Error? ValidateArguments(ToolDescriptor tool, JsonElement arguments, JsonElement schema, bool typedFamiliesOnly = false) => throw new NotSupportedException();
         public McpServerTool CreateTool(ToolDescriptor tool) => throw new NotSupportedException();

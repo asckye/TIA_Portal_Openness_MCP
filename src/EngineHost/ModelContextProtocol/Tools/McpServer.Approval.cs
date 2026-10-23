@@ -110,7 +110,7 @@ namespace TiaMcpServer.ModelContextProtocol
             bool candidate = ToolBehaviorPolicy(name, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4;
             if (!HostBehavior.NeedsPrecheck(ApprovalPreviewDepth.Value > 0, ApprovalWrite(name, arguments), settings.Enabled,
                 TryDryRunDefault(name, out _) || candidate || HostBehavior.IsSingleXmlImport(name))) return null;
-            string? identity = null; ApprovalBindingIdentity(ref identity);
+            string? identity = await BridgeWait.On(BridgeApprovalIdentityAsync()).ConfigureAwait(false);
             AuditInvocation.RecordCurrentRequest(PendingApproval.Create(McpServer.InvocationHostTag, ReleaseKey, name, arguments, identity, settings.TimeoutSeconds, AuditInvocation.CurrentRequestId).PlanHash);
             CallToolResult? result = null;
             var batchRefusal = HostBehavior.BatchApplyRefusal(name, args);
@@ -127,7 +127,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     args[candidate ? "mode" : "dryRun"] = candidate ? JsonValue.Create("preview") : JsonValue.Create(true);
                 using var preview = BeginReadOnlyApprovalPreview();
                 using var audit = AuditInvocation.ReadOnlyPreview();
-                try { token.ThrowIfCancellationRequested(); result = await previewCall(args.ToJsonString()).ConfigureAwait(false); token.ThrowIfCancellationRequested(); }
+                try { token.ThrowIfCancellationRequested(); result = await BridgeWait.On(previewCall(args.ToJsonString())).ConfigureAwait(false); token.ThrowIfCancellationRequested(); }
                 catch (OperationCanceledException) /* swallow(privacy): cancellation in the read-only precheck has no issued write */
                 { result = V4Reject(name, new Error("The approval precheck was cancelled.", new CancelledDetails("approval-precheck"))); }
                 catch (Exception ex) /* swallow(privacy): preview failures are classified before a write is issued */
@@ -182,87 +182,117 @@ namespace TiaMcpServer.ModelContextProtocol
             if (ToolBehaviorPolicy(tool, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4
                 && (string?)args["mode"] != "apply") return null;
             var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
-            string? identity = null;
-            ApprovalBindingIdentity(ref identity);
+            string? identity = await BridgeWait.On(BridgeApprovalIdentityAsync()).ConfigureAwait(false);
             var pending = PendingApproval.Create(McpServer.InvocationHostTag, ReleaseKey, tool, arguments, identity, settings.TimeoutSeconds, TiaOpenness.Shared.AuditInvocation.CurrentRequestId);
             TiaOpenness.Shared.AuditInvocation.RecordCurrentRequest(pending.PlanHash);
-            if (ApprovalWaitOverride.Value is { } overrideWait) return await overrideWait(pending, settings, token).ConfigureAwait(false);
+            if (ApprovalWaitOverride.Value is { } overrideWait) return await BridgeWait.On(overrideWait(pending, settings, token)).ConfigureAwait(false);
             if (settings.Enabled) ApprovalWaitSignal("begin", settings.TimeoutSeconds);
-            try { return await ApprovalClient.Wait(pending, settings, token).ConfigureAwait(false); }
+            try { return await BridgeWait.On(ApprovalClient.Wait(pending, settings, token)).ConfigureAwait(false); }
             finally { if (settings.Enabled) ApprovalWaitSignal("end", settings.TimeoutSeconds); }
         }
         static partial void ApprovalWaitSignal(string phase, int seconds);
         static partial void ApprovalBindingIdentity(ref string? identity);
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0040",
+            Justification = "Optional partial hooks require implicit accessibility to remain erasable.")]
+        static partial void ApprovalBindingIdentityAsync(ref Task<string?>? pending);
+        private static Task<string?> BridgeApprovalIdentityAsync()
+        {
+            Task<string?>? pending = null;
+            ApprovalBindingIdentityAsync(ref pending);
+            if (pending != null) return pending;
+            string? identity = null; ApprovalBindingIdentity(ref identity);
+            return Task.FromResult(identity);
+        }
         internal static CallToolResult ApprovalRefusal(ApprovalOutcome approval)
-            => FinishApproval(V4Reject(approval.Request.Tool, new Error(approval.Request.Tool == "SaveExportContent"
+            => ApprovalRefusalAsync(approval).GetAwaiter().GetResult();
+        internal static Task<CallToolResult> ApprovalRefusalAsync(ApprovalOutcome approval)
+            => FinishApprovalAsync(V4Reject(approval.Request.Tool, new Error(approval.Request.Tool == "SaveExportContent"
                 ? "MCP cannot write Workbench approval settings." : "Workbench confirmation is required before this write.",
                 approval.Reason == "cancelled" ? (ErrorDetails)new CancelledDetails("approval-wait")
                     : new ConfirmationRequiredDetails(approval.Reason!, approval.Request.PlanHash, approval.Request.RequestId))), approval);
         internal static CallToolResult ChangedApprovalRefusal(ApprovalOutcome approval)
+            => ChangedApprovalRefusalAsync(approval).GetAwaiter().GetResult();
+        internal static async Task<CallToolResult> ChangedApprovalRefusalAsync(ApprovalOutcome approval)
         {
-            ApprovalClient.Complete(approval, "rejected-before-operation").GetAwaiter().GetResult();
-            return ApprovalRefusal(new ApprovalOutcome(approval.Request, false, "denied"));
+            await BridgeWait.On(ApprovalClient.Complete(approval, "rejected-before-operation")).ConfigureAwait(false);
+            return await BridgeWait.On(ApprovalRefusalAsync(new ApprovalOutcome(approval.Request, false, "denied"))).ConfigureAwait(false);
         }
         internal static CallToolResult FinishApproval(CallToolResult result, ApprovalOutcome? approval, bool disabled = false, string? completion = null)
+            => FinishApprovalAsync(result, approval, disabled, completion).GetAwaiter().GetResult();
+        internal static async Task<CallToolResult> FinishApprovalAsync(CallToolResult result, ApprovalOutcome? approval, bool disabled = false, string? completion = null)
         {
             result = McpHints.WithRecovery(result);
             if (approval == null && !disabled) return result;
             var body = ResultBody(result);
             if (body == null)
             {
-                if (approval != null) ApprovalClient.Complete(approval, completion ?? "unknown").GetAwaiter().GetResult();
+                if (approval != null) await BridgeWait.On(ApprovalClient.Complete(approval, completion ?? "unknown")).ConfigureAwait(false);
                 return result;
             }
             body = ApprovalResult.Decorate(body, disabled || approval?.Disabled == true, approval?.Request.RequestId);
-            if (approval != null) ApprovalClient.Complete(approval, completion ?? (string?)body["meta"]?["outcome"] ?? "unknown").GetAwaiter().GetResult();
+            if (approval != null) await BridgeWait.On(ApprovalClient.Complete(approval, completion ?? (string?)body["meta"]?["outcome"] ?? "unknown")).ConfigureAwait(false);
             return new CallToolResult { IsError = result.IsError, StructuredContent = body,
                 Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
         }
-        internal static CallToolResult ApprovedBridgeCall(string name, string arguments, Func<CallToolResult> invoke,
-            Func<CallToolResult?>? beforeDispatch = null)
+        internal static async Task<CallToolResult> ApprovedBridgeCallAsync(string name, string arguments, Func<Task<CallToolResult>> invoke,
+            Func<Task<CallToolResult?>>? beforeDispatch = null)
         {
             // Target approval must finish before acquiring its lane. The identity
             // check and audit start belong inside that lane, immediately before dispatch.
-            var refusal = McpApprovalContext.Value ? PrecheckBeforeApproval(name, arguments, previewArgs => Task.FromResult(CallToolCore(name,
-                new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.Deserialize<JsonElement>(previewArgs)))), McpDispatchCancellation.Value).GetAwaiter().GetResult() : SessionPrecheckRefusal(name);
+            var refusal = McpApprovalContext.Value ? await BridgeWait.On(PrecheckBeforeApproval(name, arguments, previewArgs => CallToolCoreAsync(name,
+                new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.Deserialize<JsonElement>(previewArgs))), McpDispatchCancellation.Value)).ConfigureAwait(false) : SessionPrecheckRefusal(name);
             if (refusal != null) return refusal;
             var approval = McpApprovalContext.Value && ApprovalPreviewDepth.Value == 0
-                ? WaitForApproval(name, arguments, McpDispatchCancellation.Value).GetAwaiter().GetResult() : null;
-            if (approval?.Reason != null) return ApprovalRefusal(approval);
-            IDisposable? lane = null;
-            EnterTargetLane(beforeDispatch == null ? name : "GetSessionState", arguments, ref lane);
-            using var dispatchLane = lane;
-            IDisposable? targetLane = null;
-            if (beforeDispatch != null) EnterTargetLane(name, arguments, ref targetLane);
-            using var boundedTargetLane = targetLane;
+                ? await BridgeWait.On(WaitForApproval(name, arguments, McpDispatchCancellation.Value)).ConfigureAwait(false) : null;
+            if (approval?.Reason != null) return await BridgeWait.On(ApprovalRefusalAsync(approval)).ConfigureAwait(false);
+            using var dispatchLane = await BridgeWait.On(BridgeTargetLaneAsync(beforeDispatch == null ? name : "GetSessionState", arguments)).ConfigureAwait(false);
+            ActivateTargetLane(dispatchLane);
+            using var boundedTargetLane = beforeDispatch == null ? null
+                : await BridgeWait.On(BridgeTargetLaneAsync(name, arguments)).ConfigureAwait(false);
+            ActivateTargetLane(boundedTargetLane);
             var fenced = GenerationFenceRefusal(name, arguments, dispatched: true);
-            if (fenced != null) return FinishApproval(fenced, approval);
+            if (fenced != null) return await BridgeWait.On(FinishApprovalAsync(fenced, approval)).ConfigureAwait(false);
             var reset = SessionPrecheckRefusal(name);
-            if (reset != null) return FinishApproval(reset, approval);
-            if (approval != null && !ApprovalStillMatches(approval, arguments)) return ChangedApprovalRefusal(approval);
-            var rejection = beforeDispatch?.Invoke();
-            if (rejection != null) return FinishApproval(rejection, approval);
+            if (reset != null) return await BridgeWait.On(FinishApprovalAsync(reset, approval)).ConfigureAwait(false);
+            if (approval != null && !await BridgeWait.On(ApprovalStillMatchesAsync(approval, arguments)).ConfigureAwait(false))
+                return await BridgeWait.On(ChangedApprovalRefusalAsync(approval)).ConfigureAwait(false);
+            var rejection = beforeDispatch == null ? null : await BridgeWait.On(beforeDispatch()).ConfigureAwait(false);
+            if (rejection != null) return await BridgeWait.On(FinishApprovalAsync(rejection, approval)).ConfigureAwait(false);
             try { ValidateCallerInputFiles(name, arguments); }
-            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error) { return FinishApproval(TargetFailure(name, error, false), approval); }
-            if (ApprovalPreviewDepth.Value > 0) return FinishApproval(invoke(), null,
-                ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled);
+            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
+            { return await BridgeWait.On(FinishApprovalAsync(TargetFailure(name, error, false), approval)).ConfigureAwait(false); }
+            if (ApprovalPreviewDepth.Value > 0) return await BridgeWait.On(FinishApprovalAsync(await BridgeWait.On(invoke()).ConfigureAwait(false), null,
+                ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled)).ConfigureAwait(false);
             TiaOpenness.Shared.AuditInvocation.StartCurrent();
             using var nativeCalls = InvocationJournal.BeginNativeCallScope();
             try
             {
-                var invoked = invoke();
-                return FinishApproval(ObserveSessionOutcome(name, invoked, ApprovalWrite(name, arguments), nativeCalls.NativeCallIssued), approval,
-                    McpApprovalContext.Value && ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled);
+                var invoked = await BridgeWait.On(invoke()).ConfigureAwait(false);
+                return await BridgeWait.On(FinishApprovalAsync(ObserveSessionOutcome(name, invoked, ApprovalWrite(name, arguments), nativeCalls.NativeCallIssued), approval,
+                    McpApprovalContext.Value && ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled)).ConfigureAwait(false);
             }
-            catch { if (approval != null) ApprovalClient.Complete(approval, "unknown").GetAwaiter().GetResult(); throw; }
+            catch { if (approval != null) await BridgeWait.On(ApprovalClient.Complete(approval, "unknown")).ConfigureAwait(false); throw; }
         }
-        static partial void EnterTargetLane(string name, string arguments, ref IDisposable? lane);
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0040",
+            Justification = "Optional partial hooks require implicit accessibility to remain erasable.")]
+        static partial void AcquireTargetLaneAsync(string name, string arguments, ref Task<IDisposable?>? pending);
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0040",
+            Justification = "Optional partial hooks require implicit accessibility to remain erasable.")]
+        static partial void ActivateTargetLane(IDisposable? lane);
+        private static Task<IDisposable?> BridgeTargetLaneAsync(string name, string arguments)
+        {
+            Task<IDisposable?>? pending = null;
+            AcquireTargetLaneAsync(name, arguments, ref pending);
+            return pending ?? Task.FromResult<IDisposable?>(null);
+        }
         internal static bool ApprovalStillMatches(ApprovalOutcome approval, string arguments)
+            => ApprovalStillMatchesAsync(approval, arguments).GetAwaiter().GetResult();
+        internal static async Task<bool> ApprovalStillMatchesAsync(ApprovalOutcome approval, string arguments)
         {
             if (approval.Disabled) return true;
             try
             {
-                string? identity = null; ApprovalBindingIdentity(ref identity);
+                string? identity = await BridgeWait.On(BridgeApprovalIdentityAsync()).ConfigureAwait(false);
                 return PendingApproval.Create(McpServer.InvocationHostTag, ReleaseKey, approval.Request.Tool, arguments, identity,
                     approval.Request.TimeoutSeconds).ArgumentDigest == approval.Request.ArgumentDigest;
             }

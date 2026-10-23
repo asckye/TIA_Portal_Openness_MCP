@@ -286,21 +286,28 @@ namespace TiaMcpServer.ModelContextProtocol
                 SessionFaults.GetValue(Worker.SessionKey, _ => new SessionFault()).Unknown = true;
         }
         static partial void ApprovalBindingIdentity(ref string? identity)
+            => identity = ReadApprovalIdentityAsync().GetAwaiter().GetResult();
+        static partial void ApprovalBindingIdentityAsync(ref Task<string?>? pending) => pending = ReadApprovalIdentityAsync();
+        private static async Task<string?> ReadApprovalIdentityAsync()
         {
-            _ = Worker.Status(WorkerDispatchCancellation).GetAwaiter().GetResult();
-            identity = Worker.Binding?.ToJsonString();
+            _ = await Worker.Status(WorkerDispatchCancellation).ConfigureAwait(false);
+            return Worker.Binding?.ToJsonString();
         }
         internal static void ValidateRuntimeTool(string name, string? description, string? operation = null)
+            => ValidateRuntimeToolAsync(name, description, operation).GetAwaiter().GetResult();
+        internal static async Task ValidateRuntimeToolAsync(string name, string? description, string? operation = null)
         {
             if (ToolTaxonomy.UsesOpennessLane(name) && !(TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
                 && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name == "F04"))
-                _ = Worker.Status(WorkerDispatchCancellation).GetAwaiter().GetResult();
+                _ = await Worker.Status(WorkerDispatchCancellation).ConfigureAwait(false);
         }
         static partial void ReadSessionState(ref bool? connected, ref string? project)
+            => (connected, project) = ReadBridgeSessionStateAsync().GetAwaiter().GetResult();
+        static partial void ReadSessionStateAsync(ref Task<(bool? Connected, string? Project)>? pending) => pending = ReadBridgeSessionStateAsync();
+        private static async Task<(bool? Connected, string? Project)> ReadBridgeSessionStateAsync()
         {
-            var status = Worker.Status(CancellationToken.None).GetAwaiter().GetResult();
-            connected = (bool?)status["session"]?["isConnected"];
-            project = (string?)status["session"]?["project"];
+            var status = await Worker.Status(CancellationToken.None).ConfigureAwait(false);
+            return ((bool?)status["session"]?["isConnected"], (string?)status["session"]?["project"]);
         }
     }
 }

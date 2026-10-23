@@ -372,6 +372,7 @@ public sealed class WorkbenchControlHostTests
         public Error? Bind(string name, TiaMcp.Logic.V4.Inputs.ToolArguments arguments, out enginehost::TiaMcpServer.ModelContextProtocol.IBoundToolCall? invocation)
             => throw new Exception("Batch binding is forbidden.");
         public enginehost::TiaMcpServer.ModelContextProtocol.ToolInvocationResult Invoke(string name, TiaMcp.Logic.V4.Inputs.ToolArguments arguments, bool preview) => throw new Exception("Batch dispatch is forbidden.");
+        public Task<enginehost::TiaMcpServer.ModelContextProtocol.ToolInvocationResult> InvokeAsync(string name, TiaMcp.Logic.V4.Inputs.ToolArguments arguments, bool preview) => throw new Exception("Batch dispatch is forbidden.");
         public Error? ValidateArguments(Descriptor tool, JsonElement arguments, JsonElement schema, bool typedFamiliesOnly = false) => throw new Exception("Batch validation is forbidden.");
         public McpServerTool CreateTool(Descriptor descriptor) => throw new Exception("Batch factory is forbidden.");
     }

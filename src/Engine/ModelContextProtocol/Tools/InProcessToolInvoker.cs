@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
+using System.Threading.Tasks;
 using ModelContextProtocol.Server;
 using TiaMcp.Logic.V4;
 using TiaMcp.Logic.V4.Inputs;
@@ -27,6 +28,9 @@ namespace TiaMcpServer.ModelContextProtocol
             return error == null ? call!.Invoke(preview) : new ToolInvocationResult(McpServer.V4Reject(name, error), false);
         }
 
+        public Task<ToolInvocationResult> InvokeAsync(string name, ToolArguments arguments, bool preview)
+            => Task.FromResult(Invoke(name, arguments, preview));
+
         public Error? ValidateArguments(ToolDescriptor tool, JsonElement arguments, JsonElement schema, bool typedFamiliesOnly = false)
         {
             var method = catalog.Methods.First(pair => pair.Key == tool.Name).Value;
@@ -41,6 +45,7 @@ namespace TiaMcpServer.ModelContextProtocol
             private readonly MethodInfo method;
             private readonly object?[] arguments;
             internal BoundCall(MethodInfo method, object?[] arguments) { this.method = method; this.arguments = arguments; }
+            public Task<ToolInvocationResult> InvokeAsync(bool preview) => Task.FromResult(Invoke(preview));
             public ToolInvocationResult Invoke(bool preview)
             {
                 using var previewScope = preview ? McpServer.BeginReadOnlyApprovalPreview() : null;

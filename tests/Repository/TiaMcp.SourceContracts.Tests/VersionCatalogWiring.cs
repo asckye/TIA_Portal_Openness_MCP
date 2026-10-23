@@ -44,16 +44,22 @@ public sealed partial class VersionCatalogWiring
         Assert.True(((version < binding_check) && (binding_check < target) && (target < Find(invoke, "method.Invoke(target, call)"))));
         Assert.Contains("AvailableToolMethods(((ToolCatalog)CatalogView).Methods, includeUnavailable)", Sources.Member("AllToolMethods", owner: "McpServer"), StringComparison.Ordinal);
         Assert.Contains("includeUnavailable || VersionToolProblem(kv.Key).Length == 0", Sources.Member("AvailableToolMethods"), StringComparison.Ordinal);
-        Assert.Contains("=> CallToolCore(name, arguments);", Sources.Member("CallTool", tool: true), StringComparison.Ordinal);
-        var bridge = Sources.Member("CallToolCore");
+        Assert.Equal("=> CallToolAsync(name, arguments).GetAwaiter().GetResult();",
+            Sources.Member("CallTool", tool: true, bodyOnly: true).Trim());
+        Assert.Equal("=> CallToolCoreAsync(name, arguments);", Sources.Member("CallToolAsync", bodyOnly: true).Trim());
+        var bridge = Sources.Member("CallToolCoreAsync");
         var bridgeBinding = Find(bridge, "ToolInvoker.Bind(name, arguments ?? EmptyArguments(), out var call)");
         var refusal = Find(bridge, "if (error != null)");
-        var approval = Find(bridge, "ApprovedBridgeCall");
-        var dispatch = Find(bridge, "call!.Invoke(ApprovalPreviewDepth.Value > 0)");
+        var approval = Find(bridge, "ApprovedBridgeCallAsync");
+        var dispatch = Find(bridge, "call!.InvokeAsync(ApprovalPreviewDepth.Value > 0)");
         Assert.True(((bridgeBinding < refusal) && (refusal < approval) && (approval < dispatch)));
         Assert.Contains("return AuditBridgeResult(audit, rejected, disabled);", bridge[bridgeBinding..approval], StringComparison.Ordinal);
-        Assert.Contains("ToolInvoker.Bind", Sources.Member("PreviewToolCall", tool: true), StringComparison.Ordinal);
-        Assert.Contains("versionAvailable", Sources.Member("PreflightToolCall", signature: "string argumentsJson)"), StringComparison.Ordinal);
+        Assert.Equal("=> PreviewToolCallAsync(name, arguments).GetAwaiter().GetResult();",
+            Sources.Member("PreviewToolCall", tool: true, bodyOnly: true).Trim());
+        Assert.Contains("ToolInvoker.Bind", Sources.Member("PreviewToolCallAsync"), StringComparison.Ordinal);
+        Assert.Equal("=> PreflightToolCallAsync(name, argumentsJson).GetAwaiter().GetResult();",
+            Sources.Member("PreflightToolCall", signature: "string argumentsJson)", bodyOnly: true).Trim());
+        Assert.Contains("versionAvailable", Sources.Member("PreflightToolCallAsync", signature: "string argumentsJson)"), StringComparison.Ordinal);
     }
 
     [Fact]

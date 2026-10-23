@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading.Tasks;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaMcp.Logic.V4;
@@ -21,9 +22,13 @@ namespace TiaMcpServer.ModelContextProtocol
 
 #if !TIA_ENGINE_PORTED
         [McpServerTool(Name = "RunReadOnlyToolBatch"), Description("[L2][Meta][READ] Sequentially invoke 1..50 explicit [READ] tools or GetSessionState. Rejects nested orchestration and native cross-reference queries. Returns the target results in input order. An optional expectedProject binds each call to the exact project. External edits can occur; this is not a consistent native snapshot.")]
+        [AsyncDispatch(nameof(ReadToolBatchAsync))]
         public static CallToolResult ReadToolBatch(
             [Description("Ordered calls with name and an arguments object; 1..50 operations.")] ToolCall[] operations,
             [Description("Optional exact bound project name.")] string expectedProject = "")
+            => ReadToolBatchAsync(operations, expectedProject).GetAwaiter().GetResult();
+
+        internal static async Task<CallToolResult> ReadToolBatchAsync(ToolCall[] operations, string expectedProject = "")
         {
             const string tool = "RunReadOnlyToolBatch";
             var error = ValidateBatch(operations, false, out var validated);
@@ -34,12 +39,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 CallToolResult result;
                 try
                 {
-                    result = CallToolCore(call.Name, call.Arguments, expectedProject.Length == 0 ? null : () =>
+                    result = await BridgeWait.On(CallToolCoreAsync(call.Name, call.Arguments, expectedProject.Length == 0 ? null : async () =>
                     {
-                        try { BatchState(expectedProject); return null; }
+                        try { await BridgeWait.On(BatchStateAsync(expectedProject)).ConfigureAwait(false); return null; }
                         catch (Exception) /* swallow(privacy): retain the original batch identity rejection before target dispatch */
                         { return V4Reject(tool, new Error("Batch project identity is unavailable or changed.", new PreconditionFailedDetails("batch-identity", expectedProject))); }
-                    });
+                    })).ConfigureAwait(false);
                 }
                 catch (Exception) /* swallow(privacy): preserve the explicit batch stage and outcome without exposing native exception details */ { result = V4Reject(tool, new Error("Batch project identity is unavailable or changed.", new PreconditionFailedDetails("batch-identity", expectedProject))); }
                 rows.Add(BatchRow(rows.Count, call.Name, result));
@@ -50,9 +55,13 @@ namespace TiaMcpServer.ModelContextProtocol
 
 #if !TIA_ENGINE_PORTED
         [McpServerTool(Name = "PreviewToolBatch"), Description("[L2][Meta][READ] Preview 1..50 explicit [WRITE] tools with a bool dryRun parameter. Forces dryRun=true and preserves confirmation flags. expectedProject must exactly match the connected project. Returns a single-use 10-minute previewToken bound to ordered calls, connection identity and previews. No writes, atomic rollback or complete native state coverage.")]
+        [AsyncDispatch(nameof(PreviewToolBatchAsync))]
         public static CallToolResult PreviewToolBatch(
             [Description("Ordered calls with name and an arguments object; 1..50 operations.")] ToolCall[] operations,
             [Description("Exact bound project name.")] string expectedProject)
+            => PreviewToolBatchAsync(operations, expectedProject).GetAwaiter().GetResult();
+
+        internal static async Task<CallToolResult> PreviewToolBatchAsync(ToolCall[] operations, string expectedProject)
         {
             const string tool = "PreviewToolBatch";
             var error = ValidateBatch(operations, true, out var validated);
@@ -60,12 +69,12 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 using var approvalPreview = BeginReadOnlyApprovalPreview();
-                var plan = new BatchPlanStore.Plan { Project = expectedProject, State = BatchState(expectedProject),
+                var plan = new BatchPlanStore.Plan { Project = expectedProject, State = await BridgeWait.On(BatchStateAsync(expectedProject)).ConfigureAwait(false),
                     Operations = JsonNode.Parse(V4Json.Serialize(validated))!.AsArray() };
                 var rows = new JsonArray();
                 foreach (var call in validated!)
                 {
-                    var result = CallTool(call.Name, call.Arguments);
+                    var result = await BridgeWait.On(CallToolAsync(call.Name, call.Arguments)).ConfigureAwait(false);
                     rows.Add(BatchRow(rows.Count, call.Name, result));
                     if (ResultSucceeded(ResultBody(result)) != true)
                     {
@@ -77,7 +86,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                     plan.Previews.Add(ResultBody(result));
                 }
-                if (BatchState(expectedProject) != plan.State)
+                if (await BridgeWait.On(BatchStateAsync(expectedProject)).ConfigureAwait(false) != plan.State)
                     return V4Reject(tool, new Error("Connection changed during preview.", new PreconditionFailedDetails("batch-identity", expectedProject)));
                 string previewToken = BatchPlans.Add(plan, DateTime.UtcNow);
                 return V4Result(tool, new JsonObject { ["token"] = previewToken, ["expiresUtc"] = V4Json.Timestamp(new DateTimeOffset(plan.Expires.ToUniversalTime())),
@@ -90,7 +99,11 @@ namespace TiaMcpServer.ModelContextProtocol
 
 #if !TIA_ENGINE_PORTED
         [McpServerTool(Name = "ApplyToolBatch"), Description("[L2][Meta][WRITE] Consume a PreviewToolBatch previewToken once. Recheck project/session/process identity and all stored previews before the first write. Executes exact stored ordered calls with dryRun=false; stops on failure or unknown and marks the rest NOT_EXECUTED. Earlier writes remain. No transaction, rollback or extra save/compile/download.")]
+        [AsyncDispatch(nameof(ApplyToolBatchAsync))]
         public static CallToolResult ApplyToolBatch([Description("Single-use previewToken from PreviewToolBatch; expires after 10 minutes.")] string previewToken)
+            => ApplyToolBatchAsync(previewToken).GetAwaiter().GetResult();
+
+        internal static async Task<CallToolResult> ApplyToolBatchAsync(string previewToken)
         {
             const string tool = "ApplyToolBatch";
             BatchPlanStore.Plan plan;
@@ -103,11 +116,11 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 using var approvalPreview = BeginReadOnlyApprovalPreview();
-                if (BatchState(plan.Project) != plan.State) return V4Reject(tool, new Error("Batch identity changed.", new PlanStaleDetails(null, "identity", previewToken)));
+                if (await BridgeWait.On(BatchStateAsync(plan.Project)).ConfigureAwait(false) != plan.State) return V4Reject(tool, new Error("Batch identity changed.", new PlanStaleDetails(null, "identity", previewToken)));
                 int index = 0;
                 foreach (var op in plan.Operations.OfType<JsonObject>())
                 {
-                    var result = CallTool((string)op["name"]!, new ToolArguments(JsonSerializer.SerializeToElement(op["arguments"])));
+                    var result = await BridgeWait.On(CallToolAsync((string)op["name"]!, new ToolArguments(JsonSerializer.SerializeToElement(op["arguments"])))).ConfigureAwait(false);
                     if (ResultSucceeded(ResultBody(result)) != true || StablePreview(ResultBody(result)) != StablePreview(plan.Previews[index++]))
                         return V4Reject(tool, new Error("A stored preview changed.", new PlanStaleDetails(null, "preview", previewToken)));
                 }
@@ -129,12 +142,12 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         var args = (JsonObject)op["arguments"]!.DeepClone(); args["dryRun"] = false;
                         issued = true;
-                        result = CallToolCore(name, new ToolArguments(JsonSerializer.SerializeToElement(args)), () =>
+                        result = await BridgeWait.On(CallToolCoreAsync(name, new ToolArguments(JsonSerializer.SerializeToElement(args)), async () =>
                         {
-                            try { if (BatchState(plan.Project) == plan.State) return null; }
+                            try { if (await BridgeWait.On(BatchStateAsync(plan.Project)).ConfigureAwait(false) == plan.State) return null; }
                             catch (Exception) /* swallow(privacy): an unavailable binding refuses this item before dispatch */ { }
                             return V4Reject(name, new Error("Batch identity changed before this write.", new PreconditionFailedDetails("batch-identity", plan.Project)));
-                        });
+                        })).ConfigureAwait(false);
                         if (ResultSucceeded(ResultBody(result)) != true) cause = rows.Count;
                     }
                     catch (Exception) /* swallow(privacy): preserve the explicit batch stage and outcome without exposing native exception details */
@@ -229,14 +242,13 @@ namespace TiaMcpServer.ModelContextProtocol
             return V4Result(tool, data, causeError,
                 write ? Outcome.Failed : Outcome.ReadFailed, write ? Execution.Completed : Execution.ReadOnly, Completeness.None, current: current);
         }
-        private static string BatchState(string project)
+        private static async Task<string> BatchStateAsync(string project)
         {
-            IDisposable? lane = null;
-            EnterTargetLane("GetSessionState", "{}", ref lane);
-            using var stateLane = lane;
+            using var stateLane = await BridgeWait.On(BridgeTargetLaneAsync("GetSessionState", "{}")).ConfigureAwait(false);
+            ActivateTargetLane(stateLane);
             if (string.IsNullOrWhiteSpace(project)) throw new ArgumentException("expectedProject is required.");
 #if TIA_ENGINE_HOST
-            var status = Worker.Status(System.Threading.CancellationToken.None).GetAwaiter().GetResult();
+            var status = await BridgeWait.On(Worker.Status(System.Threading.CancellationToken.None)).ConfigureAwait(false);
             var state = status["session"];
             if ((bool?)state?["isConnected"] != true || !string.Equals((string?)state?["project"], project, StringComparison.Ordinal))
                 throw new InvalidOperationException("Expected project is not connected: " + project);
