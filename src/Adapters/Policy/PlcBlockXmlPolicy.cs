@@ -23,6 +23,13 @@ namespace TiaMcp.Adapters
             Warnings=new[]{"V14 SP1 SCL XML contains the block interface only, not the SCL implementation. It is not a complete program backup and cannot restore or replace the complete program."} };
         internal static PlcBlockXmlCapability Export(string release,string language) =>
             release=="14sp1" && string.Equals(language,"SCL",StringComparison.OrdinalIgnoreCase) ? InterfaceOnly() : new PlcBlockXmlCapability();
+        // API audit 2026-10-19 F5: a know-how-protected block exports only its public interface ("Exporting blocks with know-how
+        // protection") and cannot be imported again ("Basic principles of importing/exporting").
+        internal static PlcBlockXmlCapability Export(string release,string language,bool knowHowProtected) =>
+            knowHowProtected ? new PlcBlockXmlCapability {
+                Content="interface-only",FullProgramRestoreSupported=false,ImportAllowed=false,
+                Warnings=new[]{"The block is know-how protected: its XML holds only the public interface, not the protected code. It is not a backup and cannot be imported again."} }
+            : Export(release,language);
         internal static PlcBlockXmlCapability Import(string release,string file)
         {
             var settings=new XmlReaderSettings { DtdProcessing=DtdProcessing.Prohibit,XmlResolver=null,MaxCharactersInDocument=64*1024*1024 };

@@ -429,7 +429,9 @@ namespace TiaMcp.Adapters.Native.Plc
                     ["referenceName"] = r.ReferenceName,
                     ["referencePath"] = r.ReferencePath,
                     ["referenceType"] = r.ReferenceType,
-                    ["access"] = r.Access
+                    ["access"] = r.Access,
+                    ["locationAddress"] = r.LocationAddress,
+                    ["locationTypeName"] = r.LocationTypeName
                 });
             }
             return arr;
@@ -516,6 +518,12 @@ namespace TiaMcp.Adapters.Native.Plc
             {
                 // The service belongs to tags/constants, not the table itself. Any failed child invalidates the aggregate.
                 var typed = table as global::Siemens.Engineering.SW.Tags.PlcTagTable ?? throw new NotSupportedException("Expected PlcTagTable.");
+                // API audit 2026-10-19 F2: Delete() also removes the table's user constants, and Siemens does not list PlcUserConstant
+                // among the CrossReferenceService objects ("Accessing the cross-reference service"), so their references are not
+                // covered. A table that holds user constants never reports a complete aggregate.
+                int userConstants = PlcGroupOperations.Items(typed.UserConstants).Count();
+                if (userConstants != 0)
+                { reason = "Tag table cross-reference result incomplete: " + userConstants + " user constant(s) are not covered by CrossReferenceService; no native query was made."; return null; }
                 var items = new List<PlcCrossReference>();
                 var targets = PlcGroupOperations.Items(PlcOrganisationPrimitives.Tags(typed)).Concat(PlcGroupOperations.Items(PlcOrganisationPrimitives.SystemConstants(typed)));
                 foreach (IEngineeringServiceProvider target in targets)
@@ -600,10 +608,17 @@ namespace TiaMcp.Adapters.Native.Plc
 
         public HardwareAddressingReply ManagePlcUserGroup(string softwarePath, string family, string groupPath, string action, string newName = "", bool dryRun = true)
             => _session.RunHmiStepTool("ManagePlcUserGroup", meta => {
+                // Emptiness covers every documented object composition of the group (API audit 2026-10-19 F3, F19):
+                // PlcTypeGroup.Documents (V20/V21) and PlcWatchAndForceTableGroup.ForceTables.
                 var shape = family switch {
-                    "blocks" => ("BlockGroup", "Blocks"), "types" => ("TypeGroup", "Types"),
+                    "blocks" => ("BlockGroup", "Blocks"),
+#if PLC_DOCUMENT_EXPORT
+                    "types" => ("TypeGroup", "Types,Documents"),
+#else
+                    "types" => ("TypeGroup", "Types"),
+#endif
                     "tags" => ("TagTableGroup", "TagTables"), "technology" => ("TechnologicalObjectGroup", "TechnologicalObjects"),
-                    "watchTables" => ("WatchAndForceTableGroup", "WatchTables"), "externalSources" => ("ExternalSourceGroup", "ExternalSources"),
+                    "watchTables" => ("WatchAndForceTableGroup", "WatchTables,ForceTables"), "externalSources" => ("ExternalSourceGroup", "ExternalSources"),
                     _ => throw new ArgumentException("family must be blocks, types, tags, technology, watchTables or externalSources.") };
                 PlcGroupOperations.Parts(groupPath);
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
@@ -622,7 +637,11 @@ namespace TiaMcp.Adapters.Native.Plc
         private static Dictionary<string, object?> UserGroupRow(object group) => group switch
         {
             global::Siemens.Engineering.SW.Blocks.PlcBlockUserGroup b => new Dictionary<string, object?> { ["name"] = PlcOrganisationPrimitives.Name(b), ["groupClass"] = b.GetType().Name, ["blocks"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Blocks(b)), ["groups"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Groups(b)) },
+#if PLC_DOCUMENT_EXPORT
+            global::Siemens.Engineering.SW.Types.PlcTypeUserGroup ty => new Dictionary<string, object?> { ["name"] = PlcOrganisationPrimitives.Name(ty), ["groupClass"] = ty.GetType().Name, ["types"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Types(ty)), ["documents"] = PlcGroupOperations.Items(ty.Documents).Count(), ["groups"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Groups(ty)) },
+#else
             global::Siemens.Engineering.SW.Types.PlcTypeUserGroup ty => new Dictionary<string, object?> { ["name"] = PlcOrganisationPrimitives.Name(ty), ["groupClass"] = ty.GetType().Name, ["types"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Types(ty)), ["groups"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Groups(ty)) },
+#endif
             global::Siemens.Engineering.SW.Tags.PlcTagTableUserGroup tg => new Dictionary<string, object?> { ["name"] = PlcOrganisationPrimitives.Name(tg), ["groupClass"] = tg.GetType().Name, ["tagTables"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.TagTables(tg)), ["groups"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Groups(tg)) },
 #if PLC_SOFTWARE_PROTECTION
             global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableUserGroup w => new Dictionary<string, object?> { ["name"] = PlcOrganisationPrimitives.Name(w), ["groupClass"] = w.GetType().Name, ["watchTables"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.WatchTables(w)), ["forceTables"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.ForceTables(w)), ["groups"] = PlcOrganisationPrimitives.Count(PlcOrganisationPrimitives.Groups(w)) },
@@ -684,16 +703,23 @@ namespace TiaMcp.Adapters.Native.Plc
                 throw new PlcSoftwareException("NotFound", $"Block '{blockName}' not found in '{softwarePath}'");
             }
 
-            // Siemens SIMATIC SD import recreates OBs as cyclic OBs with a new
-            // number. Do not delete an original OB through this generic move route.
+            // An OB's type, number and event assignment are not verified to survive a delete/import round trip.
+            // Do not delete an original OB through this generic move route.
             if (block is OB)
             {
                 var existingGroup = _session.GetPlcBlockGroupByPath(softwarePath, targetGroupPath);
                 if (existingGroup != null && ReferenceEquals(PlcOrganisationPrimitives.Parent(block), existingGroup))
                     return $"Block '{blockName}' already in group '{targetGroupPath}' (no move needed)";
                 throw new PlcSoftwareException("NotSupportedOnVersion",
-                    "Moving organization blocks by export/delete/import is disabled: SIMATIC SD import does not preserve OB type/number. Move this OB in TIA Portal.");
+                    "Moving organization blocks by export/delete/import is disabled: the OB type, number and event assignment are not verified to survive the round trip. Move this OB in TIA Portal.");
             }
+
+            // API audit 2026-10-19 F22: the round trip deletes the source block. A know-how-protected block exports only its public
+            // interface and cannot be imported again ("Exporting blocks with know-how protection", "Basic principles of
+            // importing/exporting"), and only consistent blocks export ("Exporting blocks"). Both are refused before any change.
+            var refusal = PlcMovePolicy.Refusal(block.IsKnowHowProtected, block.IsConsistent);
+            if (refusal != null) throw new AdapterPreconditionException(refusal, "blockName", false);
+            int? numberBefore = PlcMovePolicy.Number(((IEngineeringObject)block).GetAttribute("Number"));
 
             // 2) ensure the target group exists
             var targetGroup = autoCreateGroup
@@ -714,66 +740,34 @@ namespace TiaMcp.Adapters.Native.Plc
                 throw new PlcSoftwareException("InvalidParams",
                     $"Target group already contains '{blockName}'; relocation never overwrites another block.");
 
-            // 3) export -> delete -> import into target group (no native reparent)
+            // 3) export -> delete -> import into target group (no native reparent). Only SimaticML XML is used: it carries the
+            // block number, while SIMATIC SD documents do not store it and TIA assigns a new number on import (STEP 7 help V20,
+            // "Exporting and importing blocks in SIMATIC SD format"). The recovery export includes default values (WithDefaults).
             var tempDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia_mcp_move", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
-            string method;
+            const string method = "xml(SimaticML)";
             bool moveVerified = false;
+            int? numberAfter = null;
             try
             {
-                bool usedDocs;
-#if PLC_DOCUMENT_EXPORT
-                try
+                var xml = Path.Combine(tempDir, blockName + ".xml");
+                PlcOrganisationPrimitives.Export(block, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(xml)), ExportOptions.WithDefaults);
+                MutationStarted = true;
+                PlcOrganisationPrimitives.Delete(block);
+                var imp = PlcOrganisationPrimitives.Import(PlcOrganisationPrimitives.Blocks(targetGroup), new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(xml)), ImportOptions.None);
+                if (imp == null || imp.Count == 0)
                 {
-                    var exp = PlcOrganisationPrimitives.ExportDocuments(block, new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(tempDir)), blockName);
-                    usedDocs = exp != null && TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(PlcOrganisationPrimitives.State(exp));
-                }
-                catch (EngineeringNotSupportedException)
-                {
- /* swallow(native-fallback): Unsupported document export falls back to SimaticML before deleting the source block. */                    usedDocs = false; // mixed-language / STL -> fall back to XML
-                }
-
-#else
-                usedDocs = false;
-#endif
-
-#if PLC_DOCUMENT_EXPORT
-                if (usedDocs)
-                {
-                    MutationStarted = true;
-            PlcOrganisationPrimitives.Delete(block);
-                    var res = PlcOrganisationPrimitives.ImportDocuments(PlcOrganisationPrimitives.Blocks(targetGroup), new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(tempDir)), blockName, ImportDocumentOptions.Override);
-                    if (res == null || !TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(PlcOrganisationPrimitives.State(res)))
-                    {
-                        var evidence = new Dictionary<string, object?>();
-                        PlcSoftwareValues.RecordNativeResult(evidence, res?.State, res == null ? null : _session.DocumentMessages(res.Messages));
-                        var failure = new PlcSoftwareException("ImportFailed",
-                            $"Re-import of '{blockName}' into '{targetGroupPath}' failed (documents)");
-                        failure.Data["nativeResultEvidence"] = evidence;
-                        throw failure;
-                    }
-                    method = "documents(.s7dcl)";
-                }
-                else
-#endif
-                {
-                    var xml = Path.Combine(tempDir, blockName + ".xml");
-                    PlcOrganisationPrimitives.Export(block, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(xml)), ExportOptions.None);
-                    MutationStarted = true;
-            PlcOrganisationPrimitives.Delete(block);
-                    var imp = PlcOrganisationPrimitives.Import(PlcOrganisationPrimitives.Blocks(targetGroup), new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(xml)), ImportOptions.Override);
-                    if (imp == null || imp.Count == 0)
-                    {
-                        throw new PlcSoftwareException("ImportFailed",
-                            $"Re-import of '{blockName}' into '{targetGroupPath}' failed (xml)");
-                    }
-                    method = "xml(SimaticML)";
+                    throw new PlcSoftwareException("ImportFailed",
+                        $"Re-import of '{blockName}' into '{targetGroupPath}' failed (xml)");
                 }
                 var verifyGroup = _session.GetPlcBlockGroupByPath(softwarePath, targetGroupPath);
-                var verifyBlocks = PlcOrganisationPrimitives.BlocksOrNull(verifyGroup);
-                moveVerified = verifyGroup != null && verifyBlocks.Any(b => PlcOrganisationPrimitives.Name(b).Equals(blockName, StringComparison.OrdinalIgnoreCase));
-                if (!moveVerified) throw new PlcSoftwareException("ImportFailed",
+                var moved = PlcOrganisationPrimitives.BlocksOrNull(verifyGroup)?.FirstOrDefault(b => PlcOrganisationPrimitives.Name(b).Equals(blockName, StringComparison.OrdinalIgnoreCase));
+                numberAfter = moved == null ? null : PlcMovePolicy.Number(((IEngineeringObject)moved).GetAttribute("Number"));
+                var numberChange = PlcMovePolicy.NumberChange(numberBefore, numberAfter);
+                moveVerified = verifyGroup != null && moved != null && numberChange == null;
+                if (verifyGroup == null || moved == null) throw new PlcSoftwareException("ImportFailed",
                     $"Move of '{blockName}' to '{targetGroupPath}' could not be verified");
+                if (numberChange != null) throw new PlcSoftwareException("ImportFailed", $"Block '{blockName}' was moved to '{targetGroupPath}' but {numberChange}");
             }
             catch (Exception ex)
             {
@@ -788,7 +782,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true); } catch {  /* swallow(cleanup): Cleanup after verified relocation must not replace the successful move result. *//* best-effort cleanup */ }
             }
 
-            return $"Moved '{blockName}' to '{targetGroupPath}' via {method}";
+            return $"Moved '{blockName}' to '{targetGroupPath}' via {method}; block number {PlcMovePolicy.Text(numberAfter)} kept";
         }
     }
 }

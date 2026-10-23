@@ -201,16 +201,39 @@ public sealed class CompileCandidateTests
     }
     [Theory]
     [InlineData(0, 1)][InlineData(1, 1)][InlineData(2, 1)][InlineData(1, 0)]
-    public void FullNestedDiagnosticsOverrideFalseRootSuccessAndPreserveCounts(int root, int leaves)
+    // API audit 2026-10-19 F7: success is decided by the root State and root ErrorCount == 0; a root/leaf count mismatch is a
+    // retained diagnostic (countsConsistent=false), not a failure.
+    public void RootStateAndErrorCountDecideSuccessAndLeafCountsStayDiagnostics(int root, int leaves)
     {
         var a = new Adapter(); a.Diagnostics.RootErrorCount = root;
         a.Diagnostics.Messages = new[] { new CompileMessage { State = "Success", Messages = leaves == 0 ? Array.Empty<CompileMessage>()
             : new[] { new CompileMessage { State = "Error", Path = "PLC_1/Program blocks/Block_1", Description = "nested error" } } } };
         var s = new CompileSession(); var r = Request(); var p = Run(s, a, r); var result = Run(s, a, r, "apply", Hash(p));
-        Assert.Equal(Outcome.Failed, result.Meta.Outcome); Assert.False(result.Meta.RequiresSessionReset);
+        Assert.Equal(root == 0 ? Outcome.Succeeded : Outcome.Failed, result.Meta.Outcome); Assert.False(result.Meta.RequiresSessionReset);
         var d = result.Data!.Value.GetProperty("attempt").GetProperty("diagnostics"); Assert.Equal(root, d.GetProperty("rootErrorCount").GetInt32());
         Assert.Equal(leaves, d.GetProperty("leafErrorCount").GetInt32()); Assert.Equal(root == leaves, d.GetProperty("countsConsistent").GetBoolean());
         if (leaves > 0) Assert.Contains("nested error", d.GetRawText()); Assert.Equal(1, a.Trace.Count(t => t == "compile"));
+    }
+    // API audit 2026-10-19 F7: a successful compile with warnings whose tree carries an extra summary leaf (State Warning) is a
+    // success; the root/leaf mismatch is kept as a diagnostic.
+    [Fact]
+    public void WarningCompileWithASummaryLeafSucceedsAndKeepsTheCountMismatch()
+    {
+        var a = new Adapter(); a.Diagnostics.State = "Warning"; a.Diagnostics.RootWarningCount = 1;
+        a.Diagnostics.Messages = new[] { new CompileMessage { State = "Warning", Messages = new[] {
+            new CompileMessage { State = "Warning", Path = "PLC_1/Program blocks/Block_1", Description = "unused" },
+            new CompileMessage { State = "Warning", Description = "Compiling finished (errors: 0; warnings: 1)" } } } };
+        var s = new CompileSession(); var r = Request(); var p = Run(s, a, r); var result = Run(s, a, r, "apply", Hash(p));
+        Assert.True(result.Ok, V4Json.Serialize(result)); Assert.Equal(Outcome.Succeeded, result.Meta.Outcome);
+        var d = result.Data!.Value.GetProperty("attempt").GetProperty("diagnostics");
+        Assert.Equal(2, d.GetProperty("leafWarningCount").GetInt32()); Assert.False(d.GetProperty("countsConsistent").GetBoolean());
+    }
+    [Fact]
+    public void RootErrorStateFailsEvenWithoutErrorCounts()
+    {
+        var a = new Adapter(); a.Diagnostics.State = "Error";
+        var s = new CompileSession(); var r = Request(); var p = Run(s, a, r); var result = Run(s, a, r, "apply", Hash(p));
+        Assert.Equal(Outcome.Failed, result.Meta.Outcome);
     }
     [Fact]
     public void WarningTreeAndDuplicateDescriptionsRetainAllLeaves()

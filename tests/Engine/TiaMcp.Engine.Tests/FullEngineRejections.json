@@ -508,6 +508,12 @@
             "default": "true",
             "description": "dryRun: true writes temporary candidate XML and returns the import plan without importing/compiling.",
             "value": true
+          },
+          "overwrite": {
+            "type": "bool",
+            "default": "false",
+            "description": "overwrite: false (default) refuses an existing object of the same name before the import; true replaces it (Siemens.Engineering.ImportOptions.Override).",
+            "value": false
           }
         },
         "arguments": {
@@ -736,123 +742,6 @@
         }
       },
       {
-        "name": "BuildPlcAliasAlarmLad",
-        "parameters": {
-          "blockName": {
-            "type": "string",
-            "default": null,
-            "description": "Name of the generated LAD FC."
-          },
-          "blockNumber": {
-            "type": "int",
-            "default": null,
-            "description": "Positive FC number."
-          },
-          "rows": {
-            "type": "PlcAliasRow[]",
-            "default": null,
-            "description": "rows: PlcAliasRow[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding."
-          }
-        },
-        "arguments": {
-          "blockName": "FC_Example",
-          "blockNumber": 1,
-          "rows": [
-            {
-              "source": [
-                "Input"
-              ],
-              "destination": [
-                "DB_Status",
-                "Ready"
-              ]
-            }
-          ]
-        },
-        "renamedFrom": [
-          "ComposePlcAliasAlarmLad"
-        ],
-        "typedParameters": {
-          "rowsJson": "rows"
-        }
-      },
-      {
-        "name": "BuildPlcFbBlock",
-        "parameters": {
-          "fbBlock": {
-            "type": "FbBlockSpec",
-            "default": null,
-            "description": "fbBlock: FbBlockSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding."
-          }
-        },
-        "arguments": {
-          "fbBlock": {
-            "blockName": "FB_Ready",
-            "blockNumber": 11,
-            "inputs": [],
-            "outputs": [
-              {
-                "name": "Ready",
-                "datatype": "Bool"
-              }
-            ],
-            "structuredText": {
-              "operations": [
-                {
-                  "op": "assign",
-                  "target": "#Ready",
-                  "literalValue": "TRUE"
-                }
-              ]
-            }
-          }
-        },
-        "renamedFrom": [
-          "ComposePlcFbBlockXml"
-        ],
-        "typedParameters": {
-          "fbBlockJson": "fbBlock"
-        }
-      },
-      {
-        "name": "BuildPlcFcBlock",
-        "parameters": {
-          "fcBlock": {
-            "type": "FcBlockSpec",
-            "default": null,
-            "description": "fcBlock: FcBlockSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding."
-          }
-        },
-        "arguments": {
-          "fcBlock": {
-            "blockName": "FC_Ready",
-            "blockNumber": 10,
-            "inputs": [],
-            "outputs": [
-              {
-                "name": "Ready",
-                "datatype": "Bool"
-              }
-            ],
-            "structuredText": {
-              "operations": [
-                {
-                  "op": "assign",
-                  "target": "#Ready",
-                  "literalValue": "TRUE"
-                }
-              ]
-            }
-          }
-        },
-        "renamedFrom": [
-          "ComposePlcFcBlockXml"
-        ],
-        "typedParameters": {
-          "fcBlockJson": "fcBlock"
-        }
-      },
-      {
         "name": "BuildPlcGlobalDb",
         "parameters": {
           "globalDb": {
@@ -886,46 +775,6 @@
         ],
         "typedParameters": {
           "globalDbJson": "globalDb"
-        }
-      },
-      {
-        "name": "BuildPlcLadFcBlock",
-        "parameters": {
-          "ladFcBlock": {
-            "type": "LadFcBlockSpec",
-            "default": null,
-            "description": "ladFcBlock: LadFcBlockSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding."
-          }
-        },
-        "arguments": {
-          "ladFcBlock": {
-            "blockName": "FC_Lad",
-            "blockNumber": 12,
-            "networks": [
-              {
-                "call": {
-                  "callName": "FC_Ready",
-                  "parameters": [
-                    {
-                      "name": "Ready",
-                      "section": "Output",
-                      "dataType": "Bool",
-                      "symbolPath": [
-                        "DB_Status",
-                        "Ready"
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        "renamedFrom": [
-          "ComposePlcLadFcBlockXml"
-        ],
-        "typedParameters": {
-          "ladFcBlockJson": "ladFcBlock"
         }
       },
       {
@@ -8952,9 +8801,9 @@
           },
           "overwrite": {
             "type": "bool",
-            "default": "true",
-            "description": "overwrite: true=Override (default)",
-            "value": true
+            "default": "false",
+            "description": "overwrite: false (default) refuses an existing tag table of the same name before its import; true replaces it (Siemens.Engineering.ImportOptions.Override).",
+            "value": false
           }
         },
         "arguments": {
@@ -13188,7 +13037,7 @@
           "filePath": {
             "type": "string",
             "default": "\"\"",
-            "description": "filePath: for createFromFile - full path of the .scl / .awl / .stl / .db / .udt file on the TIA machine.",
+            "description": "filePath: for createFromFile - fully qualified path (drive or UNC) of the .scl / .awl / .db / .udt file on the TIA machine.",
             "value": ""
           },
           "libraryName": {
@@ -16723,6 +16572,12 @@
             "default": "true",
             "description": "compileAfter: compile PLC after import",
             "value": true
+          },
+          "overwrite": {
+            "type": "bool",
+            "default": "false",
+            "description": "overwrite: false (default) refuses an existing block of the same name before the import; true replaces it (Siemens.Engineering.ImportOptions.Override).",
+            "value": false
           }
         },
         "arguments": {
@@ -17515,6 +17370,12 @@
             "default": "null",
             "description": "placeholders: JsonObject key-values for replacement in XML, e.g. {\"PLC_NAME\":\"PLC_1\"}",
             "value": null
+          },
+          "overwrite": {
+            "type": "bool",
+            "default": "false",
+            "description": "overwrite: false (default) refuses existing PLC types and blocks of the same name before their import; true replaces them (Siemens.Engineering.ImportOptions.Override).",
+            "value": false
           }
         },
         "arguments": {
@@ -19631,6 +19492,12 @@
             "default": "true",
             "description": "dryRun: true writes temporary candidate XML and returns the import plan without importing/compiling.",
             "value": true
+          },
+          "overwrite": {
+            "type": "bool",
+            "default": "false",
+            "description": "overwrite: false (default) refuses an existing object of the same name before the import; true replaces it (Siemens.Engineering.ImportOptions.Override).",
+            "value": false
           }
         },
         "arguments": {
@@ -28105,9 +27972,9 @@
           },
           "overwrite": {
             "type": "bool",
-            "default": "true",
-            "description": "overwrite: true=Override (default)",
-            "value": true
+            "default": "false",
+            "description": "overwrite: false (default) refuses an existing tag table of the same name before its import; true replaces it (Siemens.Engineering.ImportOptions.Override).",
+            "value": false
           }
         },
         "arguments": {
@@ -32723,7 +32590,7 @@
           "filePath": {
             "type": "string",
             "default": "\"\"",
-            "description": "filePath: for createFromFile - full path of the .scl / .awl / .stl / .db / .udt file on the TIA machine.",
+            "description": "filePath: for createFromFile - fully qualified path (drive or UNC) of the .scl / .awl / .db / .udt file on the TIA machine.",
             "value": ""
           },
           "libraryName": {
@@ -36465,6 +36332,12 @@
             "default": "true",
             "description": "compileAfter: compile PLC after import",
             "value": true
+          },
+          "overwrite": {
+            "type": "bool",
+            "default": "false",
+            "description": "overwrite: false (default) refuses an existing block of the same name before the import; true replaces it (Siemens.Engineering.ImportOptions.Override).",
+            "value": false
           }
         },
         "arguments": {
@@ -37257,6 +37130,12 @@
             "default": "null",
             "description": "placeholders: JsonObject key-values for replacement in XML, e.g. {\"PLC_NAME\":\"PLC_1\"}",
             "value": null
+          },
+          "overwrite": {
+            "type": "bool",
+            "default": "false",
+            "description": "overwrite: false (default) refuses existing PLC types and blocks of the same name before their import; true replaces them (Siemens.Engineering.ImportOptions.Override).",
+            "value": false
           }
         },
         "arguments": {

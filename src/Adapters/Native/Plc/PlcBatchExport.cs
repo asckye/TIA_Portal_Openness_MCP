@@ -27,7 +27,7 @@ namespace TiaMcp.Adapters
             var group=BatchGroup(BlockGroups(PlcNative.BlockGroup(selected.Value)),path,"groupPath");
             var groups=recursive ? BlockGroups(group,path) : new[]{new Located<PlcBlockGroup>(path,group)};
             var sources=BatchGroupsBounded(groups).SelectMany(g=>PlcNative.Blocks(g.Value).Select(b=>new PlcBatchExportSource {
-                Path=Child(g.Path,PlcNative.Name(b)),Consistent=PlcNative.IsConsistent(b),Capability=PlcBlockXmlPolicy.Export(ReleaseKey,PlcNative.Language(b).ToString()),
+                Path=Child(g.Path,PlcNative.Name(b)),Consistent=PlcNative.IsConsistent(b),Capability=PlcBlockXmlPolicy.Export(ReleaseKey,PlcNative.Language(b).ToString(),b.IsKnowHowProtected),
                 Export=f=>{ RequireTargetOffline(selected); if(!PlcNative.IsConsistent(b)) throw new InvalidOperationException("Block is no longer consistent."); PlcNative.Export(b,f,ExportOptions.None); }
             }));
             return PlcBatchExportPolicy.Run("blocks",Project().Path.FullName,selected.ExactPath,path,recursive,exportPath,maxItems,dryRun,expectedInventoryHash,sources,()=>RequireTargetOffline(selected));

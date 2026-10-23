@@ -97,7 +97,8 @@ namespace TiaMcp.Adapters.Native.Plc
                     }
                     if (!writing) return "External source creation preview; no changes.";
                     meta["mayHaveChanged"] = true;
-                    PlcExternalSource created = copy == null ? Documents.CreateFromFile(sources, name, filePath) : mode == null ? Documents.CreateFrom(sources, copy) :
+                    // The checked, normalized full path is the file TIA opens (API audit 2026-10-19 F12).
+                    PlcExternalSource created = copy == null ? Documents.CreateFromFile(sources, name, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)).FullName) : mode == null ? Documents.CreateFrom(sources, copy) :
 #if PLC_DOCUMENT_EXPORT
                         Documents.CreateFrom(sources, copy, mode.Value);
 #else

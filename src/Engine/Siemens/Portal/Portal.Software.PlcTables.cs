@@ -244,18 +244,17 @@ namespace TiaMcpServer.Siemens
             try
             {
                 object root = TryGetPropertyValue(plc, "TagTableGroup", "TagTableFolder") ?? plc;
-                var group = TryResolveChildGroupByPath(root, folderPath) ?? root;
+                // API audit 2026-10-19 F4: an unresolved folderPath is refused, never redirected to the root group.
+                var group = TryResolveChildGroupByPath(root, folderPath)
+                    ?? throw new PortalException(PortalErrorCode.NotFound, $"PLC tag table group not found for folderPath='{folderPath}'; nothing was imported.");
 
                 // TagTables collection lives on group
                 var tables = TryGetPropertyValue(group, "TagTables") ?? TryGetPropertyValue(root, "TagTables");
                 if (tables == null)
                     throw new PortalException(PortalErrorCode.NotFound, $"TagTables collection not found. plcType={plc.GetType().FullName} groupType={group.GetType().FullName}");
 
-                // Route through PrepareXmlForImport so the hardcoded <Engineering version="V21"/>
-                // header is rewritten to the connected portal version (and a UTF-8 BOM is ensured).
-                // Without this, tag-table imports fail on a V20 portal with
-                // "The engineering version 'V21' ... is not supported." (block/type imports already
-                // sanitize via PrepareXmlForImport; tag tables previously skipped it).
+                // PrepareXmlForImport refuses a header outside the release's SimaticML import window (never rewrites it)
+                // and ensures a UTF-8 BOM on an identical copy.
                 if (TryImportEngineeringObjectIntoCollection(tables, PrepareXmlForImport(importPath), out _, out var err)) return;
                 throw new PortalException(PortalErrorCode.ImportFailed, err ?? "ImportPlcTagTable failed");
             }

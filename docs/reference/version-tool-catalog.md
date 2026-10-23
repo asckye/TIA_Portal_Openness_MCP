@@ -285,7 +285,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `WritePlcWebVars` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `WriteUnifiedRuntimeTags` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 
-## Shared by some releases (223)
+## Shared by some releases (219)
 
 | Tool | Release keys |
 |---|---|
@@ -299,10 +299,6 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `BuildClassicHmiScreen` | 18, 19, 20, 21 |
 | `BuildClassicHmiTagTable` | 20, 21 |
 | `BuildFlgNetCall` | 20, 21 |
-| `BuildPlcAliasAlarmLad` | 20, 21 |
-| `BuildPlcFbBlock` | 20, 21 |
-| `BuildPlcFcBlock` | 20, 21 |
-| `BuildPlcLadFcBlock` | 20, 21 |
 | `BuildPlcTagTable` | 20, 21 |
 | `BuildStructuredText` | 20, 21 |
 | `BuildUnifiedHmiButtonActionScript` | 19, 20, 21 |
@@ -513,11 +509,15 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ValidateUnifiedObject` | 19, 20, 21 |
 | `WriteClassicHmiMinimalPackageFiles` | 20, 21 |
 
-## One release only (16)
+## One release only (20)
 
 | Tool | Release keys |
 |---|---|
 | `BindUnifiedHmiButtonPressedTag` | 21 |
+| `BuildPlcAliasAlarmLad` | 21 |
+| `BuildPlcFbBlock` | 21 |
+| `BuildPlcFcBlock` | 21 |
+| `BuildPlcLadFcBlock` | 21 |
 | `GetClassicHmiGlobalization` | 21 |
 | `GetOpcUaAccessControl` | 21 |
 | `ListCommunicationConnections` | 21 |

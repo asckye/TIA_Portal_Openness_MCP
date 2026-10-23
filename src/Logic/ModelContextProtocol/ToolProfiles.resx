@@ -24371,96 +24371,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "BuildPlcAliasAlarmLad",
-        "currentName": "BuildPlcAliasAlarmLad",
-        "sourceName": "ComposePlcAliasAlarmLad",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "blockName": "FC_Example",
-          "blockNumber": 1,
-          "rows": [
-            {
-              "source": [
-                "Input"
-              ],
-              "destination": [
-                "DB_Status",
-                "Ready"
-              ]
-            }
-          ]
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcFbBlock",
-        "currentName": "BuildPlcFbBlock",
-        "sourceName": "ComposePlcFbBlockXml",
-        "profiles": [
-          "full",
-          "lite",
-          "plc-foundation"
-        ],
-        "arguments": {
-          "fbBlock": {
-            "blockName": "FB_Ready",
-            "blockNumber": 11,
-            "inputs": [],
-            "outputs": [
-              {
-                "name": "Ready",
-                "datatype": "Bool"
-              }
-            ],
-            "structuredText": {
-              "operations": [
-                {
-                  "op": "assign",
-                  "target": "#Ready",
-                  "literalValue": "TRUE"
-                }
-              ]
-            }
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcFcBlock",
-        "currentName": "BuildPlcFcBlock",
-        "sourceName": "ComposePlcFcBlockXml",
-        "profiles": [
-          "full",
-          "lite",
-          "plc-foundation"
-        ],
-        "arguments": {
-          "fcBlock": {
-            "blockName": "FC_Ready",
-            "blockNumber": 10,
-            "inputs": [],
-            "outputs": [
-              {
-                "name": "Ready",
-                "datatype": "Bool"
-              }
-            ],
-            "structuredText": {
-              "operations": [
-                {
-                  "op": "assign",
-                  "target": "#Ready",
-                  "literalValue": "TRUE"
-                }
-              ]
-            }
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "BuildPlcGlobalDb",
         "currentName": "BuildPlcGlobalDb",
         "sourceName": "BuildPlcGlobalDbXml",
@@ -24479,41 +24389,6 @@
                 "name": "Ready",
                 "datatype": "Bool",
                 "startValue": "FALSE"
-              }
-            ]
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcLadFcBlock",
-        "currentName": "BuildPlcLadFcBlock",
-        "sourceName": "ComposePlcLadFcBlockXml",
-        "profiles": [
-          "full",
-          "lite",
-          "plc-foundation"
-        ],
-        "arguments": {
-          "ladFcBlock": {
-            "blockName": "FC_Lad",
-            "blockNumber": 12,
-            "networks": [
-              {
-                "call": {
-                  "callName": "FC_Ready",
-                  "parameters": [
-                    {
-                      "name": "Ready",
-                      "section": "Output",
-                      "dataType": "Bool",
-                      "symbolPath": [
-                        "DB_Status",
-                        "Ready"
-                      ]
-                    }
-                  ]
-                }
               }
             ]
           }
@@ -80569,92 +80444,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "BuildPlcAliasAlarmLad",
-        "currentName": "BuildPlcAliasAlarmLad",
-        "sourceName": "ComposePlcAliasAlarmLad",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "blockName": "FC_Example",
-          "blockNumber": 1,
-          "rows": [
-            {
-              "source": [
-                "Input"
-              ],
-              "destination": [
-                "DB_Status",
-                "Ready"
-              ]
-            }
-          ]
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcFbBlock",
-        "currentName": "BuildPlcFbBlock",
-        "sourceName": "ComposePlcFbBlockXml",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "fbBlock": {
-            "blockName": "FB_Ready",
-            "blockNumber": 11,
-            "inputs": [],
-            "outputs": [
-              {
-                "name": "Ready",
-                "datatype": "Bool"
-              }
-            ],
-            "structuredText": {
-              "operations": [
-                {
-                  "op": "assign",
-                  "target": "#Ready",
-                  "literalValue": "TRUE"
-                }
-              ]
-            }
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcFcBlock",
-        "currentName": "BuildPlcFcBlock",
-        "sourceName": "ComposePlcFcBlockXml",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "fcBlock": {
-            "blockName": "FC_Ready",
-            "blockNumber": 10,
-            "inputs": [],
-            "outputs": [
-              {
-                "name": "Ready",
-                "datatype": "Bool"
-              }
-            ],
-            "structuredText": {
-              "operations": [
-                {
-                  "op": "assign",
-                  "target": "#Ready",
-                  "literalValue": "TRUE"
-                }
-              ]
-            }
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "BuildPlcGlobalDb",
         "currentName": "BuildPlcGlobalDb",
         "sourceName": "BuildPlcGlobalDbXml",
@@ -80672,39 +80461,6 @@
                 "name": "Ready",
                 "datatype": "Bool",
                 "startValue": "FALSE"
-              }
-            ]
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcLadFcBlock",
-        "currentName": "BuildPlcLadFcBlock",
-        "sourceName": "ComposePlcLadFcBlockXml",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "ladFcBlock": {
-            "blockName": "FC_Lad",
-            "blockNumber": 12,
-            "networks": [
-              {
-                "call": {
-                  "callName": "FC_Ready",
-                  "parameters": [
-                    {
-                      "name": "Ready",
-                      "section": "Output",
-                      "dataType": "Bool",
-                      "symbolPath": [
-                        "DB_Status",
-                        "Ready"
-                      ]
-                    }
-                  ]
-                }
               }
             ]
           }

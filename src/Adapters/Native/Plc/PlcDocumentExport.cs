@@ -26,7 +26,7 @@ namespace TiaMcp.Adapters
                 var result=Documents.Export(target,stage,name);
                 var state=result==null ? (object?)null : Documents.State(result);
                 if(!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(state))
-                    throw new TiaMcp.Adapters.Contracts.NativeResultException(TiaMcp.Adapters.Contracts.NativeResultStates.Documents,state);
+                    throw new TiaMcp.Adapters.Contracts.NativeResultException(TiaMcp.Adapters.Contracts.NativeResultStates.Documents,state,result==null ? null : Documents.Messages(result.Messages));
                 return result.ExportedDocuments.Select(f=>f.FullName).Take(3).ToArray();
             });
 #else

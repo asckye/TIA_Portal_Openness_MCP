@@ -27,8 +27,13 @@ namespace TiaMcp.Adapters.Native.Plc
         internal static readonly string[] GenerateBlockOptions = { "None", "KeepOnError" };
         internal static readonly string[] GenerateTargetKinds = { "block", "type" };
         internal static readonly string[] MasterCopyModes = new[] { "ThrowIfExists", "Rename", "Replace" };
-        // Official "Generating blocks from source": only ASCII sources; TIA accepts .scl / .awl / .db / .udt (and .stl for STL).
-        internal static readonly string[] ExternalSourceExtensions = { ".scl", ".awl", ".stl", ".db", ".udt" };
+        // Official "Adding an external file": STL, SCL, DB and UDT sources use *.AWL, *.SCL, *.DB and *.UDT; any other extension
+        // throws (API audit 2026-10-19 F16, the same allowlist as the external-source workflow).
+        internal static readonly string[] ExternalSourceExtensions = { ".scl", ".awl", ".db", ".udt" };
+        // A drive-relative ("C:foo.scl") or root-relative ("\foo.scl") path is rooted but not fully qualified (API audit F12).
+        internal static bool FullyQualified(string path)
+            => path.Length >= 3 && char.IsLetter(path[0]) && path[1] == ':' && (path[2] == '\\' || path[2] == '/')
+                || path.StartsWith("\\\\", StringComparison.Ordinal) || path.StartsWith("//", StringComparison.Ordinal);
 
         internal static bool ValidateExternalSourceRequest(string action, string name, string unitName, string unitKind, string filePath, string libraryName, string masterCopyPath, string copyMode,
             string generateOption, string targetKind, string targetGroupPath, string newName, bool confirmDelete, bool dryRun)
@@ -41,7 +46,7 @@ namespace TiaMcp.Adapters.Native.Plc
             else RequireName(name, group ? "name (the user group)" : "name (the external source, with extension)");
             if (action == "createFromFile")
             {
-                if (string.IsNullOrWhiteSpace(filePath) || !Path.IsPathRooted(filePath)) throw new ArgumentException("createFromFile needs the absolute filePath of an existing source file on the TIA Portal machine.");
+                if (string.IsNullOrWhiteSpace(filePath) || !Path.IsPathRooted(filePath) || !FullyQualified(filePath)) throw new ArgumentException("createFromFile needs the fully qualified filePath (drive or UNC) of an existing source file on the TIA Portal machine.");
                 if (!ExternalSourceExtensions.Contains(Path.GetExtension(filePath).ToLowerInvariant())) throw new ArgumentException("filePath must be an ASCII source file (" + string.Join(" / ", ExternalSourceExtensions) + ").");
             }
             else Refuse(filePath, "filePath", "applies to createFromFile only.");

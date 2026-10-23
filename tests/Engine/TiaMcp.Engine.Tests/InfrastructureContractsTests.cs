@@ -172,8 +172,10 @@ namespace TiaMcp.Engine.Tests
             foreach (string release in new[] { "20", "21" })
             {
                 var rows = ToolUsageCatalog.ProfileEntries(release).Where(r => r!["profiles"]!.AsArray().Any(p => (string?)p == "lite")).ToArray();
-                Assert.Equal(84, rows.Length);
-                Assert.Equal(84, rows.Select(r => (string?)r!["currentName"]).Distinct().Count());
+                // P8-81d (2026-10-20 decision): V20 withdraws the lite BuildPlcFcBlock, BuildPlcFbBlock and BuildPlcLadFcBlock entries.
+                int expected = release == "20" ? 81 : 84;
+                Assert.Equal(expected, rows.Length);
+                Assert.Equal(expected, rows.Select(r => (string?)r!["currentName"]).Distinct().Count());
                 Assert.All(rows, row => Assert.IsType<JsonObject>(row!["arguments"]));
                 Assert.Contains(rows, r => (string?)r!["currentName"] == "PreviewToolCall");
                 Assert.Contains(rows, r => (string?)r!["name"] == "GetSessionState" && (string?)r!["currentName"] == "GetSessionState");

@@ -142,7 +142,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildPlcFcBlock"), Description("[L2][PLC-Builders][OFFLINE] Compose a TIA V21 SCL FC block XML from interface JSON and StructuredText content. Input: {blockName,blockNumber,inputs:[{name,datatype}],outputs:[{name,datatype}],structuredText:{operations:[]}}. It only returns XML; it does not connect to TIA Portal, import blocks, write files, or modify projects.")]
+        [McpServerTool(Name = "BuildPlcFcBlock"), Description("[L2][PLC-Builders][OFFLINE] Compose a TIA V21 SCL FC block XML from interface JSON and StructuredText content. Input: {blockName,blockNumber,inputs:[{name,datatype}],outputs:[{name,datatype}],structuredText:{operations:[]}}. It only returns XML; it does not connect to TIA Portal, import blocks, write files, or modify projects. Registered on V21 only: V20 withdraws this V21-format composer until an import of its output on V20 is verified.")]
         public CallToolResult ComposePlcFcBlockXmlV4(
             [Description("fcBlock: FcBlockSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] FcBlockSpec fcBlock)
             => OfflineContracts.Run("BuildPlcFcBlock", () => ComposePlcFcBlockXml(ConstructionAdapter.ToBuilderJson(fcBlock)), writes: false, current: false);
@@ -160,7 +160,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildPlcFbBlock"), Description("[L2][PLC-Builders][OFFLINE] Compose a TIA V21 SCL FB block XML from interface JSON and StructuredText content. Input: {blockName,blockNumber,inputs?,outputs?,inouts?,statics?,temps?,structuredText:{operations:[]}}. It only returns XML; it does not connect to TIA Portal, import blocks, write files, create instance DBs, or modify projects.")]
+        [McpServerTool(Name = "BuildPlcFbBlock"), Description("[L2][PLC-Builders][OFFLINE] Compose a TIA V21 SCL FB block XML from interface JSON and StructuredText content. Input: {blockName,blockNumber,inputs?,outputs?,inouts?,statics?,temps?,structuredText:{operations:[]}}. It only returns XML; it does not connect to TIA Portal, import blocks, write files, create instance DBs, or modify projects. Registered on V21 only: V20 withdraws this V21-format composer until an import of its output on V20 is verified.")]
         public CallToolResult ComposePlcFbBlockXmlV4(
             [Description("fbBlock: FbBlockSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] FbBlockSpec fbBlock)
             => OfflineContracts.Run("BuildPlcFbBlock", () => ComposePlcFbBlockXml(ConstructionAdapter.ToBuilderJson(fbBlock)), writes: false, current: false);
@@ -178,7 +178,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildPlcLadFcBlock"), Description("[L2][PLC-Builders][OFFLINE] NARROW SCOPE: every network must be an FC call; this cannot emit contacts/coils/SR/compare/Move/math. For general ladder, author S7DCL text (.s7dcl + .s7res) and import with ImportPlcBlocksDocuments instead. Compose a TIA V21 LAD FC block XML containing one or more FlgNet/v5 FC-call networks. Each network is an FC call described as { call: { callName, parameters[] }, titleZhCn?, commentZhCn? }. Top-level: blockName, blockNumber, optional inputs/outputs members, optional commentZhCn / titleZhCn. Returns XML only; does not connect to TIA Portal or import. Pair with ImportPlcBlock.")]
+        [McpServerTool(Name = "BuildPlcLadFcBlock"), Description("[L2][PLC-Builders][OFFLINE] NARROW SCOPE: every network must be an FC call; this cannot emit contacts/coils/SR/compare/Move/math. For general ladder, author S7DCL text (.s7dcl + .s7res) and import with ImportPlcBlocksDocuments instead. Compose a TIA V21 LAD FC block XML containing one or more FlgNet/v5 FC-call networks. Each network is an FC call described as { call: { callName, parameters[] }, titleZhCn?, commentZhCn? }. Top-level: blockName, blockNumber, optional inputs/outputs members, optional commentZhCn / titleZhCn. Returns XML only; does not connect to TIA Portal or import. Pair with ImportPlcBlock. Registered on V21 only: V20 withdraws this V21-format composer until an import of its output on V20 is verified.")]
         public CallToolResult ComposePlcLadFcBlockXmlV4(
             [Description("ladFcBlock: LadFcBlockSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] LadFcBlockSpec ladFcBlock)
             => OfflineContracts.Run("BuildPlcLadFcBlock", () => ComposePlcLadFcBlockXml(ConstructionAdapter.ToBuilderJson(ladFcBlock)), writes: false, current: false);

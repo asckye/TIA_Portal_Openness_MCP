@@ -93,7 +93,8 @@ namespace TiaMcp.Adapters.Native.Plc
             }
             else
             {
-                int childCount = Items(Get(target, "Groups")).Count(), itemCount = Items(Get(target, contents)).Count();
+                // contents may name several compositions ("WatchTables,ForceTables"); the group is empty only when all are empty.
+                int childCount = Items(Get(target, "Groups")).Count(), itemCount = contents.Split(',').Sum(c => Items(Get(target, c)).Count());
                 result["childCount"] = childCount; result["itemCount"] = itemCount;
                 if (childCount != 0 || itemCount != 0) throw new InvalidOperationException("Only empty user groups can be deleted.");
                 if (target.GetType().GetMethod("Delete", Type.EmptyTypes) == null) throw new NotSupportedException("Native Delete unavailable.");

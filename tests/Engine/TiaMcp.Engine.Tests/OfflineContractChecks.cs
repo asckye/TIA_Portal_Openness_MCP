@@ -190,7 +190,8 @@ namespace TiaMcp.Engine.Tests
                 string expected = (string)logic.GetType("TiaMcp.Logic.V4.Construction.ConstructionAdapter", true)!.GetMethod("ToBuilderJson")!.Invoke(null, new[] { resolved })!;
                 Check((string)Invoke("OfflineContracts", "Artifact", sample.Item1, bound, "spec") == expected, "Resolved builder input: " + sample.Item1);
                 string mismatch = sample.Item1 == "udt" ? "globaldb" : "udt";
-                var refused = Body(Invoke("PlcBuildTools", "PlcBuildAndImportV4", "", mismatch, bound, "", "", "", true, false));
+                // The trailing false is the F25 overwrite parameter (P8-81d); the refusal under test happens before any import.
+                var refused = Body(Invoke("PlcBuildTools", "PlcBuildAndImportV4", "", mismatch, bound, "", "", "", true, false, false));
                 Check(Text(refused["error"]!, "code") == "INVALID_ARGUMENT" && Text(refused["meta"]!, "execution") == "not-started", "Kind mismatch refuses before import: " + sample.Item1);
             }
             foreach (string spec in new[] { "null", "\"{}\"", "[]", "{}", "{\"members\":[],\"extra\":1}" })
@@ -234,7 +235,7 @@ namespace TiaMcp.Engine.Tests
             var invalidRelease = Body(Invoke("XmlBuilderTools", "BuildPlcUdtXmlV4", Input("{\"members\":[]}"), "14"));
             Check(!(bool)invalidRelease["ok"]!, "Original output release restriction");
             var specType = Assembly.Load("TiaMcp.Logic").GetType("TiaMcp.Logic.V4.Construction.UdtSpec", true)!;
-            var union = Body(Invoke("PlcBuildTools", "PlcBuildAndImportV4", "", "globaldb", JsonSerializer.Deserialize("{\"members\":[]}", specType), "", "", "", true, false));
+            var union = Body(Invoke("PlcBuildTools", "PlcBuildAndImportV4", "", "globaldb", JsonSerializer.Deserialize("{\"members\":[]}", specType), "", "", "", true, false, false));
             Check(Text(union["error"]!, "code") == "INVALID_ARGUMENT", "Outer kind selects spec before native dispatch");
             var nullNames = Admission("ValidateClassicHmiMinimalPackagePlcSync", "{\"path\":\"absent\",\"plcSymbols\":null}");
             Check(Text(nullNames["error"]!, "code") == "INVALID_ARGUMENT", "Null is not an omitted list");

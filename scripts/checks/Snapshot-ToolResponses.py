@@ -283,6 +283,8 @@ V21_ONLY = (
     'ManageSafetyFunctionCondition', 'ManagePlcBlockWriteProtection',
     'ManageDriveSafetyAcceptanceTest', 'ManageSivarcScreenLayout',
     'ManageClassicHmiGraphic',
+    # P8-81d (2026-10-20 decision): the whole-block composers write V21 documents and are withdrawn on V20.
+    'BuildPlcFcBlock', 'BuildPlcFbBlock', 'BuildPlcLadFcBlock', 'BuildPlcAliasAlarmLad',
 )
 
 
@@ -879,6 +881,9 @@ def capture_release(args, release, exe, public_api):
 
             pure_examples = list(PURE_EXAMPLES)
             for name in pure_examples:
+                if release == '20' and name in V21_ONLY:
+                    # Withdrawn on V20 by decision; the V21_ONLY refusal sweep below records its refusal instead.
+                    continue
                 arguments = example(name)
                 resources.require(not arguments.get('filePath'), 'Pure example acquired a file input')
                 decoded(name, arguments)

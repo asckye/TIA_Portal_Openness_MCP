@@ -256,9 +256,11 @@ namespace TiaMcp.Adapters.Contracts
             ["CreateHardwareDevice"] = new[] { "18", "19", "20", "21" },
             ["SearchHardwareCatalog"] = new[] { "18", "19", "20", "21" },
             ["ExportPlcWatchTable"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
-            ["BuildPlcLadFcBlock"] = new[] { "20", "21" },
-            ["BuildPlcFcBlock"] = new[] { "20", "21" },
-            ["BuildPlcFbBlock"] = new[] { "20", "21" },
+            // 2026-10-20 decision (P8-81d): the whole-block composers write V21 documents; V20 withdraws them until an import of
+            // their output on V20 is verified (2026-10-11 builder rule).
+            ["BuildPlcLadFcBlock"] = new[] { "21" },
+            ["BuildPlcFcBlock"] = new[] { "21" },
+            ["BuildPlcFbBlock"] = new[] { "21" },
             ["BuildFlgNetCall"] = new[] { "20", "21" },
             ["BuildStructuredText"] = new[] { "20", "21" },
             ["BuildPlcTagTable"] = new[] { "20", "21" },
@@ -410,7 +412,8 @@ namespace TiaMcp.Adapters.Contracts
             ["CompareLibraries"] = new[] { "18", "19", "20", "21" },
             ["ManageProjectCompilationSettings"] = new[] { "16", "17", "18", "19", "20", "21" },
             // Format evidence is deliberately separate from managed-code availability.
-            ["BuildPlcAliasAlarmLad"] = new[] { "20", "21" },
+            // 2026-10-20 decision (P8-81d): V21 LAD FC document composer; withdrawn on V20 with the other whole-block composers.
+            ["BuildPlcAliasAlarmLad"] = new[] { "21" },
             ["DecodePlcSimaticMl"] = new[] { "20", "21" },
             ["ValidatePlcDocumentSchemas"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
             ["InspectSimaticSdCompatibility"] = new[] { "20", "21" },

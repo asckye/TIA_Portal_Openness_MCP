@@ -37,6 +37,12 @@ namespace TiaMcp.Adapters.Native.Plc
         public static ProgrammingLanguage Language(PlcBlock block) => block.ProgrammingLanguage;
 
 #if PLC_DOCUMENT_EXPORT
+        // DocumentResultMessage.Message texts of an export or import result (API audit 2026-10-19 F10).
+        public static IEnumerable<string> Messages(DocumentResultMessageComposition messages)
+        {
+            if (messages == null) yield break;
+            foreach (var message in messages) if (message != null) yield return message.Message;
+        }
         public static Software Software(SoftwareContainer container) => container?.Software;
         public static PlcBlockUserGroupComposition BlockGroups(PlcBlockGroup group) => group.Groups;
         public static PlcBlock FindBlock(this PlcBlockComposition blocks, string name) => blocks.Find(name);

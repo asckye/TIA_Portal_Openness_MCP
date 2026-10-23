@@ -1,6 +1,6 @@
 # API audit VM checklist
 
-Status: current · Source: the 2026-10-19 official-API audit, the P8-81a/P8-81b/P8-81c fix reports (2026-10-19 to 21) and the
+Status: current · Source: the 2026-10-19 official-API audit, the P8-81a/P8-81b/P8-81c/P8-81d fix reports (2026-10-19 to 21) and the
 P8-73b Workbench fix report (2026-10-21).
 
 The audit compared the repository with the Siemens SDK XML and the official Openness documentation. The items below depend on native
@@ -11,7 +11,7 @@ been run on a real TIA Portal. Pre-release notes copy this list into their "Not 
 Every row names its source: the fix report and its VM item number, and the audit area file and finding id. The reports and the
 audit files are kept in the maintainer checkout and are not tracked: `bin-build/refactor/P8-81a-evidence/P8-81a.result.md`,
 `bin-build/refactor/P8-81b-evidence/P8-81b.result.md` and `bin-build/refactor/P8-81c-evidence/P8-81c.result.md` ("VM checklist"
-sections), and `bin-build/refactor/api-audit/<area>.md`. The
+sections), `bin-build/refactor/P8-81d.result.md` ("VM checklist"), and `bin-build/refactor/api-audit/<area>.md`. The
 Workbench fix items come from `bin-build/refactor/P8-73b.result.md` and item O1 of `bin-build/refactor/P8-70-73-triage.md`.
 
 ## Online, download and simulation (fixed in P8-81a)
@@ -121,6 +121,43 @@ Workbench fix items come from `bin-build/refactor/P8-73b.result.md` and item O1 
 13. P8-81c VM item 13 · session.md F18: `TiaPortal.GetProcess(pid, timeout)` for an unknown PID and a busy TIA Portal (returns null
     or throws; time to answer).
 
+## PLC software (fixed in P8-81d)
+
+1. P8-81d VM item 1 · plc.md F6: the Engineering version spellings TIA V14 SP1 and V15.1 write into SimaticML exports ("V14 SP1",
+   "V15.1"), and on every release the header of an export, so the import window check reads it.
+2. P8-81d VM item 2 · plc.md F6: TIA's own window: V19 refuses a V15.1 file, V20 a V16 file, V21 a V17 file, and every release up to
+   V18 a file from a newer release; an in-window file imports unchanged (for example a V17 file into V20 without the V18+
+   namespace attribute).
+3. P8-81d VM item 3 · plc.md F25: with overwrite=false the MCP refuses an existing block, data type or tag table of the same name
+   (case-insensitive comparison) before the import, and `ImportOptions.None` throws when TIA finds one that the check missed;
+   overwrite=true replaces it in its own group.
+4. P8-81d VM item 4 · plc.md F4: ImportPlcTagTablesFromDirectory and BuildAndImportPlcArtifact kind tagtable into a nested tag-table
+   group through `PlcTagTableUserGroup.Groups.Find`; a mistyped folderPath is refused and nothing is imported.
+5. P8-81d VM item 5 · plc.md F22: MovePlcBlockToGroup keeps the block number through the SimaticML round trip (FB, FC, global DB,
+   instance DB; AutoNumber true and false) on one old and one new release, and the move of an STL or mixed-language block.
+6. P8-81d VM item 6 · plc.md F7: a compile with warnings succeeds through CompilePlcSoftware (V4 candidate) on one old and one new
+   release, and the root/leaf counts of that result.
+7. P8-81d VM item 7 · plc.md F8: where TIA places the "Compiling finished" summary rows in the compiler message tree, whether they carry
+   a Path, and their text in a non-English, non-German UI language.
+8. P8-81d VM item 8 · plc.md F2: what `GetService<CrossReferenceService>()` returns on a `PlcUserConstant` (the MCP does not query it).
+9. P8-81d VM item 9 · plc.md F5: the exception type for exporting an inconsistent block on each release; a V4 single import next to an
+   inconsistent block elsewhere in the PLC now succeeds (only targets are hashed).
+10. P8-81d VM item 10 · plc.md F16: `CreateFromFile` inside an external-source user group, and the native refusal of a `.stl` file.
+11. P8-81d VM item 11 · plc.md F20: ManagePlcUserGroup rename on V21 (block, type, watch-table groups) and V20 (tag-table groups)
+    through the public `Name` setter.
+12. P8-81d VM item 12 · plc.md F21: CreatePlcInstanceDb on V15.1/V16 for a ProDiag FB, and the refusal for an ordinary FB.
+13. P8-81d VM item 13 · plc.md F10: the content of `DocumentResult.Messages` on a failed and a partial document export/import
+    (V20/V21), as carried in the failure text.
+14. P8-81d VM item 14 · plc.md F9: SeedProjectFromReference with a UDT used by a block, and blocks ordered FB/FC, global DB,
+    instance DB, OB; an FB that calls another FB as a multi-instance still depends on file-name order.
+15. P8-81d VM item 15 · plc.md F13: a recovery export written with `ExportOptions.WithDefaults` imports back identically.
+16. P8-81d VM item 16 · plc.md F14: the native refusal texts for a unit-exported file, a missing referenced object and inactive
+    cultures, as they appear beside the named import options.
+17. P8-81d VM item 17 · plc.md F24: values of `Location.Address`, `TypeName` and `ReferencedAsName` for a tag used in two networks.
+18. P8-81d VM item 18 · plc.md F1, F3, F19: the download-readiness consistency read with an inconsistent block inside a software unit
+    on V16/V17; deleteEmpty refused for a V20/V21 type group that holds only PLC documents and for a watch-table group that holds
+    only force tables.
+
 ## Workbench environment fix (P8-73b)
 
 Item 3 of the P8-73b report (the engine worker's fix result on V20/V21) was withdrawn on 2026-10-21: since P8-04j2 the package no
@@ -142,13 +179,6 @@ audit area file and its finding id.
 - hmi.md F5: the legacy Unified tag-create helper and a non-default tag table.
 - hmi.md F8: Unified driver and connection property names.
 - hmi.md F15: Unified collections claimed for V16–V18.
-- plc.md F2: `CrossReferenceService` on a `PlcUserConstant`.
-- plc.md F5: the exception type for exporting an inconsistent block per release.
-- plc.md F7: a compile with warnings on one old and one new release.
-- plc.md F16: `CreateFromFile` in a user group.
-- plc.md F20: user-group rename where `Name` has no public setter.
-- plc.md F21: `CreateInstanceDB` on V15.1/V16.
-- plc.md F22: whether the XML re-import of a non-know-how-protected block keeps its number (MovePlcBlockToGroup on V20/V21).
 - libraries-vci-safety.md L-1: the native outcome of `Edit()` on STEP 7 library types.
 - libraries-vci-safety.md L-6: `GlobalLibrary.IsReadOnly` semantics.
 - libraries-vci-safety.md V-1: absolute versus relative `ExportObject` paths.

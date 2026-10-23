@@ -121,18 +121,24 @@ internal static class PlcHostShapes
         Check(declared.All(complete.Contains), "A release declaration is missing from the complete catalog: "
             + string.Join(", ", declared.Where(name => !complete.Contains(name))));
         var sharedOnly = complete.Keys.Cast<string>().Where(name => !methods.ContainsKey(name)).ToHashSet(StringComparer.Ordinal);
-        var reviewed = complete.Keys.Cast<string>().Where(name => !sharedOnly.Contains(name) || execution.Contains(name)).ToArray();
+        // P8-81d (2026-10-20 decision): a shared Foundation implementation that PortedFamilies withholds on this release (the V21-format
+        // composers on V20) is neither served nor declared here, so its release-independent execution-table row is outside this
+        // release's coverage. Every other row is compared exactly as before.
+        var withheld = TiaMcp.Adapters.Contracts.PortedFamilies.Withheld(release).ToHashSet(StringComparer.Ordinal);
+        var releaseExecution = execution.Keys.Cast<string>().Where(name => !(withheld.Contains(name) && !complete.Contains(name)))
+            .ToDictionary(name => name, name => execution[name], StringComparer.Ordinal);
+        var reviewed = complete.Keys.Cast<string>().Where(name => !sharedOnly.Contains(name) || releaseExecution.ContainsKey(name)).ToArray();
         var coverage = reviewed.Concat(removed).ToHashSet(StringComparer.Ordinal);
-        Check(CoverageMatches(reviewed, removed.ToArray(), execution), "Descriptor/execution coverage mismatch; missing: "
-            + string.Join(", ", coverage.Except(execution.Keys.Cast<string>()).Order(StringComparer.Ordinal)) + "; extra: "
-            + string.Join(", ", execution.Keys.Cast<string>().Except(coverage).Order(StringComparer.Ordinal)));
+        Check(CoverageMatches(reviewed, removed.ToArray(), releaseExecution), "Descriptor/execution coverage mismatch; missing: "
+            + string.Join(", ", coverage.Except(releaseExecution.Keys).Order(StringComparer.Ordinal)) + "; extra: "
+            + string.Join(", ", releaseExecution.Keys.Except(coverage).Order(StringComparer.Ordinal)));
         var implemented = shared.Select(tool => tool.ProtocolTool.Name).ToHashSet(StringComparer.Ordinal);
         Check(implemented.Count > 0 && sharedOnly.All(implemented.Contains), "An undeclared catalog entry is not a shared host implementation: "
             + string.Join(", ", sharedOnly.Where(name => !implemented.Contains(name))));
         foreach (var name in sharedOnly)
             Check((string)Get(complete[name]!, "Execution") == "foundation", name + " shared host implementation is not Foundation-owned");
         Check(removed.SetEquals(new[] { "ConnectProject" }) && removed.All(name => !complete.Contains(name) && execution.Contains(name)), "Retired engine alias changed without D5 review");
-        foreach (var name in execution.Keys.Cast<string>().Where(name => (string)execution[name]! == "host"))
+        foreach (var name in releaseExecution.Keys.Where(name => (string)execution[name]! == "host"))
             Check(complete.Contains(name), name + " host declaration is missing");
         var metadata = new JsonObject();
         foreach (DictionaryEntry entry in complete)

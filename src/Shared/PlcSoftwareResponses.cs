@@ -54,5 +54,9 @@ namespace TiaMcpServer.ModelContextProtocol
         public string? ReferenceAddress { get; set; }
         public string? ReferenceDevice { get; set; }
         public string? ReferenceObjectClass { get; set; }
+        // CrossReference.Location.Address / TypeName / ReferencedAsName (V18+; API audit 2026-10-19 F24).
+        public string? LocationAddress { get; set; }
+        public string? LocationTypeName { get; set; }
+        public string? LocationReferencedAs { get; set; }
     }
 }

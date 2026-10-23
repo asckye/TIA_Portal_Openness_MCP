@@ -68,7 +68,15 @@ namespace TiaMcpServer.Siemens.Services
         }
         public ResponseMessage ImportPlcBlockVerified(string softwarePath, string blockPath, string importPath, string evidenceDirectory, bool dryRun, string expectedToken, bool compileAfterImport)
             => SoftwareStep(new PlcSoftwareRequest { Operation = "ImportPlcBlockVerified", SoftwarePath = softwarePath, Path = blockPath, FilePath = importPath, EvidenceDirectory = evidenceDirectory, DryRun = dryRun, ExpectedToken = expectedToken, CompileAfterImport = compileAfterImport });
-        public ResponseImportBatch ImportPlcTagTablesFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = true)
+        // Every PLC file of a directory import is checked against the release's SimaticML import window before the first
+        // native import (API audit 2026-10-19 F6), so a refusal never follows a partial import.
+        internal static void RequireImportWindow(IEnumerable<string> files, string parameter)
+        {
+            foreach (var file in files)
+                SimaticMlImportWindow.Require(HardwareContract.ReleaseKey, TiaOpenness.Shared.NativeInputPolicy.Read(parameter, () => File.ReadAllBytes(file)), parameter);
+        }
+
+        public ResponseImportBatch ImportPlcTagTablesFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = false)
         {
             if (hasProject()) TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,
                 new PlcArtifactPortSession(this, "ImportPlcTagTablesFromDirectory").SoftwarePath(softwarePath), true);
@@ -96,17 +104,21 @@ namespace TiaMcpServer.Siemens.Services
                     regex = new Regex(regexName, RegexOptions.IgnoreCase);
                 }
 
-                foreach (var file in Directory.EnumerateFiles(dir, "*.xml", SearchOption.TopDirectoryOnly))
+                var files = Directory.EnumerateFiles(dir, "*.xml", SearchOption.TopDirectoryOnly)
+                    .Where(file => regex == null || regex.IsMatch(Path.GetFileNameWithoutExtension(file))).OrderBy(file => file, StringComparer.OrdinalIgnoreCase).ToArray();
+                RequireImportWindow(files, "dir");
+                foreach (var file in files)
                 {
                     var name = Path.GetFileNameWithoutExtension(file);
-                    if (regex != null && !regex.IsMatch(name)) continue;
-
-                    try { new PlcArtifactPortSession(this, "ImportPlcTagTablesFromDirectory").ImportPlcTagTable(softwarePath, folderPath, file); imported.Add(name); }
+                    try { new PlcArtifactPortSession(this, "ImportPlcTagTablesFromDirectory").ImportPlcTagTable(softwarePath, folderPath, file, overwrite); imported.Add(name); }
                     catch (PortalException pex) { failed.Add(new ImportFailure { Path = file, Error = pex.Message }); }
+                    // overwrite=false: the worker refuses an existing table before its import; the batch records that file as failed.
+                    catch (AdapterPreconditionException refusal) when (imported.Count + failed.Count > 0) { failed.Add(new ImportFailure { Path = file, Error = refusal.Message }); }
                 }
 
                 return new ResponseImportBatch { Imported = imported, Failed = failed };
             }
+            catch (AdapterPreconditionException) { throw; }
             catch (Exception ex)
             {
                 failed.Add(new ImportFailure { Path = dir, Error = ex.ToString() });
@@ -117,7 +129,8 @@ namespace TiaMcpServer.Siemens.Services
             string plcSoftwarePath,
             string hmiSoftwarePath,
             string referenceDir,
-            JsonObject? placeholders = null)
+            JsonObject? placeholders = null,
+            bool overwrite = false)
         {
             var imported = new List<string>();
             var failed = new List<ImportFailure>();
@@ -203,24 +216,33 @@ namespace TiaMcpServer.Siemens.Services
                 CopyDirWithReplace(hmiScreensDir, tempHmiScreens);
                 CopyDirWithReplace(hmiTagsDir, tempHmiTags);
 
-                // PLC blocks
-                if (Directory.Exists(tempPlcBlocks))
-                {
-                    var r = new PlcArtifactPortSession(this, "SeedProjectFromReference").ImportBlocksFromDirectory(plcSoftwarePath, plcBlockGroupPath, tempPlcBlocks, "", overwrite: true);
-                    imported.AddRange(r.Imported?.Select(x => "plc:block:" + x) ?? Array.Empty<string>());
-                    failed.AddRange(r.Failed?.Select(x => new ImportFailure { Path = x.Path, Error = "plc:block:" + x.Error }) ?? Array.Empty<ImportFailure>());
-                }
+                string[] PlcFiles(string directory) => Directory.Exists(directory)
+                    ? Directory.EnumerateFiles(directory, "*.xml", SearchOption.TopDirectoryOnly).OrderBy(f => f, StringComparer.OrdinalIgnoreCase).ToArray() : Array.Empty<string>();
+                RequireImportWindow(PlcFiles(tempPlcTypes).Concat(PlcFiles(tempPlcBlocks)), "referenceDir");
 
-                // PLC types (UDT)
-                if (Directory.Exists(tempPlcTypes))
+                // PLC types (UDT) first, then blocks: blocks skill "Import Order Rule" (API audit 2026-10-19 F9).
+                foreach (var file in PlcFiles(tempPlcTypes))
                 {
-                    foreach (var file in Directory.EnumerateFiles(tempPlcTypes, "*.xml", SearchOption.TopDirectoryOnly))
+                    var name = Path.GetFileNameWithoutExtension(file);
+                    try
                     {
-                        var ok = new PlcArtifactPortSession(this, "SeedProjectFromReference").ImportType(plcSoftwarePath, plcTypeGroupPath, file);
-                        var name = Path.GetFileNameWithoutExtension(file);
+                        var ok = new PlcArtifactPortSession(this, "SeedProjectFromReference").ImportType(plcSoftwarePath, plcTypeGroupPath, file, overwrite);
                         if (ok) imported.Add("plc:type:" + name);
                         else failed.Add(new ImportFailure { Path = file, Error = "plc:type:Import failed" });
                     }
+                    catch (AdapterPreconditionException refusal) when (imported.Count + failed.Count > 0) { failed.Add(new ImportFailure { Path = file, Error = "plc:type:" + refusal.Message }); }
+                }
+
+                // PLC blocks, ordered by the worker: FB/FC, global DB, instance DB, OB.
+                if (Directory.Exists(tempPlcBlocks))
+                {
+                    try
+                    {
+                        var r = new PlcArtifactPortSession(this, "SeedProjectFromReference").ImportBlocksFromDirectory(plcSoftwarePath, plcBlockGroupPath, tempPlcBlocks, "", overwrite);
+                        imported.AddRange(r.Imported?.Select(x => "plc:block:" + x) ?? Array.Empty<string>());
+                        failed.AddRange(r.Failed?.Select(x => new ImportFailure { Path = x.Path, Error = "plc:block:" + x.Error }) ?? Array.Empty<ImportFailure>());
+                    }
+                    catch (AdapterPreconditionException refusal) when (imported.Count + failed.Count > 0) { failed.Add(new ImportFailure { Path = tempPlcBlocks, Error = "plc:block:" + refusal.Message }); }
                 }
 
                 // HMI tag tables then screens
@@ -248,6 +270,7 @@ namespace TiaMcpServer.Siemens.Services
                 };
             }
             catch (NotSupportedException) { throw; }
+            catch (AdapterPreconditionException) { throw; }
             catch (Exception ex)
             {
                 failed.Add(new ImportFailure { Path = referenceDir, Error = ex.ToString() });

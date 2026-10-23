@@ -229,9 +229,10 @@ public sealed class B3HostPortsTests
         foreach (var branch in new[] {
             ("ManagePlcBlockProtection", "read", "", 15), ("ListPlcSystemGroups", "", "", 14),
             ("CreatePlcInstanceDb", "", "", 15), ("SetPlcProgram", "", "", 18),
-            ("GetPlcCrossReferences", "", "", 18), ("ManagePlcUserGroup", "rename", "watchTables", 15),
+            // P8-81d: watch-table group rename needs the V21 public Name setter (API audit F20); fc/fb builds are V21 only (2026-10-20).
+            ("GetPlcCrossReferences", "", "", 18), ("ManagePlcUserGroup", "rename", "watchTables", 21),
             ("ManagePlcUserGroup", "rename", "technology", 19), ("ManagePlcUserGroup", "rename", "externalSources", 21),
-            ("ManagePlcExternalSources", "renameGroup", "", 21), ("BuildAndImportPlcArtifact", "", "fc", 20) })
+            ("ManagePlcExternalSources", "renameGroup", "", 21), ("BuildAndImportPlcArtifact", "", "fc", 21) })
             Assert.Equal(version < branch.Item4, PlcSoftwareCapabilities.Unsupported(release, branch.Item1, branch.Item2, branch.Item3) != null);
         Assert.Equal(version < 16, PlcSoftwareCapabilities.Unsupported(release, "ListPlcSystemGroups", unitName: "U") != null);
         Assert.Equal(version < 18, PlcSoftwareCapabilities.Unsupported(release, "ListPlcSystemGroups", unitName: "U", unitKind: "safety") != null);
@@ -264,7 +265,9 @@ public sealed class B3HostPortsTests
     [Theory]
     [InlineData("20")]
     [InlineData("21")]
-    public void Seed_PLC_and_HMI_use_explicit_worker_operations_in_original_order(string release)
+    // API audit 2026-10-19 F9: PLC data types are imported before blocks (blocks skill "Import Order Rule"); F6: the PLC files
+    // carry an in-window Engineering header; F25: overwrite defaults to false.
+    public void Seed_PLC_and_HMI_use_explicit_worker_operations_with_types_before_blocks(string release)
     {
         using var scope = Host.HardwareContract.UseRelease(release);
         var root = Path.Combine(Path.GetTempPath(), "b3-seed-" + Guid.NewGuid().ToString("N"));
@@ -272,18 +275,74 @@ public sealed class B3HostPortsTests
         try
         {
             foreach (string part in new[] { "plc/blocks", "plc/types", "hmi/tags", "hmi/screens" }) {
-                Directory.CreateDirectory(Path.Combine(root, part)); File.WriteAllText(Path.Combine(root, part, "fixture.xml"), "<Document />"); }
+                Directory.CreateDirectory(Path.Combine(root, part)); File.WriteAllText(Path.Combine(root, part, "fixture.xml"), part.StartsWith("plc", StringComparison.Ordinal) ? "<Document><Engineering version=\"V" + release + "\" /></Document>" : "<Document />"); }
             var service = new Service((operation, args) => {
                 string action = (string?)args["request"]?["Action"] ?? (string?)args["request"]?["Kind"] ?? "";
+                if (operation.EndsWith("ExecutePlcOrganisation", StringComparison.Ordinal)) Assert.False((bool?)args["request"]?["Overwrite"]);
                 calls.Add(operation + ":" + action);
                 if (operation.EndsWith("SeedReferenceHmi")) return new JsonObject { ["Imported"] = new JsonArray("fixture"), ["Failed"] = new JsonArray() };
                 if (action == "importBlockDirectory") return new JsonObject { ["Batch"] = new JsonObject { ["Imported"] = new JsonArray("ActualBlockName"), ["Failed"] = new JsonArray() } };
                 return new JsonObject { ["Found"] = true };
             }, () => true, () => "fixture.ap" + release);
             var result = service.SeedProjectFromReference("PLC", "HMI", root);
-            Assert.Equal(new[] { "plc-software.ExecutePlcOrganisation:importBlockDirectory", "plc-software.ExecutePlcOrganisation:importType", "plc-software.SeedReferenceHmi:tagTables", "plc-software.SeedReferenceHmi:screens" }, calls);
+            Assert.Equal(new[] { "plc-software.ExecutePlcOrganisation:importType", "plc-software.ExecutePlcOrganisation:importBlockDirectory", "plc-software.SeedReferenceHmi:tagTables", "plc-software.SeedReferenceHmi:screens" }, calls);
             Assert.Contains("plc:block:ActualBlockName", result.Imported!);
             Assert.Empty(result.Failed!);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    // API audit 2026-10-19 F6: a PLC file outside the release's SimaticML import window is refused before any worker operation;
+    // the header is never rewritten.
+    [Theory]
+    [InlineData("20", "V16")]
+    [InlineData("21", "V17")]
+    [InlineData("19", "V15.1")]
+    [InlineData("18", "V19")]
+    public void Seed_refuses_an_out_of_window_PLC_file_before_any_import(string release, string header)
+    {
+        using var scope = Host.HardwareContract.UseRelease(release);
+        string root = Path.Combine(Path.GetTempPath(), "b3-window-" + Guid.NewGuid().ToString("N"));
+        try {
+            Directory.CreateDirectory(Path.Combine(root, "plc/types")); Directory.CreateDirectory(Path.Combine(root, "plc/blocks"));
+            File.WriteAllText(Path.Combine(root, "plc/types/T.xml"), "<Document><Engineering version=\"V" + release + "\" /></Document>");
+            File.WriteAllText(Path.Combine(root, "plc/blocks/B.xml"), "<Document><Engineering version=\"" + header + "\" /></Document>");
+            var service = new Service((_, _) => throw new Exception("An out-of-window seed must issue no worker operation."), () => true, () => "fixture");
+            var refusal = Assert.Throws<AdapterPreconditionException>(() => service.SeedProjectFromReference("PLC", "HMI", root));
+            Assert.Contains(header, refusal.Message, StringComparison.Ordinal);
+            Assert.False(refusal.IsArgument);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    // API audit 2026-10-19 F25: overwrite=false is sent by default, and a worker refusal raised before its first native mutation
+    // (an existing tag table) stays a typed precondition on the host for the first file, then becomes a failed file.
+    [Theory]
+    [InlineData("17")]
+    [InlineData("21")]
+    public void Tag_table_directory_import_sends_overwrite_false_and_keeps_worker_refusals_typed(string release)
+    {
+        using var scope = Host.HardwareContract.UseRelease(release);
+        string root = Path.Combine(Path.GetTempPath(), "b3-overwrite-" + Guid.NewGuid().ToString("N"));
+        try {
+            Directory.CreateDirectory(root);
+            foreach (var name in new[] { "A", "B" }) File.WriteAllText(Path.Combine(root, name + ".xml"), "<Document><Engineering version=\"V" + release + "\" /></Document>");
+            var overwrite = new List<bool?>();
+            JsonNode Worker(string operation, JsonObject args)
+            {
+                if ((string?)args["request"]?["Action"] == "softwarePath") return new JsonObject { ["Message"] = "PLC" };
+                overwrite.Add((bool?)args["request"]?["Overwrite"]);
+                return (string?)args["request"]?["FilePath"] is string file && file.EndsWith("A.xml", StringComparison.Ordinal)
+                    ? new JsonObject { ["Found"] = true }
+                    : new JsonObject { ["MayHaveChanged"] = false, ["Failure"] = new JsonObject { ["Code"] = nameof(AdapterPreconditionException), ["Message"] = "The PLC tag table 'B' already exists and overwrite=false; nothing was imported." } };
+            }
+            var service = new Service(Worker, () => true, () => "fixture.ap" + release);
+            var result = service.ImportPlcTagTablesFromDirectory("PLC", "", root);
+            Assert.Equal(new bool?[] { false, false }, overwrite);
+            Assert.Equal(new[] { "A" }, result.Imported!);
+            Assert.Contains("overwrite=false", Assert.Single(result.Failed!).Error, StringComparison.Ordinal);
+            File.Delete(Path.Combine(root, "A.xml"));
+            Assert.Throws<AdapterPreconditionException>(() => service.ImportPlcTagTablesFromDirectory("PLC", "", root));
         }
         finally { Directory.Delete(root, true); }
     }

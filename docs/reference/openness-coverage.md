@@ -205,6 +205,50 @@ Official APIs in this family that no 4.0 tool uses:
 
 Not verified on a real TIA Portal: every row above. In particular the headless behaviour of a protected project without credentials, the dialog texts that reach the Confirmation handler, whether `UmacCredentials` is supplied in `AuthenticationEventArgs`, and whether a worker-started headless TIA Portal outlives the worker.
 
+## PLC software (API audit 2026-10-19, P8-81d)
+
+Used since P8-81d, with the releases where the SDK has each member:
+
+| Official API | Releases | Use |
+|---|---|---|
+| SimaticML `Document/Engineering/@version` and "Version-specific SimaticML import" | all eight | Never rewritten. Every legacy PLC import path (BuildAndImportPlcArtifact, RepairAndReimportPlcBlock, ImportPlcTagTablesFromDirectory, SeedProjectFromReference) refuses a file outside the documented window before any native call: up to V18 the file's version must not be newer than the API (V14 SP1, V15.1, V16, V17, V18); V19 imports V16-V19, V20 imports V17-V20, V21 imports V18-V21. "V14 SP1", "V15.1" and the numeric spellings are parsed. Builders write the serving release's header (`PlcDeclarationXmlFormat.ForRelease`). |
+| `ImportOptions.None` / `ImportOptions.Override` | all eight | `overwrite=false` (the default) refuses an existing object of the same name before the import and then imports with `None`; `overwrite=true` uses `Override`. An existing object in another group is refused, because TIA cancels such an Override import. |
+| `PlcTagTableSystemGroup.Groups.Find` / `PlcTagTableUserGroup.Groups.Find` | all eight | Exact tag-table group resolution; an unresolved `folderPath` is refused, never redirected to the root group. |
+| `PlcBlock.IsKnowHowProtected`, `PlcBlock.IsConsistent`, `PlcBlock.Number` | all eight | MovePlcBlockToGroup refuses know-how-protected and inconsistent blocks before any delete, moves through SimaticML XML only (SIMATIC SD does not store the block number), and compares the number before and after; a change is reported as a failure with the retained recovery export. |
+| `ExportOptions.WithDefaults` | all eight | Backup and recovery exports (import recovery, batch-import recovery, the move round trip). User-facing XML exports keep `ExportOptions.None`: TIA writes only modified and non-default values plus what a later import needs. |
+| `CompilerResult.State` and `ErrorCount` | all eight | The V4 compile candidate decides success from the root state (Success, Information, Warning) and root ErrorCount 0. A root/leaf count mismatch is kept as a diagnostic. The legacy diagnostics lists compare `State` with the enum names. |
+| `DocumentImportResult.Messages`, `DocumentExportResult.Messages` | 20, 21 | Kept (at most 8 messages of 512 characters) with every failed or partial document result. `PartialSuccess` is never success: B5 document tools return outcome partial with the messages; candidate, move and batch paths stop. |
+| `PlcTypeGroup.Documents` | 20, 21 | A type group that holds only PLC documents is not empty and is not deleted. |
+| `PlcWatchAndForceTableGroup.ForceTables` | 15.1-21 | A watch-table group that holds only force tables is not empty and is not deleted. |
+| `PlcUnitProvider` units / `SafetyUnits` | 16-21 / 18-21 | The download-readiness consistency read includes software units from V16 (it started at V18 before). |
+| `CrossReference.Location.Address`, `TypeName`, `ReferencedAsName` | 18-21 | Returned with every cross-reference row as `locationAddress`, `locationTypeName`, `locationReferencedAs`. `CrossReferenceService` does not cover `PlcUserConstant`, so a tag table that holds user constants never reports a complete delete aggregate. |
+| `PlcExternalSourceComposition.CreateFromFile(String, String)` | all eight | Only `.scl`, `.awl`, `.db` and `.udt` ("Adding an external file"; `.stl` throws natively) and a fully qualified path; TIA receives the normalized full path. |
+| `PlcBlockComposition.CreateInstanceDB` | 15.1-21 | V15.1 and V16 document it for ProDiag FBs only, so other FBs are refused there; `autoNumber=false` needs `number >= 1`. |
+| User-group `Name` setter | blocks, types, watch tables: 21; tag tables: 20-21; technology: 19-21 | ManagePlcUserGroup `rename` is refused where the setter does not exist (no `SetAttribute` fallback). |
+
+Withdrawn by decision (2026-10-20): on V20 the four whole-block composers that write V21 documents (`BuildPlcFcBlock`,
+`BuildPlcFbBlock`, `BuildPlcLadFcBlock`, `BuildPlcAliasAlarmLad`) are not registered, and `BuildAndImportPlcArtifact` refuses
+`kind` fc/fb below V21. They stay on V21. They open on V20 only after an import of their output there has been verified.
+
+Official APIs in this family that no 4.0 tool uses:
+
+- Software-unit scope for the candidate import/export and batch tools (`PlcUnitBase.BlockGroup`, `TypeGroup`, `TagTableGroup`,
+  `ExternalSourceGroup`, 16-21). ImportPlcBlock, ImportPlcType, ImportPlcTagTable, their directory variants, ExportPlcBlock,
+  ExportPlcBlocks, ExportPlcTypes and ImportPlcProgramFromDirectory work on the PLC root groups only; ManagePlcExternalSources and
+  ManagePlcBlockDocuments take `unitName`.
+- `SWImportOptions` (`IgnoreStructuralChanges`, `IgnoreMissingReferencedObjects` 15.1-21, `IgnoreUnitAttributes` 16-21) and the
+  culture options `ImportOptions.SkipInactiveCultures` / `ActivateInactiveCultures` (19-21). A file exported from a software unit,
+  one that references objects not yet in the project, or one with inactive cultures is therefore refused by TIA; the import
+  failure names these options.
+- SIMATIC SD for FBD, F-FBD, SCL and mixed-language blocks on V21 (V21 "What's new"). The SD document tools accept LAD and DB blocks
+  (and UDTs) on V20 and V21; V20 documents exactly that set.
+- `PlcBlock.Export(FileInfo, ExportOptions, DocumentInfoOptions)` (18-21) and `ExportOptions.WithReadOnly` outside
+  ImportPlcBlockVerified.
+- `GenerateOptions.WithDependencies` for `PlcExternalSourceSystemGroup.GenerateSource`. GeneratePlcSourceFromBlocks does not pre-check
+  the block language; TIA generates sources only from SCL and STL blocks, DBs and UDTs and rejects the rest.
+
+Not verified on a real TIA Portal: every row above; the VM checklist names the native behaviours each fix depends on.
+
 ## Additional version-specific evidence boundaries
 
 - Classic HMI and Unified HMI use separate object models and dispatch paths. An

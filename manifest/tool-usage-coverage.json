@@ -1,10 +1,10 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "6da3d42e553d1954fcf46c1f3d307daef227b7a855e714e04b8b45a56db109dc",
+  "catalogSha256": "d5d5aa5e4142ac36382bde6d5af9215faac87f8d96b64f48cf10474b68658cb3",
   "uniqueTools": 516,
   "documents": 89,
-  "versionToolPairs": 3189,
-  "offlineCallExecutions": 79,
+  "versionToolPairs": 3185,
+  "offlineCallExecutions": 76,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
   "callSequences": 36,
@@ -32758,8 +32758,8 @@
     },
     "20": {
       "releaseKey": "20",
-      "registeredToolCount": 500,
-      "checkedToolCount": 500,
+      "registeredToolCount": 496,
+      "checkedToolCount": 496,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 498,
@@ -32768,10 +32768,7 @@
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
-        "BuildPlcFbBlock",
-        "BuildPlcFcBlock",
         "BuildPlcGlobalDb",
-        "BuildPlcLadFcBlock",
         "BuildPlcTagTable",
         "BuildPlcUdt",
         "BuildStructuredText",
@@ -33009,39 +33006,7 @@
           "operations": []
         },
         {
-          "toolName": "BuildPlcAliasAlarmLad",
-          "usageProfile": "full-engine",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildPlcFbBlock",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildPlcFcBlock",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "BuildPlcGlobalDb",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildPlcLadFcBlock",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",

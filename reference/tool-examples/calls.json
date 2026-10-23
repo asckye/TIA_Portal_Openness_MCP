@@ -7317,7 +7317,10 @@
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "resultReading": [
+          "Know-how-protected and inconsistent blocks are refused before anything is deleted. The move uses SimaticML XML; a changed block number is reported as a failure with the retained recovery export."
+        ]
       },
       "ListPlcSystemGroups": {
         "arguments": {
@@ -7361,7 +7364,10 @@
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "resultReading": [
+          "autoNumber=false needs number >= 1. On V15.1 and V16 only ProDiag FBs are accepted (SDK: CreateInstanceDB for ProDiag blocks)."
+        ]
       },
       "ManagePlcTagDefinition": {
         "arguments": {
@@ -7405,7 +7411,10 @@
         },
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true,
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "resultReading": [
+          "Renaming a tag (operation update with properties Name) needs the public PlcTag.Name setter of V20/V21; V14 SP1-V19 refuse it with 'Public writable property unavailable'."
+        ]
       },
       "SetPlcProgram": {
         "arguments": {
@@ -7533,12 +7542,20 @@
           },
           "compileAfter": {
             "exampleValue": true
+          },
+          "overwrite": {
+            "exampleValue": false
           }
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true,
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "resultReading": [
+          "overwrite=false (default) refuses an existing object of the same name before the import (PRECONDITION_FAILED, nothing imported); pass overwrite=true to replace it with ImportOptions.Override.",
+          "The SimaticML Engineering version is never rewritten. A file outside the release's documented import window is refused before any native call (up to V18: not newer than the release; V19: V16-V19; V20: V17-V20; V21: V18-V21).",
+          "kind fc and fb write V21 documents and are available on V21 only; udt, tagtable and globaldb use the serving release's header."
+        ]
       },
       "DescribePlcBlockLogic": {
         "arguments": {
@@ -7561,11 +7578,18 @@
           },
           "compileAfter": {
             "exampleValue": true
+          },
+          "overwrite": {
+            "exampleValue": false
           }
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "resultReading": [
+          "overwrite=false (default) refuses an existing object of the same name before the import (PRECONDITION_FAILED, nothing imported); pass overwrite=true to replace it with ImportOptions.Override.",
+          "The SimaticML Engineering version is never rewritten. A file outside the release's documented import window is refused before any native call (up to V18: not newer than the release; V19: V16-V19; V20: V17-V20; V21: V18-V21)."
+        ]
       },
       "ImportPlcTagTablesFromDirectory": {
         "arguments": {
@@ -7579,13 +7603,16 @@
             "requiresBinding": true
           },
           "overwrite": {
-            "exampleValue": true
+            "exampleValue": false
           }
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultReading": [
-          "P6-35 behavior family P6-IMPORT is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+          "P6-35 behavior family P6-IMPORT is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
+          "overwrite=false (default) records an existing tag table of the same name as a failed file before its import; pass overwrite=true to replace it with ImportOptions.Override.",
+          "folderPath must name an existing tag table group exactly; an unresolved group is refused, never redirected to the root group.",
+          "The SimaticML Engineering version is never rewritten. A file outside the release's documented import window is refused before any native call (up to V18: not newer than the release; V19: V16-V19; V20: V17-V20; V21: V18-V21)."
         ],
         "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
       },
@@ -7598,11 +7625,19 @@
         "parameters": {
           "placeholders": {
             "exampleValue": {}
+          },
+          "overwrite": {
+            "exampleValue": false
           }
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "resultReading": [
+          "overwrite=false (default) refuses an existing object of the same name before the import (PRECONDITION_FAILED, nothing imported); pass overwrite=true to replace it with ImportOptions.Override.",
+          "The SimaticML Engineering version is never rewritten. A file outside the release's documented import window is refused before any native call (up to V18: not newer than the release; V19: V16-V19; V20: V17-V20; V21: V18-V21).",
+          "PLC data types are imported before blocks; blocks follow FB/FC, global DB, instance DB, OB."
+        ]
       },
       "GeneratePlcSourceFromBlocks": {
         "arguments": {
@@ -7615,7 +7650,10 @@
         },
         "parameters": {},
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": [
+          "TIA generates sources from SCL and STL blocks (plus DBs and UDTs) only and rejects other languages; the file extension must match (.scl, .awl, .db, .udt)."
+        ]
       },
       "ManagePlcExternalSources": {
         "arguments": {
@@ -7713,7 +7751,8 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true,
         "resultReading": [
-          "P6-35 behavior family P6-SOURCE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+          "P6-35 behavior family P6-SOURCE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
+          "createFromFile accepts .scl, .awl, .db and .udt files with a fully qualified path; .stl is refused (Siemens: other extensions throw)."
         ],
         "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
       },
@@ -19113,7 +19152,10 @@
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "resultReading": [
+          "autoNumber=false needs number >= 1. On V15.1 and V16 only ProDiag FBs are accepted (SDK: CreateInstanceDB for ProDiag blocks)."
+        ]
       },
       "CreatePlcTypeGroup": {
         "arguments": {
@@ -21113,7 +21155,10 @@
         },
         "parameters": {},
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": [
+          "TIA generates sources from SCL and STL blocks (plus DBs and UDTs) only and rejects other languages; the file extension must match (.scl, .awl, .db, .udt)."
+        ]
       },
       "GenerateSivarc": {
         "arguments": {
@@ -22463,13 +22508,16 @@
             "requiresBinding": true
           },
           "overwrite": {
-            "exampleValue": true
+            "exampleValue": false
           }
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultReading": [
-          "P6-35 behavior family P6-IMPORT is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+          "P6-35 behavior family P6-IMPORT is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
+          "overwrite=false (default) records an existing tag table of the same name as a failed file before its import; pass overwrite=true to replace it with ImportOptions.Override.",
+          "folderPath must name an existing tag table group exactly; an unresolved group is refused, never redirected to the root group.",
+          "The SimaticML Engineering version is never rewritten. A file outside the release's documented import window is refused before any native call (up to V18: not newer than the release; V19: V16-V19; V20: V17-V20; V21: V18-V21)."
         ],
         "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
       },
@@ -26123,7 +26171,8 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true,
         "resultReading": [
-          "P6-35 behavior family P6-SOURCE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+          "P6-35 behavior family P6-SOURCE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
+          "createFromFile accepts .scl, .awl, .db and .udt files with a fully qualified path; .stl is refused (Siemens: other extensions throw)."
         ],
         "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
       },
@@ -26717,7 +26766,10 @@
         },
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true,
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "resultReading": [
+          "Renaming a tag (operation update with properties Name) needs the public PlcTag.Name setter of V20/V21; V14 SP1-V19 refuse it with 'Public writable property unavailable'."
+        ]
       },
       "ManagePlcUserGroup": {
         "arguments": {
@@ -29335,7 +29387,10 @@
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "resultReading": [
+          "Know-how-protected and inconsistent blocks are refused before anything is deleted. The move uses SimaticML XML; a changed block number is reported as a failure with the retained recovery export."
+        ]
       },
       "OpenProject": {
         "arguments": {
@@ -31070,11 +31125,18 @@
           },
           "compileAfter": {
             "exampleValue": true
+          },
+          "overwrite": {
+            "exampleValue": false
           }
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "resultReading": [
+          "overwrite=false (default) refuses an existing object of the same name before the import (PRECONDITION_FAILED, nothing imported); pass overwrite=true to replace it with ImportOptions.Override.",
+          "The SimaticML Engineering version is never rewritten. A file outside the release's documented import window is refused before any native call (up to V18: not newer than the release; V19: V16-V19; V20: V17-V20; V21: V18-V21)."
+        ]
       },
       "ResolveSivarcExpression": {
         "arguments": {
@@ -31547,11 +31609,19 @@
         "parameters": {
           "placeholders": {
             "exampleValue": {}
+          },
+          "overwrite": {
+            "exampleValue": false
           }
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "resultReading": [
+          "overwrite=false (default) refuses an existing object of the same name before the import (PRECONDITION_FAILED, nothing imported); pass overwrite=true to replace it with ImportOptions.Override.",
+          "The SimaticML Engineering version is never rewritten. A file outside the release's documented import window is refused before any native call (up to V18: not newer than the release; V19: V16-V19; V20: V17-V20; V21: V18-V21).",
+          "PLC data types are imported before blocks; blocks follow FB/FC, global DB, instance DB, OB."
+        ]
       },
       "SetPlcCpuSettings": {
         "arguments": {
@@ -33189,12 +33259,20 @@
           },
           "compileAfter": {
             "exampleValue": true
+          },
+          "overwrite": {
+            "exampleValue": false
           }
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true,
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "resultReading": [
+          "overwrite=false (default) refuses an existing object of the same name before the import (PRECONDITION_FAILED, nothing imported); pass overwrite=true to replace it with ImportOptions.Override.",
+          "The SimaticML Engineering version is never rewritten. A file outside the release's documented import window is refused before any native call (up to V18: not newer than the release; V19: V16-V19; V20: V17-V20; V21: V18-V21).",
+          "kind fc and fb write V21 documents and are available on V21 only; udt, tagtable and globaldb use the serving release's header."
+        ]
       },
       "GetOpennessGuidance": {
         "arguments": {},

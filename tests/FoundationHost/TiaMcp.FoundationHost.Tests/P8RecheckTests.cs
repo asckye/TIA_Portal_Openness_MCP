@@ -190,10 +190,16 @@ public sealed class P8RecheckTests
         Assert.Equal(index >= 1, names.Contains("ExportPlcWatchTable"));
         Assert.Equal(index >= 1, names.Contains("ListPlcWatchTables"));
         Assert.Equal(index >= 5, names.Contains("ImportMasterCopyFromGlobalLibrary"));
-        foreach (string name in new[] { "BuildPlcLadFcBlock", "BuildPlcFcBlock", "BuildPlcFbBlock", "BuildFlgNetCall", "BuildStructuredText", "BuildPlcTagTable" })
+        foreach (string name in new[] { "BuildFlgNetCall", "BuildStructuredText", "BuildPlcTagTable" })
         {
             Assert.Equal(index >= 6, PortedFamilies.Available(release, name));
             Assert.Equal(index >= 6, names.Contains(name));
+        }
+        // 2026-10-20 decision (P8-81d): the whole-block composers write V21 documents and are registered on V21 only.
+        foreach (string name in new[] { "BuildPlcLadFcBlock", "BuildPlcFcBlock", "BuildPlcFbBlock" })
+        {
+            Assert.Equal(index >= 7, PortedFamilies.Available(release, name));
+            Assert.Equal(index >= 7, names.Contains(name));
         }
         Assert.Equal(0, worker.Calls);
     }

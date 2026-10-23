@@ -21959,7 +21959,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "4a169f1f5ffc567173323d6c23f2150081a0912aab70108971519accf97ee275",
+      "descriptionSha256": "1f54d0b464facb422f0f9459d1bbd2c0227863b7c8f17f6631fea50a6b3d1fbc",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -21994,6 +21994,11 @@
               "fc"
             ],
             "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "overwrite: false (default) refuses an existing object of the same name before the import; true replaces it (Siemens.Engineering.ImportOptions.Override).",
+            "type": "boolean"
           },
           "softwarePath": {
             "description": "softwarePath: PLC software path, e.g. 'PLC_1'. Required only when dryRun=false.",
@@ -32842,7 +32847,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "25e9d50c7a844117f3a2edeb566594728f0446a522fea8ed067e0f2de38d4663",
+      "descriptionSha256": "51a06aac38cd3925c700fb48b68d800b67b7f70c0a2f03e00a3fdcb75f8a99b5",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -34199,7 +34204,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "79ccd3fd012bf9375601418391bfead0619651180cfcf78e9061c84933da9767",
+      "descriptionSha256": "74d3f50e7c76c81b4e39b256727115b0bf6603466ce18ccecafd166cce8c34c8",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -36239,7 +36244,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "136a28bfbab071586e75b1945ca646d22bb64990433f7413a5f5acc10198de6b",
+      "descriptionSha256": "e2a3656bb1ed12b39b884e9be33cd3d2bf44bb8a1e63d6a644560205c0b6e544",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -39493,7 +39498,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "980fe2a2f95d2ecbd085668295fff33cc5021c603707b5bbbae47bfe24fbae9e",
+      "descriptionSha256": "555f7568f7248b3ecfd1367734dca702ce8960076405145bcd03658694be0115",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -102112,7 +102117,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "633ca5f2c98f465c45dfc75106dd570ee217ec468eb86e190b78b28350675761",
+      "descriptionSha256": "2272edf8eecb6a4388c3d7e07098b148a326a7f2b584b76e154f73421953527d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -183577,7 +183582,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "93da56fb6b852f07b42bcfa842bbaf242660ed3ef083fdb192ca71cc4c06183b",
+      "descriptionSha256": "04a41a37566bd66014acbbc1443f9a21f31efd641800599cd2a59ae4734818a8",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -184900,7 +184905,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "8c8051e081849f70062fe26d604a3c495b5bac95495be6295403ce9166cee324",
+      "descriptionSha256": "727c6efc4172192843fcd8bcfda453929b4cbe632ad17a917c0d814bcd5f7791",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -186228,7 +186233,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "a90b995a8db332c8335a3b3065d68781dec9671c538565769b9b526ba9e5fb2b",
+      "descriptionSha256": "10f763b34adec64e2959b7b69c5558e34911678274bbf2cafe0f15cac98efb67",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -187561,7 +187566,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "0cb3dfc6ac5ee6f8ca4aca2cb2fd748873b8afbd462040918baf6e33fc45a6e8",
+      "descriptionSha256": "b7b5dc9158483c1dec7ed1e8cf9251cf594238eb1a625161845e39c518ca4def",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -190221,7 +190226,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "f449c4485b34c6e4303e3c7a8daac108393e34171d5087c352d9c54b6e86da59",
+      "descriptionSha256": "e04f034823f76d8e866d93263bd0f4dd856d8a1afaa83749d63f03bb0b2054dc",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -191539,7 +191544,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "230e7eb6791019b07a2c3c80e6ab3f794419c6ab76daa0570d08dbf67d51200f",
+      "descriptionSha256": "c4ff4d8ad5777ba417c26bb24ec55e66fe2f940ccf4b24aa96281f700ea366e5",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -192862,7 +192867,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "a75f842a96d650fdc9408a85e2e3ea9cebea4ca60be36afe99873b52b0a97809",
+      "descriptionSha256": "4b0b275bf45d2e9dd6d38c228eb79c86b28a3954a41f256f1ff62a0b02f597cb",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -213972,7 +213977,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "6e3ea886652d0419357d0b9ea9c51d25c389368c99c07920da9eba21dc145421",
+      "descriptionSha256": "6707d119a276dd1fec15e6e5f4b5c3f1cfd90dc547f1ddac7fb4b2d367fdbacd",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -265043,7 +265048,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "8cbf88043f265ae00a54ffadddfeee64e0c2737aa66f4588f230324421f72696",
+      "descriptionSha256": "91d705b665d71e38cad33b5a479675b71251a59bdc06b7cde087073dafbd250f",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -345141,7 +345146,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "bc21bd2f9f00b74c4d5f8a00e1ecb55db924ee28e32f5eb4806972447f663696",
+      "descriptionSha256": "ee242b3941c0ad7e34a5d721ce471cb51ba61bbb3e4e66aca3613d65a61fc1d0",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -353143,7 +353148,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "429e2b210fc2e6a5c2590d3f78c67e6ef142cbc0e414146fb4a9367587af1e7f",
+      "descriptionSha256": "9c5edb20df52da9ce46921855839b4ee4659118688baa4b39990666c8897a3f9",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -354514,7 +354519,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "ed482449fd208fd1dae425a6fdb90edb17c3d12ccf23463b57cf9c7620c3c5e7",
+      "descriptionSha256": "1ecbaca3174560b5de14b51a70e0353c56337f92bf29f4b9fe93cafe08ef6520",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -355837,7 +355842,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "df306b903e5b6caf07c6c0de779151dda5fc2ce88a29925ef189a7073eb4da29",
+      "descriptionSha256": "adce6eaf4213e16d0b08f0d47de4d90785d59c9580257a59486ed13427db16a7",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -355850,8 +355855,8 @@
             "type": "string"
           },
           "overwrite": {
-            "default": true,
-            "description": "overwrite: true=Override (default)",
+            "default": false,
+            "description": "overwrite: false (default) refuses an existing tag table of the same name before its import; true replaces it (Siemens.Engineering.ImportOptions.Override).",
             "type": "boolean"
           },
           "regexName": {
@@ -357150,7 +357155,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "283306e9a6e0d671b28c795a4d9ff876500d0d04dec2166542a919a9f9b2c3d2",
+      "descriptionSha256": "c37f62e1db1a195e743badbe16ede2901f208337e0d4d39db6ad4e895262b7fa",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -496174,7 +496179,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "2566133cf339b31c6bfca0d30fd7aa25726dc43a32aff537a00832b09f39a5df",
+      "descriptionSha256": "0408d48ff45adf19c0c90a317e44b70d379026d433074608aeb5365ca5f72486",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -496225,7 +496230,7 @@
           },
           "filePath": {
             "default": "",
-            "description": "filePath: for createFromFile - full path of the .scl / .awl / .stl / .db / .udt file on the TIA machine.",
+            "description": "filePath: for createFromFile - fully qualified path (drive or UNC) of the .scl / .awl / .db / .udt file on the TIA machine.",
             "examples": [
               "C:\\Temp\\FC_Add.scl"
             ],
@@ -507142,7 +507147,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "91dee1a6c9aeba8a90af17aac75684cd0fabe8da48fe956161e9c69095e1a72e",
+      "descriptionSha256": "a16bba933bf79c1b331099a04915a4f72e6fcff434f922ab03a15fb544f7aae7",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -508525,7 +508530,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "7746519700d2d835a018e36efbd1042fa23b3b36125798240b6f43f3a64acc64",
+      "descriptionSha256": "a8d46e9c4a63866136f850158417c5c4fed2ccce01b4090b0c7b5b8655745268",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -563167,7 +563172,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "d06368917083ef0db40de8f79d4b859fb09ae91c6514df4c2e4788873b29feab",
+      "descriptionSha256": "50312d7e7ed4b18677cdfbff79045c3a1091f4afe25932d30bcddee8c5cec2c7",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -596541,7 +596546,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "01cd62ed2535d1ddf69522d7bb609467e01c7ef459e8192d4825769a85992c84",
+      "descriptionSha256": "3f5f53a8bbc259a322219875d4bf451eb69a7213a4d7bd90f997c731c7ba775a",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -596558,6 +596563,11 @@
           "importPath": {
             "description": "importPath: block XML path",
             "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "overwrite: false (default) refuses an existing block of the same name before the import; true replaces it (Siemens.Engineering.ImportOptions.Override).",
+            "type": "boolean"
           },
           "softwarePath": {
             "description": "softwarePath: PLC software path, e.g. 'PLC_1'",
@@ -628082,13 +628092,18 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e0202f9179caa00f10f1c8de986aac4de766855f93db35aeffe3bd113e29930b",
+      "descriptionSha256": "0cdd63fbf293ce75d434a7a70563867d069f47e00db186e43ff401d91b7f7794",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "hmiSoftwarePath": {
             "description": "hmiSoftwarePath: path in the project structure to the HMI software",
             "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "overwrite: false (default) refuses existing PLC types and blocks of the same name before their import; true replaces them (Siemens.Engineering.ImportOptions.Override).",
+            "type": "boolean"
           },
           "placeholders": {
             "description": "placeholders: JsonObject key-values for replacement in XML, e.g. {\"PLC_NAME\":\"PLC_1\"}",

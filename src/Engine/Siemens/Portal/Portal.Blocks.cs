@@ -333,31 +333,22 @@ namespace TiaMcpServer.Siemens
             }
         }
 
-        // Prepare a block/type XML file for Openness import. Two things are fixed on a temp
-        // copy (the user's original file is never touched):
-        //   1) Engineering version: Openness rejects an XML whose <Engineering version="Vxx"/>
-        //      is newer than the connected portal ("The engineering version 'V21' ... is not
-        //      supported."). The XML builders historically hardcode V21, so on a V20 portal
-        //      every import fails. The header is rewritten to the detected major version.
+        // Prepare a block/type XML file for Openness import on a temp copy (the user's original file is never touched).
+        //   1) Engineering version (API audit 2026-10-19 F6): the header is never rewritten. A document outside the documented
+        //      SimaticML import window of the connected release is refused before any native call.
         //   2) Encoding/BOM: block/type XML carrying Chinese comments must be UTF-8 *with BOM*
         //      or TIA imports the text as mojibake (中文乱码). Callers (and the model that wrote
-        //      the file) frequently emit BOM-less UTF-8, so we always re-emit with a BOM here.
+        //      the file) frequently emit BOM-less UTF-8, so a BOM is added on an identical copy.
         private static string PrepareXmlForImport(string path)
         {
             try
             {
                 var bytes = TiaOpenness.Shared.NativeInputPolicy.Read("importPath", () => File.ReadAllBytes(path));
+                TiaMcp.Adapters.Contracts.SimaticMlImportWindow.Require(Engineering.TiaMajorVersion.ToString(System.Globalization.CultureInfo.InvariantCulture), bytes, "importPath");
                 bool hasBom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
                 var text = TiaOpenness.Shared.NativeInputPolicy.Read("importPath", () => File.ReadAllText(path, Encoding.UTF8));
 
                 var fixedText = text;
-                int major = Engineering.TiaMajorVersion;
-                if (major > 0)
-                {
-                    fixedText = Regex.Replace(text,
-                        "<Engineering\\s+version=\"V\\d+\"\\s*/>",
-                        $"<Engineering version=\"V{major}\" />");
-                }
 
                 // Already correct: version matches (or unknown) AND a BOM is present -> import as-is.
                 if (fixedText == text && hasBom) return path;
@@ -374,7 +365,7 @@ namespace TiaMcpServer.Siemens
         }
 
         public bool ImportBlock(string softwarePath, string groupPath, string importPath)
-        => Organisation(() => new TiaMcp.Adapters.Native.Plc.PlcOrganisationAdapter(new TiaMcpServer.Worker.EnginePlcOrganisationSession(this)).ImportBlock(softwarePath, groupPath, importPath));
+        => Organisation(() => new TiaMcp.Adapters.Native.Plc.PlcOrganisationAdapter(new TiaMcpServer.Worker.EnginePlcOrganisationSession(this)).ImportBlock(softwarePath, groupPath, importPath, overwrite: true));
 
         // Walk InnerException chain and concatenate type+message — Openness wraps the
         // useful XML-validation error several layers deep.
@@ -396,7 +387,7 @@ namespace TiaMcpServer.Siemens
         => System.Text.Json.JsonSerializer.Deserialize<ResponseImportBatch>(System.Text.Json.JsonSerializer.Serialize(new TiaMcp.Adapters.Native.Plc.PlcOrganisationAdapter(new TiaMcpServer.Worker.EnginePlcOrganisationSession(this)).ImportBlocksFromDirectory(softwarePath, groupPath, dir, regexName, overwrite)))!;
 
         public bool ImportType(string softwarePath, string groupPath, string importPath)
-        => Organisation(() => new TiaMcp.Adapters.Native.Plc.PlcOrganisationAdapter(new TiaMcpServer.Worker.EnginePlcOrganisationSession(this)).ImportType(softwarePath, groupPath, importPath));
+        => Organisation(() => new TiaMcp.Adapters.Native.Plc.PlcOrganisationAdapter(new TiaMcpServer.Worker.EnginePlcOrganisationSession(this)).ImportType(softwarePath, groupPath, importPath, overwrite: true));
 
         public (string TempDir, List<string> Paths)? ExportBlockToTemp(string softwarePath, string blockPath, bool preservePath = false)
         {

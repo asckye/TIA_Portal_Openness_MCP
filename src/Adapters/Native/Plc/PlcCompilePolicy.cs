@@ -20,9 +20,13 @@ namespace TiaMcp.Adapters
             {
                 raw.Add(item.Formatted);
                 var description=item.Description.Trim();
+                // API audit 2026-10-19 F8: State is the CompilerResultState enum name (Error, Information, Success, Warning), never
+                // localized text. Summary rows are still recognised by the English/German "Compiling finished" prefixes and by the
+                // empty-description parent rule; where TIA places them in the tree is on the VM checklist. Success and the native
+                // ErrorCount/WarningCount always come from the root result, not from these lists.
                 if(new[]{"Compiling finished","Compilation finished","Kompilierung beendet"}.Any(s=>description.StartsWith(s,StringComparison.OrdinalIgnoreCase))) continue;
-                bool error=item.State.IndexOf("error",StringComparison.OrdinalIgnoreCase)>=0 || item.State.IndexOf("fehler",StringComparison.OrdinalIgnoreCase)>=0;
-                bool warning=item.State.IndexOf("warning",StringComparison.OrdinalIgnoreCase)>=0 || item.State.IndexOf("warnung",StringComparison.OrdinalIgnoreCase)>=0;
+                bool error=string.Equals(item.State,"Error",StringComparison.Ordinal);
+                bool warning=string.Equals(item.State,"Warning",StringComparison.Ordinal);
                 if((error || warning) && item.HasChildren && string.IsNullOrWhiteSpace(item.Description)) continue;
                 var target=error ? errors : warning ? warnings : info;
                 if((error || warning || description.Length!=0) && !target.Contains(item.Formatted)) target.Add(item.Formatted);

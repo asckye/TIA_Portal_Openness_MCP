@@ -116,9 +116,9 @@ namespace TiaMcp.Adapters
                     case "ImportPlcTagTablesFromDirectory":
                     case "SeedProjectFromReference":
                         if (request.Action == "importBlockDirectory" && request.Operation == "SeedProjectFromReference") reply.Batch = adapter.ImportBlocksFromDirectory(request.SoftwarePath, request.GroupPath, request.FilePath, request.RegexName, request.Overwrite);
-                        else if (request.Action == "importBlock") reply.Found = adapter.ImportBlock(request.SoftwarePath, request.GroupPath, request.FilePath);
-                        else if (request.Action == "importType") reply.Found = adapter.ImportType(request.SoftwarePath, request.GroupPath, request.FilePath);
-                        else if (request.Action == "importTagTable") { adapter.ImportPlcTagTable(request.SoftwarePath, request.GroupPath, request.FilePath); reply.Found = true; }
+                        else if (request.Action == "importBlock") reply.Found = adapter.ImportBlock(request.SoftwarePath, request.GroupPath, request.FilePath, request.Overwrite);
+                        else if (request.Action == "importType") reply.Found = adapter.ImportType(request.SoftwarePath, request.GroupPath, request.FilePath, request.Overwrite);
+                        else if (request.Action == "importTagTable") { adapter.ImportPlcTagTable(request.SoftwarePath, request.GroupPath, request.FilePath, request.Overwrite); reply.Found = true; }
                         else if (request.Action == "softwarePath") reply.Message = (EngineeringPlcOrganisationSession ?? new OrganisationSession(this)).PlcSoftwarePath((EngineeringPlcOrganisationSession ?? new OrganisationSession(this)).GetPlcSoftware(request.SoftwarePath));
                         else if (request.Action == "compile") {
                             var watch = System.Diagnostics.Stopwatch.StartNew();
@@ -239,11 +239,14 @@ namespace TiaMcp.Adapters
                 }
                 return TiaMcpServer.ModelContextProtocol.InvocationJournal.Native("PLC.consistency.rootAndUnits", () => {
                     Scope(null, "root:/");
-#if PLC_SOFTWARE_CROSS_REFERENCES
+#if PLC_UNITS
+                    // API audit 2026-10-19 F1: PlcUnitProvider/Units exist from V16, SafetyUnits from V18.
                     var provider = TiaMcpServer.ModelContextProtocol.InvocationJournal.Native("PlcUnitProvider.GetService", () => plc.GetService<Siemens.Engineering.SW.Units.PlcUnitProvider>());
                     if (provider != null) {
                         foreach (var unit in provider.UnitGroup.Units) Scope(unit, "unit:" + unit.Name + "/");
+#if PLC_SAFETY_UNITS
                         foreach (var unit in provider.UnitGroup.SafetyUnits) Scope(unit, "safety:" + unit.Name + "/");
+#endif
                     }
 #endif
                     return rows;

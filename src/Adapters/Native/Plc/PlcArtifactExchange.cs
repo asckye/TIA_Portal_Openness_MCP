@@ -1,14 +1,14 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using Siemens.Engineering;
 using Siemens.Engineering.SW;
 using Siemens.Engineering.SW.Blocks;
+using Siemens.Engineering.SW.Tags;
+using Siemens.Engineering.SW.Types;
 using TiaMcp.Adapters.Contracts;
 namespace TiaMcp.Adapters.Native.Plc
 {
@@ -65,35 +65,73 @@ namespace TiaMcp.Adapters.Native.Plc
             }
         }
 
-        private string PrepareXmlForImport(string path)
+        // A caller's SimaticML document is imported as written (API audit 2026-10-19 F6): its Engineering version is never
+        // rewritten. A header outside the documented window of this release is refused before any native call. Only a missing
+        // UTF-8 BOM is added, on a temporary copy with identical content.
+        private sealed class PreparedImport
         {
-            try
-            {
-                var bytes = TiaOpenness.Shared.NativeInputPolicy.Read("importPath", () => File.ReadAllBytes(path));
-                bool hasBom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
-                var text = TiaOpenness.Shared.NativeInputPolicy.Read("importPath", () => File.ReadAllText(path, Encoding.UTF8));
-
-                var fixedText = text;
-                var version = TiaMcpServer.ModelContextProtocol.PlcDeclarationXmlFormat.ForRelease(_session.ReleaseKey).EngineeringVersion;
-                fixedText = Regex.Replace(text,
-                    "(<Engineering\\s+version=\")[^\"]+(\"\\s*/>)",
-                    match => match.Groups[1].Value + version + match.Groups[2].Value);
-
-                // Already correct: version matches (or unknown) AND a BOM is present -> import as-is.
-                if (fixedText == text && hasBom) return path;
-
-                var tmp = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia_mcp_import_" + Guid.NewGuid().ToString("N") + ".xml");
-                File.WriteAllText(tmp, fixedText, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
-                return tmp;
-            }
-            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException) { throw; }
-            catch
-            {
- /* swallow(parse-fallback): If XML preparation fails, preserve the original path so native import reports the input error. */                return path; // best effort; on any failure import the original file
-            }
+            internal string Path = "";
+            internal string Kind = "";
+            internal string Name = "";
         }
 
-        public bool ImportBlock(string softwarePath, string groupPath, string importPath)
+        private PreparedImport PrepareXmlForImport(string path, string parameter = "importPath")
+        {
+            var bytes = TiaOpenness.Shared.NativeInputPolicy.Read(parameter, () => File.ReadAllBytes(path));
+            SimaticMlImportWindow.Require(_session.ReleaseKey, bytes, parameter);
+            var native = SimaticMlImportWindow.ReadObject(SimaticMlImportWindow.Load(bytes))
+                ?? throw new AdapterPreconditionException("The import file holds no SW.Blocks, SW.Types or SW.Tags object with a Name.", parameter);
+            var prepared = new PreparedImport { Path = path, Kind = native.Kind, Name = native.Name };
+            bool hasBom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
+            if (hasBom) return prepared;
+            var tmp = System.IO.Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia_mcp_import_" + Guid.NewGuid().ToString("N") + ".xml");
+            File.WriteAllText(tmp, TiaOpenness.Shared.NativeInputPolicy.Read(parameter, () => File.ReadAllText(path, Encoding.UTF8)), new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+            prepared.Path = tmp;
+            return prepared;
+        }
+
+        // overwrite=false (the default of every tool): an existing object of the same name gives a typed refusal before the native
+        // import, which then runs with ImportOptions.None ("Throw if exists"). overwrite=true uses ImportOptions.Override; an existing
+        // object in another group is refused because Siemens documents that such an import is cancelled ("Importing configuration data").
+        private static void RequireImportTarget(string noun, string name, IEnumerable<(object Parent, string Name)> existing, object destination, bool overwrite)
+        {
+            var hits = existing.Where(e => string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase)).ToArray();
+            if (hits.Length == 0) return;
+            if (!overwrite)
+                throw new AdapterPreconditionException("The PLC " + noun + " '" + name + "' already exists and overwrite=false; nothing was imported. Pass overwrite=true to replace it (ImportOptions.Override).", "overwrite", false);
+            if (hits.Any(h => !ReferenceEquals(h.Parent, destination) && !object.Equals(h.Parent, destination)))
+                throw new AdapterPreconditionException("The PLC " + noun + " '" + name + "' exists in another group; TIA cancels an Override import into a different group. Nothing was imported.", "groupPath", false);
+        }
+
+        private static IEnumerable<(object Parent, string Name)> ExistingTypes(PlcTypeGroup group, int depth = 0)
+        {
+            if (depth > 64) throw new InvalidOperationException("PLC type group depth exceeds 64.");
+            foreach (var type in group.Types) yield return (group, type.Name);
+            foreach (var child in group.Groups) foreach (var item in ExistingTypes(child, depth + 1)) yield return item;
+        }
+
+        private static IEnumerable<(object Parent, string Name)> ExistingTagTables(PlcTagTableGroup group, int depth = 0)
+        {
+            if (depth > 64) throw new InvalidOperationException("PLC tag table group depth exceeds 64.");
+            foreach (var table in group.TagTables) yield return (group, table.Name);
+            foreach (var child in group.Groups) foreach (var item in ExistingTagTables(child, depth + 1)) yield return item;
+        }
+
+        private IEnumerable<(object Parent, string Name)> ExistingBlocks(PlcSoftware plc)
+        {
+            var all = new List<PlcBlock>();
+            _session.GetBlocksRecursive(plc.BlockGroup, all);
+            return all.Select(b => ((object)b.Parent, b.Name));
+        }
+
+        private static void RequireKind(PreparedImport prepared, bool block, bool type, string parameter)
+        {
+            bool isType = prepared.Kind == "PlcStruct", isTable = prepared.Kind == "PlcTagTable";
+            if (block ? isType || isTable : type ? !isType : !isTable)
+                throw new AdapterPreconditionException("The import file holds a " + prepared.Kind + ", not a " + (block ? "block" : type ? "PLC data type" : "PLC tag table") + ".", parameter);
+        }
+
+        public bool ImportBlock(string softwarePath, string groupPath, string importPath, bool overwrite)
         {
 
 
@@ -116,10 +154,13 @@ namespace TiaMcp.Adapters.Native.Plc
 
                 if (!new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath)).Exists)
                     throw new PlcSoftwareException("InvalidParams", $"Import file not found: {importPath}");
-                var fileInfo = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(PrepareXmlForImport(importPath)));
+                var prepared = PrepareXmlForImport(importPath);
+                RequireKind(prepared, true, false, "importPath");
+                RequireImportTarget("block", prepared.Name, ExistingBlocks(plcSoftware), group, overwrite);
+                var fileInfo = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(prepared.Path));
 
                 MutationStarted = true;
-                var imported = PlcBlockPrimitives.Import(PlcBlockPrimitives.Blocks(group), fileInfo, ImportOptions.Override);
+                var imported = PlcBlockPrimitives.Import(PlcBlockPrimitives.Blocks(group), fileInfo, overwrite ? ImportOptions.Override : ImportOptions.None);
                 if (imported == null || imported.Count == 0)
                     throw new PlcSoftwareException("ImportFailed", "Blocks.Import returned an empty collection");
 
@@ -131,13 +172,20 @@ namespace TiaMcp.Adapters.Native.Plc
                 // Surface the real Openness error to callers — without this the message
                 // is just "Import failed" which is useless for diagnosing bad LAD/SCL XML.
                 var inner = UnwrapImportError(ex);
-                var pex = ex as PlcSoftwareException ?? new PlcSoftwareException("ImportFailed", $"Import failed: {inner}", null, ex);
+                var pex = ex as PlcSoftwareException ?? new PlcSoftwareException("ImportFailed", $"Import failed: {inner}{ImportOptionsNote}", null, ex);
                 pex.Data["softwarePath"] = softwarePath;
                 pex.Data["groupPath"] = groupPath;
                 pex.Data["importPath"] = importPath;
                 throw pex;
             }
         }
+
+        // API audit F14: the documented import options this path does not pass (SWImportOptions on 15.1+, the culture
+        // ImportOptions on 19+) are named beside a native refusal; the refusal itself is not reinterpreted.
+        internal const string ImportOptionsNote = " TIA refused the import natively. This tool imports with ImportOptions.None or Override only;"
+            + " it does not pass SWImportOptions (IgnoreStructuralChanges, IgnoreMissingReferencedObjects, IgnoreUnitAttributes) or the"
+            + " culture options, so a file exported from a software unit, one that references objects not yet in the project, or one with"
+            + " inactive cultures is refused by TIA.";
 
         private static string UnwrapImportError(Exception ex)
         {
@@ -153,7 +201,7 @@ namespace TiaMcp.Adapters.Native.Plc
             return string.Join(" | ", parts);
         }
 
-        public bool ImportType(string softwarePath, string groupPath, string importPath)
+        public bool ImportType(string softwarePath, string groupPath, string importPath, bool overwrite)
         {
 
 
@@ -176,10 +224,13 @@ namespace TiaMcp.Adapters.Native.Plc
 
                 if (!new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath)).Exists)
                     throw new PlcSoftwareException("InvalidParams", $"Import file not found: {importPath}");
-                var fileInfo = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(PrepareXmlForImport(importPath)));
+                var prepared = PrepareXmlForImport(importPath);
+                RequireKind(prepared, false, true, "importPath");
+                RequireImportTarget("data type", prepared.Name, ExistingTypes(plcSoftware.TypeGroup), group, overwrite);
+                var fileInfo = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(prepared.Path));
 
                 MutationStarted = true;
-                var imported = PlcBlockPrimitives.Types(group).Import(fileInfo, ImportOptions.Override);
+                var imported = PlcBlockPrimitives.Types(group).Import(fileInfo, overwrite ? ImportOptions.Override : ImportOptions.None);
                 if (imported == null || imported.Count == 0)
                     throw new PlcSoftwareException("ImportFailed", "Types.Import returned an empty collection");
 
@@ -188,7 +239,7 @@ namespace TiaMcp.Adapters.Native.Plc
             catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException) { throw; }
             catch (Exception ex)
             {
-                var pex = ex as PlcSoftwareException ?? new PlcSoftwareException("ImportFailed", "Import failed", null, ex);
+                var pex = ex as PlcSoftwareException ?? new PlcSoftwareException("ImportFailed", "Import failed: " + UnwrapImportError(ex) + ImportOptionsNote, null, ex);
                 pex.Data["softwarePath"] = softwarePath;
                 pex.Data["groupPath"] = groupPath;
                 pex.Data["importPath"] = importPath;
@@ -196,7 +247,9 @@ namespace TiaMcp.Adapters.Native.Plc
             }
         }
 
-        public void ImportPlcTagTable(string softwarePath, string folderPath, string importPath)
+        // API audit F4: the destination group is resolved exactly through the typed PlcTagTableSystemGroup/PlcTagTableUserGroup
+        // Groups.Find path; a folderPath that does not resolve is refused, never redirected to the root group.
+        public void ImportPlcTagTable(string softwarePath, string folderPath, string importPath, bool overwrite)
         {
             if (_session.IsProjectNull()) throw new PlcSoftwareException("InvalidState", "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
 
@@ -205,116 +258,38 @@ namespace TiaMcp.Adapters.Native.Plc
 
             try
             {
-                object root = TryGetPropertyValue(plc, "TagTableGroup", "TagTableFolder") ?? plc;
-                var group = TryResolveChildGroupByPath(root, folderPath) ?? root;
+                PlcTagTableGroup group = plc.TagTableGroup;
+                foreach (var part in PlcGroupOperations.Parts(folderPath, true))
+                    group = group.Groups.Find(part) ?? throw new PlcSoftwareException("NotFound",
+                        $"PLC tag table group not found for folderPath='{folderPath}' (segment '{part}'); use empty string for the root tag table group. Nothing was imported.");
 
-                // TagTables collection lives on group
-                var tables = TryGetPropertyValue(group, "TagTables") ?? TryGetPropertyValue(root, "TagTables");
-                if (tables == null)
-                    throw new PlcSoftwareException("NotFound", $"TagTables collection not found. plcType={plc.GetType().FullName} groupType={group.GetType().FullName}");
+                if (!new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath)).Exists)
+                    throw new PlcSoftwareException("InvalidParams", $"Import file not found: {importPath}");
+                var prepared = PrepareXmlForImport(importPath);
+                RequireKind(prepared, false, false, "importPath");
+                RequireImportTarget("tag table", prepared.Name, ExistingTagTables(plc.TagTableGroup), group, overwrite);
 
-                // Route through PrepareXmlForImport so the hardcoded <Engineering version="V21"/>
-                // header is rewritten to the connected portal version (and a UTF-8 BOM is ensured).
-                // Without this, tag-table imports fail on a V20 portal with
-                // "The engineering version 'V21' ... is not supported." (block/type imports already
-                // sanitize via PrepareXmlForImport; tag tables previously skipped it).
-                if (TryImportEngineeringObjectIntoCollection(tables, PrepareXmlForImport(importPath), out _, out var err)) return;
-                throw new PlcSoftwareException("ImportFailed", err ?? "ImportPlcTagTable failed");
+                MutationStarted = true;
+                var imported = PlcOrganisationPrimitives.TagTables(group).Import(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(prepared.Path)), overwrite ? ImportOptions.Override : ImportOptions.None);
+                if (imported == null || imported.Count == 0)
+                    throw new PlcSoftwareException("ImportFailed", "TagTables.Import returned an empty collection");
             }
+            catch (AdapterPreconditionException) { throw; }
             catch (PlcSoftwareException)
             {
                 throw;
             }
             catch (Exception ex)
             {
-                throw new PlcSoftwareException("ImportFailed", ex.Message, null, ex);
+                throw new PlcSoftwareException("ImportFailed", ex.GetBaseException().GetType().FullName + ": " + ex.GetBaseException().Message + ImportOptionsNote, null, ex);
             }
         }
 
-        private bool TryImportEngineeringObjectIntoCollection(object collection, string importPath, out string? importedName, out string? error)
-        {
-            importedName = null;
-            error = null;
-
-            try
-            {
-                var fi = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath));
-                if (!fi.Exists)
-                {
-                    error = "File not found";
-                    return false;
-                }
-
-                var t = collection.GetType();
-
-                // Prefer Import(FileInfo, ImportOptions)
-                var m2 = t.GetMethod("Import", new[] { typeof(FileInfo), typeof(ImportOptions) });
-                if (m2 != null)
-                {
-                    MutationStarted = true;
-                    var list = m2.Invoke(collection, new object[] { fi, ImportOptions.Override });
-                    importedName = BestEffortExtractFirstName(list) ?? Path.GetFileNameWithoutExtension(importPath);
-                    return true;
-                }
-
-                // Import(FileInfo)
-                var m1 = t.GetMethod("Import", new[] { typeof(FileInfo) });
-                if (m1 != null)
-                {
-                    MutationStarted = true;
-                    var list = m1.Invoke(collection, new object[] { fi });
-                    importedName = BestEffortExtractFirstName(list) ?? Path.GetFileNameWithoutExtension(importPath);
-                    return true;
-                }
-
-                error = $"No Import method found on collection type {t.FullName}";
-                return false;
-            }
-            catch (TargetInvocationException tie) when (tie.InnerException != null)
-            {
-                error = $"{tie.InnerException.GetType().FullName}: {tie.InnerException.Message}";
-                return false;
-            }
-            catch (Exception ex)
-            {
-                error = ex.ToString();
-                return false;
-            }
-        }
-
-
-
-        private static object? TryResolveChildGroupByPath(object rootGroup, string groupPath)
-        {
-            if (string.IsNullOrWhiteSpace(groupPath)) return rootGroup;
-
-            var parts = groupPath.Trim().Trim('/').Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
-            object? current = rootGroup;
-            foreach (var part in parts)
-            {
-                if (current == null) return null;
-
-                // common group collections used by HMI objects
-                var next = TryFindByNameInCollection(current, new[] { "Groups", "ScreenGroups", "TagTableGroups", "Folders" }, part);
-                if (next == null)
-                {
-                    // Some shapes: current.ScreenGroups or current.Groups are nested under another property
-                    var groupContainer = TryGetPropertyValue(current, "Groups", "ScreenGroups", "TagTableGroups");
-                    if (groupContainer != null)
-                    {
-                        next = TryFindByNameInCollection(groupContainer, new[] { "Groups", "ScreenGroups", "TagTableGroups", "Folders" }, part);
-                    }
-                }
-
-                current = next;
-            }
-
-            return current;
-        }        internal static string? BestEffortExtractFirstName(object? importReturnValue)
+        internal static string? BestEffortExtractFirstName(object? importReturnValue)
         {
             try
             {
-                if (importReturnValue is IEnumerable enumerable)
+                if (importReturnValue is System.Collections.IEnumerable enumerable)
                 {
                     foreach (var item in enumerable)
                     {
@@ -328,50 +303,6 @@ namespace TiaMcp.Adapters.Native.Plc
             return null;
         }
 
-        private static object? TryFindByNameInCollection(object root, string[] propertyHints, string wantedName)
-        {
-            try
-            {
-                var rootType = root.GetType();
-                foreach (var propName in propertyHints)
-                {
-                    object? collection = null;
-
-                    var prop = rootType.GetProperty(propName);
-                    if (prop != null)
-                    {
-                        collection = prop.GetValue(root);
-                    }
-                    else if (propName.EndsWith("Folder", StringComparison.OrdinalIgnoreCase))
-                    {
-                        var folder = rootType.GetProperty(propName)?.GetValue(root);
-                        if (folder != null)
-                        {
-                            collection = folder.GetType().GetProperty(propName.Replace("Folder", "s"))?.GetValue(folder);
-                        }
-                    }
-
-                    if (collection is System.Collections.IEnumerable enumerable)
-                    {
-                        foreach (var item in enumerable)
-                        {
-                            if (item == null) continue;
-                            var name = item.GetType().GetProperty("Name")?.GetValue(item)?.ToString();
-                            if (string.Equals(name, wantedName, StringComparison.OrdinalIgnoreCase))
-                            {
-                                return item;
-                            }
-                        }
-                    }
-                }
-            }
-            catch /* swallow(enumerate-optional): an unavailable candidate collection yields no matching library object */
-            {
-                // ignore
-            }
-
-            return null;
-        }
         public PlcSeedHmiReply ImportBlocksFromDirectory(string softwarePath, string groupPath, string dir, string regexName = "", bool overwrite = true)
         {
             if (!_session.IsProjectNull()) TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,
@@ -395,7 +326,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 }
 
                 var softwareContainer = _session.GetSoftwareContainer(softwarePath);
-                if (softwareContainer?.Software is not PlcSoftware)
+                if (softwareContainer?.Software is not PlcSoftware plcSoftware)
                 {
                     failed.Add(new PlcSeedImportFailure { Path = dir, Error = $"PlcSoftware not found at '{softwarePath}'" });
                     return new PlcSeedHmiReply { Imported = imported, Failed = failed };
@@ -414,25 +345,24 @@ namespace TiaMcp.Adapters.Native.Plc
                     regex = new Regex(regexName, RegexOptions.IgnoreCase);
                 }
 
-                foreach (var file in Directory.EnumerateFiles(dir, "*.xml", SearchOption.TopDirectoryOnly))
+                // Every file is checked (version window, object kind, overwrite=false collisions) before the first native import.
+                var planned = new List<(string File, PreparedImport Prepared)>();
+                var existing = ExistingBlocks(plcSoftware).ToArray();
+                foreach (var file in Directory.EnumerateFiles(dir, "*.xml", SearchOption.TopDirectoryOnly).OrderBy(f => f, StringComparer.OrdinalIgnoreCase))
                 {
-                    var name = Path.GetFileNameWithoutExtension(file);
-                    if (regex != null && !regex.IsMatch(name))
-                    {
-                        continue;
-                    }
+                    if (regex != null && !regex.IsMatch(Path.GetFileNameWithoutExtension(file))) continue;
+                    var prepared = PrepareXmlForImport(file, "dir");
+                    RequireKind(prepared, true, false, "dir");
+                    RequireImportTarget("block", prepared.Name, existing, group, overwrite);
+                    planned.Add((file, prepared));
+                }
 
+                foreach (var item in planned.OrderBy(p => PlcImportOrder.BlockRank(p.Prepared.Kind)).ThenBy(p => p.File, StringComparer.OrdinalIgnoreCase))
+                {
+                    var name = Path.GetFileNameWithoutExtension(item.File);
                     try
                     {
-                        if (!new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(file)).Exists)
-                        {
-                            failed.Add(new PlcSeedImportFailure { Path = file, Error = "File not found" });
-                            continue;
-                        }
-                        var fi = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(PrepareXmlForImport(file)));
-
-                        // Let Openness check the XML object's identity atomically. A filename
-                        // lookup cannot enforce overwrite=false (and may miss renamed files).
+                        var fi = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(item.Prepared.Path));
                         MutationStarted = true;
                         var list = PlcBlockPrimitives.Import(group.Blocks, fi, overwrite ? ImportOptions.Override : ImportOptions.None);
                         if (list != null && list.Count > 0)
@@ -444,10 +374,9 @@ namespace TiaMcp.Adapters.Native.Plc
                             imported.Add(name);
                         }
                     }
-                    catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException) { throw; }
-            catch (Exception ex)
+                    catch (Exception ex)
                     {
-                        failed.Add(new PlcSeedImportFailure { Path = file, Error = ex.ToString() });
+                        failed.Add(new PlcSeedImportFailure { Path = item.File, Error = ex.ToString() });
                     }
                 }
 

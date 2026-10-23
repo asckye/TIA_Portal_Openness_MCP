@@ -76,7 +76,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 ReferenceName = reference.Name, ReferencePath = reference.Path, ReferenceTypeName = reference.TypeName,
                 ReferenceAddress = reference.Address, ReferenceDevice = reference.Device,
                 LocationName = location?.Name, ReferenceLocation = location?.ReferenceLocation,
-                ReferenceType = location?.ReferenceType.ToString(), Access = location?.Access.ToString()
+                ReferenceType = location?.ReferenceType.ToString(), Access = location?.Access.ToString(),
+                LocationAddress = location?.Address, LocationTypeName = location?.TypeName, LocationReferencedAs = location?.ReferencedAsName
             };
 
         private IEngineeringServiceProvider ExactCrossReferenceTarget(string softwarePath, string objectPath, string kind, string unitName, string unitKind)

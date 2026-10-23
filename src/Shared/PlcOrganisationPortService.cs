@@ -37,6 +37,8 @@ namespace TiaMcpServer.Siemens.Services
                     if (failure["Evidence"] is JsonObject evidence && evidence.Count > 0) error.Data["nativeResultEvidence"] = evidence.DeepClone();
                     throw error;
                 }
+                // A worker refusal raised before its first native mutation stays a typed precondition on the host.
+                if (code == nameof(AdapterPreconditionException) && (bool?)reply["MayHaveChanged"] != true) throw new AdapterPreconditionException(message, null, false);
                 if (code == nameof(ArgumentException)) throw new ArgumentException(message);
                 if (code == nameof(NotSupportedException)) throw new NotSupportedException(message);
                 throw new InvalidOperationException(message);

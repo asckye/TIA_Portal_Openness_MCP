@@ -17,6 +17,23 @@ namespace TiaMcp.Adapters.Contracts
         public NativeResultException(string enumType, object? state)
             : base("Native operation returned " + (state?.ToString() ?? "no state") + ".")
         { Evidence = new NativeResultEvidence { EnumType = enumType, State = state?.ToString() }; }
+
+        // API audit 2026-10-19 F10: DocumentResult.Messages travel with the failure (at most 8 messages of 512 characters).
+        public NativeResultException(string enumType, object? state, System.Collections.Generic.IEnumerable<string?>? messages)
+            : base("Native operation returned " + (state?.ToString() ?? "no state") + "." + BoundedMessages(messages))
+        { Evidence = new NativeResultEvidence { EnumType = enumType, State = state?.ToString() }; }
+
+        public static string BoundedMessages(System.Collections.Generic.IEnumerable<string?>? messages)
+        {
+            if (messages == null) return "";
+            var kept = new System.Collections.Generic.List<string>(); int total = 0;
+            foreach (var message in messages)
+            {
+                total++;
+                if (kept.Count < 8 && !string.IsNullOrWhiteSpace(message)) kept.Add(message!.Length > 512 ? message.Substring(0, 512) + "..." : message);
+            }
+            return kept.Count == 0 ? "" : " Native messages: " + string.Join(" | ", kept) + (total > kept.Count ? " (" + (total - kept.Count) + " more not shown)" : "");
+        }
     }
 
     // Exact SDK enum names and values, checked against V14 SP1-V21 metadata.

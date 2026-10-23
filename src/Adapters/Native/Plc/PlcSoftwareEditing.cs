@@ -16,10 +16,14 @@ namespace TiaMcp.Adapters.Native.Plc
 #if PLC_SOFTWARE_PROTECTION
         public HardwareAddressingReply CreatePlcInstanceDb(string softwarePath, string fbPath, string name, string groupPath = "", bool autoNumber = true, int number = 0, bool dryRun = true)
             => _session.RunHmiStepTool("CreatePlcInstanceDb", meta => {
-                if (PlcGroupOperations.Parts(name).Length != 1 || number < 0) throw new ArgumentException("Single DB name and nonnegative number required.");
+                if (PlcGroupOperations.Parts(name).Length != 1) throw new ArgumentException("Single DB name and nonnegative number required.");
+                var numberRefusal = PlcInstanceDbPolicy.Refusal(autoNumber, number);
+                if (numberRefusal != null) throw new ArgumentException(numberRefusal);
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 var plc = _session.ExactPlcForEngineering(softwarePath, !dryRun);
                 var fb = _session.ExactMasterCopyPlcSource(softwarePath, fbPath, true) as FB ?? throw new ArgumentException("fbPath must identify an FB, not an FC or DB.");
+                var sourceRefusal = PlcInstanceDbPolicy.SourceRefusal(_session.ReleaseKey, fb.ProgrammingLanguage.ToString());
+                if (sourceRefusal != null) throw new NotSupportedException(sourceRefusal);
                 var group = (PlcBlockGroup)PlcGroupOperations.Group(plc.BlockGroup, groupPath);
                 if (group.Blocks.Find(name) != null) throw new InvalidOperationException("Destination DB name already exists.");
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["fbPath"] = fbPath; meta["groupPath"] = groupPath; meta["name"] = name;

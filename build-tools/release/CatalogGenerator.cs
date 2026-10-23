@@ -128,7 +128,9 @@ internal static class CatalogGenerator
             foreach (var entry in releases["19"]!.AsArray()) { var current = Text(entry!["currentName"]); if (data.Ported["19"].Contains(current)) continue; var row = entry.DeepClone(); row["profiles"] = new JsonArray("full", "lite", "plc-foundation"); rows[current] = row; }
             foreach (var (current, entry) in calls["plc-foundation"]!.AsObject())
                 if (!shared.Contains(current) && (!data.Ported[key].Contains(current) || data.FoundationCandidates.Contains(current))) rows[current] = new JsonObject { ["name"] = current, ["currentName"] = current, ["sourceName"] = current, ["profiles"] = new JsonArray("full", "plc-foundation"), ["arguments"] = Copy(entry!["arguments"]!), ["envelopeVersion"] = 4 };
-            foreach (var name in data.Families["F00"].Tools) rows[name]["profiles"] = new JsonArray("full", "lite", "plc-foundation");
+            // A Foundation-family tool withheld on this release (P8-81d: the V21-format composers on V20) has no row here.
+            var withheldHere = PortedFamilies.Withheld(data.Families, key);
+            foreach (var name in data.Families["F00"].Tools.Where(n => !withheldHere.Contains(n))) rows[name]["profiles"] = new JsonArray("full", "lite", "plc-foundation");
             foreach (var row in rows.Values.Where(r => !shared.Contains(Text(r["currentName"])))) row["profiles"] = data.Bridge.Contains(Text(row["currentName"])) ? new JsonArray("full", "lite") : new JsonArray(Strings(row["profiles"]).Where(p => p != "lite").Select(s => (JsonNode?)JsonValue.Create(s)).ToArray());
             releases[key] = new JsonArray(rows.Values.OrderBy(r => Text(r["name"]), PythonStringComparer.Instance).ToArray());
             for (var i = entries.Count - 1; i >= 0; i--) if (Text(entries[i]!["releaseKey"]) == key && data.Removed.Contains(Text(entries[i]!["entry"]))) entries.RemoveAt(i);

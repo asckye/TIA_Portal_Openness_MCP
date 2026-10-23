@@ -30,7 +30,7 @@ internal sealed class OfflineLadderTool : McpServerTool
         };
         tool = new Tool
         {
-            Name = name, Description = "[offline candidate; native unverified] In-memory V21 LAD FC-call candidate generation with existing helpers. " + OfflineCompositionBuilders.Warning + " No file reads/writes, connection or worker calls.",
+            Name = name, Description = "[offline candidate; native unverified] In-memory V21 LAD FC-call candidate generation with existing helpers. " + (name == "ComposePlcLadFcBlockXml" ? "Registered on V21 only: V20 withdraws this V21-format composer until an import of its output on V20 is verified. " : "") + OfflineCompositionBuilders.Warning + " No file reads/writes, connection or worker calls.",
             InputSchema = JsonSerializer.SerializeToElement(new JsonObject
             {
                 ["type"] = "object", ["additionalProperties"] = false, ["required"] = new JsonArray(jsonParameter, "outputReleaseKey"), ["properties"] = properties

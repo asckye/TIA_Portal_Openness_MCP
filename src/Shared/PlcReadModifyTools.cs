@@ -48,7 +48,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("dryRun: true (default) previews; false executes (project must be offline).")] bool dryRun=true)
         => _service.ManagePlcTagDefinition(softwarePath,tablePath,name,kind,action,dataType,addressOrValue,propertiesJson,dryRun);
 
-        [McpServerTool(Name = "CreatePlcInstanceDb"), Description("[L2][PLC-Software][WRITE] Create a native instance DB from an exact FB and destination block group. Default preview; requires offline PLC when executing. No save/compile/download." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+        [McpServerTool(Name = "CreatePlcInstanceDb"), Description("[L2][PLC-Software][WRITE] Create a native instance DB from an exact FB and destination block group. autoNumber=false needs number >= 1. On V15.1 and V16 the SDK documents PlcBlockComposition.CreateInstanceDB for ProDiag FBs only, so other FBs are refused there; V17 and later accept any FB. Default preview; requires offline PLC when executing. No save/compile/download." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
         public CallToolResult CreatePlcInstanceDbV4(
             string softwarePath,
             [Description("fbPath: 'Group/Name' of the function block the instance DB is created for.")] string fbPath,
@@ -61,7 +61,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return PlcExchangeContract.Run("CreatePlcInstanceDb", () => CreatePlcInstanceDb(softwarePath, fbPath, name, groupPath, autoNumber, number, dryRun), write: !dryRun, current: true);
         }
 
-        [McpServerTool(Name = "GeneratePlcSourceFromBlocks"), Description("[L2][PLC-Software][FILE] Generate native source from 1..500 exact block paths (array). New absolute output file only; SHA-256 returned. Unsupported block languages rejected; default preview." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+        [McpServerTool(Name = "GeneratePlcSourceFromBlocks"), Description("[L2][PLC-Software][FILE] Generate native source from 1..500 exact block paths (array). New absolute output file only; SHA-256 returned. TIA generates sources only from SCL and STL blocks (plus DBs and UDTs) and rejects other languages, an existing file and an extension that does not match (.scl, .awl, .db, .udt); the MCP does not pre-check the language. Default preview." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
         public CallToolResult GeneratePlcSourceFromBlocksV4(
             string softwarePath,
             [Description("blockPaths: Array of block paths.")] string[] blockPaths,
@@ -73,7 +73,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return PlcExchangeContract.Run("GeneratePlcSourceFromBlocks", () => GeneratePlcSourceFromBlocks(softwarePath, V4Json.Serialize(validated.Value), filePath, dryRun), write: !dryRun, current: true);
         }
 
-        [McpServerTool(Name = "ManagePlcTagDefinition"), Description("[L2][PLC-Software][WRITE] Read/create/update/delete an exact tag or constant. properties accepts scalar SDK attributes; Comment is text in the editing language. Default preview, execution requires Offline. No runtime write, save, compile or download. V4 envelope; PLC path policy remains current pending native acceptance.")]
+        [McpServerTool(Name = "ManagePlcTagDefinition"), Description("[L2][PLC-Software][WRITE] Read/create/update/delete an exact tag or constant. properties accepts scalar SDK attributes; Comment is text in the editing language. Renaming a tag (properties Name) needs the public PlcTag.Name setter of V20/V21; earlier releases refuse it. Default preview, execution requires Offline. No runtime write, save, compile or download. V4 envelope; PLC path policy remains current pending native acceptance.")]
         public CallToolResult ManagePlcTagDefinitionV4(
             [Description("softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.")] string softwarePath,
             [Description("tablePath: 'Group/Table' path of the tag table, e.g. 'Default tag table'.")] string tablePath,
@@ -157,7 +157,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("unitName: software unit holding the sources ('' = the PLC program).")] string unitName="",
             [Description("unitKind: unit | safety - which unit collection unitName refers to.")] string unitKind="unit",
             [Description("groupPath: 'Folder/Subfolder' inside the external sources ('' = root).")] string groupPath="",
-            [Description("filePath: for createFromFile - full path of the .scl / .awl / .stl / .db / .udt file on the TIA machine.")] string filePath="",
+            [Description("filePath: for createFromFile - fully qualified path (drive or UNC) of the .scl / .awl / .db / .udt file on the TIA machine.")] string filePath="",
             [Description("libraryName: for createFromMasterCopy - global library name ('' = the project library).")] string libraryName="",
             [Description("masterCopyPath: for createFromMasterCopy - 'Folder/Name' of the master copy.")] string masterCopyPath="",
             [Description("copyMode: for createFromMasterCopy - ThrowIfExists | Rename | Replace.")] string copyMode="",
@@ -169,7 +169,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("dryRun: true (default) previews; false executes.")] bool dryRun=true)
         => _service.ManagePlcExternalSources(softwarePath,action,name,unitName,unitKind,groupPath,filePath,libraryName,masterCopyPath,copyMode,generateOption,targetKind,targetGroupPath,newName,confirmDelete,dryRun);
 
-        [McpServerTool(Name = "ManagePlcExternalSources"), Description("[L2][PLC-Software][WRITE] Native external source files of the exact PLC (PlcSoftware.ExternalSourceGroup) or of a unit (unitName + unitKind), in the root system group or a user group at groupPath: list (PlcExternalSourceGroup Name / ExternalSources / Groups), read, createFromFile (PlcExternalSourceComposition.CreateFromFile(name, filePath): an existing ASCII .scl/.awl/.stl/.db/.udt file on the TIA Portal machine), createFromMasterCopy (libraryName empty = project library, masterCopyPath, copyMode ThrowIfExists/Rename/Replace), delete, generateBlocks (PlcExternalSource.GenerateBlocksFromSource with generateOption None/KeepOnError, optionally into an exact block or type user group via targetKind + targetGroupPath; existing objects are overwritten natively, returns the generated names), createGroup / renameGroup / deleteGroup (PlcExternalSourceUserGroup; deletion only when empty). Every write is read back. Default dryRun=true; delete needs confirmDelete=true; real writes require an Offline PLC. No save/compile/download. Source generation from blocks stays GeneratePlcSourceFromBlocks." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "ManagePlcExternalSources"), Description("[L2][PLC-Software][WRITE] Native external source files of the exact PLC (PlcSoftware.ExternalSourceGroup) or of a unit (unitName + unitKind), in the root system group or a user group at groupPath: list (PlcExternalSourceGroup Name / ExternalSources / Groups), read, createFromFile (PlcExternalSourceComposition.CreateFromFile(name, filePath): an existing ASCII .scl/.awl/.db/.udt file with a fully qualified path on the TIA Portal machine; Siemens documents no groups in the external-source folder, so creating inside a user group is not natively verified), createFromMasterCopy (libraryName empty = project library, masterCopyPath, copyMode ThrowIfExists/Rename/Replace), delete, generateBlocks (PlcExternalSource.GenerateBlocksFromSource with generateOption None/KeepOnError, optionally into an exact block or type user group via targetKind + targetGroupPath; existing objects are overwritten natively, returns the generated names), createGroup / renameGroup / deleteGroup (PlcExternalSourceUserGroup; deletion only when empty). Every write is read back. Default dryRun=true; delete needs confirmDelete=true; real writes require an Offline PLC. No save/compile/download. Source generation from blocks stays GeneratePlcSourceFromBlocks." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManagePlcExternalSourcesV4(
             [Description("softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.")] string softwarePath,
             [Description("action: list | read | createFromFile | createFromMasterCopy | delete | generateBlocks | createGroup | renameGroup | deleteGroup.")] string action,
@@ -177,7 +177,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("unitName: software unit holding the sources ('' = the PLC program).")] string unitName="",
             [Description("unitKind: unit | safety - which unit collection unitName refers to.")] string unitKind="unit",
             [Description("groupPath: 'Folder/Subfolder' inside the external sources ('' = root).")] string groupPath="",
-            [Description("filePath: for createFromFile - full path of the .scl / .awl / .stl / .db / .udt file on the TIA machine.")] string filePath="",
+            [Description("filePath: for createFromFile - fully qualified path (drive or UNC) of the .scl / .awl / .db / .udt file on the TIA machine.")] string filePath="",
             [Description("libraryName: for createFromMasterCopy - global library name ('' = the project library).")] string libraryName="",
             [Description("masterCopyPath: for createFromMasterCopy - 'Folder/Name' of the master copy.")] string masterCopyPath="",
             [Description("copyMode: for createFromMasterCopy - ThrowIfExists | Rename | Replace.")] string copyMode="",
@@ -221,7 +221,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "GetPlcCrossReferences"), Description("[L2][PLC-Software] Native Step7 block/type/tag/system-constant cross references, including software and safety units. DISABLED BY DEFAULT: CrossReferenceService queries have terminated TIA Portal V21, even after returning a result. Refusal means NOT QUERIED, never zero references. Controlled diagnosis on a saved test project requires the server-process setting TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1; do not enable it automatically. Even with opt-in, any uncompiled block or unreadable IsConsistent refuses the query. Compilation does not guarantee crash safety. Prefer exported PLC documents for partial offline call/reference analysis (GeneratePlcDocumentation); that is not a complete replacement for native references. Delete tools share this policy even with crossReferences=true." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+        [McpServerTool(Name = "GetPlcCrossReferences"), Description("[L2][PLC-Software] Native Step7 block/type/tag/system-constant cross references, including software and safety units. DISABLED BY DEFAULT: CrossReferenceService queries have terminated TIA Portal V21, even after returning a result. Refusal means NOT QUERIED, never zero references. Controlled diagnosis on a saved test project requires the server-process setting TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1; do not enable it automatically. Even with opt-in, any uncompiled block or unreadable IsConsistent refuses the query. Compilation does not guarantee crash safety. Prefer exported PLC documents for partial offline call/reference analysis (GeneratePlcDocumentation); that is not a complete replacement for native references. Delete tools share this policy even with crossReferences=true. Rows carry the location address, type name and referenced-as name (CrossReference.Location). CrossReferenceService does not cover PLC user constants." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
         public CallToolResult GetCrossReferencesV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
             [Description("objectPath: exact relative block/type path, or [group/]table/tag-or-constant under the selected scope")] string objectPath,
@@ -252,25 +252,27 @@ namespace TiaMcpServer.ModelContextProtocol
             string expectedToken = "",
             bool compileAfterImport = false)
             => _service.ImportPlcBlockVerified(softwarePath, blockPath, importPath, evidenceDirectory, dryRun, expectedToken, compileAfterImport);
-        [McpServerTool(Name = "RepairAndReimportPlcBlock"), Description("[L2][PLC-Software]Try import a block XML; if compile fails, return diagnostics and best-effort suggestions (no destructive actions). Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "RepairAndReimportPlcBlock"), Description("[L2][PLC-Software]Try import a block XML; if compile fails, return diagnostics and best-effort suggestions (no destructive actions). The SimaticML Engineering version is never rewritten: a file outside this release's documented import window is refused before any native call. overwrite=false (default) refuses an existing block of the same name before the import; overwrite=true replaces it (Siemens.Engineering.ImportOptions.Override). Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult RepairAndReimportBlockV4(
             [Description("softwarePath: PLC software path, e.g. 'PLC_1'")] string softwarePath,
             [Description("importPath: block XML path")] string importPath,
             [Description("groupPath: block group path; use empty for root Program blocks")] string groupPath = "",
-            [Description("compileAfter: compile PLC after import")] bool compileAfter = true)
-            => PlcToolContract.Run("RepairAndReimportPlcBlock", true, true, () => RepairAndReimportBlock(softwarePath, importPath, groupPath, compileAfter));
+            [Description("compileAfter: compile PLC after import")] bool compileAfter = true,
+            [Description("overwrite: false (default) refuses an existing block of the same name before the import; true replaces it (Siemens.Engineering.ImportOptions.Override).")] bool overwrite = false)
+            => PlcToolContract.Run("RepairAndReimportPlcBlock", true, true, () => RepairAndReimportBlock(softwarePath, importPath, groupPath, compileAfter, overwrite));
 
         public ResponseRepairAndCompile RepairAndReimportBlock(
             string softwarePath,
             string importPath,
             string groupPath = "",
-            bool compileAfter = true)
+            bool compileAfter = true,
+            bool overwrite = false)
         {
             var suggestions = new List<string>();
             try
             {
                 // ImportBlock 以 PortalException 报失败；成功即已导入
-                new PlcArtifactPortSession(_service, "RepairAndReimportPlcBlock").ImportBlock(softwarePath, groupPath, importPath);
+                new PlcArtifactPortSession(_service, "RepairAndReimportPlcBlock").ImportBlock(softwarePath, groupPath, importPath, overwrite);
 
                 ResponseCompileDiagnose? compile = null;
                 if (compileAfter)
@@ -367,13 +369,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true); } catch {  /* swallow(cleanup): Temporary logic export cleanup must not replace the analysis result or export error. */}
             }
         }
-        [McpServerTool(Name = "ImportPlcTagTablesFromDirectory"), Description("[L2][PLC-Software]Batch import PLC tag table .xml files from a directory (best-effort) Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "ImportPlcTagTablesFromDirectory"), Description("[L2][PLC-Software]Batch import PLC tag table .xml files from a directory (best-effort). folderPath must name an existing tag table group exactly; an unresolved group is refused, never redirected to the root group. Every file's SimaticML Engineering version must be inside this release's documented import window (checked for all files before the first import; the header is never rewritten). overwrite=false (default) records an existing tag table of the same name as a failed file before its import; overwrite=true replaces it (Siemens.Engineering.ImportOptions.Override). Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ImportPlcTagTablesFromDirectoryV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
             [Description("folderPath: optional tag table group path (use empty for root)")] string folderPath,
             [Description("dir: directory containing PLC tag table XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
-            [Description("overwrite: true=Override (default)")] bool overwrite = true)
+            [Description("overwrite: false (default) refuses an existing tag table of the same name before its import; true replaces it (Siemens.Engineering.ImportOptions.Override).")] bool overwrite = false)
             => PlcToolContract.Run("ImportPlcTagTablesFromDirectory", true, true, () => ImportPlcTagTablesFromDirectory(softwarePath, folderPath, dir, regexName, overwrite));
 
         public ResponseImportBatch ImportPlcTagTablesFromDirectory(
@@ -381,7 +383,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string folderPath,
             string dir,
             string regexName = "",
-            bool overwrite = true)
+            bool overwrite = false)
         {
             try
             {
@@ -394,35 +396,37 @@ namespace TiaMcpServer.ModelContextProtocol
                     Meta = ResponseMeta.Basic(DateTime.Now, (result.Failed == null || !result.Failed.Any()))
                 };
             }
-            catch (Exception ex) when (ex is not McpException)
+            catch (Exception ex) when (ex is not McpException && ex is not TiaMcp.Adapters.Contracts.AdapterPreconditionException)
             {
                 throw new McpException($"Unexpected error importing PLC tag tables from '{dir}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
             }
         }
-        [McpServerTool(Name = "SeedProjectFromReference"), Description("[L2][PLC-Software]Seed PLC blocks/types and HMI screens/tagtables from a reference directory (manifest.json + {{PLACEHOLDER}} replace) Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "SeedProjectFromReference"), Description("[L2][PLC-Software]Seed PLC blocks/types and HMI screens/tagtables from a reference directory (manifest.json + {{PLACEHOLDER}} replace). PLC data types are imported before blocks, and blocks in the official order (FB/FC, global DB, instance DB, OB). Every PLC file's SimaticML Engineering version must be inside this release's documented import window (checked before the first import; never rewritten). overwrite=false (default) refuses existing PLC types and blocks of the same name before their import; overwrite=true replaces them (Siemens.Engineering.ImportOptions.Override). Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult SeedProjectFromReferenceV4(
             [Description("plcSoftwarePath: path in the project structure to the PLC software")] string plcSoftwarePath,
             [Description("hmiSoftwarePath: path in the project structure to the HMI software")] string hmiSoftwarePath,
             [Description("referenceDir: directory containing manifest.json and subfolders (plc/blocks, plc/types, hmi/screens, hmi/tags)")] string referenceDir,
-            [Description("placeholders: JsonObject key-values for replacement in XML, e.g. {\"PLC_NAME\":\"PLC_1\"}")] JsonObject? placeholders = null)
-            => PlcToolContract.Run("SeedProjectFromReference", true, true, () => SeedProjectFromReference(plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders));
+            [Description("placeholders: JsonObject key-values for replacement in XML, e.g. {\"PLC_NAME\":\"PLC_1\"}")] JsonObject? placeholders = null,
+            [Description("overwrite: false (default) refuses existing PLC types and blocks of the same name before their import; true replaces them (Siemens.Engineering.ImportOptions.Override).")] bool overwrite = false)
+            => PlcToolContract.Run("SeedProjectFromReference", true, true, () => SeedProjectFromReference(plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders, overwrite));
 
         public ResponseSeed SeedProjectFromReference(
             string plcSoftwarePath,
             string hmiSoftwarePath,
             string referenceDir,
-            JsonObject? placeholders = null)
+            JsonObject? placeholders = null,
+            bool overwrite = false)
         {
             try
             {
-                var res = _service.SeedProjectFromReference(plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders);
+                var res = _service.SeedProjectFromReference(plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders, overwrite);
                 // envelope: legacy-existing-meta
                 res.Meta ??= new JsonObject();
                 res.Meta["timestamp"] = DateTime.Now;
                 res.Meta["success"] = (res.Failed == null || !res.Failed.Any());
                 return res;
             }
-            catch (Exception ex) when (ex is not McpException)
+            catch (Exception ex) when (ex is not McpException && ex is not TiaMcp.Adapters.Contracts.AdapterPreconditionException)
             {
                 throw new McpException($"Unexpected error seeding project from reference: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
             }

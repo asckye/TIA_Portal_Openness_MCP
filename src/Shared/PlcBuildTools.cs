@@ -28,7 +28,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public PlcBuildTools(PlcOrganisationPortService service) => _session = new PlcArtifactPortSession(service, "BuildAndImportPlcArtifact");
 
-        [McpServerTool(Name = "BuildAndImportPlcArtifact"), Description("[L1][PLC-Software] MAIN tool for creating new PLC blocks from natural language. Build one PLC artifact (UDT/tag table/GlobalDB/FC/FB) from structured JSON, then optionally import and compile. Use dryRun=true first to validate. Workflow: describe block in JSON → dryRun → review → dryRun=false to import. Replaces the multi-step Build*Xml + ImportPlcBlock sequence. Native behaviorPolicy remains current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "BuildAndImportPlcArtifact"), Description("[L1][PLC-Software] MAIN tool for creating new PLC blocks from natural language. Build one PLC artifact (UDT/tag table/GlobalDB/FC/FB) from structured JSON, then optionally import and compile. Use dryRun=true first to validate. Workflow: describe block in JSON → dryRun → review → dryRun=false to import. Replaces the multi-step Build*Xml + ImportPlcBlock sequence. kind fc|fb writes the V21 document format and is available on V21 only; udt, tagtable and globaldb use the serving release's header. overwrite=false (default) refuses an existing object of the same name before the import (Siemens.Engineering.ImportOptions.None); overwrite=true replaces it (Siemens.Engineering.ImportOptions.Override). Native behaviorPolicy remains current; V4 native acceptance is pending.")]
         public CallToolResult PlcBuildAndImportV4(
             [Description("softwarePath: PLC software path, e.g. 'PLC_1'. Required only when dryRun=false.")] string softwarePath,
             [Description("kind: udt|tagtable|globaldb|fc|fb")] string kind,
@@ -37,8 +37,9 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("tagFolderPath: PLC tag table group path for kind=tagtable.")] string tagFolderPath = "",
             [Description("blockGroupPath: PLC block group path for kind=globaldb|fc.")] string blockGroupPath = "",
             [Description("compileAfter: compile PLC after import when dryRun=false.")] bool compileAfter = true,
-            [Description("dryRun: true writes temporary candidate XML and returns the import plan without importing/compiling.")] bool dryRun = true)
-            => OfflineContracts.Run("BuildAndImportPlcArtifact", () => PlcBuildAndImport(softwarePath, kind, OfflineContracts.Artifact(kind, spec, "spec"), typeGroupPath, tagFolderPath, blockGroupPath, compileAfter, dryRun), writes: true, current: true);
+            [Description("dryRun: true writes temporary candidate XML and returns the import plan without importing/compiling.")] bool dryRun = true,
+            [Description("overwrite: false (default) refuses an existing object of the same name before the import; true replaces it (Siemens.Engineering.ImportOptions.Override).")] bool overwrite = false)
+            => OfflineContracts.Run("BuildAndImportPlcArtifact", () => PlcBuildAndImport(softwarePath, kind, OfflineContracts.Artifact(kind, spec, "spec"), typeGroupPath, tagFolderPath, blockGroupPath, compileAfter, dryRun, overwrite), writes: true, current: true);
 
         public ResponsePlcProgramImport PlcBuildAndImport(
             [Description("softwarePath: PLC software path, e.g. 'PLC_1'. Required only when dryRun=false.")] string softwarePath,
@@ -48,7 +49,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("tagFolderPath: PLC tag table group path for kind=tagtable.")] string tagFolderPath = "",
             [Description("blockGroupPath: PLC block group path for kind=globaldb|fc.")] string blockGroupPath = "",
             [Description("compileAfter: compile PLC after import when dryRun=false.")] bool compileAfter = true,
-            [Description("dryRun: true writes temporary candidate XML and returns the import plan without importing/compiling.")] bool dryRun = true)
+            [Description("dryRun: true writes temporary candidate XML and returns the import plan without importing/compiling.")] bool dryRun = true,
+            bool overwrite = false)
         {
             var failed = new List<ImportFailure>();
             var importedTypes = new List<string>();
@@ -82,7 +84,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var discoveredBlocks = classifiedKind == "block" ? new List<string> { classifiedObjectName } : new List<string>();
 
                 if (!dryRun && failed.Count == 0)
-                    compile = PlcBuildAndImportApply(softwarePath, typeGroupPath, tagFolderPath, blockGroupPath, compileAfter, xmlPath, classifiedKind, classifiedObjectName, importedTypes, importedTagTables, importedBlocks, failed);
+                    compile = PlcBuildAndImportApply(softwarePath, typeGroupPath, tagFolderPath, blockGroupPath, compileAfter, xmlPath, classifiedKind, classifiedObjectName, importedTypes, importedTagTables, importedBlocks, failed, overwrite);
 
                 var response = PlcProgramImport.BuildPlcProgramImportResponse(
                     tempDir,
@@ -115,7 +117,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 response.Meta["recommendedNextActions"] = new JsonArray(capability.NextActions.Select(x => (JsonNode)x).ToArray());
                 return response;
             }
-            catch (Exception ex) when (ex is not McpException && ex is not NotSupportedException)
+            catch (Exception ex) when (ex is not McpException && ex is not NotSupportedException && ex is not TiaMcp.Adapters.Contracts.AdapterPreconditionException)
             {
                 throw new McpException($"Unexpected error running BuildAndImportPlcArtifact: {ex.Message}", ex, McpErrorCode.InvalidParams);
             }
@@ -133,21 +135,22 @@ namespace TiaMcpServer.ModelContextProtocol
             List<string> importedTypes,
             List<string> importedTagTables,
             List<string> importedBlocks,
-            List<ImportFailure> failed)
+            List<ImportFailure> failed,
+            bool overwrite)
         {
             if (classifiedKind == "type")
             {
-                try { _session.ImportType(softwarePath, typeGroupPath, xmlPath); importedTypes.Add(classifiedObjectName); }
+                try { _session.ImportType(softwarePath, typeGroupPath, xmlPath, overwrite); importedTypes.Add(classifiedObjectName); }
                 catch (PortalException pex) { failed.Add(new ImportFailure { Path = xmlPath, Error = pex.Message }); }
             }
             else if (classifiedKind == "tagtable")
             {
-                try { _session.ImportPlcTagTable(softwarePath, tagFolderPath, xmlPath); importedTagTables.Add(classifiedObjectName); }
+                try { _session.ImportPlcTagTable(softwarePath, tagFolderPath, xmlPath, overwrite); importedTagTables.Add(classifiedObjectName); }
                 catch (PortalException pex) { failed.Add(new ImportFailure { Path = xmlPath, Error = pex.Message }); }
             }
             else if (classifiedKind == "block")
             {
-                try { _session.ImportBlock(softwarePath, blockGroupPath, xmlPath); importedBlocks.Add(classifiedObjectName); }
+                try { _session.ImportBlock(softwarePath, blockGroupPath, xmlPath, overwrite); importedBlocks.Add(classifiedObjectName); }
                 catch (PortalException pex) { failed.Add(new ImportFailure { Path = xmlPath, Error = pex.Message }); }
             }
             else

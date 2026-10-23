@@ -108,7 +108,17 @@
 },
 "note": "",
 "expect": "ok",
-"keys": []
+"keys": [],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "BuildPlcFcBlock is absent from the V20 release catalog (withdrawn 2026-10-20: it writes V21 documents); this plan step requires the V21 tool."
+},
+"21": {
+"applicable": true,
+"reason": "BuildPlcFcBlock is registered in V21; validate this input on V21."
+}
+}
 },
 {
 "tool": "BuildPlcFbBlock",
@@ -142,7 +152,17 @@
 },
 "note": "",
 "expect": "ok",
-"keys": []
+"keys": [],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "BuildPlcFbBlock is absent from the V20 release catalog (withdrawn 2026-10-20: it writes V21 documents); this plan step requires the V21 tool."
+},
+"21": {
+"applicable": true,
+"reason": "BuildPlcFbBlock is registered in V21; validate this input on V21."
+}
+}
 },
 {
 "tool": "BuildFlgNetCall",
@@ -225,7 +245,17 @@
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "BuildPlcLadFcBlock is absent from the V20 release catalog (withdrawn 2026-10-20: it writes V21 documents); this plan step requires the V21 tool."
+},
+"21": {
+"applicable": true,
+"reason": "BuildPlcLadFcBlock is registered in V21; validate this input on V21."
+}
+}
 },
 {
 "tool": "BuildPlcSymbolManifestFromPath",

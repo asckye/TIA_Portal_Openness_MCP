@@ -103,9 +103,9 @@ namespace TiaMcp.Adapters
                 {
                     PlcExportPublication.Publish(file,output=>
                     {
-                        if(target.Kind=="UDT") PlcNative.Types(types!).Single(t=>PlcNative.Name(t)==target.Name).Export(output,ExportOptions.None);
-                        else if(target.Kind=="TagTable") PlcNative.TagTables(tags!).Single(t=>t.Name==target.Name).Export(output,ExportOptions.None);
-                        else PlcNative.Export(PlcNative.Blocks(blocks).Single(b=>PlcNative.Name(b)==target.Name),output,ExportOptions.None);
+                        if(target.Kind=="UDT") PlcNative.Types(types!).Single(t=>PlcNative.Name(t)==target.Name).Export(output,ExportOptions.WithDefaults);
+                        else if(target.Kind=="TagTable") PlcNative.TagTables(tags!).Single(t=>t.Name==target.Name).Export(output,ExportOptions.WithDefaults);
+                        else PlcNative.Export(PlcNative.Blocks(blocks).Single(b=>PlcNative.Name(b)==target.Name),output,ExportOptions.WithDefaults);
                     });
                 }
                 prepared=true;

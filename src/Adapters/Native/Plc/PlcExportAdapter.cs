@@ -172,7 +172,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 var result = PlcDocumentPrimitives.Export((PlcBlock)value, new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(stagingPath)), item.Name);
                 var state = result == null ? (object?)null : PlcDocumentPrimitives.State(result);
                 if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(state))
-                    throw new TiaMcp.Adapters.Contracts.NativeResultException(TiaMcp.Adapters.Contracts.NativeResultStates.Documents, state);
+                    throw new TiaMcp.Adapters.Contracts.NativeResultException(TiaMcp.Adapters.Contracts.NativeResultStates.Documents, state, result == null ? null : PlcDocumentPrimitives.Messages(result.Messages));
 #else
                 CandidatePrimitives.Unsupported(release, "documents");
 #endif

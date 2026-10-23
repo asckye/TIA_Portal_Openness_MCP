@@ -35,8 +35,17 @@ namespace TiaMcp.Adapters.Native.Plc
             ids.Add(new KeyValuePair<object, string>(value, id)); objects[id] = value; return id;
         }
         public CandidateIdentity ReadIdentity() => Identity();
+        // API audit 2026-10-19 F5: the inventory hashes the content of the request's named targets only (every V4 import reads its
+        // inputs before the inventory); the other objects keep their identity rows without a full-PLC export.
+        private readonly HashSet<string> contentTargets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         public IReadOnlyList<PlcImportInput> ReadInputs(string key, string tool, PlcImportRequest request, IDictionary<string, Stream> locks)
-        { if (key != release) CandidatePrimitives.Unsupported(key, "adapter-release"); return TiaOpenness.Shared.NativeInputPolicy.Read(tool == "ImportPlcProgramFromDirectory" ? "sourceDir" : tool.EndsWith("FromDirectory", StringComparison.Ordinal) ? "dir" : "importPath", () => CandidateImportFiles.Read(key, tool, request, locks)); }
+        {
+            if (key != release) CandidatePrimitives.Unsupported(key, "adapter-release");
+            var inputs = TiaOpenness.Shared.NativeInputPolicy.Read(tool == "ImportPlcProgramFromDirectory" ? "sourceDir" : tool.EndsWith("FromDirectory", StringComparison.Ordinal) ? "dir" : "importPath", () => CandidateImportFiles.Read(key, tool, request, locks));
+            contentTargets.Clear();
+            foreach (var input in inputs) contentTargets.Add(Key(Space(input.Target.Kind), input.Target.Name));
+            return inputs;
+        }
         private static string Space(string kind) => kind == "UDT" ? "type" : kind == "TagTable" ? "tag" : "block";
         private static string Key(string space, string group) => space + ":" + group;
         public string TargetGroupIdentity(PlcImportObject target)
@@ -131,7 +140,14 @@ namespace TiaMcp.Adapters.Native.Plc
             void Add(object item, object parent, string path)
             {
                 if (result.Count >= 4096) throw new InvalidOperationException("Complete import inventory exceeds 4096 rows.");
-                var row = Describe(item, parent, path); if (content) row.ContentHash = XmlReadback(item); result.Add(row);
+                var row = Describe(item, parent, path);
+                if (content && contentTargets.Contains(Key(item is PlcType ? "type" : item is PlcTagTable ? "tag" : "block", row.Name)))
+                {
+                    // An object TIA cannot export (inconsistent or know-how protected) is marked unknown instead of failing the import.
+                    var blocker = Blocker(item);
+                    row.ContentHash = blocker.Length != 0 ? "unknown:" + blocker : XmlReadback(item);
+                }
+                result.Add(row);
             }
             foreach (var pair in groups.OrderBy(p => p.Key, StringComparer.Ordinal))
             {
@@ -153,7 +169,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 var result = ((PlcBlockGroup)group).Blocks.ImportFromDocuments(new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.GetDirectoryName(input.Path)!)), Path.GetFileNameWithoutExtension(input.Path), overwrite ? ImportDocumentOptions.Override : ImportDocumentOptions.None);
                 var state = result == null ? (object?)null : result.State;
                 if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(state))
-                    throw new TiaMcp.Adapters.Contracts.NativeResultException(TiaMcp.Adapters.Contracts.NativeResultStates.Documents, state);
+                    throw new TiaMcp.Adapters.Contracts.NativeResultException(TiaMcp.Adapters.Contracts.NativeResultStates.Documents, state, result == null ? null : PlcDocumentPrimitives.Messages(result.Messages));
                 imported = result.ImportedPlcBlocks.Take(2).Cast<object>().ToArray();
 #else
                 throw new NotSupportedException("Document import is not available on this exact release.");
@@ -165,20 +181,19 @@ namespace TiaMcp.Adapters.Native.Plc
             if (imported.Length != 1) throw new InvalidDataException("Native import must return exactly one reviewed object.");
             return Describe(imported[0], group, input.Target.GroupPath);
         }
-        public string RecoveryBlocker(PlcImportObject item)
-        {
-            var value = objects[item.Id];
-            return value is PlcBlock block ? TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(block.IsConsistent, block.IsKnowHowProtected)
+        public string RecoveryBlocker(PlcImportObject item) => Blocker(objects[item.Id]);
+        private static string Blocker(object value)
+            => value is PlcBlock block ? TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(block.IsConsistent, block.IsKnowHowProtected)
                 : value is PlcType type ? TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(type.IsConsistent) : "";
-        }
+        // Recovery exports include default values (ExportOptions.WithDefaults, API audit F13) so they restore the object as it was.
         public void ExportRecovery(PlcImportObject item, FileInfo file)
         {
             TiaMcp.Adapters.PlcExportPublication.Publish(file, output =>
             {
                 var value = objects[item.Id];
-                if (value is PlcBlock block) block.Export(output, ExportOptions.None);
-                else if (value is PlcType type) type.Export(output, ExportOptions.None);
-                else ((PlcTagTable)value).Export(output, ExportOptions.None);
+                if (value is PlcBlock block) block.Export(output, ExportOptions.WithDefaults);
+                else if (value is PlcType type) type.Export(output, ExportOptions.WithDefaults);
+                else ((PlcTagTable)value).Export(output, ExportOptions.WithDefaults);
             });
         }
         private static string AuditDirectory()
@@ -186,14 +201,26 @@ namespace TiaMcp.Adapters.Native.Plc
             string path = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "plc-import-readback-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(path); return path;
         }
+        // Readback directories are temporary and removed after hashing (API audit F5).
+        private static void RemoveAuditDirectory(string directory)
+        {
+            try { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
+            catch (IOException) { /* swallow(cleanup): a locked temporary readback file must not replace the verified hash */ }
+            catch (UnauthorizedAccessException) { /* swallow(cleanup): a protected temporary readback file must not replace the verified hash */ }
+        }
         private static string XmlReadback(object item)
         {
-            string path = Path.Combine(AuditDirectory(), "readback.xml"); var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path));
-            if (item is PlcBlock block) block.Export(file, ExportOptions.None);
-            else if (item is PlcType type) type.Export(file, ExportOptions.None);
-            else ((PlcTagTable)item).Export(file, ExportOptions.None);
-            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-            return CandidateImportFiles.XmlHash(CandidatePrimitives.Read(stream));
+            string directory = AuditDirectory();
+            try
+            {
+                string path = Path.Combine(directory, "readback.xml"); var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path));
+                if (item is PlcBlock block) block.Export(file, ExportOptions.None);
+                else if (item is PlcType type) type.Export(file, ExportOptions.None);
+                else ((PlcTagTable)item).Export(file, ExportOptions.None);
+                using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+                return CandidateImportFiles.XmlHash(CandidatePrimitives.Read(stream));
+            }
+            finally { RemoveAuditDirectory(directory); }
         }
         public string ReadContent(PlcImportInput input, PlcImportObject imported)
         {
@@ -201,14 +228,18 @@ namespace TiaMcp.Adapters.Native.Plc
             if (!input.Documents) return XmlReadback(item);
 #if PLC_DOCUMENT_EXPORT
             string path = AuditDirectory(), name = imported.Name;
+            try
+            {
             var result = ((PlcBlock)item).ExportAsDocuments(new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path)), name);
             var state = result == null ? (object?)null : result.State;
                 if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(state))
-                    throw new TiaMcp.Adapters.Contracts.NativeResultException(TiaMcp.Adapters.Contracts.NativeResultStates.Documents, state);
+                    throw new TiaMcp.Adapters.Contracts.NativeResultException(TiaMcp.Adapters.Contracts.NativeResultStates.Documents, state, result == null ? null : PlcDocumentPrimitives.Messages(result.Messages));
             byte[] Read(string file) { using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read); return CandidatePrimitives.Read(stream); }
             var code = Read(Path.Combine(path, name + ".s7dcl"));
             string resource = Path.Combine(path, name + ".s7res");
             return CandidateImportFiles.DocumentHash(code, File.Exists(resource) ? Read(resource) : null);
+            }
+            finally { RemoveAuditDirectory(path); }
 #else
             throw new NotSupportedException("Document readback is unavailable.");
 #endif

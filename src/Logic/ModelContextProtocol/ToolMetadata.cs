@@ -1006,7 +1006,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["GeneratePlcLoadableFile.filePath"] = new ParameterHint("\"C:\\\\Temp\\\\file.xml\""),
             ["GeneratePlcSourceFromBlocks.softwarePath"] = new ParameterHint("\"PLC_1\""),
             ["GeneratePlcSourceFromBlocks.blockPaths"] = new ParameterHint("\"\\u003CblockPaths\\u003E\""),
-            ["GeneratePlcSourceFromBlocks.filePath"] = new ParameterHint("\"C:\\\\Temp\\\\file.xml\""),
+            ["GeneratePlcSourceFromBlocks.filePath"] = new ParameterHint("\"C:\\\\Temp\\\\FC_Ready.scl\""),
             ["GenerateSivarc.hmiDeviceName"] = new ParameterHint("\"\\u003ChmiDeviceName\\u003E\""),
             ["GenerateSivarc.plcSoftwarePaths"] = new ParameterHint("\"\\u003CplcSoftwarePaths\\u003E\""),
             ["GenerateSivarc.generationOptions"] = new ParameterHint("\"\\u003CgenerationOptions\\u003E\""),

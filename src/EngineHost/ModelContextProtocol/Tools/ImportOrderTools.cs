@@ -111,6 +111,15 @@ namespace TiaMcpServer.ModelContextProtocol
                     Outcome.RejectedBeforeOperation, Completeness.None, current);
             if (error is Rejected rejected)
                 return Result(tool, null, rejected.Error, Outcome.RejectedBeforeOperation, Completeness.None, current);
+            // AdapterPreconditionException is thrown only before the first native mutation (for example the SimaticML
+            // import window or overwrite=false on an existing target), so it is a typed refusal, not an unknown write.
+            if (HostFailurePolicy.Precondition(error) is TiaMcp.Adapters.Contracts.AdapterPreconditionException precondition)
+            {
+                var evidence = HostBehavior.FailureEvidence(precondition.GetType().Name, precondition.Message);
+                return Result(tool, null, HostBehavior.FailureError(precondition.IsArgument ? HostFailureKind.Argument : HostFailureKind.Precondition,
+                    precondition.ParamName, evidence, HostBehavior.AdmissionDiagnostic(error), condition: precondition.Condition),
+                    Outcome.RejectedBeforeOperation, Completeness.None, current);
+            }
             if (!writes && (cause is ArgumentException || cause is JsonException))
                 return Result(tool, null, McpServer.InvalidInput("arguments"), Outcome.RejectedBeforeOperation, Completeness.None, current);
             if (!writes && (cause is FileNotFoundException || cause is DirectoryNotFoundException))

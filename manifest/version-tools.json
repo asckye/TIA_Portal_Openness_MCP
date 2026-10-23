@@ -2219,7 +2219,7 @@
     },
     "20": {
       "profile": "full-engine",
-      "toolCount": 500,
+      "toolCount": 496,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -2242,11 +2242,7 @@
         "BuildClassicHmiTagTable",
         "BuildDeviceAmlDocument",
         "BuildFlgNetCall",
-        "BuildPlcAliasAlarmLad",
-        "BuildPlcFbBlock",
-        "BuildPlcFcBlock",
         "BuildPlcGlobalDb",
-        "BuildPlcLadFcBlock",
         "BuildPlcSymbolManifestFromPath",
         "BuildPlcTagTable",
         "BuildPlcUdt",
@@ -3243,8 +3239,8 @@
   },
   "groupCounts": {
     "all-releases": 277,
-    "shared-subset": 223,
-    "release-only": 16
+    "shared-subset": 219,
+    "release-only": 20
   },
   "tools": [
     {
@@ -3525,28 +3521,25 @@
     {
       "name": "BuildPlcAliasAlarmLad",
       "releases": [
-        "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "release-only",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "BuildPlcFbBlock",
       "releases": [
-        "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "release-only",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "BuildPlcFcBlock",
       "releases": [
-        "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "release-only",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3567,10 +3560,9 @@
     {
       "name": "BuildPlcLadFcBlock",
       "releases": [
-        "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "release-only",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {

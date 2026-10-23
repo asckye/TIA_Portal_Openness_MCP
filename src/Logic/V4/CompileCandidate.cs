@@ -76,7 +76,7 @@ namespace TiaMcp.Logic.V4
                     return Result(release, tool, id, data, new Error("The native compiler returned an unexpected state.",
                         new OutcomeUnknownDetails("native-compile-state", Evidence(attempt))), Outcome.Unknown, Execution.Unknown, attempt);
                 }
-                if (!Good(d)) return Result(release, tool, id, data, CompileResultMapping.Errors(new JsonObject { ["state"] = d.State, ["errorCount"] = d.RootErrorCount, ["warningCount"] = d.RootWarningCount, ["diagnosticMessages"] = JsonNode.Parse(V4Json.Serialize(d.Messages)) }) ?? new Error("Compilation finished with inconsistent root and leaf diagnostic counts.",
+                if (!Good(d)) return Result(release, tool, id, data, CompileResultMapping.Errors(new JsonObject { ["state"] = d.State, ["errorCount"] = d.RootErrorCount, ["warningCount"] = d.RootWarningCount, ["diagnosticMessages"] = JsonNode.Parse(V4Json.Serialize(d.Messages)) }) ?? new Error("Compilation did not succeed; inspect the root state and diagnostics.",
                     new NativeOperationFailedDetails(null, null, Evidence(attempt))), Outcome.Failed, Execution.Completed, attempt);
                 return Result(release, tool, id, data, null, Outcome.Succeeded, Execution.Completed, attempt);
             }
@@ -93,7 +93,10 @@ namespace TiaMcp.Logic.V4
                 return Result(release, tool, id, data, refusal, Outcome.RejectedBeforeOperation, Execution.NotStarted);
             }
         }
-        private static bool Good(CompileDiagnostics d) => d.CountsConsistent && d.RootErrorCount == 0 && d.LeafErrorCount == 0 && TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.Compiler, d.State);
+        // API audit 2026-10-19 F7: success is the root State (Success, Information or Warning) with root ErrorCount == 0, as the
+        // blocks skill ("Compile Diagnostics") and "Compiling a project" document. A root/leaf count mismatch stays a diagnostic
+        // (attempt.diagnostics countsConsistent and the leaf counts), never a failure on its own.
+        internal static bool Good(CompileDiagnostics d) => d.RootErrorCount == 0 && TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.Compiler, d.State);
         private static Dictionary<string, JsonElement> Evidence(CompileAttempt? attempt) => new Dictionary<string, JsonElement> {
             ["attempt"] = JsonSerializer.SerializeToElement(attempt), ["retry"] = JsonSerializer.SerializeToElement("never") };
         public static Error Map(CandidateFault fault, string release, string hash)

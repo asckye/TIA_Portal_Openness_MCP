@@ -18,11 +18,12 @@ namespace TiaMcpServer.Siemens.Services
         internal PlcArtifactPortSession(PlcOrganisationPortService service, string tool) { this.service = service; this.tool = tool; }
         internal void RequireBuildFormat(string kind)
         { var refusal = PlcSoftwareCapabilities.Unsupported(HardwareContract.ReleaseKey, tool, family: kind); if (refusal != null) throw new NotSupportedException(refusal); buildFormat = kind; }
-        private JsonObject Invoke(string action, string path, string group = "", string file = "")
-            => service.Artifact(new PlcSoftwareRequest { Operation = tool, Family = buildFormat, Action = action, SoftwarePath = path, GroupPath = group, FilePath = file, DryRun = action == "softwarePath" });
-        public bool ImportBlock(string path, string group, string file) => (bool?)Invoke("importBlock", path, group, file)["Found"] == true;
-        public bool ImportType(string path, string group, string file) => (bool?)Invoke("importType", path, group, file)["Found"] == true;
-        public void ImportPlcTagTable(string path, string group, string file) => Invoke("importTagTable", path, group, file);
+        private JsonObject Invoke(string action, string path, string group = "", string file = "", bool overwrite = false)
+            => service.Artifact(new PlcSoftwareRequest { Operation = tool, Family = buildFormat, Action = action, SoftwarePath = path, GroupPath = group, FilePath = file, Overwrite = overwrite, DryRun = action == "softwarePath" });
+        // overwrite=false refuses an existing object of the same name before the native import (API audit 2026-10-19 F25).
+        public bool ImportBlock(string path, string group, string file, bool overwrite) => (bool?)Invoke("importBlock", path, group, file, overwrite)["Found"] == true;
+        public bool ImportType(string path, string group, string file, bool overwrite) => (bool?)Invoke("importType", path, group, file, overwrite)["Found"] == true;
+        public void ImportPlcTagTable(string path, string group, string file, bool overwrite) => Invoke("importTagTable", path, group, file, overwrite);
         public string SoftwarePath(string path) => (string?)Invoke("softwarePath", path)["Message"] ?? "";
         public PlcArtifactBlock? ExportBlock(string path, string block, string folder)
         {
@@ -44,7 +45,7 @@ namespace TiaMcpServer.Siemens.Services
             catch (PortalException error) { throw new McpException("Failed compiling software '" + path + "' [" + error.Code + "]: " + error.Message, error, McpErrorCode.InternalError); }
             catch (Exception error) when (error is not McpException) { throw new McpException("Unexpected error compiling software '" + path + "': " + error.Message + McpHints.Recovery(error), error, McpErrorCode.InternalError); }
         }
-        public ResponseImportBatch ImportBlocksFromDirectory(string path, string group, string directory, string regexName = "", bool overwrite = true)
+        public ResponseImportBatch ImportBlocksFromDirectory(string path, string group, string directory, string regexName = "", bool overwrite = false)
         {
             var reply = service.Artifact(new PlcSoftwareRequest { Operation = tool, Action = "importBlockDirectory", SoftwarePath = path, GroupPath = group, FilePath = directory, RegexName = regexName, Overwrite = overwrite, DryRun = false });
             return JsonSerializer.Deserialize<ResponseImportBatch>(reply["Batch"]!.ToJsonString())!;

@@ -288,12 +288,27 @@ internal static class DeveloperChecks
             CheckOk(Ok(validTransaction) && !(Data(validTransaction)["mayHaveChanged"]?.GetValue<bool>() ?? false), "Supported transaction preview does not write");
             var badTransaction = Call("RunToolTransaction", new { calls = new[] { new { name = "CreatePlcTypeGroup", arguments = new { softwarePath = "PLC_Offline" } } }, text = "Missing argument" });
             CheckOk(!Ok(badTransaction) && badTransaction["error"]?["code"]?.GetValue<string>() == "INVALID_ARGUMENT", "Transaction preflights every call");
-            var lad = Call("BuildPlcAliasAlarmLad", new { blockName = "FC_Offline", blockNumber = 701, rows = new[] { new { source = new[] { "Input" }, destination = new[] { "DB", "Output" } } } });
-            CheckOk(Ok(lad) && Data(lad)["xml"]!.GetValue<string>().Contains("Contact"), "Boolean LAD composer returns contact XML");
+            string xml;
+            // P8-81d (2026-10-20 decision): V20 withdraws the V21-format BuildPlcAliasAlarmLad. There the release refuses it and the
+            // same offline builder supplies the LAD document the following checks use; V21 keeps the served call.
+            bool withdrawn = (PlcHarnessChecks.Active ? PlcHarnessChecks.Release : server.GetName().Name!.EndsWith("V20", StringComparison.Ordinal) ? "20" : "21") == "20";
+            if (withdrawn)
+            {
+                var usage = Call("GetToolUsage", new { toolName = "BuildPlcAliasAlarmLad" });
+                CheckOk(!Ok(usage), "V20 does not serve the withdrawn V21 LAD composer");
+                xml = (string)logic.GetType("TiaMcpServer.ModelContextProtocol.PlcAliasAlarmBuilder", true)!.GetMethod("Build")!
+                    .Invoke(null, new object[] { "FC_Offline", 701, "[{\"source\":[\"Input\"],\"destination\":[\"DB\",\"Output\"]}]" })!;
+                CheckOk(xml.Contains("Contact"), "Offline Boolean LAD builder returns contact XML");
+            }
+            else
+            {
+                var lad = Call("BuildPlcAliasAlarmLad", new { blockName = "FC_Offline", blockNumber = 701, rows = new[] { new { source = new[] { "Input" }, destination = new[] { "DB", "Output" } } } });
+                CheckOk(Ok(lad) && Data(lad)["xml"]!.GetValue<string>().Contains("Contact"), "Boolean LAD composer returns contact XML");
+                xml = Data(lad)["xml"]!.GetValue<string>();
+            }
 
             var left = Path.Combine(scratch, "before.xml");
             var right = Path.Combine(scratch, "after.xml");
-            var xml = Data(lad)["xml"]!.GetValue<string>();
             File.WriteAllText(left, xml, new UTF8Encoding(false));
             File.WriteAllText(right, xml.Replace("Name=\"Input\"", "Name=\"OtherInput\""), new UTF8Encoding(false));
             var report = Path.Combine(scratch, "diff.html");
