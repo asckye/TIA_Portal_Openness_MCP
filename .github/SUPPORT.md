@@ -4,10 +4,11 @@ Support requests may be written in English or Chinese.
 
 ## Before asking
 
-1. For a V20/V21 full engine, run doctor on the TIA computer. For older foundation releases, use Studio Doctor or the connected host's environment tools and their GetToolUsage examples:
+1. On the TIA computer, run `doctor` with the host of the release you use (every release has the same host; give its release key),
+   or use the environment check of the Workbench:
 
    ```bat
-   runtime\v21\TiaMcp.Engine.V21.exe doctor
+   runtime\v21\TiaMcp.FoundationHost.exe doctor --release-key 21
    ```
 
 2. Read the docs for your question:
@@ -17,13 +18,13 @@ Support requests may be written in English or Chinese.
    - Errors and Openness limits: [docs/troubleshooting/errors.md](../docs/troubleshooting/errors.md), [docs/troubleshooting/openness-limitations.md](../docs/troubleshooting/openness-limitations.md)
    - What is verified on a real machine and what is not: [docs/reference/capabilities.md](../docs/reference/capabilities.md), [docs/reference/real-machine-ledger.md](../docs/reference/real-machine-ledger.md)
 
-3. Inside an AI session, retrieve `GetToolUsage` for the current release, tool and operation. Full engines also offer `InitializeEnvironment`, `GetEnvironmentDiagnostics` and `FindTools`; foundation hosts use their own catalog.
+3. Inside an AI session, retrieve `GetToolUsage` for the current release, tool and operation. Every release also offers `InitializeEnvironment`, `GetEnvironmentDiagnostics` and `FindTools`.
 
 ## Where to ask
 
 - **Bug or unexpected behaviour** → open an issue with the [bug report template](https://github.com/asckye/TIA_Portal_Openness_MCP/issues/new?template=bug_report.md); paste the `doctor` output and the full error text.
 - **Missing tool or workflow** → [feature request](https://github.com/asckye/TIA_Portal_Openness_MCP/issues/new?template=feature_request.md).
-- **Question** → open an issue with the `question` label; say which TIA version, client and engine version (from the current host's state/environment output).
+- **Question** → open an issue with the `question` label; say which TIA version, client and product version (from the current host's state/environment output).
 - **Security problem** → do not open a public issue; follow [SECURITY.md](SECURITY.md).
 
 Please do not attach real customer projects or unredacted logs. Reduce a reproduction to the smallest block or spec that still fails.

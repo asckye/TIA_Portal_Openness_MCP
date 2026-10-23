@@ -8,10 +8,10 @@ labels: bug
 **Environment**
 - Exact TIA release: V14 SP1 / V15.1 / V16 / V17 / V18 / V19 / V20 / V21
 - Installed Update/Hotfix, if known:
-- Component and version: MCP foundation / MCP full / Studio / configurator
+- Component and version: MCP host / PLC worker / Workbench (Studio) / configurator
 - Selected runtime and Windows version:
 - MCP client, if applicable:
-- Environment check output (full-engine doctor or the selected host/Studio check):
+- Environment check output (`doctor --release-key <key>` of the release's host, or the Workbench environment check):
 
 **What happened**
 Include the tool/action and redacted error text. Say whether the request failed, the connection was lost, or the TIA process exited.

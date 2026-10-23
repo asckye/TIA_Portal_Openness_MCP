@@ -6,8 +6,7 @@
 
 ## Affected components
 
-- [ ] Full MCP engines (V20/V21)
-- [ ] Foundation MCP / workers (exact releases: )
+- [ ] MCP host / PLC workers (exact releases: )
 - [ ] Studio / its version adapters
 - [ ] Configurator
 - [ ] Build, packaging or CI
