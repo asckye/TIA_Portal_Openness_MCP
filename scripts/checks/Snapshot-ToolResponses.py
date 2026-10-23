@@ -282,9 +282,11 @@ V21_ONLY = (
     'ManageSafetyActivationTestGroup', 'ManageSafetyFunction',
     'ManageSafetyFunctionCondition', 'ManagePlcBlockWriteProtection',
     'ManageDriveSafetyAcceptanceTest', 'ManageSivarcScreenLayout',
-    'ManageClassicHmiGraphic',
     # P8-81d (2026-10-20 decision): the whole-block composers write V21 documents and are withdrawn on V20.
     'BuildPlcFcBlock', 'BuildPlcFbBlock', 'BuildPlcLadFcBlock', 'BuildPlcAliasAlarmLad',
+    # P8-81e (same decision): the Classic HMI tag-table and minimal-package builders are withdrawn on V20. ManageClassicHmiGraphic
+    # left this list: the official API registers it on all eight releases.
+    'BuildClassicHmiTagTable', 'BuildClassicHmiMinimalPackage',
 )
 
 

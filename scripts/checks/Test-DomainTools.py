@@ -1227,12 +1227,10 @@ def capture(args, exe, harness, profile, isolated):
                     arguments = dict(arguments, outputDirectory=str(args.report_directory / name))
                 hidden = args.major == 20 and (name in ('ManagePlcBlockWriteProtection', 'ManageDriveSafetyAcceptanceTest',
                                                         'ManageSivarcScreenLayout',
-                                                        'ManageClassicHmiGraphic', 'GetClassicHmiGlobalization',
                                                         'ListCommunicationConnections', 'ManageCommunicationConnection')
                                                or domain == 'SafetyValidation')
                 version_action = args.major == 20 and (
                     (name == 'ManagePlcDocuments' and arguments['action'] in ('createFromMasterCopy', 'createFromLibraryType'))
-                    or (name == 'ManageDcbLibraries' and arguments['action'] == 'import')
                     or (name == 'ManageDriveHardwareModule' and arguments['action'] in ('changeType', 'setPositionNumber'))
                     or (name == 'ManagePlcSafety' and arguments['action'] == 'generateBaseId')
                     or (name == 'ManagePlcProtection' and arguments['action'] in ('protectAllConfiguration', 'unprotectAllConfiguration'))
