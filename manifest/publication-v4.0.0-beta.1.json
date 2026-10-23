@@ -1,0 +1,91 @@
+{
+  "release": "v4.0.0-beta.1",
+  "url": "https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v4.0.0-beta.1",
+  "sourceCommit": "bc5dcc5a128b02e4bf8c3e405a3cbcb0e354e481",
+  "publishedAtUtc": "2026-10-23T04:14:27Z",
+  "formalRelease": false,
+  "prerelease": true,
+  "latest": false,
+  "package": {
+    "name": "TIA_MCP_Delivery_v4.0.0-beta.1_20261022.zip",
+    "bytes": 190859803,
+    "sha256": "c1705d6e850df614753a8266d1ce8e590344f47e7e8481d1cc9f1eecdf2b7d17",
+    "files": 1793
+  },
+  "assets": [
+    {
+      "name": "TIA_MCP_Delivery_v4.0.0-beta.1_20261022.sha256",
+      "bytes": 111,
+      "digest": "sha256:cd90612b4f5105d01ebdd7f068443b8177995b2a4aece52e2b1eb4dcc601e749",
+      "state": "uploaded",
+      "downloadUrl": "https://github.com/asckye/TIA_Portal_Openness_MCP/releases/download/v4.0.0-beta.1/TIA_MCP_Delivery_v4.0.0-beta.1_20261022.sha256"
+    },
+    {
+      "name": "TIA_MCP_Delivery_v4.0.0-beta.1_20261022.zip",
+      "bytes": 190859803,
+      "digest": "sha256:c1705d6e850df614753a8266d1ce8e590344f47e7e8481d1cc9f1eecdf2b7d17",
+      "state": "uploaded",
+      "downloadUrl": "https://github.com/asckye/TIA_Portal_Openness_MCP/releases/download/v4.0.0-beta.1/TIA_MCP_Delivery_v4.0.0-beta.1_20261022.zip"
+    }
+  ],
+  "workflows": [
+    {
+      "name": "validate-bundle",
+      "event": "push",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/asckye/TIA_Portal_Openness_MCP/actions/runs/39886484245",
+      "headSha": "bc5dcc5a128b02e4bf8c3e405a3cbcb0e354e481"
+    },
+    {
+      "name": "offline-checks",
+      "event": "push",
+      "attempt": 2,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/asckye/TIA_Portal_Openness_MCP/actions/runs/39886484246",
+      "headSha": "bc5dcc5a128b02e4bf8c3e405a3cbcb0e354e481"
+    },
+    {
+      "name": "Verify v4.0.0-beta.1",
+      "event": "release",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/asckye/TIA_Portal_Openness_MCP/actions/runs/39899266163",
+      "headSha": "bc5dcc5a128b02e4bf8c3e405a3cbcb0e354e481"
+    },
+    {
+      "name": "Verify v4.0.0-beta.1",
+      "event": "workflow_dispatch",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/asckye/TIA_Portal_Openness_MCP/actions/runs/39899758651",
+      "headSha": "df90ead0f4873e73d76d8c4ea3ee8d8a9ec426b3"
+    }
+  ],
+  "notes": [
+    "offline-checks attempt 1 failed in foundation-transport (HTTP host not listening within the wait on the hosted runner); the failed job was re-run unchanged and passed.",
+    "The release-published verification failed in its first step because the workflow kept a carriage return from the Windows Python output; df90ead0 strips it and the workflow_dispatch re-verification of the tag passed.",
+    "The release page was edited on 2026-10-22 with the maintainer's approval to withdraw \"Not verified\" items 1-6 (V20/V21 engine comparisons; the engine was removed before this pre-release)."
+  ],
+  "releaseKeys": [
+    "14sp1",
+    "15.1",
+    "16",
+    "17",
+    "18",
+    "19",
+    "20",
+    "21"
+  ],
+  "bundledDotnet": "10.0.12",
+  "realMachineAcceptance": {
+    "status": "not run",
+    "decision": "docs/development/decisions/0020-prereleases-tested-by-users.md"
+  },
+  "nativeTiaExecuted": false,
+  "vmDeployed": false
+}

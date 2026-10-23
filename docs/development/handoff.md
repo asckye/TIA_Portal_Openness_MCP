@@ -1,8 +1,8 @@
 # Current development handoff
 
-Status: Current · Last checked: 2026-10-21, master `62ebf86e`
+Status: Current · Last checked: 2026-10-22, master `df90ead0`
 
-The published release is [v3.3.0](../releases/v3.3.0.md); 4.0 is unreleased. Release and acceptance conditions are recorded in [ADR 0013](decisions/0013-release-4-0-after-phases-7-and-8.md) and [ADR 0020](decisions/0020-prereleases-tested-by-users.md): we do no real-machine acceptance ourselves, and 4.0 goes to other users as GitHub pre-releases (`v4.0.0-beta.N`, not marked latest). P8-04j2 is merged, so the first pre-release, 4.0.0-beta.1, is next (see [Next step](#next-step)). Use the [refactor plan](refactor-plan.md) as the task-status authority. This handoff records source facts, not new acceptance results.
+The latest release is [v3.3.0](../releases/v3.3.0.md). The first 4.0 pre-release, [v4.0.0-beta.1](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v4.0.0-beta.1) ([notes](../releases/v4.0.0-beta.1.md), record `manifest/publication-v4.0.0-beta.1.json`), was published on 2026-10-22 from `bc5dcc5a` as a GitHub pre-release that is not the latest release; testers report against its numbered not-verified list (items 1-6 withdrawn on the release page: they compared the removed engine). Release and acceptance conditions are recorded in [ADR 0013](decisions/0013-release-4-0-after-phases-7-and-8.md) and [ADR 0020](decisions/0020-prereleases-tested-by-users.md): we do no real-machine acceptance ourselves, and 4.0 goes to other users as GitHub pre-releases (`v4.0.0-beta.N`, not marked latest). P8-04j2 is merged, so the first pre-release, 4.0.0-beta.1, is next (see [Next step](#next-step)). Use the [refactor plan](refactor-plan.md) as the task-status authority. This handoff records source facts, not new acceptance results.
 
 ## Current source
 
@@ -26,12 +26,11 @@ The BICO `p2051[0]` and Unified library rename observations and native cross-ref
 
 ## Next step
 
-Build the first pre-release, 4.0.0-beta.1, as described in the [release workflow](release-workflow.md#预发布beta--rc):
+Since beta.1 the V20/V21 engine program and its release route are deleted (P8-04l stage 1, `287bbac2`); the remaining non-compiled `src/Engine` sources go with P8-04l2, and the 34 retired engine candidate check-all jobs get PLC-worker successors in P8-04l3. Also merged for beta.1: the Maple Mono CN Workbench font and EplanMCP style (P8-80d, ADR 0021), digest redaction of sensitive values (P8-83, P8-83b), the `package-test` command (P8-94) and the release-chain fixes found by the first engine-free release runs (`7426f8b6`, `1e4e040c`, `4019e8b6`, `df90ead0`).
 
-1. Regenerate the not-verified section with `generate-prerelease-notes -Version 4.0.0-beta.1` if the real-machine ledger or the API audit VM checklist changed, and add the `## [4.0.0-beta.1] - YYYY-MM-DD` CHANGELOG entry right before the release command.
-2. Run `release -Version 4.0.0-beta.1 -Summary "..." -NoPush` with the SDK, reference and Python options. It creates the local release commit, packages and verifies the package, and stops before the push.
-3. Wait for the maintainer to confirm the package.
-4. Only then push master, wait for CI, tag `v4.0.0-beta.1` and publish it as a pre-release. Afterwards record the result in this handoff and in `manifest/publication-v4.0.0-beta.1.json`.
+Maintainer decisions of 2026-10-22: 4.0 final needs every 4.0 task merged with 20 consecutive green CI runs on master, the last beta public for at least 14 days, no open blocker, a final rc from the full release chain and the maintainer's confirmation; P8-31f-i and P8-40 move to 4.1; the EplanMCP adoptions P8-95a-g and the documentation restructure (plan in `bin-build/refactor/docs-plan/plan.md`, which absorbs P8-04m) belong to 4.0.
+
+Next, in order: review and merge the finished branches (P8-81d-g, P8-stab-2b, P8-93, P8-80e, P8-10d-f), then P8-04l2, P8-04l3, P8-04n, P8-21f, P8-84, P8-95a-g and the documentation batches, and release beta.2 with `release -AdoptEvidence` (P8-93).
 
 ## Continue development
 
