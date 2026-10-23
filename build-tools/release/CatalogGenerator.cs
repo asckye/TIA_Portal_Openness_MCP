@@ -24,6 +24,9 @@ internal static class CatalogGenerator
         foreach (var (name, entry) in data.Additions)
             if (!data.HostOnly.ContainsKey(name)) foreach (var key in Strings(entry!["releases"])) tools[key][name] = new JsonObject { ["name"] = name, ["inputSchema"] = new JsonObject { ["type"] = "object", ["additionalProperties"] = false, ["required"] = new JsonArray("inputPath", "outputPath"), ["properties"] = new JsonObject { ["inputPath"] = new JsonObject { ["type"] = "string" }, ["outputPath"] = new JsonObject { ["type"] = "string" } } } };
         foreach (var key in Keys.Take(6)) foreach (var current in data.Reviewed[key]) { var old = tools["21"].Select(p => p.Key).First(n => data.Renames[n] == current); tools[key][old] = Copy(tools["21"][old]!); }
+        // A family tool that 3.x registered on V21 only and the official API opens on V20 (P8-81e graphics tools) takes its V21
+        // contract; every tool the V20 archive already has keeps its frozen V20 contract.
+        foreach (var current in data.Reviewed["20"]) { var old = tools["21"].Select(p => p.Key).First(n => data.Renames[n] == current); if (!tools["20"].ContainsKey(old)) tools["20"][old] = Copy(tools["21"][old]!); }
         var currentNames = data.Mapping;
         // A tool without any supported action on a release is not listed there, even if the 3.x archive had it
         // (maintainer 2026-10-11: one registration rule for all eight releases).
