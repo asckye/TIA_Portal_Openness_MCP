@@ -97,7 +97,8 @@ public sealed class ReadOnlySourceContracts
         var registration = Sources.TypeText("McpPromptRegistration");
         var pipeline = Read("src/EngineHost/EngineHostPipeline.cs");
         Excludes(Sources.AllText(), "WithPromptsFromAssembly(", "WithToolsFromAssembly failed:");
-        Count(program, "pipeline.RegisterHandlers(mcp);", 1); Count(program, "probe.RegisterHandlers(mcp);", 1);
+        // P8-stab-3: HTTP registers the same handlers by release key before any session catalog exists.
+        Count(program, "pipeline.RegisterHandlers(mcp);", 1); Count(program, "EngineHostPipeline.RegisterHandlers(mcp, options.ReleaseKey);", 1);
         Contains(pipeline, "McpPromptRegistration.Configure(builder)");
         Excludes(registration, "catch", "GetTypes("); Contains(registration, "builder.WithPrompts(new[] {");
         Contains(program, "WithStdioServerTransport()", "WithHttpTransport(", "WorkerShutdown.StopAll");
