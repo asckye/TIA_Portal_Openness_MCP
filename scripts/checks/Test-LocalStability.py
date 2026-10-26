@@ -314,8 +314,11 @@ def run_profile(args, transport, profile, run_dir):
             scenario.append(('block_group_portal_refused', 'CreatePlcBlockGroup',
                              {'softwarePath': '__soak_no_plc__', 'groupPath': '__soak_missing__'}, 'portal_refused'))
             scenario.append(('build_import_portal_refused', 'BuildAndImportPlcArtifact',
-                             {'softwarePath': '__soak_no_plc__', 'kind': 'fc', 'dryRun': False,
-                              'spec': {'blockName': 'FC_Soak', 'blockNumber': 12,
+                             {'softwarePath': '__soak_no_plc__', 'kind': 'globaldb' if args.major == 20 else 'fc', 'dryRun': False,
+                              # V20's FC/FB composer was withdrawn; keep exercising the import admission boundary.
+                              'spec': {'dbName': 'DB_Soak', 'dbNumber': 12,
+                                       'staticMembers': [{'name': 'Run', 'datatype': 'Bool'}]} if args.major == 20 else
+                                      {'blockName': 'FC_Soak', 'blockNumber': 12,
                                        'inputs': [{'name': 'Start', 'datatype': 'Bool'}],
                                        'outputs': [{'name': 'Run', 'datatype': 'Bool'}],
                                        'structuredText': {'operations': [{'op': 'if', 'condition': 'Start'},

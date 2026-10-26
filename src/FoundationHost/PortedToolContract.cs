@@ -242,6 +242,7 @@ internal sealed partial class FoundationTool
         ["offset"] = nameof(UnifiedRequest.Offset),
         ["limit"] = nameof(UnifiedRequest.Limit),
         ["properties"] = nameof(UnifiedRequest.PropertiesJson),
+        ["overwrite"] = nameof(UnifiedRequest.Overwrite),
         ["dryRun"] = nameof(UnifiedRequest.DryRun),
         ["property"] = nameof(UnifiedRequest.Property),
         ["culture"] = nameof(UnifiedRequest.Culture),

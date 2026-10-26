@@ -259,11 +259,24 @@ public sealed class ReadOnlySourceContracts
     [Fact]
     public void UnifiedHmiPlcFamilyFallbackFindsGroupedAndUngroupedDevices()
     {
-        // The PLC-family fallback looked up the PLC device among the root devices only.
-        var fallback = EngineSources.BlockAfter(Read("src/Adapters/Native/Hmi/UnifiedHmiAdapter.cs"), "private string TryInferPlcFamilyFromProjectDevices(string plcSoftwarePath)");
-        Contains(fallback, "ProjectDeviceWalk.Walk(project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, _ => { })",
-            "var device = located.Device;");
-        Excludes(fallback, "_session.CurrentProject.Devices", "foreach (var device in");
+        // P8-81e F8 removes guessed PLC-family/driver writes; exact partner resolution must still find every device location.
+        var connection = EngineSources.BlockAfter(Read("src/Adapters/Native/Hmi/UnifiedHmiAdapter.cs"),
+            "public HmiDescribe EnsureUnifiedHmiConnection(string hmiSoftwarePath, string connectionName = \"HMI_Connection_1\", string plcName = \"PLC_1\")");
+        Contains(connection, "_session.GetSoftwareContainer(plcName)?.Parent as DeviceItem", "HmiExchangePolicy.RequireConnection(connection, expectedPartner)");
+        Excludes(connection, "TryInferPlcFamily", "_session.CurrentProject.Devices", "foreach (var device in");
+        Contains(Read("src/Adapters/Native/Hmi/HmiSession.cs"), "internal SoftwareContainer? GetSoftwareContainer(string path) => session.GetSoftwareContainer(path);");
+        Contains(Read("src/Adapters/Native/Engineering/WorkerFamilyCallbacks.cs"), "ResolveEngineeringSoftwareContainer = path => session.ReadContainer(path);");
+        var organisation = Read("src/Adapters/Native/Plc/PlcOrganisationWorker.cs");
+        Contains(organisation, "public SoftwareContainer? GetSoftwareContainer(string path) => engine.ResolveEngineeringSoftwareContainer != null",
+            "? engine.ResolveEngineeringSoftwareContainer(path) as SoftwareContainer : ReadContainer(path);");
+        var discovery = EngineSources.BlockAfter(organisation, "internal SoftwareContainer ReadContainer(string path)");
+        Contains(discovery, "foreach (var device in project.Devices) Device(device, Array.Empty<string>(), \"devices\");",
+            "foreach (var group in project.DeviceGroups) Group(group, Array.Empty<string>(), \"device-groups\", 0);",
+            "foreach (var device in project.UngroupedDevicesGroup.Devices) Device(device, Array.Empty<string>(), \"ungrouped\");",
+            "foreach (var child in group.Groups) Group(child, groups, exact + \"/groups\", depth + 1);",
+            "foreach (var device in group.Devices) Device(device, groups, exact + \"/devices\");",
+            "foreach (var child in item.DeviceItems) Item(child, device, groups, exact, depth + 1);",
+            "var selected = PlcReadPathPolicy.Select(values, path);", "return selected.Value;");
     }
 
     [Fact]

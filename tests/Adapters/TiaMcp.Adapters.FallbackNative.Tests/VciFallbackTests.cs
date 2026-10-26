@@ -22,8 +22,10 @@ public sealed class VciFallbackTests
         var world = new World { Formats = new[] { "Scl", "SimaticML" } };
         var request = Request("ConnectProjectToWorkspace");
         var adapter = Adapter(world, request);
-        adapter.MappingTargets = () => new[] { new VciMappingTarget {
+        // Preview and apply must observe the same native target identity.
+        var targets = new[] { new VciMappingTarget {
             Object = new Siemens.Engineering.SW.Blocks.PlcBlock(), Name = "Main", RelativePath = "PLC/Main" } };
+        adapter.MappingTargets = () => targets;
         var session = new FallbackSession();
         request.Route = adapter.Observe().Routes.Single().Id;
         var preview = Run(session, adapter, request);

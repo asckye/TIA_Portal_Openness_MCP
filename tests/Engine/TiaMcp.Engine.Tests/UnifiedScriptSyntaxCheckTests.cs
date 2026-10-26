@@ -78,8 +78,9 @@ namespace TiaMcp.Engine.Tests
             // Unified HMI 族由 UnifiedHmiService / UnifiedHmiTools 提供。
             var portalSource = FindSource(Path.Combine("Adapters", "Native", "Hmi", "UnifiedHmiAdapter.cs"));
             var toolSource = FindSource(Path.Combine("Shared", "UnifiedHmiTools.cs"));
+            var policySource = FindSource(Path.Combine("Adapters", "Native", "Hmi", "HmiExchangePolicy.cs"));
 
-            if (portalSource == null || toolSource == null)
+            if (portalSource == null || toolSource == null || policySource == null)
             {
                 // 找不到源码就明确跳过并计数，不冒充通过 —— 「少跑了一批」和「全过了」
                 // 必须长得不一样，否则换台机器跑就是个永远不响的报警器。
@@ -89,11 +90,16 @@ namespace TiaMcp.Engine.Tests
 
             var portal = File.ReadAllText(portalSource);
             var tool = File.ReadAllText(toolSource);
+            var policy = File.ReadAllText(policySource);
 
-            check(portal.Contains("bool async = false, bool syntaxCheck = false)"),
+            // 签名钉在方法声明本身上，别的方法凑巧带同样的尾巴不算数。async 不传就不改（P8-81e F6）。
+            const string portalMethod = "public HmiMessage SetUnifiedHmiButtonEventScriptCode(";
+            check(Declaration(portal, portalMethod).EndsWith(
+                    "string? globalDefinitionAreaScriptCode = null, bool? async = null, bool syntaxCheck = false)", StringComparison.Ordinal),
                 "Portal.SetUnifiedHmiButtonEventScriptCode 的 syntaxCheck 必须默认 false（issue #36）");
 
-            check(tool.Contains("bool syntaxCheck = false)"),
+            check(Declaration(tool, "public CallToolResult SetUnifiedHmiButtonEventScriptCodeV4(").EndsWith(
+                    "bool syntaxCheck = false)", StringComparison.Ordinal),
                 "MCP 工具暴露的 syntaxCheck 必须默认 false（issue #36）");
 
             // 默认关闭时绝不能发 syntaxErrorCount：调用方读到「没有这个键」必须理解成
@@ -103,11 +109,42 @@ namespace TiaMcp.Engine.Tests
                 "跳过 SyntaxCheck 时必须显式标注 skipped 与原因");
 
             // ScriptCode 没写进去就该直接失败，不该先拿一个会弄崩 V21 的调用去检查
-            // 一份根本不存在的脚本。这里盯的是两段代码的先后顺序。
-            var guardAt = portal.IndexOf("ScriptCode property could not be written on", StringComparison.Ordinal);
-            var checkAt = portal.IndexOf("meta[\"syntaxCheckRequested\"]", StringComparison.Ordinal);
-            check(guardAt > 0 && checkAt > 0 && guardAt < checkAt,
+            // 一份根本不存在的脚本。这里盯的是两段代码的先后顺序：写入经 HmiExchangePolicy
+            // 预检公开可写属性，写后回读不一致即抛错，全部发生在 SyntaxCheck 之前。
+            var methodAt = portal.IndexOf(portalMethod, StringComparison.Ordinal);
+            var writeAt = methodAt < 0 ? -1 : portal.IndexOf(
+                "HmiExchangePolicy.UpdateScript(script, scriptCode ?? string.Empty, globalDefinitionAreaScriptCode, async,", methodAt, StringComparison.Ordinal);
+            var checkAt = methodAt < 0 ? -1 : portal.IndexOf("meta[\"syntaxCheckRequested\"]", methodAt, StringComparison.Ordinal);
+            var update = Member(policy, "internal static void UpdateScript(");
+            var write = Member(policy, "internal static void WriteScalars(");
+            check(writeAt > 0 && checkAt > 0 && writeAt < checkAt
+                  && update.Contains("[\"ScriptCode\"] = code", StringComparison.Ordinal)
+                  && update.Contains("WriteScalars(script, changes, beforeWrite);", StringComparison.Ordinal)
+                  && write.Contains("property?.SetMethod?.IsPublic != true || property.GetMethod?.IsPublic != true", StringComparison.Ordinal)
+                  && write.Contains("throw new NotSupportedException(\"Public writable property unavailable: \"", StringComparison.Ordinal)
+                  && write.Contains("change.Property.SetValue(target, change.Value);", StringComparison.Ordinal)
+                  && write.Contains("if (!Equals(change.Property.GetValue(target), change.Value))", StringComparison.Ordinal)
+                  && write.Contains("throw new InvalidOperationException(\"Property readback differs: \"", StringComparison.Ordinal),
                 "ScriptCode 写失败的判断必须排在 SyntaxCheck 之前");
+        }
+
+        /// <summary>从方法名起取到参数表的右括号（其后是方法体或表达式体）；找不到返回空串。</summary>
+        private static string Declaration(string source, string start)
+        {
+            var at = source.IndexOf(start, StringComparison.Ordinal);
+            if (at < 0) return string.Empty;
+            var match = System.Text.RegularExpressions.Regex.Match(source.Substring(at), @"^.*?\)(?=\s*(?:\{|=>))",
+                System.Text.RegularExpressions.RegexOptions.Singleline);
+            return match.Success ? match.Value : string.Empty;
+        }
+
+        /// <summary>从成员声明取到下一个 internal static 成员之前；找不到返回空串。</summary>
+        private static string Member(string source, string start)
+        {
+            var at = source.IndexOf(start, StringComparison.Ordinal);
+            if (at < 0) return string.Empty;
+            var next = source.IndexOf("internal static", at + start.Length, StringComparison.Ordinal);
+            return next < 0 ? source.Substring(at) : source.Substring(at, next - at);
         }
 
         /// <summary>从测试程序集所在目录往上爬找引擎源码；找不到返回 null，由调用方明确跳过。</summary>

@@ -44,6 +44,26 @@ public sealed class ReleaseRecordConsumerTests
     public void CommittedRecordsValidateWithoutBinaries()
         => ReleaseCommands.ValidateBuildRecords(TiaMcp.BuildCommon.Repository.FindRoot(), package: false, noBinaries: true, skipSourceHashes: true);
 
+    [Theory]
+    [InlineData("20")]
+    [InlineData("21")]
+    public void ToolsListHashRemainsBoundWhenValidatingBinaries(string release)
+    {
+        using var tree = new StaticTree();
+        var (_, multi) = Records(tree);
+        var path = tree.Write("manifest/tools-list.json", "{\"tools\":[]}");
+        foreach (var key in new[] { "20", "21" })
+            multi["plcRuntimes"]!["V" + key]!["toolsList"]!["sha256"] = ReleaseRecords.HashFile(path);
+        Validate(tree.Root, multi, binaries: true);
+
+        tree.Write("manifest/tools-list.json", "{\"tools\":[{\"name\":\"ChangedTool\"}]}");
+        // Isolate each release's binding while keeping all binary and receipt gates active.
+        multi["plcRuntimes"]!["V" + (release == "20" ? "21" : "20")]!["toolsList"]!["sha256"] = ReleaseRecords.HashFile(path);
+        Validate(tree.Root, multi, binaries: false);
+        Assert.Equal("PLC tools-list changed after validation",
+            Assert.Throws<ReleaseException>(() => Validate(tree.Root, multi, binaries: true)).Message);
+    }
+
     [Fact]
     public void PreferredMultiDoesNotFallBackWhenItsRecordIsDamaged()
     {

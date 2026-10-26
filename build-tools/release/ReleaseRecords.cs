@@ -272,7 +272,8 @@ internal static class ReleaseRecords
             foreach (var field in new[] { "catalog", "toolsList", "sdkWorker" })
                 if (GetString(runtime.GetProperty(field), "sha256").Length != 64) throw new ReleaseException("PLC catalog/SDK hash missing: " + field);
             var toolsPath = Path.Combine(root, "manifest/tools-list.json");
-            if (File.Exists(toolsPath) && HashFile(toolsPath) != GetString(runtime.GetProperty("toolsList"), "sha256"))
+            // Bind the shipped roster in binaries mode; between releases check-tools-list validates the current catalog.
+            if (binaries && File.Exists(toolsPath) && HashFile(toolsPath) != GetString(runtime.GetProperty("toolsList"), "sha256"))
                 throw new ReleaseException("PLC tools-list changed after validation");
             foreach (var job in ReleaseCommands.PlcReleaseJobs(root, "", "", "", "dotnet", "python")
                 .Where(job => job.Release == key && ReleaseCommands.PlcReleaseSelected(plan, job)))

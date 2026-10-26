@@ -157,7 +157,13 @@
 "keys": [
 "ok",
 "missingTags"
-]
+],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "P8-81e: withdrawn on V20 by the 2026-10-20 decision because the builder emits a V21-only header."
+}
+}
 },
 {
 "tool": "WriteClassicHmiMinimalPackageFiles",
