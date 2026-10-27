@@ -46,7 +46,7 @@ namespace TiaMcp.Adapters.Native.Plc
             else RequireName(name, group ? "name (the user group)" : "name (the external source, with extension)");
             if (action == "createFromFile")
             {
-                if (string.IsNullOrWhiteSpace(filePath) || !Path.IsPathRooted(filePath) || !FullyQualified(filePath)) throw new ArgumentException("createFromFile needs the fully qualified filePath (drive or UNC) of an existing source file on the TIA Portal machine.");
+                if (string.IsNullOrWhiteSpace(filePath) || !FullyQualified(filePath)) throw new ArgumentException("createFromFile needs the fully qualified filePath (drive or UNC) of an existing source file on the TIA Portal machine.");
                 if (!ExternalSourceExtensions.Contains(Path.GetExtension(filePath).ToLowerInvariant())) throw new ArgumentException("filePath must be an ASCII source file (" + string.Join(" / ", ExternalSourceExtensions) + ").");
             }
             else Refuse(filePath, "filePath", "applies to createFromFile only.");
