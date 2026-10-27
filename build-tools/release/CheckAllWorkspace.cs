@@ -205,7 +205,7 @@ internal static partial class ReleaseCommands
         if (result.ExitCode == 0) PrepareCheckAllRuntime(Root, builds, Path.Combine(output, "build/runtime-paths.tsv"));
         if (result.ExitCode == 0)
         {
-            var scripts = FileBasedPrograms.Build(Root, Path.Combine(output, "build/analyzer-warnings"), dotnet, nuget);
+            var scripts = FileBasedPrograms.Build(Root, Path.Combine(output, "build/analyzer-warnings"), dotnet, nuget, parallelism);
             result = new(scripts.ExitCode, result.StandardOutput + scripts.StandardOutput, result.StandardError + scripts.StandardError);
         }
         if (result.ExitCode == 0)

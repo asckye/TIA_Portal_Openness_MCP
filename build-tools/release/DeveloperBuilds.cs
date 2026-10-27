@@ -22,23 +22,41 @@ internal static class FileBasedPrograms
         }).Select(path => AnalyzerWarnings.RepositoryPath(root, path)).Order(StringComparer.Ordinal).ToArray();
     }
 
-    internal static CommandResult Build(string root, string directory, string dotnet, string? nuget)
+    internal static string[][] BuildGroups(string root, IEnumerable<string> programs)
+    {
+        var ordered = programs.Order(StringComparer.Ordinal).ToArray();
+        bool References(string program) => File.ReadLines(Path.Combine(root, program)).Any(line =>
+            System.Text.RegularExpressions.Regex.IsMatch(line, @"^\s*#:project(?:\s|$)"));
+        // File apps have independent SDK runfile directories. Their project
+        // references still write ordinary obj/bin paths, so keep every such
+        // writer on one serial lane (including transitive/conditional references).
+        var referenced = ordered.Where(References).ToArray();
+        return [.. referenced.Length == 0 ? Array.Empty<string[]>() : new[] { referenced },
+            .. ordered.Except(referenced, StringComparer.Ordinal).Select(program => new[] { program })];
+    }
+
+    internal static CommandResult Build(string root, string directory, string dotnet, string? nuget, int parallelism = 1)
     {
         Directory.CreateDirectory(directory);
-        var results = new List<CommandResult>();
-        foreach (var program in Discover(root))
+        var programs = Discover(root);
+        var results = new System.Collections.Concurrent.ConcurrentDictionary<string, CommandResult>(StringComparer.Ordinal);
+        Parallel.ForEach(BuildGroups(root, programs), new ParallelOptions { MaxDegreeOfParallelism = parallelism }, group =>
         {
-            var arguments = new List<string> { "build", Path.Combine(root, program), "-c", "Release", "--nologo",
-                "-p:NuGetAudit=false", "-p:UseSharedCompilation=false", "-p:TiaMcpCollectFileBasedPrograms=true" };
-            if (nuget != null) arguments.Add("-p:RestoreConfigFile=" + nuget);
-            var result = ProcessRunner.Run(dotnet, arguments, root,
-                new Dictionary<string, string?> { ["TIA_MCP_ANALYZER_REPORT_DIRECTORY"] = directory },
-                logPath: Path.Combine(directory, program.Replace('/', '_') + ".log"));
-            results.Add(result);
-            // Keep compiling the remaining programs so failures cannot conceal coverage.
-        }
-        return new(results.FirstOrDefault(result => result.ExitCode != 0)?.ExitCode ?? 0,
-            string.Concat(results.Select(result => result.StandardOutput)), string.Concat(results.Select(result => result.StandardError)));
+            foreach (var program in group)
+            {
+                var arguments = new List<string> { "build", Path.Combine(root, program), "-c", "Release", "--nologo",
+                    "-p:NuGetAudit=false", "-p:UseSharedCompilation=false", "-p:TiaMcpCollectFileBasedPrograms=true" };
+                if (nuget != null) arguments.Add("-p:RestoreConfigFile=" + nuget);
+                var result = ProcessRunner.Run(dotnet, arguments, root,
+                    new Dictionary<string, string?> { ["TIA_MCP_ANALYZER_REPORT_DIRECTORY"] = directory },
+                    logPath: Path.Combine(directory, program.Replace('/', '_') + ".log"));
+                results[program] = result;
+                // Keep compiling the remaining programs so failures cannot conceal coverage.
+            }
+        });
+        var orderedResults = programs.Select(program => results[program]).ToArray();
+        return new(orderedResults.FirstOrDefault(result => result.ExitCode != 0)?.ExitCode ?? 0,
+            string.Concat(orderedResults.Select(result => result.StandardOutput)), string.Concat(orderedResults.Select(result => result.StandardError)));
     }
 }
 
@@ -50,7 +68,7 @@ internal static partial class ReleaseCommands
             AnalyzerWarnings.DefaultDirectory(Root)));
         AnalyzerWarnings.LocalDirectory(directory);
         var nuget = options.Get("NuGetConfig") ?? Environment.GetEnvironmentVariable("TIA_MCP_OFFLINE_NUGET_CONFIG");
-        var result = FileBasedPrograms.Build(Root, directory, Dotnet, nuget == null ? null : Path.GetFullPath(nuget));
+        var result = FileBasedPrograms.Build(Root, directory, Dotnet, nuget == null ? null : Path.GetFullPath(nuget), GetMaxParallelism(options));
         Console.Write(result.StandardOutput); Console.Error.Write(result.StandardError);
         if (result.ExitCode == 0) AnalyzerWarnings.RememberDirectory(Root, directory);
         return result.ExitCode;
@@ -59,6 +77,10 @@ internal static partial class ReleaseCommands
     private static int BuildSolutions(Options options)
     {
         EnsureWindows("build-solutions");
+        int parallelism = FastSuites.Positive(options, "BuildParallelism", GetMaxParallelism(options));
+        // Ordinary solution variants can share obj/bin through reference edges.
+        // The isolated check-all graph owns node parallelism; these roots retain
+        // their serial writes, while independent file apps use the build budget.
         var properties = new List<string> { "-p:NuGetAudit=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false" };
         if (options.Get("PublicApiRoot") is { } api) properties.Add("-p:TiaPublicApiRoot=" + Path.GetFullPath(api));
         var nuget = options.Get("NuGetConfig") ?? Environment.GetEnvironmentVariable("TIA_MCP_OFFLINE_NUGET_CONFIG");
@@ -74,7 +96,7 @@ internal static partial class ReleaseCommands
                 logPath: Path.Combine(directory, Path.GetFileNameWithoutExtension(solution) + ".log"));
             Console.Write(result.StandardOutput); Console.Error.Write(result.StandardError); ProcessRunner.RequireSuccess(result, solution);
         }
-        var scripts = FileBasedPrograms.Build(Root, directory, Dotnet, nuget == null ? null : Path.GetFullPath(nuget));
+        var scripts = FileBasedPrograms.Build(Root, directory, Dotnet, nuget == null ? null : Path.GetFullPath(nuget), parallelism);
         Console.Write(scripts.StandardOutput); Console.Error.Write(scripts.StandardError); ProcessRunner.RequireSuccess(scripts, "File-based programs");
         AnalyzerWarnings.RememberDirectory(Root, directory);
         var analyzerResult = AnalyzerWarnings.Run(Root, Options.Parse(["-Check", "-DiagnosticsDirectory", directory], new HashSet<string> { "Check" }));

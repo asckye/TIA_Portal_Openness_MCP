@@ -46,7 +46,18 @@ namespace TiaMcp.Engine.Tests.Shared
                 throw new InvalidOperationException("Invalid test shard count.");
             int ordinaryCount = reserveSensitive ? count - sensitiveShards : count;
             if (reserveSensitive && TimeSensitiveTests.ContainsCost(costKey))
+            {
+                // S: entries are measured sensitive-only assignments. Old plans
+                // with ordinary T:/M: entries cannot move a sensitive test out of
+                // its exclusive CPU lane. Unknown cases retain their old group.
+                if (plan.TryGetValue("S:" + costKey, out int sensitive) ||
+                    plan.TryGetValue("S:partition:" + TimeSensitiveTests.SensitivePartition(costKey), out sensitive))
+                {
+                    if (sensitive < ordinaryCount || sensitive >= count) throw new InvalidOperationException("Sensitive shard outside reserved shard count.");
+                    return sensitive;
+                }
                 return ordinaryCount + Math.Min(TimeSensitiveTests.SensitivePartition(costKey), sensitiveShards - 1);
+            }
             if (plan.TryGetValue(costKey, out int planned) || plan.TryGetValue("C:" + className, out planned))
             {
                 if (planned < 0 || planned >= ordinaryCount) throw new InvalidOperationException("Cost shard outside shard count.");

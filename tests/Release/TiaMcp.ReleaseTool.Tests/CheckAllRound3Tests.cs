@@ -83,7 +83,7 @@ public sealed class CheckAllRound3Tests(ITestOutputHelper output)
         Assert.False(ReleaseCommands.CheckAllPrerequisitesPassed([new("generate-tool-usage", "blocked", 1, 0, "failed prerequisite")]));
         using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
         File.WriteAllText(Path.Combine(root, "fake.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>");
-        File.WriteAllText(Path.Combine(root, "Program.cs"), "using System.IO; if (args[0] == \"msbuild\") return 1; if (args.Length > 1 && args[1].StartsWith(\"generate-\")) return 0; File.WriteAllText(\"unexpected-check\", string.Join(\"|\", args)); return 2;");
+        File.WriteAllText(Path.Combine(root, "Program.cs"), "using System.IO; if (args[0] == \"msbuild\") return 1; if (args.Length > 1 && (args[1].StartsWith(\"generate-\") || args[1] is \"check-tools-list\" or \"check-script-tool-calls\" or \"check-dead-tool-references\" or \"check-adapter-boundary\" or \"check-tia-features\" or \"validate-bundle\" || args[1] == \"release\" && System.Array.IndexOf(args, \"-DocumentationOnly\") >= 0)) return 0; File.WriteAllText(\"unexpected-check\", string.Join(\"|\", args)); return 2;");
         File.WriteAllText(Path.Combine(root, "offline.config"), "<configuration><packageSources><clear /></packageSources></configuration>");
         var dotnet = Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") ?? "dotnet";
         ProcessRunner.RequireSuccess(ProcessRunner.Run(dotnet, ["build", Path.Combine(root, "fake.csproj"), "-c", "Release", "-m:1", "-nodeReuse:false",
@@ -102,8 +102,12 @@ public sealed class CheckAllRound3Tests(ITestOutputHelper output)
         output.WriteLine(result.StandardOutput + result.StandardError);
         Assert.Equal(1, result.ExitCode);
         var checks = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(Path.Combine(runDirectory, "report.json")))!["checks"]!.AsArray();
-        Assert.Equal(new[] { "generate-catalogs", "generate-tool-usage", "build-once", "tracked-tree-drift" }, checks.Select(row => (string)row!["Name"]!));
-        Assert.Equal("failed", (string)checks[2]!["Status"]!);
+        Assert.Equal(new[] { "generate-catalogs", "generate-tool-usage", "generate-release-migration", "build-once", "analyzer-warnings",
+            "catalog-drift", "tool-counts-drift", "usage-drift", "migration-drift", "tools-list", "script-calls", "dead-references",
+            "adapter-boundary", "tia-features", "bundle", "release-documentation", "python-repository", "python-script-self-tests",
+            "python-script-calls", "domain-source", "contract-self-tests", "contract-verify", "response-verify", "tracked-tree-drift" }, checks.Select(row => (string)row!["Name"]!));
+        Assert.Equal("failed", (string)checks[3]!["Status"]!);
+        Assert.Equal("blocked", (string)checks[4]!["Status"]!);
         Assert.False(File.Exists(Path.Combine(Repository.FindRoot(), "unexpected-check")));
     }
 

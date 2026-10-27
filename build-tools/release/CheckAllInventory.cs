@@ -113,8 +113,26 @@ internal static partial class ReleaseCommands
         if (checks.Count != coverage.Count || checks.Any(check => !coverage.TryGetValue(check.Name, out var name) || !jobs.Any(job => job.Name == name)))
             throw new ReleaseException("Incomplete check-all preflight coverage");
         var dependencies = checks.Select(check => coverage[check.Name]).Distinct().ToArray();
-        jobs.Add(new("preflight", () => new(0, $"PREFLIGHT: {checks.Count} passed, 0 failed (shared executions)\n", ""), dependencies));
+        jobs.Add(new("preflight", () => new(0, $"PREFLIGHT: {checks.Count} passed, 0 failed (shared executions)\n", ""), dependencies) { Priority = 1 });
     }
+
+    // These commands read source/catalogs only. Self-tests that execute the built
+    // release-tool suite, file apps or product payloads still wait for projection.
+    internal static bool CheckAllSourceOnly(string name) => name is
+        "catalog-drift" or "tool-counts-drift" or "usage-drift" or "migration-drift" or
+        "tools-list" or "script-calls" or "dead-references" or "adapter-boundary" or "tia-features" or
+        "bundle" or "release-documentation" or "python-repository" or "python-script-self-tests" or
+        "python-script-calls" or "domain-source" or "contract-self-tests" or "contract-verify" or "response-verify";
+
+    internal static List<CheckJob> CheckAllRuntimeDependencies(IEnumerable<CheckJob> jobs) => jobs.Select(job =>
+        job.Name == "suite-output-parity" ? job : job with
+        {
+            // Parity temporarily writes ordinary outputs and restores them in
+            // finally. Preserve the old behavior of running checks even when
+            // parity fails, once those writes have finished.
+            Dependencies = job.Dependencies.Length == 0 ? ["suite-output-parity"] : job.Dependencies,
+            AllowFailedDependencies = job.Dependencies.Length == 0 || job.AllowFailedDependencies
+        }).ToList();
 
     private static void AddCheckAllStaticJobs(Action<string, Func<CommandResult>, string[]?, bool> add,
         Func<string, string[], CommandResult> tool, Func<string, string, string[], CommandResult> python,
@@ -140,8 +158,8 @@ internal static partial class ReleaseCommands
         Tool("release-documentation", "release", "-DocumentationOnly");
         Tool("release-dry-run", "run-release-build", "-Tier", "full", "-DryRun");
         add("preflight", () => tool("preflight", ["preflight", "-NoBuild", "-MaxParallelism", parallelism.ToString(), "-Shards", shards.ToString()]), null, true);
-        Tool("production-compile-only", "build-release", "-CompileOnly", "-NoBuild", "-NuGetConfig", nuget,
-            "-V20ReferenceRoot", ResolveReleaseApi(null, api, 20), "-V21ReferenceRoot", ResolveReleaseApi(null, api, 21));
+        add("production-compile-only", () => tool("production-compile-only", ["build-release", "-CompileOnly", "-NoBuild", "-NuGetConfig", nuget,
+            "-V20ReferenceRoot", ResolveReleaseApi(null, api, 20), "-V21ReferenceRoot", ResolveReleaseApi(null, api, 21)]), null, false);
         Python("python-repository", "scripts/checks/Check-Repository.py", "--no-binaries");
         Python("python-script-self-tests", "scripts/checks/Check-ScriptToolCalls.py", "--self-test");
         Python("python-script-calls", "scripts/checks/Check-ScriptToolCalls.py");

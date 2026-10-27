@@ -7,6 +7,7 @@ namespace TiaMcp.ReleaseTool;
 internal sealed record CheckJob(string Name, Func<CommandResult> Run, string[] Dependencies, int Slots = 1, bool Exclusive = false)
 {
     internal double EstimatedSeconds { get; init; }
+    internal int Priority { get; init; }
     internal string Lane { get; init; } = "general";
     internal string? SensitiveGroup { get; init; }
     internal ulong? Affinity { get; init; }
@@ -39,15 +40,16 @@ internal static class CheckScheduler
     internal static TimeSpan JobTimeout(CheckJob job, IReadOnlyDictionary<string, double> history) =>
         TimeSpan.FromSeconds(Math.Max(job.Name is "build-once" or "suite-output-parity" ? 1800 : 300,
             3 * Math.Max(job.EstimatedSeconds, history.GetValueOrDefault(job.Name))));
-    internal static IReadOnlyList<CheckTiming> Run(IReadOnlyList<CheckJob> jobs, int slots, string logs, IReadOnlyDictionary<string, int>? lanes = null)
+    internal static IReadOnlyList<CheckTiming> Run(IReadOnlyList<CheckJob> jobs, int slots, string logs, IReadOnlyDictionary<string, int>? lanes = null,
+        IReadOnlyList<CheckTiming>? prerequisites = null)
     {
         lanes ??= new Dictionary<string, int> { ["general"] = slots };
-        Validate(jobs, slots, lanes);
+        Validate(jobs, slots, lanes, prerequisites?.Select(row => row.Name).ToArray());
         Directory.CreateDirectory(logs);
         var priorities = CriticalCosts(jobs);
         var pending = jobs.OrderByDescending(job => priorities[job.Name]).ToList();
         var running = new Dictionary<Task<CheckTiming>, CheckJob>();
-        var done = new Dictionary<string, CheckTiming>(StringComparer.Ordinal);
+        var done = (prerequisites ?? []).ToDictionary(row => row.Name, StringComparer.Ordinal);
         while (pending.Count > 0 || running.Count > 0)
         {
             foreach (var job in pending.ToArray())
@@ -63,7 +65,8 @@ internal static class CheckScheduler
             // general backlog while their dedicated CPUs sit unused.
             bool FeedsIdleLane(CheckJob input) => pending.Any(next => next.Lane != input.Lane &&
                 next.Dependencies.Contains(input.Name, StringComparer.Ordinal) && !running.Values.Any(active => active.Lane == next.Lane));
-            foreach (var job in pending.OrderByDescending(FeedsIdleLane).ThenByDescending(job => priorities[job.Name]).ToArray())
+            foreach (var job in pending.OrderByDescending(FeedsIdleLane).ThenByDescending(job => job.Priority)
+                .ThenByDescending(job => priorities[job.Name]).ThenBy(job => job.Name, StringComparer.Ordinal).ToArray())
             {
                 if (!job.Dependencies.All(done.ContainsKey)) continue;
                 var lane = running.Values.Where(row => row.Lane == job.Lane).ToArray();
@@ -104,6 +107,48 @@ internal static class CheckScheduler
         return costs;
     }
 
+    internal static CheckPerformance Performance(IReadOnlyList<CheckJob> jobs, IReadOnlyList<CheckTiming> timings, DateTime start, double wallSeconds)
+    {
+        var rows = timings.ToDictionary(row => row.Name, StringComparer.Ordinal);
+        var paths = new Dictionary<string, (double Seconds, string[] Names)>(StringComparer.Ordinal);
+        var inputs = jobs.ToDictionary(job => job.Name, StringComparer.Ordinal);
+        (double Seconds, string[] Names) PathTo(string name)
+        {
+            if (paths.TryGetValue(name, out var path)) return path;
+            var previous = inputs[name].Dependencies.Select(PathTo).OrderByDescending(path => path.Seconds)
+                .ThenBy(path => string.Join("/", path.Names), StringComparer.Ordinal).FirstOrDefault();
+            return paths[name] = (previous.Seconds + rows[name].Seconds, [.. previous.Names ?? [], name]);
+        }
+        foreach (var job in jobs) PathTo(job.Name);
+        var critical = paths.Values.OrderByDescending(path => path.Seconds)
+            .ThenBy(path => string.Join("/", path.Names), StringComparer.Ordinal).FirstOrDefault();
+        var active = timings.Where(row => row.StartedAtUtc != default && row.Seconds > 0).ToArray();
+        int Peak(IEnumerable<CheckTiming> values)
+        {
+            int count = 0, peak = 0;
+            foreach (var point in values.SelectMany(row => new[] { (At: row.StartedAtUtc, Delta: 1), (At: row.StartedAtUtc.AddSeconds(row.Seconds), Delta: -1) })
+                .OrderBy(point => point.At).ThenBy(point => point.Delta))
+                peak = Math.Max(peak, count += point.Delta);
+            return peak;
+        }
+        var windows = Enumerable.Range(0, Math.Max(1, (int)Math.Ceiling(wallSeconds / 300))).Select(index =>
+        {
+            double from = index * 300, to = Math.Min(wallSeconds, from + 300);
+            var left = start.AddSeconds(from); var right = start.AddSeconds(to);
+            double seconds = active.Sum(row => Math.Max(0, (new[] { right, row.StartedAtUtc.AddSeconds(row.Seconds) }.Min() - new[] { left, row.StartedAtUtc }.Max()).TotalSeconds));
+            return new CheckConcurrencyWindow(from, to, to > from ? seconds / (to - from) : 0);
+        }).ToArray();
+        var lanes = jobs.GroupBy(job => job.Lane).OrderBy(group => group.Key, StringComparer.Ordinal).Select(group =>
+        {
+            var names = group.Select(job => job.Name).ToHashSet(StringComparer.Ordinal);
+            var members = active.Where(row => names.Contains(row.Name)).ToArray();
+            double seconds = members.Sum(row => row.Seconds);
+            return new CheckLaneConcurrency(group.Key, seconds, wallSeconds > 0 ? seconds / wallSeconds : 0, Peak(members));
+        }).ToArray();
+        double total = active.Sum(row => row.Seconds);
+        return new(critical.Names ?? [], critical.Seconds, total, wallSeconds > 0 ? total / wallSeconds : 0, Peak(active), lanes, windows);
+    }
+
     private static CheckTiming Execute(CheckJob job, string logs)
     {
         var timer = Stopwatch.StartNew();
@@ -135,17 +180,19 @@ internal static class CheckScheduler
         finally { deadline.Value = null; evidenceDirectory.Value = null; }
     }
 
-    internal static void Validate(IReadOnlyList<CheckJob> jobs, int slots, IReadOnlyDictionary<string, int>? lanes = null)
+    internal static void Validate(IReadOnlyList<CheckJob> jobs, int slots, IReadOnlyDictionary<string, int>? lanes = null, IReadOnlyList<string>? prerequisites = null)
     {
         lanes ??= new Dictionary<string, int> { ["general"] = slots };
         if (slots < 1) throw new ReleaseException("-MaxParallelism must be at least one", 64);
         var names = jobs.Select(job => job.Name).ToHashSet(StringComparer.Ordinal);
         if (names.Count != jobs.Count) throw new ReleaseException("Duplicate check names", 64);
+        foreach (var name in prerequisites ?? [])
+            if (!names.Add(name)) throw new ReleaseException("Duplicate completed check: " + name, 64);
         foreach (var job in jobs)
             if (job.Timeout <= TimeSpan.Zero || !lanes.TryGetValue(job.Lane, out var capacity) || job.Slots < 1 || job.Slots > capacity || job.Dependencies.Any(dep => !names.Contains(dep)))
                 throw new ReleaseException("Invalid check resources/dependencies: " + job.Name, 64);
-        var visited = new HashSet<string>();
-        while (visited.Count < jobs.Count)
+        var visited = new HashSet<string>(prerequisites ?? [], StringComparer.Ordinal);
+        while (visited.Count < names.Count)
         {
             var ready = jobs.Where(job => !visited.Contains(job.Name) && job.Dependencies.All(visited.Contains)).ToArray();
             if (ready.Length == 0) throw new ReleaseException("Check dependency cycle", 64);
@@ -153,6 +200,11 @@ internal static class CheckScheduler
         }
     }
 }
+
+internal sealed record CheckConcurrencyWindow(double FromSeconds, double ToSeconds, double AverageConcurrency);
+internal sealed record CheckLaneConcurrency(string Lane, double JobSeconds, double AverageConcurrency, int PeakConcurrency);
+internal sealed record CheckPerformance(string[] CriticalPath, double CriticalPathSeconds, double JobSeconds,
+    double AverageConcurrency, int PeakConcurrency, CheckLaneConcurrency[] Lanes, CheckConcurrencyWindow[] Windows);
 
 internal sealed record CheckCpuProcess(int Pid, string Name, double CpuSeconds, bool Owned);
 internal sealed record CheckCpuSample(DateTime AtUtc, double Seconds, CheckCpuProcess[] Processes, int Unreadable);

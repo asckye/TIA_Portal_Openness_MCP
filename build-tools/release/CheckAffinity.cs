@@ -280,13 +280,14 @@ internal static class CheckAffinity
         // Keep each worker exclusive on its own CPUs. Long sensitive suite
         // partitions can overlap without sharing a CPU with another runner lane.
         foreach (var group in jobs.Where(job => job.Lane == "sensitive").GroupBy(job => job.SensitiveGroup ?? job.Name)
-            .OrderByDescending(group => group.Sum(job => Math.Max(1, job.EstimatedSeconds))).ToArray())
+            .OrderByDescending(group => group.OrderBy(job => job.Name, StringComparer.Ordinal).Sum(job => Math.Max(1, job.EstimatedSeconds)))
+            .ThenBy(group => group.Key, StringComparer.Ordinal).ToArray())
         {
             int index = Array.IndexOf(loads, loads.Min());
             // Fixtures can write beside their assembly (adapter identities, for
             // example). Different registered filters of that assembly must not
             // become concurrent writers when a second worker is introduced.
-            foreach (var job in group)
+            foreach (var job in group.OrderBy(job => job.Name, StringComparer.Ordinal))
             {
                 jobs[jobs.IndexOf(job)] = job with { Lane = "sensitive-" + index, Affinity = masks[index] };
                 loads[index] += Math.Max(1, job.EstimatedSeconds);

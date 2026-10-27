@@ -100,7 +100,7 @@ internal static class SuiteSharding
 // MeasuredCases counts the cases with timing history. A fresh CI checkout or new worktree has none, and a run that
 // was stopped part way records only part of a suite; the caller compares it with the registered minimum before it
 // lets the costs set job deadlines.
-internal sealed record ShardPlan(string Path, double[] Costs, int MeasuredCases = int.MaxValue);
+internal sealed record ShardPlan(string Path, double[] Costs, int MeasuredCases = int.MaxValue, int[]? SensitivePartitions = null);
 internal static class SuiteCosts
 {
     internal static ShardPlan Prepare(string name, string directory, string historyDirectory, string? baseline, int fallback, bool reserveSensitive = false, int sensitiveShards = 1)
@@ -127,20 +127,39 @@ internal static class SuiteCosts
         // method lane. At least one ordinary partition remains for unknown cases.
         if (reserveSensitive) count = Math.Max(1, count - Math.Max(0, sensitiveShards - 1));
         var (assignments, totals) = Balance(planned, count);
+        var sensitivePartitions = new List<int>();
         if (reserveSensitive)
         {
             if (sensitiveShards < 1) throw new ReleaseException("Invalid sensitive shard count");
-            var sensitiveCosts = Enumerable.Range(0, sensitiveShards).Select(partition => costs.Where(pair =>
-                TimeSensitiveTests.ContainsCost(pair.Key) && Math.Min(TimeSensitiveTests.SensitivePartition(pair.Key), sensitiveShards - 1) == partition).Sum(pair => pair.Value));
-            totals = [.. totals, .. sensitiveCosts];
+            // Partition zero was the 500-second Foundation shard: all process
+            // fixtures and legacy producers landed there. Balance within each
+            // existing isolation group; never split a late-enumerated producer.
+            for (int partition = 0; partition < sensitiveShards; partition++)
+            {
+                var measured = costs.Where(pair => TimeSensitiveTests.ContainsCost(pair.Key) &&
+                    Math.Min(TimeSensitiveTests.SensitivePartition(pair.Key), sensitiveShards - 1) == partition)
+                    .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
+                double seconds = measured.Values.Sum();
+                // An indivisible long producer plus a few cheap cases does not
+                // become faster by adding another process just for those cases.
+                int partitions = fallback == 1 || seconds - measured.Values.DefaultIfEmpty().Max() <= 55 ? 1
+                    : Math.Max(1, Math.Min(measured.Count, (int)Math.Ceiling(seconds / 55)));
+                var (sensitiveAssignments, sensitiveCosts) = Balance(measured, partitions);
+                assignments.Add("S:partition:" + partition, totals.Length);
+                foreach (var pair in sensitiveAssignments) assignments.Add("S:" + pair.Key, totals.Length + pair.Value);
+                sensitivePartitions.AddRange(Enumerable.Repeat(partition, partitions));
+                totals = [.. totals, .. sensitiveCosts];
+            }
         }
+        int reservedCount = sensitivePartitions.Count;
         var path = Path.Combine(directory, "shard-plan.tsv");
         File.WriteAllLines(path, assignments.Select(pair => Convert.ToBase64String(Encoding.UTF8.GetBytes(pair.Key)) + "\t" + pair.Value));
         File.WriteAllText(Path.Combine(directory, "shard-plan.json"), JsonSerializer.Serialize(new { source = history, targetSeconds = 55, startupAllowanceSeconds = 5, costs = totals, assignments, measuredClasses = classes,
             exclusiveShard = reserveSensitive ? (int?)(totals.Length - 1) : null,
-            exclusiveShards = reserveSensitive ? Enumerable.Range(totals.Length - sensitiveShards, sensitiveShards).ToArray() : [], timeSensitiveClasses = reserveSensitive ? TimeSensitiveTests.Classes : null,
+            exclusiveShards = reserveSensitive ? Enumerable.Range(totals.Length - reservedCount, reservedCount).ToArray() : [], sensitivePartitions,
+            timeSensitiveClasses = reserveSensitive ? TimeSensitiveTests.Classes : null,
             timeSensitiveMethods = reserveSensitive ? TimeSensitiveTests.Methods : null }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
-        return new(path, totals, costs.Count);
+        return new(path, totals, costs.Count, sensitivePartitions.ToArray());
     }
 
     internal sealed record ClassCost(double Seconds, double TrxSeconds, int Cases, DateTime MeasuredUtc);

@@ -31,6 +31,10 @@ internal static class FastSuites
     internal static int GeneralCapacity(int requested, int cores, bool explicitLimit) =>
         explicitLimit ? requested : Math.Min(requested, cores);
 
+    internal static int CheckAllParallelism(Options options, int generalCores) =>
+        options.Has("CpuParallelism") ? Positive(options, "CpuParallelism", generalCores)
+        : Positive(options, "MaxParallelism", generalCores);
+
     internal static int SensitiveCoreBudget(ulong available, IReadOnlyList<CheckJob> jobs)
     {
         int groups = jobs.Where(job => job.Exclusive).Select(job => job.SensitiveGroup ?? job.Name).Distinct(StringComparer.Ordinal).Count();
@@ -71,6 +75,7 @@ internal static class FastSuites
         bool reserveSensitive = TimeSensitiveTests.ReserveShard(unit.Project);
         int sensitiveShards = reserveSensitive ? TimeSensitiveTests.ReservedShardCount(unit.Project) : 0;
         var plan = SuiteCosts.Prepare(name, directory, history, baseline, shards, reserveSensitive, sensitiveShards); shards = plan.Costs.Length;
+        sensitiveShards = plan.SensitivePartitions?.Length ?? sensitiveShards;
         // Costs set deadlines only when the history covers at least the registered minimum number of cases.
         bool measuredPlan = plan.MeasuredCases >= (suite["minimumPassed"]?.GetValue<int>() ?? int.MaxValue);
         var paths = Enumerable.Range(0, shards).Select(i => Path.Combine(directory, "shard-" + i, name + ".trx")).ToArray();
@@ -93,11 +98,12 @@ internal static class FastSuites
                         ["reserveSensitive"] = reserveSensitive, ["sensitiveShards"] = sensitiveShards }.ToJsonString(),
                         Path.GetDirectoryName(paths[index]), Path.GetFileName(paths[index]), plan.Path,
                         suite["maximumSkipped"]!.GetValue<int>(), prove || baseline != null ? "equivalence proof" : null),
-                    SensitiveGroup = sensitiveShards > 1 && index == shards - 1 ? unit.Project + "#portal-lane" : unit.Project });
+                    SensitiveGroup = reserveSensitive && index >= shards - sensitiveShards &&
+                        plan.SensitivePartitions![index - (shards - sensitiveShards)] > 0 ? unit.Project + "#portal-lane" : unit.Project });
         }
         // Merge runs even after a failed test process, so partial totals/failures remain
         // reviewable. The caller schedules merges in a second wave without prerequisites.
-        jobs.Add(new(jobPrefix + name + "-gate", () => { SuiteCosts.Record(name, directory, history); return SuiteSharding.Merge(name, suite, paths, output, sequential); }, shardNames.ToArray()) { AllowFailedDependencies = true });
+        jobs.Add(new(jobPrefix + name + "-gate", () => { SuiteCosts.Record(name, directory, history); return SuiteSharding.Merge(name, suite, paths, output, sequential); }, shardNames.ToArray()) { AllowFailedDependencies = true, Priority = 1 });
     }
 
     // Without timing history a shard has no estimate; three times this allowance (one hour) bounds it instead of the

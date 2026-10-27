@@ -21,7 +21,7 @@ internal static partial class ReleaseCommands
         }
         // -NoBuildCache: no verified file-app or build cache reuse, and with it no result cache (a release may adopt only such a run).
         if (options.Has("NoBuildCache")) Environment.SetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED", "1");
-        int parallelism = FastSuites.CpuParallelism(Root, options);
+        int parallelism;
         int shards = FastSuites.Positive(options, "Shards", 8);
         var api = RequiredDirectory(options.Get("PublicApiRoot"), "-PublicApiRoot");
         var nuget = options.Get("NuGetConfig") ?? Environment.GetEnvironmentVariable("TIA_MCP_OFFLINE_NUGET_CONFIG");
@@ -45,7 +45,8 @@ internal static partial class ReleaseCommands
         if (layout.Isolation != CheckAffinity.FullIsolation) Console.WriteLine("check-all: cpuIsolation " + layout.Isolation + ": " + layout.Reason);
         int stabilityCores = System.Numerics.BitOperations.PopCount(layout.Stability);
         int generalCores = System.Numerics.BitOperations.PopCount(layout.General);
-        parallelism = FastSuites.GeneralCapacity(parallelism, generalCores, options.Has("MaxParallelism") || options.Has("CpuParallelism"));
+        parallelism = FastSuites.CheckAllParallelism(options, generalCores);
+        int buildParallelism = FastSuites.Positive(options, "BuildParallelism", System.Numerics.BitOperations.PopCount(available));
         int stabilityParallelism = Math.Min(FastSuites.Positive(options, "StabilityParallelism", 4), Math.Min(4, stabilityCores));
         int sensitiveParallelism = FastSuites.Positive(options, "SensitiveParallelism", 2);
         var clock = Stopwatch.StartNew();
@@ -54,6 +55,7 @@ internal static partial class ReleaseCommands
         var before = TrackedBytes();
         var timings = new List<CheckTiming>();
         var jobs = new List<CheckJob>();
+        var allJobs = new List<CheckJob>();
         var planned = new List<string>();
         // The release may adopt this run (P8-93): bind the commit, the tree and every input before anything is regenerated.
         var releaseEvidence = ReleaseEvidence.BeginSafely(() => ReleaseEvidence.Begin(Root, "git", options, ReleaseEvidence.ProbeExternal(Root, api, nuget, Dotnet, python, companionPython),
@@ -94,11 +96,13 @@ internal static partial class ReleaseCommands
             var job = new CheckJob(name, run, depends ?? [], Exclusive: exclusive);
             jobs.Add(job with { Timeout = CheckScheduler.JobTimeout(job, costs) });
         }
-        void Wave()
+        void Wave(string[]? prerequisites = null)
         {
             if (jobs.Count == 0) return;
+            for (int index = 0; index < jobs.Count; index++) jobs[index] = jobs[index] with { EstimatedSeconds = CheckAllJobCost(jobs[index], costs) };
             planned.AddRange(jobs.Select(job => job.Name));
-            timings.AddRange(CheckScheduler.Run(jobs.ToArray(), parallelism, Path.Combine(output, "logs")));
+            allJobs.AddRange(jobs.Select(job => job with { Dependencies = [.. job.Dependencies, .. prerequisites ?? []] }));
+            timings.AddRange(CheckScheduler.Run(jobs.ToArray(), parallelism, Path.Combine(output, "logs"), prerequisites: timings.ToArray()));
             jobs.Clear();
         }
         // Generation is an ordered prerequisite of compilation/capture. -Check is
@@ -115,18 +119,31 @@ internal static partial class ReleaseCommands
         Wave();
         if (!CheckAllPrerequisitesPassed(timings)) return Finish();
         var builds = CheckAllBuildInventory(catalog, api);
+        AddCheckAllStaticJobs(Add, Tool, Python, Isolated, output, api, nuget, parallelism, shards, dotnet);
+        jobs.RemoveAll(job => job.Name == "preflight");
+        var staticJobs = jobs.ToArray(); jobs.Clear();
+        // Migration writes documentation only, but source checks must see its
+        // final bytes. Keep the generation job and every drift check.
+        if (!options.Has("BuildOnly"))
+        {
+            Add("generate-release-migration", () => Tool("generate-release-migration", "generate-release-migration"));
+            Wave(["generate-tool-usage"]);
+        }
         Add("build-once", () => CheckAllCachedBuild(options, builds, output, dotnet, api, nuget,
-            FastSuites.Positive(options, "BuildParallelism", parallelism)));
-        Wave();
-        if (!CheckAllPrerequisitesPassed(timings)) return Finish();
-        AnalyzerWarnings.RememberDirectory(Root, Path.Combine(output, "build/analyzer-warnings"));
+            buildParallelism));
+        jobs[^1] = jobs[^1] with { Priority = 2, Affinity = available };
         Add("analyzer-warnings", () => Tool("analyzer-warnings", "check-analyzer-warnings", "-Check", "-Complete",
-            "-DiagnosticsDirectory", Path.Combine(output, "build/analyzer-warnings")));
-        Wave();
+            "-DiagnosticsDirectory", Path.Combine(output, "build/analyzer-warnings")), ["build-once"]);
+        if (!options.Has("BuildOnly")) jobs.AddRange(staticJobs.Where(job => CheckAllSourceOnly(job.Name))
+            .Select(job => job with { Priority = 1, Affinity = layout.General,
+                Dependencies = job.Name == "migration-drift" ? ["generate-release-migration"] : job.Dependencies }));
+        Wave(["generate-tool-usage"]);
+        if (!CheckAllPrerequisitesPassed(timings.Where(row => row.Name is "generate-catalogs" or "generate-tool-usage" or "build-once"))) return Finish();
+        AnalyzerWarnings.RememberDirectory(Root, Path.Combine(output, "build/analyzer-warnings"));
         if (options.Has("BuildOnly")) return Finish();
         var runtimeManifest = Path.Combine(output, "build/runtime-paths.tsv");
-        Add("suite-output-parity", () => CheckAllLayout.Verify(Root, builds, dotnet, nuget, api, Path.Combine(output, "suite-output-parity"), runtimeManifest, FastSuites.Positive(options, "BuildParallelism", parallelism)));
-        Wave();
+        Add("suite-output-parity", () => CheckAllLayout.Verify(Root, builds, dotnet, nuget, api, Path.Combine(output, "suite-output-parity"), runtimeManifest, buildParallelism), ["build-once"]);
+        jobs[^1] = jobs[^1] with { Priority = 2, Affinity = available };
         string host = Path.Combine(Root, "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe");
         string harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
         // Stability shares wall time, but no CPUs, with the general lane. The
@@ -173,9 +190,12 @@ internal static partial class ReleaseCommands
                 "--disable-build-servers", "-m:1", "-nodeReuse:false", "--logger", "trx;LogFileName=" + name + ".trx", "--results-directory", Path.Combine(output, "studio")]), exclusive: true);
             jobs[^1] = jobs[^1] with { SensitiveGroup = $"tests/Studio/TiaOpenness.{project}.Tests/TiaOpenness.{project}.Tests.csproj" };
         }
-        AddCheckAllStaticJobs(Add, Tool, Python, Isolated, output, api, nuget, parallelism, shards, dotnet);
-        jobs.RemoveAll(job => job.Name == "preflight");
-        AddCheckAllPreflightJobs(jobs);
+        jobs.AddRange(staticJobs.Where(job => !CheckAllSourceOnly(job.Name)));
+        // Preflight also depends on the source-only checks completed in the build
+        // wave. Retain their results in its aggregate instead of executing twice.
+        var preflightInputs = jobs.Concat(staticJobs.Where(job => CheckAllSourceOnly(job.Name))).ToList();
+        AddCheckAllPreflightJobs(preflightInputs);
+        jobs.Add(preflightInputs[^1]);
         foreach (var release in CatalogJson.Keys)
         {
             var key = release;
@@ -322,12 +342,11 @@ internal static partial class ReleaseCommands
         }
         ValidateCheckAllPlcScriptJobs(jobs);
         ValidateCheckAllPlcHarnessJobs(jobs);
-        Add("generate-release-migration", () => Tool("generate-release-migration", "generate-release-migration"));
-        var scheduled = jobs.Select(job => job with
+        var scheduled = CheckAllRuntimeDependencies(jobs).Select(job => job with
         {
             EstimatedSeconds = CheckAllJobCost(job, costs),
             Timeout = CheckScheduler.JobTimeout(job, costs),
-            Dependencies = job.Name == "migration-drift" ? ["generate-release-migration"] : job.Dependencies
+            Priority = job.Priority > 0 || !staticJobs.Any(item => item.Name == job.Name) ? job.Priority : 1
         }).ToList();
         var sensitiveLanes = CheckAffinity.AssignLanes(scheduled, layout, sensitiveParallelism);
         var resultCache = new CheckAllResultCache(Root, output, runtimeManifest, api, nuget, dotnet, python, companionPython, options,
@@ -337,17 +356,18 @@ internal static partial class ReleaseCommands
             ? job with { ResultInputs = new(job.Name.StartsWith("python-", StringComparison.Ordinal) ? "python" : job.Name.EndsWith("-drift", StringComparison.Ordinal) ? "generator" : "static", job.Name) } : job)).ToArray();
         CheckAllInputClosure.WriteInventory(Root, plan, output);
         var lanes = new Dictionary<string, int>(sensitiveLanes) { ["general"] = parallelism, ["stability"] = stabilityParallelism };
-        var priorities = CheckScheduler.CriticalCosts(plan);
+        allJobs.AddRange(plan);
+        var priorities = CheckScheduler.CriticalCosts(allJobs);
         File.WriteAllText(Path.Combine(output, "cpu-plan.json"), JsonSerializer.Serialize(new { availableMask = available.ToString("X"),
             cpuIsolation = layout.Isolation, cpuIsolationReason = layout.Reason,
             stabilityMask = layout.Stability.ToString("X"), sensitiveMask = layout.Sensitive.ToString("X"), generalMask = layout.General.ToString("X"), stabilityCores, generalCores,
             physicalCores = CheckAffinity.PhysicalCores().Select(core => new { mask = core.Mask.ToString("X"), efficiencyClass = core.Efficiency }),
-            stabilityParallelism, sensitiveParallelism = sensitiveLanes.Count, sensitiveCores = System.Numerics.BitOperations.PopCount(layout.Sensitive), sensitiveMinWorkerThreads = CheckAffinity.BaselineWorkers, generalParallelism = parallelism, companionPython,
-            checks = plan.Select(job => new { job.Name, job.Lane, job.SensitiveGroup, job.Slots, job.Exclusive, affinityMask = job.Affinity?.ToString("X"), job.EstimatedSeconds, timeoutSeconds = job.Timeout.TotalSeconds, criticalSeconds = priorities[job.Name], job.Dependencies,
+            buildParallelism, stabilityParallelism, sensitiveParallelism = sensitiveLanes.Count, sensitiveCores = System.Numerics.BitOperations.PopCount(layout.Sensitive), sensitiveMinWorkerThreads = CheckAffinity.BaselineWorkers, generalParallelism = parallelism, companionPython,
+            checks = allJobs.Select(job => new { job.Name, job.Lane, job.SensitiveGroup, job.Slots, job.Exclusive, job.Priority, affinityMask = job.Affinity?.ToString("X"), job.EstimatedSeconds, timeoutSeconds = job.Timeout.TotalSeconds, criticalSeconds = priorities[job.Name], job.Dependencies,
                 resultCache = job.ResultCachePolicy ?? "always rerun: generated evidence, mutable machine inputs or aggregate gate" }) }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
         planned.AddRange(plan.Select(job => job.Name));
         timings.AddRange(CheckScheduler.Run(plan, parallelism, Path.Combine(output, "logs"),
-            lanes));
+            lanes, timings.ToArray()));
         return Finish();
 
         int Finish()
@@ -362,18 +382,21 @@ internal static partial class ReleaseCommands
             // fields are ignored; any other byte change remains a failed drift gate.
             var unexpected = drift.Where(path => !TimestampOnly(path, before)).ToArray();
             timings.Add(new("tracked-tree-drift", unexpected.Length == 0 ? "passed" : "failed", unexpected.Length == 0 ? 0 : 1, 0, string.Join(", ", unexpected)));
+            var performance = CheckScheduler.Performance(allJobs, timings, DateTime.UtcNow - clock.Elapsed, clock.Elapsed.TotalSeconds);
             var report = new { schemaVersion = 1, machineCores = Environment.ProcessorCount, cpuIsolation = layout.Isolation, cpuIsolationReason = layout.Reason,
                 parallelism, shards, cold = options.Has("Cold"), clean = options.Has("Clean"),
                 wallSeconds = clock.Elapsed.TotalSeconds, underThirtyMinutes = clock.Elapsed.TotalSeconds < 1800, buildOnly = options.Has("BuildOnly"), nativeTiaExecuted = false,
                 passed = timings.Count(CheckTiming.Passed), reused = timings.Count(row => row.Status == "passed (reused)"),
-                failed = timings.Count(row => !CheckTiming.Passed(row)), drift, checks = timings };
+                failed = timings.Count(row => !CheckTiming.Passed(row)), drift, performance, checks = timings };
             File.WriteAllText(Path.Combine(output, "report.json"), JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }) + "\n");
             WriteTimingComparison(output, timings, options.Get("BaselineReport"), layout);
+            File.AppendAllText(Path.Combine(output, "comparison.md"), $"\nDependency critical path ({performance.CriticalPathSeconds:F3}s of job execution): {string.Join(" -> ", performance.CriticalPath)}\nAverage job concurrency: {performance.AverageConcurrency:F3}; peak: {performance.PeakConcurrency}. Includes process waits and reused-evidence lookups, not CPU utilization.\n");
             var exitCode = report.failed == 0 && report.underThirtyMinutes ? 0 : 1;
             string evidencePath;
             try { evidencePath = ReleaseEvidence.Write(releaseEvidence, output, planned, timings, exitCode, report.wallSeconds, report.underThirtyMinutes, unexpected, DateTimeOffset.UtcNow); }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { evidencePath = "not written (" + ex.Message + ")"; }
             Console.WriteLine($"check-all: {report.passed} passed; {report.failed} failed/blocked; {report.wallSeconds:F3}s; report: {output}; release evidence: {evidencePath}");
+            Console.WriteLine($"Dependency critical path: {string.Join(" -> ", performance.CriticalPath)} ({performance.CriticalPathSeconds:F3}s); achieved job concurrency: average {performance.AverageConcurrency:F3}, peak {performance.PeakConcurrency}");
             return exitCode;
         }
     }
