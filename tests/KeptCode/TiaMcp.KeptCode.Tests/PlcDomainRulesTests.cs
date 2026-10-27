@@ -15,7 +15,7 @@ namespace TiaMcp.Engine.Tests
         internal static void Run(Action<bool, string> check)
         {
             var temp = Path.GetTempPath();                       // rooted on every OS (offline-checks runs on ubuntu)
-            string scl = Path.Combine(temp, "Block_1.scl"), xlsx = Path.Combine(temp, "lists.xlsx"), csvDir = Path.Combine(temp, "prodiag");
+            string scl = @"C:\TiaSources\Block_1.scl", xlsx = Path.Combine(temp, "lists.xlsx"), csvDir = Path.Combine(temp, "prodiag");
 
             // ---- external sources ----
             bool E(string action, string name = "", string unitName = "", string unitKind = "unit", string filePath = "", string libraryName = "", string masterCopyPath = "", string copyMode = "",
@@ -38,7 +38,7 @@ namespace TiaMcp.Engine.Tests
             check(Fails<ArgumentException>(() => E("read", "x", newName: "y")), "extsrc: newName outside group actions refused");
             check(Fails<ArgumentException>(() => E("createFromFile", "Block_1.scl")), "extsrc: createFromFile without filePath refused");
             check(Fails<ArgumentException>(() => E("createFromFile", "Block_1.scl", filePath: "relative/Block_1.scl")), "extsrc: relative filePath refused");
-            check(Fails<ArgumentException>(() => E("createFromFile", "Block_1.xml", filePath: Path.Combine(temp, "Block_1.xml"))), "extsrc: non-ASCII-source extension refused");
+            check(Fails<ArgumentException>(() => E("createFromFile", "Block_1.xml", filePath: @"C:\TiaSources\Block_1.xml")), "extsrc: non-ASCII-source extension refused");
             check(Fails<ArgumentException>(() => E("read", "x", filePath: scl)), "extsrc: filePath outside createFromFile refused");
             check(Fails<ArgumentException>(() => E("createFromMasterCopy", "x")), "extsrc: createFromMasterCopy without masterCopyPath refused");
             check(Fails<ArgumentException>(() => E("createFromMasterCopy", "x", masterCopyPath: "F/x", copyMode: "Overwrite")), "extsrc: unknown copyMode refused");
