@@ -28,6 +28,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal const string UiNamespace = "Siemens.Engineering.HmiUnified.UI.";
         internal const string ScreenItemBase = UiNamespace + "Base.HmiScreenItemBase";
         internal static readonly string[] ItemNamespaces = { UiNamespace + "Shapes", UiNamespace + "Widgets", UiNamespace + "Controls", UiNamespace + "Screens" };
+        private static readonly string[] BaseContainers = { UiNamespace + "Base.HmiCustomWebControlContainer", UiNamespace + "Base.HmiCustomWidgetContainer" };
         internal static readonly string[] Actions = { "read", "list", "create", "update", "delete" };
         private static readonly string[] BackLinks = { "Parent", "Owner", "Project", "Portal", "Site", "Container", "Device", "AssignedHmiDevice" };
 
@@ -59,8 +60,21 @@ namespace TiaMcp.Adapters.Native.Hmi
             var root = assembly.GetType(ScreenItemBase, false);
             return LoadableTypes(assembly)
                 .Where(t => t.IsClass && !t.IsAbstract && t.IsPublic && !t.Name.EndsWith("Base", StringComparison.Ordinal)
-                    && t.Namespace != null && ItemNamespaces.Contains(t.Namespace) && (root == null || root.IsAssignableFrom(t)))
+                    && t.Namespace != null && (ItemNamespaces.Contains(t.Namespace) || BaseContainers.Contains(t.FullName)) && (root == null || root.IsAssignableFrom(t)))
                 .OrderBy(t => t.Namespace, StringComparer.Ordinal).ThenBy(t => t.Name, StringComparer.Ordinal).ToList();
+        }
+        internal static bool RequiresContainedType(Type type)
+            => type.FullName == UiNamespace + "Controls.HmiFaceplateContainer" || BaseContainers.Contains(type.FullName);
+
+        internal static void ValidateContainedType(Type type, string containedType)
+            => TiaMcp.Adapters.Contracts.UnifiedHmiInputValidation.ContainedType(type.FullName!, containedType);
+
+        internal static string ReadContainedType(object item, string expected)
+        {
+            var actual = UnifiedUiModelLogic.FindProperty(item.GetType(), "ContainedType")?.GetValue(item) as string;
+            if (!string.Equals(actual, expected, StringComparison.Ordinal))
+                throw new InvalidOperationException("ContainedType readback differs. The created item is not rolled back.");
+            return actual!;
         }
         internal static IEnumerable<Type> LoadableTypes(Assembly assembly)
         {
@@ -114,7 +128,11 @@ namespace TiaMcp.Adapters.Native.Hmi
             var kind = Kind(p);
             var row = new UnifiedObject { ["name"] = p.Name, ["kind"] = kind, ["type"] = p.PropertyType.Name, ["writable"] = p.SetMethod?.IsPublic == true };
             var t = p.PropertyType;
-            if (t.IsEnum) row["enumValues"] = new UnifiedArray(Enum.GetNames(t).Select(n => (UnifiedNode)UnifiedValues.Value(n)!).ToArray());
+            if (t.IsEnum)
+            {
+                row["enumValues"] = new UnifiedArray(Enum.GetNames(t).Select(n => (UnifiedNode)UnifiedValues.Value(n)!).ToArray());
+                row["flags"] = t.IsDefined(typeof(FlagsAttribute), false);
+            }
             if (kind == "collection" || kind == "enumerable")
             {
                 var element = t.GetProperty("Item")?.PropertyType;
@@ -139,12 +157,15 @@ namespace TiaMcp.Adapters.Native.Hmi
         }
         internal static UnifiedObject TypeDescription(Type type, int depth = 2)
         {
-            var events = UnifiedUiModelLogic.FindProperty(type, "EventHandlers")?.PropertyType.GetMethods().FirstOrDefault(m => m.Name == "Create" && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType.IsEnum)?.GetParameters()[0].ParameterType;
+            var events = UnifiedUiModelLogic.FindProperty(type, "EventHandlers")?.PropertyType.GetMethods().FirstOrDefault(m => m.Name == "Create" && m.GetParameters().Length == 1
+                && (m.GetParameters()[0].ParameterType.IsEnum || m.GetParameters()[0].ParameterType == typeof(string)))?.GetParameters()[0].ParameterType;
             return new UnifiedObject
             {
                 ["type"] = type.FullName, ["name"] = type.Name, ["group"] = Group(type), ["baseTypes"] = BaseChain(type), ["features"] = Features(type),
                 ["hasDynamizations"] = UnifiedUiModelLogic.FindProperty(type, "Dynamizations") != null, ["hasEventHandlers"] = UnifiedUiModelLogic.FindProperty(type, "EventHandlers") != null,
-                ["eventTypes"] = events == null ? null : new UnifiedArray(Enum.GetNames(events).Select(n => (UnifiedNode)UnifiedValues.Value(n)!).ToArray()),
+                ["eventTypes"] = events == null ? null : new UnifiedArray((events == typeof(string) ? Array.Empty<string>() : Enum.GetNames(events)).Select(n => (UnifiedNode)UnifiedValues.Value(n)!).ToArray()),
+                ["eventTypeType"] = events?.FullName, ["eventTypesRequireBinding"] = events == typeof(string),
+                ["requiresContainedType"] = RequiresContainedType(type),
                 ["deletable"] = type.GetMethod("Delete", Type.EmptyTypes) != null,
                 ["properties"] = Schema(type, depth)
             };

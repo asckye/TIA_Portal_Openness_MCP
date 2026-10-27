@@ -425,8 +425,9 @@ namespace TiaMcp.Adapters.Native.Hmi
             }
         }
 
-        public HmiMessage EnsureUnifiedHmiTag(string hmiSoftwarePath, string tagTableName, string tagName, string hmiDataType = "Bool", string plcName = "PLC_1", string plcTag = "", string connectionName = "", string address = "", bool requireVerifiedBinding = true)
+        public HmiMessage EnsureUnifiedHmiTag(string hmiSoftwarePath, string tagTableName, string tagName, string hmiDataType = "Bool", string plcName = "", string plcTag = "", string connectionName = "", string address = "", bool requireVerifiedBinding = true)
         {
+            UnifiedHmiInputValidation.PlcBinding(plcName, plcTag);
             return _session.RunHmiStepTool("EnsureUnifiedHmiTag", meta => _session.Capture(meta, _ =>
             {
                 EngineeringInputValidation.NameOrAbsolutePath(tagTableName);
@@ -441,7 +442,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var action = existed ? "exists" : "created";
 
                 var writeResults = new HmiArray();
-                var targetPlcTag = string.IsNullOrWhiteSpace(plcTag) ? tagName : plcTag;
+                var targetPlcTag = plcTag;
                 BindUnifiedHmiTagToPlcSymbol(tag, connectionName, plcName, targetPlcTag, hmiDataType, writeResults, address);
 
                 meta["action"] = action;

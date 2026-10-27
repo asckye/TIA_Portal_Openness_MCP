@@ -107,6 +107,7 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public HmiDescribe DescribeHmiScreen(string softwarePath, string screenName, int maxMembers = 200)
         {
+            EngineeringInputValidation.NameOrAbsolutePath(screenName);
             if (_session.IsProjectNull())
             {
                 return new HmiDescribe
@@ -129,7 +130,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             }
 
             var sw = softwareContainer.Software;
-            var screen = HmiScreenTraversal.FindByName(sw, screenName);
+            var screen = HmiExactAccess.Screen(sw, screenName);
             if (screen == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。

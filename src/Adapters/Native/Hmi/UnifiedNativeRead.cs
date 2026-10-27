@@ -17,8 +17,7 @@ namespace TiaMcp.Adapters.Native.Hmi
     {
         internal static object ExactType(object projectLibrary, string typePath)
         {
-            if (!typePath.StartsWith("/") || typePath.EndsWith("/")) throw new ArgumentException("typePath must be an absolute URI-escaped /Folder/Type path; no recursive library search.");
-            var parts = typePath.Substring(1).Split('/'); object folder = MigrationRead.Get(projectLibrary, "TypeFolder")!;
+            var parts = EngineeringInputValidation.AbsoluteHmiPath(typePath); object folder = MigrationRead.Get(projectLibrary, "TypeFolder")!;
             for (int j = 0; j < parts.Length - 1; j++) folder = MigrationRead.Named(MigrationRead.Get(folder, "Folders")!, Uri.UnescapeDataString(parts[j]));
             return MigrationRead.Named(MigrationRead.Get(folder, "Types")!, Uri.UnescapeDataString(parts[parts.Length - 1]));
         }

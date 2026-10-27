@@ -51,37 +51,16 @@ namespace TiaMcp.Adapters.Native.Hmi
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
             if (softwareContainer?.Software == null) return null;
             var sw = softwareContainer.Software;
-            var tables = _session.TryGetHmiTagTablesCollection(sw);
-            if (tables == null) return new List<string>();
-            var names = _session.TryListNamesFromCollection(tables, Array.Empty<string>(), "TagTables");
-            // Tables inside user folders are listed too (name only; ManageClassicHmiFolder read shows the folder).
-            var root = _session.TryGetHmiTagRoot(sw);
-            if (root != null)
-                foreach (var table in _session.EnumerateHmiTagTablesRecursive(root))
-                {
-                    var name = _session.TryGetName(table);
-                    if (!string.IsNullOrWhiteSpace(name) && !names.Contains(name!, StringComparer.Ordinal)) names.Add(name!);
-                }
-            return names;
+            return HmiExchangePolicy.TagTables(sw).Select(table => table.Path).ToList();
         }
 
         public List<string>? GetHmiTags(string softwarePath, string tagTableName = "")
         {
+            if (!string.IsNullOrWhiteSpace(tagTableName)) EngineeringInputValidation.NameOrAbsolutePath(tagTableName);
             if (_session.IsProjectNull()) return null;
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
             if (softwareContainer?.Software == null) return null;
-
-            var sw = softwareContainer.Software;
-            var tagRoot = _session.TryGetHmiTagRoot(sw);
-            object? tagTable = string.IsNullOrWhiteSpace(tagTableName)
-                ? null
-                : _session.TryFindHmiTagTable(sw, tagTableName);
-            // An unknown table is a lookup failure, not an empty table.
-            if (!string.IsNullOrWhiteSpace(tagTableName) && tagTable == null)
-                throw new PlcSoftwareException("NotFound", "HMI tag table not found: " + tagTableName + " (tables: " + string.Join(", ", GetHmiTagTables(softwarePath) ?? new List<string>()) + ").");
-
-            var root = tagTable ?? tagRoot;
-            return _session.TryListNamesFromCollection(root, new[] { "Tags" }, "Tags");
+            return HmiExchangePolicy.TagNames(softwareContainer.Software, tagTableName);
         }
 
         public List<string>? GetHmiConnections(string softwarePath)

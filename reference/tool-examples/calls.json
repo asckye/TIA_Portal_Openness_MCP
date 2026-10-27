@@ -13071,7 +13071,7 @@
         "arguments": {},
         "parameters": {
           "itemType": {
-            "exampleValue": "T4TiaProject"
+            "exampleValue": "HmiButton"
           },
           "depth": {
             "exampleValue": 2
@@ -13217,14 +13217,17 @@
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
           "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
-          "tagName": "Ready"
+          "tagName": "Ready",
+          "plcName": "PLC_1",
+          "plcTag": "<exact PLC tag name from project reads>"
         },
         "parameters": {
           "hmiDataType": {
             "exampleValue": "Bool"
           },
           "plcName": {
-            "exampleValue": "PLC_1"
+            "exampleValue": "PLC_1",
+            "requiresBinding": true
           },
           "plcTag": {
             "exampleValue": "<plcTag from this operation's target or user input>",
@@ -13363,7 +13366,7 @@
       "ManageUnifiedScreenItem": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
@@ -13372,7 +13375,7 @@
         "parameters": {
           "itemName": {},
           "itemType": {
-            "exampleValue": "T4TiaProject"
+            "exampleValue": "Widgets.HmiIOField"
           },
           "depth": {
             "exampleValue": 2
@@ -13384,7 +13387,7 @@
             "exampleValue": 100
           },
           "containedType": {
-            "exampleValue": "<containedType from this operation's target or user input>",
+            "exampleValue": "<exact ContainedType read from an existing HmiFaceplateContainer>",
             "requiresBinding": true
           },
           "properties": {
@@ -13409,8 +13412,8 @@
           "create": {
             "arguments": {
               "action": "create",
-              "itemName": "StatusText",
-              "itemType": "TextBox"
+              "itemName": "IOField_1",
+              "itemType": "Widgets.HmiIOField"
             }
           },
           "update": {
@@ -13428,6 +13431,23 @@
               "action": "delete",
               "itemName": "StatusText"
             }
+          },
+          "createFaceplateContainer": {
+            "arguments": {
+              "action": "create",
+              "itemName": "MotorFaceplate_2",
+              "itemType": "HmiFaceplateContainer",
+              "containedType": "<exact ContainedType read from MotorFaceplate_1>",
+              "dryRun": true
+            },
+            "parameters": {
+              "containedType": {
+                "requiresBinding": true,
+                "source": "ManageUnifiedScreenItem read of /Overview itemName=MotorFaceplate_1: item.values.ContainedType in the returned evidence"
+              }
+            },
+            "requiresBinding": true,
+            "note": "First read an existing HmiFaceplateContainer and copy its ContainedType verbatim. Do not construct a type/version identifier. Preview first; native ContainedType format and create behavior are unverified."
           }
         },
         "validation": "V19/V20/V21 PublicAPI metadata and reflection shape reviewed offline. Native engineering acceptance NOT RUN; use only an explicitly bound disposable test project.",
@@ -16627,9 +16647,6 @@
           "dryRun": true,
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -16663,9 +16680,6 @@
           "dryRun": true,
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -16688,9 +16702,6 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -16711,9 +16722,6 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
@@ -16951,9 +16959,6 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -16981,9 +16986,6 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
@@ -17059,9 +17061,6 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -17128,9 +17127,6 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             }
@@ -17159,9 +17155,6 @@
               "action": "create",
               "name": "Overview_2",
               "objectPath": [
-                {
-                  "property": "ScreenFolder"
-                },
                 {
                   "property": "Screens"
                 }
@@ -17311,9 +17304,6 @@
           "dryRun": true,
           "action": "read",
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
@@ -17803,7 +17793,8 @@
         },
         "parameters": {
           "itemName": {
-            "exampleValue": "StatusText"
+            "exampleValue": "MotorFaceplate_1",
+            "requiresBinding": true
           },
           "branch": {
             "exampleValue": [
@@ -17841,7 +17832,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "typePath": "UDT_Status",
+          "typePath": "/Faceplates/MotorFaceplate",
           "version": "<version from target discovery>"
         },
         "parameters": {
@@ -17857,6 +17848,10 @@
           },
           "limit": {
             "exampleValue": 100
+          },
+          "typePath": {
+            "requiresBinding": true,
+            "source": "ListUnifiedLibraryFolderEntries: exact HMI faceplate type path from the project library"
           }
         },
         "operations": {},
@@ -17872,7 +17867,7 @@
         },
         "parameters": {
           "folderPath": {
-            "exampleValue": ""
+            "exampleValue": "/"
           },
           "cursor": {
             "exampleValue": "<cursor from the preceding read>",
@@ -17895,9 +17890,9 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "screenPath": "Overview",
-          "itemName": "StatusText",
-          "typePath": "UDT_Status",
+          "screenPath": "/Overview",
+          "itemName": "MotorFaceplate_1",
+          "typePath": "/Faceplates/MotorFaceplate",
           "version": "<version from target discovery>"
         },
         "parameters": {
@@ -17913,6 +17908,10 @@
           },
           "limit": {
             "exampleValue": 100
+          },
+          "typePath": {
+            "requiresBinding": true,
+            "source": "ListUnifiedLibraryFolderEntries: exact HMI faceplate type path from the project library"
           }
         },
         "operations": {},
@@ -19762,7 +19761,7 @@
         "arguments": {},
         "parameters": {
           "itemType": {
-            "exampleValue": "T4TiaProject"
+            "exampleValue": "HmiButton"
           },
           "depth": {
             "exampleValue": 2
@@ -20066,14 +20065,17 @@
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
           "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
-          "tagName": "Ready"
+          "tagName": "Ready",
+          "plcName": "PLC_1",
+          "plcTag": "<exact PLC tag name from project reads>"
         },
         "parameters": {
           "hmiDataType": {
             "exampleValue": "Bool"
           },
           "plcName": {
-            "exampleValue": "PLC_1"
+            "exampleValue": "PLC_1",
+            "requiresBinding": true
           },
           "plcTag": {
             "exampleValue": "<plcTag from this operation's target or user input>",
@@ -21985,9 +21987,6 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -23281,7 +23280,7 @@
         },
         "parameters": {
           "folderPath": {
-            "exampleValue": ""
+            "exampleValue": "/"
           },
           "cursor": {
             "exampleValue": "<cursor from the preceding read>",
@@ -29021,9 +29020,6 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -29124,9 +29120,6 @@
           "dryRun": true,
           "action": "read",
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
@@ -29316,9 +29309,6 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -29448,7 +29438,7 @@
       "ManageUnifiedScreenItem": {
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
@@ -29457,7 +29447,7 @@
         "parameters": {
           "itemName": {},
           "itemType": {
-            "exampleValue": "T4TiaProject"
+            "exampleValue": "Widgets.HmiIOField"
           },
           "depth": {
             "exampleValue": 2
@@ -29469,7 +29459,7 @@
             "exampleValue": 100
           },
           "containedType": {
-            "exampleValue": "<containedType from this operation's target or user input>",
+            "exampleValue": "<exact ContainedType read from an existing HmiFaceplateContainer>",
             "requiresBinding": true
           },
           "properties": {
@@ -29494,8 +29484,8 @@
           "create": {
             "arguments": {
               "action": "create",
-              "itemName": "StatusText",
-              "itemType": "TextBox"
+              "itemName": "IOField_1",
+              "itemType": "Widgets.HmiIOField"
             }
           },
           "update": {
@@ -29513,6 +29503,23 @@
               "action": "delete",
               "itemName": "StatusText"
             }
+          },
+          "createFaceplateContainer": {
+            "arguments": {
+              "action": "create",
+              "itemName": "MotorFaceplate_2",
+              "itemType": "HmiFaceplateContainer",
+              "containedType": "<exact ContainedType read from MotorFaceplate_1>",
+              "dryRun": true
+            },
+            "parameters": {
+              "containedType": {
+                "requiresBinding": true,
+                "source": "ManageUnifiedScreenItem read of /Overview itemName=MotorFaceplate_1: item.values.ContainedType in the returned evidence"
+              }
+            },
+            "requiresBinding": true,
+            "note": "First read an existing HmiFaceplateContainer and copy its ContainedType verbatim. Do not construct a type/version identifier. Preview first; native ContainedType format and create behavior are unverified."
           }
         },
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
@@ -29522,9 +29529,6 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
@@ -29554,9 +29558,6 @@
               "action": "create",
               "name": "Overview_2",
               "objectPath": [
-                {
-                  "property": "ScreenFolder"
-                },
                 {
                   "property": "Screens"
                 }
@@ -31085,9 +31086,9 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "screenPath": "Overview",
-          "itemName": "StatusText",
-          "typePath": "UDT_Status",
+          "screenPath": "/Overview",
+          "itemName": "MotorFaceplate_1",
+          "typePath": "/Faceplates/MotorFaceplate",
           "version": "<version from target discovery>"
         },
         "parameters": {
@@ -31103,6 +31104,10 @@
           },
           "budgetMs": {
             "exampleValue": 5000
+          },
+          "typePath": {
+            "requiresBinding": true,
+            "source": "ListUnifiedLibraryFolderEntries: exact HMI faceplate type path from the project library"
           }
         },
         "operations": {},
@@ -31193,7 +31198,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "typePath": "UDT_Status",
+          "typePath": "/Faceplates/MotorFaceplate",
           "version": "<version from target discovery>"
         },
         "parameters": {
@@ -31209,6 +31214,10 @@
           },
           "budgetMs": {
             "exampleValue": 5000
+          },
+          "typePath": {
+            "requiresBinding": true,
+            "source": "ListUnifiedLibraryFolderEntries: exact HMI faceplate type path from the project library"
           }
         },
         "operations": {},
@@ -31218,9 +31227,6 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
@@ -32429,9 +32435,6 @@
           "dryRun": true,
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -32451,9 +32454,6 @@
           "softwarePath": "HMI_RT_1",
           "dryRun": true,
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
@@ -32619,9 +32619,6 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
@@ -33663,7 +33660,8 @@
         },
         "parameters": {
           "itemName": {
-            "exampleValue": "StatusText"
+            "exampleValue": "MotorFaceplate_1",
+            "requiresBinding": true
           },
           "branch": {
             "exampleValue": [

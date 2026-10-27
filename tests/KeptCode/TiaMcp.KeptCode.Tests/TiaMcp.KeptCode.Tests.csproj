@@ -1,9 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="DefineConstants">
   <Import Project="../../Shared/Xunit.props" />
   <Import Project="../../Fixtures/TiaMcp.Offline.Fixtures/OfflineFixtureSources.props" />
   <Import Project="../../Shared/HostDomainBuild.targets" />
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <DefineConstants>$(DefineConstants);TIA_ADAPTER_INTERNAL_VERSIONING</DefineConstants>
     <OutputType>Exe</OutputType>
     <RootNamespace>TiaMcp.Engine.Tests</RootNamespace>
     <Nullable>enable</Nullable>
@@ -11,6 +12,17 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedScreenItemLogic.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedScreenItemsAdapter.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedUiModelLogic.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedMultilingualText.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedHmiAccess.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiExactAccess.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedHmiExactAccess.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiEventAccess.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiExchangePolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Reflection/PropertyPathReader.cs" />
+
     <Compile Include="../../Engine/TiaMcp.Engine.Tests/CodeDesignTests.cs" />
     <Compile Include="../../Engine/TiaMcp.Engine.Tests/McpLocalProcessTests.cs" />
     <Compile Include="../../Engine/TiaMcp.Engine.Tests/PlcEditingTests.cs" />

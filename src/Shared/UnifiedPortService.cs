@@ -86,6 +86,12 @@ namespace TiaMcpServer.Siemens.Services
 
         internal static void ValidateInputs(UnifiedRequest request)
         {
+            if (request.Operation is "GetUnifiedScreenBranch" or "GetUnifiedFaceplateInstance")
+                EngineeringInputValidation.AbsoluteHmiPath(request.ScreenPath);
+            if (request.Operation is "GetUnifiedLibraryType" or "GetUnifiedFaceplateInstance")
+                EngineeringInputValidation.AbsoluteHmiPath(request.TypePath);
+            if (request.Operation == "ListUnifiedLibraryFolderEntries")
+                EngineeringInputValidation.AbsoluteHmiPath(request.FolderPath, rootAllowed: true);
             foreach (var text in new[] { request.ObjectPathJson, request.TagPathJson, request.DurationPathJson })
                 if (text.Length != 0) ValidateAddress(text);
             if (request.BranchJson.Length != 0) ValidateAddress(request.BranchJson, true);

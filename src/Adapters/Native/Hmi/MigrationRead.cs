@@ -82,8 +82,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         }
         internal static object Screen(object hmi, string screenPath)
         {
-            if (!screenPath.StartsWith("/") || screenPath.EndsWith("/")) throw new ArgumentException("screenPath must be an absolute URI-escaped path from ListHmiScreenPaths.");
-            var parts = screenPath.Substring(1).Split('/'); object owner = hmi;
+            var parts = EngineeringInputValidation.AbsoluteHmiPath(screenPath); object owner = hmi;
             for (int j = 0; j < parts.Length - 1; j++) owner = Named(Get(owner, j == 0 ? "ScreenGroups" : "Groups")!, Uri.UnescapeDataString(parts[j]));
             return Named(Get(owner, "Screens")!, Uri.UnescapeDataString(parts[parts.Length - 1]));
         }

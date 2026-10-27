@@ -19,6 +19,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             HmiObject result;
             try
             {
+                foreach (string key in new[] { "screenPath", "typePath", "folderPath" })
+                    if (scope.TryGetValue(key, out var path)) EngineeringInputValidation.AbsoluteHmiPath((string)path!, rootAllowed: key == "folderPath");
                 if (_session.CurrentProject == null) throw new InvalidOperationException("No open project.");
                 var project = _session.CurrentProject;
                 if (string.IsNullOrWhiteSpace(expectedProject)) throw new InvalidOperationException("An exact expectedProject is required.");
@@ -89,7 +91,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 hmi => LibraryFolder(MigrationRead.Get(_session.CurrentProject!, "ProjectLibrary")!, folderPath));
         private static IEnumerable<HmiObject> LibraryFolder(object library, string path)
         {
-            if (!path.StartsWith("/") || (path != "/" && path.EndsWith("/"))) throw new ArgumentException("Use / or an exact URI-escaped library folder path.");
+            EngineeringInputValidation.AbsoluteHmiPath(path, rootAllowed: true);
             var folder = MigrationRead.Get(library, "TypeFolder")!;
             if (path != "/") foreach (var name in path.Substring(1).Split('/')) folder = MigrationRead.Named(MigrationRead.Get(folder, "Folders")!, Uri.UnescapeDataString(name));
             foreach (var prop in new[] { "Folders", "Types" })

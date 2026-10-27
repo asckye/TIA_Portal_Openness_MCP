@@ -91,10 +91,10 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "DescribeHmiScreen"), Description("[L2][HMI]Describe one HMI screen object (members/methods) by name under an HMI software.")]
+        [McpServerTool(Name = "DescribeHmiScreen"), Description("[L2][HMI]Describe one HMI screen object (members/methods) by exact absolute /Group/Sub/Screen path or unambiguous name under an HMI software. Relative slash paths and backslashes are refused with the corrected form.")]
         public CallToolResult DescribeHmiScreenV4(
             [Description("softwarePath: HMI software path, e.g. 'HMI_RT_1'")] string softwarePath,
-            [Description("screenName: screen name, e.g. 'Main'")] string screenName,
+            [Description("screenName: absolute /Group/Sub/Screen path (URI-escaped segments), or an unambiguous exact name; use a path when names repeat.")] string screenName,
             [Description("maxMembers: max member count")] int maxMembers = 200)
             => HmiInspectionContract.Run("DescribeHmiScreen", false, false, () => DescribeHmiScreen(softwarePath, screenName, maxMembers));
 

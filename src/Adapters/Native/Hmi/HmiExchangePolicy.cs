@@ -27,10 +27,64 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         internal static object? Find(object collection, string name)
         {
-            var matches = Items(collection).Where(x => string.Equals(Get(x, "Name") as string, name,
+            var matches = Items(collection).Where(x => string.Equals(Name(x), name,
                 StringComparison.OrdinalIgnoreCase)).ToArray();
             if (matches.Length > 1) throw new PlcSoftwareException("InvalidParams", "Ambiguous object: " + name + "; use a complete path.");
             return matches.SingleOrDefault();
+        }
+
+        private static string Name(object value) => Get(value, "Name") as string
+            ?? throw new InvalidOperationException("HMI object has no readable Name: " + value.GetType().FullName);
+
+        internal static List<string> Names(object root, string[] propertyHints, string finalCollectionName)
+        {
+            object? collection = propertyHints.Length == 0 ? root : null;
+            foreach (var hint in propertyHints)
+            {
+                var value = Get(root, hint);
+                if (value == null) continue;
+                collection = hint.EndsWith("Folder", StringComparison.OrdinalIgnoreCase) ? Get(value, finalCollectionName) : value;
+                if (collection != null) break;
+            }
+            if (collection == null) throw new NotSupportedException("HMI collection unavailable: " + finalCollectionName);
+            return Items(collection).Select(Name).ToList();
+        }
+
+        internal static List<(string Path, object Value)> TagTables(object software, int initialDepth = 0)
+        {
+            var root = Get(software, "TagFolder") ?? software;
+            var result = new List<(string, object)>();
+            var ancestors = new HashSet<object>();
+            Walk(root, "", ReferenceEquals(root, software) && root.GetType().GetProperty("TagTableGroups") != null ? "TagTableGroups" : "Folders", initialDepth);
+            return result;
+
+            void Walk(object folder, string path, string childProperty, int depth)
+            {
+                if (depth > 64 || !ancestors.Add(folder)) throw new InvalidOperationException("HMI folder cycle or traversal limit.");
+                var tables = Get(folder, "TagTables") ?? throw new NotSupportedException("TagTables unavailable.");
+                foreach (var table in Items(tables))
+                {
+                    if (result.Count >= 10000) throw new InvalidOperationException("HMI tag table traversal limit.");
+                    result.Add((path + "/" + Uri.EscapeDataString(Name(table)), table));
+                }
+                var groups = Get(folder, childProperty);
+                if (groups != null)
+                    foreach (var child in Items(groups))
+                        Walk(child, path + "/" + Uri.EscapeDataString(Name(child)), childProperty == "Folders" ? "Folders" : "Groups", depth + 1);
+                ancestors.Remove(folder);
+            }
+        }
+
+        internal static List<string> TagNames(object software, string tagTableName)
+        {
+            if (!string.IsNullOrWhiteSpace(tagTableName))
+            {
+                var table = TagTable(software, tagTableName)
+                    ?? throw new PlcSoftwareException("NotFound", "HMI tag table not found: " + tagTableName);
+                return Names(table, new[] { "Tags" }, "Tags");
+            }
+            // Classic TagFolder has no Tags; both APIs document Tags on each tag table.
+            return TagTables(software).SelectMany(table => Names(table.Value, new[] { "Tags" }, "Tags")).ToList();
         }
 
         internal static object Folder(object root, string path, string rootGroups = "Folders")
@@ -131,9 +185,9 @@ namespace TiaMcp.Adapters.Native.Hmi
                 object? value = change.Value;
                 if (property.PropertyType.IsEnum && value is string text)
                 {
-                    if (!Enum.GetNames(property.PropertyType).Contains(text, StringComparer.Ordinal))
-                        throw new NotSupportedException("Documented enum value unavailable: " + change.Key + "." + text);
-                    value = Enum.Parse(property.PropertyType, text);
+                    try { value = HmiScalarPolicy.ParseEnum(property.PropertyType, text); }
+                    catch (ArgumentException error)
+                    { throw new NotSupportedException("Documented enum value unavailable: " + change.Key + "." + text, error); }
                 }
                 else if (value != null && !property.PropertyType.IsInstanceOfType(value))
                     throw new NotSupportedException("Property type does not match the documented value: " + change.Key);

@@ -55,6 +55,11 @@ namespace TiaMcp.Adapters.Native.Hmi
             => _session.RunHmiStepTool("ManageUnifiedScreenItem", meta => {
                 var changes = UnifiedScreenItemLogic.ParseProperties(propertiesJson);
                 bool writing = UnifiedScreenItemLogic.ValidateRequest(action, itemName, itemType, changes, confirmDelete, dryRun, containedType);
+                EngineeringInputValidation.AbsoluteHmiPath(screenPath);
+                var createType = action == "create" ? UnifiedScreenItemLogic.ResolveItemType(_session.UnifiedAssembly, itemType) : null;
+                if (createType != null) UnifiedScreenItemLogic.ValidateContainedType(createType, containedType);
+                if (createType != null && changes.ContainsKey("ContainedType"))
+                    throw new ArgumentException("Create accepts ContainedType only through the containedType parameter, copied verbatim from an existing container.");
                 if (depth < 0 || depth > 4) throw new ArgumentException("depth 0..4 required.");
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 var root = _session.ExactUnifiedRoot(softwarePath);
@@ -82,7 +87,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 }
                 if (action == "create" && existing != null) throw new InvalidOperationException("Screen item already exists: " + itemName);
                 if (action != "create" && existing == null) throw new PlcSoftwareException("NotFound", "Screen item not found: " + itemName);
-                var type = action == "create" ? UnifiedScreenItemLogic.ResolveItemType(_session.UnifiedAssembly, itemType) : existing!.GetType();
+                var type = createType ?? existing!.GetType();
                 meta["itemType"] = type.FullName;
                 var invalid = _session.ValidateUnifiedProperties(type, propertiesJson);
                 if (invalid != null)
@@ -115,6 +120,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                     // Openness returns a fresh proxy from Create<T>; Find() yields another proxy for the same object, so identity is checked by exact name and count, never by reference.
                     item = PlcGroupOperations.Find(items, itemName) ?? throw new InvalidOperationException("Create returned but the item is not found by name.");
                     if (PlcGroupOperations.Items(items).Count() != countBefore + 1) throw new InvalidOperationException("Create returned but the item count did not grow by one.");
+                    if (UnifiedScreenItemLogic.RequiresContainedType(type)) meta["containedTypeReadback"] = UnifiedScreenItemLogic.ReadContainedType(item, containedType);
                 }
                 UnifiedUiModelLogic.ApplyNested(item, prepared, meta);
                 var textResults = new HmiArray(); meta["textResults"] = textResults;

@@ -1,7 +1,50 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 namespace TiaMcp.Adapters.Contracts
 {
+    public static class UnifiedHmiInputValidation
+    {
+        public static void PlcBinding(string plcName, string plcTag)
+        {
+            if (string.IsNullOrWhiteSpace(plcName) || string.IsNullOrWhiteSpace(plcTag))
+                throw new ArgumentException("EnsureUnifiedHmiTag requires explicit nonempty plcName and plcTag. Read the exact PLC software and tag names first; no PLC_1 or same-name default is used.");
+        }
+
+        public static bool ContainerType(string itemType)
+        {
+            var key = (itemType ?? "").Trim();
+            const string prefix = "Siemens.Engineering.HmiUnified.UI.";
+            if (key.StartsWith(prefix, StringComparison.Ordinal)) key = key.Substring(prefix.Length);
+            return new[] { "HmiFaceplateContainer", "FaceplateContainer", "Controls.HmiFaceplateContainer",
+                "HmiCustomWebControlContainer", "CustomWebControlContainer", "Base.HmiCustomWebControlContainer",
+                "HmiCustomWidgetContainer", "CustomWidgetContainer", "Base.HmiCustomWidgetContainer" }
+                .Contains(key, StringComparer.OrdinalIgnoreCase);
+        }
+
+        public static void ContainedType(string itemType, string containedType)
+        {
+            if (ContainerType(itemType))
+            {
+                if (string.IsNullOrWhiteSpace(containedType) || containedType.Length > 4096 || containedType.Any(char.IsControl))
+                    throw new ArgumentException("containedType is required for " + itemType + ": pass the exact value read from an existing container (1..4096 characters, no control characters). The server does not compose it.");
+            }
+            else if (!string.IsNullOrEmpty(containedType))
+                throw new ArgumentException("containedType is only accepted for HmiFaceplateContainer, HmiCustomWebControlContainer and HmiCustomWidgetContainer.");
+        }
+
+        public static void Request(UnifiedHmiRequest request)
+        {
+            if (request.Operation == "EnsureUnifiedHmiTag") PlcBinding(request.PlcName, request.PlcTag);
+            if (request.Operation == "ManageUnifiedScreenItem")
+            {
+                EngineeringInputValidation.AbsoluteHmiPath(request.ScreenPath);
+                if (request.Action == "create") ContainedType(request.ItemType, request.ContainedType);
+                else if (!string.IsNullOrEmpty(request.ContainedType)) throw new ArgumentException("containedType is only used by create.");
+            }
+        }
+    }
+
     public sealed class UnifiedHmiRequest
     {
         public string Operation { get; set; } = "";

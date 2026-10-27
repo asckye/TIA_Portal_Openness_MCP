@@ -92,36 +92,10 @@ public static object? TryFindHmiTagTable(object hmiSoftware, string tagTableName
         }
 
 public static IEnumerable<object> EnumerateHmiTagTablesRecursive(object folder, int depth = 0)
-        {
-            if (depth > 32) yield break;
-            if (TryGetPropertyValue(folder, "TagTables") is IEnumerable tables)
-                foreach (var table in tables) if (table != null) yield return table;
-            if (TryGetPropertyValue(folder, "Folders") is IEnumerable folders)
-                foreach (var child in folders)
-                    if (child != null) foreach (var table in EnumerateHmiTagTablesRecursive(child, depth + 1)) yield return table;
-        }
+        => HmiExchangePolicy.TagTables(folder, depth).Select(table => table.Value);
 
 public static object? FindExistingByName(object compositionOrEnumerable, string name)
-        {
-            try
-            {
-                if (compositionOrEnumerable is IEnumerable en)
-                {
-                    foreach (var it in en)
-                    {
-                        var n = TryGetName(it);
-                        if (!string.IsNullOrWhiteSpace(n) &&
-                            string.Equals(n!.Trim(), name, StringComparison.OrdinalIgnoreCase))
-                        {
-                            return it;
-                        }
-                    }
-                }
-            }
-            catch /* swallow(enumerate-optional): Unavailable collection enumeration preserves the missing-item fallback. */ { }
-
-            return null;
-        }
+        => HmiExchangePolicy.Find(compositionOrEnumerable, name);
 
 internal static bool TryImportEngineeringObjectIntoCollection(object collection, string importPath, out string? importedName, out string? error, Action? beforeImport = null, bool overwrite = false)
         {
@@ -238,60 +212,7 @@ internal static object? TryFindByNameInCollection(object root, string[] property
         }
 
 internal static List<string> TryListNamesFromCollection(object root, string[] propertyHints, string finalCollectionNameHint)
-        {
-            var result = new List<string>();
-            try
-            {
-                object? collection = null;
-                var rootType = root.GetType();
-
-                if (propertyHints.Length == 0 && root is System.Collections.IEnumerable)
-                {
-                    collection = root;
-                }
-
-                // try direct property matches
-                foreach (var propName in propertyHints)
-                {
-                    var prop = rootType.GetProperty(propName);
-                    if (prop == null) continue;
-
-                    var v = prop.GetValue(root);
-                    if (v == null) continue;
-
-                    // tag tables can be under a folder object
-                    if (propName.EndsWith("Folder", StringComparison.OrdinalIgnoreCase))
-                    {
-                        collection = v.GetType().GetProperty(finalCollectionNameHint)?.GetValue(v);
-                    }
-                    else
-                    {
-                        collection = v;
-                    }
-
-                    if (collection != null) break;
-                }
-
-                if (collection is System.Collections.IEnumerable enumerable)
-                {
-                    foreach (var item in enumerable)
-                    {
-                        if (item == null) continue;
-                        var name = item.GetType().GetProperty("Name")?.GetValue(item)?.ToString();
-                        if (!string.IsNullOrWhiteSpace(name))
-                        {
-                            result.Add(name!);
-                        }
-                    }
-                }
-            }
-            catch /* swallow(enumerate-optional): unavailable library collections leave the collected name hints intact */
-            {
-                // best-effort only
-            }
-
-            return result;
-        }
+        => HmiExchangePolicy.Names(root, propertyHints, finalCollectionNameHint);
 
 internal static string MakeSafeFileName(string name)
         {

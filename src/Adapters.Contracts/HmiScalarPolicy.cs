@@ -24,9 +24,7 @@ namespace TiaMcp.Adapters.Contracts
             if (type.IsEnum)
             {
                 Require(value, "string", true);
-                var parsed = Enum.Parse(type, value.Text, false);
-                if (!Enum.IsDefined(type, parsed)) throw new ArgumentException("Undefined enum value.");
-                return parsed;
+                return ParseEnum(type, value.Text);
             }
             if (type == typeof(string) || type == typeof(char) || type == typeof(Version) || type == typeof(Guid)
                 || type == typeof(TimeSpan) || type == typeof(DateTime))
@@ -47,6 +45,31 @@ namespace TiaMcp.Adapters.Contracts
             if (type == typeof(double)) return double.Parse(value.Text, NumberStyles.Float, CultureInfo.InvariantCulture);
             if (type == typeof(float)) return float.Parse(value.Text, NumberStyles.Float, CultureInfo.InvariantCulture);
             return Convert.ChangeType(value.Text, type, CultureInfo.InvariantCulture);
+        }
+        public static object ParseEnum(Type type, string text)
+        {
+            bool flags = type.IsDefined(typeof(FlagsAttribute), false);
+            var names = text.Split(',');
+            if (!flags && names.Length != 1) throw new ArgumentException("Combined names require a [Flags] enum.");
+            foreach (var name in names)
+                if (Array.IndexOf(Enum.GetNames(type), name.Trim()) < 0)
+                    throw new ArgumentException("Undefined enum name: " + name + ". Numeric enum strings are refused.");
+            var parsed = Enum.Parse(type, text, false);
+            if (flags)
+            {
+                ulong mask = 0;
+                foreach (var defined in Enum.GetValues(type)) mask |= EnumBits(defined, type);
+                if ((EnumBits(parsed, type) & ~mask) != 0) throw new ArgumentException("Undefined enum bits.");
+            }
+            else if (!Enum.IsDefined(type, parsed)) throw new ArgumentException("Undefined enum value.");
+            return parsed;
+        }
+        private static ulong EnumBits(object value, Type type)
+        {
+            var underlying = Enum.GetUnderlyingType(type);
+            return underlying == typeof(sbyte) || underlying == typeof(short) || underlying == typeof(int) || underlying == typeof(long)
+                ? unchecked((ulong)Convert.ToInt64(value, CultureInfo.InvariantCulture))
+                : Convert.ToUInt64(value, CultureInfo.InvariantCulture);
         }
         private static void Require(HardwareScalar value, string kind, bool getter = false)
         {
