@@ -4,7 +4,7 @@
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "2d05309c5686d35cdeb78b653ce6dd33d2212b9cc6cdcfc0f4eea3e541171447",
-  "workerSha256": "899d595886bd2b2a7f0a80ebba937b1b6025e9a15c84d62182e7c6b457dc8664",
+  "workerSha256": "ed9d2e30afa479077c6caf6d67ac42f3377e26c1c497b9e1f62a6abb40743fb8",
   "toolCount": 516,
   "note": "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -6086,7 +6086,7 @@
         "hmiSoftwarePath",
         "tagTableName"
       ],
-      "description": "[L2][HMI-Unified][WRITE] Create or verify a Unified HMI tag table exists. Requires: ConnectPortal + OpenProject + Unified HMI. Idempotent. Create tag tables before adding tags with EnsureUnifiedHmiTag. Use the exact tag table name returned by the project. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiTagTable\"), optionally operation or language.",
+      "description": "[L2][HMI-Unified][WRITE] Create or verify a Unified HMI tag table exists. Requires: ConnectPortal + OpenProject + Unified HMI. Idempotent. Create tag tables before adding tags with EnsureUnifiedHmiTag. Use the exact tag table name or absolute /Group/Sub/Table path. Existing nested groups are resolved; missing groups are refused without root fallback. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiTagTable\"), optionally operation or language.",
       "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"tagTableName\":\"Default tag table\"}"
     },
     {
@@ -6391,7 +6391,7 @@
         "maxObjects",
         "walkTrace"
       ],
-      "description": "[L2][VersionControl][WRITE] Put a WHOLE project under version control automatically - no TIA UI clicks. Walks the project tree; V20+ queries Workspace.GetSupportedFileFormats, while V16-V19 maps PLC blocks/types/tag tables. Maps supported objects using ExportObject at the workspace root on V20+; V16-V19 uses WorkspaceMapping.Create. Connecting existing files with ConnectObject is not exposed. COARSE-FIRST: when a device or PLC software object is mappable as one unit it is mapped whole and its children are not visited, so you get the fewest mappings that still cover everything. Objects VCI does not support (typically hardware configuration) are reported, never silently dropped. Devices of Project.UngroupedDevicesGroup are walked under the fixed workspace folder 'UngroupedDevices' (the group's own name is localized); a root-level device or device group that already uses that folder name is refused before anything is mapped, and an ungrouped device that VCI refuses is reported as a failure. DEFAULTS TO dryRun=true: the default call only reports what it WOULD map. After a real run call SynchronizeVersionControlWorkspace(ProjectToWorkspace, dryRun=false), then git commit. Current native policy; V4 native acceptance is pending. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ConnectProjectToWorkspace\"), optionally operation or language.",
+      "description": "[L2][VersionControl][WRITE] Put a WHOLE project under version control automatically - no TIA UI clicks. Walks the project tree; V20+ queries Workspace.GetSupportedFileFormats, while V16-V19 maps PLC blocks/types/tag tables. Maps supported objects using Workspace.ExportObject at the workspace root on V20+; V16-V19 uses WorkspaceMapping.Create. Connecting existing files with ConnectObject is not exposed. COARSE-FIRST: when a device or PLC software object is mappable as one unit it is mapped whole and its children are not visited, so you get the fewest mappings that still cover everything. Objects VCI does not support (typically hardware configuration) are reported, never silently dropped. Devices of Project.UngroupedDevicesGroup are walked under the fixed workspace folder 'UngroupedDevices' (the group's own name is localized); a root-level device or device group that already uses that folder name is refused before anything is mapped, and an ungrouped device that VCI refuses is reported as a failure. DEFAULTS TO dryRun=true: the default call only reports what it WOULD map. After a real run call SynchronizeVersionControlWorkspace(ProjectToWorkspace, dryRun=false), then git commit. Current native policy; V4 native acceptance is pending. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ConnectProjectToWorkspace\"), optionally operation or language.",
       "example": "{\"dryRun\":true}"
     },
     {

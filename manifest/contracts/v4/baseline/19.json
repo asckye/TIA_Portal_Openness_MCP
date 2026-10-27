@@ -10177,7 +10177,7 @@
             "type": "object"
           },
           "screenName": {
-            "description": "screenName: target screen name",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           }
         },
@@ -11888,7 +11888,7 @@
             "type": "string"
           },
           "screenName": {
-            "description": "screenName: target screen name",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           },
           "strict": {
@@ -13192,7 +13192,7 @@
             "type": "string"
           },
           "screenName": {
-            "description": "screenName: target screen name",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           },
           "theme": {
@@ -19903,7 +19903,7 @@
             "type": "string"
           },
           "screenName": {
-            "description": "screenName: target screen name",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           },
           "tagName": {
@@ -77634,7 +77634,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "a7321adafd7beb756df36623303ba7a2261132fd9de3b14ecc8a5c693cdbac97",
+      "descriptionSha256": "e961f3c1029ae24102702ab44fb30d5e61e20ea9ad9c2783c512e485a8f63af2",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -122240,7 +122240,7 @@
             "type": "integer"
           },
           "screenName": {
-            "description": "screenName: target screen name",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           }
         },
@@ -134064,7 +134064,7 @@
             "type": "string"
           },
           "screenName": {
-            "description": "screenName: target screen name",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           },
           "syntaxCheck": {
@@ -135383,7 +135383,7 @@
             "type": "string"
           },
           "screenName": {
-            "description": "screenName: target screen name",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           }
         },
@@ -137999,7 +137999,7 @@
             "type": "string"
           },
           "screenName": {
-            "description": "screenName: target screen name",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           }
         },
@@ -139304,7 +139304,7 @@
             "type": "string"
           },
           "screenName": {
-            "description": "screenName: target screen name",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           },
           "width": {
@@ -140626,7 +140626,7 @@
             "type": "integer"
           },
           "screenName": {
-            "description": "screenName: target screen name",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           },
           "text": {
@@ -141974,7 +141974,7 @@
             "type": "string"
           },
           "tagTableName": {
-            "description": "tagTableName: target HMI tag table name",
+            "description": "tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with URI-escaped segments. Parent folders must already exist; relative or backslash paths and missing folders are refused.",
             "type": "string"
           }
         },
@@ -143264,7 +143264,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "dd9f0c557aba317f2e15ffda3a2a79bde53e920c7be489e7a1e8403e3f3e7f08",
+      "descriptionSha256": "fa9c6c67b3aedc22509c8cbe4c357e1585b30332c40984be263a95fe0fa85ab9",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -143273,7 +143273,7 @@
             "type": "string"
           },
           "tagTableName": {
-            "description": "tagTableName: target HMI tag table name",
+            "description": "tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with URI-escaped segments. Parent folders must already exist; relative or backslash paths and missing folders are refused.",
             "type": "string"
           }
         },
@@ -312757,7 +312757,7 @@
         "additionalProperties": false,
         "properties": {
           "folderPath": {
-            "description": "folderPath: optional screen group path inside HMI (use empty for root)",
+            "description": "folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
             "examples": [
               ""
             ],
@@ -314078,12 +314078,12 @@
             "type": "string"
           },
           "folderPath": {
-            "description": "folderPath: optional screen group path inside HMI (use empty for root)",
+            "description": "folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
             "type": "string"
           },
           "overwrite": {
             "default": false,
-            "description": "overwrite: default false (ImportOptions.None); true explicitly selects Override",
+            "description": "overwrite: default false (native import option None); true explicitly selects Override",
             "type": "boolean"
           },
           "regexName": {
@@ -315387,7 +315387,7 @@
         "additionalProperties": false,
         "properties": {
           "folderPath": {
-            "description": "folderPath: optional tag table group path inside HMI (use empty for root)",
+            "description": "folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
             "examples": [
               ""
             ],
@@ -316708,12 +316708,12 @@
             "type": "string"
           },
           "folderPath": {
-            "description": "folderPath: optional tag table group path inside HMI (use empty for root)",
+            "description": "folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
             "type": "string"
           },
           "overwrite": {
             "default": false,
-            "description": "overwrite: default false (ImportOptions.None); true explicitly selects Override",
+            "description": "overwrite: default false (native import option None); true explicitly selects Override",
             "type": "boolean"
           },
           "regexName": {
@@ -599279,7 +599279,7 @@
             "type": "string"
           },
           "screenName": {
-            "description": "screenName: target screen name",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           },
           "scriptCode": {
@@ -600600,12 +600600,12 @@
           },
           "screenName": {
             "default": "Main",
-            "description": "screenName: target screen name (default 'Main')",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused. (default 'Main')",
             "type": "string"
           },
           "tagTableName": {
             "default": "默认变量表",
-            "description": "tagTableName: target HMI tag table name (default '默认变量表')",
+            "description": "tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with URI-escaped segments. Parent folders must already exist; relative or backslash paths and missing folders are refused. (default '默认变量表')",
             "type": "string"
           }
         },

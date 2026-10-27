@@ -188278,7 +188278,7 @@
         "additionalProperties": false,
         "properties": {
           "folderPath": {
-            "description": "folderPath: optional screen group path inside HMI (use empty for root)",
+            "description": "folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
             "examples": [
               ""
             ],
@@ -189599,12 +189599,12 @@
             "type": "string"
           },
           "folderPath": {
-            "description": "folderPath: optional screen group path inside HMI (use empty for root)",
+            "description": "folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
             "type": "string"
           },
           "overwrite": {
             "default": false,
-            "description": "overwrite: default false (ImportOptions.None); true explicitly selects Override",
+            "description": "overwrite: default false (native import option None); true explicitly selects Override",
             "type": "boolean"
           },
           "regexName": {
@@ -190908,7 +190908,7 @@
         "additionalProperties": false,
         "properties": {
           "folderPath": {
-            "description": "folderPath: optional tag table group path inside HMI (use empty for root)",
+            "description": "folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
             "examples": [
               ""
             ],
@@ -192229,12 +192229,12 @@
             "type": "string"
           },
           "folderPath": {
-            "description": "folderPath: optional tag table group path inside HMI (use empty for root)",
+            "description": "folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
             "type": "string"
           },
           "overwrite": {
             "default": false,
-            "description": "overwrite: default false (ImportOptions.None); true explicitly selects Override",
+            "description": "overwrite: default false (native import option None); true explicitly selects Override",
             "type": "boolean"
           },
           "regexName": {
