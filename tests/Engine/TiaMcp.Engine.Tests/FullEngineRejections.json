@@ -18061,7 +18061,7 @@
           "tagTableName": {
             "type": "string",
             "default": "TiaMcp.Adapters.Contracts.UnifiedHmiDefaults.DefaultTagTableName",
-            "description": "tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with URI-escaped segments. Parent folders must already exist; relative or backslash paths and missing folders are refused. (default '默认变量表')",
+            "description": "tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with URI-escaped segments. Parent folders must already exist; relative or backslash paths and missing folders are refused. (default: the HMI software's default tag table)",
             "value": "默认变量表"
           },
           "plcName": {
@@ -37927,7 +37927,7 @@
           "tagTableName": {
             "type": "string",
             "default": "TiaMcp.Adapters.Contracts.UnifiedHmiDefaults.DefaultTagTableName",
-            "description": "tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with URI-escaped segments. Parent folders must already exist; relative or backslash paths and missing folders are refused. (default '默认变量表')",
+            "description": "tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with URI-escaped segments. Parent folders must already exist; relative or backslash paths and missing folders are refused. (default: the HMI software's default tag table)",
             "value": "默认变量表"
           },
           "plcName": {

@@ -4,7 +4,7 @@
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "2d05309c5686d35cdeb78b653ce6dd33d2212b9cc6cdcfc0f4eea3e541171447",
-  "workerSha256": "ed9d2e30afa479077c6caf6d67ac42f3377e26c1c497b9e1f62a6abb40743fb8",
+  "workerSha256": "ab4ae3917482a589a18dfd92a2447b6f0f8f59d5c0a91f452c3ae9ff6cd683d6",
   "toolCount": 516,
   "note": "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
