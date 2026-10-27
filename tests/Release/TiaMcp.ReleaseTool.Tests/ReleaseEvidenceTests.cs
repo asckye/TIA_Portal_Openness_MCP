@@ -499,6 +499,70 @@ public sealed class ReleaseEvidenceTests
         };
     }
 
+    [Fact]
+    public void CiCoveredEvidenceCannotBeAdoptedOfflineAndKeepsEveryNamedJobInTheAdoptionRecord()
+    {
+        using var fixture = new EvidenceFixture();
+        fixture.InstallCiCoverage();
+        Assert.Contains("online named-job verification", Assert.Throws<ReleaseException>(() => fixture.Verify()).Message);
+        var adoption = fixture.VerifyCoverage(coverage => CiCoverageTests.VerifyRemote(coverage));
+        Assert.Single(adoption["record"]!["ci"]!.AsArray());
+        Assert.Equal(19, adoption["record"]!["ciCoveredJobs"]!.AsArray().Count);
+        Assert.All(adoption["record"]!["ciCoveredJobs"]!.AsArray(), row =>
+        {
+            Assert.Equal(301L, (long)row!["ci"]!["jobId"]!);
+            Assert.Equal(101L, (long)row["ci"]!["receipt"]!["runId"]!);
+            Assert.Equal(2, (int)row["ci"]!["receipt"]!["runAttempt"]!);
+        });
+        fixture.Edit(evidence => evidence["jobs"]!.AsArray().Single(job => (string?)job!["name"] == "release-tool-shard-0")!["status"] = "passed");
+        Assert.Contains("mapping differs", Assert.Throws<ReleaseException>(() => fixture.VerifyCoverage(coverage => CiCoverageTests.VerifyRemote(coverage))).Message);
+    }
+
+    [Theory]
+    [InlineData("missing")]
+    [InlineData("failed")]
+    [InlineData("cancelled")]
+    [InlineData("commit")]
+    [InlineData("attempt")]
+    [InlineData("latest-attempt")]
+    [InlineData("log-missing")]
+    public void EvidenceAdoptionRefusesUnverifiedCiCoverage(string change)
+    {
+        using var fixture = new EvidenceFixture();
+        fixture.InstallCiCoverage();
+        Assert.Contains("Adoption refused", Assert.Throws<ReleaseException>(() => fixture.VerifyCoverage(coverage => CiCoverageTests.VerifyRemote(coverage, change))).Message);
+    }
+
+    [Fact]
+    public void CiReceiptReadsEveryRealTrxAndRefusesSummaryOrGateTampering()
+    {
+        using var fixture = new EvidenceFixture();
+        fixture.InstallCiCoverage();
+        var gates = ReleaseEvidence.SuiteRegistry(fixture.Root);
+        foreach (var (suite, gate) in gates)
+            DotnetSuiteSelfTests.SyntheticTrx(Path.Combine(fixture.Output, "suites", suite + ".trx"), Enumerable.Repeat("Passed", gate.MinimumPassed).ToArray());
+        var environment = new Dictionary<string, string?> { ["GITHUB_ACTIONS"] = "true", ["GITHUB_SHA"] = fixture.GitText("rev-parse", "HEAD"),
+            ["GITHUB_JOB"] = "validate-bundle", ["GITHUB_REPOSITORY"] = "owner/repo", ["GITHUB_RUN_ID"] = "101", ["GITHUB_RUN_ATTEMPT"] = "2" };
+        Assert.Throws<ReleaseException>(() => CiCoverage.Receipt(fixture.Root, "release", Path.Combine(fixture.Output, "suites"), key => environment.GetValueOrDefault(key), () => false));
+        JsonObject Read() => CiCoverage.Receipt(fixture.Root, "release", Path.Combine(fixture.Output, "suites"), key => environment.GetValueOrDefault(key), () => true);
+        var receipt = Read();
+        Assert.Equal(gates.Keys.Order(), receipt["suites"]!.AsObject().Select(pair => pair.Key).Order());
+        var candidate = Path.Combine(fixture.Output, "ci-covered.json");
+        File.WriteAllText(candidate, CiCoverage.Assemble([(receipt, 301L)]).ToJsonString());
+        Assert.NotNull(CiCoverage.Load(fixture.Root, candidate, fixture.GitText("rev-parse", "HEAD")));
+        var summary = Path.Combine(fixture.Output, "suites", "release-tool.json");
+        var original = File.ReadAllText(summary);
+        var changed = JsonNode.Parse(original)!;
+        changed["passed"] = 1;
+        File.WriteAllText(summary, changed.ToJsonString());
+        Assert.Contains("differs from TRX", Assert.Throws<ReleaseException>(Read).Message);
+        File.WriteAllText(summary, original);
+        DotnetSuiteSelfTests.SyntheticTrx(Path.Combine(fixture.Output, "suites", "release-tool.trx"), ["Failed"]);
+        Assert.Contains("gate failed", Assert.Throws<ReleaseException>(Read).Message);
+        File.AppendAllText(Path.Combine(fixture.Root, "README.md"), "dirty input\n");
+        Assert.Contains("clean checkout", Assert.Throws<ReleaseException>(() => CiCoverage.Load(fixture.Root, candidate, fixture.GitText("rev-parse", "HEAD"))).Message);
+    }
+
     private static JsonObject Run(long id, string name, string sha, string trigger, string branch, string status, string? conclusion, int attempt = 1, int number = 1) => new()
     {
         ["id"] = id, ["name"] = name, ["head_sha"] = sha, ["event"] = trigger, ["head_branch"] = branch, ["status"] = status, ["conclusion"] = conclusion,
@@ -569,6 +633,39 @@ public sealed class ReleaseEvidenceTests
 
         internal JsonObject Verify(EvidenceExternal current) =>
             ReleaseEvidence.Verify(new ReleaseEvidence.Inputs(Root, "git", EvidencePath, current, DateTimeOffset.UtcNow.AddMinutes(1)));
+
+        internal JsonObject VerifyCoverage(Func<JsonObject, JsonArray> verify) =>
+            ReleaseEvidence.Verify(new ReleaseEvidence.Inputs(Root, "git", EvidencePath, Machine, DateTimeOffset.UtcNow.AddMinutes(1), verify));
+
+        internal void InstallCiCoverage()
+        {
+            var repo = TiaMcp.BuildCommon.Repository.FindRoot();
+            var profile = CiCoverage.Profiles["release"];
+            var source = JsonNode.Parse(File.ReadAllText(Path.Combine(repo, "tests/test-suites.json")))!.AsObject();
+            var catalog = new JsonObject();
+            foreach (var name in profile.Suites)
+            {
+                catalog[name] = source[name]!.DeepClone();
+                var project = Path.Combine(Root, (string)catalog[name]!["project"]!);
+                Directory.CreateDirectory(Path.GetDirectoryName(project)!); File.WriteAllText(project, "<Project />\n");
+            }
+            File.WriteAllText(Path.Combine(Root, "tests/test-suites.json"), catalog.ToJsonString());
+            var workflow = Path.Combine(Root, profile.File);
+            Directory.CreateDirectory(Path.GetDirectoryName(workflow)!); File.Copy(Path.Combine(repo, profile.File), workflow);
+            Git("add", "tests", ".github"); Git("commit", "-q", "-m", "CI fixture registry");
+            var environment = new Dictionary<string, string?> { ["TIA_MCP_CLEAN_CHECKOUT"] = Root, ["TIA_MCP_BUILD_CACHE_DISABLED"] = "1" };
+            var options = Options.Parse(["-Clean", "-NoBuildCache"], new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Clean", "NoBuildCache" });
+            var begin = ReleaseEvidence.Begin(Root, "git", options, Machine, name => environment.GetValueOrDefault(name), DateTimeOffset.UtcNow.AddSeconds(1));
+            var candidate = CiCoverage.Validate(Root, CiCoverageTests.Candidate(Root, "release", GitText("rev-parse", "HEAD")), GitText("rev-parse", "HEAD"));
+            begin["ciCovered"] = candidate.DeepClone();
+            CiCoverage.WriteSummaries(Output, candidate);
+            var names = ReleaseEvidence.RequiredJobs(Root).Select(job => job.Exact ? job.Name : job.Name + "-plc")
+                .Concat(profile.Suites.Select(suite => suite + "-shard-0")).Concat(profile.Checks).Concat(["repository", "bundle"]).Distinct().ToArray();
+            foreach (var name in names) File.WriteAllText(Path.Combine(Output, "logs", name + ".log"), "PASS " + name + "\n");
+            var timings = names.Select(name => new CheckTiming(name, CiCoverage.Binding(name, candidate) == null ? "passed" : "covered by CI", 0, 1, null)
+                { CiCoverage = CiCoverage.Binding(name, candidate)?.DeepClone().AsObject() }).ToArray();
+            ReleaseEvidence.Write(begin, Output, names, timings, 0, 900, true, [], DateTimeOffset.UtcNow.AddSeconds(2));
+        }
 
         internal void Edit(Action<JsonObject> change)
         {

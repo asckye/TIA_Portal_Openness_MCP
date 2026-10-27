@@ -269,7 +269,9 @@ public sealed class BuildOutputCacheTests
                     "<ItemGroup><Compile Include=\"../linked.cs\" /></ItemGroup></Project>");
                 ProcessRunner.RequireSuccess(ProcessRunner.Run("dotnet", ["restore", Path.Combine(folder, "unit.csproj"), "--configfile", Path.Combine(root, "nuget.config"), "-p:NuGetAudit=false"], root), "Restore portable key fixture");
             }
-            foreach (var unit in units)
+            // Restored project/assets/source bytes are immutable here. Every
+            // evaluation uses its own preprocess file and runs no build target.
+            Parallel.ForEach(units, new ParallelOptions { MaxDegreeOfParallelism = 4 }, unit =>
             {
                 string Key(string root, string session)
                 {
@@ -279,7 +281,7 @@ public sealed class BuildOutputCacheTests
                         new Dictionary<string, string?> { ["UNRELATED_RELEASE_SESSION"] = session }).Key;
                 }
                 Assert.Equal(Key(roots[0], "first"), Key(roots[1], "second"));
-            }
+            });
             // The legacy csc unit shares the same input and argument normalization.
             string Configurator(string root) => BuildOutputCache.Key([new(ReleaseCommands.CacheInputPath(Path.Combine(root, "linked.cs"), root), ReleaseRecords.HashFile(Path.Combine(root, "linked.cs")))],
                 new[] { "/out:" + Path.Combine(root, "TiaOpenness.exe"), Path.Combine(root, "linked.cs") }.Select(arg => ReleaseCommands.NormalizeCacheText(arg, root)));

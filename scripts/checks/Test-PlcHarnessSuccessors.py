@@ -6,6 +6,7 @@ import io
 import json
 from pathlib import Path
 import unittest
+import urllib.request
 from unittest.mock import patch
 
 from offline_fixtures import fixture_directory
@@ -83,6 +84,15 @@ class PlcHarnessSuccessorTests(unittest.TestCase):
         self.assertNotIn('engine_worker', kwargs)
         self.assertNotEqual(kwargs.get('sdk_ready'), False)
 
+    def test_bridge_serves_loopback_rpc_and_joins_on_its_stop_signal(self):
+        with harness.bridge(self.args, self.rpc, {'Fixture': {}}) as url:
+            request = urllib.request.Request(url, json.dumps({'command': 'ToolMetadata', 'arguments': {}}).encode('utf-8'))
+            with urllib.request.urlopen(request) as response:
+                self.assertEqual(json.load(response), {'Fixture': {}})
+        # Leaving the scope joins the accept thread and closes its listener.
+        with self.assertRaises(OSError):
+            urllib.request.urlopen(request)
+
     def test_descriptor_uses_real_host_roster_and_worker(self):
         self.args.mode = 'descriptor-catalog-only'
         child, output = self.execute()
@@ -123,6 +133,30 @@ class PlcHarnessSuccessorTests(unittest.TestCase):
         first, second = (call.kwargs['env'] for call in runner.call_args_list)
         self.assertEqual((first['TEMP'], first['TMP']), ('system', 'system'))
         self.assertEqual((second['TEMP'], second['TMP'], second['X']), ('system', 'system', '1'))
+
+    def test_clean_snapshot_accepts_only_its_originating_worktree_evidence(self):
+        original = self.root / 'origin'
+        snapshot = original / 'bin-build/c/1234abcd'
+        marker = snapshot / 'bin-build/check-all-snapshot.owner.json'
+        marker.parent.mkdir(parents=True)
+        (original / 'AGENTS.md').write_text('fixture', encoding='utf-8')
+        marker.write_text(json.dumps({'original': str(original)}), encoding='utf-8')
+        environment = {'TIA_MCP_CLEAN_CHECKOUT': str(snapshot), 'TIA_MCP_CHECK_ORIGINAL_ROOT': str(original)}
+        with patch.object(harness, 'ROOT', snapshot), patch.dict(harness.os.environ, environment):
+            self.assertTrue(harness.owns_evidence(original / 'bin-build/results'))
+            self.assertTrue(harness.owns_evidence(snapshot / 'bin-build/results'))
+            self.assertFalse(harness.owns_evidence(self.root / 'another-worktree/results'))
+            self.assertFalse(harness.owns_evidence(original / 'bin-build/c/abcd1234/results'))
+            marker.write_text(json.dumps({'original': str(self.root / 'other')}), encoding='utf-8')
+            self.assertFalse(harness.owns_evidence(original / 'bin-build/results'))
+            marker.unlink()
+            self.assertFalse(harness.owns_evidence(original / 'bin-build/results'))
+
+    def test_snapshot_environment_does_not_authorize_foreign_executables(self):
+        self.args.host = harness.ROOT.parent / 'foreign/TiaMcp.FoundationHost.exe'
+        with self.assertRaisesRegex(AssertionError, 'must belong to this worktree'):
+            self.execute()
+        self.assertFalse(self.args.output.exists())
 
     def test_evidence_hashes_the_selected_worker_and_host(self):
         self.execute()

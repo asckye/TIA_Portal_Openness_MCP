@@ -161,6 +161,7 @@ internal static class ReleaseEvidence
             {
                 ["name"] = row.Name, ["status"] = row.Status, ["exitCode"] = row.ExitCode,
                 ["seconds"] = Math.Round(row.Seconds, 3), ["reused"] = row.ReusedRunId is not null,
+                ["ci"] = row.CiCoverage?.DeepClone(),
                 ["logSha256"] = File.Exists(log) ? ReleaseRecords.HashFile(log) : null
             });
         }
@@ -232,7 +233,8 @@ internal static class ReleaseEvidence
         return jobs;
     }
 
-    internal sealed record Inputs(string Root, string Git, string EvidencePath, EvidenceExternal Current, DateTimeOffset Now);
+    internal sealed record Inputs(string Root, string Git, string EvidencePath, EvidenceExternal Current, DateTimeOffset Now,
+        Func<JsonObject, JsonArray>? VerifyCiCoverage = null);
 
     // Every refusal reason is collected; the release reports them together.
     internal static JsonObject Verify(Inputs inputs)
@@ -245,6 +247,13 @@ internal static class ReleaseEvidence
         if (Text(evidence["schema"]) != Schema) throw new ReleaseException($"Adopted evidence schema is '{Text(evidence["schema"])}', not '{Schema}': {path}");
         var directory = Path.GetDirectoryName(path)!;
         var problems = new List<string>();
+        JsonObject? ciCovered = null;
+        JsonArray? verifiedCi = null;
+        if (evidence["ciCovered"] != null)
+        {
+            try { ciCovered = CiCoverage.Validate(inputs.Root, evidence["ciCovered"]!.AsObject(), Text(evidence["source"]?["commit"])); }
+            catch (Exception ex) when (ex is ReleaseException or InvalidOperationException) { problems.Add("invalid CI coverage: " + ex.Message); }
+        }
         if (evidence["beginError"] is not null) problems.Add("check-all could not record its start state: " + Text(evidence["beginError"]));
 
         // A failed, partial, cached or reused run.
@@ -268,13 +277,20 @@ internal static class ReleaseEvidence
         var byName = new Dictionary<string, JsonObject>(StringComparer.Ordinal);
         foreach (var job in jobs) if (!byName.TryAdd(Text(job["name"]), job)) problems.Add("duplicate job in evidence: " + Text(job["name"]));
         var planned = (evidence["planned"] as JsonArray ?? []).Select(Text).ToArray();
+        if (ciCovered != null)
+            foreach (var binding in ciCovered["jobs"]!.AsArray().OfType<JsonObject>())
+                foreach (var check in binding["receipt"]!["checks"]!.AsArray().Select(Text))
+                    if (!planned.Contains(check, StringComparer.Ordinal)) problems.Add("CI check missing from complete plan: " + check);
         if (planned.Length == 0) problems.Add("evidence lists no planned jobs (partial run)");
         foreach (var name in planned.Where(name => !byName.ContainsKey(name))) problems.Add("planned job has no result (partial run): " + name);
         foreach (var name in byName.Keys.Where(name => !planned.Contains(name, StringComparer.Ordinal) && name != "tracked-tree-drift")) problems.Add("unplanned job in evidence: " + name);
         foreach (var job in jobs)
         {
             var name = Text(job["name"]);
-            if (Text(job["status"]) != "passed" || Int(job["exitCode"]) != 0 || Bool(job["reused"])) { problems.Add($"job {name} is {Text(job["status"])} (exit {Int(job["exitCode"])})"); continue; }
+            var binding = CiCoverage.Binding(name, ciCovered);
+            var covered = Text(job["status"]) == "covered by CI";
+            if (covered != (binding != null) || !JsonNode.DeepEquals(job["ci"], binding)) problems.Add("CI/local job mapping differs: " + name);
+            if ((!covered && Text(job["status"]) != "passed") || Int(job["exitCode"]) != 0 || Bool(job["reused"])) { problems.Add($"job {name} is {Text(job["status"])} (exit {Int(job["exitCode"])})"); continue; }
             if (name == "tracked-tree-drift") continue;
             var log = Path.Combine(directory, "logs", name + ".log");
             if (Text(job["logSha256"]).Length != 64) problems.Add("job has no bound log: " + name);
@@ -291,6 +307,14 @@ internal static class ReleaseEvidence
         // Coverage: everything an adopted release skips must have passed in this run.
         var registry = SuiteRegistry(inputs.Root);
         var suites = evidence["suites"] as JsonObject ?? new JsonObject();
+        foreach (var (suite, binding) in CiCoverage.Suites(ciCovered))
+        {
+            if (!planned.Contains(suite + "-gate", StringComparer.Ordinal) || !planned.Any(name => name.StartsWith(suite + "-shard-", StringComparison.Ordinal)))
+                problems.Add("CI suite missing from complete plan: " + suite);
+            var summary = Path.Combine(directory, "suites", suite + ".json");
+            if (!File.Exists(summary) || !JsonNode.DeepEquals(JsonNode.Parse(File.ReadAllText(summary)), binding["receipt"]!["suites"]![suite]!["summary"]))
+                problems.Add("CI summary differs from receipt: " + suite);
+        }
         foreach (var (suite, gate) in registry)
         {
             if (suites[suite] is not JsonObject row) { problems.Add("registered suite missing from evidence: " + suite); continue; }
@@ -300,7 +324,7 @@ internal static class ReleaseEvidence
             var summary = Path.Combine(directory, "suites", suite + ".json");
             if (!File.Exists(summary) || ReleaseRecords.HashFile(summary) != Text(row["sha256"])) problems.Add("suite summary missing or changed after the run: " + suite);
         }
-        var passedJobs = jobs.Where(job => Text(job["status"]) == "passed").Select(job => Text(job["name"])).ToArray();
+        var passedJobs = jobs.Where(job => Text(job["status"]) is "passed" or "covered by CI").Select(job => Text(job["name"])).ToArray();
         foreach (var (name, exact) in RequiredJobs(inputs.Root))
             if (!passedJobs.Any(job => job == name || !exact && job.StartsWith(name + "-", StringComparison.Ordinal))) problems.Add("required check-all job missing: " + name);
 
@@ -343,6 +367,15 @@ internal static class ReleaseEvidence
         if (external["companionPython"] is not null && inputs.Current.CompanionPython is not null && Text(external["companionPython"]) != inputs.Current.CompanionPython)
             problems.Add($"companion Python differs: evidence '{Text(external["companionPython"])}', now '{inputs.Current.CompanionPython}'");
 
+        if (ciCovered != null && problems.Count == 0)
+        {
+            if (inputs.VerifyCiCoverage == null) problems.Add("CI-covered evidence requires online named-job verification (-Ci); offline candidate receipts are not release proof");
+            else
+            {
+                try { verifiedCi = inputs.VerifyCiCoverage(ciCovered); }
+                catch (ReleaseException ex) { problems.Add(ex.Message); }
+            }
+        }
         if (problems.Count != 0)
             throw new ReleaseException($"Adoption refused; {problems.Count} problem(s) with {path}:{Environment.NewLine}  " + string.Join(Environment.NewLine + "  ", problems));
 
@@ -369,7 +402,10 @@ internal static class ReleaseEvidence
                     ["wallSeconds"] = (double?)result["wallSeconds"] ?? 0, ["jobs"] = jobs.Length, ["mode"] = Bool(mode["clean"]) ? "clean" : "cold",
                     ["dotnetSdk"] = Text(external["dotnetSdk"]), ["python"] = Text(external["python"])
                 },
-                ["ci"] = null,
+                ["ci"] = verifiedCi,
+                ["ciCovered"] = ciCovered?.DeepClone(),
+                ["ciCoveredJobs"] = new JsonArray(jobs.Where(job => Text(job["status"]) == "covered by CI").Select(job => (JsonNode?)new JsonObject
+                    { ["name"] = Text(job["name"]), ["ci"] = job["ci"]!.DeepClone() }).ToArray()),
                 ["suites"] = counts,
                 ["adoptedChecks"] = Strings(AdoptedChecks),
                 ["localChecks"] = new JsonArray()
@@ -412,7 +448,7 @@ internal static class ReleaseEvidence
     }
 
     // GitHub Actions of the commit: the latest push run on master of each workflow completed successfully, every job included.
-    internal static JsonArray VerifyCi(Func<string, string> get, string repository, string sha, IReadOnlyList<string> workflows)
+    internal static JsonArray VerifyCi(Func<string, string> get, string repository, string sha, IReadOnlyList<string> workflows, JsonObject? ciCovered = null)
     {
         var problems = new List<string>();
         var runs = Pages(get, $"repos/{repository.Trim('/')}/actions/runs?head_sha={Uri.EscapeDataString(sha)}&per_page=100", "workflow_runs");
@@ -432,6 +468,7 @@ internal static class ReleaseEvidence
             if (jobs.Count == 0) problems.Add($"{workflow} run {id} lists no jobs");
             foreach (var job in jobs.Where(job => Text(job["status"]) != "completed" || Text(job["conclusion"]) != "success"))
                 problems.Add($"{workflow} job {Text(job["name"])} is {Text(job["status"])}/{Text(job["conclusion"])}");
+            if (ciCovered != null) CiCoverage.VerifyJobs(ciCovered, repository, workflow, latest, jobs, get);
             records.Add(new JsonObject
             {
                 ["workflow"] = workflow, ["runId"] = (long?)latest["id"] ?? 0, ["runNumber"] = Int(latest["run_number"]), ["runAttempt"] = attempt,

@@ -221,7 +221,7 @@ dotnet run --project build-tools/release -- release -Version 4.0.0-beta.2 -Summa
   `-AdoptEvidence` 不能与 `-EarlyGatesOnly`、`-Resume` 同用，`-BumpOnly` 不能与 `-DryRun`、`-EarlyGatesOnly`、`-AdoptEvidence` 同用。
 - CI：正式发布用现有令牌读取 `repos/<repo>/actions/runs?head_sha=<提交>`，要求 `validate-bundle` 与 `offline-checks` 在 master 上由 push
   触发的最新一次运行（最高 run number 与 attempt）已完成且结论为 success，并逐页读取该次 attempt 的全部 job，每个都必须 completed/success。
-  `-DryRun` 不访问 GitHub，记录写明 CI 未核对；`check-release-evidence -Ci` 可在演练前只读核对。
+    未分工的 `-DryRun` 不访问 GitHub，记录写明 CI 未核对；`check-release-evidence -Ci` 可在发布前只读核对。
 - 采纳的阶段：早期门禁的 source-contracts、write-guard、crash-evidence 套件；build-release 公共阶段的注册套件（计数取自证据，同样要求
   通过数大于零且无失败、无跳过）；多版本准备与完成改为不带 `-Test`（记录因此为 `test: false`，PLC 证明只要求审批收据），即 Studio 配置/客户端/GUI
   测试、七个多版本套件、Foundation 与 PLC 传输、PLC harness 模式（含 P8-04l 移入的 V21 路由选择与 PLC 名称夹具）、资源、生态、用法、campaign、
@@ -239,6 +239,39 @@ dotnet run --project build-tools/release -- release -Version 4.0.0-beta.2 -Summa
   `adopted-release-evidence.json` 与 `adopted-validation.json`。
 - 发布提交只能包含 build 改写的记录（`manifest/` 与 `docs/reference/tool-matrix.md`、`docs/reference/version-tool-catalog.md`），
   且 HEAD 仍是证据的提交；否则在暂存前拒绝（演练同样检查）。
+
+## CI 分工候选与在线采纳
+
+`check-all -CiCovered <文件>` 可把[验证映射表](validation.md)中的 foundation/release profile 交给同提交的 Windows CI。
+默认不分工，仍运行全部本机检查；分工模式要求本机 checkout 干净且与收据提交相同，防止借用 CI 覆盖未提交的测试输入。
+两个 CI job 在覆盖范围内的全部命令成功后调用 `ci-coverage`，读取完整注册套件的 TRX、核对摘要与门禁，
+foundation 另核对四个 runner 的完整分片并集报告；收据包含提交、仓库、run/attempt、job 名、workflow 哈希、注册定义和通过/失败/跳过数。
+收据同时保存为 artifact 中的 `ci-receipt.json` 并以 `TIA_MCP_CI_COVERAGE=` 开头的编码行写入 job 日志。
+发布收据只来自干净、未改写的 CI checkout；Linux、SDK 套件和未列入 profile 的检查不参与替换。
+release 收据在 `build-configurator -Test` 之前生成，因为后者按原流程写入跟踪的配置器构建记录；该命令和全部断言仍执行，
+采纳仍要求包含它的整个 job 最终成功，不能凭提前生成的收据接受后续失败的 job。
+
+从当前 prep 提交的最新成功 push run 下载两份收据，保存在本 worktree 的 `bin-build` 下；从对应 attempt 的 jobs 列表取数字 job ID。
+可只提供一个 profile；没有提供的部分仍本机执行。示例 ID 必须换成实际值：
+
+```powershell
+dotnet run --project build-tools/release -- ci-coverage -Receipt bin-build/ci-foundation/ci-receipt.json -JobId 123456 -Receipt bin-build/ci-release/ci-receipt.json -JobId 123457 -Output bin-build/ci-covered.json
+dotnet run --project build-tools/release -- check-all -Clean -NoBuildCache -CiCovered bin-build/ci-covered.json -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <python.exe> -OutputDirectory bin-build/check-all/beta2-ci
+dotnet run --project build-tools/release -- check-release-evidence -Evidence bin-build/check-all/beta2-ci/release-evidence.json -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -Ci
+dotnet run --project build-tools/release -- release -Version 4.0.0-beta.2 -Summary "..." -AdoptEvidence bin-build/check-all/beta2-ci/release-evidence.json -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -Python <python.exe>
+```
+
+候选文件不是可信发布证明。check-all 保留全部原计划作业名与依赖，CI 承担的每个 shard/gate/静态检查写为 `covered by CI`，
+绑定具体 run、attempt、job；其他检查照常执行，deadline、最低通过数、最大跳过数、压测参数和三十分钟门槛均不变。
+`-CiCovered` 不与 `-BuildOnly`、`-ProveEquivalence`、本机 sequential baseline 同用。`-Clean` 转发候选的绝对路径。
+生成、完整构建、analyzer、输出清单对等性、SDK/Windows 本机状态检查继续由本机证明；不减少全集覆盖。
+
+`check-release-evidence -Ci` 与正式发布采纳重新查询 GitHub：仍要求两个 workflow 的最新 push/master run 及其全部 job 成功，
+另要求每条分工收据的 run/attempt 与该最新运行相同，数字 job ID、job 名、head SHA、run ID、attempt 精确一致且 completed/success，
+并在该 job 的日志中找到完全相同的门禁收据。缺少/取消/失败/运行中、其他提交、旧 attempt、日志缺失或计数不同均拒绝，不能自动退回旧成功运行。
+日志已过保留期时须重新运行 CI 并重新取得同 attempt 的收据。`release-evidence.json` 与最终 `adoptedValidation` 都保留每个分工作业和具体 CI 证明者。
+含分工的证据不能离线采纳；`check-release-evidence` 必须带 `-Ci`，`release -DryRun -AdoptEvidence` 会拒绝它。
+需要保持不访问 GitHub 的完整发布演练时，使用不带 `-CiCovered` 的 check-all 证据。
 
 ## 预发布（beta / rc）
 

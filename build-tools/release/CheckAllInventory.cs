@@ -121,16 +121,26 @@ internal static partial class ReleaseCommands
     internal static bool CheckAllSourceOnly(string name) => name is
         "catalog-drift" or "tool-counts-drift" or "usage-drift" or "migration-drift" or
         "tools-list" or "script-calls" or "dead-references" or "adapter-boundary" or "tia-features" or
-        "bundle" or "release-documentation" or "python-repository" or "python-script-self-tests" or
+        "release-documentation" or "python-script-self-tests" or
         "python-script-calls" or "domain-source" or "contract-self-tests" or "contract-verify" or "response-verify";
 
-    internal static List<CheckJob> CheckAllRuntimeDependencies(IEnumerable<CheckJob> jobs) => jobs.Select(job =>
+    internal static bool CheckAllEarly(string name) => CheckAllSourceOnly(name) || name is "bundle" or "python-repository";
+
+    internal static CheckJob CheckAllEarlyDependencies(CheckJob job) => job with
+    {
+        Dependencies = job.Name is "bundle" or "python-repository" ? [.. job.Dependencies, "analyzer-warnings"]
+            : job.Name == "migration-drift" ? ["generate-release-migration"] : job.Dependencies
+    };
+
+    internal static List<CheckJob> CheckAllRuntimeDependencies(IEnumerable<CheckJob> jobs, bool independentParity = false) => jobs.Select(job =>
         job.Name == "suite-output-parity" ? job : job with
         {
             // Parity temporarily writes ordinary outputs and restores them in
             // finally. Preserve the old behavior of running checks even when
             // parity fails, once those writes have finished.
-            Dependencies = job.Dependencies.Length == 0 ? ["suite-output-parity"] : job.Dependencies,
+            Dependencies = job.Name is "bundle" or "python-repository" or "repository"
+                ? [.. job.Dependencies, independentParity ? "build-once" : "suite-output-parity", "analyzer-warnings"]
+                : job.Dependencies.Length == 0 ? [independentParity ? "build-once" : "suite-output-parity"] : job.Dependencies,
             AllowFailedDependencies = job.Dependencies.Length == 0 || job.AllowFailedDependencies
         }).ToList();
 

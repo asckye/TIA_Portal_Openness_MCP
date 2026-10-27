@@ -94,7 +94,7 @@ internal static class CommandLine
 {
     internal static readonly string[] Commands =
     [
-        "release", "build-release", "build-multi-version", "compare-release-records", "run-release-build", "branch-gate", "check-all", "check-release-evidence", "build-tool", "cache-info", "cache-clear", "preflight", "prerequisites", "publish",
+        "release", "build-release", "build-multi-version", "compare-release-records", "run-release-build", "branch-gate", "check-all", "check-release-evidence", "ci-coverage", "build-tool", "cache-info", "cache-clear", "preflight", "prerequisites", "publish",
         "build-studio", "build-configurator", "build-plc-workers", "build-plc-worker-fixtures", "check-plc-workers", "build-solutions", "build-file-programs", "publish-vci-watch", "prepare-delivery", "get-bundled-dotnet", "validate-bundle", "test-suites", "host-parity",
         "check-analyzer-warnings", "check-ratchet", "check-envelope-rewrite", "check-adapter-boundary", "check-bundle-layout", "check-repository", "check-dead-tool-references", "check-tia-features", "check-script-tool-calls",
         "generate-tool-counts", "generate-catalogs", "generate-tool-usage", "generate-release-migration", "audit-version-tools", "audit-tool-usage", "check-tools-list", "generate-prerelease-notes", "package-test"
@@ -210,6 +210,7 @@ internal static class ProcessRunner
         catch (Exception ex) { throw new ReleaseException($"Could not start {executable}: {ex.Message}"); }
         CheckLoad.Current?.Register(process.Id);
         using var affinityJob = affinity is { } mask ? CheckAffinity.Assign(process, mask, jobName) : null;
+        using var resourceObservation = CheckResourceMeter.Observe(affinityJob);
         using var ownedChildren = waitForDescendants ? CheckAffinity.CompleteOnDispose(
             affinityJob ?? throw new ReleaseException("Descendant cleanup requires an owned affinity job"), CheckAffinity.OwnershipRoot) : null;
         StreamWriter? logWriter = null;

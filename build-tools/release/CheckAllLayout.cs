@@ -87,7 +87,25 @@ internal static class CheckAllLayout
         }
     }
 
-    internal static CommandResult Verify(string root, IEnumerable<CheckBuild> builds, string dotnet, string nuget, string api, string directory, string manifest, int parallelism = 1)
+    internal static string CopyBaselineSources(string root, IEnumerable<string> inventory)
+    {
+        // A real ordinary-layout build, with identical source bytes, but no
+        // writers in the runtime directories that concurrent suites discover.
+        var baseline = Path.Combine(root, "bin-build/p", Guid.NewGuid().ToString("N")[..8]);
+        foreach (var relative in inventory)
+        {
+            var source = Path.GetFullPath(Path.Combine(root, relative));
+            var target = Path.GetFullPath(Path.Combine(baseline, relative));
+            ReleaseCommands.RequireCheckAllOwnedPath(root, source);
+            ReleaseCommands.RequireCheckAllOwnedPath(baseline, target);
+            if (!File.Exists(source)) continue;
+            Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+            File.Copy(source, target);
+        }
+        return baseline;
+    }
+
+    internal static CommandResult Verify(string root, IEnumerable<CheckBuild> builds, string dotnet, string nuget, string api, string directory, string manifest, int parallelism = 1, bool independent = false)
     {
         Directory.CreateDirectory(directory);
         var runtime = File.ReadLines(manifest).Select(line => line.Split('\t')).ToArray();
@@ -108,7 +126,8 @@ internal static class CheckAllLayout
             if (pending.Length != 0)
             {
                 rebuilt = pending.Length;
-                var result = BuildInventories(root, pending, dotnet, nuget, api, directory, parallelism);
+                var baselineRoot = independent ? CopyBaselineSources(root, inputs.Where(pair => !pair.Key.StartsWith("sdk/", StringComparison.Ordinal)).Select(pair => pair.Key)) : root;
+                var result = BuildInventories(baselineRoot, pending, dotnet, nuget, api, directory, parallelism);
                 if (result.ExitCode != 0) return result;
             }
             foreach (var unit in units)
@@ -120,12 +139,14 @@ internal static class CheckAllLayout
                 var key = keys[unit];
                 var cache = Path.Combine(root, "bin-build/check-layout", key + ".json");
                 var baseline = row[3];
+                var ordinaryOutput = row[3];
                 string[] files;
                 if (File.Exists(cache)) files = ReadInventory(cache);
                 else
                 {
                     var lines = File.ReadAllLines(Receipt(directory, unit));
                     var defaultOutput = Path.GetFullPath(lines[0]);
+                    ordinaryOutput = defaultOutput;
                     baseline = lines[1];
                     files = lines.Skip(2).Select(line => line.Split('\t')).Select(fields => fields[0] switch
                     {
@@ -138,7 +159,7 @@ internal static class CheckAllLayout
                     Directory.CreateDirectory(Path.GetDirectoryName(cache)!); File.WriteAllText(cache, JsonSerializer.Serialize(files) + "\n");
                 }
                 var missing = Missing(baseline, row[2], files);
-                receipts.Add(new { unit.Project, unit.Variant, defaultOutput = row[3], checkOutput = row[2], files, missing, inputKey = key });
+                receipts.Add(new { unit.Project, unit.Variant, defaultOutput = ordinaryOutput, checkOutput = row[2], files, missing, inputKey = key });
                 if (missing.Length != 0)
                 {
                     failures.Add("Missing registered output files: " + unit.Project + "/" + unit.Variant + ": " + string.Join(", ", missing));
@@ -146,7 +167,7 @@ internal static class CheckAllLayout
             }
             File.WriteAllText(Path.Combine(directory, "comparison.json"), JsonSerializer.Serialize(receipts, new JsonSerializerOptions { WriteIndented = true }) + "\n");
             File.WriteAllText(Path.Combine(directory, "inventory-cache.json"), JsonSerializer.Serialize(new {
-                sdkIdentity, variants = receipts.Count, rebuilt, cached = receipts.Count - rebuilt, runtimeProjectionRequired = true
+                sdkIdentity, variants = receipts.Count, rebuilt, cached = receipts.Count - rebuilt, runtimeProjectionRequired = !independent
             }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
             return new(failures.Count == 0 ? 0 : 1, $"Suite output parity: {receipts.Count} variants, {failures.Count} with missing files; {rebuilt} inventories rebuilt.\n", string.Join("\n", failures));
         }
@@ -154,7 +175,7 @@ internal static class CheckAllLayout
         {
             // Ordinary builds may share their default outputs. Restore each isolated
             // production/fixture payload before any check starts.
-            ReleaseCommands.PrepareCheckAllRuntime(root, builds, manifest);
+            if (!independent) ReleaseCommands.PrepareCheckAllRuntime(root, builds, manifest);
         }
     }
     private static string Receipt(string directory, CheckBuild unit) => Path.Combine(directory, InputKey([], [unit.Project, unit.Variant]) + ".tsv");

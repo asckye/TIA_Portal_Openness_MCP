@@ -370,15 +370,15 @@ public sealed class CheckAllResultCacheTests
         var root = Repository.FindRoot(); var layout = CheckAllLayout.SourceInventory(root);
         var catalog = DotnetSuites.LoadCatalog(Path.Combine(root, "tests/test-suites.json"), root);
         int eligible = 0;
-        foreach (var (_, node) in catalog)
+        Parallel.ForEach(catalog, new ParallelOptions { MaxDegreeOfParallelism = 4 }, pair =>
         {
-            var registration = node!.AsObject();
+            var registration = pair.Value!.AsObject();
             var closure = CheckAllInputClosure.Derive(root, (string)registration["project"]!, registration, layout);
-            if (closure.LiveReasons.Length != 0) continue;
-            eligible++;
+            if (closure.LiveReasons.Length != 0) return;
+            Interlocked.Increment(ref eligible);
             CheckAllInputClosure.Guard(root, closure, registration, layout);
             Assert.All(closure.References, reference => Assert.True(closure.Roots.Any(prefix => CheckAllInputClosure.Covers(prefix, reference.Path)), reference.File + ":" + reference.Line + ": " + reference.Path));
-        }
+        });
         Assert.True(eligible > 0, "Eligibility and the closure guard must not be vacuous.");
     }
 

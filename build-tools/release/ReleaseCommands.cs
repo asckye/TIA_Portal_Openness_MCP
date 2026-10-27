@@ -26,6 +26,7 @@ internal static partial class ReleaseCommands
         "branch-gate" => BranchGate(options),
         "check-all" => CheckAll(options),
         "check-release-evidence" => CheckReleaseEvidence(options),
+        "ci-coverage" => CiCoverage.Command(Root, options),
         "build-tool" => BuildTool(options),
         "cache-info" => CacheInfo(options),
         "cache-clear" => CacheClear(options),

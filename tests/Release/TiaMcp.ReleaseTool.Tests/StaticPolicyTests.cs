@@ -63,7 +63,7 @@ public sealed class StaticPolicyTests
         var result = ProcessRunner.Run(OperatingSystem.IsWindows() ? "python" : "python3",
             ["-X", "utf8", Path.Combine(root, "scripts/checks/Test-PlcHarnessSuccessors.py")], root,
             new Dictionary<string, string?> { ["PYTHONDONTWRITEBYTECODE"] = "1" });
-        Assert.Equal(0, result.ExitCode); Assert.Contains("Ran 12 tests", result.StandardError); Assert.Contains("OK", result.StandardError);
+        Assert.Equal(0, result.ExitCode); Assert.Contains("Ran 15 tests", result.StandardError); Assert.Contains("OK", result.StandardError);
         Assert.Contains("\"plc-harness-self-tests\"", File.ReadAllText(Path.Combine(root, "build-tools/release/CheckAllInventory.cs")));
     }
 

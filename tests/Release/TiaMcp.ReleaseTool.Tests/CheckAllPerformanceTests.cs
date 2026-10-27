@@ -11,6 +11,129 @@ public sealed class CheckAllPerformanceTests
 {
     private static CommandResult Passed() => new(0, "passed\n", "");
 
+    [Theory]
+    [InlineData("sensitive-0", true)]
+    [InlineData("stability", false)]
+    public void IdleReservedCpusAreLentThenDrainedBeforeTheirOwnerStarts(string reservedLane, bool exclusive)
+    {
+        using var fixture = new OfflineFixtures();
+        using var borrowed = new ManualResetEventSlim(); using var release = new ManualResetEventSlim();
+        int borrowing = 0; bool ownerRan = false;
+        var jobs = new List<CheckJob> {
+            new CheckJob("borrower", () => {
+                Assert.Equal(3UL, CheckAffinity.Current); Interlocked.Exchange(ref borrowing, 1); borrowed.Set();
+                Assert.True(release.Wait(TimeSpan.FromSeconds(10))); Interlocked.Exchange(ref borrowing, 0); return Passed();
+            }, []) { Priority = 2 },
+            new CheckJob("trigger", () => { Assert.True(borrowed.Wait(TimeSpan.FromSeconds(10))); return Passed(); }, []) { Priority = 1 },
+            new CheckJob("owner", () => { Assert.Equal(0, Volatile.Read(ref borrowing)); Assert.Equal(2UL, CheckAffinity.Current); ownerRan = true; return Passed(); }, ["trigger"], Exclusive: exclusive)
+                { Lane = reservedLane, Affinity = 2 },
+            new("new-general", () => { Assert.Equal(1UL, CheckAffinity.Current); Assert.False(ownerRan); release.Set(); return Passed(); }, ["trigger"]),
+            new("after", () => { Assert.Equal(3UL, CheckAffinity.Current); return Passed(); }, ["owner", "borrower", "new-general"]) };
+        try
+        {
+            var rows = CheckScheduler.Run(jobs, 2, fixture.DirectoryPath, new Dictionary<string, int> { ["general"] = 2, [reservedLane] = 1 },
+                packing: new(1, .5, 256UL << 20, 4UL << 30, 2));
+            Assert.All(rows, row => Assert.True(CheckTiming.Passed(row), row.Error));
+            Assert.Equal(jobs.Count, rows.Count); Assert.True(ownerRan);
+            Assert.Equal("3", rows.Single(row => row.Name == "borrower").AffinityMask);
+            Assert.Equal("1", rows.Single(row => row.Name == "new-general").AffinityMask);
+        }
+        finally { release.Set(); }
+    }
+
+    [Fact]
+    public void PackingUsesCpuSecondsPerWallSecondAndRespectsMemoryAndTheCap()
+    {
+        CheckResourceUsage[] history = [new(10, 100, 1UL << 30, "measured"), new(30, 100, 1UL << 30, "measured")];
+        var plan = CheckPacking.Plan(3, history, 64UL << 30, 32);
+        Assert.Equal(.2, plan.CpuPerJob, 8);
+        Assert.Equal(10, plan.Capacity(3)); Assert.Equal(32, plan.Capacity(0xffff));
+        Assert.Equal(2, CheckPacking.Plan(3, history, 4UL << 30, 32).Capacity(0xffff));
+        Assert.Equal(1, CheckPacking.Plan(3, history, 4UL << 30, 32).Capacity(0xffff, 1));
+        var jobs = new[] { new CheckJob("one", Passed, [], Exclusive: true) { SensitiveGroup = "a" },
+            new CheckJob("two", Passed, [], Exclusive: true) { SensitiveGroup = "b" } };
+        Assert.Equal(4, CheckPacking.ReservedCores(jobs, new Dictionary<string, CheckResourceUsage> { ["one"] = history[0], ["two"] = history[1] }, 2));
+        Assert.Equal(2, CheckPacking.ReservedCores(jobs.Take(1), new Dictionary<string, CheckResourceUsage>(), 2));
+    }
+
+    [Fact]
+    public void LegacyRunnerCpuIsApportionedAndNeverMislabelledAsOwnedJobCpu()
+    {
+        using var fixture = new OfflineFixtures();
+        var start = DateTime.UtcNow;
+        var rows = new[] { "one", "two" }.Select(name => new CheckTiming(name, "passed", 0, 10, null) {
+            StartedAtUtc = start, CpuLoad = new(2, 0, [], 0) }).ToArray();
+        var report = Path.Combine(fixture.DirectoryPath, "report.json"); File.WriteAllText(report, JsonSerializer.Serialize(new { checks = rows }));
+        var history = CheckPacking.Read(fixture.DirectoryPath, report);
+        Assert.Equal(2, history.Count);
+        Assert.All(history.Values, row => { Assert.Equal(10, row.CpuSeconds); Assert.Equal(1, row.CoreDemand); Assert.Contains("apportioned", row.Source); });
+    }
+
+    [Fact]
+    public void IndependentParityAndAllRuntimeChecksCanStartAfterTheBuild()
+    {
+        using var fixture = new OfflineFixtures(); using var barrier = new Barrier(2);
+        CommandResult Both() { Assert.True(barrier.SignalAndWait(TimeSpan.FromSeconds(10))); return Passed(); }
+        var plan = ReleaseCommands.CheckAllRuntimeDependencies([
+            new("suite-output-parity", Both, ["build-once"]), new("foundation-api-shard-1", Both, []),
+            new("repository", Passed, [])], independentParity: true);
+        Assert.Equal(new[] { "build-once" }, plan[1].Dependencies);
+        Assert.Equal(new[] { "build-once", "analyzer-warnings" }, plan[2].Dependencies);
+        var rows = CheckScheduler.Run(plan, 2, fixture.DirectoryPath, prerequisites: [new("build-once", "passed", 0, 1, null), new("analyzer-warnings", "passed", 0, 1, null)]);
+        Assert.All(rows, row => Assert.True(CheckTiming.Passed(row), row.Error));
+        foreach (var name in new[] { "bundle", "python-repository" })
+        {
+            Assert.False(ReleaseCommands.CheckAllSourceOnly(name));
+            var job = ReleaseCommands.CheckAllEarlyDependencies(new(name, Passed, []));
+            Assert.Equal(new[] { "analyzer-warnings" }, job.Dependencies);
+        }
+    }
+
+    [Fact]
+    public void OrdinaryBaselineSourcesHaveIdenticalBytesAndIndependentWriters()
+    {
+        using var fixture = new OfflineFixtures();
+        File.WriteAllText(Path.Combine(fixture.DirectoryPath, "input.cs"), "source bytes\n");
+        var baseline = CheckAllLayout.CopyBaselineSources(fixture.DirectoryPath, ["input.cs"]);
+        Assert.Equal(File.ReadAllBytes(Path.Combine(fixture.DirectoryPath, "input.cs")), File.ReadAllBytes(Path.Combine(baseline, "input.cs")));
+        File.WriteAllText(Path.Combine(baseline, "input.cs"), "ordinary writer");
+        Assert.Equal("source bytes\n", File.ReadAllText(Path.Combine(fixture.DirectoryPath, "input.cs")));
+        Assert.Throws<ReleaseException>(() => CheckAllLayout.CopyBaselineSources(fixture.DirectoryPath, ["../outside.cs"]));
+    }
+
+    [Fact]
+    public void OrdinaryBaselineBuildDoesNotTouchTheRuntimeOutputBeingRead()
+    {
+        using var fixture = new OfflineFixtures();
+        var root = fixture.DirectoryPath;
+        var project = "tests/unit/unit.csproj";
+        Directory.CreateDirectory(Path.Combine(root, "tests/unit/bin/Release/net10.0"));
+        File.WriteAllText(Path.Combine(root, project), "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>");
+        File.WriteAllText(Path.Combine(root, "tests/unit/Input.cs"), "public class Input {}\n");
+        File.WriteAllText(Path.Combine(root, "offline.config"), "<configuration><packageSources><clear /></packageSources></configuration>");
+        var ordinary = Path.Combine(root, "tests/unit/bin/Release/net10.0/unit.dll");
+        File.WriteAllText(ordinary, "runtime reader");
+        using var locked = new FileStream(ordinary, FileMode.Open, FileAccess.Read, FileShare.Read);
+        var baseline = CheckAllLayout.CopyBaselineSources(root, [project, "tests/unit/Input.cs", "offline.config"]);
+        var result = CheckAllLayout.BuildInventories(baseline, [new(project, "", [])], "dotnet", Path.Combine(baseline, "offline.config"), root, Path.Combine(root, "receipts"), 1);
+        Assert.True(result.ExitCode == 0, result.StandardOutput + result.StandardError);
+        Assert.True(File.Exists(Path.Combine(baseline, "tests/unit/bin/Release/net10.0/unit.dll")));
+        Assert.Equal("runtime reader", File.ReadAllText(ordinary));
+    }
+
+    [Fact]
+    public void CommandResourcesComeFromItsOwnedJobIncludingExitedChildren()
+    {
+        if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("Windows command job accounting verification");
+        using var fixture = new OfflineFixtures(); using var process = System.Diagnostics.Process.GetCurrentProcess();
+        var mask = unchecked((ulong)process.ProcessorAffinity.ToInt64());
+        var rows = CheckScheduler.Run([new CheckJob("command", () => ProcessRunner.Run("dotnet", ["--info"], fixture.DirectoryPath), []) { Affinity = mask }], 1, fixture.DirectoryPath);
+        var row = Assert.Single(rows);
+        Assert.True(CheckTiming.Passed(row), row.Error);
+        Assert.NotNull(row.Resources); Assert.True(row.Resources.CpuSeconds > 0); Assert.True(row.Resources.PeakMemoryBytes > 0);
+        Assert.Contains("owned command jobs", row.Resources.Source);
+    }
+
     [Fact]
     public void CheckAllCapacityComesFromTheCpuPlanAndKeepsExplicitOverrides()
     {

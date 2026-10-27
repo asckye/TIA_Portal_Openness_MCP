@@ -16,16 +16,21 @@ internal sealed record CheckJob(string Name, Func<CommandResult> Run, string[] D
     internal CheckAllResultBinding? ResultCache { get; init; }
     internal CheckAllResultSpec? ResultInputs { get; init; }
     internal string? ResultCachePolicy { get; init; }
+    internal System.Text.Json.Nodes.JsonObject? CiCoverage { get; init; }
 }
 internal sealed record CheckTiming(string Name, string Status, int ExitCode, double Seconds, string? Error)
 {
     public DateTime StartedAtUtc { get; init; }
     public CheckCpuLoad? CpuLoad { get; init; }
+    public CheckResourceUsage? Resources { get; init; }
+    public string? AffinityMask { get; init; }
     public string? IdentityHash { get; init; }
     public string? ReusedRunId { get; init; }
     public DateTime? ReusedAtUtc { get; init; }
     public string? EvidencePath { get; init; }
+    public System.Text.Json.Nodes.JsonObject? CiCoverage { get; init; }
     public static bool Passed(CheckTiming row) => row.ExitCode == 0 && (row.Status == "passed" ||
+        row.Status == "covered by CI" && row.CiCoverage != null ||
         row.Status == "passed (reused)" && row.IdentityHash != null && row.ReusedRunId != null && row.ReusedAtUtc != null && row.EvidencePath != null);
 }
 
@@ -41,7 +46,7 @@ internal static class CheckScheduler
         TimeSpan.FromSeconds(Math.Max(job.Name is "build-once" or "suite-output-parity" ? 1800 : 300,
             3 * Math.Max(job.EstimatedSeconds, history.GetValueOrDefault(job.Name))));
     internal static IReadOnlyList<CheckTiming> Run(IReadOnlyList<CheckJob> jobs, int slots, string logs, IReadOnlyDictionary<string, int>? lanes = null,
-        IReadOnlyList<CheckTiming>? prerequisites = null)
+        IReadOnlyList<CheckTiming>? prerequisites = null, CheckPacking? packing = null)
     {
         lanes ??= new Dictionary<string, int> { ["general"] = slots };
         Validate(jobs, slots, lanes, prerequisites?.Select(row => row.Name).ToArray());
@@ -65,7 +70,7 @@ internal static class CheckScheduler
             // general backlog while their dedicated CPUs sit unused.
             bool FeedsIdleLane(CheckJob input) => pending.Any(next => next.Lane != input.Lane &&
                 next.Dependencies.Contains(input.Name, StringComparer.Ordinal) && !running.Values.Any(active => active.Lane == next.Lane));
-            foreach (var job in pending.OrderByDescending(FeedsIdleLane).ThenByDescending(job => job.Priority)
+            foreach (var job in pending.OrderBy(job => packing != null && job.Lane == "general").ThenByDescending(FeedsIdleLane).ThenByDescending(job => job.Priority)
                 .ThenByDescending(job => priorities[job.Name]).ThenBy(job => job.Name, StringComparer.Ordinal).ToArray())
             {
                 if (!job.Dependencies.All(done.ContainsKey)) continue;
@@ -73,10 +78,29 @@ internal static class CheckScheduler
                 if (lane.Any(row => row.Exclusive)) continue;
                 if (job.Exclusive && lane.Length != 0) continue;
                 if (lane.Sum(row => row.Slots) + job.Slots > lanes[job.Lane]) continue;
+                var admitted = job;
+                if (packing != null)
+                {
+                    if (job.Lane == "general")
+                    {
+                        var mask = packing.General;
+                        foreach (var reserved in jobs.Where(next => next.Lane != "general" && next.Affinity != null).GroupBy(next => next.Lane))
+                            if (!running.Values.Any(active => active.Lane == reserved.Key) &&
+                                !pending.Any(next => next.Lane == reserved.Key && next.Dependencies.All(done.ContainsKey)))
+                                mask |= reserved.First().Affinity!.Value;
+                        mask |= packing.Available & ~jobs.Where(next => next.Lane != "general").Aggregate(0UL, (used, next) => used | next.Affinity.GetValueOrDefault());
+                        // Leases are immutable for the lifetime of a command job.
+                        // A ready owner closes its lane to new borrowers; below it
+                        // waits for every overlapping lease (including descendants).
+                        if (lane.Sum(row => row.Slots) + job.Slots > packing.Capacity(mask, running.Values.Count(row => row.Lane != "general"))) continue;
+                        admitted = job with { Affinity = mask };
+                    }
+                    else if (running.Values.Any(active => active.Lane == "general" && (active.Affinity.GetValueOrDefault() & job.Affinity.GetValueOrDefault()) != 0)) continue;
+                }
                 pending.Remove(job);
                 // Jobs block on child processes/barriers. Dedicated threads keep
                 // reserved one/two-core CLR pools from serializing admitted work.
-                running.Add(Task.Factory.StartNew(() => Execute(job, logs), CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default), job);
+                running.Add(Task.Factory.StartNew(() => Execute(admitted, logs), CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default), admitted);
             }
             if (running.Count == 0)
             {
@@ -153,6 +177,7 @@ internal static class CheckScheduler
     {
         var timer = Stopwatch.StartNew();
         var started = DateTime.UtcNow;
+        using var resources = CheckResourceMeter.Start();
         try
         {
             using var affinity = CheckAffinity.Enter(job.Affinity);
@@ -167,15 +192,17 @@ internal static class CheckScheduler
             var result = job.Run();
             if (DateTime.UtcNow >= deadline.Value.Value.Deadline) throw new ReleaseException("Check job timed out: " + job.Name);
             File.WriteAllText(Path.Combine(logs, job.Name + ".log"), result.StandardOutput + result.StandardError);
-            var row = new CheckTiming(job.Name, result.ExitCode == 0 ? "passed" : "failed", result.ExitCode, timer.Elapsed.TotalSeconds,
+            var row = new CheckTiming(job.Name, result.ExitCode == 0 ? job.CiCoverage == null ? "passed" : "covered by CI" : "failed", result.ExitCode, timer.Elapsed.TotalSeconds,
                 result.ExitCode == 0 ? null : (result.StandardError.Length == 0 ? result.StandardOutput : result.StandardError).Trim())
-                { StartedAtUtc = started, CpuLoad = CheckLoad.Current?.Between(started, DateTime.UtcNow) };
+                { StartedAtUtc = started, CpuLoad = CheckLoad.Current?.Between(started, DateTime.UtcNow), CiCoverage = job.CiCoverage,
+                    Resources = resources.Usage(timer.Elapsed.TotalSeconds), AffinityMask = job.Affinity?.ToString("X") };
             return job.ResultCache?.Record(row, Path.Combine(logs, job.Name + ".log")) ?? row;
         }
         catch (Exception ex)
         {
             File.WriteAllText(Path.Combine(logs, job.Name + ".log"), ex.ToString());
-            return new(job.Name, "failed", 1, timer.Elapsed.TotalSeconds, ex.Message) { StartedAtUtc = started, CpuLoad = CheckLoad.Current?.Between(started, DateTime.UtcNow) };
+            return new(job.Name, "failed", 1, timer.Elapsed.TotalSeconds, ex.Message) { StartedAtUtc = started, CpuLoad = CheckLoad.Current?.Between(started, DateTime.UtcNow),
+                Resources = resources.Usage(timer.Elapsed.TotalSeconds), AffinityMask = job.Affinity?.ToString("X") };
         }
         finally { deadline.Value = null; evidenceDirectory.Value = null; }
     }
@@ -209,6 +236,83 @@ internal sealed record CheckPerformance(string[] CriticalPath, double CriticalPa
 internal sealed record CheckCpuProcess(int Pid, string Name, double CpuSeconds, bool Owned);
 internal sealed record CheckCpuSample(DateTime AtUtc, double Seconds, CheckCpuProcess[] Processes, int Unreadable);
 internal sealed record CheckCpuLoad(double OwnCoreEquivalent, double OtherCoreEquivalent, CheckCpuProcess[] OtherProcesses, int Unreadable);
+
+internal sealed record CheckResourceUsage(double CpuSeconds, double WallSeconds, ulong PeakMemoryBytes, string Source)
+{
+    public double CoreDemand => WallSeconds > 0 ? CpuSeconds / WallSeconds : 0;
+}
+
+internal sealed record CheckPacking(ulong General, double CpuPerJob, ulong MemoryPerJob, ulong MemoryBudget, int Cap)
+{
+    internal ulong Available { get; init; }
+    internal static int ReservedCores(IEnumerable<CheckJob> jobs, IReadOnlyDictionary<string, CheckResourceUsage> history, int workers, bool exclusive = true)
+    {
+        var groups = jobs.GroupBy(job => job.SensitiveGroup ?? job.Name).ToArray();
+        if (groups.Length == 0) return 1;
+        double demand = groups.SelectMany(group => group).Select(job => history.GetValueOrDefault(job.Name)?.CoreDemand ?? 1).Max();
+        int count = Math.Min(workers, groups.Length);
+        return exclusive ? count * Math.Max(2, (int)Math.Ceiling(demand)) : Math.Max(2, (int)Math.Ceiling(count * demand));
+    }
+    internal int Capacity(ulong mask, int reservedJobs = 0) => Math.Max(1, Math.Min(Cap, Math.Min(
+        (int)Math.Ceiling(System.Numerics.BitOperations.PopCount(mask) / Math.Max(.05, CpuPerJob)),
+        (int)Math.Min(int.MaxValue, MemoryBudget / Math.Max(1UL, MemoryPerJob)) - reservedJobs)));
+
+    internal static CheckPacking Plan(ulong general, IEnumerable<CheckResourceUsage> history, ulong memory, int cap)
+    {
+        var rows = history.Where(row => row.WallSeconds >= 1 && row.CpuSeconds > 0).ToArray();
+        double wall = rows.Sum(row => row.WallSeconds);
+        double demand = wall > 0 ? rows.Sum(row => row.CpuSeconds) / wall : 1;
+        var peaks = rows.Where(row => row.PeakMemoryBytes > 0).Select(row => row.PeakMemoryBytes).Order().ToArray();
+        ulong peak = peaks.Length == 0 ? 512UL << 20 : peaks[(int)Math.Ceiling(peaks.Length * .95) - 1];
+        return new(general, demand, Math.Max(256UL << 20, peak), memory / 2, cap);
+    }
+
+    internal static Dictionary<string, CheckResourceUsage> Read(string root, string? baseline)
+    {
+        var path = Path.Combine(root, "bin-build/check-timings/check-resources.json");
+        var rows = File.Exists(path) ? JsonSerializer.Deserialize<Dictionary<string, CheckResourceUsage>>(File.ReadAllText(path))! : new();
+        if (baseline == null) return rows;
+        using var document = JsonDocument.Parse(File.ReadAllText(baseline));
+        var checks = document.RootElement.GetProperty("checks").Deserialize<CheckTiming[]>()!;
+        foreach (var row in checks.Where(row => row.Seconds >= 1 && row.Status == "passed"))
+        {
+            if (row.Resources is { CpuSeconds: > 0 } measured) { rows[row.Name] = measured; continue; }
+            if (rows.ContainsKey(row.Name) || row.CpuLoad == null) continue;
+            // Older reports sampled the WHOLE runner, not individual jobs.
+            // Apportion that measured demand by time-weighted overlap and label
+            // it explicitly; never treat the overlapping totals as job-owned CPU.
+            double overlap = checks.Where(other => other.StartedAtUtc != default).Sum(other => Math.Max(0,
+                (new[] { row.StartedAtUtc.AddSeconds(row.Seconds), other.StartedAtUtc.AddSeconds(other.Seconds) }.Min() -
+                 new[] { row.StartedAtUtc, other.StartedAtUtc }.Max()).TotalSeconds)) / row.Seconds;
+            rows[row.Name] = new(row.CpuLoad.OwnCoreEquivalent * row.Seconds / Math.Max(1, overlap), row.Seconds, 0, "legacy runner CPU apportioned by overlapping job-seconds");
+        }
+        return rows;
+    }
+}
+
+// Only this scheduled command's kernel job accounting is attributed to it.
+// Concurrent commands, the runner sampler and unrelated processes are excluded.
+internal sealed class CheckResourceMeter : IDisposable
+{
+    private static readonly AsyncLocal<CheckResourceMeter?> current = new();
+    private readonly CheckResourceMeter? previous = current.Value;
+    private readonly object sync = new();
+    private double cpu;
+    private ulong memory;
+    internal static CheckResourceMeter Start() { var meter = new CheckResourceMeter(); current.Value = meter; return meter; }
+    internal static IDisposable Observe(Microsoft.Win32.SafeHandles.SafeFileHandle? job) => new Observation(current.Value, job);
+    private sealed class Observation(CheckResourceMeter? meter, Microsoft.Win32.SafeHandles.SafeFileHandle? job) : IDisposable
+    {
+        public void Dispose()
+        {
+            if (meter == null || job == null) return;
+            var usage = CheckAffinity.Accounting(job);
+            lock (meter.sync) { meter.cpu += usage.CpuSeconds; meter.memory += usage.PeakMemoryBytes; }
+        }
+    }
+    internal CheckResourceUsage Usage(double wall) { lock (sync) return new(cpu, wall, memory, "owned command jobs (kernel CPU and sum of peak committed memory)"); }
+    public void Dispose() => current.Value = previous;
+}
 
 // Sample deltas, not accumulated process CPU since login. Descendants (including
 // test hosts and fixture workers) belong to this run. Unreadable/short-lived

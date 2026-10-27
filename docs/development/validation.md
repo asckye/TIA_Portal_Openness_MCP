@@ -55,12 +55,36 @@ Studio 测试收到既有的 bundle 根目录覆盖；bridge 载荷来自对应�
 运行模式、计划作业与每个作业的结果和日志哈希、注册套件计数及退出状态。`-NoBuildCache` 关闭文件程序构建缓存并随之关闭结果缓存；
 发布只采纳干净提交上 `-Clean`（或 `-Cold`）且带 `-NoBuildCache` 的完整通过运行，规则见[发布流程](release-workflow.md#采纳同一提交的-check-all-与-ci-证据-adoptevidence)。
 
+可选 `-CiCovered <候选 JSON>` 将同一提交的部分检查交给 Windows CI；不传时全部本机执行。
+原计划的每个 shard、gate 和静态作业仍有一条结果：本机执行，或 `covered by CI`，并列出 run ID、attempt、job ID 与 job 名。
+候选收据只用于分工，不能单独作为发布证明；`check-release-evidence -Ci` 与正式采纳必须重新读取 GitHub 的具体 job 及日志中的原始门禁收据。
+缺失、失败、取消、未完成、其他提交或其他 attempt 均拒绝；离线核对和 `-DryRun -AdoptEvidence` 拒绝含未在线核对的 CI 分工证据。
+本机 SDK、路径深度、输出清单对等性、Studio 两种路径模式、传输、捕获和压测继续执行原检查与原时间门槛。
+
+| Workflow / job（含矩阵） | 对应 check-all 作业 / 套件 | 分工与差异 |
+|---|---|---|
+| offline-checks / py-cs-parity，ubuntu-latest、windows-latest | static-python-csharp-parity、catalog-drift、usage-drift、migration-drift、tool-counts-drift、tools-list；文件程序构建与 analyzer-warnings 的部分输入 | 生成器字节检查与 tools-list 命令相同，但该 job 尚无分工收据，仍本机执行；parity 的 Python 版本、编译模式与路径环境不同，CI analyzer 未用本机完整 SDK 构建清单，不等价 |
+| offline-checks / offline-tests，Ubuntu，Shards=4 | repository-self-tests、suite-runner-self-tests；offline、offline-v20、kept-code、kept-code-v20、version-policy、generation-model、generation-planning、workbench-control-protocol | Linux 的平台通过/跳过门槛、管道身份、代码页与路径语义不等价于 Windows；不采纳 |
+| offline-checks / source-contracts，Ubuntu | 四个 drift、tools-list-self-tests/tools-list、python-script-self-tests/python-script-calls/script-calls、campaign-runner-self-tests、dead-references、repository/repository-self-tests、source-contracts、adapter-boundary、domain-source、contract-self-tests/contract-verify/response-verify | 纯生成/roster/快照 verify 命令相同，尚无该 job 的分工收据，仍本机执行；其余检查的 Linux 进程、代码页、路径状态不等价于本机 Windows；文件程序/analyzer 仅为部分构建输入 |
+| offline-checks / studio-tests，shared-adapter-paths=false、true，Windows | studio-core-false/true、studio-gui-false/true | 同项目与路径模式，但直接 dotnet test 没有注册套件计数门禁/CI 收据；保留本机；Studio 构建也不替代本机输出对等性 |
+| offline-checks / foundation-suites，runner=0、1、2、3，Windows，Shards=8、RunnerCount=4 | foundation、engine-host、shared-lifecycle-plc、worker-progress-foundation、prompt-registration、software-read、special-export-shape、device-add、hardware-catalog、diagnostic-membership、adapter-contracts、worker-channel、compile-candidate、compile-candidate-no-safety、fallback-vci-modern/initial/classic、workbench-control-protocol | 各 runner 只证明分片；必须由下一行覆盖全部分片的门禁合并，不单独采纳任一 runner |
+| offline-checks / foundation-suites-gate，Windows，Shards=8、GateOnly | 上述 18 套件的全部本机 shard 与 gate | foundation profile 可采纳；沿用注册过滤/属性/最低通过数/最大跳过数，验证四个 runner 的分片并集且每片恰一次；本机可能用计时历史产生不同分片，但都覆盖完整同一套件；不包含 foundation-api |
+| offline-checks / foundation-transport，Windows | transport-usage-v14sp1/v15.1/v16/v17/v18/v19 | CI 一次串行六版、使用 publish 目录/默认 host 发现；本机逐版显式 host 路径、隔离根不同，尚无逐版本收据；继续本机执行，V20/V21 SDK 分支也留本机 |
+| validate-bundle / validate-bundle，Windows | release-tool、generation-model、generation-planning、crash-evidence、write-guard、source-contracts；repository、bundle、bundle-self-tests、release-documentation、release-dry-run、native-lifecycle、native-mcp-session、tia-features、match-plc-name-source | release profile 可采纳六套件及除 repository/bundle 外的七个精确命令；repository/bundle 含实际已收集 analyzer 报告的核对，CI 缺少本机完整 SDK 构建的报告，继续本机执行。release-tool 改用完整注册入口，新增原有最低通过/跳过门禁；preflight 仍本机汇总。build-configurator -Test 是较大的构建/测试入口，不当成 configuration-page 的单独收据 |
+| Verify published release / verify，release 或 workflow_dispatch | 无 check-all 等价项 | 检查发布后 tag/ZIP/摘要、过滤树与包模式验证；时点、输入和二进制模式均不同，继续独立执行 |
+
+每个 profile 的完整套件清单、静态作业清单、Windows 注册定义（含过滤与构建属性）和 workflow 文件 SHA-256 都写入收据并在采纳时比较。
+CI 命令仍执行全部检查；本机分片数量无需等于 CI，但 CI 的 runner gate 必须证明整个注册套件，不能凭某个分片或最低计数代替覆盖检查。
+后续 workflow/注册定义变化必须同步映射测试；不匹配即失败。操作步骤见[发布流程](release-workflow.md#ci-分工候选与在线采纳)。
+
 构建后的注册套件、Studio、静态检查、捕获、usage、Harness 和引擎检查进入同一依赖调度图。preflight 保留全部检查并引用图中相同检查的结果；ReleaseTool 的完整套件同时覆盖 Pipeline 子集，每轮全集只执行一次，避免重复运行；汇总在依赖结束后执行，失败的分片仍产生汇总。
-压测与其他检查同时运行，但通过 Windows job object 分别限定到互不相交的 CPU 核集合。默认预留 8 个逻辑核（小机器取三分之一）、最多四个压测进程；`-StabilityCores` 和 `-StabilityParallelism` 控制预留和并发。HTTP 夹具使用独立临时工作目录，避免 ASP.NET 配置文件监视器扫描整个 worktree；原句柄和内存界限保持不变。
-读取 Windows 物理核拓扑，敏感队列先选较高性能等级的完整物理核，压测随后从余下核心中预留，避免拆开 SMT 同胞；启动前设置 DOTNET_PROCESSOR_COUNT 与 job 的实际核心数一致。cpu-plan.json 记录实际分配，不把非空闲诊断当作性能验收。
-客户端启动后先等待父进程分配 job，再启动实际命令，job 限制覆盖宿主、worker 和立即启动的子孙进程。50 轮、内存和句柄增长限值保持；结果及失败前的 process-samples.json 记录实际 affinity 与样本。时间敏感方法、worker deadline 和配置页面检查进入独立敏感队列，普通队列和压测队列继续运行。默认 `-SensitiveCores 8 -SensitiveParallelism 2`（小机器缩减并保留普通核），每个敏感 worker 独占至少四个逻辑核；按预测成本将敏感分片分配到互不相交的 worker 队列，队列内部串行；使用同一测试程序集的套件固定在同一 worker，避免夹具写入同一程序集目录。Foundation 的纯内存 portal lane 方法独立进入第二个敏感分片，可与进程夹具重叠；其全部用例与原时间断言保留。独立 test-suites 命令按实际敏感程序集组数预留 worker：只有一组时默认四核，没有敏感工作时不闲置预留核心；check-all 默认仍为八核两个 worker。
-可用 CPU 无法按完整物理核同时容纳敏感队列、压测队列和至少一个普通 CPU 时（例如 4 逻辑核、2 物理核的 CI runner），check-all 不再拒绝，而按顺序选第一个可行的降级布局：先把默认大小改为最接近的完整物理核数，三组仍互不相交；否则不预留敏感队列，敏感检查回到普通队列独占运行（与 P8-72 之前相同），压测保留完整物理核，普通队列优先选核；否则敏感队列保留完整物理核，压测与普通队列共用 CPU；只有一个物理核时三者共用全部 CPU。显式的 `-SensitiveCores`/`-StabilityCores` 保持原值且不与其他队列共用，无法满足时以退出码 64 拒绝；两者都显式时只用严格布局。report.json、cpu-plan.json 和 comparison.md 记录 `cpuIsolation`（`full` 或 `degraded`）及 `cpuIsolationReason`，启动时也输出原因；检查项、最低通过数、跳过上限、deadline、计时门槛和断言均不变，三十分钟门槛照常写入报告并决定退出状态。
-`-MaxParallelism` 或 `-CpuParallelism` 显式指定普通队列进程上限，不受旧校准文件或更大的预留核数压低；I/O 等待中的进程可多于普通核数，实际 affinity 仍限制在普通核心集合。未指定时并发不超过普通核心数，只有标记 representativeIdleMeasurement=true 的本机 cpu-budget.json 才覆盖默认值。
+压测与其他检查同时运行，通过 Windows job object 限定到完整物理核。默认预留大小来自实际作业的 CPU 秒 / wall 秒历史：敏感 worker 各取需求上整且至少两个逻辑核；压测取并发作业需求之和上整且至少两个逻辑核。无历史时每项按一个核估计；实际大小仍由物理拓扑调整。`-StabilityCores`、`-SensitiveCores` 显式值保持原值，`-StabilityParallelism` 仍最多四项压测。50 轮、句柄和内存增长限值、全部时间断言保持。
+读取 Windows 物理核拓扑，敏感队列先选较高性能等级的完整物理核，压测随后从余下核心中预留，避免拆开 SMT 同胞；启动前设置 DOTNET_PROCESSOR_COUNT 与 job 的实际核心数一致。客户端先等待父进程分配 job，再启动实际命令，限制覆盖宿主、worker 和立即启动的子孙进程。
+保留队列没有运行或就绪作业时，其核心借给普通作业；每项普通作业从启动到全部后代退出一直使用同一掩码。保留作业就绪后停止发放重叠借用，等已有借用者及其后代全部结束才启动保留作业，敏感作业运行期间独占所属核心。新普通作业可以继续使用其余核心。实际租用掩码写入 report.json 每项的 AffinityMask。
+默认 `-SensitiveParallelism 2`，敏感分片按成本分配到 worker，各 worker 内部串行；同一测试程序集的组固定在同一 worker，避免夹具写入同一目录。Foundation 的纯内存 portal lane 仍独立分片。独立 test-suites 入口保留原四核 worker 默认；check-all 按实际组和需求配置。
+可用 CPU 无法按完整物理核同时容纳敏感、压测和普通队列时，仍依次尝试调整默认大小、不保留敏感队列、压测共用普通队列、单物理核共用全部 CPU。显式大小保持严格拒绝规则。report.json、cpu-plan.json 和 comparison.md 记录 cpuIsolation 及原因；三十分钟门槛照常决定退出状态。
+普通队列默认并发为可用核数除以历史加权 CPU 需求后上整，最多 32 项，同时不超过可用物理内存与 commit 余量较小值的一半除以每项内存预算；内存预算取历史峰值的第 95 百分位，至少 256 MiB，无历史时 512 MiB。正在运行的保留作业也占内存名额。`-MaxParallelism` 或优先的 `-CpuParallelism` 设置更小的上限；单项检查始终允许前进。新记录 check-resources.json 使用每个命令自有内核 job 的 CPU 累计和峰值 committed memory，不把同期 runner CPU 全算给每项。旧报告只有共享采样时按重叠 job-seconds 分摊并明确标注估算，后续以实际归属计量替换；CPU 采样仍用于外部负载诊断。
+suite-output-parity 在本 worktree 的 bin-build/p 内复制相同源码，构建普通布局并保留原文件清单比较，避免写入正在被测试发现的输出目录；分片在 build-once 后与它并行。bundle 与 python-repository 等待读取 analyzer-warnings 成功后登记的本轮报告。-Clean 的 harness 仅接受自身快照中的可执行文件；证据还可写到环境及 owner 标记共同证明的原 worktree，其他 worktree 和兄弟快照均拒绝。
 cpu-plan.json 记录核掩码、队列容量、依赖、预测成本及 companion Python；check-costs.json 保存实测整项最大成本用于最长耗时优先调度。`-CompanionPython` 优先于 TIA_MCP_PLC_TOOLS_PYTHON；未指定时查询 worktree 或 SDK 所属仓库的 TiaMcp_Output/ecosystem-python 环境，传给所有隔离子进程，保留 PDF 和伴随命令检查。
 每个进程在系统临时目录下使用独立的短 TEMP，数据及配置位于该 TEMP 内，避免 Git 与安装目录检查误认源码 checkout；Harness 使用独立引擎副本和套件结果目录。
 `bin-build/check-timings` 保存套件的用例耗时历史，先用单进程 TRX 初始化，再用执行边界的实际耗时更新（含旧 theory 的 producer 时间）。

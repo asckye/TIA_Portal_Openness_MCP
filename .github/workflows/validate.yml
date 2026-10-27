@@ -34,12 +34,12 @@ jobs:
         run: |
           dotnet run --project build-tools/release -- validate-bundle -SelfTest
       - name: Generation model, basic package and golden plan tests
-        run: dotnet run --project build-tools/release -- test-suites -Suite generation-model -Suite generation-planning
+        run: dotnet run --project build-tools/release -- test-suites -ResultsDirectory bin-build/ci-covered-results -Suite generation-model -Suite generation-planning
       - name: Release prerequisites, reuse and documentation assertions
         run: |
           # Stop at the first failing command; otherwise only the last exit code fails the step.
           $PSNativeCommandUseErrorActionPreference = $true
-          dotnet test tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj -c Release --nologo --logger "trx;LogFileName=release-tool.trx" --results-directory bin-build/ci-test-results/release-tool
+          dotnet run --project build-tools/release -- test-suites -ResultsDirectory bin-build/ci-covered-results -Suite release-tool
           dotnet run --project build-tools/release -- preflight
           dotnet run --project build-tools/release -- release -DocumentationOnly
           dotnet run --project build-tools/release -- run-release-build -Tier full -DryRun
@@ -47,15 +47,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python scripts/checks/Test-NativeLifecycle.py --self-test
-          python scripts/checks/Test-NativeMcpSession.py --self-test
-          dotnet run --project build-tools/release -- test-suites -Suite crash-evidence
-          dotnet run --project build-tools/release -- test-suites -Suite write-guard
+          python -X utf8 scripts/checks/Test-NativeLifecycle.py --self-test
+          python -X utf8 scripts/checks/Test-NativeMcpSession.py --self-test
+          dotnet run --project build-tools/release -- test-suites -ResultsDirectory bin-build/ci-covered-results -Suite crash-evidence
+          dotnet run --project build-tools/release -- test-suites -ResultsDirectory bin-build/ci-covered-results -Suite write-guard
           dotnet run scripts/checks/Test-MatchPlcName.cs -- -SourceOnly
       - name: Release feature defines match the reviewed table
         run: dotnet run --project build-tools/release -- check-tia-features
       - name: Supplementary read and worker dispatch source contracts
-        run: dotnet run --project build-tools/release -- test-suites -Suite source-contracts
+        run: dotnet run --project build-tools/release -- test-suites -ResultsDirectory bin-build/ci-covered-results -Suite source-contracts
+      - name: Bind registered gates to this CI run and attempt
+        run: dotnet run --project build-tools/release -- ci-coverage -Profile release -ResultsDirectory bin-build/ci-covered-results -Output bin-build/ci-covered-results/ci-receipt.json
       - name: Build launcher and test .NET 10 configuration page
         run: dotnet run --project build-tools/release -- build-configurator -Test
       - uses: actions/upload-artifact@v6
@@ -64,6 +66,7 @@ jobs:
           name: validate-bundle-test-results
           path: |
             bin-build/ci-test-results/
+            bin-build/ci-covered-results/
             bin-build/test-results*/
             bin-build/check-all/
             bin-build/preflight-*/

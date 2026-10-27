@@ -113,6 +113,28 @@ internal static class CheckAffinity
         finally { Marshal.FreeHGlobal(buffer); }
     }
 
+    internal static (double CpuSeconds, ulong PeakMemoryBytes) Accounting(SafeFileHandle job)
+    {
+        int size = Marshal.SizeOf<ExtendedLimits>(); var buffer = Marshal.AllocHGlobal(size);
+        try
+        {
+            // JOBOBJECT_BASIC_ACCOUNTING_INFORMATION is exactly four Int64s
+            // followed by four DWORDs; Windows rejects a larger buffer length.
+            if (!QueryInformationJobObject(job, 1, buffer, 48, out _)) throw new Win32Exception(Marshal.GetLastWin32Error());
+            double cpu = (Marshal.ReadInt64(buffer) + Marshal.ReadInt64(buffer, 8)) / (double)TimeSpan.TicksPerSecond;
+            if (!QueryInformationJobObject(job, 9, buffer, size, out _)) throw new Win32Exception(Marshal.GetLastWin32Error());
+            return (cpu, Marshal.PtrToStructure<ExtendedLimits>(buffer).PeakJobMemory.ToUInt64());
+        }
+        finally { Marshal.FreeHGlobal(buffer); }
+    }
+
+    internal static ulong AvailableMemory()
+    {
+        var state = new MemoryStatus { Length = (uint)Marshal.SizeOf<MemoryStatus>() };
+        if (!GlobalMemoryStatusEx(ref state)) throw new Win32Exception(Marshal.GetLastWin32Error());
+        return Math.Min(state.AvailablePhysical, state.AvailablePageFile);
+    }
+
     internal sealed record JobProcess(int Pid, DateTime? StartTimeUtc, string? ImagePath, bool Member, string? Error = null);
     internal static JobProcess Observe(SafeFileHandle job, Process process) => new(process.Id, process.StartTime.ToUniversalTime(), process.MainModule?.FileName, IsMember(job, process));
 
@@ -263,16 +285,20 @@ internal static class CheckAffinity
     internal static int DefaultSensitiveCores(ulong available) =>
         Math.Min(8, Math.Max(1, System.Numerics.BitOperations.PopCount(available) / 2));
 
-    internal static IReadOnlyDictionary<string, int> AssignSensitiveLanes(List<CheckJob> jobs, ulong mask, int workers, ulong[]? physicalCores = null)
+    internal static IReadOnlyDictionary<string, int> AssignSensitiveLanes(List<CheckJob> jobs, ulong mask, int workers, ulong[]? physicalCores = null, int minimumCores = 4)
     {
         int cores = System.Numerics.BitOperations.PopCount(mask);
         physicalCores ??= PreferredPhysicalCores();
-        workers = Math.Min(workers, Math.Max(1, cores / 4));
+        workers = Math.Min(workers, Math.Max(1, cores / minimumCores));
+        workers = Math.Min(workers, physicalCores.Count(core => (core & mask) != 0));
         var masks = new ulong[workers];
         ulong remaining = mask;
         for (int i = 0; i < workers; i++)
         {
-            masks[i] = i == workers - 1 ? remaining : SplitPreferred(remaining, cores / workers, physicalCores).Stability;
+            masks[i] = i == workers - 1 ? remaining : Enumerable.Range(1, System.Numerics.BitOperations.PopCount(remaining) - 1)
+                .OrderBy(size => Math.Abs(size - cores / workers)).ThenBy(size => size)
+                .Select(size => TrySplitPreferred(remaining, size, physicalCores))
+                .First(split => split != null && physicalCores.Count(core => (core & split.Value.General) != 0) >= workers - i - 1)!.Value.Stability;
             remaining &= ~masks[i];
         }
         var loads = new double[workers];
@@ -311,7 +337,7 @@ internal static class CheckAffinity
                 Affinity = job.Affinity ?? (job.Exclusive && reserved ? layout.Sensitive : layout.General)
             };
         }
-        return reserved ? AssignSensitiveLanes(jobs, layout.Sensitive, sensitiveParallelism, physicalCores) : new Dictionary<string, int>();
+        return reserved ? AssignSensitiveLanes(jobs, layout.Sensitive, sensitiveParallelism, physicalCores, minimumCores: 2) : new Dictionary<string, int>();
     }
 
     internal static (ulong Mask, byte Efficiency)[] PhysicalCores()
@@ -528,6 +554,14 @@ internal static class CheckAffinity
         internal ulong ReadOperations, WriteOperations, OtherOperations, ReadBytes, WriteBytes, OtherBytes;
         internal UIntPtr ProcessMemory, JobMemory, PeakProcessMemory, PeakJobMemory;
     }
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MemoryStatus
+    {
+        internal uint Length, Load;
+        internal ulong TotalPhysical, AvailablePhysical, TotalPageFile, AvailablePageFile, TotalVirtual, AvailableVirtual, AvailableExtendedVirtual;
+    }
+    [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GlobalMemoryStatusEx(ref MemoryStatus status);
     [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool IsProcessInJob(IntPtr process, SafeFileHandle job, [MarshalAs(UnmanagedType.Bool)] out bool member);
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]

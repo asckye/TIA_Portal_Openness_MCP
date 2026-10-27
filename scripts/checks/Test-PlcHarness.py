@@ -7,6 +7,8 @@ import json
 import os
 from pathlib import Path
 import re
+import selectors
+import socket
 import subprocess
 import sys
 import threading
@@ -107,14 +109,26 @@ def bridge(args, rpc, metadata):
 
     server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
     server.calls = 0
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    wake, stop = socket.socketpair()
+    def serve():
+        with selectors.DefaultSelector() as ready:
+            ready.register(server, selectors.EVENT_READ)
+            ready.register(wake, selectors.EVENT_READ)
+            while True:
+                events = ready.select()
+                if any(key.fileobj is wake for key, _ in events):
+                    return
+                server._handle_request_noblock()
+    thread = threading.Thread(target=serve, daemon=True)
     thread.start()
     try:
         yield f'http://127.0.0.1:{server.server_port}/'
     finally:
-        server.shutdown()
-        server.server_close()
+        stop.sendall(b'stop')
         thread.join()
+        server.server_close()
+        wake.close()
+        stop.close()
 
 
 def example_library(args, rpc):
@@ -189,9 +203,33 @@ def native_reader(args, directory):
     print('COMPLETE: 3 native journal reader checks passed; no native call executed')
 
 
+def owns_evidence(path):
+    path = path.resolve()
+    if path.is_relative_to(ROOT):
+        return True
+    # -Clean runs this script and every executable in a detached source copy,
+    # but deliberately retains the evidence in its originating worktree.
+    clean = os.environ.get('TIA_MCP_CLEAN_CHECKOUT')
+    original = os.environ.get('TIA_MCP_CHECK_ORIGINAL_ROOT')
+    if not clean or not original or Path(clean).resolve() != ROOT:
+        return False
+    original = Path(original).resolve()
+    if ROOT.parent != original / 'bin-build/c' or not re.fullmatch('[0-9a-f]{8}', ROOT.name):
+        return False
+    marker = ROOT / 'bin-build/check-all-snapshot.owner.json'
+    if not marker.resolve().is_relative_to(ROOT):
+        return False
+    try:
+        owner = json.loads(marker.read_text(encoding='utf-8'))
+        return (Path(owner['original']).resolve() == original and (original / 'AGENTS.md').is_file()
+                and path.is_relative_to(original) and not path.is_relative_to(original / 'bin-build/c'))
+    except (OSError, ValueError, KeyError, TypeError):
+        return False
+
+
 def execute(args):
     resources.require(args.mode in MODES, 'No PLC successor for mode: ' + args.mode)
-    resources.require(all(path.resolve().is_relative_to(ROOT) for path in (args.host, args.worker, args.harness, args.output)),
+    resources.require(all(path.resolve().is_relative_to(ROOT) for path in (args.host, args.worker, args.harness)) and owns_evidence(args.output),
                       'Host, worker, harness and evidence must belong to this worktree')
     args.output.mkdir(parents=True, exist_ok=False)
     diagnostics = args.output / 'diagnostics'

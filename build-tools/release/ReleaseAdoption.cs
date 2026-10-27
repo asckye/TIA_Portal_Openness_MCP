@@ -84,11 +84,13 @@ internal static partial class ReleaseCommands
         var external = ReleaseEvidence.ProbeExternal(Root, publicApiRoot, nugetConfig is null ? null : Path.GetFullPath(nugetConfig), Dotnet, python,
             string.IsNullOrWhiteSpace(companion) ? null : ResolveApplication(companion));
         var evidencePath = Path.GetFullPath(options.Get("AdoptEvidence")!);
-        var adoption = ReleaseEvidence.Verify(new ReleaseEvidence.Inputs(Root, git, evidencePath, external, DateTimeOffset.UtcNow));
+        var repository = options.Get("Repository", "asckye/TIA_Portal_Openness_MCP");
+        var adoption = ReleaseEvidence.Verify(new ReleaseEvidence.Inputs(Root, git, evidencePath, external, DateTimeOffset.UtcNow,
+            dryRun ? null : coverage => VerifyReleaseCi(options.Get("ApiBaseUrl", "https://api.github.com"), token, repository,
+                ReleaseEvidence.GitText(Root, git, "rev-parse", "HEAD"), coverage)));
         var record = adoption["record"]!.AsObject();
         var commit = ReleaseEvidence.Text(record["evidence"]?["commit"]);
-        var repository = options.Get("Repository", "asckye/TIA_Portal_Openness_MCP");
-        record["ci"] = dryRun
+        if (record["ci"] == null) record["ci"] = dryRun
             ? new JsonObject { ["status"] = "not verified in a dry run; publication requires " + string.Join(" and ", ReleaseEvidence.PushWorkflows) + " of " + commit }
             : VerifyReleaseCi(options.Get("ApiBaseUrl", "https://api.github.com"), token, repository, commit);
         File.Copy(evidencePath, Path.Combine(logRoot, "adopted-" + ReleaseEvidence.FileName), true);
@@ -101,7 +103,7 @@ internal static partial class ReleaseCommands
         return adoption;
     }
 
-    private static JsonArray VerifyReleaseCi(string apiBase, string token, string repository, string sha)
+    private static JsonArray VerifyReleaseCi(string apiBase, string token, string repository, string sha, JsonObject? ciCovered = null)
     {
         using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -113,7 +115,7 @@ internal static partial class ReleaseCommands
             using var response = client.GetAsync(apiBase.TrimEnd('/') + "/" + url).GetAwaiter().GetResult();
             if (!response.IsSuccessStatusCode) throw new ReleaseException($"GitHub API answered HTTP {(int)response.StatusCode} for {url}");
             return response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-        }, repository, sha, ReleaseEvidence.PushWorkflows);
+        }, repository, sha, ReleaseEvidence.PushWorkflows, ciCovered);
     }
 
     // After the version step the adopted tree must still be the evidence's tree; nothing may have been rewritten.
@@ -219,7 +221,16 @@ internal static partial class ReleaseCommands
         var git = options.Get("Git", "git");
         var external = ReleaseEvidence.ProbeExternal(Root, api, nuget is null ? null : Path.GetFullPath(nuget), Dotnet, options.Get("Python", Py),
             string.IsNullOrWhiteSpace(companion) ? null : ResolveApplication(companion));
-        var adoption = ReleaseEvidence.Verify(new ReleaseEvidence.Inputs(Root, git, evidence, external, DateTimeOffset.UtcNow));
+        string? token = null;
+        string Token()
+        {
+            token ??= ReleasePrerequisites.GetToken(options.Get("Token") ?? "", ResolveApplication(git), Root, localOnly: false);
+            ReleasePrerequisites.RequireToken(token);
+            return token;
+        }
+        var adoption = ReleaseEvidence.Verify(new ReleaseEvidence.Inputs(Root, git, evidence, external, DateTimeOffset.UtcNow,
+            options.Has("Ci") ? coverage => VerifyReleaseCi(options.Get("ApiBaseUrl", "https://api.github.com"), Token(), options.Get("Repository", "asckye/TIA_Portal_Openness_MCP"),
+                ReleaseEvidence.GitText(Root, git, "rev-parse", "HEAD"), coverage) : null));
         var record = adoption["record"]!.AsObject();
         var commit = ReleaseEvidence.Text(record["evidence"]?["commit"]);
         Console.WriteLine($"Evidence accepted for {commit}: {record["evidence"]?["jobs"]} passed jobs, {record["suites"]!.AsObject().Count} registered suites, " +
@@ -229,9 +240,7 @@ internal static partial class ReleaseCommands
             Console.WriteLine("CI not checked; pass -Ci to read " + string.Join(" and ", ReleaseEvidence.PushWorkflows) + " of the commit (token from -Token, GITHUB_TOKEN or Git).");
             return 0;
         }
-        var token = ReleasePrerequisites.GetToken(options.Get("Token") ?? "", ResolveApplication(git), Root, localOnly: false);
-        ReleasePrerequisites.RequireToken(token);
-        foreach (var run in VerifyReleaseCi(options.Get("ApiBaseUrl", "https://api.github.com"), token, options.Get("Repository", "asckye/TIA_Portal_Openness_MCP"), commit))
+        foreach (var run in record["ci"] as JsonArray ?? VerifyReleaseCi(options.Get("ApiBaseUrl", "https://api.github.com"), Token(), options.Get("Repository", "asckye/TIA_Portal_Openness_MCP"), commit))
             Console.WriteLine($"CI {ReleaseEvidence.Text(run?["workflow"])}: run {run?["runId"]} attempt {run?["runAttempt"]} success, {run?["jobs"]} jobs; {ReleaseEvidence.Text(run?["url"])}");
         return 0;
     }
