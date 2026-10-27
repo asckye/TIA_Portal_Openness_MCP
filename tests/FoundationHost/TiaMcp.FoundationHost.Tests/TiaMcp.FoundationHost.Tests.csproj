@@ -68,6 +68,7 @@
     <Compile Include="../../../src/FoundationHost/WorkbenchControlClient.cs" Link="WorkbenchControlClient.cs" />
     <Compile Include="../../../src/FoundationHost/WorkbenchControlSession.cs" Link="WorkbenchControlSession.cs" />
     <Compile Include="../../../src/FoundationHost/WorkbenchControlTools.cs" Link="WorkbenchControlTools.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiExchangePolicy.cs" Link="Native/Hmi/HmiExchangePolicy.cs" />
     <Compile Include="../../../src/FoundationHost/FoundationV4Tool.cs" Link="FoundationV4Tool.cs" />
     <Compile Include="../../../src/FoundationHost/FoundationV4Result.cs" Link="FoundationV4Result.cs" />
     <Compile Include="../../../src/FoundationHost/FoundationSessionCandidate.cs" Link="FoundationSessionCandidate.cs" />

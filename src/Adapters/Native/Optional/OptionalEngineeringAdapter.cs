@@ -24,6 +24,7 @@ namespace TiaMcp.Adapters.Native.Optional
 
         public HardwareAddressingReply ReadSiVArcRules(string category,string objectPathJson="[]",int offset=0,int limit=100)
             =>_session.RunHmiStepTool("ListSivarcRules",meta=>{
+                EngineeringObjectAddress.Parse(objectPathJson);
                 try
                 {
                 if(offset<0||limit<1||limit>500)throw new ArgumentException("Invalid pagination.");
@@ -38,6 +39,9 @@ namespace TiaMcp.Adapters.Native.Optional
             });
         public HardwareAddressingReply ManageSiVArcRule(string category,string collectionPathJson,string name,string action,string propertiesJson="{}",bool dryRun=true)
             =>_session.RunHmiStepTool("ManageSivarcRule",meta=>{
+                EngineeringObjectAddress.Parse(collectionPathJson);
+                var changes=OptionalInputs.Parse(propertiesJson) as HmiObject ?? throw new ArgumentException("Expected properties object.");
+                if(changes.ContainsKey("Name")||(action=="delete"&&changes.Count>0))throw new ArgumentException("No renaming or changes during delete.");
                 try
                 {
                 if(!new[]{"create","update","delete"}.Contains(action)||string.IsNullOrWhiteSpace(name))throw new ArgumentException("Exact name and create/update/delete required.");
@@ -46,8 +50,6 @@ namespace TiaMcp.Adapters.Native.Optional
                 if(collection.GetType().Namespace!="Siemens.Engineering.SiVArc"||!collection.GetType().Name.EndsWith("Composition",StringComparison.Ordinal))throw new ArgumentException("Select a native SiVArc rule/folder/table collection.");
                 var target=EngineeringGroupOperations.Find(collection,name);
                 if((action=="create")== (target!=null))throw new InvalidOperationException(action=="create" ? "Object exists." : "Exact object not found.");
-                var changes=OptionalInputs.Parse(propertiesJson) as HmiObject ?? throw new ArgumentException("Expected properties object.");
-                if(changes.ContainsKey("Name")||(action=="delete"&&changes.Count>0))throw new ArgumentException("No renaming or changes during delete.");
                 if(action=="delete") foreach(var child in target!.GetType().GetProperties().Where(p=>p.GetIndexParameters().Length==0&&p.GetMethod?.IsPublic==true&&p.PropertyType.Name.EndsWith("Composition",StringComparison.Ordinal))) {
                     var children=child.GetValue(target);if(children!=null&&EngineeringGroupOperations.Items(children).Any())throw new InvalidOperationException("Nonempty rule container deletion refused: "+child.Name);
                 }

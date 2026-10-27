@@ -14,6 +14,21 @@ namespace TiaMcp.Engine.Tests
 {
     public sealed class UnifiedHmiPortTests
     {
+        [Fact]
+        public void Classic_builders_refuse_backslash_paths_in_XML_names()
+        {
+            string input = JsonSerializer.Serialize(new { Name = "Group\\Name" });
+            Assert.Throws<ArgumentException>(() => ClassicHmiTagTableXmlBuilder.BuildFromJson(input));
+            Assert.Throws<ArgumentException>(() => ClassicHmiScreenXmlBuilder.BuildFromJson(input));
+        }
+
+        [Fact]
+        public void Classic_builders_refuse_path_names_instead_of_putting_them_in_XML()
+        {
+            Assert.Throws<ArgumentException>(() => ClassicHmiTagTableXmlBuilder.BuildFromJson("{\"Name\":\"/Group/Table\"}"));
+            Assert.Throws<ArgumentException>(() => ClassicHmiScreenXmlBuilder.BuildFromJson("{\"Name\":\"Group/Screen\"}"));
+        }
+
         [Theory]
         [InlineData("ExpressionDynamization")]
         [InlineData("Expression")]

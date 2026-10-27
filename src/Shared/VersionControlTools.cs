@@ -93,7 +93,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "ConnectProjectToWorkspace"), Description(
             "[L2][VersionControl] Put a WHOLE project under version control automatically - no TIA UI clicks. " +
             "Walks the project tree; V20+ queries Workspace.GetSupportedFileFormats, while V16-V19 maps PLC blocks/types/tag tables. " +
-            "Maps supported objects using ExportObject at the workspace root on V20+; V16-V19 uses WorkspaceMapping.Create. Connecting existing files with ConnectObject is not exposed. COARSE-FIRST: when a device or PLC " +
+            "Maps supported objects using Workspace.ExportObject at the workspace root on V20+; V16-V19 uses WorkspaceMapping.Create. Connecting existing files with ConnectObject is not exposed. COARSE-FIRST: when a device or PLC " +
             "software object is mappable as one unit it is mapped whole and its children are not visited, so you " +
             "get the fewest mappings that still cover everything. Objects VCI does not support (typically hardware " +
             "configuration) are reported, never silently dropped. " +

@@ -22,6 +22,10 @@ namespace TiaMcpServer.Siemens.Services
 
         protected T Invoke<T>(UnifiedHmiRequest request)
         {
+            if (request.Operation == "EnsureUnifiedHmiTagTable" || request.Operation == "EnsureUnifiedHmiTag"
+                || request.Operation == "SetUnifiedHmiRuntimeState") EngineeringInputValidation.NameOrAbsolutePath(request.TagTableName);
+            if (request.Operation == "EnsureUnifiedHmiScreen" || request.Operation == "SetUnifiedHmiRuntimeState")
+                EngineeringInputValidation.NameOrAbsolutePath(request.ScreenName);
             foreach (string input in new[] { request.DesignJson, request.PropertiesJson })
             {
                 if (string.IsNullOrEmpty(input)) continue;

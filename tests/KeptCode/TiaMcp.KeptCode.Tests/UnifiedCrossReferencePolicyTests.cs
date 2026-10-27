@@ -31,6 +31,29 @@ namespace TiaMcp.Engine.Tests
 {
     public sealed class UnifiedCrossReferencePolicyTests
     {
+        [Theory]
+        [InlineData("strings")]
+        [InlineData("object")]
+        [InlineData("unknown")]
+        [InlineData("backlink")]
+        public void Malformed_path_is_refused_before_root_or_native_service_access(string kind)
+        {
+            var previous = UnifiedRequestValues.Inputs;
+            try
+            {
+                object input = kind == "strings" ? new HmiArray("Screens", "Main") : kind == "object" ? new HmiObject()
+                    : kind == "unknown" ? new HmiArray(new HmiObject { ["property"] = "Screens", ["unknown"] = true })
+                    : new HmiArray(new HmiObject { ["property"] = "Parent" });
+                UnifiedRequestValues.Inputs = new Dictionary<string, object?> { ["fixture-path"] = input };
+                var session = new Session();
+                var error = Assert.Throws<ArgumentException>(() => UnifiedCrossReferences.Read(session, "HMI", "fixture-path"));
+                Assert.Contains("Expected an array", error.Message);
+                Assert.Equal(0, session.Resolves);
+                Assert.Equal(0, session.Target.ServiceRequests);
+                Assert.Equal(0, session.Target.Service.Calls);
+            }
+            finally { UnifiedRequestValues.Inputs = previous; }
+        }
         public static IEnumerable<object?[]> Refusals => from release in new[] { "19", "20", "21" }
             from setting in new string?[] { null, "", "0", "true", " 1" }
             select new object?[] { release, setting };

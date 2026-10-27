@@ -66,8 +66,11 @@ namespace TiaMcp.Adapters.Native.Hmi
         public HmiMessage ReadUnifiedTagDefinitions(string softwarePath, string expectedProject, string cursor = "", int pageSize = 100, int budgetMs = 5000)
             => MigrationPage("ReadUnifiedTagDefinitions", softwarePath, expectedProject, new HmiObject(), cursor, pageSize, budgetMs, UnifiedTagDefinitions.Read);
         public HmiMessage ReadUnifiedScreenBranch(string softwarePath, string expectedProject, string screenPath, string itemName = "", string branchJson = "[]", string cursor = "", int pageSize = 100, int budgetMs = 5000)
-            => MigrationPage("ReadUnifiedScreenBranch", softwarePath, expectedProject, new HmiObject { ["screenPath"] = screenPath, ["itemName"] = itemName, ["branch"] = branchJson }, cursor, pageSize, budgetMs,
+        {
+            MigrationRead.ParseBranch(branchJson);
+            return MigrationPage("ReadUnifiedScreenBranch", softwarePath, expectedProject, new HmiObject { ["screenPath"] = screenPath, ["itemName"] = itemName, ["branch"] = branchJson }, cursor, pageSize, budgetMs,
                 hmi => ScreenBranch(hmi, screenPath, itemName, branchJson));
+        }
         private static IEnumerable<HmiObject> ScreenBranch(object hmi, string screenPath, string itemName, string branchJson)
         {
             object root = MigrationRead.Screen(hmi, screenPath);

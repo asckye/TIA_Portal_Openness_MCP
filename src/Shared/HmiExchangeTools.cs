@@ -447,14 +447,14 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "ImportHmiScreen"), Description("[L2][HMI]Import one HMI screen XML file into an HMI program (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ImportHmiScreenV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: optional screen group path inside HMI (use empty for root)")] string folderPath,
+            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.")] string folderPath,
             [Description("importPath: full file path of exported screen XML")] string importPath,
             [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false)
             => HmiExchangeContract.Run("ImportHmiScreen", true, true, () => ImportHmiScreen(softwarePath, folderPath, importPath, overwrite));
 
         public ResponseMessage ImportHmiScreen(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: optional screen group path inside HMI (use empty for root)")] string folderPath,
+            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.")] string folderPath,
             [Description("importPath: full file path of exported screen XML")] string importPath,
             [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false)
         {
@@ -480,14 +480,14 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "ImportHmiTagTable"), Description("[L2][HMI]Import one HMI tag table XML file into an HMI program (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ImportHmiTagTableV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: optional tag table group path inside HMI (use empty for root)")] string folderPath,
+            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.")] string folderPath,
             [Description("importPath: full file path of exported tag table XML")] string importPath,
             [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false)
             => HmiExchangeContract.Run("ImportHmiTagTable", true, true, () => ImportHmiTagTable(softwarePath, folderPath, importPath, overwrite));
 
         public ResponseMessage ImportHmiTagTable(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: optional tag table group path inside HMI (use empty for root)")] string folderPath,
+            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.")] string folderPath,
             [Description("importPath: full file path of exported tag table XML")] string importPath,
             [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false)
         {
@@ -544,18 +544,18 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "ImportHmiScreensFromDirectory"), Description("[L2][HMI]Batch import classic WinCC screen .xml files; overwrite defaults false, unresolved folders refuse Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ImportHmiScreensFromDirectoryV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: optional screen group path inside HMI (use empty for root)")] string folderPath,
+            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.")] string folderPath,
             [Description("dir: directory containing exported screen XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
-            [Description("overwrite: default false (ImportOptions.None); true explicitly selects Override")] bool overwrite = false)
+            [Description("overwrite: default false (native import option None); true explicitly selects Override")] bool overwrite = false)
             => HmiExchangeContract.Run("ImportHmiScreensFromDirectory", true, true, () => ImportHmiScreensFromDirectory(softwarePath, folderPath, dir, regexName, overwrite));
 
         public ResponseImportBatch ImportHmiScreensFromDirectory(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: optional screen group path inside HMI (use empty for root)")] string folderPath,
+            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.")] string folderPath,
             [Description("dir: directory containing exported screen XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
-            [Description("overwrite: default false (ImportOptions.None); true explicitly selects Override")] bool overwrite = false)
+            [Description("overwrite: default false (native import option None); true explicitly selects Override")] bool overwrite = false)
         {
             try
             {
@@ -577,18 +577,18 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "ImportHmiTagTablesFromDirectory"), Description("[L2][HMI]Batch import classic WinCC tag table .xml files; overwrite defaults false, unresolved folders refuse Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ImportHmiTagTablesFromDirectoryV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: optional tag table group path inside HMI (use empty for root)")] string folderPath,
+            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.")] string folderPath,
             [Description("dir: directory containing exported tag table XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
-            [Description("overwrite: default false (ImportOptions.None); true explicitly selects Override")] bool overwrite = false)
+            [Description("overwrite: default false (native import option None); true explicitly selects Override")] bool overwrite = false)
             => HmiExchangeContract.Run("ImportHmiTagTablesFromDirectory", true, true, () => ImportHmiTagTablesFromDirectory(softwarePath, folderPath, dir, regexName, overwrite));
 
         public ResponseImportBatch ImportHmiTagTablesFromDirectory(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: optional tag table group path inside HMI (use empty for root)")] string folderPath,
+            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.")] string folderPath,
             [Description("dir: directory containing exported tag table XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
-            [Description("overwrite: default false (ImportOptions.None); true explicitly selects Override")] bool overwrite = false)
+            [Description("overwrite: default false (native import option None); true explicitly selects Override")] bool overwrite = false)
         {
             try
             {

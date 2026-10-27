@@ -87,10 +87,15 @@ namespace TiaMcp.Adapters.Native.Hmi
             for (int j = 0; j < parts.Length - 1; j++) owner = Named(Get(owner, j == 0 ? "ScreenGroups" : "Groups")!, Uri.UnescapeDataString(parts[j]));
             return Named(Get(owner, "Screens")!, Uri.UnescapeDataString(parts[parts.Length - 1]));
         }
+        internal static HmiArray ParseBranch(string branchJson)
+        {
+            var steps = UnifiedRequestValues.Parse(branchJson);
+            EngineeringInputValidation.Path(branchJson, steps, true);
+            return (HmiArray)steps!;
+        }
         internal static object? Branch(object? root, string branchJson)
         {
-            var steps = UnifiedRequestValues.Parse(branchJson) as HmiArray ?? throw new ArgumentException("branchJson must be a JSON array.");
-            if (steps.Count > 64) throw new ArgumentException("At most 64 branch segments.");
+            var steps = ParseBranch(branchJson);
             foreach (var node in steps)
             {
                 if (root == null) throw new InvalidOperationException("Null intermediate branch.");

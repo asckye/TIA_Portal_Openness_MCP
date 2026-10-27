@@ -13,6 +13,7 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public HmiMessage ReadUnifiedObjectEvents(string softwarePath, string objectPathJson, int offset = 0, int limit = 100)
             => _session.RunHmiStepTool("GetUnifiedObjectEvents", meta => {
+                UnifiedObjectAddress.Parse(objectPathJson);
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset >= 0 and limit 1..500 required.");
                 var target = UnifiedObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath), objectPathJson);
                 var capabilities = UnifiedUiModelLogic.EventCapabilities(target);
@@ -27,8 +28,10 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public HmiMessage ManageUnifiedObjectParts(string softwarePath, string objectPathJson, string action = "read", string collectionProperty = "", string partName = "", int partIndex = -1, string partKind = "", string propertiesJson = "{}", bool confirmDelete = false, bool dryRun = true)
             => _session.RunHmiStepTool("ManageUnifiedObjectParts", meta => {
-                if (!new[] { "read", "create", "update", "delete" }.Contains(action)) throw new ArgumentException("action must be read/create/update/delete.");
+                UnifiedObjectAddress.Parse(objectPathJson);
                 var changes = UnifiedRequestValues.Parse(propertiesJson) as HmiObject ?? throw new ArgumentException("propertiesJson must be an object.");
+                if (!new[] { "read", "create", "update", "delete" }.Contains(action)) throw new ArgumentException("action must be read/create/update/delete.");
+                if (action == "create" && partName.IndexOfAny(new[] { '/', '\\' }) >= 0) throw new ArgumentException("partName must be a single name. Select /Group/Sub/Table through objectPath property steps, e.g. " + EngineeringInputValidation.ObjectPathExample);
                 if (action != "update" && changes.Count != 0) throw new ArgumentException("propertiesJson is only accepted by update.");
                 if (action == "update" && changes.Count == 0) throw new ArgumentException("update requires nonempty propertiesJson.");
                 bool write = action != "read" && !dryRun; using var access = write ? _session.AcquireHmiEditAccess() : null;
@@ -87,8 +90,9 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public HmiMessage ManageUnifiedDynamization(string softwarePath, string objectPathJson, string propertyName, string action = "read", string dynamizationKind = "", string propertiesJson = "{}", string mappingEntriesJson = "[]", bool confirmDelete = false, bool dryRun = true)
             => _session.RunHmiStepTool("ManageUnifiedDynamization", meta => {
-                if (!new[] { "read", "create", "update", "delete" }.Contains(action)) throw new ArgumentException("action must be read/create/update/delete.");
+                UnifiedObjectAddress.Parse(objectPathJson);
                 var changes = UnifiedRequestValues.Parse(propertiesJson) as HmiObject ?? throw new ArgumentException("propertiesJson must be an object.");
+                if (!new[] { "read", "create", "update", "delete" }.Contains(action)) throw new ArgumentException("action must be read/create/update/delete.");
                 if ((action == "read" || action == "delete") && (changes.Count != 0 || mappingEntriesJson.Trim() != "[]")) throw new ArgumentException("Properties and mapping entries are only accepted by create/update.");
                 bool write = action != "read" && !dryRun; using var access = write ? _session.AcquireHmiEditAccess() : null;
                 var target = UnifiedObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath), objectPathJson);
@@ -152,8 +156,9 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public HmiMessage ManageUnifiedScreenLayout(string softwarePath, string objectPathJson, string action = "read", string name = "", string propertiesJson = "{}", bool confirmDelete = false, bool dryRun = true)
             => _session.RunHmiStepTool("ManageUnifiedScreenLayout", meta => {
-                if (!new[] { "read", "create", "rename", "update", "resize", "delete" }.Contains(action)) throw new ArgumentException("action must be read/create/rename/update/resize/delete.");
+                UnifiedObjectAddress.Parse(objectPathJson);
                 var changes = UnifiedRequestValues.Parse(propertiesJson) as HmiObject ?? throw new ArgumentException("propertiesJson must be an object.");
+                if (!new[] { "read", "create", "rename", "update", "resize", "delete" }.Contains(action)) throw new ArgumentException("action must be read/create/rename/update/resize/delete.");
                 if (action != "update" && changes.Count != 0) throw new ArgumentException("propertiesJson is only accepted by update.");
                 if (action == "update" && changes.Count == 0) throw new ArgumentException("update requires nonempty propertiesJson.");
                 if ((action == "create" || action == "rename") != (name != "")) throw new ArgumentException("name is required by create/rename only.");

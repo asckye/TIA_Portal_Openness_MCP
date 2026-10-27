@@ -9,6 +9,7 @@ namespace TiaMcp.Adapters.Native.Hmi
     {
         internal static HmiMessage Read(IUnifiedSession session, string softwarePath, string objectPathJson, string filter = "AllObjects")
             => session.RunHmiStepTool("GetUnifiedCrossReferences", meta => {
+                UnifiedObjectAddress.Parse(objectPathJson);
                 var refusal = PlcCrossReferencePolicy.PolicyRefusal(
                     Environment.GetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable), unified: true);
                 if (refusal != null)

@@ -39,6 +39,9 @@ internal sealed class OptionalEngineeringPort
     }
     internal ResponseMessage Invoke(string module, OptionalEngineeringRequest request)
     {
+        foreach (var text in new[] { request.ObjectPathJson, request.CollectionPathJson })
+            if (text.Length != 0) UnifiedPortService.ValidateAddress(text, optional: true);
+        if (request.PropertiesJson.Length != 0) UnifiedPortService.ValidateProperties(request.PropertiesJson);
         request.IsWrite = OptionalEngineeringMutations.Writes(request);
         if (OptionalEngineeringCapabilities.Unsupported(HardwareContract.ReleaseKey, request) is string unavailable)
             return new ResponseMessage { Message = unavailable,

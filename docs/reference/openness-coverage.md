@@ -20,7 +20,7 @@ The 2026-10-19 API audit (P8-81g, S-11) identified these documented members with
 
 S-4/S-5/S-6: no PUT/GET, certificate assignment or PLC syslog certificate dynamic attribute names have verified owner/type/write semantics. Their exact allow-lists start empty; these operations refuse until documented or VM-verified evidence is recorded. Typed certificate and syslog APIs remain available. `ProtectionProviderBase` describes block protection and is not a project-protection probe. On V17+ the project indicator follows `UmacConfigurator` availability and `EngineeringFunctionRights.Any()`; V15.1/V16 remain unknown.
 
-Native follow-up is recorded in the [API audit VM checklist](api-audit-vm-checklist.md). These limitations do not claim native acceptance.
+Native follow-up is recorded in the [API audit VM checklist](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/api-audit-vm-checklist.md). These limitations do not claim native acceptance.
 
 | Release | Domain signatures | Unique member names | Compiled direct references | Names requiring further review |
 |---|---:|---:|---:|---:|
@@ -357,7 +357,7 @@ coverage work for 4.1:
 | User-group creation | `WorkspaceUserGroupComposition.Create` | 16–21 |
 | Hierarchical child status | `ChildObjectsStateProvider.GetStatus`; `MappedObject.GetChildStatus` | 18–20; 20–21 |
 | Initialize an unknown, unmodified mapping's status | `IndividualObjectSynchronizationStatus.InitializeStatus` | 19–20 |
-| Connect an existing workspace file | `Workspace.ConnectObject` | 20–21 |
+| Associate an existing workspace file | `Workspace.ConnectObject` | 20–21 |
 | Library path / deletion policy | `Workspace.GlobalLibraryPath`, `DeleteUnusedTypeVersionFromLibrary` | 20–21 |
 | Library-instance update policy | `Workspace.UpdateLibraryInstancesInProject` | 20 |
 

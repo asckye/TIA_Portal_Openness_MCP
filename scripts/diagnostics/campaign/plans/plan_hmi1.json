@@ -673,8 +673,8 @@
 ],
 "applicability": {
 "20": {
-"applicable": false,
-"reason": "GetClassicHmiGlobalization is absent from the V20 release catalog; this plan step requires the V21 tool."
+"applicable": true,
+"reason": "P8-81e: GetClassicHmiGlobalization is registered on V20 and V21; project graphics use the supported release-specific project API."
 },
 "21": {
 "applicable": true,
@@ -700,8 +700,8 @@
 ],
 "applicability": {
 "20": {
-"applicable": false,
-"reason": "ManageClassicHmiGraphic is absent from the V20 release catalog; this plan step requires the V21 tool."
+"applicable": true,
+"reason": "P8-81e: ManageClassicHmiGraphic is registered on V20 and V21; project graphics use the supported release-specific project API."
 },
 "21": {
 "applicable": true,

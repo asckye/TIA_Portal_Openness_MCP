@@ -519,7 +519,9 @@ internal sealed partial class FoundationTool
             "HardwareAmlTools" => new HardwareAmlTools(new HardwareAmlService(call, hasProject, identity)),
             _ => new AddressesTools(service)
         };
-        var values = portedMethod!.GetParameters().Select(p => arguments.TryGetValue(p.Name!, out var value)
+        // A request-context parameter lets a V4 method tell an omitted option from an explicit default.
+        var values = portedMethod!.GetParameters().Select(p => p.ParameterType == typeof(RequestContext<CallToolRequestParams>) ? request
+            : arguments.TryGetValue(p.Name!, out var value)
             ? JsonSerializer.Deserialize(value.GetRawText(), p.ParameterType, new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = false }) : p.DefaultValue).ToArray();
         try
         {

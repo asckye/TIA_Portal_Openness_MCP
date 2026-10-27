@@ -3,9 +3,11 @@ extern alias enginehost;
 using DeclaredToolMetadata = enginehost::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
 using ProgressHeartbeat = enginehost::TiaMcpServer.ModelContextProtocol.ProgressHeartbeat;
 using ReleaseCatalogData = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
+using UnifiedInputAdmission = enginehost::TiaMcpServer.Siemens.Services.UnifiedPortService;
 #else
 using DeclaredToolMetadata = TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
 using ProgressHeartbeat = TiaMcpServer.ModelContextProtocol.ProgressHeartbeat;
+using UnifiedInputAdmission = TiaMcpServer.Siemens.Services.UnifiedPortService;
 #endif
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -270,6 +272,35 @@ internal sealed class FoundationV4Tool : McpServerTool
         IDisposable? lane = null;
         try
         {
+            if (tool.Name is "EnsureUnifiedHmiTagTable" or "EnsureUnifiedHmiTag" or "EnsureUnifiedHmiScreen" or "SetUnifiedHmiRuntimeState")
+                foreach (var field in new[] { "tagTableName", "screenName" })
+                    if (args.TryGetValue(field, out var name) && name.ValueKind == JsonValueKind.String)
+                        try { TiaMcp.Adapters.Contracts.EngineeringInputValidation.NameOrAbsolutePath(name.GetString()!); }
+                        catch (ArgumentException error)
+                        {
+                            return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
+                                new Error(error.Message, new InvalidArgumentDetails(field, Array.Empty<string>())), true));
+                        }
+            // Validate navigation before schema binding, readiness, approval, lane acquisition or ReadState.
+            // In particular, a string-array path must never become a worker request.
+            foreach (var field in new[] { "objectPath", "branch", "collectionPath", "tagPath", "durationPath" })
+            {
+                if (!tool.InputSchema.GetProperty("properties").TryGetProperty(field, out var fieldSchema)
+                    || !fieldSchema.TryGetProperty("type", out var fieldType) || fieldType.GetString() != "array"
+                    || !args.TryGetValue(field, out var input)) continue;
+                try
+                {
+                    UnifiedInputAdmission.ValidateAddress(
+                        input.ValueKind == JsonValueKind.String ? input.GetString()! : input.GetRawText(), field == "branch",
+                        TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool.Name)
+                            && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(tool.Name).Name is "F29" or "F31");
+                }
+                catch (ArgumentException error)
+                {
+                    return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
+                        new Error(error.Message, new InvalidArgumentDetails(field, Array.Empty<string>())), inner is FoundationTool { IsNative: true }));
+                }
+            }
             var validation = new InputContract<ToolArguments>(new InputSchema(tool.InputSchema), tool.Name == "StageImportFiles" ? new InputBudget(characters: 40 * 1024 * 1024, items: 4096) : new InputBudget())
                 .Read(JsonSerializer.SerializeToElement(args), "arguments");
             if (validation.Error != null && compileCandidate) return Recorded(FoundationV4Result.ImportCandidate(CompileSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted)));

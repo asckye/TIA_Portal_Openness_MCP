@@ -308,7 +308,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                     var entryIdentifier = TryGetPropertyValue(entry, "TypeIdentifier")?.ToString();
                     if (!string.Equals(entryIdentifier, typeIdentifier, StringComparison.OrdinalIgnoreCase)) continue;
                     var description = TryGetPropertyValue(entry, "Description")?.ToString() ?? "";
-                    var match = Regex.Match(description, @"(\d{3,4})\s*[x脳X]\s*(\d{3,4})");
+                    var match = Regex.Match(description, @"(\d{3,4})\s*[x×X]\s*(\d{3,4})");
                     if (match.Success) return (int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture), int.Parse(match.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture));
                 }
             }

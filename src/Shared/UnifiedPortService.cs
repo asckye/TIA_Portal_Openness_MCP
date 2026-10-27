@@ -18,10 +18,50 @@ namespace TiaMcpServer.Siemens.Services
 
         protected ResponseMessage Invoke(UnifiedRequest request, bool dryRun)
         {
+            ValidateInputs(request);
             DecodeInputs(request);
             var unavailable = UnifiedCapabilities.Unsupported(HardwareContract.ReleaseKey, request);
             if (unavailable != null) throw new PortalException(PortalErrorCode.NotSupportedOnVersion, unavailable);
             return Dispatch(request, dryRun);
+        }
+
+        internal static void ValidateAddress(string text, bool branch = false, bool optional = false)
+        {
+            string example = branch ? EngineeringInputValidation.BranchPathExample
+                : optional ? EngineeringInputValidation.OptionalObjectPathExample + " (the typed DCC/SiVArc root)" : EngineeringInputValidation.ObjectPathExample;
+            if (text == null || text.Length > 32768) throw new ArgumentException("Object path exceeds 32 KiB. Expected property steps, e.g. " + example + ".");
+            object? value;
+            try
+            {
+                using var document = JsonDocument.Parse(text);
+                value = EngineeringInputValidation.Value(UnifiedInputCodec.Decode(document.RootElement));
+            }
+            catch (Exception error) when (error is JsonException || error is ArgumentException)
+            {
+                throw new ArgumentException("Invalid path JSON. Expected property steps, e.g. "
+                    + example + ". " + error.Message);
+            }
+            EngineeringInputValidation.Path(text, value, branch, optional);
+        }
+
+        internal static void ValidateProperties(string text)
+        {
+            try
+            {
+                using var document = JsonDocument.Parse(text);
+                if (document.RootElement.ValueKind != JsonValueKind.Object || UnifiedInputCodec.HasDuplicateKeys(document.RootElement))
+                    throw new ArgumentException("propertiesJson must be a JSON object with unique keys, e.g. {\"Width\":800}.");
+            }
+            catch (JsonException error) { throw new ArgumentException("propertiesJson must be a JSON object with unique keys, e.g. {\"Width\":800}.", error); }
+        }
+
+        internal static void ValidateInputs(UnifiedRequest request)
+        {
+            foreach (var text in new[] { request.ObjectPathJson, request.TagPathJson, request.DurationPathJson })
+                if (text.Length != 0) ValidateAddress(text);
+            if (request.BranchJson.Length != 0) ValidateAddress(request.BranchJson, true);
+            foreach (var text in new[] { request.PropertiesJson, request.ScriptPropertiesJson })
+                if (text.Length != 0) ValidateProperties(text);
         }
 
         internal static void DecodeInputs(UnifiedRequest request)

@@ -45,6 +45,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var tableName = GetString(root, "Name", "name", GetString(root, "TableName", "tableName", "Classic_HMI_Tags"));
             if (string.IsNullOrWhiteSpace(tableName))
                 throw new ArgumentException("Classic HMI tag table name is required.");
+            if (tableName.IndexOfAny(new[] { '/', '\\' }) >= 0)
+                throw new ArgumentException("Classic HMI tag table Name must be a single name without path separators. Select absolute /Group/Sub with folderPath when importing Table; paths do not belong in the XML Name.");
             var tags = (root["Tags"] as JsonArray ?? root["tags"] as JsonArray ?? new JsonArray())
                 .OfType<JsonObject>()
                 .ToArray();

@@ -18,6 +18,7 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public HmiMessage ReadUnifiedObjectProperties(string softwarePath, string objectPathJson = "[]", int offset = 0, int limit = 100)
             => _session.RunHmiStepTool("GetUnifiedObjectProperties", meta => {
+                UnifiedObjectAddress.Parse(objectPathJson);
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset >= 0, limit 1..500 required.");
                 var target = UnifiedObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath), objectPathJson);
                 var items = target is IEnumerable && target is not string ? PlcGroupOperations.Items(target).ToArray() : new[] { target };
@@ -51,6 +52,7 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public HmiMessage UpdateUnifiedMultilingualProperty(string softwarePath, string objectPathJson, string property, string culture, string rawText, bool dryRun = true)
             => _session.RunHmiStepTool("SetUnifiedMultilingualProperty", meta => {
+                UnifiedObjectAddress.Parse(objectPathJson);
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 var target = UnifiedObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath), objectPathJson);
                 UnifiedMultilingualText.Validate(target, property, culture);
@@ -67,6 +69,7 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public HmiMessage ValidateUnifiedObject(string softwarePath, string objectPathJson)
             => _session.RunHmiStepTool("ValidateUnifiedObject", meta => {
+                UnifiedObjectAddress.Parse(objectPathJson);
                 var target = UnifiedObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath), objectPathJson);
                 var result = PlcGroupOperations.Call(target, "Validate", Type.EmptyTypes);
                 var rows = new HmiArray();
@@ -122,6 +125,9 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public HmiMessage ManageUnifiedLoggingTag(string softwarePath, string tagPathJson, string action = "read", string name = "", string propertiesJson = "{}", bool dryRun = true)
             => _session.RunHmiStepTool("ManageUnifiedLoggingTag", meta => {
+                UnifiedObjectAddress.Parse(tagPathJson);
+                var changes = UnifiedRequestValues.Parse(propertiesJson) as HmiObject ?? throw new ArgumentException("propertiesJson must be an object.");
+                if (changes.ContainsKey("Name") || (action == "delete" && changes.Count != 0)) throw new ArgumentException("Renaming or properties on delete are not supported.");
                 if (!new[] { "read", "create", "update", "delete" }.Contains(action)) throw new ArgumentException("action must be one of: read/create/update/delete (case-sensitive).");
                 bool write = action != "read" && !dryRun;
                 using var access = write ? _session.AcquireHmiEditAccess() : null;
@@ -140,8 +146,6 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Exact logging tag name required.");
                 var target = PlcGroupOperations.Find(collection, name);
                 if ((action == "create") == (target != null)) throw new InvalidOperationException(action == "create" ? "Logging tag exists." : "Logging tag not found.");
-                var changes = UnifiedRequestValues.Parse(propertiesJson) as HmiObject ?? throw new ArgumentException("propertiesJson must be an object.");
-                if (changes.ContainsKey("Name") || (action == "delete" && changes.Count != 0)) throw new ArgumentException("Renaming or properties on delete are not supported.");
                 if (changes.ContainsKey("DataLog") && PlcGroupOperations.Find(PlcGroupOperations.Get(root, "DataLogs"), changes["DataLog"]!.GetValue<string>()) == null) throw new InvalidOperationException("Requested DataLog does not exist.");
                 var type = target?.GetType() ?? collection.GetType().GetMethod("Create", new[] { typeof(string) })?.ReturnType ?? throw new NotSupportedException("Native LoggingTag.Create unavailable.");
                 var prepared = UnifiedRequestScalar.Prepare(type, changes);
@@ -161,6 +165,7 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public HmiMessage SetUnifiedLogDuration(string softwarePath, string durationPathJson, string kind, uint days, uint hours, uint minutes, uint seconds, uint hundredNanoseconds, bool dryRun = true)
             => _session.RunHmiStepTool("SetUnifiedLogDuration", meta => {
+                UnifiedObjectAddress.Parse(durationPathJson);
                 if (kind != "log" && kind != "segment") throw new ArgumentException("kind must be log/segment.");
                 if (hours > 23 || minutes > 59 || seconds > 59 || hundredNanoseconds > 9999999) throw new ArgumentException("Use normalized time components.");
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
@@ -215,6 +220,7 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public HmiMessage ReadUnifiedPlantObject(string plantPath="", string objectPathJson="[]", int offset=0, int limit=100)
             => _session.RunHmiStepTool("GetUnifiedPlantObject", meta => {
+                UnifiedObjectAddress.Parse(objectPathJson);
                 if(offset<0 || limit<1 || limit>500) throw new ArgumentException("offset >= 0, limit 1..500 required.");
                 var root=string.IsNullOrEmpty(plantPath) ? ExactPlantViews() : ExactPlantNode(plantPath);
                 var target=UnifiedObjectAddress.Resolve(root,objectPathJson);
@@ -230,6 +236,8 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public HmiMessage ManageUnifiedPlantNode(string plantPath, string action, string plantObjectType="", string propertiesJson="{}", bool dryRun=true)
             => _session.RunHmiStepTool("ManageUnifiedPlantNode", meta => {
+                var changes=UnifiedRequestValues.Parse(propertiesJson) as HmiObject ?? throw new ArgumentException("propertiesJson must be an object.");
+                if(changes.ContainsKey("Name") || (action=="delete" && changes.Count!=0)) throw new ArgumentException("Rename and properties during delete are excluded.");
                 if(!new[]{"create","update","delete"}.Contains(action)) throw new ArgumentException("action must be create/update/delete.");
                 var parts=PlcGroupOperations.Parts(plantPath);
                 using var access=dryRun ? null : _session.AcquireHmiEditAccess();
@@ -237,8 +245,6 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var target=PlcGroupOperations.Find(collection,parts.Last());
                 if((action=="create")== (target!=null)) throw new InvalidOperationException(action=="create" ? "Plant object exists." : "Exact plant object not found.");
                 if(plantObjectType!="" && (parts.Length==1 || action!="create")) throw new ArgumentException("plantObjectType only applies to creating a child CPM instance.");
-                var changes=UnifiedRequestValues.Parse(propertiesJson) as HmiObject ?? throw new ArgumentException("propertiesJson must be an object.");
-                if(changes.ContainsKey("Name") || (action=="delete" && changes.Count!=0)) throw new ArgumentException("Rename and properties during delete are excluded.");
                 if(action=="delete" && PlcGroupOperations.Items(PlcGroupOperations.Get(target!,"PlantViewNodes")).Any()) throw new InvalidOperationException("Only leaf nodes or empty plant views can be deleted; subtree deletion refused.");
                 var signature=plantObjectType=="" ? new[]{typeof(string)} : new[]{typeof(string),typeof(string)};
                 var type=target?.GetType() ?? collection.GetType().GetMethod("Create",signature)?.ReturnType ?? throw new NotSupportedException("Native plant creation unavailable.");
@@ -258,10 +264,11 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public HmiMessage UpdateUnifiedPlantObject(string plantPath, string objectPathJson, string propertiesJson, bool dryRun=true)
             => _session.RunHmiStepTool("SetUnifiedPlantObject", meta => {
-                using var access=dryRun ? null : _session.AcquireHmiEditAccess();
-                var target=UnifiedObjectAddress.Resolve(ExactPlantNode(plantPath),objectPathJson);
+                UnifiedObjectAddress.Parse(objectPathJson);
                 var changes=UnifiedRequestValues.Parse(propertiesJson) as HmiObject ?? throw new ArgumentException("propertiesJson must be an object.");
                 if(changes.Count==0 || changes.ContainsKey("Name")) throw new ArgumentException("Nonempty properties required; renaming excluded.");
+                using var access=dryRun ? null : _session.AcquireHmiEditAccess();
+                var target=UnifiedObjectAddress.Resolve(ExactPlantNode(plantPath),objectPathJson);
                 var prepared=UnifiedRequestScalar.Prepare(target.GetType(),changes);
                 meta["dryRun"]=dryRun; meta["mayHaveChanged"]=false; meta["plantPath"]=plantPath; meta["objectPath"]=UnifiedObjectAddress.Parse(objectPathJson);
                 meta["before"]=UnifiedObjectAddress.Read(target);

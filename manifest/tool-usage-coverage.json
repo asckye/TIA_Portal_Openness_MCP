@@ -1,9 +1,9 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "d5d5aa5e4142ac36382bde6d5af9215faac87f8d96b64f48cf10474b68658cb3",
+  "catalogSha256": "5e120b8e4a2763fc25aba0ca41d984f329357908b2c9d99013e657a5ba93df3e",
   "uniqueTools": 516,
   "documents": 89,
-  "versionToolPairs": 3185,
+  "versionToolPairs": 3194,
   "offlineCallExecutions": 76,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
@@ -48,11 +48,11 @@
   "releases": {
     "14sp1": {
       "releaseKey": "14sp1",
-      "registeredToolCount": 278,
-      "checkedToolCount": 278,
+      "registeredToolCount": 279,
+      "checkedToolCount": 279,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 159,
+      "operationExampleCount": 164,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -664,14 +664,6 @@
           "operations": []
         },
         {
-          "toolName": "DescribeHmiScreenItem",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "DescribeHmiSoftware",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -1000,6 +992,14 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
             "guides/skills/software-hierarchy/SKILL.md"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "GetClassicHmiGlobalization",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -2138,6 +2138,40 @@
             },
             {
               "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageClassicHmiGraphic",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             },
@@ -3758,11 +3792,11 @@
     },
     "15.1": {
       "releaseKey": "15.1",
-      "registeredToolCount": 318,
-      "checkedToolCount": 318,
+      "registeredToolCount": 319,
+      "checkedToolCount": 319,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 219,
+      "operationExampleCount": 224,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -4410,14 +4444,6 @@
           "operations": []
         },
         {
-          "toolName": "DescribeHmiScreenItem",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "DescribeHmiSoftware",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -4841,6 +4867,14 @@
         },
         {
           "toolName": "GenerateSivarc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetClassicHmiGlobalization",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -6142,6 +6176,40 @@
             },
             {
               "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageClassicHmiGraphic",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             },
@@ -8229,11 +8297,11 @@
     },
     "16": {
       "releaseKey": "16",
-      "registeredToolCount": 346,
-      "checkedToolCount": 346,
+      "registeredToolCount": 348,
+      "checkedToolCount": 348,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 271,
+      "operationExampleCount": 278,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -8897,14 +8965,6 @@
           "operations": []
         },
         {
-          "toolName": "DescribeHmiScreenItem",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "DescribeHmiSoftware",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -9383,6 +9443,14 @@
         },
         {
           "toolName": "GenerateSivarc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetClassicHmiGlobalization",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -10805,6 +10873,40 @@
           ]
         },
         {
+          "toolName": "ManageClassicHmiGraphic",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManageClassicHmiScreenObject",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -10921,6 +11023,28 @@
             },
             {
               "operation": "setAttributes",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageDcbLibraries",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/drive-control-charts/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive.Dcc/DccSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -13283,11 +13407,11 @@
     },
     "17": {
       "releaseKey": "17",
-      "registeredToolCount": 369,
-      "checkedToolCount": 369,
+      "registeredToolCount": 371,
+      "checkedToolCount": 371,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 346,
+      "operationExampleCount": 353,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -13951,14 +14075,6 @@
           "operations": []
         },
         {
-          "toolName": "DescribeHmiScreenItem",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "DescribeHmiSoftware",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -14571,6 +14687,14 @@
         },
         {
           "toolName": "GenerateSivarc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetClassicHmiGlobalization",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -16059,6 +16183,40 @@
           ]
         },
         {
+          "toolName": "ManageClassicHmiGraphic",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManageClassicHmiScreenObject",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -16175,6 +16333,28 @@
             },
             {
               "operation": "setAttributes",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageDcbLibraries",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/drive-control-charts/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive.Dcc/DccSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -18982,11 +19162,11 @@
     },
     "18": {
       "releaseKey": "18",
-      "registeredToolCount": 396,
-      "checkedToolCount": 396,
+      "registeredToolCount": 397,
+      "checkedToolCount": 397,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 424,
+      "operationExampleCount": 429,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -19726,14 +19906,6 @@
           "operations": []
         },
         {
-          "toolName": "DescribeHmiScreenItem",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "DescribeHmiSoftware",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -20393,6 +20565,14 @@
         },
         {
           "toolName": "GenerateSivarc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetClassicHmiGlobalization",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -21930,6 +22110,40 @@
             },
             {
               "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageClassicHmiGraphic",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             },
@@ -25400,11 +25614,11 @@
     },
     "19": {
       "releaseKey": "19",
-      "registeredToolCount": 471,
-      "checkedToolCount": 471,
+      "registeredToolCount": 473,
+      "checkedToolCount": 473,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 484,
+      "operationExampleCount": 489,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -27054,6 +27268,14 @@
         },
         {
           "toolName": "GenerateSivarc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetClassicHmiGlobalization",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -28778,6 +29000,40 @@
             },
             {
               "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageClassicHmiGraphic",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             },
@@ -32762,7 +33018,7 @@
       "checkedToolCount": 496,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 498,
+      "operationExampleCount": 503,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 2,
@@ -32960,23 +33216,7 @@
           "operations": []
         },
         {
-          "toolName": "BuildClassicHmiMinimalPackage",
-          "usageProfile": "full-engine",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "BuildClassicHmiScreen",
-          "usageProfile": "full-engine",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildClassicHmiTagTable",
           "usageProfile": "full-engine",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -34491,6 +34731,14 @@
         },
         {
           "toolName": "GenerateSivarc",
+          "usageProfile": "full-engine",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetClassicHmiGlobalization",
           "usageProfile": "full-engine",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -36272,6 +36520,40 @@
             },
             {
               "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageClassicHmiGraphic",
+          "usageProfile": "full-engine",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             },

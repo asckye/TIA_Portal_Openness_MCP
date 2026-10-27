@@ -209,6 +209,9 @@ internal sealed class LegacyOptionalAdapter
     private string GenericSivarc(HmiObject meta)
     {
         var raw = _request.Operation == "ListSivarcRules" ? _request.ObjectPathJson : _request.CollectionPathJson;
+        OptionalObjectAddress.Parse(raw);
+        var changes = _request.Operation == "ManageSivarcRule" ? Object(_request.PropertiesJson, "propertiesJson") : new HmiObject();
+        if (changes.ContainsKey("Name") || _request.Action == "delete" && changes.Count != 0) throw new ArgumentException("No renaming or changes during delete.");
         if (_request.Operation == "ListSivarcRules")
         {
             var target = OptionalObjectAddress.Resolve(Rules(), raw);
@@ -224,8 +227,6 @@ internal sealed class LegacyOptionalAdapter
             throw new ArgumentException("Select a native SiVArc rule/folder/table collection.");
         var targetObject = Find(collection, _request.Name);
         if ((_request.Action == "create") == (targetObject != null)) throw new InvalidOperationException(_request.Action == "create" ? "Object exists." : "Exact object not found.");
-        var changes = Object(_request.PropertiesJson, "propertiesJson");
-        if (changes.ContainsKey("Name") || _request.Action == "delete" && changes.Count != 0) throw new ArgumentException("No renaming or changes during delete.");
         if (_request.Action == "delete") RequireEmpty(targetObject!);
         var type = targetObject?.GetType() ?? collection.GetType().GetMethod("Create", new[] { typeof(string) })?.ReturnType
             ?? throw new NotSupportedException("Native Create(string) unavailable.");
@@ -763,6 +764,7 @@ internal sealed class LegacyOptionalAdapter
 
     private string DccObject(HmiObject meta)
     {
+        OptionalObjectAddress.Parse(_request.ObjectPathJson);
         OptionalRules.ValidatePagination(_request.Offset, _request.Limit);
         var target = OptionalObjectAddress.Resolve(Dcc(), _request.ObjectPathJson);
         Page(target is IEnumerable && target is not string ? Items(target) : new[] { target }, meta, true);

@@ -7,6 +7,94 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 public sealed class HmiAuditRegressionTests
 {
     [Theory]
+    [InlineData("Group/Sub/Table", "/Group/Sub/Table")]
+    [InlineData("Group\\Sub\\Table", "/Group/Sub/Table")]
+    [InlineData("/Group\\Sub/Table", "/Group/Sub/Table")]
+    [InlineData("\\Group\\Sub\\Table", "/Group/Sub/Table")]
+    public void Relative_and_backslash_table_paths_are_refused_with_the_corrected_absolute_form(string path, string corrected)
+    {
+        var root = new TableFolder(); int writes = 0;
+        var error = Assert.Throws<ArgumentException>(() => HmiExchangePolicy.EnsureTagTable(root, path, () => writes++));
+        Assert.Contains("Corrected slash form: " + corrected, error.Message);
+        Assert.Equal(0, writes);
+        Assert.Empty(root.TagTables.Calls);
+    }
+
+    [Theory]
+    [InlineData("Group", "/Group")]
+    [InlineData("Group/Sub", "/Group/Sub")]
+    [InlineData("Group\\Sub", "/Group/Sub")]
+    [InlineData("/Group\\Sub", "/Group/Sub")]
+    public void Folder_paths_use_the_same_absolute_convention_without_silent_normalization(string path, string corrected)
+    {
+        var root = new TableFolder();
+        var error = Assert.Throws<ArgumentException>(() => HmiExchangePolicy.Folder(root, path, "TagTableGroups"));
+        Assert.Contains("Corrected slash form: " + corrected, error.Message);
+        Assert.Empty(root.TagTables.Calls);
+        Assert.Same(root, HmiExchangePolicy.Folder(root, "/", "TagTableGroups"));
+    }
+
+    [Theory]
+    [InlineData("//")]
+    [InlineData("/A//B")]
+    [InlineData("/A/")]
+    public void Invalid_folder_paths_cannot_normalize_to_a_different_import_destination(string path)
+    {
+        var root = new TableFolder();
+        Assert.Throws<ArgumentException>(() => HmiExchangePolicy.Folder(root, path, "TagTableGroups"));
+        Assert.Empty(root.TagTables.Calls);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Table_creation_and_lookup_select_the_nested_existing_folder_and_unescape_each_segment(bool classic)
+    {
+        var leaf = new TableFolder { Name = "Diagnostic Data" };
+        var parent = new TableFolder { Name = "Hmi Tags", Groups = [leaf], Folders = [leaf] };
+        var root = new TableFolder { TagTableGroups = [parent], Folders = [parent] };
+        object software = classic ? new ClassicSoftware { TagFolder = root } : root;
+        int writes = 0;
+        const string path = "/Hmi%20Tags/Diagnostic%20Data/Diag%20Info";
+        var table = HmiExchangePolicy.EnsureTagTable(software, path, () => writes++);
+        Assert.Equal("Diag Info", ((Named)table).Name);
+        Assert.Same(table, HmiExchangePolicy.TagTable(software, path));
+        Assert.Same(table, HmiExchangePolicy.EnsureTagTable(software, path, () => writes++));
+        Assert.Equal(1, writes);
+        Assert.Equal(new[] { "Diag Info" }, leaf.TagTables.Calls);
+        Assert.Empty(root.TagTables.Calls);
+        Assert.Empty(parent.TagTables.Calls);
+    }
+
+    public static IEnumerable<object[]> InvalidTablePaths => new[] { "Group/Table", "/Group/Table/", "/Group//Table", "/", "/Group/A%2FB",
+        "/" + string.Join("/", Enumerable.Repeat("Group", 65)) + "/Table" }.Select(path => new object[] { path });
+
+    [Theory, MemberData(nameof(InvalidTablePaths))]
+    public void Invalid_slash_names_never_create_a_table(string path)
+    {
+        var root = new TableFolder(); int writes = 0;
+        var error = Assert.Throws<ArgumentException>(() => HmiExchangePolicy.EnsureTagTable(root, path, () => writes++));
+        Assert.Contains("/Group/Sub/Table", error.Message);
+        Assert.Equal(0, writes);
+        Assert.Empty(root.TagTables.Calls);
+    }
+
+    [Fact]
+    public void Missing_folder_never_creates_and_plain_names_keep_unique_lookup_and_root_create()
+    {
+        var root = new TableFolder(); int writes = 0;
+        Assert.Equal("NotFound", Assert.Throws<PlcSoftwareException>(() => HmiExchangePolicy.EnsureTagTable(root,
+            "/Missing/Table", () => writes++)).Code);
+        Assert.Equal(0, writes); Assert.Empty(root.TagTables.Calls);
+        var table = HmiExchangePolicy.EnsureTagTable(root, "Plain", () => writes++);
+        Assert.Same(table, HmiExchangePolicy.EnsureTagTable(root, "Plain", () => writes++));
+        Assert.Equal(1, writes); Assert.Equal(new[] { "Plain" }, root.TagTables.Calls);
+        root.TagTableGroups = [new TableFolder { TagTables = new Tables { new Named { Name = "Plain" } } }];
+        Assert.Throws<PlcSoftwareException>(() => HmiExchangePolicy.EnsureTagTable(root, "Plain", () => writes++));
+        Assert.Equal(1, writes);
+    }
+
+    [Theory]
     [InlineData("Hmi.Screen.Screen")]
     [InlineData("Hmi.Tag.TagTable")]
     [InlineData("Hmi.Communication.Connection")]
@@ -188,6 +276,19 @@ public sealed class HmiAuditRegressionTests
     }
 
     public class Named { public string Name { get; set; } = ""; }
+    public sealed class Tables : List<Named>
+    {
+        public List<string> Calls { get; } = [];
+        public Named Create(string name) { Calls.Add(name); var value = new Named { Name = name }; Add(value); return value; }
+    }
+    public sealed class TableFolder : Named
+    {
+        public object[] Folders { get; set; } = [];
+        public object[] TagTableGroups { get; set; } = [];
+        public object[] Groups { get; set; } = [];
+        public Tables TagTables { get; set; } = new();
+    }
+    public sealed class ClassicSoftware { public TableFolder TagFolder { get; set; } = new(); }
     public sealed class Folder : Named
     {
         public object[] Folders { get; set; } = [];

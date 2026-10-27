@@ -35,8 +35,8 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         internal static object Folder(object root, string path, string rootGroups = "Folders")
         {
-            var parts = path.Trim().Trim('/', '\\').Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length > 64) throw new ArgumentException("HMI folder path exceeds 64 segments.");
+            if (path == "") return root;
+            var parts = EngineeringInputValidation.AbsoluteHmiPath(path, rootAllowed: true, maximumSegments: 64);
             object current = root;
             for (int i = 0; i < parts.Length; i++)
             {
@@ -50,6 +50,7 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         internal static object? TagTable(object software, string nameOrPath)
         {
+            EngineeringInputValidation.NameOrAbsolutePath(nameOrPath);
             if (string.IsNullOrWhiteSpace(nameOrPath)) throw new PlcSoftwareException("InvalidParams", "Tag table name/path is required.");
             object root = Get(software, "TagFolder") ?? software;
             string groupsName = ReferenceEquals(root, software) ? "TagTableGroups" : "Folders";
@@ -78,6 +79,30 @@ namespace TiaMcp.Adapters.Native.Hmi
             }
         }
 
+        internal static object EnsureTagTable(object software, string nameOrPath, Action beforeWrite)
+        {
+            EngineeringInputValidation.NameOrAbsolutePath(nameOrPath);
+            object root = Get(software, "TagFolder") ?? software;
+            var existing = TagTable(software, nameOrPath);
+            if (existing != null) return existing;
+            var tables = Get(Get(software, "TagFolder") ?? software, "TagTables")
+                ?? throw new PlcSoftwareException("NotFound", "TagTables unavailable.");
+            string name = nameOrPath;
+            if (nameOrPath.StartsWith("/", StringComparison.Ordinal))
+            {
+                int slash = nameOrPath.LastIndexOf('/');
+                root = Folder(root, nameOrPath.Substring(0, slash), ReferenceEquals(root, software) ? "TagTableGroups" : "Folders");
+                tables = Get(root, "TagTables") ?? throw new PlcSoftwareException("NotFound", "TagTables unavailable.");
+                name = Uri.UnescapeDataString(nameOrPath.Substring(slash + 1));
+            }
+            var create = tables.GetType().GetMethod("Create", new[] { typeof(string) })
+                ?? throw new NotSupportedException("Documented TagTables.Create(string) unavailable.");
+            beforeWrite();
+            try { return create.Invoke(tables, new object[] { name }) ?? throw new InvalidOperationException("Tag table creation returned null."); }
+            catch (TargetInvocationException error) when (error.InnerException != null)
+            { throw new InvalidOperationException(error.InnerException.GetType().FullName + ": " + error.InnerException.Message, error.InnerException); }
+        }
+
         internal static void BeforeImport(object collection, string path, string objectType, bool overwrite)
         {
             // Read the exported identities, never infer object names from the filename.
@@ -87,6 +112,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                     .Elements().SingleOrDefault(a => a.Name.LocalName == "Name")?.Value).ToArray();
             if (names.Length == 0 || names.Any(string.IsNullOrWhiteSpace))
                 throw new PlcSoftwareException("InvalidParams", "Cannot verify the import target identities for " + objectType + ". Use an official exported XML file.");
+            if (names.Any(n => n!.IndexOfAny(new[] { '/', '\\' }) >= 0))
+                throw new PlcSoftwareException("InvalidParams", "Imported HMI object names must be single names without path separators. Select the existing destination with absolute folderPath /Group/Sub; do not put /Group/Sub/Table in the XML Name.");
             if (!overwrite)
                 foreach (var name in names)
                     if (Find(collection, name!) != null)

@@ -35,6 +35,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             string plcName = "PLC_1",
             string connectionName = "HMI_Connection_1")
         {
+            EngineeringInputValidation.NameOrAbsolutePath(screenName);
+            EngineeringInputValidation.NameOrAbsolutePath(tagTableName);
             var meta = HmiMeta.Basic(false);
 
             var steps = new HmiArray();
@@ -347,13 +349,14 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             return _session.RunHmiStepTool("EnsureUnifiedHmiScreen", meta => _session.Capture(meta, _ =>
             {
+                EngineeringInputValidation.NameOrAbsolutePath(screenName);
                 var sw = _session.ResolveHmiSoftwareOrThrow(hmiSoftwarePath);
                 var screens = TryGetPropertyValue(sw, "Screens");
                 if (screens == null) throw new InvalidOperationException("HMI Screens collection not found.");
 
                 object? screen = null;
                 try { screen = HmiExactAccess.Screen(sw, screenName); }
-                catch (PlcSoftwareException error) when (error.Code == "NotFound") { /* absence permits creation in the resolved parent only */ }
+                catch (PlcSoftwareException error) when (error.Code == "NotFound") { /* swallow(native-fallback): an absent screen permits creation only in the resolved existing parent */ }
                 var action = "exists";
                 if (screen == null)
                 {
@@ -388,6 +391,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             return _session.RunHmiStepTool("EnsureUnifiedHmiTagTable", meta => _session.Capture(meta, _ =>
             {
+                EngineeringInputValidation.NameOrAbsolutePath(tagTableName);
                 var sw = _session.ResolveHmiSoftwareOrThrow(hmiSoftwarePath);
                 var existed = _session.TryFindHmiTagTable(sw, tagTableName) != null;
                 var table = EnsureHmiTagTableObject(sw, tagTableName);
@@ -425,6 +429,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             return _session.RunHmiStepTool("EnsureUnifiedHmiTag", meta => _session.Capture(meta, _ =>
             {
+                EngineeringInputValidation.NameOrAbsolutePath(tagTableName);
                 var sw = _session.ResolveHmiSoftwareOrThrow(hmiSoftwarePath);
                 var tagTable = EnsureHmiTagTableObject(sw, tagTableName);
                 var tags = TryGetPropertyValue(tagTable, "Tags");
@@ -1135,33 +1140,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         }
 
         private object EnsureHmiTagTableObject(object hmiSoftware, string tagTableName)
-        {
-            var tagRoot = _session.TryGetHmiTagRoot(hmiSoftware);
-            var table = _session.TryFindHmiTagTable(hmiSoftware, tagTableName);
-            if (table != null) return table;
-
-            var tables = _session.TryGetHmiTagTablesCollection(hmiSoftware);
-            if (tables == null)
-            {
-                throw new InvalidOperationException($"HMI TagTables collection not found. hmiType={hmiSoftware.GetType().FullName}; tagRootType={tagRoot.GetType().FullName}; tagRootMembers={string.Join(" | ", _session.DescribeMembers(tagRoot, 80).Select(m => $"{m.Kind}:{m.Name}:{m.Type}"))}");
-            }
-
-            var createName = tagTableName;
-            if (tagTableName.StartsWith("/", StringComparison.Ordinal))
-            {
-                int slash = tagTableName.LastIndexOf('/');
-                var folder = HmiExchangePolicy.Folder(hmiSoftware, tagTableName.Substring(0, slash), "TagTableGroups");
-                tables = TryGetPropertyValue(folder, "TagTables") ?? throw new PlcSoftwareException("NotFound", "TagTables unavailable.");
-                createName = Uri.UnescapeDataString(tagTableName.Substring(slash + 1));
-            }
-            table = TryCreateNamedEngineeringObject(tables, createName, out var createError);
-            if (table == null)
-            {
-                throw new InvalidOperationException(createError ?? $"Failed to create HMI tag table '{tagTableName}'.");
-            }
-
-            return table;
-        }
+            => HmiExchangePolicy.EnsureTagTable(hmiSoftware, tagTableName, _session.MarkHmiChanged);
 
         private object? TryCreateNamedEngineeringObject(object collection, string name, out string? error)
         {

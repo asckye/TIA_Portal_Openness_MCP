@@ -31,8 +31,8 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "SetUnifiedHmiRuntimeState"), Description("[L2][HMI-Unified] SHORTCUT for motor start/stop HMI. Verifies an existing connection using exact Partner/CommunicationDriver/InitialAddress readback before any writes; unverified automatic configuration refuses and stops the shortcut. Ensures 4 HMI tags (StartPB/StopPB/EStop/RunOut) with symbolic PLC binding, and attempts a simple styled Main screen; caption-language selection, V19/V20 pressed-state support and lamp color mapping remain unverified and incomplete steps are reported. Requires: ConnectPortal + OpenProject + PLC + Unified HMI. Call after EnsureUnifiedHmiScreen if you need a fixed screen size. Idempotent. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult EnsureStartStopUnifiedHmiV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: target screen name (default 'Main')")] string screenName = "Main",
-            [Description("tagTableName: target HMI tag table name (default '默认变量表')")] string tagTableName = TiaMcp.Adapters.Contracts.UnifiedHmiDefaults.DefaultTagTableName,
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused. (default 'Main')")] string screenName = "Main",
+            [Description("tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with URI-escaped segments. Parent folders must already exist; relative or backslash paths and missing folders are refused. (default '默认变量表')")] string tagTableName = TiaMcp.Adapters.Contracts.UnifiedHmiDefaults.DefaultTagTableName,
             [Description("plcName: PLC software path / device name for connection + tag mapping (default 'PLC_1')")] string plcName = "PLC_1",
             [Description("connectionName: Unified HMI connection object name (default 'HMI_Connection_1')")] string connectionName = "HMI_Connection_1")
             => UnifiedHmiContract.Run("SetUnifiedHmiRuntimeState", true, true, () => EnsureStartStopUnifiedHmi(hmiSoftwarePath, screenName, tagTableName, plcName, connectionName));
@@ -57,7 +57,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "EnsureUnifiedHmiScreen"), Description("[L2][HMI-Unified] Create or verify a WinCC Unified HMI screen exists. Requires: ConnectPortal + OpenProject + Unified HMI. Idempotent. After creating a screen, add tags with EnsureUnifiedHmiTag, add controls with EnsureUnifiedHmiScreenItem, or apply a complete layout with ApplyUnifiedHmiScreenDesign. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult EnsureUnifiedHmiScreenV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: target screen name")] string screenName,
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.")] string screenName,
             [Description("width: optional screen width, 0 means keep current")] uint width = 0,
             [Description("height: optional screen height, 0 means keep current")] uint height = 0)
             => UnifiedHmiContract.Run("EnsureUnifiedHmiScreen", true, true, () => EnsureUnifiedHmiScreen(hmiSoftwarePath, screenName, width, height));
@@ -71,16 +71,20 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 return _service.EnsureUnifiedHmiScreen(hmiSoftwarePath, screenName, width, height);
             }
+            catch (ArgumentException ex)
+            {
+                throw new McpException(ex.Message, ex, McpErrorCode.InvalidParams);
+            }
             catch (Exception ex) when (ex is not McpException)
             {
                 throw new McpException($"Unexpected error ensuring HMI screen '{screenName}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
             }
         }
 
-        [McpServerTool(Name = "EnsureUnifiedHmiTagTable"), Description("[L2][HMI-Unified] Create or verify a Unified HMI tag table exists. Requires: ConnectPortal + OpenProject + Unified HMI. Idempotent. Create tag tables before adding tags with EnsureUnifiedHmiTag. Use the exact tag table name returned by the project. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "EnsureUnifiedHmiTagTable"), Description("[L2][HMI-Unified] Create or verify a Unified HMI tag table exists. Requires: ConnectPortal + OpenProject + Unified HMI. Idempotent. Create tag tables before adding tags with EnsureUnifiedHmiTag. Use the exact tag table name or absolute /Group/Sub/Table path. Existing nested groups are resolved; missing groups are refused without root fallback. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult EnsureUnifiedHmiTagTableV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("tagTableName: target HMI tag table name")] string tagTableName)
+            [Description("tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with URI-escaped segments. Parent folders must already exist; relative or backslash paths and missing folders are refused.")] string tagTableName)
             => UnifiedHmiContract.Run("EnsureUnifiedHmiTagTable", true, true, () => EnsureUnifiedHmiTagTable(hmiSoftwarePath, tagTableName));
 
         public ResponseMessage EnsureUnifiedHmiTagTable(string hmiSoftwarePath,
@@ -89,6 +93,10 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 return _service.EnsureUnifiedHmiTagTable(hmiSoftwarePath, tagTableName);
+            }
+            catch (ArgumentException ex)
+            {
+                throw new McpException(ex.Message, ex, McpErrorCode.InvalidParams);
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -99,7 +107,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "EnsureUnifiedHmiTag"), Description("[L2][HMI-Unified] Create or verify a Unified HMI external tag. For PLC-backed tags pass plcTag and address in the same call; the address must read back in Address/LogicalAddress, e.g. %DB200.DBX0.0. Requires: ConnectPortal + OpenProject + EnsureUnifiedHmiConnection + EnsureUnifiedHmiTagTable. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult EnsureUnifiedHmiTagV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("tagTableName: target HMI tag table name")] string tagTableName,
+            [Description("tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with URI-escaped segments. Parent folders must already exist; relative or backslash paths and missing folders are refused.")] string tagTableName,
             [Description("tagName: HMI tag name")] string tagName,
             [Description("hmiDataType: HMI data type, e.g. Bool, Int, Real, String")] string hmiDataType = "Bool",
             [Description("plcName: PLC name for symbolic binding")] string plcName = "PLC_1",
@@ -122,6 +130,10 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 return _service.EnsureUnifiedHmiTag(hmiSoftwarePath, tagTableName, tagName, hmiDataType, plcName, plcTag, connectionName, address, requireVerifiedBinding);
+            }
+            catch (ArgumentException ex)
+            {
+                throw new McpException(ex.Message, ex, McpErrorCode.InvalidParams);
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -155,7 +167,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "EnsureUnifiedHmiScreenItem"), Description("[L2][HMI-Unified]Non-empty text refuses before changes because no culture is specified; use SetUnifiedMultilingualProperty with an explicit culture.  Create or verify a single Unified HMI control (button, lamp, IO field, etc.) on a screen. Requires: ConnectPortal + OpenProject + EnsureUnifiedHmiScreen. itemType: Button, Rectangle (lamp/indicator/background — has NO text), Text (static text label = HmiText), IOField (value display/entry), or full CLR type name. For a text caption/label ALWAYS use Text, never Rectangle (a Rectangle has no Text property and renders blank if given text). For a complete screen layout use ApplyUnifiedHmiScreenDesign instead. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult EnsureUnifiedHmiScreenItemV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: target screen name")] string screenName,
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.")] string screenName,
             [Description("itemName: screen item name")] string itemName,
             [Description("itemType: Button, Rectangle/Lamp, IOField, or full CLR type name")] string itemType = "Button",
             [Description("left: X position")] int left = 0,
@@ -202,7 +214,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "ApplyUnifiedHmiScreenDesign"), Description("[L2][HMI-Unified] Apply layout JSON. For language text use items[].text, culture (default zh-CN), textProperty (default Text; also AlternateText/ToolTipText). Omit text to preserve, empty string clears, null is invalid. Exact language match required; data.evidence.textReadback contains verified raw text by language. ok=false on any failed write, including strict=false partial results. Changes are not transactional. Requires ConnectPortal + OpenProject. Use type Text for labels; Rectangle has no text. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ApplyUnifiedHmiScreenDesignJsonV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: target screen name")] string screenName,
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.")] string screenName,
             [Description("design: JSON object with optional screen properties and items array")] UnifiedScreenSpec design,
             [Description("strict: true includes failure details in the error; false returns a partial-result summary. Both report ok=false on failed writes; neither rolls back changes.")] bool strict = true)
             => UnifiedHmiContract.Run("ApplyUnifiedHmiScreenDesign", true, true, () => ApplyUnifiedHmiScreenDesignJson(hmiSoftwarePath, screenName, design.ToBuilderInput().ToJsonString(), strict));
@@ -233,7 +245,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "ApplyUnifiedHmiTheme"), Description("[L2][HMI-Unified] Apply a theme/palette to a real Unified HMI screen through ApplyUnifiedHmiScreenDesign. Requires a connected TIA project; verify with DescribeHmiScreenItem/readback before saving. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ApplyUnifiedHmiThemeV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: target screen name")] string screenName,
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.")] string screenName,
             [Description("theme: JSON accepted by BuildUnifiedHmiThemeDesign.")] UnifiedThemeSpec theme)
             => UnifiedHmiContract.Run("ApplyUnifiedHmiTheme", true, true, () => ApplyUnifiedHmiTheme(hmiSoftwarePath, screenName, theme.ToBuilderInput().ToJsonString()));
 
@@ -255,7 +267,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "ApplyUnifiedHmiLayout"), Description("[L2][HMI-Unified] Apply a grid layout to a real Unified HMI screen through ApplyUnifiedHmiScreenDesign. Requires a connected TIA project; verify changed items with DescribeHmiScreenItem/readback before saving. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ApplyUnifiedHmiLayoutV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: target screen name")] string screenName,
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.")] string screenName,
             [Description("layout: JSON accepted by BuildUnifiedHmiLayoutDesign.")] UnifiedLayoutSpec layout)
             => UnifiedHmiContract.Run("ApplyUnifiedHmiLayout", true, true, () => ApplyUnifiedHmiLayout(hmiSoftwarePath, screenName, layout.ToBuilderInput().ToJsonString()));
 
@@ -277,7 +289,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "BindUnifiedHmiButtonPressedTag"), Description("[L2][HMI-Unified]Bind a Unified HMI button PressedStateTags entry to an HMI tag (momentary press behavior, best-effort). Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult BindUnifiedHmiButtonPressedTagV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: target screen name")] string screenName,
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.")] string screenName,
             [Description("buttonName: HMI button item name")] string buttonName,
             [Description("tagName: HMI tag name to write while pressed")] string tagName)
             => UnifiedHmiContract.Run("BindUnifiedHmiButtonPressedTag", true, true, () => BindUnifiedHmiButtonPressedTag(hmiSoftwarePath, screenName, buttonName, tagName));
@@ -325,7 +337,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "EnsureUnifiedHmiButtonEventHandler"), Description("[L2][HMI-Unified]Ensure a Unified HMI button event handler exists and return its API shape. eventType must match HmiButtonEventType. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult EnsureUnifiedHmiButtonEventHandlerV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: target screen name")] string screenName,
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.")] string screenName,
             [Description("buttonName: HMI button item name")] string buttonName,
             [Description("eventType: HmiButtonEventType value, e.g. Tapped, Down, Up; use ListUnifiedHmiApiTypes('HmiButtonEventType') to inspect")] string eventType)
             => UnifiedHmiContract.Run("EnsureUnifiedHmiButtonEventHandler", true, true, () => EnsureUnifiedHmiButtonEventHandler(hmiSoftwarePath, screenName, buttonName, eventType));
@@ -348,7 +360,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "DescribeUnifiedHmiButtonEventScript"), Description("[L2][HMI-Unified]Describe a Unified HMI button event handler Script property and its current object members/attributes.")]
         public CallToolResult DescribeUnifiedHmiButtonEventScriptV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: target screen name")] string screenName,
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.")] string screenName,
             [Description("buttonName: HMI button item name")] string buttonName,
             [Description("eventType: enum value, e.g. Tapped, Down, Up")] string eventType,
             [Description("maxMembers: max member count")] int maxMembers = 200)
@@ -384,7 +396,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult SetUnifiedHmiButtonEventScriptCodeV4(
             RequestContext<CallToolRequestParams> context,
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: target screen name")] string screenName,
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.")] string screenName,
             [Description("buttonName: HMI button item name")] string buttonName,
             [Description("eventType: enum value, e.g. Tapped, Down, Up")] string eventType,
             [Description("scriptCode: JavaScript code for the event")] string scriptCode,
@@ -425,7 +437,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "EnsureUnifiedHmiButtonAction"), Description("[L2][HMI-Unified]Generate and apply a deterministic Unified HMI button action. Only set-bit/reset-bit/toggle-bit are applied; high-risk or TODO recipes are rejected. SyntaxCheck is OFF by default (issue #36: it can crash TIA V21). Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult EnsureUnifiedHmiButtonActionV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: target screen name")] string screenName,
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.")] string screenName,
             [Description("buttonName: HMI button item name")] string buttonName,
             [Description("eventType: HmiButtonEventType value, e.g. Down (press), Up (release), Tapped — NOT Pressed/Released")] string eventType,
             [Description("actionKind: set-bit, reset-bit, or toggle-bit")] string actionKind,
@@ -482,7 +494,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "EnsureUnifiedHmiDynamization"), Description("[L2][HMI-Unified]Only documented Tag (default), Script, ResourceList, Flashing, Expression and TagParameter kinds are accepted; the last two require V20+. Ensure a Unified HMI item property dynamization exists using a concrete dynamization type and return its API shape. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult EnsureUnifiedHmiDynamizationV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: target screen name")] string screenName,
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.")] string screenName,
             [Description("itemName: HMI screen item name")] string itemName,
             [Description("propertyName: target property name, e.g. BackColor or Visible")] string propertyName,
             [Description("dynamizationType: type short name/full name; empty tries common candidates and returns errors if unsupported")] string dynamizationType = "")
@@ -507,7 +519,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "BindUnifiedHmiTagDynamization"), Description("[L2][HMI-Unified]Ensure a Unified HMI TagDynamization exists for an item property and bind it to an HMI tag. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult BindUnifiedHmiTagDynamizationV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: target screen name")] string screenName,
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.")] string screenName,
             [Description("itemName: HMI screen item name")] string itemName,
             [Description("propertyName: target property name, e.g. BackColor or Visible")] string propertyName,
             [Description("tagName: HMI tag name used as the dynamic source")] string tagName,

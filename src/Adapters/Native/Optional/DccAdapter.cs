@@ -433,6 +433,7 @@ namespace TiaMcp.Adapters.Native.Optional
         public HardwareAddressingReply ReadDccObject(string devicePathJson, string itemPathJson, ushort driveObjectNumber, string objectPathJson = "[]", int offset = 0, int limit = 100, int driveObjectIndex = -1)
             => _session.RunHmiStepTool("GetDccObject", meta => DccStep(meta, () =>
             {
+                EngineeringObjectAddress.Parse(objectPathJson);
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("Invalid pagination.");
                 var drive = _session.ExactDriveObject(devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex);
                 var root = ExactDccContainer(drive);

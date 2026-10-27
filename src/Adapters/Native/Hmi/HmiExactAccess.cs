@@ -58,6 +58,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             ?? throw new InvalidOperationException("Object name unavailable."));
         internal static object Screen(object software, string nameOrPath)
         {
+            EngineeringInputValidation.NameOrAbsolutePath(nameOrPath);
             if (string.IsNullOrWhiteSpace(nameOrPath))
                 throw new PlcSoftwareException("InvalidParams", "Screen name/path is required.");
             if (!nameOrPath.StartsWith("/", StringComparison.Ordinal))
