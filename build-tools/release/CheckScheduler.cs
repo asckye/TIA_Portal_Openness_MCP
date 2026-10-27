@@ -7,6 +7,8 @@ namespace TiaMcp.ReleaseTool;
 internal sealed record CheckJob(string Name, Func<CommandResult> Run, string[] Dependencies, int Slots = 1, bool Exclusive = false)
 {
     internal double EstimatedSeconds { get; init; }
+    internal double? MeasuredSeconds { get; init; }
+    internal double SchedulingSeconds => MeasuredSeconds ?? EstimatedSeconds;
     internal int Priority { get; init; }
     internal string Lane { get; init; } = "general";
     internal string? SensitiveGroup { get; init; }
@@ -66,12 +68,11 @@ internal static class CheckScheduler
         lanes ??= new Dictionary<string, int> { ["general"] = slots };
         Validate(jobs, slots, lanes, prerequisites?.Select(row => row.Name).ToArray());
         Directory.CreateDirectory(logs);
-        var priorities = CriticalCosts(jobs);
         var running = started == null ? new Dictionary<Task<CheckTiming>, CheckJob>() : new(started);
         var startedNames = running.Values.Select(job => job.Name).ToHashSet(StringComparer.Ordinal);
         if (startedNames.Count != running.Count || startedNames.Any(name => !jobs.Any(job => job.Name == name)))
             throw new ReleaseException("Invalid already-started checks", 64);
-        var pending = jobs.Where(job => !startedNames.Contains(job.Name)).OrderByDescending(job => priorities[job.Name]).ToList();
+        var pending = jobs.Where(job => !startedNames.Contains(job.Name)).ToList();
         var done = (prerequisites ?? []).ToDictionary(row => row.Name, StringComparer.Ordinal);
         while (pending.Count > 0 || running.Count > 0)
         {
@@ -84,12 +85,7 @@ internal static class CheckScheduler
                     File.WriteAllText(Path.Combine(logs, job.Name + ".log"), row.Error + "\n");
                 }
             }
-            // Ready inputs of an idle reserved lane must not wait behind the
-            // general backlog while their dedicated CPUs sit unused.
-            bool FeedsIdleLane(CheckJob input) => pending.Any(next => next.Lane != input.Lane &&
-                next.Dependencies.Contains(input.Name, StringComparer.Ordinal) && !running.Values.Any(active => active.Lane == next.Lane));
-            foreach (var job in pending.OrderBy(job => packing != null && job.Lane == "general").ThenByDescending(FeedsIdleLane).ThenByDescending(job => job.Priority)
-                .ThenByDescending(job => priorities[job.Name]).ThenBy(job => job.Name, StringComparer.Ordinal).ToArray())
+            foreach (var job in ReadyOrder(pending, running.Values, packing != null))
             {
                 if (!job.Dependencies.All(done.ContainsKey)) continue;
                 var lane = running.Values.Where(row => row.Lane == job.Lane).ToArray();
@@ -110,10 +106,11 @@ internal static class CheckScheduler
                         // Leases are immutable for the lifetime of a command job.
                         // A ready owner closes its lane to new borrowers; below it
                         // waits for every overlapping lease (including descendants).
-                        if (lane.Sum(row => row.Slots) + job.Slots > packing.Capacity(mask, running.Values.Count(row => row.Lane != "general"))) continue;
+                        if (!packing.CanAdmit(job, mask, running.Values)) continue;
                         admitted = job with { Affinity = mask };
                     }
-                    else if (running.Values.Any(active => active.Lane == "general" && (active.Affinity.GetValueOrDefault() & job.Affinity.GetValueOrDefault()) != 0)) continue;
+                    else if (running.Values.Any(active => active.Lane == "general" && (active.Affinity.GetValueOrDefault() & job.Affinity.GetValueOrDefault()) != 0) ||
+                        !packing.MemoryFits(job, running.Values)) continue;
                 }
                 pending.Remove(job);
                 // Jobs block on child processes/barriers. Dedicated threads keep
@@ -133,6 +130,22 @@ internal static class CheckScheduler
         var timings = jobs.Select(job => done[job.Name]).ToArray();
         File.WriteAllText(Path.Combine(logs, "timings.json"), JsonSerializer.Serialize(timings, new JsonSerializerOptions { WriteIndented = true }) + "\n");
         return timings;
+    }
+
+    internal static CheckJob[] ReadyOrder(IReadOnlyCollection<CheckJob> pending, IEnumerable<CheckJob> running, bool packing)
+    {
+        var active = running.ToArray();
+        // Keep the original catalog/capture bootstrap ordering when no measured
+        // ordering history is available. Measured work uses ready-command LPT.
+        var estimates = pending.Any(job => job.MeasuredSeconds != null) ? null : CriticalCosts(pending.ToArray());
+        // Ready inputs of an idle reserved lane retain precedence. Within each
+        // lane and priority, start the longest measured command first; a short
+        // parent must not inherit its children's cost and postpone long work.
+        bool FeedsIdleLane(CheckJob input) => pending.Any(next => next.Lane != input.Lane &&
+            next.Dependencies.Contains(input.Name, StringComparer.Ordinal) && !active.Any(job => job.Lane == next.Lane));
+        return pending.OrderBy(job => packing && job.Lane == "general").ThenByDescending(FeedsIdleLane).ThenByDescending(job => job.Priority)
+            .ThenByDescending(job => estimates == null ? job.SchedulingSeconds : estimates[job.Name])
+            .ThenBy(job => job.Name, StringComparer.Ordinal).ToArray();
     }
 
     internal static Dictionary<string, double> CriticalCosts(IReadOnlyList<CheckJob> jobs)
@@ -263,6 +276,51 @@ internal sealed record CheckResourceUsage(double CpuSeconds, double WallSeconds,
 internal sealed record CheckPacking(ulong General, double CpuPerJob, ulong MemoryPerJob, ulong MemoryBudget, int Cap)
 {
     internal ulong Available { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore]
+    internal IReadOnlyDictionary<string, CheckResourceUsage> History { get; init; } = new Dictionary<string, CheckResourceUsage>();
+    internal int Parallelism => History.Count == 0 ? Capacity(Available) : Cap;
+    internal double Cpu(CheckJob job) => History.TryGetValue(job.Name, out var row) && row.WallSeconds >= 1 && row.CpuSeconds > 0
+        ? Math.Max(.05, row.CoreDemand) : Math.Max(.05, CpuPerJob);
+    internal ulong Memory(CheckJob job) => History.TryGetValue(job.Name, out var row) && row.PeakMemoryBytes > 0
+        ? Math.Max(256UL << 20, row.PeakMemoryBytes) : MemoryPerJob;
+    internal bool MemoryFits(CheckJob job, IEnumerable<CheckJob> running)
+    {
+        var active = running.ToArray();
+        return History.Count == 0 || active.Length == 0 || active.Sum(row => (double)Memory(row)) + Memory(job) <= MemoryBudget;
+    }
+
+    internal bool CanAdmit(CheckJob job, ulong mask, IEnumerable<CheckJob> running)
+    {
+        var active = running.ToArray();
+        if (active.Where(row => row.Lane == "general").Sum(row => row.Slots) + job.Slots > Cap) return false;
+        if (History.Count == 0) return active.Where(row => row.Lane == "general").Sum(row => row.Slots) + job.Slots <=
+            Capacity(mask, active.Count(row => row.Lane != "general"));
+        // Known commands reserve their own measured demand, not the p95 peak of
+        // an unrelated heavy shard. Unknown work retains the conservative plan.
+        // One oversized command can still make progress when it runs alone.
+        if (active.Length == 0) return true;
+        var competing = active.Where(row => row.Lane == "general" || (row.Affinity.GetValueOrDefault() & mask) != 0).ToArray();
+        bool cpu = competing.Length == 0 || competing.Sum(Cpu) + Cpu(job) <= System.Numerics.BitOperations.PopCount(mask);
+        return cpu && MemoryFits(job, active);
+    }
+
+    internal static Dictionary<string, double> ReadOrderCosts(string root, string? baseline)
+    {
+        var directory = Path.Combine(root, "bin-build/check-timings");
+        var maximums = Path.Combine(directory, "check-costs.json");
+        var costs = File.Exists(maximums) ? JsonSerializer.Deserialize<Dictionary<string, double>>(File.ReadAllText(maximums))! : new();
+        // Existing worktrees already have successful command wall times in the
+        // resource history. Seed them before the first ordering-history write.
+        foreach (var (name, row) in Read(root, null).Where(pair => pair.Value.WallSeconds > 0)) costs[name] = row.WallSeconds;
+        var path = Path.Combine(directory, "check-order-costs.json");
+        if (File.Exists(path))
+            foreach (var (name, seconds) in JsonSerializer.Deserialize<Dictionary<string, double>>(File.ReadAllText(path))!) costs[name] = seconds;
+        if (baseline == null) return costs;
+        using var report = JsonDocument.Parse(File.ReadAllText(baseline));
+        foreach (var row in report.RootElement.GetProperty("checks").Deserialize<CheckTiming[]>()!.Where(row => row.Status == "passed" && row.Seconds > 0))
+            costs[row.Name] = row.Seconds;
+        return costs;
+    }
     internal static int ReservedCores(IEnumerable<CheckJob> jobs, IReadOnlyDictionary<string, CheckResourceUsage> history, int workers, bool exclusive = true)
     {
         var groups = jobs.GroupBy(job => job.SensitiveGroup ?? job.Name).ToArray();

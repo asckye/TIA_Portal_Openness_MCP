@@ -49,6 +49,7 @@ internal static partial class ReleaseCommands
             foreach (var row in JsonNode.Parse(File.ReadAllText(baselineReport))!["checks"]!.AsArray())
                 costs[(string)row!["Name"]!] = Math.Max(costs.GetValueOrDefault((string)row["Name"]!), (double)row["Seconds"]!);
         var resources = CheckPacking.Read(Root, baselineReport);
+        var orderCosts = CheckPacking.ReadOrderCosts(Root, baselineReport);
         var suitePlan = new List<CheckJob>();
         foreach (var (name, node) in catalog)
             FastSuites.AddJobs(suitePlan, Root, name, node!.AsObject(), Path.Combine(output, "packing-suites"), dotnet,
@@ -74,8 +75,8 @@ internal static partial class ReleaseCommands
         var sensitiveNames = suitePlan.Where(job => job.Exclusive).Select(job => job.Name).ToHashSet(StringComparer.Ordinal);
         var packing = CheckPacking.Plan(layout.General, resources.Where(pair => !sensitiveNames.Contains(pair.Key) &&
             !pair.Key.StartsWith("stability-", StringComparison.Ordinal) && pair.Key is not ("build-once" or "suite-output-parity" or "configuration-page")).Select(pair => pair.Value),
-            CheckAffinity.AvailableMemory(), Math.Min(32, FastSuites.CheckAllParallelism(options, 32))) with { Available = available };
-        parallelism = packing.Capacity(available);
+            CheckAffinity.AvailableMemory(), Math.Min(32, FastSuites.CheckAllParallelism(options, 32))) with { Available = available, History = resources };
+        parallelism = packing.Parallelism;
         int buildParallelism = FastSuites.Positive(options, "BuildParallelism", System.Numerics.BitOperations.PopCount(available));
         int stabilityParallelism = Math.Min(FastSuites.Positive(options, "StabilityParallelism", 4), Math.Min(4, stabilityCores));
         using var load = CheckLoad.Start(Path.Combine(output, "process-load.json"));
@@ -122,10 +123,16 @@ internal static partial class ReleaseCommands
         void Wave(string[]? prerequisites = null)
         {
             if (jobs.Count == 0) return;
-            for (int index = 0; index < jobs.Count; index++) jobs[index] = jobs[index] with { EstimatedSeconds = CheckAllJobCost(jobs[index], costs) };
+            for (int index = 0; index < jobs.Count; index++) jobs[index] = jobs[index] with {
+                EstimatedSeconds = CheckAllJobCost(jobs[index], costs), MeasuredSeconds = orderCosts.TryGetValue(jobs[index].Name, out var measured) ? measured : null };
             planned.AddRange(jobs.Select(job => job.Name));
             allJobs.AddRange(jobs.Select(job => job with { Dependencies = [.. job.Dependencies, .. prerequisites ?? []] }));
-            timings.AddRange(CheckScheduler.Run(jobs.ToArray(), parallelism, Path.Combine(output, "logs"), prerequisites: timings.ToArray(), packing: packing));
+            // The build wave has its own MSBuild parallelism and an already
+            // running parity task. Its sum of sequential command memory peaks
+            // is not an individual runtime-check reservation; retain its
+            // existing uniform admission rather than serializing source checks.
+            timings.AddRange(CheckScheduler.Run(jobs.ToArray(), parallelism, Path.Combine(output, "logs"), prerequisites: timings.ToArray(),
+                packing: packing with { History = new Dictionary<string, CheckResourceUsage>() }));
             jobs.Clear();
         }
         // Generation is an ordered prerequisite of compilation/capture. -Check is
@@ -398,6 +405,7 @@ internal static partial class ReleaseCommands
         var scheduled = CiCoverage.Rewrite(CheckAllRuntimeDependencies(jobs, independentParity: true), ciCovered).Select(job => job with
         {
             EstimatedSeconds = CheckAllJobCost(job, costs),
+            MeasuredSeconds = orderCosts.TryGetValue(job.Name, out var measured) ? measured : null,
             Timeout = CheckScheduler.JobTimeout(job, costs),
             Priority = job.Priority > 0 || !staticJobs.Any(item => item.Name == job.Name) ? job.Priority : 1
         }).ToList();
@@ -416,7 +424,8 @@ internal static partial class ReleaseCommands
             stabilityMask = layout.Stability.ToString("X"), sensitiveMask = layout.Sensitive.ToString("X"), generalMask = layout.General.ToString("X"), stabilityCores, generalCores,
             physicalCores = CheckAffinity.PhysicalCores().Select(core => new { mask = core.Mask.ToString("X"), efficiencyClass = core.Efficiency }),
             buildParallelism, stabilityParallelism, sensitiveParallelism = sensitiveLanes.Count, sensitiveCores = System.Numerics.BitOperations.PopCount(layout.Sensitive), sensitiveMinWorkerThreads = CheckAffinity.BaselineWorkers, generalParallelism = parallelism, packing, companionPython,
-            checks = allJobs.Select(job => new { job.Name, job.Lane, job.SensitiveGroup, job.Slots, job.Exclusive, job.Priority, affinityMask = job.Affinity?.ToString("X"), job.EstimatedSeconds, timeoutSeconds = job.Timeout.TotalSeconds, criticalSeconds = priorities[job.Name], job.Dependencies,
+            checks = allJobs.Select(job => new { job.Name, job.Lane, job.SensitiveGroup, job.Slots, job.Exclusive, job.Priority, affinityMask = job.Affinity?.ToString("X"), job.EstimatedSeconds, job.MeasuredSeconds, job.SchedulingSeconds,
+                cpuDemand = packing.Cpu(job), memoryBytes = packing.Memory(job), timeoutSeconds = job.Timeout.TotalSeconds, criticalSeconds = priorities[job.Name], job.Dependencies,
                 runtimeManifestDependency = job.Name == "suite-output-parity" ? "build-once (comparison phase only)" : null,
                 resultCache = job.ResultCachePolicy ?? "always rerun: generated evidence, mutable machine inputs or aggregate gate" }) }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
         planned.AddRange(plan.Select(job => job.Name));
@@ -429,6 +438,8 @@ internal static partial class ReleaseCommands
             Directory.CreateDirectory(Path.GetDirectoryName(history)!);
             foreach (var row in timings.Where(row => row.Status == "passed")) costs[row.Name] = Math.Max(costs.GetValueOrDefault(row.Name), row.Seconds);
             File.WriteAllText(history, JsonSerializer.Serialize(costs, new JsonSerializerOptions { WriteIndented = true }) + "\n");
+            foreach (var row in timings.Where(row => row.Status == "passed" && row.Seconds > 0)) orderCosts[row.Name] = row.Seconds;
+            File.WriteAllText(Path.Combine(Path.GetDirectoryName(history)!, "check-order-costs.json"), JsonSerializer.Serialize(orderCosts, new JsonSerializerOptions { WriteIndented = true }) + "\n");
             foreach (var row in timings.Where(row => row.Status == "passed" && row.Resources is { CpuSeconds: > 0 })) resources[row.Name] = row.Resources!;
             File.WriteAllText(Path.Combine(Path.GetDirectoryName(history)!, "check-resources.json"), JsonSerializer.Serialize(resources, new JsonSerializerOptions { WriteIndented = true }) + "\n");
             var after = TrackedBytes();

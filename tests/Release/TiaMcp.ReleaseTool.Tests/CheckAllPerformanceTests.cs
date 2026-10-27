@@ -12,6 +12,101 @@ public sealed class CheckAllPerformanceTests
     private static CommandResult Passed() => new(0, "passed\n", "");
 
     [Fact]
+    public void MeasuredLongestReadyJobsPrecedeShortParentsWithoutChangingPrioritiesOrGateDependencies()
+    {
+        using var fixture = new OfflineFixtures();
+        foreach (bool reverse in new[] { false, true })
+        {
+            var ran = new List<string>();
+            CommandResult Run(string name) { ran.Add(name); return Passed(); }
+            CheckJob[] jobs = [
+                new CheckJob("short-parent", () => Run("short-parent"), []) { EstimatedSeconds = 1200, MeasuredSeconds = 1 },
+                new CheckJob("long-child", () => Run("long-child"), ["short-parent"]) { MeasuredSeconds = 200 },
+                new CheckJob("harness", () => Run("harness"), []) { EstimatedSeconds = .5, MeasuredSeconds = 115 },
+                new CheckJob("priority", () => Run("priority"), []) { Priority = 1, MeasuredSeconds = .1 },
+                new CheckJob("gate", () => { Assert.Equal(4, ran.Count); return Run("gate"); }, ["short-parent", "long-child", "harness", "priority"]) { Priority = 1 } ];
+            var deadlines = jobs.Select(job => job.Timeout).ToArray();
+            var rows = CheckScheduler.Run(reverse ? jobs.Reverse().ToArray() : jobs, 1, fixture.DirectoryPath);
+            Assert.Equal(new[] { "priority", "harness", "short-parent", "long-child", "gate" }, ran);
+            Assert.Equal(deadlines, jobs.Select(job => job.Timeout));
+            Assert.All(rows, row => Assert.True(CheckTiming.Passed(row), row.Error));
+            Assert.Equal(jobs.Select(job => job.Name).Order(), rows.Select(row => row.Name).Order());
+        }
+    }
+
+    [Fact]
+    public void OrderingHistoryUsesTheLatestSuccessfulWallTimeIndependentlyOfDeadlineEstimates()
+    {
+        using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
+        Directory.CreateDirectory(Path.Combine(root, "bin-build/check-timings"));
+        File.WriteAllText(Path.Combine(root, "bin-build/check-timings/check-costs.json"), "{\"legacy\":1200}");
+        File.WriteAllText(Path.Combine(root, "bin-build/check-timings/check-resources.json"), JsonSerializer.Serialize(
+            new Dictionary<string, CheckResourceUsage> { ["legacy"] = new(10, 60, 1, "measured") }));
+        File.WriteAllText(Path.Combine(root, "bin-build/check-timings/check-order-costs.json"), "{\"short\":1000,\"failed\":40}");
+        var report = Path.Combine(root, "report.json");
+        File.WriteAllText(report, JsonSerializer.Serialize(new { checks = new CheckTiming[] {
+            new("short", "passed", 0, 2, null), new("harness", "passed", 0, 115, null), new("failed", "failed", 1, .5, "failure") } }));
+        var costs = CheckPacking.ReadOrderCosts(root, report);
+        Assert.Equal(2, costs["short"]); Assert.Equal(115, costs["harness"]); Assert.Equal(40, costs["failed"]);
+        Assert.Equal(60, costs["legacy"]);
+        var job = new CheckJob("short", Passed, []) { EstimatedSeconds = 1200, MeasuredSeconds = costs["short"] };
+        Assert.Equal(2, job.SchedulingSeconds);
+        Assert.Equal(TimeSpan.FromSeconds(3600), CheckScheduler.JobTimeout(job, new Dictionary<string, double>()));
+    }
+
+    [Fact]
+    public void AdmissionSumsEachCommandsCpuAndMemoryIncludingReservedWorkAndKeepsUnknownFallbacks()
+    {
+        var history = new Dictionary<string, CheckResourceUsage> {
+            ["small"] = new(10, 100, 256UL << 20, "measured"),
+            ["large"] = new(180, 100, 2UL << 30, "measured"),
+            ["reserved"] = new(30, 100, 3UL << 30, "measured") };
+        var plan = CheckPacking.Plan(3, history.Values, 16UL << 30, 20) with { Available = 15, History = history };
+        CheckJob Small() => new("small", Passed, []);
+        var large = new CheckJob("large", Passed, []);
+        var reserved = new CheckJob("reserved", Passed, []) { Lane = "sensitive-0" };
+        Assert.Equal(20, plan.Parallelism);
+        Assert.True(plan.CanAdmit(Small(), 3, Enumerable.Range(0, 10).Select(_ => Small()).Append(reserved)));
+        Assert.False(plan.CanAdmit(large, 3, [Small(), Small(), Small()]));
+        Assert.False(plan.CanAdmit(large, 15, [large, large, reserved]));
+        Assert.False(plan.MemoryFits(reserved, [large, large, large]));
+        Assert.True(plan.CanAdmit(large, 1, []));
+        Assert.False((plan with { Cap = 2 }).CanAdmit(Small(), 15, [Small(), Small()]));
+        Assert.Equal(plan.MemoryPerJob, plan.Memory(new("unknown", Passed, [])));
+        Assert.Equal(plan.CpuPerJob, plan.Cpu(new("unknown", Passed, [])));
+        Assert.Equal(2UL << 30, plan.Memory(large));
+        Assert.Equal(3UL << 30, plan.Memory(reserved));
+    }
+
+    [Fact]
+    public void SensitiveLaneBalancingUsesMeasuredCostAndKeepsEachAssemblyGroupTogether()
+    {
+        CheckJob Job(string name, string group, double estimate, double measured) => new(name, Passed, [], Exclusive: true) {
+            Lane = "sensitive", SensitiveGroup = group, EstimatedSeconds = estimate, MeasuredSeconds = measured };
+        var jobs = new List<CheckJob> { Job("a1", "assembly-a", 1, 100), Job("a2", "assembly-a", 1, 100),
+            Job("b", "assembly-b", 1200, 180), Job("c", "assembly-c", 1, 40) };
+        CheckAffinity.AssignSensitiveLanes(jobs, 15, 2, [1, 2, 4, 8], minimumCores: 2);
+        Assert.Equal(new[] { "sensitive-0", "sensitive-0", "sensitive-1", "sensitive-1" }, jobs.Select(job => job.Lane));
+        Assert.Equal(0UL, jobs[0].Affinity!.Value & jobs[2].Affinity!.Value);
+        Assert.All(jobs.GroupBy(job => job.SensitiveGroup), group => Assert.Single(group.Select(job => job.Affinity).Distinct()));
+    }
+
+    [Fact]
+    public void SmallMeasuredJobsOverlapBeyondTheUniformMemoryLimitAndStillRespectTheExplicitCap()
+    {
+        using var fixture = new OfflineFixtures(); using var together = new Barrier(3);
+        var history = new Dictionary<string, CheckResourceUsage> { ["small"] = new(10, 100, 256UL << 20, "measured") };
+        var plan = new CheckPacking(3, .1, 2UL << 30, 4UL << 30, 3) { Available = 3, History = history };
+        Assert.Equal(2, plan.Capacity(3));
+        var jobs = Enumerable.Range(0, 3).Select(index => new CheckJob("small-" + index, () => {
+            Assert.True(together.SignalAndWait(TimeSpan.FromSeconds(10))); return Passed(); }, [])).ToArray();
+        history.Clear();
+        foreach (var job in jobs) history.Add(job.Name, new(10, 100, 256UL << 20, "measured"));
+        var rows = CheckScheduler.Run(jobs, plan.Parallelism, fixture.DirectoryPath, packing: plan);
+        Assert.Equal(3, rows.Count); Assert.All(rows, row => Assert.True(CheckTiming.Passed(row), row.Error));
+    }
+
+    [Fact]
     public void AbortedShardsCollectDiagnosticsWithoutChangingTheHangDeadlineOrFailureGate()
     {
         using var fixture = new OfflineFixtures(); var directory = Path.Combine(fixture.DirectoryPath, "shard");

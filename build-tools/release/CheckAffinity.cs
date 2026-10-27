@@ -306,7 +306,7 @@ internal static class CheckAffinity
         // Keep each worker exclusive on its own CPUs. Long sensitive suite
         // partitions can overlap without sharing a CPU with another runner lane.
         foreach (var group in jobs.Where(job => job.Lane == "sensitive").GroupBy(job => job.SensitiveGroup ?? job.Name)
-            .OrderByDescending(group => group.OrderBy(job => job.Name, StringComparer.Ordinal).Sum(job => Math.Max(1, job.EstimatedSeconds)))
+            .OrderByDescending(group => group.OrderBy(job => job.Name, StringComparer.Ordinal).Sum(job => Math.Max(1, job.SchedulingSeconds)))
             .ThenBy(group => group.Key, StringComparer.Ordinal).ToArray())
         {
             int index = Array.IndexOf(loads, loads.Min());
@@ -316,7 +316,7 @@ internal static class CheckAffinity
             foreach (var job in group.OrderBy(job => job.Name, StringComparer.Ordinal))
             {
                 jobs[jobs.IndexOf(job)] = job with { Lane = "sensitive-" + index, Affinity = masks[index] };
-                loads[index] += Math.Max(1, job.EstimatedSeconds);
+                loads[index] += Math.Max(1, job.SchedulingSeconds);
             }
         }
         return capacities;
