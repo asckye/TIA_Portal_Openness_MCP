@@ -11,6 +11,99 @@ public sealed class CheckAllPerformanceTests
 {
     private static CommandResult Passed() => new(0, "passed\n", "");
 
+    [Fact]
+    public void AbortedShardsCollectDiagnosticsWithoutChangingTheHangDeadlineOrFailureGate()
+    {
+        using var fixture = new OfflineFixtures(); var directory = Path.Combine(fixture.DirectoryPath, "shard");
+        var suite = new JsonObject { ["project"] = "tests/fixture.csproj", ["arguments"] = new JsonArray(), ["minimumPassed"] = 1, ["maximumSkipped"] = 0 };
+        var result = FastSuites.RunShard(fixture.DirectoryPath, "fixture", suite, directory, "dotnet", null, new("tests/fixture.csproj", "", []), 0, 1,
+            diagnostics: true, process: (_, args, _, _) => {
+                Assert.Equal("5m", SuiteHang.Timeout);
+                Assert.All(SuiteHang.TestArguments, flag => Assert.Contains(flag, args));
+                Assert.Contains(Path.Combine(directory, "fixture.vstest.log") + ";TraceLevel=Info", args);
+                DotnetSuiteSelfTests.SyntheticTrx(Path.Combine(directory, "fixture.trx"), ["Passed"]);
+                File.WriteAllText(Path.Combine(directory, "Sequence_crash.xml"), "<TestSequence><Test Name=\"Unfinished\" DisplayName=\"Unfinished\" Completed=\"False\" /></TestSequence>");
+                return new(1, "testhost crashed", "");
+            });
+        Assert.Equal(1, result.ExitCode);
+        Assert.Contains("VSTest hang/aborted test: Unfinished", result.StandardError);
+        Assert.Contains("mini dump: not produced", result.StandardError);
+        Assert.Equal("5m", (string?)JsonNode.Parse(File.ReadAllText(Path.Combine(directory, "fixture.hang.json")))!["timeout"]);
+    }
+
+    [Fact]
+    public void ParityStartsBeforeBuildAndTheFinalWaveCollectsItExactlyOnce()
+    {
+        using var fixture = new OfflineFixtures(); using var began = new ManualResetEventSlim(); using var finish = new ManualResetEventSlim();
+        using var overlap = new Barrier(2);
+        var ready = new TaskCompletionSource<CommandResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        int runs = 0;
+        var parity = new CheckJob("suite-output-parity", () => {
+            Interlocked.Increment(ref runs); began.Set();
+            Assert.True(finish.Wait(TimeSpan.FromSeconds(10)));
+            Assert.Equal(0, CheckScheduler.AwaitRuntime(ready.Task).ExitCode);
+            Assert.True(overlap.SignalAndWait(TimeSpan.FromSeconds(10))); return Passed();
+        }, ["generated"]);
+        var task = CheckScheduler.Start(parity, fixture.DirectoryPath);
+        try
+        {
+            Assert.True(began.Wait(TimeSpan.FromSeconds(10)));
+            var built = CheckScheduler.Run([new("build-once", () => { ready.SetResult(Passed()); return Passed(); }, [])], 1, fixture.DirectoryPath);
+            Assert.False(task.IsCompleted);
+            finish.Set();
+            var rows = CheckScheduler.Run([parity, new("shard", () => { Assert.True(overlap.SignalAndWait(TimeSpan.FromSeconds(10))); return Passed(); }, ["build-once"])],
+                2, fixture.DirectoryPath, prerequisites: [new("generated", "passed", 0, 1, null), .. built],
+                started: new Dictionary<Task<CheckTiming>, CheckJob> { [task] = parity });
+            Assert.All(rows, row => Assert.True(CheckTiming.Passed(row), row.Error));
+            Assert.Equal(1, runs); Assert.Equal(2, rows.Count);
+            Assert.True(rows[0].StartedAtUtc < built[0].StartedAtUtc);
+        }
+        finally { finish.Set(); }
+    }
+
+    [Fact]
+    public void BuiltReleaseToolMustBeTheExactOwnedManifestOutput()
+    {
+        using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
+        var manifest = Path.Combine(root, "runtime-paths.tsv");
+        var tool = Path.Combine(root, "isolated/TiaMcp.ReleaseTool.dll"); Directory.CreateDirectory(Path.GetDirectoryName(tool)!); File.WriteAllText(tool, "built");
+        void Manifest(string output) => File.WriteAllText(manifest, Path.Combine(root, "build-tools/release/TiaMcp.ReleaseTool.csproj") + "\tdefault\tignored\tignored\t" + output + "\n");
+        Manifest(tool); Assert.Equal(tool, CheckAllBuild.ReleaseTool(root, manifest));
+        Manifest(Path.Combine(root, "missing/TiaMcp.ReleaseTool.dll")); Assert.Throws<ReleaseException>(() => CheckAllBuild.ReleaseTool(root, manifest));
+        Manifest(Path.Combine(root, "../foreign/TiaMcp.ReleaseTool.dll")); Assert.Throws<ReleaseException>(() => CheckAllBuild.ReleaseTool(root, manifest));
+        File.WriteAllText(manifest, ""); Assert.Throws<ReleaseException>(() => CheckAllBuild.ReleaseTool(root, manifest));
+    }
+
+    [Fact]
+    public void OrdinaryParityBuildFinishesBeforeTheRuntimeManifestIsPublished()
+    {
+        using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
+        void Write(string relative, string content) { var path = Path.Combine(root, relative); Directory.CreateDirectory(Path.GetDirectoryName(path)!); File.WriteAllText(path, content); }
+        Write(".gitignore", "bin-build/\nruntime/\n**/bin/\n**/obj/\n"); Write("Directory.Build.props", "<Project />");
+        Write("tests/unit/unit.csproj", "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>");
+        Write("tests/unit/Input.cs", "public class Input {}\n"); Write("offline.config", "<configuration><packageSources><clear /></packageSources></configuration>");
+        ProcessRunner.RequireSuccess(ProcessRunner.Run("git", ["init", "--quiet", root], root), "ordinary parity source fixture");
+        var directory = Path.Combine(root, "bin-build/parity"); var manifest = Path.Combine(root, "bin-build/runtime-paths.tsv");
+        bool ready = false;
+        var result = CheckAllLayout.Verify(root, [new("tests/unit/unit.csproj", "", [])], "dotnet", Path.Combine(root, "offline.config"), root, directory, manifest,
+            independent: true, awaitRuntime: () => {
+                Assert.False(File.Exists(manifest));
+                var receipt = Assert.Single(Directory.GetFiles(directory, "*.tsv")); var lines = File.ReadAllLines(receipt);
+                Assert.True(File.Exists(Path.Combine(lines[1], "unit.dll")));
+                var output = Path.Combine(root, "runtime");
+                foreach (var file in Directory.EnumerateFiles(lines[1], "*", SearchOption.AllDirectories))
+                {
+                    var destination = Path.Combine(output, Path.GetRelativePath(lines[1], file)); Directory.CreateDirectory(Path.GetDirectoryName(destination)!); File.Copy(file, destination);
+                }
+                File.WriteAllText(manifest, Path.Combine(root, "tests/unit/unit.csproj") + "\tdefault\t" + output + "\t" + output + "\t" + Path.Combine(output, "unit.dll") + "\n");
+                ready = true; return Passed();
+            });
+        Assert.True(result.ExitCode == 0, result.StandardOutput + result.StandardError); Assert.True(ready);
+        var phases = JsonNode.Parse(File.ReadAllText(Path.Combine(directory, "phases.json")))!;
+        Assert.True((bool)phases["runtimeManifestRead"]!); Assert.True((double)phases["baselineSeconds"]! > 0);
+        Assert.Empty(JsonNode.Parse(File.ReadAllText(Path.Combine(directory, "comparison.json")))![0]!["missing"]!.AsArray());
+    }
+
     [Theory]
     [InlineData("sensitive-0", true)]
     [InlineData("stability", false)]

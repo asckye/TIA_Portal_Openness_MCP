@@ -130,5 +130,14 @@ internal static class CheckAllBuild
         return null;
     }
 
+    internal static string ReleaseTool(string root, string manifest)
+    {
+        var path = TestAssembly(root, new("build-tools/release/TiaMcp.ReleaseTool.csproj", "", []), manifest, "PLC harness release tool")!;
+        ReleaseCommands.RequireCheckAllOwnedPath(root, path);
+        if (!File.Exists(path) || Path.GetFileName(path) != "TiaMcp.ReleaseTool.dll")
+            throw new ReleaseException("Missing built release tool in runtime manifest: " + path);
+        return path;
+    }
+
     private static string Escape(string value) => value.Replace("%", "%25", StringComparison.Ordinal).Replace(";", "%3B", StringComparison.Ordinal);
 }

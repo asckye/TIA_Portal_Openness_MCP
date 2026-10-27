@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -105,10 +106,13 @@ internal static class CheckAllLayout
         return baseline;
     }
 
-    internal static CommandResult Verify(string root, IEnumerable<CheckBuild> builds, string dotnet, string nuget, string api, string directory, string manifest, int parallelism = 1, bool independent = false)
+    internal static CommandResult Verify(string root, IEnumerable<CheckBuild> builds, string dotnet, string nuget, string api, string directory, string manifest, int parallelism = 1, bool independent = false,
+        Func<CommandResult>? awaitRuntime = null)
     {
         Directory.CreateDirectory(directory);
-        var runtime = File.ReadLines(manifest).Select(line => line.Split('\t')).ToArray();
+        var clock = Stopwatch.StartNew();
+        double? baselineSeconds = null, runtimeWaitSeconds = null, comparisonStarted = null;
+        bool runtimeManifestRead = false;
         var inputs = SourceInventory(root).Where(file => File.Exists(Path.Combine(root, file)))
             .Select(file => new KeyValuePair<string, string>(file, InputHash(root, file))).ToArray();
         inputs = inputs.Concat(Directory.EnumerateFiles(api, "*.dll", SearchOption.AllDirectories)
@@ -130,6 +134,16 @@ internal static class CheckAllLayout
                 var result = BuildInventories(baselineRoot, pending, dotnet, nuget, api, directory, parallelism);
                 if (result.ExitCode != 0) return result;
             }
+            baselineSeconds = clock.Elapsed.TotalSeconds;
+            if (awaitRuntime != null)
+            {
+                var ready = awaitRuntime();
+                runtimeWaitSeconds = clock.Elapsed.TotalSeconds - baselineSeconds;
+                if (ready.ExitCode != 0) return new(ready.ExitCode, "", "Runtime build failed before output parity comparison.\n" + ready.StandardError);
+            }
+            comparisonStarted = clock.Elapsed.TotalSeconds;
+            var runtime = File.ReadLines(manifest).Select(line => line.Split('\t')).ToArray();
+            runtimeManifestRead = true;
             foreach (var unit in units)
             {
                 var row = runtime.Single(row => string.Equals(Path.GetFullPath(row[0]), Path.GetFullPath(Path.Combine(root, unit.Project)), StringComparison.OrdinalIgnoreCase) && row[1] == unit.Variant);
@@ -173,6 +187,11 @@ internal static class CheckAllLayout
         }
         finally
         {
+            File.WriteAllText(Path.Combine(directory, "phases.json"), JsonSerializer.Serialize(new {
+                baselineSeconds = baselineSeconds ?? clock.Elapsed.TotalSeconds, runtimeWaitSeconds = runtimeWaitSeconds ?? 0,
+                comparisonSeconds = comparisonStarted == null ? 0 : clock.Elapsed.TotalSeconds - comparisonStarted,
+                runtimeManifestRead, independent
+            }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
             // Ordinary builds may share their default outputs. Restore each isolated
             // production/fixture payload before any check starts.
             if (!independent) ReleaseCommands.PrepareCheckAllRuntime(root, builds, manifest);
@@ -262,7 +281,8 @@ internal static class CheckAllLayout
         return ProcessRunner.Run(dotnet, ["msbuild", path, "-t:Build", "-m:" + parallelism, "-nodeReuse:false", "-v:minimal",
             "-p:Configuration=Release", "-p:NuGetAudit=false", "-p:UseSharedCompilation=false", "-p:TiaSharedAdapterPaths=false", "-p:RestoreConfigFile=" + nuget,
             "-p:TiaPublicApiRoot=" + api, "-p:PublicApiRoot=" + api], root,
-            new Dictionary<string, string?> { ["TIA_MCP_TEST_PUBLIC_API_ROOT"] = null }, logPath: Path.Combine(directory, "ordinary-build.log"));
+            new Dictionary<string, string?> { ["TIA_MCP_TEST_PUBLIC_API_ROOT"] = null,
+                ["TIA_MCP_ANALYZER_REPORT_DIRECTORY"] = Path.Combine(directory, "analyzer-warnings") }, logPath: Path.Combine(directory, "ordinary-build.log"));
     }
 
 }

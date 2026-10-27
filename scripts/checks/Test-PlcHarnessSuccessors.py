@@ -200,6 +200,28 @@ class PlcHarnessSuccessorTests(unittest.TestCase):
             return {'result': {'structuredContent': value, 'isError': True}}
         self.assertEqual(harness.call_tool(rpc, 'Fixture', {}), value)
 
+    def test_suites_use_the_built_tool_selected_by_check_all_without_an_ordinary_copy(self):
+        self.args.release_tool = self.root / 'isolated/Release/net10.0/TiaMcp.ReleaseTool.dll'
+        self.args.release_tool.parent.mkdir(parents=True)
+        self.args.release_tool.write_bytes(b'compiled tool')
+        self.args.runtime_manifest = self.root / 'runtime-paths.tsv'
+        self.args.runtime_manifest.write_text('runtime inventory', encoding='utf-8')
+        with patch.object(harness, 'run', return_value='PASS') as runner, redirect_stdout(io.StringIO()):
+            for release in ('20', '21'):
+                self.args.release = release
+                harness.suites(self.args)
+        self.assertEqual(runner.call_count, 2)
+        for call in runner.call_args_list:
+            self.assertEqual(call.args[0], ['dotnet', self.args.release_tool, 'test-suites', '-Suite', 'engine-host',
+                                          '-NoBuild', '-Shards', '1', '-MaxParallelism', '1',
+                                          '-ResultsDirectory', self.args.output / 'engine-host', '-RuntimeManifest', self.args.runtime_manifest])
+        self.args.release_tool = harness.ROOT.parent / 'foreign/TiaMcp.ReleaseTool.dll'
+        with self.assertRaisesRegex(AssertionError, 'must be built in this worktree'):
+            harness.suites(self.args)
+        self.args.release_tool = self.root / 'missing/TiaMcp.ReleaseTool.dll'
+        with self.assertRaisesRegex(AssertionError, 'must be built in this worktree'):
+            harness.suites(self.args)
+
     def test_staged_tool_reply_is_fully_reassembled(self):
         logical = dict(schemaVersion=4, ok=True, data={'tools': [1]}, error=None, meta={})
         text = json.dumps(logical)

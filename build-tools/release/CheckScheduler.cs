@@ -42,18 +42,36 @@ internal static class CheckScheduler
     private static readonly AsyncLocal<string?> evidenceDirectory = new();
     internal static (string Name, DateTime Deadline)? Deadline => deadline.Value;
     internal static string? EvidenceDirectory => evidenceDirectory.Value;
+    internal static Task<CheckTiming> Start(CheckJob job, string logs)
+    {
+        Directory.CreateDirectory(logs);
+        return Task.Factory.StartNew(() => Execute(job, logs), CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+    }
+
+    internal static CommandResult AwaitRuntime(Task<CommandResult> ready)
+    {
+        if (Deadline is not { } budget) return ready.GetAwaiter().GetResult();
+        var remaining = budget.Deadline - DateTime.UtcNow;
+        if (remaining <= TimeSpan.Zero) throw new ReleaseException("Check job timed out: " + budget.Name);
+        try { return ready.WaitAsync(remaining).GetAwaiter().GetResult(); }
+        catch (TimeoutException) { throw new ReleaseException("Check job timed out: " + budget.Name); }
+    }
     internal static TimeSpan JobTimeout(CheckJob job, IReadOnlyDictionary<string, double> history) =>
         TimeSpan.FromSeconds(Math.Max(job.Name is "build-once" or "suite-output-parity" ? 1800 : 300,
             3 * Math.Max(job.EstimatedSeconds, history.GetValueOrDefault(job.Name))));
     internal static IReadOnlyList<CheckTiming> Run(IReadOnlyList<CheckJob> jobs, int slots, string logs, IReadOnlyDictionary<string, int>? lanes = null,
-        IReadOnlyList<CheckTiming>? prerequisites = null, CheckPacking? packing = null)
+        IReadOnlyList<CheckTiming>? prerequisites = null, CheckPacking? packing = null,
+        IReadOnlyDictionary<Task<CheckTiming>, CheckJob>? started = null)
     {
         lanes ??= new Dictionary<string, int> { ["general"] = slots };
         Validate(jobs, slots, lanes, prerequisites?.Select(row => row.Name).ToArray());
         Directory.CreateDirectory(logs);
         var priorities = CriticalCosts(jobs);
-        var pending = jobs.OrderByDescending(job => priorities[job.Name]).ToList();
-        var running = new Dictionary<Task<CheckTiming>, CheckJob>();
+        var running = started == null ? new Dictionary<Task<CheckTiming>, CheckJob>() : new(started);
+        var startedNames = running.Values.Select(job => job.Name).ToHashSet(StringComparer.Ordinal);
+        if (startedNames.Count != running.Count || startedNames.Any(name => !jobs.Any(job => job.Name == name)))
+            throw new ReleaseException("Invalid already-started checks", 64);
+        var pending = jobs.Where(job => !startedNames.Contains(job.Name)).OrderByDescending(job => priorities[job.Name]).ToList();
         var done = (prerequisites ?? []).ToDictionary(row => row.Name, StringComparer.Ordinal);
         while (pending.Count > 0 || running.Count > 0)
         {
@@ -100,7 +118,7 @@ internal static class CheckScheduler
                 pending.Remove(job);
                 // Jobs block on child processes/barriers. Dedicated threads keep
                 // reserved one/two-core CLR pools from serializing admitted work.
-                running.Add(Task.Factory.StartNew(() => Execute(admitted, logs), CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default), admitted);
+                running.Add(Start(admitted, logs), admitted);
             }
             if (running.Count == 0)
             {

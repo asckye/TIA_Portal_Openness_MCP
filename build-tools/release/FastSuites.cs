@@ -67,7 +67,7 @@ internal static class FastSuites
 
     internal static void AddJobs(List<CheckJob> jobs, string root, string name, JsonObject suite, string output, string dotnet,
         int shards, string? api, string[] dependencies, string? baseline = null, bool prove = false, string[]? extra = null, string? history = null, string? jobPrefix = null, string? manifest = null,
-        SuiteProcess? process = null)
+        SuiteProcess? process = null, bool diagnostics = false)
     {
         var unit = CheckAllBuild.Suite(suite);
         var directory = Path.Combine(output, name);
@@ -83,14 +83,14 @@ internal static class FastSuites
         if (prove)
         {
             sequential = Path.Combine(directory, "sequential", name + ".trx");
-            jobs.Add(new(jobPrefix + name + "-sequential", () => RunShard(root, name, suite, Path.GetDirectoryName(sequential)!, dotnet, api, unit, 0, 1, extra, manifest: manifest, process: process), dependencies, Exclusive: true) {
+            jobs.Add(new(jobPrefix + name + "-sequential", () => RunShard(root, name, suite, Path.GetDirectoryName(sequential)!, dotnet, api, unit, 0, 1, extra, manifest: manifest, process: process, diagnostics: diagnostics), dependencies, Exclusive: true) {
                 SensitiveGroup = unit.Project, EstimatedSeconds = measuredPlan ? plan.Costs.Sum() + 5 : ColdShardSeconds * shards });
         }
         var shardNames = new List<string>();
         for (int i = 0; i < shards; i++)
         {
             var index = i; var jobName = jobPrefix + name + "-shard-" + i; shardNames.Add(jobName);
-            jobs.Add(new(jobName, () => RunShard(root, name, suite, Path.GetDirectoryName(paths[index])!, dotnet, api, unit, index, shards, extra, plan.Path, reserveSensitive, manifest, process, sensitiveShards), dependencies,
+            jobs.Add(new(jobName, () => RunShard(root, name, suite, Path.GetDirectoryName(paths[index])!, dotnet, api, unit, index, shards, extra, plan.Path, reserveSensitive, manifest, process, sensitiveShards, diagnostics), dependencies,
                 Exclusive: reserveSensitive && index >= shards - sensitiveShards) { EstimatedSeconds = measuredPlan ? plan.Costs[index] + 5 : ColdShardSeconds,
                     ResultInputs = new("suite", new JsonObject { ["suite"] = name, ["registration"] = suite.DeepClone(),
                         ["project"] = unit.Project, ["variant"] = unit.Variant, ["index"] = index, ["count"] = shards,
@@ -116,7 +116,7 @@ internal static class FastSuites
         jobs.Select(job => job with { Timeout = CheckScheduler.JobTimeout(job, new Dictionary<string, double>()) }).ToList();
 
     internal static CommandResult RunShard(string root, string name, JsonObject suite, string directory, string dotnet, string? api,
-        CheckBuild unit, int index, int count, string[]? extra = null, string? plan = null, bool reserveSensitive = false, string? manifest = null, SuiteProcess? process = null, int sensitiveShards = 1)
+        CheckBuild unit, int index, int count, string[]? extra = null, string? plan = null, bool reserveSensitive = false, string? manifest = null, SuiteProcess? process = null, int sensitiveShards = 1, bool diagnostics = false)
     {
         Directory.CreateDirectory(directory);
         var environment = EnvironmentFor(directory, api);
@@ -148,6 +148,11 @@ internal static class FastSuites
             if (extra != null) args.AddRange(extra);
             args.AddRange(["--logger", "trx;LogFileName=" + name + ".trx", "--results-directory", directory]);
             args.AddRange(SuiteHang.TestArguments);
+        }
+        if (diagnostics)
+        {
+            var diagnostic = Path.Combine(directory, name + ".vstest.log") + ";TraceLevel=Info";
+            args.AddRange(args[0] == "vstest" ? ["--Diag:" + diagnostic] : ["--diag", diagnostic]);
         }
         var result = SuiteHang.Complete(directory, name, before, (process ?? DotnetSuites.RunProcess)(dotnet, args, root, environment));
         if (!File.Exists(trx)) return result with { ExitCode = 1, StandardError = result.StandardError + "\nMissing shard TRX: " + trx };

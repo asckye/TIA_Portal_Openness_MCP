@@ -152,8 +152,28 @@ internal static partial class ReleaseCommands
             Add("generate-release-migration", () => Tool("generate-release-migration", "generate-release-migration"));
             Wave(["generate-tool-usage"]);
         }
-        Add("build-once", () => CheckAllCachedBuild(options, builds, output, dotnet, api, nuget,
-            buildParallelism));
+        var runtimeManifest = Path.Combine(output, "build/runtime-paths.tsv");
+        var runtimeReady = new TaskCompletionSource<CommandResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        CheckJob? parity = null;
+        Task<CheckTiming>? parityTask = null;
+        if (!options.Has("BuildOnly"))
+        {
+            parity = new("suite-output-parity", () => CheckAllLayout.Verify(Root, builds, dotnet, nuget, api,
+                Path.Combine(output, "suite-output-parity"), runtimeManifest, buildParallelism, independent: true,
+                awaitRuntime: () => CheckScheduler.AwaitRuntime(runtimeReady.Task)), ["generate-tool-usage", "generate-release-migration"]);
+            parity = parity with { Priority = 2, Affinity = layout.General, EstimatedSeconds = CheckAllJobCost(parity, costs), Timeout = CheckScheduler.JobTimeout(parity, costs) };
+            parityTask = CheckScheduler.Start(parity, Path.Combine(output, "logs"));
+        }
+        Add("build-once", () =>
+        {
+            try
+            {
+                var result = CheckAllCachedBuild(options, builds, output, dotnet, api, nuget, buildParallelism);
+                runtimeReady.TrySetResult(result);
+                return result;
+            }
+            catch (Exception ex) { runtimeReady.TrySetResult(new(1, "", ex.Message)); throw; }
+        });
         jobs[^1] = jobs[^1] with { Priority = 2, Affinity = available };
         Add("analyzer-warnings", () =>
         {
@@ -164,13 +184,16 @@ internal static partial class ReleaseCommands
         }, ["build-once"]);
         if (!options.Has("BuildOnly")) jobs.AddRange(staticJobs.Where(job => CheckAllEarly(job.Name))
             .Select(CheckAllEarlyDependencies).Select(job => job with { Priority = 1, Affinity = layout.General }));
-        Wave(["generate-tool-usage"]);
-        if (!CheckAllPrerequisitesPassed(timings.Where(row => row.Name is "generate-catalogs" or "generate-tool-usage" or "build-once"))) return Finish();
+        try { Wave(["generate-tool-usage"]); }
+        finally { runtimeReady.TrySetResult(new(1, "", "Build wave did not publish runtime outputs.")); }
+        if (!CheckAllPrerequisitesPassed(timings.Where(row => row.Name is "generate-catalogs" or "generate-tool-usage" or "build-once")))
+        {
+            if (parityTask != null) { planned.Add(parity!.Name); allJobs.Add(parity); timings.Add(parityTask.GetAwaiter().GetResult()); }
+            return Finish();
+        }
         AnalyzerWarnings.RememberDirectory(Root, Path.Combine(output, "build/analyzer-warnings"));
         if (options.Has("BuildOnly")) return Finish();
-        var runtimeManifest = Path.Combine(output, "build/runtime-paths.tsv");
-        Add("suite-output-parity", () => CheckAllLayout.Verify(Root, builds, dotnet, nuget, api, Path.Combine(output, "suite-output-parity"), runtimeManifest, buildParallelism, independent: true), ["build-once"]);
-        jobs[^1] = jobs[^1] with { Priority = 2, Affinity = layout.General };
+        jobs.Add(parity!);
         string host = Path.Combine(Root, "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe");
         string harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
         // Stability shares wall time, but no CPUs, with the general lane. The
@@ -206,7 +229,7 @@ internal static partial class ReleaseCommands
             var suite = node!.AsObject();
             string? sdk = name == "foundation-api" || suite["publicApiRoot"]?.GetValue<bool>() == true ? api : null;
             FastSuites.AddJobs(jobs, Root, name, suite, Path.Combine(output, "suites"), dotnet, suite["minimumPassed"]!.GetValue<int>() >= 100 ? shards : 1, sdk, [],
-                options.Get("SequentialBaselineDirectory") is { } baseline ? Path.Combine(baseline, name + ".trx") : null, options.Has("ProveEquivalence"), manifest: runtimeManifest);
+                options.Get("SequentialBaselineDirectory") is { } baseline ? Path.Combine(baseline, name + ".trx") : null, options.Has("ProveEquivalence"), manifest: runtimeManifest, diagnostics: true);
         }
         foreach (var mode in new[] { "false", "true" })
         foreach (var project in new[] { "Core", "Gui" })
@@ -286,6 +309,8 @@ internal static partial class ReleaseCommands
                     var result = CheckAllHarness(Python(plcName, "scripts/checks/Test-PlcHarness.py",
                         "--release", key, "--mode", selected.Length == 0 ? "http" : selected,
                         "--host", host, "--worker", CheckAllPlcFixture(key), "--harness", harness,
+                        "--release-tool", CheckAllBuild.ReleaseTool(Root, runtimeManifest),
+                        "--runtime-manifest", runtimeManifest,
                         "--api", targetApi, "--public-api-root", api, "--adapter-inventory", inventory,
                         "--output", Path.Combine(output, plcName)), selected, key);
                     if (result.ExitCode == 0)
@@ -392,10 +417,11 @@ internal static partial class ReleaseCommands
             physicalCores = CheckAffinity.PhysicalCores().Select(core => new { mask = core.Mask.ToString("X"), efficiencyClass = core.Efficiency }),
             buildParallelism, stabilityParallelism, sensitiveParallelism = sensitiveLanes.Count, sensitiveCores = System.Numerics.BitOperations.PopCount(layout.Sensitive), sensitiveMinWorkerThreads = CheckAffinity.BaselineWorkers, generalParallelism = parallelism, packing, companionPython,
             checks = allJobs.Select(job => new { job.Name, job.Lane, job.SensitiveGroup, job.Slots, job.Exclusive, job.Priority, affinityMask = job.Affinity?.ToString("X"), job.EstimatedSeconds, timeoutSeconds = job.Timeout.TotalSeconds, criticalSeconds = priorities[job.Name], job.Dependencies,
+                runtimeManifestDependency = job.Name == "suite-output-parity" ? "build-once (comparison phase only)" : null,
                 resultCache = job.ResultCachePolicy ?? "always rerun: generated evidence, mutable machine inputs or aggregate gate" }) }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
         planned.AddRange(plan.Select(job => job.Name));
         timings.AddRange(CheckScheduler.Run(plan, parallelism, Path.Combine(output, "logs"),
-            lanes, timings.ToArray(), packing));
+            lanes, timings.ToArray(), packing, new Dictionary<Task<CheckTiming>, CheckJob> { [parityTask!] = plan.Single(job => job.Name == "suite-output-parity") }));
         return Finish();
 
         int Finish()
