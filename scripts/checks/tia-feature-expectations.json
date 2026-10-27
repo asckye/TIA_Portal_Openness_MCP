@@ -1031,6 +1031,7 @@
     "targetFramework": "net10.0",
     "defineConstants": [
       "RELEASE",
+      "TIA_ADAPTER_INTERNAL_VERSIONING",
       "TRACE"
     ]
   },
@@ -1041,7 +1042,10 @@
     },
     "targetFramework": "net10.0",
     "defineConstants": [
-      "TIA_V20"
+      "RELEASE",
+      "TIA_ADAPTER_INTERNAL_VERSIONING",
+      "TIA_V20",
+      "TRACE"
     ]
   },
   {

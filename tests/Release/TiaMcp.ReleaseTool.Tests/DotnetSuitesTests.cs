@@ -42,6 +42,18 @@ public class DotnetSuitesTests
     }
 
     [Fact]
+    public void FeatureCasesEvaluateEachProjectConfigurationOnce()
+    {
+        var cases = TiaFeatures.ProjectCases(Repository.FindRoot());
+        var identities = cases.Select(row => (row.Project,
+            Properties: string.Join("\0", row.Properties.OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => p.Key + "\0" + p.Value)))).ToArray();
+        Assert.Equal(identities.Length, identities.Distinct().Count());
+        const string project = "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj";
+        Assert.Single(cases, row => row.Project == project && row.Properties.Count == 0);
+        Assert.Single(cases, row => row.Project == project && row.Properties.Count == 1 && row.Properties.GetValueOrDefault("DefineConstants") == "TIA_V20");
+    }
+
+    [Fact]
     public void SplitSuiteSourcesAndFixturesKeepReleaseInventoriesAndCheckSelection()
     {
         var root = Repository.FindRoot();

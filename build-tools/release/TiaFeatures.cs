@@ -28,7 +28,10 @@ internal static class TiaFeatures
             var properties = row["arguments"]!.AsArray().Select(a => a!.GetValue<string>()).Where(a => a.StartsWith("-p:", StringComparison.Ordinal)).Select(a => a[3..].Split('=', 2)).ToDictionary(p => p[0], p => p[1]);
             Add(Path.Combine(root, row["project"]!.GetValue<string>()), properties);
         }
-        return cases.OrderBy(c => c.Project, StringComparer.Ordinal).ThenBy(c => string.Join("\0", c.Properties.OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => p.Key + "\0" + p.Value)), StringComparer.Ordinal).ToList();
+        // A project with intentional defines can also be registered as an offline suite.
+        // Evaluate each exact configuration once, retaining every distinct property set.
+        return cases.DistinctBy(c => (c.Project, string.Join("\0", c.Properties.OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => p.Key + "\0" + p.Value))))
+            .OrderBy(c => c.Project, StringComparer.Ordinal).ThenBy(c => string.Join("\0", c.Properties.OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => p.Key + "\0" + p.Value)), StringComparer.Ordinal).ToList();
     }
     internal static JsonObject Evaluate(string root, string project, IReadOnlyDictionary<string, string> properties, string dotnet)
     {

@@ -230,7 +230,8 @@ namespace TiaMcp.Adapters.Contracts.Tests
             Assert.Throws<PlcSoftwareException>(() => HmiExactAccess.Screen(root, "Overview"));
             foreach (string path in new[] { "Nested/Overview", "Nested\\Overview" })
             {
-                var error = Assert.Throws<ArgumentException>(() => HmiExactAccess.Screen(root, path));
+                var error = Assert.Throws<PlcSoftwareException>(() => HmiExactAccess.Screen(root, path));
+                Assert.Equal("InvalidParams", error.Code);
                 Assert.Contains("/Nested/Overview", error.Message);
             }
         }

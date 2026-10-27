@@ -84,6 +84,8 @@ public sealed class UnifiedPortAdmissionTests
         var arguments = method.GetParameters().Select(p => p.Name == parameter ? raw
             : AddressParameters.Contains(p.Name) ? (object)"[]"
             : p.Name == "propertiesJson" || p.Name == "scriptPropertiesJson" ? "{}"
+            : p.Name == "screenPath" ? "/Overview" : p.Name == "typePath" ? "/Faceplates/MotorFaceplate"
+            : p.Name == "folderPath" ? "/"
             : p.Name == "action" ? "delete" : p.HasDefaultValue ? p.DefaultValue
             : p.ParameterType == typeof(string) ? "fixture" : Activator.CreateInstance(p.ParameterType)).ToArray();
         var error = Assert.Throws<TargetInvocationException>(() => method.Invoke(service, arguments));
@@ -130,13 +132,18 @@ public sealed class UnifiedPortAdmissionTests
             var request = arguments["request"]!.Deserialize<UnifiedHmiRequest>()!;
             Assert.Equal(ensureTag ? "EnsureUnifiedHmiTag" : "EnsureUnifiedHmiTagTable", request.Operation);
             var table = HmiExchangePolicy.EnsureTagTable(root, request.TagTableName, () => writes++);
-            if (ensureTag) HmiExchangePolicy.EnsureTag(root, table, request.TagName, () => writes++);
+            if (ensureTag)
+            {
+                Assert.Equal("PLC_Source", request.PlcName);
+                Assert.Equal("PlcReady", request.PlcTag);
+                HmiExchangePolicy.EnsureTag(root, table, request.TagName, () => writes++);
+            }
             return new JsonObject { ["Value"] = new JsonObject { ["Message"] = "fixture" } };
         }
         var service = new enginehost::TiaMcpServer.Siemens.Services.UnifiedHmiService(Call, () => "fixture.ap21");
         for (int i = 0; i < 2; i++)
         {
-            if (ensureTag) service.EnsureUnifiedHmiTag("HMI", "/Hmi%20Tags/Diagnostic/Diag%20Info", "Ready");
+            if (ensureTag) service.EnsureUnifiedHmiTag("HMI", "/Hmi%20Tags/Diagnostic/Diag%20Info", "Ready", plcName: "PLC_Source", plcTag: "PlcReady");
             else service.EnsureUnifiedHmiTagTable("HMI", "/Hmi%20Tags/Diagnostic/Diag%20Info");
         }
         Assert.Equal(2, calls);
@@ -157,7 +164,7 @@ public sealed class UnifiedPortAdmissionTests
         var service = new enginehost::TiaMcpServer.Siemens.Services.UnifiedHmiService((_, _) => { calls++; throw new InvalidOperationException(); },
             () => { calls++; throw new InvalidOperationException(); });
         Assert.Throws<ArgumentException>(() => service.EnsureUnifiedHmiTagTable("HMI", path));
-        Assert.Throws<ArgumentException>(() => service.EnsureUnifiedHmiTag("HMI", path, "Ready"));
+        Assert.Throws<ArgumentException>(() => service.EnsureUnifiedHmiTag("HMI", path, "Ready", plcName: "PLC_Source", plcTag: "PlcReady"));
         Assert.Equal(0, calls);
     }
 
