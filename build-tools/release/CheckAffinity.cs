@@ -225,6 +225,39 @@ internal static class CheckAffinity
     // Sensitive is the reserved sensitive lane's mask; zero means no reserved
     // lane, and the sensitive checks then run alone in the general lane.
     internal sealed record CheckAllCpuLayout(ulong Sensitive, ulong Stability, ulong General, string Isolation, string? Reason);
+    internal const int DefaultCheckAllSensitiveWorkers = 3;
+    internal sealed record CheckAllWorkerLayout(CheckAllCpuLayout Cpu, int RequestedWorkers, int Workers, string? Reason);
+
+    internal static CheckAllWorkerLayout PlanCheckAllWorkers(ulong available, int sensitiveCores, bool sensitiveExplicit,
+        int stabilityCores, bool stabilityExplicit, ulong[] physicalCores, int workers, bool workersExplicit, int previousSensitiveCores)
+    {
+        CheckAllCpuLayout? layout = null;
+        int allocationWorkers = workers;
+        if (!sensitiveExplicit && workers == DefaultCheckAllSensitiveWorkers)
+        {
+            // A third default worker must not squeeze the previous stability
+            // reservation out. If it cannot fit, retain the old degraded plan.
+            var previous = PlanCheckAll(available, previousSensitiveCores, false, stabilityCores, stabilityExplicit, physicalCores);
+            int stability = System.Numerics.BitOperations.PopCount(previous.Stability);
+            for (int cores = sensitiveCores; cores < System.Numerics.BitOperations.PopCount(available); cores++)
+                if (TrySplitPreferred(available, cores, physicalCores) is { } sensitive &&
+                    SensitiveWorkerCount(sensitive.Stability, workers, physicalCores) == workers &&
+                    TrySplitPreferred(sensitive.General, stability, physicalCores) is { } rest)
+                {
+                    bool rounded = cores != sensitiveCores || stability != stabilityCores;
+                    layout = new(sensitive.Stability, rest.Stability, rest.General, rounded ? DegradedIsolation : FullIsolation,
+                        rounded ? $"default reservations rounded to whole physical cores for {workers} sensitive workers: sensitive {sensitiveCores} -> {cores} CPUs, stability {stabilityCores} -> {stability} CPUs" : null);
+                    break;
+                }
+            if (layout == null && !workersExplicit) { layout = previous; allocationWorkers = 2; }
+        }
+        layout ??= PlanCheckAll(available, sensitiveCores, sensitiveExplicit, stabilityCores, stabilityExplicit, physicalCores);
+        int actual = SensitiveWorkerCount(layout.Sensitive, allocationWorkers, physicalCores);
+        string? reason = actual < workers || layout.Sensitive != 0 && System.Numerics.BitOperations.PopCount(layout.Sensitive) < 2
+            ? $"requested {workers} sensitive workers; using {actual} with sensitive mask {layout.Sensitive:X}; workers require whole physical-core partitions of at least two logical CPUs while retaining stability and general CPUs; existing explicit/degraded core rules are preserved"
+            : null;
+        return new(layout, workers, actual, reason);
+    }
 
     // The check-all layout: the sensitive lane takes whole physical cores first,
     // the stability lane whole cores from the rest, general work what remains.
@@ -285,20 +318,33 @@ internal static class CheckAffinity
     internal static int DefaultSensitiveCores(ulong available) =>
         Math.Min(8, Math.Max(1, System.Numerics.BitOperations.PopCount(available) / 2));
 
+    internal static int SensitiveWorkerCount(ulong mask, int workers, ulong[] physicalCores, int minimumCores = 2)
+    {
+        var sizes = physicalCores.Select(core => System.Numerics.BitOperations.PopCount(core & mask)).Where(size => size > 0).ToArray();
+        // With a two-CPU minimum, a large physical core is one partition and
+        // each pair of single-CPU cores is another. Counting bits alone can
+        // incorrectly promise three workers on a 4+1+1 topology.
+        int capacity = minimumCores == 2 ? sizes.Count(size => size >= 2) + sizes.Count(size => size == 1) / 2
+            : System.Numerics.BitOperations.PopCount(mask) / minimumCores;
+        return Math.Min(workers, Math.Min(sizes.Length, Math.Max(1, capacity)));
+    }
+
     internal static IReadOnlyDictionary<string, int> AssignSensitiveLanes(List<CheckJob> jobs, ulong mask, int workers, ulong[]? physicalCores = null, int minimumCores = 4)
     {
         int cores = System.Numerics.BitOperations.PopCount(mask);
         physicalCores ??= PreferredPhysicalCores();
-        workers = Math.Min(workers, Math.Max(1, cores / minimumCores));
-        workers = Math.Min(workers, physicalCores.Count(core => (core & mask) != 0));
+        workers = SensitiveWorkerCount(mask, workers, physicalCores, minimumCores);
         var masks = new ulong[workers];
         ulong remaining = mask;
         for (int i = 0; i < workers; i++)
         {
-            masks[i] = i == workers - 1 ? remaining : Enumerable.Range(1, System.Numerics.BitOperations.PopCount(remaining) - 1)
+            int minimum = minimumCores == 2 && cores >= 2 ? 2 : 1;
+            masks[i] = i == workers - 1 ? remaining : Enumerable.Range(minimum, Math.Max(0, System.Numerics.BitOperations.PopCount(remaining) - minimum))
                 .OrderBy(size => Math.Abs(size - cores / workers)).ThenBy(size => size)
                 .Select(size => TrySplitPreferred(remaining, size, physicalCores))
-                .First(split => split != null && physicalCores.Count(core => (core & split.Value.General) != 0) >= workers - i - 1)!.Value.Stability;
+                .First(split => split != null && (minimumCores != 2 || System.Numerics.BitOperations.PopCount(split.Value.General) >= 2 * (workers - i - 1)) &&
+                    (minimumCores == 2 ? SensitiveWorkerCount(split.Value.General, workers - i - 1, physicalCores)
+                    : physicalCores.Count(core => (core & split.Value.General) != 0)) >= workers - i - 1)!.Value.Stability;
             remaining &= ~masks[i];
         }
         var loads = new double[workers];

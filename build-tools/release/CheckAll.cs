@@ -58,7 +58,7 @@ internal static partial class ReleaseCommands
         foreach (var mode in new[] { "false", "true" })
             suitePlan.Add(new CheckJob("studio-" + project.ToLowerInvariant() + "-" + mode, () => new(0, "", ""), [], Exclusive: true)
                 { SensitiveGroup = $"tests/Studio/TiaOpenness.{project}.Tests/TiaOpenness.{project}.Tests.csproj" });
-        int sensitiveParallelism = FastSuites.Positive(options, "SensitiveParallelism", 2);
+        int sensitiveParallelism = FastSuites.Positive(options, "SensitiveParallelism", CheckAffinity.DefaultCheckAllSensitiveWorkers);
         int sensitiveDefault = CheckPacking.ReservedCores(suitePlan.Where(job => job.Exclusive), resources, sensitiveParallelism);
         var stabilityPlan = CheckAllPlcScriptJobs().Where(name => name.StartsWith("stability-", StringComparison.Ordinal))
             .Select(name => new CheckJob(name, () => new(0, "", ""), []));
@@ -67,8 +67,11 @@ internal static partial class ReleaseCommands
         // cores. Stability and general work retain disjoint, reserved CPU sets.
         // A machine too small for the default lanes runs a recorded degraded
         // layout; explicit lane sizes are kept exactly or refused (exit 64).
-        var layout = CheckAffinity.PlanCheckAll(available, FastSuites.Positive(options, "SensitiveCores", sensitiveDefault), options.Has("SensitiveCores"),
-            FastSuites.Positive(options, "StabilityCores", stabilityDefault), options.Has("StabilityCores"), CheckAffinity.PreferredPhysicalCores());
+        var sensitiveWorkers = CheckAffinity.PlanCheckAllWorkers(available, FastSuites.Positive(options, "SensitiveCores", sensitiveDefault), options.Has("SensitiveCores"),
+            FastSuites.Positive(options, "StabilityCores", stabilityDefault), options.Has("StabilityCores"), CheckAffinity.PreferredPhysicalCores(),
+            sensitiveParallelism, options.Has("SensitiveParallelism"), CheckPacking.ReservedCores(suitePlan.Where(job => job.Exclusive), resources, 2));
+        var layout = sensitiveWorkers.Cpu;
+        if (sensitiveWorkers.Reason != null) Console.WriteLine("check-all: " + sensitiveWorkers.Reason);
         if (layout.Isolation != CheckAffinity.FullIsolation) Console.WriteLine("check-all: cpuIsolation " + layout.Isolation + ": " + layout.Reason);
         int stabilityCores = System.Numerics.BitOperations.PopCount(layout.Stability);
         int generalCores = System.Numerics.BitOperations.PopCount(layout.General);
@@ -409,7 +412,7 @@ internal static partial class ReleaseCommands
             Timeout = CheckScheduler.JobTimeout(job, costs),
             Priority = job.Priority > 0 || !staticJobs.Any(item => item.Name == job.Name) ? job.Priority : 1
         }).ToList();
-        var sensitiveLanes = CheckAffinity.AssignLanes(scheduled, layout, sensitiveParallelism);
+        var sensitiveLanes = CheckAffinity.AssignLanes(scheduled, layout, sensitiveWorkers.Workers);
         var resultCache = new CheckAllResultCache(Root, output, runtimeManifest, api, nuget, dotnet, python, companionPython, options,
             JsonSerializer.Serialize(new { parallelism, shards, stabilityParallelism, lanes = sensitiveLanes, available, stability = layout.Stability,
                 sensitive = layout.Sensitive, general = layout.General }));
@@ -423,7 +426,8 @@ internal static partial class ReleaseCommands
             cpuIsolation = layout.Isolation, cpuIsolationReason = layout.Reason,
             stabilityMask = layout.Stability.ToString("X"), sensitiveMask = layout.Sensitive.ToString("X"), generalMask = layout.General.ToString("X"), stabilityCores, generalCores,
             physicalCores = CheckAffinity.PhysicalCores().Select(core => new { mask = core.Mask.ToString("X"), efficiencyClass = core.Efficiency }),
-            buildParallelism, stabilityParallelism, sensitiveParallelism = sensitiveLanes.Count, sensitiveCores = System.Numerics.BitOperations.PopCount(layout.Sensitive), sensitiveMinWorkerThreads = CheckAffinity.BaselineWorkers, generalParallelism = parallelism, packing, companionPython,
+            buildParallelism, stabilityParallelism, sensitiveParallelism = sensitiveLanes.Count, requestedSensitiveParallelism = sensitiveWorkers.RequestedWorkers,
+            sensitiveParallelismReason = sensitiveWorkers.Reason, sensitiveCores = System.Numerics.BitOperations.PopCount(layout.Sensitive), sensitiveMinWorkerThreads = CheckAffinity.BaselineWorkers, generalParallelism = parallelism, packing, companionPython,
             checks = allJobs.Select(job => new { job.Name, job.Lane, job.SensitiveGroup, job.Slots, job.Exclusive, job.Priority, affinityMask = job.Affinity?.ToString("X"), job.EstimatedSeconds, job.MeasuredSeconds, job.SchedulingSeconds,
                 cpuDemand = packing.Cpu(job), memoryBytes = packing.Memory(job), timeoutSeconds = job.Timeout.TotalSeconds, criticalSeconds = priorities[job.Name], job.Dependencies,
                 runtimeManifestDependency = job.Name == "suite-output-parity" ? "build-once (comparison phase only)" : null,
@@ -451,13 +455,15 @@ internal static partial class ReleaseCommands
             timings.Add(new("tracked-tree-drift", unexpected.Length == 0 ? "passed" : "failed", unexpected.Length == 0 ? 0 : 1, 0, string.Join(", ", unexpected)));
             var performance = CheckScheduler.Performance(allJobs, timings, DateTime.UtcNow - clock.Elapsed, clock.Elapsed.TotalSeconds);
             var report = new { schemaVersion = 1, machineCores = Environment.ProcessorCount, cpuIsolation = layout.Isolation, cpuIsolationReason = layout.Reason,
-                parallelism, shards, cold = options.Has("Cold"), clean = options.Has("Clean"),
+                parallelism, shards, sensitiveParallelism = sensitiveWorkers.Workers, requestedSensitiveParallelism = sensitiveWorkers.RequestedWorkers,
+                sensitiveParallelismReason = sensitiveWorkers.Reason, cold = options.Has("Cold"), clean = options.Has("Clean"),
                 wallSeconds = clock.Elapsed.TotalSeconds, underThirtyMinutes = clock.Elapsed.TotalSeconds < 1800, buildOnly = options.Has("BuildOnly"), nativeTiaExecuted = false,
                 passed = timings.Count(CheckTiming.Passed), reused = timings.Count(row => row.Status == "passed (reused)"),
                 ciCovered = timings.Count(row => row.Status == "covered by CI"),
                 failed = timings.Count(row => !CheckTiming.Passed(row)), drift, performance, checks = timings };
             File.WriteAllText(Path.Combine(output, "report.json"), JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }) + "\n");
             WriteTimingComparison(output, timings, options.Get("BaselineReport"), layout);
+            File.AppendAllText(Path.Combine(output, "comparison.md"), $"\nSensitive workers: {sensitiveWorkers.Workers} configured / {sensitiveWorkers.RequestedWorkers} requested. {sensitiveWorkers.Reason}\n");
             File.AppendAllText(Path.Combine(output, "comparison.md"), $"\nDependency critical path ({performance.CriticalPathSeconds:F3}s of job execution): {string.Join(" -> ", performance.CriticalPath)}\nAverage job concurrency: {performance.AverageConcurrency:F3}; peak: {performance.PeakConcurrency}. Includes process waits and reused-evidence lookups, not CPU utilization.\n");
             var exitCode = report.failed == 0 && report.underThirtyMinutes ? 0 : 1;
             string evidencePath;

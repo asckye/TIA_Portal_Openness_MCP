@@ -23,6 +23,114 @@ public sealed class CheckAllCpuLayoutTests(ITestOutputHelper output)
 
     private static int DefaultStability(ulong available) => Math.Min(8, Math.Max(1, BitOperations.PopCount(available) / 3));
 
+    [Fact]
+    public void DefaultThirdWorkerOverlapsOtherGroupsAndKeepsFoundationSerialAndCpusExclusive()
+    {
+        using var fixture = new OfflineFixtures(); using var together = new Barrier(5);
+        var physical = SingleThreaded(24);
+        var workers = CheckAffinity.PlanCheckAllWorkers(0xFFFFFF, 6, false, 3, false, physical,
+            CheckAffinity.DefaultCheckAllSensitiveWorkers, false, 4);
+        Assert.Equal(3, workers.RequestedWorkers); Assert.Equal(3, workers.Workers); Assert.Null(workers.Reason);
+        Assert.Equal(CheckAffinity.FullIsolation, workers.Cpu.Isolation);
+        Assert.Equal((6, 3, 15), (BitOperations.PopCount(workers.Cpu.Sensitive), BitOperations.PopCount(workers.Cpu.Stability), BitOperations.PopCount(workers.Cpu.General)));
+        int foundation = 0, completed = 0;
+        CommandResult Run(bool overlap, bool shared = false)
+        {
+            if (shared) Assert.Equal(1, Interlocked.Increment(ref foundation));
+            try { if (overlap) Assert.True(together.SignalAndWait(TimeSpan.FromSeconds(10))); Interlocked.Increment(ref completed); return new(0, "", ""); }
+            finally { if (shared) Interlocked.Decrement(ref foundation); }
+        }
+        CheckJob Sensitive(string name, string group, int seconds, bool overlap, bool shared = false) =>
+            new(name, () => Run(overlap, shared), [], Exclusive: true) { SensitiveGroup = group, MeasuredSeconds = seconds };
+        var jobs = new List<CheckJob> {
+            Sensitive("foundation-one", "foundation.dll", 100, true, true), Sensitive("foundation-two", "foundation.dll", 80, false, true),
+            Sensitive("gui", "gui.dll", 150, true), Sensitive("other", "other.dll", 120, true),
+            new("general", () => Run(true), []),
+            new CheckJob("stability", () => Run(true), []) { Lane = "stability", Affinity = workers.Cpu.Stability } };
+        var names = jobs.Select(job => job.Name).ToArray();
+        jobs.Add(new("gate", () => { Assert.Equal(6, Volatile.Read(ref completed)); return new(0, "", ""); }, names));
+        var reserved = CheckAffinity.AssignLanes(jobs, workers.Cpu, workers.Workers, physical);
+        Assert.Equal(3, reserved.Count); Assert.All(reserved.Values, capacity => Assert.Equal(1, capacity));
+        var sensitive = jobs.Where(job => job.Exclusive).ToArray();
+        Assert.All(sensitive.GroupBy(job => job.SensitiveGroup), group => Assert.Single(group.Select(job => job.Lane).Distinct()));
+        var masks = sensitive.GroupBy(job => job.Lane).Select(group => group.First().Affinity!.Value).ToArray();
+        Assert.Equal(3, masks.Length);
+        foreach (ulong mask in masks)
+        {
+            Assert.True(BitOperations.PopCount(mask) >= 2);
+            Assert.Equal(0UL, mask & (workers.Cpu.General | workers.Cpu.Stability));
+            Assert.All(masks.Where(other => other != mask), other => Assert.Equal(0UL, mask & other));
+        }
+        var lanes = new Dictionary<string, int>(reserved) { ["general"] = 1, ["stability"] = 1 };
+        var rows = CheckScheduler.Run(jobs, 1, fixture.DirectoryPath, lanes,
+            packing: new(workers.Cpu.General, 1, 256UL << 20, 16UL << 30, 1) { Available = 0xFFFFFF });
+        Assert.Equal(jobs.Count, rows.Count); Assert.All(rows, row => Assert.True(CheckTiming.Passed(row), row.Error));
+        var first = rows.Single(row => row.Name == "foundation-one"); var second = rows.Single(row => row.Name == "foundation-two");
+        Assert.True(first.StartedAtUtc.AddSeconds(first.Seconds) <= second.StartedAtUtc);
+        var overlapRows = rows.Where(row => row.Name is "foundation-one" or "gui" or "other" or "general" or "stability").ToArray();
+        Assert.Equal(5, overlapRows.Length);
+        Assert.True(overlapRows.Max(row => row.StartedAtUtc) < overlapRows.Min(row => row.StartedAtUtc.AddSeconds(row.Seconds)));
+        Assert.Equal(names, jobs[^1].Dependencies);
+    }
+
+    [Theory]
+    [InlineData(0x3UL, "smt-1")]
+    [InlineData(0x3UL, "single-2")]
+    [InlineData(0xFUL, "smt-2")]
+    [InlineData(0xFUL, "single-4")]
+    [InlineData(0x3FUL, "smt-3")]
+    public void ThirdDefaultFallsBackToThePreviousSmallMachineLayoutAndReportsIt(ulong available, string topology)
+    {
+        var physical = Topology(topology);
+        var previous = CheckAffinity.PlanCheckAll(available, 4, false, 2, false, physical);
+        var result = CheckAffinity.PlanCheckAllWorkers(available, 6, false, 2, false, physical, 3, false, 4);
+        Assert.Equal(previous, result.Cpu); Assert.Equal(3, result.RequestedWorkers);
+        Assert.InRange(result.Workers, 0, 2); Assert.Contains("requested 3 sensitive workers; using " + result.Workers, result.Reason);
+        var jobs = Enumerable.Range(0, 4).Select(index => new CheckJob("sensitive-" + index, () => new(0, "", ""), [], Exclusive: true)
+            { SensitiveGroup = "assembly-" + index }).ToList();
+        var lanes = CheckAffinity.AssignLanes(jobs, result.Cpu, result.Workers, physical);
+        Assert.Equal(result.Workers, lanes.Count); Assert.Equal(4, jobs.Count);
+        if (result.Workers == 0) Assert.All(jobs, job => { Assert.Equal("general", job.Lane); Assert.True(job.Exclusive); });
+        else Assert.All(jobs, job => { Assert.True(BitOperations.PopCount(job.Affinity!.Value) >= 2); Assert.Equal(0UL, job.Affinity.Value & (result.Cpu.General | result.Cpu.Stability)); });
+    }
+
+    [Fact]
+    public void ThreeWorkerLayoutKeepsExplicitCoreSizesAndParallelismOverrides()
+    {
+        var physical = SingleThreaded(24);
+        var limited = CheckAffinity.PlanCheckAllWorkers(0xFFFFFF, 4, true, 5, true, physical, 3, false, 4);
+        Assert.Equal(CheckAffinity.PlanCheckAll(0xFFFFFF, 4, true, 5, true, physical), limited.Cpu);
+        Assert.Equal(2, limited.Workers); Assert.Contains("using 2", limited.Reason);
+        var explicitTwo = CheckAffinity.PlanCheckAllWorkers(0xFFFFFF, 4, false, 3, false, physical, 2, true, 4);
+        Assert.Equal(2, explicitTwo.Workers); Assert.Null(explicitTwo.Reason);
+        Assert.Equal(CheckAffinity.PlanCheckAll(0xFFFFFF, 4, false, 3, false, physical), explicitTwo.Cpu);
+        var explicitFour = CheckAffinity.PlanCheckAllWorkers(0xFFFFFF, 8, false, 3, false, physical, 4, true, 4);
+        Assert.Equal(4, explicitFour.Workers); Assert.Equal(8, BitOperations.PopCount(explicitFour.Cpu.Sensitive));
+        Assert.Equal(64, Assert.Throws<ReleaseException>(() => CheckAffinity.PlanCheckAllWorkers(15, 4, true, 1, true,
+            SingleThreaded(4), 3, false, 4)).ExitCode);
+    }
+
+    [Fact]
+    public void ThreeWorkerPartitionsKeepSmtSiblingsWholeAndRoundLargerPhysicalCores()
+    {
+        foreach (var physical in new[] { Smt(12), Enumerable.Range(0, 6).Select(core => 15UL << (4 * core)).ToArray() })
+        {
+            var result = CheckAffinity.PlanCheckAllWorkers(0xFFFFFF, 6, false, 3, false, physical, 3, false, 4);
+            Assert.Equal(3, result.Workers);
+            var jobs = Enumerable.Range(0, 3).Select(index => new CheckJob("group-" + index, () => new(0, "", ""), [], Exclusive: true)).ToList();
+            Assert.Equal(3, CheckAffinity.AssignLanes(jobs, result.Cpu, result.Workers, physical).Count);
+            foreach (var job in jobs)
+            {
+                Assert.True(BitOperations.PopCount(job.Affinity!.Value) >= 2);
+                Assert.All(physical, core => Assert.True((job.Affinity.Value & core) == 0 || (job.Affinity.Value & core) == core));
+            }
+        }
+        var mixed = new List<CheckJob> { new("one", () => new(0, "", ""), [], Exclusive: true) { Lane = "sensitive" },
+            new("two", () => new(0, "", ""), [], Exclusive: true) { Lane = "sensitive" } };
+        Assert.Equal(2, CheckAffinity.AssignSensitiveLanes(mixed, 63, 3, [15, 16, 32], minimumCores: 2).Count);
+        Assert.All(mixed, job => Assert.True(BitOperations.PopCount(job.Affinity!.Value) >= 2));
+    }
+
     [Theory]
     // 2 logical CPUs: one SMT core shares everything; two single-thread cores keep a stability core.
     [InlineData(0x3UL, "smt-1", null, null, 0x0UL, 0x3UL, 0x3UL, "no reserved lanes")]

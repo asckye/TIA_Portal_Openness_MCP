@@ -201,6 +201,7 @@ public sealed class CheckAllPerformanceTests
 
     [Theory]
     [InlineData("sensitive-0", true)]
+    [InlineData("sensitive-2", true)]
     [InlineData("stability", false)]
     public void IdleReservedCpusAreLentThenDrainedBeforeTheirOwnerStarts(string reservedLane, bool exclusive)
     {
