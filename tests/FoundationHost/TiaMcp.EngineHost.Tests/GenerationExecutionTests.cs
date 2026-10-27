@@ -12,7 +12,9 @@ namespace TiaMcp.EngineHost.Tests;
 
 public sealed class GenerationExecutionTests : IDisposable
 {
-    private readonly string root = Path.Combine(AppContext.BaseDirectory, "generation-execution", Guid.NewGuid().ToString("N"));
+    // check-all fingerprints runtime outputs concurrently; mutable evidence must live outside those inputs.
+    private readonly string root;
+    private readonly string? previousDataDirectory;
     private readonly string repository;
     private int writes, approvals;
     private string bindingGeneration = "1";
@@ -24,13 +26,32 @@ public sealed class GenerationExecutionTests : IDisposable
     private readonly StandardPackage package;
     public GenerationExecutionTests()
     {
-        Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", Path.Combine(AppContext.BaseDirectory, "fixture-data"));
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory != null && !File.Exists(Path.Combine(directory.FullName, "CLAUDE.md"))) directory = directory.Parent;
         repository = directory!.FullName;
+        root = Path.Combine(repository, "bin-build", "generation-execution", Guid.NewGuid().ToString("N"));
+        previousDataDirectory = Environment.GetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY");
+        Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", Path.Combine(root, "data"));
         package = new StandardPackageStore(Path.Combine(repository, "templates", "standards"), Path.Combine(root, "standards")).Load("tiamcp.basic", "1.0.0");
     }
-    public void Dispose() { if (Directory.Exists(root)) Directory.Delete(root, true); }
+    public void Dispose()
+    {
+        Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", previousDataDirectory);
+        Assert.StartsWith(Path.GetFullPath(Path.Combine(repository, "bin-build", "generation-execution")) + Path.DirectorySeparatorChar,
+            Path.GetFullPath(root), StringComparison.OrdinalIgnoreCase);
+        if (Directory.Exists(root)) Directory.Delete(root, true);
+    }
+    [Fact]
+    public void Mutable_evidence_is_outside_the_runtime_input_inventory()
+    {
+        Assert.False(Path.GetFullPath(root).StartsWith(Path.GetFullPath(AppContext.BaseDirectory), StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(Path.Combine(root, "data"), Environment.GetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY"));
+        var session = Session("19");
+        var result = Apply(session, Plan(session, "19"));
+        string run = (string)result.StructuredContent!["data"]!["runId"]!;
+        Assert.True(File.Exists(Path.Combine(root, "runs", run + ".jsonl")));
+        Assert.Equal("succeeded", (string?)new GenerationRunStore(Path.Combine(root, "runs")).Read(run)["status"]);
+    }
     private JsonObject Machine(string release)
     {
         var machine = JsonNode.Parse(Encoding.UTF8.GetString(package.ReadFile("examples/machine.json")))!.AsObject();

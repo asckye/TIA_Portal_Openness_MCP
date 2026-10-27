@@ -43,8 +43,8 @@ namespace TiaMcp.Engine.Tests
                 Assert.Equal(TiaMcpServer.Siemens.CrossReferenceGuardLogic.PolicyRefusal(setting),
                     PlcCrossReferencePolicy.PolicyRefusal(setting));
                 var session = new Session();
-                // Even an invalid path must not reach the native resolver while disabled.
-                var reply = UnifiedCrossReferences.Read(session, "HMI", "invalid");
+                // A valid typed-root path must not reach the native resolver while disabled.
+                var reply = UnifiedCrossReferences.Read(session, "HMI", "[]");
                 Assert.Equal(0, session.Resolves);
                 Assert.Equal(0, session.Target.ServiceRequests);
                 Assert.Equal(0, session.Target.Service.Calls);

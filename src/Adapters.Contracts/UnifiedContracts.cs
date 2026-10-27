@@ -95,9 +95,8 @@ namespace TiaMcp.Adapters.Contracts
             if (string.IsNullOrWhiteSpace(value) || !value!.StartsWith("/", StringComparison.Ordinal) || value.IndexOf('\\') >= 0)
                 throw new ArgumentException("Relative and backslash HMI paths are refused." + guidance);
             var parts = value.Substring(1).Split('/');
-            if (parts.Length > maximumSegments || parts.Any(p => string.IsNullOrWhiteSpace(Uri.UnescapeDataString(p))
-                || Uri.UnescapeDataString(p).IndexOfAny(new[] { '/', '\\' }) >= 0))
-                throw new ArgumentException("Invalid HMI path: empty segments, encoded separators and trailing / are refused; at most " + maximumSegments + " segments are allowed." + guidance);
+            if (parts.Length > maximumSegments || parts.Any(p => string.IsNullOrWhiteSpace(Uri.UnescapeDataString(p))))
+                throw new ArgumentException("Invalid HMI path: empty segments and trailing / are refused; at most " + maximumSegments + " segments are allowed." + guidance);
             return parts;
         }
     }

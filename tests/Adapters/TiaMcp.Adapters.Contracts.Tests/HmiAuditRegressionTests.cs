@@ -66,7 +66,28 @@ public sealed class HmiAuditRegressionTests
         Assert.Empty(parent.TagTables.Calls);
     }
 
-    public static IEnumerable<object[]> InvalidTablePaths => new[] { "Group/Table", "/Group/Table/", "/Group//Table", "/", "/Group/A%2FB",
+    [Theory]
+    [InlineData(false, "%2F", "/")]
+    [InlineData(true, "%2F", "/")]
+    [InlineData(false, "%5C", "\\")]
+    [InlineData(true, "%5C", "\\")]
+    public void Escaped_separators_remain_inside_each_exact_folder_and_table_name(bool classic, string escaped, string decoded)
+    {
+        var parent = new TableFolder { Name = "Group" + decoded + "Sub" };
+        var root = new TableFolder { TagTableGroups = [parent], Folders = [parent] };
+        object software = classic ? new ClassicSoftware { TagFolder = root } : root;
+        string path = "/Group" + escaped + "Sub/Table" + escaped + "Name";
+        int writes = 0;
+        var table = HmiExchangePolicy.EnsureTagTable(software, path, () => writes++);
+        Assert.Equal("Table" + decoded + "Name", ((Named)table).Name);
+        Assert.Same(table, HmiExchangePolicy.TagTable(software, path));
+        Assert.Same(parent, HmiExchangePolicy.Folder(root, "/Group" + escaped + "Sub", classic ? "Folders" : "TagTableGroups"));
+        Assert.Equal(1, writes);
+        Assert.Equal(new[] { "Table" + decoded + "Name" }, parent.TagTables.Calls);
+        Assert.Empty(root.TagTables.Calls);
+    }
+
+    public static IEnumerable<object[]> InvalidTablePaths => new[] { "Group/Table", "/Group/Table/", "/Group//Table", "/", "/Group/A%2FB/",
         "/" + string.Join("/", Enumerable.Repeat("Group", 65)) + "/Table" }.Select(path => new object[] { path });
 
     [Theory, MemberData(nameof(InvalidTablePaths))]

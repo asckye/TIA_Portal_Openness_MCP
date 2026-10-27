@@ -79,6 +79,8 @@ namespace TiaMcp.FoundationHost
         private static Type? ParameterType(string name) => typeof(TypedToolInput).Assembly.GetType(name) ?? Type.GetType(name);
         public Error? ValidateArguments(ToolDescriptor tool, JsonElement arguments, JsonElement schema, bool typedFamiliesOnly = false)
         {
+            var navigation = TiaMcpServer.Siemens.Services.UnifiedPortService.ValidateNavigation(tool.Name, schema, arguments);
+            if (navigation != null) return navigation;
             Error? Families(ToolDescriptor target, JsonElement input)
             {
                 foreach (var parameter in target.Parameters)

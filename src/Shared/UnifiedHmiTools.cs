@@ -32,7 +32,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult EnsureStartStopUnifiedHmiV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
             [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused. (default 'Main')")] string screenName = "Main",
-            [Description("tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with URI-escaped segments. Parent folders must already exist; relative or backslash paths and missing folders are refused. (default '默认变量表')")] string tagTableName = TiaMcp.Adapters.Contracts.UnifiedHmiDefaults.DefaultTagTableName,
+            [Description("tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with URI-escaped segments. Parent folders must already exist; relative or backslash paths and missing folders are refused. (default: the HMI software's default tag table)")] string tagTableName = TiaMcp.Adapters.Contracts.UnifiedHmiDefaults.DefaultTagTableName,
             [Description("plcName: PLC software path / device name for connection + tag mapping (default 'PLC_1')")] string plcName = "PLC_1",
             [Description("connectionName: Unified HMI connection object name (default 'HMI_Connection_1')")] string connectionName = "HMI_Connection_1")
             => UnifiedHmiContract.Run("SetUnifiedHmiRuntimeState", true, true, () => EnsureStartStopUnifiedHmi(hmiSoftwarePath, screenName, tagTableName, plcName, connectionName));

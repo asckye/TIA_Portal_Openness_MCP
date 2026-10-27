@@ -215,9 +215,15 @@ internal sealed partial class FoundationTool
             CancellationToken cancellationToken = default)
         {
             var arguments = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
-            // Invalid input still goes through the existing wrapper so its
-            // behaviour disclosure and raw rejection payload remain unchanged.
             var input = JsonSerializer.SerializeToElement(arguments);
+            if (UnifiedPortService.ValidateNavigation(owner.tool.Name, ProtocolTool.InputSchema, input) is { } navigationError)
+            {
+                var rejected = McpServer.V4TargetReject(owner.tool.Name, navigationError, current: true);
+                McpServer.RecordAdmissionProjection(request, rejected);
+                return new ValueTask<CallToolResult>(rejected);
+            }
+            // Other invalid input still goes through the existing wrapper so its
+            // behaviour disclosure and raw rejection payload remain unchanged.
             var validation = McpServer.ToolInvoker.ValidateArguments(owner.portedDescriptor!, input, ProtocolTool.InputSchema);
             if (validation != null && PortedFamilies.ForTool(owner.tool.Name).Name is "F27" or "F28"
                 && UnifiedInputCodec.HasDuplicateKeys(input))
@@ -382,7 +388,7 @@ internal sealed partial class FoundationTool
             Text("category"), Text("filePath")) != null)
             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
         b4.Aspect = Text(tool.Name == "ConfigureMotionHardwareConnection" ? "interfaceKind" : "aspect");
-        b4.Path = Text("objectPath");
+        if (family.Name == "F13") b4.Path = Text("objectPath");
         b4.GroupPath = Text(tool.Name.StartsWith("ImportTechnologyObject", StringComparison.Ordinal) ? "folderPath" : "groupPath");
         if (tool.Name == "ManagePlcSoftwareUnit" && arguments.TryGetValue("properties", out var properties)
             && properties.ValueKind == JsonValueKind.Object && properties.TryGetProperty("NamespacePreset", out _))

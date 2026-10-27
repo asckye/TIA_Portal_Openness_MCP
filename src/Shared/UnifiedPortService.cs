@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.Adapters.Contracts;
+using TiaMcp.Logic.V4;
 using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens.Services
@@ -23,6 +24,34 @@ namespace TiaMcpServer.Siemens.Services
             var unavailable = UnifiedCapabilities.Unsupported(HardwareContract.ReleaseKey, request);
             if (unavailable != null) throw new PortalException(PortalErrorCode.NotSupportedOnVersion, unavailable);
             return Dispatch(request, dryRun);
+        }
+
+        // Direct tools and bridge binding share admission before schema, readiness and approval gates.
+        internal static Error? ValidateNavigation(string tool, JsonElement schema, JsonElement args)
+        {
+            if (args.ValueKind != JsonValueKind.Object) return null;
+            if (tool is "EnsureUnifiedHmiTagTable" or "EnsureUnifiedHmiTag" or "EnsureUnifiedHmiScreen" or "SetUnifiedHmiRuntimeState")
+                foreach (var field in new[] { "tagTableName", "screenName" })
+                    if (args.TryGetProperty(field, out var name) && name.ValueKind == JsonValueKind.String)
+                        try { TiaMcp.Adapters.Contracts.EngineeringInputValidation.NameOrAbsolutePath(name.GetString()!); }
+                        catch (ArgumentException error)
+                        { return new Error(error.Message, new InvalidArgumentDetails(field, Array.Empty<string>())); }
+            foreach (var field in new[] { "objectPath", "branch", "collectionPath", "tagPath", "durationPath" })
+            {
+                if (!schema.GetProperty("properties").TryGetProperty(field, out var fieldSchema)
+                    || !fieldSchema.TryGetProperty("type", out var fieldType) || fieldType.GetString() != "array"
+                    || !args.TryGetProperty(field, out var input)) continue;
+                try
+                {
+                    ValidateAddress(
+                        input.ValueKind == JsonValueKind.String ? input.GetString()! : input.GetRawText(), field == "branch",
+                        TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool)
+                            && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(tool).Name is "F29" or "F31");
+                }
+                catch (ArgumentException error)
+                { return new Error(error.Message, new InvalidArgumentDetails(field, Array.Empty<string>())); }
+            }
+            return null;
         }
 
         internal static void ValidateAddress(string text, bool branch = false, bool optional = false)

@@ -290,6 +290,7 @@ public sealed class UnifiedPortAdmissionTests
         var result = await tool.InvokeAsync(Request(name, arguments));
         var body = result.StructuredContent!;
         Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
+        Assert.Equal(parameter, (string?)body["error"]?["details"]?["parameter"]);
         Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
         Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
         Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
@@ -300,6 +301,62 @@ public sealed class UnifiedPortAdmissionTests
         if (path.StartsWith("[\"", StringComparison.Ordinal)) Assert.Contains("is a string", message);
         Assert.Equal(0, worker.Calls);
     }
+    [Theory]
+    [InlineData("20", "GetUnifiedObjectEvents")]
+    [InlineData("21", "GetUnifiedPlantObject")]
+    [InlineData("20", "GetUnifiedScreenBranch")]
+    [InlineData("21", "ValidateUnifiedObject")]
+    public void Read_address_tools_do_not_require_approval(string release, string name)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+        Assert.False(Host.McpServer.ApprovalWrite(name, Arguments(name).ToJsonString()));
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("20", "GetDccObject")]
+    [InlineData("21", "GetDccObject")]
+    [InlineData("20", "ListSivarcRules")]
+    [InlineData("21", "ListSivarcRules")]
+    public async Task Optional_root_addresses_keep_their_array_type_during_capability_admission(string release, string name)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+        var tool = PortedToolContract.Create(worker, release).OfType<FoundationTool>().Single(t => t.ProtocolTool.Name == name);
+        var arguments = Arguments(name); arguments["objectPath"] = new JsonArray();
+        var values = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString())!;
+        Assert.Null(tool.RefusePortedCapability(values));
+        var result = await new FoundationV4Tool(tool, release).InvokeAsync(Request(name, arguments));
+        Assert.Equal("PRECONDITION_FAILED", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
+        Assert.Equal(1, worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("19", "ManageUnifiedObjectParts", "objectPath")]
+    [InlineData("20", "ManageUnifiedObjectParts", "objectPath")]
+    [InlineData("21", "SetUnifiedPlantObject", "objectPath")]
+    [InlineData("20", "GetUnifiedObjectEvents", "objectPath")]
+    [InlineData("21", "GetUnifiedScreenBranch", "branch")]
+    [InlineData("21", "ManageSivarcRule", "collectionPath")]
+    public void Bridge_binding_refuses_malformed_addresses_before_approval_or_dispatch(string release, string name, string parameter)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var selected = new ReleaseState(release);
+        using var lifetime = new Host.ImportStagingHostLifetime();
+        var invoker = new enginehost::TiaMcp.FoundationHost.WorkerToolInvoker(new ApprovalCatalog(release), worker, lifetime);
+        var arguments = Arguments(name);
+        arguments[parameter] = JsonNode.Parse("[{\"property\":\"Parent\"}]");
+        var error = invoker.Bind(name, new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.SerializeToElement(arguments)), out var call);
+        Assert.NotNull(error);
+        Assert.Equal(TiaMcp.Logic.V4.ErrorCode.InvalidArgument, error!.Code);
+        Assert.Equal(parameter, Assert.IsType<TiaMcp.Logic.V4.InvalidArgumentDetails>(error.Details).Parameter);
+        Assert.Contains("Expected an array", error.Message);
+        Assert.Null(call);
+        Assert.Equal(0, worker.Calls);
+    }
+
     [Theory, MemberData(nameof(MappingCases))]
     public void Every_served_parameter_has_an_explicit_request_mapping(string name)
     {
