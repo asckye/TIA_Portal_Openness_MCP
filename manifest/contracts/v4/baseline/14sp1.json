@@ -70577,7 +70577,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "3626e14cc2ff6279c047938b26ddf34b0efd03c124e8f87ee4befb8f1e14f0dc",
+      "descriptionSha256": "d00d3f6761ecff28fb152d5c374c62c9ade3ebe237f7cee5e024ec7e873b9857",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -70587,7 +70587,7 @@
             "type": "integer"
           },
           "screenName": {
-            "description": "screenName: screen name, e.g. 'Main'",
+            "description": "screenName: absolute /Group/Sub/Screen path (URI-escaped segments), or an unambiguous exact name; use a path when names repeat.",
             "type": "string"
           },
           "softwarePath": {

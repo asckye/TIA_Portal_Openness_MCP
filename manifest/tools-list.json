@@ -4,7 +4,7 @@
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "2d05309c5686d35cdeb78b653ce6dd33d2212b9cc6cdcfc0f4eea3e541171447",
-  "workerSha256": "ab4ae3917482a589a18dfd92a2447b6f0f8f59d5c0a91f452c3ae9ff6cd683d6",
+  "workerSha256": "6d3889f744e72f796e42729c19806cd71729551b96b0e661ac41250e3a448f49",
   "toolCount": 516,
   "note": "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -14,7 +14,7 @@
     "toolsWithUndocumentedParameters": 205,
     "toolsWithEnumHints": 161,
     "enumHints": 250,
-    "defaultHints": 1446,
+    "defaultHints": 1444,
     "examplesCurated": 516,
     "recipes": 36
   },
@@ -4365,7 +4365,7 @@
         "containedType",
         "properties"
       ],
-      "description": "[L2][HMI-Unified][WRITE] Any screen item type on one exact Unified screen (screenPath = unique screen name or /Group/Screen): list (name/type/geometry, paged), read (scalars, #AARRGGBB colors, parts and collections to depth, every MultilingualText language, features, event/dynamization counts), create (itemType from DescribeUnifiedScreenItemType via native Create<T>(name) or Create<T>(name, containedType) for faceplate/custom widget containers, with initial properties), update, delete (confirmDelete=true). properties accepts scalars or one level of parts ({\"Font\":{\"Size\":14},\"BackColor\":\"#FF0000FF\"}) and multilingual texts per culture ({\"Text\":{\"en-US\":\"Start\"}}); at most 50 leaves, every leaf is read back. Default preview; no save/compile/download. Events: ManageUnifiedEvent; dynamizations: ManageUnifiedDynamization. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ManageUnifiedScreenItem\"), optionally operation or language.",
+      "description": "[L2][HMI-Unified][WRITE] Any screen item type on one exact Unified screen (screenPath = absolute /Group/Screen; relative and backslash paths are refused): list (name/type/geometry, paged), read (scalars, #AARRGGBB colors, parts and collections to depth, every MultilingualText language, features, event/dynamization counts), create (itemType from DescribeUnifiedScreenItemType via native Create<T>(name) or Create<T>(name, containedType) for faceplate/custom widget containers, with initial properties; the three container types require a verbatim containedType copied from an existing container, every other type refuses it), update, delete (confirmDelete=true). properties accepts scalars or one level of parts ({\"Font\":{\"Size\":14},\"BackColor\":\"#FF0000FF\"}) and multilingual texts per culture ({\"Text\":{\"en-US\":\"Start\"}}); at most 50 leaves, every leaf is read back. Default preview; no save/compile/download. Events: ManageUnifiedEvent; dynamizations: ManageUnifiedDynamization. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ManageUnifiedScreenItem\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenPath\":\"Overview\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\",\"itemName\":\"StatusText\"}"
     },
     {
@@ -5373,7 +5373,7 @@
         "screenName",
         "maxMembers"
       ],
-      "description": "[L2][HMI][READ]Describe one HMI screen object (members/methods) by name under an HMI software. Examples: GetToolUsage(toolName: \"DescribeHmiScreen\"), optionally operation or language.",
+      "description": "[L2][HMI][READ]Describe one HMI screen object (members/methods) by exact absolute /Group/Sub/Screen path or unambiguous name under an HMI software. Relative slash paths and backslashes are refused with the corrected form. Examples: GetToolUsage(toolName: \"DescribeHmiScreen\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"Overview\"}"
     },
     {
@@ -5448,7 +5448,7 @@
         "itemType",
         "depth"
       ],
-      "description": "[L2][HMI-Unified][READ] Typed catalog and schema of WinCC Unified screen item types from the loaded official API (no project needed): empty itemType lists every concrete UI.Shapes / UI.Widgets / UI.Controls / UI.Screens item type with its IHmi*Feature interfaces; a name (HmiCircle, Circle, Widgets.HmiSlider or full CLR name) returns its properties classified as scalar/color/multilingual/part/collection/reference with CLR type, enum values, writability, part sub-properties to depth, event types and Delete availability. Use before ManageUnifiedScreenItem so property names and enums are exact. Examples: GetToolUsage(toolName: \"DescribeUnifiedScreenItemType\"), optionally operation or language.",
+      "description": "[L2][HMI-Unified][READ] Typed catalog and schema of WinCC Unified screen item types from the loaded official API (no project needed): empty itemType lists every concrete UI.Shapes / UI.Widgets / UI.Controls / UI.Screens item type and the explicitly admitted UI.Base custom web control/widget containers with its IHmi*Feature interfaces; a name (HmiCircle, Circle, Widgets.HmiSlider or full CLR name) returns its properties classified as scalar/color/multilingual/part/collection/reference with CLR type, enum values, writability, part sub-properties to depth, event types and Delete availability. Use before ManageUnifiedScreenItem so property names and enums are exact. Examples: GetToolUsage(toolName: \"DescribeUnifiedScreenItemType\"), optionally operation or language.",
       "example": "{}"
     },
     {
@@ -6102,15 +6102,15 @@
         "hmiSoftwarePath",
         "tagTableName",
         "tagName",
-        "hmiDataType",
         "plcName",
         "plcTag",
+        "hmiDataType",
         "connectionName",
         "address",
         "requireVerifiedBinding"
       ],
       "description": "[L2][HMI-Unified][WRITE] Create or verify a Unified HMI external tag. For PLC-backed tags pass plcTag and address in the same call; the address must read back in Address/LogicalAddress, e.g. %DB200.DBX0.0. Requires: ConnectPortal + OpenProject + EnsureUnifiedHmiConnection + EnsureUnifiedHmiTagTable. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiTag\"), optionally operation or language.",
-      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"tagTableName\":\"Default tag table\",\"tagName\":\"Ready\"}"
+      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"tagTableName\":\"Default tag table\",\"tagName\":\"Ready\",\"plcName\":\"\\u003CplcName: resolve from the parameter description/current project\\u003E\",\"plcTag\":\"\\u003CplcTag: resolve from the parameter description/current project\\u003E\"}"
     },
     {
       "name": "EnsureUnifiedHmiScreenItem",

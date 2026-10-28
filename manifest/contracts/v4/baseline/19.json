@@ -109127,7 +109127,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "3626e14cc2ff6279c047938b26ddf34b0efd03c124e8f87ee4befb8f1e14f0dc",
+      "descriptionSha256": "d00d3f6761ecff28fb152d5c374c62c9ade3ebe237f7cee5e024ec7e873b9857",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -109137,7 +109137,7 @@
             "type": "integer"
           },
           "screenName": {
-            "description": "screenName: screen name, e.g. 'Main'",
+            "description": "screenName: absolute /Group/Sub/Screen path (URI-escaped segments), or an unambiguous exact name; use a path when names repeat.",
             "type": "string"
           },
           "softwarePath": {
@@ -123531,7 +123531,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "ccbffb33adc51024fc7409ecb96e4175e79fe1448806a7992ad5eed5a0c75d2a",
+      "descriptionSha256": "e1cee4d5c8450bd7293e6bc919a215bbefc6c140f1c73adab1346c6c1e6ff44e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -141955,13 +141955,11 @@
             "type": "string"
           },
           "plcName": {
-            "default": "PLC_1",
-            "description": "plcName: PLC name for symbolic binding",
+            "description": "plcName: required exact PLC software name for symbolic binding; discover it from project reads.",
             "type": "string"
           },
           "plcTag": {
-            "default": "",
-            "description": "plcTag: PLC tag name/path; empty means same as tagName",
+            "description": "plcTag: required exact PLC tag name/path; discover it from PLC tag reads.",
             "type": "string"
           },
           "requireVerifiedBinding": {
@@ -141981,7 +141979,9 @@
         "required": [
           "hmiSoftwarePath",
           "tagTableName",
-          "tagName"
+          "tagName",
+          "plcName",
+          "plcTag"
         ],
         "type": "object"
       },
@@ -515620,7 +515620,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "04b6bfb1d838fc5fccfdd217652dae7bc71219f4328d442ff0fc2638bd88c989",
+      "descriptionSha256": "76569652291b503dd40cac452a76be75ec6b7ac0355767c9728a038c6fc3c18c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -515643,7 +515643,7 @@
           },
           "containedType": {
             "default": "",
-            "description": "containedType: type of the contained items (see the tool description).",
+            "description": "containedType: required only for HmiFaceplateContainer, HmiCustomWebControlContainer and HmiCustomWidgetContainer; copy the exact value from an existing container read. Passed verbatim, 1..4096 characters, no control characters. Refused for every other type, including previews.",
             "type": "string"
           },
           "depth": {

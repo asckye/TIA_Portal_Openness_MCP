@@ -2638,7 +2638,7 @@
           "screenName": {
             "type": "string",
             "default": null,
-            "description": "screenName: screen name, e.g. 'Main'"
+            "description": "screenName: absolute /Group/Sub/Screen path (URI-escaped segments), or an unambiguous exact name; use a path when names repeat."
           },
           "maxMembers": {
             "type": "int",
@@ -3516,23 +3516,21 @@
             "default": null,
             "description": "tagName: HMI tag name"
           },
+          "plcName": {
+            "type": "string",
+            "default": null,
+            "description": "plcName: required exact PLC software name for symbolic binding; discover it from project reads."
+          },
+          "plcTag": {
+            "type": "string",
+            "default": null,
+            "description": "plcTag: required exact PLC tag name/path; discover it from PLC tag reads."
+          },
           "hmiDataType": {
             "type": "string",
             "default": "\"Bool\"",
             "description": "hmiDataType: HMI data type, e.g. Bool, Int, Real, String",
             "value": "Bool"
-          },
-          "plcName": {
-            "type": "string",
-            "default": "\"PLC_1\"",
-            "description": "plcName: PLC name for symbolic binding",
-            "value": "PLC_1"
-          },
-          "plcTag": {
-            "type": "string",
-            "default": "\"\"",
-            "description": "plcTag: PLC tag name/path; empty means same as tagName",
-            "value": ""
           },
           "connectionName": {
             "type": "string",
@@ -15826,7 +15824,7 @@
           "containedType": {
             "type": "string",
             "default": "\"\"",
-            "description": "containedType: type of the contained items (see the tool description).",
+            "description": "containedType: required only for HmiFaceplateContainer, HmiCustomWebControlContainer and HmiCustomWidgetContainer; copy the exact value from an existing container read. Passed verbatim, 1..4096 characters, no control characters. Refused for every other type, including previews.",
             "value": ""
           }
         },
@@ -21960,7 +21958,7 @@
           "screenName": {
             "type": "string",
             "default": null,
-            "description": "screenName: screen name, e.g. 'Main'"
+            "description": "screenName: absolute /Group/Sub/Screen path (URI-escaped segments), or an unambiguous exact name; use a path when names repeat."
           },
           "maxMembers": {
             "type": "int",
@@ -22838,23 +22836,21 @@
             "default": null,
             "description": "tagName: HMI tag name"
           },
+          "plcName": {
+            "type": "string",
+            "default": null,
+            "description": "plcName: required exact PLC software name for symbolic binding; discover it from project reads."
+          },
+          "plcTag": {
+            "type": "string",
+            "default": null,
+            "description": "plcTag: required exact PLC tag name/path; discover it from PLC tag reads."
+          },
           "hmiDataType": {
             "type": "string",
             "default": "\"Bool\"",
             "description": "hmiDataType: HMI data type, e.g. Bool, Int, Real, String",
             "value": "Bool"
-          },
-          "plcName": {
-            "type": "string",
-            "default": "\"PLC_1\"",
-            "description": "plcName: PLC name for symbolic binding",
-            "value": "PLC_1"
-          },
-          "plcTag": {
-            "type": "string",
-            "default": "\"\"",
-            "description": "plcTag: PLC tag name/path; empty means same as tagName",
-            "value": ""
           },
           "connectionName": {
             "type": "string",
@@ -35692,7 +35688,7 @@
           "containedType": {
             "type": "string",
             "default": "\"\"",
-            "description": "containedType: type of the contained items (see the tool description).",
+            "description": "containedType: required only for HmiFaceplateContainer, HmiCustomWebControlContainer and HmiCustomWidgetContainer; copy the exact value from an existing container read. Passed verbatim, 1..4096 characters, no control characters. Refused for every other type, including previews.",
             "value": ""
           }
         },

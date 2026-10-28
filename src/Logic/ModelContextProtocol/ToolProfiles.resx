@@ -21874,7 +21874,9 @@
       "example": {
         "hmiSoftwarePath": "HMI_RT_1",
         "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
-        "tagName": "Ready"
+        "tagName": "Ready",
+        "plcName": "PLC_1",
+        "plcTag": "&lt;exact PLC tag name from project reads&gt;"
       }
     },
     {
@@ -21942,7 +21944,7 @@
       "family": "F26",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenPath": "Overview",
+        "screenPath": "/Overview",
         "confirmDelete": false,
         "dryRun": true,
         "action": "read",
@@ -21986,9 +21988,6 @@
         "dryRun": true,
         "objectPath": [
           {
-            "property": "ScreenFolder"
-          },
-          {
             "property": "Screens",
             "name": "Overview"
           },
@@ -22014,9 +22013,6 @@
         "dryRun": true,
         "objectPath": [
           {
-            "property": "ScreenFolder"
-          },
-          {
             "property": "Screens",
             "name": "Overview"
           },
@@ -22035,9 +22031,6 @@
         "softwarePath": "HMI_RT_1",
         "objectPath": [
           {
-            "property": "ScreenFolder"
-          },
-          {
             "property": "Screens",
             "name": "Overview"
           },
@@ -22055,9 +22048,6 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "objectPath": [
-          {
-            "property": "ScreenFolder"
-          },
           {
             "property": "Screens",
             "name": "Overview"
@@ -22164,9 +22154,6 @@
         "softwarePath": "HMI_RT_1",
         "objectPath": [
           {
-            "property": "ScreenFolder"
-          },
-          {
             "property": "Screens",
             "name": "Overview"
           },
@@ -22184,9 +22171,6 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "objectPath": [
-          {
-            "property": "ScreenFolder"
-          },
           {
             "property": "Screens",
             "name": "Overview"
@@ -22209,9 +22193,6 @@
         "softwarePath": "HMI_RT_1",
         "objectPath": [
           {
-            "property": "ScreenFolder"
-          },
-          {
             "property": "Screens",
             "name": "Overview"
           },
@@ -22233,9 +22214,6 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "objectPath": [
-          {
-            "property": "ScreenFolder"
-          },
           {
             "property": "Screens",
             "name": "Overview"
@@ -22295,9 +22273,6 @@
         "dryRun": true,
         "action": "read",
         "objectPath": [
-          {
-            "property": "ScreenFolder"
-          },
           {
             "property": "Screens",
             "name": "Overview"
@@ -22588,7 +22563,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "expectedProject": "Example",
-        "typePath": "UDT_Status",
+        "typePath": "/Faceplates/MotorFaceplate",
         "version": "&lt;version from target discovery&gt;"
       }
     },
@@ -22608,9 +22583,9 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "expectedProject": "Example",
-        "screenPath": "Overview",
-        "itemName": "StatusText",
-        "typePath": "UDT_Status",
+        "screenPath": "/Overview",
+        "itemName": "MotorFaceplate_1",
+        "typePath": "/Faceplates/MotorFaceplate",
         "version": "&lt;version from target discovery&gt;"
       }
     },
@@ -73606,7 +73581,9 @@
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
           "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
-          "tagName": "Ready"
+          "tagName": "Ready",
+          "plcName": "PLC_1",
+          "plcTag": "&lt;exact PLC tag name from project reads&gt;"
         },
         "envelopeVersion": 4
       },
@@ -74686,9 +74663,6 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
@@ -77101,9 +77075,6 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -77148,9 +77119,6 @@
           "dryRun": true,
           "action": "read",
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
@@ -77214,9 +77182,6 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -77272,7 +77237,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
@@ -77290,9 +77255,6 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
@@ -78971,9 +78933,9 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "screenPath": "Overview",
-          "itemName": "StatusText",
-          "typePath": "UDT_Status",
+          "screenPath": "/Overview",
+          "itemName": "MotorFaceplate_1",
+          "typePath": "/Faceplates/MotorFaceplate",
           "version": "&lt;version from target discovery&gt;"
         },
         "envelopeVersion": 4
@@ -79063,7 +79025,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "typePath": "UDT_Status",
+          "typePath": "/Faceplates/MotorFaceplate",
           "version": "&lt;version from target discovery&gt;"
         },
         "envelopeVersion": 4
@@ -79078,9 +79040,6 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
@@ -79944,9 +79903,6 @@
           "dryRun": true,
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -79969,9 +79925,6 @@
           "softwarePath": "HMI_RT_1",
           "dryRun": true,
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
@@ -80086,9 +80039,6 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
