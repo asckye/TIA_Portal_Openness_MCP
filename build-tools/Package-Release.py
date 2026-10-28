@@ -203,6 +203,7 @@ def main():
         if 'foundation-transport' in selected: flags += ['foundationTransportExecuted', 'toolUsageCoverageExecuted']
         if 'gui-tests' in selected: flags += ['studioFunctionalTestsExecuted']
         if 'foundation-approval' in selected: flags += ['approvalSafetyExecuted']
+        if layout.adopted_validation(multi): flags = [key for key in flags if key not in layout.ADOPTED_MULTI_FLAGS]
         require(all(multi['validation'].get(key) for key in flags), 'Selected multi-version checks have not passed')
     if multi is not None:
         require(multi['studioReleaseKeys'] == ['14sp1', '15.1', '16', '17', '18', '19', '20', '21'], 'Eight release adapters are required')

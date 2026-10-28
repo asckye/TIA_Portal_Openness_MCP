@@ -233,8 +233,9 @@ internal static class ReleaseEvidence
         return jobs;
     }
 
+    // TimeGateException: a maintainer's recorded one-time acceptance of a run whose only failure is the 30-minute gate.
     internal sealed record Inputs(string Root, string Git, string EvidencePath, EvidenceExternal Current, DateTimeOffset Now,
-        Func<JsonObject, JsonArray>? VerifyCiCoverage = null);
+        Func<JsonObject, JsonArray>? VerifyCiCoverage = null, string? TimeGateException = null);
 
     // Every refusal reason is collected; the release reports them together.
     internal static JsonObject Verify(Inputs inputs)
@@ -261,11 +262,14 @@ internal static class ReleaseEvidence
             problems.Add("evidence lacks its result, mode or source section (partial run)");
         var result = evidence["result"] as JsonObject ?? new JsonObject();
         var mode = evidence["mode"] as JsonObject ?? new JsonObject();
-        if (Int(result["exitCode"]) != 0) problems.Add("check-all exited " + Int(result["exitCode"]) + " (failed run)");
+        // check-all exits 1 for a failed job or for the time gate; only the latter can be excepted, never a failed job.
+        bool timeGateExcepted = !string.IsNullOrWhiteSpace(inputs.TimeGateException) && !Bool(result["underThirtyMinutes"])
+            && Int(result["failed"]) == 0 && Int(result["exitCode"]) == 1;
+        if (Int(result["exitCode"]) != 0 && !timeGateExcepted) problems.Add("check-all exited " + Int(result["exitCode"]) + " (failed run)");
         if (Int(result["failed"]) != 0) problems.Add(Int(result["failed"]) + " check-all job(s) failed or were blocked");
         if (Int(result["reused"]) != 0) problems.Add(Int(result["reused"]) + " check-all job(s) reused earlier results");
         if (result["drift"] is not JsonArray drift || drift.Count != 0) problems.Add("check-all reported tracked-tree drift: " + string.Join(", ", (result["drift"] as JsonArray ?? []).Select(Text).Take(5)));
-        if (!Bool(result["underThirtyMinutes"])) problems.Add("check-all did not finish within its 30-minute gate");
+        if (!Bool(result["underThirtyMinutes"]) && !timeGateExcepted) problems.Add("check-all did not finish within its 30-minute gate");
         if (Bool(mode["buildOnly"])) problems.Add("check-all ran -BuildOnly (partial run)");
         if (!Bool(mode["clean"]) && !Bool(mode["cold"])) problems.Add("check-all was neither -Clean nor -Cold (incremental build outputs)");
         if (Bool(mode["resultCacheEnabled"])) problems.Add("check-all ran with its result cache enabled");
@@ -387,7 +391,7 @@ internal static class ReleaseEvidence
                 ["minimumPassed"] = Int(row["minimumPassed"]), ["maximumSkipped"] = Int(row["maximumSkipped"])
             };
         var relative = Path.GetRelativePath(inputs.Root, path).Replace('\\', '/');
-        return new JsonObject
+        var adopted = new JsonObject
         {
             ["schema"] = AdoptionSchema,
             ["evidencePath"] = path,
@@ -411,6 +415,10 @@ internal static class ReleaseEvidence
                 ["localChecks"] = new JsonArray()
             }
         };
+        if (timeGateExcepted)
+            adopted["record"]!["timeGateException"] = new JsonObject
+                { ["approval"] = inputs.TimeGateException, ["wallSeconds"] = (double?)result["wallSeconds"] ?? 0, ["gateSeconds"] = 1800 };
+        return adopted;
     }
 
     // The release stages an adopted publication leaves to the evidence, and the ones it still runs itself.

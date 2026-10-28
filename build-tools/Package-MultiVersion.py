@@ -113,8 +113,9 @@ def main():
     candidate = json.loads((ROOT / 'manifest/package-manifest.json').read_text('utf-8-sig'))
     selected = layout.release_checks(ROOT, candidate, primary, multi)
     assert candidate['checkStatus'] == 'passed', 'Complete the candidate chain before packaging'
-    if 'foundation-transport' in selected: assert multi['validation']['foundationTransportExecuted']
-    if 'gui-tests' in selected: assert multi['validation']['studioFunctionalTestsExecuted']
+    adopted = layout.adopted_validation(multi)
+    if 'foundation-transport' in selected: assert adopted or multi['validation']['foundationTransportExecuted']
+    if 'gui-tests' in selected: assert adopted or multi['validation']['studioFunctionalTestsExecuted']
     assert set(multi['studioReleaseKeys']) == {'14sp1', '15.1', '16', '17', '18', '19', '20', '21'}
     # P8-04l: release-build.json is one of the tracked records above; the eight-release record embeds no engine copy.
     for record in records.values():

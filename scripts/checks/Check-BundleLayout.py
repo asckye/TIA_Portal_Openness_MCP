@@ -151,6 +151,18 @@ def validate_plc_record(record):
                 raise ValueError('PLC stability matrix incomplete: ' + key)
 
 
+# P8-93: a publication that adopts same-commit check-all evidence does not rerun these multi-version tests;
+# the release verified the evidence and recorded it as adoptedValidation. Approval safety still runs locally.
+ADOPTED_MULTI_FLAGS = frozenset({'configurationFunctionalTestsExecuted', 'studioFunctionalTestsExecuted',
+                                 'foundationTransportExecuted', 'toolUsageCoverageExecuted'})
+
+
+def adopted_validation(multi):
+    adopted = (multi or {}).get('adoptedValidation') or {}
+    evidence = adopted.get('evidence') or {}
+    return bool(evidence.get('sha256') and evidence.get('commit') and adopted.get('adoptedChecks'))
+
+
 def release_checks(root, package, *records):
     """Validate candidate tier evidence before delivery projection removes sources."""
     policy = json.loads((root / 'build-tools/release/release-checks.json').read_text('utf-8'))

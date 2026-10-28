@@ -87,7 +87,8 @@ internal static partial class ReleaseCommands
         var repository = options.Get("Repository", "asckye/TIA_Portal_Openness_MCP");
         var adoption = ReleaseEvidence.Verify(new ReleaseEvidence.Inputs(Root, git, evidencePath, external, DateTimeOffset.UtcNow,
             dryRun ? null : coverage => VerifyReleaseCi(options.Get("ApiBaseUrl", "https://api.github.com"), token, repository,
-                ReleaseEvidence.GitText(Root, git, "rev-parse", "HEAD"), coverage)));
+                ReleaseEvidence.GitText(Root, git, "rev-parse", "HEAD"), coverage),
+            options.Get("AcceptTimeGateException")));
         var record = adoption["record"]!.AsObject();
         var commit = ReleaseEvidence.Text(record["evidence"]?["commit"]);
         if (record["ci"] == null) record["ci"] = dryRun
@@ -230,7 +231,7 @@ internal static partial class ReleaseCommands
         }
         var adoption = ReleaseEvidence.Verify(new ReleaseEvidence.Inputs(Root, git, evidence, external, DateTimeOffset.UtcNow,
             options.Has("Ci") ? coverage => VerifyReleaseCi(options.Get("ApiBaseUrl", "https://api.github.com"), Token(), options.Get("Repository", "asckye/TIA_Portal_Openness_MCP"),
-                ReleaseEvidence.GitText(Root, git, "rev-parse", "HEAD"), coverage) : null));
+                ReleaseEvidence.GitText(Root, git, "rev-parse", "HEAD"), coverage) : null, options.Get("AcceptTimeGateException")));
         var record = adoption["record"]!.AsObject();
         var commit = ReleaseEvidence.Text(record["evidence"]?["commit"]);
         Console.WriteLine($"Evidence accepted for {commit}: {record["evidence"]?["jobs"]} passed jobs, {record["suites"]!.AsObject().Count} registered suites, " +

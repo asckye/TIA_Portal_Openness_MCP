@@ -133,6 +133,27 @@ public sealed class ReleaseEvidenceTests
     }
 
     [Fact]
+    public void TimeGateExceptionAcceptsOnlyARunWhoseSoleFailureIsTheGate()
+    {
+        using var fixture = new EvidenceFixture();
+        fixture.Edit(evidence => { evidence["result"]!["exitCode"] = 1; evidence["result"]!["underThirtyMinutes"] = false; evidence["result"]!["wallSeconds"] = 1985.0; });
+        Assert.Contains("30-minute gate", Assert.Throws<ReleaseException>(fixture.Verify).Message);
+        var record = fixture.VerifyWithTimeGateException("maintainer 2026-10-27, beta.2 only")["record"]!;
+        Assert.Equal("maintainer 2026-10-27, beta.2 only", ReleaseEvidence.Text(record["timeGateException"]?["approval"]));
+        Assert.Equal(1800, (int)record["timeGateException"]!["gateSeconds"]!);
+    }
+
+    [Fact]
+    public void TimeGateExceptionNeverExcusesAFailedJob()
+    {
+        using var fixture = new EvidenceFixture();
+        fixture.Edit(evidence => { evidence["result"]!["exitCode"] = 1; evidence["result"]!["failed"] = 1; evidence["result"]!["underThirtyMinutes"] = false; });
+        var error = Assert.Throws<ReleaseException>(() => fixture.VerifyWithTimeGateException("maintainer 2026-10-27, beta.2 only"));
+        Assert.Contains("check-all exited 1", error.Message);
+        Assert.Contains("30-minute gate", error.Message);
+    }
+
+    [Fact]
     [Trait("Category", "ReleaseParity")]
     public void RefusesAFailedRun()
     {
@@ -630,6 +651,9 @@ public sealed class ReleaseEvidenceTests
         }
 
         internal JsonObject Verify() => Verify(Machine);
+
+        internal JsonObject VerifyWithTimeGateException(string approval) =>
+            ReleaseEvidence.Verify(new ReleaseEvidence.Inputs(Root, "git", EvidencePath, Machine, DateTimeOffset.UtcNow.AddMinutes(1), null, approval));
 
         internal JsonObject Verify(EvidenceExternal current) =>
             ReleaseEvidence.Verify(new ReleaseEvidence.Inputs(Root, "git", EvidencePath, current, DateTimeOffset.UtcNow.AddMinutes(1)));
