@@ -128,8 +128,7 @@ public sealed class WorkerRobustnessTests
             // The engine rows share one location per test process: parallel shard processes run from the same output directory,
             // and a shared location let one process write audit records while another compared its audit files (beta.1 release run).
             Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", dataDirectory ?? Path.Combine(AppContext.BaseDirectory, "worker-fixture-data", "p" + Environment.ProcessId));
-            string exe = plcWorker ? Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
-                "tests/WorkerChannel/TiaMcp.PlcWorker.FaultFixture/bin/Release/net48/TiaMcp.PlcWorker.FaultFixture.exe")
+            string exe = plcWorker ? TiaMcp.Engine.Tests.Shared.TestPaths.WorkerFixture("TiaMcp.PlcWorker.FaultFixture", "TiaMcp.PlcWorker.FaultFixture.exe", "net48")
                 : TiaMcp.Engine.Tests.Shared.TestPaths.WorkerFixture("TiaMcp.EngineWorker.FaultFixture", "TiaMcp.EngineWorker.FaultFixture.exe");
             Assert.True(File.Exists(exe), exe);
             TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + release + ".dll"), "offline fixture identity");
@@ -314,8 +313,7 @@ public sealed class WorkerRobustnessTests
     [Theory, InlineData(240), InlineData(300)]
     public async Task Net48_worker_spills_an_oversized_reply_beyond_MAX_PATH(int directoryLength)
     {
-        string exe = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
-            "tests/WorkerChannel/TiaMcp.PlcWorker.FaultFixture/bin/Release/net48/TiaMcp.PlcWorker.FaultFixture.exe");
+        string exe = TiaMcp.Engine.Tests.Shared.TestPaths.WorkerFixture("TiaMcp.PlcWorker.FaultFixture", "TiaMcp.PlcWorker.FaultFixture.exe", "net48");
         Assert.True(File.Exists(exe), exe);
         string adapter = Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter.21.dll");
         TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(adapter, "offline fixture identity");

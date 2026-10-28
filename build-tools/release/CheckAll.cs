@@ -234,12 +234,13 @@ internal static partial class ReleaseCommands
             }, null);
             jobs[^1] = jobs[^1] with { Lane = "stability", Affinity = layout.Stability };
         }
+        var workerCopies = new SuiteWorkerCopies(output);
         foreach (var (name, node) in catalog)
         {
             var suite = node!.AsObject();
             string? sdk = name == "foundation-api" || suite["publicApiRoot"]?.GetValue<bool>() == true ? api : null;
             FastSuites.AddJobs(jobs, Root, name, suite, Path.Combine(output, "suites"), dotnet, suite["minimumPassed"]!.GetValue<int>() >= 100 ? shards : 1, sdk, [],
-                options.Get("SequentialBaselineDirectory") is { } baseline ? Path.Combine(baseline, name + ".trx") : null, options.Has("ProveEquivalence"), manifest: runtimeManifest, diagnostics: true);
+                options.Get("SequentialBaselineDirectory") is { } baseline ? Path.Combine(baseline, name + ".trx") : null, options.Has("ProveEquivalence"), manifest: runtimeManifest, diagnostics: true, workerCopies: workerCopies);
         }
         foreach (var mode in new[] { "false", "true" })
         foreach (var project in new[] { "Core", "Gui" })
@@ -413,6 +414,7 @@ internal static partial class ReleaseCommands
             Priority = job.Priority > 0 || !staticJobs.Any(item => item.Name == job.Name) ? job.Priority : 1
         }).ToList();
         var sensitiveLanes = CheckAffinity.AssignLanes(scheduled, layout, sensitiveWorkers.Workers);
+        workerCopies.Prepare(Root, scheduled, runtimeManifest);
         var resultCache = new CheckAllResultCache(Root, output, runtimeManifest, api, nuget, dotnet, python, companionPython, options,
             JsonSerializer.Serialize(new { parallelism, shards, stabilityParallelism, lanes = sensitiveLanes, available, stability = layout.Stability,
                 sensitive = layout.Sensitive, general = layout.General }));

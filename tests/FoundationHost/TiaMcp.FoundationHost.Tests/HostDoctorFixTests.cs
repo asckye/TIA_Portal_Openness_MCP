@@ -26,7 +26,7 @@ public sealed class HostDoctorFixTests : IDisposable
     private readonly string scratch = Path.Combine(Root(), "bin-build", "doctor-fix-" + Guid.NewGuid().ToString("N"));
     private static string Root([CallerFilePath] string file = "") => Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file)!, "../../.."));
     private static string HostDirectory => Path.Combine(Root(), "src/FoundationHost/bin/Release/net10.0");
-    private static string Fixture => Path.Combine(Root(), "tests/WorkerChannel/TiaMcp.PlcWorker.FaultFixture/bin/Release/net48/TiaMcp.PlcWorker.FaultFixture.exe");
+    private static string Fixture => TiaMcp.Engine.Tests.Shared.TestPaths.WorkerFixture("TiaMcp.PlcWorker.FaultFixture", "TiaMcp.PlcWorker.FaultFixture.exe", "net48");
     private static readonly string[] JsonKeys = { "releaseKey", "fix", "ready", "logs", "diagnostics", "checks", "group", "clients", "report" };
     public static IEnumerable<object[]> Releases() => TiaVersionCatalog.Runnable.Select(release => new object[] { release.Key });
 

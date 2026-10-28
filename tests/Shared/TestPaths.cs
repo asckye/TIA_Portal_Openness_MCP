@@ -16,6 +16,9 @@ namespace TiaMcp.Engine.Tests.Shared
 
         public static string RegisteredOutput(string isolatedOutput)
         {
+            if (string.Equals(Path.GetFullPath(isolatedOutput).TrimEnd('\\', '/'), AppContext.BaseDirectory.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase)
+                && Environment.GetEnvironmentVariable("TIA_MCP_TEST_REGISTERED_OUTPUT") is string registered)
+                isolatedOutput = registered;
             var directory = new DirectoryInfo(isolatedOutput);
             if (directory.Parent?.Parent?.Parent?.Parent?.Name == "check-all")
             {
@@ -25,8 +28,10 @@ namespace TiaMcp.Engine.Tests.Shared
             return isolatedOutput;
         }
 
-        public static string WorkerFixture(string project, string file) => Path.Combine(
-            RepositoryRoot(AppContext.BaseDirectory), "tests", "WorkerChannel", project, "bin", "Release", "net10.0", file);
+        public static string WorkerFixture(string project, string file, string framework = "net10.0") =>
+            Environment.GetEnvironmentVariable("TIA_MCP_TEST_WORKER_FIXTURE_ROOT") is string fixtures
+                ? Path.Combine(fixtures, project, file)
+                : Path.Combine(RepositoryRoot(AppContext.BaseDirectory), "tests", "WorkerChannel", project, "bin", "Release", framework, file);
 
         // Parallel shard processes share one output directory, and their worker fixtures hash this file at startup.
         // File.WriteAllText truncates it in place, so another process could hash an empty file or be refused by the

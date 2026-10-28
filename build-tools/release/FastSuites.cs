@@ -60,6 +60,7 @@ internal static class FastSuites
             ["LOCALAPPDATA"] = Path.Combine(isolation, "local"), ["APPDATA"] = Path.Combine(isolation, "roaming"),
             ["TIA_MCP_TEST_PIPE_SCOPE"] = Guid.NewGuid().ToString("N"), ["TIA_MCP_TEST_PUBLIC_API_ROOT"] = api,
             ["TIA_MCP_TEST_PRODUCT_ROOT"] = null, ["TIA_MCP_TEST_SHARD_COUNT"] = null, ["TIA_MCP_TEST_SHARD_INDEX"] = null,
+            ["TIA_MCP_TEST_WORKER_FIXTURE_ROOT"] = null, ["TIA_MCP_TEST_REGISTERED_OUTPUT"] = null,
             ["TIA_MCP_TEST_SENSITIVE_SHARDS"] = null, ["TIA_MCP_TEST_SHARD_ASSEMBLY"] = null, ["TIA_MCP_TEST_SHARD_PLAN"] = null, ["TIA_MCP_TEST_RESERVE_SENSITIVE_SHARD"] = null,
             ["NuGetAudit"] = "false", ["TIA_MCP_CHECK_SYSTEM_TEMP_ROOT"] = SystemTemp
         };
@@ -67,7 +68,7 @@ internal static class FastSuites
 
     internal static void AddJobs(List<CheckJob> jobs, string root, string name, JsonObject suite, string output, string dotnet,
         int shards, string? api, string[] dependencies, string? baseline = null, bool prove = false, string[]? extra = null, string? history = null, string? jobPrefix = null, string? manifest = null,
-        SuiteProcess? process = null, bool diagnostics = false)
+        SuiteProcess? process = null, bool diagnostics = false, SuiteWorkerCopies? workerCopies = null)
     {
         var unit = CheckAllBuild.Suite(suite);
         var directory = Path.Combine(output, name);
@@ -83,14 +84,19 @@ internal static class FastSuites
         if (prove)
         {
             sequential = Path.Combine(directory, "sequential", name + ".trx");
-            jobs.Add(new(jobPrefix + name + "-sequential", () => RunShard(root, name, suite, Path.GetDirectoryName(sequential)!, dotnet, api, unit, 0, 1, extra, manifest: manifest, process: process, diagnostics: diagnostics), dependencies, Exclusive: true) {
-                SensitiveGroup = unit.Project, EstimatedSeconds = measuredPlan ? plan.Costs.Sum() + 5 : ColdShardSeconds * shards });
+            var jobName = jobPrefix + name + "-sequential";
+            var group = workerCopies?.Register(jobName, unit, Path.GetDirectoryName(sequential)!, unit.Project) ?? unit.Project;
+            jobs.Add(new(jobName, () => RunShard(root, name, suite, Path.GetDirectoryName(sequential)!, dotnet, api, unit, 0, 1, extra, manifest: manifest, process: process, diagnostics: diagnostics, runtime: workerCopies?.ForJob(jobName)), dependencies, Exclusive: true) {
+                SensitiveGroup = group, EstimatedSeconds = measuredPlan ? plan.Costs.Sum() + 5 : ColdShardSeconds * shards });
         }
         var shardNames = new List<string>();
         for (int i = 0; i < shards; i++)
         {
             var index = i; var jobName = jobPrefix + name + "-shard-" + i; shardNames.Add(jobName);
-            jobs.Add(new(jobName, () => RunShard(root, name, suite, Path.GetDirectoryName(paths[index])!, dotnet, api, unit, index, shards, extra, plan.Path, reserveSensitive, manifest, process, sensitiveShards, diagnostics), dependencies,
+            var group = reserveSensitive && index >= shards - sensitiveShards &&
+                plan.SensitivePartitions![index - (shards - sensitiveShards)] > 0 ? unit.Project + "#portal-lane" : unit.Project;
+            group = workerCopies?.Register(jobName, unit, Path.GetDirectoryName(paths[index])!, group) ?? group;
+            jobs.Add(new(jobName, () => RunShard(root, name, suite, Path.GetDirectoryName(paths[index])!, dotnet, api, unit, index, shards, extra, plan.Path, reserveSensitive, manifest, process, sensitiveShards, diagnostics, workerCopies?.ForJob(jobName)), dependencies,
                 Exclusive: reserveSensitive && index >= shards - sensitiveShards) { EstimatedSeconds = measuredPlan ? plan.Costs[index] + 5 : ColdShardSeconds,
                     ResultInputs = new("suite", new JsonObject { ["suite"] = name, ["registration"] = suite.DeepClone(),
                         ["project"] = unit.Project, ["variant"] = unit.Variant, ["index"] = index, ["count"] = shards,
@@ -98,8 +104,7 @@ internal static class FastSuites
                         ["reserveSensitive"] = reserveSensitive, ["sensitiveShards"] = sensitiveShards }.ToJsonString(),
                         Path.GetDirectoryName(paths[index]), Path.GetFileName(paths[index]), plan.Path,
                         suite["maximumSkipped"]!.GetValue<int>(), prove || baseline != null ? "equivalence proof" : null),
-                    SensitiveGroup = reserveSensitive && index >= shards - sensitiveShards &&
-                        plan.SensitivePartitions![index - (shards - sensitiveShards)] > 0 ? unit.Project + "#portal-lane" : unit.Project });
+                    SensitiveGroup = group });
         }
         // Merge runs even after a failed test process, so partial totals/failures remain
         // reviewable. The caller schedules merges in a second wave without prerequisites.
@@ -116,10 +121,16 @@ internal static class FastSuites
         jobs.Select(job => job with { Timeout = CheckScheduler.JobTimeout(job, new Dictionary<string, double>()) }).ToList();
 
     internal static CommandResult RunShard(string root, string name, JsonObject suite, string directory, string dotnet, string? api,
-        CheckBuild unit, int index, int count, string[]? extra = null, string? plan = null, bool reserveSensitive = false, string? manifest = null, SuiteProcess? process = null, int sensitiveShards = 1, bool diagnostics = false)
+        CheckBuild unit, int index, int count, string[]? extra = null, string? plan = null, bool reserveSensitive = false, string? manifest = null, SuiteProcess? process = null, int sensitiveShards = 1, bool diagnostics = false, SuiteWorkerRuntime? runtime = null)
     {
         Directory.CreateDirectory(directory);
         var environment = EnvironmentFor(directory, api);
+        if (runtime != null)
+        {
+            if (extra is { Length: > 0 }) throw new ReleaseException("Isolated Foundation copies require direct VSTest execution; refusing shared MSBuild writes.");
+            environment["TIA_MCP_TEST_WORKER_FIXTURE_ROOT"] = runtime.Fixtures;
+            environment["TIA_MCP_TEST_REGISTERED_OUTPUT"] = Path.GetDirectoryName(runtime.RegisteredOutput);
+        }
         if (unit.Project.StartsWith("tests/Studio/", StringComparison.Ordinal)) environment["TIA_MCP_BUNDLE_ROOT"] = root;
         environment["TIA_MCP_TEST_SHARD_COUNT"] = count.ToString(); environment["TIA_MCP_TEST_SHARD_INDEX"] = index.ToString();
         environment["TIA_MCP_TEST_SHARD_ASSEMBLY"] = Path.GetFileNameWithoutExtension(unit.Project);
@@ -134,7 +145,7 @@ internal static class FastSuites
         var before = SuiteHang.Begin(directory, name);
         environment["TIA_MCP_TEST_PHASE_TIMINGS"] = Path.Combine(directory, "phase-timings.json");
         string? assembly;
-        try { assembly = CheckAllBuild.TestAssembly(root, unit, manifest, name); }
+        try { assembly = runtime?.Assembly ?? CheckAllBuild.TestAssembly(root, unit, manifest, name); }
         catch (ReleaseException ex) { return new(1, "", ex.Message + "\n"); }
         List<string> args;
         if (assembly != null && (extra == null || extra.Length == 0))

@@ -11,8 +11,7 @@ using Xunit;
 
 public sealed class PlcFixtureWorkerRobustnessTests
 {
-    private static string Fixture => Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
-        "tests/WorkerChannel/TiaMcp.PlcWorker.FaultFixture/bin/Release/net48/TiaMcp.PlcWorker.FaultFixture.exe");
+    private static string Fixture => TiaMcp.Engine.Tests.Shared.TestPaths.WorkerFixture("TiaMcp.PlcWorker.FaultFixture", "TiaMcp.PlcWorker.FaultFixture.exe", "net48");
     private sealed class Scope : IDisposable
     {
         private readonly string? previous = Environment.GetEnvironmentVariable("TIA_MCP_PLC_WORKER_FAULT");
