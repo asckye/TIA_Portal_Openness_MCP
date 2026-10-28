@@ -70,12 +70,42 @@ public sealed class CheckAllPerformanceTests
         Assert.False(plan.CanAdmit(large, 3, [Small(), Small(), Small()]));
         Assert.False(plan.CanAdmit(large, 15, [large, large, reserved]));
         Assert.False(plan.MemoryFits(reserved, [large, large, large]));
-        Assert.True(plan.CanAdmit(large, 1, []));
+        Assert.False(plan.CanAdmit(large, 1, []));
+        Assert.True(plan.CanAdmit(large, 3, []));
         Assert.False((plan with { Cap = 2 }).CanAdmit(Small(), 15, [Small(), Small()]));
         Assert.Equal(plan.MemoryPerJob, plan.Memory(new("unknown", Passed, [])));
-        Assert.Equal(plan.CpuPerJob, plan.Cpu(new("unknown", Passed, [])));
+        Assert.Equal(Math.Max(1, plan.CpuPerJob), plan.Cpu(new("unknown", Passed, [])));
         Assert.Equal(2UL << 30, plan.Memory(large));
         Assert.Equal(3UL << 30, plan.Memory(reserved));
+    }
+
+    [Fact]
+    public void AdmissionNeverExceedsAvailableCpusWithMissingOrPartialHistory()
+    {
+        var unknown = new CheckJob("unknown", Passed, []);
+        var plan = new CheckPacking(3, .2, 256UL << 20, 4UL << 30, 32);
+        Assert.Equal(1, plan.Cpu(unknown));
+        Assert.True(plan.CanAdmit(unknown, 3, [unknown]));
+        Assert.False(plan.CanAdmit(unknown, 3, [unknown, unknown]));
+        Assert.False(plan.CanAdmit(unknown, 0, []));
+        var history = new Dictionary<string, CheckResourceUsage> {
+            ["heavy"] = new(21, 10, 1UL << 30, "measured"),
+            ["small"] = new(2, 10, 256UL << 20, "measured"),
+            ["unknown"] = new(0, 100, 256UL << 20, "missing CPU") };
+        plan = plan with { History = history };
+        var small = new CheckJob("small", Passed, []);
+        var heavy = new CheckJob("heavy", Passed, []);
+        Assert.Equal(1, plan.Cpu(unknown));
+        Assert.False(plan.CanAdmit(heavy, 3, []));
+        Assert.True(plan.CanAdmit(heavy, 7, []));
+        Assert.False(plan.CanAdmit(unknown, 1, [small]));
+        Assert.False(plan.CanAdmit(unknown, 3, [unknown, unknown]));
+        Assert.False((plan with { MemoryBudget = 128UL << 20 }).CanAdmit(small, 7, []));
+        Assert.False((plan with { History = new Dictionary<string, CheckResourceUsage>(), MemoryBudget = 256UL << 20 })
+            .CanAdmit(unknown, 7, [unknown]));
+        var reserved = small with { Lane = "sensitive-0", Affinity = 2 };
+        Assert.False(plan.CanAdmit(unknown, 3, [unknown, reserved]));
+        Assert.True(plan.CanAdmit(unknown, 1, [reserved]));
     }
 
     [Fact]
@@ -221,7 +251,8 @@ public sealed class CheckAllPerformanceTests
         try
         {
             var rows = CheckScheduler.Run(jobs, 2, fixture.DirectoryPath, new Dictionary<string, int> { ["general"] = 2, [reservedLane] = 1 },
-                packing: new(1, .5, 256UL << 20, 4UL << 30, 2));
+                packing: new(1, .5, 256UL << 20, 4UL << 30, 2) {
+                    History = jobs.ToDictionary(job => job.Name, _ => new CheckResourceUsage(1, 2, 256UL << 20, "measured")) });
             Assert.All(rows, row => Assert.True(CheckTiming.Passed(row), row.Error));
             Assert.Equal(jobs.Count, rows.Count); Assert.True(ownerRan);
             Assert.Equal("3", rows.Single(row => row.Name == "borrower").AffinityMask);

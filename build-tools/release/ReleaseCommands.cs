@@ -674,7 +674,7 @@ internal static partial class ReleaseCommands
             }
             else Console.Write(repositoryCheck.StandardOutput);
         }
-        try { ValidateRequiredJson(root, package, options.Get("PendingRelease")); }
+        try { ValidateRequiredJson(root, package, options.Get("PendingRelease"), noBinaries && !package); }
         catch (Exception ex) { errors.Add(ex.Message); }
         if (strict && !options.Has("PendingRelease"))
         {
@@ -709,7 +709,7 @@ internal static partial class ReleaseCommands
         return generated.Length != 0 && File.Exists(Path.Combine(root, generated.Replace('/', Path.DirectorySeparatorChar)));
     }
 
-    private static void ValidateRequiredJson(string root, bool package, string? pendingRelease = null)
+    private static void ValidateRequiredJson(string root, bool package, string? pendingRelease = null, bool noBinaries = false)
     {
         var names = new[] { "manifest/package-manifest.json", "manifest/delivery.json", "manifest/release-build.json", "manifest/configurator-build.json", "manifest/multi-version-build.json", "manifest/tools-list.json" };
         foreach (var name in names)
@@ -739,16 +739,15 @@ internal static partial class ReleaseCommands
         var pluginPath = Path.Combine(root, ".claude-plugin/plugin.json");
         if (File.Exists(pluginPath))
         {
-            if (PluginVersionError(root, pendingRelease) is { } pluginError) throw new ReleaseException(pluginError);
+            if (PluginVersionError(root, pendingRelease, noBinaries) is { } pluginError) throw new ReleaseException(pluginError);
             if (!JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "manifest/package-manifest.json"))).RootElement.TryGetProperty("capabilities", out _))
                 throw new ReleaseException("package-manifest.json lacks capabilities");
         }
     }
 
-    /// <summary>The plugin and marketplace versions must equal the release exactly: the delivery record's release, or the pending
-    /// release version during the pre-build gate (-PendingRelease), where the mechanical bump has already run but build-release has
-    /// not rewritten manifest/delivery.json yet.</summary>
-    internal static string? PluginVersionError(string root, string? pendingRelease)
+    /// <summary>The plugin and marketplace must agree exactly. They follow the delivery version, or Version.props in a repository
+    /// -NoBinaries prep commit whose delivery is the newest published version. -PendingRelease selects the pre-build version.</summary>
+    internal static string? PluginVersionError(string root, string? pendingRelease, bool noBinaries = false)
     {
         var pluginPath = Path.Combine(root, ".claude-plugin/plugin.json");
         if (!File.Exists(pluginPath)) return null;
@@ -760,6 +759,11 @@ internal static partial class ReleaseCommands
         {
             using var delivery = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "manifest/delivery.json")));
             release = JsonString(delivery.RootElement, "release");
+            if (noBinaries)
+            {
+                var sourceRelease = ReleaseVersions.ReadLabel(root);
+                if (ReleaseVersions.IsPublishedRecordLag(root, sourceRelease, release)) release = sourceRelease;
+            }
         }
         if (JsonString(plugin.RootElement, "version") != release) return "Plugin version differs from release version";
         var marketplacePath = Path.Combine(root, ".claude-plugin/marketplace.json");
@@ -805,7 +809,9 @@ internal static partial class ReleaseCommands
         if (JsonString(delivery, "release") != newest || JsonString(delivery, "engineRelease") != engineRelease || JsonString(delivery, "fileVersion") != fileVersion)
             throw new ReleaseException("Delivery version differs from CHANGELOG or engine build record");
         var sourceRelease = package ? release : ReleaseVersions.ReadLabel(root);
-        if (sourceRelease != engineRelease || ReleaseVersions.FileVersionOf(sourceRelease) != fileVersion) throw new ReleaseException("Engine build version differs from Version.props");
+        bool publishedLag = noBinaries && !package && release == engineRelease && ReleaseVersions.IsPublishedRecordLag(root, sourceRelease, engineRelease);
+        if (release != engineRelease || sourceRelease != engineRelease && !publishedLag || ReleaseVersions.FileVersionOf(engineRelease) != fileVersion)
+            throw new ReleaseException("Engine build version differs from Version.props");
         using var manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "manifest/package-manifest.json")));
         if (!noBinaries && manifest.RootElement.TryGetProperty("tier", out var tier))
         {

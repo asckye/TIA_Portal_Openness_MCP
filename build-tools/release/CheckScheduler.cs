@@ -280,27 +280,24 @@ internal sealed record CheckPacking(ulong General, double CpuPerJob, ulong Memor
     internal IReadOnlyDictionary<string, CheckResourceUsage> History { get; init; } = new Dictionary<string, CheckResourceUsage>();
     internal int Parallelism => History.Count == 0 ? Capacity(Available) : Cap;
     internal double Cpu(CheckJob job) => History.TryGetValue(job.Name, out var row) && row.WallSeconds >= 1 && row.CpuSeconds > 0
-        ? Math.Max(.05, row.CoreDemand) : Math.Max(.05, CpuPerJob);
+        ? Math.Max(.05, row.CoreDemand) : Math.Max(1, CpuPerJob);
     internal ulong Memory(CheckJob job) => History.TryGetValue(job.Name, out var row) && row.PeakMemoryBytes > 0
         ? Math.Max(256UL << 20, row.PeakMemoryBytes) : MemoryPerJob;
     internal bool MemoryFits(CheckJob job, IEnumerable<CheckJob> running)
     {
         var active = running.ToArray();
-        return History.Count == 0 || active.Length == 0 || active.Sum(row => (double)Memory(row)) + Memory(job) <= MemoryBudget;
+        return active.Sum(row => (double)Memory(row)) + Memory(job) <= MemoryBudget;
     }
 
     internal bool CanAdmit(CheckJob job, ulong mask, IEnumerable<CheckJob> running)
     {
         var active = running.ToArray();
         if (active.Where(row => row.Lane == "general").Sum(row => row.Slots) + job.Slots > Cap) return false;
-        if (History.Count == 0) return active.Where(row => row.Lane == "general").Sum(row => row.Slots) + job.Slots <=
-            Capacity(mask, active.Count(row => row.Lane != "general"));
         // Known commands reserve their own measured demand, not the p95 peak of
-        // an unrelated heavy shard. Unknown work retains the conservative plan.
-        // One oversized command can still make progress when it runs alone.
-        if (active.Length == 0) return true;
+        // an unrelated heavy shard. Unknown work reserves at least one core.
+        // The same limits apply to the first command and to borrowed CPUs.
         var competing = active.Where(row => row.Lane == "general" || (row.Affinity.GetValueOrDefault() & mask) != 0).ToArray();
-        bool cpu = competing.Length == 0 || competing.Sum(Cpu) + Cpu(job) <= System.Numerics.BitOperations.PopCount(mask);
+        bool cpu = competing.Sum(Cpu) + Cpu(job) <= System.Numerics.BitOperations.PopCount(mask);
         return cpu && MemoryFits(job, active);
     }
 

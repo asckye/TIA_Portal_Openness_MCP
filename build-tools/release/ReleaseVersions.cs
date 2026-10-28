@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using System.Text.Json;
 using System.Xml.Linq;
 using TiaMcp.Versioning;
 
@@ -48,5 +49,25 @@ internal static class ReleaseVersions
     {
         if (!ProductReleaseVersion.TryParse(left, out var a) || !ProductReleaseVersion.TryParse(right, out var b) || a is null || b is null) return null;
         return a.CompareTo(b);
+    }
+
+    // A BumpOnly prep commit keeps the previous published build records until
+    // release rebuilds them. A draft or any older publication is not evidence.
+    internal static bool IsPublishedRecordLag(string root, string pending, string recorded)
+    {
+        if (Compare(pending, recorded) is not > 0) return false;
+        string? newest = null;
+        var directory = Path.Combine(root, "manifest");
+        foreach (var path in Directory.EnumerateFiles(directory, "publication-v*.json"))
+        {
+            var version = Path.GetFileName(path)["publication-v".Length..^".json".Length];
+            if (!IsValid(version)) continue;
+            using var publication = JsonDocument.Parse(File.ReadAllText(path));
+            var record = publication.RootElement;
+            if (!record.TryGetProperty("release", out var release) || release.GetString() != "v" + version ||
+                !record.TryGetProperty("publishedAtUtc", out var published) || !published.TryGetDateTimeOffset(out _)) continue;
+            if (newest == null || Compare(version, newest) is > 0) newest = version;
+        }
+        return recorded == newest;
     }
 }

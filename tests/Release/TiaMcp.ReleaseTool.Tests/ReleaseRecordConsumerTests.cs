@@ -38,11 +38,110 @@ public sealed class ReleaseRecordConsumerTests
         Assert.Equal(required, ReleaseRecords.RequiresPlcProof(record.RootElement));
     }
 
-    // CI's validate-bundle step (-Strict -NoBinaries -SkipSourceHashes) reads the committed records; between 3.3.0 and the first
-    // 4.0 release they are the shipped 3.3.0 records (P8-04j2 broke this once).
+    // CI reads committed build records, which may name the newest published version while BumpOnly prepares the next release.
     [Fact]
     public void CommittedRecordsValidateWithoutBinaries()
         => ReleaseCommands.ValidateBuildRecords(TiaMcp.BuildCommon.Repository.FindRoot(), package: false, noBinaries: true, skipSourceHashes: true);
+
+    [Theory]
+    [InlineData("4.0.0-beta.1", "4.0.0-beta.2", "4.0.0-beta.1", true, true)]
+    [InlineData("4.0.0-beta.1", "4.1.0", "4.0.0-beta.1", true, true)]
+    [InlineData("4.0.0-beta.1", "4.0.0-beta.3", "4.0.0-beta.2", true, false)]
+    [InlineData("4.0.0-beta.2", "4.0.0-beta.3", "4.0.0-beta.1", true, false)]
+    [InlineData("4.0.0-beta.1", "4.0.0-beta.2", "4.0.0-beta.1", false, false)]
+    [InlineData("4.0.0-beta.2", "4.0.0-beta.1", "4.0.0-beta.2", true, false)]
+    public void PrepRecordsAllowOnlyTheNewestPublishedLagWithoutBinaries(string recorded, string pending, string published, bool noBinaries, bool allowed)
+    {
+        using var tree = new StaticTree();
+        PrepRecords(tree, recorded, pending);
+        // Keep the binary test's CHANGELOG current with its delivery so it reaches the source/build version gate.
+        if (!noBinaries) tree.Write("CHANGELOG.md", $"## [{recorded}]\n");
+        Publish(tree, "4.0.0-beta.1");
+        Publish(tree, published);
+        void Validate() => ReleaseCommands.ValidateBuildRecords(tree.Root, package: false, noBinaries, skipSourceHashes: true);
+        if (allowed) Validate();
+        else if (ReleaseVersions.Compare(pending, recorded) is > 0)
+            Assert.Equal("Engine build version differs from Version.props", Assert.Throws<ReleaseException>(Validate).Message);
+        else Assert.Throws<ReleaseException>(Validate);
+    }
+
+    [Theory]
+    [InlineData("file-version")]
+    [InlineData("mixed-delivery-release")]
+    [InlineData("publication-missing")]
+    [InlineData("publication-draft")]
+    [InlineData("publication-label")]
+    [InlineData("unbound-build")]
+    public void PublishedLagKeepsFileVersionsPublicationEvidenceAndRecordBindings(string mutation)
+    {
+        using var tree = new StaticTree();
+        PrepRecords(tree, "4.0.0-beta.1", "4.0.0-beta.2");
+        Publish(tree, "4.0.0-beta.1");
+        var publication = "manifest/publication-v4.0.0-beta.1.json";
+        switch (mutation)
+        {
+            case "file-version":
+            case "mixed-delivery-release":
+                var build = JsonNode.Parse(File.ReadAllText(Path.Combine(tree.Root, ReleaseRecords.EnginePath)))!;
+                if (mutation == "file-version") build["fileVersion"] = "9.9.9.0";
+                else build["release"] = "4.0.0-beta.2";
+                tree.Write(ReleaseRecords.EnginePath, build.ToJsonString());
+                var delivery = JsonNode.Parse(File.ReadAllText(Path.Combine(tree.Root, "manifest/delivery.json")))!;
+                if (mutation == "file-version") delivery["fileVersion"] = "9.9.9.0";
+                else delivery["engineRelease"] = "4.0.0-beta.2";
+                delivery[ReleaseRecords.BindingProperty(ReleaseRecords.EnginePath)] = ReleaseRecords.HashFile(Path.Combine(tree.Root, ReleaseRecords.EnginePath));
+                tree.Write("manifest/delivery.json", delivery.ToJsonString());
+                break;
+            case "publication-missing": File.Delete(Path.Combine(tree.Root, publication)); break;
+            case "publication-draft": tree.Write(publication, "{\"release\":\"v4.0.0-beta.1\"}"); break;
+            case "publication-label": tree.Write(publication, "{\"release\":\"v4.0.0-beta.0\",\"publishedAtUtc\":\"2026-10-23T04:14:27Z\"}"); break;
+            case "unbound-build": tree.Write(ReleaseRecords.EnginePath, "{}"); break;
+        }
+        Assert.Throws<ReleaseException>(() => ReleaseCommands.ValidateBuildRecords(tree.Root, false, true, true));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void PrepPluginAndMarketplaceFollowTheSourceOnlyWhenDeliveryIsTheNewestPublication(bool noBinaries)
+    {
+        using var tree = new StaticTree();
+        PrepRecords(tree, "4.0.0-beta.1", "4.0.0-beta.2");
+        Publish(tree, "4.0.0-beta.1");
+        void Plugin(string version) => tree.Write(".claude-plugin/plugin.json", new JsonObject { ["name"] = "fixture", ["version"] = version }.ToJsonString());
+        void Marketplace(string version) => tree.Write(".claude-plugin/marketplace.json", new JsonObject {
+            ["plugins"] = new JsonArray(new JsonObject { ["name"] = "fixture", ["version"] = version }) }.ToJsonString());
+        Plugin("4.0.0-beta.2"); Marketplace("4.0.0-beta.2");
+        if (noBinaries) Assert.Null(ReleaseCommands.PluginVersionError(tree.Root, null, noBinaries));
+        else Assert.Equal("Plugin version differs from release version", ReleaseCommands.PluginVersionError(tree.Root, null, noBinaries));
+        Marketplace("4.0.0-beta.1");
+        Assert.NotNull(ReleaseCommands.PluginVersionError(tree.Root, null, noBinaries));
+        Plugin("4.0.0-beta.3"); Marketplace("4.0.0-beta.3");
+        Assert.Equal("Plugin version differs from release version", ReleaseCommands.PluginVersionError(tree.Root, null, noBinaries));
+        Plugin("4.0.0-beta.2"); Marketplace("4.0.0-beta.2");
+        Publish(tree, "4.0.0-beta.2");
+        Assert.Equal("Plugin version differs from release version", ReleaseCommands.PluginVersionError(tree.Root, null, noBinaries));
+    }
+
+    private static void Publish(StaticTree tree, string release) => tree.Write("manifest/publication-v" + release + ".json",
+        new JsonObject { ["release"] = "v" + release, ["publishedAtUtc"] = "2026-10-23T04:14:27Z" }.ToJsonString());
+
+    private static void PrepRecords(StaticTree tree, string recorded, string pending)
+    {
+        foreach (var relative in new[] { "build-tools/release/ReleaseTiers.cs", "build-tools/release/ReleaseCandidateChecks.cs", "build-tools/release/BuildOutputCache.cs",
+            "build-tools/release/BranchGate.cs", "tests/Release/TiaMcp.ReleaseTool.Tests/BuildOutputCacheTests.cs", "build-tools/release/release-checks.json",
+            "scripts/checks/Test-ReleaseSmoke.py", "tests/Release/TiaMcp.ReleaseTool.Tests/ReleaseTierTests.cs" }) tree.Copy(relative);
+        var parts = pending.Split('-', 2);
+        tree.Write("Version.props", $"<Project><PropertyGroup><TiaMcpRelease>{parts[0]}</TiaMcpRelease><TiaMcpPrerelease>{(parts.Length == 2 ? parts[1] : "")}</TiaMcpPrerelease></PropertyGroup></Project>");
+        tree.Write("CHANGELOG.md", $"## [{pending}]\n");
+        tree.Write($"docs/releases/v{pending}.md", "Pending release\n");
+        tree.Write(ReleaseRecords.EnginePath, new JsonObject { ["release"] = recorded, ["fileVersion"] = ReleaseVersions.FileVersionOf(recorded) }.ToJsonString());
+        tree.Write("manifest/configurator-build.json", "{\"testsPassed\":1,\"executable\":{\"path\":\"TiaOpenness.exe\",\"sha256\":\"unused in no-binaries\"}}");
+        tree.Write("manifest/package-manifest.json", new JsonObject { ["bundleVersion"] = recorded, ["packageName"] = $"TIA_MCP_Delivery_v{recorded}_20261022" }.ToJsonString());
+        tree.Write("manifest/delivery.json", new JsonObject { ["release"] = recorded, ["engineRelease"] = recorded, ["fileVersion"] = ReleaseVersions.FileVersionOf(recorded),
+            [ReleaseRecords.BindingProperty(ReleaseRecords.EnginePath)] = ReleaseRecords.HashFile(Path.Combine(tree.Root, ReleaseRecords.EnginePath)),
+            ["configuratorBuildSha256"] = ReleaseRecords.HashFile(Path.Combine(tree.Root, "manifest/configurator-build.json")) }.ToJsonString());
+    }
 
     [Theory]
     [InlineData("20")]
