@@ -78,7 +78,11 @@ internal static partial class ReleaseCommands
         var sensitiveNames = suitePlan.Where(job => job.Exclusive).Select(job => job.Name).ToHashSet(StringComparer.Ordinal);
         var packing = CheckPacking.Plan(layout.General, resources.Where(pair => !sensitiveNames.Contains(pair.Key) &&
             !pair.Key.StartsWith("stability-", StringComparison.Ordinal) && pair.Key is not ("build-once" or "suite-output-parity" or "configuration-page")).Select(pair => pair.Value),
-            CheckAffinity.AvailableMemory(), Math.Min(32, FastSuites.CheckAllParallelism(options, 32))) with { Available = available, History = resources };
+            CheckAffinity.AvailableMemory(), Math.Min(32, FastSuites.CheckAllParallelism(options, 32))) with { Available = available,
+                // An alternate compiler (including the synthetic build fixture)
+                // cannot inherit another executable's measured CPU reservations.
+                History = string.Equals(ResolveResultApplication(dotnet), ResolveResultApplication(Dotnet), StringComparison.OrdinalIgnoreCase)
+                    ? resources : new Dictionary<string, CheckResourceUsage>() };
         parallelism = packing.Parallelism;
         int buildParallelism = FastSuites.Positive(options, "BuildParallelism", System.Numerics.BitOperations.PopCount(available));
         int stabilityParallelism = Math.Min(FastSuites.Positive(options, "StabilityParallelism", 4), Math.Min(4, stabilityCores));
@@ -86,6 +90,7 @@ internal static partial class ReleaseCommands
         var before = TrackedBytes();
         var timings = new List<CheckTiming>();
         var jobs = new List<CheckJob>();
+        var background = new Dictionary<Task<CheckTiming>, CheckJob>();
         var allJobs = new List<CheckJob>();
         var planned = new List<string>();
         // The release may adopt this run (P8-93): bind the commit, the tree and every input before anything is regenerated.
@@ -132,10 +137,10 @@ internal static partial class ReleaseCommands
             allJobs.AddRange(jobs.Select(job => job with { Dependencies = [.. job.Dependencies, .. prerequisites ?? []] }));
             // The build wave has its own MSBuild parallelism and an already
             // running parity task. Its sum of sequential command memory peaks
-            // is not an individual runtime-check reservation; retain its
-            // existing uniform admission rather than serializing source checks.
+            // is not an individual runtime-check reservation. Keep the memory
+            // fallback, but retain measured CPU and the parity reservation.
             timings.AddRange(CheckScheduler.Run(jobs.ToArray(), parallelism, Path.Combine(output, "logs"), prerequisites: timings.ToArray(),
-                packing: packing with { History = new Dictionary<string, CheckResourceUsage>() }));
+                packing: packing with { MeasuredMemory = false }, background: background));
             jobs.Clear();
         }
         // Generation is an ordered prerequisite of compilation/capture. -Check is
@@ -172,7 +177,9 @@ internal static partial class ReleaseCommands
                 Path.Combine(output, "suite-output-parity"), runtimeManifest, buildParallelism, independent: true,
                 awaitRuntime: () => CheckScheduler.AwaitRuntime(runtimeReady.Task)), ["generate-tool-usage", "generate-release-migration"]);
             parity = parity with { Priority = 2, Affinity = layout.General, EstimatedSeconds = CheckAllJobCost(parity, costs), Timeout = CheckScheduler.JobTimeout(parity, costs) };
+            if (!packing.CanAdmit(parity, layout.General, [])) throw new ReleaseException("Parity exceeds the available check CPU/memory budget.");
             parityTask = CheckScheduler.Start(parity, Path.Combine(output, "logs"));
+            background.Add(parityTask, parity);
         }
         Add("build-once", () =>
         {
@@ -406,7 +413,7 @@ internal static partial class ReleaseCommands
         ValidateCheckAllPlcScriptJobs(jobs);
         ValidateCheckAllPlcHarnessJobs(jobs);
         CiCoverage.RequirePlan([.. allJobs, .. jobs], ciCovered);
-        var scheduled = CiCoverage.Rewrite(CheckAllRuntimeDependencies(jobs, independentParity: true), ciCovered).Select(job => job with
+        var scheduled = CiCoverage.Rewrite(CheckAllRuntimeDependencies(jobs, independentParity: true), ciCovered).Select(CheckAllScratchIsolation).Select(job => job with
         {
             EstimatedSeconds = CheckAllJobCost(job, costs),
             MeasuredSeconds = orderCosts.TryGetValue(job.Name, out var measured) ? measured : null,
@@ -430,7 +437,7 @@ internal static partial class ReleaseCommands
             physicalCores = CheckAffinity.PhysicalCores().Select(core => new { mask = core.Mask.ToString("X"), efficiencyClass = core.Efficiency }),
             buildParallelism, stabilityParallelism, sensitiveParallelism = sensitiveLanes.Count, requestedSensitiveParallelism = sensitiveWorkers.RequestedWorkers,
             sensitiveParallelismReason = sensitiveWorkers.Reason, sensitiveCores = System.Numerics.BitOperations.PopCount(layout.Sensitive), sensitiveMinWorkerThreads = CheckAffinity.BaselineWorkers, generalParallelism = parallelism, packing, companionPython,
-            checks = allJobs.Select(job => new { job.Name, job.Lane, job.SensitiveGroup, job.Slots, job.Exclusive, job.Priority, affinityMask = job.Affinity?.ToString("X"), job.EstimatedSeconds, job.MeasuredSeconds, job.SchedulingSeconds,
+            checks = allJobs.Select(job => new { job.Name, job.Lane, job.SensitiveGroup, job.Slots, job.Exclusive, job.GlobalExclusive, job.Priority, affinityMask = job.Affinity?.ToString("X"), job.EstimatedSeconds, job.MeasuredSeconds, job.SchedulingSeconds,
                 cpuDemand = packing.Cpu(job), memoryBytes = packing.Memory(job), timeoutSeconds = job.Timeout.TotalSeconds, criticalSeconds = priorities[job.Name], job.Dependencies,
                 runtimeManifestDependency = job.Name == "suite-output-parity" ? "build-once (comparison phase only)" : null,
                 resultCache = job.ResultCachePolicy ?? "always rerun: generated evidence, mutable machine inputs or aggregate gate" }) }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
@@ -495,6 +502,11 @@ internal static partial class ReleaseCommands
     internal static double CheckAllJobCost(CheckJob job, IReadOnlyDictionary<string, double> history) =>
         job.Name == "preflight" ? 0 : job.EstimatedSeconds > 0 ? job.EstimatedSeconds
         : history.TryGetValue(job.Name, out var seconds) ? seconds : CheckAllEstimatedCost(job.Name);
+
+    // Ecosystem checks delete their scratch tree before the harness exits. Keep
+    // repository readers out until that strict cleanup has completed.
+    internal static CheckJob CheckAllScratchIsolation(CheckJob job) => job.Name is "harness-v20-test-ecosystem-assembly-plc" or "harness-v21-test-ecosystem-assembly-plc"
+        ? job with { GlobalExclusive = true } : job;
 
     private static double CheckAllEstimatedCost(string name) => name.StartsWith("responses-", StringComparison.Ordinal) ? 60
         : name.StartsWith("usage-v", StringComparison.Ordinal) || name.StartsWith("harness-", StringComparison.Ordinal) ? 25

@@ -12,6 +12,77 @@ public sealed class CheckAllPerformanceTests
     private static CommandResult Passed() => new(0, "passed\n", "");
 
     [Fact]
+    public void SubCoreHistoryCannotAdmitMoreJobsThanCpusAndReservedWorkUsesTheSameBudget()
+    {
+        using var fixture = new OfflineFixtures(); using var pair = new Barrier(2);
+        int active = 0, peak = 0; var sync = new object();
+        var jobs = Enumerable.Range(0, 12).Select(i => new CheckJob("small-" + i, () => {
+            int count = Interlocked.Increment(ref active); lock (sync) peak = Math.Max(peak, count);
+            Assert.True(pair.SignalAndWait(TimeSpan.FromSeconds(10)));
+            Interlocked.Decrement(ref active); return Passed();
+        }, [])).ToArray();
+        var history = jobs.ToDictionary(job => job.Name, _ => new CheckResourceUsage(.1, 10, 256UL << 20, "measured under contention"));
+        var packing = new CheckPacking(3, .01, 256UL << 20, 4UL << 30, 32) { Available = 3, History = history };
+        Assert.Equal(2, packing.Parallelism); Assert.All(jobs, job => Assert.Equal(1, packing.Cpu(job)));
+        Assert.All(CheckScheduler.Run(jobs, packing.Parallelism, fixture.DirectoryPath, packing: packing), row => Assert.True(CheckTiming.Passed(row), row.Error));
+        Assert.Equal(2, peak); Assert.Equal(0, active);
+        var reserved = jobs[0] with { Lane = "stability", Affinity = 3 };
+        Assert.False(packing.CanAdmit(reserved, 3, [reserved, reserved]));
+        var build = jobs[0] with { Name = "build-once" };
+        history[build.Name] = new(30, 10, 20UL << 30, "compound build");
+        var wave = packing with { MeasuredMemory = false };
+        Assert.Equal(3, wave.Cpu(build)); Assert.Equal(packing.MemoryPerJob, wave.Memory(build));
+        Assert.False(wave.CanAdmit(build, 3, []));
+    }
+
+    [Fact]
+    public void BackgroundReservationBlocksAdmissionAndItsCompletionWakesTheBuildWave()
+    {
+        using var fixture = new OfflineFixtures(); using var began = new ManualResetEventSlim(); using var release = new ManualResetEventSlim();
+        using var ordinary = new ManualResetEventSlim();
+        var parity = new CheckJob("parity", () => { began.Set(); Assert.True(release.Wait(TimeSpan.FromSeconds(10))); return Passed(); }, []) { Affinity = 3 };
+        var task = CheckScheduler.Start(parity, fixture.DirectoryPath);
+        Assert.True(began.Wait(TimeSpan.FromSeconds(10)));
+        var packing = new CheckPacking(3, 1, 256UL << 20, 4UL << 30, 2) { Available = 3,
+            History = new Dictionary<string, CheckResourceUsage> { ["parity"] = new(15, 10, 256UL << 20, "measured") } };
+        var run = Task.Run(() => CheckScheduler.Run([new("build", () => { Assert.True(task.IsCompleted); ordinary.Set(); return Passed(); }, [])],
+            2, fixture.DirectoryPath, packing: packing, background: new Dictionary<Task<CheckTiming>, CheckJob> { [task] = parity }));
+        try { Assert.False(ordinary.Wait(TimeSpan.FromMilliseconds(100))); }
+        finally { release.Set(); }
+        Assert.True(run.Wait(TimeSpan.FromSeconds(10)));
+        Assert.Equal("build", Assert.Single(run.Result).Name); Assert.True(CheckTiming.Passed(run.Result[0]));
+        Assert.True(CheckTiming.Passed(task.GetAwaiter().GetResult()));
+    }
+
+    [Fact]
+    public void UpdaterConflictDrainsEveryLaneAndPreventsNewHostJobsUntilItFinishes()
+    {
+        using var fixture = new OfflineFixtures(); using var began = new CountdownEvent(2); using var release = new ManualResetEventSlim();
+        int hosts = 0; bool updated = false;
+        CommandResult Host() { Interlocked.Increment(ref hosts); began.Signal(); Assert.True(release.Wait(TimeSpan.FromSeconds(10))); Interlocked.Decrement(ref hosts); return Passed(); }
+        var rows = CheckScheduler.Run([
+            new CheckJob("general-host", Host, []) { Priority = 3 },
+            new CheckJob("reserved-host", Host, []) { Lane = "sensitive-0", Priority = 3 },
+            new CheckJob("trigger", () => { Assert.True(began.Wait(TimeSpan.FromSeconds(10))); release.Set(); return Passed(); }, []) { Priority = 2 },
+            new CheckJob("late-host", () => { Assert.True(updated); return Passed(); }, ["trigger"]),
+            new CheckJob("updater", () => { Assert.Equal(0, Volatile.Read(ref hosts)); updated = true; return Passed(); }, ["trigger"]) { GlobalExclusive = true }
+        ], 3, fixture.DirectoryPath, new Dictionary<string, int> { ["general"] = 3, ["sensitive-0"] = 1 });
+        Assert.Equal(5, rows.Count); Assert.All(rows, row => Assert.True(CheckTiming.Passed(row), row.Error)); Assert.True(updated);
+        var jobs = new List<CheckJob>();
+        FastSuites.AddJobs(jobs, fixture.DirectoryPath, "updater", new JsonObject { ["project"] = "tests/Updater/TiaMcp.Updater.Tests/TiaMcp.Updater.Tests.csproj",
+            ["minimumPassed"] = 1, ["maximumSkipped"] = 0, ["arguments"] = new JsonArray() }, Path.Combine(fixture.DirectoryPath, "registration"), "dotnet", 2, null, []);
+        Assert.All(jobs.Where(job => !job.Name.EndsWith("-gate", StringComparison.Ordinal)), job => Assert.True(job.GlobalExclusive));
+        Assert.False(jobs.Single(job => job.Name.EndsWith("-gate", StringComparison.Ordinal)).GlobalExclusive);
+        foreach (var key in new[] { "20", "21" })
+        {
+            var harness = new CheckJob("harness-v" + key + "-test-ecosystem-assembly-plc", Passed, []);
+            Assert.True(ReleaseCommands.CheckAllScratchIsolation(harness).GlobalExclusive);
+            Assert.Equal(harness.Timeout, ReleaseCommands.CheckAllScratchIsolation(harness).Timeout);
+        }
+        Assert.False(ReleaseCommands.CheckAllScratchIsolation(new("harness-v20-http-plc", Passed, [])).GlobalExclusive);
+    }
+
+    [Fact]
     public void MeasuredLongestReadyJobsPrecedeShortParentsWithoutChangingPrioritiesOrGateDependencies()
     {
         using var fixture = new OfflineFixtures();
@@ -65,8 +136,9 @@ public sealed class CheckAllPerformanceTests
         CheckJob Small() => new("small", Passed, []);
         var large = new CheckJob("large", Passed, []);
         var reserved = new CheckJob("reserved", Passed, []) { Lane = "sensitive-0" };
-        Assert.Equal(20, plan.Parallelism);
-        Assert.True(plan.CanAdmit(Small(), 3, Enumerable.Range(0, 10).Select(_ => Small()).Append(reserved)));
+        Assert.Equal(4, plan.Parallelism);
+        Assert.False(plan.CanAdmit(Small(), 3, Enumerable.Range(0, 10).Select(_ => Small()).Append(reserved)));
+        Assert.True(plan.CanAdmit(Small(), 0xfff, Enumerable.Range(0, 10).Select(_ => Small()).Append(reserved)));
         Assert.False(plan.CanAdmit(large, 3, [Small(), Small(), Small()]));
         Assert.False(plan.CanAdmit(large, 15, [large, large, reserved]));
         Assert.False(plan.MemoryFits(reserved, [large, large, large]));
@@ -126,8 +198,8 @@ public sealed class CheckAllPerformanceTests
     {
         using var fixture = new OfflineFixtures(); using var together = new Barrier(3);
         var history = new Dictionary<string, CheckResourceUsage> { ["small"] = new(10, 100, 256UL << 20, "measured") };
-        var plan = new CheckPacking(3, .1, 2UL << 30, 4UL << 30, 3) { Available = 3, History = history };
-        Assert.Equal(2, plan.Capacity(3));
+        var plan = new CheckPacking(7, .1, 2UL << 30, 4UL << 30, 3) { Available = 7, History = history };
+        Assert.Equal(2, plan.Capacity(7));
         var jobs = Enumerable.Range(0, 3).Select(index => new CheckJob("small-" + index, () => {
             Assert.True(together.SignalAndWait(TimeSpan.FromSeconds(10))); return Passed(); }, [])).ToArray();
         history.Clear();
@@ -240,23 +312,23 @@ public sealed class CheckAllPerformanceTests
         int borrowing = 0; bool ownerRan = false;
         var jobs = new List<CheckJob> {
             new CheckJob("borrower", () => {
-                Assert.Equal(3UL, CheckAffinity.Current); Interlocked.Exchange(ref borrowing, 1); borrowed.Set();
+                Assert.Equal(15UL, CheckAffinity.Current); Interlocked.Exchange(ref borrowing, 1); borrowed.Set();
                 Assert.True(release.Wait(TimeSpan.FromSeconds(10))); Interlocked.Exchange(ref borrowing, 0); return Passed();
             }, []) { Priority = 2 },
             new CheckJob("trigger", () => { Assert.True(borrowed.Wait(TimeSpan.FromSeconds(10))); return Passed(); }, []) { Priority = 1 },
-            new CheckJob("owner", () => { Assert.Equal(0, Volatile.Read(ref borrowing)); Assert.Equal(2UL, CheckAffinity.Current); ownerRan = true; return Passed(); }, ["trigger"], Exclusive: exclusive)
-                { Lane = reservedLane, Affinity = 2 },
-            new("new-general", () => { Assert.Equal(1UL, CheckAffinity.Current); Assert.False(ownerRan); release.Set(); return Passed(); }, ["trigger"]),
-            new("after", () => { Assert.Equal(3UL, CheckAffinity.Current); return Passed(); }, ["owner", "borrower", "new-general"]) };
+            new CheckJob("owner", () => { Assert.Equal(0, Volatile.Read(ref borrowing)); Assert.Equal(12UL, CheckAffinity.Current); ownerRan = true; return Passed(); }, ["trigger"], Exclusive: exclusive)
+                { Lane = reservedLane, Affinity = 12 },
+            new("new-general", () => { Assert.Equal(3UL, CheckAffinity.Current); Assert.False(ownerRan); release.Set(); return Passed(); }, ["trigger"]),
+            new("after", () => { Assert.Equal(15UL, CheckAffinity.Current); return Passed(); }, ["owner", "borrower", "new-general"]) };
         try
         {
             var rows = CheckScheduler.Run(jobs, 2, fixture.DirectoryPath, new Dictionary<string, int> { ["general"] = 2, [reservedLane] = 1 },
-                packing: new(1, .5, 256UL << 20, 4UL << 30, 2) {
+                packing: new(3, .5, 256UL << 20, 4UL << 30, 2) {
                     History = jobs.ToDictionary(job => job.Name, _ => new CheckResourceUsage(1, 2, 256UL << 20, "measured")) });
             Assert.All(rows, row => Assert.True(CheckTiming.Passed(row), row.Error));
             Assert.Equal(jobs.Count, rows.Count); Assert.True(ownerRan);
-            Assert.Equal("3", rows.Single(row => row.Name == "borrower").AffinityMask);
-            Assert.Equal("1", rows.Single(row => row.Name == "new-general").AffinityMask);
+            Assert.Equal("F", rows.Single(row => row.Name == "borrower").AffinityMask);
+            Assert.Equal("3", rows.Single(row => row.Name == "new-general").AffinityMask);
         }
         finally { release.Set(); }
     }

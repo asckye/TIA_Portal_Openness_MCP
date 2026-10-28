@@ -87,7 +87,7 @@ internal static class FastSuites
             var jobName = jobPrefix + name + "-sequential";
             var group = workerCopies?.Register(jobName, unit, Path.GetDirectoryName(sequential)!, unit.Project) ?? unit.Project;
             jobs.Add(new(jobName, () => RunShard(root, name, suite, Path.GetDirectoryName(sequential)!, dotnet, api, unit, 0, 1, extra, manifest: manifest, process: process, diagnostics: diagnostics, runtime: workerCopies?.ForJob(jobName)), dependencies, Exclusive: true) {
-                SensitiveGroup = group, EstimatedSeconds = measuredPlan ? plan.Costs.Sum() + 5 : ColdShardSeconds * shards });
+                SensitiveGroup = group, GlobalExclusive = name == "updater", EstimatedSeconds = measuredPlan ? plan.Costs.Sum() + 5 : ColdShardSeconds * shards });
         }
         var shardNames = new List<string>();
         for (int i = 0; i < shards; i++)
@@ -104,7 +104,7 @@ internal static class FastSuites
                         ["reserveSensitive"] = reserveSensitive, ["sensitiveShards"] = sensitiveShards }.ToJsonString(),
                         Path.GetDirectoryName(paths[index]), Path.GetFileName(paths[index]), plan.Path,
                         suite["maximumSkipped"]!.GetValue<int>(), prove || baseline != null ? "equivalence proof" : null),
-                    SensitiveGroup = group });
+                    SensitiveGroup = group, GlobalExclusive = name == "updater" });
         }
         // Merge runs even after a failed test process, so partial totals/failures remain
         // reviewable. The caller schedules merges in a second wave without prerequisites.

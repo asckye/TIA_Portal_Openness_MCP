@@ -35,7 +35,12 @@ def project_cases(root):
         properties = dict(arg.removeprefix('-p:').split('=', 1)
                           for arg in suites[name]['arguments'] if arg.startswith('-p:'))
         add(root / suites[name]['project'], properties)
-    return sorted(cases, key=lambda case: (case[0], sorted(case[1].items())))
+    # Intentional test defines can also be registered as offline suites. Keep
+    # each exact configuration once, retaining distinct property sets.
+    unique = {}
+    for project, properties in cases:
+        unique.setdefault((project, tuple(sorted(properties.items()))), (project, properties))
+    return [unique[key] for key in sorted(unique)]
 
 
 def evaluate(root, project, properties, dotnet):

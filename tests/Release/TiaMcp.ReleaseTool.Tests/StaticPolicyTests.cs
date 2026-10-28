@@ -29,6 +29,51 @@ internal sealed class StaticTree : IDisposable
 public sealed class StaticPolicyTests
 {
     [Fact]
+    public void PythonAndCSharpFeatureCasesDeduplicateExactConfigurationsAndKeepDifferentProperties()
+    {
+        using var tree = new StaticTree();
+        Directory.CreateDirectory(Path.Combine(tree.Root, "src/Adapters")); Directory.CreateDirectory(Path.Combine(tree.Root, "src/Studio/Openness"));
+        const string project = "tests/unit/unit.csproj";
+        tree.Write(project, "<Project><PropertyGroup><DefineConstants>FIXTURE</DefineConstants></PropertyGroup></Project>");
+        var suites = new JsonObject();
+        foreach (var name in ReleaseCommandTable.OfflineSuites)
+            suites[name] = new JsonObject { ["project"] = project, ["arguments"] = name.EndsWith("-v20", StringComparison.Ordinal) ? new JsonArray("-p:DefineConstants=TIA_V20") : new JsonArray() };
+        tree.Write("tests/test-suites.json", suites.ToJsonString());
+        var actual = TiaFeatures.ProjectCases(tree.Root);
+        Assert.Equal(2, actual.Count(row => row.Project == project));
+        Assert.Contains(actual, row => row.Project == project && row.Properties.Count == 0);
+        Assert.Contains(actual, row => row.Project == project && row.Properties.GetValueOrDefault("DefineConstants") == "TIA_V20");
+        var code = "import importlib.util,json,sys; from pathlib import Path; s=importlib.util.spec_from_file_location('features',sys.argv[1]); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(json.dumps([dict(project=p,properties=v) for p,v in m.project_cases(Path(sys.argv[2]))]))";
+        var result = ProcessRunner.Run(OperatingSystem.IsWindows() ? "python" : "python3", ["-c", code, Path.Combine(StaticCheckVectorTests.Root, "scripts/checks/Check-TiaFeatures.py"), tree.Root], tree.Root);
+        Assert.True(result.ExitCode == 0, result.StandardError);
+        var expected = System.Text.Json.JsonSerializer.SerializeToNode(actual.Select(row => new { project = row.Project, properties = row.Properties }));
+        Assert.True(JsonNode.DeepEquals(expected, JsonNode.Parse(result.StandardOutput)));
+    }
+
+    [Fact]
+    public void PythonDocumentWalkNeverOpensIgnoredMutableCheckDirectories()
+    {
+        using var tree = new StaticTree();
+        tree.Write("README.md", "root"); tree.Write("docs/a.md", "guide");
+        tree.Write("bin-build/ecosystem-assembly-fixture/held.md", "scratch"); tree.Write("tests/unit/bin/Release/hidden.md", "binary output");
+        var code = """
+            import importlib.util,sys,os
+            from pathlib import Path
+            from unittest.mock import patch
+            s=importlib.util.spec_from_file_location('repository',sys.argv[1]); m=importlib.util.module_from_spec(s); s.loader.exec_module(m)
+            root=Path(sys.argv[2]); original=os.scandir
+            def guarded(path):
+                assert not m.SKIP.intersection(Path(path).relative_to(root).parts), 'opened an ignored mutable directory: '+str(path)
+                return original(path)
+            with patch('os.scandir',guarded):
+                assert sorted(p.relative_to(root).as_posix() for p in m.documents(root))==['README.md','docs/a.md']
+            print('document pruning passed')
+            """;
+        var result = ProcessRunner.Run(OperatingSystem.IsWindows() ? "python" : "python3", ["-c", code, Path.Combine(StaticCheckVectorTests.Root, "scripts/checks/Check-Repository.py"), tree.Root], tree.Root);
+        Assert.True(result.ExitCode == 0, result.StandardOutput + result.StandardError);
+    }
+
+    [Fact]
     public void StagedReleaseRunsThePlcChecksAndNoEngineStepWithoutTouchingTheRecordBinding()
     {
         var root = Repository.FindRoot();

@@ -2,6 +2,7 @@
 import argparse
 import importlib.util
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -42,9 +43,16 @@ def runtime_inventory_errors(root):
 
 
 def documents(root):
-    for path in root.rglob('*.md'):
-        if not SKIP.intersection(path.relative_to(root).parts):
-            yield path
+    # Prune before opening directory enumerators. Filtering rglob's results
+    # still visits mutable check fixtures and can lock their cleanup on Windows.
+    def failed(error):
+        raise error
+
+    for parent, directories, names in os.walk(root, onerror=failed):
+        directories[:] = [name for name in directories if name not in SKIP]
+        for name in names:
+            if Path(name).match('*.md'):
+                yield Path(parent) / name
 
 
 def local_target(root, source, target):

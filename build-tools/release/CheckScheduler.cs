@@ -12,6 +12,7 @@ internal sealed record CheckJob(string Name, Func<CommandResult> Run, string[] D
     internal int Priority { get; init; }
     internal string Lane { get; init; } = "general";
     internal string? SensitiveGroup { get; init; }
+    internal bool GlobalExclusive { get; init; }
     internal ulong? Affinity { get; init; }
     internal bool AllowFailedDependencies { get; init; }
     internal TimeSpan Timeout { get; init; } = TimeSpan.FromMinutes(5);
@@ -63,7 +64,8 @@ internal static class CheckScheduler
             3 * Math.Max(job.EstimatedSeconds, history.GetValueOrDefault(job.Name))));
     internal static IReadOnlyList<CheckTiming> Run(IReadOnlyList<CheckJob> jobs, int slots, string logs, IReadOnlyDictionary<string, int>? lanes = null,
         IReadOnlyList<CheckTiming>? prerequisites = null, CheckPacking? packing = null,
-        IReadOnlyDictionary<Task<CheckTiming>, CheckJob>? started = null)
+        IReadOnlyDictionary<Task<CheckTiming>, CheckJob>? started = null,
+        IReadOnlyDictionary<Task<CheckTiming>, CheckJob>? background = null)
     {
         lanes ??= new Dictionary<string, int> { ["general"] = slots };
         Validate(jobs, slots, lanes, prerequisites?.Select(row => row.Name).ToArray());
@@ -74,6 +76,7 @@ internal static class CheckScheduler
             throw new ReleaseException("Invalid already-started checks", 64);
         var pending = jobs.Where(job => !startedNames.Contains(job.Name)).ToList();
         var done = (prerequisites ?? []).ToDictionary(row => row.Name, StringComparer.Ordinal);
+        CheckJob[] Active() => running.Values.Concat(background?.Where(pair => !pair.Key.IsCompleted).Select(pair => pair.Value) ?? []).ToArray();
         while (pending.Count > 0 || running.Count > 0)
         {
             foreach (var job in pending.ToArray())
@@ -85,10 +88,15 @@ internal static class CheckScheduler
                     File.WriteAllText(Path.Combine(logs, job.Name + ".log"), row.Error + "\n");
                 }
             }
-            foreach (var job in ReadyOrder(pending, running.Values, packing != null))
+            foreach (var job in ReadyOrder(pending, Active(), packing != null))
             {
                 if (!job.Dependencies.All(done.ContainsKey)) continue;
-                var lane = running.Values.Where(row => row.Lane == job.Lane).ToArray();
+                var active = Active();
+                if (active.Any(row => row.GlobalExclusive) || job.GlobalExclusive && active.Length != 0) continue;
+                // An updater probes process names conservatively, including
+                // unreadable images. Drain every lane before its real probe.
+                if (!job.GlobalExclusive && pending.Any(next => next.GlobalExclusive && next.Dependencies.All(done.ContainsKey))) continue;
+                var lane = active.Where(row => row.Lane == job.Lane).ToArray();
                 if (lane.Any(row => row.Exclusive)) continue;
                 if (job.Exclusive && lane.Length != 0) continue;
                 if (lane.Sum(row => row.Slots) + job.Slots > lanes[job.Lane]) continue;
@@ -99,18 +107,18 @@ internal static class CheckScheduler
                     {
                         var mask = packing.General;
                         foreach (var reserved in jobs.Where(next => next.Lane != "general" && next.Affinity != null).GroupBy(next => next.Lane))
-                            if (!running.Values.Any(active => active.Lane == reserved.Key) &&
+                            if (!active.Any(row => row.Lane == reserved.Key) &&
                                 !pending.Any(next => next.Lane == reserved.Key && next.Dependencies.All(done.ContainsKey)))
                                 mask |= reserved.First().Affinity!.Value;
                         mask |= packing.Available & ~jobs.Where(next => next.Lane != "general").Aggregate(0UL, (used, next) => used | next.Affinity.GetValueOrDefault());
                         // Leases are immutable for the lifetime of a command job.
                         // A ready owner closes its lane to new borrowers; below it
                         // waits for every overlapping lease (including descendants).
-                        if (!packing.CanAdmit(job, mask, running.Values)) continue;
+                        if (!packing.CanAdmit(job, mask, active)) continue;
                         admitted = job with { Affinity = mask };
                     }
-                    else if (running.Values.Any(active => active.Lane == "general" && (active.Affinity.GetValueOrDefault() & job.Affinity.GetValueOrDefault()) != 0) ||
-                        !packing.MemoryFits(job, running.Values)) continue;
+                    else if (active.Any(row => row.Lane == "general" && (row.Affinity.GetValueOrDefault() & job.Affinity.GetValueOrDefault()) != 0) ||
+                        !packing.CanAdmit(job, job.Affinity.GetValueOrDefault(), active)) continue;
                 }
                 pending.Remove(job);
                 // Jobs block on child processes/barriers. Dedicated threads keep
@@ -119,10 +127,13 @@ internal static class CheckScheduler
             }
             if (running.Count == 0)
             {
+                var waiting = background?.Keys.Where(task => !task.IsCompleted).ToArray() ?? [];
+                if (pending.Count != 0 && waiting.Length != 0) { Task.WhenAny(waiting).GetAwaiter().GetResult(); continue; }
                 if (pending.Count != 0) throw new ReleaseException("Check scheduler cannot make progress.");
                 break;
             }
-            var finished = Task.WhenAny(running.Keys).GetAwaiter().GetResult();
+            var finished = Task.WhenAny(running.Keys.Concat(background?.Keys.Where(task => !task.IsCompleted) ?? [])).GetAwaiter().GetResult();
+            if (!running.ContainsKey(finished)) continue;
             var result = finished.GetAwaiter().GetResult();
             done.Add(result.Name, result); running.Remove(finished);
             Console.WriteLine($"{result.Name}: {result.Status}; {result.Seconds:F3}s");
@@ -278,10 +289,12 @@ internal sealed record CheckPacking(ulong General, double CpuPerJob, ulong Memor
     internal ulong Available { get; init; }
     [System.Text.Json.Serialization.JsonIgnore]
     internal IReadOnlyDictionary<string, CheckResourceUsage> History { get; init; } = new Dictionary<string, CheckResourceUsage>();
-    internal int Parallelism => History.Count == 0 ? Capacity(Available) : Cap;
+    internal bool MeasuredMemory { get; init; } = true;
+    internal int Parallelism => Math.Min(History.Count == 0 ? Capacity(Available != 0 ? Available : General) : Cap,
+        Math.Max(1, System.Numerics.BitOperations.PopCount(Available != 0 ? Available : General)));
     internal double Cpu(CheckJob job) => History.TryGetValue(job.Name, out var row) && row.WallSeconds >= 1 && row.CpuSeconds > 0
-        ? Math.Max(.05, row.CoreDemand) : Math.Max(1, CpuPerJob);
-    internal ulong Memory(CheckJob job) => History.TryGetValue(job.Name, out var row) && row.PeakMemoryBytes > 0
+        ? Math.Max(1, row.CoreDemand) : Math.Max(1, CpuPerJob);
+    internal ulong Memory(CheckJob job) => MeasuredMemory && History.TryGetValue(job.Name, out var row) && row.PeakMemoryBytes > 0
         ? Math.Max(256UL << 20, row.PeakMemoryBytes) : MemoryPerJob;
     internal bool MemoryFits(CheckJob job, IEnumerable<CheckJob> running)
     {
@@ -292,11 +305,12 @@ internal sealed record CheckPacking(ulong General, double CpuPerJob, ulong Memor
     internal bool CanAdmit(CheckJob job, ulong mask, IEnumerable<CheckJob> running)
     {
         var active = running.ToArray();
-        if (active.Where(row => row.Lane == "general").Sum(row => row.Slots) + job.Slots > Cap) return false;
+        if (job.Lane == "general" && active.Where(row => row.Lane == "general").Sum(row => row.Slots) + job.Slots > Cap) return false;
         // Known commands reserve their own measured demand, not the p95 peak of
-        // an unrelated heavy shard. Unknown work reserves at least one core.
+        // an unrelated heavy shard. Every command reserves at least one core:
+        // sub-core averages measured under contention cannot justify more jobs.
         // The same limits apply to the first command and to borrowed CPUs.
-        var competing = active.Where(row => row.Lane == "general" || (row.Affinity.GetValueOrDefault() & mask) != 0).ToArray();
+        var competing = active.Where(row => row.Lane == job.Lane || (row.Affinity.GetValueOrDefault() & mask) != 0).ToArray();
         bool cpu = competing.Sum(Cpu) + Cpu(job) <= System.Numerics.BitOperations.PopCount(mask);
         return cpu && MemoryFits(job, active);
     }
