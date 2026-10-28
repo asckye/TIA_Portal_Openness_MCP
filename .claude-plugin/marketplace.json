@@ -4,7 +4,7 @@
   "plugins": [
     {
       "name": "tia-portal-openness-mcp",
-      "version": "4.0.0-beta.1",
+      "version": "4.0.0-beta.2",
       "source": "./",
       "description": "Siemens TIA Portal Openness automation MCP — runtimes for V14 SP1, V15.1, V16, V17, V18, V19, V20 and V21, plus skills. Selects the newest installed TIA release, then the newest runnable bundled host."
     }

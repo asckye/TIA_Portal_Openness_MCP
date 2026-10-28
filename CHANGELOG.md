@@ -2,6 +2,15 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)：最新版本在前，日期为 ISO 8601；当前版本说明在 `docs/releases/`，历史正文保留在 Git 历史与 GitHub Releases，交付包在 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)。版本号从 2.8.0 起按[语义化版本](https://semver.org/lang/zh-CN/)：**MAJOR** = 工具名 / 参数 / 返回形状的不兼容改动或删除工具；**MINOR** = 新工具、新参数、新功能、内部重构；**PATCH** = 修缺陷、改文案 / 文档、只动交付脚本。2.7.x 及之前每版都可能新增工具，未按此规则。预发布版本为 X.Y.Z-beta.N 或 X.Y.Z-rc.N，条目写作 `## [4.0.0-beta.1] - YYYY-MM-DD`，与正式版本相同，在发布命令前写入；`## [Unreleased]` 不被视为版本条目。
 
+## [4.0.0-beta.2] - 2026-10-27
+
+4.0 的第二个预发布版本，同样在 GitHub 上标为预发布、不设为最新版，3.3 的更新器和工作台更新检查不会提示它。本版仍未在真实 TIA Portal 上验证，说明见 [v4.0.0-beta.2](docs/releases/v4.0.0-beta.2.md)。
+
+- 测试者反馈：Unified 变量表和画面按 `/组/子组/名称` 建在已有分组内，不再在根目录生成以路径为名的对象；相对、反斜杠和格式错误的路径给出改正后的绝对写法并拒绝。对象路径等结构化参数格式错误时，在确认、审批和任何 TIA 调用之前拒绝。V20/V21 的按钮事件脚本工具不再报告结果未知。
+- HMI 复核：Unified 对象路径示例改从 `Screens`/`ScreenGroups` 开始并新增面板容器示例；面板、自定义 Web 控件和自定义控件容器必须给出 `containedType`；Flags 枚举接受组合值；Unified 变量表列表包含嵌套分组；Classic 未给表名时列出全部变量；查找失败不再当作“不存在”；EnsureUnifiedHmiTag 必须给出 `plcName` 与 `plcTag`。
+- 按官方 API 复核并修正 PLC、HMI、库/VCI/Safety/反射与安全/可选产品（P8-81d–g）：导入不再改写 SimaticML 头且覆盖需明确授权，HMI 导入默认不覆盖，PUT/GET 修改默认预览，工具注册按各版官方 API。
+- 稳定性：HTTP 主机先监听再构建会话目录，桥接调用异步分派；摘要脱敏修正与工作台文案改进。
+
 ## [4.0.0-beta.1] - 2026-10-22
 
 4.0 的第一个预发布版本，在 GitHub 上标为预发布，不设为最新版；3.3 的更新器和工作台更新检查不会提示它，需要从发布页手动下载。本版未在真实 TIA Portal 上验证：构建、离线套件、V4 契约与响应快照和 GitHub CI 已通过，只能在真机上确认的项目编号列在 [v4.0.0-beta.1](docs/releases/v4.0.0-beta.1.md) 末尾，请用工程副本测试，并按[预发布问题模板](https://github.com/asckye/TIA_Portal_Openness_MCP/issues/new?template=prerelease_report.md)报告。完整变化见 [4.0.0 发布说明草稿](docs/releases/v4.0.0.md)，3.x 工具名的去向见[工具迁移表](docs/releases/v4.0.0-tool-migration.md)。
