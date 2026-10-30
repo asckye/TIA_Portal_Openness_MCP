@@ -1,0 +1,61 @@
+{
+  "release": "v4.0.0-beta.2",
+  "url": "https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v4.0.0-beta.2",
+  "sourceCommit": "7e9c4c65608eff89d5180a0e69aeb19e31dc272d",
+  "publishedAtUtc": "2026-10-30T19:00:52Z",
+  "formalRelease": false,
+  "prerelease": true,
+  "latest": false,
+  "package": {
+    "name": "TIA_MCP_Delivery_v4.0.0-beta.2_20261030.zip",
+    "bytes": 182964419,
+    "sha256": "5a4535fc362ebdb8d5f956aae66a3e61eda2a6589b1e64f3fd1d1929cb16a3a9",
+    "files": 1498
+  },
+  "assets": [
+    {
+      "name": "TIA_MCP_Delivery_v4.0.0-beta.2_20261030.sha256",
+      "bytes": 111,
+      "digest": "sha256:b94b26fdb7f776749b3c380cf05302e350bec6c6de98cbffb6cad61852ebfa14",
+      "state": "uploaded",
+      "downloadUrl": "https://github.com/asckye/TIA_Portal_Openness_MCP/releases/download/v4.0.0-beta.2/TIA_MCP_Delivery_v4.0.0-beta.2_20261030.sha256"
+    },
+    {
+      "name": "TIA_MCP_Delivery_v4.0.0-beta.2_20261030.zip",
+      "bytes": 182964419,
+      "digest": "sha256:5a4535fc362ebdb8d5f956aae66a3e61eda2a6589b1e64f3fd1d1929cb16a3a9",
+      "state": "uploaded",
+      "downloadUrl": "https://github.com/asckye/TIA_Portal_Openness_MCP/releases/download/v4.0.0-beta.2/TIA_MCP_Delivery_v4.0.0-beta.2_20261030.zip"
+    }
+  ],
+  "workflows": [
+    {
+      "name": "Verify v4.0.0-beta.2",
+      "event": "release",
+      "attempt": 1,
+      "status": "queued",
+      "conclusion": null,
+      "url": "https://github.com/asckye/TIA_Portal_Openness_MCP/actions/runs/41111670146",
+      "headSha": "7e9c4c65608eff89d5180a0e69aeb19e31dc272d"
+    },
+    {
+      "name": "validate-bundle",
+      "event": "push",
+      "attempt": 1,
+      "status": "in_progress",
+      "conclusion": null,
+      "url": "https://github.com/asckye/TIA_Portal_Openness_MCP/actions/runs/41107272169",
+      "headSha": "7e9c4c65608eff89d5180a0e69aeb19e31dc272d"
+    },
+    {
+      "name": "offline-checks",
+      "event": "push",
+      "attempt": 1,
+      "status": "in_progress",
+      "conclusion": null,
+      "url": "https://github.com/asckye/TIA_Portal_Openness_MCP/actions/runs/41107272456",
+      "headSha": "7e9c4c65608eff89d5180a0e69aeb19e31dc272d"
+    }
+  ],
+  "notes": "Adopted the cold check-all evidence of db6b51fd (377 passed, 0 failed, 2825 s) under the maintainer's one-time time-gate exception; the publication did not wait for the release-commit CI (maintainer 2026-10-30), so the workflow states above are as recorded at publication time."
+}
