@@ -86,6 +86,29 @@ internal static partial class ReleaseCommands
         return suite;
     }
 
+    internal static void AddCheckAllStudioJobs(List<CheckJob> jobs, string root, string output, string dotnet,
+        string? manifest = null, bool diagnostics = false, SuiteProcess? process = null, string? history = null)
+    {
+        foreach (var mode in new[] { "false", "true" })
+        foreach (var project in new[] { "Core", "Gui" })
+        {
+            var name = $"studio-{project.ToLowerInvariant()}-{mode}";
+            // These whole-suite jobs previously used dotnet test without a skip-count gate. Keep that policy;
+            // registered Studio subsets retain their own unchanged minimumPassed/maximumSkipped gates.
+            var suite = new JsonObject { ["project"] = $"tests/Studio/TiaOpenness.{project}.Tests/TiaOpenness.{project}.Tests.csproj",
+                ["minimumPassed"] = 1, ["maximumSkipped"] = int.MaxValue,
+                ["arguments"] = new JsonArray("-p:TiaSharedAdapterPaths=" + mode) };
+            FastSuites.AddJobs(jobs, root, name, suite, output, dotnet, 1, null, [], manifest: manifest,
+                diagnostics: diagnostics, process: process, history: history);
+            // The original job name remains the complete TRX merge, including every sensitive partition.
+            jobs[^1] = jobs[^1] with { Name = name };
+        }
+    }
+
+    internal static CheckJob CheckAllStudioConflict(CheckJob job) =>
+        job.Name == "configuration-page" || job.SensitiveGroup?.StartsWith("tests/Studio/", StringComparison.Ordinal) == true
+            ? job with { ConflictGroup = "studio-writes" } : job;
+
     internal static void AddCheckAllPreflightJobs(List<CheckJob> jobs)
     {
         // Reuse the authoritative standalone jobs, including the complete release

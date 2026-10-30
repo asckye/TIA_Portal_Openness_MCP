@@ -54,10 +54,7 @@ internal static partial class ReleaseCommands
         foreach (var (name, node) in catalog)
             FastSuites.AddJobs(suitePlan, Root, name, node!.AsObject(), Path.Combine(output, "packing-suites"), dotnet,
                 node["minimumPassed"]!.GetValue<int>() >= 100 ? shards : 1, null, []);
-        foreach (var project in new[] { "Core", "Gui" })
-        foreach (var mode in new[] { "false", "true" })
-            suitePlan.Add(new CheckJob("studio-" + project.ToLowerInvariant() + "-" + mode, () => new(0, "", ""), [], Exclusive: true)
-                { SensitiveGroup = $"tests/Studio/TiaOpenness.{project}.Tests/TiaOpenness.{project}.Tests.csproj" });
+        AddCheckAllStudioJobs(suitePlan, Root, Path.Combine(output, "packing-studio"), dotnet);
         int sensitiveParallelism = FastSuites.Positive(options, "SensitiveParallelism", CheckAffinity.DefaultCheckAllSensitiveWorkers);
         int sensitiveDefault = CheckPacking.ReservedCores(suitePlan.Where(job => job.Exclusive), resources, sensitiveParallelism);
         var stabilityPlan = CheckAllPlcScriptJobs().Where(name => name.StartsWith("stability-", StringComparison.Ordinal))
@@ -249,15 +246,7 @@ internal static partial class ReleaseCommands
             FastSuites.AddJobs(jobs, Root, name, suite, Path.Combine(output, "suites"), dotnet, suite["minimumPassed"]!.GetValue<int>() >= 100 ? shards : 1, sdk, [],
                 options.Get("SequentialBaselineDirectory") is { } baseline ? Path.Combine(baseline, name + ".trx") : null, options.Has("ProveEquivalence"), manifest: runtimeManifest, diagnostics: true, workerCopies: workerCopies);
         }
-        foreach (var mode in new[] { "false", "true" })
-        foreach (var project in new[] { "Core", "Gui" })
-        {
-            var name = $"studio-{project.ToLowerInvariant()}-{mode}"; var selectedMode = mode; var selectedProject = project;
-            Add(name, () => Isolated(name, dotnet, ["test", $"tests/Studio/TiaOpenness.{selectedProject}.Tests/TiaOpenness.{selectedProject}.Tests.csproj", "-c", "Release", "--no-build", "--no-restore",
-                "-p:TiaSharedAdapterPaths=" + selectedMode,
-                "--disable-build-servers", "-m:1", "-nodeReuse:false", "--logger", "trx;LogFileName=" + name + ".trx", "--results-directory", Path.Combine(output, "studio")]), exclusive: true);
-            jobs[^1] = jobs[^1] with { SensitiveGroup = $"tests/Studio/TiaOpenness.{project}.Tests/TiaOpenness.{project}.Tests.csproj" };
-        }
+        AddCheckAllStudioJobs(jobs, Root, Path.Combine(output, "studio"), dotnet, runtimeManifest, diagnostics: true);
         jobs.AddRange(staticJobs.Where(job => !CheckAllEarly(job.Name)));
         // Preflight also depends on the source-only checks completed in the build
         // wave. Retain their results in its aggregate instead of executing twice.
@@ -413,7 +402,7 @@ internal static partial class ReleaseCommands
         ValidateCheckAllPlcScriptJobs(jobs);
         ValidateCheckAllPlcHarnessJobs(jobs);
         CiCoverage.RequirePlan([.. allJobs, .. jobs], ciCovered);
-        var scheduled = CiCoverage.Rewrite(CheckAllRuntimeDependencies(jobs, independentParity: true), ciCovered).Select(CheckAllScratchIsolation).Select(job => job with
+        var scheduled = CiCoverage.Rewrite(CheckAllRuntimeDependencies(jobs, independentParity: true), ciCovered).Select(CheckAllStudioConflict).Select(CheckAllScratchIsolation).Select(job => job with
         {
             EstimatedSeconds = CheckAllJobCost(job, costs),
             MeasuredSeconds = orderCosts.TryGetValue(job.Name, out var measured) ? measured : null,
@@ -437,7 +426,7 @@ internal static partial class ReleaseCommands
             physicalCores = CheckAffinity.PhysicalCores().Select(core => new { mask = core.Mask.ToString("X"), efficiencyClass = core.Efficiency }),
             buildParallelism, stabilityParallelism, sensitiveParallelism = sensitiveLanes.Count, requestedSensitiveParallelism = sensitiveWorkers.RequestedWorkers,
             sensitiveParallelismReason = sensitiveWorkers.Reason, sensitiveCores = System.Numerics.BitOperations.PopCount(layout.Sensitive), sensitiveMinWorkerThreads = CheckAffinity.BaselineWorkers, generalParallelism = parallelism, packing, companionPython,
-            checks = allJobs.Select(job => new { job.Name, job.Lane, job.SensitiveGroup, job.Slots, job.Exclusive, job.GlobalExclusive, job.Priority, affinityMask = job.Affinity?.ToString("X"), job.EstimatedSeconds, job.MeasuredSeconds, job.SchedulingSeconds,
+            checks = allJobs.Select(job => new { job.Name, job.Lane, job.SensitiveGroup, job.ConflictGroup, job.Slots, job.Exclusive, job.GlobalExclusive, job.Priority, affinityMask = job.Affinity?.ToString("X"), job.EstimatedSeconds, job.MeasuredSeconds, job.SchedulingSeconds,
                 cpuDemand = packing.Cpu(job), memoryBytes = packing.Memory(job), timeoutSeconds = job.Timeout.TotalSeconds, criticalSeconds = priorities[job.Name], job.Dependencies,
                 runtimeManifestDependency = job.Name == "suite-output-parity" ? "build-once (comparison phase only)" : null,
                 resultCache = job.ResultCachePolicy ?? "always rerun: generated evidence, mutable machine inputs or aggregate gate" }) }, new JsonSerializerOptions { WriteIndented = true }) + "\n");

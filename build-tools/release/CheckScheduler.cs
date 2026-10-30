@@ -12,6 +12,7 @@ internal sealed record CheckJob(string Name, Func<CommandResult> Run, string[] D
     internal int Priority { get; init; }
     internal string Lane { get; init; } = "general";
     internal string? SensitiveGroup { get; init; }
+    internal string? ConflictGroup { get; init; }
     internal bool GlobalExclusive { get; init; }
     internal ulong? Affinity { get; init; }
     internal bool AllowFailedDependencies { get; init; }
@@ -92,6 +93,9 @@ internal static class CheckScheduler
             {
                 if (!job.Dependencies.All(done.ContainsKey)) continue;
                 var active = Active();
+                // Studio variants and registered subsets share repository-relative reports and fixture outputs.
+                // This lock crosses CPU lanes; an exclusive worker alone cannot protect those writable paths.
+                if (job.ConflictGroup != null && active.Any(row => row.ConflictGroup == job.ConflictGroup)) continue;
                 if (active.Any(row => row.GlobalExclusive) || job.GlobalExclusive && active.Length != 0) continue;
                 // An updater probes process names conservatively, including
                 // unreadable images. Drain every lane before its real probe.
