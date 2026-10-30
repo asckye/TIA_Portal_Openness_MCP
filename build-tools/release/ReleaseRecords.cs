@@ -184,7 +184,7 @@ internal static class ReleaseRecords
         _ => node?.DeepClone()
     };
 
-    internal static JsonObject PlcProof(string root, string logs, ReleaseCheckPlan plan)
+    internal static JsonObject PlcProof(string root, string logs, ReleaseCheckPlan plan, Func<PlcReleaseJob, bool>? include = null)
     {
         var result = new JsonObject();
         foreach (var key in new[] { "20", "21" })
@@ -202,7 +202,7 @@ internal static class ReleaseRecords
                 ["checks"] = new JsonObject()
             };
             foreach (var job in ReleaseCommands.PlcReleaseJobs(root, "", logs, "", "dotnet", "python")
-                .Where(job => job.Release == key && ReleaseCommands.PlcReleaseSelected(plan, job)))
+                .Where(job => job.Release == key && ReleaseCommands.PlcReleaseSelected(plan, job) && (include?.Invoke(job) ?? true)))
             {
                 var log = Path.Combine(logs, job.Name + ".log");
                 if (!File.Exists(log)) throw new ReleaseException("PLC check log missing: " + job.Name);
@@ -247,8 +247,10 @@ internal static class ReleaseRecords
     // the V20/V21 evidence.
     internal static void AssertPlcProof(string root, JsonElement record, bool binaries)
     {
-        var plan = PlcProofPlan(JsonSerializer.Deserialize<ReleaseCheckPlan>(record.GetProperty("checkPlan").GetRawText(),
-            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }) ?? throw new ReleaseException("Multi-version check plan missing"), RecordTest(record));
+        var selectedPlan = JsonSerializer.Deserialize<ReleaseCheckPlan>(record.GetProperty("checkPlan").GetRawText(),
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }) ?? throw new ReleaseException("Multi-version check plan missing");
+        var plan = PlcProofPlan(selectedPlan, RecordTest(record));
+        var adopted = record.TryGetProperty("adoptedValidation", out _);
         var files = ReadRows(record, "files").ToDictionary(row => row.Path, StringComparer.Ordinal);
         // Each receipt names a log that the record binds in validationArtifacts with the same SHA-256.
         var bound = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -276,16 +278,29 @@ internal static class ReleaseRecords
             if (binaries && File.Exists(toolsPath) && HashFile(toolsPath) != GetString(runtime.GetProperty("toolsList"), "sha256"))
                 throw new ReleaseException("PLC tools-list changed after validation");
             foreach (var job in ReleaseCommands.PlcReleaseJobs(root, "", "", "", "dotnet", "python")
-                .Where(job => job.Release == key && ReleaseCommands.PlcReleaseSelected(plan, job)))
+                .Where(job => job.Release == key && (ReleaseCommands.PlcReleaseSelected(plan, job) ||
+                    adopted && ReleaseCommands.PlcReleaseSelected(selectedPlan, job) && ReleaseCommands.IsAdoptionBinaryPlcJob(job))))
+            {
                 if (!checks.TryGetProperty(job.Name, out var check) || GetString(check, "status") != "passed" ||
                     !System.Text.RegularExpressions.Regex.IsMatch(GetString(check, "sha256"), "^[0-9a-f]{64}$") || GetLong(check, "length") <= 0 ||
                     !check.TryGetProperty("counts", out var counts) || counts.ValueKind != JsonValueKind.Array ||
                     GetString(check, "path") != $"bin-build/multi-version/{job.Name}.log" ||
                     !bound.TryGetValue(GetString(check, "path"), out var boundSha) || boundSha != GetString(check, "sha256"))
                     throw new ReleaseException("PLC check proof missing: " + job.Name);
+                if (!adopted || !ReleaseCommands.IsAdoptionBinaryPlcJob(job)) continue;
+                var local = record.GetProperty("adoptedValidation").GetProperty("localChecks").EnumerateArray()
+                    .Where(row => GetString(row, "name") == job.Name).ToArray();
+                if (local.Length != 1 || new[] { "path", "sha256", "status" }.Any(field => GetString(local[0], field) != GetString(check, field)) ||
+                    new[] { "worker", "host", "sdkWorker" }.Any(field => GetString(local[0].GetProperty(field), "sha256") != GetString(runtime.GetProperty(field), "sha256")))
+                    throw new ReleaseException("Adopted PLC local check missing or changed: " + job.Name);
+                var result = $"bin-build/multi-version/{(job.Mode == "worker-protocol" ? "transport-v" + key + "-plc" : job.Name)}/result.json";
+                if (!local[0].GetProperty("artifacts").EnumerateArray().Any(row => GetString(row, "path") == result &&
+                    bound.TryGetValue(result, out var hash) && hash == GetString(row, "sha256")))
+                    throw new ReleaseException("Adopted PLC result is not bound: " + job.Name);
+            }
             foreach (var (name, selected) in new[] { ("localStability", "plc-stability"), ("isolatedLocalStability", "plc-isolated-stability") })
             {
-                if (!plan.Includes(selected)) continue;
+                if (!plan.Includes(selected) && !(adopted && selectedPlan.Includes(selected))) continue;
                 var proof = runtime.GetProperty(name);
                 var sdkHash = GetString(runtime.GetProperty("sdkWorker"), "sha256");
                 if (sdkHash.Length != 64 || GetString(proof, "runtimeSha256") != sdkHash || GetString(proof, "sdkWorkerSha256") != sdkHash ||

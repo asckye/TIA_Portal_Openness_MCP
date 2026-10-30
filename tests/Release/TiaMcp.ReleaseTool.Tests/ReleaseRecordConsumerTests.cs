@@ -7,6 +7,160 @@ namespace TiaMcp.ReleaseTool.Tests;
 
 public sealed class ReleaseRecordConsumerTests
 {
+    [Fact]
+    public void AdoptedBinaryChecksUseTheFullPathsUnmodifiedSoaksAndWorkerIsolationCommands()
+    {
+        var jobs = ReleaseCommands.PlcReleaseJobs("root", "api", "logs", "temp", "dotnet", "python")
+            .Where(ReleaseCommands.IsAdoptionBinaryPlcJob).ToArray();
+        Assert.Equal(6, jobs.Length);
+        Assert.Equal(2, jobs.Count(job => job.Mode == "worker-protocol"));
+        foreach (var key in new[] { "20", "21" })
+        foreach (var concurrency in new[] { "8", "16" })
+        {
+            var job = Assert.Single(jobs, job => job.Name == $"stability-c{concurrency}-v{key}-plc");
+            string Argument(string name) => job.Arguments[Array.IndexOf(job.Arguments, name) + 1];
+            Assert.Equal("50", Argument("--rounds"));
+            Assert.Equal(concurrency, Argument("--concurrency"));
+            Assert.Equal(Path.Combine("root", $"runtime/v{key}/TiaMcp.FoundationHost.exe"), Argument("--exe"));
+            Assert.Equal(new PlcWorkerFixtureBuild(key, "sdk", null).Worker(Path.Combine("logs", "plc-fixtures")), Argument("--plc-worker"));
+            Assert.True(ReleaseCommands.IsExclusivePlcJob(job));
+            Assert.DoesNotContain("--transports", job.Arguments);
+            Assert.DoesNotContain("--profiles", job.Arguments);
+        }
+    }
+
+    [Theory]
+    [InlineData("none", true, true)]
+    [InlineData("missing-soaks", false, false)]
+    [InlineData("missing-isolated-soak", false, false)]
+    [InlineData("different-host", false, false)]
+    [InlineData("different-sdk-worker", false, false)]
+    [InlineData("different-production-worker", false, false)]
+    [InlineData("non-isolated-worker", false, false)]
+    [InlineData("missing-matrix-run", false, false)]
+    [InlineData("missing-isolation", false, false)]
+    [InlineData("missing-local-receipt", false, false)]
+    [InlineData("unbound-result", false, false)]
+    [InlineData("changed-packaged-host", false, false)]
+    [InlineData("changed-script", true, false)]
+    [InlineData("extended-different-host", true, false)]
+    public void ActualAdoptedRecordPassesBothConsumersOnlyWithItsOwnBinaryProofs(string mutation, bool csharpPasses, bool pythonPasses)
+    {
+        using var tree = new StaticTree();
+        var fixture = JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures/adopted-multi-version.json")))!;
+        var multi = fixture["record"]!.AsObject();
+        Assert.False(multi["test"]!.GetValue<bool>());
+        Assert.False(multi["validation"]!["foundationTransportExecuted"]!.GetValue<bool>());
+        Assert.Null(multi["plcRuntimes"]!["V20"]!["localStability"]);
+        var plan = JsonSerializer.Deserialize<ReleaseCheckPlan>(multi["checkPlan"]!.ToJsonString(), JsonOptions)!;
+        var logs = Path.Combine(tree.Root, "bin-build/multi-version");
+        foreach (var key in new[] { "20", "21" })
+        {
+            var runtime = multi["plcRuntimes"]!["V" + key]!;
+            foreach (var field in new[] { "worker", "adapter", "host", "sdkWorker", "catalog", "toolsList" })
+            {
+                var artifact = runtime[field]!;
+                var name = artifact["path"]!.GetValue<string>();
+                var path = tree.Write(name, "synthetic fixture bytes: " + name);
+                artifact["sha256"] = ReleaseRecords.HashFile(path);
+                artifact["length"] = new FileInfo(path).Length;
+                var inventory = multi["files"]!.AsArray().SingleOrDefault(row => (string?)row!["path"] == name);
+                if (inventory is not null) { inventory["sha256"] = artifact["sha256"]!.DeepClone(); inventory["length"] = artifact["length"]!.DeepClone(); }
+            }
+        }
+        foreach (var script in new[] { "Test-LocalStability.py", "Test-ResourceDiscovery.py" }) tree.Copy("scripts/checks/" + script);
+        foreach (var job in ReleaseCommands.PlcReleaseJobs(tree.Root, "api", logs, "temp", "dotnet", "python")
+            .Where(ReleaseCommands.IsAdoptionBinaryPlcJob))
+        {
+            var runtime = multi["plcRuntimes"]!["V" + job.Release]!;
+            var identity = new JsonObject
+            {
+                ["runtimeSha256"] = runtime["sdkWorker"]!["sha256"]!.DeepClone(), ["sdkWorkerSha256"] = runtime["sdkWorker"]!["sha256"]!.DeepClone(),
+                ["hostSha256"] = runtime["host"]!["sha256"]!.DeepClone()
+            };
+            var evidence = identity.DeepClone().AsObject();
+            evidence["status"] = "passed"; evidence["nativeTiaExecuted"] = false;
+            evidence["rounds"] = 50; evidence["isolatedWorker"] = true; evidence["workerModel"] = "foundation-host-plc-worker";
+            evidence["scriptSha256"] = ReleaseRecords.HashFile(Path.Combine(tree.Root, "scripts/checks/Test-LocalStability.py"));
+            evidence["resourceHelperSha256"] = ReleaseRecords.HashFile(Path.Combine(tree.Root, "scripts/checks/Test-ResourceDiscovery.py"));
+            evidence["runs"] = JsonSerializer.SerializeToNode(new[] { "stdio", "http" }.SelectMany(transport => new[] { "full", "lite" }.Select(profile =>
+                new { transport, profile, unexpectedExits = 0, unexpectedFailures = 0, unmatchedJournalEntries = 0, measuredToolCalls = 1, tiaConnected = false })));
+            evidence["plcWorkers"] = new JsonObject { [job.Release] = identity };
+            var output = job.Arguments[Array.IndexOf(job.Arguments, "--output") + 1];
+            tree.Write(Path.GetRelativePath(tree.Root, Path.Combine(output, "result.json")), evidence.ToJsonString());
+            tree.Write($"bin-build/multi-version/{job.Name}.log", "COMPLETE: synthetic binary-proof fixture\n");
+        }
+        var adoption = new JsonObject { ["record"] = multi["adoptedValidation"]!.DeepClone() };
+        ReleaseCommands.RecordAdoptionBinaryChecks(tree.Root, logs, plan, adoption, multi["plcRuntimes"]!.AsObject(), multi["validationArtifacts"]!.AsArray());
+        multi["adoptedValidation"] = adoption["record"]!.DeepClone();
+        var local = multi["adoptedValidation"]!["localChecks"]!.AsArray();
+        Assert.Equal(6, local.Count(row => row!["artifacts"] is JsonArray));
+        Assert.False(multi["test"]!.GetValue<bool>());
+        Assert.Empty(ReleaseEvidence.NonRecordChanges(["manifest/multi-version-build.json"]));
+        var v20 = multi["plcRuntimes"]!["V20"]!;
+        switch (mutation)
+        {
+            case "missing-soaks":
+                v20.AsObject().Remove("localStability"); v20.AsObject().Remove("isolatedLocalStability");
+                v20["checks"]!.AsObject().Remove("stability-c8-v20-plc"); break;
+            case "missing-isolated-soak": v20.AsObject().Remove("isolatedLocalStability"); break;
+            case "different-host": v20["localStability"]!["hostSha256"] = new string('0', 64); break;
+            case "different-sdk-worker": v20["localStability"]!["runtimeSha256"] = new string('0', 64); break;
+            case "different-production-worker": v20["localStability"]!["productionWorkerSha256"] = new string('0', 64); break;
+            case "non-isolated-worker": v20["isolatedLocalStability"]!["isolatedWorker"] = false; break;
+            case "missing-matrix-run": v20["localStability"]!["runs"]!.AsArray().RemoveAt(0); break;
+            case "missing-isolation": v20["checks"]!.AsObject().Remove("worker-protocol-v20-plc"); break;
+            case "missing-local-receipt": local.Remove(local.Single(row => (string?)row!["name"] == "stability-c8-v20-plc")); break;
+            case "unbound-result":
+                multi["validationArtifacts"]!.AsArray().Remove(multi["validationArtifacts"]!.AsArray().Single(row =>
+                    (string?)row!["path"] == "bin-build/multi-version/stability-c8-v20-plc/result.json")); break;
+            case "changed-packaged-host": tree.Write(v20["host"]!["path"]!.GetValue<string>(), "changed after local check"); break;
+            case "changed-script": tree.Write("scripts/checks/Test-LocalStability.py", "changed after soak"); break;
+            case "extended-different-host":
+                var runtimes = new JsonObject();
+                foreach (var key in new[] { "V20", "V21" }) runtimes[key] = multi["plcRuntimes"]![key]!["localStability"]!.DeepClone();
+                runtimes["V20"]!["hostSha256"] = new string('0', 64);
+                tree.Write("manifest/local-stability-extended.json", new JsonObject
+                    { ["release"] = multi["release"]!.DeepClone(), ["status"] = "passed", ["runtimes"] = runtimes }.ToJsonString()); break;
+        }
+        if (csharpPasses) Validate(tree.Root, multi);
+        else Assert.ThrowsAny<Exception>(() => Validate(tree.Root, multi));
+        tree.Write("fixture.json", fixture.ToJsonString());
+        var root = TiaMcp.BuildCommon.Repository.FindRoot();
+        var code = """
+            import importlib.util,json,sys
+            from pathlib import Path
+            root,tree=map(Path,sys.argv[1:])
+            spec=importlib.util.spec_from_file_location('package',root/'build-tools/Package-Release.py')
+            p=importlib.util.module_from_spec(spec);spec.loader.exec_module(p)
+            fixture=json.loads((tree/'fixture.json').read_text('utf-8-sig'));m=fixture['record']
+            selected=p.layout.release_checks(root,fixture['package'],m)
+            record=json.dumps(m).encode()
+            delivery={'multiVersionBuildSha256':p.sha(record)}
+            records={p.layout.MULTI_RECORD:record,'manifest/delivery.json':json.dumps(delivery).encode(),
+                     'manifest/tools-list.json':(tree/'manifest/tools-list.json').read_bytes()}
+            p.read_build_record(records,delivery)
+            other=importlib.util.spec_from_file_location('multi',root/'build-tools/Package-MultiVersion.py')
+            mp=importlib.util.module_from_spec(other);other.loader.exec_module(mp)
+            mp.read_build_record(records)
+            final=dict(fixture['package'],checkStatus='passed',checksRan=fixture['package']['checksSelected'])
+            assert final['tier']=='full' and final['buildCacheEnabled'] is False
+            assert p.layout.release_checks(root,final,m)==selected
+            files={row['path']:(tree/row['path']).read_bytes() for row in m['files']}
+            for key in ('20','21'):
+                files[f'runtime/v{key}/Esprima.dll']=b'synthetic parser'
+            for name in ('Test-LocalStability.py','Test-ResourceDiscovery.py'):
+                files['scripts/checks/'+name]=(tree/'scripts/checks'/name).read_bytes()
+            extended=tree/'manifest/local-stability-extended.json'
+            if extended.is_file():files['manifest/local-stability-extended.json']=extended.read_bytes()
+            p.check_stability(files,m,selected,m['release'])
+            print('PASS adopted candidate and final packager proof requirements')
+            """;
+        var result = ProcessRunner.Run(OperatingSystem.IsWindows() ? "python" : "python3", ["-X", "utf8", "-c", code, root, tree.Root], root,
+            new Dictionary<string, string?> { ["PYTHONDONTWRITEBYTECODE"] = "1" });
+        Assert.True((result.ExitCode == 0) == pythonPasses, result.StandardOutput + result.StandardError);
+    }
+
     [Theory]
     [Trait("Category", "BundleParity")]
     [InlineData(false)]

@@ -1677,6 +1677,10 @@ internal static partial class ReleaseCommands
                 WriteJson(Path.Combine(logs, "tool-usage-audit-plc.json"), CatalogAudits.Usage(Root, recordsPath: receiptPath));
                 validationAfter["plcToolUsageCoverageExecuted"] = true;
             }
+            var plcRuntimes = ReleaseRecords.WithShippedToolsList(Root, pending!.RootElement.GetProperty("plcRuntimes"));
+            var validationArtifacts = JsonNode.Parse(pending.RootElement.GetProperty("evidence").GetRawText())!.AsArray();
+            if (ReleaseEvidence.LoadAdoption() is { } adoption)
+                RunAdoptionBinaryChecks(adoption, plan, api, python, dotnet, nuget, logs, runTemp, plcRuntimes, validationArtifacts);
             var files = ReleaseRecords.GetRuntimeFiles(Root);
             var currentValidation = ReleaseRecords.GetValidationInputs(Root, "multi");
             if (!SameArtifacts(ReleaseRecords.ReadRows(pending!.RootElement, "validationInputs"), currentValidation)) throw new ReleaseException("Validation inputs changed during the build; refusing to record results");
@@ -1691,12 +1695,12 @@ internal static partial class ReleaseCommands
                 tier = plan.Tier, checkPlan = plan,
                 createdAt = DateTimeOffset.UtcNow.ToString("o"), release, fileVersion = releaseFileVersion, test,
                 releases = pending.RootElement.GetProperty("releases"),
-                plcRuntimes = ReleaseRecords.WithShippedToolsList(Root, pending.RootElement.GetProperty("plcRuntimes")),
+                plcRuntimes,
                 studioReleaseKeys = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
                 nativeAcceptance = "NOT RUN", validation = validationAfter,
                 files = files.Select(row => new { path = row.Path, sha256 = row.Sha256, length = new FileInfo(Path.Combine(Root, row.Path)).Length }),
                 updaterFiles = engineRecord.RootElement.GetProperty("updaterFiles"),
-                sourceFiles = sources, validationInputs, validationArtifacts = pending.RootElement.GetProperty("evidence")
+                sourceFiles = sources, validationInputs, validationArtifacts
             };
             var recordPath = Path.Combine(Root, "manifest/multi-version-build.json");
             WriteJson(recordPath, record);

@@ -103,6 +103,7 @@ def validate_plc_record(record):
     # P8-04l: a 4.x eight-release record carries no engineCompatibility; its PLC proof is the V20/V21 evidence.
     files = {row['path']: row['sha256'] for row in record_inventory(record)}
     selected = set(record['checkPlan']['selectedChecks'])
+    adopted_binary = selected & {'plc-stability', 'plc-isolated-stability', 'plc-worker-isolation'} if 'adoptedValidation' in record else set()
     # Without -Test the preparation runs only the PLC approval successors, and only for foundation-approval.
     if record.get('test', True) is False:
         selected = {'plc-approval'} if 'foundation-approval' in selected else set()
@@ -124,7 +125,8 @@ def validate_plc_record(record):
         checks = runtime['checks']
         required = {name for name, group in plc_record_jobs(key).items() if group in selected
                     or group == 'plc-approval' and 'foundation-approval' in selected
-                    or group == 'resource-discovery' and 'foundation-transport' in selected}
+                    or group == 'resource-discovery' and 'foundation-transport' in selected
+                    or group in adopted_binary and (group != 'plc-worker-isolation' or name.startswith('worker-protocol-'))}
         if not required <= set(checks):
             raise ValueError('Missing PLC check receipts: ' + ', '.join(sorted(required - set(checks))))
         for name, check in checks.items():
@@ -132,8 +134,18 @@ def validate_plc_record(record):
                     or not isinstance(check.get('length'), int) or check['length'] <= 0 or not isinstance(check.get('counts'), list)
                     or check.get('path') != f'bin-build/multi-version/{name}.log' or bound.get(check['path']) != check['sha256']):
                 raise ValueError('Incomplete PLC check receipt: ' + name)
+            binary = name.startswith(('stability-c8-', 'stability-c16-', 'worker-protocol-'))
+            if 'adoptedValidation' in record and name in required and binary:
+                local = [row for row in record['adoptedValidation']['localChecks'] if row.get('name') == name]
+                if (len(local) != 1 or any(local[0].get(field) != check.get(field) for field in ('path', 'sha256', 'status'))
+                        or any(local[0][field]['sha256'] != runtime[field]['sha256'] for field in ('worker', 'host', 'sdkWorker'))):
+                    raise ValueError('Adopted PLC local check missing or changed: ' + name)
+                directory = f'transport-v{key}-plc' if name.startswith('worker-protocol-') else name
+                result = f'bin-build/multi-version/{directory}/result.json'
+                if not any(row['path'] == result and row['sha256'] == bound.get(result) for row in local[0]['artifacts']):
+                    raise ValueError('Adopted PLC result is not bound: ' + name)
         for name, group in (('localStability', 'plc-stability'), ('isolatedLocalStability', 'plc-isolated-stability')):
-            if group not in selected:
+            if group not in selected | adopted_binary:
                 continue
             proof = runtime[name]
             if (proof.get('status') != 'passed' or proof.get('rounds', 0) < 10 or proof.get('isolatedWorker') is not True

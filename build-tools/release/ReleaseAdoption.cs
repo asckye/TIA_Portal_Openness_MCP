@@ -100,7 +100,7 @@ internal static partial class ReleaseCommands
         Environment.SetEnvironmentVariable(ReleaseEvidence.AdoptionVariable, path);
         Console.WriteLine($"ADOPTED check-all evidence {ReleaseEvidence.Text(record["evidence"]?["file"])} (sha256 {ReleaseEvidence.Text(record["evidence"]?["sha256"])}) for {commit}; " +
             (dryRun ? "CI not verified in a dry run" : "CI runs " + string.Join(", ", record["ci"]!.AsArray().Select(run => ReleaseEvidence.Text(run?["workflow"]) + " " + run?["runId"]))));
-        Console.WriteLine("  The suites, Studio tests, transport checks, PLC harness modes, soaks and preparation captures are adopted; the release builds, packages and checks its own product.");
+        Console.WriteLine("  Source/suite evidence is adopted; the release builds, packages and checks its own product, including binary-bound PLC soaks and worker isolation.");
         return adoption;
     }
 
@@ -179,6 +179,81 @@ internal static partial class ReleaseCommands
 
     internal static bool IsAdoptionLocalPlcJob(PlcReleaseJob job) =>
         job.Check == "native-coverage" || job.Name.StartsWith("jit-adapter-coverage-", StringComparison.Ordinal) || job.Mode == "native-safety";
+
+    // These receipts bind the installed host and worker, so check-all's different build cannot supply them. Run at
+    // completion, after build-release, with the full path's commands, validators, rounds and serial soak scheduling.
+    internal static bool IsAdoptionBinaryPlcJob(PlcReleaseJob job) =>
+        job.Check is "plc-stability" or "plc-isolated-stability" || job.Mode == "worker-protocol";
+
+    private static void RunAdoptionBinaryChecks(JsonObject adoption, ReleaseCheckPlan plan, string api, string python,
+        string dotnet, string? nuget, string logs, string runTemp, JsonObject runtimes, JsonArray artifacts)
+    {
+        var cli = Path.Combine(logs, "dotnet-home-plc");
+        var jobs = PlcReleaseJobs(Root, api, logs, runTemp, dotnet, python)
+            .Where(job => PlcReleaseSelected(plan, job) && IsAdoptionBinaryPlcJob(job)).ToArray();
+        RunPlcReleaseJobs(jobs, Root, logs, job =>
+        {
+            ResetPlcReleaseJobOutputs(job, logs);
+            return RunBuildIsolated(job.Executable, job.Arguments, Path.Combine(logs, job.Name + ".log"),
+                runTemp, cli, api, nuget, false, job.Name);
+        }, (script, _) => throw new ReleaseException("Adopted binary checks include no capture: " + script));
+        RecordAdoptionBinaryChecks(Root, logs, plan, adoption, runtimes, artifacts);
+        WriteJson(Environment.GetEnvironmentVariable(ReleaseEvidence.AdoptionVariable) ?? throw new ReleaseException("Adoption record path missing"), adoption);
+    }
+
+    internal static void RecordAdoptionBinaryChecks(string root, string logs, ReleaseCheckPlan plan, JsonObject adoption,
+        JsonObject runtimes, JsonArray artifacts)
+    {
+        var proof = ReleaseRecords.PlcProof(root, logs, plan, IsAdoptionBinaryPlcJob);
+        var local = adoption["record"]!["localChecks"]!.AsArray();
+        var bound = artifacts.ToDictionary(row => ReleaseEvidence.Text(row!["path"]), row => ReleaseEvidence.Text(row!["sha256"]), StringComparer.Ordinal);
+        JsonObject Bind(string file)
+        {
+            var path = Path.GetRelativePath(root, file).Replace('\\', '/');
+            var hash = ReleaseRecords.HashFile(file);
+            if (bound.TryGetValue(path, out var old) && old != hash) throw new ReleaseException("Adopted PLC evidence changed: " + path);
+            var row = new JsonObject { ["path"] = path, ["sha256"] = hash };
+            if (bound.TryAdd(path, hash)) artifacts.Add(row.DeepClone());
+            return row;
+        }
+        foreach (var key in new[] { "20", "21" })
+        {
+            var tested = proof["V" + key]!;
+            var prepared = runtimes["V" + key]!;
+            foreach (var field in new[] { "worker", "adapter", "host", "sdkWorker", "catalog", "toolsList" })
+                if (ReleaseEvidence.Text(tested[field]!["sha256"]) != ReleaseEvidence.Text(prepared[field]!["sha256"]))
+                    throw new ReleaseException("Adopted PLC binary changed since preparation: " + key + "/" + field);
+            foreach (var field in new[] { "localStability", "isolatedLocalStability" })
+                if (tested[field] is { } value) prepared[field] = value.DeepClone();
+            foreach (var (name, receipt) in tested["checks"]!.AsObject())
+            {
+                prepared["checks"]![name] = receipt!.DeepClone();
+                var log = Path.Combine(root, ReleaseEvidence.Text(receipt["path"]));
+                Bind(log);
+                var output = Path.Combine(logs, name.StartsWith("worker-protocol-", StringComparison.Ordinal)
+                    ? "transport-v" + key + "-plc" : name);
+                if (name.StartsWith("worker-protocol-", StringComparison.Ordinal))
+                {
+                    var isolation = JsonNode.Parse(File.ReadAllText(Path.Combine(output, "result.json")))!;
+                    var worker = isolation["plcWorkers"]?[key];
+                    if (ReleaseEvidence.Bool(isolation["nativeTiaExecuted"]) || worker is null ||
+                        ReleaseEvidence.Text(worker["hostSha256"]) != ReleaseEvidence.Text(tested["host"]!["sha256"]) ||
+                        ReleaseEvidence.Text(worker["runtimeSha256"]) != ReleaseEvidence.Text(tested["sdkWorker"]!["sha256"]) ||
+                        ReleaseEvidence.Text(worker["sdkWorkerSha256"]) != ReleaseEvidence.Text(tested["sdkWorker"]!["sha256"]))
+                        throw new ReleaseException("Adopted PLC worker isolation runtime evidence mismatch: " + key);
+                }
+                var evidence = new JsonArray(Directory.EnumerateFiles(output, "*.json", SearchOption.AllDirectories)
+                    .Order(StringComparer.Ordinal).Select(file => (JsonNode?)Bind(file)).ToArray());
+                var row = receipt.DeepClone().AsObject();
+                row["name"] = name;
+                row["check"] = name.StartsWith("worker-protocol-", StringComparison.Ordinal) ? "plc-worker-isolation"
+                    : name.StartsWith("stability-c8-", StringComparison.Ordinal) ? "plc-stability" : "plc-isolated-stability";
+                row["artifacts"] = evidence;
+                foreach (var field in new[] { "worker", "host", "sdkWorker" }) row[field] = tested[field]!.DeepClone();
+                local.Add(row);
+            }
+        }
+    }
 
     // build-release under adoption: the suite counts of its record come from the evidence; the self-tests that report counts and the
     // tool usage check still run here.

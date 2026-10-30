@@ -427,7 +427,7 @@ internal static class ReleaseEvidence
         "registered .NET suites (early gates, build-release, multi-version preparation and the PLC suite runs)",
         "Studio configuration, client and GUI tests",
         "Foundation and PLC transport checks and the all-release tool usage audit",
-        "PLC harness modes, resource discovery, ecosystem, usage and campaign checks, stability soaks and the preparation's PLC captures"
+        "PLC harness modes, resource discovery, ecosystem, usage and campaign checks and the preparation's PLC captures; binary-bound stability and worker isolation run locally"
     ];
 
     internal static IReadOnlyList<string> NonRecordChanges(IEnumerable<string> paths) =>

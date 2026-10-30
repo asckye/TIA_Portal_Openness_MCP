@@ -1,0 +1,1088 @@
+{
+  "origin": "bin-build/dryrun2-records/manifest/multi-version-build.json",
+  "originSha256": "94618d07dd8316cfebefaf10b78cf9db448ab9e50e81ac96ca6f85cf635fc634",
+  "record": {
+    "tier": "full",
+    "checkPlan": {
+      "tier": "full",
+      "selectedChecks": [
+        "preflight",
+        "binary-build",
+        "offline-suites",
+        "native-coverage",
+        "resource-discovery",
+        "prompt-registration",
+        "product-smoke",
+        "plc-functional",
+        "plc-worker-isolation",
+        "plc-approval",
+        "plc-ecosystem",
+        "plc-stability",
+        "plc-isolated-stability",
+        "plc-contracts",
+        "plc-responses",
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses",
+        "gui-tests",
+        "relocation",
+        "approval-self-test",
+        "relocation-self-test",
+        "contracts-self-test",
+        "responses-self-test",
+        "ecosystem-self-test",
+        "package",
+        "bundle-validation",
+        "smoke-self-test",
+        "adapterboundary-self-test",
+        "bundlelayout-self-test",
+        "commenthygiene-self-test",
+        "enveloperewrite-self-test",
+        "mcptext-self-test",
+        "repository-self-test",
+        "scripttoolcalls-self-test",
+        "swallowedexceptions-self-test",
+        "toolslist-self-test",
+        "nativecallorder-self-test",
+        "sharednativepaths-self-test",
+        "responseenvelopes-self-test",
+        "domaintools-self-test",
+        "dotnetsuites-self-test",
+        "nativelifecycle-self-test",
+        "releaseasset-self-test",
+        "dead-tool-references-self-test",
+        "native-mcp-session-self-test",
+        "resource-discovery-self-test",
+        "native-diagnostics",
+        "http-concurrency"
+      ],
+      "skippedChecks": [],
+      "changedPaths": []
+    },
+    "createdAt": "2026-10-28T09:10:28.2280786+00:00",
+    "release": "4.0.0-beta.2",
+    "fileVersion": "4.0.0.0",
+    "test": false,
+    "releases": [
+      {
+        "releaseKey": "14sp1",
+        "profile": "plc-foundation",
+        "toolCount": 279,
+        "nativeAcceptance": "NOT RUN",
+        "approvalSafetyChecksPassed": 5,
+        "approvalDefaultEnabled": true,
+        "approvalSafety": {
+          "status": "passed",
+          "checksPassed": 5,
+          "defaultEnabled": true,
+          "directWriteRefusedBeforeDispatch": true,
+          "readSucceeded": true,
+          "callTool": "refused-before-dispatch"
+        }
+      },
+      {
+        "releaseKey": "15.1",
+        "profile": "plc-foundation",
+        "toolCount": 319,
+        "nativeAcceptance": "NOT RUN",
+        "approvalSafetyChecksPassed": 5,
+        "approvalDefaultEnabled": true,
+        "approvalSafety": {
+          "status": "passed",
+          "checksPassed": 5,
+          "defaultEnabled": true,
+          "directWriteRefusedBeforeDispatch": true,
+          "readSucceeded": true,
+          "callTool": "refused-before-dispatch"
+        }
+      },
+      {
+        "releaseKey": "16",
+        "profile": "plc-foundation",
+        "toolCount": 348,
+        "nativeAcceptance": "NOT RUN",
+        "approvalSafetyChecksPassed": 5,
+        "approvalDefaultEnabled": true,
+        "approvalSafety": {
+          "status": "passed",
+          "checksPassed": 5,
+          "defaultEnabled": true,
+          "directWriteRefusedBeforeDispatch": true,
+          "readSucceeded": true,
+          "callTool": "refused-before-dispatch"
+        }
+      },
+      {
+        "releaseKey": "17",
+        "profile": "plc-foundation",
+        "toolCount": 371,
+        "nativeAcceptance": "NOT RUN",
+        "approvalSafetyChecksPassed": 5,
+        "approvalDefaultEnabled": true,
+        "approvalSafety": {
+          "status": "passed",
+          "checksPassed": 5,
+          "defaultEnabled": true,
+          "directWriteRefusedBeforeDispatch": true,
+          "readSucceeded": true,
+          "callTool": "refused-before-dispatch"
+        }
+      },
+      {
+        "releaseKey": "18",
+        "profile": "plc-foundation",
+        "toolCount": 397,
+        "nativeAcceptance": "NOT RUN",
+        "approvalSafetyChecksPassed": 5,
+        "approvalDefaultEnabled": true,
+        "approvalSafety": {
+          "status": "passed",
+          "checksPassed": 5,
+          "defaultEnabled": true,
+          "directWriteRefusedBeforeDispatch": true,
+          "readSucceeded": true,
+          "callTool": "refused-before-dispatch"
+        }
+      },
+      {
+        "releaseKey": "19",
+        "profile": "plc-foundation",
+        "toolCount": 473,
+        "nativeAcceptance": "NOT RUN",
+        "approvalSafetyChecksPassed": 5,
+        "approvalDefaultEnabled": true,
+        "approvalSafety": {
+          "status": "passed",
+          "checksPassed": 5,
+          "defaultEnabled": true,
+          "directWriteRefusedBeforeDispatch": true,
+          "readSucceeded": true,
+          "callTool": "refused-before-dispatch"
+        }
+      },
+      {
+        "releaseKey": "20",
+        "profile": "full-engine",
+        "toolCount": 496,
+        "nativeAcceptance": "NOT RUN",
+        "plcApprovalSafetyChecksPassed": 7,
+        "plcApprovalDefaultEnabled": true
+      },
+      {
+        "releaseKey": "21",
+        "profile": "full-engine",
+        "toolCount": 511,
+        "nativeAcceptance": "NOT RUN",
+        "plcApprovalSafetyChecksPassed": 7,
+        "plcApprovalDefaultEnabled": true
+      }
+    ],
+    "plcRuntimes": {
+      "V20": {
+        "worker": {
+          "path": "runtime/v20/worker/TiaMcp.PlcWorker.20.exe",
+          "sha256": "149f3cc697cbf74d6845f799e7fa428b00f7c94b4e190522e51d750938faf5d2",
+          "length": 304128
+        },
+        "sdkWorker": {
+          "path": "bin-build/multi-version/plc-fixtures/sdk/bin/20/Release/net48/TiaMcp.PlcWorker.20.exe",
+          "sha256": "6d05351d5f8873ddeea05bae97291981c4425125c669809ed552ce99166dbecd",
+          "length": 304128
+        },
+        "adapter": {
+          "path": "runtime/v20/worker/TiaMcp.Adapter.20.dll",
+          "sha256": "49d45c6cab0bfe26ad10e88511551adde92b5525a143fcca55b0a7dfa46e7eb9",
+          "length": 17187840
+        },
+        "host": {
+          "path": "runtime/v20/TiaMcp.FoundationHost.exe",
+          "sha256": "83053e6bf3aa5efb2633669730982ea5fce017b613d3fa00b4665c3c13274d39",
+          "length": 162304
+        },
+        "catalog": {
+          "path": "bin-build/multi-version/tools-20.json",
+          "sha256": "a036e8fc44b4896f33ccbeec81be3d4d34dd22736766d89de50ff30f586040b9",
+          "length": 6238345
+        },
+        "toolsList": {
+          "path": "manifest/tools-list.json",
+          "sha256": "7bc0b04a2ed8be03a6051aa4c3b1f02384ef2e0bf918fdf35ffb8b3f7376a0f9",
+          "length": 658717
+        },
+        "checks": {
+          "approval-v20-plc": {
+            "path": "bin-build/multi-version/approval-v20-plc.log",
+            "sha256": "08ae52570c23cd5821bff1c00d639ea6e24a9a0d81444e35b33628663b78b62c",
+            "length": 194,
+            "status": "passed",
+            "counts": [
+              "COMPLETE: 7 approval/readiness checks passed for V20; FoundationHost with an SDK-only PlcWorker proves default-on approval and real EXE proves readiness precedence; no TIA connection attempted"
+            ]
+          }
+        }
+      },
+      "V21": {
+        "worker": {
+          "path": "runtime/v21/worker/TiaMcp.PlcWorker.21.exe",
+          "sha256": "807563970192676f6a0401f09f4f26fab243aeed84075befdabd7ae5a1169f35",
+          "length": 304128
+        },
+        "sdkWorker": {
+          "path": "bin-build/multi-version/plc-fixtures/sdk/bin/21/Release/net48/TiaMcp.PlcWorker.21.exe",
+          "sha256": "8c2fd72bf71f91cae11bbb9369f6a2b197ac0749689f2c115aea782d2c890ab1",
+          "length": 304128
+        },
+        "adapter": {
+          "path": "runtime/v21/worker/TiaMcp.Adapter.21.dll",
+          "sha256": "d5e5c9a954953de179807e76933c367864745e40cc40f7a4047882037b5469e2",
+          "length": 17829888
+        },
+        "host": {
+          "path": "runtime/v21/TiaMcp.FoundationHost.exe",
+          "sha256": "83053e6bf3aa5efb2633669730982ea5fce017b613d3fa00b4665c3c13274d39",
+          "length": 162304
+        },
+        "catalog": {
+          "path": "bin-build/multi-version/tools-21.json",
+          "sha256": "7552428666441f31f6251026d9e9dea48d8eecfa3398811b1fb1b7d497aaf276",
+          "length": 6458320
+        },
+        "toolsList": {
+          "path": "manifest/tools-list.json",
+          "sha256": "7bc0b04a2ed8be03a6051aa4c3b1f02384ef2e0bf918fdf35ffb8b3f7376a0f9",
+          "length": 658717
+        },
+        "checks": {
+          "approval-v21-plc": {
+            "path": "bin-build/multi-version/approval-v21-plc.log",
+            "sha256": "8d7a189b7821dd663b2ee64878954b5f401a8cfd5abbb65d0f075a49c404008f",
+            "length": 194,
+            "status": "passed",
+            "counts": [
+              "COMPLETE: 7 approval/readiness checks passed for V21; FoundationHost with an SDK-only PlcWorker proves default-on approval and real EXE proves readiness precedence; no TIA connection attempted"
+            ]
+          }
+        }
+      }
+    },
+    "studioReleaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ],
+    "nativeAcceptance": "NOT RUN",
+    "validation": {
+      "nativeTiaExecuted": false,
+      "studioFunctionalTestsExecuted": false,
+      "configurationFunctionalTestsExecuted": false,
+      "foundationTransportExecuted": false,
+      "toolUsageCoverageExecuted": false,
+      "approvalSafetyExecuted": true,
+      "foundationApprovalSafetyChecksPassed": 30,
+      "foundationApprovalResultPath": "bin-build/multi-version/foundation-approval-default-11b013cd25bf42918c9a1e85c2529a4d/result.json",
+      "approvalSafetyScriptSha256": "688e80e9b54f920248c151f4ce3249e728fad067eb790eb146de992ad97759eb",
+      "dotnetSuites": {
+        "foundation-api": {
+          "passed": 34295,
+          "failed": 0,
+          "skipped": 1,
+          "total": 34296,
+          "minimumPassed": 30000,
+          "maximumSkipped": 1
+        },
+        "prompt-registration": {
+          "passed": 195,
+          "failed": 0,
+          "skipped": 0,
+          "total": 195,
+          "minimumPassed": 195,
+          "maximumSkipped": 0
+        },
+        "software-read": {
+          "passed": 260,
+          "failed": 0,
+          "skipped": 0,
+          "total": 260,
+          "minimumPassed": 258,
+          "maximumSkipped": 0
+        },
+        "special-export-shape": {
+          "passed": 12,
+          "failed": 0,
+          "skipped": 0,
+          "total": 12,
+          "minimumPassed": 12,
+          "maximumSkipped": 0
+        },
+        "device-add": {
+          "passed": 208,
+          "failed": 0,
+          "skipped": 0,
+          "total": 208,
+          "minimumPassed": 175,
+          "maximumSkipped": 0
+        },
+        "hardware-catalog": {
+          "passed": 57,
+          "failed": 0,
+          "skipped": 0,
+          "total": 57,
+          "minimumPassed": 57,
+          "maximumSkipped": 0
+        },
+        "diagnostic-membership": {
+          "passed": 37,
+          "failed": 0,
+          "skipped": 0,
+          "total": 37,
+          "minimumPassed": 10,
+          "maximumSkipped": 0
+        }
+      }
+    },
+    "files": [
+      {
+        "path": "runtime/v20/TiaMcp.FoundationHost.exe",
+        "sha256": "83053e6bf3aa5efb2633669730982ea5fce017b613d3fa00b4665c3c13274d39",
+        "length": 162304
+      },
+      {
+        "path": "runtime/v20/worker/TiaMcp.Adapter.20.dll",
+        "sha256": "49d45c6cab0bfe26ad10e88511551adde92b5525a143fcca55b0a7dfa46e7eb9",
+        "length": 17187840
+      },
+      {
+        "path": "runtime/v20/worker/TiaMcp.PlcWorker.20.exe",
+        "sha256": "149f3cc697cbf74d6845f799e7fa428b00f7c94b4e190522e51d750938faf5d2",
+        "length": 304128
+      },
+      {
+        "path": "runtime/v21/TiaMcp.FoundationHost.exe",
+        "sha256": "83053e6bf3aa5efb2633669730982ea5fce017b613d3fa00b4665c3c13274d39",
+        "length": 162304
+      },
+      {
+        "path": "runtime/v21/worker/TiaMcp.Adapter.21.dll",
+        "sha256": "d5e5c9a954953de179807e76933c367864745e40cc40f7a4047882037b5469e2",
+        "length": 17829888
+      },
+      {
+        "path": "runtime/v21/worker/TiaMcp.PlcWorker.21.exe",
+        "sha256": "807563970192676f6a0401f09f4f26fab243aeed84075befdabd7ae5a1169f35",
+        "length": 304128
+      }
+    ],
+    "updaterFiles": [
+      {
+        "path": "runtime/tools/TiaMcp.Updater.exe",
+        "sha256": "8c668e73cd5cbaaca65d4bdf2a081b4aefd59fa17793e826dc802736e7c38574",
+        "length": 54784
+      },
+      {
+        "path": "runtime/tools/TiaMcp.Updater.exe.config",
+        "sha256": "71fc64f698ae13f7ca87e9b0b55499ba9d4877b53f2399a3164353262d1b3d44",
+        "length": 327
+      }
+    ],
+    "sourceFiles": [],
+    "validationInputs": [],
+    "validationArtifacts": [
+      {
+        "path": "bin-build/multi-version/approval-v20-plc.log",
+        "sha256": "08ae52570c23cd5821bff1c00d639ea6e24a9a0d81444e35b33628663b78b62c"
+      },
+      {
+        "path": "bin-build/multi-version/approval-v21-plc.log",
+        "sha256": "8d7a189b7821dd663b2ee64878954b5f401a8cfd5abbb65d0f075a49c404008f"
+      }
+    ],
+    "adoptedValidation": {
+      "source": "check-all and GitHub Actions of the same commit; the release built, packaged and checked its own product",
+      "evidence": {
+        "file": "bin-build/check-all/beta2e/release-evidence.json",
+        "sha256": "ce5ee8726351139908f91ee04ccdb7eebf5a88a62de758f9964ce6b199edb4b0",
+        "runId": "beta2e",
+        "commit": "f9e578679b43bcc9ffad644b66b134c99a8a3930",
+        "tree": "4b75567b46b6b462392da86ead3e2eeed0c78ef1",
+        "inputsSha256": "3004db310e7765a472509af64504f44d840f0898fac519f0aaf009cd155e8ab1",
+        "startedUtc": "2026-10-28T08:10:17.1901688+00:00",
+        "completedUtc": "2026-10-28T08:40:47.5381981+00:00",
+        "wallSeconds": 1855.438,
+        "jobs": 376,
+        "mode": "clean",
+        "dotnetSdk": "10.0.403",
+        "python": "Python 3.12.10"
+      },
+      "ci": {
+        "status": "not verified in a dry run; publication requires validate-bundle and offline-checks of f9e578679b43bcc9ffad644b66b134c99a8a3930"
+      },
+      "ciCovered": null,
+      "ciCoveredJobs": [],
+      "suites": {
+        "adapter-contracts": {
+          "passed": 2518,
+          "failed": 0,
+          "skipped": 0,
+          "total": 2518,
+          "minimumPassed": 1850,
+          "maximumSkipped": 0
+        },
+        "compile-candidate-no-safety": {
+          "passed": 17,
+          "failed": 0,
+          "skipped": 0,
+          "total": 17,
+          "minimumPassed": 17,
+          "maximumSkipped": 0
+        },
+        "compile-candidate": {
+          "passed": 17,
+          "failed": 0,
+          "skipped": 0,
+          "total": 17,
+          "minimumPassed": 17,
+          "maximumSkipped": 0
+        },
+        "crash-evidence": {
+          "passed": 7,
+          "failed": 0,
+          "skipped": 0,
+          "total": 7,
+          "minimumPassed": 7,
+          "maximumSkipped": 0
+        },
+        "device-add": {
+          "passed": 208,
+          "failed": 0,
+          "skipped": 0,
+          "total": 208,
+          "minimumPassed": 175,
+          "maximumSkipped": 0
+        },
+        "diagnostic-membership": {
+          "passed": 37,
+          "failed": 0,
+          "skipped": 0,
+          "total": 37,
+          "minimumPassed": 10,
+          "maximumSkipped": 0
+        },
+        "engine-host": {
+          "passed": 225,
+          "failed": 0,
+          "skipped": 0,
+          "total": 225,
+          "minimumPassed": 159,
+          "maximumSkipped": 0
+        },
+        "fallback-vci-classic": {
+          "passed": 17,
+          "failed": 0,
+          "skipped": 0,
+          "total": 17,
+          "minimumPassed": 13,
+          "maximumSkipped": 0
+        },
+        "fallback-vci-initial": {
+          "passed": 19,
+          "failed": 0,
+          "skipped": 0,
+          "total": 19,
+          "minimumPassed": 15,
+          "maximumSkipped": 0
+        },
+        "fallback-vci-modern": {
+          "passed": 18,
+          "failed": 0,
+          "skipped": 0,
+          "total": 18,
+          "minimumPassed": 13,
+          "maximumSkipped": 0
+        },
+        "foundation-api": {
+          "passed": 34295,
+          "failed": 0,
+          "skipped": 1,
+          "total": 34296,
+          "minimumPassed": 30000,
+          "maximumSkipped": 1
+        },
+        "foundation": {
+          "passed": 31819,
+          "failed": 0,
+          "skipped": 1,
+          "total": 31820,
+          "minimumPassed": 29000,
+          "maximumSkipped": 1
+        },
+        "generation-model": {
+          "passed": 148,
+          "failed": 0,
+          "skipped": 0,
+          "total": 148,
+          "minimumPassed": 129,
+          "maximumSkipped": 0
+        },
+        "generation-planning": {
+          "passed": 263,
+          "failed": 0,
+          "skipped": 0,
+          "total": 263,
+          "minimumPassed": 260,
+          "maximumSkipped": 0
+        },
+        "hardware-catalog": {
+          "passed": 57,
+          "failed": 0,
+          "skipped": 0,
+          "total": 57,
+          "minimumPassed": 57,
+          "maximumSkipped": 0
+        },
+        "kept-code-v20": {
+          "passed": 4976,
+          "failed": 0,
+          "skipped": 0,
+          "total": 4976,
+          "minimumPassed": 4854,
+          "maximumSkipped": 0
+        },
+        "kept-code": {
+          "passed": 4976,
+          "failed": 0,
+          "skipped": 0,
+          "total": 4976,
+          "minimumPassed": 4854,
+          "maximumSkipped": 0
+        },
+        "mcp-panel": {
+          "passed": 50,
+          "failed": 0,
+          "skipped": 0,
+          "total": 50,
+          "minimumPassed": 48,
+          "maximumSkipped": 0
+        },
+        "offline-v20": {
+          "passed": 4127,
+          "failed": 0,
+          "skipped": 0,
+          "total": 4127,
+          "minimumPassed": 303,
+          "maximumSkipped": 0
+        },
+        "offline": {
+          "passed": 4181,
+          "failed": 0,
+          "skipped": 0,
+          "total": 4181,
+          "minimumPassed": 303,
+          "maximumSkipped": 0
+        },
+        "operator-host": {
+          "passed": 106,
+          "failed": 0,
+          "skipped": 0,
+          "total": 106,
+          "minimumPassed": 68,
+          "maximumSkipped": 0
+        },
+        "plc-exchange-worker-v20": {
+          "passed": 130,
+          "failed": 0,
+          "skipped": 0,
+          "total": 130,
+          "minimumPassed": 128,
+          "maximumSkipped": 0
+        },
+        "plc-exchange-worker-v21": {
+          "passed": 130,
+          "failed": 0,
+          "skipped": 0,
+          "total": 130,
+          "minimumPassed": 128,
+          "maximumSkipped": 0
+        },
+        "plugin-launcher": {
+          "passed": 32,
+          "failed": 0,
+          "skipped": 0,
+          "total": 32,
+          "minimumPassed": 32,
+          "maximumSkipped": 0
+        },
+        "prompt-registration": {
+          "passed": 195,
+          "failed": 0,
+          "skipped": 0,
+          "total": 195,
+          "minimumPassed": 195,
+          "maximumSkipped": 0
+        },
+        "release-tool": {
+          "passed": 1264,
+          "failed": 0,
+          "skipped": 0,
+          "total": 1264,
+          "minimumPassed": 720,
+          "maximumSkipped": 0
+        },
+        "shared-lifecycle-plc": {
+          "passed": 46,
+          "failed": 0,
+          "skipped": 0,
+          "total": 46,
+          "minimumPassed": 46,
+          "maximumSkipped": 0
+        },
+        "shared-lifecycle": {
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0,
+          "total": 6,
+          "minimumPassed": 6,
+          "maximumSkipped": 0
+        },
+        "shared-pipeline": {
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0,
+          "total": 6,
+          "minimumPassed": 6,
+          "maximumSkipped": 0
+        },
+        "shared-session": {
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0,
+          "total": 6,
+          "minimumPassed": 6,
+          "maximumSkipped": 0
+        },
+        "software-read": {
+          "passed": 260,
+          "failed": 0,
+          "skipped": 0,
+          "total": 260,
+          "minimumPassed": 258,
+          "maximumSkipped": 0
+        },
+        "source-contracts": {
+          "passed": 164,
+          "failed": 0,
+          "skipped": 0,
+          "total": 164,
+          "minimumPassed": 148,
+          "maximumSkipped": 0
+        },
+        "special-export-shape": {
+          "passed": 12,
+          "failed": 0,
+          "skipped": 0,
+          "total": 12,
+          "minimumPassed": 12,
+          "maximumSkipped": 0
+        },
+        "updater": {
+          "passed": 79,
+          "failed": 0,
+          "skipped": 0,
+          "total": 79,
+          "minimumPassed": 33,
+          "maximumSkipped": 0
+        },
+        "vci-read-only-binding": {
+          "passed": 13,
+          "failed": 0,
+          "skipped": 0,
+          "total": 13,
+          "minimumPassed": 13,
+          "maximumSkipped": 0
+        },
+        "version-policy": {
+          "passed": 10,
+          "failed": 0,
+          "skipped": 0,
+          "total": 10,
+          "minimumPassed": 10,
+          "maximumSkipped": 0
+        },
+        "workbench-control-host": {
+          "passed": 99,
+          "failed": 0,
+          "skipped": 0,
+          "total": 99,
+          "minimumPassed": 98,
+          "maximumSkipped": 0
+        },
+        "workbench-control-protocol": {
+          "passed": 96,
+          "failed": 0,
+          "skipped": 0,
+          "total": 96,
+          "minimumPassed": 94,
+          "maximumSkipped": 0
+        },
+        "workbench-control": {
+          "passed": 102,
+          "failed": 0,
+          "skipped": 0,
+          "total": 102,
+          "minimumPassed": 96,
+          "maximumSkipped": 0
+        },
+        "workbench-vci-prefill": {
+          "passed": 65,
+          "failed": 0,
+          "skipped": 0,
+          "total": 65,
+          "minimumPassed": 63,
+          "maximumSkipped": 0
+        },
+        "worker-channel": {
+          "passed": 288,
+          "failed": 0,
+          "skipped": 0,
+          "total": 288,
+          "minimumPassed": 275,
+          "maximumSkipped": 0
+        },
+        "worker-progress-foundation": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0,
+          "total": 3,
+          "minimumPassed": 3,
+          "maximumSkipped": 0
+        },
+        "worker-robustness": {
+          "passed": 718,
+          "failed": 0,
+          "skipped": 0,
+          "total": 718,
+          "minimumPassed": 570,
+          "maximumSkipped": 0
+        },
+        "write-guard": {
+          "passed": 9,
+          "failed": 0,
+          "skipped": 0,
+          "total": 9,
+          "minimumPassed": 8,
+          "maximumSkipped": 0
+        }
+      },
+      "adoptedChecks": [
+        "registered .NET suites (early gates, build-release, multi-version preparation and the PLC suite runs)",
+        "Studio configuration, client and GUI tests",
+        "Foundation and PLC transport checks and the all-release tool usage audit",
+        "PLC harness modes, resource discovery, ecosystem, usage and campaign checks, stability soaks and the preparation's PLC captures"
+      ],
+      "localChecks": [
+        {
+          "name": "adapter-native-coverage-v20-plc",
+          "check": "native-coverage",
+          "status": "passed",
+          "path": "bin-build/release-runs/20261028-015217-072-51b72394/adoption-local/adapter-native-coverage-v20-plc.log",
+          "sha256": "79fc72981bfab4d7647bb6198e87d44d55599cff160357d03e55b809ac2f0540",
+          "counts": []
+        },
+        {
+          "name": "adapter-native-coverage-v21-plc",
+          "check": "native-coverage",
+          "status": "passed",
+          "path": "bin-build/release-runs/20261028-015217-072-51b72394/adoption-local/adapter-native-coverage-v21-plc.log",
+          "sha256": "7513793918de5d3c06142270022ffbdd031d171cc6a3e7145ced99953f81cc2f",
+          "counts": []
+        },
+        {
+          "name": "host-behavior-parity-v20",
+          "check": "offline-suites",
+          "status": "passed",
+          "path": "bin-build/release-runs/20261028-015217-072-51b72394/adoption-local/host-behavior-parity-v20.log",
+          "sha256": "da045adbbb13cceda0006cdc4a75e25ae9c776ee759f077417137409e842a7a8",
+          "counts": [
+            "COMPLETE: 111 host-behavior-parity checks passed; 0 failed, 0 skipped"
+          ]
+        },
+        {
+          "name": "host-behavior-parity-v21",
+          "check": "offline-suites",
+          "status": "passed",
+          "path": "bin-build/release-runs/20261028-015217-072-51b72394/adoption-local/host-behavior-parity-v21.log",
+          "sha256": "6880ea55bf659dd33493404d3048dc4c82120484533efd5ab0d5036901d3008d",
+          "counts": [
+            "COMPLETE: 111 host-behavior-parity checks passed; 0 failed, 0 skipped"
+          ]
+        },
+        {
+          "name": "jit-adapter-coverage-v20-plc",
+          "check": "native-diagnostics",
+          "status": "passed",
+          "path": "bin-build/release-runs/20261028-015217-072-51b72394/adoption-local/jit-adapter-coverage-v20-plc.log",
+          "sha256": "79fc72981bfab4d7647bb6198e87d44d55599cff160357d03e55b809ac2f0540",
+          "counts": []
+        },
+        {
+          "name": "jit-adapter-coverage-v21-plc",
+          "check": "native-diagnostics",
+          "status": "passed",
+          "path": "bin-build/release-runs/20261028-015217-072-51b72394/adoption-local/jit-adapter-coverage-v21-plc.log",
+          "sha256": "7513793918de5d3c06142270022ffbdd031d171cc6a3e7145ced99953f81cc2f",
+          "counts": []
+        },
+        {
+          "name": "native-coverage-v20-plc",
+          "check": "native-coverage",
+          "status": "passed",
+          "path": "bin-build/release-runs/20261028-015217-072-51b72394/adoption-local/native-coverage-v20-plc.log",
+          "sha256": "79fc72981bfab4d7647bb6198e87d44d55599cff160357d03e55b809ac2f0540",
+          "counts": []
+        },
+        {
+          "name": "native-coverage-v21-plc",
+          "check": "native-coverage",
+          "status": "passed",
+          "path": "bin-build/release-runs/20261028-015217-072-51b72394/adoption-local/native-coverage-v21-plc.log",
+          "sha256": "7513793918de5d3c06142270022ffbdd031d171cc6a3e7145ced99953f81cc2f",
+          "counts": []
+        },
+        {
+          "name": "native-safety-v20-plc",
+          "check": "offline-suites",
+          "status": "passed",
+          "path": "bin-build/release-runs/20261028-015217-072-51b72394/adoption-local/native-safety-v20-plc.log",
+          "sha256": "685410b1b351326cafe3e0d3d3d1e195d07b8e69ac895407a45624ccd5be6c05",
+          "counts": [
+            "COMPLETE: 25 native harness safety checks passed; live TIA tests NOT RUN"
+          ]
+        },
+        {
+          "name": "native-safety-v21-plc",
+          "check": "offline-suites",
+          "status": "passed",
+          "path": "bin-build/release-runs/20261028-015217-072-51b72394/adoption-local/native-safety-v21-plc.log",
+          "sha256": "685410b1b351326cafe3e0d3d3d1e195d07b8e69ac895407a45624ccd5be6c05",
+          "counts": [
+            "COMPLETE: 25 native harness safety checks passed; live TIA tests NOT RUN"
+          ]
+        }
+      ],
+      "timeGateException": {
+        "approval": "Maintainer approval 2026-10-27 23:10 (beta.2 only): all 376 check-all jobs passed; wall 1855 s exceeded the unchanged 1800 s gate",
+        "wallSeconds": 1855.438,
+        "gateSeconds": 1800
+      }
+    }
+  },
+  "package": {
+    "schemaVersion": "2026-05-25",
+    "bundleVersion": "4.0.0-beta.2",
+    "packageName": "TIA_MCP_Delivery_v4.0.0-beta.2_20261028",
+    "packageType": "tia-portal-mcp-complete-offline-delivery-bundle",
+    "generatedAt": "2026-05-31T05:30:00-07:00",
+    "refreshedAt": "2026-10-28T09:11:09.8620878+00:00",
+    "target": {
+      "tiaPortalMajorVersion": [
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "publicApiPathExample": "C:\\Program Files\\Siemens\\Automation\\Portal V21\\PublicAPI\\V21\\net48",
+      "runtimeRequirement": "All eight Foundation hosts and Workbench use bundled .NET 10; per-release workers and the Openness bridge require .NET Framework 4.8",
+      "windowsGroupRequirement": "Siemens TIA Openness",
+      "newCliFlags": [
+        "--tia-portal-location <path>",
+        "--release-key {14sp1|15.1|16|17|18|19|20|21}"
+      ],
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ]
+    },
+    "selfContainedScope": {
+      "description": "Eight version-specific MCP catalogs, direct Openness Studio, configurator, examples, documentation, templates and licenses. Foundation and full-engine capabilities differ by release.",
+      "bundled": [
+        "TiaMcpServer runtime and dependent DLLs",
+        "Skill and MCP operation rules",
+        "Static MCP tool roster",
+        "Tool capability matrix",
+        "Complete PLC + HMI project blueprint",
+        "PLC instruction recipes, PlcBuildAndImport JSON templates, LAD recipes and SCL examples",
+        "WinCC Unified designJson screen templates",
+        "Project generation runbook and validation checklist"
+      ],
+      "notBundled": [
+        "Siemens TIA Portal installation",
+        "Siemens PublicAPI assemblies installed with TIA Portal",
+        "Project-specific exported source folders",
+        "Project-specific process logic, site names or business program segments"
+      ]
+    },
+    "entrypoints": {
+      "readme": "README.md",
+      "skill": "plugin/skill/SKILL.md",
+      "mcpServerExe": "runtime/v21/TiaMcp.FoundationHost.exe",
+      "cursorExample": "docs/getting-started/cursor.example.json",
+      "toolRoster": "manifest/tools-list.json",
+      "toolMatrix": "docs/reference/tool-matrix.md",
+      "fullProjectBlueprint": "templates/project-blueprints/full_plc_hmi_project.json",
+      "fullProjectRunbook": "docs/guides/project-generation.md",
+      "hmiTemplateIndex": "templates/hmi/README.md",
+      "plcTemplateIndex": "templates/plc/README.md",
+      "plcTemplateLibrary": "docs/guides/plc/templates.md",
+      "hmiTemplateGuide": "docs/guides/hmi/design.md",
+      "hmiBindingGuide": "docs/guides/hmi/tag-binding.md",
+      "mcpIdeNeutral": "docs/getting-started/configuration.md",
+      "optionalReferenceReadme": "templates/README.md",
+      "bundleValidationScript": "scripts/checks/Validate-Bundle.ps1",
+      "studio": "runtime/studio/TiaOpenness.exe",
+      "versionToolMatrix": "manifest/version-tools.json",
+      "beginnerGuide": "docs/getting-started/beginners.zh-CN.md",
+      "configurator": "TiaOpenness.exe",
+      "mcpServerArgs": [
+        "--release-key",
+        "21"
+      ]
+    },
+    "cli": {
+      "description": "Call runtime/<release-directory>/TiaMcp.FoundationHost.exe <verb> --release-key <key> on all eight releases. Project changes use MCP tools and the project generation framework. install-plc-tools preserves pip's exit status.",
+      "exe": "runtime/v21/TiaMcp.FoundationHost.exe",
+      "verbs": [
+        "doctor",
+        "audit verify",
+        "schema",
+        "version",
+        "config",
+        "install-plc-tools",
+        "help"
+      ],
+      "specFormats": [
+        "json",
+        "yaml"
+      ],
+      "exitCodes": {
+        "0": "success",
+        "2": "rejected, doctor not ready or no successful config writes",
+        "3": "failed",
+        "4": "partial",
+        "5": "outcome unknown",
+        "64": "syntax error",
+        "70": "runtime resources unavailable"
+      }
+    },
+    "capabilities": {
+      "mcpToolCount": 516,
+      "mcpToolLayers": {
+        "L0": 17,
+        "L1": 73,
+        "L2": 426
+      },
+      "hmiTemplateJsonCount": 8,
+      "plcTemplateJsonCount": 9,
+      "projectBlueprintJsonCount": 1,
+      "supports": [
+        "project/session management",
+        "hardware catalog search and insertion",
+        "PROFINET subnet connection",
+        "PLC tag/type/block generation and import",
+        "SCL FC/FB examples",
+        "LAD call-network recipe generation",
+        "PLC compile diagnostics",
+        "WinCC Unified screen/tag/connection generation",
+        "Unified HMI screen designJson application",
+        "button Down/Up actions and tag dynamization",
+        "read-only online live-value monitoring over S7 (port 102) and OPC UA (port 4840): single read, trend sampling (PID step-response capture), watch-table live read, CPU RUN/STOP state, and offline+live tag causal trace",
+        "reflection-based API discovery for uncovered Openness shapes"
+      ],
+      "liteProfile": {
+        "toolCount": 84,
+        "isDefault": true,
+        "scope": "L0+L1 essentials + FindTools/CallTool; covers the full golden path",
+        "optOut": "--profile full (or TIA_MCP_PROFILE=full)",
+        "note": "Other available tools remain reachable through FindTools + CallTool; per-version admission excludes unsupported routes and runtime tools/list is authoritative."
+      }
+    },
+    "fileVersion": "4.0.0.0",
+    "validationStatus": "Delivery 4.0.0-beta.2; engine 4.0.0.0 validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending",
+    "validationRecords": {
+      "engine": "manifest/release-build.json",
+      "configurator": "manifest/configurator-build.json",
+      "delivery": "manifest/delivery.json"
+    },
+    "tier": "full",
+    "buildCache": [],
+    "buildCacheEnabled": false,
+    "checkStatus": "pending",
+    "checksSelected": [
+      "preflight",
+      "binary-build",
+      "offline-suites",
+      "native-coverage",
+      "resource-discovery",
+      "prompt-registration",
+      "product-smoke",
+      "plc-functional",
+      "plc-worker-isolation",
+      "plc-approval",
+      "plc-ecosystem",
+      "plc-stability",
+      "plc-isolated-stability",
+      "plc-contracts",
+      "plc-responses",
+      "foundation-transport",
+      "foundation-approval",
+      "foundation-responses",
+      "gui-tests",
+      "relocation",
+      "approval-self-test",
+      "relocation-self-test",
+      "contracts-self-test",
+      "responses-self-test",
+      "ecosystem-self-test",
+      "package",
+      "bundle-validation",
+      "smoke-self-test",
+      "adapterboundary-self-test",
+      "bundlelayout-self-test",
+      "commenthygiene-self-test",
+      "enveloperewrite-self-test",
+      "mcptext-self-test",
+      "repository-self-test",
+      "scripttoolcalls-self-test",
+      "swallowedexceptions-self-test",
+      "toolslist-self-test",
+      "nativecallorder-self-test",
+      "sharednativepaths-self-test",
+      "responseenvelopes-self-test",
+      "domaintools-self-test",
+      "dotnetsuites-self-test",
+      "nativelifecycle-self-test",
+      "releaseasset-self-test",
+      "dead-tool-references-self-test",
+      "native-mcp-session-self-test",
+      "resource-discovery-self-test",
+      "native-diagnostics",
+      "http-concurrency"
+    ],
+    "checksRan": [],
+    "checksSkipped": [],
+    "changedPaths": []
+  }
+}

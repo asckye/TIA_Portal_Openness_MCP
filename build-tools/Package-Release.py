@@ -72,6 +72,49 @@ def check_updater(record, files):
                 f"Updater build output differs from the validated release record: {layout.UPDATER_OUTPUTS[row['path']]}")
 
 
+def check_stability(files, multi, selected, release):
+    """Require the existing binary-bound PLC soak proofs before candidate or committed packaging."""
+    extended = json.loads(files['manifest/local-stability-extended.json'].decode('utf-8-sig')) if 'manifest/local-stability-extended.json' in files else None
+    if extended is not None and 'plc-stability' in selected:
+        require(extended['release'] == release and extended['status'] == 'passed', 'Extended stability record does not match this release')
+    # P8-04l: the V20/V21 functional, diagnostics, resource and worker-isolation evidence is the eight-release record's PLC
+    # proof (validate_plc_record above); the soaks are checked here against the packaged host and worker.
+    for major in (20, 21):
+        proofs = [multi['plcRuntimes'][f'V{major}'].get('localStability') or {}] if 'plc-stability' in selected else []
+        if 'plc-isolated-stability' in selected:
+            require((multi['plcRuntimes'][f'V{major}'].get('isolatedLocalStability') or {}).get('isolatedWorker') is True,
+                    f'V{major} isolated stability proof missing')
+            proofs.append(multi['plcRuntimes'][f'V{major}']['isolatedLocalStability'])
+        if extended is not None and 'plc-stability' in selected:
+            proofs.append(extended['runtimes'][f'V{major}'])
+            if 'isolatedRuntimes' in extended:
+                isolated_extended = extended['isolatedRuntimes'][f'V{major}']
+                require(isolated_extended.get('isolatedWorker') is True,
+                        f'V{major} extended isolated proof is not an isolated run')
+                proofs.append(isolated_extended)
+        for stability in proofs:
+            require(stability.get('workerModel') == 'foundation-host-plc-worker' and stability.get('isolatedWorker') is True,
+                    f'V{major} stability proof must use FoundationHost and its session worker')
+            require(stability.get('hostSha256') == sha(files[f'runtime/v{major}/TiaMcp.FoundationHost.exe']),
+                    f'V{major} stability proof used a different Foundation host')
+            require(stability.get('status') == 'passed' and stability.get('rounds', 0) >= 10,
+                    f'V{major} local stability validation missing')
+            require(stability['productionWorkerSha256'] == sha(files[f'runtime/v{major}/worker/TiaMcp.PlcWorker.{major}.exe'])
+                    and stability['runtimeSha256'] == multi['plcRuntimes'][f'V{major}']['sdkWorker']['sha256'],
+                    f'V{major} stability test used a different runtime')
+            for field, path in (('scriptSha256', 'scripts/checks/Test-LocalStability.py'),
+                                ('resourceHelperSha256', 'scripts/checks/Test-ResourceDiscovery.py')):
+                require(stability.get(field) == sha(files[path]), f'Stability test script changed after validation: {path}')
+            runs = stability.get('runs', [])
+            require(len(runs) == 4 and {(r['transport'], r['profile']) for r in runs} ==
+                    {('stdio', 'full'), ('stdio', 'lite'), ('http', 'full'), ('http', 'lite')},
+                    f'V{major} stability profile/transport coverage incomplete')
+            require(all(r['unexpectedExits'] == 0 and r['unexpectedFailures'] == 0 and r['tiaConnected'] is False
+                        and r['unmatchedJournalEntries'] == 0 and r['measuredToolCalls'] > 0 for r in runs),
+                    f'V{major} local stability checks failed')
+        require(f'runtime/v{major}/Esprima.dll' in files, f'V{major} script parser missing')
+
+
 def self_test():
     import unittest
 
@@ -286,45 +329,7 @@ def main():
         for suite, key in (('offline-v20', 'offlineV20Passed'),
                            ('kept-code', 'keptCodePassed'), ('kept-code-v20', 'keptCodeV20Passed')):
             require(metadata['validation'].get(key, 0) > 0, f'No {suite} suite result')
-    extended = json.loads(files['manifest/local-stability-extended.json'].decode('utf-8-sig')) if 'manifest/local-stability-extended.json' in files else None
-    if extended is not None and 'plc-stability' in selected:
-        require(extended['release'] == release and extended['status'] == 'passed', 'Extended stability record does not match this release')
-    # P8-04l: the V20/V21 functional, diagnostics, resource and worker-isolation evidence is the eight-release record's PLC
-    # proof (validate_plc_record above); the soaks are checked here against the packaged host and worker.
-    for major in (20, 21):
-        proofs = [multi['plcRuntimes'][f'V{major}'].get('localStability') or {}] if 'plc-stability' in selected else []
-        if 'plc-isolated-stability' in selected:
-            require((multi['plcRuntimes'][f'V{major}'].get('isolatedLocalStability') or {}).get('isolatedWorker') is True,
-                    f'V{major} isolated stability proof missing')
-            proofs.append(multi['plcRuntimes'][f'V{major}']['isolatedLocalStability'])
-        if extended is not None and 'plc-stability' in selected:
-            proofs.append(extended['runtimes'][f'V{major}'])
-            if 'isolatedRuntimes' in extended:
-                isolated_extended = extended['isolatedRuntimes'][f'V{major}']
-                require(isolated_extended.get('isolatedWorker') is True,
-                        f'V{major} extended isolated proof is not an isolated run')
-                proofs.append(isolated_extended)
-        for stability in proofs:
-            require(stability.get('workerModel') == 'foundation-host-plc-worker' and stability.get('isolatedWorker') is True,
-                    f'V{major} stability proof must use FoundationHost and its session worker')
-            require(stability.get('hostSha256') == sha(files[f'runtime/v{major}/TiaMcp.FoundationHost.exe']),
-                    f'V{major} stability proof used a different Foundation host')
-            require(stability.get('status') == 'passed' and stability.get('rounds', 0) >= 10,
-                    f'V{major} local stability validation missing')
-            require(stability['productionWorkerSha256'] == sha(files[f'runtime/v{major}/worker/TiaMcp.PlcWorker.{major}.exe'])
-                    and stability['runtimeSha256'] == multi['plcRuntimes'][f'V{major}']['sdkWorker']['sha256'],
-                    f'V{major} stability test used a different runtime')
-            for field, path in (('scriptSha256', 'scripts/checks/Test-LocalStability.py'),
-                                ('resourceHelperSha256', 'scripts/checks/Test-ResourceDiscovery.py')):
-                require(stability.get(field) == sha(files[path]), f'Stability test script changed after validation: {path}')
-            runs = stability.get('runs', [])
-            require(len(runs) == 4 and {(r['transport'], r['profile']) for r in runs} ==
-                    {('stdio', 'full'), ('stdio', 'lite'), ('http', 'full'), ('http', 'lite')},
-                    f'V{major} stability profile/transport coverage incomplete')
-            require(all(r['unexpectedExits'] == 0 and r['unexpectedFailures'] == 0 and r['tiaConnected'] is False
-                        and r['unmatchedJournalEntries'] == 0 and r['measuredToolCalls'] > 0 for r in runs),
-                    f'V{major} local stability checks failed')
-        require(f'runtime/v{major}/Esprima.dll' in files, f'V{major} script parser missing')
+    check_stability(files, multi, selected, release)
     gui = json.loads(files['manifest/configurator-build.json'].decode('utf-8-sig'))
     if 'gui-tests' in selected:
         require(gui['testsPassed'] > 0, 'Missing configurator test result')
