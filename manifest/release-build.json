@@ -56,16 +56,16 @@
     "skippedChecks": [],
     "changedPaths": []
   },
-  "release": "4.0.0-beta.1",
-  "releaseDate": "20261022",
+  "release": "4.0.0-beta.2",
+  "releaseDate": "20261030",
   "fileVersion": "4.0.0.0",
-  "package": "TIA_MCP_Delivery_v4.0.0-beta.1_20261022",
-  "generatedAt": "2026-10-22T21:34:27.8704389\u002B00:00",
+  "package": "TIA_MCP_Delivery_v4.0.0-beta.2_20261030",
+  "generatedAt": "2026-10-30T17:43:44.9316338\u002B00:00",
   "validation": {
-    "offlinePassed": 4173,
-    "offlineV20Passed": 4134,
-    "keptCodePassed": 4940,
-    "keptCodeV20Passed": 4940,
+    "offlinePassed": 4181,
+    "offlineV20Passed": 4127,
+    "keptCodePassed": 4976,
+    "keptCodeV20Passed": 4976,
     "writeGuardPassed": 9,
     "crashEvidencePassed": 7,
     "versionPolicySdkPassed": 10,
@@ -78,7 +78,7 @@
       "idempotenceChecks": 1,
       "rejectionChecks": 5,
       "encodingChecks": 12,
-      "fixtureSha256": "a363cd48af38dd6a24d08604b93d6931d5aa791aaf48e681b5bd51f45ab2864d",
+      "fixtureSha256": "9707b49b6e3bd3baae0d8d455e7cd3e032cd3a9d64eea31ea26122e818e91549",
       "weaverSha256": "eede395b7cd7c5576654a2fb63a970c0e4cb3987dea3ddf8c5a6286eb382864b",
       "nativeTiaExecuted": false
     }
@@ -87,22 +87,22 @@
     {
       "path": "runtime/tools/TiaMcp.PluginLauncher.dll",
       "length": 48128,
-      "sha256": "26dbeb8091f082e55070e47fc666bd3b7868bcdce3d18956fed5ced849f75109"
+      "sha256": "9eb27a504b8f344672e7ca94fdd63be50beedaf9f6d8874e69cf4d13b17a31ff"
     },
     {
       "path": "runtime/tools/TiaMcp.PluginLauncher.exe",
       "length": 162816,
-      "sha256": "4846966ec58c8768b98bf652388edb5a091d7294f5ba1e0772ed07435bd4b765"
+      "sha256": "dc0fd311425b0fc7f0c7deb25f4f61ba4fc59b2d3cff710c19869d56e0338a14"
     },
     {
       "path": "runtime/tools/TiaMcp.WriteGuard.dll",
       "length": 20480,
-      "sha256": "b7d99ddaadeaef04ba52ea7fa67e4730843baf9e85c64ff66babd9e7ac34c924"
+      "sha256": "0724b92ebb1d8d4542d83cab7f3d1b0ed5291594bcf8eda06020e956615935b0"
     },
     {
       "path": "runtime/tools/TiaMcp.WriteGuard.exe",
       "length": 162304,
-      "sha256": "624e879663113604c7375b74e15a8ab99c167619bd5889979ef2a394a551b1a0"
+      "sha256": "e05b21ce5c524facee6953b8600f9e75555ab8c9540f4d43e9d7fdff9f1693fc"
     },
     {
       "path": "runtime/verification/Mono.Cecil.dll",
@@ -128,7 +128,7 @@
   "updaterFiles": [
     {
       "path": "runtime/tools/TiaMcp.Updater.exe",
-      "sha256": "080ea54ea5f4d4517f4e2a1929118c300ec87671fbbdd815c2a3c7d416d6689d",
+      "sha256": "460b4fe8552a3378db9599a3bf4ebc5ab355b9892e9996bd82fef23b80f17232",
       "length": 54784
     },
     {
@@ -208,7 +208,7 @@
     },
     {
       "path": "build-tools/release/BuildReleasePipeline.cs",
-      "sha256": "28aca05b19124aea98572abbd6d2285c59b03afee6d2160bf730036c60e3a1f1"
+      "sha256": "3f33e81cb5ab5f37b0b788b7330c15fda02c08aeded74ef9240319f8dec0740d"
     },
     {
       "path": "build-tools/release/BundleLayoutChecks.cs",
@@ -228,7 +228,7 @@
     },
     {
       "path": "build-tools/release/CatalogGenerator.cs",
-      "sha256": "8f06fe758ade3a395ffbb4818485c53a83895ca1a4b1eaf929ff345843480124"
+      "sha256": "b073a294467f7597438353871c8eaaa0593c00bad9337b64ae68e1529635ed34"
     },
     {
       "path": "build-tools/release/check-build/CheckBuildTasks.cs",
@@ -240,7 +240,7 @@
     },
     {
       "path": "build-tools/release/CheckAffinity.cs",
-      "sha256": "a970be4e3376dfce1ab7597251541d2e2e0ed7de960298af1d7a70d3bbd77c96"
+      "sha256": "42618c543dc71fff83e13d6cae4fdb4848610b95d397a3e3e34f357b46234d20"
     },
     {
       "path": "build-tools/release/CheckAll.Build.props",
@@ -252,11 +252,11 @@
     },
     {
       "path": "build-tools/release/CheckAll.cs",
-      "sha256": "1773cd6d618fac385c2a12ea40057f77533faeacff6c753a7b41b7cd687f3499"
+      "sha256": "7a701b34541b87c1693bd94d18a1a032ac5a2c228326635ac689711157e7ad07"
     },
     {
       "path": "build-tools/release/CheckAllBuild.cs",
-      "sha256": "cfa14a593af1f83536f3e1fb4e7ace74825f7f780e8fd2c7d23ed5c5de897c45"
+      "sha256": "55ddf4cb52c6d1949b41a8bc93ff7594c5146832e3e2d1e9615a85a058b7eda2"
     },
     {
       "path": "build-tools/release/CheckAllInputClosure.cs",
@@ -264,11 +264,11 @@
     },
     {
       "path": "build-tools/release/CheckAllInventory.cs",
-      "sha256": "2152d3c7a49caf7593ea8dc415c58913f588c8f8fe777a381f2a59861113ca0e"
+      "sha256": "d52354305b26bec31a4493b5170f98c5a3768ff30d14a5e6ac56929d726a8880"
     },
     {
       "path": "build-tools/release/CheckAllLayout.cs",
-      "sha256": "ac394829a20daaedb8bda74bdb4ccb73205ccdeeaa8971f24cc8d1b091d78050"
+      "sha256": "e7eb7607ab43ab7c23336cecc57e76aeda433a31578402a20d22dfa07b9958c3"
     },
     {
       "path": "build-tools/release/CheckAllResultCache.cs",
@@ -276,11 +276,15 @@
     },
     {
       "path": "build-tools/release/CheckAllWorkspace.cs",
-      "sha256": "c851b92840817a4dfe698707741b1a99af93f8b9fcab1ec7c6967848977c9cf5"
+      "sha256": "e2024709f2d67e11e3ee2d8e6ebd856d8bce4893115ac443923b2d007303b92d"
     },
     {
       "path": "build-tools/release/CheckScheduler.cs",
-      "sha256": "e5575c54199b0e8712e8e00037556084f9e1837c966b8659bada0cb1d84450db"
+      "sha256": "e75b3b93e810ee21e3496aae605b0787368d81b846e2563f48ac2b2c8ea68da7"
+    },
+    {
+      "path": "build-tools/release/CiCoverage.cs",
+      "sha256": "5a86a81daf12fd70ca7f648342ab3ca9d8bddf6eab22263262f102143f732100"
     },
     {
       "path": "build-tools/release/CommentHygiene.cs",
@@ -296,7 +300,7 @@
     },
     {
       "path": "build-tools/release/DeveloperBuilds.cs",
-      "sha256": "ddaa795f2679d5fbdc63fb07e1b99bd009d505df40076948deb16e419c826e0f"
+      "sha256": "89c5e49bdee3228da06cb9314352709ba3e7ad103bf81989eb052a87d3feabbe"
     },
     {
       "path": "build-tools/release/DocumentationLinks.cs",
@@ -316,7 +320,7 @@
     },
     {
       "path": "build-tools/release/FastSuites.cs",
-      "sha256": "3a7859c1afc334c95d77da94e65597406214a5dc34da2320228bd94b37938086"
+      "sha256": "2420e1655fca92dc65b94ca863e0c7c649a79618aa2097418256077624c13e95"
     },
     {
       "path": "build-tools/release/GeneratorCommands.cs",
@@ -356,7 +360,7 @@
     },
     {
       "path": "build-tools/release/Program.cs",
-      "sha256": "f4f02d71a440da2a1bee4393225bbdbebc6c395c09a75fe01c7b004afac00466"
+      "sha256": "e1a3f37fe93127c57156a3a2ac42317c9962456b86fa0a902bd3211b27e7b173"
     },
     {
       "path": "build-tools/release/ProjectDependencies.cs",
@@ -371,16 +375,24 @@
       "sha256": "26122285e1e2651d87793b225c08b5dedd6554a7fc2c1d26ad705c633d4b9aea"
     },
     {
+      "path": "build-tools/release/ReleaseAdoption.cs",
+      "sha256": "3fdbb54f7525eab06f8994d325bbbbf7d40ae2628c1cb825ddfe9f487524f0c4"
+    },
+    {
       "path": "build-tools/release/ReleaseCandidateChecks.cs",
-      "sha256": "5f3bef01f3768064201aad2099466f643003869c56bba54338d46fd7a3e06946"
+      "sha256": "a76a9a416d3ce54ad5e4ff78dc2fe8ab693f98d1faca3624745cbc534c4f652b"
     },
     {
       "path": "build-tools/release/ReleaseCommands.cs",
-      "sha256": "9cf0593c6072295471453a28bc467e585200b73c57a365df398466cb5385b192"
+      "sha256": "315ae6b2689bbb947c62297305305aefc3a7f1dde22d00638f2e8522da9e1f71"
     },
     {
       "path": "build-tools/release/ReleaseCommandTable.cs",
       "sha256": "d98220df41050ca7cb1ac605a26b7f9779fa5682411a011284ff687f0b7f6be7"
+    },
+    {
+      "path": "build-tools/release/ReleaseEvidence.cs",
+      "sha256": "2b9c6957fac710d94e9a806b447f5d79ae89303245f33692b3371a153f1f3214"
     },
     {
       "path": "build-tools/release/ReleaseMigrationGenerator.cs",
@@ -392,7 +404,7 @@
     },
     {
       "path": "build-tools/release/ReleaseProduction.cs",
-      "sha256": "6026470cc7bf41ae65a61063a5197a575d3c9eb1625d4d660c6f7c456a248e2f"
+      "sha256": "d6cc0449175b832834329bdd08a6f91d7b952983ea115f1c38f9ecc1a0d53986"
     },
     {
       "path": "build-tools/release/ReleasePublisher.cs",
@@ -400,7 +412,7 @@
     },
     {
       "path": "build-tools/release/ReleaseRecords.cs",
-      "sha256": "11329aca78a545435061c588793b7c820729c67d2a5ce2fa8d368c1fc4b4c113"
+      "sha256": "8ebe7892762ff540d90a10cd569114edd78ea66bc1d3a668f3dc3f91bccd8825"
     },
     {
       "path": "build-tools/release/ReleaseRecordSnapshot.cs",
@@ -420,7 +432,7 @@
     },
     {
       "path": "build-tools/release/ReleaseVersions.cs",
-      "sha256": "82297e7881c9e36821a5d915ab3bbbc869c1326d808244df55980b16d9b0155c"
+      "sha256": "45463ea21b366380b1eaa13ce2a511f664d4522651ed602334ef1554a62f314c"
     },
     {
       "path": "build-tools/release/RepositoryChecks.cs",
@@ -460,7 +472,11 @@
     },
     {
       "path": "build-tools/release/SuiteSharding.cs",
-      "sha256": "43f5267d838c76042e43761654fe3ca4038dfd00fbd23eb5dc50c232dc7818bf"
+      "sha256": "c7caa5060ff51464d1df92bf0805f249e5460f0b240c597d008a484f5bc08078"
+    },
+    {
+      "path": "build-tools/release/SuiteWorkerCopies.cs",
+      "sha256": "14b2ce96f182098b23ba2b49ef5c50a210d7901ec7b047867cd4ef3350b5d982"
     },
     {
       "path": "build-tools/release/SwallowedExceptions.cs",
@@ -472,7 +488,7 @@
     },
     {
       "path": "build-tools/release/TiaFeatures.cs",
-      "sha256": "ad68adbe6d38f39bf99e1f2effd94d22ae00417af19bf78b82566b42e1e57ab0"
+      "sha256": "9ec921b8ae9ea92c947dc93c2e7365a352f792ca4c6fabce05afd4ccd4e17d71"
     },
     {
       "path": "build-tools/release/TiaMcp.ReleaseTool.csproj",
@@ -572,7 +588,7 @@
     },
     {
       "path": "src/Adapters.Contracts/EngineeringCredentialRules.cs",
-      "sha256": "e1e1b427939a11d344036889e26a7b2d5cb5b51e8c1f31f366504059b8fffa85"
+      "sha256": "65fdf43cf58b0168dc77895bea643491a343fb2b60d9fcded34179e21f251173"
     },
     {
       "path": "src/Adapters.Contracts/EngineeringCredentialRules.Online.cs",
@@ -620,7 +636,7 @@
     },
     {
       "path": "src/Adapters.Contracts/HmiContracts.cs",
-      "sha256": "4da72ceb75e5bc8dbf0b5ef97e34193be0249e1f06a60d97c225664c09e0091e"
+      "sha256": "731635645d38a3df277507aef7fd17ad7388fc1841cc2ced3509f548ce08fbd4"
     },
     {
       "path": "src/Adapters.Contracts/HmiReadPolicy.cs",
@@ -628,7 +644,7 @@
     },
     {
       "path": "src/Adapters.Contracts/HmiScalarPolicy.cs",
-      "sha256": "3c3e146ab9826fcd19935895465f2d0e1c929495e154a1a32485e7792370dfc8"
+      "sha256": "3473c2377b8dd4f6fc4bd49c291dbab506ee0e5a483c859fe697716ba6c58426"
     },
     {
       "path": "src/Adapters.Contracts/IOpennessAdapter.cs",
@@ -648,7 +664,7 @@
     },
     {
       "path": "src/Adapters.Contracts/LibraryCapabilities.cs",
-      "sha256": "e5da7198a4e679491eaede56f7f1686bc161df65c98e443b2e94cafeecbe07c6"
+      "sha256": "b1ec9fd84f1c0bbc1b5c4c3b11166a9d8096f484665fb9185e0baa5788829e90"
     },
     {
       "path": "src/Adapters.Contracts/LibraryContracts.cs",
@@ -660,7 +676,7 @@
     },
     {
       "path": "src/Adapters.Contracts/NativeResultStates.cs",
-      "sha256": "3238cf52ac7c7e0688fb2a7025d862ea6e4a46f8476d5a9b3ae7bc99b4ddd10c"
+      "sha256": "bd0d24636d5cb9c26d10da53da338d199eac425d9590c9e64f29fb269a32110a"
     },
     {
       "path": "src/Adapters.Contracts/OnlineCapabilities.cs",
@@ -684,7 +700,7 @@
     },
     {
       "path": "src/Adapters.Contracts/OpennessReflectionContracts.cs",
-      "sha256": "453c50106f6e1eff1c1536cf9f38f05acfbfd7e02fd6cd2a977fe235a7b44ba5"
+      "sha256": "91c9082b69be6f0ff5d64617acda5a4c6b9536189d24c723f4656e8028e8e242"
     },
     {
       "path": "src/Adapters.Contracts/OpennessSessionRules.cs",
@@ -692,7 +708,7 @@
     },
     {
       "path": "src/Adapters.Contracts/OptionalEngineeringCapabilities.cs",
-      "sha256": "8972ce80f3499ce2bf164ef15c4dd299820b5be2bed1d87d45b7478e7a35ab9d"
+      "sha256": "4e83ebdb2b0f8a538b2135aad98fbd991f95ea8a837fad86fe2cf884d3c0ae4d"
     },
     {
       "path": "src/Adapters.Contracts/OptionalEngineeringContracts.cs",
@@ -791,8 +807,20 @@
       "sha256": "119e3ce7d680ee9be02a48a67f74aa98937bf62df9753850d0232c61cb2bc424"
     },
     {
+      "path": "src/Adapters.Contracts/PlcImportOrder.cs",
+      "sha256": "34cd8a1caa222a683c1175b1e38847e2d722436612a0aa80a3e7a06bed1a9e89"
+    },
+    {
+      "path": "src/Adapters.Contracts/PlcInstanceDbPolicy.cs",
+      "sha256": "61825977f3d66d29127ef7e1202e961c4ed44fb287bb824ef365567f23ef8164"
+    },
+    {
       "path": "src/Adapters.Contracts/PlcLifecycleContracts.cs",
       "sha256": "0625af03a06dced9efe2e68c746d11c99522e42fd42ca09e8707d7d6e7f6b5d0"
+    },
+    {
+      "path": "src/Adapters.Contracts/PlcMovePolicy.cs",
+      "sha256": "62d6f9dc7006bcd3b7b0c4640209704b11fdf0beb1e4857016a26ccc8c390292"
     },
     {
       "path": "src/Adapters.Contracts/PlcOrganisationPaths.cs",
@@ -812,11 +840,11 @@
     },
     {
       "path": "src/Adapters.Contracts/PlcSoftwareCapabilities.cs",
-      "sha256": "d773d2dcd696c441183016d948196a0580be96f4dfa15442678038336ea0f795"
+      "sha256": "d6a0ad82e660342acb9badcdd27fe4f235362155d740c09bf9ad9fbe7a63e89c"
     },
     {
       "path": "src/Adapters.Contracts/PlcSoftwareContracts.cs",
-      "sha256": "707e795debe945a8463166acb22762d15420bb5f7811c91a6719d7025bb1e87f"
+      "sha256": "543af99d077ed1cdcf5d8f1ac8c482cd6825d000de1b0c281e16af5b4df7dda6"
     },
     {
       "path": "src/Adapters.Contracts/PlcSoftwareRead.cs",
@@ -844,7 +872,7 @@
     },
     {
       "path": "src/Adapters.Contracts/PortedFamilies.cs",
-      "sha256": "bf9e41cc2cf8367576c9c45b40e04d62bcd51ebbf35b489860525a322b277006"
+      "sha256": "d9f742d6d88fca1326cda6044d10a762609daa97e9ca39b6ae1ec92414e40f1b"
     },
     {
       "path": "src/Adapters.Contracts/ProjectLifecycleContracts.cs",
@@ -863,12 +891,20 @@
       "sha256": "4c789aa07d297af98fd2bc95ce71c327754aa3b83bf006f233204ea97b6b2aab"
     },
     {
+      "path": "src/Adapters.Contracts/SecurityAttributePolicy.cs",
+      "sha256": "a1e695a724b2efa1f3f34e87481206c50ec387e66ab6db1fa506cbdd8802b02a"
+    },
+    {
       "path": "src/Adapters.Contracts/SecurityCapabilities.cs",
-      "sha256": "34abb3a71137aeca5b9918cfa48c9a5a8868f6af9e8b01eb4f6680a7eefac749"
+      "sha256": "a09e1a55f80eca2ff1ccbb2a2c93a67f944a2f9eb1b4f325cfc752fd4cbdd969"
     },
     {
       "path": "src/Adapters.Contracts/SecurityContracts.cs",
       "sha256": "9f9ad8a50406eab8c1db79e9a033517c1446ac474d01ec84bb8582f43785589b"
+    },
+    {
+      "path": "src/Adapters.Contracts/SimaticMlImportWindow.cs",
+      "sha256": "4c5b4e2701959cd657e0af1156508ecba60aed8a8f68d0d21e41b3d42046c814"
     },
     {
       "path": "src/Adapters.Contracts/StudioInterfaces.cs",
@@ -900,7 +936,7 @@
     },
     {
       "path": "src/Adapters.Contracts/UnifiedContracts.cs",
-      "sha256": "6fdbe4663305dda4fc5c4c55b27d6dcd1fc17babc4befc94d7ebf607855ef13a"
+      "sha256": "623ecd4b863fad0418f3e5b448b28c0916d7d2fe3a70a6df7f5f465b4ca5247b"
     },
     {
       "path": "src/Adapters.Contracts/UnifiedHmiCapabilities.cs",
@@ -908,7 +944,7 @@
     },
     {
       "path": "src/Adapters.Contracts/UnifiedHmiContracts.cs",
-      "sha256": "cd904e6e7be365d7420a8dce94da8e42fdf11bcbfa61c348f113ea0123f5bc81"
+      "sha256": "6c0785398eab05798d125068fd5f6ec5b30733db40d226f9d6e513606f7219dc"
     },
     {
       "path": "src/Adapters.Contracts/UnifiedHmiDefaults.cs",
@@ -944,7 +980,7 @@
     },
     {
       "path": "src/Adapters/build/Adapter.Sources.props",
-      "sha256": "1f8a62c65130c871e2f3c3f73cf50b74d7e83edf7c026edb4745f5e517f278a7"
+      "sha256": "380bcc82cc3b82eb15466d5f6c731d878cdbd8f64d7c9ef1f1584893a2aab2ed"
     },
     {
       "path": "src/Adapters/build/Test-AdapterInputs.cs",
@@ -1128,7 +1164,7 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/ClassicHmiFoldersAdapter.cs",
-      "sha256": "af2473509c4d1fbbb6ae048aca7e97d3e891dd73141fe9e9ec82d890dc68f844"
+      "sha256": "1a50121ee3cc8149121368a59778cb18da32559782b6a627500fc85690bf1a36"
     },
     {
       "path": "src/Adapters/Native/Hmi/ClassicHmiFoldersLogic.cs",
@@ -1148,7 +1184,7 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiAccessHelpers.cs",
-      "sha256": "8e87e0e51b6eec466eada40bb42acc7980bd8e083ab03f1d84f8a7a2266ec543"
+      "sha256": "4c5a933dc47a48792fc0fb03622dfcd92e8f7036caa3e30b02587c0a44ab6564"
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiAccessPrimitives.cs",
@@ -1160,7 +1196,7 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiDescribeAdapter.cs",
-      "sha256": "d9daab6103c05ac80a46a47c4c68b071831792043350c395cf6ccfc02fcf1e1a"
+      "sha256": "e85e0e79d3582c081750674f99639a5370a7ac4a2128a8b03b2b7e63b033720f"
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiDynamic.cs",
@@ -1176,15 +1212,19 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiEvidence.cs",
-      "sha256": "d8124dd44ea293bd1592552eaf7c23f154a38c6f59a1d82a103aa4fddfa4f0b4"
+      "sha256": "38bf6fb013e2d18d18bc2fe2348f8fd678e2cd437657960225078b1d823415af"
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiExactAccess.cs",
-      "sha256": "acc81cf6c1e662c78866080adf440dc3730e7d0e45ac961d334f227fdbab33d7"
+      "sha256": "0fb655d214bbe85520f3f55eaa0b6372a4d12b725adf2305033460ab6be1e987"
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiExchangeAdapter.cs",
-      "sha256": "08f01d7dc61ec1cdbe5f5e3a58e575573772543f4671258988de5036ed68d8c6"
+      "sha256": "141866ccd164aedbc65a5a389a22c42c5cdc9c4cc8a3fa57c0bd220d554bcc24"
+    },
+    {
+      "path": "src/Adapters/Native/Hmi/HmiExchangePolicy.cs",
+      "sha256": "b840f5a73e8e070bf76db2130728560bd13e3eff374c2c4c7d70e23e615d9178"
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiInspectionPortAdapter.cs",
@@ -1208,7 +1248,7 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiSession.cs",
-      "sha256": "a93de74fa3ea8f9cbc12826c1845da8f4f7ee999da491e78f7309c865c5d12cb"
+      "sha256": "be00426c17943516de6e9ef0cb1f6b0c8df23254963b0fd618546a9cbf5e8d2a"
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiSnapshot.cs",
@@ -1232,7 +1272,7 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiWorker.cs",
-      "sha256": "017e92ddde3c4bbb56b41d5fbad26f7fbd3d5357bd4c6670ec198faee4d78285"
+      "sha256": "db5de985c93330735e14508d93f4b759571a89a7a0af6fd5d8d26e9b5d0f2856"
     },
     {
       "path": "src/Adapters/Native/Hmi/IUnifiedHmiInspectionSession.cs",
@@ -1248,15 +1288,15 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/MigrationRead.cs",
-      "sha256": "c000917cbcc0092d17a3bb3e25ae1ac6cde40fafeb12584d23252bd67051d9da"
+      "sha256": "333141d28660357c5f7263bb58a018cf018a6007011088446a98fd5213ff0627"
     },
     {
       "path": "src/Adapters/Native/Hmi/MigrationReadAdapter.cs",
-      "sha256": "553a7c3a155577ff88a1f7453f2898a48fc7997ba2dced0b2a3895e8b1c5db94"
+      "sha256": "aa7656efae7ff14f77dcbde3124dee6f7c35f33f712829fe03267c68705b7339"
     },
     {
       "path": "src/Adapters/Native/Hmi/MotionProDiagClassicHmiAdapter.cs",
-      "sha256": "6595ec8aa088a0d6af0c7f7aab13668c8abe3a0dd74f163247ed11c598749866"
+      "sha256": "52cd534e749e1002293e65e7b375d24f5fb6def69f076e62f3bd9cc6ef1cc220"
     },
     {
       "path": "src/Adapters/Native/Hmi/NativeExportCapture.cs",
@@ -1272,11 +1312,11 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedCrossReferences.cs",
-      "sha256": "a01f8cee2eed0ef75255a1d5b1bf56ceb7a18e31a1f65b3def5fa3bb3c01a817"
+      "sha256": "f5ab8656ac0847f385b66d7f3b18b2c1735ed70e6bcc88b1d3ed9ddc70f7e502"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedEngineeringAdapter.cs",
-      "sha256": "60060d0856abb1d6eb7016e950128388320ce0a29dff6b36266220791c1956e9"
+      "sha256": "a18024785d362e07d2663bb8517971d6d81f7bf362eef3b859677710ff628113"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedEventOperations.cs",
@@ -1284,11 +1324,11 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedEventsAdapter.cs",
-      "sha256": "eccb56eb3f7f7fe26a48b82d04af0317f77199d4faaa85b12042a8ba30b97fc7"
+      "sha256": "6dbd37815bb2ce32c479dad2a1049fc7ce19f6b4a2405b40b85d1d848f1f282f"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedExchangeAdapter.cs",
-      "sha256": "d6486c9ce5dcdadb4da1b1a64f7c333bd1e3163384cb64acd76f44ffe2bdb3e7"
+      "sha256": "be0607cf2b555fb973029132bbf675eafc7ac44c186194dd35df1ba1364a8087"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedExchangeLogic.cs",
@@ -1308,7 +1348,7 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedHmiAdapter.cs",
-      "sha256": "195fb8db63d6ba326194a48734c6f308004aec911c165af817e06c55fc64f8e5"
+      "sha256": "263ae67ce09fbba211f5f9fc4b9e4a9a8194889e55f7bd627d4f10d79be82d85"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedHmiExactAccess.cs",
@@ -1332,7 +1372,7 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedHmiWorker.cs",
-      "sha256": "55fecd8e8ab05141cff703bd9e8913716bbe200f954f39e5b36fc64861af383c"
+      "sha256": "7f13d8937f0c57dc96b14c983d36e1c74d4d4e88230cb6ae6abc3210651a7824"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedMultilingualText.cs",
@@ -1340,15 +1380,15 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedNativeRead.cs",
-      "sha256": "cfbb3ac03d1d1f675d80bf62a997cf761d4807d29d1c94b17cb89fd964255479"
+      "sha256": "41b671c697ad2e9aeee1377162aa9d11a784cdcb76f96e6b6a5a5b61b11267f6"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedObjectAddress.cs",
-      "sha256": "0174429c78eee2db401e1a9820308e2b6b0aae7ce7ab10ac32e5a59d1d626918"
+      "sha256": "db386c2829ee22a571804b123ac20b22a3d7d5b09552485aa7d8562f2be59dbf"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedObjectServicesAdapter.cs",
-      "sha256": "f204f76b335ea2dd360d459a9736a584086f4d6e892d5f214b994262c75f9216"
+      "sha256": "6e94f233b6421cdaed72823b7a3309328c2458b1713ddd9af63f45309f35044c"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedPrimitiveBridge.cs",
@@ -1368,11 +1408,11 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedScreenItemLogic.cs",
-      "sha256": "a37bcfcf7e4e7f0e749366817a4b91408b7db4da8521ec655cdea21e0288009a"
+      "sha256": "08dee23f982d714dffda1cecb701d991afdb8d071c3d86480186184f1bc3dbb3"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedScreenItemsAdapter.cs",
-      "sha256": "263b190e8add36ee7dfcb88230ec8a8b0914de2190f391fb853add4a908ecb78"
+      "sha256": "839fcab8724595bd9c49c6bda1949e7246ece2f6cefaeefd12809c8b69a6cfde"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedScriptAccess.cs",
@@ -1388,7 +1428,7 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedUiModelAdapter.cs",
-      "sha256": "6e94fb2066d861d00ce36eff5c5242fdd9580d6a361c528d9aff75dcc1dd0a87"
+      "sha256": "728ab98e3a82899a25b99e045506d3c9d557c9f9e463b95f6641d90c026ad5a4"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedUiModelLogic.cs",
@@ -1396,19 +1436,19 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedWorker.cs",
-      "sha256": "15df2af0b39a2ce4e53c2d1d0f94fd5757ad7e9bb34cf0e411952bff5e9eccdd"
+      "sha256": "419393436513238ce380d360853d4cd7289ba196854565a608fc8ce9aaf40fed"
     },
     {
       "path": "src/Adapters/Native/Libraries/LibraryPolicy.cs",
-      "sha256": "8b66d683fa156f5236ac3658a4a814bba8327b675b8b235c6e139d1006c83b1e"
+      "sha256": "3674c6bfd86855d3ce116db416ff36f55189bb32077948a495e4b2ffd41d2ec2"
     },
     {
       "path": "src/Adapters/Native/Libraries/LibraryPrimitives.cs",
-      "sha256": "6ece6e40b93e676da41ccd50e6212436c9edd52e04e9d066bc4fc6110f0c8f91"
+      "sha256": "05a518b865a8c0d2d105bc4958f6689cd2c9f7429b21dd819dc773fcb8a0d58c"
     },
     {
       "path": "src/Adapters/Native/Libraries/LibraryService.cs",
-      "sha256": "206a9f36368ecde649a08be02e8007454f3b80d2cc3a5618a43e8860b76cc007"
+      "sha256": "89b4286ebd722421541b56152c9ea3fa6724f1a61b3504df990b4863d1c634e2"
     },
     {
       "path": "src/Adapters/Native/Libraries/LibraryWorker.cs",
@@ -1452,7 +1492,7 @@
     },
     {
       "path": "src/Adapters/Native/Optional/DccAdapter.cs",
-      "sha256": "c431c03653d103f99187f8d8173b2b4717f693cace27f006c5ba43bcc0854405"
+      "sha256": "c0848af10841634d3c5d2ff9fc5cddc33130d7e97a0aa9feef906b124085bb24"
     },
     {
       "path": "src/Adapters/Native/Optional/DccPolicy.cs",
@@ -1460,7 +1500,7 @@
     },
     {
       "path": "src/Adapters/Native/Optional/LegacyOptionalAdapter.cs",
-      "sha256": "18e5a4eee8ced968197ca75c4555b8fbf99db2b0d970cf38d3612cd734cfc81d"
+      "sha256": "98a4876632f7d0a63ec2bc3a3c818fdac3d19f24cb2b53bbba031e3245396cbd"
     },
     {
       "path": "src/Adapters/Native/Optional/OptionalAssemblyAdmission.cs",
@@ -1468,7 +1508,7 @@
     },
     {
       "path": "src/Adapters/Native/Optional/OptionalEngineeringAdapter.cs",
-      "sha256": "ed053868c8519e19fe94a547719f4ef622ca2906b28ce7a0f2b636f0b0276f97"
+      "sha256": "898ef35b066fbd906cd1adb7bb190ff8e5e2bba1ff6cfef64fb4dd9cf6f0f2aa"
     },
     {
       "path": "src/Adapters/Native/Optional/OptionalEvidence.cs",
@@ -1479,8 +1519,12 @@
       "sha256": "84b07a01bfbccc5f77019c440a7fd7d22064b7cfde4d06e7d27c18491f454755"
     },
     {
+      "path": "src/Adapters/Native/Optional/OptionalNativeOperations.cs",
+      "sha256": "d03e13584542d0378d3125575801e75d545ec463ac1149f244741f905cb23fa1"
+    },
+    {
       "path": "src/Adapters/Native/Optional/OptionalObjectAddress.cs",
-      "sha256": "e65d81962e716f09d7177244d17e078ddef93752018e6321919938102f86129a"
+      "sha256": "658ac59d99416a7b6c9a94c42fb340867d6b27161084823389ee203f66a31876"
     },
     {
       "path": "src/Adapters/Native/Optional/OptionalRules.cs",
@@ -1512,7 +1556,7 @@
     },
     {
       "path": "src/Adapters/Native/Optional/SivarcAdapter.cs",
-      "sha256": "1c4aa82ed3e6d1f43a74a01277565d834bd30a58aa12b6cd21b8c4e73189cef0"
+      "sha256": "4df40d1cd1b0e0715ab6073a556c74e915373258197e3a795922e8301285df95"
     },
     {
       "path": "src/Adapters/Native/Optional/SivarcPolicy.cs",
@@ -1520,7 +1564,7 @@
     },
     {
       "path": "src/Adapters/Native/Optional/StartdriveAdapter.cs",
-      "sha256": "5ae617d21e1d91461554edb6da06b5f57c3fd5308eeb2fd603445f3f4b4d4b2e"
+      "sha256": "3e83f031535a5dd04f9a0238841b6d3b7f1aa8770afde1730667f6287c53bab4"
     },
     {
       "path": "src/Adapters/Native/Optional/StartdrivePolicy.cs",
@@ -1572,7 +1616,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/EngineeringFileExport.cs",
-      "sha256": "e76989ca3884c76aa3cb001a70b1a2836b9d77cfd8cf0d4eede2966183f5c6a6"
+      "sha256": "ccefa2c722f2f8ba533150b4ed1ca98cf1f77582cf67d6634751f50023ad8ed6"
     },
     {
       "path": "src/Adapters/Native/Plc/IPlcOrganisationSession.cs",
@@ -1580,7 +1624,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcArtifactExchange.cs",
-      "sha256": "b2ddf1bd1305b60f2191adf7e09f06a47efbe92d98fed85d444991c81bbbce12"
+      "sha256": "3fe6f54d0d9e5003933b2ac8ae21dbc26d4086a964e24685ce734b1bfb5ac9a5"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcB5Adapter.cs",
@@ -1648,7 +1692,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcBatchExport.cs",
-      "sha256": "e2b928ed9a5a8b27ab5cd60038f20df22ad0884430de18a24ba710c198e85bee"
+      "sha256": "c76aae5b6f6de2fd7310f932bd13dfe683b298396ea652a721ce619acd28f99c"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcBatchExportPolicy.cs",
@@ -1656,7 +1700,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcBatchImport.cs",
-      "sha256": "1c98233afa90a6406e0443fcaaa25eeb9094a9786588de9dce70d42a75dddf5b"
+      "sha256": "bd671a445e5030fab4c6195c9c38e7fe714c855e705febf939d1653c7f3daa53"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcBatchImportPolicy.cs",
@@ -1680,7 +1724,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcCompilePolicy.cs",
-      "sha256": "1edf27c031327c647471f5b731b905dc517eb9eea8e376b0e1463488fea85f56"
+      "sha256": "de5a0b46992aef93ea26321c8fc02ce6c726592578f366463c98513596085f09"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcCrossReferencePolicy.cs",
@@ -1688,7 +1732,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcCrossReferences.cs",
-      "sha256": "d8f3798817bacc9fdb79a0b74719c5b9f12fea552695fe150ba4bb5595a878fb"
+      "sha256": "4fae843fbe3db6499bccf8ef65b180270ca3ac6d4d7f82c2ce2419aa07c5a31c"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcDeviceCompile.cs",
@@ -1696,7 +1740,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcDocumentExport.cs",
-      "sha256": "002d5bdf1e721652d6d27b04dde2621069353fa46f97377e3dcdccdedc09cdd5"
+      "sha256": "a0899de776fa31bfda05f578fb7f3a587fa5c0fc3bcf4179703122896b1bf9fd"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcDocumentExportPolicy.cs",
@@ -1712,7 +1756,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcDocumentPrimitives.cs",
-      "sha256": "8c31160b8f24f02b24a695065a0c8e5b307a38997ec4bfb6827d3fe9d7d982db"
+      "sha256": "3c7aa3b0fd1045cd59748553a75f8b1df273f30507e63039a4c9b47b74cb1237"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcExchangePolicy.cs",
@@ -1720,7 +1764,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcExportAdapter.cs",
-      "sha256": "ccfb3e9281805686042d39b0b9566b3340ab7998f80b456a15bc5c608d49dbec"
+      "sha256": "959c845e82377f6286524a482dfdab61ca676dc4e7933b14b5e1e9cf2e94d97f"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcExportCandidate.cs",
@@ -1748,7 +1792,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcExternalSources.cs",
-      "sha256": "8f8d0b670c15830155153f91a858dfe5f1374f9b5b8cb93a41d150255b6bf51f"
+      "sha256": "9526164132b235cec040f3f2341432ad959be48469d5f6ad34ac3fcbbba53b6f"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcExternalSourceWorkflow.cs",
@@ -1768,11 +1812,11 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcGroupOperations.cs",
-      "sha256": "3a08b4e76bcb0c4c46bf7fd29c6ba58b5cfd930075a336ca1f43580cc99ee135"
+      "sha256": "2b9aec0817223c7e295134fc964a22000e252cb74b1ed3571ac6ea83d139a4d6"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcImportAdapter.cs",
-      "sha256": "0fc48d65ece49086bd0c1eea16f9bdd40c0c3662aa53cd2ea506f855c560486d"
+      "sha256": "5fe053d8029088ea21e97d67d13d673eedf7b23156338ecc20a81f54a36cb3a5"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcImportCandidate.cs",
@@ -1820,7 +1864,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcOrganisationAdapter.cs",
-      "sha256": "09b99c9c3561bb18c420f4632e5bcf317f485ecead3cef8a3de89b0ed34497e9"
+      "sha256": "a7739c1b581619b027e8736488c9b513444a09cea7457f96829233b48b4816a9"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcOrganisationCompileTarget.cs",
@@ -1832,7 +1876,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcOrganisationWorker.cs",
-      "sha256": "3280b9706a7d15929d47b6f772cfb0f196b39b7f5bfc5fe5d47661e000c31238"
+      "sha256": "a69b92a7d58d013e0ee5749a260464b19baf68cb1008f537884f8039be4946c4"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcReadPathPolicy.cs",
@@ -1844,7 +1888,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcSoftwareEditing.cs",
-      "sha256": "8532c92ed556591059911acce617aeee5deebbe08adeaa1b98744424f6ca4575"
+      "sha256": "c912142da892169b5f18c3dde0d2628a5cfbf9329af0b64ef085a1935ffdd666"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcSoftwareValues.cs",
@@ -1864,7 +1908,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcSourceRules.cs",
-      "sha256": "3a91219e998613029d5e57b32a68b7aa2a28265ff88308fe3f775572259cd3ac"
+      "sha256": "b3ebad42f80a04ecff7f7130c1c39abdc30733f9c04fd3cc63cd832971f13be3"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcSpecialExport.cs",
@@ -1928,11 +1972,11 @@
     },
     {
       "path": "src/Adapters/Native/Reflection/OpennessObjectResolver.cs",
-      "sha256": "21dc4565fbf5fc86b480e3dbb5e3ff3284212c86bebbebcc24432802848d7612"
+      "sha256": "d207ac24dd0347917b1a1825e3f07daa78cf87ef56c5752ce6349ce4d748189a"
     },
     {
       "path": "src/Adapters/Native/Reflection/OpennessReflection.cs",
-      "sha256": "61b799dc639022cfbe01dc2ec7b018526dc440932e2df74e0106918e8ae6aa80"
+      "sha256": "d94b7cf0792dba4909487b49702b49d6167954ce545305d2cb451ad1819383c7"
     },
     {
       "path": "src/Adapters/Native/Reflection/OpennessReflectionWorker.cs",
@@ -1944,11 +1988,11 @@
     },
     {
       "path": "src/Adapters/Native/Reflection/ReflectionScreenTraversal.cs",
-      "sha256": "d5c5444ae8c17c867456dda031485ea97e9e2f1b4f7f7df68dbdf4aaa159698d"
+      "sha256": "97da1e5fcc4664b6e88ab63cf272bf43f66ad9e0f0a6c4b38cdbb925d13fe424"
     },
     {
       "path": "src/Adapters/Native/Reflection/ReflectionSession.cs",
-      "sha256": "45e1b5d81ce493d4868a79e0f30916ebdf5c33949f71e1d0169d5d9c028e0cc1"
+      "sha256": "d59be104c05ba03d83e2419071f0158b399f2dbdb15cf470df8c293294cd32e1"
     },
     {
       "path": "src/Adapters/Native/Safety/SafetyFileOutput.cs",
@@ -1956,7 +2000,7 @@
     },
     {
       "path": "src/Adapters/Native/Safety/SafetyManagementAdapter.cs",
-      "sha256": "d15673d86ceb9e3cafcb9301f99ce78e6833d76259ac74b27177ceb268018a41"
+      "sha256": "c51423c304fe85f19dd21d264e9a9d62789348e0e5fb161fa4efdcab4bb86afc"
     },
     {
       "path": "src/Adapters/Native/Safety/SafetyPrimitives.cs",
@@ -1972,7 +2016,7 @@
     },
     {
       "path": "src/Adapters/Native/Safety/SafetyValidationAdapter.cs",
-      "sha256": "d451041a5d176f6c6c145cdf78c4fe23e97f229a8daadf8dc77e14159d272eee"
+      "sha256": "50800762004f10b1a884c03042f8298ea11506184ddcc2fd0b21c39614ae71eb"
     },
     {
       "path": "src/Adapters/Native/Safety/SafetyValidationPrimitives.cs",
@@ -1988,19 +2032,19 @@
     },
     {
       "path": "src/Adapters/Native/Security/CertificateAdapter.cs",
-      "sha256": "dc38415df8574b1ed9d6388d9db08ace14a36a53cdafa0ee25148b4da07ced8c"
+      "sha256": "b68351581ffc5c73c2780f4c95ca2bb3a1f722abd181370cbf28f8f04cde375d"
     },
     {
       "path": "src/Adapters/Native/Security/DeviceUsersAdapter.cs",
-      "sha256": "849669cafd4ac3959261fc2c82f4b216f336b91a410cb2c5860a8952d30cefe7"
+      "sha256": "956a1814f411b097207fec1fd75142ecd5e701ecdbb87e7ccb2f593d04c79493"
     },
     {
       "path": "src/Adapters/Native/Security/HardwareSecurityAdapter.cs",
-      "sha256": "fd65196d8704c4f15f27624927fa8ef21eddb4b3b9d3bafe68837f77dc651b23"
+      "sha256": "088c6ff276929f89a7d9aee5e2eca753a9ea9f648e0573873a49dacf247cecc9"
     },
     {
       "path": "src/Adapters/Native/Security/ProjectProtection.cs",
-      "sha256": "337ca658a01b1cf1a258d8ead99797122574da57bce0894b954a628121a79443"
+      "sha256": "bffe18ccb307662a9c832be96e050fcdf4eab6b37c7c5d538738d3be7a4b3cca"
     },
     {
       "path": "src/Adapters/Native/Security/ProjectSecurityPrimitives.cs",
@@ -2008,11 +2052,11 @@
     },
     {
       "path": "src/Adapters/Native/Security/ProjectUsers.cs",
-      "sha256": "9a2d978e58dba0c08623896b62ab8f7b6bf636dc91225bc63bfe865f4feaeff8"
+      "sha256": "46b001039dd29de4b96351f3bbb1f691c5242c510ffb023690b7aeebe49cebfd"
     },
     {
       "path": "src/Adapters/Native/Security/PutGetAccess.cs",
-      "sha256": "b38aecbd5e9d3ae071557efca2ef40257c62c7599cebbe97427dfec2666599b0"
+      "sha256": "874d9280c40eb3bec972de6626ae9df82d0857dbb53ab29634f0823f6d6ea7b9"
     },
     {
       "path": "src/Adapters/Native/Security/SecurityCatalog.cs",
@@ -2024,7 +2068,7 @@
     },
     {
       "path": "src/Adapters/Native/Security/SecurityDeepAdapter.cs",
-      "sha256": "2aac4a43069b88e068c60773924f7d59bccda492c5a437de8cb9dc5183c2a8c6"
+      "sha256": "39f6fb4f2d4c9ecc8e584d4bc66d908bd3aedfd99b80860216f9d4b1eb231a17"
     },
     {
       "path": "src/Adapters/Native/Security/SecurityEvidence.cs",
@@ -2036,7 +2080,7 @@
     },
     {
       "path": "src/Adapters/Native/Security/SecurityRules.cs",
-      "sha256": "f06438adb883b8f6e6d0db42f0fab83fc9039a04aafaed1f97b8dcc9cc43dff6"
+      "sha256": "ec823467744cd4a4e2332bd12ad03b87a925c70dcfff71e9622234ce61c91cb4"
     },
     {
       "path": "src/Adapters/Native/Security/SecuritySession.cs",
@@ -2044,7 +2088,7 @@
     },
     {
       "path": "src/Adapters/Native/Security/SecurityWorker.cs",
-      "sha256": "9a4f117736343a7b48a9c28bb82e8806f89a814b8f8ff55caf52251481ddd550"
+      "sha256": "f274d9e0fb6be3b3c54c59074b6bf01c9b2f2db3a8a69f6a3dce4a45df484a9e"
     },
     {
       "path": "src/Adapters/Native/Session/BindingSnapshotAdapter.cs",
@@ -2072,7 +2116,7 @@
     },
     {
       "path": "src/Adapters/Native/Session/PlcFoundationEngine.cs",
-      "sha256": "187c1b1a2c9cd62a06b7ddee875cf816389c162176806db023e0bb1802b5ceb7"
+      "sha256": "9ba7f4ba3e5a72f06e7306532f54c30b3980a5de1d60ff2fa214dad881ddcf15"
     },
     {
       "path": "src/Adapters/Native/Session/PlcRuntimeQueries.cs",
@@ -2132,7 +2176,7 @@
     },
     {
       "path": "src/Adapters/Native/Studio/OpennessVersionControl.cs",
-      "sha256": "e96c7d8ef0139972b57c9a5a4bc4bd2d2c0ebaabb2a4e4c0ae65466f21263c43"
+      "sha256": "3ffb158ac31f2d644a8491bfee7e3aebf19a53ca3658d8b0937e50524dd085d4"
     },
     {
       "path": "src/Adapters/Native/Studio/PlcNavigator.cs",
@@ -2147,12 +2191,16 @@
       "sha256": "90c4489a8b505dc467c34873f812c9bda3a43aab4f886a5f6e874442ec50b9ac"
     },
     {
+      "path": "src/Adapters/Native/Vci/VciExportPolicy.cs",
+      "sha256": "e7e9e760020d08525b32f13914e49085b1571d55a2588cb3d58b05105bf07502"
+    },
+    {
       "path": "src/Adapters/Native/Vci/VciFallbackAdapter.cs",
-      "sha256": "9a4ab5ac14afcccbb2e1b9f0cf85ed48a93c0ec15f4bfc4cd4f9ddfe850d4b79"
+      "sha256": "0d5a342b85b696e35105e371763e16d49a8176f01431059a4882232170de7e0c"
     },
     {
       "path": "src/Adapters/Native/Vci/VersionControlAdapter.cs",
-      "sha256": "d1d3ea5bbe790c93f04aed87e6b85307aa9ab3dcd0d039e5325fa73d7bf87297"
+      "sha256": "8430e08bf9ce9b62eeae2f6232824473b7eda88c76d8c3ea273507285263868f"
     },
     {
       "path": "src/Adapters/Native/Vci/VersionControlFallback.cs",
@@ -2172,11 +2220,11 @@
     },
     {
       "path": "src/Adapters/Policy/OpennessReleaseContract.cs",
-      "sha256": "a4a76c1c5ebe37bdae77b1caaafe0ba624682b7793957bf5906f683de16f68f0"
+      "sha256": "cbf8349f6376ddf527c0e7c28b173aa471a9e7d9975e0db6066b5c3414dac1bd"
     },
     {
       "path": "src/Adapters/Policy/PlcBlockXmlPolicy.cs",
-      "sha256": "d33015c800f53dccc836752571752277389d752ad7adc3dc114016c44cf56fee"
+      "sha256": "874eef9b0bf92685a77c1646b77d927763cb12487b54bef02d1b4652df4cb0dd"
     },
     {
       "path": "src/Adapters/Policy/PlcLifecyclePolicy.cs",
@@ -2264,7 +2312,7 @@
     },
     {
       "path": "src/EngineHost/EngineHostPipeline.cs",
-      "sha256": "86dfcff939094a9a8fbdf1c2005802117f65cbffa6220124c2e4b6a0906a38f8"
+      "sha256": "7fcbaf59ce043054e7144ba9b84ab3b8984091be654376c51c8c23364ca379f4"
     },
     {
       "path": "src/EngineHost/EngineHostSources.props",
@@ -2304,7 +2352,7 @@
     },
     {
       "path": "src/EngineHost/ModelContextProtocol/Tools/ImportOrderTools.cs",
-      "sha256": "5d7e673a572320ed2bf3c5b8ef4e5a5f1e6b0be24bff6689ef56557ba6f205e0"
+      "sha256": "d6974d41b217d3cb3588bd0ed7fc17f97d9a2ec3aebcc7bd676cad1b54d3febd"
     },
     {
       "path": "src/EngineHost/ModelContextProtocol/Tools/ImportStagingTools.cs",
@@ -2312,7 +2360,7 @@
     },
     {
       "path": "src/EngineHost/ModelContextProtocol/Tools/McpServer.Approval.cs",
-      "sha256": "53997f34e5b75317715fbfa3a37bc0a6a5c5c7f242ceb00bc1848b5ac27c3703"
+      "sha256": "356246c48bd3144eb9251b90d370c8ea99cb71b4ae09704e23852f5de6718166"
     },
     {
       "path": "src/EngineHost/ModelContextProtocol/Tools/McpServer.ArgDiagnostics.cs",
@@ -2328,7 +2376,7 @@
     },
     {
       "path": "src/EngineHost/ModelContextProtocol/Tools/McpServer.SerializedCalls.cs",
-      "sha256": "59ac7345d38500c9745ce666e0f890e061407ba4c522cb46b43438442933061b"
+      "sha256": "d636e17a062c4c31ace4d2837ae0ea1cbdbf191e0138f4584df3af8faca3ade5"
     },
     {
       "path": "src/EngineHost/ModelContextProtocol/Tools/McpServer.VersionPolicy.cs",
@@ -2344,7 +2392,7 @@
     },
     {
       "path": "src/EngineHost/ModelContextProtocol/Tools/ToolDescriptor.cs",
-      "sha256": "cadcfb75f131ba6967953aa2bc6e295d1966644c04e43482c039f545d00017b6"
+      "sha256": "9eefb9e2f0d553eb5e76b5922a42fdc075085db3c8c559413a24cda8071fc9be"
     },
     {
       "path": "src/EngineHost/ModelContextProtocol/Tools/ToolUsageTools.cs",
@@ -2376,7 +2424,7 @@
     },
     {
       "path": "src/EngineHost/Siemens/SecurityDeepLogic.cs",
-      "sha256": "225a453daac2335ec0663adbc66c7100a67bb1a880004ce72c963cfa29e627be"
+      "sha256": "f3b1ce67784f53665a70c11e62b7953cc64ecb0590b3333ae1d7bbb5be89f071"
     },
     {
       "path": "src/EngineHost/TiaMcp.EngineHost.csproj",
@@ -2384,7 +2432,7 @@
     },
     {
       "path": "src/EngineHost/WorkerToolInvoker.cs",
-      "sha256": "5853071bad7f7d0ae9c75a2f5b06d4cfe2c3f306ae74638d7b8141feb8711ecd"
+      "sha256": "221a2fc0f2cc325c71ff94e51193cfc7f0a258603dd2ef79f8bc4e0ab06ea4ea"
     },
     {
       "path": "src/Engine/Cli/CliBoundary.cs",
@@ -2444,7 +2492,7 @@
     },
     {
       "path": "src/Engine/ModelContextProtocol/Tools/InProcessToolInvoker.cs",
-      "sha256": "7abd297e4d9f52d89a24ccfd41d4bb64bb956f729097d09f8645bbd130547b40"
+      "sha256": "d6391b3c2ccc9ef14cb51adfba201fbfbcf78dd1bd938d9f33646d39af7afeee"
     },
     {
       "path": "src/Engine/ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs",
@@ -2616,7 +2664,7 @@
     },
     {
       "path": "src/Engine/Siemens/Portal/Portal.Blocks.cs",
-      "sha256": "061a8183ba49d97a06acb6f4d2a7c962150dbe83ef2e25e252768f98368149f1"
+      "sha256": "fc211903e328c83998faf3639b7caf42cc27c9e81f7196b9f34a7bdeba8707eb"
     },
     {
       "path": "src/Engine/Siemens/Portal/Portal.CausalTrace.cs",
@@ -2760,7 +2808,7 @@
     },
     {
       "path": "src/Engine/Siemens/Portal/Portal.Software.PlcTables.cs",
-      "sha256": "9e7b7c2de0afb1b7743a9149f8140d0cf80729a816d592939a38f968faf39a5a"
+      "sha256": "61ad9b3644053a1f2b4c2abc499b9a3c7696885d13cbe0ff0dcccbcc2c79d657"
     },
     {
       "path": "src/Engine/Siemens/Portal/Portal.Software.Reflection.cs",
@@ -2932,7 +2980,7 @@
     },
     {
       "path": "src/FoundationHost/EngineReleaseHost.cs",
-      "sha256": "aa37f76f5e27d6463ea5e0bed9bd90cf2c61d1d62e10174ff90e92548059644f"
+      "sha256": "48f77699d49f76baa80bbdd459c9462df91595dc5895935615f47ae891fae6e5"
     },
     {
       "path": "src/FoundationHost/EngineTestVisibility.cs",
@@ -2964,7 +3012,7 @@
     },
     {
       "path": "src/FoundationHost/FoundationHostPorts.cs",
-      "sha256": "ee2ecd1e34ce43e547a8143eba723809cc1e4be0f5e0545fe13555ab839e6695"
+      "sha256": "b2cc57c82f63908137d217008c3636bf4e4d4a1af7cadbc0a47f75ece4d6dd54"
     },
     {
       "path": "src/FoundationHost/FoundationPassiveDiagnostics.cs",
@@ -2988,7 +3036,7 @@
     },
     {
       "path": "src/FoundationHost/FoundationTools.cs",
-      "sha256": "bc12babcb6a8114570aef417436783b359603dfaa47a4262e13bc67b0fe74d15"
+      "sha256": "4160493b20213c147a39fe7f0e97a7e5bb2b2a40e64582250725f74ab0f2e10f"
     },
     {
       "path": "src/FoundationHost/FoundationV4Result.cs",
@@ -2996,7 +3044,7 @@
     },
     {
       "path": "src/FoundationHost/FoundationV4Tool.cs",
-      "sha256": "81b0b25abdfd1ec7580d4854d7e66bee1bf4876d4bfd57eae01376bd984d1545"
+      "sha256": "ea5594bcd616531aad3f75bb1ea2b43e275bd4f980d37781deda89799ae78248"
     },
     {
       "path": "src/FoundationHost/GenerationTool.cs",
@@ -3012,7 +3060,7 @@
     },
     {
       "path": "src/FoundationHost/HardwareFamilyWire.cs",
-      "sha256": "f99ff585dcb30d14b242dd11c48872347ff307fa34fa8d6a83c899ca25806dd3"
+      "sha256": "8d4e82c4b1f22fb15effb26a14847bfea79bbd492a75e412b771e584f90cf5b7"
     },
     {
       "path": "src/FoundationHost/HostCliCommands.cs",
@@ -3064,7 +3112,7 @@
     },
     {
       "path": "src/FoundationHost/LocalStabilityTelemetry.cs",
-      "sha256": "fc1a8d8c9cb4354dfba590a4eabf06873aa03d4ad83c77bdc0efd2c4d54d2e8b"
+      "sha256": "3d0d12b96c450033d021d1cb58edd237da69385c0a7041b6098151044b105ddc"
     },
     {
       "path": "src/FoundationHost/OfflineBlockCompositionBuilders.cs",
@@ -3072,7 +3120,7 @@
     },
     {
       "path": "src/FoundationHost/OfflineBlockCompositionTools.cs",
-      "sha256": "93a2872662f05bde81e841abe9042c76717aebdc5456685dbc46d6067f99bb5f"
+      "sha256": "d8d3dbb4e083c5eec313655ea8d6034ccff89a69bb49911fb2731e4bb897de03"
     },
     {
       "path": "src/FoundationHost/OfflineCompositionBuilders.cs",
@@ -3088,7 +3136,7 @@
     },
     {
       "path": "src/FoundationHost/OfflineLadderTools.cs",
-      "sha256": "ea97899be1c0af4aa748cdbcb949602934727d41769098c5637bc057b0184fbd"
+      "sha256": "1630c8711f1c57f28e2758105692243152fc49cccc7af7b6e216161193a63d37"
     },
     {
       "path": "src/FoundationHost/OfflineSymbolManifest.cs",
@@ -3116,11 +3164,11 @@
     },
     {
       "path": "src/FoundationHost/PortedToolContract.cs",
-      "sha256": "3ad0684cd89fbf357bb53b2b355ddf6d165ee7c37da788e27660dc5a1dbc7183"
+      "sha256": "25477c27bae9741491cbb145288b1e6a8f9f1e7ab9615111096967361a171cbd"
     },
     {
       "path": "src/FoundationHost/Program.cs",
-      "sha256": "3745585df5ee501fd2c99b3afd1ea94281d48a65d21590ce97af71259c121084"
+      "sha256": "fc5687ef86bafa95e124c6268c341709b24ad8bbd83a3c3c76252e8175e2295c"
     },
     {
       "path": "src/FoundationHost/RuntimeQueryContract.cs",
@@ -3368,11 +3416,11 @@
     },
     {
       "path": "src/Logic/ModelContextProtocol/Builders/ClassicHmiScreenXmlBuilder.cs",
-      "sha256": "cb78872083fee3d8034b176374aa05feafc04d54737da9742b386d306bce8961"
+      "sha256": "9e9940ccb0de3cf88776850b11604aed9ed64a428937cd80e79064fd5c020a30"
     },
     {
       "path": "src/Logic/ModelContextProtocol/Builders/ClassicHmiTagTableXmlBuilder.cs",
-      "sha256": "27007ebdd7822c638ab6259fc675534b8bd6f4c9e8269b9dcb7b7941c8e5393c"
+      "sha256": "38df7ae6e3b0cd0bab1133c2bf3a737a476c2e19e76f64cf1f7fc8a01bea6757"
     },
     {
       "path": "src/Logic/ModelContextProtocol/Builders/ClassicHmiValidationFixture.cs",
@@ -3608,11 +3656,11 @@
     },
     {
       "path": "src/Logic/ModelContextProtocol/ToolMetadata.cs",
-      "sha256": "6767fd0d33c41e9c64b66951695156d1d19ddedbcbb6c053dac875dc022a3a10"
+      "sha256": "119f4a67e1b71e82893b5dc2d0bec27360a384a1136d22f906c241056e0be6d6"
     },
     {
       "path": "src/Logic/ModelContextProtocol/ToolProfiles.resx",
-      "sha256": "7073fdc705cc1ca9c4b8bf66883ee7405856a873d2de5e56b7575340f4ec41e5"
+      "sha256": "0b11e50508d3106b6e29a5ad199dc7efadabb9f161ed7da3eec402f154723f7f"
     },
     {
       "path": "src/Logic/ModelContextProtocol/ToolRecipes.cs",
@@ -3660,7 +3708,7 @@
     },
     {
       "path": "src/Logic/Siemens/CfcLogic.cs",
-      "sha256": "30fd5e6da62ee91f32092f1681f475fc65d3c4b1ca120ae68ce8089bc9683cc2"
+      "sha256": "ace53ba809706d17977662bf5541e96f509ac3e5fbbd34dd6d2ae0edb713e14f"
     },
     {
       "path": "src/Logic/Siemens/ClassicHmiFoldersLogic.cs",
@@ -3704,7 +3752,7 @@
     },
     {
       "path": "src/Logic/Siemens/ExternalSourceRules.cs",
-      "sha256": "e715e661f05c02c0bec5279a332a3273b9ff408df6932fc9841d1780427afee5"
+      "sha256": "bf2195c03d9dbf43923b477e9f5972a44ba920dd4ac8f7bbafbac10947cf55c2"
     },
     {
       "path": "src/Logic/Siemens/Guard.cs",
@@ -3804,7 +3852,7 @@
     },
     {
       "path": "src/Logic/Siemens/TestSuiteLogic.cs",
-      "sha256": "0edd2d6c1b58ca65018b3ccddffd29bd523dd4aaae2ee9d71f3743c0e3deb239"
+      "sha256": "40bb045d64872f4d82aa4a1c79bf58628936ff3fe97cef1bd11838c5b5f92b3a"
     },
     {
       "path": "src/Logic/Siemens/TiaVersionCatalog.cs",
@@ -3812,7 +3860,7 @@
     },
     {
       "path": "src/Logic/Siemens/ToolVersionPolicy.cs",
-      "sha256": "d433b2c21fc3f67528558642bdbfb95563e9eca2610dfba7846afd1ac520408c"
+      "sha256": "2bea2afde91c91e717e7a9f81c420c0a1add69e62725a5557b79eb28dce76be5"
     },
     {
       "path": "src/Logic/Siemens/WatchTableEntryXml.cs",
@@ -3840,7 +3888,7 @@
     },
     {
       "path": "src/Logic/V4/CompileCandidate.cs",
-      "sha256": "2852ffcfb999698c0f5bf3610a3374b432c0c77225b79d1bdf06c12e7d1a6402"
+      "sha256": "9c4a3eeaa8b447151dd982f77ac007bd2cb4c0dd3d20c27b02aa4030bacb3965"
     },
     {
       "path": "src/Logic/V4/CompileContract.cs",
@@ -4292,7 +4340,7 @@
     },
     {
       "path": "src/Shared/CertificateManagementTools.cs",
-      "sha256": "6b661de6911b015a7d5d866e053ce1a87d66ab7ae923eed6453911f495b17043"
+      "sha256": "94fdf6adbdb7d042561bb7ed0caaca767eef8f500f4f98ece9ffefd15f16bca1"
     },
     {
       "path": "src/Shared/CfcPortService.cs",
@@ -4304,11 +4352,11 @@
     },
     {
       "path": "src/Shared/ClassicHmiFoldersService.cs",
-      "sha256": "15a1cde8ecc154a87cc423c5a74e1fcd4fd3f95f18e057d118dfa19f7ee49af1"
+      "sha256": "eb8b5108ff14989136515b613fec8edd3db370c8b6cb070a81debe538cd53e92"
     },
     {
       "path": "src/Shared/ClassicHmiFoldersTools.cs",
-      "sha256": "dd0e3b052a26f6e0681a6e29ed2cab2a9a10dc1a61269065c63bf0e98f8bddf6"
+      "sha256": "c357090f434d1189d23cf3fc6f1f69608e96344114dcb7729ee7cb6f324451cc"
     },
     {
       "path": "src/Shared/ClassicMotionToolContract.cs",
@@ -4332,7 +4380,7 @@
     },
     {
       "path": "src/Shared/DccTools.cs",
-      "sha256": "0a20ffe2e1f000458c45c1617f38278315486eafadc847fcf51ede86864c0043"
+      "sha256": "00405c4b9eb6d6ff608ca959d7e6e8cd0418048e50600e8dbe27158e9bfc1c3e"
     },
     {
       "path": "src/Shared/DeclaredToolMetadata.cs",
@@ -4444,11 +4492,11 @@
     },
     {
       "path": "src/Shared/HardwareSecurityPortService.cs",
-      "sha256": "421aa0e0866c956bd7d0aadca5b1a82748bfb1c1b3d23f6934253b3c708288dd"
+      "sha256": "cb06cf154a73238e1eeaea25e858eac2ba5fab9a79e98ca42b148ddf1d6982fa"
     },
     {
       "path": "src/Shared/HardwareSecurityTools.cs",
-      "sha256": "75a975a903af6c59c43beac662c78ceedaa7f82e16120a93125f2e9d07508f37"
+      "sha256": "b3ee0f6e9d0304b652f5730c7b677c25066b1e8b01c8bf96c6d17d482dbf6593"
     },
     {
       "path": "src/Shared/HardwareServicesPortService.cs",
@@ -4460,7 +4508,7 @@
     },
     {
       "path": "src/Shared/HardwareServicesTools.cs",
-      "sha256": "f8a130bd66daa6965264a15d2ebe40e8659689d44afc4076483cb64165d6b087"
+      "sha256": "4372c1299ffb36557a6920e4faa5b392c191791ecf7baf5da3b98210ec7e86a4"
     },
     {
       "path": "src/Shared/HardwareToolContract.cs",
@@ -4476,7 +4524,7 @@
     },
     {
       "path": "src/Shared/HmiDescribeTools.cs",
-      "sha256": "fc7d423327bdc23853a94796a0fc52cdb34a5555673401b64b1216532251dfbf"
+      "sha256": "2e0332e865066d82ca0e5fcd996a700e011195eebab42e099cf2d18f1e929685"
     },
     {
       "path": "src/Shared/HmiDesignBuilder.cs",
@@ -4488,15 +4536,15 @@
     },
     {
       "path": "src/Shared/HmiExchangeService.cs",
-      "sha256": "2a12f59c03ba7ebc52a3b5a8cd97f536a7a7e988c3b8f4cff0d51074be10e34f"
+      "sha256": "ffed7cf4756059792fb414d1273baee9b76542c217da3138e81829f4dbf0b6f5"
     },
     {
       "path": "src/Shared/HmiExchangeTools.cs",
-      "sha256": "5ec9d810d7f853dc088a5d99d266b4ae1925f700ffd414e9fc6e701cfea83e7d"
+      "sha256": "46c93daeb981c1d25590a72fae0ac1b4a4daf429bc86df9568ef5a4610466902"
     },
     {
       "path": "src/Shared/HmiInspectionContract.cs",
-      "sha256": "95e3551dc1480a5d91e0cd524a2651c24fed559a72d664b4324fdab749e3b1fc"
+      "sha256": "fd9369bf4a554110aecf16ae5f55655fc25fc16abb642f1d92a729ba3ad76938"
     },
     {
       "path": "src/Shared/HmiInspectionPortService.cs",
@@ -4588,7 +4636,7 @@
     },
     {
       "path": "src/Shared/Host/McpServer.Batch.cs",
-      "sha256": "44806d322cbfea1d649a2f813597e636cfc2d6733fb0ae75c9bc1e9a9740a222"
+      "sha256": "40f8c604ea6baf327df2696f1d853b0be618a7d433f6e1fe306378b42a943523"
     },
     {
       "path": "src/Shared/Host/McpServer.Doctor.cs",
@@ -4608,11 +4656,11 @@
     },
     {
       "path": "src/Shared/Host/McpServer.ToolBridge.cs",
-      "sha256": "765af037ad86759a4fcd4a8d217db7b66cef88de4bd23ee296e162ab53605681"
+      "sha256": "46d182a0bb52063fafb398a76543fd25688fe781e2d924a0da6d7992a22eb3a8"
     },
     {
       "path": "src/Shared/Host/McpServer.Worker.cs",
-      "sha256": "efae54fc97c0a4d798df80150300ca91724e518551be96fe4642ade8f2726770"
+      "sha256": "453a3dc3e85f899919cabedb68f6a3df639ef62014a150643567eeb7fe996914"
     },
     {
       "path": "src/Shared/Host/OfflineAnalysisTools.cs",
@@ -4652,7 +4700,7 @@
     },
     {
       "path": "src/Shared/Host/TemplateTools.cs",
-      "sha256": "7f02e65a260d9a420f05d98b91a3cabeeff29ced44f7dbd29a8f9ff68fdf25ab"
+      "sha256": "decd0291252ac881929904f9869662935974f973af2325174f41a5417402c769"
     },
     {
       "path": "src/Shared/Host/ToolDispatchLanes.cs",
@@ -4668,7 +4716,7 @@
     },
     {
       "path": "src/Shared/Host/XmlBuilderTools.cs",
-      "sha256": "97fa2ec51b6de30627d7e3defec981df109e0b634318f12273daa0093a4d374d"
+      "sha256": "899ea7d509c0491df90d6a2774e0a14e535d7b369946d48ed98e2e5d28f0da46"
     },
     {
       "path": "src/Shared/ImportDependencyPlanner.cs",
@@ -4692,11 +4740,11 @@
     },
     {
       "path": "src/Shared/LibraryToolContract.cs",
-      "sha256": "4d89b0ccb347f3491d875e3edabd37edf496bcc7bcc72e701f75950be46f690f"
+      "sha256": "3b18c22b45aac4d45fc639934e29ea4356988bc9c2722b6fa1cc7a7d122f89bb"
     },
     {
       "path": "src/Shared/LibraryTools.cs",
-      "sha256": "652413b6f77278fedd36bffaac4f154c0c031205fda7c81a2c12a32cd29bc1d4"
+      "sha256": "4ab28f21c95be5f6d526728ae3279affc0e6229998a94a07095ad54d6ce99ec8"
     },
     {
       "path": "src/Shared/LocalPipeSecurity.cs",
@@ -4736,11 +4784,11 @@
     },
     {
       "path": "src/Shared/MotionProDiagClassicHmiService.cs",
-      "sha256": "267110e4a80bd21859474891693f7f3b13f1412c85bf89e9c45d8af578361d1f"
+      "sha256": "6ff3f458e82c83f1e0804130d6026201f44fa8dbf6f6f1c36f80cbcdbc48a80d"
     },
     {
       "path": "src/Shared/MotionProDiagClassicHmiTools.cs",
-      "sha256": "1c904002d41d43bf3841d5d846801dc6176dafe0b64ef29c22a2bcb9c9e3f0a3"
+      "sha256": "d975bf96169a6d0db30f3cbc38be9fb570d9716b5c7b78b8279d49c3dd8c82d3"
     },
     {
       "path": "src/Shared/NativeCallDiagnostics.cs",
@@ -4816,7 +4864,7 @@
     },
     {
       "path": "src/Shared/OptionalEngineeringPort.cs",
-      "sha256": "2ab40f5403c32e0fc79d9b709c7468d4771899207e4d6ad351fb9c41c4e3c9ad"
+      "sha256": "87308290345e80f57862616472657dc312fec8d0b849f6a2c53af1283d1c0e1e"
     },
     {
       "path": "src/Shared/OptionalEngineeringPortService.cs",
@@ -4840,7 +4888,7 @@
     },
     {
       "path": "src/Shared/PlcArtifactPortSession.cs",
-      "sha256": "4bf1745145119f54d7e1067ffaf241b832dfd313d7403552860d0615b9eb9b21"
+      "sha256": "05865d273cef2d5c4033a9ecf1e1dc0c17c3a5ed511af538fcdc1b573e0083c8"
     },
     {
       "path": "src/Shared/PlcB5Inputs.cs",
@@ -4856,7 +4904,7 @@
     },
     {
       "path": "src/Shared/PlcBuildTools.cs",
-      "sha256": "8e82562cc670b5dd6520746232ed748af0ae882dda0dbc975ed45aa73074868b"
+      "sha256": "310ec09e6578d48f38eac2c3751d571365bda1e7041fe9310d9f1a4966f95398"
     },
     {
       "path": "src/Shared/PlcCausalTraceTools.cs",
@@ -4884,11 +4932,11 @@
     },
     {
       "path": "src/Shared/PlcOrganisationPortService.cs",
-      "sha256": "e7d70545a1a40bdcead6c62312049b883ec5f6ecfa6616e7ac6370a721ab102a"
+      "sha256": "9bef4cfa2825b270f73a417ed4056438f2d87231a8ae2e30d5b850291838dc46"
     },
     {
       "path": "src/Shared/PlcOrganisationTools.cs",
-      "sha256": "bc84201ccb9e19ccc76e6a215580fdd6dce49af65302c59cee2ecb169594b8ee"
+      "sha256": "d8ba7bedc61721423d21829708b88be84b35da8a4c536d96bf556b6d721fdf74"
     },
     {
       "path": "src/Shared/PlcProDiagTools.cs",
@@ -4896,7 +4944,7 @@
     },
     {
       "path": "src/Shared/PlcReadModifyTools.cs",
-      "sha256": "4466dbf04d455bd42d7c3bed249ce0064980b03211c4f8867b9c5648f93f30ae"
+      "sha256": "b44c254684064eb59445a652cd5d1fa58f8f82598ac3a89e67f4f8acca477efe"
     },
     {
       "path": "src/Shared/PlcSimAdvancedPortService.cs",
@@ -4908,11 +4956,11 @@
     },
     {
       "path": "src/Shared/PlcSoftwarePortService.cs",
-      "sha256": "f689b86cd200139aad1d1206f2ddc27e9e562f2e5b60450ff78daf1b75045c97"
+      "sha256": "8830de4e3891e646c3560111cfde4bab512b10908cb270ae04b5b17122c00d1c"
     },
     {
       "path": "src/Shared/PlcSoftwareResponses.cs",
-      "sha256": "04785f7519baf0b69ac22c188e6303bef0333a02ff6435368c5a210c9024d0d6"
+      "sha256": "8304c179912200668863f547d57b62f35ac6116f13ee38bde051d1cb26c0f044"
     },
     {
       "path": "src/Shared/PlcTechnologyPortService.cs",
@@ -4988,7 +5036,7 @@
     },
     {
       "path": "src/Shared/ProjectProtectionTools.cs",
-      "sha256": "b9f749bb7351c294ad40603df19dec70c9b92c32a109e8c7cf0361d28ae7aeb1"
+      "sha256": "0afbdac0c60f5ab428d08090f2bf9f5f189390b0c42fa918344ad3b0ff22aae6"
     },
     {
       "path": "src/Shared/ProjectSecurityTools.cs",
@@ -5000,7 +5048,7 @@
     },
     {
       "path": "src/Shared/ProjectUserManagementTools.cs",
-      "sha256": "c551b57c715d99341ee77013d274f5eb0662038e26cefa87cc647c998613ffdf"
+      "sha256": "6b8d9904b5a4f9b3adee69a2566543c682752cadf24ba8c1e04c9f038b58c62a"
     },
     {
       "path": "src/Shared/ReflectionPortService.cs",
@@ -5008,7 +5056,7 @@
     },
     {
       "path": "src/Shared/ReflectionTools.cs",
-      "sha256": "1bf459174b3bfae782c8dc1f42aaf6542048c9d71b3374a806b304be2bca7602"
+      "sha256": "6c9c8fc245e4035fea5396660015771026873dedc271f52fa81599923109b06c"
     },
     {
       "path": "src/Shared/RuntimeSettingsService.cs",
@@ -5016,7 +5064,7 @@
     },
     {
       "path": "src/Shared/RuntimeSettingsTools.cs",
-      "sha256": "72abacaff0a9d1cee648505d64d62214e34fe5b04fad3935a077c9d92d83d507"
+      "sha256": "faab7a1901062483fafbd16c28ca4abb1f5f32703499719077e7286437228df5"
     },
     {
       "path": "src/Shared/RuntimeToolContract.cs",
@@ -5032,11 +5080,11 @@
     },
     {
       "path": "src/Shared/SafetyManagementTools.cs",
-      "sha256": "cb8cfd53be4674923b8da2f7569a410644f1a15c066fc26a804d31e9fe4586c1"
+      "sha256": "dec05339b77e7f21c3460749cb5d63aef741f0fec2c4d5ae657698a072986858"
     },
     {
       "path": "src/Shared/SafetyPolicy.cs",
-      "sha256": "6f2b9e068b093ed49a60010d2db154357495988cd85446ee6461d2b8debfd36e"
+      "sha256": "ba98155bd5ef56a4875d9373610eea4749fe359e493fc2c3d5b8bb69ff7c3a54"
     },
     {
       "path": "src/Shared/SafetyValidationPortService.cs",
@@ -5044,7 +5092,7 @@
     },
     {
       "path": "src/Shared/SafetyValidationTools.cs",
-      "sha256": "884330413b60d9acb81903b66cb3f12651eae44e4168d18ef53fb7c560ca8196"
+      "sha256": "ace054ee187f6fd89ed0302e9b7ee9fa4fffe64af93c09494905a26667c59c7d"
     },
     {
       "path": "src/Shared/ScaffoldOperations.cs",
@@ -5056,7 +5104,7 @@
     },
     {
       "path": "src/Shared/SecurityDeepTools.cs",
-      "sha256": "8f5ca51e124e356962268efb024b5eec45a61a2e165242b37605a69d33ba2c8d"
+      "sha256": "87fdcb29703d525135d4249e348bff186f6235a51e2b6d0f9c555aa2cb417c1e"
     },
     {
       "path": "src/Shared/SecurityToolContract.cs",
@@ -5132,7 +5180,7 @@
     },
     {
       "path": "src/Shared/StartdriveTools.cs",
-      "sha256": "3d8ba13385cfd0d9a860272111789c588aaa16e44db9097e2ba2e26cd045533e"
+      "sha256": "b63cdfcf539e0fde2528f8b1b5bca935e755aa2e995338621b7148a2e7da5dd1"
     },
     {
       "path": "src/Shared/SwallowedExceptions.cs",
@@ -5156,7 +5204,7 @@
     },
     {
       "path": "src/Shared/TiaFeatures.props",
-      "sha256": "ea3d65c779962aef7de873272c2fc384e8246397e47c55bdd67d384996b3db7e"
+      "sha256": "fdc68bd95904fa113f51fe4eda0186d4c354ce3df7535c4428191f4ea197a6d0"
     },
     {
       "path": "src/Shared/TiaPublicApi.props",
@@ -5172,7 +5220,7 @@
     },
     {
       "path": "src/Shared/ToolUsageData.json",
-      "sha256": "6da3d42e553d1954fcf46c1f3d307daef227b7a855e714e04b8b45a56db109dc"
+      "sha256": "0232030a8710eb2de3196f766cbd8fd02ff2a80b08cd8d7c444ffa0fc6a4a954"
     },
     {
       "path": "src/Shared/TransactionExecution.cs",
@@ -5184,11 +5232,11 @@
     },
     {
       "path": "src/Shared/UnifiedEngineeringService.cs",
-      "sha256": "c288a0245968849acf5702b69589cfc3e5b92cc7785b582e9a61011898bc29a2"
+      "sha256": "beffee8750d14b17c8c770d382e3addaf00a8748cdc5a5b6adaf6aa0b29d93f6"
     },
     {
       "path": "src/Shared/UnifiedEngineeringTools.cs",
-      "sha256": "a514c1e529c46b9b85befd7ebd01ebbf801338234acf662fccc3dbd1ccf7ee05"
+      "sha256": "0f787fb8c5a47d4a79e81147e1304113efda541436fd384d30d94b2bdd46f37a"
     },
     {
       "path": "src/Shared/UnifiedEventsService.cs",
@@ -5200,11 +5248,11 @@
     },
     {
       "path": "src/Shared/UnifiedExchangeService.cs",
-      "sha256": "adca5bd7f6189df60c97abe3b7b9cc0040a09b4f6ade61103f8063cb045414b1"
+      "sha256": "654db2e428a7e36b0bf9eed58373168e5b0088e8f0cbdbafab9a9eb81fc5ab89"
     },
     {
       "path": "src/Shared/UnifiedExchangeTools.cs",
-      "sha256": "b4d80c0a1a0ba77f5963d6ab9e7f1d4f7aa2e419d25c47cb2f2c32912ce4e086"
+      "sha256": "8bf7b28aa812edf341e0dd34912738948967c26f00644c8422df7700d54dbc33"
     },
     {
       "path": "src/Shared/UnifiedGraphicComparison.cs",
@@ -5212,7 +5260,7 @@
     },
     {
       "path": "src/Shared/UnifiedHmiContract.cs",
-      "sha256": "ac84dcb359dcc647d6b41388e87bef79c442ddd067f39e7342930a8194975b33"
+      "sha256": "f4dc0b774fcfafb56998d48978a52c3b79151d2f6c10b49f852faf45e09c9f72"
     },
     {
       "path": "src/Shared/UnifiedHmiGroupsService.cs",
@@ -5228,7 +5276,7 @@
     },
     {
       "path": "src/Shared/UnifiedHmiPortService.cs",
-      "sha256": "c55506d8845e2543d3d197ab6f98dabcd932791f87ae735120f897ab03d2abc6"
+      "sha256": "d9d98020ddd77d63696fcdff52c9960c3aacc04e5028e29063486fe15d3ecaff"
     },
     {
       "path": "src/Shared/UnifiedHmiPropertyAdmission.cs",
@@ -5240,11 +5288,11 @@
     },
     {
       "path": "src/Shared/UnifiedHmiService.cs",
-      "sha256": "2d1052e57b9f331b9a1cde6de753ee28110574e041127d0dfd10cd9c7dd9a36a"
+      "sha256": "2db978f2d2c899aae41be5c5d50cb48b77890ba99844b7871f77a68740933014"
     },
     {
       "path": "src/Shared/UnifiedHmiTools.cs",
-      "sha256": "8b4b4019950c70f04cce6038b5b5561e0f1dc70b09f37655ceaca59099bad3cd"
+      "sha256": "3319f7546621635ba84b71edf1f253011f10bdc106d7062e49401a0858b4b805"
     },
     {
       "path": "src/Shared/UnifiedObjectServicesService.cs",
@@ -5256,7 +5304,7 @@
     },
     {
       "path": "src/Shared/UnifiedPortService.cs",
-      "sha256": "ea9c11b3952f15f411f7cf82cb3b05317062561f30a467db2b9dc7ab1ef00f76"
+      "sha256": "bb7b8d6eb3dcbd538e3848267ee9c018792174f3efad448c91a0bbbb38018e8e"
     },
     {
       "path": "src/Shared/UnifiedScreenItemsService.cs",
@@ -5264,7 +5312,7 @@
     },
     {
       "path": "src/Shared/UnifiedScreenItemsTools.cs",
-      "sha256": "bef285094f2388c5e87bcec17b8980c8ce9ce92632f354f7fca841ddceb1fe07"
+      "sha256": "1136d238c2823ebd389b174030f2b1b547c2c99633228273e783bd9aa2ab163c"
     },
     {
       "path": "src/Shared/UnifiedScriptAccessFacade.cs",
@@ -5296,7 +5344,7 @@
     },
     {
       "path": "src/Shared/VersionControlTools.cs",
-      "sha256": "dbf0f467eed472261f2b3228a78034156ce84fce09b705d798440e4c3bae51d3"
+      "sha256": "6d591727662b335a74a33f47807dd96c4c8decfec2dda88e820e0408be7dcc02"
     },
     {
       "path": "src/Shared/WindowsFirewallRule.cs",
@@ -5463,8 +5511,24 @@
       "sha256": "2c49b9d88bbf6c9007fd1c0d67198498958e2efbe5bdb7475782ed2b0bffccca"
     },
     {
+      "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/HmiAuditNativePathTests.cs",
+      "sha256": "e414afe85e6ecb02f267835d918d6238685303915cd7f5a3af574649046160fa"
+    },
+    {
+      "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/HmiAuditRegressionTests.cs",
+      "sha256": "cc6530a4cf436147f8c15d9f11c2f5a09c8a64aafb2023d6b8902f2e45a4de38"
+    },
+    {
+      "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/HmiExportPolicyTests.cs",
+      "sha256": "af0d78594e4a0708664ea53fec247a9f393c40b8174ebdd5a2825a1fdd3d7b54"
+    },
+    {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/HmiPortTests.cs",
-      "sha256": "61d8edcd5831b58ccb106ff7d0b2f37943d8be6cbbaa17a56741260974962b7a"
+      "sha256": "50e966466793b6c2333458be6812e7e520448e05e4a0f5bc8a55bd29ad4a4f03"
+    },
+    {
+      "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/OfficialApiAuditTests.cs",
+      "sha256": "e155b9690195da19fe668907aaa119e9ab01ab6ca27160c4a44cff6c03c27140"
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/OnlinePortTests.cs",
@@ -5473,6 +5537,10 @@
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/OpennessSessionRulesTests.cs",
       "sha256": "ab1b5bc6874eb1d1a2463c5586885abd056af9bf17bbd52ce082a4075bc2fb9e"
+    },
+    {
+      "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/OptionalAuditRegressionTests.cs",
+      "sha256": "5798aa5a05388316b846770b4f96407ba68a05e4ed18e2ea9be14410c3cba744"
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/OptionalEngineeringMutationAdmissionTests.cs",
@@ -5484,7 +5552,7 @@
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/OptionalEngineeringPortTests.cs",
-      "sha256": "59d195c0173b72b890583fee89f0223db49cd5129bf2bb5abd8b70bcc08f8e8f"
+      "sha256": "12c73a7859ac6a5c3f287b5cce5d4b693c7b3a38af055b5d6215b038101a7f07"
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/OptionalProductTests.cs",
@@ -5497,6 +5565,10 @@
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/PlcIntegrityPortTests.cs",
       "sha256": "bb1a3ce7543e0e38232bfb4bae3a591b62dcb78b941fbf22acafa71211cf6cc6"
+    },
+    {
+      "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/PlcSoftwareAuditRulesTests.cs",
+      "sha256": "1cc29dbf69495a44694bb779c743b0b28870ad8b02799749ec6336994be0bf03"
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/PlcWatchTechnologyPortTests.cs",
@@ -5513,6 +5585,10 @@
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/ScaffoldWorkerFake.cs",
       "sha256": "a205cb92dbf9562561e27429ed2975f76c40062648d91053d395ed2dcf8d00cd"
+    },
+    {
+      "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/SecurityAuditRegressionTests.cs",
+      "sha256": "d3cf269fee1a2e3453deb35b0fafa8b899142fb4a932c3b88e3bf8abc7498e15"
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/SecurityPortTests.cs",
@@ -5536,7 +5612,7 @@
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/TiaMcp.Adapters.Contracts.Tests.csproj",
-      "sha256": "6ea733f3551e48c30d9ab6af44ef46fd8f1d03e72afb14cd34da952e60ab62e4"
+      "sha256": "bd84d0f422f9f06d490d85fdca885fe7e8fddee5f7f785572b87c556c49a3b51"
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/VciWorkspaceLayoutTests.cs",
@@ -5544,7 +5620,7 @@
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/VersionControlPortTests.cs",
-      "sha256": "eaa38f246ec71e4c61af80a69779f10e091476557c512441785ced02f2ef3894"
+      "sha256": "013e8ee07c9aca9daf8d8a9c19caab0773733e5517c184d70ccebde4727936ce"
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/WorkerFamilyCallbackTests.cs",
@@ -5592,15 +5668,15 @@
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.FallbackNative.Tests/TiaMcp.Adapters.FallbackNative.Tests.csproj",
-      "sha256": "1237f34e179edf9902bc40f6c260b6540abe8c9e942f85b1fb1d47510f473dd8"
+      "sha256": "d772de5515320e47872bb3566c7e63cbfd55fa15b73b2537e6149165cfa1036f"
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.FallbackNative.Tests/VciFallbackTests.cs",
-      "sha256": "e5cfe172e620830204ee6829e9cc958c023930f9e2461337bdd55d9bfccf48a3"
+      "sha256": "2771d416f58e4a15ce465d76eadb901a84110bdebb55c183b944d7482d86c753"
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.FallbackNative.Tests/VciStandins.cs",
-      "sha256": "09dcaa4d97adaa4084bf11c1630576a16c67c86df631a1b440ce96ba7ac42b93"
+      "sha256": "a3b4d4965bb1bfa3507706d1472b1946ffa3c8432aade7dc574926de4f7f2868"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.ApiCompileChecks/ApiCompileChecks.cs",
@@ -5684,7 +5760,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Harness/ClassicHmiFoldersShapeChecks.cs",
-      "sha256": "df03f6e0fdebc9dc9dfe29b331797e01d341d36da58ae536e09279137b55577e"
+      "sha256": "f8335c185176911faf139b826406ab5a32f30261a156dfc9b2ef74b8c86c2e1b"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Harness/CompileCandidateChecks.cs",
@@ -5696,7 +5772,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Harness/DeveloperChecks.cs",
-      "sha256": "20f44dd5320d148df71c9a41dc1c0ef7582459222ea24fb68c7c416ea3c73b16"
+      "sha256": "86239d77fb0d284afb35b9c12356dbb548e306db9f5e707c4eb155e0379f6f62"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Harness/DeviceCandidateChecks.cs",
@@ -5784,7 +5860,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Harness/MotionProDiagClassicHmiShapeChecks.cs",
-      "sha256": "f5bf05b631d36a5d133551e6c234c6f3cb33542592a36c4d99b713418e4b12cf"
+      "sha256": "e55e0f71120bd4f90306b8b22daf5d5645355689873d5bca1f4df19d5800eb62"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Harness/NativeDiagnosticsJit.cs",
@@ -5972,7 +6048,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.PlcExchange.Tests/HmiExchangeContractsTests.cs",
-      "sha256": "67d48f9933b11344a98c265e25b1ad18d329286f0407b682414c131bb901d48f"
+      "sha256": "0f26393656b306e519ef527de12b7228e049ad8e2270d744a5ebc22a93760c8b"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.PlcExchange.Tests/P707bNativeTests.cs",
@@ -6020,7 +6096,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/ApprovalPrecheckTests.cs",
-      "sha256": "98e6858857e2e69449d50428b36284d14df78bd4b19721ec1d6b28b9e4aff034"
+      "sha256": "a9ca5683ff7928d68c99351e80dbf684ae20589a1af1fe29a8ce60fa3a1da6c6"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/ApprovalTests.cs",
@@ -6044,7 +6120,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/ClassicMotionContractsTests.cs",
-      "sha256": "d5011735031c5f3b9d0485133ce5c7277a9466abbfbe6e19a741f57fe6ae91b9"
+      "sha256": "7aca91c3338ec9a23140d1c84f2eea5061062dc3be6d89b7e24b00fc6bde5b78"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/CliV4Tests.cs",
@@ -6120,7 +6196,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/FullEngineRejections.json",
-      "sha256": "26a2621a25af034b1922645d5de126503fe6c87d368ef7d218cf78eea42ab58c"
+      "sha256": "be34c54ffcfeaa9cc1a165454a7e204845e90b3d2bb2ab42fba1ff5883baa4de"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/FullEngineRejectionTests.cs",
@@ -6136,11 +6212,11 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/HardwareContractsTests.cs",
-      "sha256": "b8285be07cecb75a1f66864db89b14530c3ec71db102dd8afaf584cd5bd001b6"
+      "sha256": "06caaddb1beb39723c1bb7fee194d7083acc0f4987532cbda36717ac537efe27"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/HmiInspectionContractsTests.cs",
-      "sha256": "68330b6b70d15efda67a033b81ba982cae928e8ca21d07976654f9c9093653d4"
+      "sha256": "7cc5f26b08f4d9477d4bd3adba3220dd078f9c5f6af8ace8aec3b7e6c5a07a95"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/HmiInspectionTests.cs",
@@ -6172,11 +6248,11 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/InfrastructureContractsTests.cs",
-      "sha256": "d7c75108f0e09d750cc6c01a0a503964497d72836aa9d54da303188b2772392c"
+      "sha256": "2d0aa07e9974d89f4ef7cfaf217a4f8412e1a50867c90749374c0b4fc2c36ccd"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/LibrarySivarcVersionControlContractsTests.cs",
-      "sha256": "dcfad0e301f327cd062d28fd22d4e63cce342e865d2533a3374a069e72a5c6be"
+      "sha256": "77f6aa90705d0e4975cdb85acf12ecde8c221198d99ca44628ba81cdec9a3584"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/LibraryWriteSafetyTests.cs",
@@ -6208,7 +6284,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/OfflineContractChecks.cs",
-      "sha256": "387bfab1f3447d220e9d825a0a3ce797a2cdd927fe33982e4bfbe184a3168778"
+      "sha256": "f2abcf94a2ec2d0446c3d5649b0aba7a41dde23717367546cd8f23d6a1058322"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/OfflineContractFixtures.cs",
@@ -6300,7 +6376,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/TiaVersionCatalogTests.cs",
-      "sha256": "f9bd0b2363cfce6b45466770f96229a4cc07fd112515e0e1ccb0913693a87843"
+      "sha256": "2fdf4d0d33f0da1a2a21067230e9a0ff422684228e16beb9106d7f2eeceba64f"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/ToolBridgeFixtures.cs",
@@ -6308,7 +6384,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/ToolDescriptorTests.cs",
-      "sha256": "3da3a54554b6b0bcb49b219ffb2c659d78c02f518bd7e378b80244bbc14e1be4"
+      "sha256": "ff8d0aee63211c7ced156cba63e585e20ffa61cec28b7f8f39e3ab097b1c3d16"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/ToolExampleLibraryTests.cs",
@@ -6372,7 +6448,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/UnifiedCrossReferencePolicyTests.cs",
-      "sha256": "3472ba7df68f5e10fa531b62d0633f32b1a0ae1c986e9788568f2617fea1d02e"
+      "sha256": "97d9e8583323dfec78518adeef34f5383b8c6e5c022d96eac98c467aceee4b82"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/UnifiedExchangeTests.cs",
@@ -6384,7 +6460,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/UnifiedHmiContractsTests.cs",
-      "sha256": "af000b80434c8086be0e085c79b62a40a04126a592f6dfe94515850e4e35ad08"
+      "sha256": "0378d41f714dd94e8e3a42bf1a7662438196eae0278d773b3baf5a28f643a417"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/UnifiedHmiNativeFixture.cs",
@@ -6404,7 +6480,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/UnifiedScriptSyntaxCheckTests.cs",
-      "sha256": "248322357bd50a4f1f01d75282cdd74fb8652c6aa40271ee582e07f74233c4b0"
+      "sha256": "7e3df17112794f9c55b5e8c969842ccf3b688d78847e81d573ddda66eb398976"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/UnifiedUiModelTests.cs",
@@ -6496,7 +6572,7 @@
     },
     {
       "path": "tests/Fixtures/TiaMcp.Offline.Fixtures/HardwareContractsTestsFixture.cs",
-      "sha256": "ba20ac8e71270a6d8974edc0d9438a90c745a7bc3d90b7838fd04e51cf37c3f7"
+      "sha256": "bde8ed1789dfb3fc836e1be5933331b65184c1b45105a137623b16081440b906"
     },
     {
       "path": "tests/Fixtures/TiaMcp.Offline.Fixtures/ImportStagingTestsFixture.cs",
@@ -6532,7 +6608,7 @@
     },
     {
       "path": "tests/Fixtures/TiaMcp.Offline.Fixtures/Oracle/ModelContextProtocol/Tools/InProcessToolInvoker.cs",
-      "sha256": "7abd297e4d9f52d89a24ccfd41d4bb64bb956f729097d09f8645bbd130547b40"
+      "sha256": "d6391b3c2ccc9ef14cb51adfba201fbfbcf78dd1bd938d9f33646d39af7afeee"
     },
     {
       "path": "tests/Fixtures/TiaMcp.Offline.Fixtures/Oracle/ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs",
@@ -6572,11 +6648,11 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.EngineHost.Tests/DomainShapeProgram.cs",
-      "sha256": "ae160f3e0f3d487e3e1ed5e63a333d88ffb79d2e81c0bd59d55f48f28cd61445"
+      "sha256": "8b1a30c6850eb1bca894782dd18efa6652bed28913e663d908381dd4bdd65ddc"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.EngineHost.Tests/Fixtures/EngineCatalog20.json",
-      "sha256": "5997b2b9cf83d7527c2425c477a63d7c371c455084522c1bd2499d11053d9804"
+      "sha256": "6cf73f62abd56fb7cb09c09c226eda5f157ebd530cd701925889647e1fd8ddf2"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.EngineHost.Tests/Fixtures/EngineCatalog21.json",
@@ -6592,7 +6668,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.EngineHost.Tests/GenerationExecutionTests.cs",
-      "sha256": "3479dbf7775861c6da9b512e2f0ecedebe216dc1357de3d09f90d1ab1d7e3fb7"
+      "sha256": "72d5f3c08ab7082b7affc64fe533a08d922ac047fad57b45e1e98f66f208f8fa"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.EngineHost.Tests/HostBuiltCatalogTests.cs",
@@ -6600,7 +6676,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.EngineHost.Tests/PipelineTests.cs",
-      "sha256": "c053b5103aa39f59eae93df8b1211b4e34a2082b686baa287fcac3c8feffe61f"
+      "sha256": "a58defd8d0bca535520f410e2fd4900e4f8116bdc875079a9cd3c6ca47500226"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.EngineHost.Tests/ReadBatchAdmissionTests.cs",
@@ -6764,7 +6840,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/B3HostPortsTests.cs",
-      "sha256": "71e49c24eaac335ebc4292a07c2f3ca4b33ca8bd096a6aa0912c978e7f10accd"
+      "sha256": "21ff6c0d1333998fa84c96f2547162f6af55968e6335b78f3ef4adb92b35209b"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/B4HostPortsTests.cs",
@@ -6840,7 +6916,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/CompileCandidateTests.cs",
-      "sha256": "7c6cdfe3a0a0268683709b0dd4f65de3a2ebc7dc93ce66299067cfadb34bef2f"
+      "sha256": "171ac1a24ca1cada6f8a4b74a1f9e2e7b66a70911a1158a49eaea559120ead86"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/CompileContractTests.cs",
@@ -6892,7 +6968,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpSessionTests.cs",
-      "sha256": "2bc1ee81bc265025edb4a2f2b3526885077354337223a10b1f688020dd6bcdd2"
+      "sha256": "87ae00f5d8bd794ee23470c3b4c3361e83e619998313c678782ce5a523693b33"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineSessionFixture.cs",
@@ -6936,7 +7012,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FamilyPlainReplyTests.cs",
-      "sha256": "7381fa019352b2cc3aafbf9f96e8df72a117eb7f880dd965d1c40face1587ec0"
+      "sha256": "22691e430dbef6db657dcd120bef8aa3d7e80bc7c0a0b8e0f57719a194f59d9c"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FamilyReplyApiMetadataChecks.cs",
@@ -6968,7 +7044,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
-      "sha256": "d387bce52032cf129160119c7152e6c6b23bb29e686710fca55f5139686adbc5"
+      "sha256": "4cb74e724054936e9daebf578c780101574ca4877d6bee8674b4b11c8c6b4a90"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4InnerResultTests.cs",
@@ -7008,7 +7084,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HostDoctorFixTests.cs",
-      "sha256": "9bc652699cf9c07de8f9a91deaad18607834d421008c2d6b0fdc7e192c49ba53"
+      "sha256": "a027f48351b2a71076ef76e28d401c92c510f13bd634657842067e23ee308dd4"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HttpHostOptionsTests.cs",
@@ -7080,7 +7156,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/P8RecheckTests.cs",
-      "sha256": "ec3c776667ab91866cce002653eb149cd3af5e4b7fe401bf2216a397000142f8"
+      "sha256": "18c908ffee7281efa03ecb93308655eb39a72e906a1cdb26770aef64972873ce"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PackagedNoTiaReadinessTests.cs",
@@ -7124,7 +7200,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcWorkerRobustnessTests.cs",
-      "sha256": "d5467ee308a808e422699de241666d861266e82b9dbf6e2e56fd67a4ae5d2a8b"
+      "sha256": "05ef27ceab54436aee2a1b0558143f4fdd063540d22105ceab9a1e8e1523f1e4"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcWorkerTimeoutTests.cs",
@@ -7136,7 +7212,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/Program.cs",
-      "sha256": "460babfebd801ccd0169921666eddb935a705e2c7d562bff6de0ab80f024bcb8"
+      "sha256": "bfdbed66b76df5c77d9d82fd50e65544865706c445bc289efbc880910b68c90e"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/ProjectLifecycleAdmissionTests.cs",
@@ -7149,6 +7225,10 @@
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SaveCloseCandidateTests.cs",
       "sha256": "848494089f084ec2fab57b92ff4d85395f3cb131622941b36efe957c0a6161e5"
+    },
+    {
+      "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SecurityAuditBoundaryTests.cs",
+      "sha256": "8250cc4e1cbf8f6f85a8757bbcd14c1219263569d2a796ff85b02b8f71a19656"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SessionAuditHostTests.cs",
@@ -7172,7 +7252,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedWorkerRegressionTests.cs",
-      "sha256": "248b6fd71108f3f092c53dc77af1c37e0d5f915e74d7a193a225aa70269cecc2"
+      "sha256": "7c9359d77f9979377dc89af0b68d0a8b862ae779f0a69906facfc947e1cc31f1"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SoftwareReadDispatchTests.cs",
@@ -7200,15 +7280,15 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-      "sha256": "d76d8cd0d17189e6beb20a3bdd88f3f264e279c467d5891c3071071ae98efb53"
+      "sha256": "5161337be184ef60d070083fb22bee188ccc5385b4a557bc358e8da9dea3aa1e"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/ToolUsageTests.cs",
-      "sha256": "6869787ddbaea0750b225df257992ff58798fad7a9db036b46d121bfaab5a2b0"
+      "sha256": "f80e9463a4dc0653a2219c15bfbc66691cad6eb22d4f0692e11d31526c0cbe49"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/UnifiedPortAdmissionTests.cs",
-      "sha256": "eb4066d59ee9ba9ddf52b7ed903967ac837d56b82c689a2d2d1e9b9ff9b0b6dc"
+      "sha256": "fdde039b96e65b046b196c06fb0c9dbdd3186e79e5f7e61eba5c32495b2cffaa"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/UnifiedPortAvailabilityTests.cs",
@@ -7232,7 +7312,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkbenchControlHostTests.cs",
-      "sha256": "c229ce0abc2c0b533e11896cbee51ff415e865bb71805d73599b64c90b475faa"
+      "sha256": "2601f476313b754a9fcdca4e8fcbdce932f8d42ea93de350eb2e95ce8eeaa9c2"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerBackendFixture.cs",
@@ -7248,7 +7328,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerRobustnessTests.cs",
-      "sha256": "5eb82982527fd97ba89aa70bcb8d720469c49517dc01ce6dbe8fa9414bb770d5"
+      "sha256": "e292c115660f92a54ef54e2b557e41a9c74de381a4e3e5067b621d4cfc448ec6"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerSessionOutcomeTests.cs",
@@ -7347,6 +7427,10 @@
       "sha256": "464f97c83573e2ead32a96dd9f2341ff86a349d55efc34ae54abf91847a3b308"
     },
     {
+      "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/HmiBetaFixTests.cs",
+      "sha256": "d69ad53a38d1af0016ec9ad42561642187bd4fdd97329831b1d7f94bd7452308"
+    },
+    {
       "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/HmiTagPathSchemaTests.cs",
       "sha256": "da206e701a41b34a43c493c32cd93c697e720657aaee6ef278e4ff8f00d05cfd"
     },
@@ -7416,7 +7500,7 @@
     },
     {
       "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/PlcDomainRulesTests.cs",
-      "sha256": "fed261f2a240b67e37ecb5311b91d2698b1efea5e6a0a75eb7cecc5ea33b58b0"
+      "sha256": "cba6875828c858118756e73c40025aa672c3a4132d301223a1bc56ea5cff8723"
     },
     {
       "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/PlcFoundationPolicyTests.cs",
@@ -7508,7 +7592,7 @@
     },
     {
       "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj",
-      "sha256": "93c525643e7472015f524c32d1b578dbadcbe4ce3947ff7259ae4ecbd154e969"
+      "sha256": "888870385da4a11107731f0c8fbfac20faf17d45459c5cb519984ea701ad32a7"
     },
     {
       "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/ToolBridgeFixtures.cs",
@@ -7520,11 +7604,11 @@
     },
     {
       "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/UnifiedCrossReferencePolicyTests.cs",
-      "sha256": "2a73f0f0055c78682b1f216a2ed59b7ab81882c082942acb96e306f5e0093283"
+      "sha256": "157b26c93d17ae60ac3c9fff0e45559f74872845853962f1c5d1741fbad599ae"
     },
     {
       "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/UnifiedHmiPortTests.cs",
-      "sha256": "2bbd22948118dc446c610ae8272d316d93b57343ee9f0f92b2ce9ddba0555a3f"
+      "sha256": "2647433e4063040a4c95c5d7525917d687eda3a5a2d1a3cac43d788a8fc0189d"
     },
     {
       "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/UpdaterStagingTests.cs",
@@ -7608,11 +7692,11 @@
     },
     {
       "path": "tests/Shared/ShardFramework.cs",
-      "sha256": "52877a4ba127123db9b66b52650cd65e6540c14979ad04a01df296578620ba4e"
+      "sha256": "9442712ade0c0765bb3f2fd1e092a8fe1b81699a7e9a6a869d5fc0ef981e709d"
     },
     {
       "path": "tests/Shared/TestPaths.cs",
-      "sha256": "d5bbd7945f65813cf7feab5a97994ade3e79a5f56fc5e85003fda63ae58dc302"
+      "sha256": "2041ebd8364eef24d194ec13d8cf12ecab60cb7169ab724d42e59825209c01eb"
     },
     {
       "path": "tests/Shared/TiaMcp.WorkbenchControl.Tests/ActorTests.cs",
@@ -7632,7 +7716,7 @@
     },
     {
       "path": "tests/Shared/TimeSensitiveTests.cs",
-      "sha256": "7ce1bf83cbab94584459099eba2f1a40e2121ed6131e04d6f58811038b573fce"
+      "sha256": "14d708657e1c750fb5ed4b32b464bd78d03951448c0c4af01e7da92565ac9192"
     },
     {
       "path": "tests/Shared/Xunit.props",
@@ -8180,7 +8264,7 @@
     },
     {
       "path": "Version.props",
-      "sha256": "cbdc5c95021fef08eaf454c70862081da8ba8136dc296c3825c71d5038e9a04b"
+      "sha256": "52889c3fae6089f7cb193a532349c87dfd55a39a29ea3ebb18477dbecfb597fd"
     }
   ],
   "validationInputs": [
@@ -8242,11 +8326,11 @@
     },
     {
       "path": "build-tools/Package-MultiVersion.py",
-      "sha256": "7be085bdf818db45c7eb40da3e3aa5647047f5a2195ed7db6128e563670fc1af"
+      "sha256": "636c88458ae9b5e06dc85661951bba4264c1a77e6feecdb6a1cf1dff38b9e2cf"
     },
     {
       "path": "build-tools/Package-Release.py",
-      "sha256": "525353f4a380269cbd5d6412ba04639dc0f2380ae1ef7b21f9722567fe82e1ad"
+      "sha256": "55df45da63c89154a958838433ef46ed00ee47e3d1469d0fed5cd37ea86886e2"
     },
     {
       "path": "build-tools/release/AdapterBoundary.cs",
@@ -8266,7 +8350,7 @@
     },
     {
       "path": "build-tools/release/BuildReleasePipeline.cs",
-      "sha256": "28aca05b19124aea98572abbd6d2285c59b03afee6d2160bf730036c60e3a1f1"
+      "sha256": "3f33e81cb5ab5f37b0b788b7330c15fda02c08aeded74ef9240319f8dec0740d"
     },
     {
       "path": "build-tools/release/BundleLayoutChecks.cs",
@@ -8286,7 +8370,7 @@
     },
     {
       "path": "build-tools/release/CatalogGenerator.cs",
-      "sha256": "8f06fe758ade3a395ffbb4818485c53a83895ca1a4b1eaf929ff345843480124"
+      "sha256": "b073a294467f7597438353871c8eaaa0593c00bad9337b64ae68e1529635ed34"
     },
     {
       "path": "build-tools/release/check-build/CheckBuildTasks.cs",
@@ -8298,7 +8382,7 @@
     },
     {
       "path": "build-tools/release/CheckAffinity.cs",
-      "sha256": "a970be4e3376dfce1ab7597251541d2e2e0ed7de960298af1d7a70d3bbd77c96"
+      "sha256": "42618c543dc71fff83e13d6cae4fdb4848610b95d397a3e3e34f357b46234d20"
     },
     {
       "path": "build-tools/release/CheckAll.Build.props",
@@ -8310,11 +8394,11 @@
     },
     {
       "path": "build-tools/release/CheckAll.cs",
-      "sha256": "1773cd6d618fac385c2a12ea40057f77533faeacff6c753a7b41b7cd687f3499"
+      "sha256": "7a701b34541b87c1693bd94d18a1a032ac5a2c228326635ac689711157e7ad07"
     },
     {
       "path": "build-tools/release/CheckAllBuild.cs",
-      "sha256": "cfa14a593af1f83536f3e1fb4e7ace74825f7f780e8fd2c7d23ed5c5de897c45"
+      "sha256": "55ddf4cb52c6d1949b41a8bc93ff7594c5146832e3e2d1e9615a85a058b7eda2"
     },
     {
       "path": "build-tools/release/CheckAllInputClosure.cs",
@@ -8322,11 +8406,11 @@
     },
     {
       "path": "build-tools/release/CheckAllInventory.cs",
-      "sha256": "2152d3c7a49caf7593ea8dc415c58913f588c8f8fe777a381f2a59861113ca0e"
+      "sha256": "d52354305b26bec31a4493b5170f98c5a3768ff30d14a5e6ac56929d726a8880"
     },
     {
       "path": "build-tools/release/CheckAllLayout.cs",
-      "sha256": "ac394829a20daaedb8bda74bdb4ccb73205ccdeeaa8971f24cc8d1b091d78050"
+      "sha256": "e7eb7607ab43ab7c23336cecc57e76aeda433a31578402a20d22dfa07b9958c3"
     },
     {
       "path": "build-tools/release/CheckAllResultCache.cs",
@@ -8334,11 +8418,15 @@
     },
     {
       "path": "build-tools/release/CheckAllWorkspace.cs",
-      "sha256": "c851b92840817a4dfe698707741b1a99af93f8b9fcab1ec7c6967848977c9cf5"
+      "sha256": "e2024709f2d67e11e3ee2d8e6ebd856d8bce4893115ac443923b2d007303b92d"
     },
     {
       "path": "build-tools/release/CheckScheduler.cs",
-      "sha256": "e5575c54199b0e8712e8e00037556084f9e1837c966b8659bada0cb1d84450db"
+      "sha256": "e75b3b93e810ee21e3496aae605b0787368d81b846e2563f48ac2b2c8ea68da7"
+    },
+    {
+      "path": "build-tools/release/CiCoverage.cs",
+      "sha256": "5a86a81daf12fd70ca7f648342ab3ca9d8bddf6eab22263262f102143f732100"
     },
     {
       "path": "build-tools/release/CommentHygiene.cs",
@@ -8354,7 +8442,7 @@
     },
     {
       "path": "build-tools/release/DeveloperBuilds.cs",
-      "sha256": "ddaa795f2679d5fbdc63fb07e1b99bd009d505df40076948deb16e419c826e0f"
+      "sha256": "89c5e49bdee3228da06cb9314352709ba3e7ad103bf81989eb052a87d3feabbe"
     },
     {
       "path": "build-tools/release/DocumentationLinks.cs",
@@ -8374,7 +8462,7 @@
     },
     {
       "path": "build-tools/release/FastSuites.cs",
-      "sha256": "3a7859c1afc334c95d77da94e65597406214a5dc34da2320228bd94b37938086"
+      "sha256": "2420e1655fca92dc65b94ca863e0c7c649a79618aa2097418256077624c13e95"
     },
     {
       "path": "build-tools/release/GeneratorCommands.cs",
@@ -8414,7 +8502,7 @@
     },
     {
       "path": "build-tools/release/Program.cs",
-      "sha256": "f4f02d71a440da2a1bee4393225bbdbebc6c395c09a75fe01c7b004afac00466"
+      "sha256": "e1a3f37fe93127c57156a3a2ac42317c9962456b86fa0a902bd3211b27e7b173"
     },
     {
       "path": "build-tools/release/ProjectDependencies.cs",
@@ -8429,16 +8517,24 @@
       "sha256": "26122285e1e2651d87793b225c08b5dedd6554a7fc2c1d26ad705c633d4b9aea"
     },
     {
+      "path": "build-tools/release/ReleaseAdoption.cs",
+      "sha256": "3fdbb54f7525eab06f8994d325bbbbf7d40ae2628c1cb825ddfe9f487524f0c4"
+    },
+    {
       "path": "build-tools/release/ReleaseCandidateChecks.cs",
-      "sha256": "5f3bef01f3768064201aad2099466f643003869c56bba54338d46fd7a3e06946"
+      "sha256": "a76a9a416d3ce54ad5e4ff78dc2fe8ab693f98d1faca3624745cbc534c4f652b"
     },
     {
       "path": "build-tools/release/ReleaseCommands.cs",
-      "sha256": "9cf0593c6072295471453a28bc467e585200b73c57a365df398466cb5385b192"
+      "sha256": "315ae6b2689bbb947c62297305305aefc3a7f1dde22d00638f2e8522da9e1f71"
     },
     {
       "path": "build-tools/release/ReleaseCommandTable.cs",
       "sha256": "d98220df41050ca7cb1ac605a26b7f9779fa5682411a011284ff687f0b7f6be7"
+    },
+    {
+      "path": "build-tools/release/ReleaseEvidence.cs",
+      "sha256": "2b9c6957fac710d94e9a806b447f5d79ae89303245f33692b3371a153f1f3214"
     },
     {
       "path": "build-tools/release/ReleaseMigrationGenerator.cs",
@@ -8450,7 +8546,7 @@
     },
     {
       "path": "build-tools/release/ReleaseProduction.cs",
-      "sha256": "6026470cc7bf41ae65a61063a5197a575d3c9eb1625d4d660c6f7c456a248e2f"
+      "sha256": "d6cc0449175b832834329bdd08a6f91d7b952983ea115f1c38f9ecc1a0d53986"
     },
     {
       "path": "build-tools/release/ReleasePublisher.cs",
@@ -8458,7 +8554,7 @@
     },
     {
       "path": "build-tools/release/ReleaseRecords.cs",
-      "sha256": "11329aca78a545435061c588793b7c820729c67d2a5ce2fa8d368c1fc4b4c113"
+      "sha256": "8ebe7892762ff540d90a10cd569114edd78ea66bc1d3a668f3dc3f91bccd8825"
     },
     {
       "path": "build-tools/release/ReleaseRecordSnapshot.cs",
@@ -8478,7 +8574,7 @@
     },
     {
       "path": "build-tools/release/ReleaseVersions.cs",
-      "sha256": "82297e7881c9e36821a5d915ab3bbbc869c1326d808244df55980b16d9b0155c"
+      "sha256": "45463ea21b366380b1eaa13ce2a511f664d4522651ed602334ef1554a62f314c"
     },
     {
       "path": "build-tools/release/RepositoryChecks.cs",
@@ -8518,7 +8614,11 @@
     },
     {
       "path": "build-tools/release/SuiteSharding.cs",
-      "sha256": "43f5267d838c76042e43761654fe3ca4038dfd00fbd23eb5dc50c232dc7818bf"
+      "sha256": "c7caa5060ff51464d1df92bf0805f249e5460f0b240c597d008a484f5bc08078"
+    },
+    {
+      "path": "build-tools/release/SuiteWorkerCopies.cs",
+      "sha256": "14b2ce96f182098b23ba2b49ef5c50a210d7901ec7b047867cd4ef3350b5d982"
     },
     {
       "path": "build-tools/release/SwallowedExceptions.cs",
@@ -8530,7 +8630,7 @@
     },
     {
       "path": "build-tools/release/TiaFeatures.cs",
-      "sha256": "ad68adbe6d38f39bf99e1f2effd94d22ae00417af19bf78b82566b42e1e57ab0"
+      "sha256": "9ec921b8ae9ea92c947dc93c2e7365a352f792ca4c6fabce05afd4ccd4e17d71"
     },
     {
       "path": "build-tools/release/TiaMcp.ReleaseTool.csproj",
@@ -8810,7 +8910,7 @@
     },
     {
       "path": "reference/tool-examples/calls.json",
-      "sha256": "a9d11f43c7efd9c507f95d0c003ce63a16ed172344076bc27c9ad262136229a5"
+      "sha256": "fe97696f53743c1c0e0237709c33479d57ec3f76e1dd74c43eef14d0871e3677"
     },
     {
       "path": "reference/tool-examples/languages/catalog.json",
@@ -8822,7 +8922,7 @@
     },
     {
       "path": "reference/tool-examples/metadata.json",
-      "sha256": "51401ea4ecd0406543b0b1c0d7aec008bbdbde5bbe35646e595a1088da4afb00"
+      "sha256": "037d1e4869117fb6afea132d1d60f2cc77f374dce8f7d656ec8ae391a7c3a061"
     },
     {
       "path": "reference/tool-examples/sequences.json",
@@ -8834,7 +8934,7 @@
     },
     {
       "path": "reference/version-feature-matrix.json",
-      "sha256": "229aa64d8d383cb9475241af66bca56a94f9f804d5181d527aa3a0df53a40c3f"
+      "sha256": "50c90f04523a860fe75f5d44aaca11899f6ae575afc7c3634fce5394d163989f"
     },
     {
       "path": "scripts/checks/analyzer-warnings-baseline.json",
@@ -8846,7 +8946,7 @@
     },
     {
       "path": "scripts/checks/Check-BundleLayout.py",
-      "sha256": "ba4a39e156354813c1e2f14555fe9900cc5e216f27b3801c9cd57b6f3f0adae5"
+      "sha256": "4c5115ca87caa671b76c3344e68bae82468d34a902fd7ea5beea645c74c89abd"
     },
     {
       "path": "scripts/checks/Check-CommentHygiene.py",
@@ -8870,7 +8970,7 @@
     },
     {
       "path": "scripts/checks/Check-Repository.py",
-      "sha256": "a3b495bdbaf179c0d98a121a1ed856f0838ab3d21464a65a323ded1269345710"
+      "sha256": "00f40480c67773567e858a49e4c7b0ed369a8c6fa482086c0d5fcaa15d7d2a46"
     },
     {
       "path": "scripts/checks/Check-ScriptToolCalls.py",
@@ -8882,7 +8982,7 @@
     },
     {
       "path": "scripts/checks/Check-TiaFeatures.py",
-      "sha256": "822ed2e53ec8b6633ae57b34ced31f7a629ab71f24454d859819bccdb802d55c"
+      "sha256": "b52caf6aa3a662dbc5333ea4094e2a601b4e9f7e9f8678507d2d97f1ecadbef2"
     },
     {
       "path": "scripts/checks/comment-hygiene-baseline.json",
@@ -8962,7 +9062,7 @@
     },
     {
       "path": "scripts/checks/Snapshot-ToolResponses.py",
-      "sha256": "9207f2676be119994c12145487283c775821c48e717fcbc6023f9478898e23df"
+      "sha256": "9f39ac3d14c09b56f8a06b92d678471bf7b53640c36c7bba67ce1e1350f2013e"
     },
     {
       "path": "scripts/checks/snapshot_text_migration.py",
@@ -8994,7 +9094,7 @@
     },
     {
       "path": "scripts/checks/Test-DomainTools.py",
-      "sha256": "c91400a8b123288be2c939abae8d171378136255227bbdf125182a2a50c3275c"
+      "sha256": "a1dba454933631c139942ec30c33a6e99af21b423f5c0dc77d56626a311b3cd8"
     },
     {
       "path": "scripts/checks/Test-DownloadRouteSelection.cs",
@@ -9038,7 +9138,7 @@
     },
     {
       "path": "scripts/checks/Test-LocalStability.py",
-      "sha256": "a08b2bcb1f4c25c1059d65b81f06ce6941226e24f676ebf6439944dc1702d9a9"
+      "sha256": "1433f1972cab143b254a33e0302e1ce2813926c88e0b81788df0e78268e767b3"
     },
     {
       "path": "scripts/checks/Test-MatchPlcName.cs",
@@ -9066,15 +9166,15 @@
     },
     {
       "path": "scripts/checks/Test-PlcHarness.cs",
-      "sha256": "7be6282e35a543e8827618aababbd7b65848bd9dfa085fed6345ec6638ac24e3"
+      "sha256": "ef44aaf65c3be229d03388e8e01515c792761cbb91e462bce82918d0ebf26345"
     },
     {
       "path": "scripts/checks/Test-PlcHarness.py",
-      "sha256": "f2b53287e559ab4e519cd81a9e1780338a107b9faf24d84a7c27241bd1b937b1"
+      "sha256": "3b5d17579edcc23723bde964925eeee0bd9ffd60e70b6d53e4a5552438d36796"
     },
     {
       "path": "scripts/checks/Test-PlcHarnessSuccessors.py",
-      "sha256": "c994456c54a239140831b1aa61bb2460d457a79e84ee5412d26c9de7810a35f4"
+      "sha256": "77ce4687247f5163f5a60f0cf58f45221504c840a57e9faa563d7346eea3038c"
     },
     {
       "path": "scripts/checks/Test-PlcScriptSuccessors.py",
@@ -9142,7 +9242,7 @@
     },
     {
       "path": "scripts/checks/tia-feature-expectations.json",
-      "sha256": "3ca9c01af9b27b1abf600322f1e16e882257a9c2ae83c362d25881e923f81339"
+      "sha256": "74654e604395aecad9d9354bbda5e648ccbe27b38acd822b9fcd3917d87676ca"
     },
     {
       "path": "scripts/checks/tool_usage_checks.py",
@@ -9186,7 +9286,7 @@
     },
     {
       "path": "scripts/diagnostics/campaign/plans/plan_hmi1.json",
-      "sha256": "3d62a8f55fde334a49f52e52ddc3094b7b1ed5c6110ab0538146aab0d6ac97fd"
+      "sha256": "fba36e13e3584c0f077b7be6984407e68a4bd26d23f3e7ed87660c01b02fc97a"
     },
     {
       "path": "scripts/diagnostics/campaign/plans/plan_hmi2.json",
@@ -9214,7 +9314,7 @@
     },
     {
       "path": "scripts/diagnostics/campaign/plans/plan_off1.json",
-      "sha256": "b7b47b357876fcbc5b3f92c088db1692088ab65dac8beb5098c48cca89afd3f0"
+      "sha256": "7eba261a9d5ed2be32ddb7d914f017c74479b92992bc7932e29a7ade1b3f987b"
     },
     {
       "path": "scripts/diagnostics/campaign/plans/plan_online1.json",
@@ -9402,7 +9502,7 @@
     },
     {
       "path": "src/Adapters.Contracts/EngineeringCredentialRules.cs",
-      "sha256": "e1e1b427939a11d344036889e26a7b2d5cb5b51e8c1f31f366504059b8fffa85"
+      "sha256": "65fdf43cf58b0168dc77895bea643491a343fb2b60d9fcded34179e21f251173"
     },
     {
       "path": "src/Adapters.Contracts/EngineeringCredentialRules.Online.cs",
@@ -9450,7 +9550,7 @@
     },
     {
       "path": "src/Adapters.Contracts/HmiContracts.cs",
-      "sha256": "4da72ceb75e5bc8dbf0b5ef97e34193be0249e1f06a60d97c225664c09e0091e"
+      "sha256": "731635645d38a3df277507aef7fd17ad7388fc1841cc2ced3509f548ce08fbd4"
     },
     {
       "path": "src/Adapters.Contracts/HmiReadPolicy.cs",
@@ -9458,7 +9558,7 @@
     },
     {
       "path": "src/Adapters.Contracts/HmiScalarPolicy.cs",
-      "sha256": "3c3e146ab9826fcd19935895465f2d0e1c929495e154a1a32485e7792370dfc8"
+      "sha256": "3473c2377b8dd4f6fc4bd49c291dbab506ee0e5a483c859fe697716ba6c58426"
     },
     {
       "path": "src/Adapters.Contracts/IOpennessAdapter.cs",
@@ -9478,7 +9578,7 @@
     },
     {
       "path": "src/Adapters.Contracts/LibraryCapabilities.cs",
-      "sha256": "e5da7198a4e679491eaede56f7f1686bc161df65c98e443b2e94cafeecbe07c6"
+      "sha256": "b1ec9fd84f1c0bbc1b5c4c3b11166a9d8096f484665fb9185e0baa5788829e90"
     },
     {
       "path": "src/Adapters.Contracts/LibraryContracts.cs",
@@ -9490,7 +9590,7 @@
     },
     {
       "path": "src/Adapters.Contracts/NativeResultStates.cs",
-      "sha256": "3238cf52ac7c7e0688fb2a7025d862ea6e4a46f8476d5a9b3ae7bc99b4ddd10c"
+      "sha256": "bd0d24636d5cb9c26d10da53da338d199eac425d9590c9e64f29fb269a32110a"
     },
     {
       "path": "src/Adapters.Contracts/OnlineCapabilities.cs",
@@ -9514,7 +9614,7 @@
     },
     {
       "path": "src/Adapters.Contracts/OpennessReflectionContracts.cs",
-      "sha256": "453c50106f6e1eff1c1536cf9f38f05acfbfd7e02fd6cd2a977fe235a7b44ba5"
+      "sha256": "91c9082b69be6f0ff5d64617acda5a4c6b9536189d24c723f4656e8028e8e242"
     },
     {
       "path": "src/Adapters.Contracts/OpennessSessionRules.cs",
@@ -9522,7 +9622,7 @@
     },
     {
       "path": "src/Adapters.Contracts/OptionalEngineeringCapabilities.cs",
-      "sha256": "8972ce80f3499ce2bf164ef15c4dd299820b5be2bed1d87d45b7478e7a35ab9d"
+      "sha256": "4e83ebdb2b0f8a538b2135aad98fbd991f95ea8a837fad86fe2cf884d3c0ae4d"
     },
     {
       "path": "src/Adapters.Contracts/OptionalEngineeringContracts.cs",
@@ -9621,8 +9721,20 @@
       "sha256": "119e3ce7d680ee9be02a48a67f74aa98937bf62df9753850d0232c61cb2bc424"
     },
     {
+      "path": "src/Adapters.Contracts/PlcImportOrder.cs",
+      "sha256": "34cd8a1caa222a683c1175b1e38847e2d722436612a0aa80a3e7a06bed1a9e89"
+    },
+    {
+      "path": "src/Adapters.Contracts/PlcInstanceDbPolicy.cs",
+      "sha256": "61825977f3d66d29127ef7e1202e961c4ed44fb287bb824ef365567f23ef8164"
+    },
+    {
       "path": "src/Adapters.Contracts/PlcLifecycleContracts.cs",
       "sha256": "0625af03a06dced9efe2e68c746d11c99522e42fd42ca09e8707d7d6e7f6b5d0"
+    },
+    {
+      "path": "src/Adapters.Contracts/PlcMovePolicy.cs",
+      "sha256": "62d6f9dc7006bcd3b7b0c4640209704b11fdf0beb1e4857016a26ccc8c390292"
     },
     {
       "path": "src/Adapters.Contracts/PlcOrganisationPaths.cs",
@@ -9642,11 +9754,11 @@
     },
     {
       "path": "src/Adapters.Contracts/PlcSoftwareCapabilities.cs",
-      "sha256": "d773d2dcd696c441183016d948196a0580be96f4dfa15442678038336ea0f795"
+      "sha256": "d6a0ad82e660342acb9badcdd27fe4f235362155d740c09bf9ad9fbe7a63e89c"
     },
     {
       "path": "src/Adapters.Contracts/PlcSoftwareContracts.cs",
-      "sha256": "707e795debe945a8463166acb22762d15420bb5f7811c91a6719d7025bb1e87f"
+      "sha256": "543af99d077ed1cdcf5d8f1ac8c482cd6825d000de1b0c281e16af5b4df7dda6"
     },
     {
       "path": "src/Adapters.Contracts/PlcSoftwareRead.cs",
@@ -9674,7 +9786,7 @@
     },
     {
       "path": "src/Adapters.Contracts/PortedFamilies.cs",
-      "sha256": "bf9e41cc2cf8367576c9c45b40e04d62bcd51ebbf35b489860525a322b277006"
+      "sha256": "d9f742d6d88fca1326cda6044d10a762609daa97e9ca39b6ae1ec92414e40f1b"
     },
     {
       "path": "src/Adapters.Contracts/ProjectLifecycleContracts.cs",
@@ -9693,12 +9805,20 @@
       "sha256": "4c789aa07d297af98fd2bc95ce71c327754aa3b83bf006f233204ea97b6b2aab"
     },
     {
+      "path": "src/Adapters.Contracts/SecurityAttributePolicy.cs",
+      "sha256": "a1e695a724b2efa1f3f34e87481206c50ec387e66ab6db1fa506cbdd8802b02a"
+    },
+    {
       "path": "src/Adapters.Contracts/SecurityCapabilities.cs",
-      "sha256": "34abb3a71137aeca5b9918cfa48c9a5a8868f6af9e8b01eb4f6680a7eefac749"
+      "sha256": "a09e1a55f80eca2ff1ccbb2a2c93a67f944a2f9eb1b4f325cfc752fd4cbdd969"
     },
     {
       "path": "src/Adapters.Contracts/SecurityContracts.cs",
       "sha256": "9f9ad8a50406eab8c1db79e9a033517c1446ac474d01ec84bb8582f43785589b"
+    },
+    {
+      "path": "src/Adapters.Contracts/SimaticMlImportWindow.cs",
+      "sha256": "4c5b4e2701959cd657e0af1156508ecba60aed8a8f68d0d21e41b3d42046c814"
     },
     {
       "path": "src/Adapters.Contracts/StudioInterfaces.cs",
@@ -9730,7 +9850,7 @@
     },
     {
       "path": "src/Adapters.Contracts/UnifiedContracts.cs",
-      "sha256": "6fdbe4663305dda4fc5c4c55b27d6dcd1fc17babc4befc94d7ebf607855ef13a"
+      "sha256": "623ecd4b863fad0418f3e5b448b28c0916d7d2fe3a70a6df7f5f465b4ca5247b"
     },
     {
       "path": "src/Adapters.Contracts/UnifiedHmiCapabilities.cs",
@@ -9738,7 +9858,7 @@
     },
     {
       "path": "src/Adapters.Contracts/UnifiedHmiContracts.cs",
-      "sha256": "cd904e6e7be365d7420a8dce94da8e42fdf11bcbfa61c348f113ea0123f5bc81"
+      "sha256": "6c0785398eab05798d125068fd5f6ec5b30733db40d226f9d6e513606f7219dc"
     },
     {
       "path": "src/Adapters.Contracts/UnifiedHmiDefaults.cs",
@@ -9774,7 +9894,7 @@
     },
     {
       "path": "src/Adapters/build/Adapter.Sources.props",
-      "sha256": "1f8a62c65130c871e2f3c3f73cf50b74d7e83edf7c026edb4745f5e517f278a7"
+      "sha256": "380bcc82cc3b82eb15466d5f6c731d878cdbd8f64d7c9ef1f1584893a2aab2ed"
     },
     {
       "path": "src/Adapters/build/Test-AdapterInputs.cs",
@@ -9958,7 +10078,7 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/ClassicHmiFoldersAdapter.cs",
-      "sha256": "af2473509c4d1fbbb6ae048aca7e97d3e891dd73141fe9e9ec82d890dc68f844"
+      "sha256": "1a50121ee3cc8149121368a59778cb18da32559782b6a627500fc85690bf1a36"
     },
     {
       "path": "src/Adapters/Native/Hmi/ClassicHmiFoldersLogic.cs",
@@ -9978,7 +10098,7 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiAccessHelpers.cs",
-      "sha256": "8e87e0e51b6eec466eada40bb42acc7980bd8e083ab03f1d84f8a7a2266ec543"
+      "sha256": "4c5a933dc47a48792fc0fb03622dfcd92e8f7036caa3e30b02587c0a44ab6564"
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiAccessPrimitives.cs",
@@ -9990,7 +10110,7 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiDescribeAdapter.cs",
-      "sha256": "d9daab6103c05ac80a46a47c4c68b071831792043350c395cf6ccfc02fcf1e1a"
+      "sha256": "e85e0e79d3582c081750674f99639a5370a7ac4a2128a8b03b2b7e63b033720f"
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiDynamic.cs",
@@ -10006,15 +10126,19 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiEvidence.cs",
-      "sha256": "d8124dd44ea293bd1592552eaf7c23f154a38c6f59a1d82a103aa4fddfa4f0b4"
+      "sha256": "38bf6fb013e2d18d18bc2fe2348f8fd678e2cd437657960225078b1d823415af"
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiExactAccess.cs",
-      "sha256": "acc81cf6c1e662c78866080adf440dc3730e7d0e45ac961d334f227fdbab33d7"
+      "sha256": "0fb655d214bbe85520f3f55eaa0b6372a4d12b725adf2305033460ab6be1e987"
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiExchangeAdapter.cs",
-      "sha256": "08f01d7dc61ec1cdbe5f5e3a58e575573772543f4671258988de5036ed68d8c6"
+      "sha256": "141866ccd164aedbc65a5a389a22c42c5cdc9c4cc8a3fa57c0bd220d554bcc24"
+    },
+    {
+      "path": "src/Adapters/Native/Hmi/HmiExchangePolicy.cs",
+      "sha256": "b840f5a73e8e070bf76db2130728560bd13e3eff374c2c4c7d70e23e615d9178"
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiInspectionPortAdapter.cs",
@@ -10038,7 +10162,7 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiSession.cs",
-      "sha256": "a93de74fa3ea8f9cbc12826c1845da8f4f7ee999da491e78f7309c865c5d12cb"
+      "sha256": "be00426c17943516de6e9ef0cb1f6b0c8df23254963b0fd618546a9cbf5e8d2a"
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiSnapshot.cs",
@@ -10062,7 +10186,7 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/HmiWorker.cs",
-      "sha256": "017e92ddde3c4bbb56b41d5fbad26f7fbd3d5357bd4c6670ec198faee4d78285"
+      "sha256": "db5de985c93330735e14508d93f4b759571a89a7a0af6fd5d8d26e9b5d0f2856"
     },
     {
       "path": "src/Adapters/Native/Hmi/IUnifiedHmiInspectionSession.cs",
@@ -10078,15 +10202,15 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/MigrationRead.cs",
-      "sha256": "c000917cbcc0092d17a3bb3e25ae1ac6cde40fafeb12584d23252bd67051d9da"
+      "sha256": "333141d28660357c5f7263bb58a018cf018a6007011088446a98fd5213ff0627"
     },
     {
       "path": "src/Adapters/Native/Hmi/MigrationReadAdapter.cs",
-      "sha256": "553a7c3a155577ff88a1f7453f2898a48fc7997ba2dced0b2a3895e8b1c5db94"
+      "sha256": "aa7656efae7ff14f77dcbde3124dee6f7c35f33f712829fe03267c68705b7339"
     },
     {
       "path": "src/Adapters/Native/Hmi/MotionProDiagClassicHmiAdapter.cs",
-      "sha256": "6595ec8aa088a0d6af0c7f7aab13668c8abe3a0dd74f163247ed11c598749866"
+      "sha256": "52cd534e749e1002293e65e7b375d24f5fb6def69f076e62f3bd9cc6ef1cc220"
     },
     {
       "path": "src/Adapters/Native/Hmi/NativeExportCapture.cs",
@@ -10102,11 +10226,11 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedCrossReferences.cs",
-      "sha256": "a01f8cee2eed0ef75255a1d5b1bf56ceb7a18e31a1f65b3def5fa3bb3c01a817"
+      "sha256": "f5ab8656ac0847f385b66d7f3b18b2c1735ed70e6bcc88b1d3ed9ddc70f7e502"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedEngineeringAdapter.cs",
-      "sha256": "60060d0856abb1d6eb7016e950128388320ce0a29dff6b36266220791c1956e9"
+      "sha256": "a18024785d362e07d2663bb8517971d6d81f7bf362eef3b859677710ff628113"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedEventOperations.cs",
@@ -10114,11 +10238,11 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedEventsAdapter.cs",
-      "sha256": "eccb56eb3f7f7fe26a48b82d04af0317f77199d4faaa85b12042a8ba30b97fc7"
+      "sha256": "6dbd37815bb2ce32c479dad2a1049fc7ce19f6b4a2405b40b85d1d848f1f282f"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedExchangeAdapter.cs",
-      "sha256": "d6486c9ce5dcdadb4da1b1a64f7c333bd1e3163384cb64acd76f44ffe2bdb3e7"
+      "sha256": "be0607cf2b555fb973029132bbf675eafc7ac44c186194dd35df1ba1364a8087"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedExchangeLogic.cs",
@@ -10138,7 +10262,7 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedHmiAdapter.cs",
-      "sha256": "195fb8db63d6ba326194a48734c6f308004aec911c165af817e06c55fc64f8e5"
+      "sha256": "263ae67ce09fbba211f5f9fc4b9e4a9a8194889e55f7bd627d4f10d79be82d85"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedHmiExactAccess.cs",
@@ -10162,7 +10286,7 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedHmiWorker.cs",
-      "sha256": "55fecd8e8ab05141cff703bd9e8913716bbe200f954f39e5b36fc64861af383c"
+      "sha256": "7f13d8937f0c57dc96b14c983d36e1c74d4d4e88230cb6ae6abc3210651a7824"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedMultilingualText.cs",
@@ -10170,15 +10294,15 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedNativeRead.cs",
-      "sha256": "cfbb3ac03d1d1f675d80bf62a997cf761d4807d29d1c94b17cb89fd964255479"
+      "sha256": "41b671c697ad2e9aeee1377162aa9d11a784cdcb76f96e6b6a5a5b61b11267f6"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedObjectAddress.cs",
-      "sha256": "0174429c78eee2db401e1a9820308e2b6b0aae7ce7ab10ac32e5a59d1d626918"
+      "sha256": "db386c2829ee22a571804b123ac20b22a3d7d5b09552485aa7d8562f2be59dbf"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedObjectServicesAdapter.cs",
-      "sha256": "f204f76b335ea2dd360d459a9736a584086f4d6e892d5f214b994262c75f9216"
+      "sha256": "6e94f233b6421cdaed72823b7a3309328c2458b1713ddd9af63f45309f35044c"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedPrimitiveBridge.cs",
@@ -10198,11 +10322,11 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedScreenItemLogic.cs",
-      "sha256": "a37bcfcf7e4e7f0e749366817a4b91408b7db4da8521ec655cdea21e0288009a"
+      "sha256": "08dee23f982d714dffda1cecb701d991afdb8d071c3d86480186184f1bc3dbb3"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedScreenItemsAdapter.cs",
-      "sha256": "263b190e8add36ee7dfcb88230ec8a8b0914de2190f391fb853add4a908ecb78"
+      "sha256": "839fcab8724595bd9c49c6bda1949e7246ece2f6cefaeefd12809c8b69a6cfde"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedScriptAccess.cs",
@@ -10218,7 +10342,7 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedUiModelAdapter.cs",
-      "sha256": "6e94fb2066d861d00ce36eff5c5242fdd9580d6a361c528d9aff75dcc1dd0a87"
+      "sha256": "728ab98e3a82899a25b99e045506d3c9d557c9f9e463b95f6641d90c026ad5a4"
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedUiModelLogic.cs",
@@ -10226,19 +10350,19 @@
     },
     {
       "path": "src/Adapters/Native/Hmi/UnifiedWorker.cs",
-      "sha256": "15df2af0b39a2ce4e53c2d1d0f94fd5757ad7e9bb34cf0e411952bff5e9eccdd"
+      "sha256": "419393436513238ce380d360853d4cd7289ba196854565a608fc8ce9aaf40fed"
     },
     {
       "path": "src/Adapters/Native/Libraries/LibraryPolicy.cs",
-      "sha256": "8b66d683fa156f5236ac3658a4a814bba8327b675b8b235c6e139d1006c83b1e"
+      "sha256": "3674c6bfd86855d3ce116db416ff36f55189bb32077948a495e4b2ffd41d2ec2"
     },
     {
       "path": "src/Adapters/Native/Libraries/LibraryPrimitives.cs",
-      "sha256": "6ece6e40b93e676da41ccd50e6212436c9edd52e04e9d066bc4fc6110f0c8f91"
+      "sha256": "05a518b865a8c0d2d105bc4958f6689cd2c9f7429b21dd819dc773fcb8a0d58c"
     },
     {
       "path": "src/Adapters/Native/Libraries/LibraryService.cs",
-      "sha256": "206a9f36368ecde649a08be02e8007454f3b80d2cc3a5618a43e8860b76cc007"
+      "sha256": "89b4286ebd722421541b56152c9ea3fa6724f1a61b3504df990b4863d1c634e2"
     },
     {
       "path": "src/Adapters/Native/Libraries/LibraryWorker.cs",
@@ -10282,7 +10406,7 @@
     },
     {
       "path": "src/Adapters/Native/Optional/DccAdapter.cs",
-      "sha256": "c431c03653d103f99187f8d8173b2b4717f693cace27f006c5ba43bcc0854405"
+      "sha256": "c0848af10841634d3c5d2ff9fc5cddc33130d7e97a0aa9feef906b124085bb24"
     },
     {
       "path": "src/Adapters/Native/Optional/DccPolicy.cs",
@@ -10290,7 +10414,7 @@
     },
     {
       "path": "src/Adapters/Native/Optional/LegacyOptionalAdapter.cs",
-      "sha256": "18e5a4eee8ced968197ca75c4555b8fbf99db2b0d970cf38d3612cd734cfc81d"
+      "sha256": "98a4876632f7d0a63ec2bc3a3c818fdac3d19f24cb2b53bbba031e3245396cbd"
     },
     {
       "path": "src/Adapters/Native/Optional/OptionalAssemblyAdmission.cs",
@@ -10298,7 +10422,7 @@
     },
     {
       "path": "src/Adapters/Native/Optional/OptionalEngineeringAdapter.cs",
-      "sha256": "ed053868c8519e19fe94a547719f4ef622ca2906b28ce7a0f2b636f0b0276f97"
+      "sha256": "898ef35b066fbd906cd1adb7bb190ff8e5e2bba1ff6cfef64fb4dd9cf6f0f2aa"
     },
     {
       "path": "src/Adapters/Native/Optional/OptionalEvidence.cs",
@@ -10309,8 +10433,12 @@
       "sha256": "84b07a01bfbccc5f77019c440a7fd7d22064b7cfde4d06e7d27c18491f454755"
     },
     {
+      "path": "src/Adapters/Native/Optional/OptionalNativeOperations.cs",
+      "sha256": "d03e13584542d0378d3125575801e75d545ec463ac1149f244741f905cb23fa1"
+    },
+    {
       "path": "src/Adapters/Native/Optional/OptionalObjectAddress.cs",
-      "sha256": "e65d81962e716f09d7177244d17e078ddef93752018e6321919938102f86129a"
+      "sha256": "658ac59d99416a7b6c9a94c42fb340867d6b27161084823389ee203f66a31876"
     },
     {
       "path": "src/Adapters/Native/Optional/OptionalRules.cs",
@@ -10342,7 +10470,7 @@
     },
     {
       "path": "src/Adapters/Native/Optional/SivarcAdapter.cs",
-      "sha256": "1c4aa82ed3e6d1f43a74a01277565d834bd30a58aa12b6cd21b8c4e73189cef0"
+      "sha256": "4df40d1cd1b0e0715ab6073a556c74e915373258197e3a795922e8301285df95"
     },
     {
       "path": "src/Adapters/Native/Optional/SivarcPolicy.cs",
@@ -10350,7 +10478,7 @@
     },
     {
       "path": "src/Adapters/Native/Optional/StartdriveAdapter.cs",
-      "sha256": "5ae617d21e1d91461554edb6da06b5f57c3fd5308eeb2fd603445f3f4b4d4b2e"
+      "sha256": "3e83f031535a5dd04f9a0238841b6d3b7f1aa8770afde1730667f6287c53bab4"
     },
     {
       "path": "src/Adapters/Native/Optional/StartdrivePolicy.cs",
@@ -10402,7 +10530,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/EngineeringFileExport.cs",
-      "sha256": "e76989ca3884c76aa3cb001a70b1a2836b9d77cfd8cf0d4eede2966183f5c6a6"
+      "sha256": "ccefa2c722f2f8ba533150b4ed1ca98cf1f77582cf67d6634751f50023ad8ed6"
     },
     {
       "path": "src/Adapters/Native/Plc/IPlcOrganisationSession.cs",
@@ -10410,7 +10538,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcArtifactExchange.cs",
-      "sha256": "b2ddf1bd1305b60f2191adf7e09f06a47efbe92d98fed85d444991c81bbbce12"
+      "sha256": "3fe6f54d0d9e5003933b2ac8ae21dbc26d4086a964e24685ce734b1bfb5ac9a5"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcB5Adapter.cs",
@@ -10478,7 +10606,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcBatchExport.cs",
-      "sha256": "e2b928ed9a5a8b27ab5cd60038f20df22ad0884430de18a24ba710c198e85bee"
+      "sha256": "c76aae5b6f6de2fd7310f932bd13dfe683b298396ea652a721ce619acd28f99c"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcBatchExportPolicy.cs",
@@ -10486,7 +10614,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcBatchImport.cs",
-      "sha256": "1c98233afa90a6406e0443fcaaa25eeb9094a9786588de9dce70d42a75dddf5b"
+      "sha256": "bd671a445e5030fab4c6195c9c38e7fe714c855e705febf939d1653c7f3daa53"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcBatchImportPolicy.cs",
@@ -10510,7 +10638,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcCompilePolicy.cs",
-      "sha256": "1edf27c031327c647471f5b731b905dc517eb9eea8e376b0e1463488fea85f56"
+      "sha256": "de5a0b46992aef93ea26321c8fc02ce6c726592578f366463c98513596085f09"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcCrossReferencePolicy.cs",
@@ -10518,7 +10646,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcCrossReferences.cs",
-      "sha256": "d8f3798817bacc9fdb79a0b74719c5b9f12fea552695fe150ba4bb5595a878fb"
+      "sha256": "4fae843fbe3db6499bccf8ef65b180270ca3ac6d4d7f82c2ce2419aa07c5a31c"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcDeviceCompile.cs",
@@ -10526,7 +10654,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcDocumentExport.cs",
-      "sha256": "002d5bdf1e721652d6d27b04dde2621069353fa46f97377e3dcdccdedc09cdd5"
+      "sha256": "a0899de776fa31bfda05f578fb7f3a587fa5c0fc3bcf4179703122896b1bf9fd"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcDocumentExportPolicy.cs",
@@ -10542,7 +10670,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcDocumentPrimitives.cs",
-      "sha256": "8c31160b8f24f02b24a695065a0c8e5b307a38997ec4bfb6827d3fe9d7d982db"
+      "sha256": "3c7aa3b0fd1045cd59748553a75f8b1df273f30507e63039a4c9b47b74cb1237"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcExchangePolicy.cs",
@@ -10550,7 +10678,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcExportAdapter.cs",
-      "sha256": "ccfb3e9281805686042d39b0b9566b3340ab7998f80b456a15bc5c608d49dbec"
+      "sha256": "959c845e82377f6286524a482dfdab61ca676dc4e7933b14b5e1e9cf2e94d97f"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcExportCandidate.cs",
@@ -10578,7 +10706,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcExternalSources.cs",
-      "sha256": "8f8d0b670c15830155153f91a858dfe5f1374f9b5b8cb93a41d150255b6bf51f"
+      "sha256": "9526164132b235cec040f3f2341432ad959be48469d5f6ad34ac3fcbbba53b6f"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcExternalSourceWorkflow.cs",
@@ -10598,11 +10726,11 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcGroupOperations.cs",
-      "sha256": "3a08b4e76bcb0c4c46bf7fd29c6ba58b5cfd930075a336ca1f43580cc99ee135"
+      "sha256": "2b9aec0817223c7e295134fc964a22000e252cb74b1ed3571ac6ea83d139a4d6"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcImportAdapter.cs",
-      "sha256": "0fc48d65ece49086bd0c1eea16f9bdd40c0c3662aa53cd2ea506f855c560486d"
+      "sha256": "5fe053d8029088ea21e97d67d13d673eedf7b23156338ecc20a81f54a36cb3a5"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcImportCandidate.cs",
@@ -10650,7 +10778,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcOrganisationAdapter.cs",
-      "sha256": "09b99c9c3561bb18c420f4632e5bcf317f485ecead3cef8a3de89b0ed34497e9"
+      "sha256": "a7739c1b581619b027e8736488c9b513444a09cea7457f96829233b48b4816a9"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcOrganisationCompileTarget.cs",
@@ -10662,7 +10790,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcOrganisationWorker.cs",
-      "sha256": "3280b9706a7d15929d47b6f772cfb0f196b39b7f5bfc5fe5d47661e000c31238"
+      "sha256": "a69b92a7d58d013e0ee5749a260464b19baf68cb1008f537884f8039be4946c4"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcReadPathPolicy.cs",
@@ -10674,7 +10802,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcSoftwareEditing.cs",
-      "sha256": "8532c92ed556591059911acce617aeee5deebbe08adeaa1b98744424f6ca4575"
+      "sha256": "c912142da892169b5f18c3dde0d2628a5cfbf9329af0b64ef085a1935ffdd666"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcSoftwareValues.cs",
@@ -10694,7 +10822,7 @@
     },
     {
       "path": "src/Adapters/Native/Plc/PlcSourceRules.cs",
-      "sha256": "3a91219e998613029d5e57b32a68b7aa2a28265ff88308fe3f775572259cd3ac"
+      "sha256": "b3ebad42f80a04ecff7f7130c1c39abdc30733f9c04fd3cc63cd832971f13be3"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcSpecialExport.cs",
@@ -10758,11 +10886,11 @@
     },
     {
       "path": "src/Adapters/Native/Reflection/OpennessObjectResolver.cs",
-      "sha256": "21dc4565fbf5fc86b480e3dbb5e3ff3284212c86bebbebcc24432802848d7612"
+      "sha256": "d207ac24dd0347917b1a1825e3f07daa78cf87ef56c5752ce6349ce4d748189a"
     },
     {
       "path": "src/Adapters/Native/Reflection/OpennessReflection.cs",
-      "sha256": "61b799dc639022cfbe01dc2ec7b018526dc440932e2df74e0106918e8ae6aa80"
+      "sha256": "d94b7cf0792dba4909487b49702b49d6167954ce545305d2cb451ad1819383c7"
     },
     {
       "path": "src/Adapters/Native/Reflection/OpennessReflectionWorker.cs",
@@ -10774,11 +10902,11 @@
     },
     {
       "path": "src/Adapters/Native/Reflection/ReflectionScreenTraversal.cs",
-      "sha256": "d5c5444ae8c17c867456dda031485ea97e9e2f1b4f7f7df68dbdf4aaa159698d"
+      "sha256": "97da1e5fcc4664b6e88ab63cf272bf43f66ad9e0f0a6c4b38cdbb925d13fe424"
     },
     {
       "path": "src/Adapters/Native/Reflection/ReflectionSession.cs",
-      "sha256": "45e1b5d81ce493d4868a79e0f30916ebdf5c33949f71e1d0169d5d9c028e0cc1"
+      "sha256": "d59be104c05ba03d83e2419071f0158b399f2dbdb15cf470df8c293294cd32e1"
     },
     {
       "path": "src/Adapters/Native/Safety/SafetyFileOutput.cs",
@@ -10786,7 +10914,7 @@
     },
     {
       "path": "src/Adapters/Native/Safety/SafetyManagementAdapter.cs",
-      "sha256": "d15673d86ceb9e3cafcb9301f99ce78e6833d76259ac74b27177ceb268018a41"
+      "sha256": "c51423c304fe85f19dd21d264e9a9d62789348e0e5fb161fa4efdcab4bb86afc"
     },
     {
       "path": "src/Adapters/Native/Safety/SafetyPrimitives.cs",
@@ -10802,7 +10930,7 @@
     },
     {
       "path": "src/Adapters/Native/Safety/SafetyValidationAdapter.cs",
-      "sha256": "d451041a5d176f6c6c145cdf78c4fe23e97f229a8daadf8dc77e14159d272eee"
+      "sha256": "50800762004f10b1a884c03042f8298ea11506184ddcc2fd0b21c39614ae71eb"
     },
     {
       "path": "src/Adapters/Native/Safety/SafetyValidationPrimitives.cs",
@@ -10818,19 +10946,19 @@
     },
     {
       "path": "src/Adapters/Native/Security/CertificateAdapter.cs",
-      "sha256": "dc38415df8574b1ed9d6388d9db08ace14a36a53cdafa0ee25148b4da07ced8c"
+      "sha256": "b68351581ffc5c73c2780f4c95ca2bb3a1f722abd181370cbf28f8f04cde375d"
     },
     {
       "path": "src/Adapters/Native/Security/DeviceUsersAdapter.cs",
-      "sha256": "849669cafd4ac3959261fc2c82f4b216f336b91a410cb2c5860a8952d30cefe7"
+      "sha256": "956a1814f411b097207fec1fd75142ecd5e701ecdbb87e7ccb2f593d04c79493"
     },
     {
       "path": "src/Adapters/Native/Security/HardwareSecurityAdapter.cs",
-      "sha256": "fd65196d8704c4f15f27624927fa8ef21eddb4b3b9d3bafe68837f77dc651b23"
+      "sha256": "088c6ff276929f89a7d9aee5e2eca753a9ea9f648e0573873a49dacf247cecc9"
     },
     {
       "path": "src/Adapters/Native/Security/ProjectProtection.cs",
-      "sha256": "337ca658a01b1cf1a258d8ead99797122574da57bce0894b954a628121a79443"
+      "sha256": "bffe18ccb307662a9c832be96e050fcdf4eab6b37c7c5d538738d3be7a4b3cca"
     },
     {
       "path": "src/Adapters/Native/Security/ProjectSecurityPrimitives.cs",
@@ -10838,11 +10966,11 @@
     },
     {
       "path": "src/Adapters/Native/Security/ProjectUsers.cs",
-      "sha256": "9a2d978e58dba0c08623896b62ab8f7b6bf636dc91225bc63bfe865f4feaeff8"
+      "sha256": "46b001039dd29de4b96351f3bbb1f691c5242c510ffb023690b7aeebe49cebfd"
     },
     {
       "path": "src/Adapters/Native/Security/PutGetAccess.cs",
-      "sha256": "b38aecbd5e9d3ae071557efca2ef40257c62c7599cebbe97427dfec2666599b0"
+      "sha256": "874d9280c40eb3bec972de6626ae9df82d0857dbb53ab29634f0823f6d6ea7b9"
     },
     {
       "path": "src/Adapters/Native/Security/SecurityCatalog.cs",
@@ -10854,7 +10982,7 @@
     },
     {
       "path": "src/Adapters/Native/Security/SecurityDeepAdapter.cs",
-      "sha256": "2aac4a43069b88e068c60773924f7d59bccda492c5a437de8cb9dc5183c2a8c6"
+      "sha256": "39f6fb4f2d4c9ecc8e584d4bc66d908bd3aedfd99b80860216f9d4b1eb231a17"
     },
     {
       "path": "src/Adapters/Native/Security/SecurityEvidence.cs",
@@ -10866,7 +10994,7 @@
     },
     {
       "path": "src/Adapters/Native/Security/SecurityRules.cs",
-      "sha256": "f06438adb883b8f6e6d0db42f0fab83fc9039a04aafaed1f97b8dcc9cc43dff6"
+      "sha256": "ec823467744cd4a4e2332bd12ad03b87a925c70dcfff71e9622234ce61c91cb4"
     },
     {
       "path": "src/Adapters/Native/Security/SecuritySession.cs",
@@ -10874,7 +11002,7 @@
     },
     {
       "path": "src/Adapters/Native/Security/SecurityWorker.cs",
-      "sha256": "9a4f117736343a7b48a9c28bb82e8806f89a814b8f8ff55caf52251481ddd550"
+      "sha256": "f274d9e0fb6be3b3c54c59074b6bf01c9b2f2db3a8a69f6a3dce4a45df484a9e"
     },
     {
       "path": "src/Adapters/Native/Session/BindingSnapshotAdapter.cs",
@@ -10902,7 +11030,7 @@
     },
     {
       "path": "src/Adapters/Native/Session/PlcFoundationEngine.cs",
-      "sha256": "187c1b1a2c9cd62a06b7ddee875cf816389c162176806db023e0bb1802b5ceb7"
+      "sha256": "9ba7f4ba3e5a72f06e7306532f54c30b3980a5de1d60ff2fa214dad881ddcf15"
     },
     {
       "path": "src/Adapters/Native/Session/PlcRuntimeQueries.cs",
@@ -10962,7 +11090,7 @@
     },
     {
       "path": "src/Adapters/Native/Studio/OpennessVersionControl.cs",
-      "sha256": "e96c7d8ef0139972b57c9a5a4bc4bd2d2c0ebaabb2a4e4c0ae65466f21263c43"
+      "sha256": "3ffb158ac31f2d644a8491bfee7e3aebf19a53ca3658d8b0937e50524dd085d4"
     },
     {
       "path": "src/Adapters/Native/Studio/PlcNavigator.cs",
@@ -10977,12 +11105,16 @@
       "sha256": "90c4489a8b505dc467c34873f812c9bda3a43aab4f886a5f6e874442ec50b9ac"
     },
     {
+      "path": "src/Adapters/Native/Vci/VciExportPolicy.cs",
+      "sha256": "e7e9e760020d08525b32f13914e49085b1571d55a2588cb3d58b05105bf07502"
+    },
+    {
       "path": "src/Adapters/Native/Vci/VciFallbackAdapter.cs",
-      "sha256": "9a4ab5ac14afcccbb2e1b9f0cf85ed48a93c0ec15f4bfc4cd4f9ddfe850d4b79"
+      "sha256": "0d5a342b85b696e35105e371763e16d49a8176f01431059a4882232170de7e0c"
     },
     {
       "path": "src/Adapters/Native/Vci/VersionControlAdapter.cs",
-      "sha256": "d1d3ea5bbe790c93f04aed87e6b85307aa9ab3dcd0d039e5325fa73d7bf87297"
+      "sha256": "8430e08bf9ce9b62eeae2f6232824473b7eda88c76d8c3ea273507285263868f"
     },
     {
       "path": "src/Adapters/Native/Vci/VersionControlFallback.cs",
@@ -11002,11 +11134,11 @@
     },
     {
       "path": "src/Adapters/Policy/OpennessReleaseContract.cs",
-      "sha256": "a4a76c1c5ebe37bdae77b1caaafe0ba624682b7793957bf5906f683de16f68f0"
+      "sha256": "cbf8349f6376ddf527c0e7c28b173aa471a9e7d9975e0db6066b5c3414dac1bd"
     },
     {
       "path": "src/Adapters/Policy/PlcBlockXmlPolicy.cs",
-      "sha256": "d33015c800f53dccc836752571752277389d752ad7adc3dc114016c44cf56fee"
+      "sha256": "874eef9b0bf92685a77c1646b77d927763cb12487b54bef02d1b4652df4cb0dd"
     },
     {
       "path": "src/Adapters/Policy/PlcLifecyclePolicy.cs",
@@ -11094,7 +11226,7 @@
     },
     {
       "path": "src/EngineHost/EngineHostPipeline.cs",
-      "sha256": "86dfcff939094a9a8fbdf1c2005802117f65cbffa6220124c2e4b6a0906a38f8"
+      "sha256": "7fcbaf59ce043054e7144ba9b84ab3b8984091be654376c51c8c23364ca379f4"
     },
     {
       "path": "src/EngineHost/EngineHostSources.props",
@@ -11134,7 +11266,7 @@
     },
     {
       "path": "src/EngineHost/ModelContextProtocol/Tools/ImportOrderTools.cs",
-      "sha256": "5d7e673a572320ed2bf3c5b8ef4e5a5f1e6b0be24bff6689ef56557ba6f205e0"
+      "sha256": "d6974d41b217d3cb3588bd0ed7fc17f97d9a2ec3aebcc7bd676cad1b54d3febd"
     },
     {
       "path": "src/EngineHost/ModelContextProtocol/Tools/ImportStagingTools.cs",
@@ -11142,7 +11274,7 @@
     },
     {
       "path": "src/EngineHost/ModelContextProtocol/Tools/McpServer.Approval.cs",
-      "sha256": "53997f34e5b75317715fbfa3a37bc0a6a5c5c7f242ceb00bc1848b5ac27c3703"
+      "sha256": "356246c48bd3144eb9251b90d370c8ea99cb71b4ae09704e23852f5de6718166"
     },
     {
       "path": "src/EngineHost/ModelContextProtocol/Tools/McpServer.ArgDiagnostics.cs",
@@ -11158,7 +11290,7 @@
     },
     {
       "path": "src/EngineHost/ModelContextProtocol/Tools/McpServer.SerializedCalls.cs",
-      "sha256": "59ac7345d38500c9745ce666e0f890e061407ba4c522cb46b43438442933061b"
+      "sha256": "d636e17a062c4c31ace4d2837ae0ea1cbdbf191e0138f4584df3af8faca3ade5"
     },
     {
       "path": "src/EngineHost/ModelContextProtocol/Tools/McpServer.VersionPolicy.cs",
@@ -11174,7 +11306,7 @@
     },
     {
       "path": "src/EngineHost/ModelContextProtocol/Tools/ToolDescriptor.cs",
-      "sha256": "cadcfb75f131ba6967953aa2bc6e295d1966644c04e43482c039f545d00017b6"
+      "sha256": "9eefb9e2f0d553eb5e76b5922a42fdc075085db3c8c559413a24cda8071fc9be"
     },
     {
       "path": "src/EngineHost/ModelContextProtocol/Tools/ToolUsageTools.cs",
@@ -11206,7 +11338,7 @@
     },
     {
       "path": "src/EngineHost/Siemens/SecurityDeepLogic.cs",
-      "sha256": "225a453daac2335ec0663adbc66c7100a67bb1a880004ce72c963cfa29e627be"
+      "sha256": "f3b1ce67784f53665a70c11e62b7953cc64ecb0590b3333ae1d7bbb5be89f071"
     },
     {
       "path": "src/EngineHost/TiaMcp.EngineHost.csproj",
@@ -11214,7 +11346,7 @@
     },
     {
       "path": "src/EngineHost/WorkerToolInvoker.cs",
-      "sha256": "5853071bad7f7d0ae9c75a2f5b06d4cfe2c3f306ae74638d7b8141feb8711ecd"
+      "sha256": "221a2fc0f2cc325c71ff94e51193cfc7f0a258603dd2ef79f8bc4e0ab06ea4ea"
     },
     {
       "path": "src/Engine/Cli/CliBoundary.cs",
@@ -11274,7 +11406,7 @@
     },
     {
       "path": "src/Engine/ModelContextProtocol/Tools/InProcessToolInvoker.cs",
-      "sha256": "7abd297e4d9f52d89a24ccfd41d4bb64bb956f729097d09f8645bbd130547b40"
+      "sha256": "d6391b3c2ccc9ef14cb51adfba201fbfbcf78dd1bd938d9f33646d39af7afeee"
     },
     {
       "path": "src/Engine/ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs",
@@ -11446,7 +11578,7 @@
     },
     {
       "path": "src/Engine/Siemens/Portal/Portal.Blocks.cs",
-      "sha256": "061a8183ba49d97a06acb6f4d2a7c962150dbe83ef2e25e252768f98368149f1"
+      "sha256": "fc211903e328c83998faf3639b7caf42cc27c9e81f7196b9f34a7bdeba8707eb"
     },
     {
       "path": "src/Engine/Siemens/Portal/Portal.CausalTrace.cs",
@@ -11590,7 +11722,7 @@
     },
     {
       "path": "src/Engine/Siemens/Portal/Portal.Software.PlcTables.cs",
-      "sha256": "9e7b7c2de0afb1b7743a9149f8140d0cf80729a816d592939a38f968faf39a5a"
+      "sha256": "61ad9b3644053a1f2b4c2abc499b9a3c7696885d13cbe0ff0dcccbcc2c79d657"
     },
     {
       "path": "src/Engine/Siemens/Portal/Portal.Software.Reflection.cs",
@@ -11762,7 +11894,7 @@
     },
     {
       "path": "src/FoundationHost/EngineReleaseHost.cs",
-      "sha256": "aa37f76f5e27d6463ea5e0bed9bd90cf2c61d1d62e10174ff90e92548059644f"
+      "sha256": "48f77699d49f76baa80bbdd459c9462df91595dc5895935615f47ae891fae6e5"
     },
     {
       "path": "src/FoundationHost/EngineTestVisibility.cs",
@@ -11794,7 +11926,7 @@
     },
     {
       "path": "src/FoundationHost/FoundationHostPorts.cs",
-      "sha256": "ee2ecd1e34ce43e547a8143eba723809cc1e4be0f5e0545fe13555ab839e6695"
+      "sha256": "b2cc57c82f63908137d217008c3636bf4e4d4a1af7cadbc0a47f75ece4d6dd54"
     },
     {
       "path": "src/FoundationHost/FoundationPassiveDiagnostics.cs",
@@ -11818,7 +11950,7 @@
     },
     {
       "path": "src/FoundationHost/FoundationTools.cs",
-      "sha256": "bc12babcb6a8114570aef417436783b359603dfaa47a4262e13bc67b0fe74d15"
+      "sha256": "4160493b20213c147a39fe7f0e97a7e5bb2b2a40e64582250725f74ab0f2e10f"
     },
     {
       "path": "src/FoundationHost/FoundationV4Result.cs",
@@ -11826,7 +11958,7 @@
     },
     {
       "path": "src/FoundationHost/FoundationV4Tool.cs",
-      "sha256": "81b0b25abdfd1ec7580d4854d7e66bee1bf4876d4bfd57eae01376bd984d1545"
+      "sha256": "ea5594bcd616531aad3f75bb1ea2b43e275bd4f980d37781deda89799ae78248"
     },
     {
       "path": "src/FoundationHost/GenerationTool.cs",
@@ -11842,7 +11974,7 @@
     },
     {
       "path": "src/FoundationHost/HardwareFamilyWire.cs",
-      "sha256": "f99ff585dcb30d14b242dd11c48872347ff307fa34fa8d6a83c899ca25806dd3"
+      "sha256": "8d4e82c4b1f22fb15effb26a14847bfea79bbd492a75e412b771e584f90cf5b7"
     },
     {
       "path": "src/FoundationHost/HostCliCommands.cs",
@@ -11894,7 +12026,7 @@
     },
     {
       "path": "src/FoundationHost/LocalStabilityTelemetry.cs",
-      "sha256": "fc1a8d8c9cb4354dfba590a4eabf06873aa03d4ad83c77bdc0efd2c4d54d2e8b"
+      "sha256": "3d0d12b96c450033d021d1cb58edd237da69385c0a7041b6098151044b105ddc"
     },
     {
       "path": "src/FoundationHost/OfflineBlockCompositionBuilders.cs",
@@ -11902,7 +12034,7 @@
     },
     {
       "path": "src/FoundationHost/OfflineBlockCompositionTools.cs",
-      "sha256": "93a2872662f05bde81e841abe9042c76717aebdc5456685dbc46d6067f99bb5f"
+      "sha256": "d8d3dbb4e083c5eec313655ea8d6034ccff89a69bb49911fb2731e4bb897de03"
     },
     {
       "path": "src/FoundationHost/OfflineCompositionBuilders.cs",
@@ -11918,7 +12050,7 @@
     },
     {
       "path": "src/FoundationHost/OfflineLadderTools.cs",
-      "sha256": "ea97899be1c0af4aa748cdbcb949602934727d41769098c5637bc057b0184fbd"
+      "sha256": "1630c8711f1c57f28e2758105692243152fc49cccc7af7b6e216161193a63d37"
     },
     {
       "path": "src/FoundationHost/OfflineSymbolManifest.cs",
@@ -11946,11 +12078,11 @@
     },
     {
       "path": "src/FoundationHost/PortedToolContract.cs",
-      "sha256": "3ad0684cd89fbf357bb53b2b355ddf6d165ee7c37da788e27660dc5a1dbc7183"
+      "sha256": "25477c27bae9741491cbb145288b1e6a8f9f1e7ab9615111096967361a171cbd"
     },
     {
       "path": "src/FoundationHost/Program.cs",
-      "sha256": "3745585df5ee501fd2c99b3afd1ea94281d48a65d21590ce97af71259c121084"
+      "sha256": "fc5687ef86bafa95e124c6268c341709b24ad8bbd83a3c3c76252e8175e2295c"
     },
     {
       "path": "src/FoundationHost/RuntimeQueryContract.cs",
@@ -12198,11 +12330,11 @@
     },
     {
       "path": "src/Logic/ModelContextProtocol/Builders/ClassicHmiScreenXmlBuilder.cs",
-      "sha256": "cb78872083fee3d8034b176374aa05feafc04d54737da9742b386d306bce8961"
+      "sha256": "9e9940ccb0de3cf88776850b11604aed9ed64a428937cd80e79064fd5c020a30"
     },
     {
       "path": "src/Logic/ModelContextProtocol/Builders/ClassicHmiTagTableXmlBuilder.cs",
-      "sha256": "27007ebdd7822c638ab6259fc675534b8bd6f4c9e8269b9dcb7b7941c8e5393c"
+      "sha256": "38df7ae6e3b0cd0bab1133c2bf3a737a476c2e19e76f64cf1f7fc8a01bea6757"
     },
     {
       "path": "src/Logic/ModelContextProtocol/Builders/ClassicHmiValidationFixture.cs",
@@ -12438,7 +12570,7 @@
     },
     {
       "path": "src/Logic/ModelContextProtocol/ToolMetadata.cs",
-      "sha256": "6767fd0d33c41e9c64b66951695156d1d19ddedbcbb6c053dac875dc022a3a10"
+      "sha256": "119f4a67e1b71e82893b5dc2d0bec27360a384a1136d22f906c241056e0be6d6"
     },
     {
       "path": "src/Logic/ModelContextProtocol/ToolRecipes.cs",
@@ -12486,7 +12618,7 @@
     },
     {
       "path": "src/Logic/Siemens/CfcLogic.cs",
-      "sha256": "30fd5e6da62ee91f32092f1681f475fc65d3c4b1ca120ae68ce8089bc9683cc2"
+      "sha256": "ace53ba809706d17977662bf5541e96f509ac3e5fbbd34dd6d2ae0edb713e14f"
     },
     {
       "path": "src/Logic/Siemens/ClassicHmiFoldersLogic.cs",
@@ -12530,7 +12662,7 @@
     },
     {
       "path": "src/Logic/Siemens/ExternalSourceRules.cs",
-      "sha256": "e715e661f05c02c0bec5279a332a3273b9ff408df6932fc9841d1780427afee5"
+      "sha256": "bf2195c03d9dbf43923b477e9f5972a44ba920dd4ac8f7bbafbac10947cf55c2"
     },
     {
       "path": "src/Logic/Siemens/Guard.cs",
@@ -12630,7 +12762,7 @@
     },
     {
       "path": "src/Logic/Siemens/TestSuiteLogic.cs",
-      "sha256": "0edd2d6c1b58ca65018b3ccddffd29bd523dd4aaae2ee9d71f3743c0e3deb239"
+      "sha256": "40bb045d64872f4d82aa4a1c79bf58628936ff3fe97cef1bd11838c5b5f92b3a"
     },
     {
       "path": "src/Logic/Siemens/TiaVersionCatalog.cs",
@@ -12638,7 +12770,7 @@
     },
     {
       "path": "src/Logic/Siemens/ToolVersionPolicy.cs",
-      "sha256": "d433b2c21fc3f67528558642bdbfb95563e9eca2610dfba7846afd1ac520408c"
+      "sha256": "2bea2afde91c91e717e7a9f81c420c0a1add69e62725a5557b79eb28dce76be5"
     },
     {
       "path": "src/Logic/Siemens/WatchTableEntryXml.cs",
@@ -12666,7 +12798,7 @@
     },
     {
       "path": "src/Logic/V4/CompileCandidate.cs",
-      "sha256": "2852ffcfb999698c0f5bf3610a3374b432c0c77225b79d1bdf06c12e7d1a6402"
+      "sha256": "9c4a3eeaa8b447151dd982f77ac007bd2cb4c0dd3d20c27b02aa4030bacb3965"
     },
     {
       "path": "src/Logic/V4/CompileContract.cs",
@@ -13114,7 +13246,7 @@
     },
     {
       "path": "src/Shared/CertificateManagementTools.cs",
-      "sha256": "6b661de6911b015a7d5d866e053ce1a87d66ab7ae923eed6453911f495b17043"
+      "sha256": "94fdf6adbdb7d042561bb7ed0caaca767eef8f500f4f98ece9ffefd15f16bca1"
     },
     {
       "path": "src/Shared/CfcPortService.cs",
@@ -13126,11 +13258,11 @@
     },
     {
       "path": "src/Shared/ClassicHmiFoldersService.cs",
-      "sha256": "15a1cde8ecc154a87cc423c5a74e1fcd4fd3f95f18e057d118dfa19f7ee49af1"
+      "sha256": "eb8b5108ff14989136515b613fec8edd3db370c8b6cb070a81debe538cd53e92"
     },
     {
       "path": "src/Shared/ClassicHmiFoldersTools.cs",
-      "sha256": "dd0e3b052a26f6e0681a6e29ed2cab2a9a10dc1a61269065c63bf0e98f8bddf6"
+      "sha256": "c357090f434d1189d23cf3fc6f1f69608e96344114dcb7729ee7cb6f324451cc"
     },
     {
       "path": "src/Shared/ClassicMotionToolContract.cs",
@@ -13154,7 +13286,7 @@
     },
     {
       "path": "src/Shared/DccTools.cs",
-      "sha256": "0a20ffe2e1f000458c45c1617f38278315486eafadc847fcf51ede86864c0043"
+      "sha256": "00405c4b9eb6d6ff608ca959d7e6e8cd0418048e50600e8dbe27158e9bfc1c3e"
     },
     {
       "path": "src/Shared/DeclaredToolMetadata.cs",
@@ -13266,11 +13398,11 @@
     },
     {
       "path": "src/Shared/HardwareSecurityPortService.cs",
-      "sha256": "421aa0e0866c956bd7d0aadca5b1a82748bfb1c1b3d23f6934253b3c708288dd"
+      "sha256": "cb06cf154a73238e1eeaea25e858eac2ba5fab9a79e98ca42b148ddf1d6982fa"
     },
     {
       "path": "src/Shared/HardwareSecurityTools.cs",
-      "sha256": "75a975a903af6c59c43beac662c78ceedaa7f82e16120a93125f2e9d07508f37"
+      "sha256": "b3ee0f6e9d0304b652f5730c7b677c25066b1e8b01c8bf96c6d17d482dbf6593"
     },
     {
       "path": "src/Shared/HardwareServicesPortService.cs",
@@ -13282,7 +13414,7 @@
     },
     {
       "path": "src/Shared/HardwareServicesTools.cs",
-      "sha256": "f8a130bd66daa6965264a15d2ebe40e8659689d44afc4076483cb64165d6b087"
+      "sha256": "4372c1299ffb36557a6920e4faa5b392c191791ecf7baf5da3b98210ec7e86a4"
     },
     {
       "path": "src/Shared/HardwareToolContract.cs",
@@ -13298,7 +13430,7 @@
     },
     {
       "path": "src/Shared/HmiDescribeTools.cs",
-      "sha256": "fc7d423327bdc23853a94796a0fc52cdb34a5555673401b64b1216532251dfbf"
+      "sha256": "2e0332e865066d82ca0e5fcd996a700e011195eebab42e099cf2d18f1e929685"
     },
     {
       "path": "src/Shared/HmiDesignBuilder.cs",
@@ -13310,15 +13442,15 @@
     },
     {
       "path": "src/Shared/HmiExchangeService.cs",
-      "sha256": "2a12f59c03ba7ebc52a3b5a8cd97f536a7a7e988c3b8f4cff0d51074be10e34f"
+      "sha256": "ffed7cf4756059792fb414d1273baee9b76542c217da3138e81829f4dbf0b6f5"
     },
     {
       "path": "src/Shared/HmiExchangeTools.cs",
-      "sha256": "5ec9d810d7f853dc088a5d99d266b4ae1925f700ffd414e9fc6e701cfea83e7d"
+      "sha256": "46c93daeb981c1d25590a72fae0ac1b4a4daf429bc86df9568ef5a4610466902"
     },
     {
       "path": "src/Shared/HmiInspectionContract.cs",
-      "sha256": "95e3551dc1480a5d91e0cd524a2651c24fed559a72d664b4324fdab749e3b1fc"
+      "sha256": "fd9369bf4a554110aecf16ae5f55655fc25fc16abb642f1d92a729ba3ad76938"
     },
     {
       "path": "src/Shared/HmiInspectionPortService.cs",
@@ -13410,7 +13542,7 @@
     },
     {
       "path": "src/Shared/Host/McpServer.Batch.cs",
-      "sha256": "44806d322cbfea1d649a2f813597e636cfc2d6733fb0ae75c9bc1e9a9740a222"
+      "sha256": "40f8c604ea6baf327df2696f1d853b0be618a7d433f6e1fe306378b42a943523"
     },
     {
       "path": "src/Shared/Host/McpServer.Doctor.cs",
@@ -13430,11 +13562,11 @@
     },
     {
       "path": "src/Shared/Host/McpServer.ToolBridge.cs",
-      "sha256": "765af037ad86759a4fcd4a8d217db7b66cef88de4bd23ee296e162ab53605681"
+      "sha256": "46d182a0bb52063fafb398a76543fd25688fe781e2d924a0da6d7992a22eb3a8"
     },
     {
       "path": "src/Shared/Host/McpServer.Worker.cs",
-      "sha256": "efae54fc97c0a4d798df80150300ca91724e518551be96fe4642ade8f2726770"
+      "sha256": "453a3dc3e85f899919cabedb68f6a3df639ef62014a150643567eeb7fe996914"
     },
     {
       "path": "src/Shared/Host/OfflineAnalysisTools.cs",
@@ -13474,7 +13606,7 @@
     },
     {
       "path": "src/Shared/Host/TemplateTools.cs",
-      "sha256": "7f02e65a260d9a420f05d98b91a3cabeeff29ced44f7dbd29a8f9ff68fdf25ab"
+      "sha256": "decd0291252ac881929904f9869662935974f973af2325174f41a5417402c769"
     },
     {
       "path": "src/Shared/Host/ToolDispatchLanes.cs",
@@ -13490,7 +13622,7 @@
     },
     {
       "path": "src/Shared/Host/XmlBuilderTools.cs",
-      "sha256": "97fa2ec51b6de30627d7e3defec981df109e0b634318f12273daa0093a4d374d"
+      "sha256": "899ea7d509c0491df90d6a2774e0a14e535d7b369946d48ed98e2e5d28f0da46"
     },
     {
       "path": "src/Shared/ImportDependencyPlanner.cs",
@@ -13514,11 +13646,11 @@
     },
     {
       "path": "src/Shared/LibraryToolContract.cs",
-      "sha256": "4d89b0ccb347f3491d875e3edabd37edf496bcc7bcc72e701f75950be46f690f"
+      "sha256": "3b18c22b45aac4d45fc639934e29ea4356988bc9c2722b6fa1cc7a7d122f89bb"
     },
     {
       "path": "src/Shared/LibraryTools.cs",
-      "sha256": "652413b6f77278fedd36bffaac4f154c0c031205fda7c81a2c12a32cd29bc1d4"
+      "sha256": "4ab28f21c95be5f6d526728ae3279affc0e6229998a94a07095ad54d6ce99ec8"
     },
     {
       "path": "src/Shared/LocalPipeSecurity.cs",
@@ -13558,11 +13690,11 @@
     },
     {
       "path": "src/Shared/MotionProDiagClassicHmiService.cs",
-      "sha256": "267110e4a80bd21859474891693f7f3b13f1412c85bf89e9c45d8af578361d1f"
+      "sha256": "6ff3f458e82c83f1e0804130d6026201f44fa8dbf6f6f1c36f80cbcdbc48a80d"
     },
     {
       "path": "src/Shared/MotionProDiagClassicHmiTools.cs",
-      "sha256": "1c904002d41d43bf3841d5d846801dc6176dafe0b64ef29c22a2bcb9c9e3f0a3"
+      "sha256": "d975bf96169a6d0db30f3cbc38be9fb570d9716b5c7b78b8279d49c3dd8c82d3"
     },
     {
       "path": "src/Shared/NativeCallDiagnostics.cs",
@@ -13638,7 +13770,7 @@
     },
     {
       "path": "src/Shared/OptionalEngineeringPort.cs",
-      "sha256": "2ab40f5403c32e0fc79d9b709c7468d4771899207e4d6ad351fb9c41c4e3c9ad"
+      "sha256": "87308290345e80f57862616472657dc312fec8d0b849f6a2c53af1283d1c0e1e"
     },
     {
       "path": "src/Shared/OptionalEngineeringPortService.cs",
@@ -13662,7 +13794,7 @@
     },
     {
       "path": "src/Shared/PlcArtifactPortSession.cs",
-      "sha256": "4bf1745145119f54d7e1067ffaf241b832dfd313d7403552860d0615b9eb9b21"
+      "sha256": "05865d273cef2d5c4033a9ecf1e1dc0c17c3a5ed511af538fcdc1b573e0083c8"
     },
     {
       "path": "src/Shared/PlcB5Inputs.cs",
@@ -13678,7 +13810,7 @@
     },
     {
       "path": "src/Shared/PlcBuildTools.cs",
-      "sha256": "8e82562cc670b5dd6520746232ed748af0ae882dda0dbc975ed45aa73074868b"
+      "sha256": "310ec09e6578d48f38eac2c3751d571365bda1e7041fe9310d9f1a4966f95398"
     },
     {
       "path": "src/Shared/PlcCausalTraceTools.cs",
@@ -13706,11 +13838,11 @@
     },
     {
       "path": "src/Shared/PlcOrganisationPortService.cs",
-      "sha256": "e7d70545a1a40bdcead6c62312049b883ec5f6ecfa6616e7ac6370a721ab102a"
+      "sha256": "9bef4cfa2825b270f73a417ed4056438f2d87231a8ae2e30d5b850291838dc46"
     },
     {
       "path": "src/Shared/PlcOrganisationTools.cs",
-      "sha256": "bc84201ccb9e19ccc76e6a215580fdd6dce49af65302c59cee2ecb169594b8ee"
+      "sha256": "d8ba7bedc61721423d21829708b88be84b35da8a4c536d96bf556b6d721fdf74"
     },
     {
       "path": "src/Shared/PlcProDiagTools.cs",
@@ -13718,7 +13850,7 @@
     },
     {
       "path": "src/Shared/PlcReadModifyTools.cs",
-      "sha256": "4466dbf04d455bd42d7c3bed249ce0064980b03211c4f8867b9c5648f93f30ae"
+      "sha256": "b44c254684064eb59445a652cd5d1fa58f8f82598ac3a89e67f4f8acca477efe"
     },
     {
       "path": "src/Shared/PlcSimAdvancedPortService.cs",
@@ -13730,11 +13862,11 @@
     },
     {
       "path": "src/Shared/PlcSoftwarePortService.cs",
-      "sha256": "f689b86cd200139aad1d1206f2ddc27e9e562f2e5b60450ff78daf1b75045c97"
+      "sha256": "8830de4e3891e646c3560111cfde4bab512b10908cb270ae04b5b17122c00d1c"
     },
     {
       "path": "src/Shared/PlcSoftwareResponses.cs",
-      "sha256": "04785f7519baf0b69ac22c188e6303bef0333a02ff6435368c5a210c9024d0d6"
+      "sha256": "8304c179912200668863f547d57b62f35ac6116f13ee38bde051d1cb26c0f044"
     },
     {
       "path": "src/Shared/PlcTechnologyPortService.cs",
@@ -13810,7 +13942,7 @@
     },
     {
       "path": "src/Shared/ProjectProtectionTools.cs",
-      "sha256": "b9f749bb7351c294ad40603df19dec70c9b92c32a109e8c7cf0361d28ae7aeb1"
+      "sha256": "0afbdac0c60f5ab428d08090f2bf9f5f189390b0c42fa918344ad3b0ff22aae6"
     },
     {
       "path": "src/Shared/ProjectSecurityTools.cs",
@@ -13822,7 +13954,7 @@
     },
     {
       "path": "src/Shared/ProjectUserManagementTools.cs",
-      "sha256": "c551b57c715d99341ee77013d274f5eb0662038e26cefa87cc647c998613ffdf"
+      "sha256": "6b8d9904b5a4f9b3adee69a2566543c682752cadf24ba8c1e04c9f038b58c62a"
     },
     {
       "path": "src/Shared/ReflectionPortService.cs",
@@ -13830,7 +13962,7 @@
     },
     {
       "path": "src/Shared/ReflectionTools.cs",
-      "sha256": "1bf459174b3bfae782c8dc1f42aaf6542048c9d71b3374a806b304be2bca7602"
+      "sha256": "6c9c8fc245e4035fea5396660015771026873dedc271f52fa81599923109b06c"
     },
     {
       "path": "src/Shared/RuntimeSettingsService.cs",
@@ -13838,7 +13970,7 @@
     },
     {
       "path": "src/Shared/RuntimeSettingsTools.cs",
-      "sha256": "72abacaff0a9d1cee648505d64d62214e34fe5b04fad3935a077c9d92d83d507"
+      "sha256": "faab7a1901062483fafbd16c28ca4abb1f5f32703499719077e7286437228df5"
     },
     {
       "path": "src/Shared/RuntimeToolContract.cs",
@@ -13854,11 +13986,11 @@
     },
     {
       "path": "src/Shared/SafetyManagementTools.cs",
-      "sha256": "cb8cfd53be4674923b8da2f7569a410644f1a15c066fc26a804d31e9fe4586c1"
+      "sha256": "dec05339b77e7f21c3460749cb5d63aef741f0fec2c4d5ae657698a072986858"
     },
     {
       "path": "src/Shared/SafetyPolicy.cs",
-      "sha256": "6f2b9e068b093ed49a60010d2db154357495988cd85446ee6461d2b8debfd36e"
+      "sha256": "ba98155bd5ef56a4875d9373610eea4749fe359e493fc2c3d5b8bb69ff7c3a54"
     },
     {
       "path": "src/Shared/SafetyValidationPortService.cs",
@@ -13866,7 +13998,7 @@
     },
     {
       "path": "src/Shared/SafetyValidationTools.cs",
-      "sha256": "884330413b60d9acb81903b66cb3f12651eae44e4168d18ef53fb7c560ca8196"
+      "sha256": "ace054ee187f6fd89ed0302e9b7ee9fa4fffe64af93c09494905a26667c59c7d"
     },
     {
       "path": "src/Shared/ScaffoldOperations.cs",
@@ -13878,7 +14010,7 @@
     },
     {
       "path": "src/Shared/SecurityDeepTools.cs",
-      "sha256": "8f5ca51e124e356962268efb024b5eec45a61a2e165242b37605a69d33ba2c8d"
+      "sha256": "87fdcb29703d525135d4249e348bff186f6235a51e2b6d0f9c555aa2cb417c1e"
     },
     {
       "path": "src/Shared/SecurityToolContract.cs",
@@ -13954,7 +14086,7 @@
     },
     {
       "path": "src/Shared/StartdriveTools.cs",
-      "sha256": "3d8ba13385cfd0d9a860272111789c588aaa16e44db9097e2ba2e26cd045533e"
+      "sha256": "b63cdfcf539e0fde2528f8b1b5bca935e755aa2e995338621b7148a2e7da5dd1"
     },
     {
       "path": "src/Shared/SwallowedExceptions.cs",
@@ -13978,7 +14110,7 @@
     },
     {
       "path": "src/Shared/TiaFeatures.props",
-      "sha256": "ea3d65c779962aef7de873272c2fc384e8246397e47c55bdd67d384996b3db7e"
+      "sha256": "fdc68bd95904fa113f51fe4eda0186d4c354ce3df7535c4428191f4ea197a6d0"
     },
     {
       "path": "src/Shared/TiaPublicApi.props",
@@ -13994,7 +14126,7 @@
     },
     {
       "path": "src/Shared/ToolUsageData.json",
-      "sha256": "6da3d42e553d1954fcf46c1f3d307daef227b7a855e714e04b8b45a56db109dc"
+      "sha256": "0232030a8710eb2de3196f766cbd8fd02ff2a80b08cd8d7c444ffa0fc6a4a954"
     },
     {
       "path": "src/Shared/TransactionExecution.cs",
@@ -14006,11 +14138,11 @@
     },
     {
       "path": "src/Shared/UnifiedEngineeringService.cs",
-      "sha256": "c288a0245968849acf5702b69589cfc3e5b92cc7785b582e9a61011898bc29a2"
+      "sha256": "beffee8750d14b17c8c770d382e3addaf00a8748cdc5a5b6adaf6aa0b29d93f6"
     },
     {
       "path": "src/Shared/UnifiedEngineeringTools.cs",
-      "sha256": "a514c1e529c46b9b85befd7ebd01ebbf801338234acf662fccc3dbd1ccf7ee05"
+      "sha256": "0f787fb8c5a47d4a79e81147e1304113efda541436fd384d30d94b2bdd46f37a"
     },
     {
       "path": "src/Shared/UnifiedEventsService.cs",
@@ -14022,11 +14154,11 @@
     },
     {
       "path": "src/Shared/UnifiedExchangeService.cs",
-      "sha256": "adca5bd7f6189df60c97abe3b7b9cc0040a09b4f6ade61103f8063cb045414b1"
+      "sha256": "654db2e428a7e36b0bf9eed58373168e5b0088e8f0cbdbafab9a9eb81fc5ab89"
     },
     {
       "path": "src/Shared/UnifiedExchangeTools.cs",
-      "sha256": "b4d80c0a1a0ba77f5963d6ab9e7f1d4f7aa2e419d25c47cb2f2c32912ce4e086"
+      "sha256": "8bf7b28aa812edf341e0dd34912738948967c26f00644c8422df7700d54dbc33"
     },
     {
       "path": "src/Shared/UnifiedGraphicComparison.cs",
@@ -14034,7 +14166,7 @@
     },
     {
       "path": "src/Shared/UnifiedHmiContract.cs",
-      "sha256": "ac84dcb359dcc647d6b41388e87bef79c442ddd067f39e7342930a8194975b33"
+      "sha256": "f4dc0b774fcfafb56998d48978a52c3b79151d2f6c10b49f852faf45e09c9f72"
     },
     {
       "path": "src/Shared/UnifiedHmiGroupsService.cs",
@@ -14050,7 +14182,7 @@
     },
     {
       "path": "src/Shared/UnifiedHmiPortService.cs",
-      "sha256": "c55506d8845e2543d3d197ab6f98dabcd932791f87ae735120f897ab03d2abc6"
+      "sha256": "d9d98020ddd77d63696fcdff52c9960c3aacc04e5028e29063486fe15d3ecaff"
     },
     {
       "path": "src/Shared/UnifiedHmiPropertyAdmission.cs",
@@ -14062,11 +14194,11 @@
     },
     {
       "path": "src/Shared/UnifiedHmiService.cs",
-      "sha256": "2d1052e57b9f331b9a1cde6de753ee28110574e041127d0dfd10cd9c7dd9a36a"
+      "sha256": "2db978f2d2c899aae41be5c5d50cb48b77890ba99844b7871f77a68740933014"
     },
     {
       "path": "src/Shared/UnifiedHmiTools.cs",
-      "sha256": "8b4b4019950c70f04cce6038b5b5561e0f1dc70b09f37655ceaca59099bad3cd"
+      "sha256": "3319f7546621635ba84b71edf1f253011f10bdc106d7062e49401a0858b4b805"
     },
     {
       "path": "src/Shared/UnifiedObjectServicesService.cs",
@@ -14078,7 +14210,7 @@
     },
     {
       "path": "src/Shared/UnifiedPortService.cs",
-      "sha256": "ea9c11b3952f15f411f7cf82cb3b05317062561f30a467db2b9dc7ab1ef00f76"
+      "sha256": "bb7b8d6eb3dcbd538e3848267ee9c018792174f3efad448c91a0bbbb38018e8e"
     },
     {
       "path": "src/Shared/UnifiedScreenItemsService.cs",
@@ -14086,7 +14218,7 @@
     },
     {
       "path": "src/Shared/UnifiedScreenItemsTools.cs",
-      "sha256": "bef285094f2388c5e87bcec17b8980c8ce9ce92632f354f7fca841ddceb1fe07"
+      "sha256": "1136d238c2823ebd389b174030f2b1b547c2c99633228273e783bd9aa2ab163c"
     },
     {
       "path": "src/Shared/UnifiedScriptAccessFacade.cs",
@@ -14118,7 +14250,7 @@
     },
     {
       "path": "src/Shared/VersionControlTools.cs",
-      "sha256": "dbf0f467eed472261f2b3228a78034156ce84fce09b705d798440e4c3bae51d3"
+      "sha256": "6d591727662b335a74a33f47807dd96c4c8decfec2dda88e820e0408be7dcc02"
     },
     {
       "path": "src/Shared/WindowsFirewallRule.cs",
@@ -14489,8 +14621,24 @@
       "sha256": "2c49b9d88bbf6c9007fd1c0d67198498958e2efbe5bdb7475782ed2b0bffccca"
     },
     {
+      "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/HmiAuditNativePathTests.cs",
+      "sha256": "e414afe85e6ecb02f267835d918d6238685303915cd7f5a3af574649046160fa"
+    },
+    {
+      "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/HmiAuditRegressionTests.cs",
+      "sha256": "cc6530a4cf436147f8c15d9f11c2f5a09c8a64aafb2023d6b8902f2e45a4de38"
+    },
+    {
+      "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/HmiExportPolicyTests.cs",
+      "sha256": "af0d78594e4a0708664ea53fec247a9f393c40b8174ebdd5a2825a1fdd3d7b54"
+    },
+    {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/HmiPortTests.cs",
-      "sha256": "61d8edcd5831b58ccb106ff7d0b2f37943d8be6cbbaa17a56741260974962b7a"
+      "sha256": "50e966466793b6c2333458be6812e7e520448e05e4a0f5bc8a55bd29ad4a4f03"
+    },
+    {
+      "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/OfficialApiAuditTests.cs",
+      "sha256": "e155b9690195da19fe668907aaa119e9ab01ab6ca27160c4a44cff6c03c27140"
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/OnlinePortTests.cs",
@@ -14499,6 +14647,10 @@
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/OpennessSessionRulesTests.cs",
       "sha256": "ab1b5bc6874eb1d1a2463c5586885abd056af9bf17bbd52ce082a4075bc2fb9e"
+    },
+    {
+      "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/OptionalAuditRegressionTests.cs",
+      "sha256": "5798aa5a05388316b846770b4f96407ba68a05e4ed18e2ea9be14410c3cba744"
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/OptionalEngineeringMutationAdmissionTests.cs",
@@ -14510,7 +14662,7 @@
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/OptionalEngineeringPortTests.cs",
-      "sha256": "59d195c0173b72b890583fee89f0223db49cd5129bf2bb5abd8b70bcc08f8e8f"
+      "sha256": "12c73a7859ac6a5c3f287b5cce5d4b693c7b3a38af055b5d6215b038101a7f07"
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/OptionalProductTests.cs",
@@ -14523,6 +14675,10 @@
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/PlcIntegrityPortTests.cs",
       "sha256": "bb1a3ce7543e0e38232bfb4bae3a591b62dcb78b941fbf22acafa71211cf6cc6"
+    },
+    {
+      "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/PlcSoftwareAuditRulesTests.cs",
+      "sha256": "1cc29dbf69495a44694bb779c743b0b28870ad8b02799749ec6336994be0bf03"
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/PlcWatchTechnologyPortTests.cs",
@@ -14539,6 +14695,10 @@
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/ScaffoldWorkerFake.cs",
       "sha256": "a205cb92dbf9562561e27429ed2975f76c40062648d91053d395ed2dcf8d00cd"
+    },
+    {
+      "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/SecurityAuditRegressionTests.cs",
+      "sha256": "d3cf269fee1a2e3453deb35b0fafa8b899142fb4a932c3b88e3bf8abc7498e15"
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/SecurityPortTests.cs",
@@ -14562,7 +14722,7 @@
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/TiaMcp.Adapters.Contracts.Tests.csproj",
-      "sha256": "6ea733f3551e48c30d9ab6af44ef46fd8f1d03e72afb14cd34da952e60ab62e4"
+      "sha256": "bd84d0f422f9f06d490d85fdca885fe7e8fddee5f7f785572b87c556c49a3b51"
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/VciWorkspaceLayoutTests.cs",
@@ -14570,7 +14730,7 @@
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/VersionControlPortTests.cs",
-      "sha256": "eaa38f246ec71e4c61af80a69779f10e091476557c512441785ced02f2ef3894"
+      "sha256": "013e8ee07c9aca9daf8d8a9c19caab0773733e5517c184d70ccebde4727936ce"
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/WorkerFamilyCallbackTests.cs",
@@ -14618,15 +14778,15 @@
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.FallbackNative.Tests/TiaMcp.Adapters.FallbackNative.Tests.csproj",
-      "sha256": "1237f34e179edf9902bc40f6c260b6540abe8c9e942f85b1fb1d47510f473dd8"
+      "sha256": "d772de5515320e47872bb3566c7e63cbfd55fa15b73b2537e6149165cfa1036f"
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.FallbackNative.Tests/VciFallbackTests.cs",
-      "sha256": "e5cfe172e620830204ee6829e9cc958c023930f9e2461337bdd55d9bfccf48a3"
+      "sha256": "2771d416f58e4a15ce465d76eadb901a84110bdebb55c183b944d7482d86c753"
     },
     {
       "path": "tests/Adapters/TiaMcp.Adapters.FallbackNative.Tests/VciStandins.cs",
-      "sha256": "09dcaa4d97adaa4084bf11c1630576a16c67c86df631a1b440ce96ba7ac42b93"
+      "sha256": "a3b4d4965bb1bfa3507706d1472b1946ffa3c8432aade7dc574926de4f7f2868"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.ApiCompileChecks/ApiCompileChecks.cs",
@@ -14710,7 +14870,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Harness/ClassicHmiFoldersShapeChecks.cs",
-      "sha256": "df03f6e0fdebc9dc9dfe29b331797e01d341d36da58ae536e09279137b55577e"
+      "sha256": "f8335c185176911faf139b826406ab5a32f30261a156dfc9b2ef74b8c86c2e1b"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Harness/CompileCandidateChecks.cs",
@@ -14722,7 +14882,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Harness/DeveloperChecks.cs",
-      "sha256": "20f44dd5320d148df71c9a41dc1c0ef7582459222ea24fb68c7c416ea3c73b16"
+      "sha256": "86239d77fb0d284afb35b9c12356dbb548e306db9f5e707c4eb155e0379f6f62"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Harness/DeviceCandidateChecks.cs",
@@ -14814,7 +14974,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Harness/MotionProDiagClassicHmiShapeChecks.cs",
-      "sha256": "f5bf05b631d36a5d133551e6c234c6f3cb33542592a36c4d99b713418e4b12cf"
+      "sha256": "e55e0f71120bd4f90306b8b22daf5d5645355689873d5bca1f4df19d5800eb62"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Harness/NativeDiagnosticsJit.cs",
@@ -15002,7 +15162,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.PlcExchange.Tests/HmiExchangeContractsTests.cs",
-      "sha256": "67d48f9933b11344a98c265e25b1ad18d329286f0407b682414c131bb901d48f"
+      "sha256": "0f26393656b306e519ef527de12b7228e049ad8e2270d744a5ebc22a93760c8b"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.PlcExchange.Tests/P707bNativeTests.cs",
@@ -15050,7 +15210,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/ApprovalPrecheckTests.cs",
-      "sha256": "98e6858857e2e69449d50428b36284d14df78bd4b19721ec1d6b28b9e4aff034"
+      "sha256": "a9ca5683ff7928d68c99351e80dbf684ae20589a1af1fe29a8ce60fa3a1da6c6"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/ApprovalTests.cs",
@@ -15074,7 +15234,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/ClassicMotionContractsTests.cs",
-      "sha256": "d5011735031c5f3b9d0485133ce5c7277a9466abbfbe6e19a741f57fe6ae91b9"
+      "sha256": "7aca91c3338ec9a23140d1c84f2eea5061062dc3be6d89b7e24b00fc6bde5b78"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/CliV4Tests.cs",
@@ -15150,7 +15310,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/FullEngineRejections.json",
-      "sha256": "26a2621a25af034b1922645d5de126503fe6c87d368ef7d218cf78eea42ab58c"
+      "sha256": "be34c54ffcfeaa9cc1a165454a7e204845e90b3d2bb2ab42fba1ff5883baa4de"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/FullEngineRejectionTests.cs",
@@ -15166,11 +15326,11 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/HardwareContractsTests.cs",
-      "sha256": "b8285be07cecb75a1f66864db89b14530c3ec71db102dd8afaf584cd5bd001b6"
+      "sha256": "06caaddb1beb39723c1bb7fee194d7083acc0f4987532cbda36717ac537efe27"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/HmiInspectionContractsTests.cs",
-      "sha256": "68330b6b70d15efda67a033b81ba982cae928e8ca21d07976654f9c9093653d4"
+      "sha256": "7cc5f26b08f4d9477d4bd3adba3220dd078f9c5f6af8ace8aec3b7e6c5a07a95"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/HmiInspectionTests.cs",
@@ -15202,11 +15362,11 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/InfrastructureContractsTests.cs",
-      "sha256": "d7c75108f0e09d750cc6c01a0a503964497d72836aa9d54da303188b2772392c"
+      "sha256": "2d0aa07e9974d89f4ef7cfaf217a4f8412e1a50867c90749374c0b4fc2c36ccd"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/LibrarySivarcVersionControlContractsTests.cs",
-      "sha256": "dcfad0e301f327cd062d28fd22d4e63cce342e865d2533a3374a069e72a5c6be"
+      "sha256": "77f6aa90705d0e4975cdb85acf12ecde8c221198d99ca44628ba81cdec9a3584"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/LibraryWriteSafetyTests.cs",
@@ -15238,7 +15398,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/OfflineContractChecks.cs",
-      "sha256": "387bfab1f3447d220e9d825a0a3ce797a2cdd927fe33982e4bfbe184a3168778"
+      "sha256": "f2abcf94a2ec2d0446c3d5649b0aba7a41dde23717367546cd8f23d6a1058322"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/OfflineContractFixtures.cs",
@@ -15330,7 +15490,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/TiaVersionCatalogTests.cs",
-      "sha256": "f9bd0b2363cfce6b45466770f96229a4cc07fd112515e0e1ccb0913693a87843"
+      "sha256": "2fdf4d0d33f0da1a2a21067230e9a0ff422684228e16beb9106d7f2eeceba64f"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/ToolBridgeFixtures.cs",
@@ -15338,7 +15498,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/ToolDescriptorTests.cs",
-      "sha256": "3da3a54554b6b0bcb49b219ffb2c659d78c02f518bd7e378b80244bbc14e1be4"
+      "sha256": "ff8d0aee63211c7ced156cba63e585e20ffa61cec28b7f8f39e3ab097b1c3d16"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/ToolExampleLibraryTests.cs",
@@ -15402,7 +15562,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/UnifiedCrossReferencePolicyTests.cs",
-      "sha256": "3472ba7df68f5e10fa531b62d0633f32b1a0ae1c986e9788568f2617fea1d02e"
+      "sha256": "97d9e8583323dfec78518adeef34f5383b8c6e5c022d96eac98c467aceee4b82"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/UnifiedExchangeTests.cs",
@@ -15414,7 +15574,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/UnifiedHmiContractsTests.cs",
-      "sha256": "af000b80434c8086be0e085c79b62a40a04126a592f6dfe94515850e4e35ad08"
+      "sha256": "0378d41f714dd94e8e3a42bf1a7662438196eae0278d773b3baf5a28f643a417"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/UnifiedHmiNativeFixture.cs",
@@ -15434,7 +15594,7 @@
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/UnifiedScriptSyntaxCheckTests.cs",
-      "sha256": "248322357bd50a4f1f01d75282cdd74fb8652c6aa40271ee582e07f74233c4b0"
+      "sha256": "7e3df17112794f9c55b5e8c969842ccf3b688d78847e81d573ddda66eb398976"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Tests/UnifiedUiModelTests.cs",
@@ -15526,7 +15686,7 @@
     },
     {
       "path": "tests/Fixtures/TiaMcp.Offline.Fixtures/HardwareContractsTestsFixture.cs",
-      "sha256": "ba20ac8e71270a6d8974edc0d9438a90c745a7bc3d90b7838fd04e51cf37c3f7"
+      "sha256": "bde8ed1789dfb3fc836e1be5933331b65184c1b45105a137623b16081440b906"
     },
     {
       "path": "tests/Fixtures/TiaMcp.Offline.Fixtures/ImportStagingTestsFixture.cs",
@@ -15562,7 +15722,7 @@
     },
     {
       "path": "tests/Fixtures/TiaMcp.Offline.Fixtures/Oracle/ModelContextProtocol/Tools/InProcessToolInvoker.cs",
-      "sha256": "7abd297e4d9f52d89a24ccfd41d4bb64bb956f729097d09f8645bbd130547b40"
+      "sha256": "d6391b3c2ccc9ef14cb51adfba201fbfbcf78dd1bd938d9f33646d39af7afeee"
     },
     {
       "path": "tests/Fixtures/TiaMcp.Offline.Fixtures/Oracle/ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs",
@@ -15602,11 +15762,11 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.EngineHost.Tests/DomainShapeProgram.cs",
-      "sha256": "ae160f3e0f3d487e3e1ed5e63a333d88ffb79d2e81c0bd59d55f48f28cd61445"
+      "sha256": "8b1a30c6850eb1bca894782dd18efa6652bed28913e663d908381dd4bdd65ddc"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.EngineHost.Tests/Fixtures/EngineCatalog20.json",
-      "sha256": "5997b2b9cf83d7527c2425c477a63d7c371c455084522c1bd2499d11053d9804"
+      "sha256": "6cf73f62abd56fb7cb09c09c226eda5f157ebd530cd701925889647e1fd8ddf2"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.EngineHost.Tests/Fixtures/EngineCatalog21.json",
@@ -15622,7 +15782,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.EngineHost.Tests/GenerationExecutionTests.cs",
-      "sha256": "3479dbf7775861c6da9b512e2f0ecedebe216dc1357de3d09f90d1ab1d7e3fb7"
+      "sha256": "72d5f3c08ab7082b7affc64fe533a08d922ac047fad57b45e1e98f66f208f8fa"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.EngineHost.Tests/HostBuiltCatalogTests.cs",
@@ -15630,7 +15790,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.EngineHost.Tests/PipelineTests.cs",
-      "sha256": "c053b5103aa39f59eae93df8b1211b4e34a2082b686baa287fcac3c8feffe61f"
+      "sha256": "a58defd8d0bca535520f410e2fd4900e4f8116bdc875079a9cd3c6ca47500226"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.EngineHost.Tests/ReadBatchAdmissionTests.cs",
@@ -15794,7 +15954,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/B3HostPortsTests.cs",
-      "sha256": "71e49c24eaac335ebc4292a07c2f3ca4b33ca8bd096a6aa0912c978e7f10accd"
+      "sha256": "21ff6c0d1333998fa84c96f2547162f6af55968e6335b78f3ef4adb92b35209b"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/B4HostPortsTests.cs",
@@ -15870,7 +16030,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/CompileCandidateTests.cs",
-      "sha256": "7c6cdfe3a0a0268683709b0dd4f65de3a2ebc7dc93ce66299067cfadb34bef2f"
+      "sha256": "171ac1a24ca1cada6f8a4b74a1f9e2e7b66a70911a1158a49eaea559120ead86"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/CompileContractTests.cs",
@@ -15922,7 +16082,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpSessionTests.cs",
-      "sha256": "2bc1ee81bc265025edb4a2f2b3526885077354337223a10b1f688020dd6bcdd2"
+      "sha256": "87ae00f5d8bd794ee23470c3b4c3361e83e619998313c678782ce5a523693b33"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineSessionFixture.cs",
@@ -15970,7 +16130,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FamilyPlainReplyTests.cs",
-      "sha256": "7381fa019352b2cc3aafbf9f96e8df72a117eb7f880dd965d1c40face1587ec0"
+      "sha256": "22691e430dbef6db657dcd120bef8aa3d7e80bc7c0a0b8e0f57719a194f59d9c"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FamilyReplyApiMetadataChecks.cs",
@@ -16002,7 +16162,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
-      "sha256": "d387bce52032cf129160119c7152e6c6b23bb29e686710fca55f5139686adbc5"
+      "sha256": "4cb74e724054936e9daebf578c780101574ca4877d6bee8674b4b11c8c6b4a90"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4InnerResultTests.cs",
@@ -16042,7 +16202,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HostDoctorFixTests.cs",
-      "sha256": "9bc652699cf9c07de8f9a91deaad18607834d421008c2d6b0fdc7e192c49ba53"
+      "sha256": "a027f48351b2a71076ef76e28d401c92c510f13bd634657842067e23ee308dd4"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HttpHostOptionsTests.cs",
@@ -16114,7 +16274,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/P8RecheckTests.cs",
-      "sha256": "ec3c776667ab91866cce002653eb149cd3af5e4b7fe401bf2216a397000142f8"
+      "sha256": "18c908ffee7281efa03ecb93308655eb39a72e906a1cdb26770aef64972873ce"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PackagedNoTiaReadinessTests.cs",
@@ -16158,7 +16318,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcWorkerRobustnessTests.cs",
-      "sha256": "d5467ee308a808e422699de241666d861266e82b9dbf6e2e56fd67a4ae5d2a8b"
+      "sha256": "05ef27ceab54436aee2a1b0558143f4fdd063540d22105ceab9a1e8e1523f1e4"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcWorkerTimeoutTests.cs",
@@ -16170,7 +16330,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/Program.cs",
-      "sha256": "460babfebd801ccd0169921666eddb935a705e2c7d562bff6de0ab80f024bcb8"
+      "sha256": "bfdbed66b76df5c77d9d82fd50e65544865706c445bc289efbc880910b68c90e"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/ProjectLifecycleAdmissionTests.cs",
@@ -16183,6 +16343,10 @@
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SaveCloseCandidateTests.cs",
       "sha256": "848494089f084ec2fab57b92ff4d85395f3cb131622941b36efe957c0a6161e5"
+    },
+    {
+      "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SecurityAuditBoundaryTests.cs",
+      "sha256": "8250cc4e1cbf8f6f85a8757bbcd14c1219263569d2a796ff85b02b8f71a19656"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SessionAuditHostTests.cs",
@@ -16206,7 +16370,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedWorkerRegressionTests.cs",
-      "sha256": "248b6fd71108f3f092c53dc77af1c37e0d5f915e74d7a193a225aa70269cecc2"
+      "sha256": "7c9359d77f9979377dc89af0b68d0a8b862ae779f0a69906facfc947e1cc31f1"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SoftwareReadDispatchTests.cs",
@@ -16234,15 +16398,15 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-      "sha256": "d76d8cd0d17189e6beb20a3bdd88f3f264e279c467d5891c3071071ae98efb53"
+      "sha256": "5161337be184ef60d070083fb22bee188ccc5385b4a557bc358e8da9dea3aa1e"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/ToolUsageTests.cs",
-      "sha256": "6869787ddbaea0750b225df257992ff58798fad7a9db036b46d121bfaab5a2b0"
+      "sha256": "f80e9463a4dc0653a2219c15bfbc66691cad6eb22d4f0692e11d31526c0cbe49"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/UnifiedPortAdmissionTests.cs",
-      "sha256": "eb4066d59ee9ba9ddf52b7ed903967ac837d56b82c689a2d2d1e9b9ff9b0b6dc"
+      "sha256": "fdde039b96e65b046b196c06fb0c9dbdd3186e79e5f7e61eba5c32495b2cffaa"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/UnifiedPortAvailabilityTests.cs",
@@ -16266,7 +16430,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkbenchControlHostTests.cs",
-      "sha256": "c229ce0abc2c0b533e11896cbee51ff415e865bb71805d73599b64c90b475faa"
+      "sha256": "2601f476313b754a9fcdca4e8fcbdce932f8d42ea93de350eb2e95ce8eeaa9c2"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerBackendFixture.cs",
@@ -16282,7 +16446,7 @@
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerRobustnessTests.cs",
-      "sha256": "5eb82982527fd97ba89aa70bcb8d720469c49517dc01ce6dbe8fa9414bb770d5"
+      "sha256": "e292c115660f92a54ef54e2b557e41a9c74de381a4e3e5067b621d4cfc448ec6"
     },
     {
       "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerSessionOutcomeTests.cs",
@@ -16381,6 +16545,10 @@
       "sha256": "464f97c83573e2ead32a96dd9f2341ff86a349d55efc34ae54abf91847a3b308"
     },
     {
+      "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/HmiBetaFixTests.cs",
+      "sha256": "d69ad53a38d1af0016ec9ad42561642187bd4fdd97329831b1d7f94bd7452308"
+    },
+    {
       "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/HmiTagPathSchemaTests.cs",
       "sha256": "da206e701a41b34a43c493c32cd93c697e720657aaee6ef278e4ff8f00d05cfd"
     },
@@ -16450,7 +16618,7 @@
     },
     {
       "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/PlcDomainRulesTests.cs",
-      "sha256": "fed261f2a240b67e37ecb5311b91d2698b1efea5e6a0a75eb7cecc5ea33b58b0"
+      "sha256": "cba6875828c858118756e73c40025aa672c3a4132d301223a1bc56ea5cff8723"
     },
     {
       "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/PlcFoundationPolicyTests.cs",
@@ -16542,7 +16710,7 @@
     },
     {
       "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj",
-      "sha256": "93c525643e7472015f524c32d1b578dbadcbe4ce3947ff7259ae4ecbd154e969"
+      "sha256": "888870385da4a11107731f0c8fbfac20faf17d45459c5cb519984ea701ad32a7"
     },
     {
       "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/ToolBridgeFixtures.cs",
@@ -16554,11 +16722,11 @@
     },
     {
       "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/UnifiedCrossReferencePolicyTests.cs",
-      "sha256": "2a73f0f0055c78682b1f216a2ed59b7ab81882c082942acb96e306f5e0093283"
+      "sha256": "157b26c93d17ae60ac3c9fff0e45559f74872845853962f1c5d1741fbad599ae"
     },
     {
       "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/UnifiedHmiPortTests.cs",
-      "sha256": "2bbd22948118dc446c610ae8272d316d93b57343ee9f0f92b2ce9ddba0555a3f"
+      "sha256": "2647433e4063040a4c95c5d7525917d687eda3a5a2d1a3cac43d788a8fc0189d"
     },
     {
       "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/UpdaterStagingTests.cs",
@@ -16642,11 +16810,11 @@
     },
     {
       "path": "tests/Shared/ShardFramework.cs",
-      "sha256": "52877a4ba127123db9b66b52650cd65e6540c14979ad04a01df296578620ba4e"
+      "sha256": "9442712ade0c0765bb3f2fd1e092a8fe1b81699a7e9a6a869d5fc0ef981e709d"
     },
     {
       "path": "tests/Shared/TestPaths.cs",
-      "sha256": "d5bbd7945f65813cf7feab5a97994ade3e79a5f56fc5e85003fda63ae58dc302"
+      "sha256": "2041ebd8364eef24d194ec13d8cf12ecab60cb7169ab724d42e59825209c01eb"
     },
     {
       "path": "tests/Shared/TiaMcp.WorkbenchControl.Tests/ActorTests.cs",
@@ -16666,7 +16834,7 @@
     },
     {
       "path": "tests/Shared/TimeSensitiveTests.cs",
-      "sha256": "7ce1bf83cbab94584459099eba2f1a40e2121ed6131e04d6f58811038b573fce"
+      "sha256": "14d708657e1c750fb5ed4b32b464bd78d03951448c0c4af01e7da92565ac9192"
     },
     {
       "path": "tests/Shared/Xunit.props",
@@ -18898,7 +19066,7 @@
     },
     {
       "path": "Version.props",
-      "sha256": "cbdc5c95021fef08eaf454c70862081da8ba8136dc296c3825c71d5038e9a04b"
+      "sha256": "52889c3fae6089f7cb193a532349c87dfd55a39a29ea3ebb18477dbecfb597fd"
     }
   ],
   "validationArtifacts": []

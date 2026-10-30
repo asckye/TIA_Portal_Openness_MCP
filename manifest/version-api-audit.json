@@ -4,16 +4,16 @@
   "versions": [
     {
       "releaseKey": "14sp1",
-      "mcpTools": 278,
+      "mcpTools": 279,
       "xmlFiles": 2,
       "domainSignatures": 847,
       "domainMemberNames": 825,
-      "compiledDirectMemberNames": 436,
-      "withoutDirectMemberReference": 389,
+      "compiledDirectMemberNames": 442,
+      "withoutDirectMemberReference": 383,
       "topCandidateNamespaces": [
         [
           "Siemens.Engineering",
-          72
+          71
         ],
         [
           "Siemens.Engineering.HW",
@@ -48,16 +48,16 @@
         "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
         "Siemens.Engineering.xml": "67892ad36b697bd0919c6b4ac0f4b6fe65b3128235c90333f5f509f4a389b6e6"
       },
-      "compiledCallInventorySha256": "d0d20163af3df1a8ff3408c9da0a42905807ece1f653f1498be7b87372a03c40"
+      "compiledCallInventorySha256": "6dfe35a64e5834419693a4a38eb70caf072f9840baf2ec1b31fd2840fd40ce7e"
     },
     {
       "releaseKey": "15.1",
-      "mcpTools": 318,
+      "mcpTools": 319,
       "xmlFiles": 2,
       "domainSignatures": 1209,
       "domainMemberNames": 1161,
-      "compiledDirectMemberNames": 555,
-      "withoutDirectMemberReference": 606,
+      "compiledDirectMemberNames": 561,
+      "withoutDirectMemberReference": 600,
       "topCandidateNamespaces": [
         [
           "Siemens.Engineering.SiVArc",
@@ -65,7 +65,7 @@
         ],
         [
           "Siemens.Engineering",
-          69
+          68
         ],
         [
           "Siemens.Engineering.HW",
@@ -96,16 +96,16 @@
         "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
         "Siemens.Engineering.xml": "e6864dad4478bffac958e1d2ce72328d3b5218ccf1447557fa1da6d3469991b6"
       },
-      "compiledCallInventorySha256": "9f5187398c56c8a54113806d9cf2a918f930b1510426b3ff99d8502af495fc15"
+      "compiledCallInventorySha256": "75e1501703cec4e38c2353865c9de5b0ef5e398999bdf05439afbb0b2deffa8b"
     },
     {
       "releaseKey": "16",
-      "mcpTools": 346,
+      "mcpTools": 348,
       "xmlFiles": 2,
       "domainSignatures": 1476,
       "domainMemberNames": 1420,
-      "compiledDirectMemberNames": 662,
-      "withoutDirectMemberReference": 758,
+      "compiledDirectMemberNames": 669,
+      "withoutDirectMemberReference": 751,
       "topCandidateNamespaces": [
         [
           "Siemens.Engineering.SiVArc",
@@ -113,7 +113,7 @@
         ],
         [
           "Siemens.Engineering",
-          69
+          68
         ],
         [
           "Siemens.Engineering.HW",
@@ -144,16 +144,16 @@
         "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
         "Siemens.Engineering.xml": "b2b6542acc3ad33270193487eae57f896e11acd281038377f1bdce1cb478413a"
       },
-      "compiledCallInventorySha256": "5b98103ddb9212b800ff03c509af76b6676d162d4250fe1be739673bed0a0163"
+      "compiledCallInventorySha256": "56b1573a098e07cbdcb4b77b7b45872a3d0b871ba907fa9e75cf603e30100220"
     },
     {
       "releaseKey": "17",
-      "mcpTools": 369,
+      "mcpTools": 371,
       "xmlFiles": 2,
       "domainSignatures": 1797,
       "domainMemberNames": 1719,
-      "compiledDirectMemberNames": 860,
-      "withoutDirectMemberReference": 859,
+      "compiledDirectMemberNames": 868,
+      "withoutDirectMemberReference": 851,
       "topCandidateNamespaces": [
         [
           "Siemens.Engineering.SiVArc",
@@ -161,7 +161,7 @@
         ],
         [
           "Siemens.Engineering",
-          72
+          71
         ],
         [
           "Siemens.Engineering.HW",
@@ -192,16 +192,16 @@
         "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
         "Siemens.Engineering.xml": "5ab7b2e24b129ede6daa7e28d53dc6e9e724f6ee7f86c13c20625d35190f53fa"
       },
-      "compiledCallInventorySha256": "347431f2bebaae29ddae28959d293ee9faf7e90fcae3b29e46bc2c0aa5c2ea62"
+      "compiledCallInventorySha256": "c0a47ad4a228e1e204da74890e8e7103fdd03d82a58b153938f3ac3950ab9c69"
     },
     {
       "releaseKey": "18",
-      "mcpTools": 396,
+      "mcpTools": 397,
       "xmlFiles": 2,
       "domainSignatures": 2215,
       "domainMemberNames": 2113,
-      "compiledDirectMemberNames": 1016,
-      "withoutDirectMemberReference": 1097,
+      "compiledDirectMemberNames": 1027,
+      "withoutDirectMemberReference": 1086,
       "topCandidateNamespaces": [
         [
           "Siemens.Engineering.SiVArc",
@@ -213,7 +213,7 @@
         ],
         [
           "Siemens.Engineering",
-          76
+          75
         ],
         [
           "Siemens.Engineering.HW",
@@ -240,16 +240,16 @@
         "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
         "Siemens.Engineering.xml": "4ee727da5077757f28081197cb26d222df9bb90329ab2176400fc39c163b5245"
       },
-      "compiledCallInventorySha256": "b1902f0dd03031dc57b48b876dab8cc2a605b3eb44692f552eae1117253093e1"
+      "compiledCallInventorySha256": "4c6704b09153720d4de0ecd78e510660b43329b537ae5cf7b2bb4a1302cad46b"
     },
     {
       "releaseKey": "19",
-      "mcpTools": 471,
+      "mcpTools": 473,
       "xmlFiles": 2,
       "domainSignatures": 3714,
       "domainMemberNames": 3586,
-      "compiledDirectMemberNames": 1079,
-      "withoutDirectMemberReference": 2507,
+      "compiledDirectMemberNames": 1089,
+      "withoutDirectMemberReference": 2497,
       "topCandidateNamespaces": [
         [
           "Siemens.Engineering.HmiUnified.UI.Parts",
@@ -277,7 +277,7 @@
         ],
         [
           "Siemens.Engineering",
-          76
+          75
         ],
         [
           "Siemens.Engineering.HmiUnified.UI.Features",
@@ -288,16 +288,16 @@
         "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
         "Siemens.Engineering.xml": "a6bf56b1adb638e6b4b7ff9a52e7d89021323ee3b46e52967c95eb3764dae684"
       },
-      "compiledCallInventorySha256": "41e33ae1593eee530fd44496bd5dcab37e0fa6c2abcb3b54b16407fc92bcafe6"
+      "compiledCallInventorySha256": "ee8ac823ac1b006791f927b5961cdad3b4598c604a4a2d1afffbb6b51b645fb6"
     },
     {
       "releaseKey": "20",
-      "mcpTools": 500,
+      "mcpTools": 496,
       "xmlFiles": 2,
       "domainSignatures": 4016,
       "domainMemberNames": 3860,
-      "compiledDirectMemberNames": 1604,
-      "withoutDirectMemberReference": 2256,
+      "compiledDirectMemberNames": 1614,
+      "withoutDirectMemberReference": 2246,
       "topCandidateNamespaces": [
         [
           "Siemens.Engineering.HmiUnified.UI.Parts",
@@ -325,7 +325,7 @@
         ],
         [
           "Siemens.Engineering",
-          71
+          70
         ],
         [
           "Siemens.Engineering.HmiUnified.Cpm",
@@ -336,10 +336,10 @@
         "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
         "Siemens.Engineering.xml": "154d83b9cf013c2428b514bbafdb4802946661b177c6323e53e037f05a297cd8"
       },
-      "compiledCallInventorySha256": "f9b306733985d3660b1ae2990fe52ad431501fb4d32ef55134779a338a901766",
-      "plcCompiledDirectMemberNames": 1604,
-      "plcCompiledCallInventorySha256": "f9b306733985d3660b1ae2990fe52ad431501fb4d32ef55134779a338a901766",
-      "hostCatalogSha256": "05b858cd29a36c410b1ce629dd640071ac5da7e8f7a8bf7309d608d9ce3937af"
+      "compiledCallInventorySha256": "23b9711d226c9690a5b84ce43b0799acb1da5375f1a091fdc434fcec82d2eacb",
+      "plcCompiledDirectMemberNames": 1614,
+      "plcCompiledCallInventorySha256": "23b9711d226c9690a5b84ce43b0799acb1da5375f1a091fdc434fcec82d2eacb",
+      "hostCatalogSha256": "a036e8fc44b4896f33ccbeec81be3d4d34dd22736766d89de50ff30f586040b9"
     },
     {
       "releaseKey": "21",
@@ -347,8 +347,8 @@
       "xmlFiles": 13,
       "domainSignatures": 4480,
       "domainMemberNames": 4323,
-      "compiledDirectMemberNames": 1745,
-      "withoutDirectMemberReference": 2578,
+      "compiledDirectMemberNames": 1748,
+      "withoutDirectMemberReference": 2575,
       "topCandidateNamespaces": [
         [
           "Siemens.Engineering.HmiUnified.UI.Parts",
@@ -398,10 +398,10 @@
         "Siemens.Engineering.WinCC.xml": "2d1c7e1816b43ab10ead3036d37e007d15540ddbddc6a1a239635f71e43e7615",
         "Siemens.Engineering.WinCCUnified.xml": "894afc507742b3498a3be4273e6818b05677103ecdd4687af1c6d1caa4a5f73b"
       },
-      "compiledCallInventorySha256": "42160907f55f4f39ef7fb2a267f128aefb3ccc2eb9eff06ebf8fd1507d34b1ec",
-      "plcCompiledDirectMemberNames": 1745,
-      "plcCompiledCallInventorySha256": "42160907f55f4f39ef7fb2a267f128aefb3ccc2eb9eff06ebf8fd1507d34b1ec",
-      "hostCatalogSha256": "2fe71938b5195e1a58ec7c17c92c0b517cda4167b547593f63e839855fea5c96"
+      "compiledCallInventorySha256": "e590eaa7f94aab91b7d4edf130d4979e2319ebc6f0ff6963b0c6d669b7805f9e",
+      "plcCompiledDirectMemberNames": 1748,
+      "plcCompiledCallInventorySha256": "e590eaa7f94aab91b7d4edf130d4979e2319ebc6f0ff6963b0c6d669b7805f9e",
+      "hostCatalogSha256": "7552428666441f31f6251026d9e9dea48d8eecfa3398811b1fb1b7d497aaf276"
     }
   ]
 }

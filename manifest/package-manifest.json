@@ -1,10 +1,10 @@
 {
   "schemaVersion": "2026-05-25",
-  "bundleVersion": "4.0.0-beta.1",
-  "packageName": "TIA_MCP_Delivery_v4.0.0-beta.1_20261022",
+  "bundleVersion": "4.0.0-beta.2",
+  "packageName": "TIA_MCP_Delivery_v4.0.0-beta.2_20261030",
   "packageType": "tia-portal-mcp-complete-offline-delivery-bundle",
   "generatedAt": "2026-05-31T05:30:00-07:00",
-  "refreshedAt": "2026-10-22T21:35:12.6004066\u002B00:00",
+  "refreshedAt": "2026-10-30T18:02:08.3131003\u002B00:00",
   "target": {
     "tiaPortalMajorVersion": [
       14,
@@ -138,7 +138,7 @@
     }
   },
   "fileVersion": "4.0.0.0",
-  "validationStatus": "Delivery 4.0.0-beta.1; engine 4.0.0.0 validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending",
+  "validationStatus": "Delivery 4.0.0-beta.2; engine 4.0.0.0 validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending",
   "validationRecords": {
     "engine": "manifest/release-build.json",
     "configurator": "manifest/configurator-build.json",
