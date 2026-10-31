@@ -70,7 +70,9 @@ internal static partial class ReleaseCommands
                 "-OutputDirectory=" + output, "-CacheDirectory=" + Path.GetFullPath(options.Get("CacheDirectory", Path.Combine(original, "bin-build/cache/check-all"))),
                 .. options.Get("CiCovered") is { } coverage ? new[] { "-CiCovered=" + Path.GetFullPath(coverage) } : Array.Empty<string>()], snapshot,
                 new Dictionary<string, string?> { ["TIA_MCP_CLEAN_CHECKOUT"] = snapshot, ["TIA_MCP_CHECK_RUNNER"] = "1", ["TIA_MCP_TEST_PUBLIC_API_ROOT"] = null,
-                    ["TIA_MCP_CHECK_ISOLATION_ROOT"] = null, ["TIA_MCP_CHECK_ORIGINAL_ROOT"] = original }, forwardOutput: true);
+                    ["TIA_MCP_CHECK_ISOLATION_ROOT"] = null,
+                    // The snapshot owner and evidence ownership checks use the root the snapshot was created under.
+                    ["TIA_MCP_CHECK_ORIGINAL_ROOT"] = snapshotBase }, forwardOutput: true);
             return result.ExitCode;
         }
         finally
