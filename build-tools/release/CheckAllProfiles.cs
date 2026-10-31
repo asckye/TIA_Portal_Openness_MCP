@@ -216,7 +216,7 @@ internal static class CheckAllProfiles
             File.WriteAllText(Path.Combine(directory, "shard-plan.json"), JsonSerializer.Serialize(new { assignments, costs,
                 algorithm = "LPT by measured class duration", concurrent = false, reason = "Shown windows and Keyboard.FocusedElement share the desktop" }) + "\n");
             var unit = CheckAllBuild.Suite(suite);
-            var budget = CheckScheduler.JobTimeout(new(name, () => new(0, "", ""), []), history ?? new Dictionary<string, double>());
+            var budget = UnshardedBudget(name, count, history);
             long runtimeTicks = 0;
             var paths = new List<string>();
             var names = new List<string>();
@@ -259,6 +259,17 @@ internal static class CheckAllProfiles
             // Preserve the historical release-evidence job names as full-suite aggregate aliases.
             jobs.Add(new(name, () => new(0, name + ": registered gate passed\n", ""), [name + "-gate"]));
         }
+    }
+
+    // The former unsharded job's allowance, computed as before (3x its measured runtime, at least 300 s). Since the job now runs
+    // as shards, its runtime is recorded under the shard names; their sum stands in for the unsharded runtime (maintainer
+    // decision 2026-10-31), so a fresh history or the aggregate alias never falls back to the bare 300 s floor.
+    internal static TimeSpan UnshardedBudget(string name, int count, IReadOnlyDictionary<string, double>? history)
+    {
+        history ??= new Dictionary<string, double>();
+        double shards = Enumerable.Range(0, count).Sum(index => history.GetValueOrDefault(name + "-shard-" + index));
+        return CheckScheduler.JobTimeout(new(name, () => new(0, "", ""), []) { EstimatedSeconds = Math.Max(history.GetValueOrDefault(name), shards) },
+            new Dictionary<string, double>());
     }
 
     internal static string? StudioRuntimeError(TimeSpan runtime, TimeSpan budget) => runtime >= budget

@@ -306,6 +306,18 @@ public sealed class CheckAllProfileTests
     }
 
     [Fact]
+    public void UnshardedBudgetUsesTheLargerOfTheFormerJobHistoryAndTheShardSum()
+    {
+        Assert.Equal(TimeSpan.FromSeconds(300), CheckAllProfiles.UnshardedBudget("studio-gui-false", 3, null));
+        Assert.Equal(TimeSpan.FromSeconds(785), CheckAllProfiles.UnshardedBudget("studio-gui-false", 3,
+            new Dictionary<string, double> { ["studio-gui-false"] = 261.6666666666667 }));
+        var shards = new Dictionary<string, double> { ["studio-gui-false"] = 0.01, ["studio-gui-false-shard-0"] = 123, ["studio-gui-false-shard-1"] = 157,
+            ["studio-gui-false-shard-2"] = 44, ["studio-gui-false-shard-3"] = 1000 };
+        // Only the job's own shards count; the aggregate alias's near-zero history never lowers the allowance.
+        Assert.Equal(TimeSpan.FromSeconds(972), CheckAllProfiles.UnshardedBudget("studio-gui-false", 3, shards));
+    }
+
+    [Fact]
     public void GuiShardsShareTheOriginalUnshardedTimeoutInsteadOfMultiplyingItsAllowance()
     {
         var budget = CheckScheduler.JobTimeout(new("studio-gui-false", () => new(0, "", ""), []), new Dictionary<string, double>());
