@@ -101,6 +101,9 @@ internal static partial class ReleaseCommands
 
     private static int Preflight(Options options)
     {
+        string? normalizationError = null;
+        try { ReleaseEvidence.RequireNormalizedWorkingBytes(Root, options.Get("Git", "git")); }
+        catch (ReleaseException error) { normalizationError = error.Message; Console.WriteLine("FAIL Git working-byte normalization: " + error.Message); }
         NightlyRuns.RequireRelease(Root, options.Get("Git", "git"));
         var checks = PreflightChecks();
 
@@ -121,10 +124,11 @@ internal static partial class ReleaseCommands
                 return SuiteHang.RunProcess(check.Exe == "test-suites" || check.Exe.StartsWith("check-", StringComparison.Ordinal) ? Dotnet : check.Exe, command, Root, environment);
             }, [], Exclusive: check.Name == "release tool test suite")).ToArray();
             var rows = CheckScheduler.Run(jobs, GetMaxParallelism(options), logRoot);
-            Console.WriteLine($"PREFLIGHT: {rows.Count(row => row.Status == "passed")} passed, {rows.Count(row => row.Status != "passed")} failed; {logRoot}");
-            return rows.All(row => row.Status == "passed") ? 0 : 1;
+            Console.WriteLine($"PREFLIGHT: {rows.Count(row => row.Status == "passed")} passed, {rows.Count(row => row.Status != "passed") + (normalizationError is null ? 0 : 1)} failed; {logRoot}");
+            return normalizationError is null && rows.All(row => row.Status == "passed") ? 0 : 1;
         }
         var failures = new List<(string Name, CommandResult Result)>();
+        if (normalizationError is not null) failures.Add(("Git working-byte normalization", new CommandResult(1, "", normalizationError)));
         foreach (var check in checks)
         {
             var arguments = AddOfflineNuGetConfig(check.Exe, check.Args);
@@ -184,15 +188,13 @@ internal static partial class ReleaseCommands
             }),
             new("Ecosystem Python", () =>
             {
-                var executable = options.Get("EcosystemPython") ?? Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON");
-                if (string.IsNullOrWhiteSpace(executable))
-                {
-                    var local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                    if (string.IsNullOrWhiteSpace(local)) throw new ReleaseException("IO_FAILED: LocalAppData is unavailable");
-                    executable = Path.Combine(local, "TiaMcp/ecosystem-python/Scripts/python.exe");
-                }
-                executable = ResolveApplication(executable);
+                var executable = ReleaseCompanionPython(options);
                 return ReleasePrerequisites.RequireEcosystemPython(executable, Path.Combine(repo, "scripts/ecosystem/plc_tools_bridge.py"), python);
+            }),
+            new("Git working-byte normalization", () =>
+            {
+                ReleaseEvidence.RequireNormalizedWorkingBytes(repo, git);
+                return "tracked working bytes match Git normalization";
             }),
             new("Git / clean tree", () =>
             {
@@ -315,9 +317,14 @@ internal static partial class ReleaseCommands
         if (options.Has("AdoptEvidence") && (options.Has("EarlyGatesOnly") || options.Has("Resume")))
             throw new ReleaseException("-AdoptEvidence cannot be combined with -EarlyGatesOnly or -Resume; an adopted publication starts on the prep commit the evidence tested");
         var previousCache = Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED");
+        var previousCompanion = Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON");
         Environment.SetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED", "1");
         try { return RunReleaseProduction(options); }
-        finally { Environment.SetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED", previousCache); }
+        finally
+        {
+            Environment.SetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED", previousCache);
+            Environment.SetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON", previousCompanion);
+        }
     }
 
     private static int RunReleaseBuild(Options options)

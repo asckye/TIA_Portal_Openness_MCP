@@ -22,6 +22,51 @@ public sealed class McpPanelTests(WpfContext wpf)
     private static async Task Attach(McpSessionClient client, McpOperatorFixture host)
         => await client.AttachAsync(Assert.Single(await client.DiscoverAsync(host.Host.ReleaseKey)));
 
+    [Fact]
+    public async Task Registration_reader_allows_atomic_replace_and_concurrent_write()
+    {
+        await using var host = new McpOperatorFixture();
+        using var reader = McpSessionClient.OpenRegistration(host.Host.RegistrationPath);
+        // The production reader must allow both write access and deletion while its handle stays open.
+        using (var writer = new FileStream(host.Host.RegistrationPath, FileMode.Open, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete))
+            Assert.True(writer.CanWrite);
+        var temporary = host.Host.RegistrationPath + ".new";
+        File.WriteAllText(temporary, "{\"replacement\":true}");
+        File.Move(temporary, host.Host.RegistrationPath, overwrite: true);
+        Assert.True((bool)JsonNode.Parse(File.ReadAllText(host.Host.RegistrationPath))!["replacement"]!);
+        Assert.Equal(1, (int)JsonNode.Parse(reader)!["version"]!);
+    }
+
+    [Theory, InlineData("missing"), InlineData("partial"), InlineData("incomplete"), InlineData("locked")]
+    public async Task Registration_watch_retries_transient_file_failure_on_the_next_poll(string failure)
+    {
+        await using var host = new McpOperatorFixture(); await using var client = host.Client(); await Attach(client, host);
+        var record = JsonNode.Parse(File.ReadAllText(host.Host.RegistrationPath))!;
+        bool detached = false; client.Detached += (_, _) => detached = true;
+        FileStream? blocker = null;
+        try
+        {
+            if (failure == "missing") File.Delete(host.Host.RegistrationPath);
+            else if (failure == "locked") blocker = new FileStream(host.Host.RegistrationPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+            else File.WriteAllText(host.Host.RegistrationPath, failure == "partial" ? "{\"version\":" : "{\"version\":1}");
+            await Task.Delay(1100);
+            Assert.False(detached); Assert.Equal(host.Key, client.SessionKey);
+        }
+        finally { blocker?.Dispose(); }
+        var updated = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        client.StateChanged += (_, state) => { if ((long?)state["revision"] == 100) updated.TrySetResult(true); };
+        record["sessions"]![0]!["revision"] = 100L;
+        File.WriteAllText(host.Host.RegistrationPath, record.ToJsonString());
+        await updated.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.False(detached); Assert.Equal(host.Key, client.SessionKey);
+        var ended = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        client.Detached += (_, _) => ended.TrySetResult(true);
+        record["sessions"] = new JsonArray();
+        File.WriteAllText(host.Host.RegistrationPath, record.ToJsonString());
+        await ended.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Null(client.SessionKey);
+    }
+
     [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public async Task Every_release_discovers_and_attaches_without_launch_and_detaches_without_disconnect(string release)
     {

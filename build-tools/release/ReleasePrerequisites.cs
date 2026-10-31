@@ -38,7 +38,7 @@ internal static class ReleasePrerequisites
     {
         var code = "import runpy,sys; assert sys.version_info >= (3,12); import reportlab; m=runpy.run_path(sys.argv[1]); group,errors=m['load_groups'](); assert not errors, errors; assert len(m['catalog'](group)) >= 49";
         var result = ProcessRunner.Run(executable, ["-B", "-c", code, bridge], Path.GetDirectoryName(bridge)!);
-        ProcessRunner.RequireSuccess(result, "Ecosystem catalogue/dependencies unavailable; set TIA_MCP_PLC_TOOLS_PYTHON");
+        ProcessRunner.RequireSuccess(result, $"Ecosystem catalogue/dependencies unavailable at '{executable}'; prepare it with 'tia install-plc-tools' and pass -EcosystemPython / -CompanionPython or set TIA_MCP_PLC_TOOLS_PYTHON");
         return executable;
     }
 

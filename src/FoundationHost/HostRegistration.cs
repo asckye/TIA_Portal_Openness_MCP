@@ -7,16 +7,19 @@ namespace TiaMcp.FoundationHost;
 
 internal sealed class HostRegistration : IDisposable
 {
+    internal static readonly TimeSpan PublishRetryTimeout = TimeSpan.FromSeconds(1);
     private readonly object sync = new();
     private readonly Dictionary<string, IHostSession> sessions = new(StringComparer.Ordinal);
     private readonly JsonObject host;
     private readonly Action<Exception> report;
+    private readonly Action? sharingRetry;
     private bool disposed;
     internal string FilePath { get; }
     internal string PipeName { get; }
-    internal HostRegistration(HostOptions options, string sid, string dataRoot, Action<Exception> report)
+    internal HostRegistration(HostOptions options, string sid, string dataRoot, Action<Exception> report, Action? sharingRetry = null)
     {
         this.report = report;
+        this.sharingRetry = sharingRetry;
         using var process = Process.GetCurrentProcess();
         long ticks = process.StartTime.ToUniversalTime().Ticks;
         PipeName = OperatorPipe.Name(sid, dataRoot, process.Id, ticks);
@@ -34,15 +37,35 @@ internal sealed class HostRegistration : IDisposable
             if (disposed) return;
             var record = (JsonObject)host.DeepClone();
             record["sessions"] = new JsonArray(sessions.Values.Select(s => (JsonNode)s.Snapshot()).ToArray());
-            Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
             string temporary = FilePath + "." + Guid.NewGuid().ToString("N") + ".tmp";
             try
             {
+                Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
                 using (var file = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
                 { JsonSerializer.Serialize(file, record, OperatorProtocol.Json); file.Flush(true); }
-                File.Move(temporary, FilePath, overwrite: true);
+                RetrySharingViolation(() => File.Move(temporary, FilePath, overwrite: true), sharingRetry);
             }
-            finally { if (File.Exists(temporary)) File.Delete(temporary); }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException) { report(error); }
+            finally
+            {
+                try { if (File.Exists(temporary)) File.Delete(temporary); }
+                catch (Exception error) when (error is IOException or UnauthorizedAccessException) { report(error); }
+            }
+        }
+    }
+    private static void RetrySharingViolation(Action action, Action? retrying = null)
+    {
+        var timer = Stopwatch.StartNew();
+        while (true)
+        {
+            try { action(); return; }
+            // MoveFileEx can report access denied for an open destination as well as a sharing/lock violation.
+            catch (Exception error) when ((error is IOException && (error.HResult & 0xffff) is 32 or 33
+                || error is UnauthorizedAccessException && (error.HResult & 0xffff) == 5) && timer.Elapsed < PublishRetryTimeout)
+            {
+                retrying?.Invoke();
+                Thread.Sleep(TimeSpan.FromMilliseconds(Math.Clamp((PublishRetryTimeout - timer.Elapsed).TotalMilliseconds, 0, 10)));
+            }
         }
     }
     internal IDisposable Register(IHostSession session)
@@ -82,7 +105,8 @@ internal sealed class HostRegistration : IDisposable
             disposed = true;
             foreach (var session in sessions.Values) session.StateChanged -= Refresh;
             sessions.Clear();
-            if (File.Exists(FilePath)) File.Delete(FilePath);
+            try { if (File.Exists(FilePath)) RetrySharingViolation(() => File.Delete(FilePath)); }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException) { report(error); }
         }
     }
 }

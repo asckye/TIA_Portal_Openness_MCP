@@ -11,6 +11,50 @@ public sealed class ReleaseEvidenceTests
     private static readonly EvidenceExternal Machine = new(3, new string('a', 64), new string('b', 64), "10.0.402", "Python 3.12.7", null, "machine-1");
 
     [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CleanAutocrlfCheckoutIsRefusedWhetherRewrittenBeforeOrAfterEvidence(bool beforeEvidence)
+    {
+        void Rewrite(string root)
+        {
+            ProcessRunner.RequireSuccess(ProcessRunner.Run("git", ["-C", root, "config", "core.autocrlf", "true"], root), "Fixture autocrlf");
+            File.WriteAllText(Path.Combine(root, "README.md"), "fixture\r\n");
+            ProcessRunner.RequireSuccess(ProcessRunner.Run("git", ["-C", root, "add", "README.md"], root), "Fixture normalized index/stat cache");
+        }
+        using var fixture = new EvidenceFixture(beforeBegin: beforeEvidence ? Rewrite : null);
+        if (!beforeEvidence) Rewrite(fixture.Root);
+        Assert.Empty(fixture.GitText("status", "--porcelain"));
+        Assert.Equal(["README.md"], ReleaseEvidence.NonNormalizedWorkingFiles(fixture.Root, "git"));
+        var error = Assert.Throws<ReleaseException>(fixture.Verify);
+        Assert.Contains("Git index/HEAD normalization", error.Message);
+        Assert.Contains("README.md", error.Message);
+        Assert.Contains("Preserve any edits", error.Message);
+        Assert.Contains("core.autocrlf=false", error.Message);
+    }
+
+    [Fact]
+    public void WorkingByteProbeMatchesGitFiltersAndPreservesBinaryBytesEditsAndTheIndex()
+    {
+        using var fixture = new EvidenceFixture();
+        File.WriteAllText(Path.Combine(fixture.Root, ".gitattributes"), "*.md text eol=lf\n*.dat -text\n");
+        const string name = "说明 with spaces.md";
+        File.WriteAllText(Path.Combine(fixture.Root, name), "one\ntwo\n");
+        File.WriteAllBytes(Path.Combine(fixture.Root, "binary.dat"), [0, 13, 10, 255, 128]);
+        fixture.Git("add", ".gitattributes", name, "binary.dat"); fixture.Git("commit", "-q", "-m", "normalization fixture");
+        File.WriteAllText(Path.Combine(fixture.Root, name), "one\r\ntwo\r\n");
+        File.AppendAllText(Path.Combine(fixture.Root, "README.md"), "a real LF edit\n");
+        var index = fixture.GitText("write-tree");
+        var inventory = ReleaseEvidence.Digest(ReleaseEvidence.Inventory(fixture.Root, "git"));
+        Assert.NotEqual(fixture.GitText("hash-object", "--no-filters", "--", name), fixture.GitText("hash-object", "--", name));
+        Assert.Equal([name], ReleaseEvidence.NonNormalizedWorkingFiles(fixture.Root, "git"));
+        Assert.Equal(index, fixture.GitText("write-tree"));
+        Assert.Equal(inventory, ReleaseEvidence.Digest(ReleaseEvidence.Inventory(fixture.Root, "git")));
+        Assert.Equal(new byte[] { 0, 13, 10, 255, 128 }, File.ReadAllBytes(Path.Combine(fixture.Root, "binary.dat")));
+        File.WriteAllText(Path.Combine(fixture.Root, name), "one\ntwo\n");
+        ReleaseEvidence.RequireNormalizedWorkingBytes(fixture.Root, "git");
+    }
+
+    [Theory]
     [InlineData("quick")]
     [InlineData("affected")]
     public void DevelopmentRunsCannotBecomeReleaseEvidence(string mode)

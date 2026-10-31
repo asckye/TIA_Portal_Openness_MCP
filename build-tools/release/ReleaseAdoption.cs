@@ -81,7 +81,7 @@ internal static partial class ReleaseCommands
     {
         if (ReleaseEvidence.PrepCommitError(ReleaseVersions.ReadVersionProps(Root).Label, version) is { } prepError) throw new ReleaseException(prepError);
         NightlyRuns.RequireRelease(Root, git);
-        var companion = options.Get("EcosystemPython") ?? CheckAllCompanionPython(options);
+        var companion = ReleaseCompanionPython(options);
         var external = ReleaseEvidence.ProbeExternal(Root, publicApiRoot, nugetConfig is null ? null : Path.GetFullPath(nugetConfig), Dotnet, python,
             string.IsNullOrWhiteSpace(companion) ? null : ResolveApplication(companion));
         var evidencePath = Path.GetFullPath(options.Get("AdoptEvidence")!);
@@ -294,10 +294,11 @@ internal static partial class ReleaseCommands
     // check-release-evidence: the release's adoption checks, read-only, on this checkout; -Ci also reads GitHub Actions of the commit.
     private static int CheckReleaseEvidence(Options options)
     {
+        ReleaseEvidence.RequireNormalizedWorkingBytes(Root, options.Get("Git", "git"));
         var evidence = options.Get("Evidence") ?? throw new ReleaseException("-Evidence <check-all output>/" + ReleaseEvidence.FileName + " is required", 64);
         var api = Path.GetFullPath(options.Get("PublicApiRoot") ?? throw new ReleaseException("-PublicApiRoot is required", 64));
         var nuget = options.Get("NuGetConfig") ?? Environment.GetEnvironmentVariable("TIA_MCP_OFFLINE_NUGET_CONFIG");
-        var companion = options.Get("EcosystemPython") ?? CheckAllCompanionPython(options);
+        var companion = ReleaseCompanionPython(options);
         var git = options.Get("Git", "git");
         var external = ReleaseEvidence.ProbeExternal(Root, api, nuget is null ? null : Path.GetFullPath(nuget), Dotnet, options.Get("Python", Py),
             string.IsNullOrWhiteSpace(companion) ? null : ResolveApplication(companion));

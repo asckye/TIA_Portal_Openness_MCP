@@ -84,8 +84,9 @@ public sealed class McpSessionClient : IMcpSessionClient
             try
             {
                 if (new FileInfo(file).Length > OperatorProtocol.MaximumBytes) continue;
-                var record = JsonNode.Parse(File.ReadAllText(file))!;
-                if ((int?)record["version"] != 1 || (string?)record["releaseKey"] != release) continue;
+                using var stream = OpenRegistration(file);
+                var record = JsonNode.Parse(stream)!;
+                if ((int?)record?["version"] != 1 || (string?)record["releaseKey"] != release) continue;
                 host = new((int)record["pid"]!, (long)record["startTicks"]!, release, (string)record["pipeName"]!, file);
             }
             catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException or ArgumentException)
@@ -166,6 +167,20 @@ public sealed class McpSessionClient : IMcpSessionClient
         }
         StateChanged?.Invoke(this, (JsonObject)snapshot.DeepClone());
     }
+    internal static FileStream OpenRegistration(string path) => new(path, FileMode.Open, FileAccess.Read,
+        FileShare.ReadWrite | FileShare.Delete, 4096, FileOptions.Asynchronous);
+
+    internal static async Task<JsonNode?> ReadRegistration(string path, CancellationToken token)
+    {
+        try
+        {
+            await using var stream = OpenRegistration(path);
+            var record = await JsonNode.ParseAsync(stream, cancellationToken: token).ConfigureAwait(false);
+            return (int?)record?["version"] == 1 && record?["sessions"] is JsonArray ? record : null;
+        }
+        catch (Exception error) when (error is IOException or JsonException or UnauthorizedAccessException or InvalidOperationException)
+        { Trace.TraceInformation("Operator registration poll deferred: {0}", error.Message); return null; }
+    }
     private async Task Watch(OperatorHost host, CancellationToken token)
     {
         try
@@ -173,8 +188,9 @@ public sealed class McpSessionClient : IMcpSessionClient
             while (!token.IsCancellationRequested)
             {
                 await Task.Delay(500, token).ConfigureAwait(false);
-                if (!Alive(host) || !File.Exists(host.RegistrationPath)) break;
-                var record = JsonNode.Parse(await File.ReadAllTextAsync(host.RegistrationPath, token).ConfigureAwait(false));
+                if (!Alive(host)) break;
+                var record = await ReadRegistration(host.RegistrationPath, token).ConfigureAwait(false);
+                if (record == null) continue;
                 var snapshot = (record?["sessions"] as JsonArray)?.OfType<JsonObject>().FirstOrDefault(s => (string?)s["sessionKey"] == SessionKey);
                 if (snapshot == null) break;
                 Merge(snapshot);

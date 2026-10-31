@@ -22,6 +22,10 @@ internal static partial class ReleaseCommands
         if (options.Has("NoReuse") && options.Has("SkipBuild")) throw new ReleaseException("-NoReuse and -SkipBuild cannot be combined");
         var git = options.Get("Git", "git");
         if (options.Has("BumpOnly")) return BumpReleaseOnly(version, git);
+        var companion = ReleaseCompanionPython(options);
+        ReleasePrerequisites.RequireEcosystemPython(companion, Path.Combine(Root, "scripts/ecosystem/plc_tools_bridge.py"), options.Get("Python", Py));
+        ReleaseEvidence.RequireNormalizedWorkingBytes(Root, git);
+        Environment.SetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON", companion);
         NightlyRuns.RequireRelease(Root, git);
         var python = options.Get("Python", Py);
         var parallelism = GetMaxParallelism(options).ToString(System.Globalization.CultureInfo.InvariantCulture);
