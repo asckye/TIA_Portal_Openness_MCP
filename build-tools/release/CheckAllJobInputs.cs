@@ -44,7 +44,8 @@ internal static class CheckAllJobInputs
     internal static CheckJobInputs? Find(CheckJob job, JsonObject catalog)
     {
         var suite = catalog.Select(pair => pair.Key).OrderByDescending(name => name.Length).FirstOrDefault(name =>
-            job.Name == name || job.Name == name + "-gate" || job.Name == name + "-coverage-proof" ||
+            // "-reference" binds the suite's merged result to its runtime binaries (engine-host, SPD-1); same inputs as the suite.
+            job.Name == name || job.Name == name + "-gate" || job.Name == name + "-coverage-proof" || job.Name == name + "-reference" ||
             Regex.IsMatch(job.Name, "^" + Regex.Escape(name) + @"-(?:shard-\d+|sequential)$"));
         if (suite != null)
             return new("registered suite", ["tests/test-suites.json"], [(string)catalog[suite]!["project"]!],

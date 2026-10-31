@@ -14,6 +14,14 @@ public sealed class AffectedNightlyTests
     private static CheckJob Job(string name) => new(name, () => new(0, "passed", ""), []);
 
     [Fact]
+    public void EngineHostReferenceBindingIsDeclaredWithTheEngineHostSuiteInputs()
+    {
+        var inputs = CheckAllJobInputs.Find(Job("engine-host-reference"), Catalog);
+        Assert.NotNull(inputs);
+        Assert.Equal(CheckAllJobInputs.Find(Job("engine-host"), Catalog)!.Projects, inputs!.Projects);
+    }
+
+    [Fact]
     public void ManagedNightlyBuildsItsCleanSnapshotAtTheOrdinaryRepositoryDepth()
     {
         var repository = Path.GetFullPath(@"D:\repo");
