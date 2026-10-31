@@ -468,6 +468,7 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public HmiDescribe EnsureUnifiedHmiConnection(string hmiSoftwarePath, string connectionName = "HMI_Connection_1", string plcName = "PLC_1")
         {
+            if (string.IsNullOrWhiteSpace(hmiSoftwarePath) || string.IsNullOrWhiteSpace(connectionName) || string.IsNullOrWhiteSpace(plcName)) throw new ArgumentException("Explicit nonempty hmiSoftwarePath, connectionName and plcName required.");
             var sw = _session.ExactUnifiedRoot(hmiSoftwarePath);
             var connections = TryGetPropertyValue(sw, "Connections") ?? throw new NotSupportedException("Unified Connections unavailable.");
             var connection = HmiExchangePolicy.Find(connections, connectionName);
@@ -494,11 +495,12 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var items = TryGetPropertyValue(screen, "ScreenItems");
                 if (items == null) throw new InvalidOperationException($"ScreenItems collection not found on screen '{screenName}'.");
 
+                var itemClrType = ResolveUnifiedScreenItemType(itemType);
                 var item = _session.FindExistingByName(items, itemName);
+                if (item != null && item.GetType() != itemClrType) throw new InvalidOperationException("Type conflict for " + itemName + ": existing " + item.GetType().FullName + ", requested " + itemClrType.FullName);
                 var action = "exists";
                 if (item == null)
                 {
-                    var itemClrType = ResolveUnifiedScreenItemType(itemType);
                     meta["mayHaveChanged"] = true;
                     item = CreateUnifiedScreenItem(items, itemName, itemClrType, itemType);
                     action = "created";
@@ -541,10 +543,12 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var root = UnifiedHmiAccess.Parse(designJson) as HmiObject
                     ?? throw new InvalidOperationException("designJson root must be a JSON object.");
 
+                RejectDesignRenames(root);
                 var screen = _session.ResolveHmiScreenOrThrow(hmiSoftwarePath, screenName);
                 var items = TryGetPropertyValue(screen, "ScreenItems")
                     ?? throw new InvalidOperationException($"ScreenItems collection not found on screen '{screenName}'.");
 
+                var writeResults = new HmiArray(); meta["writeResults"] = writeResults;
                 var changed = new HmiArray();
                 var itemResults = new HmiArray();
                 meta["itemResults"] = itemResults;
@@ -555,7 +559,7 @@ namespace TiaMcp.Adapters.Native.Hmi
 
                 if (root["screen"] is HmiObject screenProps)
                 {
-                    ApplyJsonProperties(screen, screenProps, failed, "screen");
+                    ApplyJsonProperties(screen, screenProps, failed, writeResults, "screen");
                 }
 
                 var itemArray = root["items"] as HmiArray
@@ -581,11 +585,12 @@ namespace TiaMcp.Adapters.Native.Hmi
                         var typeHint = HmiString(itemNode, "type");
                         if (string.IsNullOrWhiteSpace(typeHint)) typeHint = "Rectangle";
 
+                        var itemClrType = ResolveUnifiedScreenItemType(typeHint!);
                         var item = _session.FindExistingByName(items, name!);
+                        if (item != null && item.GetType() != itemClrType) throw new InvalidOperationException("Type conflict for " + name + ": existing " + item.GetType().FullName + ", requested " + itemClrType.FullName);
                         var action = "updated";
                         if (item == null)
                         {
-                            var itemClrType = ResolveUnifiedScreenItemType(typeHint!);
                             item = CreateUnifiedScreenItem(items, name!, itemClrType, typeHint!);
                             action = "created";
                             itemStatus["created"] = item != null;
@@ -599,14 +604,14 @@ namespace TiaMcp.Adapters.Native.Hmi
                                 HmiString(itemNode, "culture") ?? "zh-CN");
 
                         itemStatus["mayHaveChanged"] = true;
-                        if (itemNode["left"] != null) _session.TrySetProperty(item, "Left", HmiObjectValue(itemNode["left"]));
-                        if (itemNode["top"] != null) _session.TrySetProperty(item, "Top", HmiObjectValue(itemNode["top"]));
-                        if (itemNode["width"] != null) _session.TrySetProperty(item, "Width", HmiObjectValue(itemNode["width"]));
-                        if (itemNode["height"] != null) _session.TrySetProperty(item, "Height", HmiObjectValue(itemNode["height"]));
+                        if (itemNode["left"] != null) ApplyJsonProperties(item, new HmiObject { ["Left"] = itemNode["left"] }, failed, writeResults, name!, allowAttributeFallback: false);
+                        if (itemNode["top"] != null) ApplyJsonProperties(item, new HmiObject { ["Top"] = itemNode["top"] }, failed, writeResults, name!, allowAttributeFallback: false);
+                        if (itemNode["width"] != null) ApplyJsonProperties(item, new HmiObject { ["Width"] = itemNode["width"] }, failed, writeResults, name!, allowAttributeFallback: false);
+                        if (itemNode["height"] != null) ApplyJsonProperties(item, new HmiObject { ["Height"] = itemNode["height"] }, failed, writeResults, name!, allowAttributeFallback: false);
 
                         if (itemNode["properties"] is HmiObject props)
                         {
-                            ApplyJsonProperties(item, props, failed, name!, typeHint ?? string.Empty);
+                            ApplyJsonProperties(item, props, failed, writeResults, name!, typeHint ?? string.Empty);
                         }
 
                         if (hasText)
@@ -624,21 +629,21 @@ namespace TiaMcp.Adapters.Native.Hmi
                         if (itemNode["font"] is HmiObject font)
                         {
                             var fontPart = TryGetPropertyValue(item, "Font");
-                            if (fontPart != null) ApplyJsonProperties(fontPart, font, failed, name + ".Font");
+                            if (fontPart != null) ApplyJsonProperties(fontPart, font, failed, writeResults, name + ".Font");
                             else failed.Add($"{name}.Font: part not found");
                         }
 
                         if (itemNode["content"] is HmiObject content)
                         {
                             var contentPart = TryGetPropertyValue(item, "Content");
-                            if (contentPart != null) ApplyJsonProperties(contentPart, content, failed, name + ".Content");
+                            if (contentPart != null) ApplyJsonProperties(contentPart, content, failed, writeResults, name + ".Content");
                             else failed.Add($"{name}.Content: part not found");
                         }
 
                         if (itemNode["padding"] is HmiObject padding)
                         {
                             var paddingPart = TryGetPropertyValue(item, "Padding");
-                            if (paddingPart != null) ApplyJsonProperties(paddingPart, padding, failed, name + ".Padding");
+                            if (paddingPart != null) ApplyJsonProperties(paddingPart, padding, failed, writeResults, name + ".Padding");
                             else failed.Add($"{name}.Padding: part not found");
                         }
 
@@ -1082,27 +1087,23 @@ namespace TiaMcp.Adapters.Native.Hmi
                 }
 
                 if (dyn == null) throw new InvalidOperationException("Dynamization create/find returned null.");
-                var setTag = _session.TrySetProperty(dyn, "Tag", tagName);
-                var setDataType = _session.TrySetProperty(dyn, "DataType", dataType);
-                var setPlcTag = !string.IsNullOrWhiteSpace(plcTag) && _session.TrySetProperty(dyn, "PlcTag", plcTag);
-                var setAddress = false;
-                if (!string.IsNullOrWhiteSpace(address))
+                var results = new HmiArray(); meta["writeResults"] = results;
+                void Write(string property, string value, Func<bool> setter)
                 {
-                    setAddress = TrySetTagDynamizationAddress(dyn, address);
+                    meta["mayHaveChanged"] = true;
+                    var result = UnifiedUiModelLogic.VerifiedWrite(dyn, property, value, setter);
+                    results.Add(result); meta["set" + property] = result["trySetResult"];
                 }
-
-                meta["action"] = action;
-                meta["dynamizationType"] = dyn.GetType().FullName;
-                meta["setTag"] = setTag;
-                meta["setDataType"] = setDataType;
-                meta["setPlcTag"] = string.IsNullOrWhiteSpace(plcTag) ? "skipped" : setPlcTag;
-                meta["setAddress"] = string.IsNullOrWhiteSpace(address) ? "skipped" : setAddress;
+                Write("Tag", tagName, () => _session.TrySetProperty(dyn, "Tag", tagName));
+                Write("DataType", dataType, () => _session.TrySetProperty(dyn, "DataType", dataType));
+                if (!string.IsNullOrWhiteSpace(plcTag)) Write("PlcTag", plcTag, () => _session.TrySetProperty(dyn, "PlcTag", plcTag));
+                if (!string.IsNullOrWhiteSpace(address)) Write("Address", address, () => TrySetTagDynamizationAddress(dyn, address));
+                meta["action"] = action; meta["dynamizationType"] = dyn.GetType().FullName;
+                if (string.IsNullOrWhiteSpace(plcTag)) meta["setPlcTag"] = "skipped";
+                if (string.IsNullOrWhiteSpace(address)) meta["setAddress"] = "skipped";
                 meta["members"] = string.Join(" | ", _session.DescribeMembers(dyn, 120).Select(m => $"{m.Kind}:{m.Name}:{m.Type}"));
-
-                if (!setTag)
-                {
-                    throw new InvalidOperationException($"Tag property could not be written on {dyn.GetType().FullName}.");
-                }
+                meta["after"] = UnifiedRequestScalar.Read(dyn);
+                if (results.Any(r => r!.Field("verified") is not true)) throw new InvalidOperationException("Tag dynamization write/readback failed; inspect writeResults. Partial edits are not rolled back.");
 
                 return $"Tag dynamization for '{itemName}.{propertyName}' bound to '{tagName}'.";
             });
@@ -1325,7 +1326,17 @@ namespace TiaMcp.Adapters.Native.Hmi
 
 
 
-        private void ApplyJsonProperties(object target, HmiObject props, HmiArray failed, string path, string typeHint = "")
+        private static void RejectDesignRenames(HmiObject root, bool item = false)
+        {
+            foreach (var pair in root)
+            {
+                if (pair.Key.Equals("Name", StringComparison.OrdinalIgnoreCase) && !(item && pair.Key == "name")) throw new ArgumentException("Renaming through screen design is refused; use an explicit rename operation.");
+                if (pair.Value is HmiObject nested) RejectDesignRenames(nested);
+                else if (pair.Value is HmiArray items) foreach (var child in items.OfType<HmiObject>()) RejectDesignRenames(child, pair.Key == "items");
+            }
+        }
+
+        private void ApplyJsonProperties(object target, HmiObject props, HmiArray failed, HmiArray writeResults, string path, string typeHint = "", bool allowAttributeFallback = true)
         {
             foreach (var kv in props)
             {
@@ -1337,9 +1348,10 @@ namespace TiaMcp.Adapters.Native.Hmi
                 }
 
                 var value = HmiObjectValue(kv.Value);
-                if (_session.TrySetProperty(target, kv.Key, value)) continue;
-                if (TrySetEngineeringAttribute(target, kv.Key, value)) continue;
-                failed.Add($"{path}.{kv.Key}: property/attribute write failed");
+                var result = UnifiedUiModelLogic.VerifiedWrite(target, kv.Key, value,
+                    () => _session.TrySetProperty(target, kv.Key, value), allowAttributeFallback ? () => TrySetEngineeringAttribute(target, kv.Key, value) : (Func<bool>?)null);
+                result["path"] = path; writeResults.Add(result);
+                if (result["verified"] is not true) failed.Add($"{path}.{kv.Key}: {result["error"]}");
             }
         }
 

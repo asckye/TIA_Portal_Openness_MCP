@@ -76,13 +76,15 @@ namespace TiaMcp.Logic.V4.Inputs
         public string Property { get; }
         public string? Name { get; }
         public int? Index { get; }
-        public PropertyStep(string property, string? name = null, int? index = null)
+        public string? Key { get; }
+        public PropertyStep(string property, string? name = null, int? index = null, string? key = null)
         {
             V4Validation.Text(property, nameof(property));
             V4Validation.Require(name == null || !string.IsNullOrWhiteSpace(name), "A selector name must be nonempty.");
             V4Validation.Require(index == null || index >= 0, "A selector index must be nonnegative.");
             V4Validation.Require(name == null || index == null, "Name and index selectors are mutually exclusive.");
-            Property = property; Name = name; Index = index;
+            V4Validation.Require(key == null || name != null && (key == "Name" || key == "PropertyName"), "Key requires name and must be Name or PropertyName.");
+            Property = property; Name = name; Index = index; Key = key;
         }
     }
 
@@ -141,18 +143,19 @@ namespace TiaMcp.Logic.V4.Inputs
         {
             using var document = JsonDocument.ParseValue(ref reader);
             var value = document.RootElement;
-            InputGuard.Closed(value, new[] { "property" }, "name", "index");
+            InputGuard.Closed(value, new[] { "property" }, "name", "index", "key");
             string? name = null;
             int? index = null;
             if (value.TryGetProperty("name", out var nameJson))
             { InputGuard.Require(nameJson.ValueKind == JsonValueKind.String); name = nameJson.GetString(); }
             if (value.TryGetProperty("index", out var indexJson)) index = indexJson.GetInt32();
-            return new PropertyStep(value.GetProperty("property").GetString()!, name, index);
+            return new PropertyStep(value.GetProperty("property").GetString()!, name, index, value.TryGetProperty("key", out var key) ? key.GetString() : null);
         }
         public override void Write(Utf8JsonWriter writer, PropertyStep value, JsonSerializerOptions options)
         {
             writer.WriteStartObject(); writer.WriteString("property", value.Property);
             if (value.Name != null) writer.WriteString("name", value.Name);
+            if (value.Key != null) writer.WriteString("key", value.Key);
             if (value.Index.HasValue) writer.WriteNumber("index", value.Index.Value);
             writer.WriteEndObject();
         }

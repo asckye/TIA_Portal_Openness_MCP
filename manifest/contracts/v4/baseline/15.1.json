@@ -99474,7 +99474,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "3caf098c4cd5f7e2483245a6d7435592c92fd4b185780063b98b5d4f43908f68",
+      "descriptionSha256": "cb87b2d54c7d246695254b46a2284b66621ef5af01a630a4a31d64d2783d538b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -99485,6 +99485,9 @@
               "None",
               "WithDefaults",
               "WithReadOnly"
+            ],
+            "examples": [
+              "WithDefaults"
             ],
             "type": "string"
           },
@@ -99498,7 +99501,7 @@
           "screenName": {
             "description": "screenName: the screen name to export",
             "examples": [
-              "Screen_1"
+              "/Screen_1"
             ],
             "type": "string"
           },
@@ -272978,6 +272981,13 @@
                   "minimum": 0,
                   "type": "integer"
                 },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
+                },
                 "name": {
                   "minLength": 1,
                   "type": "string"
@@ -326937,6 +326947,13 @@
                   "maximum": 2147483647,
                   "minimum": 0,
                   "type": "integer"
+                },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
                 },
                 "name": {
                   "minLength": 1,

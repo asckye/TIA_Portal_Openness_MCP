@@ -23,6 +23,18 @@ V14 SP1–V20 的原生交叉引用策略默认允许，工具仍按官方 API �
 
 `AnalyzePlcCrossReferences` 在八版复用现有普通 PLC XML 批量导出和 `AnalyzePlcReferences` 离线引擎，一次调用覆盖整个普通软件或指定块组（最多 256 块），文件保留在会话输出目录。结果明确给出软件、导出块数、未导出范围、失败/未尝试项目和索引失败；每块列出显式调用者、被调用者和全局符号位置。软件单元、系统块、SCL 文本体、间接调用、HMI 与外部客户端不在覆盖范围内。它不调用原生 CrossReferenceService，也不编译或保存；空结果、未查询或部分结果都不是“没有引用”或可安全删除的证据。原生失败或退出后先检查工程与 MCP/TIA 日志，再按[恢复步骤](../guides/openness-worker-isolation.md)显式恢复会话并重新绑定，不要自动重试。
 
+## HMI 预览、接口值与版本追溯
+
+旧 `EnsureUnifiedHmi*`、`ApplyUnifiedHmi*` 和 `BindUnifiedHmi*` 工具默认 `dryRun=true`，只返回计划，不调用原生 API。预览只做托管参数检查，不证明目标存在或 TIA 语义有效；审核计划后显式传 `dryRun=false`，执行仍需既有 Workbench 审批。执行失败可能保留部分修改，不自动回滚。
+
+HMI 路径使用绝对 `/Group/Sub/Name`，段按 URI 转义；相对路径和反斜杠写法被拒绝，消息给出改正形式。旧 `screenName/tagTableName` 参数仍可传唯一的单个名称；需要指定目录时必须用绝对路径。`ManageUnifiedHmiGroup.groupPath` 与 Plant 路径要求绝对写法。
+
+通用对象路径可用 `{"property":"Interface","key":"PropertyName","name":"Speed"}` 选中面板接口项，再读取或编辑 `Value`、动态化或属性事件。`key` 只接受 `Name` 和 `PropertyName`，默认 `Name`。写 `Value` 前读取当前值的 CLR 类型，按该类型转换并在写后回读；当前值为 null 或复杂类型无法转换时明确拒绝，不能从 JSON token 猜类型。接口值的真实类型和变量接口绑定仍需在对应 TIA 版本验证。
+
+`ApplyUnifiedHmiScreenDesign` 拒绝通过属性重命名；同名异类对象报冲突。`writeResults` 保留每个几何或属性写入返回值与回读，返回 true 而回读不符仍属失败。`BindUnifiedHmiTagDynamization` 同样回读请求的绑定字段，`EnsureUnifiedHmiTagTable` 核对目标的 Parent。
+
+`GetUnifiedFaceplateInstance` 从实例暴露的 `LibraryTypeInstanceInfo.LibraryTypeVersion` 读取类型及版本身份，并直接读取该连接版本；调用者无需猜 `typePath/version`，二者仅作可选核对条件。服务缺失、返回 null、版本对象或 TypeObject 不可用会返回具体缺口；不会从 ContainedType 推导格式、改用默认版本或搜索无关类型。该服务在真实 Unified 实例上是否非空、版本导出及接口值语义仍未验证。Classic 库类型按类型名和继承关系匹配，版本继续单独返回。
+
 ## 工程数据与在线数据
 
 | 通道 | 当前可以做什么 | 前提与限制 |

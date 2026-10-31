@@ -42,7 +42,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var target = UnifiedObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath), objectPathJson);
                 if (target.GetType().Name == "HmiRuntimeSetting") throw new NotSupportedException("Use SetUnifiedRuntimeSettings for root settings and its confirmation/readback flow; this adapter only edits nested runtime settings.");
                 // Nested parts (alarm class RaisedState, log Settings/Backup/Segment ...) and System.Drawing.Color leaves are accepted; collections still need their dedicated tools.
-                var prepared = UnifiedUiModelLogic.PrepareNested(target.GetType(), changes);
+                var prepared = UnifiedUiModelLogic.PrepareNested(target.GetType(), changes, target: target, evidence: meta);
                 meta["softwarePath"] = softwarePath; meta["objectPath"] = UnifiedObjectAddress.Parse(objectPathJson);
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["before"] = UnifiedUiModelLogic.Tree(target, 1);
                 meta["requestedProperties"] = changes.DeepClone();
@@ -212,7 +212,7 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         private object ExactPlantNode(string path)
         {
-            var parts=PlcGroupOperations.Parts(path);
+            var parts=EngineeringInputValidation.AbsoluteHmiPath(path).Select(Uri.UnescapeDataString).ToArray();
             object current=PlcGroupOperations.Find(ExactPlantViews(),parts[0]) ?? throw new InvalidOperationException("Exact plant view not found.");
             foreach(var part in parts.Skip(1)) current=PlcGroupOperations.Find(PlcGroupOperations.Get(current,"PlantViewNodes"),part) ?? throw new InvalidOperationException("Exact plant node not found: "+part);
             return current;
@@ -239,12 +239,12 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var changes=UnifiedRequestValues.Parse(propertiesJson) as HmiObject ?? throw new ArgumentException("propertiesJson must be an object.");
                 if(changes.ContainsKey("Name") || (action=="delete" && changes.Count!=0)) throw new ArgumentException("Rename and properties during delete are excluded.");
                 if(!new[]{"create","update","delete"}.Contains(action)) throw new ArgumentException("action must be create/update/delete.");
-                var parts=PlcGroupOperations.Parts(plantPath);
+                var parts=EngineeringInputValidation.AbsoluteHmiPath(plantPath).Select(Uri.UnescapeDataString).ToArray();
+                if(plantObjectType!="" && (parts.Length==1 || action!="create")) throw new ArgumentException("plantObjectType only applies to creating a child CPM instance.");
                 using var access=dryRun ? null : _session.AcquireHmiEditAccess();
-                var collection=parts.Length==1 ? ExactPlantViews() : PlcGroupOperations.Get(ExactPlantNode(string.Join("/",parts.Take(parts.Length-1))),"PlantViewNodes");
+                var collection=parts.Length==1 ? ExactPlantViews() : PlcGroupOperations.Get(ExactPlantNode("/" + string.Join("/",parts.Take(parts.Length-1).Select(Uri.EscapeDataString))),"PlantViewNodes");
                 var target=PlcGroupOperations.Find(collection,parts.Last());
                 if((action=="create")== (target!=null)) throw new InvalidOperationException(action=="create" ? "Plant object exists." : "Exact plant object not found.");
-                if(plantObjectType!="" && (parts.Length==1 || action!="create")) throw new ArgumentException("plantObjectType only applies to creating a child CPM instance.");
                 if(action=="delete" && PlcGroupOperations.Items(PlcGroupOperations.Get(target!,"PlantViewNodes")).Any()) throw new InvalidOperationException("Only leaf nodes or empty plant views can be deleted; subtree deletion refused.");
                 var signature=plantObjectType=="" ? new[]{typeof(string)} : new[]{typeof(string),typeof(string)};
                 var type=target?.GetType() ?? collection.GetType().GetMethod("Create",signature)?.ReturnType ?? throw new NotSupportedException("Native plant creation unavailable.");

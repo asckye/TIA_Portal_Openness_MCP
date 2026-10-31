@@ -18,6 +18,14 @@ namespace TiaMcp.Adapters.Native.Hmi { internal static class ClassicHmiLogic {
             ["cScript"] = "Siemens.Engineering.Hmi.RuntimeScripting.CScriptLibraryType",
         };
 
+internal static bool LibraryTypeMatches(Type type, string expected)
+        {
+            var name = expected.Substring(expected.LastIndexOf('.') + 1);
+            for (var current = type; current != null; current = current.BaseType)
+                if (current.Name == name) return true;
+            return false;
+        }
+
 internal static string RequireAction(string action, string[] allowed)
         {
             if (!allowed.Contains(action)) throw new ArgumentException("action must be one of: " + string.Join("/", allowed) + ".");

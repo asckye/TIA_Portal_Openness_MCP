@@ -21,6 +21,7 @@ namespace TiaMcpServer.Siemens.Services
         {
             ValidateInputs(request);
             DecodeInputs(request);
+            EngineeringInputValidation.Request(request);
             var unavailable = UnifiedCapabilities.Unsupported(HardwareContract.ReleaseKey, request);
             if (unavailable != null) throw new PortalException(PortalErrorCode.NotSupportedOnVersion, unavailable);
             return Dispatch(request, dryRun);
@@ -36,6 +37,13 @@ namespace TiaMcpServer.Siemens.Services
                         try { TiaMcp.Adapters.Contracts.EngineeringInputValidation.NameOrAbsolutePath(name.GetString()!); }
                         catch (ArgumentException error)
                         { return new Error(error.Message, new InvalidArgumentDetails(field, Array.Empty<string>())); }
+            if (TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool)
+                && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(tool).Tools.Contains(tool)
+                && TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(tool)?.Domain.StartsWith("HMI", StringComparison.Ordinal) == true)
+                foreach (var field in new[] { "screenPath", "groupPath", "plantPath", "typePath", "folderPath" })
+                    if (args.TryGetProperty(field, out var path) && path.ValueKind == JsonValueKind.String && path.GetString()!.Length != 0)
+                        try { EngineeringInputValidation.AbsoluteHmiPath(path.GetString()!, rootAllowed: field == "folderPath"); }
+                        catch (ArgumentException error) { return new Error(error.Message, new InvalidArgumentDetails(field, Array.Empty<string>())); }
             foreach (var field in new[] { "objectPath", "branch", "collectionPath", "tagPath", "durationPath" })
             {
                 if (!schema.GetProperty("properties").TryGetProperty(field, out var fieldSchema)
@@ -86,16 +94,17 @@ namespace TiaMcpServer.Siemens.Services
 
         internal static void ValidateInputs(UnifiedRequest request)
         {
+            EngineeringInputValidation.Request(request);
             if (request.Operation is "GetUnifiedScreenBranch" or "GetUnifiedFaceplateInstance")
                 EngineeringInputValidation.AbsoluteHmiPath(request.ScreenPath);
-            if (request.Operation is "GetUnifiedLibraryType" or "GetUnifiedFaceplateInstance")
+            if (request.Operation == "GetUnifiedLibraryType" || request.Operation == "GetUnifiedFaceplateInstance" && request.TypePath.Length != 0)
                 EngineeringInputValidation.AbsoluteHmiPath(request.TypePath);
             if (request.Operation == "ListUnifiedLibraryFolderEntries")
                 EngineeringInputValidation.AbsoluteHmiPath(request.FolderPath, rootAllowed: true);
             foreach (var text in new[] { request.ObjectPathJson, request.TagPathJson, request.DurationPathJson })
                 if (text.Length != 0) ValidateAddress(text);
             if (request.BranchJson.Length != 0) ValidateAddress(request.BranchJson, true);
-            foreach (var text in new[] { request.PropertiesJson, request.ScriptPropertiesJson })
+            foreach (var text in new[] { request.PropertiesJson, request.ScriptPropertiesJson, request.EntryJson })
                 if (text.Length != 0) ValidateProperties(text);
         }
 

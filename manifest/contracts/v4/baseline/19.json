@@ -9920,10 +9920,15 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "6ac36bde8eafdf6be0c1916ace5fdd5183d5bc6911afb9b10a8a3b14dac147ae",
+      "descriptionSha256": "d5a074f8ec2a1b82a7f5e2f657ffae396e7fea9b6e96cc4fff00c87fb71a70a4",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
           "hmiSoftwarePath": {
             "description": "hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')",
             "type": "string"
@@ -11467,7 +11472,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "44dec831d1b9a8d399b8cc379996df2fb858a4ddeb6225f20f3f96442d243ddc",
+      "descriptionSha256": "d24930351df866e06ab7e791e530c55998837ce16dfb1cdc7e13599a2b96a0b8",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -11882,6 +11887,11 @@
               "items"
             ],
             "type": "object"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
           },
           "hmiSoftwarePath": {
             "description": "hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')",
@@ -13183,10 +13193,15 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "08bc9ca2f60b595db05ebe2556a71a588ba391e027fa988f713fec75b5481a0a",
+      "descriptionSha256": "09b0714eaf3d39cee4a7ba193bd8b6103c5be909a32d7a2a162fd0d0b681bc98",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
           "hmiSoftwarePath": {
             "description": "hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')",
             "type": "string"
@@ -19871,7 +19886,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "ee61a1ac78c4aa2ec3360e024c86c26feb10e802c74be47af962b9a01718de05",
+      "descriptionSha256": "851c8e49e02f25bba5d42522c0b3637837f6dd811cc850fedc817b8741e1464c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -19884,6 +19899,11 @@
             "default": "Bool",
             "description": "dataType: tag data type, e.g. Bool, Int, Real",
             "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
           },
           "hmiSoftwarePath": {
             "description": "hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')",
@@ -134043,7 +134063,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "45da790667bdbbc06744ba9e54298dcc585489a538b3b16d3bb9519379dbd253",
+      "descriptionSha256": "8b2ed94d75aabfebbe9bb05ddc86c51970a49de9d7b429ef23be152926e889a9",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -134054,6 +134074,11 @@
           "buttonName": {
             "description": "buttonName: HMI button item name",
             "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
           },
           "eventType": {
             "description": "eventType: HmiButtonEventType value, e.g. Down (press), Up (release), Tapped — NOT Pressed/Released",
@@ -135366,13 +135391,18 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "7a66e02307ced024580ba29e79c873fb9a1cd0a6f7e70a653ca65174467d7662",
+      "descriptionSha256": "88fcb7f1bb52b64b71e387c5c3d84012886177f88d20fcf95e6acdf1f43b6884",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "buttonName": {
             "description": "buttonName: HMI button item name",
             "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
           },
           "eventType": {
             "description": "eventType: HmiButtonEventType value, e.g. Tapped, Down, Up; use ListUnifiedHmiApiTypes('HmiButtonEventType') to inspect",
@@ -136674,7 +136704,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "67bd8cb2f7e5ad2955f703c3da8d795e089305dad203e40954c0173ddb2f85a7",
+      "descriptionSha256": "3379949e1a60dac1777e553281d03624c25b32ed1cc3cb6f989ff38004ac8711",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -136682,6 +136712,11 @@
             "default": "HMI_Connection_1",
             "description": "connectionName: HMI connection name",
             "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
           },
           "hmiSoftwarePath": {
             "description": "hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')",
@@ -137977,10 +138012,15 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "3e3262d4528139e0123a1065a52c217ff7377ae792f76c01face84ca2a031015",
+      "descriptionSha256": "342cb57c86571bdaa08fc7958c203870cb8d4cd15cad62dbedbf6d61bbc055ee",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
           "dynamizationType": {
             "default": "",
             "description": "dynamizationType: type short name/full name; empty tries common candidates and returns errors if unsupported",
@@ -139290,10 +139330,15 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "025b18f43285a5c98c032a82e519a73a1eff3a458fc9fc2f23578b3acdeea245",
+      "descriptionSha256": "4e10f6a8f657d35d404acb4535b94d992a85f678dc799c18da7df7da1a88e014",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
           "height": {
             "default": 0,
             "description": "height: optional screen height, 0 means keep current",
@@ -140598,10 +140643,15 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "b9021603e393ecb2c14efb72f9c1d9dd02793f44a141729cc276a0d600fb2044",
+      "descriptionSha256": "b2c9b6adcd39128c2eb3c803dc36aa268a4bac541dc1dcdbf5b5455688f191c1",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
           "height": {
             "default": 40,
             "description": "height: item height",
@@ -141931,7 +141981,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "176cf2216a236e787f6944677e6c5657abd7581558ec5ebbb90dc471b72c5f28",
+      "descriptionSha256": "940b36c0f0bdf0fa925589316a1a805b606ecbbf7e5260dc157aded4d2047eb0",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -141944,6 +141994,11 @@
             "default": "",
             "description": "connectionName: HMI connection name; empty keeps current/auto",
             "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
           },
           "hmiDataType": {
             "default": "Bool",
@@ -143264,10 +143319,15 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "fa9c6c67b3aedc22509c8cbe4c357e1585b30332c40984be263a95fe0fa85ab9",
+      "descriptionSha256": "f7bf3872acd497490f61c86a4d92d1c7f9349634f04530aa7e32bc0dab0882b6",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
           "hmiSoftwarePath": {
             "description": "hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')",
             "type": "string"
@@ -163088,7 +163148,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "3caf098c4cd5f7e2483245a6d7435592c92fd4b185780063b98b5d4f43908f68",
+      "descriptionSha256": "cb87b2d54c7d246695254b46a2284b66621ef5af01a630a4a31d64d2783d538b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -163099,6 +163159,9 @@
               "None",
               "WithDefaults",
               "WithReadOnly"
+            ],
+            "examples": [
+              "WithDefaults"
             ],
             "type": "string"
           },
@@ -163112,7 +163175,7 @@
           "screenName": {
             "description": "screenName: the screen name to export",
             "examples": [
-              "Screen_1"
+              "/Screen_1"
             ],
             "type": "string"
           },
@@ -200045,6 +200108,13 @@
                   "maximum": 2147483647,
                   "minimum": 0,
                   "type": "integer"
+                },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
                 },
                 "name": {
                   "minLength": 1,
@@ -279823,6 +279893,11 @@
         "properties": {
           "category": {
             "description": "category: the category - the tool description lists the accepted values.",
+            "enum": [
+              "alarmClasses",
+              "discreteAlarms",
+              "analogAlarms"
+            ],
             "type": "string"
           },
           "limit": {
@@ -281138,6 +281213,10 @@
         "properties": {
           "category": {
             "description": "category: the category - the tool description lists the accepted values.",
+            "enum": [
+              "alarmAuditClasses",
+              "auditTrails"
+            ],
             "type": "string"
           },
           "limit": {
@@ -282471,6 +282550,13 @@
                   "minimum": 0,
                   "type": "integer"
                 },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
+                },
                 "name": {
                   "minLength": 1,
                   "type": "string"
@@ -283779,7 +283865,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "e98795fa4e7c8a72c545b9fff1ee02bca67844dacb1e625d3505be7560794b6a",
+      "descriptionSha256": "7ef5862435b9d9ab6909f38136c8c8198f7028bfafef75253488e9616fdfed0b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -283816,10 +283902,12 @@
             "type": "string"
           },
           "typePath": {
+            "default": "",
             "description": "typePath: 'Group/Name' of the PLC data type as GetSoftwareTree shows it.",
             "type": "string"
           },
           "version": {
+            "default": "",
             "description": "version: catalog / firmware version string, e.g. 'V2.9'.",
             "type": "string"
           }
@@ -283828,9 +283916,7 @@
           "softwarePath",
           "expectedProject",
           "screenPath",
-          "itemName",
-          "typePath",
-          "version"
+          "itemName"
         ],
         "type": "object"
       },
@@ -293032,6 +293118,13 @@
                   "minimum": 0,
                   "type": "integer"
                 },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
+                },
                 "name": {
                   "minLength": 1,
                   "type": "string"
@@ -294371,6 +294464,13 @@
                   "minimum": 0,
                   "type": "integer"
                 },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
+                },
                 "name": {
                   "minLength": 1,
                   "type": "string"
@@ -295708,6 +295808,13 @@
                   "maximum": 2147483647,
                   "minimum": 0,
                   "type": "integer"
+                },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
                 },
                 "name": {
                   "minLength": 1,
@@ -386801,6 +386908,13 @@
                   "minimum": 0,
                   "type": "integer"
                 },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
+                },
                 "name": {
                   "minLength": 1,
                   "type": "string"
@@ -397210,6 +397324,19 @@
         "properties": {
           "category": {
             "description": "category: the category - the tool description lists the accepted values.",
+            "enum": [
+              "alarmClasses",
+              "discreteAlarms",
+              "analogAlarms",
+              "alarmLogs",
+              "dataLogs",
+              "textLists",
+              "graphicLists",
+              "systemTags",
+              "systemTextLists",
+              "auditTrails",
+              "opcUaAlarmTypes"
+            ],
             "type": "string"
           },
           "limit": {
@@ -483920,6 +484047,13 @@
                   "minimum": 0,
                   "type": "integer"
                 },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
+                },
                 "name": {
                   "minLength": 1,
                   "type": "string"
@@ -504831,6 +504965,13 @@
                   "minimum": 0,
                   "type": "integer"
                 },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
+                },
                 "name": {
                   "minLength": 1,
                   "type": "string"
@@ -506179,6 +506320,19 @@
           },
           "category": {
             "description": "category: the category - the tool description lists the accepted values.",
+            "enum": [
+              "alarmClasses",
+              "discreteAlarms",
+              "analogAlarms",
+              "alarmLogs",
+              "dataLogs",
+              "textLists",
+              "graphicLists",
+              "systemTags",
+              "systemTextLists",
+              "auditTrails",
+              "opcUaAlarmTypes"
+            ],
             "type": "string"
           },
           "dryRun": {
@@ -507541,6 +507695,13 @@
                   "minimum": 0,
                   "type": "integer"
                 },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
+                },
                 "name": {
                   "minLength": 1,
                   "type": "string"
@@ -508881,7 +509042,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "65698ab115613ec40b4fb95449f7bba4515d3cf17f4cca03c6f0465d5eed5e62",
+      "descriptionSha256": "497f579442d29bdef9306ee528dfe6da8dfdbf2ff3f23bfd9ef1cd3b84513c2e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -510273,6 +510434,13 @@
                   "minimum": 0,
                   "type": "integer"
                 },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
+                },
                 "name": {
                   "minLength": 1,
                   "type": "string"
@@ -511621,6 +511789,13 @@
                   "maximum": 2147483647,
                   "minimum": 0,
                   "type": "integer"
+                },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
                 },
                 "name": {
                   "minLength": 1,
@@ -517066,6 +517241,13 @@
                   "maximum": 2147483647,
                   "minimum": 0,
                   "type": "integer"
+                },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
                 },
                 "name": {
                   "minLength": 1,
@@ -601922,6 +602104,13 @@
                   "minimum": 0,
                   "type": "integer"
                 },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
+                },
                 "name": {
                   "minLength": 1,
                   "type": "string"
@@ -603288,6 +603477,13 @@
                   "minimum": 0,
                   "type": "integer"
                 },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
+                },
                 "name": {
                   "minLength": 1,
                   "type": "string"
@@ -604630,6 +604826,13 @@
                   "maximum": 2147483647,
                   "minimum": 0,
                   "type": "integer"
+                },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
                 },
                 "name": {
                   "minLength": 1,
@@ -605983,6 +606186,13 @@
                   "maximum": 2147483647,
                   "minimum": 0,
                   "type": "integer"
+                },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
                 },
                 "name": {
                   "minLength": 1,
@@ -628400,6 +628610,13 @@
                   "maximum": 2147483647,
                   "minimum": 0,
                   "type": "integer"
+                },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
                 },
                 "name": {
                   "minLength": 1,

@@ -20,7 +20,7 @@ namespace TiaMcpServer.Siemens.Services
             => Invoke(new UnifiedRequest { Operation = "GetUnifiedLibraryType", SoftwarePath = softwarePath, ExpectedProject = expectedProject, TypePath = typePath, Version = version, Cursor = cursor, PageSize = pageSize, BudgetMs = budgetMs }, true);
         public ResponseMessage ListUnifiedLibraryFolder(string softwarePath, string expectedProject, string folderPath = "/", string cursor = "", int pageSize = 100, int budgetMs = 5000)
             => Invoke(new UnifiedRequest { Operation = "ListUnifiedLibraryFolderEntries", SoftwarePath = softwarePath, ExpectedProject = expectedProject, FolderPath = folderPath, Cursor = cursor, PageSize = pageSize, BudgetMs = budgetMs }, true);
-        public ResponseMessage ReadUnifiedFaceplateInstance(string softwarePath, string expectedProject, string screenPath, string itemName, string typePath, string version, string cursor = "", int pageSize = 100, int budgetMs = 5000)
+        public ResponseMessage ReadUnifiedFaceplateInstance(string softwarePath, string expectedProject, string screenPath, string itemName, string typePath = "", string version = "", string cursor = "", int pageSize = 100, int budgetMs = 5000)
             => Invoke(new UnifiedRequest { Operation = "GetUnifiedFaceplateInstance", SoftwarePath = softwarePath, ExpectedProject = expectedProject, ScreenPath = screenPath, ItemName = itemName, TypePath = typePath, Version = version, Cursor = cursor, PageSize = pageSize, BudgetMs = budgetMs }, true);
         public ResponseMessage ReleaseUnifiedReadCursor(string cursor)
             => Invoke(new UnifiedRequest { Operation = "ReleaseUnifiedReadCursor", Cursor = cursor }, true);

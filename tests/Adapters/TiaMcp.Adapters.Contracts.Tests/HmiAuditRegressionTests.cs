@@ -296,18 +296,20 @@ public sealed class HmiAuditRegressionTests
         Assert.True(PortedFamilies.Available("21", tool));
     }
 
-    public class Named { public string Name { get; set; } = ""; }
+    public class Named { public string Name { get; set; } = ""; public object? Parent { get; set; } }
     public sealed class Tables : List<Named>
     {
+        internal object? Owner;
         public List<string> Calls { get; } = [];
-        public Named Create(string name) { Calls.Add(name); var value = new Named { Name = name }; Add(value); return value; }
+        public Named Create(string name) { Calls.Add(name); var value = new Named { Name = name, Parent = Owner }; Add(value); return value; }
     }
     public sealed class TableFolder : Named
     {
         public object[] Folders { get; set; } = [];
         public object[] TagTableGroups { get; set; } = [];
         public object[] Groups { get; set; } = [];
-        public Tables TagTables { get; set; } = new();
+        private Tables tables = new();
+        public Tables TagTables { get { tables.Owner = this; return tables; } set { tables = value; tables.Owner = this; } }
     }
     public sealed class ClassicSoftware { public TableFolder TagFolder { get; set; } = new(); }
     public sealed class Folder : Named

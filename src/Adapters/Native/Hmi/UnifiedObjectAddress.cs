@@ -25,7 +25,16 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var property = target.GetType().GetProperty(step["property"]!.GetValue<string>(), BindingFlags.Instance | BindingFlags.Public);
                 if (property?.GetMethod?.IsPublic != true || property.GetIndexParameters().Length != 0) throw new NotSupportedException("Public property not available: " + step["property"]);
                 target = property.GetValue(target) ?? throw new InvalidOperationException("Null object at " + step);
-                if (step.ContainsKey("name")) target = PlcGroupOperations.Find(target, step["name"]!.GetValue<string>()) ?? throw new InvalidOperationException("Exact named object not found at " + step);
+                if (step.ContainsKey("name"))
+                {
+                    var key = step.ContainsKey("key") ? step["key"]!.GetValue<string>() : "Name";
+                    var name = step["name"]!.GetValue<string>();
+                    var matches = PlcGroupOperations.Items(target).Where(item => string.Equals(
+                        PlcGroupOperations.Get(item, key).ToString(), name, StringComparison.OrdinalIgnoreCase)).Take(2).ToArray();
+                    if (matches.Length != 1) throw new InvalidOperationException(matches.Length == 0
+                        ? "Exact named object not found at " + step : "Ambiguous exact object at " + step);
+                    target = matches[0];
+                }
             }
             return target;
         }

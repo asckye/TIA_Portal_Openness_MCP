@@ -276,6 +276,11 @@ public sealed class PortedPortalAdmissionTests
         foreach (var key in new[] { "dryRun", "confirm", "confirmProtectionChange" })
             if (properties.TryGetProperty(key, out _)) args[key] = key != "dryRun";
         foreach (var pair in Overrides(name)) args[pair.Key] = pair.Value?.DeepClone();
+        // Missing-portal cases need valid HMI paths to reach the portal admission boundary.
+        if (TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(name)?.Domain.StartsWith("HMI", StringComparison.Ordinal) == true)
+            foreach (var field in new[] { "screenPath", "folderPath", "groupPath", "plantPath", "typePath" })
+                if (args[field] is JsonValue value && value.TryGetValue<string>(out var path) && path.Length != 0)
+                    args[field] = "/" + path.TrimStart('/');
         return args;
     }
 

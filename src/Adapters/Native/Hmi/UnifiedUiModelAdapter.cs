@@ -59,7 +59,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var part = action == "create" ? null : UnifiedUiModelLogic.FindPart(composition, partName, partIndex) ?? throw new InvalidOperationException("Exact part not found in " + collectionProperty + ".");
                 var creation = action == "create" ? UnifiedUiModelLogic.PartCreation(composition, partName, partKind) : default;
                 if (action == "create" && !string.IsNullOrEmpty(partName) && UnifiedUiModelLogic.FindPart(composition, partName, -1) != null) throw new InvalidOperationException("Part already exists: " + partName);
-                var prepared = action == "update" ? UnifiedUiModelLogic.PrepareNested(part!.GetType(), changes) : null;
+                var prepared = action == "update" ? UnifiedUiModelLogic.PrepareNested(part!.GetType(), changes, target: part, evidence: meta) : null;
                 if (action == "delete" && part!.GetType().GetMethod("Delete", Type.EmptyTypes) == null) throw new NotSupportedException("Native Delete() is not exposed on " + part.GetType().FullName);
                 if (part != null) meta["before"] = UnifiedUiModelLogic.Scalars(part);
                 if (action == "update") meta["requestedProperties"] = changes.DeepClone();
@@ -226,8 +226,10 @@ namespace TiaMcp.Adapters.Native.Hmi
             => _session.RunHmiStepTool("ManageUnifiedListEntries", meta => {
                 if (!new[] { "read", "create", "update", "delete" }.Contains(action)) throw new ArgumentException("action must be read/create/update/delete.");
                 if (string.IsNullOrWhiteSpace(listName)) throw new ArgumentException("Exact list name required.");
+                var collectionName = UnifiedUiModelLogic.ListCollection(category);
+                if (UnifiedRequestValues.Parse(entryJson) is not HmiObject) throw new ArgumentException("entryJson must be an object.");
                 var root = _session.ExactUnifiedRoot(softwarePath);
-                var property = root.GetType().GetProperty(UnifiedUiModelLogic.ListCollection(category)) ?? throw new NotSupportedException(category + " collection is not exposed by this API version (V20 has no HmiGraphicLists).");
+                var property = root.GetType().GetProperty(collectionName) ?? throw new NotSupportedException(category + " collection is not exposed by this API version (V20 has no HmiGraphicLists).");
                 var collection = property.GetValue(root) ?? throw new InvalidOperationException("List collection is null.");
                 var list = PlcGroupOperations.Find(collection, listName) ?? throw new InvalidOperationException("Exact list not found: " + listName);
                 meta["category"] = category; meta["listName"] = listName; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
@@ -243,7 +245,8 @@ namespace TiaMcp.Adapters.Native.Hmi
         public HmiMessage ReadUnifiedAlarmCommon(string softwarePath, string category, string name = "", int offset = 0, int limit = 100)
             => _session.RunHmiStepTool("GetUnifiedAlarmCommon", meta => {
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset >= 0 and limit 1..500 required.");
-                var collection = PlcGroupOperations.Get(_session.ExactUnifiedRoot(softwarePath), UnifiedUiModelLogic.AlarmCommonCollection(category));
+                var collectionName = UnifiedUiModelLogic.AlarmCommonCollection(category);
+                var collection = PlcGroupOperations.Get(_session.ExactUnifiedRoot(softwarePath), collectionName);
                 var items = string.IsNullOrEmpty(name) ? PlcGroupOperations.Items(collection).ToArray()
                     : new[] { PlcGroupOperations.Find(collection, name) ?? throw new InvalidOperationException("Exact object not found: " + name) };
                 var rows = new HmiArray();
@@ -275,8 +278,8 @@ namespace TiaMcp.Adapters.Native.Hmi
         public HmiMessage ReadUnifiedAuditSettings(string softwarePath, string category, string name = "", int offset = 0, int limit = 100)
             => _session.RunHmiStepTool("GetUnifiedAuditSettings", meta => {
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset >= 0 and limit 1..500 required.");
-                var root = _session.ExactUnifiedRoot(softwarePath);
                 var propertyName = UnifiedUiModelLogic.AuditCollection(category);
+                var root = _session.ExactUnifiedRoot(softwarePath);
                 var property = root.GetType().GetProperty(propertyName) ?? throw new NotSupportedException("HmiSoftware." + propertyName + " is not exposed by this API version.");
                 var collection = property.GetValue(root) ?? throw new InvalidOperationException("Audit collection is null.");
                 var items = string.IsNullOrEmpty(name) ? PlcGroupOperations.Items(collection).ToArray()

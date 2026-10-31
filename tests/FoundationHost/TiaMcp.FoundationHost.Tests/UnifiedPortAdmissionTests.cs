@@ -143,8 +143,8 @@ public sealed class UnifiedPortAdmissionTests
         var service = new enginehost::TiaMcpServer.Siemens.Services.UnifiedHmiService(Call, () => "fixture.ap21");
         for (int i = 0; i < 2; i++)
         {
-            if (ensureTag) service.EnsureUnifiedHmiTag("HMI", "/Hmi%20Tags/Diagnostic/Diag%20Info", "Ready", plcName: "PLC_Source", plcTag: "PlcReady");
-            else service.EnsureUnifiedHmiTagTable("HMI", "/Hmi%20Tags/Diagnostic/Diag%20Info");
+            if (ensureTag) service.EnsureUnifiedHmiTag("HMI", "/Hmi%20Tags/Diagnostic/Diag%20Info", "Ready", plcName: "PLC_Source", plcTag: "PlcReady", dryRun: false);
+            else service.EnsureUnifiedHmiTagTable("HMI", "/Hmi%20Tags/Diagnostic/Diag%20Info", dryRun: false);
         }
         Assert.Equal(2, calls);
         Assert.Equal(ensureTag ? 2 : 1, writes);
@@ -168,11 +168,12 @@ public sealed class UnifiedPortAdmissionTests
         Assert.Equal(0, calls);
     }
 
-    public sealed class NamedTagTable { public string Name { get; set; } = ""; }
+    public sealed class NamedTagTable { public string Name { get; set; } = ""; public object? Parent { get; set; } }
     public sealed class TagTables : List<NamedTagTable>
     {
         public List<string> Calls { get; } = new();
-        public NamedTagTable Create(string name) { Calls.Add(name); var table = new NamedTagTable { Name = name }; Add(table); return table; }
+        public object? Owner { get; set; }
+        public NamedTagTable Create(string name) { Calls.Add(name); var table = new NamedTagTable { Name = name, Parent = Owner }; Add(table); return table; }
     }
     public sealed class TagValue { public string Name { get; set; } = ""; public string TagTableName { get; set; } = ""; }
     public sealed class Tags : List<TagValue>
@@ -186,6 +187,7 @@ public sealed class UnifiedPortAdmissionTests
         public TagFolder[] Groups { get; set; } = Array.Empty<TagFolder>();
         public TagTables TagTables { get; } = new();
         public Tags Tags { get; } = new();
+        public TagFolder() => TagTables.Owner = this;
     }
 
     private static MethodInfo Method(string name) => Host.PortedToolDeclarations.Methods("21")

@@ -17,8 +17,10 @@ namespace TiaMcp.Adapters
         public HmiReply ExecuteUnifiedHmi(UnifiedHmiRequest request, bool dryRun = true)
         {
             UnifiedHmiInputValidation.Request(request);
-            Check();
             if (request.IsReadOnly != dryRun) throw new ArgumentException("Conflicting HMI preview mode.", nameof(dryRun));
+            if (request.DryRun && dryRun && UnifiedHmiInputValidation.LegacyWrite(request.Operation))
+                return new HmiReply { Value = UnifiedHmiInputValidation.Preview(request) };
+            Check();
             if (!PortedFamilies.Available(ReleaseKey, request.Operation)) throw new NotSupportedException("WinCC Unified HMI API requires V19 or later.");
             if (UnifiedHmiCapabilities.Unsupported(ReleaseKey, request.Operation, request.Action, request.ItemType, request.DynamizationType) is string unavailable)
                 throw new NotSupportedException(unavailable);
