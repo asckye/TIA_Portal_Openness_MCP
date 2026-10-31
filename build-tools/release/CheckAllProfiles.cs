@@ -49,6 +49,8 @@ internal static class CheckAllProfiles
                 environment["TIA_MCP_OFFLINE_NUGET_CONFIG"] = nuget; environment["RestoreConfigFile"] = nuget;
                 environment["PYTHONIOENCODING"] = "utf-8"; environment["TIA_MCP_CHECK_NO_BUILD"] = "1";
                 environment["TIA_MCP_PLC_TOOLS_PYTHON"] = companion; environment["TIA_MCP_ANALYZER_REPORT_DIRECTORY"] = null;
+                // The original Isolated jobs never set a bundle root; Studio's layout tests resolve their own temporary roots.
+                environment["TIA_MCP_BUNDLE_ROOT"] = null;
             }
             return new SuiteExecution(CheckAllBuild.Suite(pair.Value!.AsObject()), dotnet, environment,
                 BaseEnvironment: FastSuites.EnvironmentValues("$ISOLATION", "$PIPE_SCOPE", sdk));

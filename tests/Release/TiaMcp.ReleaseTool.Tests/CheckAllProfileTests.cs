@@ -170,6 +170,19 @@ public sealed class CheckAllProfileTests
         Assert.Equal(CheckAllBuild.Suite(Catalog["workbench-control"]!.AsObject()).Variant, CheckAllBuild.Suite(Catalog["studio-gui-false"]!.AsObject()).Variant);
     }
 
+    [Fact]
+    public void StudioSuitesClearTheShardBundleRootLikeTheOriginalIsolatedJobs()
+    {
+        using var temp = new OfflineFixtures(); var plan = Plan();
+        foreach (var name in CheckAllProfiles.StudioSuites)
+        {
+            var environment = FastSuites.EnvironmentFor(Path.Combine(temp.DirectoryPath, name));
+            environment["TIA_MCP_BUNDLE_ROOT"] = temp.DirectoryPath;
+            CheckAllProfiles.ApplyEnvironment(plan.Executions[name], environment, studio: true);
+            Assert.Null(environment["TIA_MCP_BUNDLE_ROOT"]);
+        }
+    }
+
     [Theory]
     [InlineData("merge")]
     [InlineData("nightly")]
