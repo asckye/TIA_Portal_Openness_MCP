@@ -1,8 +1,10 @@
-# TIA Portal Openness MCP
+# Automation Engineering Workbench
 
 [Chinese](README.zh-CN.md) · [Beginner guide (Chinese)](docs/getting-started/beginners.zh-CN.md) · [Documentation](docs/README.md) · [Downloads](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest)
 
-One TIA Portal Workbench window contains **MCP & clients** and **Engineering** pages. Configure clients, manage the MCP service and work directly with TIA projects without opening a second desktop application. Chinese and English are supported.
+Automation Engineering Workbench (formerly TIA Portal Openness MCP) is an MCP server for TIA Portal Openness and a desktop workbench for Siemens TIA Portal V14 SP1 through V21. Executables, the Claude Code plugin ID `tia-portal-openness-mcp`, the MCP server name `tia-portal` and the repository address keep their previous names, so existing configurations continue to work.
+
+One Workbench window contains **MCP & clients** and **Engineering** pages. Configure clients, manage the MCP service and work directly with TIA projects without opening a second desktop application. Chinese and English are supported.
 
 The Workbench is included in the delivery package. This page describes the unreleased 4.0 source; use the documentation included with your downloaded release.
 
@@ -58,3 +60,9 @@ dotnet run --project build-tools/release -- build-multi-version -PublicApiRoot <
 ```
 
 [Build and validation](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/validation.md) · [Release workflow](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/release-workflow.md) · [Current handoff](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/handoff.md) · [Changelog](CHANGELOG.md) · [License notices](docs/licenses/THIRD-PARTY-NOTICES.md)
+
+## Origin, license and trademarks
+
+Automation Engineering Workbench was originally derived from the MIT-licensed [bulaofen0036-coder/TIA_Portal_Openness_MCP](https://github.com/bulaofen0036-coder/TIA_Portal_Openness_MCP) and is now developed solely by asckye. The original copyright notice is retained in [LICENSE](LICENSE); provenance details are in [NOTICE](NOTICE.md).
+
+TIA Portal, SIMATIC, STEP 7, WinCC and Openness are trademarks of Siemens AG; this project is not affiliated with or endorsed by Siemens.

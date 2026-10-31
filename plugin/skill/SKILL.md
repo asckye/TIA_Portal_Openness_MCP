@@ -3,7 +3,7 @@ name: tiaportal-mcp
 description: Use this project's version-specific MCP tools to inspect and edit Siemens TIA Portal projects. Retrieve exact call examples, programming files and result interpretation through GetToolUsage for the connected release.
 ---
 
-# TIA Portal MCP usage
+# Automation Engineering Workbench (TIA Portal MCP) usage
 
 This skill explains how to find and use the project's maintained examples. Tool arguments and programming examples live in `reference/tool-examples` and are returned by `GetToolUsage`; this file does not duplicate their contracts.
 

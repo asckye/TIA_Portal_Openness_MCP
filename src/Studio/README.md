@@ -1,4 +1,4 @@
-# TIA Openness Studio
+# Automation Engineering Workbench desktop (formerly TIA Openness Studio)
 
 状态：现行 · 最后核对：2026-10-11，master `578a05ee`
 

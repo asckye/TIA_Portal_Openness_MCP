@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "tia-portal-openness-mcp",
   "version": "4.0.0-beta.2",
-  "description": "Siemens TIA Portal Openness automation via MCP — project/PLC/HMI scaffolding, SCL/LAD authoring, compile, download, online read. Includes runtimes for V14 SP1, V15.1, V16, V17, V18, V19, V20 and V21; the plugin selects the newest installed TIA release, then the newest runnable bundled host.",
+  "description": "Automation Engineering Workbench (formerly TIA Portal Openness MCP): an MCP server for Siemens TIA Portal Openness — project/PLC/HMI scaffolding, SCL/LAD authoring, compile, download, online read. Includes runtimes for V14 SP1, V15.1, V16, V17, V18, V19, V20 and V21; the plugin selects the newest installed TIA release, then the newest runnable bundled host.",
   "author": { "name": "asckye" },
   "keywords": ["siemens", "tia-portal", "tia-openness", "plc", "hmi", "scl", "s7", "automation", "mcp"],
   "skills": "./plugin",

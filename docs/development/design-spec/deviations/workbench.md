@@ -575,7 +575,7 @@ WCAG 2.2 A/AA 中按代码阅读存在不满足的准则共 17 条：A 级 9 条
 
 - **规则**：NAV-03、LOC-07。
 - **WCAG**：2.4.2 Page Titled（A；EN 301 549 认为对软件不适用，本规范按 SHOULD）。
-- **位置**：`Window.Title` 固定为 `App.Title`“TIA Portal 工作台”（`MainWindow.xaml:1`，`Strings.cs:334`），当前页只显示在标题栏的 `TextBlock` 中（`WorkbenchShell.cs:82-87`）；产品名还有“TIA 工作台”（`Shell.Brand`）与“TIA Workbench”（`SettingsView.xaml.cs:25`、`ApprovalNotification.cs:20`）。
+- **位置**：`Window.Title` 固定为 `App.Title`“自动化工程工作台”（2026-10-30 前为“TIA Portal 工作台”）（`MainWindow.xaml:1`，`Strings.cs:334`），当前页只显示在标题栏的 `TextBlock` 中（`WorkbenchShell.cs:82-87`）；产品名还有“TIA 工作台”（`Shell.Brand`）与“TIA Workbench”（`SettingsView.xaml.cs:25`、`ApprovalNotification.cs:20`）。
 - **用户影响**：任务栏与读屏读到的标题不含页名；产品名不统一。
 - **成本 / 风险**：S。
 - **建议**：**4.0 后修改**。

@@ -4,7 +4,7 @@
 
 [设计规范索引](README.md) · [文档偏差清单](deviations/docs.md)
 
-本规范是 TIA Portal Openness MCP 项目全部文字材料的写作标准。维护者于 2026-10-11 决定以 Microsoft 设计规范为基线：英文按 [Microsoft Writing Style Guide](https://learn.microsoft.com/en-us/style-guide/welcome/)，中文按 Microsoft 发布的 [Chinese (Simplified) Localization Style Guide](https://aka.ms/chinese-simplified-styleguide)（以下简称“zh-CN 指南”，PDF，2024 年版，58 页）。新写和改写的文档必须符合本规范；现有材料与本规范不一致之处逐条列在 [文档偏差清单](deviations/docs.md)，每条的状态（4.0 前修改、4.0 后修改或有意偏差）已按 2026-10-11 的决定登记，4.0 前的修改由 P8-63 与 P7-11b 一起完成。基线决定见 [ADR 0015](../decisions/0015-microsoft-design-spec-baseline.md)。
+本规范是自动化工程工作台（原名 TIA Portal Openness MCP）项目全部文字材料的写作标准。维护者于 2026-10-11 决定以 Microsoft 设计规范为基线：英文按 [Microsoft Writing Style Guide](https://learn.microsoft.com/en-us/style-guide/welcome/)，中文按 Microsoft 发布的 [Chinese (Simplified) Localization Style Guide](https://aka.ms/chinese-simplified-styleguide)（以下简称“zh-CN 指南”，PDF，2024 年版，58 页）。新写和改写的文档必须符合本规范；现有材料与本规范不一致之处逐条列在 [文档偏差清单](deviations/docs.md)，每条的状态（4.0 前修改、4.0 后修改或有意偏差）已按 2026-10-11 的决定登记，4.0 前的修改由 P8-63 与 P7-11b 一起完成。基线决定见 [ADR 0015](../decisions/0015-microsoft-design-spec-baseline.md)。
 
 ## 0 规范用语与引用方式
 
@@ -204,7 +204,7 @@ MCP 工具描述、参数说明和错误消息不属于本规范，它们的语�
 - MUST：UTF-8 无 BOM，仓库内 LF 行尾。建议在 `.gitattributes` 中为 `*.md` 声明 `text eol=lf`。[项目；AGENTS.md 对 C# 的同类要求]
 - MUST：文档按第 1 节的类别放在对应目录；用户文档不得依赖不随包分发的文件才能读懂。[项目]
 - SHOULD：架构图用 Mermaid 写在 Markdown 中，便于审阅差异；需要 SVG 时同时保留可编辑源或生成步骤。[项目]
-- MUST：图片有说明用途的替代文本（如“TIA Portal Openness MCP 4.0 组件关系图”），不写“架构图”这类泛称。[MS: [Alternative text](https://learn.microsoft.com/en-us/style-guide/accessibility/alternative-text)]
+- MUST：图片有说明用途的替代文本（如“自动化工程工作台 4.0 组件关系图”），不写“架构图”这类泛称。[MS: [Alternative text](https://learn.microsoft.com/en-us/style-guide/accessibility/alternative-text)]
 
 ### 11.2 链接
 

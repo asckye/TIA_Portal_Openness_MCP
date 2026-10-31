@@ -1,8 +1,10 @@
-# TIA Portal Openness MCP
+# 自动化工程工作台
 
 [English](README.md) · [新手使用指南](docs/getting-started/beginners.zh-CN.md) · [文档目录](docs/README.md) · [下载完整包](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest)
 
-同一个 TIA Portal 工作台提供 **MCP 与客户端** 和 **工程操作** 两个页面，支持中文和英文。配置 AI 连接、启停服务、浏览工程、导入导出和编译均在同一个主窗口内完成。
+自动化工程工作台（Automation Engineering Workbench，原名 TIA Portal Openness MCP）是面向 TIA Portal Openness 的 MCP 服务器和桌面工作台，适用于 Siemens TIA Portal V14 SP1 至 V21。可执行文件、Claude Code 插件 ID `tia-portal-openness-mcp`、MCP 服务名 `tia-portal` 和仓库地址保留原名，现有配置无需修改。
+
+同一个工作台窗口提供 **MCP 与客户端** 和 **工程操作** 两个页面，支持中文和英文。配置 AI 连接、启停服务、浏览工程、导入导出和编译均在同一个主窗口内完成。
 
 交付包包含工作台；从包根打开 `TiaOpenness.exe`。本页说明尚未发布的 4.0 源码；已下载版本以包内文档为准。
 
@@ -54,3 +56,9 @@ AI 调用不熟悉的工具时，用 `GetToolUsage(toolName, operation)` 获取�
 仅维护 `master`。运行二进制随完整 Release 分发，不提交到 Git。准备 SDK 和伴随 Python 环境后，使用 `dotnet run --project build-tools/release -- build-multi-version -Test` 构建全部版本。
 
 [构建与验证](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/validation.md) · [发布流程](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/release-workflow.md) · [当前交接](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/handoff.md) · [变更记录](CHANGELOG.md) · [第三方许可证](docs/licenses/THIRD-PARTY-NOTICES.md)
+
+## 来源、许可证和商标
+
+自动化工程工作台最初派生自 MIT 许可的 [bulaofen0036-coder/TIA_Portal_Openness_MCP](https://github.com/bulaofen0036-coder/TIA_Portal_Openness_MCP)，现由 asckye 独立开发。原始版权声明保留在 [LICENSE](LICENSE)，来源说明见 [NOTICE](NOTICE.md)。
+
+TIA Portal、SIMATIC、STEP 7、WinCC 和 Openness 是 Siemens AG 的商标；本项目与 Siemens 无关联，也未获得 Siemens 的认可或背书。

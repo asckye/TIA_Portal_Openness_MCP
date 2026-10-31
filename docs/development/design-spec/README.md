@@ -4,7 +4,7 @@
 
 [文档目录](../../README.md) · [当前交接](../handoff.md) · [重构计划](../refactor-plan.md) · [架构决策记录](../decisions/README.md)
 
-本目录是 TIA Portal Openness MCP 的设计规范：说明 4.0 的运行架构，并规定 C# 代码、V4 工具协议、工作台界面和文档写作的规则。维护者于 2026-10-11 决定以 Microsoft 规范为基线编写这些规范（[ADR 0015](../decisions/0015-microsoft-design-spec-baseline.md)）。规范对新工作是规范性的：新代码、新工具、新界面和新文档必须满足其中的 MUST 规则。现有代码和文档与规范的差异逐条记在偏差清单中，每条的状态已在同日决定，4.0 前的修改分配给任务 P8-60–P8-64。
+本目录是自动化工程工作台（Automation Engineering Workbench，原名 TIA Portal Openness MCP）的设计规范：说明 4.0 的运行架构，并规定 C# 代码、V4 工具协议、工作台界面和文档写作的规则。维护者于 2026-10-11 决定以 Microsoft 规范为基线编写这些规范（[ADR 0015](../decisions/0015-microsoft-design-spec-baseline.md)）。规范对新工作是规范性的：新代码、新工具、新界面和新文档必须满足其中的 MUST 规则。现有代码和文档与规范的差异逐条记在偏差清单中，每条的状态已在同日决定，4.0 前的修改分配给任务 P8-60–P8-64。
 
 ## 规范与基线
 

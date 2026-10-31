@@ -388,7 +388,7 @@ internal static partial class Strings
         ("Primer.InspectionSummary", "Checked {0} blocks, found {1} issues.", "检查 {0} 个块，发现 {1} 个问题。"),
         ("Primer.SyncPreview", "Preview: {0} objects expected to sync · {1} already identical.", "预览：{0} 个对象需要同步，{1} 个已相同。"),
         // ---- shell -----------------------------------------------------------------
-        ("App.Title",                  "TIA Portal Workbench", "TIA Portal 工作台"),
+        ("App.Title",                  "Automation Engineering Workbench", "自动化工程工作台"),
         ("Badge.NoVersion",            "TIA —", "TIA —"),
         ("Badge.Version",              "TIA {0}", "TIA {0}"),
 
