@@ -80,7 +80,8 @@ internal static partial class ReleaseCommands
         string python, string logRoot, string token, bool dryRun)
     {
         if (ReleaseEvidence.PrepCommitError(ReleaseVersions.ReadVersionProps(Root).Label, version) is { } prepError) throw new ReleaseException(prepError);
-        var companion = options.Get("EcosystemPython") ?? Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON");
+        NightlyRuns.RequireRelease(Root, git);
+        var companion = options.Get("EcosystemPython") ?? CheckAllCompanionPython(options);
         var external = ReleaseEvidence.ProbeExternal(Root, publicApiRoot, nugetConfig is null ? null : Path.GetFullPath(nugetConfig), Dotnet, python,
             string.IsNullOrWhiteSpace(companion) ? null : ResolveApplication(companion));
         var evidencePath = Path.GetFullPath(options.Get("AdoptEvidence")!);
@@ -296,7 +297,7 @@ internal static partial class ReleaseCommands
         var evidence = options.Get("Evidence") ?? throw new ReleaseException("-Evidence <check-all output>/" + ReleaseEvidence.FileName + " is required", 64);
         var api = Path.GetFullPath(options.Get("PublicApiRoot") ?? throw new ReleaseException("-PublicApiRoot is required", 64));
         var nuget = options.Get("NuGetConfig") ?? Environment.GetEnvironmentVariable("TIA_MCP_OFFLINE_NUGET_CONFIG");
-        var companion = options.Get("EcosystemPython") ?? Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON");
+        var companion = options.Get("EcosystemPython") ?? CheckAllCompanionPython(options);
         var git = options.Get("Git", "git");
         var external = ReleaseEvidence.ProbeExternal(Root, api, nuget is null ? null : Path.GetFullPath(nuget), Dotnet, options.Get("Python", Py),
             string.IsNullOrWhiteSpace(companion) ? null : ResolveApplication(companion));

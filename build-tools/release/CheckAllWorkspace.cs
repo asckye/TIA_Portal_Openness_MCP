@@ -170,7 +170,7 @@ internal static partial class ReleaseCommands
         catch (ArgumentException) { return null; } // The process no longer exists; other lookup errors retain the snapshot.
     }
 
-    private static DateTime CheckAllSnapshotNewestWriteUtc(string parent, string path)
+    internal static DateTime CheckAllSnapshotNewestWriteUtc(string parent, string path)
     {
         RequireCheckAllOwnedPath(parent, path);
         var directory = new DirectoryInfo(path);

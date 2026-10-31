@@ -30,6 +30,27 @@
 V20/V21 生产及 SDK fixture 引擎、Harness、Studio 两种路径模式和全部套件，后续测试使用对应程序集直接执行 VSTest，保留注册的过滤表达式；其他工程入口使用 `--no-build --no-restore`。
 SDK 仅传入 `foundation-api` 与两个 PLC exchange 套件；其余独立执行的注册套件清除 SDK 环境变量，继续执行 clean-checkout 门槛。
 
+日常合并使用 `check-all -Affected [-Base origin/master]`：快门禁始终执行，其余作业按 merge-base 到 HEAD 加上未提交的
+已跟踪/未跟踪路径选择。选择使用构建输入闭包、ProjectReference 依赖和脚本输入声明；未映射路径、发布工具、套件注册表、
+全局构建规则、NuGet 或 SDK 改动回退完整 merge。未选作业只有与本机最近一次**成功 nightly** 的作业身份和产物哈希相同才复用，
+否则执行；普通开发结果缓存不能提供合并证明。`affected.json` 列出路径→单元→作业、复用的 nightly ID/身份、回退和未执行原因。
+V20/V21 的 c8 压测保留原 50 轮、时限和增长门槛；c16 只在 nightly 运行。
+
+开发自检用 `check-all -Affected -Quick`，保留暖构建，仅运行受影响检查，排除压测，Studio 未变时不运行 GUI。
+报告标记 `quick`，不能作为合并或发布证明。目标为窄改动 3–5 分钟，实际耗时需在主机记录。
+完整冷全集移至每日 nightly，合并本身不等待 nightly；失败或超时阻断后续发布，直到相关提交上有更晚的成功 nightly。
+
+```powershell
+dotnet run --project build-tools/release -- check-all -Affected -Base origin/master -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <python.exe>
+dotnet run --project build-tools/release -- check-all -Affected -Quick -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <python.exe>
+dotnet run --project build-tools/release -- nightly -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <python.exe>
+```
+
+`nightly [-Rev <rev>] [-Keep 10]` 在 `bin-build/nightly/<date>-<sha8>` 下建立本地 detached checkout，默认验证本地 `origin/master`，
+不 fetch；工作树外部 Git 元数据保持只读。运行 `check-all -Profile nightly -Clean -NoBuildCache`，三十分钟门槛不变。
+`latest.json` 保存最近结果，`latest-passed.json` 指向最近成功报告；元数据历史保留，旧产物按保留数量清理，失败产物至少保留 14 天。
+命令打印供维护者手工登记的每日 03:00 Windows Task Scheduler 命令，工具不登记计划任务。合并在主机验收后直接推送，GitHub CI 随后运行且不阻断合并。
+
 ```powershell
 dotnet run --project build-tools/release -- check-all -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <ecosystem-python/Scripts/python.exe> -MaxParallelism 16 -BuildParallelism 16 -StabilityCores 8 -StabilityParallelism 4 -Shards 8 -OutputDirectory bin-build/check-all/run-1
 ```

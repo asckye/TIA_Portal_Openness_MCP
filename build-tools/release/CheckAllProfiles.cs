@@ -143,7 +143,7 @@ internal static class CheckAllProfiles
         return selected;
     }
 
-    internal static string[] Profiles(string job, DerivationPlan plan) => job.EndsWith("-coverage-proof", StringComparison.Ordinal) ? ["nightly"] : plan.Mappings.Keys.Any(name => job.StartsWith(name + "-shard-", StringComparison.Ordinal)
+    internal static string[] Profiles(string job, DerivationPlan plan) => CheckAllJobInputs.NightlyOnly(job) || job.EndsWith("-coverage-proof", StringComparison.Ordinal) ? ["nightly"] : plan.Mappings.Keys.Any(name => job.StartsWith(name + "-shard-", StringComparison.Ordinal)
         || job == name + "-sequential") ? ["nightly"] : ["merge", "nightly"];
 
     internal static void WriteInventory(JsonObject catalog, string output, string profile, DerivationPlan plan)
@@ -200,7 +200,7 @@ internal static class CheckAllProfiles
     }
 
     internal static void AddStudio(List<CheckJob> jobs, string root, JsonObject catalog, string output, string dotnet, string profile,
-        string? manifest, SuiteProcess? process = null, IReadOnlyDictionary<string, double>? history = null, Func<string, SuiteProcess>? processFor = null)
+        string? manifest, SuiteProcess? process = null, IReadOnlyDictionary<string, double>? history = null, Func<string, SuiteProcess>? processFor = null, string? api = null)
     {
         foreach (var name in StudioSuites)
         {
@@ -232,7 +232,11 @@ internal static class CheckAllProfiles
                         plan: plan, manifest: manifest, process: processFor?.Invoke(name) ?? process, diagnostics: true, registeredOutput: true); }
                     finally { Interlocked.Add(ref runtimeTicks, clock.Elapsed.Ticks); }
                 }, index == 0 ? [] : [names[index - 1]], Exclusive: true)
-                    { AllowFailedDependencies = true, SensitiveGroup = unit.Project, EstimatedSeconds = costs[index] + 5 });
+                    { AllowFailedDependencies = true, SensitiveGroup = unit.Project, EstimatedSeconds = costs[index] + 5,
+                        ResultInputs = new("suite", new JsonObject { ["suite"] = name, ["registration"] = suite.DeepClone(),
+                            ["project"] = unit.Project, ["variant"] = unit.Variant, ["index"] = index, ["count"] = count,
+                            ["api"] = api, ["runner"] = "Studio RunShard", ["profileSelection"] = ReferenceEquals(suite, full) ? "full" : "selected-classes" }.ToJsonString(),
+                            shardDirectory, name + ".trx", plan, (int)suite["maximumSkipped"]!) });
             }
             jobs.Add(new(name + "-gate", () =>
             {

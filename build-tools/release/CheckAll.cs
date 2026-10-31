@@ -13,6 +13,10 @@ internal static partial class ReleaseCommands
     private static int CheckAll(Options options)
     {
         var checkProfile = CheckAllProfiles.Parse(options);
+        if (options.Has("Affected") && (checkProfile != "merge" || options.Has("CiCovered")))
+            throw new ReleaseException("-Affected requires the local merge profile", 64);
+        if (options.Has("Quick") && (!options.Has("Affected") || options.Has("Clean") || options.Has("Cold") || options.Has("NoBuildCache") || options.Has("BuildOnly")))
+            throw new ReleaseException("-Quick requires -Affected and a warm build (no -Clean/-Cold/-NoBuildCache/-BuildOnly)", 64);
         if (checkProfile == "nightly" && options.Has("CiCovered"))
             throw new ReleaseException("nightly requires local same-run subset/superset TRXs; use -CiCovered with merge", 64);
         if (options.Has("CiCovered") && (options.Has("BuildOnly") || options.Has("ProveEquivalence") || options.Has("SequentialBaselineDirectory")))
@@ -101,9 +105,22 @@ internal static partial class ReleaseCommands
         var background = new Dictionary<Task<CheckTiming>, CheckJob>();
         var allJobs = new List<CheckJob>();
         var planned = new List<string>();
+        CheckAllAffected? affected = null;
+        bool recordIdentities = NightlyRuns.EvidenceRun(options);
+        string coverageMachine;
+        try { coverageMachine = CheckAllResultCache.MachineIdentity(); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException) { coverageMachine = "unavailable:" + Guid.NewGuid().ToString("N"); }
+        var nightlyCoverage = new CheckAllNightlyCoverage(output, coverageMachine, options.Has("Affected") && !options.Has("Quick") &&
+            !options.Has("NoResultCache") && !options.Has("NoBuildCache") && !options.Has("ProveEquivalence") && !options.Has("SequentialBaselineDirectory")
+            ? Path.Combine(NightlyRuns.DirectoryFor(Root), "latest-passed.json") : null, recordPasses: recordIdentities);
+        var nightlyOnly = new List<string>();
+        bool Early(string name) => CheckAllEarly(name) && (!options.Has("Affected") || CheckAllJobInputs.AlwaysRun(name));
         // The release may adopt this run (P8-93): bind the commit, the tree and every input before anything is regenerated.
         var releaseEvidence = ReleaseEvidence.BeginSafely(() => ReleaseEvidence.Begin(Root, "git", options, ReleaseEvidence.ProbeExternal(Root, api, nuget, Dotnet, python, companionPython),
             Environment.GetEnvironmentVariable, DateTimeOffset.UtcNow), DateTimeOffset.UtcNow);
+        if (recordIdentities && releaseEvidence["source"]?["cleanAtStart"]?.GetValue<bool>() == true && Environment.GetEnvironmentVariable("TIA_MCP_NIGHTLY_MANAGED") != "1")
+            NightlyRuns.Save(NightlyRuns.DirectoryFor(Root), new(Path.GetFileName(Path.TrimEndingDirectorySeparator(output)),
+                (string)releaseEvidence["source"]!["commit"]!, Path.Combine(output, "report.json"), "running", 0, false, DateTime.UtcNow - clock.Elapsed));
         var ciCovered = options.Get("CiCovered") is { } candidate
             ? CiCoverage.Load(Root, Path.GetFullPath(candidate), ReleaseEvidence.GitText(Root, "git", "rev-parse", "HEAD")) : null;
         if (ciCovered != null)
@@ -174,6 +191,16 @@ internal static partial class ReleaseCommands
         Wave();
         if (!CheckAllPrerequisitesPassed(timings)) return Finish();
         var builds = CheckAllBuildInventory(catalog, api);
+        if (options.Has("Affected")) affected = CheckAllAffected.Discover(Root, options, builds, dotnet, api);
+        var earlyIdentity = recordIdentities
+            ? new CheckAllResultCache(Root, output, Path.Combine(output, "build/runtime-paths.tsv"), api, nuget, dotnet, python, companionPython, options, "source-only", discoverVersions: false) : null;
+        CheckJob BindEarly(CheckJob job)
+        {
+            var declaration = CheckAllJobInputs.Find(job, catalog);
+            if (earlyIdentity == null || declaration?.SourceOnly != true || CheckAllJobInputs.AlwaysRun(job.Name) || job.CiCoverage != null) return job;
+            var spec = new CheckAllResultSpec(declaration.Driver.EndsWith(".py", StringComparison.Ordinal) ? "python" : "job", JsonSerializer.Serialize(declaration));
+            return job with { NightlyCoverage = nightlyCoverage.Bind(job, () => earlyIdentity.JobIdentity(job, spec, declaration), false, declaration.Outputs) };
+        }
         AddCheckAllStaticJobs(Add, Tool, Python, Isolated, output, api, nuget, parallelism, shards, dotnet);
         jobs.RemoveAll(job => job.Name == "preflight");
         var staticJobs = CiCoverage.Rewrite(jobs, ciCovered).ToArray(); jobs.Clear();
@@ -188,7 +215,7 @@ internal static partial class ReleaseCommands
         var runtimeReady = new TaskCompletionSource<CommandResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         CheckJob? parity = null;
         Task<CheckTiming>? parityTask = null;
-        if (!options.Has("BuildOnly"))
+        if (!options.Has("BuildOnly") && !options.Has("Quick"))
         {
             parity = new("suite-output-parity", () => CheckAllLayout.Verify(Root, builds, dotnet, nuget, api,
                 Path.Combine(output, "suite-output-parity"), runtimeManifest, buildParallelism, independent: true,
@@ -216,8 +243,8 @@ internal static partial class ReleaseCommands
             if (result.ExitCode == 0) AnalyzerWarnings.RememberDirectory(Root, directory);
             return result;
         }, ["build-once"]);
-        if (!options.Has("BuildOnly")) jobs.AddRange(staticJobs.Where(job => CheckAllEarly(job.Name))
-            .Select(CheckAllEarlyDependencies).Select(job => job with { Priority = 1, Affinity = layout.General }));
+        if (!options.Has("BuildOnly")) jobs.AddRange(staticJobs.Where(job => Early(job.Name))
+            .Select(CheckAllEarlyDependencies).Select(job => BindEarly(job with { Priority = 1, Affinity = layout.General })));
         try { Wave(["generate-tool-usage"]); }
         finally { runtimeReady.TrySetResult(new(1, "", "Build wave did not publish runtime outputs.")); }
         if (!CheckAllPrerequisitesPassed(timings.Where(row => row.Name is "generate-catalogs" or "generate-tool-usage" or "build-once")))
@@ -227,7 +254,7 @@ internal static partial class ReleaseCommands
         }
         AnalyzerWarnings.RememberDirectory(Root, Path.Combine(output, "build/analyzer-warnings"));
         if (options.Has("BuildOnly")) return Finish();
-        jobs.Add(parity!);
+        if (parity != null) jobs.Add(parity);
         string host = Path.Combine(Root, "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe");
         string harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
         // Stability shares wall time, but no CPUs, with the general lane. The
@@ -269,13 +296,13 @@ internal static partial class ReleaseCommands
         }
         BindEngineHostResult(jobs, Root, output, runtimeManifest);
         CheckAllProfiles.AddStudio(jobs, Root, catalog, Path.Combine(output, "suites"), dotnet, checkProfile, runtimeManifest,
-            history: costs, processFor: SuiteProcessFor);
+            history: costs, processFor: SuiteProcessFor, api: api);
         if (checkProfile == "merge") CheckAllProfiles.AddDerived(jobs, catalog, Path.Combine(output, "suites"), derivations);
         else CheckAllProfiles.AddNightlyProofs(jobs, catalog, Path.Combine(output, "suites"));
-        jobs.AddRange(staticJobs.Where(job => !CheckAllEarly(job.Name)));
+        jobs.AddRange(staticJobs.Where(job => !Early(job.Name)));
         // Preflight also depends on the source-only checks completed in the build
         // wave. Retain their results in its aggregate instead of executing twice.
-        var preflightInputs = jobs.Concat(staticJobs.Where(job => CheckAllEarly(job.Name))).ToList();
+        var preflightInputs = jobs.Concat(staticJobs.Where(job => Early(job.Name))).ToList();
         AddCheckAllPreflightJobs(preflightInputs);
         jobs.Add(preflightInputs[^1]);
         foreach (var release in CatalogJson.Keys)
@@ -427,6 +454,8 @@ internal static partial class ReleaseCommands
         }
         ValidateCheckAllPlcScriptJobs(jobs);
         ValidateCheckAllPlcHarnessJobs(jobs);
+        var declaredPlan = allJobs.Concat(jobs).ToArray();
+        Add("affected-inputs-self-test", () => CheckAllJobInputs.Validate(declaredPlan, catalog));
         CiCoverage.RequirePlan([.. allJobs, .. jobs], ciCovered);
         var scheduled = CiCoverage.Rewrite(CheckAllRuntimeDependencies(jobs, independentParity: true), ciCovered).Select(CheckAllScratchIsolation).Select(job => job with
         {
@@ -440,8 +469,37 @@ internal static partial class ReleaseCommands
         var resultCache = new CheckAllResultCache(Root, output, runtimeManifest, api, nuget, dotnet, python, companionPython, options,
             JsonSerializer.Serialize(new { parallelism, shards, stabilityParallelism, lanes = sensitiveLanes, available, stability = layout.Stability,
                 sensitive = layout.Sensitive, general = layout.General }));
-        var plan = scheduled.Select(job => job.CiCoverage != null ? job : resultCache.Bind(CheckAllResultCache.ReusableStatic(job.Name)
-            ? job with { ResultInputs = new(job.Name.StartsWith("python-", StringComparison.Ordinal) ? "python" : job.Name.EndsWith("-drift", StringComparison.Ordinal) ? "generator" : "static", job.Name) } : job)).ToArray();
+        // Merge evidence is either fresh execution or the same job identity from
+        // the latest passed nightly. The developer result cache is not merge evidence.
+        scheduled = scheduled.Select(job =>
+        {
+            if (job.ResultInputs is not { } spec) return job;
+            try { return job with { ResultInputs = resultCache.Prepare(spec) }; }
+            catch (Exception ex) when (CheckAllNightlyCoverage.InputError(ex))
+            {
+                affected?.RequireFull("Cannot derive suite identity closure: " + job.Name + ": " + ex.Message);
+                return job with { ResultInputs = null, ResultCachePolicy = "execute: identity closure unavailable" };
+            }
+        }).ToList();
+        affected?.Map(scheduled, catalog);
+        if (checkProfile == "merge")
+        {
+            nightlyOnly.AddRange(scheduled.Where(job => CheckAllJobInputs.NightlyOnly(job.Name)).Select(job => job.Name));
+            scheduled.RemoveAll(job => CheckAllJobInputs.NightlyOnly(job.Name));
+        }
+        if (affected != null) scheduled = affected.QuickPlan(scheduled, catalog).ToList();
+        var plan = scheduled.Select(job =>
+        {
+            var declaration = CheckAllJobInputs.Find(job, catalog);
+            if (options.Has("Quick") || job.CiCoverage != null || job.ResultInputs?.AlwaysRun != null || declaration == null || declaration.Aggregate || CheckAllJobInputs.AlwaysRun(job.Name)) return job;
+            if (!recordIdentities && (affected == null || affected.Selected(job, declaration) || nightlyCoverage.NightlyId == null)) return job;
+            var spec = job.ResultInputs ?? new CheckAllResultSpec(declaration.Driver.EndsWith(".py", StringComparison.Ordinal) || declaration.DefaultPython ? "python" : "job",
+                JsonSerializer.Serialize(declaration));
+            var artifacts = spec.Trx != null ? new[] { Path.GetRelativePath(output, Path.Combine(spec.Directory!, spec.Trx)).Replace('\\', '/') } : declaration.Outputs;
+            return job with { NightlyCoverage = nightlyCoverage.Bind(job, () => resultCache.JobIdentity(job, spec, declaration),
+                affected != null && !affected.Quick && !affected.Selected(job, declaration), artifacts),
+                ResultCachePolicy = "execute or byte-identical latest passed nightly (including sensitive jobs)" };
+        }).ToArray();
         CheckAllInputClosure.WriteInventory(Root, plan, output);
         var lanes = new Dictionary<string, int>(sensitiveLanes) { ["general"] = parallelism, ["stability"] = stabilityParallelism };
         allJobs.AddRange(plan);
@@ -459,7 +517,7 @@ internal static partial class ReleaseCommands
                 resultCache = job.ResultCachePolicy ?? "always rerun: generated evidence, mutable machine inputs or aggregate gate" }) }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
         planned.AddRange(plan.Select(job => job.Name));
         timings.AddRange(CheckScheduler.Run(plan, parallelism, Path.Combine(output, "logs"),
-            lanes, timings.ToArray(), packing, new Dictionary<Task<CheckTiming>, CheckJob> { [parityTask!] = plan.Single(job => job.Name == "suite-output-parity") }));
+            lanes, timings.ToArray(), packing, parityTask == null ? null : new Dictionary<Task<CheckTiming>, CheckJob> { [parityTask] = plan.Single(job => job.Name == "suite-output-parity") }));
         return Finish();
 
         int Finish()
@@ -479,7 +537,13 @@ internal static partial class ReleaseCommands
             var unexpected = drift.Where(path => !TimestampOnly(path, before)).ToArray();
             timings.Add(new("tracked-tree-drift", unexpected.Length == 0 ? "passed" : "failed", unexpected.Length == 0 ? 0 : 1, 0, string.Join(", ", unexpected)));
             var performance = CheckScheduler.Performance(allJobs, timings, DateTime.UtcNow - clock.Elapsed, clock.Elapsed.TotalSeconds);
-            var report = new { schemaVersion = 1, profile = checkProfile, machineCores = Environment.ProcessorCount, cpuIsolation = layout.Isolation, cpuIsolationReason = layout.Reason,
+            affected?.Write(output, timings, nightlyOnly, nightlyCoverage?.NightlyId);
+            nightlyCoverage?.Save();
+            var report = new { schemaVersion = 1, profile = checkProfile, quick = options.Has("Quick"), affected = options.Has("Affected"),
+                coverage = new { executed = timings.Count(row => row.ReusedRunId == null), reused = timings.Count(row => row.ReusedRunId != null),
+                    nightlyRunId = nightlyCoverage?.NightlyId, nightlyOnly = nightlyOnly.Count,
+                    complete = !options.Has("Quick") && !options.Has("BuildOnly") && planned.All(name => timings.Any(row => row.Name == name && CheckTiming.Passed(row))) },
+                machineCores = Environment.ProcessorCount, cpuIsolation = layout.Isolation, cpuIsolationReason = layout.Reason,
                 parallelism, shards, sensitiveParallelism = sensitiveWorkers.Workers, requestedSensitiveParallelism = sensitiveWorkers.RequestedWorkers,
                 sensitiveParallelismReason = sensitiveWorkers.Reason, cold = options.Has("Cold"), clean = options.Has("Clean"),
                 wallSeconds = clock.Elapsed.TotalSeconds, underThirtyMinutes = clock.Elapsed.TotalSeconds < 1800, buildOnly = options.Has("BuildOnly"), nativeTiaExecuted = false,
@@ -494,6 +558,10 @@ internal static partial class ReleaseCommands
             string evidencePath;
             try { evidencePath = ReleaseEvidence.Write(releaseEvidence, output, planned, timings, exitCode, report.wallSeconds, report.underThirtyMinutes, unexpected, DateTimeOffset.UtcNow); }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { evidencePath = "not written (" + ex.Message + ")"; }
+            // The nightly runner publishes only after the complete outer command
+            // exits within its deadline, including checkout and runner startup.
+            if (recordIdentities && releaseEvidence["source"]?["cleanAtStart"]?.GetValue<bool>() == true && Environment.GetEnvironmentVariable("TIA_MCP_NIGHTLY_MANAGED") != "1")
+                NightlyRuns.Complete(Root, output, (string?)releaseEvidence["source"]?["commit"] ?? ReleaseEvidence.GitText(Root, "git", "rev-parse", "HEAD"), exitCode, report.wallSeconds);
             Console.WriteLine($"check-all: {report.passed} passed; {report.failed} failed/blocked; {report.wallSeconds:F3}s; report: {output}; release evidence: {evidencePath}");
             Console.WriteLine($"Dependency critical path: {string.Join(" -> ", performance.CriticalPath)} ({performance.CriticalPathSeconds:F3}s); achieved job concurrency: average {performance.AverageConcurrency:F3}, peak {performance.PeakConcurrency}");
             return exitCode;

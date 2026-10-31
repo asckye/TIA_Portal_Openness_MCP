@@ -25,6 +25,7 @@ internal static partial class ReleaseCommands
         "run-release-build" => RunReleaseBuild(options),
         "branch-gate" => BranchGate(options),
         "check-all" => CheckAll(options),
+        "nightly" => Nightly(options),
         "check-release-evidence" => CheckReleaseEvidence(options),
         "ci-coverage" => CiCoverage.Command(Root, options),
         "build-tool" => BuildTool(options),
@@ -100,6 +101,7 @@ internal static partial class ReleaseCommands
 
     private static int Preflight(Options options)
     {
+        NightlyRuns.RequireRelease(Root, options.Get("Git", "git"));
         var checks = PreflightChecks();
 
         if (options.Get("Tier") == "package") checks = checks.Where(check => check.Name is "repository, links, shipped-document links, CHANGELOG version" or "dead tool references (descriptions and current docs)" or "strict bundle rules" or "release documentation rules").ToList();
@@ -1737,6 +1739,7 @@ internal static partial class ReleaseCommands
 
     private static int Publish(Options options)
     {
+        NightlyRuns.RequireRelease(Root, options.Get("Git", "git"));
         var version = options.Get("Version") ?? throw new ReleaseException("-Version is required");
         var token = options.Get("Token") ?? Environment.GetEnvironmentVariable("GITHUB_TOKEN") ?? "";
         var publisherOptions = new PublishOptions(

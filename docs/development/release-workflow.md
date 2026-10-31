@@ -12,6 +12,14 @@
 
 ## 交付清单与两种校验模式
 
+每日冷全集由 `dotnet run --project build-tools/release -- nightly -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <python.exe>`
+运行，默认使用本地 `origin/master`，可用 `-Rev` 指定提交；工具打印每日 03:00 的 Task Scheduler 命令，由维护者登记。
+运行目录为 `bin-build/nightly/<date>-<sha8>`，`latest.json` 保存提交、报告路径、通过/失败、耗时和三十分钟门槛。
+`history.json` 是发布阻断历史，不随旧产物清理。release、`release -AdoptEvidence`、publish 和独立 preflight 在发布提交或上次发布之后的
+祖先提交存在失败/超时 nightly，且没有更晚的相关成功 nightly 时拒绝继续；没有 `-AcceptNightlyFailure` 覆盖项。
+同一干净提交的成功 nightly `release-evidence.json` 可直接采纳，仍逐项验证 tree、输入、机器与原有全量门禁。
+merge/affected/quick 报告不能用于发布；合并验证与 nightly 操作见[验证分层](validation.md)。
+
 [`scripts/operations/delivery-files.json`](../../scripts/operations/delivery-files.json) 是唯一交付规则文件。
 `include.files` 为精确路径，`include.prefixes` 为以 `/` 结尾的目录前缀，`exclude` 优先；未匹配的跟踪文件不交付。
 Python 打包器、资产核验、仓库/布局检查与 .NET release tool 校验器、更新器均读取它。运行文件仍只来自构建记录，

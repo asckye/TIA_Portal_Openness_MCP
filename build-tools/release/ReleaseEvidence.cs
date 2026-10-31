@@ -119,6 +119,7 @@ internal static class ReleaseEvidence
             ["mode"] = new JsonObject
             {
                 ["profile"] = CheckAllProfiles.Parse(options),
+                ["quick"] = options.Has("Quick"), ["affected"] = options.Has("Affected"),
                 ["clean"] = options.Has("Clean") && !string.IsNullOrEmpty(environment("TIA_MCP_CLEAN_CHECKOUT")),
                 ["cold"] = options.Has("Cold"),
                 ["resultCacheEnabled"] = CheckAllResultCache.Enabled(options, environment),
@@ -266,6 +267,7 @@ internal static class ReleaseEvidence
             problems.Add("evidence lacks its result, mode or source section (partial run)");
         var result = evidence["result"] as JsonObject ?? new JsonObject();
         var mode = evidence["mode"] as JsonObject ?? new JsonObject();
+        if (Bool(mode["quick"]) || Bool(mode["affected"])) problems.Add("quick/affected runs cannot supply release evidence");
         if (mode["profile"] != null && Text(mode["profile"]) != "nightly")
             problems.Add("release evidence requires the full nightly profile; merge profile cannot supply keptCodeV20Passed");
         // check-all exits 1 for a failed job or for the time gate; only the latter can be excepted, never a failed job.

@@ -29,7 +29,7 @@ internal sealed class CheckAllResultCache
 
     internal CheckAllResultCache(string root, string output, string manifest, string api, string nuget,
         string dotnet, string python, string? companion, Options options, string resources, Func<string, string?>? contextEnvironment = null,
-        Func<string>? machineStateProbe = null)
+        Func<string>? machineStateProbe = null, bool discoverVersions = true)
     {
         this.root = root; this.output = output; this.manifest = manifest; this.api = api; this.nuget = nuget;
         this.dotnet = dotnet; this.python = python; this.companion = companion;
@@ -43,6 +43,7 @@ internal sealed class CheckAllResultCache
         // reuse; the original checks still execute.
         try
         {
+            if (!discoverVersions) { versions = "source-only"; return; }
             var sdk = ProcessRunner.Run(dotnet, ["--version"], root);
             var runtimes = ProcessRunner.Run(dotnet, ["--list-runtimes"], root);
             ProcessRunner.RequireSuccess(sdk, "result cache SDK identity"); ProcessRunner.RequireSuccess(runtimes, "result cache runtime identity");
@@ -101,6 +102,18 @@ internal sealed class CheckAllResultCache
         return closure;
     }
 
+    internal CheckAllResultSpec Prepare(CheckAllResultSpec spec) => spec.Family == "suite" ? spec with { Closure = SuiteClosure(spec) } : spec;
+
+    internal string JobIdentity(CheckJob job, CheckAllResultSpec spec, CheckJobInputs declaration)
+    {
+        if (machine == "unavailable" || !declaration.SourceOnly && versions.StartsWith("unavailable:", StringComparison.Ordinal)) throw new IOException("Job identity probe unavailable");
+        // A source-derived machine input that the common probe cannot identify
+        // remains live. Sensitive lanes themselves do not prohibit reuse.
+        if (spec.Closure is { LiveReasons.Length: > 0 } closure)
+            throw new IOException(string.Join("; ", closure.LiveReasons.Select(reason => reason.Detail)));
+        return Identity(job, spec, declaration);
+    }
+
     internal static bool ReusableStatic(string name) => name is "catalog-drift" or "tool-counts-drift" or "usage-drift" or "migration-drift" or
         "tools-list" or "script-calls" or "dead-references" or "adapter-boundary" or "python-script-calls" or "python-script-self-tests";
 
@@ -109,34 +122,69 @@ internal sealed class CheckAllResultCache
 
     internal static bool HasVolatileInput(string source) => CheckAllInputClosure.MachineInputs("source", source).Length != 0;
 
-    internal string Identity(CheckJob job, CheckAllResultSpec spec)
+    internal string Identity(CheckJob job, CheckAllResultSpec spec, CheckJobInputs? declaration = null)
     {
         var closure = spec.Family == "suite" ? spec.Closure ?? SuiteClosure(spec) : null;
-        if (closure != null) CheckAllInputClosure.RequireStable(root, closure);
+        if (closure != null && declaration == null) CheckAllInputClosure.RequireStable(root, closure);
         string? settingsForPython = null;
-        var source = closure == null ? CheckAllLayout.ResultSourceInventory(root, CheckAllLayout.SourceInventory(root)) : CheckAllInputClosure.DataFiles(root, closure);
+        var source = closure != null ? CheckAllInputClosure.DataFiles(root, closure) : declaration != null
+            ? CheckAllInputClosure.DataFiles(root, new("", [], [], declaration.Paths, [], []))
+            : CheckAllLayout.ResultSourceInventory(root, CheckAllLayout.SourceInventory(root));
+        if (declaration != null) source = [.. source, .. CheckAllJobInputs.Controls];
+        if (declaration?.SourceOnly == true) source = [.. source, ReleaseCommands.ResolveResultApplication(dotnet)];
         var trees = new Dictionary<string, string>(StringComparer.Ordinal);
+        if (declaration != null) trees["driver"] = Path.GetDirectoryName(typeof(CheckAllResultCache).Assembly.Location)!;
+        if (declaration?.BinaryRoots is { } binaries)
+            foreach (var binary in binaries) trees["declared-binary/" + binary] = Path.Combine(root, binary);
+        if (declaration?.FilePrograms is { } programs)
+        {
+            var receipts = Path.Combine(output, "build/analyzer-warnings");
+            foreach (var program in programs)
+            {
+                var matches = Directory.EnumerateFiles(receipts, "*.inputs").Select(File.ReadAllLines).Where(lines =>
+                    lines.Length > 0 && lines[0].Split('|') is { Length: 4 } context &&
+                    Path.GetFullPath(context[1]).Equals(Path.Combine(root, program) + ".csproj", StringComparison.OrdinalIgnoreCase)).ToArray();
+                var roots = matches.SelectMany(lines => lines.Skip(1)).Select(line => System.Text.RegularExpressions.Regex.Match(line.Replace('\\', '/'),
+                    @"^(?<root>.*?/dotnet/runfile/[^/]+)/obj/", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                    .Where(match => match.Success).Select(match => match.Groups["root"].Value).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+                if (roots.Length != 1) throw new IOException("Cannot identify the built file program: " + program);
+                trees["file-program/" + program] = roots[0];
+            }
+        }
         if (closure == null)
         {
-            trees["driver"] = Path.GetDirectoryName(typeof(CheckAllResultCache).Assembly.Location)!;
             trees["sdk"] = api;
+            if (declaration == null) trees["driver"] = Path.GetDirectoryName(typeof(CheckAllResultCache).Assembly.Location)!;
         }
         else if (!string.IsNullOrEmpty((string?)JsonNode.Parse(spec.Definition)!["api"]) || closure.Roots.Any(path => CheckAllInputClosure.Covers("sdk", path))) trees["sdk"] = api;
-        var rows = File.ReadLines(manifest).Select(line => line.Split('\t')).ToArray();
+        var rows = declaration?.SourceOnly == true ? Array.Empty<string[]>() : File.ReadLines(manifest).Select(line => line.Split('\t')).ToArray();
         if (rows.Any(row => row.Length != 5)) throw new IOException("Invalid runtime inventory");
         // Include ALL outputs, not just a test DLL or the build inventory's expected
         // subset: fixture/reference payloads and additional files also affect a run.
         foreach (var row in rows)
         {
             var project = Path.GetRelativePath(root, row[0]).Replace('\\', '/');
+            if (declaration?.Release is { } release)
+            {
+                var rowRelease = CheckAllAffected.ReleaseKey(project);
+                var binaryRelease = System.Text.RegularExpressions.Regex.Match(Path.GetFileName(row[4]),
+                    @"(?:PlcWorker|Adapter)\.(14sp1|15\.1|16|17|18|19|20|21)\.");
+                rowRelease ??= binaryRelease.Success ? binaryRelease.Groups[1].Value : null;
+                if (rowRelease != null && rowRelease != release) continue;
+            }
             if (closure != null && !CheckAllInputClosure.Loads(closure, root, row)) continue;
+            // An empty project declaration means the complete runtime inventory,
+            // used by general self-tests which can load arbitrary product fixtures.
+            if (closure == null && declaration != null && declaration.Projects.Length != 0 && !declaration.Projects.Any(input =>
+                project == input || CheckAllInputClosure.Covers(Path.GetDirectoryName(input)!.Replace('\\', '/'), project))) continue;
             if (closure != null && project == closure.Project && JsonNode.Parse(spec.Definition)!["variant"] is { } variant && row[1] != variant.GetValue<string>()) continue;
             trees["isolated/" + project + "/" + row[1]] = row[2];
             trees["ordinary/" + project + "/" + row[1]] = row[3];
         }
         if (spec.Family == "python")
         {
-            var interpreter = ReleaseCommands.ResolveResultApplication(python);
+            var interpreter = ReleaseCommands.ResolveResultApplication(declaration?.DefaultPython == true
+                ? Environment.GetEnvironmentVariable("PYTHON") ?? "python" : python);
             trees["python"] = Path.GetDirectoryName(interpreter)!;
             if (companion != null) trees["companion"] = Path.GetDirectoryName(companion)!;
             var runtime = ProcessRunner.Run(interpreter, ["-X", "utf8", "-c",
@@ -156,18 +204,37 @@ internal sealed class CheckAllResultCache
             settingsForPython = details.ToJsonString();
         }
         var inputs = Enumerate(root, source.Append(nuget), trees).ToList();
+        if (declaration != null)
+        {
+            inputs = inputs.Select(input => input.Path.StartsWith("source/../", StringComparison.Ordinal)
+                ? input with { Path = "external/" + Path.GetFullPath(Path.Combine(root, input.Path["source/".Length..])).Replace('\\', '/') } : input).ToList();
+        }
         if (spec.Plan != null) inputs.Add(new("shard-plan", FileHash(spec.Plan)));
         var environment = Environment.GetEnvironmentVariables().Cast<DictionaryEntry>().ToDictionary(pair => (string)pair.Key, pair => (string?)pair.Value, StringComparer.OrdinalIgnoreCase);
+        if (declaration != null)
+        {
+            // These variables select runner allocation roles, never product configuration.
+            foreach (var key in new[] { "TIA_MCP_CLEAN_CHECKOUT", "TIA_MCP_CHECK_ORIGINAL_ROOT", "TIA_MCP_NIGHTLY_ROOT", "TIA_MCP_NIGHTLY_MANAGED",
+                "TIA_MCP_BUILD_CACHE_DISABLED", "TIA_MCP_CHECK_RUNNER" }) environment.Remove(key);
+        }
         // Fresh empty sandboxes, pipe names and result paths are allocation roles,
         // not ambient state. Their policy, parent and the runner implementing it
         // are inputs. Never normalize arbitrary caller-supplied environment values.
         var isolation = new { temporaryRoot = Path.GetTempPath(), data = "fresh/TEMP/data", local = "fresh/TEMP/local", roaming = "fresh/TEMP/roaming",
             pipeScope = "fresh-guid", sdk = spec.Family == "suite" ? (string?)JsonNode.Parse(spec.Definition)!["api"] : api,
             approval = true, approvalTimeoutSeconds = 120, noBuild = true, nuget, companion, dotnet, python };
-        return Fingerprint(inputs, new { spec.Family, spec.Definition, spec.MaximumSkipped, settings, versions, machine, root,
-            machineState = machineStateProbe(), closureRoots = closure?.Roots, wholeInventory = closure?.WholeInventory, productProjects = closure?.Projects,
+        var definition = new { spec.Family, spec.Definition, spec.MaximumSkipped, settings = declaration == null ? settings : "nightly job identity v1",
+            versions = declaration?.SourceOnly == true ? Environment.Version + "/" + System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription + "/" + Environment.OSVersion.VersionString : versions, machine, root,
+            machineState = declaration?.SourceOnly == true ? "pure source check on " + machine : machineStateProbe(), closureRoots = closure?.Roots, wholeInventory = closure?.WholeInventory, productProjects = closure?.Projects,
             job.Lane, job.Affinity, job.Slots, job.Exclusive, timeoutTicks = job.Timeout.Ticks, minWorkers = CheckAffinity.BaselineWorkers,
-            isolation, pythonRuntime = settingsForPython, environment = environment.OrderBy(pair => pair.Key, StringComparer.Ordinal) });
+            isolation, declaration, pythonRuntime = settingsForPython, environment = environment.OrderBy(pair => pair.Key, StringComparer.Ordinal) };
+        // Only runner-owned repository paths become allocation roles. Binary and
+        // data bytes, arbitrary environment values, SDK and machine state remain exact.
+        if (declaration == null) return Fingerprint(inputs, definition);
+        var normalized = JsonNode.Parse(JsonSerializer.Serialize(definition))!;
+        normalized["root"] = "$CHECKOUT";
+        normalized["Definition"] = ReleaseCommands.NormalizeCacheText(spec.Definition, root);
+        return Fingerprint(inputs, normalized);
     }
 
     internal static ReleaseArtifact[] Enumerate(string root, IEnumerable<string> files, IReadOnlyDictionary<string, string> trees)

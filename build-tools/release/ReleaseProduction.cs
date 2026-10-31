@@ -22,6 +22,7 @@ internal static partial class ReleaseCommands
         if (options.Has("NoReuse") && options.Has("SkipBuild")) throw new ReleaseException("-NoReuse and -SkipBuild cannot be combined");
         var git = options.Get("Git", "git");
         if (options.Has("BumpOnly")) return BumpReleaseOnly(version, git);
+        NightlyRuns.RequireRelease(Root, git);
         var python = options.Get("Python", Py);
         var parallelism = GetMaxParallelism(options).ToString(System.Globalization.CultureInfo.InvariantCulture);
         var publicApiRoot = ResolveReleaseApiRoot(options);

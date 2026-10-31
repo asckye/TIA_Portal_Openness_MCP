@@ -340,6 +340,19 @@ internal static class CheckAllInputClosure
     private static bool BuildDirectory(string path) => path.Split('/').Any(part => part is "bin" or "obj" || part.StartsWith("bin-", StringComparison.Ordinal) || part.StartsWith("obj-", StringComparison.Ordinal));
 
     private sealed record CompileEvaluation(string[] Sources, string[] Imports, string ImportIdentity);
+
+    internal static string[] BuildInputs(string root, CheckBuild unit, string dotnet, string api)
+    {
+        var reasons = new List<CheckAllInputFinding>();
+        var files = new List<string>();
+        foreach (var project in ProjectClosure(root, unit.Project, reasons))
+        {
+            var evaluated = Evaluate(root, project, dotnet, ["-p:Configuration=Release", .. unit.Properties, "-p:TiaPublicApiRoot=" + api]);
+            files.AddRange(evaluated.Sources); files.AddRange(evaluated.Imports); files.Add(project);
+        }
+        if (reasons.Count != 0) throw new IOException(string.Join("; ", reasons.Select(reason => reason.Detail)));
+        return files.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+    }
     private static readonly ConcurrentDictionary<string, Lazy<CompileEvaluation>> Evaluations = new(StringComparer.Ordinal);
 
     private static string[] EvaluationArguments(JsonObject registration, string? api)

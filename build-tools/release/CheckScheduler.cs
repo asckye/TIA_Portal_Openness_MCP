@@ -17,6 +17,7 @@ internal sealed record CheckJob(string Name, Func<CommandResult> Run, string[] D
     internal bool AllowFailedDependencies { get; init; }
     internal TimeSpan Timeout { get; init; } = TimeSpan.FromMinutes(5);
     internal CheckAllResultBinding? ResultCache { get; init; }
+    internal CheckAllNightlyBinding? NightlyCoverage { get; init; }
     internal CheckAllResultSpec? ResultInputs { get; init; }
     internal string? ResultCachePolicy { get; init; }
     internal System.Text.Json.Nodes.JsonObject? CiCoverage { get; init; }
@@ -225,9 +226,10 @@ internal static class CheckScheduler
             using var affinity = CheckAffinity.Enter(job.Affinity);
             deadline.Value = (job.Name, started + job.Timeout);
             evidenceDirectory.Value = Path.Combine(logs, job.Name + "-processes");
-            var cached = job.ResultCache?.TryReuse(job.Name);
+            var cached = job.NightlyCoverage != null ? job.NightlyCoverage.TryReuse() : job.ResultCache?.TryReuse(job.Name);
             if (cached != null)
             {
+                if (DateTime.UtcNow >= deadline.Value.Value.Deadline) throw new ReleaseException("Check job timed out: " + job.Name);
                 File.WriteAllText(Path.Combine(logs, job.Name + ".log"), JsonSerializer.Serialize(cached) + "\n");
                 return cached with { Seconds = timer.Elapsed.TotalSeconds, StartedAtUtc = started };
             }
@@ -238,7 +240,9 @@ internal static class CheckScheduler
                 result.ExitCode == 0 ? null : (result.StandardError.Length == 0 ? result.StandardOutput : result.StandardError).Trim())
                 { StartedAtUtc = started, CpuLoad = CheckLoad.Current?.Between(started, DateTime.UtcNow), CiCoverage = job.CiCoverage,
                     Resources = resources.Usage(timer.Elapsed.TotalSeconds), AffinityMask = job.Affinity?.ToString("X") };
-            return job.ResultCache?.Record(row, Path.Combine(logs, job.Name + ".log")) ?? row;
+            var recorded = job.NightlyCoverage != null ? job.NightlyCoverage.Record(row) : job.ResultCache?.Record(row, Path.Combine(logs, job.Name + ".log")) ?? row;
+            if (DateTime.UtcNow >= deadline.Value.Value.Deadline) throw new ReleaseException("Check job timed out: " + job.Name);
+            return recorded;
         }
         catch (Exception ex)
         {

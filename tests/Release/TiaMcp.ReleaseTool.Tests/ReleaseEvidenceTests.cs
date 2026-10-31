@@ -10,6 +10,16 @@ public sealed class ReleaseEvidenceTests
 {
     private static readonly EvidenceExternal Machine = new(3, new string('a', 64), new string('b', 64), "10.0.402", "Python 3.12.7", null, "machine-1");
 
+    [Theory]
+    [InlineData("quick")]
+    [InlineData("affected")]
+    public void DevelopmentRunsCannotBecomeReleaseEvidence(string mode)
+    {
+        using var fixture = new EvidenceFixture();
+        fixture.Edit(evidence => evidence["mode"]![mode] = true);
+        Assert.Contains("quick/affected runs cannot supply release evidence", Assert.Throws<ReleaseException>(fixture.Verify).Message);
+    }
+
     [Fact]
     public void MergeCannotBecomeReleaseEvidenceOrSupplyKeptCodeV20RecordCounts()
     {
