@@ -14,6 +14,12 @@ internal static partial class ReleaseCommands
         return snapshot;
     }
 
+    // The nightly runs from a detached checkout nested under bin-build/nightly/<id>/worktree. Building a snapshot below that
+    // checkout adds ~52 characters to every path and pushes outputs past MAX_PATH (LongPathsEnabled is off), so the managed
+    // nightly places its clean snapshot under the repository it was started from, at the same depth as an ordinary run.
+    internal static string CheckAllSnapshotBase(string original, string? nightlyManaged, string? originalRoot) =>
+        nightlyManaged == "1" && !string.IsNullOrWhiteSpace(originalRoot) ? Path.GetFullPath(originalRoot) : original;
+
     internal static void RequireCheckAllCleanRootHeadroom(string original, string snapshot)
     {
         if (Path.GetFullPath(snapshot).TrimEnd('\\', '/').Length > Path.GetFullPath(original).TrimEnd('\\', '/').Length + CheckAllCleanRootMargin)
@@ -23,11 +29,13 @@ internal static partial class ReleaseCommands
     private static int CheckAllSnapshot(Options options)
     {
         var original = Root;
-        var snapshot = CheckAllSnapshotPath(original, Guid.NewGuid().ToString("N")[..8]);
+        var snapshotBase = CheckAllSnapshotBase(original, Environment.GetEnvironmentVariable("TIA_MCP_NIGHTLY_MANAGED"),
+            Environment.GetEnvironmentVariable("TIA_MCP_CHECK_ORIGINAL_ROOT"));
+        var snapshot = CheckAllSnapshotPath(snapshotBase, Guid.NewGuid().ToString("N")[..8]);
         var output = Path.GetFullPath(options.Get("OutputDirectory", Path.Combine(original, "bin-build/check-all/clean-" + Guid.NewGuid().ToString("N"))));
         Directory.CreateDirectory(Path.GetDirectoryName(snapshot)!);
-        WriteCheckAllSnapshotOwner(original, snapshot);
-        PruneCheckAllSnapshots(original, 3, snapshot);
+        WriteCheckAllSnapshotOwner(snapshotBase, snapshot);
+        PruneCheckAllSnapshots(snapshotBase, 3, snapshot);
         var history = Path.Combine(original, "bin-build/check-timings");
         CopyCheckAllHistory(history, Path.Combine(snapshot, "bin-build/check-timings"));
         // Git for Windows' clone transport invokes sh even for a local worktree,
@@ -69,7 +77,7 @@ internal static partial class ReleaseCommands
         {
             CopyCheckAllHistory(Path.Combine(snapshot, "bin-build/check-timings"), history);
             File.WriteAllText(Path.Combine(snapshot, "bin-build/check-all-snapshot.json"), JsonSerializer.Serialize(new { original, completedUtc = DateTime.UtcNow }) + "\n");
-            PruneCheckAllSnapshots(original, 3, snapshot);
+            PruneCheckAllSnapshots(snapshotBase, 3, snapshot);
             Console.WriteLine("Retained detached source checkout: " + snapshot);
         }
     }

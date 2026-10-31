@@ -14,6 +14,18 @@ public sealed class AffectedNightlyTests
     private static CheckJob Job(string name) => new(name, () => new(0, "passed", ""), []);
 
     [Fact]
+    public void ManagedNightlyBuildsItsCleanSnapshotAtTheOrdinaryRepositoryDepth()
+    {
+        var repository = Path.GetFullPath(@"D:\repo");
+        var nested = Path.Combine(repository, @"bin-build\nightly\20261031-054357-3bb4fa06\worktree");
+        Assert.Equal(repository, ReleaseCommands.CheckAllSnapshotBase(nested, "1", repository));
+        Assert.Equal(nested, ReleaseCommands.CheckAllSnapshotBase(nested, null, repository));
+        Assert.Equal(nested, ReleaseCommands.CheckAllSnapshotBase(nested, "1", null));
+        var snapshot = ReleaseCommands.CheckAllSnapshotPath(ReleaseCommands.CheckAllSnapshotBase(nested, "1", repository), "84fe8194");
+        Assert.True(snapshot.Length <= repository.Length + ReleaseCommands.CheckAllCleanRootMargin, snapshot);
+    }
+
+    [Fact]
     public void OnlyTheManagedNightlyLayoutCountsAsAFreshCheckAllOutput()
     {
         using var temp = new OfflineFixtures(); var output = temp.DirectoryPath;
