@@ -23,18 +23,22 @@ public sealed class McpPanelTests(WpfContext wpf)
         => await client.AttachAsync(Assert.Single(await client.DiscoverAsync(host.Host.ReleaseKey)));
 
     [Fact]
-    public async Task Registration_reader_allows_atomic_replace_and_concurrent_write()
+    public async Task Registration_reader_allows_concurrent_write_and_keeps_the_previous_record_until_replaced()
     {
         await using var host = new McpOperatorFixture();
-        using var reader = McpSessionClient.OpenRegistration(host.Host.RegistrationPath);
-        // The production reader must allow both write access and deletion while its handle stays open.
+        var reader = McpSessionClient.OpenRegistration(host.Host.RegistrationPath);
+        // The production reader must allow write access and deletion while its handle stays open.
         using (var writer = new FileStream(host.Host.RegistrationPath, FileMode.Open, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete))
             Assert.True(writer.CanWrite);
+        // Classic Windows rename semantics still refuse replacing a file with an open handle (access denied, also with
+        // FILE_SHARE_DELETE); HostRegistration retries that case. The reader keeps the complete previous record, and the
+        // replace succeeds once the poll's handle is closed.
         var temporary = host.Host.RegistrationPath + ".new";
         File.WriteAllText(temporary, "{\"replacement\":true}");
+        Assert.Equal(1, (int)JsonNode.Parse(reader)!["version"]!);
+        reader.Dispose();
         File.Move(temporary, host.Host.RegistrationPath, overwrite: true);
         Assert.True((bool)JsonNode.Parse(File.ReadAllText(host.Host.RegistrationPath))!["replacement"]!);
-        Assert.Equal(1, (int)JsonNode.Parse(reader)!["version"]!);
     }
 
     [Theory, InlineData("missing"), InlineData("partial"), InlineData("incomplete"), InlineData("locked")]
