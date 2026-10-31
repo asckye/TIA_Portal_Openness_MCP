@@ -11,6 +11,32 @@ public sealed class ReleaseEvidenceTests
     private static readonly EvidenceExternal Machine = new(3, new string('a', 64), new string('b', 64), "10.0.402", "Python 3.12.7", null, "machine-1");
 
     [Fact]
+    public void MergeCannotBecomeReleaseEvidenceOrSupplyKeptCodeV20RecordCounts()
+    {
+        using var fixture = new EvidenceFixture();
+        var adoption = fixture.Verify();
+        Assert.Equal("nightly", (string)adoption["record"]!["evidence"]!["profile"]!);
+        fixture.Edit(evidence => evidence["mode"]!["profile"] = "merge");
+        Assert.Contains("full nightly profile", Assert.Throws<ReleaseException>(fixture.Verify).Message);
+        adoption["record"]!["evidence"]!["profile"] = "merge";
+        adoption["record"]!["suites"]!["kept-code-v20"] = new JsonObject { ["passed"] = 4908, ["failed"] = 0, ["skipped"] = 0 };
+        Assert.Contains("keptCodeV20Passed", Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "kept-code-v20")).Message);
+        Assert.Throws<ReleaseException>(() => ReleaseEvidence.AnnotateRecord(new JsonObject { ["test"] = false, ["validation"] = new JsonObject() }, adoption, ["kept-code-v20"]));
+        adoption["record"]!["evidence"]!["profile"] = "nightly";
+        Assert.Equal(4908, ReleaseEvidence.SuitePassed(adoption, "kept-code-v20"));
+        adoption["record"]!["suites"]!["kept-code-v20"]!["execution"] = "derived";
+        Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "kept-code-v20"));
+    }
+
+    [Fact]
+    public void HistoricalEvidenceWithoutAProfileStillMeansTheOriginalFullRun()
+    {
+        using var fixture = new EvidenceFixture();
+        fixture.Edit(evidence => evidence["mode"]!.AsObject().Remove("profile"));
+        Assert.Equal("full", (string)fixture.Verify()["record"]!["evidence"]!["profile"]!);
+    }
+
+    [Fact]
     [Trait("Category", "ReleaseParity")]
     public void AcceptsTheCompleteEvidenceOfTheCleanHead()
     {
@@ -635,7 +661,7 @@ public sealed class ReleaseEvidenceTests
             Directory.CreateDirectory(Path.Combine(Output, "logs"));
             Directory.CreateDirectory(Path.Combine(Output, "suites"));
             var environment = new Dictionary<string, string?> { ["TIA_MCP_CLEAN_CHECKOUT"] = Root, ["TIA_MCP_BUILD_CACHE_DISABLED"] = "1" };
-            var options = Options.Parse(["-Clean", "-NoBuildCache"], new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Clean", "NoBuildCache" });
+            var options = Options.Parse(["-Clean", "-NoBuildCache", "-Profile", "nightly"], new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Clean", "NoBuildCache" });
             var begin = ReleaseEvidence.Begin(Root, "git", options, external ?? Machine, name => environment.GetValueOrDefault(name), started ?? DateTimeOffset.UtcNow.AddSeconds(1));
 
             var names = ReleaseEvidence.RequiredJobs(Root).Select(job => job.Exact ? job.Name : job.Name + "-plc").Append("catalog-drift").Distinct(StringComparer.Ordinal).ToArray();
@@ -678,7 +704,7 @@ public sealed class ReleaseEvidenceTests
             Directory.CreateDirectory(Path.GetDirectoryName(workflow)!); File.Copy(Path.Combine(repo, profile.File), workflow);
             Git("add", "tests", ".github"); Git("commit", "-q", "-m", "CI fixture registry");
             var environment = new Dictionary<string, string?> { ["TIA_MCP_CLEAN_CHECKOUT"] = Root, ["TIA_MCP_BUILD_CACHE_DISABLED"] = "1" };
-            var options = Options.Parse(["-Clean", "-NoBuildCache"], new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Clean", "NoBuildCache" });
+            var options = Options.Parse(["-Clean", "-NoBuildCache", "-Profile", "nightly"], new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Clean", "NoBuildCache" });
             var begin = ReleaseEvidence.Begin(Root, "git", options, Machine, name => environment.GetValueOrDefault(name), DateTimeOffset.UtcNow.AddSeconds(1));
             var candidate = CiCoverage.Validate(Root, CiCoverageTests.Candidate(Root, "release", GitText("rev-parse", "HEAD")), GitText("rev-parse", "HEAD"));
             begin["ciCovered"] = candidate.DeepClone();

@@ -10,6 +10,31 @@ public sealed class CiCoverageTests
     private static string Root => Repository.FindRoot();
     private const string Sha = "1111111111111111111111111111111111111111";
 
+    [Fact]
+    public void FullStudioTrueReceiptHasBothRegisteredGatesAndBindsTheConcreteMatrixJob()
+    {
+        var candidate = CiCoverage.Validate(Root, Candidate(Root, "studio-true", Sha), Sha);
+        var runs = VerifyRemote(candidate);
+        Assert.Single(runs);
+        Assert.Equal(new[] { "studio-core-true", "studio-gui-true" }, CiCoverage.Suites(candidate).Keys.Order());
+        var receipt = candidate["jobs"]![0]!["receipt"]!;
+        receipt["suites"]!["studio-gui-true"]!["summary"]!["failed"] = 1;
+        Assert.Throws<ReleaseException>(() => CiCoverage.Validate(Root, candidate, Sha));
+    }
+
+    [Fact]
+    public void MergeCiCoverageMayReplaceADerivedGateButStillRequiresItsUniquePlanEntry()
+    {
+        var candidate = CiCoverage.Validate(Root, Candidate(Root, "foundation", Sha), Sha);
+        var jobs = CiCoverage.Suites(candidate).Keys.SelectMany(suite => CheckAllProfiles.Derived.ContainsKey(suite)
+            ? new[] { new CheckJob(suite + "-gate", () => new(1, "must be replaced", ""), []) }
+            : new[] { new CheckJob(suite + "-shard-0", () => new(1, "must be replaced", ""), []),
+                new CheckJob(suite + "-gate", () => new(1, "must be replaced", ""), [suite + "-shard-0"]) }).ToArray();
+        var rewritten = CiCoverage.Apply(jobs, candidate);
+        Assert.All(rewritten, job => Assert.NotNull(job.CiCoverage));
+        Assert.Throws<ReleaseException>(() => CiCoverage.RequirePlan(jobs.Where(job => job.Name != "foundation-gate").ToArray(), candidate));
+    }
+
     internal static JsonObject Candidate(string root, string profileName, string sha)
     {
         var profile = CiCoverage.Profiles[profileName];
@@ -40,6 +65,18 @@ public sealed class CiCoverageTests
         foreach (var (name, profile) in CiCoverage.Profiles)
         {
             var workflow = File.ReadAllText(Path.Combine(Root, profile.File));
+            if (name == "studio-true")
+            {
+                var studio = workflow.Split("\n  studio-tests:", StringSplitOptions.None)[1].Split("\n  foundation-suites:", StringSplitOptions.None)[0];
+                Assert.Equal("studio-tests (true)", profile.Job); Assert.Equal("studio-tests", profile.ActionsJob);
+                Assert.Equal(new[] { "studio-core-true", "studio-gui-true" }, profile.Suites);
+                Assert.Contains("shared-adapter-paths: ['false', 'true']", studio);
+                Assert.Contains("test-suites -Suite studio-core-${{ matrix.shared-adapter-paths }}", studio);
+                Assert.Contains("test-suites -Suite studio-gui-${{ matrix.shared-adapter-paths }}", studio);
+                Assert.Contains("if: matrix.shared-adapter-paths == 'true'", studio);
+                Assert.Contains("ci-coverage -Profile studio-true", studio);
+                continue;
+            }
             var block = workflow.Split("\n  " + profile.Job + ":", StringSplitOptions.None)[1].Split("\n  foundation-transport:", StringSplitOptions.None)[0];
             var suites = Regex.Matches(block, @"-Suite ([a-z0-9-]+)").Select(match => match.Groups[1].Value).Distinct().Order().ToArray();
             Assert.Equal(profile.Suites.Order(), suites);

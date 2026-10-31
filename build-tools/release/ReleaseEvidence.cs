@@ -118,6 +118,7 @@ internal static class ReleaseEvidence
                 ["releaseToolSha256"] = ReleaseRecords.HashFile(typeof(ReleaseEvidence).Assembly.Location) },
             ["mode"] = new JsonObject
             {
+                ["profile"] = CheckAllProfiles.Parse(options),
                 ["clean"] = options.Has("Clean") && !string.IsNullOrEmpty(environment("TIA_MCP_CLEAN_CHECKOUT")),
                 ["cold"] = options.Has("Cold"),
                 ["resultCacheEnabled"] = CheckAllResultCache.Enabled(options, environment),
@@ -219,7 +220,10 @@ internal static class ReleaseEvidence
     // other family by name or name prefix (successor jobs keep the family prefix, with or without the -plc suffix).
     internal static IReadOnlyList<(string Name, bool Exact)> RequiredJobs(string root)
     {
-        var jobs = SuiteRegistry(root).Keys.Select(suite => (suite + "-gate", true)).ToList();
+        var registry = SuiteRegistry(root);
+        var jobs = registry.Keys.Select(suite => (suite + "-gate", true)).ToList();
+        jobs.AddRange(CheckAllProfiles.Derived.Where(pair => registry.ContainsKey(pair.Key) && registry.ContainsKey(pair.Value))
+            .Select(pair => (pair.Key + "-coverage-proof", true)));
         jobs.AddRange(StudioJobs.Select(name => (name, true)));
         foreach (var key in CatalogJson.Keys)
             foreach (var family in new[] { "contracts", "responses", "transport-usage", "usage" }) jobs.Add((family + "-v" + key, false));
@@ -262,6 +266,8 @@ internal static class ReleaseEvidence
             problems.Add("evidence lacks its result, mode or source section (partial run)");
         var result = evidence["result"] as JsonObject ?? new JsonObject();
         var mode = evidence["mode"] as JsonObject ?? new JsonObject();
+        if (mode["profile"] != null && Text(mode["profile"]) != "nightly")
+            problems.Add("release evidence requires the full nightly profile; merge profile cannot supply keptCodeV20Passed");
         // check-all exits 1 for a failed job or for the time gate; only the latter can be excepted, never a failed job.
         bool timeGateExcepted = !string.IsNullOrWhiteSpace(inputs.TimeGateException) && !Bool(result["underThirtyMinutes"])
             && Int(result["failed"]) == 0 && Int(result["exitCode"]) == 1;
@@ -404,6 +410,7 @@ internal static class ReleaseEvidence
                     ["sha256"] = ReleaseRecords.HashFile(path), ["runId"] = Text(evidence["runId"]), ["commit"] = state.Commit, ["tree"] = state.Tree,
                     ["inputsSha256"] = Text(recordedInputs["sha256"]), ["startedUtc"] = Text(evidence["startedUtc"]), ["completedUtc"] = Text(evidence["completedUtc"]),
                     ["wallSeconds"] = (double?)result["wallSeconds"] ?? 0, ["jobs"] = jobs.Length, ["mode"] = Bool(mode["clean"]) ? "clean" : "cold",
+                    ["profile"] = mode["profile"]?.DeepClone() ?? JsonValue.Create("full"),
                     ["dotnetSdk"] = Text(external["dotnetSdk"]), ["python"] = Text(external["python"])
                 },
                 ["ci"] = verifiedCi,
@@ -509,13 +516,23 @@ internal static class ReleaseEvidence
         var adoption = JsonNode.Parse(File.ReadAllText(path)) as JsonObject;
         if (adoption is null || Text(adoption["schema"]) != AdoptionSchema || adoption["record"] is not JsonObject)
             throw new ReleaseException("Release adoption record is invalid: " + path);
+        RequireFullProfile(adoption);
         return adoption;
+    }
+
+    internal static void RequireFullProfile(JsonObject adoption)
+    {
+        var profile = adoption["record"]?["evidence"]?["profile"];
+        if (profile != null && Text(profile) is not ("nightly" or "full"))
+            throw new ReleaseException("Release record counts require full nightly evidence; merge cannot claim keptCodeV20Passed");
     }
 
     // The same gate as a suite the release runs itself (ReadSuitePassed): passes, no failure and no skip.
     internal static int SuitePassed(JsonObject adoption, string suite)
     {
+        RequireFullProfile(adoption);
         if (adoption["record"]?["suites"]?[suite] is not JsonObject row) throw new ReleaseException("Adopted evidence has no result for suite " + suite);
+        if (Text(row["execution"]) is "derived" or "selected-classes") throw new ReleaseException("Adopted suite is not a full execution: " + suite);
         var passed = Int(row["passed"]);
         if (passed <= 0 || Int(row["failed"]) != 0 || Int(row["skipped"]) != 0) throw new ReleaseException($"Adopted suite {suite} did not meet its passed/failed/skipped gates");
         return passed;
@@ -525,6 +542,7 @@ internal static class ReleaseEvidence
     // adoption (evidence, CI runs, the checks the release ran itself) come from the verified adoption record.
     internal static JsonObject AnnotateRecord(JsonObject record, JsonObject adoption, IReadOnlyList<string> suites)
     {
+        RequireFullProfile(adoption);
         if (record["test"] is not JsonValue test || !test.TryGetValue<bool>(out var tested) || tested)
             throw new ReleaseException("An adopted release record must come from a preparation without -Test");
         var validation = record["validation"] as JsonObject ?? throw new ReleaseException("Eight-release record has no validation section");
@@ -532,6 +550,7 @@ internal static class ReleaseEvidence
         foreach (var suite in suites)
         {
             if (adoption["record"]?["suites"]?[suite] is not JsonObject row) throw new ReleaseException("Adopted evidence has no result for suite " + suite);
+            if (Text(row["execution"]) is "derived" or "selected-classes") throw new ReleaseException("Adopted suite is not a full execution: " + suite);
             if (Int(row["failed"]) != 0 || Int(row["passed"]) < Int(row["minimumPassed"]) || Int(row["skipped"]) > Int(row["maximumSkipped"]))
                 throw new ReleaseException("Adopted suite does not meet its gate: " + suite);
             rows[suite] = row.DeepClone();

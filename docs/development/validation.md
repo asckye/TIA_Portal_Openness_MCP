@@ -28,10 +28,38 @@
 
 本机离线全集可用 `check-all` 执行。它先按顺序生成嵌入目录、工具用法和文档数量块，再构建两个 solution 的项目、八版 PLC worker、
 V20/V21 生产及 SDK fixture 引擎、Harness、Studio 两种路径模式和全部套件，后续测试使用对应程序集直接执行 VSTest，保留注册的过滤表达式；其他工程入口使用 `--no-build --no-restore`。
-SDK 仅传入 `foundation-api` 与两个 PLC exchange 套件；其余注册套件清除 SDK 环境变量，继续执行 clean-checkout 门槛。
+SDK 仅传入 `foundation-api` 与两个 PLC exchange 套件；其余独立执行的注册套件清除 SDK 环境变量，继续执行 clean-checkout 门槛。
 
 ```powershell
 dotnet run --project build-tools/release -- check-all -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <ecosystem-python/Scripts/python.exe> -MaxParallelism 16 -BuildParallelism 16 -StabilityCores 8 -StabilityParallelism 4 -Shards 8 -OutputDirectory bin-build/check-all/run-1
+```
+
+`-Profile merge` 是默认值。派生门禁只使用同轮超集 TRX，保留子集注册的最低通过数、最大跳过数和零失败要求。
+执行前检查项目、变体与构建单元完全一致、runner 和配置一致、环境差异属于映射白名单，以及超集过滤表达式确实包含子集。
+该检查做保守的逻辑包含证明，不能证明时记录 `fallbackReason` 并独立执行原套件，不能仅凭已经返回的行推断没有漏例。
+当前 foundation 从 foundation-api 派生；四个 GUI 子集从 studio-gui-false、vci-read-only-binding 从 studio-core-false、
+shared-lifecycle 从 shared-session 派生。Studio 子集显式使用与超集相同的 false 构建属性。
+worker-robustness、workbench-control-host、shared-pipeline、shared-lifecycle-plc 的过滤器不能逻辑保证排除 Operator，
+kept-code-v20 则具有不同的编译变体，故这五项在 merge 中回退为独立进程。两种 kept-code 构建仍保留。
+FoundationChecks 仅归一化 producer 行号；额外的 16 条 API XSD 行有精确识别规则。无 SDK 的原配置继续在 nightly 和 CI 运行。
+
+merge 的 studio-gui-true 使用 [SharedGuiClasses](../../build-tools/release/CheckAllProfiles.cs) 中已接受的 14 个类，
+要求每类至少一例通过且零失败、零跳过，不固定总数量；全量 studio-core-true 继续检查 Core 的共享适配器分支。
+GUI 使用实测类耗时做 LPT 三分片，缺失计时时使用估值和确定性类分配。计时条目过期、增加或重命名不导致门禁失败。
+测试显示窗口并检查键盘焦点，因此三片保持同一独占通道并顺序执行；累计时间仍按原未分片作业的预算判定。
+
+`-Profile nightly` 完整执行去重前的每个原套件和两种完整 GUI 变体，还执行全部 12 项 `*-coverage-proof`：
+将该轮独立子集的身份多重集与同轮超集派生结果比较，保留类名、方法、规范化显示名和重数。缺失、重复、替换会失败并列出差异类。
+新增或重命名测试在两边同步出现即可通过，无需提交用例基线或先运行另一轮 nightly。完整 GUI true 另检查全部 14 个选定类仍存在；
+类名重命名必须同步审查清单。注册数量、跳过和失败门禁仍独立判定，nightly 证明失败会阻止发布采纳。
+nightly 禁用结果缓存，确实启动本轮测试进程；它需要本机同轮 TRX，因此拒绝只有聚合收据的 `-CiCovered` 分工。merge 仍可使用 CI 分工。
+
+`report.json`、`cpu-plan.json` 和发布证据记录 profile；`profile-inventory.json` 列出各套件的构建/进程/全量适用 profile、
+派生来源、回退原因与 GUI 类清单。nightly 仍受原三十分钟门槛约束。发布只采纳完整 nightly（或旧格式原全集）；merge 不能提供
+发布证据或 `keptCodeV20Passed`。该字段继续取所采纳的同提交完整运行结果，不借用其他提交的 nightly。
+
+```powershell
+dotnet run --project build-tools/release -- check-all -Profile nightly -Clean -NoBuildCache -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <python.exe> -OutputDirectory bin-build/check-all/nightly-1
 ```
 
 `-Clean` 在当前 worktree 的 `bin-build` 内建立保留现有源码修改的 detached checkout，往返复制 `bin-build/check-timings` 的用例、类与整项历史；
@@ -53,7 +81,7 @@ Studio 测试收到既有的 bundle 根目录覆盖；bridge 载荷来自对应�
 全集低于三十分钟与检查通过是两个独立条件，任何一个不满足都返回非零状态。
 每次结束时另写 `release-evidence.json`：提交、tree id、开始时的工作树状态与全部输入文件 SHA-256、PublicAPI/NuGet 配置/SDK/Python/机器标识、
 运行模式、计划作业与每个作业的结果和日志哈希、注册套件计数及退出状态。`-NoBuildCache` 关闭文件程序构建缓存并随之关闭结果缓存；
-发布只采纳干净提交上 `-Clean`（或 `-Cold`）且带 `-NoBuildCache` 的完整通过运行，规则见[发布流程](release-workflow.md#采纳同一提交的-check-all-与-ci-证据-adoptevidence)。
+发布只采纳干净提交上 `-Profile nightly`、`-Clean`（或 `-Cold`）且带 `-NoBuildCache` 的完整通过运行，规则见[发布流程](release-workflow.md#采纳同一提交的-check-all-与-ci-证据-adoptevidence)。
 
 可选 `-CiCovered <候选 JSON>` 将同一提交的部分检查交给 Windows CI；不传时全部本机执行。
 原计划的每个 shard、gate 和静态作业仍有一条结果：本机执行，或 `covered by CI`，并列出 run ID、attempt、job ID 与 job 名。
@@ -66,7 +94,7 @@ Studio 测试收到既有的 bundle 根目录覆盖；bridge 载荷来自对应�
 | offline-checks / py-cs-parity，ubuntu-latest、windows-latest | static-python-csharp-parity、catalog-drift、usage-drift、migration-drift、tool-counts-drift、tools-list；文件程序构建与 analyzer-warnings 的部分输入 | 生成器字节检查与 tools-list 命令相同，但该 job 尚无分工收据，仍本机执行；parity 的 Python 版本、编译模式与路径环境不同，CI analyzer 未用本机完整 SDK 构建清单，不等价 |
 | offline-checks / offline-tests，Ubuntu，Shards=4 | repository-self-tests、suite-runner-self-tests；offline、offline-v20、kept-code、kept-code-v20、version-policy、generation-model、generation-planning、workbench-control-protocol | Linux 的平台通过/跳过门槛、管道身份、代码页与路径语义不等价于 Windows；不采纳 |
 | offline-checks / source-contracts，Ubuntu | 四个 drift、tools-list-self-tests/tools-list、python-script-self-tests/python-script-calls/script-calls、campaign-runner-self-tests、dead-references、repository/repository-self-tests、source-contracts、adapter-boundary、domain-source、contract-self-tests/contract-verify/response-verify | 纯生成/roster/快照 verify 命令相同，尚无该 job 的分工收据，仍本机执行；其余检查的 Linux 进程、代码页、路径状态不等价于本机 Windows；文件程序/analyzer 仅为部分构建输入 |
-| offline-checks / studio-tests，shared-adapter-paths=false、true，Windows | studio-core-false/true、studio-gui-false/true | 同项目与路径模式，但直接 dotnet test 没有注册套件计数门禁/CI 收据；保留本机；Studio 构建也不替代本机输出对等性 |
+| offline-checks / studio-tests，shared-adapter-paths=false、true，Windows | studio-core-false/true、studio-gui-false/true | 同项目与路径模式，使用注册套件门禁；true 的 studio-true profile 另出 CI 收据，false 保留本机；Studio 构建也不替代本机输出对等性 |
 | offline-checks / foundation-suites，runner=0、1、2、3，Windows，Shards=8、RunnerCount=4 | foundation、engine-host、shared-lifecycle-plc、worker-progress-foundation、prompt-registration、software-read、special-export-shape、device-add、hardware-catalog、diagnostic-membership、adapter-contracts、worker-channel、compile-candidate、compile-candidate-no-safety、fallback-vci-modern/initial/classic、workbench-control-protocol | 各 runner 只证明分片；必须由下一行覆盖全部分片的门禁合并，不单独采纳任一 runner |
 | offline-checks / foundation-suites-gate，Windows，Shards=8、GateOnly | 上述 18 套件的全部本机 shard 与 gate | foundation profile 可采纳；沿用注册过滤/属性/最低通过数/最大跳过数，验证四个 runner 的分片并集且每片恰一次；本机可能用计时历史产生不同分片，但都覆盖完整同一套件；不包含 foundation-api |
 | offline-checks / foundation-transport，Windows | transport-usage-v14sp1/v15.1/v16/v17/v18/v19 | CI 一次串行六版、使用 publish 目录/默认 host 发现；本机逐版显式 host 路径、隔离根不同，尚无逐版本收据；继续本机执行，V20/V21 SDK 分支也留本机 |

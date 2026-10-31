@@ -100,6 +100,7 @@
     "minimumPassed": 7,
     "maximumSkipped": 0,
     "arguments": [
+      "-p:TiaSharedAdapterPaths=false",
       "--filter",
       "FullyQualifiedName~CrashEvidencePortTests"
     ]
@@ -336,6 +337,7 @@
     "minimumPassed": 96,
     "maximumSkipped": 0,
     "arguments": [
+      "-p:TiaSharedAdapterPaths=false",
       "--filter",
       "FullyQualifiedName~WorkbenchControl"
     ]
@@ -366,6 +368,7 @@
     "minimumPassed": 48,
     "maximumSkipped": 0,
     "arguments": [
+      "-p:TiaSharedAdapterPaths=false",
       "--filter",
       "FullyQualifiedName~McpPanelTests"
     ]
@@ -375,6 +378,7 @@
     "minimumPassed": 63,
     "maximumSkipped": 0,
     "arguments": [
+      "-p:TiaSharedAdapterPaths=false",
       "--filter",
       "FullyQualifiedName~VciPanelTests|FullyQualifiedName~WorkbenchMcpPrefillTests|FullyQualifiedName~OfflineDemoTests"
     ]
@@ -384,6 +388,7 @@
     "minimumPassed": 13,
     "maximumSkipped": 0,
     "arguments": [
+      "-p:TiaSharedAdapterPaths=false",
       "--filter",
       "FullyQualifiedName~VciReadOnlyBindingTests"
     ]
@@ -429,5 +434,37 @@
     "minimumPassed": 3,
     "maximumSkipped": 0,
     "arguments": []
+  },
+  "studio-core-false": {
+    "project": "tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj",
+    "minimumPassed": 553,
+    "maximumSkipped": 0,
+    "arguments": [
+      "-p:TiaSharedAdapterPaths=false"
+    ]
+  },
+  "studio-core-true": {
+    "project": "tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj",
+    "minimumPassed": 677,
+    "maximumSkipped": 0,
+    "arguments": [
+      "-p:TiaSharedAdapterPaths=true"
+    ]
+  },
+  "studio-gui-false": {
+    "project": "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj",
+    "minimumPassed": 2958,
+    "maximumSkipped": 4,
+    "arguments": [
+      "-p:TiaSharedAdapterPaths=false"
+    ]
+  },
+  "studio-gui-true": {
+    "project": "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj",
+    "minimumPassed": 2958,
+    "maximumSkipped": 4,
+    "arguments": [
+      "-p:TiaSharedAdapterPaths=true"
+    ]
   }
 }

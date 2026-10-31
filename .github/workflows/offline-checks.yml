@@ -142,9 +142,12 @@ jobs:
       - name: Build Studio
         run: dotnet build src/Studio/Gui/TiaOpenness.Gui.csproj -c Release --nologo -p:TiaSharedAdapterPaths=${{ matrix.shared-adapter-paths }}
       - name: Studio client functional tests
-        run: dotnet test tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj -c Release --nologo -p:TiaSharedAdapterPaths=${{ matrix.shared-adapter-paths }} --logger "trx;LogFileName=studio-core.trx" --results-directory bin-build/ci-test-results/studio-core
+        run: dotnet run --project build-tools/release -- test-suites -Suite studio-core-${{ matrix.shared-adapter-paths }} -Shards 1 -ResultsDirectory bin-build/ci-test-results
       - name: Studio WPF functional tests
-        run: dotnet test tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj -c Release --nologo -p:TiaSharedAdapterPaths=${{ matrix.shared-adapter-paths }} --logger "trx;LogFileName=studio-gui.trx" --results-directory bin-build/ci-test-results/studio-gui
+        run: dotnet run --project build-tools/release -- test-suites -Suite studio-gui-${{ matrix.shared-adapter-paths }} -Shards 1 -ResultsDirectory bin-build/ci-test-results
+      - name: Bind the full shared-adapter variant gates to this CI attempt
+        if: matrix.shared-adapter-paths == 'true'
+        run: dotnet run --project build-tools/release -- ci-coverage -Profile studio-true -ResultsDirectory bin-build/ci-test-results -Output bin-build/ci-test-results/ci-receipt.json
       - uses: actions/upload-artifact@v6
         if: always()
         with:

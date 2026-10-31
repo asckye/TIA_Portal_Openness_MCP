@@ -11,9 +11,11 @@ internal static class CiCoverage
 {
     internal const string Schema = "tia-mcp/ci-coverage/1";
     internal const string Marker = "TIA_MCP_CI_COVERAGE=";
-    internal sealed record Profile(string Workflow, string File, string Job, string[] Suites, string[] Checks);
+    internal sealed record Profile(string Workflow, string File, string Job, string[] Suites, string[] Checks, string? ActionsJob = null);
     internal static readonly IReadOnlyDictionary<string, Profile> Profiles = new Dictionary<string, Profile>(StringComparer.Ordinal)
     {
+        ["studio-true"] = new("offline-checks", ".github/workflows/offline-checks.yml", "studio-tests (true)",
+            ["studio-core-true", "studio-gui-true"], [], "studio-tests"),
         ["foundation"] = new("offline-checks", ".github/workflows/offline-checks.yml", "foundation-suites-gate",
             ["foundation", "engine-host", "shared-lifecycle-plc", "worker-progress-foundation", "prompt-registration", "software-read",
                 "special-export-shape", "device-add", "hardware-catalog", "diagnostic-membership", "adapter-contracts", "worker-channel",
@@ -37,7 +39,7 @@ internal static class CiCoverage
         if (!Profiles.TryGetValue(profileName, out var profile)) throw new ReleaseException("Unknown CI coverage profile: " + profileName, 64);
         var state = ReleaseEvidence.SourceState(root, "git");
         var sha = state.Commit;
-        if (state.Status.Length != 0 || environment("GITHUB_SHA") != sha || environment("GITHUB_JOB") != profile.Job)
+        if (state.Status.Length != 0 || environment("GITHUB_SHA") != sha || environment("GITHUB_JOB") != (profile.ActionsJob ?? profile.Job))
             throw new ReleaseException("CI receipt needs its profile's unchanged, clean checkout", 64);
         if (profileName == "foundation")
         {
@@ -167,7 +169,8 @@ internal static class CiCoverage
             foreach (var check in row["receipt"]!["checks"]!.AsArray().Select(Text))
                 if (jobs.Count(job => job.Name == check) != 1) throw new ReleaseException("CI mapping has no unique local check: " + check);
         foreach (var suite in Suites(candidate).Keys)
-            if (jobs.Count(job => job.Name == suite + "-gate") != 1 || !jobs.Any(job => job.Name.StartsWith(suite + "-shard-", StringComparison.Ordinal)))
+            if (jobs.Count(job => job.Name == suite + "-gate") != 1 || !jobs.Any(job => job.Name.StartsWith(suite + "-shard-", StringComparison.Ordinal))
+                && !CheckAllProfiles.Derived.ContainsKey(suite))
                 throw new ReleaseException("CI mapping has no complete local suite plan: " + suite);
     }
 

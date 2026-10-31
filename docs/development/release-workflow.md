@@ -202,13 +202,14 @@ harness 模式与压测；发布仍冷构建产品、打包，并在实际包上
 # 1. 准备提交：机械更新版本（只改版本文件并列出路径），写 CHANGELOG 条目和发布说明，提交并推送，CI 在该提交上运行。
 dotnet run --project build-tools/release -- release -Version 4.0.0-beta.2 -BumpOnly
 # 2. 在该提交的干净工作树上运行冷的、无缓存的 check-all；输出目录中写出 release-evidence.json。
-dotnet run --project build-tools/release -- check-all -Clean -NoBuildCache -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <python.exe> -OutputDirectory bin-build/check-all/beta2
+dotnet run --project build-tools/release -- check-all -Profile nightly -Clean -NoBuildCache -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <python.exe> -OutputDirectory bin-build/check-all/beta2
 # 3. 只读核对（-Ci 另读 GitHub Actions），然后演练与正式发布，参数与完整路径相同。
 dotnet run --project build-tools/release -- check-release-evidence -Evidence bin-build/check-all/beta2/release-evidence.json -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -Ci
 dotnet run --project build-tools/release -- release -Version 4.0.0-beta.2 -DryRun -AdoptEvidence bin-build/check-all/beta2/release-evidence.json -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -Python <python.exe>
 dotnet run --project build-tools/release -- release -Version 4.0.0-beta.2 -Summary "..." -AdoptEvidence bin-build/check-all/beta2/release-evidence.json -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -Python <python.exe>
 ```
 
+- Profile：只有 `-Profile nightly` 的完整运行可采纳；默认 `merge` 的派生门禁和选择的 GUI 类不能作为发布证据。`keptCodeV20Passed` 保留，来自所采纳完整运行的 V20 套件。旧格式未记录 profile 时仍表示当时的全集。
 - 证据：每次 check-all 结束时都写 `release-evidence.json`，是否可采纳由发布判断。它在任何生成之前记录提交、Git tree id、开始时的
   `git status`（含未跟踪文件）、全部跟踪及未忽略文件的 SHA-256 清单，PublicAPI 目录全部文件的长度与 SHA-256 摘要、离线 NuGet 配置的
   SHA-256、`dotnet --version`、`python --version`、伴随 Python 可执行文件的 SHA-256 和机器标识（无法取得的值记为 unavailable，
@@ -244,9 +245,10 @@ dotnet run --project build-tools/release -- release -Version 4.0.0-beta.2 -Summa
 
 ## CI 分工候选与在线采纳
 
-`check-all -CiCovered <文件>` 可把[验证映射表](validation.md)中的 foundation/release profile 交给同提交的 Windows CI。
+`check-all -Profile merge -CiCovered <文件>` 可把[验证映射表](validation.md)中的 foundation/release/studio-true profile 交给同提交的 Windows CI。
+merge 分工证据不能用于发布；发布另跑完整本机 nightly。nightly 需要独立子集与超集的同轮 TRX，拒绝只有聚合收据的 `-CiCovered`。
 默认不分工，仍运行全部本机检查；分工模式要求本机 checkout 干净且与收据提交相同，防止借用 CI 覆盖未提交的测试输入。
-两个 CI job 在覆盖范围内的全部命令成功后调用 `ci-coverage`，读取完整注册套件的 TRX、核对摘要与门禁，
+对应的 Windows CI job 在覆盖范围内的全部命令成功后调用 `ci-coverage`，读取完整注册套件的 TRX、核对摘要与门禁，
 foundation 另核对四个 runner 的完整分片并集报告；收据包含提交、仓库、run/attempt、job 名、workflow 哈希、注册定义和通过/失败/跳过数。
 收据同时保存为 artifact 中的 `ci-receipt.json` 并以 `TIA_MCP_CI_COVERAGE=` 开头的编码行写入 job 日志。
 发布收据只来自干净、未改写的 CI checkout；Linux、SDK 套件和未列入 profile 的检查不参与替换。
@@ -258,9 +260,7 @@ release 收据在 `build-configurator -Test` 之前生成，因为后者按原�
 
 ```powershell
 dotnet run --project build-tools/release -- ci-coverage -Receipt bin-build/ci-foundation/ci-receipt.json -JobId 123456 -Receipt bin-build/ci-release/ci-receipt.json -JobId 123457 -Output bin-build/ci-covered.json
-dotnet run --project build-tools/release -- check-all -Clean -NoBuildCache -CiCovered bin-build/ci-covered.json -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <python.exe> -OutputDirectory bin-build/check-all/beta2-ci
-dotnet run --project build-tools/release -- check-release-evidence -Evidence bin-build/check-all/beta2-ci/release-evidence.json -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -Ci
-dotnet run --project build-tools/release -- release -Version 4.0.0-beta.2 -Summary "..." -AdoptEvidence bin-build/check-all/beta2-ci/release-evidence.json -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -Python <python.exe>
+dotnet run --project build-tools/release -- check-all -Profile merge -Clean -NoBuildCache -CiCovered bin-build/ci-covered.json -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <python.exe> -OutputDirectory bin-build/check-all/merge-ci
 ```
 
 候选文件不是可信发布证明。check-all 保留全部原计划作业名与依赖，CI 承担的每个 shard/gate/静态检查写为 `covered by CI`，
@@ -268,7 +268,7 @@ dotnet run --project build-tools/release -- release -Version 4.0.0-beta.2 -Summa
 `-CiCovered` 不与 `-BuildOnly`、`-ProveEquivalence`、本机 sequential baseline 同用。`-Clean` 转发候选的绝对路径。
 生成、完整构建、analyzer、输出清单对等性、SDK/Windows 本机状态检查继续由本机证明；不减少全集覆盖。
 
-`check-release-evidence -Ci` 与正式发布采纳重新查询 GitHub：仍要求两个 workflow 的最新 push/master run 及其全部 job 成功，
+历史全集证据的 `check-release-evidence -Ci` 与正式发布采纳会重新查询 GitHub（当前 merge profile 仍直接拒绝）：仍要求两个 workflow 的最新 push/master run 及其全部 job 成功，
 另要求每条分工收据的 run/attempt 与该最新运行相同，数字 job ID、job 名、head SHA、run ID、attempt 精确一致且 completed/success，
 并在该 job 的日志中找到完全相同的门禁收据。缺少/取消/失败/运行中、其他提交、旧 attempt、日志缺失或计数不同均拒绝，不能自动退回旧成功运行。
 日志已过保留期时须重新运行 CI 并重新取得同 attempt 的收据。`release-evidence.json` 与最终 `adoptedValidation` 都保留每个分工作业和具体 CI 证明者。

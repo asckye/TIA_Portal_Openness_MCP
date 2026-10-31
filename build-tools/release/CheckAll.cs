@@ -12,6 +12,9 @@ internal static partial class ReleaseCommands
 {
     private static int CheckAll(Options options)
     {
+        var checkProfile = CheckAllProfiles.Parse(options);
+        if (checkProfile == "nightly" && options.Has("CiCovered"))
+            throw new ReleaseException("nightly requires local same-run subset/superset TRXs; use -CiCovered with merge", 64);
         if (options.Has("CiCovered") && (options.Has("BuildOnly") || options.Has("ProveEquivalence") || options.Has("SequentialBaselineDirectory")))
             throw new ReleaseException("-CiCovered requires a complete run without a local equivalence baseline", 64);
         if (options.Has("Clean") && Environment.GetEnvironmentVariable("TIA_MCP_CLEAN_CHECKOUT") == null) return CheckAllSnapshot(options);
@@ -40,6 +43,8 @@ internal static partial class ReleaseCommands
         var available = unchecked((ulong)currentProcess.ProcessorAffinity.ToInt64());
         var clock = Stopwatch.StartNew();
         var catalog = DotnetSuites.LoadCatalog(Path.Combine(Root, "tests/test-suites.json"), Root);
+        var derivations = CheckAllProfiles.Plan(catalog, api, nuget, companionPython, dotnet);
+        CheckAllProfiles.WriteInventory(catalog, output, checkProfile, derivations);
         if (options.Get("BaselineReport") is { } timingBaseline)
             SuiteCosts.ImportReport(Path.GetDirectoryName(Path.GetFullPath(timingBaseline))!, Path.Combine(Root, "bin-build/check-timings"));
         var history = Path.Combine(Root, "bin-build/check-timings/check-costs.json");
@@ -52,8 +57,11 @@ internal static partial class ReleaseCommands
         var orderCosts = CheckPacking.ReadOrderCosts(Root, baselineReport);
         var suitePlan = new List<CheckJob>();
         foreach (var (name, node) in catalog)
+        {
+            if (!CheckAllProfiles.RunsSeparately(name, checkProfile, derivations)) continue;
             FastSuites.AddJobs(suitePlan, Root, name, node!.AsObject(), Path.Combine(output, "packing-suites"), dotnet,
                 node["minimumPassed"]!.GetValue<int>() >= 100 ? shards : 1, null, []);
+        }
         foreach (var project in new[] { "Core", "Gui" })
         foreach (var mode in new[] { "false", "true" })
             suitePlan.Add(new CheckJob("studio-" + project.ToLowerInvariant() + "-" + mode, () => new(0, "", ""), [], Exclusive: true)
@@ -113,6 +121,11 @@ internal static partial class ReleaseCommands
         CommandResult Isolated(string name, string executable, string[] args, bool approval = true)
         {
             var environment = FastSuites.EnvironmentFor(Path.Combine(output, "isolation", name), api);
+            ConfigureCheckEnvironment(environment, approval);
+            return SuiteHang.RunProcess(executable, args, Root, environment);
+        }
+        void ConfigureCheckEnvironment(IDictionary<string, string?> environment, bool approval = true)
+        {
             var config = Path.Combine(environment["TIA_MCP_DATA_DIRECTORY"]!, "config"); Directory.CreateDirectory(config);
             File.WriteAllText(Path.Combine(config, "approval.settings"), "enabled=" + approval.ToString().ToLowerInvariant() + "\ntimeoutSeconds=120\n");
             environment["TIA_MCP_RELEASE_TEMP_ROOT"] = environment["TEMP"];
@@ -121,8 +134,12 @@ internal static partial class ReleaseCommands
             environment["TIA_MCP_CHECK_NO_BUILD"] = "1";
             environment["TIA_MCP_PLC_TOOLS_PYTHON"] = companionPython;
             environment["TIA_MCP_ANALYZER_REPORT_DIRECTORY"] = null;
-            return SuiteHang.RunProcess(executable, args, Root, environment);
         }
+        SuiteProcess SuiteProcessFor(string name) => (executable, arguments, cwd, environment) =>
+        {
+            CheckAllProfiles.ApplyEnvironment(derivations.Executions[name], environment!, CheckAllProfiles.StudioSuites.Contains(name));
+            return DotnetSuites.RunProcess(executable, arguments, cwd, environment);
+        };
         void Add(string name, Func<CommandResult> run, string[]? depends = null, bool exclusive = false)
         {
             var job = new CheckJob(name, run, depends ?? [], Exclusive: exclusive);
@@ -244,21 +261,17 @@ internal static partial class ReleaseCommands
         var workerCopies = new SuiteWorkerCopies(output);
         foreach (var (name, node) in catalog)
         {
+            if (!CheckAllProfiles.RunsSeparately(name, checkProfile, derivations)) continue;
             var suite = node!.AsObject();
             string? sdk = name == "foundation-api" || suite["publicApiRoot"]?.GetValue<bool>() == true ? api : null;
             FastSuites.AddJobs(jobs, Root, name, suite, Path.Combine(output, "suites"), dotnet, suite["minimumPassed"]!.GetValue<int>() >= 100 ? shards : 1, sdk, [],
-                options.Get("SequentialBaselineDirectory") is { } baseline ? Path.Combine(baseline, name + ".trx") : null, options.Has("ProveEquivalence"), manifest: runtimeManifest, diagnostics: true, workerCopies: workerCopies);
-        }
-        foreach (var mode in new[] { "false", "true" })
-        foreach (var project in new[] { "Core", "Gui" })
-        {
-            var name = $"studio-{project.ToLowerInvariant()}-{mode}"; var selectedMode = mode; var selectedProject = project;
-            Add(name, () => Isolated(name, dotnet, ["test", $"tests/Studio/TiaOpenness.{selectedProject}.Tests/TiaOpenness.{selectedProject}.Tests.csproj", "-c", "Release", "--no-build", "--no-restore",
-                "-p:TiaSharedAdapterPaths=" + selectedMode,
-                "--disable-build-servers", "-m:1", "-nodeReuse:false", "--logger", "trx;LogFileName=" + name + ".trx", "--results-directory", Path.Combine(output, "studio")]), exclusive: true);
-            jobs[^1] = jobs[^1] with { SensitiveGroup = $"tests/Studio/TiaOpenness.{project}.Tests/TiaOpenness.{project}.Tests.csproj" };
+                options.Get("SequentialBaselineDirectory") is { } baseline ? Path.Combine(baseline, name + ".trx") : null, options.Has("ProveEquivalence"), manifest: runtimeManifest, diagnostics: true, workerCopies: workerCopies, process: SuiteProcessFor(name));
         }
         BindEngineHostResult(jobs, Root, output, runtimeManifest);
+        CheckAllProfiles.AddStudio(jobs, Root, catalog, Path.Combine(output, "suites"), dotnet, checkProfile, runtimeManifest,
+            history: costs, processFor: SuiteProcessFor);
+        if (checkProfile == "merge") CheckAllProfiles.AddDerived(jobs, catalog, Path.Combine(output, "suites"), derivations);
+        else CheckAllProfiles.AddNightlyProofs(jobs, catalog, Path.Combine(output, "suites"));
         jobs.AddRange(staticJobs.Where(job => !CheckAllEarly(job.Name)));
         // Preflight also depends on the source-only checks completed in the build
         // wave. Retain their results in its aggregate instead of executing twice.
@@ -439,7 +452,8 @@ internal static partial class ReleaseCommands
             physicalCores = CheckAffinity.PhysicalCores().Select(core => new { mask = core.Mask.ToString("X"), efficiencyClass = core.Efficiency }),
             buildParallelism, stabilityParallelism, sensitiveParallelism = sensitiveLanes.Count, requestedSensitiveParallelism = sensitiveWorkers.RequestedWorkers,
             sensitiveParallelismReason = sensitiveWorkers.Reason, sensitiveCores = System.Numerics.BitOperations.PopCount(layout.Sensitive), sensitiveMinWorkerThreads = CheckAffinity.BaselineWorkers, generalParallelism = parallelism, packing, companionPython,
-            checks = allJobs.Select(job => new { job.Name, job.Lane, job.SensitiveGroup, job.Slots, job.Exclusive, job.GlobalExclusive, job.Priority, affinityMask = job.Affinity?.ToString("X"), job.EstimatedSeconds, job.MeasuredSeconds, job.SchedulingSeconds,
+            profile = checkProfile,
+            checks = allJobs.Select(job => new { job.Name, profiles = CheckAllProfiles.Profiles(job.Name, derivations), job.Lane, job.SensitiveGroup, job.Slots, job.Exclusive, job.GlobalExclusive, job.Priority, affinityMask = job.Affinity?.ToString("X"), job.EstimatedSeconds, job.MeasuredSeconds, job.SchedulingSeconds,
                 cpuDemand = packing.Cpu(job), memoryBytes = packing.Memory(job), timeoutSeconds = job.Timeout.TotalSeconds, criticalSeconds = priorities[job.Name], job.Dependencies,
                 runtimeManifestDependency = job.Name == "suite-output-parity" ? "build-once (comparison phase only)" : null,
                 resultCache = job.ResultCachePolicy ?? "always rerun: generated evidence, mutable machine inputs or aggregate gate" }) }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
@@ -465,7 +479,7 @@ internal static partial class ReleaseCommands
             var unexpected = drift.Where(path => !TimestampOnly(path, before)).ToArray();
             timings.Add(new("tracked-tree-drift", unexpected.Length == 0 ? "passed" : "failed", unexpected.Length == 0 ? 0 : 1, 0, string.Join(", ", unexpected)));
             var performance = CheckScheduler.Performance(allJobs, timings, DateTime.UtcNow - clock.Elapsed, clock.Elapsed.TotalSeconds);
-            var report = new { schemaVersion = 1, machineCores = Environment.ProcessorCount, cpuIsolation = layout.Isolation, cpuIsolationReason = layout.Reason,
+            var report = new { schemaVersion = 1, profile = checkProfile, machineCores = Environment.ProcessorCount, cpuIsolation = layout.Isolation, cpuIsolationReason = layout.Reason,
                 parallelism, shards, sensitiveParallelism = sensitiveWorkers.Workers, requestedSensitiveParallelism = sensitiveWorkers.RequestedWorkers,
                 sensitiveParallelismReason = sensitiveWorkers.Reason, cold = options.Has("Cold"), clean = options.Has("Clean"),
                 wallSeconds = clock.Elapsed.TotalSeconds, underThirtyMinutes = clock.Elapsed.TotalSeconds < 1800, buildOnly = options.Has("BuildOnly"), nativeTiaExecuted = false,

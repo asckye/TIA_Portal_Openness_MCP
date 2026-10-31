@@ -241,8 +241,10 @@ public sealed class CheckAllCpuLayoutTests(ITestOutputHelper output)
         Assert.Equal(jobs.Select(job => job.Name).Order(StringComparer.Ordinal), ran.Order(StringComparer.Ordinal));
     }
 
-    [Fact]
-    public void TwoCpuCheckAllRecordsTheDegradedLayoutAndKeepsEveryCheck()
+    [Theory]
+    [InlineData("merge")]
+    [InlineData("nightly")]
+    public void TwoCpuCheckAllRecordsTheDegradedLayoutAndKeepsEveryCheck(string profile)
     {
         using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
         File.WriteAllText(Path.Combine(root, "fake.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>");
@@ -262,13 +264,19 @@ public sealed class CheckAllCpuLayoutTests(ITestOutputHelper output)
         using (CheckAffinity.Enter(mask))
             result = ProcessRunner.Run(dotnet, [typeof(ReleaseCommands).Assembly.Location, "check-all", "-PublicApiRoot", root,
                 "-NuGetConfig", Path.Combine(root, "offline.config"), "-Dotnet", Path.Combine(root, "bin/Release/net10.0/fake.exe"),
-                "-CompanionPython", Path.Combine(root, "bin/Release/net10.0/fake.exe"), "-BuildParallelism", "1", "-MaxParallelism", "16", "-OutputDirectory", runDirectory], Repository.FindRoot());
+                "-CompanionPython", Path.Combine(root, "bin/Release/net10.0/fake.exe"), "-BuildParallelism", "1", "-MaxParallelism", "16", "-Profile", profile, "-OutputDirectory", runDirectory], Repository.FindRoot());
         output.WriteLine("Degraded fake build: available mask={0:X}, check-all mask={1:X}", available, mask);
         output.WriteLine(result.StandardOutput + result.StandardError);
         // The failed fake build, not a CPU refusal (exit 64), ends the run.
         Assert.Equal(1, result.ExitCode);
         Assert.Contains("check-all: cpuIsolation degraded: ", result.StandardOutput, StringComparison.Ordinal);
         var report = JsonNode.Parse(File.ReadAllText(Path.Combine(runDirectory, "report.json")))!;
+        Assert.Equal(profile, (string?)report["profile"]);
+        var inventory = JsonNode.Parse(File.ReadAllText(Path.Combine(runDirectory, "profile-inventory.json")))!;
+        Assert.Equal(profile, (string?)inventory["profile"]);
+        var foundation = inventory["suites"]!.AsArray().Single(row => (string?)row!["name"] == "foundation")!;
+        Assert.Equal(new[] { "nightly" }, foundation["processProfiles"]!.AsArray().Select(value => (string)value!));
+        Assert.Equal("foundation-api", (string?)foundation["mergeDerivedFrom"]);
         Assert.Equal(CheckAffinity.DegradedIsolation, (string?)report["cpuIsolation"]);
         var reason = (string?)report["cpuIsolationReason"];
         Assert.StartsWith(BitOperations.PopCount(mask) + " available CPU", reason, StringComparison.Ordinal);

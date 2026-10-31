@@ -53,18 +53,22 @@ internal static class FastSuites
         var isolation = Path.Combine(System.Environment.GetEnvironmentVariable("TIA_MCP_CHECK_ISOLATION_ROOT") ?? Path.Combine(SystemTemp, "p8t"), Guid.NewGuid().ToString("N")[..8]);
         foreach (var child in new[] { "data", "local", "roaming" }) Directory.CreateDirectory(Path.Combine(isolation, child));
         File.WriteAllText(Path.Combine(directory, "isolation.txt"), isolation + "\n");
-        return new(StringComparer.OrdinalIgnoreCase)
+        return EnvironmentValues(isolation, Guid.NewGuid().ToString("N"), api);
+    }
+
+    // The scheduler also evaluates this exact template with symbolic private roots/scopes when proving derivations.
+    internal static Dictionary<string, string?> EnvironmentValues(string isolation, string pipeScope, string? api) =>
+        new(StringComparer.OrdinalIgnoreCase)
         {
             ["TEMP"] = isolation, ["TMP"] = isolation, ["TMPDIR"] = isolation,
             ["TIA_MCP_DATA_DIRECTORY"] = Path.Combine(isolation, "data"), ["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = Path.Combine(isolation, "data", "diagnostics"),
             ["LOCALAPPDATA"] = Path.Combine(isolation, "local"), ["APPDATA"] = Path.Combine(isolation, "roaming"),
-            ["TIA_MCP_TEST_PIPE_SCOPE"] = Guid.NewGuid().ToString("N"), ["TIA_MCP_TEST_PUBLIC_API_ROOT"] = api,
+            ["TIA_MCP_TEST_PIPE_SCOPE"] = pipeScope, ["TIA_MCP_TEST_PUBLIC_API_ROOT"] = api,
             ["TIA_MCP_TEST_PRODUCT_ROOT"] = null, ["TIA_MCP_TEST_SHARD_COUNT"] = null, ["TIA_MCP_TEST_SHARD_INDEX"] = null,
             ["TIA_MCP_TEST_WORKER_FIXTURE_ROOT"] = null, ["TIA_MCP_TEST_REGISTERED_OUTPUT"] = null,
             ["TIA_MCP_TEST_SENSITIVE_SHARDS"] = null, ["TIA_MCP_TEST_SHARD_ASSEMBLY"] = null, ["TIA_MCP_TEST_SHARD_PLAN"] = null, ["TIA_MCP_TEST_RESERVE_SENSITIVE_SHARD"] = null,
             ["NuGetAudit"] = "false", ["TIA_MCP_CHECK_SYSTEM_TEMP_ROOT"] = SystemTemp
         };
-    }
 
     internal static void AddJobs(List<CheckJob> jobs, string root, string name, JsonObject suite, string output, string dotnet,
         int shards, string? api, string[] dependencies, string? baseline = null, bool prove = false, string[]? extra = null, string? history = null, string? jobPrefix = null, string? manifest = null,

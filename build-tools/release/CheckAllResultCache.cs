@@ -53,7 +53,7 @@ internal sealed class CheckAllResultCache
     }
 
     internal static bool Enabled(Options options, Func<string, string?> environment) =>
-        !options.Has("Clean") && !options.Has("NoResultCache") && !options.Has("ProveEquivalence") &&
+        options.Get("Profile", "merge") != "nightly" && !options.Has("Clean") && !options.Has("NoResultCache") && !options.Has("ProveEquivalence") &&
         !options.Has("SequentialBaselineDirectory") &&
         new[] { "CI", "GITHUB_ACTIONS", "TIA_MCP_CLEAN_CHECKOUT", "TIA_MCP_RELEASE_CHECK_PLAN", "TIA_MCP_BUILD_CACHE_DISABLED" }
             .All(name => string.IsNullOrEmpty(environment(name)) || environment(name) is "0" or "false");
