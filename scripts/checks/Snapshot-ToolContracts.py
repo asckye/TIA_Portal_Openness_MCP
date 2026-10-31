@@ -834,6 +834,8 @@ def foundation_registered_names(root, parameters=None, releases=RELEASES):
         text = path.read_text(encoding='utf-8-sig')
         names.update(renames.get(name, name) for name in re.findall(
             r'new\s+(?:Offline\w+Tool|PassiveDiagnosticTool|GenerationTool)\("([^"\n]+)"', text))
+        # Host tools declared by a static Definition (XREF AnalyzePlcCrossReferences).
+        names.update(re.findall(r'Definition\s+Definition\s*=\s*new\("([^"\n]+)"', text))
     families = ported_families.families(root).values()
     enabled = {name for family in families for name in family['tools']
                if set(releases) & set(family.get('tool_releases', {}).get(name, family['releases']))}

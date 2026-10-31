@@ -43,6 +43,8 @@ internal static class DeadToolReferences
         foreach (var source in sources.Values)
         {
             foreach (Match m in Regex.Matches(source, "McpServerTool\\(Name\\s*=\\s*\"([A-Za-z0-9_]+)\"")) names.Add(m.Groups[1].Value);
+            // Foundation host tools declared by a static Definition (XREF AnalyzePlcCrossReferences) are registered tools too.
+            foreach (Match m in Regex.Matches(source, "Definition\\s+Definition\\s*=\\s*new\\(\"([A-Za-z0-9_]+)\"")) names.Add(m.Groups[1].Value);
             foreach (Match m in Regex.Matches(source, "McpServerPrompt\\(Name\\s*=\\s*\"([A-Za-z0-9_]+)\"")) prompts.Add(m.Groups[1].Value);
         }
         var bad = new Dictionary<string, List<string>>();
