@@ -229,7 +229,7 @@ internal static class CheckAllProfiles
                 {
                     var clock = Stopwatch.StartNew();
                     try { return FastSuites.RunShard(root, name, suite, shardDirectory, dotnet, null, unit, shard, count,
-                        plan: plan, manifest: manifest, process: processFor?.Invoke(name) ?? process, diagnostics: true); }
+                        plan: plan, manifest: manifest, process: processFor?.Invoke(name) ?? process, diagnostics: true, registeredOutput: true); }
                     finally { Interlocked.Add(ref runtimeTicks, clock.Elapsed.Ticks); }
                 }, index == 0 ? [] : [names[index - 1]], Exclusive: true)
                     { AllowFailedDependencies = true, SensitiveGroup = unit.Project, EstimatedSeconds = costs[index] + 5 });

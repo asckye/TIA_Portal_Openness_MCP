@@ -125,7 +125,7 @@ internal static class FastSuites
         jobs.Select(job => job with { Timeout = CheckScheduler.JobTimeout(job, new Dictionary<string, double>()) }).ToList();
 
     internal static CommandResult RunShard(string root, string name, JsonObject suite, string directory, string dotnet, string? api,
-        CheckBuild unit, int index, int count, string[]? extra = null, string? plan = null, bool reserveSensitive = false, string? manifest = null, SuiteProcess? process = null, int sensitiveShards = 1, bool diagnostics = false, SuiteWorkerRuntime? runtime = null)
+        CheckBuild unit, int index, int count, string[]? extra = null, string? plan = null, bool reserveSensitive = false, string? manifest = null, SuiteProcess? process = null, int sensitiveShards = 1, bool diagnostics = false, SuiteWorkerRuntime? runtime = null, bool registeredOutput = false)
     {
         Directory.CreateDirectory(directory);
         var environment = EnvironmentFor(directory, api);
@@ -149,7 +149,7 @@ internal static class FastSuites
         var before = SuiteHang.Begin(directory, name);
         environment["TIA_MCP_TEST_PHASE_TIMINGS"] = Path.Combine(directory, "phase-timings.json");
         string? assembly;
-        try { assembly = runtime?.Assembly ?? CheckAllBuild.TestAssembly(root, unit, manifest, name); }
+        try { assembly = runtime?.Assembly ?? (registeredOutput ? CheckAllBuild.RegisteredTestAssembly(root, unit, manifest, name) : CheckAllBuild.TestAssembly(root, unit, manifest, name)); }
         catch (ReleaseException ex) { return new(1, "", ex.Message + "\n"); }
         List<string> args;
         if (assembly != null && (extra == null || extra.Length == 0))

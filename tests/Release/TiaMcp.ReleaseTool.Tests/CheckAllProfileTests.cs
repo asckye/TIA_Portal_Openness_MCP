@@ -171,6 +171,22 @@ public sealed class CheckAllProfileTests
     }
 
     [Fact]
+    public void StudioSuitesRunTheRegisteredOutputAssemblyLikeTheOriginalIsolatedJobs()
+    {
+        using var temp = new OfflineFixtures();
+        var unit = CheckAllBuild.Suite(Catalog["studio-core-true"]!.AsObject());
+        var project = Path.Combine(temp.DirectoryPath, unit.Project);
+        var registered = Path.Combine(temp.DirectoryPath, "registered");
+        var manifest = Path.Combine(temp.DirectoryPath, "runtime-paths.tsv");
+        File.WriteAllText(manifest, string.Join("\t", project, unit.Variant, Path.Combine(temp.DirectoryPath, "check-all"), registered,
+            Path.Combine(temp.DirectoryPath, "check-all", "TiaOpenness.Core.Tests.dll")) + "\n");
+        Assert.Equal(Path.Combine(registered, "TiaOpenness.Core.Tests.dll"), CheckAllBuild.RegisteredTestAssembly(temp.DirectoryPath, unit, manifest));
+        File.WriteAllText(manifest, string.Join("\t", project, unit.Variant, Path.Combine(temp.DirectoryPath, "check-all"), "",
+            Path.Combine(temp.DirectoryPath, "check-all", "TiaOpenness.Core.Tests.dll")) + "\n");
+        Assert.Throws<ReleaseException>(() => CheckAllBuild.RegisteredTestAssembly(temp.DirectoryPath, unit, manifest));
+    }
+
+    [Fact]
     public void StudioSuitesClearTheShardBundleRootLikeTheOriginalIsolatedJobs()
     {
         using var temp = new OfflineFixtures(); var plan = Plan();
@@ -247,7 +263,8 @@ public sealed class CheckAllProfileTests
         File.WriteAllLines(manifest, catalog.Select(pair =>
         {
             var unit = CheckAllBuild.Suite(pair.Value!.AsObject()); string assembly = Path.Combine(root, pair.Key + ".dll"); File.WriteAllText(assembly, "fixture");
-            return string.Join('\t', Path.Combine(root, unit.Project), unit.Variant, assembly, assembly, assembly);
+            // Real manifests carry the registered output directory in the fourth column.
+            return string.Join('\t', Path.Combine(root, unit.Project), unit.Variant, assembly, root, assembly);
         }));
         CommandResult Process(string executable, IEnumerable<string> args, string cwd, IDictionary<string, string?>? environment)
         {

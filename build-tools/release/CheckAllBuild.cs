@@ -130,6 +130,20 @@ internal static class CheckAllBuild
         return null;
     }
 
+    // Studio suites run from the registered (ordinary) output with its copied bridge, as the original Isolated jobs did:
+    // Studio's bundle anchors only resolve from that layout, never from the private check-all variant directory.
+    internal static string? RegisteredTestAssembly(string root, CheckBuild unit, string? manifest, string? suite = null)
+    {
+        var assembly = TestAssembly(root, unit, manifest, suite);
+        if (assembly == null) return null;
+        var project = Path.GetFullPath(Path.Combine(root, unit.Project));
+        var row = File.ReadLines(manifest!).Select(line => line.Split('\t')).First(row => row.Length == 5 &&
+            string.Equals(Path.GetFullPath(row[0]), project, StringComparison.OrdinalIgnoreCase) && row[1] == unit.Variant);
+        if (string.IsNullOrWhiteSpace(row[3]))
+            throw new ReleaseException($"Suite {suite ?? unit.Project}: missing registered output in the runtime manifest row ({project}, {unit.Variant}).");
+        return Path.Combine(row[3], Path.GetFileName(assembly));
+    }
+
     internal static string ReleaseTool(string root, string manifest)
     {
         var path = TestAssembly(root, new("build-tools/release/TiaMcp.ReleaseTool.csproj", "", []), manifest, "PLC harness release tool")!;
