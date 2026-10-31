@@ -1,0 +1,84 @@
+name: Real-machine verification result / 真机验证结果
+description: Report the result of one item of the beta tester checklist or of the release notes' "Not verified on a real TIA Portal" list. Passed results count too.
+title: "[verify] "
+labels: ["real-machine"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One item and one TIA release per issue. Checklist: docs/guides/beta-tester-checklist.md in the package.
+        每个 Issue 写一个检查项和一个 TIA 版本。清单见交付包中的 docs/guides/beta-tester-checklist.md。
+  - type: input
+    id: item
+    attributes:
+      label: Checklist item / 检查项
+      description: Checklist ID (for example T03), or the item number in the release notes' "Not verified" list (for example "notes #81").
+    validations:
+      required: true
+  - type: input
+    id: bundle
+    attributes:
+      label: Bundle version / 交付包版本
+      description: Package file name or release tag.
+    validations:
+      required: true
+  - type: dropdown
+    id: release
+    attributes:
+      label: TIA release / TIA 版本
+      options:
+        - V14 SP1
+        - V15.1
+        - V16
+        - V17
+        - V18
+        - V19
+        - V20
+        - V21
+    validations:
+      required: true
+  - type: input
+    id: update
+    attributes:
+      label: TIA Update or hotfix / TIA 更新
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: Outcome / 结论
+      options:
+        - Passed / 通过
+        - Failed / 失败
+        - Partly passed / 部分通过
+        - Not applicable on this release / 本版本不适用
+        - Could not run / 无法执行
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps and tool calls / 步骤与调用
+      description: What you did, including tool names and arguments (secrets removed).
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Observed result / 实际结果
+      description: Result envelopes (error.code, meta.outcome, meta.requestId), what TIA Portal showed, counts you compared.
+    validations:
+      required: true
+  - type: dropdown
+    id: crash
+    attributes:
+      label: Did TIA Portal crash? / TIA 是否崩溃
+      options:
+        - "No"
+        - Yes, TIA Portal exited
+        - The worker or MCP host exited, TIA kept running
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes / 备注
+      description: Anything else, for example differences from the checklist's expected result.

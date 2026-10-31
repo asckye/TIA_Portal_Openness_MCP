@@ -20,6 +20,8 @@ The delivery package contains runtime files, user documentation, templates, the 
 
 The [beginner guide](docs/getting-started/beginners.zh-CN.md) explains installation, VM paths, PLC selection and a first SCL import/compile exercise.
 
+Already using 3.3? At first the 3.3 updater does not offer 4.0; install it side by side as described in the [3.3 to 4.0 migration guide (Chinese)](docs/guides/migrate-3.3-to-4.0.md). To test a pre-release on a real TIA Portal, follow the [beta tester checklist (Chinese)](docs/guides/beta-tester-checklist.md).
+
 ## Supported releases
 
 <!-- generated:tool-counts:begin -->

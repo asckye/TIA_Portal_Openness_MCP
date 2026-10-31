@@ -3,6 +3,12 @@ contact_links:
   - name: Documentation
     url: https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/README.md
     about: Setup, guides, references, troubleshooting - read before opening an issue.
+  - name: Beta tester checklist / 预发布真机验证清单
+    url: https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/guides/beta-tester-checklist.md
+    about: What to try on each TIA release and which evidence to attach.
+  - name: Migrating from 3.3 to 4.0 / 从 3.3 迁移到 4.0
+    url: https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/guides/migrate-3.3-to-4.0.md
+    about: Side-by-side installation, client configuration, renamed tools and rollback.
   - name: Support
     url: https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/.github/SUPPORT.md
     about: Where to ask questions and what to include.

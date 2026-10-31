@@ -1,0 +1,109 @@
+name: Bug report / 问题报告
+description: A tool returned a wrong result, TIA Portal or the worker exited, or the behavior differs from the documentation.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use copies of your projects. Remove passwords, keys, customer names and project content before you paste anything.
+        请只用工程副本，粘贴前删除密码、密钥、客户名称和工程内容。
+  - type: input
+    id: bundle
+    attributes:
+      label: Bundle version / 交付包版本
+      description: Package file name or release tag, for example TIA_MCP_Delivery_v4.0.0-beta.2_<date>.zip.
+    validations:
+      required: true
+  - type: dropdown
+    id: release
+    attributes:
+      label: TIA release / TIA 版本
+      options:
+        - V14 SP1
+        - V15.1
+        - V16
+        - V17
+        - V18
+        - V19
+        - V20
+        - V21
+    validations:
+      required: true
+  - type: input
+    id: update
+    attributes:
+      label: TIA Update or hotfix / TIA 更新
+      description: For example "Update 3", or "unknown".
+  - type: input
+    id: client
+    attributes:
+      label: MCP client / MCP 客户端
+      description: For example Claude Code, Codex, Cursor, or the Workbench Engineering page; add same computer or VM/host (HTTP).
+    validations:
+      required: true
+  - type: dropdown
+    id: approval
+    attributes:
+      label: Write approval / 写入审批
+      options:
+        - "On"
+        - "Off"
+        - Not sure
+  - type: input
+    id: tool
+    attributes:
+      label: Tool name / 工具名
+      description: The exact MCP tool name, for example CompilePlcSoftware.
+    validations:
+      required: true
+  - type: textarea
+    id: arguments
+    attributes:
+      label: Arguments JSON / 调用参数
+      description: The complete arguments of the call, with secrets removed.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Result JSON or error code / 返回结果
+      description: The complete result envelope, at least error.code, meta.outcome, meta.execution and meta.requestId. Write "no result" if nothing came back.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior / 预期结果
+      description: What you expected, what TIA Portal shows, and whether the project was saved.
+    validations:
+      required: true
+  - type: dropdown
+    id: crash
+    attributes:
+      label: Did TIA Portal crash? / TIA 是否崩溃
+      options:
+        - "No"
+        - Yes, TIA Portal exited
+        - The worker or MCP host exited, TIA kept running
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs and evidence / 日志与证据
+      description: |
+        Host logs: <bundle>\data\logs\<release key>\ (fallback %TEMP%\TiaMcp\logs\<release key>).
+        Native call diagnostics: <bundle>\data\diagnostics\ (fallback %LOCALAPPDATA%\TiaMcp\diagnostics).
+        After a crash: export the diagnostic bundle on the Workbench Environment page, and call GetNativeInvocationLog from a new MCP session.
+        Review files before attaching; do not attach customer projects or unredacted logs.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy / 隐私
+      options:
+        - label: I removed credentials, keys and customer data. / 已删除凭据、密钥和客户数据。
+          required: true

@@ -22,8 +22,9 @@ Support requests may be written in English or Chinese.
 
 ## Where to ask
 
-- **Bug or unexpected behaviour** → open an issue with the [bug report template](https://github.com/asckye/TIA_Portal_Openness_MCP/issues/new?template=bug_report.md); paste the `doctor` output and the full error text.
-- **Missing tool or workflow** → [feature request](https://github.com/asckye/TIA_Portal_Openness_MCP/issues/new?template=feature_request.md).
+- **Bug or unexpected behaviour** → open an issue with the [bug report form](https://github.com/asckye/TIA_Portal_Openness_MCP/issues/new?template=bug_report.yml); paste the `doctor` output and the full error text.
+- **Result of a real-machine check on a pre-release** → [real-machine verification result](https://github.com/asckye/TIA_Portal_Openness_MCP/issues/new?template=real_machine_result.yml); the items are in the [beta tester checklist (Chinese)](../docs/guides/beta-tester-checklist.md).
+- **Missing tool or workflow** → [feature request](https://github.com/asckye/TIA_Portal_Openness_MCP/issues/new?template=feature_request.yml).
 - **Question** → open an issue with the `question` label; say which TIA version, client and product version (from the current host's state/environment output).
 - **Security problem** → do not open a public issue; follow [SECURITY.md](SECURITY.md).
 

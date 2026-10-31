@@ -1,0 +1,50 @@
+name: Feature request / 功能建议
+description: Suggest a new tool, workflow or improvement.
+title: "[feat] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case / 问题或场景
+      description: What do you want to do in TIA Portal that the current tools do not cover?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution / 建议方案
+      description: The tool or behavior you would like, with inputs and outputs if you have them in mind.
+    validations:
+      required: true
+  - type: dropdown
+    id: releases
+    attributes:
+      label: TIA releases / TIA 版本
+      multiple: true
+      options:
+        - V14 SP1
+        - V15.1
+        - V16
+        - V17
+        - V18
+        - V19
+        - V20
+        - V21
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area / 范围
+      options:
+        - Project and session
+        - Hardware and network
+        - PLC
+        - HMI
+        - Online and download
+        - Workbench
+        - Client configuration or plugin
+        - Other
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered / 其他方案

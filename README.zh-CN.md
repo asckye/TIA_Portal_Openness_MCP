@@ -20,6 +20,8 @@
 
 按[新手使用指南](docs/getting-started/beginners.zh-CN.md)完成安装、连接和第一个 SCL 导入编译练习；具体客户端配置见[配置指南](docs/getting-started/configuration.md)。
 
+已在使用 3.3：4.0 起初不经 3.3 的更新器提供，需要并排手动安装，见[从 3.3 迁移到 4.0](docs/guides/migrate-3.3-to-4.0.md)。在真实 TIA 上测试预发布版本时，按[预发布真机验证清单](docs/guides/beta-tester-checklist.md)记录和报告。
+
 ## 版本和工具
 
 <!-- generated:tool-counts:begin -->
