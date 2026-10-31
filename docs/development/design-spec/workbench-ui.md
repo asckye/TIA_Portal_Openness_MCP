@@ -1,4 +1,4 @@
-# TIA 工作台（Workbench）界面设计规范
+# 自动化工程工作台（Workbench）界面设计规范
 
 状态：现行（v0.3）· 最后核对：2026-10-22，P8-80d
 
@@ -209,7 +209,7 @@ Microsoft 新版设计指南以 WinUI 控件为例。下表说明工作台（WPF
 
 - **NAV-01 · MUST** 一级页面为扁平结构，不超过 7 个（现为 6 个）；二级页签只出现在“工程操作”下，不再加深。理由：少于 8 个的同级页适合扁平结构，层级越深越容易迷失。依据：[Navigation basics › Flat/lateral / General recommendations](https://learn.microsoft.com/en-us/windows/apps/design/basics/navigation-basics#use-the-right-structure)。
 - **NAV-02 · MUST** 所有导航（人点击、快捷键、AI 控制）只经过 `MainWindow.Navigate(page)` 一个入口。理由：守卫、快照与页签同步只在这一处实现。依据：项目规则（phase8 §1.2、§2.6）。
-- **NAV-03 · MUST** 当前位置始终可见：选中侧栏项有非颜色的指示（3 epx 选中条 + SemiBold）；未选中项恢复 Regular；标题栏显示页名；`Window.Title` 为“<页名> – TIA 工作台”。理由：用户与读屏都要知道当前所在页。依据：[Navigation basics › Clarity](https://learn.microsoft.com/en-us/windows/apps/design/basics/navigation-basics#principles-of-good-navigation)；[WCAG 2.2 › 2.4.2 Page Titled](https://www.w3.org/TR/WCAG22/#page-titled)（软件中可不适用，本项作为 SHOULD 级补充）。
+- **NAV-03 · MUST** 当前位置始终可见：选中侧栏项有非颜色的指示（3 epx 选中条 + SemiBold）；未选中项恢复 Regular；标题栏显示页名；`Window.Title` 为“<页名> – 自动化工程工作台”。理由：用户与读屏都要知道当前所在页。依据：[Navigation basics › Clarity](https://learn.microsoft.com/en-us/windows/apps/design/basics/navigation-basics#principles-of-good-navigation)；[WCAG 2.2 › 2.4.2 Page Titled](https://www.w3.org/TR/WCAG22/#page-titled)（软件中可不适用，本项作为 SHOULD 级补充）。
 - **NAV-04 · MUST** 页签在 UIA 中呈现为“一组可选项”：每项有名称、选中状态、序号与总数（`SizeOfSet` / `PositionInSet`）；页签组是一个 Tab 停靠点，组内用方向键切换。理由：读屏需要知道“第 2 项，共 6 项，已选中”。依据：[Keyboard interactions › Control group](https://learn.microsoft.com/en-us/windows/apps/develop/input/keyboard-interactions#control-group)；[NavigationView](https://learn.microsoft.com/en-us/windows/apps/develop/ui/controls/navigationview)。
 - **NAV-05 · MUST** 暂不可用的目的地保持可见但禁用，并说明原因（HelpText / ToolTip，例如“连接 TIA 项目后可用”）；指向它的快捷键给出可见反馈，而不是静默无效。理由：用户需要知道怎样才能到达。依据：[Navigation basics › Clarity](https://learn.microsoft.com/en-us/windows/apps/design/basics/navigation-basics#principles-of-good-navigation)。
 - **NAV-06 · SHOULD** 每页使用 §3.3 的页面骨架。理由：同样的结构降低学习成本。依据：[Navigation basics › Consistency](https://learn.microsoft.com/en-us/windows/apps/design/basics/navigation-basics#principles-of-good-navigation)。
