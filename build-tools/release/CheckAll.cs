@@ -41,7 +41,7 @@ internal static partial class ReleaseCommands
         nuget = Path.GetFullPath(nuget);
         if (ReleaseValidation.OfflineNuGetError(nuget) is { } error) throw new ReleaseException(error, 64);
         var output = Path.GetFullPath(options.Get("OutputDirectory", Path.Combine(Root, "bin-build/check-all/" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture) + "-" + Guid.NewGuid().ToString("N")[..6])));
-        if (Directory.Exists(output)) throw new ReleaseException("Output directory must be fresh: " + output, 64);
+        if (Directory.Exists(output) && !NightlyRuns.ManagedFreshOutput(output)) throw new ReleaseException("Output directory must be fresh: " + output, 64);
         Directory.CreateDirectory(output);
         var python = options.Get("Python", Py); var dotnet = options.Get("Dotnet", Dotnet);
         if (!OperatingSystem.IsWindows()) throw new ReleaseException("check-all CPU isolation requires Windows", 64);

@@ -14,6 +14,20 @@ public sealed class AffectedNightlyTests
     private static CheckJob Job(string name) => new(name, () => new(0, "passed", ""), []);
 
     [Fact]
+    public void OnlyTheManagedNightlyLayoutCountsAsAFreshCheckAllOutput()
+    {
+        using var temp = new OfflineFixtures(); var output = temp.DirectoryPath;
+        File.WriteAllText(Path.Combine(output, "nightly-owner.json"), "{}"); File.WriteAllText(Path.Combine(output, "nightly.log"), "");
+        Directory.CreateDirectory(Path.Combine(output, "worktree"));
+        Assert.True(NightlyRuns.ManagedFreshOutput(output, "1"));
+        Assert.False(NightlyRuns.ManagedFreshOutput(output, null));
+        File.WriteAllText(Path.Combine(output, "report.json"), "{}");
+        Assert.False(NightlyRuns.ManagedFreshOutput(output, "1"));
+        File.Delete(Path.Combine(output, "report.json")); File.Delete(Path.Combine(output, "nightly-owner.json"));
+        Assert.False(NightlyRuns.ManagedFreshOutput(output, "1"));
+    }
+
+    [Fact]
     public void ChangeSetIncludesMergeBaseDiffStagedUnstagedDeletedAndUntrackedPaths()
     {
         var calls = new List<string[]>();

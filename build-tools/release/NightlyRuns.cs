@@ -14,6 +14,19 @@ internal static class NightlyRuns
         options.Has("NoBuildCache") && (options.Has("Clean") || options.Has("Cold")) && !options.Has("BuildOnly") &&
         !options.Has("Quick") && !options.Has("Affected");
 
+    // The nightly command creates its run directory (owner file, log, detached worktree) before check-all writes there.
+    // Only that exact managed layout counts as fresh; anything else (an earlier report or evidence) is refused.
+    internal static bool ManagedFreshOutput(string output) =>
+        ManagedFreshOutput(output, Environment.GetEnvironmentVariable("TIA_MCP_NIGHTLY_MANAGED"));
+
+    internal static bool ManagedFreshOutput(string output, string? managed)
+    {
+        if (managed != "1") return false;
+        var allowed = new HashSet<string>(["nightly-owner.json", "nightly.log", "worktree"], StringComparer.OrdinalIgnoreCase);
+        return File.Exists(Path.Combine(output, "nightly-owner.json")) &&
+            Directory.EnumerateFileSystemEntries(output).All(entry => allowed.Contains(Path.GetFileName(entry)));
+    }
+
     internal static string DirectoryFor(string root) => Path.GetFullPath(Environment.GetEnvironmentVariable("TIA_MCP_NIGHTLY_ROOT") ??
         Path.Combine(Environment.GetEnvironmentVariable("TIA_MCP_CHECK_ORIGINAL_ROOT") ?? root, "bin-build/nightly"));
 
