@@ -44,6 +44,9 @@ internal static class CheckScheduler
 {
     private static readonly AsyncLocal<(string Name, DateTime Deadline)?> deadline = new();
     private static readonly AsyncLocal<string?> evidenceDirectory = new();
+    // -FailFast (development/merge runs only): after the first executed failure nothing new starts; running jobs finish and
+    // every unstarted job is recorded as blocked, so the run still fails and can never serve as release evidence.
+    internal static readonly AsyncLocal<bool> FailFast = new();
     internal static (string Name, DateTime Deadline)? Deadline => deadline.Value;
     internal static string? EvidenceDirectory => evidenceDirectory.Value;
     internal static Task<CheckTiming> Start(CheckJob job, string logs)
@@ -78,8 +81,19 @@ internal static class CheckScheduler
         var pending = jobs.Where(job => !startedNames.Contains(job.Name)).ToList();
         var done = (prerequisites ?? []).ToDictionary(row => row.Name, StringComparer.Ordinal);
         CheckJob[] Active() => running.Values.Concat(background?.Where(pair => !pair.Key.IsCompleted).Select(pair => pair.Value) ?? []).ToArray();
+        string? stoppedAfter = null;
         while (pending.Count > 0 || running.Count > 0)
         {
+            if (stoppedAfter != null)
+            {
+                foreach (var job in pending)
+                {
+                    var row = new CheckTiming(job.Name, "blocked", 1, 0, "Not started: -FailFast stopped the run after " + stoppedAfter + " failed");
+                    done.Add(job.Name, row);
+                    File.WriteAllText(Path.Combine(logs, job.Name + ".log"), row.Error + "\n");
+                }
+                pending.Clear();
+            }
             foreach (var job in pending.ToArray())
             {
                 if (!job.AllowFailedDependencies && job.Dependencies.Any(dep => done.TryGetValue(dep, out var row) && !CheckTiming.Passed(row)))
@@ -138,6 +152,11 @@ internal static class CheckScheduler
             var result = finished.GetAwaiter().GetResult();
             done.Add(result.Name, result); running.Remove(finished);
             Console.WriteLine($"{result.Name}: {result.Status}; {result.Seconds:F3}s");
+            if (FailFast.Value && stoppedAfter == null && !CheckTiming.Passed(result))
+            {
+                stoppedAfter = result.Name;
+                Console.WriteLine($"-FailFast: {result.Name} failed; finishing {running.Count} running job(s) and starting no new ones.");
+            }
         }
         var timings = jobs.Select(job => done[job.Name]).ToArray();
         File.WriteAllText(Path.Combine(logs, "timings.json"), JsonSerializer.Serialize(timings, new JsonSerializerOptions { WriteIndented = true }) + "\n");

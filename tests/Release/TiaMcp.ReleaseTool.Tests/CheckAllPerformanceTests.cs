@@ -11,6 +11,28 @@ public sealed class CheckAllPerformanceTests
 {
     private static CommandResult Passed() => new(0, "passed\n", "");
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void FailFastStartsNothingAfterTheFirstFailureAndRecordsEveryUnstartedJobAsBlocked(bool failFast)
+    {
+        using var fixture = new OfflineFixtures(); int started = 0;
+        CommandResult Run(int exit) { Interlocked.Increment(ref started); return new(exit, "", exit == 0 ? "" : "boom\n"); }
+        var jobs = new CheckJob[] { new("first", () => Run(1), []) { Priority = 1 }, new("second", () => Run(0), []), new("third", () => Run(0), []) };
+        IReadOnlyList<CheckTiming> timings = [];
+        // A fresh thread starts with an empty AsyncLocal context, so the switch cannot leak into other tests.
+        var thread = new Thread(() => { CheckScheduler.FailFast.Value = failFast; timings = CheckScheduler.Run(jobs, 1, fixture.DirectoryPath); });
+        thread.Start(); Assert.True(thread.Join(TimeSpan.FromSeconds(30)));
+        Assert.False(CheckTiming.Passed(timings.Single(row => row.Name == "first")));
+        Assert.Equal(failFast ? 1 : 3, started);
+        foreach (var row in timings.Where(row => row.Name != "first"))
+        {
+            if (!failFast) { Assert.True(CheckTiming.Passed(row), row.Error); continue; }
+            Assert.Equal("blocked", row.Status); Assert.NotEqual(0, row.ExitCode);
+            Assert.Contains("-FailFast stopped the run after first failed", row.Error);
+        }
+    }
+
     [Fact]
     public void SubCoreHistoryCannotAdmitMoreJobsThanCpusAndReservedWorkUsesTheSameBudget()
     {

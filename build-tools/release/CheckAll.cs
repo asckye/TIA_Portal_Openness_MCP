@@ -21,7 +21,10 @@ internal static partial class ReleaseCommands
             throw new ReleaseException("nightly requires local same-run subset/superset TRXs; use -CiCovered with merge", 64);
         if (options.Has("CiCovered") && (options.Has("BuildOnly") || options.Has("ProveEquivalence") || options.Has("SequentialBaselineDirectory")))
             throw new ReleaseException("-CiCovered requires a complete run without a local equivalence baseline", 64);
+        if (options.Has("FailFast") && checkProfile == "nightly")
+            throw new ReleaseException("-FailFast is for development and merge runs; the nightly and release evidence run every job", 64);
         if (options.Has("Clean") && Environment.GetEnvironmentVariable("TIA_MCP_CLEAN_CHECKOUT") == null) return CheckAllSnapshot(options);
+        CheckScheduler.FailFast.Value = options.Has("FailFast");
         var worktree = Path.GetFullPath(options.Get("Worktree", Root));
         if (!string.Equals(worktree.TrimEnd('\\', '/'), Root.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase))
         {
