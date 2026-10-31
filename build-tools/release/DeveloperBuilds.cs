@@ -55,11 +55,12 @@ internal static class FileBasedPrograms
     private static bool References(string root, string program) => File.ReadLines(Path.Combine(root, program)).Any(line =>
         System.Text.RegularExpressions.Regex.IsMatch(line, @"^\s*#:project(?:\s|$)"));
 
-    internal static CommandResult Build(string root, string directory, string dotnet, string? nuget, int parallelism = 1, bool noBuildCache = false, SuiteProcess? process = null)
+    internal static CommandResult Build(string root, string directory, string dotnet, string? nuget, int parallelism = 1, bool? noBuildCache = null, SuiteProcess? process = null)
     {
         Directory.CreateDirectory(directory);
         var programs = Discover(root);
-        bool disabled = noBuildCache || Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED") == "1";
+        // An explicit caller choice wins; only an unspecified one follows the inherited check-all setting.
+        bool disabled = noBuildCache ?? Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED") == "1";
         var sdk = (process ?? DotnetSuites.RunProcess)(dotnet, ["--version"], root, null);
         ProcessRunner.RequireSuccess(sdk, "File program SDK version");
         // Include referenced/linked sources and imported build configuration as
@@ -157,7 +158,7 @@ internal static partial class ReleaseCommands
         AnalyzerWarnings.LocalDirectory(directory);
         var nuget = options.Get("NuGetConfig") ?? Environment.GetEnvironmentVariable("TIA_MCP_OFFLINE_NUGET_CONFIG");
         var result = FileBasedPrograms.Build(Root, directory, Dotnet, nuget == null ? null : Path.GetFullPath(nuget),
-            FastSuites.Positive(options, "BuildParallelism", GetMaxParallelism(options)), options.Has("NoBuildCache"));
+            FastSuites.Positive(options, "BuildParallelism", GetMaxParallelism(options)), options.Has("NoBuildCache") ? true : null);
         Console.Write(result.StandardOutput); Console.Error.Write(result.StandardError);
         if (result.ExitCode == 0) AnalyzerWarnings.RememberDirectory(Root, directory);
         return result.ExitCode;
@@ -185,7 +186,7 @@ internal static partial class ReleaseCommands
                 logPath: Path.Combine(directory, Path.GetFileNameWithoutExtension(solution) + ".log"));
             Console.Write(result.StandardOutput); Console.Error.Write(result.StandardError); ProcessRunner.RequireSuccess(result, solution);
         }
-        var scripts = FileBasedPrograms.Build(Root, directory, Dotnet, nuget == null ? null : Path.GetFullPath(nuget), parallelism, options.Has("NoBuildCache"));
+        var scripts = FileBasedPrograms.Build(Root, directory, Dotnet, nuget == null ? null : Path.GetFullPath(nuget), parallelism, options.Has("NoBuildCache") ? true : null);
         Console.Write(scripts.StandardOutput); Console.Error.Write(scripts.StandardError); ProcessRunner.RequireSuccess(scripts, "File-based programs");
         AnalyzerWarnings.RememberDirectory(Root, directory);
         var analyzerResult = AnalyzerWarnings.Run(Root, Options.Parse(["-Check", "-DiagnosticsDirectory", directory], new HashSet<string> { "Check" }));
