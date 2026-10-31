@@ -18,6 +18,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["ManageMachineDescription"] = "foundation",
                 ["AnalyzeGlobalLibraryPackage"] = "host",
                 ["AnalyzeHmiTemplateReference"] = "host",
+                ["AnalyzePlcCrossReferences"] = "foundation",
                 ["AnalyzePlcReferences"] = "host",
                 ["AnalyzePlcSclSource"] = "host",
                 ["AnalyzeUnifiedHmiTemplateLayout"] = "host",

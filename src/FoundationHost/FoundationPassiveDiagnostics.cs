@@ -274,6 +274,7 @@ internal static class LegacyHostToolRegistry
         var tools = FoundationTools.Create(worker, releaseKey).Concat(PortedToolContract.Create(worker, releaseKey)).Concat(OfflineXmlTools.Create()).Concat(OfflineCompositionTools.Create()).Concat(OfflineBlockCompositionTools.Create()).Concat(OfflineSymbolManifestTools.Create()).Concat(OfflineLadderTools.Create()).ToList();
         tools.RemoveAll(t => TiaMcp.Adapters.Contracts.PortedFamilies.Contains(FoundationV4Tool.Name(t.ProtocolTool.Name))
             && !TiaMcp.Adapters.Contracts.PortedFamilies.Available(releaseKey, FoundationV4Tool.Name(t.ProtocolTool.Name)));
+        tools.Add(PlcCrossReferenceAnalysis.Create(worker));
         tools.Add(new ImportOrderTool());
         tools.AddRange(WorkbenchControlTools.Create(worker, releaseKey));
         tools.AddRange(GenerationTool.Create(releaseKey));

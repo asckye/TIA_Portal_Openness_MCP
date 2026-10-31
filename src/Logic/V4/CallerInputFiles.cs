@@ -13,6 +13,7 @@ namespace TiaMcp.Logic.V4
         // Output checks use the explicit native-format table, not the input-file heuristic.
         internal static void Validate(string tool, JsonObject arguments)
         {
+            RefuseHumanSettingsTargets(arguments);
             ValidateNativeFile(tool, arguments);
             string? action = arguments["action"] is JsonValue actionValue && actionValue.TryGetValue<string>(out var actionText) ? actionText : null;
             bool import = tool.StartsWith("Import", StringComparison.Ordinal) || tool == "PlanPlcExternalSourceImport"
@@ -50,6 +51,24 @@ namespace TiaMcp.Logic.V4
             if ((import || tool == "BuildPlcSymbolManifestFromPath") && arguments["files"] is JsonArray files)
                 foreach (var file in files)
                     if (file is JsonValue fileValue && fileValue.TryGetValue<string>(out var path)) NativeInputPolicy.RequireReadable(path, "files");
+        }
+
+        internal static void RefuseHumanSettingsTargets(JsonObject arguments)
+        {
+            foreach (var pair in arguments)
+                if (AdministrativePath(pair.Key, pair.Value))
+                    throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Human-only Workbench settings cannot be targeted by a tool or approval.", pair.Key, false);
+        }
+
+        private static bool AdministrativePath(string parameter, JsonNode? node)
+        {
+            if (node is JsonObject obj) return obj.Any(pair => AdministrativePath(pair.Key, pair.Value));
+            if (node is JsonArray array) return array.Any(item => AdministrativePath(parameter, item));
+            bool fileArgument = parameter.EndsWith("Path", StringComparison.OrdinalIgnoreCase)
+                || parameter.EndsWith("Directory", StringComparison.OrdinalIgnoreCase)
+                || parameter is "dir" or "directory" or "files" or "fileName" or "output" or "destination";
+            return node is JsonValue value && value.TryGetValue<string>(out var path)
+                && (fileArgument || Path.IsPathRooted(path)) && ApprovalSettings.IsNativeCrossReferenceTarget(path);
         }
 
         private static (string Parameter, string[] Extensions, bool Output)? NativeFile(string tool, JsonObject arguments)

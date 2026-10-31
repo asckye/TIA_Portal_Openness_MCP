@@ -80,6 +80,8 @@ internal static class FoundationWorkerRequest
 
 internal sealed class WorkerClient(string releaseKey, string workerExe, string apiDirectory, bool nativeEnabled, int defaultTimeoutSeconds = 120, string? timeoutConfig = null) : IFoundationSessionWorker, IFoundationWorkerResult, IFoundationWorkerSupervisor, IFoundationWorkerReadiness
 {
+    internal string? NativeCrossReferenceSessionFile { get; set; }
+    internal string? NativeCrossReferenceSessionSecret { get; set; }
     public async Task PrepareReadiness(CancellationToken token)
     {
         // The engine read its worker status for V20/V21 and stayed usable when TIA was missing. A bundled PlcWorker cannot start
@@ -470,6 +472,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 foreach (var argument in new WorkerLaunchOptions(releaseKey, apiDirectory, nonce, WithUi, TiaPortalLocation).Arguments())
                     start.ArgumentList.Add(argument);
                 start.Environment["TIA_MCP_WORKER_SPILLS_DIRECTORY"] = SpillsDirectory;
+                if (NativeCrossReferenceSessionFile != null) start.Environment[TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.SessionFileVariable] = NativeCrossReferenceSessionFile;
+                if (NativeCrossReferenceSessionSecret != null) start.Environment[TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.SessionSecretVariable] = NativeCrossReferenceSessionSecret;
                 start.Environment["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory;
                 process = Process.Start(start) ?? throw new IOException("Worker failed to start."); WorkerJob.Bind(process); WorkerShutdown.Register(this);
                 attachAttempted = false;

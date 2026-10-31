@@ -14,6 +14,22 @@ namespace TiaOpenness.Gui.Tests;
 /// </summary>
 public sealed class UiSettingsTests : IDisposable
 {
+    [Fact]
+    public void Native_cross_reference_consent_is_not_a_saved_preference()
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
+        File.WriteAllText(_path, "nativeCrossReferencesAllowed=true\nlanguage=English\n");
+        UiSettings.Load(_path).Save(_path);
+        Assert.DoesNotContain("cross", File.ReadAllText(_path), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Native_cross_reference_consent_has_no_preference_setter()
+    {
+        Assert.DoesNotContain(typeof(UiSettings).GetProperties(), property => property.Name.Contains("CrossReference", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(typeof(UiSettings).GetMethods(), method => method.Name.Contains("CrossReference", StringComparison.OrdinalIgnoreCase));
+    }
+
     private readonly string _path = Path.Combine(
         Path.GetTempPath(), "tia-ui-settings-" + Guid.NewGuid().ToString("N"), "ui.settings");
 

@@ -14,6 +14,7 @@
 
 | 改动 | 发布前的真机验收 |
 |---|---|
+| XREF（2026-10-30）V21 原生交叉引用确认 | **pending / NOT RUN**。V14 SP1–V20 在 API 可用时默认允许是维护者决策，不是真机稳定性证明。V21 保持人工会话开关或环境变量 opt-in；首次查询前保存，编译无安全保证。待测试者在真实 V21 工程上记录补丁、查询/删除预览结果与 TIA 日志后再决定默认值。 |
 | 引擎监控/强制表与工艺对象共享原语（P4-I2，`TiaSharedAdapterPaths` 默认 `false`） | **NOT RUN**；V20/V21 使用测试工程副本比较两种变体，核对借用同一个 ProjectBase、原有 MTA 线程、调用顺序与参数、诊断关联 ID。覆盖根组/嵌套组、重名与精确路径、空表、反射回退、读属性失败；监控表覆盖 XML 导出→修改→Override 导入→新代理读回、None 导入、注释行创建/删除、整表删除及计数读回，强制表保持原有查找/创建和属性拒绝语义。工艺对象覆盖递归枚举、导出、目录导入、受支持的技术版本、创建后 Find、参数读取/写入、删除后验证、部分失败与工程切换；Foundation 八版分别核对根组/递归读取范围与不覆盖导出。比较消息、字段、结果顺序及失败后的工程状态，不自动重放写入。在线监视与 S7 读取须另行授权；离线编译、调用图和响应快照不代替真机验收，未验收不得发布。 |
 | 引擎硬件目录与设备创建共享原语（P4-I3，`TiaSharedAdapterPaths` 默认 `false`） | **NOT RUN**；发布前在 V20、V21 测试工程副本分别比较默认与共享路径的 CreateDevice、CreateHardwareDevice、SearchHardwareCatalog、SearchInstalledGsdDevices、CreateHardwareCatalogDevice、CreateGsdDevice。核对同一 ProjectBase、原有 MTA 线程、目录反射及类型化字段读取的顺序与参数、同文件同关联 ID 日志；覆盖无工程、空关键字、无目录候选、重复候选、评分排序、GSDML 回退、精确 TypeIdentifier、Unified 面板版本拒绝、MLFB×版本×名称尝试顺序、失败后继续及部分写入后的工程状态。Foundation V19–V21 保持所属 STA、目录 Find 和字段顺序、计划哈希及确认保护、完整设备清点、恰好一次 CreateWithItem、结果未知后禁止重放；核对不同宿主各自的响应和错误语义，回读创建对象并显式保存。记录引擎/适配器哈希与 TIA 补丁；离线调用图和快照不替代真机验收，验收前不得发布或默认开启。 |
 | 引擎 PLC 块与编译共享原语（P4-I4a，`TiaSharedAdapterPaths` 默认 `false`） | **NOT RUN**；八版[静态证据](../development/evidence/p4-i4a-native-evidence.json)通过，宿主限于迁移方法，V20/V21 两种引擎调用图与非域 IL 通过。V20、V21 使用同版测试工程副本比较两种变体：导出覆盖及不一致块跳过、空组删除与删后回读、类型组创建、组重命名/删除、块保护、验证导入及可选编译、移动块的文档/XML 回退与恢复文件保留、OB 拒绝。覆盖软件/设备编译器查找、Safety 登录不登出、编译消息读取失败；在线快照/指纹另需明确授权，核对 TLS/密码回调及分页。逐项记录原生调用顺序、参数、引擎 MTA 与 Foundation/Studio STA、既有工程和对象归属、异常文本及部分失败。八版 Foundation/Studio 核对块/类型遍历和批次导入导出的原有覆盖策略；缺少或失效句柄后不重放写入。离线响应相同与织入校验不代替真机回放。 |
@@ -423,7 +424,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 |---|---|
 | `ManageStartdriveParameter` 读取 `p2051[0]` | 用户报告 TIA 崩溃。现代码按官方 BICO 路线做单值读取，去掉无关元数据遍历；原生复测未运行，根因未确认。详见[限制与结果解释](../troubleshooting/openness-limitations.md)。 |
 | Unified 脚本模块库类型改名 | 2026-10-01，在项目库和独立全局库中的样本均出现 `NonRecoverableException` 并伴随测试 TIA 退出；没有已验证修复。[机器可读证据](../../manifest/history/unified-library-rename-native-20261001.json)。 |
-| PLC 原生交叉引用 | 有 V21 退出历史，默认关闭；编译成功不能保证查询稳定。离线引用分析仅覆盖输入导出。 |
+| PLC 原生交叉引用 | 有 V21 退出历史。2026-10-30 决定：V14 SP1–V20 在 API 可用时默认允许；V21 保留人工会话开关或环境变量 opt-in，真机确认 pending / NOT RUN。编译成功不能保证查询稳定。离线引用分析仅覆盖成功导出且可索引的输入。 |
 | HMI 深层快照 | 有 getter / 句柄失效记录；部分属性暂停读取。必须查看完整性字段，[诊断说明](../troubleshooting/hmi-snapshots.md)。 |
 
 ## 保留的历史记录

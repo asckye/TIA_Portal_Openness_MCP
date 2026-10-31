@@ -12,12 +12,15 @@ namespace TiaMcp.Adapters.Native.Plc
     /// CrossReferenceService for the old IDB's references - it answered "26 references" (the stale index) and TIA Portal
     /// V21 was gone before the next call. A second TIA exit on 2026-09-20 also followed a run of Openness writes.
     /// Uncompiled changes are a suspected trigger, not a complete explanation of every crash. Native PLC queries
-    /// are disabled by default. Explicitly enabling them still requires every block's consistency to be readable/true.
+    /// are allowed by default through V20 where the API exists; V21 requires session or process opt-in. Every query requires every block's consistency to be readable/true.
     /// Native exit evidence: docs/reference/real-machine-ledger.md.
     /// </summary>
     internal static class PlcCrossReferencePolicy
     {
         public const int ListLimit = 10;
+        internal static string ReleaseKey => typeof(PlcCrossReferencePolicy).Assembly
+            .GetCustomAttributes(typeof(System.Reflection.AssemblyMetadataAttribute), false)
+            .Cast<System.Reflection.AssemblyMetadataAttribute>().FirstOrDefault(a => a.Key == "TiaReleaseKey")?.Value ?? "21";
         public const string NativeQueryOptInVariable = "TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES";
 
         // Reflection must never bypass the dedicated target / consistency checks, even after opt-in.
@@ -28,20 +31,19 @@ namespace TiaMcp.Adapters.Native.Plc
             bool matches = suffix.Length > 0 && (type.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)
                 || suffix.IndexOf("CrossReference", StringComparison.OrdinalIgnoreCase) >= 0);
             return matches || string.Equals(method, "GetCrossReferences", StringComparison.OrdinalIgnoreCase)
-                ? "Native PLC cross references cannot be accessed through reflection. Use the guarded GetPlcCrossReferences tool; its default-disabled policy and consistency checks also apply after explicit opt-in."
+                ? "Native PLC cross references cannot be accessed through reflection. Use the guarded GetPlcCrossReferences tool; its release policy and consistency checks also apply after explicit opt-in."
                 : null;
         }
 
-        /// <summary>Only an explicit process setting enables this known-crashing native service.</summary>
-        public static string? PolicyRefusal(string? setting, bool unified = false)
-            => setting == "1" ? null
-                : "refused: native " + (unified ? "Unified" : "PLC") + " cross references are disabled because CrossReferenceService queries have terminated TIA Portal. "
+        /// <summary>V21 remains opt-in; API availability and consistency are separate preconditions.</summary>
+        public static string? PolicyRefusal(string? setting, bool unified = false, string release = "21", bool sessionAllowed = false)
+            => TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.DefaultAllowed(release) || setting == "1" || sessionAllowed ? null
+                : "refused: native " + (unified ? "Unified" : "PLC") + " cross references are disabled on V21 because CrossReferenceService queries have terminated TIA Portal. "
                 + "No native query was made; this does not mean there are no references. "
-                + (unified ? "No complete offline replacement for Unified references is established. " : "Use exported PLC documents for partial offline analysis. ")
-                + "For controlled diagnosis on a saved test project only, "
-                + "set " + NativeQueryOptInVariable + "=1 in the MCP server process before starting it. "
-                + "Compilation is not a guarantee against this crash."
-                + (unified ? " If TIA exits, inspect the project and MCP/TIA logs before explicitly recovering the session and rebinding; do not automatically retry." : "");
+                + (unified ? "No complete offline replacement for Unified references is established. " : "Use AnalyzePlcCrossReferences for partial offline analysis. ")
+                + "Save the project before the first query. Enable Allow native cross references (V21) in Workbench for this session, or set "
+                + NativeQueryOptInVariable + "=1 in the MCP server process before starting it. "
+                + "Compilation is not a guarantee against this crash. If TIA exits, inspect the project and MCP/TIA logs before explicitly recovering the session and rebinding; do not automatically retry.";
 
         /// <summary>Null when the query may run; otherwise the refusal text (the blocks that are not compiled).</summary>
         public static string? Refusal(IReadOnlyList<(string Path, bool? Consistent)> blocks, string softwarePath)
@@ -60,7 +62,7 @@ namespace TiaMcp.Adapters.Native.Plc
             string shown = string.Join(", ", stale.Take(ListLimit));
             if (stale.Count > ListLimit) shown += ", ... (+" + (stale.Count - ListLimit) + " more)";
             return "refused: " + stale.Count + " block(s) of '" + softwarePath + "' are not compiled (IsConsistent=false): " + shown
-                 + ". Uncompiled changes may leave cross-reference information outdated; on the maintainer's real project TIA Portal V21 exited "
+                 + ". No native query was made; this does not mean there are no references. Uncompiled changes may leave cross-reference information outdated; on the maintainer's real project TIA Portal V21 exited "
                  + "right after such a query (2026-09-21: five blocks re-imported with Override, then a query on the old instance DB). "
                  + "Run CompilePlcSoftware (errorCount=0) before considering a diagnostic query; compilation does not guarantee that the native service cannot crash.";
         }

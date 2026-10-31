@@ -326,6 +326,11 @@ internal sealed partial class FoundationTool : McpServerTool
             }
             cancellationToken.ThrowIfCancellationRequested();
             dispatched = true;
+            if (definition.ResponseMember == "CrossReferenceAnalysis")
+            {
+                var report = await PlcCrossReferenceAnalysis.Run(worker, values, cancellationToken).ConfigureAwait(false);
+                return FoundationV4Result.DeviceCandidate(PlcCrossReferenceAnalysis.Result(release, id ?? Guid.NewGuid().ToString("N"), report));
+            }
             var result=await worker.Call(definition.Operation,values,cancellationToken);
             raw = result?.DeepClone();
             if(definition.ResponseMember is "Connection" or "Projects" or "Bind" or "ProjectMutation" or "ProjectTree") result=V17ProjectEnvelope.Wrap(definition.Name,definition.ResponseMember,result,values["dryRun"]?.GetValue<bool>() ?? false);

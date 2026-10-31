@@ -61,7 +61,7 @@ namespace TiaMcp.Adapters.Contracts
             bool matches = suffix.Length > 0 && (type.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)
                 || suffix.IndexOf("CrossReference", StringComparison.OrdinalIgnoreCase) >= 0);
             return matches || string.Equals(method, "GetCrossReferences", StringComparison.OrdinalIgnoreCase)
-                ? "Native PLC cross references cannot be accessed through reflection. Use the guarded GetPlcCrossReferences tool; its default-disabled policy and consistency checks also apply after explicit opt-in."
+                ? "Native PLC cross references cannot be accessed through reflection. Use the guarded GetPlcCrossReferences tool; its release policy and consistency checks also apply after explicit opt-in."
                 : null;
         }
     }

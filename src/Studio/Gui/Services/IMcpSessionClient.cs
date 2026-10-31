@@ -26,3 +26,9 @@ public interface IMcpSessionClient : IAsyncDisposable
     public void CancelPending();
     public Task<JsonObject> CallAsync(string tool, IReadOnlyDictionary<string, object?> arguments, CancellationToken token = default);
 }
+
+// Human Settings only; this is not part of MCP or the Workbench-control surface.
+internal interface IHumanCrossReferenceSettings
+{
+    public Task SetNativeCrossReferencesAsync(bool enabled, CancellationToken token = default);
+}

@@ -18,6 +18,12 @@
 | P8-21 会话 | 默认附着到已有的 AI 会话（共享该会话的 worker）；没有 AI 会话时，工作台在自己启动的宿主里建“工作台自有会话”。第一期不允许 AI 加入工作台自有会话；V14 SP1–V19 补上与 V20/V21 相同的 TIA 进程租约，八版都拒绝两个 worker 附着同一 TIA |
 | 删除 | P8-21 完成后删除 `TiaOpenness.Bridge`、`TiaOpenness.Client`、Core 的 RPC/适配/会话抽象/Mock、`src/Studio/Openness/**` 八个适配器工程与 `src/Adapters/Native/Studio` 中的 Studio 会话实现；VCI 实现按 F33 迁入 Foundation 适配器而非删除 |
 
+### XREF：V21 原生交叉引用的人工会话设置（2026-10-30）
+
+此开关走已验证工作台映像、SID 与内核对端 PID 的 **operator** 握手 `native-cross-references`，只修改指定的现有会话；它不是 MCP 工具、操作端 MCP 方法或 Workbench-control 操作，也不经过审批。其他握手动作不能携带该字段，所选会话与 operator-owned 归属检查仍在写入之前执行。Workbench-control 的封闭操作/页面/预填表单没有新增设置入口。
+
+宿主持有每会话随机 HMAC 密钥与设置文件写句柄（拒绝其他写入和删除），只向该会话的 worker 子进程传递密钥；GUI、MCP 响应和注册快照不含密钥。worker 在原有查询线程读取并校验已签名记录及工作台 PID/启动时间。直接文件工具和普通项目脚本不能伪造另一会话的许可；关闭工作台、关闭会话、签名无效或读取失败均拒绝。设置不写入 `UiSettings` 偏好。环境变量 `TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1` 仍是独立的启动时替代方式。
+
 ## 1 P8-21 之前的背景
 
 ### 1.1 审批管道

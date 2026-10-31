@@ -18,6 +18,7 @@ internal interface IHostSession : IDisposable
     public event Action? StateChanged;
     public void BindAi(IMcpServer server);
     public IDisposable AttachOperator();
+    public void SetNativeCrossReferences(bool enabled, int workbenchPid) => throw new NotSupportedException("Human session settings unavailable.");
 }
 
 internal sealed class HostSession : IHostSession
@@ -41,6 +42,10 @@ internal sealed class HostSession : IHostSession
     private Action<string>? registerAi;
     private readonly CancellationToken closedToken;
     public string SessionKey { get; } = Guid.NewGuid().ToString("N");
+    private FileStream? nativeConsent;
+    private readonly string? nativeConsentDirectory;
+    internal string NativeCrossReferenceSessionSecret { get; } = TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.CreateSecret();
+    internal string NativeCrossReferenceSessionFile => Path.Combine(nativeConsentDirectory ?? ApprovalSettings.SettingsPath + ".sessions", "native-cross-references-" + SessionKey + ".settings");
     public string Instructions { get; }
     public bool OperatorOwned { get; }
     public CancellationToken Closed => closedToken;
@@ -49,8 +54,9 @@ internal sealed class HostSession : IHostSession
     public event Action? StateChanged;
 
     internal HostSession(string release, string instructions, bool operatorOwned, IReadOnlyList<McpServerTool> tools,
-        IReadOnlyList<McpServerTool> operatorTools, Func<JsonObject> workerState, Action dispose)
+        IReadOnlyList<McpServerTool> operatorTools, Func<JsonObject> workerState, Action dispose, string? nativeConsentDirectory = null)
     {
+        this.nativeConsentDirectory = nativeConsentDirectory;
         this.release = release; Instructions = instructions; OperatorOwned = operatorOwned;
         closedToken = closed.Token;
         this.workerState = workerState; this.dispose = dispose;
@@ -95,6 +101,21 @@ internal sealed class HostSession : IHostSession
             owner.Changed();
         }
     }
+    // Called only after the operator pipe has verified the Workbench image and peer PID.
+    public void SetNativeCrossReferences(bool enabled, int workbenchPid)
+    {
+        using var workbench = Process.GetProcessById(workbenchPid);
+        lock (sync)
+        {
+            if (disposed) throw new InvalidOperationException("The host session has ended.");
+            Directory.CreateDirectory(Path.GetDirectoryName(NativeCrossReferenceSessionFile)!);
+            nativeConsent ??= new FileStream(NativeCrossReferenceSessionFile, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
+            var bytes = System.Text.Encoding.UTF8.GetBytes(TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Record(
+                NativeCrossReferenceSessionSecret, enabled, workbenchPid, workbench.StartTime.ToUniversalTime().Ticks));
+            nativeConsent.Position = 0; nativeConsent.SetLength(0); nativeConsent.Write(bytes, 0, bytes.Length); nativeConsent.Flush(true);
+        }
+        Changed();
+    }
     public JsonObject Snapshot()
     {
         lock (sync)
@@ -109,6 +130,7 @@ internal sealed class HostSession : IHostSession
                 ["worker"] = new JsonObject { ["pid"] = worker["pid"]?.DeepClone(), ["generation"] = worker["generation"]?.DeepClone(),
                     ["state"] = disconnected ? "disconnected" : locked ? "poisoned" : lane != null ? "busy" : "idle" },
                 ["lane"] = lane?.DeepClone(), ["binding"] = worker["binding"]?.DeepClone(), ["sessionLocked"] = locked,
+                ["nativeCrossReferencesAllowed"] = !disposed && TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Read(NativeCrossReferenceSessionFile, NativeCrossReferenceSessionSecret),
                 ["approvalEnabled"] = ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled,
                 ["recentCalls"] = new JsonArray(calls.Select(c => (JsonNode)c.DeepClone()).ToArray()) };
         }
@@ -154,6 +176,7 @@ internal sealed class HostSession : IHostSession
         lock (sync) if (disposed) throw new InvalidOperationException("The host session has ended; initialize a new session.");
         if (!workbench) BindAi(request.Server);
         string id = Guid.NewGuid().ToString("N"), actor = workbench ? ActorScope.Workbench : ActorScope.Mcp;
+        using var crossReferenceSession = TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.EnterSession(NativeCrossReferenceSessionFile, NativeCrossReferenceSessionSecret);
         using var attribution = workbench ? ActorScope.EnterWorkbench(mcpSessionId ?? SessionKey, id) : ActorScope.EnterCall(mcpSessionId ?? SessionKey, request.Server);
         using var observation = HostSessionCall.Enter(LaneChanged, Ended, inner.ProtocolTool.Name, actor, id);
         var elapsed = Stopwatch.StartNew();
@@ -181,6 +204,10 @@ internal sealed class HostSession : IHostSession
         Changed(); closed.Cancel();
         if (aiNotifications != null) aiNotifications.DisposeAsync().AsTask().GetAwaiter().GetResult();
         stagingRegistration?.Dispose(); dispose();
+        nativeConsent?.Dispose(); nativeConsent = null;
+        try { File.Delete(NativeCrossReferenceSessionFile); }
+        catch (IOException error) { OperatorEndpoint.Report(error); }
+        catch (UnauthorizedAccessException error) { OperatorEndpoint.Report(error); }
         closed.Dispose();
     }
     private sealed class ObservedTool(McpServerTool inner, HostSession session) : McpServerTool

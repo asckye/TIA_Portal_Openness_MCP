@@ -25,7 +25,7 @@ public partial class MainWindow
         Approvals = approvals ?? (_model.OfflineDemo ? new ApprovalServiceStub() : new Services.ApprovalService());
         _diagnostics = diagnostics ?? new Services.DiagnosticBundleService();
         InitializeFeaturePages();
-        SettingsContent.Initialize(Approvals);
+        SettingsContent.Initialize(Approvals, _model.Panel);
         SettingsContent.DisableApprovalRequested += OnDisableApprovalRequested;
         EngineeringSideContent.EnvironmentRequested += OnEnvironmentRequested;
         EngineeringSideContent.InspectionRulesRequested += OnInspectionRulesRequested;

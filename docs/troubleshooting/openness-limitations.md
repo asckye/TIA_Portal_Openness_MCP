@@ -14,12 +14,14 @@ V20/V21 MCP host 在 TIA 未安装、检测到的 TIA 版本不匹配、Openness
 |---|---|
 | `ManageStartdriveParameter` 读取 BICO `p2051[0]` 时 TIA 崩溃 | 已按官方 `Parameters.Find(name).Value` 路线改为精确单值读取，仅在找不到条目时检查只读视图；不展开位、限值、枚举或继续读取源参数值。离线回归通过，原生复测 **NOT RUN**，根因未确认。返回另一个 `DriveParameter` 表示连接来源，普通值按标量解释，`null` 保留未知，不能当作零、实时值或未连接证明。 |
 | Unified 脚本模块库类型 `Name` 修改 | 指定样本在项目库和独立全局库两次测试中均伴随 TIA 退出，没有已验证修复；“先在全局库改名再同步”也失败。[原生证据](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/manifest/history/unified-library-rename-native-20261001.json)。 |
-| PLC 与 Unified 原生交叉引用 | PLC 在 V21 有真实退出记录；Unified 使用同一原生服务，因此两条路径都默认禁用。工具返回未查询不等于零引用。编译通过也不能证明查询稳定。通用反射入口不能绕过相同策略。 |
+| PLC 与 Unified 原生交叉引用 | PLC 在 V21 有真实退出记录。2026-10-30 维护者决定：V14 SP1–V20 在 API 可用时默认允许；V21 的 PLC 与 Unified 查询仍需人工会话开关或进程变量。工具返回未查询不等于零引用。编译通过也不能证明查询稳定。通用反射入口不能绕过相同策略。 |
 | HMI 深层属性读取 | 故障或限制下可能仅返回部分快照；`HmiSystemDiagnosisControl.ScriptDiagnosisOverviewText` 暂缓读取。[快照诊断](hmi-snapshots.md)说明完整性、会话阻断与日志。 |
 
 这些项目仍使用统一调用示例库，不再各自建立规范入口。官方示例：[V20 BICO](https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters)、[V21 BICO](https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters)。示例的正确参数不能消除尚未确定的原生故障。
 
-PLC 与 `GetUnifiedCrossReferences` 共用服务进程环境变量 `TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1` 作为显式诊断开关；虽然名称保留 PLC，两条路径都只有值为 `1` 时才允许原生查询。默认返回 `PRECONDITION_FAILED`，Unified 在解析原生对象和获取服务之前拒绝，不产生原生调用。仅在已保存的测试工程上进行受控诊断时，在启动 MCP 服务进程前设置；不要自动启用。PLC 启用后仍检查相关块/类型一致性。此开关不是日常使用必需步骤，也不是稳定性修复；原生查询可能导致 TIA Portal 退出，编译不能保证安全。查询失败或进程退出后先检查工程与 MCP/TIA 日志，再按[恢复步骤](../guides/openness-worker-isolation.md)显式恢复会话并重新绑定，不要自动重试。离线 `AnalyzePlcReferences` 只覆盖提供的 PLC 导出文件，不能据此证明整个工程没有引用，也不能替代 Unified 原生交叉引用。
+V14 SP1–V20 的原生交叉引用策略默认允许，工具仍按官方 API 注册：PLC `GetPlcCrossReferences` 从 V18 起、Unified 从 V19 起可用。删除工具仍须显式 `crossReferences=true`，默认 `false` 表示未查询。V21 的 PLC、Unified 和删除时引用检查要求工作台设置中的 **Allow native cross references (V21) / 允许原生交叉引用（V21）** 人工开关，或启动服务前设置 `TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1`，任一即可。人工开关仅作用于所选 MCP 会话，在工作台关闭或会话结束后失效；不保存为下次启动偏好，MCP 工具、工作台控制操作和审批均不能修改。人工设置经验证工作台映像与对端 PID 的 operator 通道发送，宿主持有签名密钥和拒绝其他写入/删除的会话文件句柄；worker 仅接受该会话的有效签名与仍存活的工作台身份。该通道不是 MCP 或 Workbench-control 操作。宿主与执行查询的 worker 使用同一会话设置。首次查询前请保存工程；编译通过仍不能保证安全。PLC 的全部块/类型一致性必须可读且为 true；反射入口、列表上限和退出后不自动重试的保护不变。V21 真机确认 **pending / NOT RUN**。
+
+`AnalyzePlcCrossReferences` 在八版复用现有普通 PLC XML 批量导出和 `AnalyzePlcReferences` 离线引擎，一次调用覆盖整个普通软件或指定块组（最多 256 块），文件保留在会话输出目录。结果明确给出软件、导出块数、未导出范围、失败/未尝试项目和索引失败；每块列出显式调用者、被调用者和全局符号位置。软件单元、系统块、SCL 文本体、间接调用、HMI 与外部客户端不在覆盖范围内。它不调用原生 CrossReferenceService，也不编译或保存；空结果、未查询或部分结果都不是“没有引用”或可安全删除的证据。原生失败或退出后先检查工程与 MCP/TIA 日志，再按[恢复步骤](../guides/openness-worker-isolation.md)显式恢复会话并重新绑定，不要自动重试。
 
 ## 工程数据与在线数据
 

@@ -17,6 +17,7 @@ namespace TiaOpenness.Shared
         [JsonRequired] public int Version { get; set; } = 1;
         [JsonRequired] public string Action { get; set; } = "";
         public string? SessionKey { get; set; }
+        public bool? NativeCrossReferencesAllowed { get; set; }
         [JsonRequired] public OperatorWorkbench Workbench { get; set; } = null!;
     }
     [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
@@ -52,10 +53,12 @@ namespace TiaOpenness.Shared
                 || request.Workbench == null || request.Workbench.Pid <= 0
                 || string.IsNullOrWhiteSpace(request.Workbench.Version) || request.Workbench.Version.Length > 128)
                 throw new InvalidDataException("Invalid operator handshake.");
-            if (request.Action != "list" && request.Action != "attach" && request.Action != "create")
+            if (request.Action != "list" && request.Action != "attach" && request.Action != "create" && request.Action != "native-cross-references")
                 throw new InvalidDataException("Unknown operator action.");
-            if (request.Action == "attach" ? !Guid.TryParseExact(request.SessionKey, "N", out _) : request.SessionKey != null)
+            if (request.Action is "attach" or "native-cross-references" ? !Guid.TryParseExact(request.SessionKey, "N", out _) : request.SessionKey != null)
                 throw new InvalidDataException("Invalid operator session key.");
+            if ((request.Action == "native-cross-references") != request.NativeCrossReferencesAllowed.HasValue)
+                throw new InvalidDataException("Native consent belongs only to the authenticated human settings request.");
         }
         internal static async Task Write<T>(Stream stream, T frame, CancellationToken token)
         {

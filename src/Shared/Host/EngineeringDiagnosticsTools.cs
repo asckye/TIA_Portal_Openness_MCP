@@ -50,7 +50,7 @@ namespace TiaMcpServer.ModelContextProtocol
             // envelope: legacy-multiple-dynamic-fields
             return new ResponseMessage { Message = "Local API metadata read. Actual installed patch and device option support need installation/project evidence.", Meta = new JsonObject {
                 ["success"] = true, ["engineMajor"] = TiaMcp.Versioning.TiaVersionCatalog.Get(McpServer.ReleaseKey).MajorVersion, ["installedPatch"] = null, ["assemblies"] = assemblies,
-                ["nativeCrossReferencesEnabled"] = CrossReferenceGuardLogic.PolicyRefusal(Environment.GetEnvironmentVariable(CrossReferenceGuardLogic.NativeQueryOptInVariable)) == null,
+                ["nativeCrossReferencesEnabled"] = CrossReferenceGuardLogic.PolicyRefusal(Environment.GetEnvironmentVariable(CrossReferenceGuardLogic.NativeQueryOptInVariable), release: HardwareContract.ReleaseKey, sessionAllowed: TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Enabled) == null,
                 ["reflectionCrossReferencesAllowed"] = false, ["v20OptionWrappersCompiled"] = TiaMcp.Versioning.TiaVersionCatalog.Get(McpServer.ReleaseKey).MajorVersion == 20,
                 ["faceplateTypeInternalAuthoring"] = "No verified public API in the supplied V20/V21 SDK for creating a type from zero or editing its internal controls/scripts.",
                 ["knownIssues"] = new JsonArray(

@@ -13,8 +13,40 @@ namespace TiaOpenness.Shared
         internal bool Enabled { get; }
         internal int TimeoutSeconds { get; }
         internal static string SettingsPath => Path.Combine(DataLocations.Current.ConfigDirectory, "approval.settings");
+        internal static bool IsNativeCrossReferenceTarget(string path)
+        {
+            path = path.Trim();
+            string normalized = path.Replace('\\', '/');
+            string name = normalized.Substring(normalized.LastIndexOf('/') + 1);
+            if (name.Length >= 2 && name[1] == ':') name = name.Substring(2);
+            int stream = name.IndexOf(':'); if (stream >= 0) name = name.Substring(0, stream);
+            name = name.TrimEnd(' ', '.');
+            if (System.Text.RegularExpressions.Regex.IsMatch(name, @"^native-cross-references-[a-f0-9]{32}\.settings$",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant)
+                || System.Text.RegularExpressions.Regex.IsMatch(name, @"^NATIVE~[0-9]+\.SET$",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant)
+                || normalized.IndexOf("approval.settings.sessions", StringComparison.OrdinalIgnoreCase) >= 0) return true;
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT && Directory.Exists(SettingsPath + ".sessions"))
+            {
+                foreach (var consent in Directory.EnumerateFiles(SettingsPath + ".sessions", "native-cross-references-*.settings"))
+                {
+                    using (var expectedConsent = OpenIdentity(consent, 0, 7, IntPtr.Zero, 3, 0, IntPtr.Zero))
+                    using (var targetConsent = OpenIdentity(path, 0, 7, IntPtr.Zero, 3, 0, IntPtr.Zero))
+                    {
+                        if (expectedConsent.IsInvalid)
+                        { if (!MissingIdentity(Marshal.GetLastWin32Error())) return true; continue; }
+                        if (targetConsent.IsInvalid)
+                        { if (!MissingIdentity(Marshal.GetLastWin32Error())) return true; continue; }
+                        if (!ReadIdentity(expectedConsent, out var a) || !ReadIdentity(targetConsent, out var b)) return true;
+                        if (a.Volume == b.Volume && a.IndexHigh == b.IndexHigh && a.IndexLow == b.IndexLow) return true;
+                    }
+                }
+            }
+            return false;
+        }
         internal static bool IsAdministrativeTarget(string path)
         {
+            if (IsNativeCrossReferenceTarget(path)) return true;
             path = path.Trim();
             string normalized = path.Replace('\\', '/');
             string name = normalized.Substring(normalized.LastIndexOf('/') + 1);

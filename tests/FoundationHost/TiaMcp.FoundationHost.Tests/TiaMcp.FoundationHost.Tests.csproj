@@ -53,6 +53,7 @@
     <Compile Include="../../../src/Adapters/Native/Plc/PlcBatchImportPolicy.cs" Link="PlcBatchImportPolicy.cs" />
     <Compile Include="../../../src/FoundationHost/BatchImportContract.cs" Link="BatchImportContract.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcBatchExportPolicy.cs" Link="PlcBatchExportPolicy.cs" />
+    <Compile Include="../../../src/FoundationHost/PlcCrossReferenceAnalysis.cs" Link="PlcCrossReferenceAnalysis.cs" />
     <Compile Include="../../../src/FoundationHost/BatchExportContract.cs" Link="BatchExportContract.cs" />
     <Compile Include="../../../src/FoundationHost/OfflineBlockCompositionBuilders.cs" Link="OfflineBlockCompositionBuilders.cs" />
     <Compile Include="../../../src/FoundationHost/OfflineBlockCompositionTools.cs" Link="OfflineBlockCompositionTools.cs" />

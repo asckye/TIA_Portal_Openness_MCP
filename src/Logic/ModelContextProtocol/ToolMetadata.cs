@@ -66,6 +66,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["ManageGenerationArtifacts"] = new Classification("L1", "Project", "FILE", false, false, false),
             ["AnalyzeGlobalLibraryPackage"] = new Classification("L2", "HMI-Library", "OFFLINE", false, false, false, true, false, true, false),
             ["AnalyzeHmiTemplateReference"] = new Classification("L2", "HMI-Library", "OFFLINE", false, false, false, true, false, true, false),
+            ["AnalyzePlcCrossReferences"] = new Classification("L2", "PLC-Software", "READ", false, false, false),
             ["AnalyzePlcReferences"] = new Classification("L2", "Validation", "OFFLINE", false, false, false),
             ["AnalyzePlcSclSource"] = new Classification("L2", "Validation", "OFFLINE", false, false, false),
             ["AnalyzeUnifiedHmiTemplateLayout"] = new Classification("L2", "HMI-Library", "OFFLINE", false, false, false, true, false, true, false),

@@ -15,17 +15,30 @@ namespace TiaMcpServer.ModelContextProtocol
             public List<(string Name, int Network)> Calls = new List<(string, int)>();
             public List<(string Name, int Network, string Scope)> Symbols = new List<(string, int, string)>();
         }
-        public static JsonObject Analyze(string directory, string action, string target, int maxDepth, int offset, int limit)
+        public static JsonObject Analyze(string directory, string action, string target, int maxDepth, int offset, int limit, IReadOnlyList<string>? exportedFiles = null)
         {
             if (!Path.IsPathRooted(directory) || !Directory.Exists(directory)) throw new ArgumentException("Existing absolute export directory required.");
-            if (!new[] { "summary", "callers", "callees", "callPaths", "unreachable", "references" }.Contains(action)) throw new ArgumentException("Unknown reference action.");
+            if (!new[] { "summary", "callers", "callees", "callPaths", "unreachable", "references", "blocks" }.Contains(action)) throw new ArgumentException("Unknown reference action.");
             OfflineAnalysisLogic.ValidatePage(offset, limit);
             if (maxDepth < 1 || maxDepth > 50) throw new ArgumentException("maxDepth must be 1..50.");
             directory = Path.GetFullPath(directory);
             var prefix = directory.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
             var files = new List<string>(); var pending = new Stack<string>(); pending.Push(directory); int visitedFolders = 0;
             // No symlink recursion and no unbounded materialization before checking limits.
-            while (pending.Count > 0)
+            if (exportedFiles != null)
+            {
+                if (exportedFiles.Count > 2000) throw new ArgumentException("Maximum 2000 export documents.");
+                foreach (var source in exportedFiles)
+                {
+                    var file = Path.GetFullPath(source);
+                    if (!file.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) || Path.GetDirectoryName(file) != directory)
+                        throw new ArgumentException("Only published files directly under the export scope are accepted.");
+                    if ((File.GetAttributes(file) & FileAttributes.ReparsePoint) != 0) throw new ArgumentException("Reparse files refused.");
+                    files.Add(file);
+                }
+                if (files.Distinct(StringComparer.OrdinalIgnoreCase).Count() != files.Count) throw new ArgumentException("Duplicate export files.");
+            }
+            else while (pending.Count > 0)
             {
                 var folder = pending.Pop();
                 if (++visitedFolders > 4000) throw new ArgumentException("Directory traversal limit exceeded.");
@@ -93,7 +106,22 @@ namespace TiaMcpServer.ModelContextProtocol
                 throw new ArgumentException("Target is absent or ambiguous; use the exact file identifier from summary.");
             }
             var rows = new JsonArray(); var truncated = false; var cycles = 0;
-            if (action == "summary")
+            if (action == "blocks")
+            {
+                foreach (var e in entries)
+                {
+                    var callers = edges.Where(edge => edge.To == e.Id).ToArray();
+                    var callees = edges.Where(edge => edge.From == e.Id).ToArray();
+                    bool limited = callers.Length > 2000 || callees.Length > 2000 || e.Symbols.Count > 2000;
+                    truncated |= limited;
+                    rows.Add(new JsonObject { ["id"] = e.Id, ["name"] = e.Name, ["kind"] = e.Kind,
+                        ["callers"] = new JsonArray(callers.Take(2000).Select(edge => (JsonNode)new JsonObject { ["caller"] = edge.From, ["networkIndex"] = edge.Network }).ToArray()),
+                        ["callees"] = new JsonArray(callees.Take(2000).Select(edge => (JsonNode)new JsonObject { ["callee"] = edge.To, ["networkIndex"] = edge.Network }).ToArray()),
+                        ["referenceSites"] = new JsonArray(e.Symbols.Take(2000).Select(site => (JsonNode)new JsonObject { ["symbol"] = site.Name, ["networkIndex"] = site.Network, ["scope"] = site.Scope, ["accessKind"] = "Unknown" }).ToArray()),
+                        ["truncated"] = limited });
+                }
+            }
+            else if (action == "summary")
                 foreach (var e in entries) rows.Add(new JsonObject { ["id"] = e.Id, ["name"] = e.Name, ["kind"] = e.Kind, ["explicitCalls"] = e.Calls.Count, ["globalSymbolAccesses"] = e.Symbols.Count });
             else if (action == "references")
             {

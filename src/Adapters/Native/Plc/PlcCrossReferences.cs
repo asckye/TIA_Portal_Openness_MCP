@@ -19,7 +19,7 @@ namespace TiaMcp.Adapters.Native.Plc
             out string? reason, out bool queried, string unitName, string unitKind)
         {
             queried = false;
-            reason = PlcCrossReferencePolicy.PolicyRefusal(Environment.GetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable));
+            reason = PlcCrossReferencePolicy.PolicyRefusal(Environment.GetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable), release: PlcCrossReferencePolicy.ReleaseKey, sessionAllowed: TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Enabled);
             if (reason != null) return null;
             if (string.IsNullOrWhiteSpace(filter)) filter = "AllObjects";
             if (!Enum.TryParse<global::Siemens.Engineering.CrossReference.CrossReferenceFilter>(filter, true, out var filterValue)
@@ -43,7 +43,7 @@ namespace TiaMcp.Adapters.Native.Plc
 
         public string? CrossReferenceRefusal(string softwarePath)
         {
-            var policy = PlcCrossReferencePolicy.PolicyRefusal(Environment.GetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable));
+            var policy = PlcCrossReferencePolicy.PolicyRefusal(Environment.GetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable), release: PlcCrossReferencePolicy.ReleaseKey, sessionAllowed: TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Enabled);
             if (policy != null) return policy;
             try
             {
