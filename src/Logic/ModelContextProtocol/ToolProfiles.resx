@@ -24089,6 +24089,22 @@
         "envelopeVersion": 4
       },
       {
+        "name": "AnalyzePlcCrossReferences",
+        "currentName": "AnalyzePlcCrossReferences",
+        "sourceName": "AnalyzePlcCrossReferences",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "devices/PLC_1/PLC_1",
+          "groupPath": "",
+          "recursive": true,
+          "maxBlocks": 128
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AnalyzePlcReferences",
         "currentName": "AnalyzePlcReferences",
         "sourceName": "AnalyzePlcReferences",
@@ -32897,6 +32913,22 @@
           "templateDirectory": "C:\\Examples\\templates",
           "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
           "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzePlcCrossReferences",
+        "currentName": "AnalyzePlcCrossReferences",
+        "sourceName": "AnalyzePlcCrossReferences",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "devices/PLC_1/PLC_1",
+          "groupPath": "",
+          "recursive": true,
+          "maxBlocks": 128
         },
         "envelopeVersion": 4
       },
@@ -42054,6 +42086,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "AnalyzePlcCrossReferences",
+        "currentName": "AnalyzePlcCrossReferences",
+        "sourceName": "AnalyzePlcCrossReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "devices/PLC_1/PLC_1",
+          "groupPath": "",
+          "recursive": true,
+          "maxBlocks": 128
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AnalyzePlcReferences",
         "currentName": "AnalyzePlcReferences",
         "sourceName": "AnalyzePlcReferences",
@@ -47086,6 +47133,21 @@
           "templateDirectory": "C:\\Examples\\templates",
           "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
           "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzePlcCrossReferences",
+        "currentName": "AnalyzePlcCrossReferences",
+        "sourceName": "AnalyzePlcCrossReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "devices/PLC_1/PLC_1",
+          "groupPath": "",
+          "recursive": true,
+          "maxBlocks": 128
         },
         "envelopeVersion": 4
       },
@@ -52717,6 +52779,21 @@
           "templateDirectory": "C:\\Examples\\templates",
           "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
           "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzePlcCrossReferences",
+        "currentName": "AnalyzePlcCrossReferences",
+        "sourceName": "AnalyzePlcCrossReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "devices/PLC_1/PLC_1",
+          "groupPath": "",
+          "recursive": true,
+          "maxBlocks": 128
         },
         "envelopeVersion": 4
       },
@@ -58798,6 +58875,21 @@
           "templateDirectory": "C:\\Examples\\templates",
           "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
           "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzePlcCrossReferences",
+        "currentName": "AnalyzePlcCrossReferences",
+        "sourceName": "AnalyzePlcCrossReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "devices/PLC_1/PLC_1",
+          "groupPath": "",
+          "recursive": true,
+          "maxBlocks": 128
         },
         "envelopeVersion": 4
       },
@@ -65248,6 +65340,21 @@
           "templateDirectory": "C:\\Examples\\templates",
           "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
           "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzePlcCrossReferences",
+        "currentName": "AnalyzePlcCrossReferences",
+        "sourceName": "AnalyzePlcCrossReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "devices/PLC_1/PLC_1",
+          "groupPath": "",
+          "recursive": true,
+          "maxBlocks": 128
         },
         "envelopeVersion": 4
       },
@@ -72092,6 +72199,21 @@
           "templateDirectory": "C:\\Examples\\templates",
           "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
           "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzePlcCrossReferences",
+        "currentName": "AnalyzePlcCrossReferences",
+        "sourceName": "AnalyzePlcCrossReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "devices/PLC_1/PLC_1",
+          "groupPath": "",
+          "recursive": true,
+          "maxBlocks": 128
         },
         "envelopeVersion": 4
       },

@@ -2722,6 +2722,13 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "AnalyzePlcCrossReferences": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "AnalyzePlcReferences": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
@@ -34912,7 +34919,7 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Native queries are allowed by default through V20 where the API exists. V21 requires the human Workbench Allow native cross references (V21) switch for the selected session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save before the first query: V21 TIA exits recorded; compilation is no guarantee. PLC false/unknown consistency and reflection refusals remain. Not queried / partial never means zero references. No automatic retry after a TIA exit."
         },
         "DeletePlcTagTable": {
           "arguments": {
@@ -34927,7 +34934,7 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Native queries are allowed by default through V20 where the API exists. V21 requires the human Workbench Allow native cross references (V21) switch for the selected session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save before the first query: V21 TIA exits recorded; compilation is no guarantee. PLC false/unknown consistency and reflection refusals remain. Not queried / partial never means zero references. No automatic retry after a TIA exit."
         },
         "DeletePlcType": {
           "arguments": {
@@ -34942,7 +34949,7 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Native queries are allowed by default through V20 where the API exists. V21 requires the human Workbench Allow native cross references (V21) switch for the selected session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save before the first query: V21 TIA exits recorded; compilation is no guarantee. PLC false/unknown consistency and reflection refusals remain. Not queried / partial never means zero references. No automatic retry after a TIA exit."
         },
         "ManagePlcBlockProtection": {
           "arguments": {
@@ -35482,7 +35489,8 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "inline": true
+          "inline": true,
+          "note": "Native queries are allowed by default through V20 where the API exists. V21 requires the human Workbench Allow native cross references (V21) switch for the selected session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save before the first query: V21 TIA exits recorded; compilation is no guarantee. PLC false/unknown consistency and reflection refusals remain. Not queried / partial never means zero references. No automatic retry after a TIA exit."
         },
         "CompileDevice": {
           "arguments": {
@@ -44571,7 +44579,7 @@
           "notes": [
             "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
           ],
-          "note": "Resolve exact target names from this session. Native Unified cross references are disabled by default (PRECONDITION_FAILED, not queried). Controlled diagnosis on a saved test project requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 in the server process before startup, shared with PLC queries. Compilation does not guarantee crash safety. After a TIA exit, inspect the project and MCP/TIA logs before explicitly recovering the session and rebinding; do not enable automatically or retry."
+          "note": "Native queries are allowed by default through V20 where the API exists. V21 requires the human Workbench Allow native cross references (V21) switch for the selected session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save before the first query: V21 TIA exits recorded; compilation is no guarantee. PLC false/unknown consistency and reflection refusals remain. Not queried / partial never means zero references. No automatic retry after a TIA exit."
         },
         "ManageUnifiedLoggingTag": {
           "arguments": {
@@ -45888,6 +45896,19 @@
           },
           "operations": {},
           "validation": "Project-wide multilingual graphics: project.Graphics on V14 SP1-V20, project.GetService<GraphicsProvider>().Graphics on V21. softwarePath is retained for compatibility and does not select a graphics owner. Native acceptance NOT RUN."
+        },
+        "AnalyzePlcCrossReferences": {
+          "arguments": {
+            "softwarePath": "devices/PLC_1/PLC_1",
+            "groupPath": "",
+            "recursive": true,
+            "maxBlocks": 128
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema and sandbox fixture checked; native export NOT RUN. Available on all eight releases via ordinary XML block export.",
+          "inline": true,
+          "note": "READ. Exports into a fresh session output directory using the existing bounded XML export, then runs AnalyzePlcReferences without native CrossReferenceService. Use the exact software path from GetProjectTree. Narrow groupPath if maxBlocks is exceeded (1..256). Inspect exportedBlocks, exports item Status, analysis.failures, unresolvedCalls, truncated and scope. Callers, callees and global reference sites cover indexed exported blocks only; SCL bodies, software units, system blocks and omitted exports are excluded. Empty / not queried / partial is never proof of no references or safe deletion."
         }
       },
       "full-engine": {
@@ -47401,7 +47422,7 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Native queries are allowed by default through V20 where the API exists. V21 requires the human Workbench Allow native cross references (V21) switch for the selected session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save before the first query: V21 TIA exits recorded; compilation is no guarantee. PLC false/unknown consistency and reflection refusals remain. Not queried / partial never means zero references. No automatic retry after a TIA exit."
         },
         "DeletePlcExternalSource": {
           "arguments": {
@@ -47481,7 +47502,7 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Native queries are allowed by default through V20 where the API exists. V21 requires the human Workbench Allow native cross references (V21) switch for the selected session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save before the first query: V21 TIA exits recorded; compilation is no guarantee. PLC false/unknown consistency and reflection refusals remain. Not queried / partial never means zero references. No automatic retry after a TIA exit."
         },
         "DeletePlcType": {
           "arguments": {
@@ -47496,7 +47517,7 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Native queries are allowed by default through V20 where the API exists. V21 requires the human Workbench Allow native cross references (V21) switch for the selected session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save before the first query: V21 TIA exits recorded; compilation is no guarantee. PLC false/unknown consistency and reflection refusals remain. Not queried / partial never means zero references. No automatic retry after a TIA exit."
         },
         "DeleteUnifiedHmiButtonEvent": {
           "arguments": {
@@ -49996,7 +50017,7 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "Resolve exact target names from this session. Native Unified cross references are disabled by default (PRECONDITION_FAILED, not queried). Controlled diagnosis on a saved test project requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 in the server process before startup, shared with PLC queries. Compilation does not guarantee crash safety. After a TIA exit, inspect the project and MCP/TIA logs before explicitly recovering the session and rebinding; do not enable automatically or retry."
+          "note": "Native queries are allowed by default through V20 where the API exists. V21 requires the human Workbench Allow native cross references (V21) switch for the selected session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save before the first query: V21 TIA exits recorded; compilation is no guarantee. PLC false/unknown consistency and reflection refusals remain. Not queried / partial never means zero references. No automatic retry after a TIA exit."
         },
         "GetVersionControlStatus": {
           "arguments": {},
@@ -60917,7 +60938,8 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "inline": true
+          "inline": true,
+          "note": "Native queries are allowed by default through V20 where the API exists. V21 requires the human Workbench Allow native cross references (V21) switch for the selected session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save before the first query: V21 TIA exits recorded; compilation is no guarantee. PLC false/unknown consistency and reflection refusals remain. Not queried / partial never means zero references. No automatic retry after a TIA exit."
         },
         "GetExportContent": {
           "arguments": {
@@ -64886,6 +64908,19 @@
           "resultReading": [
             "Inspect data.items and their run references. Only an exact reviewed framework staging directory can be cleaned."
           ]
+        },
+        "AnalyzePlcCrossReferences": {
+          "arguments": {
+            "softwarePath": "devices/PLC_1/PLC_1",
+            "groupPath": "",
+            "recursive": true,
+            "maxBlocks": 128
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema and sandbox fixture checked; native export NOT RUN. Available on all eight releases via ordinary XML block export.",
+          "inline": true,
+          "note": "READ. Exports into a fresh session output directory using the existing bounded XML export, then runs AnalyzePlcReferences without native CrossReferenceService. Use the exact software path from GetProjectTree. Narrow groupPath if maxBlocks is exceeded (1..256). Inspect exportedBlocks, exports item Status, analysis.failures, unresolvedCalls, truncated and scope. Callers, callees and global reference sites cover indexed exported blocks only; SCL bodies, software units, system blocks and omitted exports are excluded. Empty / not queried / partial is never proof of no references or safe deletion."
         }
       }
     }
@@ -69575,6 +69610,9 @@
     "EnsureUnifiedHmiConnection": {
       "input": "Verifies a preconfigured connection using documented readback properties. Unknown driver strings, InitialAddress syntax and read-only Partner/Station/Node are not guessed. Use ManageUnifiedEngineeringObject with verified explicit values or configure in TIA.",
       "profile": "full-engine"
+    },
+    "AnalyzePlcCrossReferences": {
+      "input": "READ; existing XML export plus offline reference engine. Retained session exports, bounded ordinary software/group scope. No native CrossReferenceService, compile or save. Always partial; inspect export and indexing failures. Blocks not exported are not analysed."
     }
   }
 }

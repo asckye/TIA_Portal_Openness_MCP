@@ -2459,7 +2459,7 @@
           "crossReferences": {
             "type": "bool",
             "default": "false",
-            "description": "crossReferences: false (default) skips native references; true requests them but does not bypass the default-disabled process policy. Controlled diagnosis requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 on the server; do not enable it automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
+            "description": "crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
             "value": false
           }
         },
@@ -2514,7 +2514,7 @@
           "crossReferences": {
             "type": "bool",
             "default": "false",
-            "description": "crossReferences: false (default) skips native references; true requests them but does not bypass the default-disabled process policy. Controlled diagnosis requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 on the server; do not enable it automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
+            "description": "crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
             "value": false
           }
         },
@@ -2548,7 +2548,7 @@
           "crossReferences": {
             "type": "bool",
             "default": "false",
-            "description": "crossReferences: false (default) skips native references; true requests them but does not bypass the default-disabled process policy. Controlled diagnosis requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 on the server; do not enable it automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
+            "description": "crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
             "value": false
           }
         },
@@ -21846,7 +21846,7 @@
           "crossReferences": {
             "type": "bool",
             "default": "false",
-            "description": "crossReferences: false (default) skips native references; true requests them but does not bypass the default-disabled process policy. Controlled diagnosis requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 on the server; do not enable it automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
+            "description": "crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
             "value": false
           }
         },
@@ -21901,7 +21901,7 @@
           "crossReferences": {
             "type": "bool",
             "default": "false",
-            "description": "crossReferences: false (default) skips native references; true requests them but does not bypass the default-disabled process policy. Controlled diagnosis requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 on the server; do not enable it automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
+            "description": "crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
             "value": false
           }
         },
@@ -21935,7 +21935,7 @@
           "crossReferences": {
             "type": "bool",
             "default": "false",
-            "description": "crossReferences: false (default) skips native references; true requests them but does not bypass the default-disabled process policy. Controlled diagnosis requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 on the server; do not enable it automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
+            "description": "crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
             "value": false
           }
         },

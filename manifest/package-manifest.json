@@ -4,7 +4,7 @@
   "packageName": "TIA_MCP_Delivery_v4.0.0-beta.2_20261030",
   "packageType": "tia-portal-mcp-complete-offline-delivery-bundle",
   "generatedAt": "2026-05-31T05:30:00-07:00",
-  "refreshedAt": "2026-10-30T18:02:08.3131003\u002B00:00",
+  "refreshedAt": "2026-10-30T18:02:08.3131003+00:00",
   "target": {
     "tiaPortalMajorVersion": [
       14,
@@ -20,7 +20,7 @@
     "runtimeRequirement": "All eight Foundation hosts and Workbench use bundled .NET 10; per-release workers and the Openness bridge require .NET Framework 4.8",
     "windowsGroupRequirement": "Siemens TIA Openness",
     "newCliFlags": [
-      "--tia-portal-location \u003Cpath\u003E",
+      "--tia-portal-location <path>",
       "--release-key {14sp1|15.1|16|17|18|19|20|21}"
     ],
     "releaseKeys": [
@@ -41,7 +41,7 @@
       "Skill and MCP operation rules",
       "Static MCP tool roster",
       "Tool capability matrix",
-      "Complete PLC \u002B HMI project blueprint",
+      "Complete PLC + HMI project blueprint",
       "PLC instruction recipes, PlcBuildAndImport JSON templates, LAD recipes and SCL examples",
       "WinCC Unified designJson screen templates",
       "Project generation runbook and validation checklist"
@@ -80,7 +80,7 @@
     ]
   },
   "cli": {
-    "description": "Call runtime/\u003Crelease-directory\u003E/TiaMcp.FoundationHost.exe \u003Cverb\u003E --release-key \u003Ckey\u003E on all eight releases. Project changes use MCP tools and the project generation framework. install-plc-tools preserves pip\u0027s exit status.",
+    "description": "Call runtime/<release-directory>/TiaMcp.FoundationHost.exe <verb> --release-key <key> on all eight releases. Project changes use MCP tools and the project generation framework. install-plc-tools preserves pip's exit status.",
     "exe": "runtime/v21/TiaMcp.FoundationHost.exe",
     "verbs": [
       "doctor",
@@ -106,11 +106,11 @@
     }
   },
   "capabilities": {
-    "mcpToolCount": 516,
+    "mcpToolCount": 517,
     "mcpToolLayers": {
-      "L0": 17,
+      "L2": 427,
       "L1": 73,
-      "L2": 426
+      "L0": 17
     },
     "hmiTemplateJsonCount": 8,
     "plcTemplateJsonCount": 9,
@@ -126,15 +126,15 @@
       "WinCC Unified screen/tag/connection generation",
       "Unified HMI screen designJson application",
       "button Down/Up actions and tag dynamization",
-      "read-only online live-value monitoring over S7 (port 102) and OPC UA (port 4840): single read, trend sampling (PID step-response capture), watch-table live read, CPU RUN/STOP state, and offline\u002Blive tag causal trace",
+      "read-only online live-value monitoring over S7 (port 102) and OPC UA (port 4840): single read, trend sampling (PID step-response capture), watch-table live read, CPU RUN/STOP state, and offline+live tag causal trace",
       "reflection-based API discovery for uncovered Openness shapes"
     ],
     "liteProfile": {
       "toolCount": 84,
       "isDefault": true,
-      "scope": "L0\u002BL1 essentials \u002B FindTools/CallTool; covers the full golden path",
+      "scope": "L0+L1 essentials + FindTools/CallTool; covers the full golden path",
       "optOut": "--profile full (or TIA_MCP_PROFILE=full)",
-      "note": "Other available tools remain reachable through FindTools \u002B CallTool; per-version admission excludes unsupported routes and runtime tools/list is authoritative."
+      "note": "Other available tools remain reachable through FindTools + CallTool; per-version admission excludes unsupported routes and runtime tools/list is authoritative."
     }
   },
   "fileVersion": "4.0.0.0",
