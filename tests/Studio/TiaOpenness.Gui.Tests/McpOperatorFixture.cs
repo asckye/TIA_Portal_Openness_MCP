@@ -53,8 +53,20 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
             ["binding"] = null, ["lane"] = null, ["sessionLocked"] = false, ["approvalEnabled"] = true, ["recentCalls"] = new JsonArray() };
         Publish();
     }
-    private void Publish() => File.WriteAllText(Host.RegistrationPath, new JsonObject { ["version"] = 1, ["releaseKey"] = Host.ReleaseKey,
-        ["pid"] = Host.Pid, ["startTicks"] = Host.StartTicks, ["pipeName"] = Host.PipeName, ["sessions"] = new JsonArray(state.DeepClone()) }.ToJsonString());
+    // Publish like HostRegistration (temporary file, then replace). The client polls this file, so a replace can meet its
+    // short read; retry that sharing violation briefly instead of failing the test on the fixture's own timing.
+    private void Publish()
+    {
+        var json = new JsonObject { ["version"] = 1, ["releaseKey"] = Host.ReleaseKey, ["pid"] = Host.Pid, ["startTicks"] = Host.StartTicks,
+            ["pipeName"] = Host.PipeName, ["sessions"] = new JsonArray(state.DeepClone()) }.ToJsonString();
+        var temporary = Host.RegistrationPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        File.WriteAllText(temporary, json);
+        for (int attempt = 0; ; attempt++)
+        {
+            try { File.Move(temporary, Host.RegistrationPath, overwrite: true); return; }
+            catch (IOException) when (attempt < 100) { Thread.Sleep(10); }
+        }
+    }
     internal McpSessionClient Client(FakeOwnedHost? owner = null) => new(RepositoryRoot, Root, Connect, start =>
     { Start = start; return Owner = owner ?? new FakeOwnedHost(Host.Pid); });
     private Task<Stream> Connect(OperatorHost host, CancellationToken token)
