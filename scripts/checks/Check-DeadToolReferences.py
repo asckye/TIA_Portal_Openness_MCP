@@ -271,6 +271,7 @@ def scan(src, extra_text=None):
     prompts = set()
     for s in src.values():
         names |= set(re.findall(r'McpServerTool\(Name\s*=\s*"([A-Za-z0-9_]+)"', s))
+        names |= set(re.findall(r'Definition\s+Definition\s*=\s*new\("([A-Za-z0-9_]+)"', s))
         prompts |= set(re.findall(r'McpServerPrompt\(Name\s*=\s*"([A-Za-z0-9_]+)"', s))
     items = list(src.items())
     if extra_text:
@@ -463,6 +464,12 @@ def main(fix=False):
     src = load(ROOT)
     src.update(load(LOGIC_ROOT))
     src.update(load(SHARED_ROOT))
+    for folder in ('EngineHost', 'FoundationHost'):
+        src.update(load(str(Path(ROOT).with_name(folder))))
+    for name in ('CrossReferenceTreeReader.cs', 'OpennessReleaseContract.cs'):
+        path = Path(ROOT).with_name('Adapters') / 'Policy' / name
+        if path.exists():
+            src[str(path)] = path.read_text(encoding='utf-8')
     if not src:
         print('找不到源码目录 %s —— 请在仓库根目录运行。' % ROOT)
         return 2
@@ -523,6 +530,15 @@ def main(fix=False):
 
 
 class GuidanceTests(unittest.TestCase):
+    def test_static_host_definition_is_registered_without_allowing_unknown_tools(self):
+        sources = {
+            'HostTool.cs': 'internal static readonly Definition Definition = new("AnalyzePlcCrossReferences", "ExportBlocks", "Offline analysis", []);',
+            'Guidance.cs': '[Description("Use AnalyzePlcCrossReferences and GetNonexistentSentinelTool.")] void M() {}',
+        }
+        names, bad = scan(sources)
+        self.assertEqual(names, {'AnalyzePlcCrossReferences'})
+        self.assertEqual(set(bad), {'GetNonexistentSentinelTool'})
+
     def test_fix_guidance_only(self):
         source = '''// Use OldTool here.
 [Description("Use OldTool and OldToolSuffix.")]

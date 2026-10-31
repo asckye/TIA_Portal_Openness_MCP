@@ -175,6 +175,67 @@ public sealed class PlcCrossReferenceAnalysisTests
     }
 
     [Theory]
+    [InlineData("v4")]
+    [InlineData("v5")]
+    public void Published_SimaticML_networks_keep_namespaces_network_indices_and_quoted_symbols(string schema)
+    {
+        string directory = NewDirectory();
+        try
+        {
+            // Synthetic export-format documents, including the real CompileUnit/NetworkSource/FlgNet nesting.
+            string caller = $$"""
+                <?xml version="1.0" encoding="utf-8"?>
+                <Document>
+                  <Engineering version="V21" />
+                  <SW.Blocks.FC ID="0">
+                    <AttributeList><Name>Caller</Name><Number>1</Number><ProgrammingLanguage>LAD</ProgrammingLanguage></AttributeList>
+                    <ObjectList>
+                      <SW.Blocks.CompileUnit ID="1" CompositionName="CompileUnits">
+                        <AttributeList><ProgrammingLanguage>LAD</ProgrammingLanguage><NetworkSource>
+                          <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/{{schema}}">
+                            <Parts><Access Scope="LocalVariable" UId="1"><Symbol><Component Name="Local" /></Symbol></Access></Parts><Wires />
+                          </FlgNet>
+                        </NetworkSource></AttributeList>
+                      </SW.Blocks.CompileUnit>
+                      <SW.Blocks.CompileUnit ID="2" CompositionName="CompileUnits">
+                        <AttributeList><ProgrammingLanguage>LAD</ProgrammingLanguage><NetworkSource>
+                          <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/{{schema}}">
+                            <Parts>
+                              <Call UId="21"><CallInfo Name="Callee" BlockType="FC"><Parameter Name="Enable" Section="Input" Type="Bool" /></CallInfo></Call>
+                              <Access Scope="GlobalVariable" UId="22"><Symbol><Component Name="Motor.Run" /></Symbol></Access>
+                              <Access Scope="GlobalConstant" UId="23"><Symbol><Component Name="Motor" /><Component Name="Run" /></Symbol></Access>
+                            </Parts><Wires />
+                          </FlgNet>
+                        </NetworkSource></AttributeList>
+                      </SW.Blocks.CompileUnit>
+                    </ObjectList>
+                  </SW.Blocks.FC>
+                </Document>
+                """;
+            string callerFile = Path.Combine(directory, "Caller.xml"), calleeFile = Path.Combine(directory, "Callee.xml");
+            File.WriteAllText(callerFile, caller); File.WriteAllText(calleeFile, Xml("Callee"));
+            var report = PlcCrossReferenceAnalysis.Report("devices/Station/PLC", directory, new JsonObject {
+                ["Items"] = new JsonArray(new JsonObject { ["Status"] = "exported", ["OutputFile"] = callerFile },
+                    new JsonObject { ["Status"] = "exported", ["OutputFile"] = calleeFile }), ["InventoryComplete"] = true });
+            Assert.True((bool)report["exportComplete"]!);
+            var analysis = report["analysis"]!;
+            Assert.Equal(2, (int)analysis["indexedBlocks"]!);
+            Assert.Empty(analysis["failures"]!.AsArray());
+            Assert.Empty(analysis["unresolvedCalls"]!.AsArray());
+            var row = analysis["rows"]!.AsArray().Single(n => (string?)n!["name"] == "Caller")!;
+            Assert.Equal("Callee.xml", (string?)Assert.Single(row["callees"]!.AsArray())!["callee"]);
+            Assert.Equal(1, (int)row["callees"]![0]!["networkIndex"]!);
+            Assert.Equal(new[] { "\"Motor.Run\"", "\"Motor\".\"Run\"" },
+                row["referenceSites"]!.AsArray().Select(site => (string?)site!["symbol"]));
+            Assert.All(row["referenceSites"]!.AsArray(), site => Assert.Equal(1, (int)site!["networkIndex"]!));
+            Assert.False((bool)report["coverageComplete"]!);
+            Assert.False((bool)report["nativeCrossReferencesQueried"]!);
+            Assert.False((bool)analysis["safeToDelete"]!);
+        }
+        finally { Directory.Delete(directory, true); }
+    }
+
+    [Theory]
     [InlineData(0)]
     [InlineData(1)]
     [InlineData(2)]

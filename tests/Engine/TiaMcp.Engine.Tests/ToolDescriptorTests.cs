@@ -101,7 +101,7 @@ namespace TiaMcp.Engine.Tests
         [Fact]
         public void ExecutionOwnershipIsExplicitAndDistinctFromReadiness()
         {
-            Assert.Equal(496, ToolExecution.Table.Count);
+            Assert.Equal(497, ToolExecution.Table.Count);
             Assert.Equal(95, ToolExecution.Table.Count(pair => pair.Value == "host"));
             Assert.Equal("host", ToolExecution.Table["ManagePlcGitRepository"]);
             foreach (var name in new[] { "CallTool", "GetExportContent", "StageImportFiles", "RestartOpennessWorker", "BuildStructuredText", "RenderPlcBlock", "GetOpennessCompatibility", "GetEnvironmentDiagnostics", "CheckProductUpdate" })
@@ -109,6 +109,7 @@ namespace TiaMcp.Engine.Tests
             foreach (var name in new[] { "InitializeEnvironment", "BuildAndImportPlcArtifact" })
                 Assert.Equal("worker", ToolExecution.Table[name]);
             Assert.Equal("foundation", ToolExecution.Table["BuildDeviceAmlDocument"]);
+            Assert.Equal("foundation", ToolExecution.Table["AnalyzePlcCrossReferences"]);
             foreach (var name in new[] { "ListStandardPackages", "ManageStandardPackage", "ValidateStandardPackage", "DescribeStandardPackage", "ManageMachineDescription" })
                 Assert.Equal("foundation", ToolExecution.Table[name]);
             Assert.Equal(BehaviorCapabilities.Table(typeof(ToolCatalog).Assembly, McpServer.ReleaseKey).ToJsonString(), new ToolCatalog(new[] { typeof(Probe) }).BehaviorCapabilities.ToJsonString());

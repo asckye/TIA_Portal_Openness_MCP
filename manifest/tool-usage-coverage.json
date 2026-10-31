@@ -1,13 +1,13 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "0232030a8710eb2de3196f766cbd8fd02ff2a80b08cd8d7c444ffa0fc6a4a954",
-  "uniqueTools": 516,
+  "catalogSha256": "da0f1d898e9132904039e6d3ee9d856b872da7171ca2d1aa7d40feac81aeacd2",
+  "uniqueTools": 517,
   "documents": 89,
-  "versionToolPairs": 3194,
+  "versionToolPairs": 3202,
   "offlineCallExecutions": 76,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
-  "callSequences": 36,
+  "callSequences": 37,
   "languages": [
     "scl",
     "scl-sd",
@@ -24,7 +24,7 @@
     "csharp"
   ],
   "relatedOfficialPatternMappings": 258,
-  "noDirectVendoredExampleMappings": 258,
+  "noDirectVendoredExampleMappings": 259,
   "sources": [
     {
       "repository": "https://github.com/siemens/tia-portal-ai-extensions",
@@ -48,13 +48,13 @@
   "releases": {
     "14sp1": {
       "releaseKey": "14sp1",
-      "registeredToolCount": 279,
-      "checkedToolCount": 279,
+      "registeredToolCount": 280,
+      "checkedToolCount": 280,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 164,
       "programmingExampleCount": 25,
-      "callSequenceCount": 36,
+      "callSequenceCount": 37,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -78,6 +78,14 @@
         },
         {
           "toolName": "AnalyzeHmiTemplateReference",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "AnalyzePlcCrossReferences",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -3792,13 +3800,13 @@
     },
     "15.1": {
       "releaseKey": "15.1",
-      "registeredToolCount": 319,
-      "checkedToolCount": 319,
+      "registeredToolCount": 320,
+      "checkedToolCount": 320,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 224,
       "programmingExampleCount": 25,
-      "callSequenceCount": 36,
+      "callSequenceCount": 37,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -3822,6 +3830,14 @@
         },
         {
           "toolName": "AnalyzeHmiTemplateReference",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "AnalyzePlcCrossReferences",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -8297,13 +8313,13 @@
     },
     "16": {
       "releaseKey": "16",
-      "registeredToolCount": 348,
-      "checkedToolCount": 348,
+      "registeredToolCount": 349,
+      "checkedToolCount": 349,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 278,
       "programmingExampleCount": 25,
-      "callSequenceCount": 36,
+      "callSequenceCount": 37,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -8327,6 +8343,14 @@
         },
         {
           "toolName": "AnalyzeHmiTemplateReference",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "AnalyzePlcCrossReferences",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -13407,13 +13431,13 @@
     },
     "17": {
       "releaseKey": "17",
-      "registeredToolCount": 371,
-      "checkedToolCount": 371,
+      "registeredToolCount": 372,
+      "checkedToolCount": 372,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 353,
       "programmingExampleCount": 25,
-      "callSequenceCount": 36,
+      "callSequenceCount": 37,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -13437,6 +13461,14 @@
         },
         {
           "toolName": "AnalyzeHmiTemplateReference",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "AnalyzePlcCrossReferences",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -19162,13 +19194,13 @@
     },
     "18": {
       "releaseKey": "18",
-      "registeredToolCount": 397,
-      "checkedToolCount": 397,
+      "registeredToolCount": 398,
+      "checkedToolCount": 398,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 429,
       "programmingExampleCount": 25,
-      "callSequenceCount": 36,
+      "callSequenceCount": 37,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -19192,6 +19224,14 @@
         },
         {
           "toolName": "AnalyzeHmiTemplateReference",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "AnalyzePlcCrossReferences",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -25614,13 +25654,13 @@
     },
     "19": {
       "releaseKey": "19",
-      "registeredToolCount": 473,
-      "checkedToolCount": 473,
+      "registeredToolCount": 474,
+      "checkedToolCount": 474,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 489,
       "programmingExampleCount": 25,
-      "callSequenceCount": 36,
+      "callSequenceCount": 37,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -25645,6 +25685,14 @@
         },
         {
           "toolName": "AnalyzeHmiTemplateReference",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "AnalyzePlcCrossReferences",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -33014,13 +33062,13 @@
     },
     "20": {
       "releaseKey": "20",
-      "registeredToolCount": 496,
-      "checkedToolCount": 496,
+      "registeredToolCount": 497,
+      "checkedToolCount": 497,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 503,
       "programmingExampleCount": 25,
-      "callSequenceCount": 36,
+      "callSequenceCount": 37,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -33049,6 +33097,14 @@
         {
           "toolName": "AnalyzeHmiTemplateReference",
           "usageProfile": "full-engine",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "AnalyzePlcCrossReferences",
+          "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -40691,13 +40747,13 @@
     },
     "21": {
       "releaseKey": "21",
-      "registeredToolCount": 511,
-      "checkedToolCount": 511,
+      "registeredToolCount": 512,
+      "checkedToolCount": 512,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 551,
       "programmingExampleCount": 25,
-      "callSequenceCount": 36,
+      "callSequenceCount": 37,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -40729,6 +40785,14 @@
         {
           "toolName": "AnalyzeHmiTemplateReference",
           "usageProfile": "full-engine",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "AnalyzePlcCrossReferences",
+          "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
