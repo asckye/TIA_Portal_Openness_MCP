@@ -1470,17 +1470,22 @@ internal static partial class ReleaseCommands
                 }))).ToArray();
                 ParallelPipeline.Run(suiteJobs, Path.Combine(logs, "dotnet-suite-pipeline"), GetMaxParallelism(options));
                 var parityRows = new JsonObject();
-                foreach (string major in new[] { "20", "21" })
+                var parityManifest = HostParity.Prepare(Root, Path.Combine(suiteResults, "parity-build"), dotnet, api, nuget);
+                Parallel.ForEach(new[] { "20", "21" }, major =>
                 {
                     var parityDirectory = Path.Combine(suiteResults, "host-behavior-parity-v" + major);
-                    var parityOptions = Options.Parse(["-Dotnet", dotnet, "-EngineMajor", major, "-ResultsDirectory", parityDirectory], new HashSet<string>());
-                    var parityEnvironment = new Dictionary<string, string?> { ["NuGetAudit"] = "false" };
+                    var parityOptions = Options.Parse(["-Dotnet", dotnet, "-EngineMajor", major, "-ResultsDirectory", parityDirectory,
+                        "-NoBuild", "-RuntimeManifest", parityManifest], new HashSet<string> { "NoBuild" });
+                    var parityEnvironment = FastSuites.EnvironmentFor(parityDirectory, api);
+                    parityEnvironment["DOTNET_CLI_HOME"] = Path.Combine(parityDirectory, "dotnet-home");
+                    Directory.CreateDirectory(parityEnvironment["DOTNET_CLI_HOME"]!);
                     if (!string.IsNullOrWhiteSpace(nuget)) parityEnvironment["RestoreConfigFile"] = Path.GetFullPath(nuget);
                     var parityResult = HostParity.Run(Root, parityOptions, parityEnvironment);
                     WriteLog(Path.Combine(logs, "host-behavior-parity-v" + major + ".log"), parityResult);
                     ProcessRunner.RequireSuccess(parityResult, "Host behavior parity gate failed: V" + major);
-                    parityRows[major] = JsonNode.Parse(File.ReadAllText(Path.Combine(parityDirectory, "host-behavior-parity.json")));
-                }
+                });
+                foreach (var major in new[] { "20", "21" })
+                    parityRows[major] = JsonNode.Parse(File.ReadAllText(Path.Combine(suiteResults, "host-behavior-parity-v" + major, "host-behavior-parity.json")));
                 validationNode["hostBehaviorParity"] = parityRows;
                 foreach (var suite in suites)
                 {

@@ -7,6 +7,34 @@ namespace TiaMcp.ReleaseTool;
 
 internal static partial class ReleaseCommands
 {
+    internal static void BindEngineHostResult(List<CheckJob> jobs, string root, string output, string manifest)
+    {
+        var index = jobs.FindIndex(job => job.Name == "engine-host-gate");
+        if (index < 0) throw new ReleaseException("Missing engine-host gate");
+        var gate = jobs[index];
+        var reference = Path.Combine(output, "suites/engine-host.reference.json");
+        jobs[index] = gate with { Run = () =>
+        {
+            File.Delete(reference);
+            return gate.Run();
+        } };
+        // Merge still runs after a failed shard for diagnostics. Reuse requires
+        // BOTH the original process results and that merged TRX gate to pass.
+        jobs.Add(new("engine-host-reference", () =>
+        {
+            var suite = DotnetSuites.LoadCatalog(Path.Combine(root, "tests/test-suites.json"), root)["engine-host"]!.AsObject();
+            var assembly = CheckAllBuild.TestAssembly(root, CheckAllBuild.Suite(suite), manifest, "engine-host")!;
+            var binaries = Directory.GetFiles(Path.GetDirectoryName(assembly)!, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal)
+                .Select(path => new { path, sha256 = ReleaseRecords.HashFile(path) }).ToArray();
+            var summary = Path.Combine(output, "suites/engine-host.json");
+            var trx = Path.Combine(output, "suites/engine-host.trx");
+            File.WriteAllText(reference, JsonSerializer.Serialize(new { schemaVersion = 1, runRoot = Path.GetFullPath(output),
+                runtimeManifest = manifest, runtimeManifestSha256 = ReleaseRecords.HashFile(manifest), binaries,
+                summary, summarySha256 = ReleaseRecords.HashFile(summary), trx, trxSha256 = ReleaseRecords.HashFile(trx) }) + "\n");
+            return new(0, "Bound this run's engine-host result to its runtime manifest and binaries.\n", "");
+        }, [gate.Name, .. gate.Dependencies]) { Priority = 1 });
+    }
+
     // P8-04l deleted the V20/V21 engine. Its harness modes, script jobs and candidate jobs no longer exist; the PLC jobs that
     // replaced them (P8-04k3a/k3b) are the only jobs and keep their names. engineering-api-only was engine-only (D5, retired with
     // the engine: 2840/3126 engine Portal/service/registration shape assertions); its adapter API checks run in foundation-api.

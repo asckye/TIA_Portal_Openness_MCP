@@ -143,24 +143,27 @@ internal static partial class ReleaseCommands
             ["sha256"] = ReleaseRecords.HashFile(file), ["counts"] = ReleaseEvidence.Strings(ReleaseRecords.CountLines(Root, File.ReadAllText(file)))
         };
         var jobs = PlcReleaseJobs(Root, api, logs, runTemp, dotnet, python).Where(IsAdoptionLocalPlcJob).ToArray();
+        var parityManifest = HostParity.Prepare(Root, Path.Combine(local, "parity-build"), dotnet, api, nuget);
         RunReleaseParallel(
         [
             ("host-behavior-parity", () =>
             {
                 // The same two runs as the preparation's -Test path, each in its own isolated data, temp and CLI folders.
-                foreach (var major in new[] { "20", "21" })
+                Parallel.ForEach(new[] { "20", "21" }, major =>
                 {
                     var name = "host-behavior-parity-v" + major;
-                    var parityOptions = Options.Parse(["-Dotnet", dotnet, "-EngineMajor", major, "-ResultsDirectory", Path.Combine(local, name)], new HashSet<string>());
+                    var parityOptions = Options.Parse(["-Dotnet", dotnet, "-EngineMajor", major, "-ResultsDirectory", Path.Combine(local, name),
+                        "-NoBuild", "-RuntimeManifest", parityManifest], new HashSet<string> { "NoBuild" });
                     var log = Path.Combine(local, name + ".log");
-                    var result = RunBuildIsolated(dotnet, [], log, runTemp, cli, api, nuget, false, name, environment =>
+                    var parityCli = Path.Combine(cli, name); Directory.CreateDirectory(parityCli);
+                    var result = RunBuildIsolated(dotnet, [], log, runTemp, parityCli, api, nuget, false, name, environment =>
                     {
                         if (!string.IsNullOrWhiteSpace(nuget)) environment["RestoreConfigFile"] = Path.GetFullPath(nuget);
                         return HostParity.Run(Root, parityOptions, environment);
                     });
                     ProcessRunner.RequireSuccess(result, "Host behavior parity gate failed: V" + major);
                     receipts.Add(Receipt(name, "offline-suites", log));
-                }
+                });
             }),
             ("plc-local", () =>
             {

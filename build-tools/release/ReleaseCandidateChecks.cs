@@ -196,9 +196,11 @@ internal static partial class ReleaseCommands
             });
             return new PipelineResult("foundation-responses", 0, "Foundation response capture and comparison passed.\n", "");
         }));
-        var staticSelfTests = new List<(string Name, Func<PipelineResult> Run)>();
+        var staticSelfTests = new List<ReleaseSelfTest>();
+        var serialSelfTests = new List<(string Name, Func<PipelineResult> Run)>();
         foreach (var test in ReleaseCheckPolicy.Load(Root).SelfTests.Where(test => plan.Includes(test.Check)))
         {
+            if (SharesStaticSelfTests(test)) { staticSelfTests.Add(test); continue; }
             var job = (Name: test.Check, Run: (Func<PipelineResult>)(() =>
             {
                 runStep(test.Check, () =>
@@ -215,14 +217,40 @@ internal static partial class ReleaseCommands
                 });
                 return new PipelineResult(test.Check, 0, "Check self-test passed.\n", "");
             }));
-            if (test.Command is { Length: > 0 } && test.Command[0].StartsWith("check-", StringComparison.Ordinal)) staticSelfTests.Add(job);
+            if (test.Command is { Length: > 0 } && test.Command[0].StartsWith("check-", StringComparison.Ordinal)) serialSelfTests.Add(job);
             else jobs.Add(job);
         }
-        // Converted self-tests share one project; avoid concurrent rebuilds of its outputs.
-        if (staticSelfTests.Count > 0) jobs.Add(("static-check-self-tests", () =>
+        // These wrappers have exactly the same project, filter and environment.
+        // Keep every named receipt and gate attached to the single TRX.
+        if (staticSelfTests.Count > 0 || serialSelfTests.Count > 0) jobs.Add(("static-check-self-tests", () =>
         {
-            foreach (var job in staticSelfTests) job.Run();
-            return new PipelineResult("static-check-self-tests", 0, "Static check self-tests passed.\n", "");
+            var directory = Path.Combine(logs, "static-checks-results");
+            Directory.CreateDirectory(directory);
+            var trx = Path.Combine(directory, "static-checks.trx");
+            File.Delete(trx);
+            var before = SuiteHang.Begin(directory, "static-checks");
+            var result = staticSelfTests.Count == 0 ? new CommandResult(0, "", "")
+                : SuiteHang.Complete(directory, "static-checks", before,
+                    runIsolated("static-check-self-tests", dotnet, AddOfflineNuGetConfig(dotnet, StaticSelfTestArguments(directory)), false, Root));
+            var errors = staticSelfTests.Count == 0 ? [] : File.Exists(trx) ? DotnetSuites.EvaluateTrx(trx, 1, int.MaxValue).Errors : new List<string> { "Missing shared StaticChecks TRX" };
+            if (errors.Count != 0) result = result with { ExitCode = 1, StandardError = result.StandardError + string.Join("; ", errors) };
+            foreach (var test in staticSelfTests)
+                runStep(test.Check, () =>
+                {
+                    var reference = new { name = test.Check, sharedTrx = trx, result.ExitCode,
+                        sha256 = File.Exists(trx) ? ReleaseRecords.HashFile(trx) : null };
+                    File.WriteAllText(Path.Combine(logs, test.Check + ".shared-result.json"), JsonSerializer.Serialize(reference) + "\n");
+                    File.AppendAllText(Path.Combine(logs, test.Check + ".log"), $"Shared StaticChecks TRX: {trx}\n" + result.StandardOutput + result.StandardError);
+                });
+            // check-tools-list runs Category=Generators. It remains a distinct
+            // execution, serialized with StaticChecks to protect build outputs.
+            foreach (var job in serialSelfTests)
+            {
+                var separate = job.Run();
+                result = new(result.ExitCode != 0 ? result.ExitCode : separate.ExitCode,
+                    result.StandardOutput + separate.StandardOutput, result.StandardError + separate.StandardError);
+            }
+            return new PipelineResult("static-check-self-tests", result.ExitCode, result.StandardOutput, result.StandardError);
         }));
         ParallelPipeline.Run(jobs, Path.Combine(logs, "post-validation"), maxParallelism);
 

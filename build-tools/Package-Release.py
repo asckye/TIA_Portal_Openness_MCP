@@ -7,6 +7,7 @@ scripts/operations/delivery-files.json, adds the recorded local binaries and ref
 The updater comes from bin-build/updater with the hashes the records bind in updaterFiles, outside the runtime inventory.
 """
 import argparse
+import copy
 from collections import Counter
 import importlib.util
 import os
@@ -16,6 +17,8 @@ import json
 from pathlib import Path
 import re
 import subprocess
+import shutil
+import struct
 import sys
 import uuid
 import zipfile
@@ -54,6 +57,72 @@ def require(condition, message):
 
 def sha(data):
     return hashlib.sha256(data).hexdigest()
+
+
+def package_archive(archive, package, files, candidate_result=None):
+    """Reuse verified compressed payloads; only the generated tier receipt may change."""
+    decision = {'packageMode': 'rebuilt', 'candidateResult': str(candidate_result) if candidate_result else None}
+    reusable = False
+    changes = []
+    candidate = None
+    if candidate_result:
+        try:
+            receipt = json.loads(candidate_result.read_text(encoding='utf-8'))
+            candidate = Path(receipt['path']).resolve()
+            require(candidate.is_relative_to(Path(__file__).resolve().parents[1]), 'Candidate ZIP must belong to this worktree')
+            require(candidate.stat().st_size == receipt['size'] and sha(candidate.read_bytes()) == receipt['sha256'], 'Candidate ZIP identity differs')
+            with zipfile.ZipFile(candidate) as previous:
+                expected = {package + '/' + name for name in files}
+                require(len(previous.infolist()) == len(expected) and set(previous.namelist()) == expected, 'Candidate ZIP paths differ')
+                for name, data in sorted(files.items()):
+                    info = previous.getinfo(package + '/' + name)
+                    old = previous.read(info)  # CRC and decompression validation remain required.
+                    if info.file_size != len(data) or sha(old) != sha(data):
+                        changes.append(name)
+                    require(not info.flag_bits & 8 and info.compress_type == zipfile.ZIP_DEFLATED, 'Candidate ZIP uses unsupported entry encoding')
+            # WriteTierRecord is the sole permitted transformation. Every other
+            # input change, including a runtime byte, requires full packaging.
+            reusable = set(changes) <= {'manifest/package-manifest.json'}
+            decision['changedInputs'] = changes
+            if not reusable:
+                decision['reason'] = 'Non-record package inputs differ'
+        except (OSError, ValueError, KeyError, RuntimeError, zipfile.BadZipFile) as error:
+            decision['reason'] = str(error)
+    if reusable:
+        decision['candidateSha256'] = receipt['sha256']
+        if not changes:
+            shutil.copyfile(candidate, archive)
+            decision['packageMode'] = 'reused-identical'
+        else:
+            # ZipFile has no compressed-entry copy API. Copy each verified local
+            # header/payload and let it write a fresh central directory. Tier
+            # records use normal writestr; no duplicate or stale entries remain.
+            with zipfile.ZipFile(candidate) as previous, zipfile.ZipFile(archive, 'x', zipfile.ZIP_DEFLATED, compresslevel=9) as result:
+                for name, data in sorted(files.items()):
+                    entry = package + '/' + name
+                    if name in changes:
+                        result.writestr(entry, data)
+                        continue
+                    info = copy.copy(previous.getinfo(entry))
+                    previous.fp.seek(info.header_offset)
+                    header = previous.fp.read(zipfile.sizeFileHeader)
+                    require(len(header) == zipfile.sizeFileHeader and header[:4] == zipfile.stringFileHeader, 'Invalid candidate local ZIP header')
+                    fields = struct.unpack(zipfile.structFileHeader, header)
+                    tail = previous.fp.read(fields[zipfile._FH_FILENAME_LENGTH] + fields[zipfile._FH_EXTRA_FIELD_LENGTH] + info.compress_size)
+                    require(len(tail) == fields[zipfile._FH_FILENAME_LENGTH] + fields[zipfile._FH_EXTRA_FIELD_LENGTH] + info.compress_size, 'Truncated candidate ZIP entry')
+                    result.fp.seek(result.start_dir)
+                    info.header_offset = result.fp.tell()
+                    result.fp.write(header + tail)
+                    result.start_dir = result.fp.tell()
+                    result.filelist.append(info)
+                    result.NameToInfo[info.filename] = info
+                    result._didModify = True
+            decision['packageMode'] = 'reused-payloads-updated-records'
+        return decision
+    with zipfile.ZipFile(archive, 'x', zipfile.ZIP_DEFLATED, compresslevel=9) as result:
+        for name, data in sorted(files.items()):
+            result.writestr(package + '/' + name, data)
+    return decision
 
 
 def read_build_record(files, delivery):
@@ -153,6 +222,34 @@ def self_test():
                 check_updater(self.record, self.files)
 
     class RecordChecks(unittest.TestCase):
+        def test_candidate_reuse_and_fallback_preserve_exact_final_file_set(self):
+            fixture_spec = importlib.util.spec_from_file_location('offline_fixtures', CHECKS / 'offline_fixtures.py')
+            fixtures = importlib.util.module_from_spec(fixture_spec)
+            fixture_spec.loader.exec_module(fixtures)
+            with fixtures.fixture_directory('package-reuse-') as temporary:
+                root = Path(temporary)
+                files = {'runtime/worker.exe': b'payload' * 1000, 'manifest/package-manifest.json': b'pending'}
+                candidate = root / 'candidate.zip'
+                package_archive(candidate, 'bundle', files)
+                receipt = root / 'package-result.json'
+                receipt.write_text(json.dumps({'path': str(candidate), 'size': candidate.stat().st_size, 'sha256': sha(candidate.read_bytes())}))
+                for case in ('identical', 'record', 'binary', 'added', 'removed', 'stale'):
+                    with self.subTest(case=case):
+                        final = dict(files)
+                        if case == 'record': final['manifest/package-manifest.json'] = b'passed'
+                        if case == 'binary': final['runtime/worker.exe'] += b'changed'
+                        if case == 'added': final['new.txt'] = b'new'
+                        if case == 'removed': del final['runtime/worker.exe']
+                        if case == 'stale': receipt.write_text('{}')
+                        archive = root / (case + '.zip')
+                        decision = package_archive(archive, 'bundle', final, receipt)
+                        self.assertEqual(decision['packageMode'], {'identical': 'reused-identical', 'record': 'reused-payloads-updated-records'}.get(case, 'rebuilt'))
+                        with zipfile.ZipFile(archive) as result:
+                            self.assertIsNone(result.testzip())
+                            self.assertEqual(result.namelist(), ['bundle/' + name for name in sorted(final)])
+                            self.assertEqual({name: result.read('bundle/' + name) for name in final}, final)
+                        if case == 'identical': self.assertEqual(candidate.read_bytes(), archive.read_bytes())
+
         def test_both_shapes_bind_before_packaging(self):
             engine, multi = layout.LayoutChecks.record_fixture()
             for name, record, binding in ((layout.ENGINE_RECORD, engine, 'engineBuildSha256'),
@@ -190,6 +287,7 @@ def main():
     parser.add_argument('--git', default='git')
     parser.add_argument('--self-test', action='store_true')
     parser.add_argument('--release-tool', type=Path, help='Already-built release tool assembly; child validations never build the running tool')
+    parser.add_argument('--candidate-results', type=Path, help='Reuse this run\'s candidate ZIP after exact comparison with final inputs')
     parser.add_argument('--output-directory', type=Path, help='Optional new local output directory; existing archives/stages are never overwritten')
     parser.add_argument('--local', action='store_true', help='Build a review-only bundle from this worktree without committing; all binary and validation gates still apply')
     parser.add_argument('--dry-run', action='store_true', help='List the filtered working tree without build outputs, clean-tree checks or publication')
@@ -402,9 +500,9 @@ def main():
     # exact binary versions and build hashes in the actual delivery directory.
     subprocess.run([*validator, '-BundleRoot', str(stage), '-Strict', '-PackageMode'], cwd=root, check=True)
     subprocess.run([sys.executable, str(CHECKS / 'Check-Repository.py'), '--root', str(stage), '--package-mode'], check=True)
-    with zipfile.ZipFile(archive, 'x', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
-        for name, data in sorted(files.items()):
-            z.writestr(package + '/' + name, data)
+    if args.candidate_results:
+        require(args.candidate_results.resolve().is_relative_to(root), 'Candidate package result must belong to this worktree')
+    package_decision = package_archive(archive, package, files, args.candidate_results)
     with zipfile.ZipFile(archive) as z:
         require(z.testzip() is None and len(z.namelist()) == len(files), 'ZIP integrity failure')
         for name, data in files.items():
@@ -412,6 +510,7 @@ def main():
     digest = sha(archive.read_bytes())
     archive.with_suffix('.sha256').write_text(digest + '  ' + archive.name + '\n', encoding='ascii')
     result = {'tier': candidate['tier'], 'checkStatus': candidate['checkStatus'], 'buildCacheEnabled': candidate.get('buildCacheEnabled'), 'checksRan': candidate['checksRan'], 'checksSkipped': candidate['checksSkipped'], 'path': str(archive), 'size': archive.stat().st_size, 'sha256': digest, 'files': len(files), 'sourceCommit': commit}
+    result.update(package_decision)
     if args.local:
         result['sourceState'] = 'worktree; local review only, not for publication'
     (out / 'package-result.json').write_text(json.dumps(result, indent=2), encoding='utf-8')

@@ -6,6 +6,19 @@ namespace TiaMcp.ReleaseTool;
 
 internal static class HostParity
 {
+    internal static CheckBuild Unit(string major) => new(SuiteWorkerCopies.FoundationProject, "parity-v" + major,
+        major == "20" ? ["-p:DefineConstants=TIA_V20"] : []);
+
+    internal static string Prepare(string root, string directory, string dotnet, string? api, string? nuget)
+    {
+        // The two compilations differ in TIA_V20. Build each variant once in the
+        // authoritative isolated graph, then the concurrent tests only read it.
+        var result = CheckAllBuild.Run(root, CheckAllBuild.WithTestFixtures(new[] { Unit("20"), Unit("21") }).ToArray(),
+            directory, dotnet, api, nuget, 1, false);
+        ProcessRunner.RequireSuccess(result, "Host parity variant builds");
+        return Path.Combine(directory, "runtime-paths.tsv");
+    }
+
     internal static CommandResult Run(string root, Options options, IDictionary<string, string?>? environment = null, SuiteProcess? process = null)
     {
         var major = options.Get("EngineMajor", "21");
@@ -22,11 +35,20 @@ internal static class HostParity
         if (options.Has("NoBuild")) command.AddRange(["--no-build", "--no-restore"]);
         else if (major == "20") command.Add("-p:DefineConstants=TIA_V20");
         command.AddRange(SuiteHang.TestArguments);
+        if (options.Get("RuntimeManifest") is { } manifest)
+        {
+            if (!options.Has("NoBuild")) throw new ReleaseException("Parity runtime manifest requires -NoBuild");
+            var assembly = CheckAllBuild.TestAssembly(root, Unit(major), manifest, "host-behavior-parity-v" + major)!;
+            command = FastSuites.VstestArguments(assembly, ["--filter", "FullyQualifiedName~BehaviorParityTests"], "host-behavior-parity", directory);
+        }
         var env = environment is null ? new Dictionary<string, string?>() : new Dictionary<string, string?>(environment);
         env["TIA_MCP_PARITY_ENGINE_RELEASE"] = major;
         var dotnet = options.Get("Dotnet", "dotnet");
         var output = new StringBuilder($"RUN host-behavior-parity: {dotnet} {string.Join(' ', command)}\n");
-        var result = SuiteHang.Complete(directory, "host-behavior-parity", before, (process ?? DotnetSuites.RunProcess)(dotnet, command, root, env));
+        // Parity cases also write fixed relative bin-build/P6-* fixtures. Give
+        // each no-build variant its own working directory as well as TEMP.
+        var working = options.Has("RuntimeManifest") ? directory : root;
+        var result = SuiteHang.Complete(directory, "host-behavior-parity", before, (process ?? DotnetSuites.RunProcess)(dotnet, command, working, env));
         output.Append(result.StandardOutput);
         var errors = new List<string>();
         errors.AddRange(SuiteHang.Errors(directory, "host-behavior-parity"));

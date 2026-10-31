@@ -108,7 +108,7 @@ public sealed class StaticPolicyTests
         var result = ProcessRunner.Run(OperatingSystem.IsWindows() ? "python" : "python3",
             ["-X", "utf8", Path.Combine(root, "scripts/checks/Test-PlcHarnessSuccessors.py")], root,
             new Dictionary<string, string?> { ["PYTHONDONTWRITEBYTECODE"] = "1" });
-        Assert.Equal(0, result.ExitCode); Assert.Contains("Ran 16 tests", result.StandardError); Assert.Contains("OK", result.StandardError);
+        Assert.Equal(0, result.ExitCode); Assert.Contains("Ran 18 tests", result.StandardError); Assert.Contains("OK", result.StandardError);
         Assert.Contains("\"plc-harness-self-tests\"", File.ReadAllText(Path.Combine(root, "build-tools/release/CheckAllInventory.cs")));
     }
 
@@ -413,10 +413,12 @@ public sealed class StaticPolicyTests
             {
                 calls.Add(name);
                 Assert.False(defaults);
-                if (name == "repository-self-test")
+                if (name == "static-check-self-tests")
                 {
                     Assert.Equal("dotnet-test-double", executable);
-                    Assert.Equal([typeof(ReleaseCommands).Assembly.Location, "check-repository", "-SelfTest"], arguments);
+                    var results = Path.Combine(tree.Root, "static-checks-results");
+                    Assert.Equal(ReleaseCommands.StaticSelfTestArguments(results), arguments);
+                    DotnetSuiteSelfTests.SyntheticTrx(Path.Combine(results, "static-checks.trx"), Enumerable.Repeat("Passed", 331).ToArray());
                 }
                 else
                 {
@@ -425,6 +427,7 @@ public sealed class StaticPolicyTests
                 }
                 return new CommandResult(0, "", "");
             });
-        Assert.Equal(["dotnetsuites-self-test", "repository-self-test"], calls.Order(StringComparer.Ordinal));
+        Assert.Equal(["dotnetsuites-self-test", "static-check-self-tests"], calls.Order(StringComparer.Ordinal));
+        Assert.Equal("repository-self-test", (string)JsonNode.Parse(File.ReadAllText(Path.Combine(tree.Root, "repository-self-test.shared-result.json")))!["name"]!);
     }
 }

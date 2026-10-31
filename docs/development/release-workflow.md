@@ -1,5 +1,7 @@
 # 完整 Release 发布流程
 
+`release -CiTimeoutMinutes` 默认等待 CI 50 分钟；发布提交和发布后核验均使用此默认值。
+
 状态：现行 · 最后核对：2026-10-11，任务启动基线 master `578a05ee`
 
 交付包 `TIA_MCP_Delivery_v<版本>_<YYYYMMDD>.zip` 包含 V14 SP1、V15.1、V16–V21 MCP 运行文件、工作台、Studio 及八版原生适配器，以及运行资源、用户文档、模板、插件和许可证。自 3.3.0 之后的下一个版本起，交付 ZIP 不再携带开发源码及构建工具。各发布键的工具范围不同，见[版本矩阵](../reference/version-tools.md)。每次发布同时上传 .sha256；GitHub 自动生成的源码压缩包不含运行二进制。

@@ -168,7 +168,8 @@ internal static partial class ReleaseCommands
         var gitExecutable = ResolveApplication(git);
         var packageDir = Path.Combine(Root, "bin-build/releases", "v" + version);
         var packageName = ReadDeliveryPackage(deliveryPath);
-        clock.Run("package", () => RunReleaseExternal(python, [Path.Combine(Root, "build-tools/Package-Release.py"), "--git", gitExecutable, .. ReleaseValidation.PackageToolArguments()], "package", logRoot, runTemp, publicApiRoot));
+        clock.Run("package", () => RunReleaseExternal(python, [Path.Combine(Root, "build-tools/Package-Release.py"), "--git", gitExecutable,
+            "--candidate-results", Path.Combine(candidateOutput, "package-result.json"), .. ReleaseValidation.PackageToolArguments()], "package", logRoot, runTemp, publicApiRoot));
         ReleaseCheckPolicy.Load(Root).RequireFullPackage(Path.Combine(packageDir, packageName + ".zip"));
         clock.Run("verify-package", () => RunReleaseExternal(python, [Path.Combine(Root, "scripts/checks/Verify-ReleaseAsset.py"), Path.Combine(packageDir, packageName + ".zip"), "--git", gitExecutable], "verify-package", logRoot, runTemp, publicApiRoot));
         if (options.Has("NoPush")) { Console.WriteLine("stopped before push (-NoPush)"); return 0; }
@@ -176,7 +177,7 @@ internal static partial class ReleaseCommands
         var headSha = GitText(git, ["rev-parse", "HEAD"]);
         var apiBase = options.Get("ApiBaseUrl", "https://api.github.com");
         if (!options.Has("NoWait")) clock.Run("release-commit-ci", () => WaitForWorkflows(ReleaseEvidence.PushWorkflows, headSha, apiBase, token,
-            options.Get("Repository", "asckye/TIA_Portal_Openness_MCP"), int.Parse(options.Get("CiTimeoutMinutes", "30"), System.Globalization.CultureInfo.InvariantCulture)));
+            options.Get("Repository", "asckye/TIA_Portal_Openness_MCP"), int.Parse(options.Get("CiTimeoutMinutes", "50"), System.Globalization.CultureInfo.InvariantCulture)));
         else Console.WriteLine("not waiting for CI (-NoWait)");
         if (options.Has("NoTag")) { Console.WriteLine("stopped before tag (-NoTag)"); return 0; }
 
@@ -203,7 +204,7 @@ internal static partial class ReleaseCommands
         if (!File.Exists(publishedPath)) throw new ReleaseException("Release publisher left no published-release.json");
         using (var published = JsonDocument.Parse(File.ReadAllText(publishedPath))) Console.WriteLine("published: " + GetJsonString(published.RootElement, "html_url"));
         if (!options.Has("NoWait")) WaitForWorkflows(["Verify " + tag], headSha, apiBase, token,
-            options.Get("Repository", "asckye/TIA_Portal_Openness_MCP"), int.Parse(options.Get("CiTimeoutMinutes", "30"), System.Globalization.CultureInfo.InvariantCulture));
+            options.Get("Repository", "asckye/TIA_Portal_Openness_MCP"), int.Parse(options.Get("CiTimeoutMinutes", "50"), System.Globalization.CultureInfo.InvariantCulture));
         Console.WriteLine($"DONE {tag}. Record publication in docs/development/handoff.md and handoff-checklist.md, then commit that separately.");
         _ = paths;
         return 0;

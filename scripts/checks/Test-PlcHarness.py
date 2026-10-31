@@ -2,6 +2,7 @@
 import argparse
 from contextlib import contextmanager
 import importlib.util
+import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
@@ -12,6 +13,7 @@ import socket
 import subprocess
 import sys
 import threading
+import xml.etree.ElementTree as ET
 
 from offline_fixtures import fixture_directory
 
@@ -305,6 +307,9 @@ def execute(args):
 
 
 def suites(args):
+    if getattr(args, 'engine_host_results', None) is not None:
+        reference_engine_host(args)
+        return
     tool = (getattr(args, 'release_tool', None) or ROOT / 'build-tools/release/bin/Release/net10.0/TiaMcp.ReleaseTool.dll').resolve()
     resources.require(tool.is_relative_to(ROOT) and tool.is_file(), 'Release tool must be built in this worktree: ' + str(tool))
     manifest = getattr(args, 'runtime_manifest', None)
@@ -314,6 +319,55 @@ def suites(args):
     print(run(['dotnet', tool, 'test-suites',
                '-Suite', 'engine-host', '-NoBuild', '-Shards', '1', '-MaxParallelism', '1',
                '-ResultsDirectory', args.output / 'engine-host', *(['-RuntimeManifest', manifest] if manifest else [])]), end='')
+
+
+def reference_engine_host(args):
+    """Accept only this run's complete, binary-bound registered gate."""
+    def checked(path, digest=None):
+        path = Path(path).resolve()
+        resources.require(owns_evidence(path) and path.is_file(), 'Referenced engine-host result missing or foreign: ' + str(path))
+        if digest is not None:
+            resources.require(hashlib.sha256(path.read_bytes()).hexdigest() == digest, 'Referenced engine-host result stale: ' + str(path))
+        return path
+    reference = checked(args.engine_host_results)
+    proof = json.loads(reference.read_text(encoding='utf-8'))
+    run_root = args.output.resolve().parent
+    resources.require(proof['schemaVersion'] == 1 and Path(proof['runRoot']).resolve() == run_root
+                      and reference == run_root / 'suites/engine-host.reference.json', 'Referenced engine-host result belongs to another run')
+    resources.require(getattr(args, 'runtime_manifest', None) is not None, 'Referenced engine-host result needs a runtime manifest')
+    manifest = checked(args.runtime_manifest, proof['runtimeManifestSha256'])
+    resources.require(manifest == Path(proof['runtimeManifest']).resolve(), 'Referenced engine-host runtime manifest differs')
+    resources.require(bool(proof['binaries']), 'Referenced engine-host binaries missing')
+    for binary in proof['binaries']:
+        checked(binary['path'], binary['sha256'])
+    summary_path = checked(proof['summary'], proof['summarySha256'])
+    trx_path = checked(proof['trx'], proof['trxSha256'])
+    resources.require(summary_path == run_root / 'suites/engine-host.json' and trx_path == run_root / 'suites/engine-host.trx',
+                      'Referenced engine-host results belong to another run')
+    summary = json.loads(summary_path.read_text(encoding='utf-8'))
+    suite = json.loads((ROOT / 'tests/test-suites.json').read_text(encoding='utf-8'))['engine-host']
+    platform = 'windows' if sys.platform == 'win32' else 'macos' if sys.platform == 'darwin' else 'linux'
+    suite.update(suite.get('platforms', {}).get(platform, {}))
+    resources.require(summary['suite'] == 'engine-host' and summary['errors'] == []
+                      and summary['minimumPassed'] == suite['minimumPassed'] and summary['maximumSkipped'] == suite['maximumSkipped']
+                      and summary['failed'] == 0 and summary['passed'] >= suite['minimumPassed']
+                      and summary['skipped'] <= suite['maximumSkipped'], 'Referenced engine-host gate failed')
+    ns = {'t': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
+    tree = ET.parse(trx_path)
+    result = tree.find('t:ResultSummary', ns)
+    counters = result.find('t:Counters', ns)
+    rows = tree.findall('t:Results/t:UnitTestResult', ns)
+    resources.require(result.get('outcome') in ('Completed', 'Passed')
+                      and all(int(value) == 0 for key, value in counters.attrib.items() if key not in ('total', 'executed', 'passed', 'failed', 'notExecuted'))
+                      and int(counters.get('failed')) == 0 and int(counters.get('passed')) == summary['passed']
+                      and int(counters.get('executed')) == summary['passed']
+                      and int(counters.get('total')) == summary['total'] == summary['passed'] + summary['skipped']
+                      and int(counters.get('notExecuted')) in (0, summary['skipped'])
+                      and len(rows) == summary['total'] and len({row.get('executionId') for row in rows}) == len(rows)
+                      and sum(row.get('outcome') == 'Passed' for row in rows) == summary['passed']
+                      and sum(row.get('outcome') == 'NotExecuted' for row in rows) == summary['skipped'], 'Referenced engine-host TRX failed')
+    print(f"COMPLETE: {summary['passed']} engine-host checks passed (shared result: {trx_path})")
+    (args.output / 'engine-host-reference.json').write_text(json.dumps(proof, indent=2) + '\n', encoding='utf-8')
 
 
 def main():
@@ -328,6 +382,7 @@ def main():
     parser.add_argument('--adapter-inventory', type=Path)
     parser.add_argument('--release-tool', type=Path)
     parser.add_argument('--runtime-manifest', type=Path)
+    parser.add_argument('--engine-host-results', type=Path)
     args = parser.parse_args()
     for name in ('host', 'worker', 'harness', 'api', 'public_api_root', 'output'):
         setattr(args, name, getattr(args, name).resolve())

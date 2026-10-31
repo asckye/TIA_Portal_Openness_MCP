@@ -258,6 +258,7 @@ internal static partial class ReleaseCommands
                 "--disable-build-servers", "-m:1", "-nodeReuse:false", "--logger", "trx;LogFileName=" + name + ".trx", "--results-directory", Path.Combine(output, "studio")]), exclusive: true);
             jobs[^1] = jobs[^1] with { SensitiveGroup = $"tests/Studio/TiaOpenness.{project}.Tests/TiaOpenness.{project}.Tests.csproj" };
         }
+        BindEngineHostResult(jobs, Root, output, runtimeManifest);
         jobs.AddRange(staticJobs.Where(job => !CheckAllEarly(job.Name)));
         // Preflight also depends on the source-only checks completed in the build
         // wave. Retain their results in its aggregate instead of executing twice.
@@ -324,17 +325,18 @@ internal static partial class ReleaseCommands
                 Add(plcName, () =>
                 {
                     var inventory = Path.Combine(output, "adapter-coverage-v" + key + ".json");
-                    var result = CheckAllHarness(Python(plcName, "scripts/checks/Test-PlcHarness.py",
+                    var result = CheckAllHarness(Python(plcName, "scripts/checks/Test-PlcHarness.py", [
                         "--release", key, "--mode", selected.Length == 0 ? "http" : selected,
                         "--host", host, "--worker", CheckAllPlcFixture(key), "--harness", harness,
                         "--release-tool", CheckAllBuild.ReleaseTool(Root, runtimeManifest),
                         "--runtime-manifest", runtimeManifest,
+                        .. selected == "native-diagnostics-only" ? new[] { "--engine-host-results", Path.Combine(output, "suites/engine-host.reference.json") } : [],
                         "--api", targetApi, "--public-api-root", api, "--adapter-inventory", inventory,
-                        "--output", Path.Combine(output, plcName)), selected, key);
+                        "--output", Path.Combine(output, plcName)]), selected, key);
                     if (result.ExitCode == 0)
                         ValidateCheckAllPlcHarness(result.StandardOutput, Path.Combine(output, plcName), selected, key, host, CheckAllPlcFixture(key), inventory);
                     return result;
-                }, selected == "native-diagnostics-only" ? ["adapter-coverage-v" + key] : null);
+                }, selected == "native-diagnostics-only" ? ["adapter-coverage-v" + key, "engine-host-gate", "engine-host-reference"] : null);
             }
             var plcCampaignName = CheckAllPlcSuccessor("campaign-inputs-v" + key);
             Add(plcCampaignName, () => Python(plcCampaignName, "scripts/checks/Test-CampaignInputs.py", "--exe", host, "--major", key,

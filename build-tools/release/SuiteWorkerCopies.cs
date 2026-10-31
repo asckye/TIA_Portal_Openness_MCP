@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Runtime.InteropServices;
 
 namespace TiaMcp.ReleaseTool;
 
@@ -8,6 +9,32 @@ internal sealed record SuiteWorkerRuntime(string Assembly, string Fixtures, stri
 // their shared-output groups until their writable inputs have been isolated.
 internal sealed class SuiteWorkerCopies(string output)
 {
+    // Third-party loader inputs only. Product/test assemblies, configs and data
+    // remain private because fixtures rewrite their identities and contents.
+    internal static bool Immutable(string relative) => relative.IndexOfAny(['\\', '/']) < 0 && Path.GetFileName(relative) is
+        "System.Text.Json.dll" or "System.Text.Encodings.Web.dll" or "System.IO.Pipelines.dll" or "Newtonsoft.Json.dll" or
+        "System.Memory.dll" or "System.Buffers.dll" or "System.Numerics.Vectors.dll" or "System.Threading.Tasks.Extensions.dll" or
+        "System.Runtime.CompilerServices.Unsafe.dll" or "Microsoft.Bcl.AsyncInterfaces.dll" or "xunit.assert.dll" or "xunit.core.dll";
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CreateHardLinkW(string name, string existing, IntPtr security);
+    [DllImport("libc", EntryPoint = "link", SetLastError = true)]
+    private static extern int Link(string existing, string name);
+
+    internal static bool TryLink(string source, string destination)
+    {
+        try { return OperatingSystem.IsWindows() ? CreateHardLinkW(destination, source, IntPtr.Zero) : Link(source, destination) == 0; }
+        catch (Exception ex) when (ex is DllNotFoundException or EntryPointNotFoundException or PlatformNotSupportedException) { return false; }
+    }
+
+    internal static string CopyFile(string source, string destination, string relative, Func<string, string, bool>? link = null)
+    {
+        if (Immutable(relative) && (link ?? TryLink)(source, destination)) return "hard-link";
+        File.Copy(source, destination);
+        return "copy";
+    }
+
     internal const string FoundationProject = "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj";
     private readonly Dictionary<string, (CheckBuild Unit, string Results)> requests = new(StringComparer.Ordinal);
     private readonly Dictionary<string, SuiteWorkerRuntime> runtimes = new(StringComparer.Ordinal);
@@ -85,10 +112,10 @@ internal sealed class SuiteWorkerCopies(string output)
                 var (input, hash) = item.pair;
                 string relative = Path.GetRelativePath(source, input), destination = Path.Combine(target, relative);
                 Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
-                File.Copy(input, destination);
+                var method = CopyFile(input, destination, relative);
                 if (hash != ReleaseRecords.HashFile(destination) || hash != ReleaseRecords.HashFile(input))
                     throw new ReleaseException("Worker copy differs from built input: " + input);
-                copied[item.index] = new { source = input, destination, relative, sha256 = hash, bytes = new FileInfo(input).Length };
+                copied[item.index] = new { source = input, destination, relative, method, sha256 = hash, bytes = new FileInfo(input).Length };
             });
             files.AddRange(copied);
             if (Directory.GetFiles(target, "*", SearchOption.AllDirectories).Length != inputs.Count ||

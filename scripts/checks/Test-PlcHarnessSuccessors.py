@@ -3,6 +3,7 @@ import argparse
 from contextlib import contextmanager, redirect_stdout
 import importlib.util
 import io
+import hashlib
 import json
 from pathlib import Path
 import unittest
@@ -221,6 +222,65 @@ class PlcHarnessSuccessorTests(unittest.TestCase):
         self.args.release_tool = self.root / 'missing/TiaMcp.ReleaseTool.dll'
         with self.assertRaisesRegex(AssertionError, 'must be built in this worktree'):
             harness.suites(self.args)
+
+    def reference_fixture(self):
+        run = self.root / 'run'
+        suites = run / 'suites'
+        suites.mkdir(parents=True)
+        self.args.output = run / 'harness-v21-native-diagnostics-only-plc'
+        self.args.output.mkdir()
+        self.args.runtime_manifest = run / 'runtime.tsv'
+        self.args.runtime_manifest.write_bytes(b'this run')
+        self.args.engine_host_results = suites / 'engine-host.reference.json'
+        minimum = json.loads((harness.ROOT / 'tests/test-suites.json').read_text(encoding='utf-8'))['engine-host']['minimumPassed']
+        summary = dict(suite='engine-host', minimumPassed=minimum, maximumSkipped=0, passed=minimum, failed=0,
+                       total=minimum, skipped=0, errors=[])
+        (suites / 'engine-host.json').write_text(json.dumps(summary), encoding='utf-8')
+        rows = ''.join(f'<UnitTestResult executionId="{index}" outcome="Passed"/>' for index in range(minimum))
+        (suites / 'engine-host.trx').write_text(
+            '<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010"><Results>' + rows + '</Results>'
+            f'<ResultSummary outcome="Completed"><Counters total="{minimum}" executed="{minimum}" passed="{minimum}" failed="0" notExecuted="0"/></ResultSummary></TestRun>', encoding='utf-8')
+        digest = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
+        proof = dict(schemaVersion=1, runRoot=str(run), runtimeManifest=str(self.args.runtime_manifest),
+                     runtimeManifestSha256=digest(self.args.runtime_manifest),
+                     binaries=[dict(path=str(self.worker), sha256=digest(self.worker))],
+                     summary=str(suites / 'engine-host.json'), summarySha256=digest(suites / 'engine-host.json'),
+                     trx=str(suites / 'engine-host.trx'), trxSha256=digest(suites / 'engine-host.trx'))
+        self.args.engine_host_results.write_text(json.dumps(proof), encoding='utf-8')
+        return proof, summary
+
+    def test_shared_engine_host_result_requires_same_run_manifest_binaries_and_registered_gate(self):
+        proof, summary = self.reference_fixture()
+        with patch.object(harness, 'run') as runner, redirect_stdout(io.StringIO()) as output:
+            harness.suites(self.args)
+        runner.assert_not_called()
+        self.assertIn(f"COMPLETE: {summary['passed']} engine-host checks passed", output.getvalue())
+        self.assertEqual(json.loads((self.args.output / 'engine-host-reference.json').read_text()), proof)
+
+    def test_shared_engine_host_missing_failed_or_stale_results_fail_without_rerunning(self):
+        proof, summary = self.reference_fixture()
+        original = {Path(path): Path(path).read_bytes() for path in
+                    (proof['summary'], proof['trx'], proof['runtimeManifest'], self.worker, self.args.engine_host_results)}
+        for case in ('missing-reference', 'missing-summary', 'failed', 'under-minimum', 'manifest', 'binary', 'trx', 'other-run'):
+            with self.subTest(case=case):
+                for path, data in original.items(): path.write_bytes(data)
+                changed = dict(proof)
+                if case == 'missing-reference': self.args.engine_host_results.unlink()
+                elif case == 'missing-summary': Path(proof['summary']).unlink()
+                elif case in ('failed', 'under-minimum'):
+                    value = dict(summary)
+                    if case == 'failed': value['errors'] = ['failed shard']
+                    else: value['passed'] -= 1
+                    Path(proof['summary']).write_text(json.dumps(value), encoding='utf-8')
+                    changed['summarySha256'] = hashlib.sha256(Path(proof['summary']).read_bytes()).hexdigest()
+                elif case == 'manifest': self.args.runtime_manifest.write_bytes(b'other runtime manifest')
+                elif case == 'binary': self.worker.write_bytes(b'other worker')
+                elif case == 'trx': Path(proof['trx']).write_bytes(b'other TRX')
+                else: changed['runRoot'] = str(self.root / 'old-run')
+                if case != 'missing-reference': self.args.engine_host_results.write_text(json.dumps(changed), encoding='utf-8')
+                with patch.object(harness, 'run') as runner, self.assertRaises((AssertionError, KeyError, ValueError)):
+                    harness.suites(self.args)
+                runner.assert_not_called()
 
     def test_staged_tool_reply_is_fully_reassembled(self):
         logical = dict(schemaVersion=4, ok=True, data={'tools': [1]}, error=None, meta={})
