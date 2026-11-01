@@ -37,6 +37,8 @@
 | [0023](0023-release-4-0-final-criteria.md) | 4.0 正式版在全部 4.0 任务合并、检查通过、rc 与维护者确认后发布 | 已采纳 | 2026-10-30 | — |
 | [0024](0024-ci-does-not-block-merges.md) | 合并以本机受影响的检查为门，GitHub CI 不阻塞合并和发布 | 已采纳 | 2026-10-30 | B35 |
 | [0025](0025-release-evidence-nightly-and-verified-build-units.md) | 发布证据采用最近一次通过的 nightly 与已验证的增量构建单元 | 已采纳（实现见 RULES-1） | 2026-11-01 | — |
+| [0026](0026-documentation-structure-and-language.md) | 开发文档按 EplanMCP 的目录结构重组，路径稳定优先，docs 下统一用中文 | 已采纳 | 2026-10-22 | — |
+| [0027](0027-archify-diagrams.md) | 架构、流程和时序图用 archify 生成，JSON 为源，HTML 与来源记录一起提交 | 已采纳 | 2026-10-22 | — |
 | [0028](0028-workbench-visual-design-eplanmcp.md) | 工作台视觉设计采用 EplanMcp 设计系统（取代 0018、0021 的视觉部分） | 已采纳（实施见 UI-2a…UI-2d） | 2026-11-01 | — |
 | [0029](0029-authoritative-session-state.md) | One managed session view and visible host lifetimes | 已采纳 | 2026-11-01 | — |
 
