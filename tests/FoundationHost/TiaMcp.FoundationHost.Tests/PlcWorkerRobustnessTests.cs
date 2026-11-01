@@ -102,7 +102,7 @@ public sealed class PlcFixtureWorkerRobustnessTests
         using var scope = new Scope(release, mode);
         var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(definition => definition.Name == "GetBlocks"), scope.Worker),
             release, null, () => new(false, 1), readinessForTest: () => {
-                scope.Arm("ReadBlocks").GetAwaiter().GetResult();
+                scope.Arm("plc-paging.ReadBlockPage").GetAwaiter().GetResult();
                 return new JsonObject { ["ready"] = true };
             });
         var server = DispatchProxy.Create<IMcpServer, WorkerRobustnessTests.ServerProxy>();
@@ -123,7 +123,7 @@ public sealed class PlcFixtureWorkerRobustnessTests
         using var scope = new Scope(release, mode);
         var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(definition => definition.Name == "GetBlocks"), scope.Worker),
             release, null, () => new(false, 1), readinessForTest: () => {
-                scope.Arm("ReadBlocks").GetAwaiter().GetResult();
+                scope.Arm("plc-paging.ReadBlockPage").GetAwaiter().GetResult();
                 scope.Prechecks(release).GetAwaiter().GetResult();
                 return new JsonObject { ["ready"] = true };
             });

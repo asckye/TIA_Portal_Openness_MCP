@@ -453,7 +453,8 @@ internal static class ReleaseRecords
             {
                 var ext = Path.GetExtension(file);
                 var bundledRuntime = file.StartsWith(Path.Combine(runtime, "dotnet") + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
-                var allowed = BinaryExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase) || FontExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase) || ext.Equals(".json", StringComparison.OrdinalIgnoreCase) || ext.Equals(".txt", StringComparison.OrdinalIgnoreCase) || bundledRuntime;
+                var decoderRuntime = file.StartsWith(Path.Combine(runtime, "decoder-python") + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+                var allowed = BinaryExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase) || FontExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase) || ext.Equals(".json", StringComparison.OrdinalIgnoreCase) || ext.Equals(".txt", StringComparison.OrdinalIgnoreCase) || bundledRuntime || decoderRuntime;
                 return allowed && !Path.GetFileName(file).Equals("README.md", StringComparison.OrdinalIgnoreCase) &&
                        (!prepared || !System.Text.RegularExpressions.Regex.IsMatch(file, @"[\\/]runtime[\\/](verification|tools)[\\/]|[\\/]runtime[\\/](v20|v21)[\\/]plc-worker[\\/]", System.Text.RegularExpressions.RegexOptions.IgnoreCase));
             })

@@ -213,7 +213,7 @@ internal static class FoundationPassiveDiagnostics
         var release = TiaVersionCatalog.Get(releaseKey);
         if (tools.Count > MaxTools) throw new InvalidOperationException();
         if (offset < 0 || offset > tools.Count || limit < 1 || limit > RosterPageLimit) throw new ArgumentOutOfRangeException();
-        sourceOperations ??= WorkerOperations.Names.Concat(new[] { "plc-analysis.ExportBlockDocument" }).Concat(TiaMcp.Adapters.Contracts.PortedFamilies.All.SelectMany(
+        sourceOperations ??= WorkerOperations.Names.Concat(new[] { "plc-analysis.ExportBlockDocument", WorkerOperations.BlockPage }).Concat(TiaMcp.Adapters.Contracts.PortedFamilies.All.SelectMany(
             family => WorkerOperations.FamilyNames(family.Name).Select(operation => family.OperationPrefix + "." + operation)))
             .ToHashSet(StringComparer.Ordinal);
         var families = PortedToolContract.Families(releaseKey).ToArray();

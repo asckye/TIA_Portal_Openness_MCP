@@ -78,6 +78,8 @@ internal static class FoundationTools
         new("CompileSoftware","CompileSoftware","[v17-compile-safe-v1] Preview by default. Actual PLC compilation returns native counts and nested messages; no download. Nonempty safety password requires supplied V17+ SafetyAdministration API and service; never ignored.",new[]{S("softwarePath"),new Argument("password","string",false,""),Dry()},"Compile"),
         new("CompileAndDiagnosePlc","CompileSoftware","[v17-compile-safe-v1] Actual counts plus error/warning/info diagnostics, preserving summary lines in raw messages. Preview by default; exact project confirmation required for execution.",new[]{S("softwarePath"),new Argument("password","string",false,""),Dry()},"Compile")
     };
+    internal static readonly Definition PagedBlocks =
+        new("GetBlocks", TiaMcp.PlcWorker.WorkerOperations.BlockPage, "List ordinary user-group blocks in stable ordinal group-qualified path order; path is usable by GetPlcBlockInfo/ExportPlcBlock. Reads details for this page only. limit 1..100 (default 20); pass meta.paging.nextCursor as cursor with the same softwarePath/regexName. Inventory changes invalidate the cursor; restart with empty cursor. System blocks and software units excluded.", new[]{S("softwarePath"),new Argument("regexName","string",false,""),new Argument("limit","integer",false,20,"Maximum blocks per page, 1..100."),new Argument("cursor","string",false,"","Opaque meta.paging.nextCursor from the previous page; empty starts a listing.")}, "BlockPage");
     internal static bool Available(Definition definition, string releaseKey)
     {
         var major = TiaMcp.Versioning.TiaVersionCatalog.Get(releaseKey).MajorVersion;
@@ -152,6 +154,7 @@ internal sealed partial class FoundationTool : McpServerTool
         var schemaRoot=new JsonObject { ["type"]="object", ["properties"]=properties, ["additionalProperties"]=false, ["required"]=new JsonArray(definition.Arguments.Where(p=>p.Required).Select(p=>(JsonNode?)JsonValue.Create(p.Name)).ToArray()) };
         tool=new Tool { Name=definition.Name, Description=(IsNative ? "[PLC foundation; native unverified] " : "")+definition.Description, InputSchema=JsonSerializer.SerializeToElement(schemaRoot) };
     }
+    internal FoundationTool ForBlockPaging() => new(FoundationTools.PagedBlocks, worker, stagingForTest);
     public override Tool ProtocolTool=>tool;
     internal bool IsWrite
     {
@@ -267,6 +270,7 @@ internal sealed partial class FoundationTool : McpServerTool
             if(string.IsNullOrWhiteSpace(values["expectedProjectFile"]?.GetValue<string>())) throw new ArgumentException("Execution requires the exact expectedProjectFile.","expectedProjectFile");
         }
         if(definition.Name=="DiagnosePortalConnectReadiness" && values["processId"]!.GetValue<int>()<=0) throw new ArgumentException("Select an explicit positive processId.","processId");
+        if(definition.ResponseMember=="BlockPage") TiaMcp.Adapters.Contracts.Paging.PlcBlockPaging.Validate(values["limit"]!.GetValue<int>(), values["cursor"]!.GetValue<string>());
         if(definition.ResponseMember=="HardwareCatalog") HardwareCatalogContract.ValidateArguments(values);
         if(definition.ResponseMember=="Declarations") DeclarationReadContract.ValidateArguments(values);
         if(definition.ResponseMember=="BatchExport" && !values["dryRun"]!.GetValue<bool>() && string.IsNullOrWhiteSpace(values["expectedInventoryHash"]!.GetValue<string>())) throw new ArgumentException("Execution requires expectedInventoryHash from a fresh preview.","expectedInventoryHash");
@@ -355,7 +359,7 @@ internal sealed partial class FoundationTool : McpServerTool
             else if(definition.ResponseMember=="Declarations") result=DeclarationReadContract.Validate(definition.Name,values["table"]!.GetValue<string>(),result,(string?)values["unitName"] ?? "",(bool?)values["includeUnits"] ?? false);
             else if(definition.ResponseMember=="SupplementaryRead") result=SupplementaryReadContract.Wrap(definition.Name,result,McpJsonUtilities.DefaultOptions);
             else if(definition.ResponseMember=="SoftwareRead") result=SoftwareReadContract.Wrap(definition.Name,result,McpJsonUtilities.DefaultOptions);
-            else if(definition.ResponseMember!=null) result=V17ReadEnvelope.Wrap(definition.Name,definition.ResponseMember,result);
+            else if(definition.ResponseMember!=null && definition.ResponseMember!="BlockPage") result=V17ReadEnvelope.Wrap(definition.Name,definition.ResponseMember,result);
             if (release != null)
             {
                 var reply = FoundationV4Result.Worker(release, definition, id!, values, raw, result);

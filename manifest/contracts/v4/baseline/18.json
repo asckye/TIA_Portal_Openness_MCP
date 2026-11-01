@@ -31916,7 +31916,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "d77ab5ace18a22deaee269e3a5c11682d588a1997b41b823ca8933c2fd01d892",
+      "descriptionSha256": "b9334e5d4d38760f4d0f3379c773921c44419558a05d15987ea370a4820744dd",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -144989,7 +144989,7 @@
           },
           "query": {
             "default": "",
-            "description": "Space-separated capability words; empty lists all tools.",
+            "description": "All capability words must match; incidental description hits below the relevance threshold are excluded. Empty browses the catalog.",
             "examples": [
               "watch table"
             ],
@@ -175216,7 +175216,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "06a1ce0c9382b20d3861e08f96945e65c4466dbf4bdba9be92444f0f1b703f98",
+      "descriptionSha256": "0a26b1f5fd0be5b7252b61a8144e9829066031304c8c5ad528a6b326343f68d0",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -305570,10 +305570,20 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "5c4577810056375b9c491d8c9dddedc5629ce7a4e5278dd3a14928d95a954f93",
+      "descriptionSha256": "b4eddfd97f7f788e307d147a57f9149113c01d4007f0dbed21158e738e937e64",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "cursor": {
+            "default": "",
+            "description": "Opaque meta.paging.nextCursor from the previous page; empty starts a listing.",
+            "type": "string"
+          },
+          "limit": {
+            "default": 20,
+            "description": "Maximum blocks per page, 1..100.",
+            "type": "integer"
+          },
           "regexName": {
             "default": "",
             "description": "Exact foundation argument: regexName",

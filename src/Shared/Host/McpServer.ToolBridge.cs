@@ -150,7 +150,7 @@ namespace TiaMcpServer.ModelContextProtocol
 #if !TIA_ENGINE_PORTED
         [McpServerTool(Name = "FindTools"), Description("[L0][Meta][READ] Search the full version-gated catalog, including tools outside lite. Returns names, signatures, descriptions and examples. Use CallTool with an arguments object to invoke a match.")]
         public static CallToolResult FindToolsV4(
-            [Description("Space-separated capability words; empty lists all tools.")] string query = "",
+            [Description("All capability words must match; incidental description hits below the relevance threshold are excluded. Empty browses the catalog.")] string query = "",
             [Description("Positive page size; default 12.")] int limit = 12,
             [Description("Optional category key from ListToolCategories.")] string category = "",
             [Description("Optional exact domain tag from ListToolCategories.")] string domain = "",
@@ -213,17 +213,21 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     string lname = kv.Key.ToLowerInvariant();
                     string desc = (ToolDescription(kv.Value) + " " + ToolMetadata.SearchAliases(kv.Key)).ToLowerInvariant();
-                    int score = 0;
-                    if (terms.Length == 0) score = 1;
+                    int score = terms.Length == 0 ? 1 : 0;
+                    int matched = 0;
+                    string aliases = ToolMetadata.SearchAliases(kv.Key).ToLowerInvariant();
                     foreach (var t in terms)
                     {
-                        // Name hits outrank description hits: a model searching "watch table"
-                        // wants ExportPlcWatchTable ahead of every tool that merely mentions it.
-                        if (lname == t) score += 100;
-                        else if (lname.Contains(t)) score += 20;
-                        if (desc.Contains(t)) score += 3;
+                        int weight = lname.Contains(t) ? 20 : aliases.Contains(t) ? 12 : desc.Contains(t) ? 3 : 0;
+                        score += weight;
+                        if (weight > 0) matched++;
                     }
-                    if (score > 0) scored.Add(new KeyValuePair<int, string>(score, kv.Key));
+                    // Require every capability word and enough evidence to exclude a lone
+                    // incidental description reference. Exact registered names always win.
+                    bool exact = string.Equals(kv.Key, query?.Trim(), StringComparison.OrdinalIgnoreCase);
+                    if (exact) score = int.MaxValue;
+                    if (terms.Length == 0 || exact || matched == terms.Length && score >= 6)
+                        scored.Add(new KeyValuePair<int, string>(score, kv.Key));
                 }
 
                 if (scored.Count == 0)
@@ -270,7 +274,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
 #if !TIA_ENGINE_PORTED
-        [McpServerTool(Name = "CallTool"), Description("[L0][Meta] Invoke a tool in the full version-gated catalog. arguments must be an object matching the target inputSchema. Returns the target result unchanged; dispatch failures use the V4 envelope. Nested orchestration is refused.")]
+        [McpServerTool(Name = "CallTool"), Description("[L0][Meta] Invoke a tool in the full version-gated catalog. arguments must be an object matching the target inputSchema. Large results return data.text, data.export and data.continuation; follow GetExportContent with meta.paging.nextOffset and concatenate text before parsing. Dispatch failures use the V4 envelope. Nested orchestration is refused.")]
         [AsyncDispatch(nameof(CallToolAsync))]
         public static CallToolResult CallTool(
             [Description("Exact currently registered tool name from FindTools.")] string name,

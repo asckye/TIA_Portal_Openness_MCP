@@ -83,6 +83,7 @@ internal sealed class FoundationV4Tool : McpServerTool
     {
         if (inner is OfflineXmlTool xmlTool) inner = xmlTool.ForRelease(release);
         else if (inner is OfflineCompositionTool compositionTool) inner = compositionTool.ForRelease(release);
+        if (inner is FoundationTool blocks && inner.ProtocolTool.Name == "GetBlocks") inner = blocks.ForBlockPaging();
         this.inner = inner; this.release = release;
         this.approvalSettings = approvalSettings;
         this.approvalWait = approvalWait;

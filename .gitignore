@@ -75,3 +75,5 @@ TIA_V21_PublicAPI/
 /data/
 
 /staging/
+
+/runtime/decoder-python/

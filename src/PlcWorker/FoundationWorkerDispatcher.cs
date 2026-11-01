@@ -68,6 +68,7 @@ namespace TiaMcp.PlcWorker
                 compileCandidateEnabled ? WorkerOperations.CompileCandidate : null
             }.Where(n => n != null).Select(n => n!));
             var modules = new List<WorkerOperationModule> { new WorkerOperationModule("", typeof(PlcFoundationEngine), names) };
+            modules.Add(new WorkerOperationModule("plc-paging", typeof(PlcFoundationEngine), new[] { "ReadBlockPage" }));
             modules.Add(new WorkerOperationModule("plc-analysis", typeof(PlcFoundationEngine), new[] { "ExportBlockDocument" }));
             foreach (var family in PortedFamilies.All.Where(f => f.Available(releaseKey)))
                 modules.Add(new WorkerOperationModule(family.OperationPrefix, family.Name == "F04" ? typeof(plcsim::TiaMcp.PlcWorker.Runtime.PlcSimAdvancedAdapter) : typeof(PlcFoundationEngine), WorkerOperations.FamilyNames(family.Name)));

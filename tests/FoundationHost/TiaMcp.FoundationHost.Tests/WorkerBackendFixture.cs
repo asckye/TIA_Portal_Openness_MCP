@@ -54,9 +54,9 @@ internal sealed class WorkerBackendFixture : Foundation.IFoundationSessionWorker
     public void MarkUncertain() => Inner.MarkUncertain();
     public async Task<JsonNode?> Call(string operation, JsonObject args, CancellationToken token)
     {
-        if (faultFixture && operation is "ReadBlocks" or "optional-products.ExecuteOptionalProduct" or "Attach")
+        if (faultFixture && operation is "ReadBlocks" or "plc-paging.ReadBlockPage" or "optional-products.ExecuteOptionalProduct" or "Attach")
         {
-            string tool = operation == "ReadBlocks" ? "ListPlcBlocks" : operation == "Attach" ? "AttachOpenProject" : "ListTestSuiteCases";
+            string tool = operation is "ReadBlocks" or "plc-paging.ReadBlockPage" ? "ListPlcBlocks" : operation == "Attach" ? "AttachOpenProject" : "ListTestSuiteCases";
             using var request = Foundation.FoundationWorkerRequest.Use(Foundation.FoundationWorkerRequest.CorrelationId, tool);
             await plc!.Call("FaultFixtureArm", new() { ["method"] = "adapter." + operation }, token);
             return await Inner.Call(operation, args, token);

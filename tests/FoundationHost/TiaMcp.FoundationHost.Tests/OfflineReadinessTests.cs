@@ -21,7 +21,7 @@ public sealed class OfflineReadinessTests
                 .Where(name => TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(name)?.Operation == "OFFLINE")
                 .Select(name => new object[] { release, name }));
 
-    // DecodePlcSimaticMl runs the plug-in ecosystem Python. Without that environment it must refuse with its own prerequisite
+    // DecodePlcSimaticMl runs the bundled Python. Without that runtime it must refuse with its own prerequisite
     // (IO_FAILED ecosystem-python) before any work - never with the TIA readiness refusal; with it, it must succeed.
     private static void AssertRanWithoutReadiness(string name, JsonNode? content)
     {
@@ -38,13 +38,11 @@ public sealed class OfflineReadinessTests
         Assert.Null(content?["error"]);
     }
 
-    // Same resolution as DataLocations.EcosystemPython: the configured executable, else the per-user environment.
+    // Probe the same bundled dependency used by DecodePlcSimaticMl, independent of user Python configuration.
     private static bool EcosystemPythonAvailable()
     {
-        string? configured = Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON");
-        if (configured != null) return Path.IsPathRooted(configured) && File.Exists(configured);
-        string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        return local.Length > 0 && File.Exists(Path.Combine(local, "TiaMcp", "ecosystem-python", "Scripts", "python.exe"));
+        string root = BundleLayout.RequireRoot(AppContext.BaseDirectory);
+        return File.Exists(Path.Combine(root, "runtime", "decoder-python", "python.exe"));
     }
 
     [Theory, MemberData(nameof(Cases))]

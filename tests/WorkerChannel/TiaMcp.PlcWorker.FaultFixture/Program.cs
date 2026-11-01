@@ -114,6 +114,8 @@ internal static class Program
                 return ChannelResponse.WithSpill(step, () => Spill(step, mode));
             }
             string raw = request.Method == "adapter.ReadBlocks" ? new JsonArray(new JsonObject { ["Name"] = padding }).ToJsonString()
+                : request.Method == "adapter.plc-paging.ReadBlockPage" ? new JsonObject { ["Items"] = new JsonArray(new JsonObject { ["Name"] = padding, ["Path"] = "fixture" }),
+                    ["Offset"] = 0, ["Total"] = 1, ["NextCursor"] = null }.ToJsonString()
                 : JsonSerializer.Serialize(new { ReleaseKey = options.ReleaseKey, IsAttached = bound, ProcessId = bound ? (int?)123 : null,
                     // Fault scenarios have a synthetic project so normal ReadState
                     // prechecks can admit the operation that will receive the fault.

@@ -8,6 +8,7 @@ using Siemens.Engineering.HW;
 using Siemens.Engineering.HW.Features;
 using Siemens.Engineering.SW;
 using System.Collections.Generic;
+using TiaMcp.Adapters.Contracts.Paging;
 
 namespace TiaMcp.Adapters
 {
@@ -135,6 +136,29 @@ namespace TiaMcp.Adapters
         {
             var filter=NameFilter(regexName);
             return BlockGroups(ReadPlc(softwarePath).BlockGroup).SelectMany(g=>g.Value.Blocks).Where(b=>filter==null || filter.IsMatch(b.Name)).Select(BlockDetails).ToArray();
+        }
+        private string blockPagingSession = Guid.NewGuid().ToString("N");
+        private object? blockPagingProject;
+        private static PlcBlockDetails BlockDetailsAt(PlcBlock block, string path)
+        {
+            var details = BlockDetails(block);
+            details.Path = path;
+            return details;
+        }
+        public PlcBlockPage ReadBlockPage(string softwarePath, string regexName = "", int limit = 20, string cursor = "")
+        {
+            PlcBlockPaging.Validate(limit, cursor);
+            var filter = NameFilter(regexName);
+            var selection = ReadSelection(softwarePath);
+            var blocks = BlockGroups(selection.Value.BlockGroup)
+                .SelectMany(g => g.Value.Blocks.Select(b => new Located<PlcBlock>(Child(g.Path, b.Name), b)))
+                .Where(b => filter == null || filter.IsMatch(b.Value.Name)).OrderBy(b => b.Path, StringComparer.Ordinal).ToArray();
+            if (!ReferenceEquals(blockPagingProject, project))
+            { blockPagingProject = project; blockPagingSession = Guid.NewGuid().ToString("N"); }
+            var page = PlcBlockPaging.Plan(blocks.Select(b => b.Path).ToArray(),
+                blockPagingSession + "\n" + selection.ExactPath + "\n" + softwarePath + "\n" + regexName, limit, cursor);
+            page.Items = blocks.Skip(page.Offset).Take(limit).Select(b => BlockDetailsAt(b.Value, b.Path)).ToArray();
+            return page;
         }
         public PlcBlockDetails ReadBlockInfo(string softwarePath, string blockPath)
         {

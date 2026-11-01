@@ -61518,7 +61518,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "1e6143baeed0e106474eb3fed5a2a0315767b8d5a458c9c811a711def67c67ea",
+      "descriptionSha256": "17ed32a989dc1f6fa4ad04eb0f0387db3a285da658ee520e5c35e3de2001fbc3",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -112666,7 +112666,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "686f46fd657c6f9968fbaa86dbeadcf7fdcdaec35e1e379bdf0f21b0bc1f5857",
+      "descriptionSha256": "b2e9a638d58a215f5e8ef8f3becd46e0795040b3aad0390a60ed77a08bb6179b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -112676,7 +112676,7 @@
           },
           "timeoutSeconds": {
             "default": 30,
-            "description": "Isolated local Python timeout 1..60 seconds.",
+            "description": "Bundled decoder timeout 1..60 seconds.",
             "type": "integer"
           }
         },
@@ -206199,7 +206199,7 @@
           },
           "query": {
             "default": "",
-            "description": "Space-separated capability words; empty lists all tools.",
+            "description": "All capability words must match; incidental description hits below the relevance threshold are excluded. Empty browses the catalog.",
             "examples": [
               "watch table"
             ],
@@ -236426,7 +236426,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "5c4bd9905a2bab09919fc157726ea531a05d13ac23c6d3ed48c25c4ffab3830c",
+      "descriptionSha256": "19f163a56c102b19359721fac6c418343072bdc48b132cc65894b9b607133fe6",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -397411,10 +397411,20 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "5c4577810056375b9c491d8c9dddedc5629ce7a4e5278dd3a14928d95a954f93",
+      "descriptionSha256": "b4eddfd97f7f788e307d147a57f9149113c01d4007f0dbed21158e738e937e64",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "cursor": {
+            "default": "",
+            "description": "Opaque meta.paging.nextCursor from the previous page; empty starts a listing.",
+            "type": "string"
+          },
+          "limit": {
+            "default": 20,
+            "description": "Maximum blocks per page, 1..100.",
+            "type": "integer"
+          },
           "regexName": {
             "default": "",
             "description": "Exact foundation argument: regexName",

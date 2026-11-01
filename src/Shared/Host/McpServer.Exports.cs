@@ -177,6 +177,25 @@ namespace TiaMcpServer.ModelContextProtocol
             return string.IsNullOrWhiteSpace(s) ? null : s!.Trim();
         }
 
+        // JSON escaping and envelope metadata also consume the client's text budget.
+        // Keep offsets in source UTF-16 units while fitting the serialized page.
+        internal static CallToolResult FitTextPage(ExportSlice maximum, Func<int, ExportSlice> slice, Func<ExportSlice, CallToolResult> render)
+        {
+            var result = render(maximum);
+            int WireLength(CallToolResult value) => ((TextContentBlock)value.Content[0]).Text.Length;
+            if (maximum.Returned < 2 || WireLength(result) <= McpServer.DefaultMaxResponseChars) return result;
+            var best = render(slice(1));
+            int low = 2, high = maximum.Returned - 1;
+            while (low <= high)
+            {
+                int middle = low + (high - low) / 2;
+                var candidate = render(slice(middle));
+                if (WireLength(candidate) <= McpServer.DefaultMaxResponseChars) { best = candidate; low = middle + 1; }
+                else high = middle - 1;
+            }
+            return best;
+        }
+
         /// <summary>超阈值就寄存并只回头部；其余情况原样返回同一个对象。</summary>
         internal static CallToolResult Shrink(CallToolResult? result, string toolName, string target, bool force = false)
         {
@@ -212,20 +231,26 @@ namespace TiaMcpServer.ModelContextProtocol
             if (JsonNode.Parse(full) is JsonObject envelope && envelope["schemaVersion"]?.GetValue<int?>() == 4)
             {
                 var original = V4Json.Deserialize<Envelope>(full);
-                string sha256;
-                var bytes = Encoding.UTF8.GetBytes(full);
-                using (var hash = System.Security.Cryptography.SHA256.Create())
-                    sha256 = BitConverter.ToString(hash.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant();
                 var entry = ExportStore.Get(id);
-                var data = new JsonObject { ["text"] = head.Text, ["returned"] = head.Returned, ["export"] = PlcExchangeContract.DescribeExport(entry!) };
-                var m = original.Meta;
-                var paging = new Paging(PagingMode.Offset, 0, Math.Min(limit, ExportStore.MaxSliceChars), head.NextOffset, null, null,
-                    head.TotalLength, head.Eof, PagingUnit.Utf16);
-                var pageMeta = new Meta(m.Timestamp, m.ReleaseKey, m.Tool, m.RequestId, m.Outcome, m.Execution, m.RequiresSessionReset,
-                    m.BehaviorPolicy, m.Completeness, paging, m.Warnings);
-                var mapped = McpResult.From(Envelope.Create(data, original.Error, pageMeta));
-                return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
-                    Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
+                var export = PlcExchangeContract.DescribeExport(entry!);
+                CallToolResult Render(ExportSlice page)
+                {
+                    if (page.Error != null) throw new InvalidOperationException(page.Message);
+                    var data = new JsonObject {
+                        ["continuation"] = new JsonObject { ["name"] = "GetExportContent",
+                            ["arguments"] = new JsonObject { ["exportId"] = id, ["offset"] = page.NextOffset, ["limit"] = ExportStore.MaxSliceChars },
+                            ["hint"] = "Invoke GetExportContent directly or through CallTool with these arguments. Concatenate data.text from this page and each GetExportContent page, following meta.paging.nextOffset until complete=true, then parse the full original response. SaveExportContent(raw=true) saves it in one call. Handles last 24 hours in this session." },
+                        ["export"] = export.DeepClone(), ["returned"] = page.Returned, ["text"] = page.Text };
+                    var m = original.Meta;
+                    var paging = new Paging(PagingMode.Offset, 0, Math.Min(limit, ExportStore.MaxSliceChars), page.NextOffset, null, null,
+                        page.TotalLength, page.Eof, PagingUnit.Utf16);
+                    var pageMeta = new Meta(m.Timestamp, m.ReleaseKey, m.Tool, m.RequestId, m.Outcome, m.Execution, m.RequiresSessionReset,
+                        m.BehaviorPolicy, m.Completeness, paging, m.Warnings);
+                    var mapped = McpResult.From(Envelope.Create(data, original.Error, pageMeta));
+                    return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
+                        Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
+                }
+                return FitTextPage(head, length => ExportStore.Slice(id, 0, length), Render);
             }
 
             var meta = new JsonObject

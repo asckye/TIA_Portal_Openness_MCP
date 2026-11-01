@@ -156,6 +156,7 @@ namespace TiaMcp.WorkerChannel
             ["plc-integrity.ExecutePlcOrganisation"] = "default",
             ["plc-opcua.ExecutePlcB5"] = "default",
             ["plc-organisation.ExecutePlcOrganisation"] = "default",
+            ["plc-paging.ReadBlockPage"] = "default",
             ["plc-software.ExecutePlcOrganisation"] = "default",
             ["plc-software.SeedReferenceHmi"] = "importExport",
             ["plc-sources.ExecutePlcOrganisation"] = "default",

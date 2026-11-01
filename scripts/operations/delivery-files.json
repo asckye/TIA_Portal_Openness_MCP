@@ -412,6 +412,12 @@
     "runtime/v21/worker/System.Numerics.Vectors.dll",
     "runtime/v21/worker/System.Runtime.CompilerServices.Unsafe.dll",
     "runtime/v21/worker/System.Threading.Tasks.Extensions.dll",
-    "runtime/v21/worker/TiaMcp.PlcSimAdvanced.dll"
+    "runtime/v21/worker/TiaMcp.PlcSimAdvanced.dll",
+    "runtime/decoder-python/python.exe",
+    "runtime/decoder-python/python._pth",
+    "runtime/decoder-python/stdlib.zip",
+    "runtime/decoder-python/LICENSE.txt",
+    "runtime/decoder-python/runtime.json",
+    "runtime/decoder-python/THIRD-PARTY-LICENSES.html"
   ]
 }

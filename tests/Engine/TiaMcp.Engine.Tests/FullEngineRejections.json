@@ -2320,7 +2320,7 @@
           "timeoutSeconds": {
             "type": "int",
             "default": "30",
-            "description": "Isolated local Python timeout 1..60 seconds.",
+            "description": "Bundled decoder timeout 1..60 seconds.",
             "value": 30
           }
         },
@@ -4965,7 +4965,7 @@
           "query": {
             "type": "string",
             "default": "\"\"",
-            "description": "Space-separated capability words; empty lists all tools.",
+            "description": "All capability words must match; incidental description hits below the relevance threshold are excluded. Empty browses the catalog.",
             "value": ""
           },
           "limit": {
@@ -21741,7 +21741,7 @@
           "timeoutSeconds": {
             "type": "int",
             "default": "30",
-            "description": "Isolated local Python timeout 1..60 seconds.",
+            "description": "Bundled decoder timeout 1..60 seconds.",
             "value": 30
           }
         },
@@ -24358,7 +24358,7 @@
           "query": {
             "type": "string",
             "default": "\"\"",
-            "description": "Space-separated capability words; empty lists all tools.",
+            "description": "All capability words must match; incidental description hits below the relevance threshold are excluded. Empty browses the catalog.",
             "value": ""
           },
           "limit": {

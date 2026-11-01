@@ -58,6 +58,8 @@ var server = new ChannelServer(Console.OpenStandardInput(), Console.OpenStandard
     string padding = mode is "oversized" or "oversized-delayed" ? new string('x', ChannelLimits.ResponseBytes) : "fixture";
     if (request.Method.StartsWith("adapter.")) {
         string raw = request.Method == "adapter.ReadBlocks" ? new JsonArray(new JsonObject { ["Name"] = padding }).ToJsonString()
+            : request.Method == "adapter.plc-paging.ReadBlockPage" ? new JsonObject { ["Items"] = new JsonArray(new JsonObject { ["Name"] = padding, ["Path"] = "fixture" }),
+                ["Offset"] = 0, ["Total"] = 1, ["NextCursor"] = null }.ToJsonString()
             : new JsonObject { ["ReleaseKey"] = release, ["IsAttached"] = bound, ["ProcessId"] = bound ? 123 : null,
                 ["ProjectFile"] = bound ? "C:/fixture.ap" + release : null, ["OwnsProject"] = false, ["IsLocalSession"] = false,
                 ["IdentityStatus"] = "unverified-cached-pid", ["RuntimeConnectionStatus"] = "not-probed" }.ToJsonString();

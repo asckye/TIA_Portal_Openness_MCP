@@ -175,6 +175,15 @@ internal static class FoundationV4Result
         string name = FoundationV4Tool.Name(definition.Name);
         var data = Object(raw);
         HostBehavior.ExportPreview(data);
+        if (definition.ResponseMember == "BlockPage")
+        {
+            int offset = data["offset"]!.GetValue<int>(), limit = args["limit"]!.GetValue<int>();
+            string? next = data["nextCursor"]?.GetValue<string>();
+            int total = data["total"]!.GetValue<int>();
+            data.Remove("offset"); data.Remove("nextCursor"); data.Remove("total");
+            return Wire(release, name, id, data, Outcome.Succeeded, Execution.ReadOnly, Completeness.Complete, null, true,
+                paging: new Paging(PagingMode.Cursor, null, limit, null, string.IsNullOrEmpty((string?)args["cursor"]) ? null : (string?)args["cursor"], next, total, next == null));
+        }
         bool mutation = IsMutation(definition, args);
         bool preview = args["dryRun"]?.GetValue<bool>() == true;
         bool reset = Flag(data, "requiresSessionReset") == true;

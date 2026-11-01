@@ -13,7 +13,7 @@
 | `Czarnak/tia-git-addin` | MIT Core 的 SimaticML 解析、结构差异和 LAD 布局；结合本项目 HTML/Git 适配器。未复制桌面 UI。 | [固定来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/TiaGitAddIn.Core/UPSTREAM.json) |
 | `core-engineering/siemens-plc-tools` | 固定版本的 Python 包和 CLI，通过独立伴随进程调用；安装环境另外准备。 | [固定来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/siemens-plc-tools/UPSTREAM.json) |
 | Siemens OPC UA Modelled Interface Add-In | 复用接口 XML 生成阶段，导入使用现有 MCP 工具；不是安装上游 Add-In。 | [改动记录](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/SiemensOpcUaModelled/UPSTREAM.json) |
-| `Czarnak/simaticml-decoder` | 独立 Python 进程只读分析 V21 FC/FB 导出；输出不可直接回编译或导入。 | [固定来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/simaticml-decoder/UPSTREAM.json) |
+| `Czarnak/simaticml-decoder` | 随包隔离 CPython 进程只读分析 V21 FC/FB 导出；输出不可直接回编译或导入。 | [固定来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/simaticml-decoder/UPSTREAM.json) |
 
 随包许可、依赖与版权见[第三方清单](../licenses/THIRD-PARTY-NOTICES.md)。Siemens PublicAPI 和第三方测试工程不随交付包分发。
 
@@ -70,3 +70,9 @@ V20/V21 V20/V21通过安装布局解析器定位包根，再读取 `reference/si
 - AutoPLC、Agents4PLC 等数据集可供后续案例评估；目前不作为随包已验证程序库。
 
 新候选应补足精确来源、许可证、目标版本、实际可复用代码和功能验证，再登记为已集成。不以完整项目名称代替已完成的具体功能。
+
+### DecodePlcSimaticMl runtime
+
+`DecodePlcSimaticMl` uses `runtime/decoder-python/python.exe` with `-I -S -B`; it does not use `TIA_MCP_PLC_TOOLS_PYTHON`, user site-packages, Python environment variables or pip. The pinned decoder source and its MIT license are unchanged. The delivery contains CPython's original `LICENSE.txt`, `THIRD-PARTY-LICENSES.html` (including OpenSSL, libffi, Expat and zlib terms) and `runtime.json` with the version, architecture and payload hashes.
+
+Release builds run `dotnet run --project build-tools/release -- prepare-decoder-python -Python <release-machine-python.exe>` before recording runtime hashes. `build-multi-version` performs this step automatically. The input must be an installed 64-bit CPython 3.11+ with its standard library, original license and `Doc/html/license.html` from the matching Python documentation. A venv is resolved to its base installation; site-packages are never copied. No download is performed. The decoder's existing XML, byte, depth, response and timeout limits remain active. The separate PLC Tools companion still uses its separately installed environment.

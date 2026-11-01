@@ -1431,7 +1431,8 @@
           "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
           "Read ok, error and meta.outcome/execution/completeness first. If outcome is unknown, inspect the target and reset the session when required before further writes; do not replay automatically.",
           "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance.",
-          "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details."
+          "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
+          "List pages in ordinal exact group-qualified path order: default limit=20, range 1..100. Pass meta.paging.nextCursor as cursor with the same softwarePath and regexName until complete=true. Each data.items[].path is accepted by GetPlcBlockInfo/ExportPlcBlock. A stale cursor requires restarting with an empty cursor; page details are live observations."
         ]
       },
       "GetPlcBlockHierarchy": {
@@ -4640,7 +4641,8 @@
         "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
         "inline": true,
         "resultReading": [
-          "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility.",
+          "If the result is parked, data.continuation gives a GetExportContent call and arguments. Concatenate data.text across meta.paging.nextOffset pages until complete=true before parsing the original response. data.export identifies its byte length and SHA-256. Export handles are scoped to this MCP session and may expire or be evicted."
         ]
       },
       "CheckProductUpdate": {
@@ -4789,7 +4791,8 @@
         "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
         "inline": true,
         "resultReading": [
-          "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility.",
+          "Serialized page text is capped at 20,000 characters including JSON escaping and metadata. returned may be lower than limit; use meta.paging.nextOffset, rather than adding limit yourself."
         ]
       },
       "GetNativeInvocationLog": {
@@ -19075,7 +19078,10 @@
         "parameters": {},
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
+        "inline": true,
+        "resultReading": [
+          "If the result is parked, data.continuation gives a GetExportContent call and arguments. Concatenate data.text across meta.paging.nextOffset pages until complete=true before parsing the original response. data.export identifies its byte length and SHA-256. Export handles are scoped to this MCP session and may expire or be evicted."
+        ]
       },
       "CheckDownloadReadiness": {
         "arguments": {
@@ -19890,7 +19896,10 @@
           }
         },
         "operations": {},
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "resultReading": [
+          "Uses the delivered runtime/decoder-python interpreter and standard library in isolation. No user Python installation, companion environment, pip download or Python environment variable is needed. Output remains analysis-only and must never be imported."
+        ]
       },
       "DeleteEmptyPlcBlockGroup": {
         "arguments": {
@@ -23763,7 +23772,8 @@
           "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
           "Read ok, error and meta.outcome/execution/completeness first. If outcome is unknown, inspect the target and reset the session when required before further writes; do not replay automatically.",
           "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance.",
-          "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details."
+          "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
+          "List pages in ordinal exact group-qualified path order: default limit=20, range 1..100. Pass meta.paging.nextCursor as cursor with the same softwarePath and regexName until complete=true. Each data.items[].path is accepted by GetPlcBlockInfo/ExportPlcBlock. A stale cursor requires restarting with an empty cursor; page details are live observations."
         ]
       },
       "ListPlcForceTables": {
@@ -33664,7 +33674,10 @@
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
+        "inline": true,
+        "resultReading": [
+          "Serialized page text is capped at 20,000 characters including JSON escaping and metadata. returned may be lower than limit; use meta.paging.nextOffset, rather than adding limit yourself."
+        ]
       },
       "ListPlcExternalSources": {
         "arguments": {

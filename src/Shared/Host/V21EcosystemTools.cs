@@ -59,13 +59,13 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("True previews only; false builds when action=build.")] bool dryRun = true, [Description("packageFingerprint from the matching inspect/preview.")] string expectedFingerprint = "")
             => OfflineToolExecution.RunOfflineAnalysisTool("ManageUnifiedCwcPackage", meta => { meta["data"] = UnifiedCwcPackage.Run(directory, action, outputPath, dryRun, expectedFingerprint); return "CWC file workflow completed. Inspect validation boundaries before any separate deployment."; });
 
-        [McpServerTool(Name = "DecodePlcSimaticMl"), Description("[L2][Validation][OFFLINE] Decode one V21 FC/FB SimaticML export with pinned MIT Czarnak/simaticml-decoder into readability-first SCL and metadata. Python >=3.11 via TIA_MCP_PLC_TOOLS_PYTHON or existing ecosystem environment. Does not execute project scripts, call TIA or write files. Output is analysis-only, NOT recompilable/reimportable; unknown instructions, warnings and native-format qualification gaps remain explicit. S7DCL/GRAPH/STL semantic translation is unsupported. V20 input is refused even when this tool runs in the V20 engine.")]
+        [McpServerTool(Name = "DecodePlcSimaticMl"), Description("[L2][Validation][OFFLINE] Decode one V21 FC/FB SimaticML export with pinned MIT Czarnak/simaticml-decoder into readability-first SCL and metadata. Uses the bundled isolated CPython runtime; no Python installation or package download required. Does not execute project scripts, call TIA or write files. Output is analysis-only, NOT recompilable/reimportable; unknown instructions, warnings and native-format qualification gaps remain explicit. S7DCL/GRAPH/STL semantic translation is unsupported. V20 input is refused even when this tool runs in the V20 engine.")]
         public Task<CallToolResult> DecodePlcSimaticMlV4(
             [Description("Absolute existing V21 FC/FB XML export; upstream boundary <=10 MiB.")] string filePath,
-            [Description("Isolated local Python timeout 1..60 seconds.")] int timeoutSeconds = 30)
+            [Description("Bundled decoder timeout 1..60 seconds.")] int timeoutSeconds = 30)
             => OfflineContracts.RunAsync("DecodePlcSimaticMl", () => DecodePlcSimaticMl(filePath, timeoutSeconds), writes: false, current: false);
 
-        public async Task<ResponseMessage> DecodePlcSimaticMl([Description("Absolute existing V21 FC/FB XML export; upstream boundary <=10 MiB.")] string filePath, [Description("Isolated local Python timeout 1..60 seconds.")] int timeoutSeconds = 30)
+        public async Task<ResponseMessage> DecodePlcSimaticMl([Description("Absolute existing V21 FC/FB XML export; upstream boundary <=10 MiB.")] string filePath, [Description("Bundled decoder timeout 1..60 seconds.")] int timeoutSeconds = 30)
         {
             var meta = ResponseMeta.Unstamped(false, ("operationSuccess", false), ("offlineOnly", true), ("tool", "DecodePlcSimaticMl"));
             try {
@@ -73,9 +73,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (timeoutSeconds < 1 || timeoutSeconds > 60) throw new ArgumentException("timeoutSeconds 1..60 required.");
                 var root = EcosystemFiles.RepositoryRoot();
                 var bridge = TiaOpenness.Shared.BundleLayout.RequirePath(root, "scripts/ecosystem/simaticml_decode_bridge.py");
-                var python = TiaOpenness.Shared.DataLocations.Current.EcosystemPythonExecutable;
-                if (!Path.IsPathRooted(python) || !File.Exists(python)) throw new FileNotFoundException("Configure TIA_MCP_PLC_TOOLS_PYTHON to Python 3.11+.");
-                var run = await EcosystemFiles.Run(python, new[] { "-I", "-B", "-X", "utf8", bridge }, root, new JsonObject { ["filePath"] = filePath }.ToJsonString(), timeoutSeconds).ConfigureAwait(false);
+                var python = Path.Combine(root, "runtime", "decoder-python", "python.exe");
+                if (!File.Exists(python)) throw new TiaOpenness.Shared.DataLocationIOException(python, "Bundled Python executable is unavailable");
+                var run = await EcosystemFiles.Run(python, new[] { "-I", "-S", "-B", "-X", "utf8", bridge }, root, new JsonObject { ["filePath"] = filePath }.ToJsonString(), timeoutSeconds).ConfigureAwait(false);
                 meta["exitCode"] = run["exitCode"]!.DeepClone(); meta["timedOut"] = run["timedOut"]!.DeepClone();
                 if (run["timedOut"]!.GetValue<bool>() || run["outputTruncated"]!.GetValue<bool>()) throw new InvalidOperationException("Decoder timed out or exceeded response budget; no complete analysis returned.");
                 var data = JsonNode.Parse(run["stdout"]!.GetValue<string>())?.AsObject() ?? throw new InvalidOperationException("Decoder returned no JSON object.");

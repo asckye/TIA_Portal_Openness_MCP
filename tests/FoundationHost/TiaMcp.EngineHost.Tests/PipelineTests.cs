@@ -352,7 +352,7 @@ public sealed partial class PipelineTests(ITestOutputHelper output)
                 string name = (string)t!["name"]!;
                 var schema = JsonSerializer.SerializeToElement(t["inputSchema"]);
                 var parameters = schema.GetProperty("properties").EnumerateObject().Select(p => new ToolParameterDescriptor(p.Name, "integer",
-                    p.Name is "limit" or "take" ? "System.Int32" : p.Name == "confirmRestart" ? "System.Boolean" : p.Name == "arguments" ? typeof(ToolArguments).FullName! : "System.String",
+                    p.Name is "offset" or "limit" or "take" ? "System.Int32" : p.Name == "confirmRestart" ? "System.Boolean" : p.Name == "arguments" ? typeof(ToolArguments).FullName! : "System.String",
                     false, null, null, "", false, Array.Empty<string>())).ToArray();
                 var classification = ToolMetadata.Find(name)!;
                 return new ToolDescriptor(name, "", new Tool { Name = name, InputSchema = schema },
@@ -402,6 +402,7 @@ public sealed partial class PipelineTests(ITestOutputHelper output)
     private sealed class Worker : IEngineWorker
     {
         internal bool Unknown, Native, Limited;
+        internal string? Payload;
         internal bool Yield;
         internal Action<string>? Event;
         internal bool Ready = true;
@@ -436,7 +437,7 @@ public sealed partial class PipelineTests(ITestOutputHelper output)
             if (Hold != null) await Hold.Task;
             var error = Limited ? new Error("limit", new LimitExceededDetails("response", 16 * 1024 * 1024, null))
                 : Unknown ? new Error("unknown", new OutcomeUnknownDetails("fixture", new Dictionary<string, JsonElement>())) : null;
-            var result = McpServer.V4Result(name, Limited ? new JsonObject { ["nativeOutcomeUnknown"] = true } : new JsonObject(), error,
+            var result = McpServer.V4Result(name, Limited ? new JsonObject { ["nativeOutcomeUnknown"] = true } : Payload == null ? new JsonObject() : new JsonObject { ["payload"] = Payload }, error,
                 Unknown ? Outcome.Unknown : Limited ? Outcome.Failed : Outcome.Succeeded, Unknown ? Execution.Unknown : Limited ? Execution.Completed : Execution.ReadOnly,
                 Unknown ? Completeness.Unknown : Limited ? Completeness.None : Completeness.Complete);
             return new EngineReply(result, Native, Binding, null, null);

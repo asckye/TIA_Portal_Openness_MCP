@@ -25,7 +25,7 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class ExportTools
     {
-        [McpServerTool(Name = "GetExportContent"), Description("[L1][Exports][READ] Read a UTF-16 code-unit slice of a parked response with offset/limit. Concatenate data.text pages before parsing. Use meta.paging.nextOffset until complete. data.export identifies the full content and its UTF-8 byteLength and SHA-256. Handles last 24 hours in this V4 session.")]
+        [McpServerTool(Name = "GetExportContent"), Description("[L1][Exports][READ] Read a UTF-16 code-unit slice of a parked response with offset/limit. Concatenate data.text pages before parsing. Use meta.paging.nextOffset until complete. data.export identifies the full content and its UTF-8 byteLength and SHA-256. Pages may return fewer units to keep serialized text within 20000 characters. Handles last 24 hours in this V4 session.")]
         public CallToolResult GetExport(
             [Description("Opaque export handle from this engine session.")] string exportId,
             [Description("Zero-based UTF-16 code-unit offset.")] int offset = 0,
@@ -40,9 +40,12 @@ namespace TiaMcpServer.ModelContextProtocol
             limit = limit <= 0 ? ExportStore.MaxSliceChars : Math.Min(limit, ExportStore.MaxSliceChars);
             var slice = ExportStore.Slice(exportId, offset, limit);
             if (slice.Error != null) return Missing(tool, exportId);
-            return PlcExchangeContract.Result(tool, new JsonObject { ["text"] = slice.Text, ["returned"] = slice.Returned, ["export"] = Describe(entry) },
-                paging: new Paging(PagingMode.Offset, offset, limit, slice.NextOffset, null, null,
-                    slice.TotalLength, slice.Eof, PagingUnit.Utf16));
+            var export = Describe(entry);
+            return ResponseGuardTool.FitTextPage(slice, length => ExportStore.Slice(exportId, offset, length), page =>
+                page.Error != null ? Missing(tool, exportId) : PlcExchangeContract.Result(tool,
+                    new JsonObject { ["export"] = export.DeepClone(), ["returned"] = page.Returned, ["text"] = page.Text },
+                    paging: new Paging(PagingMode.Offset, offset, limit, page.NextOffset, null, null,
+                        page.TotalLength, page.Eof, PagingUnit.Utf16)));
         }
 
         [McpServerTool(Name = "ListExportHandles"), Description("[L1][Exports][READ] List this engine session's parked responses with content identity and SHA-256. Empty is a complete result. limit caps the returned handles.")]
