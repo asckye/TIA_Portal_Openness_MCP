@@ -98,11 +98,15 @@ internal static class ToolUsageGenerator
         ValidateCoverage(data.Rosters, calls, data.Families["F00"].Tools); ValidateFoundation(calls, sequences); ValidateRetest(root, calls, sequences, meta);
         ValidateSourceHints(root, Read(root, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceExamples.json"));
         // The frozen engine examples stay comparison evidence; the served copy follows the same rule as the catalog examples:
-        // a parameter with a declared input pattern takes the maintained call-library value, which must satisfy the pattern.
+        // it uses the maintained call-library arguments when they exist, and every declared input pattern must hold.
         var engineSourceCalls = Read(root, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceExamples.json");
         foreach (var (name, row) in engineSourceCalls.AsObject().ToList())
+        {
             if (row?["arguments"] is JsonObject sourceArguments)
                 row["arguments"] = CatalogGenerator.CurrentArguments(name, sourceArguments, calls["profiles"]?["full-engine"]?[name]?["arguments"] as JsonObject);
+            if (row != null && calls["profiles"]?["full-engine"]?[name]?["operations"] is JsonObject operations)
+                row["operations"] = operations.DeepClone();
+        }
         var result = new JsonObject { ["schemaVersion"] = 2, ["scope"] = "Pinned Siemens source documents and project-authored MCP/programming examples. Per-release contracts are read from the running engine. Templates, complete sources and fragments are distinguished; native acceptance is separate.",
             ["sources"] = sources, ["documents"] = documents, ["tools"] = mappings,
             ["languages"] = Copy(library["languages"]!), ["examples"] = Copy(library["examples"]!),

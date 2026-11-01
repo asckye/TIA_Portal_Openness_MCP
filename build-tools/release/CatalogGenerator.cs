@@ -158,8 +158,8 @@ internal static class CatalogGenerator
             Require(Set(releases[key]!.AsArray().Select(r => Text(r!["currentName"]))).SetEquals(data.Rosters[key]), "Runtime roster differs: " + key);
             Require(releases[key]!.AsArray().Where(r => Strings(r!["profiles"]).Contains("lite")).All(r => r!["arguments"] is JsonObject), "Missing lite call arguments: " + key);
         }
-        // GetToolUsage serves the engine-source rows on 20/21, so their examples follow the same
-        // pattern rule; the typed rejection evidence below keeps the frozen engine arguments.
+        // GetToolUsage serves the engine-source rows on 20/21, so their examples also come from the
+        // maintained call library; the typed rejection evidence below keeps the frozen engine arguments.
         var servedEngineReleases = new JsonObject();
         foreach (var (key, rows) in engineReleases)
             servedEngineReleases[key] = new JsonArray(rows!.AsArray().Select(row => { var copy = row!.DeepClone(); var name = Text(copy["currentName"]);
@@ -210,17 +210,15 @@ internal static class CatalogGenerator
     }
     internal static JsonObject CurrentArguments(string name, JsonObject source, JsonObject? curated)
     {
-        var arguments = source.DeepClone().AsObject();
-        // Frozen engine examples remain comparison evidence. Live examples must
-        // satisfy the declared input pattern and use the maintained call library.
-        foreach (var parameter in source)
+        // Frozen engine examples remain comparison and rejection evidence. Live examples are the
+        // maintained call library whenever it has an entry, and must satisfy every declared input pattern.
+        var arguments = (curated ?? source).DeepClone().AsObject();
+        foreach (var parameter in arguments)
         {
             var pattern = TiaMcpServer.ModelContextProtocol.ToolMetadata.Parameter(name, parameter.Key)?.Pattern;
             if (pattern == null) continue;
-            var value = curated?.ContainsKey(parameter.Key) == true ? curated[parameter.Key] : parameter.Value;
-            Require(value is JsonValue scalar && scalar.TryGetValue<string>(out var text) && Regex.IsMatch(text, pattern),
+            Require(parameter.Value is JsonValue scalar && scalar.TryGetValue<string>(out var text) && Regex.IsMatch(text, pattern),
                 "Call example violates the declared pattern: " + name + "/" + parameter.Key);
-            arguments[parameter.Key] = value!.DeepClone();
         }
         return arguments;
     }
