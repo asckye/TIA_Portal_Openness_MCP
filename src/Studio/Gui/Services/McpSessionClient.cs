@@ -339,9 +339,18 @@ internal interface IOwnedOperatorHost : IDisposable
 }
 internal sealed class OwnedOperatorHost(Process process) : IOwnedOperatorHost
 {
+    private readonly string imagePath = Path.GetFullPath(process.StartInfo.FileName);
+    private readonly long startTicks = process.StartTime.ToUniversalTime().Ticks;
     public int Id => process.Id;
     public bool HasExited => process.HasExited;
     public Task WaitForExitAsync(CancellationToken token) => process.WaitForExitAsync(token);
-    public void Terminate() { if (!process.HasExited) process.Kill(entireProcessTree: true); }
+    public void Terminate()
+    {
+        if (process.HasExited) return;
+        if (process.StartTime.ToUniversalTime().Ticks != startTicks
+            || !string.Equals(Path.GetFullPath(process.MainModule!.FileName), imagePath, StringComparison.OrdinalIgnoreCase))
+            throw new UnauthorizedAccessException("Owned operator host identity changed.");
+        process.Kill(entireProcessTree: true);
+    }
     public void Dispose() => process.Dispose();
 }

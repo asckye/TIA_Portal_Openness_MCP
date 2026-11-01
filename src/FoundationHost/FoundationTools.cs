@@ -24,7 +24,7 @@ internal static class FoundationTools
         new("StageImportFiles", "StageImportFiles", "[L1][PLC-Software][FILE] Stage caller text under the installed bundle staging/session directory next to runtime; ASCII SCL/UDT source or UTF-8 Document XML. files: fileName, kind, content. Kinds scl, simaticml, tagtable, udt (s7dcl/s7res only V20/V21; V20 document imports require pairs, V21 resources are optional). Preview defaults true; apply dryRun=false is approved and audited. 4 MiB/file, 128 files/32 MiB/session; safe filenames, no overwrite. Returns directory, paths and SHA-256. Import and generation are separate calls; list/cleanup before ending the session.", new[]{new Argument("files","array"),Dry()}, "ImportStaging"),
         new("ListStagedImportFiles", "ListStagedImportFiles", "[L1][PLC-Software][READ] List all bundle staging batches across sessions with sessionId, batchId, createdUtc, files, bytes, currentSession, mcpSessionId, hostInstanceId, ownerState (current/live-other/ended/unknown) and SHA-256. Missing/invalid manifests are identified=false and cannot be cleaned. No TIA calls.", Array.Empty<Argument>(), "ImportStaging"),
         new("CleanupStagedImportFiles", "CleanupStagedImportFiles", "[L1][PLC-Software][FILE] Delete only staging-owned leaves of an identified batchId from ListStagedImportFiles, including ended MCP sessions; live-other and unknown owners are refused. Preview lists unknownEntries; apply retains them and reports folderRetained=true with a warning. Preview defaults true; apply dryRun=false is approved and audited. No caller paths or recursive deletion; recovery exports are retained.", new[]{S("batchId"),Dry()}, "ImportStaging"),
-        new("GetState","ReadState","[runtime-query-candidate] Cached attachment/project state only; IsAttached is not live connection proof. No runtime attach, project query or rebind. PID identity remains unverified.",Array.Empty<Argument>(),"RuntimeQuery"),
+        new("GetState","ReadState","[runtime-query-candidate] Cached attachment/project state and authoritative sessionState with binding, worker generation, reset requirement and effective read-only switches. IsAttached is not live connection proof. No runtime attach, project query or rebind. PID identity remains unverified.",Array.Empty<Argument>(),"RuntimeQuery"),
         new("ListPortalProcessProjects","ReadPortalProcessProjects","[runtime-query-candidate] Detached read of this release's process metadata; acquisition time is snapshot time, not process start. Separate OS start UTC is observation-only and may be unknown; no attach, launch or stable identity guarantee.",Array.Empty<Argument>(),"RuntimeQuery"),
         new("DiagnosePortalConnectReadiness","ReadPortalConnectReadiness","[runtime-query-candidate] Explicit processId metadata diagnosis without attach. Found never proves readiness or permission; those remain unknown/not-probed. No startup, repairs or project open.",new[]{new Argument("processId","integer")},"RuntimeQuery"),
         new("AddDeviceWithFallback","AddDeviceWithFallback","[bounded-device-add-candidate] V18–21 exact catalog selection only: explicit ArticleNumber+Version or full OrderNumber TypeIdentifier with empty version. Any exact OrderNumber catalog row is admitted, including ET 200SP CPUs, other PLCs and HMI panels; family is a descriptive label only. No approximate/default/family fallback, insertion probing or retries. Complete bounded root/grouped/ungrouped inventory; collision fails closed. Default preview, exact project/hash confirmation; one native create. Unknown outcome poisons session. No save, download, configuration or online calls; native acceptance NOT RUN.",new[]{S("preferredMlfb"),S("preferredVersion"),S("deviceName"),new Argument("family","string",false,"S7-1500"),Dry(),new Argument("expectedPlanHash","string",false,"")},"DeviceAdd"),
@@ -354,7 +354,16 @@ internal sealed partial class FoundationTool : McpServerTool
             else if(definition.ResponseMember=="SupplementaryRead") result=SupplementaryReadContract.Wrap(definition.Name,result,McpJsonUtilities.DefaultOptions);
             else if(definition.ResponseMember=="SoftwareRead") result=SoftwareReadContract.Wrap(definition.Name,result,McpJsonUtilities.DefaultOptions);
             else if(definition.ResponseMember!=null) result=V17ReadEnvelope.Wrap(definition.Name,definition.ResponseMember,result);
-            if (release != null) return FoundationV4Result.Worker(release, definition, id!, values, raw, result);
+            if (release != null)
+            {
+                var reply = FoundationV4Result.Worker(release, definition, id!, values, raw, result);
+                if (definition.Name == "GetState" && reply.StructuredContent?["data"] is JsonObject data)
+                {
+                    data["sessionState"] = SharedSessionState.For(worker).Snapshot(release);
+                    reply.Content = new[] { new TextContentBlock { Text = reply.StructuredContent.ToJsonString() } };
+                }
+                return reply;
+            }
             return new CallToolResult { Content=new List<ContentBlock>{new TextContentBlock { Text=result?.ToJsonString() ?? "null" }} };
         }
         catch (Exception ex) when (release != null)

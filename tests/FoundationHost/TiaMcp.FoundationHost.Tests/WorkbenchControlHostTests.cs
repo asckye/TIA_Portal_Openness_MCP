@@ -25,8 +25,9 @@ public sealed class WorkbenchControlHostTests
     {
         internal string Project = "C:/Projects/Fixture.ap21";
         internal bool EngineIdentity;
-        public string ApprovalIdentity => EngineIdentity ? JsonSerializer.Serialize(new { identity = new { projectPath = Project } })
-            : JsonSerializer.Serialize(new { ProjectFile = Project });
+        internal JsonObject? CachedIdentity;
+        public string ApprovalIdentity => CachedIdentity?.ToJsonString() ?? (EngineIdentity ? JsonSerializer.Serialize(new { identity = new { projectPath = Project } })
+            : JsonSerializer.Serialize(new { ProjectFile = Project }));
         public bool Poisoned => true;
         public bool Faulted => false;
         public JsonNode? Binding => JsonNode.Parse(ApprovalIdentity);
@@ -64,6 +65,26 @@ public sealed class WorkbenchControlHostTests
     public static IEnumerable<object[]> Operations() => Enumerable.Range(0, 8).Select(index => new object[] { index });
     public static IEnumerable<object[]> Refusals() => Enum.GetValues<WorkbenchControlError>().SelectMany(code => new[] {
         new object[] { (int)code, false }, new object[] { (int)code, true } });
+
+    [Fact]
+    public async Task Read_state_preserves_ui_selection_and_reports_requesting_sessions_authoritative_binding()
+    {
+        using var worker = new Worker { CachedIdentity = new JsonObject { ["processId"] = 11612,
+            ["projectPath"] = "C:/Projects/Fixture.ap21", ["projectName"] = "Fixture", ["generation"] = 7 } };
+        SharedSessionState.For(worker).HostSessionKey = () => new string('a', 32);
+        using var server = new FakeServer { Reply = request => new() { RequestId = request.RequestId,
+            Status = WorkbenchControlStatus.Done, Workbench = new() { Version = "fixture" },
+            Data = new() { Session = new() { Source = WorkbenchSessionSource.SharedMcpSession, Connected = false, SessionKey = "other" } } } };
+        var client = new WorkbenchControlClient(() => server, () => "fixture-sid", () => "C:/bundle/runtime/studio/TiaOpenness.exe");
+        var result = await Tool(5, worker, client).InvokeAsync(Request("GetWorkbenchState", new()));
+        var data = result.StructuredContent!["data"]!;
+        Assert.True((bool?)data["session"]?["connected"]);
+        Assert.Equal(new string('a', 32), (string?)data["session"]?["sessionKey"]);
+        Assert.Equal(worker.Project, (string?)data["session"]?["project"]?["path"]);
+        Assert.True((bool?)data["session"]?["sessionState"]?["requiresSessionReset"]);
+        Assert.False((bool?)data["selectedSession"]?["connected"]);
+        Assert.Equal("other", (string?)data["selectedSession"]?["sessionKey"]);
+    }
 
     // The in-test server consumes the actual framed request and returns framed
     // responses. Independent buffers model a duplex connection without a socket.

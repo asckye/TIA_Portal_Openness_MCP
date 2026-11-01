@@ -26,9 +26,17 @@ internal sealed class HostRegistration : IDisposable
         FilePath = Path.Combine(dataRoot, "run", "hosts", process.Id + "-" + ticks + ".json");
         host = new JsonObject { ["version"] = 1, ["hostInstanceId"] = Guid.NewGuid().ToString("N"), ["releaseKey"] = options.ReleaseKey,
             ["transport"] = options.Transport, ["pipeName"] = PipeName, ["operatorOwner"] = options.OperatorOwner,
-            ["workbenchStarted"] = options.OperatorOwner != null,
+            ["workbenchStarted"] = options.OperatorOwner != null || Environment.GetEnvironmentVariable("TIA_MCP_WORKBENCH_STARTED") == "1",
             ["userSid"] = sid, ["pid"] = process.Id, ["startTicks"] = ticks, ["imagePath"] = Environment.ProcessPath,
+            ["hostVersion"] = typeof(HostOptions).Assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyMetadataAttribute), false)
+                .Cast<System.Reflection.AssemblyMetadataAttribute>().Single(attribute => attribute.Key == "TiaMcpRelease").Value,
+            ["httpPrefix"] = options.Transport == "http" ? options.HttpPrefix : null,
             ["bundleRoot"] = options.BundleRoot };
+    }
+    internal void OperatorUnavailable()
+    {
+        lock (sync) host["operatorAvailable"] = false;
+        Publish();
     }
     internal void Publish()
     {

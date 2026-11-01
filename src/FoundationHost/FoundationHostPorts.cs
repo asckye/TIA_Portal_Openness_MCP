@@ -60,11 +60,7 @@ internal static class FoundationHostPorts
         public object SessionKey => worker is IEngineWorker engine ? engine.SessionKey : worker is WorkerClient client ? client.HostSessionKey : sessionKey;
         public JsonNode? Binding => Snapshot()["binding"]?.DeepClone();
         internal JsonObject OperatorSnapshot()
-        {
-            var result = (worker as IFoundationWorkerSupervisor)?.OperatorSnapshot() ?? new JsonObject();
-            result["sessionLocked"] = Snapshot()["sessionLocked"]?.DeepClone();
-            return result;
-        }
+            => SharedSessionState.For(worker).OperatorSnapshot(release);
         public JsonObject Snapshot()
         {
             if (worker is IEngineWorker engine)
@@ -77,41 +73,32 @@ internal static class FoundationHostPorts
                         ["groupOk"] = initial["environment"]?["opennessGroupOk"]?.DeepClone(),
                         ["recommendedFix"] = initial["recommendedFix"]?.DeepClone(), ["recommendedFixZh"] = initial["recommendedFixZh"]?.DeepClone() };
                 }
-                return snapshot;
+                return SessionSnapshot(snapshot);
             }
-            var result = worker is WorkerClient client ? client.HostSnapshot() : new JsonObject();
             var ready = readiness();
             ready["groupOk"] = ready["environment"]?["opennessGroupOk"]?.DeepClone();
-            result["readiness"] = ready;
-            return worker is WorkerClient plc ? plc.SupervisorSnapshot(ready) : result;
+            var result = worker is WorkerClient plc ? plc.SupervisorSnapshot(ready) : new JsonObject { ["readiness"] = ready };
+            return SessionSnapshot(result);
+        }
+        private JsonObject SessionSnapshot(JsonObject result)
+        {
+            var state = SharedSessionState.For(worker).Snapshot(release);
+            result["binding"] = state["binding"]?.DeepClone();
+            result["sessionLocked"] = state["requiresSessionReset"]?.DeepClone();
+            string? file = (string?)state["binding"]?["identity"]?["projectPath"];
+            result["session"] = new JsonObject { ["isConnected"] = state["connected"]?.DeepClone(),
+                ["project"] = (string?)state["binding"]?["identity"]?["projectName"] ?? (file == null ? "-" : Path.GetFileNameWithoutExtension(file)),
+                ["session"] = (worker as WorkerClient)?.SharedStatus?["session"]?["session"]?.DeepClone() ?? JsonValue.Create("-") };
+            result["sessionState"] = state;
+            return result;
         }
         public Task<JsonObject> Status(CancellationToken token) => Status(false, token);
         public Task<JsonObject> StartForStatus(CancellationToken token) => Status(true, token);
         private async Task<JsonObject> Status(bool startForStatus, CancellationToken token)
         {
-            if (worker is IEngineWorker engine) return startForStatus ? await engine.StartForStatus(token) : await engine.Status(token);
+            if (worker is IEngineWorker engine) return SessionSnapshot(startForStatus ? await engine.StartForStatus(token) : await engine.Status(token));
             if (worker is WorkerClient client) await client.RefreshHostState(startForStatus, token);
-            else if (worker is IFoundationSessionWorker session)
-                return ProjectStatus(JsonNode.Parse(session.ApprovalIdentity)!.AsObject(), Snapshot());
-            var result = Snapshot();
-            if (ReleaseCatalogData.Releases[release].ExtendedWorkerStatus && worker is WorkerClient plc)
-            {
-                var cached = plc.SharedStatus?["session"] ?? plc.HostSnapshot()["session"];
-                result["session"] = new JsonObject { ["isConnected"] = cached?["isConnected"]?.DeepClone(),
-                    ["project"] = cached?["project"]?.DeepClone() ?? JsonValue.Create("-"), ["session"] = cached?["session"]?.DeepClone() ?? JsonValue.Create("-") };
-            }
-            return result;
-        }
-        private JsonObject ProjectStatus(JsonObject identity, JsonObject result)
-        {
-            string? file = (string?)identity["ProjectFile"] ?? (string?)identity["ProjectPath"];
-            string? project = (string?)identity["Project"] ?? (file == null ? null : Path.GetFileNameWithoutExtension(file));
-            result["session"] = new JsonObject { ["isConnected"] = identity["ProcessId"] != null, ["project"] = project };
-            result["binding"] = new JsonObject { ["identity"] = new JsonObject {
-                ["tiaMajorVersion"] = TiaMcp.Versioning.TiaVersionCatalog.Get(release).MajorVersion, ["processId"] = identity["ProcessId"]?.DeepClone(),
-                ["processStartUtc"] = identity["ProcessStartUtc"]?.DeepClone(), ["projectPath"] = file, ["projectName"] = project,
-                ["generation"] = identity["BindingEpoch"]?.DeepClone() } };
-            return result;
+            return Snapshot();
         }
         public async Task<IDisposable> Acquire(CancellationToken token)
         {
@@ -125,6 +112,7 @@ internal static class FoundationHostPorts
                 : worker is WorkerClient client ? await client.RestartHostWorker(confirmed, token)
                 : ResponseMeta.Unstamped(!confirmed, ("dryRun", JsonValue.Create(!confirmed)), ("worker", Snapshot()));
             if ((bool?)result["restarted"] == true) ResetExports();
+            if (result["worker"] is JsonObject snapshot) result["worker"] = SessionSnapshot(snapshot);
             return result;
         }
         public Task<EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token)

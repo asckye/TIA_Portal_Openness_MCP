@@ -36,7 +36,7 @@ internal sealed class WorkbenchControlTool : McpServerTool
             "Show an ordinary call by its V4 requestId. Pending approval rows are refused.",
             "Locate a block and optionally open a ladder render registered in this MCP session. Without a render, return the human next step.",
             "Show the atlas locator and optionally open an atlas render registered in this MCP session. Without a render, return the human next step.",
-            "Read the frozen Workbench state, including the read-only UI control switch. session.source identifies the Workbench bridge session.",
+            "Read frozen Workbench UI state and the authoritative requesting MCP session. selectedSession identifies the Workbench's current selection. Session switches are read-only information.",
             "Read frozen Workbench selection with offset paging, up to 256 checked blocks.",
             "Set or clear an allowed UI form prefill owned by this MCP session. A human keeps or clears it; success awaits confirmation." };
         tool = new() { Name = name, Description = "[L1][Workbench][" + (read ? "READ" : "UI") + "] " + descriptions[(int)operation]
@@ -81,7 +81,26 @@ internal sealed class WorkbenchControlTool : McpServerTool
         if (frameBytes > WorkbenchControlFrames.MaximumBytes)
             return FoundationV4Result.Reject(release, tool.Name, id, new("Workbench control input exceeds the frame budget.",
                 new LimitExceededDetails("arguments", WorkbenchControlFrames.MaximumBytes, frameBytes)));
-        try { return Map(await client.Send(control, token).ConfigureAwait(false), release, tool.Name, id, operation); }
+        try
+        {
+            var response = await client.Send(control, token).ConfigureAwait(false);
+            var result = Map(response, release, tool.Name, id, operation);
+            if (operation == WorkbenchControlOperation.ReadState && response.Status == WorkbenchControlStatus.Done
+                && result.StructuredContent?["data"] is JsonObject data)
+            {
+                // The selected UI session can differ from the requesting MCP session. Keep both explicit.
+                data["selectedSession"] = data["session"]?.DeepClone();
+                var state = session.State(release);
+                var identity = state["binding"]?["identity"];
+                string? file = (string?)identity?["projectPath"];
+                data["session"] = new JsonObject { ["source"] = "shared-mcp-session", ["sessionKey"] = session.HostSessionKey,
+                    ["connected"] = state["connected"]?.DeepClone(), ["project"] = file == null ? null : new JsonObject {
+                        ["name"] = (string?)identity?["projectName"] ?? Path.GetFileNameWithoutExtension(file), ["path"] = file },
+                    ["sessionState"] = state };
+                result.Content = new[] { new TextContentBlock { Text = result.StructuredContent.ToJsonString() } };
+            }
+            return result;
+        }
         catch (OperationCanceledException) /* swallow(privacy): cancellation never exposes private transport exception text */
         { return FoundationV4Result.Reject(release, tool.Name, id, new("Workbench request cancelled.", new CancelledDetails("workbench-control"))); }
     }

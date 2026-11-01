@@ -287,6 +287,18 @@
         <Border Style="{StaticResource Primer.Note}" Margin="0,12,0,0">
           <TextBlock x:Name="LastTest" FontSize="{DynamicResource Ui.FontSize.Caption}" Style="{StaticResource Primer.Text.text}"/>
         </Border>
+        <DockPanel Margin="0,12,0,6">
+          <Button x:Name="RefreshHosts" DockPanel.Dock="Right" Content="{l:Tr Hosts.Refresh}" AutomationProperties.Name="{l:Tr Hosts.Refresh}" Style="{StaticResource Primer.Quiet}"/>
+          <TextBlock Text="{l:Tr Hosts.Title}" Style="{StaticResource Primer.SectionLabel}"/>
+        </DockPanel>
+        <ListBox x:Name="HostList" MinHeight="36" Style="{StaticResource Primer.List}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{l:Tr Hosts.Title}">
+          <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Display}" TextWrapping="Wrap"/></DataTemplate></ListBox.ItemTemplate>
+        </ListBox>
+        <TextBlock x:Name="HostDetail" Text="{l:Tr Hosts.Hint}" TextWrapping="Wrap" Style="{StaticResource Primer.Muted}" Margin="0,6,0,6"/>
+        <WrapPanel>
+          <Button x:Name="RestartHost" Content="{l:Tr Hosts.Restart}" AutomationProperties.Name="{l:Tr Hosts.Restart}" IsEnabled="False" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
+          <Button x:Name="StopHost" Content="{l:Tr Hosts.Stop}" AutomationProperties.Name="{l:Tr Hosts.Stop}" IsEnabled="False" Style="{StaticResource Primer.Secondary}"/>
+        </WrapPanel>
       </StackPanel>
       <Grid Grid.Row="2">
         <Grid.RowDefinitions>

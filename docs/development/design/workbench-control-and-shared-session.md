@@ -24,6 +24,24 @@
 
 宿主持有每会话随机 HMAC 密钥与设置文件写句柄（拒绝其他写入和删除），只向该会话的 worker 子进程传递密钥；GUI、MCP 响应和注册快照不含密钥。worker 在原有查询线程读取并校验已签名记录及工作台 PID/启动时间。直接文件工具和普通项目脚本不能伪造另一会话的许可；关闭工作台、关闭会话、签名无效或读取失败均拒绝。设置不写入 `UiSettings` 偏好。环境变量 `TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1` 仍是独立的启动时替代方式。
 
+### DES-1：统一会话视图与宿主生命周期（2026-11-01）
+
+宿主统一通过 `SharedSessionState` 投影 worker 缓存的绑定身份，不另存一份工程绑定。
+宿主工具、生成规划、工作台控制与 operator 注册快照共用此视图；supervisor 的绑定统一为
+`binding.identity`，operator 现有的扁平字段从同一身份导出。worker 代次和重置要求仍由原来的
+worker / pipeline 持有。`GetSessionState.data.sessionState` 同时报告这些信息、原生交叉引用的
+实际生效状态及来源（版本默认、启动环境、人工会话许可），以及只读审批状态。
+
+`GetWorkbenchState.data.session` 为请求方的共享 MCP 会话，`selectedSession` 保留工作台当前选择，
+两者可以不同；读取不改变人工选择。工程页附着后仍通过 operator 快照显示同一绑定。
+
+工作台 MCP 页列出同一数据目录的存活宿主，包括无会话宿主，显示 PID、宿主版本、UTC 启动时间、
+传输与 HTTP 前缀。旧版未记录版本时标为未知。停止前再次核对 PID、启动时间和映像路径，
+并由人确认结束全部会话。HTTP 重启先核对已保存的端点和受保护密钥，再启动当前包中的宿主；
+stdio 的输入输出流由 MCP 客户端持有，需在该客户端重启。operator 管道不可用时 HTTP 宿主仍保留
+注册信息。这些操作不加入 MCP、operator 握手或 Workbench-control；审批、审计和生成写栅栏不变。
+见 [ADR 0029](../decisions/0029-authoritative-session-state.md)。
+
 ## 1 P8-21 之前的背景
 
 ### 1.1 审批管道

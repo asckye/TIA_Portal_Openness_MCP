@@ -123,6 +123,12 @@ internal sealed class HostSession : IHostSession
             var worker = finalWorkerState ?? workerState();
             bool disconnected = disposed || (bool?)worker["disconnected"] == true;
             bool locked = (bool?)worker["sessionLocked"] == true;
+            var sessionState = worker["sessionState"]?.DeepClone();
+            if (disconnected && sessionState is JsonObject ended)
+            {
+                ended["connected"] = false; ended["disconnected"] = true;
+                if (ended["switches"]?["nativeCrossReferences"] is JsonObject policy) policy["allowed"] = false;
+            }
             return new JsonObject {
                 ["sessionKey"] = SessionKey, ["releaseKey"] = release, ["createdUtc"] = created.ToString("O"), ["revision"] = revision,
                 ["owner"] = OperatorOwned ? "workbench" : "mcp", ["endedBy"] = endedBy, ["endReason"] = endReason,
@@ -130,8 +136,10 @@ internal sealed class HostSession : IHostSession
                 ["worker"] = new JsonObject { ["pid"] = worker["pid"]?.DeepClone(), ["generation"] = worker["generation"]?.DeepClone(),
                     ["state"] = disconnected ? "disconnected" : locked ? "poisoned" : lane != null ? "busy" : "idle" },
                 ["lane"] = lane?.DeepClone(), ["binding"] = worker["binding"]?.DeepClone(), ["sessionLocked"] = locked,
-                ["nativeCrossReferencesAllowed"] = !disposed && TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Read(NativeCrossReferenceSessionFile, NativeCrossReferenceSessionSecret),
-                ["approvalEnabled"] = ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled,
+                ["sessionState"] = sessionState,
+                ["nativeCrossReferencesAllowed"] = !disposed && ((bool?)sessionState?["switches"]?["nativeCrossReferences"]?["humanSessionAllowed"]
+                    ?? TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Read(NativeCrossReferenceSessionFile, NativeCrossReferenceSessionSecret)),
+                ["approvalEnabled"] = (bool?)sessionState?["switches"]?["approval"]?["enabled"] ?? ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled,
                 ["recentCalls"] = new JsonArray(calls.Select(c => (JsonNode)c.DeepClone()).ToArray()) };
         }
     }

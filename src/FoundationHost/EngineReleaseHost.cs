@@ -141,6 +141,8 @@ internal static class SharedReleaseHost
     {
         var host = new HostSession(options.ReleaseKey, session.Pipeline.Instructions, operatorOwned, session.Pipeline.Tools.ToArray(),
             session.Pipeline.OperatorTools, () => session.Services.OperatorSnapshot(), session.Dispose);
+        SharedSessionState.For(session.Worker).HumanCrossReferences = () => TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Read(host.NativeCrossReferenceSessionFile, host.NativeCrossReferenceSessionSecret);
+        SharedSessionState.For(session.Worker).HostSessionKey = () => host.SessionKey;
         if (session.Worker is WorkerClient plc) { plc.NativeCrossReferenceSessionFile = host.NativeCrossReferenceSessionFile; plc.NativeCrossReferenceSessionSecret = host.NativeCrossReferenceSessionSecret; }
         else if (session.Worker is EngineWorkerClient engine) { engine.NativeCrossReferenceSessionFile = host.NativeCrossReferenceSessionFile; engine.NativeCrossReferenceSessionSecret = host.NativeCrossReferenceSessionSecret; }
         if (operatorOwned || options.Transport == "stdio") host.RegisterSession(host.SessionKey, session.Pipeline.RegisterStagingSession);

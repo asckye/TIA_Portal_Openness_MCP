@@ -38,6 +38,7 @@
 | [0024](0024-ci-does-not-block-merges.md) | 合并以本机受影响的检查为门，GitHub CI 不阻塞合并和发布 | 已采纳 | 2026-10-30 | B35 |
 | [0025](0025-release-evidence-nightly-and-verified-build-units.md) | 发布证据采用最近一次通过的 nightly 与已验证的增量构建单元 | 已采纳（实现见 RULES-1） | 2026-11-01 | — |
 | [0028](0028-workbench-visual-design-eplanmcp.md) | 工作台视觉设计采用 EplanMcp 设计系统（取代 0018、0021 的视觉部分） | 已采纳（实施见 UI-2a…UI-2d） | 2026-11-01 | — |
+| [0029](0029-authoritative-session-state.md) | One managed session view and visible host lifetimes | 已采纳 | 2026-11-01 | — |
 
 ## 待补写的决定
 

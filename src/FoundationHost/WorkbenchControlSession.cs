@@ -27,14 +27,10 @@ internal sealed class WorkbenchControlSession
     internal string SessionKey => (ActorScope.McpSession ?? throw new InvalidOperationException("Missing MCP session scope."))[..16];
     internal string? Project
     {
-        get
-        {
-            var identity = JsonNode.Parse((worker as IFoundationSessionWorker)?.ApprovalIdentity ?? "{}");
-            var nested = identity?["identity"] ?? identity?["Identity"];
-            return (string?)(identity?["ProjectFile"] ?? identity?["projectFile"] ?? identity?["ProjectPath"] ?? identity?["projectPath"]
-                ?? nested?["ProjectFile"] ?? nested?["projectFile"] ?? nested?["ProjectPath"] ?? nested?["projectPath"]);
-        }
+        get => (string?)SharedSessionState.For(worker).Identity?["projectPath"];
     }
+    internal JsonObject State(string release) => SharedSessionState.For(worker).Snapshot(release);
+    internal string HostSessionKey => SharedSessionState.For(worker).HostSessionKey() ?? SessionKey;
     private Registry Current => registries.GetOrAdd(SessionKey, _ => new());
     internal void Observe(string tool, IReadOnlyDictionary<string, JsonElement> args, JsonNode? result)
     {

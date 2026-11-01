@@ -59,11 +59,24 @@ internal sealed class OperatorEndpoint : IAsyncDisposable
         }
         catch (Exception error)
         {
-            pipe?.Dispose(); registration.Dispose(); owner?.Dispose();
+            pipe?.Dispose();
             if (options.OperatorOwner == null && error is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception)
-            { Report(error); return null; }
+            {
+                Report(error);
+                // A transport can remain usable when the local operator pipe cannot start.
+                // Keep its process and session registration visible to the human host list.
+                registration.OperatorUnavailable();
+                return new OperatorEndpoint(registration, create, _ => null, new UnavailableListener(), null, false);
+            }
+            registration.Dispose(); owner?.Dispose();
             throw;
         }
+    }
+    private sealed class UnavailableListener : IOperatorListener
+    {
+        public Task<Stream> Accept(CancellationToken token)
+            => new TaskCompletionSource<Stream>(TaskCreationOptions.RunContinuationsAsynchronously).Task.WaitAsync(token);
+        public void Dispose() { }
     }
     internal IDisposable Register(IHostSession session) => registration.Register(session);
     internal static void Report(Exception error) => Console.Error.WriteLine("Operator endpoint: " + error.GetType().Name);

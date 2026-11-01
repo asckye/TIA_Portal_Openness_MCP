@@ -87,6 +87,7 @@ namespace TiaMcpConfigurator
             Window = owner;
             root = preview == null ? TiaOpenness.Shared.BundleLayout.RequireWorkbenchRoot(AppContext.BaseDirectory, bundleRoot) : bundleRoot;
             InitializeComponent();
+            InitializeHosts(loadExisting && preview == null);
             var versions = Find<ComboBox>("Version");
             versions.ItemsSource = TiaVersionCatalog.Runnable.ToList();
             versions.SelectedValue = TiaOpenness.Core.Environment.WorkbenchReleaseSelection.DefaultKey(root);
@@ -514,6 +515,8 @@ namespace TiaMcpConfigurator
                 WorkingDirectory = root, UseShellExecute = false, CreateNoWindow = true,
                 RedirectStandardOutput = true, RedirectStandardError = true, RedirectStandardInput = true,
                 StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8 };
+            info.Environment["TIA_MCP_WORKBENCH_STARTED"] = "1";
+            info.Environment["TIA_MCP_DATA_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.WorkbenchDataDirectory;
             var process = new Process { StartInfo = info, EnableRaisingEvents = true };
             process.OutputDataReceived += delegate(object sender, DataReceivedEventArgs e) { if (e.Data != null) Append(e.Data); };
             process.ErrorDataReceived += delegate(object sender, DataReceivedEventArgs e) { if (e.Data != null) Append(e.Data); };
@@ -540,7 +543,11 @@ namespace TiaMcpConfigurator
             if (TiaOpenness.Gui.Controls.WorkbenchMessageBox.Show(Window, Loc.Current["Config.StopServicePrompt"], Loc.Current["Config.StopServiceCaption"], MessageBoxButton.OKCancel, MessageBoxImage.Warning) != MessageBoxResult.OK) return;
             var process = server;
             SetBusy(true);
-            try { await Task.Run(() => { process.Kill(); process.WaitForExit(); }); }
+            try { await Task.Run(() => {
+                if (!string.Equals(Path.GetFullPath(process.MainModule.FileName), Path.GetFullPath(process.StartInfo.FileName), StringComparison.OrdinalIgnoreCase))
+                    throw new UnauthorizedAccessException("Host process identity changed.");
+                process.Kill(); process.WaitForExit();
+            }); }
             finally { SetBusy(false); }
         }
         private async void OnClosing(object sender, CancelEventArgs e)
@@ -572,6 +579,7 @@ namespace TiaMcpConfigurator
         }
         public void Dispose()
         {
+            hostTimer.Stop(); hostTimer.Tick -= RefreshHostsTick;
             Window.Closing -= OnClosing;
             Loc.Current.LanguageChanged -= OnLanguageChanged;
             closing = true;

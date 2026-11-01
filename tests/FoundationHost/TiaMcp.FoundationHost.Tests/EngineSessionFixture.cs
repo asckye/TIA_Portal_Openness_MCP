@@ -23,7 +23,10 @@ internal static class EngineSessionFixture
         string? leaseRoot = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT");
         JsonObject Status() => new() { ["releaseKey"] = release, ["readiness"] = new JsonObject { ["ready"] = true },
             ["behaviorCapabilities"] = BehaviorCapabilities.Table(typeof(BehaviorCapabilities).Assembly, release),
-            ["binding"] = attached == null ? null : new JsonObject { ["projectPath"] = "C:/fixture.ap" + release },
+            ["binding"] = attached == null ? null : new JsonObject {
+                ["tiaMajorVersion"] = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release),
+                ["processId"] = attached, ["processStartUtc"] = "2026-10-05T00:00:00Z",
+                ["projectPath"] = "C:/fixture.ap" + release, ["projectName"] = "fixture", ["generation"] = epoch },
             ["session"] = new JsonObject { ["isConnected"] = attached != null } };
         ChannelResponse Dispatch(ChannelRequest request)
         {

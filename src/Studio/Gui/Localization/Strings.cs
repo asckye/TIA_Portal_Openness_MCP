@@ -18,6 +18,18 @@ internal static partial class Strings
 
     private static readonly (string Key, string En, string Zh)[] SessionCatalogue =
     [
+        ("Hosts.Title", "MCP hosts", "MCP 宿主"),
+        ("Hosts.Refresh", "Refresh hosts", "刷新宿主"),
+        ("Hosts.Restart", "Restart host", "重启宿主"),
+        ("Hosts.Stop", "Stop host", "停止宿主"),
+        ("Hosts.Hint", "Hosts registered for this data folder. Select one to manage it.", "显示此数据目录的宿主。选择宿主可进行管理。"),
+        ("Hosts.Older", "Older or unknown host version — restart to load this Workbench's version.", "宿主版本较旧或未知；重启以加载此工作台的版本。"),
+        ("Hosts.Owned", "Started by a Workbench; independent host lifetime.", "由工作台启动；宿主具有独立生命周期。"),
+        ("Hosts.External", "Visible host; the original launcher is not verified.", "可见宿主；原启动方未经核实。"),
+        ("Hosts.Stdio", "Restart stdio hosts in their MCP client. Stopping ends all sessions.", "请在 MCP 客户端中重启 stdio 宿主。停止将结束所有会话。"),
+        ("Hosts.ConfigMismatch", "Saved HTTP configuration does not match this host. Save the correct endpoint first.", "已保存的 HTTP 配置与此宿主不符，请先保存正确端点。"),
+        ("Hosts.RestartTarget", "Restart at {0} using {1}", "将使用 {1} 在 {0} 重启"),
+        ("Hosts.Confirm", "End every session on this host? Active native operations may have an unknown outcome. Reconnect clients afterwards.\n\n{0}", "结束此宿主的所有会话？正在进行的原生操作可能结果未知，随后需要重新连接客户端。\n\n{0}"),
         ("Session.OfflineDemo", "Offline demo: calls, audit, environment and log pages only. Session operations are unavailable.", "离线演示：仅提供调用、审计、环境与日志页，会话操作不可用。"),
         ("Blocks.Overwrite", "Overwrite existing blocks", "覆盖已有程序块"),
         ("Vc.ReadOnlyBridge", "VCI reads only on this release; workspace writes require F33 MCP tools.", "此版本仅支持 VCI 读取；工作区写入需等待 F33 MCP 工具。"),
