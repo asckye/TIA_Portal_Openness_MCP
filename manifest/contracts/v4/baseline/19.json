@@ -80273,7 +80273,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "9e22fc680022d39505711f80dc8184b344c614b90eb14e7c1f07506b3d6aaf9d",
+      "descriptionSha256": "7a0a985404d051939413d6ee760883760aeed6d5a16ff16151cab7b4de8887e1",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -84191,7 +84191,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "5e552298ac2a8e0387f855cfa1ee556925ffaf2318b35f601356248426082ae6",
+      "descriptionSha256": "9a227128f67c766ad45ec28b358386da48a82269a72895f0ecd8a264032c0435",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -285188,7 +285188,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.",
             "type": "string"
           },
           "itemName": {
@@ -286522,7 +286522,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.",
             "type": "string"
           },
           "limit": {
@@ -287841,7 +287841,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.",
             "type": "string"
           },
           "itemNames": {
@@ -293092,7 +293092,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.",
             "type": "string"
           },
           "limit": {
@@ -299758,7 +299758,7 @@
         "additionalProperties": false,
         "properties": {
           "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.",
             "type": "string"
           },
           "fields": {
@@ -302450,7 +302450,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.",
             "type": "string"
           },
           "itemName": {
@@ -355614,7 +355614,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "eee9abe06ec1f03c2cfcf3ab48b2bf336509a780c9a913d4b897a4e63d05d309",
+      "descriptionSha256": "e981d653d2d635419d6b6e2529f1e7d53a32eb98c5b65e19b6113cb9c29bc469",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -399969,7 +399969,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.",
             "type": "string"
           },
           "limit": {
@@ -402580,7 +402580,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.",
             "type": "string"
           },
           "folderPath": {
@@ -403899,7 +403899,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.",
             "type": "string"
           },
           "limit": {
@@ -582243,7 +582243,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "517f286d90221404a732a95c5f5362f7705e68477bfab99deae12e1bdb953ef6",
+      "descriptionSha256": "584e6045c37e6e46f5943456ff3967eedcd63b715129f80a16b9a2b102a984d4",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -608862,7 +608862,7 @@
             "type": "boolean"
           },
           "expectedProject": {
-            "description": "expectedProject: the name of the project this call must run in (GetProjectInfo); the call is refused when another project is bound.",
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.",
             "type": "string"
           },
           "previewToken": {

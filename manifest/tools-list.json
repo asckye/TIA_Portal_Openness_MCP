@@ -3,14 +3,14 @@
   "generatedAt": "2026-10-30T17:43:26.5754723+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
-  "exeSha256": "1fa0479210ca9e0e8951dcd642360aa9a62d4d0fc4cc22e978b7b8029dd69947",
-  "workerSha256": "705e77a39cf1d0a2d0fe9b54602008ee5ec20c490583ca5b0599326b9fccfcd0",
+  "exeSha256": "bac11911358910cfca77e2b5e6cb182282a5bd85f1fcfad02a3b8f97dcb74060",
+  "workerSha256": "8b186dbc358d0dbcce2a1a0be13c2fc3ca28d08753a6732a8e93d8c317aca364",
   "toolCount": 517,
   "note": "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
     "parameters": 2616,
-    "parametersUndocumented": 866,
-    "parametersFromVocabulary": 715,
+    "parametersUndocumented": 856,
+    "parametersFromVocabulary": 705,
     "toolsWithUndocumentedParameters": 218,
     "toolsWithEnumHints": 164,
     "enumHints": 255,
@@ -2120,7 +2120,7 @@
       "parameters": [
         "includePlcSoftware"
       ],
-      "description": "[L1][Hardware][READ] List all hardware devices (PLCs, HMI panels, drives) in the project with their attributes: project root, nested device groups and the ungrouped devices group (single-name device paths resolve in all three; [\"$ungrouped\", \"<device>\"] addresses the ungrouped group explicitly). Requires: ConnectPortal + OpenProject. Prefer GetProjectTree for a visual overview; use this when you need the exact device Name and attribute values for subsequent operations like CreateDevice or SetDeviceItemAttribute. Examples: GetToolUsage(toolName: \"ListDevices\"), optionally operation or language.",
+      "description": "[L1][Hardware][READ] List all hardware devices (PLCs, HMI panels, drives) in the project with their attributes: project root, nested device groups and the ungrouped devices group (single-name device paths resolve in all three; [\"$ungrouped\", \"<device>\"] addresses the ungrouped group explicitly). Requires: ConnectPortal followed by AttachOpenProject or OpenProject. Prefer GetProjectTree for a visual overview; use this when you need the exact device Name and attribute values for subsequent operations like CreateDevice or SetDeviceItemAttribute. Examples: GetToolUsage(toolName: \"ListDevices\"), optionally operation or language.",
       "example": "{}"
     },
     {
@@ -2912,7 +2912,7 @@
         "schemaDirectory"
       ],
       "description": "[L2][Validation][OFFLINE] Validate recognized SimaticML interface and LAD/FBD/SCL/STL/GRAPH fragments against the caller's local Siemens PublicAPI Schemas folder for the selected release (V14 SP1 through V21). V14 SP1 network schemas are unsuffixed and reported as skipped; its Interface/v2 is supported. Uses exact namespace schema versions; refuses DTDs and resolves schema includes only from the bounded supplied directory. No schema download or TIA connection. Read fragmentSchemasPassed, skippedFragments and issues; the whole Document, instruction semantics, CPU compatibility and native import are NOT validated. Siemens schemas are not redistributed. Examples: GetToolUsage(toolName: \"ValidatePlcDocumentSchemas\"), optionally operation or language.",
-      "example": "{\"filePath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\",\"schemaDirectory\":\"C:\\\\Siemens\\\\PublicAPI\\\\V21\\\\Schemas\"}"
+      "example": "{\"filePath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\",\"schemaDirectory\":\"\\u003Cabsolute PublicAPI Schemas folder for the selected TIA release\\u003E\"}"
     },
     {
       "name": "ValidateClassicHmiMinimalPackagePlcSync",
@@ -3726,7 +3726,7 @@
       "method": "FoundationV4Tool.InvokeAsync",
       "returnType": "CallToolResult",
       "parameters": [],
-      "description": "[L1][Workbench][READ] Read the frozen Workbench state, including the read-only UI control switch. session.source identifies the Workbench bridge session. Uses an already running local Workbench; no TIA calls or automatic launch. Examples: GetToolUsage(toolName: \"GetWorkbenchState\"), optionally operation or language.",
+      "description": "[L1][Workbench][READ] Read frozen Workbench UI state and the authoritative requesting MCP session. selectedSession identifies the Workbench's current selection. Session switches are read-only information. Uses an already running local Workbench; no TIA calls or automatic launch. Examples: GetToolUsage(toolName: \"GetWorkbenchState\"), optionally operation or language.",
       "example": "{}"
     },
     {
@@ -4720,7 +4720,7 @@
         "keyword",
         "limit"
       ],
-      "description": "[L2][Hardware][READ]Search installed TIA V21 hardware catalog and local GSDML files for third-party PROFINET/GSD devices such as AFM60A, ATV320, or DL100. Use this before inserting a non-Siemens device. Examples: GetToolUsage(toolName: \"SearchInstalledGsdDevices\"), optionally operation or language.",
+      "description": "[L2][Hardware][READ]Search the installed hardware catalog and local GSDML files for third-party PROFINET/GSD devices such as AFM60A, ATV320, or DL100. Use a precise vendor/order/DAP keyword. limit bounds returned candidates, not the synchronous native Find call or file traversal. The existing 120-second read budget is unchanged; a lost or timed-out worker requires session reset and the returned recovery steps. The catalog API has no cancellation or paging overload. Use SearchHardwareCatalog for exact Siemens catalog rows. Examples: GetToolUsage(toolName: \"SearchInstalledGsdDevices\"), optionally operation or language.",
       "example": "{\"keyword\":\"1513\"}"
     },
     {
@@ -5725,7 +5725,7 @@
         "confirm",
         "expectedProjectFile"
       ],
-      "description": "[PLC foundation; native unverified][WRITE] [bounded-device-add-candidate] V18–21 exact catalog selection only: explicit ArticleNumber+Version or full OrderNumber TypeIdentifier with empty version. Only documented CPU 1211C 6ES7211-1BE40-0XB0 or CPU 1513 6ES7513-1AM03-0AB0 with matching S7-1200/S7-1500 family accepted. No approximate/default/family fallback, insertion probing, HMI hint or retries. Complete bounded root/grouped/ungrouped inventory; collision fails closed. Default preview, exact project/hash confirmation; one native create. Unknown outcome poisons session. No save, download, configuration or online calls; native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"CreateHardwareDevice\"), optionally operation or language.",
+      "description": "[PLC foundation; native unverified][WRITE] [bounded-device-add-candidate] V18–21 exact catalog selection only: explicit ArticleNumber+Version or full OrderNumber TypeIdentifier with empty version. Any exact OrderNumber catalog row is admitted, including ET 200SP CPUs, other PLCs and HMI panels; family is a descriptive label only. No approximate/default/family fallback, insertion probing or retries. Complete bounded root/grouped/ungrouped inventory; collision fails closed. Default preview, exact project/hash confirmation; one native create. Unknown outcome poisons session. No save, download, configuration or online calls; native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"CreateHardwareDevice\"), optionally operation or language.",
       "example": "{\"preferredMlfb\":\"6ES7 513-1AM03-0AB0\",\"preferredVersion\":\"V3.1\",\"deviceName\":\"PLC_2\",\"family\":\"S7-1500\",\"dryRun\":true,\"confirm\":false}"
     },
     {
@@ -5764,7 +5764,7 @@
         "preferredText"
       ],
       "description": "[L2][Hardware][WRITE]Add one device from the installed TIA hardware catalog (V18+). keyword must be the exact TypeIdentifier of one catalog candidate (from SearchHardwareCatalog); that entry is created once with deviceName. Any other keyword is refused with the ranked candidates (preferredText only ranks them) so the caller chooses. One DeviceComposition.CreateWithItem call: no best-match guess, no next-candidate retry, no renaming. A TIA refusal is verified by the unchanged device inventory and lists the catalog candidates. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"CreateHardwareCatalogDevice\"), optionally operation or language.",
-      "example": "{\"keyword\":\"1513\",\"deviceName\":\"PLC_2\"}"
+      "example": "{\"keyword\":\"\\u003Cexact TypeIdentifier from SearchHardwareCatalog\\u003E\",\"deviceName\":\"PLC_2\"}"
     },
     {
       "name": "DisconnectOnlinePlc",
@@ -5897,7 +5897,7 @@
         "exportPath"
       ],
       "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject][FILE] Export all PLC alarm text lists to an XLSX (Excel) file. Text lists contain the text strings shown for each alarm condition. Supports multi-language projects — all configured languages are exported. Typical use: export → translate in Excel → ImportAlarmTextLists. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportAlarmTextLists\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportAlarmTextLists.xml\"}"
+      "example": "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportAlarmTextLists.xlsx\"}"
     },
     {
       "name": "ExportAlarmInstanceTexts",
@@ -5916,7 +5916,7 @@
         "includeAlarmClass"
       ],
       "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject][FILE] Export PLC alarm instance texts to an XLSX file. Instance texts are the alarm messages tied to specific FB/FC instances (e.g. Motor_01.AlarmText). Options control what additional columns are included in the export. Typical use: export → fill in alarm descriptions → ImportPlcAlarmInstanceTexts (PlcAlarmTextProvider.ImportInstanceTextsFromXlsx). Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportAlarmInstanceTexts\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportAlarmInstanceTexts.xml\"}"
+      "example": "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportAlarmInstanceTexts.xlsx\"}"
     },
     {
       "name": "ExportAlarmClasses",
@@ -5932,7 +5932,7 @@
         "exportPath"
       ],
       "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject][FILE] Export PLC alarm classes to a file. Alarm classes define severity, acknowledgment behavior, and display colors for alarms. The exported file can be edited and re-imported to update alarm class configurations. Use before bulk alarm class updates to create a backup. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportAlarmClasses\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportAlarmClasses.xml\"}"
+      "example": "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportAlarmClasses.dat\"}"
     },
     {
       "name": "ExchangeUnifiedTags",
@@ -6097,7 +6097,7 @@
         "skipChartPreflight"
       ],
       "description": "[L2][PLC-Software][WRITE] Typed CFC chart exchange of one PLC software (ChartProviderS7): export (ChartProvider.CompleteExport(path, modelVersion e.g. V2.0, filter, unattended) - every chart with block types, task assignment and run sequence, written as XML packed in a ZIP such as Chart1.xml.zip), selectiveExport (SelectiveExport(path, chartNames [..], modelVersion, filter, unattended) - the named charts only), import (Import(path, modelVersion, filter, unattended, deleteAtTarget) - the ZIP from a complete or selective export; deleteAtTarget removes charts missing from the file), exportInstructionData (ChartProviderS7.ExportInstructionData(path)). Official requirements: PLC offline (import requires the confirmed Offline state), password-protected charts are skipped by the exports, the imported block types must exist and be compiled. Output files are new and verified by size / SHA-256; export additionally reports the chart inventory parsed from the ZIP. V18 and later export, selectiveExport and exportInstructionData are refused with UNSUPPORTED_CAPABILITY before provider access: the SDK exposes no independent chart inventory, CompleteExport preflight preceded a V20 crash on a chartless PLC, and ExportInstructionData crashed V21. skipChartPreflight cannot bypass the crash guard. ExportInstructionData has no API on V18 (requires V19 or later). Imports remain available on V18 and later. Default preview; no save / compile / download. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExchangeCfcCharts\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"action\":\"export\",\"filePath\":\"C:\\\\Examples\\\\exports\\\\Charts.xml.zip\",\"dryRun\":true,\"modelVersion\":\"V2.0\"}"
+      "example": "{\"softwarePath\":\"PLC_1\",\"action\":\"import\",\"filePath\":\"C:\\\\Examples\\\\exports\\\\Charts.xml.zip\",\"dryRun\":true,\"modelVersion\":\"V2.0\"}"
     },
     {
       "name": "EnsureUnifiedHmiTagTable",
@@ -6390,7 +6390,7 @@
         "preferredDap"
       ],
       "description": "[L2][Hardware][WRITE]Add one third-party GSD/GSDML device from the installed TIA hardware catalog (V18+). keyword must be the exact catalog TypeIdentifier of one candidate (from SearchInstalledGsdDevices or SearchHardwareCatalog); that entry is created once with deviceName. Any other keyword is refused with the ranked candidates (preferredDap only ranks them); GSDML file rows without a catalog TypeIdentifier are never created. One DeviceComposition.CreateWithItem call: no next-candidate retry, no renaming. A TIA refusal is verified by the unchanged device inventory and lists the candidates. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"CreateGsdDevice\"), optionally operation or language.",
-      "example": "{\"keyword\":\"1513\",\"deviceName\":\"PLC_2\"}"
+      "example": "{\"keyword\":\"\\u003Cexact catalog TypeIdentifier from SearchInstalledGsdDevices\\u003E\",\"deviceName\":\"PLC_2\"}"
     },
     {
       "name": "CreateDevice",
@@ -6406,7 +6406,7 @@
         "version",
         "deviceName"
       ],
-      "description": "[L2][Hardware][WRITE] Add one hardware device with exactly the requested type and name: TypeIdentifier OrderNumber:<orderNumber>/<version> (or a full TypeIdentifier in orderNumber with an empty version), deviceName for the device and its head item. Requires: ConnectPortal + OpenProject. One DeviceComposition.CreateWithItem call: no firmware-version stepping, no alternative spelling or model, no renaming retries. A name already used by a device or head item (root, grouped or ungrouped) is refused before the call. When TIA refuses, the unchanged device inventory is verified and the typed refusal lists the hardware-catalog candidates (V18+; earlier releases have no catalog API) to choose again. Find the exact article number and version with SearchHardwareCatalog (V18+) or the TIA type identifier display. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"orderNumber\":\"6ES7 515-2AM02-0AB0\",\"version\":\"V2.9\",\"deviceName\":\"PLC_2\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"CreateDevice\"), optionally operation or language.",
+      "description": "[L2][Hardware][WRITE] Add one hardware device with exactly the requested type and name: TypeIdentifier OrderNumber:<orderNumber>/<version> (or a full TypeIdentifier in orderNumber with an empty version), deviceName for the device and its head item. Requires: ConnectPortal followed by AttachOpenProject or OpenProject. One DeviceComposition.CreateWithItem call: no firmware-version stepping, no alternative spelling or model, no renaming retries. A name already used by a device or head item (root, grouped or ungrouped) is refused before the call. When TIA refuses, the unchanged device inventory is verified and the typed refusal lists the hardware-catalog candidates (V18+; earlier releases have no catalog API) to choose again. Find the exact article number and version with SearchHardwareCatalog (V18+) or the TIA type identifier display. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"orderNumber\":\"6ES7 515-2AM02-0AB0\",\"version\":\"V2.9\",\"deviceName\":\"PLC_2\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"CreateDevice\"), optionally operation or language.",
       "example": "{\"orderNumber\":\"6ES7 515-2AM02-0AB0\",\"version\":\"V2.9\",\"deviceName\":\"PLC_2\"}"
     },
     {
@@ -6649,8 +6649,8 @@
         "spec",
         "dryRun"
       ],
-      "description": "[L1][Project][WRITE] One-shot project generator: from a single JSON spec it creates the project, adds PLC (and optional Unified HMI) hardware, builds UDTs/global DBs/PLC tag tables, imports SCL external sources and LAD S7DCL documents, compiles, sets up the HMI connection/screens/tags, and saves — collapsing the ~20-step runbook into one call. Auto-connects if needed. Critical-step failures (connect/createProject/PLC device) abort; per-element failures are collected and reported. Each device is created exactly as specified with one DeviceComposition.CreateWithItem call: no family default device, firmware-version stepping, alternative model or renaming; a TIA refusal is reported with the hardware-catalog candidates (V18+). Spec keys: projectName(required); directoryPath?(default %TEMP%); plcName?(PLC_1); plcFamily?(S7-1500, label only); plcMlfb(required: exact article number with its spaces, or the full TypeIdentifier from SearchHardwareCatalog); plcVersion?(exact catalog version; empty with a full TypeIdentifier); hmiName?(omit to skip all HMI); hmiFamily?(WinCCUnifiedPC, label only); hmiMlfb/hmiVersion(required with hmiName, same rules); hmiSoftwarePath?(HMI_RT_1); connectionName?(HMI_Connection_1); udt?/globalDb?/tagTable? = arrays of the same json objects BuildAndImportPlcArtifact accepts; sclSourceFiles? = array of .scl file paths; ladDocs? = array of {importPath,name}; hmiScreens? = array of {screenName,width,height,designJson(object)}; hmiTags? = array of {tagTableName?,tagName,hmiDataType?,plcTag?,address?}; compile?(true); save?(true). Returns a per-step report with compile error/warning counts. dryRun DEFAULTS TO TRUE (safety): the default call only validates the spec offline (device type keys, PLC block JSON shapes, SCL/LAD file paths, designJson) WITHOUT connecting to TIA or creating anything; after a clean dry run, call again with dryRun=false to actually create the project. Example: {\"spec\":\"{\\u0022projectName\\u0022:\\u0022Demo\\u0022,\\u0022directoryPath\\u0022:\\u0022C:\\\\\\\\Projects\\u0022,\\u0022plcName\\u0022:\\u0022PLC_1\\u0022,\\u0022plcFamily\\u0022:\\u0022S7-1500\\u0022}\",\"dryRun\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"BuildProjectScaffold\"), optionally operation or language.",
-      "example": "{\"spec\":\"{\\u0022projectName\\u0022:\\u0022Demo\\u0022,\\u0022directoryPath\\u0022:\\u0022C:\\\\\\\\Projects\\u0022,\\u0022plcName\\u0022:\\u0022PLC_1\\u0022,\\u0022plcFamily\\u0022:\\u0022S7-1500\\u0022}\",\"dryRun\":true}"
+      "description": "[L1][Project][WRITE] One-shot project generator: from a single JSON spec it creates the project, adds PLC (and optional Unified HMI) hardware, builds UDTs/global DBs/PLC tag tables, imports SCL external sources and LAD S7DCL documents, compiles, sets up the HMI connection/screens/tags, and saves — collapsing the ~20-step runbook into one call. Auto-connects if needed. Critical-step failures (connect/createProject/PLC device) abort; per-element failures are collected and reported. Each device is created exactly as specified with one DeviceComposition.CreateWithItem call: no family default device, firmware-version stepping, alternative model or renaming; a TIA refusal is reported with the hardware-catalog candidates (V18+). Spec keys: projectName(required); directoryPath?(default %TEMP%); plcName?(PLC_1); plcFamily?(S7-1500, label only); plcMlfb(required: exact article number with its spaces, or the full TypeIdentifier from SearchHardwareCatalog); plcVersion?(exact catalog version; empty with a full TypeIdentifier); hmiName?(omit to skip all HMI); hmiFamily?(WinCCUnifiedPC, label only); hmiMlfb/hmiVersion(required with hmiName, same rules); hmiSoftwarePath?(HMI_RT_1); connectionName?(HMI_Connection_1); udt?/globalDb?/tagTable? = arrays of the same json objects BuildAndImportPlcArtifact accepts; sclSourceFiles? = array of .scl file paths; ladDocs? = array of {importPath,name}; hmiScreens? = array of {screenName,width,height,designJson(object)}; hmiTags? = array of {tagTableName?,tagName,hmiDataType?,plcTag?,address?}; compile?(true); save?(true). Returns a per-step report with compile error/warning counts. dryRun DEFAULTS TO TRUE (safety): the default call only validates the spec offline (device type keys, PLC block JSON shapes, SCL/LAD file paths, designJson) WITHOUT connecting to TIA or creating anything; after a clean dry run, call again with dryRun=false to actually create the project. Example: {\"spec\":\"{\\u0022projectName\\u0022:\\u0022Demo\\u0022,\\u0022directoryPath\\u0022:\\u0022C:\\\\\\\\Projects\\u0022,\\u0022plcName\\u0022:\\u0022PLC_1\\u0022,\\u0022plcFamily\\u0022:\\u0022S7-1500\\u0022,\\u0022plcMlfb\\u0022:\\u00226ES7 513-1AM03-0AB0\\u0022,\\u0022plcVersion\\u0022:\\u0022V3.0\\u0022}\",\"dryRun\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"BuildProjectScaffold\"), optionally operation or language.",
+      "example": "{\"spec\":\"{\\u0022projectName\\u0022:\\u0022Demo\\u0022,\\u0022directoryPath\\u0022:\\u0022C:\\\\\\\\Projects\\u0022,\\u0022plcName\\u0022:\\u0022PLC_1\\u0022,\\u0022plcFamily\\u0022:\\u0022S7-1500\\u0022,\\u0022plcMlfb\\u0022:\\u00226ES7 513-1AM03-0AB0\\u0022,\\u0022plcVersion\\u0022:\\u0022V3.0\\u0022}\",\"dryRun\":true}"
     },
     {
       "name": "BuildAndImportPlcArtifact",
@@ -7845,7 +7845,7 @@
       "method": "FoundationV4Tool.InvokeAsync",
       "returnType": "CallToolResult",
       "parameters": [],
-      "description": "[PLC foundation; native unverified][SESSION] [runtime-query-candidate] Cached attachment/project state only; IsAttached is not live connection proof. No runtime attach, project query or rebind. PID identity remains unverified. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"GetSessionState\"), optionally operation or language.",
+      "description": "[PLC foundation; native unverified][SESSION] [runtime-query-candidate] Cached attachment/project state and authoritative sessionState with binding, worker generation, reset requirement and effective read-only switches. IsAttached is not live connection proof. No runtime attach, project query or rebind. PID identity remains unverified. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"GetSessionState\"), optionally operation or language.",
       "example": "{}"
     },
     {
@@ -8574,7 +8574,7 @@
         "importPath"
       ],
       "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject][WRITE] Import PLC alarm text lists from an XLSX file. The file must match the format exported by ExportAlarmTextLists. Run CompilePlcSoftware after import to validate alarm configuration. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ImportAlarmTextLists\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"importPath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\"}"
+      "example": "{\"softwarePath\":\"PLC_1\",\"importPath\":\"C:\\\\Examples\\\\exports\\\\ExportAlarmTextLists.xlsx\"}"
     },
     {
       "name": "ImportAlarmClasses",
@@ -8590,7 +8590,7 @@
         "importPath"
       ],
       "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject][WRITE] Import PLC alarm classes from a previously exported file. Overwrites existing alarm class definitions. Run CompilePlcSoftware after import. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ImportAlarmClasses\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"importPath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\"}"
+      "example": "{\"softwarePath\":\"PLC_1\",\"importPath\":\"C:\\\\Examples\\\\exports\\\\ExportAlarmClasses.dat\"}"
     },
     {
       "name": "GetVersionControlStatus",
