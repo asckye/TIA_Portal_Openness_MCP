@@ -185,6 +185,61 @@ public sealed class OperatorProtocolTests
         registration.Dispose(); Assert.False(File.Exists(registration.FilePath));
     }
 
+    [Theory, InlineData(true), InlineData(false)]
+    public async Task Registration_retries_a_read_lock_and_reports_a_bounded_failure(bool releaseLock)
+    {
+        using var fixture = new OperatorSessionTests.Fixture("19");
+        var errors = new List<Exception>();
+        var retrying = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var registration = new Registration(fixture.Options, "S-1-5-21-1-2-3-1001", fixture.DirectoryPath, errors.Add,
+            () => retrying.TrySetResult(true));
+        registration.Publish();
+        File.WriteAllText(registration.FilePath, "{\"previous\":true}");
+        using var reader = new FileStream(registration.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        var timer = Stopwatch.StartNew();
+        var publishing = Task.Run(registration.Publish);
+        try
+        {
+            // Windows denies replacing this handle. POSIX permits it and must retain the same atomic publication.
+            if (OperatingSystem.IsWindows())
+            {
+                await retrying.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                Assert.False(publishing.IsCompleted);
+            }
+            if (releaseLock) reader.Dispose();
+            await publishing.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.True(timer.Elapsed < TimeSpan.FromSeconds(5));
+            if (releaseLock || !OperatingSystem.IsWindows())
+            {
+                Assert.Empty(errors);
+                Assert.Equal(1, (int)JsonNode.Parse(File.ReadAllText(registration.FilePath))!["version"]!);
+            }
+            else
+            {
+                var error = Assert.Single(errors);
+                Assert.True(error is IOException or UnauthorizedAccessException);
+                Assert.Contains(error.HResult & 0xffff, new[] { 5, 32, 33 });
+                Assert.True(timer.Elapsed >= Registration.PublishRetryTimeout);
+                Assert.True((bool)JsonNode.Parse(File.ReadAllText(registration.FilePath))!["previous"]!);
+            }
+            Assert.Empty(Directory.EnumerateFiles(Path.GetDirectoryName(registration.FilePath)!, "*.tmp"));
+        }
+        finally { reader.Dispose(); await publishing.WaitAsync(TimeSpan.FromSeconds(5)); }
+        registration.Publish();
+        Assert.Equal(1, (int)JsonNode.Parse(File.ReadAllText(registration.FilePath))!["version"]!);
+    }
+
+    [Fact]
+    public void Registration_logs_initial_publication_io_failure_without_throwing()
+    {
+        using var fixture = new OperatorSessionTests.Fixture("19");
+        var errors = new List<Exception>();
+        using var registration = new Registration(fixture.Options, "S-1-5-21-1-2-3-1001", fixture.DirectoryPath, errors.Add);
+        File.WriteAllText(Path.Combine(fixture.DirectoryPath, "run"), "blocks the directory");
+        registration.Publish();
+        Assert.IsAssignableFrom<IOException>(Assert.Single(errors));
+    }
+
     [WindowsWorkbenchTheory, InlineData(false, false), InlineData(true, false), InlineData(false, true)]
     public async Task Windows_peer_process_token_and_exact_image_are_checked_before_read(bool wrongSid, bool wrongImage)
     {

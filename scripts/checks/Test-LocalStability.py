@@ -300,7 +300,8 @@ def run_profile(args, transport, profile, run_dir):
                     unattached_state(value, args.plc_worker is not None, logs)
                 if expectation in ('compatibility', 'bridge_success'):
                     evidence = value['data']['evidence']
-                    require(evidence['engineMajor'] == args.major and evidence['nativeCrossReferencesEnabled'] is False
+                    # XREF enables the native policy through V20; V21 still requires explicit consent.
+                    require(evidence['engineMajor'] == args.major and evidence['nativeCrossReferencesEnabled'] is (args.major != 21)
                             and evidence['reflectionCrossReferencesAllowed'] is False, 'Wrong engine/policy')
             require(not any(w['code'] == 'DIAGNOSTIC_WRITE_FAILED' for w in meta.get('warnings', [])),
                     'Invocation journal write failed')

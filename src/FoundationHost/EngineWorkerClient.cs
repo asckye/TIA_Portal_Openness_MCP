@@ -11,6 +11,8 @@ namespace TiaMcp.FoundationHost;
 
 internal sealed class EngineWorkerClient(HostOptions options, string workerHash, string? spillsDirectoryForTest = null) : IEngineWorker, IEngineWorkerProgress, IEngineWorkerReadiness, IFoundationWorkerSupervisor, IFoundationSessionWorker, IFoundationWorkerResult, IFoundationWorkerReadiness, TiaMcpServer.ModelContextProtocol.IHostToolServices
 {
+    internal string? NativeCrossReferenceSessionFile { get; set; }
+    internal string? NativeCrossReferenceSessionSecret { get; set; }
     public async Task PrepareReadiness(CancellationToken token)
     {
         if (!ReleaseCatalogData.Releases[options.ReleaseKey].MergeWorkerReadiness || readinessObserved || Faulted) return;
@@ -281,6 +283,8 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
                 if (options.WithUi) start.ArgumentList.Add("--with-ui");
                 start.Environment["TIA_MCP_ENGINE_NONCE"] = nonce;
                 start.Environment["TIA_MCP_WORKER_SPILLS_DIRECTORY"] = SpillsDirectory;
+                if (NativeCrossReferenceSessionFile != null) start.Environment[TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.SessionFileVariable] = NativeCrossReferenceSessionFile;
+                if (NativeCrossReferenceSessionSecret != null) start.Environment[TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.SessionSecretVariable] = NativeCrossReferenceSessionSecret;
                 start.Environment["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory;
                 process = Process.Start(start) ?? throw new IOException("Engine worker did not start."); WorkerJob.Bind(process); WorkerShutdown.Register(this);
                 process.ErrorDataReceived += (_, e) => { if (e.Data != null) lock (diagnostics) { diagnostics.Enqueue(e.Data); while (diagnostics.Count > 8) diagnostics.Dequeue(); } };

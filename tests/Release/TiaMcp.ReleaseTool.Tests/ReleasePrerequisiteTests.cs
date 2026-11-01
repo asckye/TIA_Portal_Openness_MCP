@@ -7,6 +7,50 @@ public sealed class ReleasePrerequisiteTests
 {
     [Theory]
     [Trait("Category", "Prerequisites")]
+    [InlineData("EcosystemPython")]
+    [InlineData("CompanionPython")]
+    public void MissingCompanionReportsTheExactPathAndRepairBeforeBuild(string option)
+    {
+        var path = Path.Combine(Path.GetTempPath(), "missing companion " + Guid.NewGuid().ToString("N"), "python.exe");
+        var options = Options.Parse(["-" + option, path], new HashSet<string>());
+        var error = Assert.Throws<ReleaseException>(() => ReleaseCommands.ReleaseCompanionPython(options));
+        Assert.Contains(path, error.Message);
+        Assert.Contains("tia install-plc-tools", error.Message);
+        Assert.Contains("-EcosystemPython / -CompanionPython", error.Message);
+        Assert.Contains("no build started", error.Message);
+    }
+
+    [Theory]
+    [Trait("Category", "Prerequisites")]
+    [InlineData("EcosystemPython")]
+    [InlineData("CompanionPython")]
+    public void BothCompanionOptionsResolveTheSameExistingFile(string option)
+    {
+        var path = typeof(ReleasePrerequisiteTests).Assembly.Location;
+        Assert.Equal(Path.GetFullPath(path), ReleaseCommands.ReleaseCompanionPython(Options.Parse(["-" + option, path], new HashSet<string>())));
+    }
+
+    [Theory]
+    [Trait("Category", "Prerequisites")]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ReleaseRefusesMissingCompanionBeforeVersionChangesBuildOrAdoption(bool adopt)
+    {
+        var root = TiaMcp.BuildCommon.Repository.FindRoot();
+        var versionBytes = File.ReadAllBytes(Path.Combine(root, "Version.props"));
+        var previousCompanion = Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON");
+        var missing = Path.Combine(root, "bin-build", "missing-" + Guid.NewGuid().ToString("N"), "python.exe");
+        var arguments = new List<string> { "-Version", "4.0.0-beta.3", "-DryRun", "-EcosystemPython", missing };
+        if (adopt) arguments.AddRange(["-AdoptEvidence", Path.Combine(root, "bin-build", "missing-evidence.json")]);
+        var error = Assert.Throws<ReleaseException>(() => ReleaseCommands.Run("release", Options.Parse(arguments.ToArray(), new HashSet<string> { "DryRun" })));
+        Assert.Contains(missing, error.Message);
+        Assert.Contains("no build started", error.Message);
+        Assert.Equal(versionBytes, File.ReadAllBytes(Path.Combine(root, "Version.props")));
+        Assert.Equal(previousCompanion, Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON"));
+    }
+
+    [Theory]
+    [Trait("Category", "Prerequisites")]
     [InlineData("10.0.100 [sdk]", true)]
     [InlineData("9.0.100 [sdk]", false)]
     public void SdkProbeAcceptsOnlyDotnetTen(string output, bool expected)

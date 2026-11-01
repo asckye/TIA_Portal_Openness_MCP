@@ -193,7 +193,8 @@ installed or that a native operation has passed acceptance.
 | `ManageSinumerikSafetyMode` | V20 only | Reads or sets NCU safety mode with an explicit dry-run/confirmation contract and readback. This does not replace safety engineering acceptance. |
 | `InitializeSimotionScripting` | V20 only | Calls the project SIMOTION initializer and returns its string; it does not execute that string or run an external SCOUT script. |
 | `ExportScadaData` | V20 only | Exports project or PLC configuration through the SCADA Export provider. It requires the optional component and does not deploy a WinCC runtime. |
-| `GetPlcCrossReferences` | V20/V21 | Native PLC cross-reference stays disabled by default. The gated route requires explicit process configuration and complete, true block/type consistency evidence. |
+| `GetPlcCrossReferences` | V18–V21 | Allowed by default through V20 where supported. V21 requires the human Workbench session switch or process opt-in; save before the first query and do not retry after an exit. Complete, true block/type consistency evidence and the reflection refusal remain. Not queried never means zero references. |
+| `AnalyzePlcCrossReferences` | All eight releases | Bounded ordinary software/group XML export followed by offline callers/callees/global-site analysis. Only published exports are indexed; the result states software/export count, omitted scope and export/indexing failures. No native CrossReferenceService; partial or empty is not proof of no references. |
 | `CheckDownloadReadiness` | V20/V21 | Unknown device reachability, access, hardware consistency, or download prompts remain unknown; `Ready=null` is not permission to download. |
 
 The optional providers above have no matching V21 SDK types in the supplied

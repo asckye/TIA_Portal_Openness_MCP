@@ -333,7 +333,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     if (depth > 64) throw new InvalidOperationException("Library folder depth exceeds 64.");
                     foreach (var type in PlcGroupOperations.Items(PlcGroupOperations.Get(folder, "Types")))
-                        if (wanted.Contains(type.GetType().FullName)) { if (found.Count >= 10000) throw new InvalidOperationException("More than 10000 matching types; narrow folderPath."); found.Add((path + (HmiDynamic.Name(type) ?? ""), type)); }
+                        if (wanted.Any(w => Logic.LibraryTypeMatches(type.GetType(), w))) { if (found.Count >= 10000) throw new InvalidOperationException("More than 10000 matching types; narrow folderPath."); found.Add((path + (HmiDynamic.Name(type) ?? ""), type)); }
                     foreach (var child in PlcGroupOperations.Items(PlcGroupOperations.Get(folder, "Folders")))
                         Walk(child, path + (HmiDynamic.Name(child) ?? "") + "/", depth + 1);
                 }

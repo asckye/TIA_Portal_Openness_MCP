@@ -40,7 +40,7 @@ namespace TiaMcp.Adapters.Contracts
         {
             string expected = branch
                 ? "Expected an array of {property}, {attribute}, {index} or {name,key?} steps, e.g. " + BranchPathExample + "."
-                : "Expected an array of {\"property\":string,\"name\"?:string} steps, e.g. "
+                : "Expected an array of {\"property\":string,\"name\"?:string,\"key\"?:Name|PropertyName} steps, e.g. "
                     + (optional ? OptionalObjectPathExample + " (the typed DCC/SiVArc root)" : ObjectPathExample) + ".";
             ArgumentException Invalid(string reason) => new ArgumentException(reason + " " + expected);
             if (json == null || json.Length > 32768) throw Invalid("Object path exceeds 32 KiB.");
@@ -52,9 +52,11 @@ namespace TiaMcp.Adapters.Contracts
                 string prefix = "step " + i + ": ";
                 if (!branch)
                 {
-                    if (step.Keys.Any(k => k != "property" && k != "name")) throw Invalid(prefix + "unknown key.");
+                    if (step.Keys.Any(k => k != "property" && k != "name" && k != "key")) throw Invalid(prefix + "unknown key.");
                     if (!step.TryGetValue("property", out var property) || !Member(property)) throw Invalid(prefix + "invalid or backward property.");
                     if (step.TryGetValue("name", out var name) && !Name(name)) throw Invalid(prefix + "name must be a nonempty string.");
+                    if (step.TryGetValue("key", out var key) && (key is not string text || (text != "Name" && text != "PropertyName") || !step.ContainsKey("name")))
+                        throw Invalid(prefix + "key requires name and must be Name or PropertyName.");
                 }
                 else if (step.Count == 1 && (step.TryGetValue("property", out var member) || step.TryGetValue("attribute", out member)))
                 {
@@ -79,11 +81,75 @@ namespace TiaMcp.Adapters.Contracts
         private static string Kind(object? value) => value == null ? "null" : value is string ? "a string"
             : value is IDictionary<string, object?> ? "an object" : value is IList ? "an array" : value is bool ? "a boolean" : "a number";
 
+        public static string Category(string value, params string[] allowed)
+        {
+            if (!allowed.Contains(value, StringComparer.Ordinal)) throw new ArgumentException("category must be " + string.Join("/", allowed) + ".");
+            return value;
+        }
+        public static void Action(string value, params string[] allowed)
+        {
+            if (!allowed.Contains(value, StringComparer.Ordinal)) throw new ArgumentException("action must be " + string.Join("/", allowed) + ".");
+        }
+        public static void Request(UnifiedRequest request)
+        {
+            foreach (var text in new[] { request.ObjectPathJson, request.TagPathJson, request.DurationPathJson, request.BranchJson })
+                if (text.Length != 0 && request.Inputs.TryGetValue(text, out var path)) Path(text, Value(path), branch: text == request.BranchJson);
+            if (request.Operation == "GetUnifiedScreenBranch" || request.Operation == "GetUnifiedFaceplateInstance") AbsoluteHmiPath(request.ScreenPath);
+            if (request.Operation == "GetUnifiedLibraryType" || request.Operation == "GetUnifiedFaceplateInstance" && request.TypePath.Length != 0) AbsoluteHmiPath(request.TypePath);
+            if (request.Operation == "ListUnifiedLibraryFolderEntries") AbsoluteHmiPath(request.FolderPath, rootAllowed: true);
+            switch (request.Operation)
+            {
+                case "GetUnifiedAlarmCommon": Category(request.Category, "alarmClasses", "discreteAlarms", "analogAlarms"); break;
+                case "GetUnifiedAuditSettings": Category(request.Category, "alarmAuditClasses", "auditTrails"); break;
+                case "ManageUnifiedListEntries":
+                    Category(request.Category, "textLists", "graphicLists", "systemTextLists");
+                    Action(request.Action, "read", "create", "update", "delete");
+                    if (string.IsNullOrWhiteSpace(request.ListName)) throw new ArgumentException("Exact list name required.");
+                    break;
+                case "ListUnifiedEngineeringObjects":
+                case "ManageUnifiedEngineeringObject":
+                    Category(request.Category, "alarmClasses", "discreteAlarms", "analogAlarms", "alarmLogs", "dataLogs", "textLists", "graphicLists", "systemTags", "systemTextLists", "auditTrails", "opcUaAlarmTypes");
+                    if (request.Operation == "ManageUnifiedEngineeringObject")
+                    {
+                        Action(request.Action, "create", "update", "delete");
+                        if (string.IsNullOrWhiteSpace(request.Name)) throw new ArgumentException("Exact name required.");
+                    }
+                    break;
+                case "ManageUnifiedPlantNode":
+                    Action(request.Action, "create", "update", "delete");
+                    var parts = AbsoluteHmiPath(request.PlantPath);
+                    if (request.PlantObjectType != "" && (parts.Length == 1 || request.Action != "create"))
+                        throw new ArgumentException("plantObjectType only applies to creating a child CPM instance.");
+                    break;
+            }
+            if (new[] { "GetUnifiedAlarmCommon", "GetUnifiedAuditSettings", "ListUnifiedEngineeringObjects", "ManageUnifiedEngineeringObject", "ManageUnifiedListEntries" }.Contains(request.Operation)
+                && string.IsNullOrWhiteSpace(request.SoftwarePath)) throw new ArgumentException("Nonempty softwarePath required.");
+            foreach (var input in new[] { request.PropertiesJson, request.EntryJson })
+                if (input.Length != 0 && request.Inputs.TryGetValue(input, out var value))
+                {
+                    if (value.Error != null || value.Kind != "object") throw new ArgumentException("Properties and entry inputs must be JSON objects with unique keys.");
+                    if (request.Operation == "ManageUnifiedEngineeringObject" || request.Operation == "ManageUnifiedPlantNode")
+                    {
+                        if (value.Properties.ContainsKey("Name")) throw new ArgumentException("Renaming through properties is refused.");
+                        if (request.Action == "delete" && value.Properties.Count != 0) throw new ArgumentException("Delete does not accept properties.");
+                    }
+                }
+            if (request.Operation == "GetUnifiedAlarmCommon" || request.Operation == "GetUnifiedAuditSettings" || request.Operation == "ListUnifiedEngineeringObjects")
+                if (request.Offset < 0 || request.Limit < 1 || request.Limit > 500) throw new ArgumentException("offset >= 0 and limit 1..500 required.");
+        }
+
         public static void NameOrAbsolutePath(string value)
         {
             if (string.IsNullOrWhiteSpace(value)) throw new ArgumentException("An exact name or absolute path is required; pass /Group/Sub/Table.");
             if (value.IndexOfAny(new[] { '/', '\\' }) < 0) return;
             AbsoluteHmiPath(value);
+        }
+
+        public static string[] HmiGroupPath(string value, bool rootAllowed = false)
+        {
+            var parts = AbsoluteHmiPath(value, rootAllowed, maximumSegments: 64).Select(Uri.UnescapeDataString).ToArray();
+            if (parts.Any(p => p == "." || p == "..")) throw new ArgumentException("HMI group paths refuse '.' and '..' segments.");
+            return parts;
         }
 
         public static string[] AbsoluteHmiPath(string value, bool rootAllowed = false, int maximumSegments = 65)

@@ -608,6 +608,7 @@
     "EnsureUnifiedHmiConnection": {
       "input": "Verifies a preconfigured connection using documented readback properties. Unknown driver strings, InitialAddress syntax and read-only Partner/Station/Node are not guessed. Use ManageUnifiedEngineeringObject with verified explicit values or configure in TIA.",
       "profile": "full-engine"
-    }
+    },
+    "AnalyzePlcCrossReferences": {"input": "READ; existing XML export plus offline reference engine. Retained session exports, bounded ordinary software/group scope. No native CrossReferenceService, compile or save. Always partial; inspect export and indexing failures. Blocks not exported are not analysed."}
   }
 }

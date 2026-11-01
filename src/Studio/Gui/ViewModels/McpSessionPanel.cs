@@ -35,6 +35,14 @@ public sealed class McpSessionPanel : ObservableObject, IDisposable
     public bool Locked => (bool?)state?["sessionLocked"] == true;
     public string Ended => state?["endedBy"] == null ? "" : $"endedBy: {state["endedBy"]} · {state["endReason"]}. "
         + ((string?)state?["worker"]?["state"] == "disconnected" ? Loc.Current["Session.ReconnectHint"] : "");
+    public bool CanSetNativeCrossReferences => Attached && client is IHumanCrossReferenceSettings;
+    public bool NativeCrossReferencesAllowed => Attached && (bool?)client.State?["nativeCrossReferencesAllowed"] == true;
+    internal async Task SetNativeCrossReferencesAsync(bool enabled)
+    {
+        if (!Attached || client is not IHumanCrossReferenceSettings human) throw new InvalidOperationException(Loc.Current["Session.SelectHint"]);
+        await human.SetNativeCrossReferencesAsync(enabled, lifetime.Token);
+        Raise(null);
+    }
     public bool ApprovalEnabled => (bool?)state?["approvalEnabled"] != false;
     public AsyncCommand Refresh { get; }
     public AsyncCommand Attach { get; }

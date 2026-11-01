@@ -9,9 +9,10 @@ namespace TiaMcp.Adapters.Native.Hmi
     {
         internal static HmiMessage Read(IUnifiedSession session, string softwarePath, string objectPathJson, string filter = "AllObjects")
             => session.RunHmiStepTool("GetUnifiedCrossReferences", meta => {
+                meta["queried"] = false;
                 UnifiedObjectAddress.Parse(objectPathJson);
                 var refusal = PlcCrossReferencePolicy.PolicyRefusal(
-                    Environment.GetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable), unified: true);
+                    Environment.GetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable), unified: true, release: PlcCrossReferencePolicy.ReleaseKey, sessionAllowed: TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Enabled);
                 if (refusal != null)
                 {
                     meta["status"] = "PRECONDITION_FAILED"; meta["operationSuccess"] = false;
@@ -27,6 +28,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                     ?? throw new NotSupportedException("CrossReferenceService unavailable on selected object.");
                 var method = serviceType.GetMethods().Single(m => m.Name == "GetCrossReferences" && m.GetParameters().Length == 1);
                 var filterValue = UnifiedRequestScalar.ConvertValue(HmiValues.Value(filter), method.GetParameters()[0].ParameterType);
+                meta["queried"] = true;
                 var raw = method.Invoke(service, new[] { filterValue }) ?? throw new InvalidOperationException("Null native result.");
                 var rows = new HmiArray(); int visited = 0;
                 foreach (var source in PlcGroupOperations.Items(PlcGroupOperations.Get(raw, "Sources")))

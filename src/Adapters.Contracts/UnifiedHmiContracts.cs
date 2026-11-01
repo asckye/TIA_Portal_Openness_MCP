@@ -33,8 +33,53 @@ namespace TiaMcp.Adapters.Contracts
                 throw new ArgumentException("containedType is only accepted for HmiFaceplateContainer, HmiCustomWebControlContainer and HmiCustomWidgetContainer.");
         }
 
+        public static bool LegacyWrite(string operation) => new[] { "EnsureUnifiedHmiScreen", "EnsureUnifiedHmiTagTable", "EnsureUnifiedHmiTag",
+            "EnsureUnifiedHmiConnection", "EnsureUnifiedHmiScreenItem", "ApplyUnifiedHmiScreenDesign", "BindUnifiedHmiButtonPressedTag",
+            "EnsureUnifiedHmiButtonEventHandler", "EnsureUnifiedHmiDynamization", "BindUnifiedHmiTagDynamization" }.Contains(operation, StringComparer.Ordinal);
+
+        public static Dictionary<string, object?> Preview(UnifiedHmiRequest request)
+        {
+            var plan = typeof(UnifiedHmiRequest).GetProperties().Where(p => p.Name != "Inputs" && p.Name != "IsReadOnly")
+                .ToDictionary(p => p.Name, p => p.GetValue(request), StringComparer.Ordinal);
+            return new Dictionary<string, object?> {
+                ["Message"] = "Unified HMI preview; planned changes only. No native call or write was issued.",
+                ["Meta"] = new Dictionary<string, object?> { ["operationSuccess"] = true, ["dryRun"] = true,
+                    ["mayHaveChanged"] = false, ["plannedChanges"] = plan,
+                    ["scope"] = "Managed argument validation only. Existence, native API shape and TIA semantics are checked during execution." } };
+        }
+
+        private static void Design(UnifiedHmiInput value, bool item = false)
+        {
+            if (value.Kind == "error") throw new ArgumentException("Invalid design JSON: " + value.Text);
+            if (value.Kind != "object") throw new ArgumentException("Design must be an object.");
+            foreach (var field in value.Properties)
+            {
+                if (field.Key.Equals("Name", StringComparison.OrdinalIgnoreCase) && !(item && field.Key == "name"))
+                    throw new ArgumentException("Renaming through screen design is refused; use an explicit rename operation.");
+                if (field.Value.Kind == "object") Design(field.Value);
+                if (field.Value.Kind == "array") foreach (var child in field.Value.Items)
+                    if (child.Kind == "object") Design(child, field.Key == "items");
+            }
+        }
+
         public static void Request(UnifiedHmiRequest request)
         {
+            if (!string.IsNullOrEmpty(request.ScreenName)) EngineeringInputValidation.NameOrAbsolutePath(request.ScreenName);
+            if (!string.IsNullOrEmpty(request.TagTableName)) EngineeringInputValidation.NameOrAbsolutePath(request.TagTableName);
+            if (request.Operation == "ManageUnifiedHmiGroup")
+            {
+                EngineeringInputValidation.HmiGroupPath(request.GroupPath);
+                EngineeringInputValidation.Action(request.Action, "create", "rename", "deleteEmpty");
+                if (request.Family != "screens" && request.Family != "tags") throw new ArgumentException("family must be screens or tags.");
+                if (request.Action == "rename" && (string.IsNullOrWhiteSpace(request.NewName) || request.NewName == "." || request.NewName == ".." || request.NewName.IndexOfAny(new[] { '/', '\\' }) >= 0)) throw new ArgumentException("newName must be one nonempty segment.");
+            }
+            if (request.Operation == "ApplyUnifiedHmiScreenDesign" && request.Inputs.TryGetValue(request.DesignJson, out var design))
+            {
+                Design(design);
+                if (!design.Properties.TryGetValue("items", out var items) || items.Kind != "array") throw new ArgumentException("Design items must be an array.");
+            }
+            if (request.Operation == "EnsureUnifiedHmiConnection" && (string.IsNullOrWhiteSpace(request.HmiSoftwarePath) || string.IsNullOrWhiteSpace(request.ConnectionName) || string.IsNullOrWhiteSpace(request.PlcName)))
+                throw new ArgumentException("Explicit nonempty hmiSoftwarePath, connectionName and plcName required.");
             if (request.Operation == "EnsureUnifiedHmiTag") PlcBinding(request.PlcName, request.PlcTag);
             if (request.Operation == "ManageUnifiedScreenItem")
             {

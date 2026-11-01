@@ -19,14 +19,14 @@ V20/V21 宿主在 TIA 缺失、版本不匹配或 Openness 环境未就绪时仍
 
 | TIA 版本 | 注册工具数 | lite 档 |
 |---|---:|---:|
-| V14 SP1 | 279 | 不适用 |
-| V15.1 | 319 | 不适用 |
-| V16 | 348 | 不适用 |
-| V17 | 371 | 不适用 |
-| V18 | 397 | 不适用 |
-| V19 | 473 | 不适用 |
-| V20 | 496 | 81 |
-| V21 | 511 | 84 |
+| V14 SP1 | 280 | 不适用 |
+| V15.1 | 320 | 不适用 |
+| V16 | 349 | 不适用 |
+| V17 | 372 | 不适用 |
+| V18 | 398 | 不适用 |
+| V19 | 474 | 不适用 |
+| V20 | 497 | 81 |
+| V21 | 512 | 84 |
 <!-- generated:tool-counts:end -->
 
 交付包不再包含引擎：`TiaMcp.Engine.V20.exe`、`TiaMcp.Engine.V21.exe`、它们的 worker 文件和 `tool-catalog.json` 已从 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 的必需文件移入 `exclude` 与 `legacyCleanup` 规则，多版本打包器断言 `runtime/` 下没有引擎文件。引擎只作为私有兼容副本构建到 `bin-build/engine-compat`，供仓库交叉检查使用，直到 P8-04l 删除引擎。宿主在任何发布键上都以退出码 64 拒绝 `--engine-worker`、`--engine-catalog` 等 `--engine-*` 选项；只有仓库检查脚本把 `TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY` 设为该 checkout 的 `bin-build/engine-compat`、宿主从该 checkout 的源码构建或私有输出运行、且两个引擎文件都在私有输出中时才接受（[`HostOptions.cs`](../../src/FoundationHost/HostOptions.cs)），该变量不是对外选项。引擎原有的 stdio/HTTP 宿主与隔离 supervisor 早已退役。发布记录为 `manifest/multi-version-build.json`，引擎交叉检查的记录原样保存在其 `engineCompatibility` 段；`manifest/release-build.json` 不再交付。

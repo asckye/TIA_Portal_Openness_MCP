@@ -286,6 +286,10 @@ internal sealed class FoundationV4Tool : McpServerTool
             if (validation.Error != null) return Recorded(deviceCandidate
                 ? FoundationV4Result.DeviceCandidate(DeviceCreationSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted))
                 : FoundationV4Result.Reject(release, tool.Name, id, validation.Error, inner is FoundationTool { IsNative: true }));
+            try { CallerInputFiles.RefuseHumanSettingsTargets(JsonSerializer.SerializeToNode(args)!.AsObject()); }
+            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
+            { return Recorded(FoundationV4Result.Reject(release, tool.Name, id, new Error(error.Message,
+                new PreconditionFailedDetails("human-only-native-cross-reference-setting", error.ParamName)))); }
             if (write && FoundationHostPorts.GenerationFence(tool.Name, JsonSerializer.Serialize(args)) is { } fenced)
                 return Recorded(fenced);
             if (inner is FoundationTool { Ported: true } ported && ported.RefusePortedCapability(args) is { } unavailable)

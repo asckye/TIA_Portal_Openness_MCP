@@ -24,11 +24,28 @@ namespace TiaOpenness.Shared
         public static JsonArray ProfileEntries(string release, int contractVersion = 4, bool engineSource = false)
         {
             if (contractVersion != 4) throw new ArgumentException("Unsupported contract version.");
-            return (JsonArray)(Profiles.Value[engineSource ? "engineSourceReleases" : "releases"]?[release]?.DeepClone() ?? new JsonArray());
+            var rows = (JsonArray)(Profiles.Value[engineSource ? "engineSourceReleases" : "releases"]?[release]?.DeepClone() ?? new JsonArray());
+            foreach (var row in rows.OfType<JsonObject>()) CurrentHmiArguments(row, release);
+            return rows;
         }
 
-        private static JsonObject? ProfileEntry(string name, string release, bool source = false) => (Profiles.Value[source ? "engineSourceReleases" : "releases"]?[release] as JsonArray)?
-            .OfType<JsonObject>().FirstOrDefault(row => (string?)row["currentName"] == name || (string?)row["sourceName"] == name);
+        private static JsonObject? CurrentHmiCall(string name, string release)
+            => TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(name)?.Domain.StartsWith("HMI", StringComparison.Ordinal) == true
+                ? Data.Value["calls"]?["profiles"]?[release is "20" or "21" ? "full-engine" : "plc-foundation"]?[name] as JsonObject : null;
+
+        // Historical catalog rows remain comparison evidence; live HMI examples come from the maintained call library.
+        private static void CurrentHmiArguments(JsonObject row, string release)
+        {
+            if (CurrentHmiCall((string)row["currentName"]!, release)?["arguments"] is JsonObject arguments)
+                row["arguments"] = arguments.DeepClone();
+        }
+        private static JsonObject? ProfileEntry(string name, string release, bool source = false)
+        {
+            var row = (Profiles.Value[source ? "engineSourceReleases" : "releases"]?[release] as JsonArray)?
+                .OfType<JsonObject>().FirstOrDefault(entry => (string?)entry["currentName"] == name || (string?)entry["sourceName"] == name)?.DeepClone().AsObject();
+            if (row != null) CurrentHmiArguments(row, release);
+            return row;
+        }
 
         public static string RegisteredName(string sourceName, string release)
             => (string?)ProfileEntry(sourceName, release)?["currentName"] ?? sourceName;
@@ -75,7 +92,20 @@ namespace TiaOpenness.Shared
             return result;
         }
 
-        public static JsonArray Sequences(bool engineSource = false) => (JsonArray)Data.Value[engineSource ? "engineSourceSequences" : "sequences"]!.DeepClone();
+        public static JsonArray Sequences(bool engineSource = false)
+        {
+            var rows = (JsonArray)Data.Value[engineSource ? "engineSourceSequences" : "sequences"]!.DeepClone();
+            if (engineSource)
+                foreach (var maintained in Data.Value["sequences"]!.AsArray().OfType<JsonObject>())
+                    if (maintained["steps"] is JsonArray steps && steps.Any(step =>
+                        TiaMcpServer.ModelContextProtocol.ToolMetadata.Find((string)step!["tool"]!)?.Domain.StartsWith("HMI", StringComparison.Ordinal) == true))
+                    {
+                        var existing = rows.FirstOrDefault(row => (string?)row!["id"] == (string?)maintained["id"]);
+                        if (existing == null) rows.Add(maintained.DeepClone());
+                        else rows[rows.IndexOf(existing)] = maintained.DeepClone();
+                    }
+            return rows;
+        }
         public static JsonObject Notes(string name) => (JsonObject)(Data.Value["toolNotes"]?[name]?.DeepClone() ?? new JsonObject());
 
         private static JsonObject? CallExample(string name, string release, string profile)
@@ -86,7 +116,7 @@ namespace TiaOpenness.Shared
                     : candidate.ContainsKey("exportPath") ? "Review the exact export objects and destination identities, then apply that plan once with confirmation and the expected project file." : "Resolve the exact installed catalog TypeIdentifier, preview, then apply that plan once with confirmation and the expected project file." };
             var entry = profile is "full-engine" or "engine-source" ? ProfileEntry(name, release, profile == "engine-source") : null;
             var source = (string?)entry?["currentName"] ?? name;
-            var row = (profile == "engine-source" ? Data.Value["engineSourceCalls"]?[source] : Data.Value["calls"]?["profiles"]?[profile]?[source])?.DeepClone();
+            var row = (CurrentHmiCall(source, release) ?? (profile == "engine-source" ? Data.Value["engineSourceCalls"]?[source] : Data.Value["calls"]?["profiles"]?[profile]?[source]))?.DeepClone();
             if (row == null) return null;
             if (entry != null) row["arguments"] = entry["arguments"]!.DeepClone();
             var extension = (string?)Data.Value["calls"]?["releaseExtensions"]?[release] ?? release;

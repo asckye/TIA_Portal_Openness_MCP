@@ -105,7 +105,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public ResponseMessage ValidateUnifiedObject(string softwarePath, string objectPathJson)
         => _service.ValidateUnifiedObject(softwarePath,objectPathJson);
 
-        [McpServerTool(Name="GetUnifiedCrossReferences"), Description("[L2][HMI-Unified][READ] Native Unified cross references for exact object. DISABLED BY DEFAULT: CrossReferenceService queries have terminated TIA Portal V21. Refusal means NOT QUERIED, never zero references. Controlled diagnosis on a saved test project requires the server-process setting TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1, shared with PLC queries; do not enable it automatically. Compilation does not guarantee crash safety. Strict errors; bounded Sources/References/Locations. Does not expand runtime script names or claim all native fields complete.")]
+        [McpServerTool(Name="GetUnifiedCrossReferences"), Description("[L2][HMI-Unified][READ] Read native Unified cross references on an exact typed object path. Allowed by default through V20 where the API exists (Unified V19+). V21 requires the human Workbench Allow native cross references (V21) switch for this session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. V21 TIA exits recorded: save before the first query; compilation is no guarantee. Not queried never means zero references; decoded results retain partial-coverage limits. Reflection cannot bypass the policy. No automatic retry after TIA exit. No complete offline replacement for Unified references is established. Native acceptance pending.")]
         public CallToolResult GetUnifiedCrossReferencesV4(
             string softwarePath,
             PropertyStep[] objectPath,

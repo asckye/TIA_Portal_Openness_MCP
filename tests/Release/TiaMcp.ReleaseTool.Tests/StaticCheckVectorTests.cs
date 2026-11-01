@@ -66,5 +66,8 @@ public sealed class StaticCheckVectorTests
         Assert.True(JsonNode.DeepEquals(row["expected"], actual), $"{kind} vector {index}: expected {row["expected"]}; actual {actual}");
     }
     [Fact]
+    public void DeadReferenceCheckIncludesFoundationHostRegistrations()
+        => Assert.Equal(0, DeadToolReferences.Run(Root, false));
+    [Fact]
     public void GenericDictionaryUsesPythonMappingSemantics() => Assert.Equal("{\"a\": 1}", PythonJson.Dumps(new Dictionary<string, int> { ["a"] = 1 }));
 }

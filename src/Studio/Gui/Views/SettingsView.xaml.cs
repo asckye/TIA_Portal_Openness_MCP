@@ -16,6 +16,7 @@ namespace TiaOpenness.Gui.Views;
 public partial class SettingsView : UserControl
 {
     private IApprovalService? _approvals;
+    private McpSessionPanel? _session;
     internal event EventHandler? DisableApprovalRequested;
     internal event EventHandler? ControlEnabledChanged;
 
@@ -25,8 +26,11 @@ public partial class SettingsView : UserControl
         VersionText.Text = Loc.Current.T("Common.WorkbenchVersion", MainViewModel.AppVersion).TrimStart('v');
     }
 
-    internal void Initialize(IApprovalService approvals)
+    internal void Initialize(IApprovalService approvals, McpSessionPanel? session = null)
     {
+        _session = session;
+        if (_session != null) _session.PropertyChanged += OnSessionChanged;
+        UpdateNativeCrossReferences();
         _approvals = approvals;
         approvals.PropertyChanged += OnApprovalChanged;
         UpdateApproval();
@@ -57,7 +61,7 @@ public partial class SettingsView : UserControl
         }
     }
 
-    internal void Dispose() { if (_approvals != null) _approvals.PropertyChanged -= OnApprovalChanged; _approvals = null; }
+    internal void Dispose() { if (_session != null) _session.PropertyChanged -= OnSessionChanged; _session = null; if (_approvals != null) _approvals.PropertyChanged -= OnApprovalChanged; _approvals = null; }
     private void OnApprovalChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName is not (nameof(IApprovalService.Enabled) or nameof(IApprovalService.TimeoutSeconds))) return;
@@ -93,6 +97,21 @@ public partial class SettingsView : UserControl
         try { await Task.Run(action); }
         catch (Exception ex) { Controls.WorkbenchMessageBox.Show(Window.GetWindow(this), ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
         UpdateApproval();
+    }
+
+    private void OnSessionChanged(object? sender, PropertyChangedEventArgs e) => UpdateNativeCrossReferences();
+    private void UpdateNativeCrossReferences()
+    {
+        NativeCrossReferencesEnabled.IsEnabled = _session?.CanSetNativeCrossReferences == true;
+        NativeCrossReferencesEnabled.IsChecked = _session?.NativeCrossReferencesAllowed == true;
+    }
+    private async void OnNativeCrossReferencesClick(object sender, RoutedEventArgs e)
+    {
+        if (_session?.CanSetNativeCrossReferences != true) { UpdateNativeCrossReferences(); return; }
+        try { await _session.SetNativeCrossReferencesAsync(NativeCrossReferencesEnabled.IsChecked == true); }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or System.Threading.Tasks.TaskCanceledException)
+        { Controls.WorkbenchMessageBox.Show(Window.GetWindow(this), error.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
+        UpdateNativeCrossReferences();
     }
 
     private void OnControlEnabledClick(object sender, RoutedEventArgs e)

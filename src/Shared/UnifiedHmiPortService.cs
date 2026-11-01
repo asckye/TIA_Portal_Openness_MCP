@@ -36,6 +36,9 @@ namespace TiaMcpServer.Siemens.Services
                     request.Inputs[input] = new UnifiedHmiInput { Kind = "error", Text = error.Message };
                 }
             }
+            UnifiedHmiInputValidation.Request(request);
+            if (request.DryRun && UnifiedHmiInputValidation.LegacyWrite(request.Operation))
+                return JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(UnifiedHmiInputValidation.Preview(request)))!;
             var arguments = new JsonObject
             {
                 ["request"] = JsonSerializer.SerializeToNode(request),

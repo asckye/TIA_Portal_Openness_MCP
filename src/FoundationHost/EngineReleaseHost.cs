@@ -141,6 +141,8 @@ internal static class SharedReleaseHost
     {
         var host = new HostSession(options.ReleaseKey, session.Pipeline.Instructions, operatorOwned, session.Pipeline.Tools.ToArray(),
             session.Pipeline.OperatorTools, () => session.Services.OperatorSnapshot(), session.Dispose);
+        if (session.Worker is WorkerClient plc) { plc.NativeCrossReferenceSessionFile = host.NativeCrossReferenceSessionFile; plc.NativeCrossReferenceSessionSecret = host.NativeCrossReferenceSessionSecret; }
+        else if (session.Worker is EngineWorkerClient engine) { engine.NativeCrossReferenceSessionFile = host.NativeCrossReferenceSessionFile; engine.NativeCrossReferenceSessionSecret = host.NativeCrossReferenceSessionSecret; }
         if (operatorOwned || options.Transport == "stdio") host.RegisterSession(host.SessionKey, session.Pipeline.RegisterStagingSession);
         else host.RegisterSessionOnBind(session.Pipeline.RegisterHttpSession);
         return host;
@@ -161,6 +163,7 @@ internal static class SharedReleaseHost
     private sealed class Session(IFoundationSessionWorker worker, FoundationHostPorts.Services services, EngineHostPipeline pipeline) : IDisposable
     {
         private int disposed;
+        internal IFoundationSessionWorker Worker => worker;
         internal FoundationHostPorts.Services Services => services;
         internal EngineHostPipeline Pipeline => pipeline;
         public void Dispose()

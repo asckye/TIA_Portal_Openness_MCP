@@ -42,8 +42,10 @@ namespace TiaMcp.Adapters.Native.Hmi
             foreach (var row in ScriptIdentity(module, path)) yield return row;
             foreach (var row in Export(module, path, false)) yield return row;
         }
-        internal static HmiObject InstanceLink(object item, string path)
+        internal static HmiObject InstanceLink(object item, string path) => InstanceLink(item, path, out _);
+        internal static HmiObject InstanceLink(object item, string path, out object? linkedVersion)
         {
+            linkedVersion = null;
             var serviceType = AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetType("Siemens.Engineering.Library.Types.LibraryTypeInstanceInfo", false)).FirstOrDefault(t => t != null);
             if (serviceType == null) return MigrationRead.Failure(path, "Unsupported", reason: "LibraryTypeInstanceInfo is not available in the loaded official API.");
             try
@@ -52,8 +54,17 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var method = (provider?.GetMethods() ?? item.GetType().GetMethods()).FirstOrDefault(m => m.Name == "GetService" && m.IsGenericMethodDefinition && m.GetParameters().Length == 0);
                 var info = method?.MakeGenericMethod(serviceType).Invoke(item, Array.Empty<object>());
                 if (info == null) return MigrationRead.Failure(path, "Unsupported", reason: "This object does not expose a connected library version via LibraryTypeInstanceInfo. ContainedType alone is not proof of a version.");
-                var version = MigrationRead.Get(info, "LibraryTypeVersion")!;
-                var type = MigrationRead.Get(version, "TypeObject")!;
+                var version = MigrationRead.Get(info, "LibraryTypeVersion");
+                if (version == null) return MigrationRead.Failure(path, "Unsupported", reason: "LibraryTypeInstanceInfo.LibraryTypeVersion is null; the connected version is unavailable.");
+                var type = MigrationRead.Get(version, "TypeObject");
+                if (type == null) return MigrationRead.Failure(path, "Unsupported", reason: "The connected LibraryTypeVersion.TypeObject is null; type identity is unavailable.");
+                foreach (var field in new[] { "VersionNumber", "Guid" })
+                    if (string.IsNullOrWhiteSpace(MigrationRead.Get(version, field)?.ToString()))
+                        return MigrationRead.Failure(path, "Unsupported", reason: "Connected LibraryTypeVersion." + field + " is unavailable; the version identity cannot be verified.");
+                foreach (var field in new[] { "Name", "Guid" })
+                    if (string.IsNullOrWhiteSpace(MigrationRead.Get(type, field)?.ToString()))
+                        return MigrationRead.Failure(path, "Unsupported", reason: "Connected LibraryTypeVersion.TypeObject." + field + " is unavailable; the type identity cannot be verified.");
+                linkedVersion = version;
                 return new HmiObject { ["path"] = path, ["kind"] = "libraryInstanceLink", ["status"] = "ok",
                     ["version"] = MigrationRead.Get(version, "VersionNumber")?.ToString(), ["versionGuid"] = MigrationRead.Get(version, "Guid")?.ToString(),
                     ["typeName"] = MigrationRead.Get(type, "Name")?.ToString(), ["typeGuid"] = MigrationRead.Get(type, "Guid")?.ToString(),
@@ -64,7 +75,11 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal static IEnumerable<HmiObject> LibraryType(object library, string typePath, string versionNumber)
         {
             var type = ExactType(library, typePath); var version = ExactVersion(type, versionNumber);
-            var path = "/ProjectLibrary" + typePath + "/Versions/" + MigrationRead.Segment(versionNumber);
+            foreach (var row in LibraryVersion(version, "/ProjectLibrary" + typePath + "/Versions/" + MigrationRead.Segment(versionNumber), type)) yield return row;
+        }
+        internal static IEnumerable<HmiObject> LibraryVersion(object version, string path, object? type = null)
+        {
+            type ??= MigrationRead.Get(version, "TypeObject") ?? throw new NotSupportedException("Connected LibraryTypeVersion.TypeObject unavailable.");
             yield return new HmiObject { ["path"] = path, ["kind"] = "libraryTypeVersion", ["status"] = "ok", ["typeName"] = MigrationRead.Get(type, "Name")?.ToString(),
                 ["version"] = MigrationRead.Get(version, "VersionNumber")?.ToString(), ["versionGuid"] = MigrationRead.Get(version, "Guid")?.ToString(), ["type"] = type.GetType().FullName };
             foreach (var name in new[] { "State", "OriginalLibrary" })

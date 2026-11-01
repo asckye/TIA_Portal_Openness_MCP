@@ -6441,7 +6441,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenName": "Overview"
+        "screenName": "/Overview"
       }
     },
     {
@@ -6450,7 +6450,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table"
+        "tagTableName": "/Default tag table"
       }
     },
     {
@@ -6459,7 +6459,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table",
+        "tagTableName": "/Default tag table",
         "tagName": "Ready"
       }
     },
@@ -6501,7 +6501,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenName": "Screen_1",
+        "screenName": "/Screen_1",
         "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
         "exportOptions": "WithDefaults"
       }
@@ -6512,7 +6512,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table",
+        "tagTableName": "/Default tag table",
         "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
         "exportOptions": "WithDefaults"
       }
@@ -6593,7 +6593,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenPath": "Overview"
+        "screenPath": "/Overview"
       }
     },
     {
@@ -6634,7 +6634,7 @@
         "confirmDelete": false,
         "dryRun": true,
         "action": "read",
-        "objectPath": "Popup_1"
+        "objectPath": "/Popup_1"
       }
     },
     {
@@ -8769,7 +8769,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenName": "Overview"
+        "screenName": "/Overview"
       }
     },
     {
@@ -8778,7 +8778,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table"
+        "tagTableName": "/Default tag table"
       }
     },
     {
@@ -8787,7 +8787,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table",
+        "tagTableName": "/Default tag table",
         "tagName": "Ready"
       }
     },
@@ -8829,7 +8829,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenName": "Screen_1",
+        "screenName": "/Screen_1",
         "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
         "exportOptions": "WithDefaults"
       }
@@ -8840,7 +8840,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table",
+        "tagTableName": "/Default tag table",
         "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
         "exportOptions": "WithDefaults"
       }
@@ -8921,7 +8921,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenPath": "Overview"
+        "screenPath": "/Overview"
       }
     },
     {
@@ -8962,7 +8962,7 @@
         "confirmDelete": false,
         "dryRun": true,
         "action": "read",
-        "objectPath": "Popup_1"
+        "objectPath": "/Popup_1"
       }
     },
     {
@@ -11509,7 +11509,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenName": "Overview"
+        "screenName": "/Overview"
       }
     },
     {
@@ -11518,7 +11518,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table"
+        "tagTableName": "/Default tag table"
       }
     },
     {
@@ -11527,7 +11527,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table",
+        "tagTableName": "/Default tag table",
         "tagName": "Ready"
       }
     },
@@ -11569,7 +11569,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenName": "Screen_1",
+        "screenName": "/Screen_1",
         "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
         "exportOptions": "WithDefaults"
       }
@@ -11580,7 +11580,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table",
+        "tagTableName": "/Default tag table",
         "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
         "exportOptions": "WithDefaults"
       }
@@ -11661,7 +11661,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenPath": "Overview"
+        "screenPath": "/Overview"
       }
     },
     {
@@ -11702,7 +11702,7 @@
         "confirmDelete": false,
         "dryRun": true,
         "action": "read",
-        "objectPath": "Popup_1"
+        "objectPath": "/Popup_1"
       }
     },
     {
@@ -14534,7 +14534,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenName": "Overview"
+        "screenName": "/Overview"
       }
     },
     {
@@ -14543,7 +14543,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table"
+        "tagTableName": "/Default tag table"
       }
     },
     {
@@ -14552,7 +14552,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table",
+        "tagTableName": "/Default tag table",
         "tagName": "Ready"
       }
     },
@@ -14594,7 +14594,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenName": "Screen_1",
+        "screenName": "/Screen_1",
         "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
         "exportOptions": "WithDefaults"
       }
@@ -14605,7 +14605,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table",
+        "tagTableName": "/Default tag table",
         "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
         "exportOptions": "WithDefaults"
       }
@@ -14686,7 +14686,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenPath": "Overview"
+        "screenPath": "/Overview"
       }
     },
     {
@@ -14727,7 +14727,7 @@
         "confirmDelete": false,
         "dryRun": true,
         "action": "read",
-        "objectPath": "Popup_1"
+        "objectPath": "/Popup_1"
       }
     },
     {
@@ -17899,7 +17899,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenName": "Overview"
+        "screenName": "/Overview"
       }
     },
     {
@@ -17908,7 +17908,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table"
+        "tagTableName": "/Default tag table"
       }
     },
     {
@@ -17917,7 +17917,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table",
+        "tagTableName": "/Default tag table",
         "tagName": "Ready"
       }
     },
@@ -17959,7 +17959,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenName": "Screen_1",
+        "screenName": "/Screen_1",
         "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
         "exportOptions": "WithDefaults"
       }
@@ -17970,7 +17970,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table",
+        "tagTableName": "/Default tag table",
         "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
         "exportOptions": "WithDefaults"
       }
@@ -18051,7 +18051,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenPath": "Overview"
+        "screenPath": "/Overview"
       }
     },
     {
@@ -18092,7 +18092,7 @@
         "confirmDelete": false,
         "dryRun": true,
         "action": "read",
-        "objectPath": "Popup_1"
+        "objectPath": "/Popup_1"
       }
     },
     {
@@ -21489,7 +21489,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenName": "Overview"
+        "screenName": "/Overview"
       }
     },
     {
@@ -21498,7 +21498,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table"
+        "tagTableName": "/Default tag table"
       }
     },
     {
@@ -21507,7 +21507,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table",
+        "tagTableName": "/Default tag table",
         "tagName": "Ready"
       }
     },
@@ -21517,7 +21517,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_Unified_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "itemName": "StatusText"
       }
     },
@@ -21559,7 +21559,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenName": "Screen_1",
+        "screenName": "/Screen_1",
         "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
         "exportOptions": "WithDefaults"
       }
@@ -21570,7 +21570,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table",
+        "tagTableName": "/Default tag table",
         "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
         "exportOptions": "WithDefaults"
       }
@@ -21651,7 +21651,7 @@
       "family": "F24",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenPath": "Overview"
+        "screenPath": "/Overview"
       }
     },
     {
@@ -21680,7 +21680,7 @@
       "family": "F26",
       "example": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "layout": {
           "columns": 1,
           "cellWidth": 160,
@@ -21694,7 +21694,8 @@
               "text": "Ready"
             }
           ]
-        }
+        },
+        "dryRun": true
       }
     },
     {
@@ -21703,7 +21704,7 @@
       "family": "F26",
       "example": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "design": {
           "screen": {
             "name": "Overview",
@@ -21721,7 +21722,8 @@
               "text": "Ready"
             }
           ]
-        }
+        },
+        "dryRun": true
       }
     },
     {
@@ -21730,7 +21732,7 @@
       "family": "F26",
       "example": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "theme": {
           "name": "Example",
           "palette": {
@@ -21739,7 +21741,8 @@
             "Text": "0xFF202020",
             "Border": "0xFF808080"
           }
-        }
+        },
+        "dryRun": true
       }
     },
     {
@@ -21748,10 +21751,11 @@
       "family": "F26",
       "example": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "itemName": "StatusText",
         "propertyName": "Visible",
-        "tagName": "Ready"
+        "tagName": "Ready",
+        "dryRun": true
       }
     },
     {
@@ -21760,7 +21764,7 @@
       "family": "F26",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "groupPath": "Examples",
+        "groupPath": "/Examples",
         "dryRun": true
       }
     },
@@ -21770,7 +21774,7 @@
       "family": "F26",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenPath": "Overview",
+        "screenPath": "/Overview",
         "buttonName": "StartButton",
         "eventType": "Down",
         "dryRun": true
@@ -21782,7 +21786,7 @@
       "family": "F26",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenPath": "Overview",
+        "screenPath": "/Overview",
         "itemName": "StatusText",
         "propertyName": "Visible",
         "dryRun": true
@@ -21794,7 +21798,7 @@
       "family": "F26",
       "example": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "buttonName": "StartButton",
         "eventType": "Down"
       }
@@ -21811,11 +21815,12 @@
       "family": "F26",
       "example": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "buttonName": "StartButton",
         "eventType": "Down",
         "actionKind": "set-bit",
-        "targetTag": "Ready"
+        "targetTag": "Ready",
+        "dryRun": true
       }
     },
     {
@@ -21824,9 +21829,10 @@
       "family": "F26",
       "example": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "buttonName": "StartButton",
-        "eventType": "Down"
+        "eventType": "Down",
+        "dryRun": true
       }
     },
     {
@@ -21834,7 +21840,8 @@
       "entry": "EnsureUnifiedHmiConnection",
       "family": "F26",
       "example": {
-        "hmiSoftwarePath": "HMI_RT_1"
+        "hmiSoftwarePath": "HMI_RT_1",
+        "dryRun": true
       }
     },
     {
@@ -21843,9 +21850,10 @@
       "family": "F26",
       "example": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "itemName": "StatusText",
-        "propertyName": "Visible"
+        "propertyName": "Visible",
+        "dryRun": true
       }
     },
     {
@@ -21854,7 +21862,8 @@
       "family": "F26",
       "example": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview"
+        "screenName": "/Overview",
+        "dryRun": true
       }
     },
     {
@@ -21863,8 +21872,9 @@
       "family": "F26",
       "example": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
-        "itemName": "StatusText"
+        "screenName": "/Overview",
+        "itemName": "StatusText",
+        "dryRun": true
       }
     },
     {
@@ -21876,7 +21886,8 @@
         "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
         "tagName": "Ready",
         "plcName": "PLC_1",
-        "plcTag": "&lt;exact PLC tag name from project reads&gt;"
+        "plcTag": "&lt;exact PLC tag name from project reads&gt;",
+        "dryRun": true
       }
     },
     {
@@ -21885,7 +21896,8 @@
       "family": "F26",
       "example": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "tagTableName": "/HmiTags/Diagnostic/DiagInfo"
+        "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
+        "dryRun": true
       }
     },
     {
@@ -21894,7 +21906,7 @@
       "family": "F26",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenPath": "Overview",
+        "screenPath": "/Overview",
         "buttonName": "StartButton",
         "eventType": "Down"
       }
@@ -21905,7 +21917,7 @@
       "family": "F26",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "screenPath": "Overview",
+        "screenPath": "/Overview",
         "itemName": "StatusText",
         "propertyName": "Visible"
       }
@@ -21916,7 +21928,7 @@
       "family": "F26",
       "example": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "itemName": "StatusText"
       }
     },
@@ -21933,7 +21945,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "family": "screens",
-        "groupPath": "Examples",
+        "groupPath": "/Examples",
         "action": "create",
         "dryRun": true
       }
@@ -21957,7 +21969,7 @@
       "family": "F26",
       "example": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "buttonName": "StartButton",
         "eventType": "Down",
         "scriptCode": "HMIRuntime.Tags(\"Ready\").Read();"
@@ -21987,6 +21999,10 @@
         "softwarePath": "HMI_RT_1",
         "dryRun": true,
         "objectPath": [
+          {
+            "property": "ScreenGroups",
+            "name": "Production"
+          },
           {
             "property": "Screens",
             "name": "Overview"
@@ -22127,7 +22143,7 @@
       "entry": "ManageUnifiedPlantNode",
       "family": "F27",
       "example": {
-        "plantPath": "ExampleArea",
+        "plantPath": "/ExampleArea/ExampleUnit",
         "action": "create",
         "plantObjectType": "&lt;existing plant object type from this project library&gt;",
         "dryRun": true
@@ -22138,7 +22154,7 @@
       "entry": "SetUnifiedPlantObject",
       "family": "F27",
       "example": {
-        "plantPath": "Plant_1",
+        "plantPath": "/Plant_1",
         "dryRun": true,
         "objectPath": [],
         "properties": {
@@ -22159,7 +22175,12 @@
           },
           {
             "property": "ScreenItems",
-            "name": "StartButton"
+            "name": "MotorFaceplate_1"
+          },
+          {
+            "property": "Interface",
+            "key": "PropertyName",
+            "name": "Speed"
           }
         ]
       }
@@ -22177,12 +22198,13 @@
           },
           {
             "property": "ScreenItems",
-            "name": "StartButton"
+            "name": "MotorFaceplate_1"
           }
         ],
         "confirmDelete": false,
         "dryRun": true,
-        "action": "read"
+        "action": "read",
+        "collectionProperty": "Interface"
       }
     },
     {
@@ -22198,10 +22220,15 @@
           },
           {
             "property": "ScreenItems",
-            "name": "StartButton"
+            "name": "MotorFaceplate_1"
+          },
+          {
+            "property": "Interface",
+            "key": "PropertyName",
+            "name": "Speed"
           }
         ],
-        "propertyName": "Visible",
+        "propertyName": "Value",
         "confirmDelete": false,
         "dryRun": true,
         "action": "read"
@@ -22338,7 +22365,7 @@
       "example": {
         "softwarePath": "HMI_RT_1",
         "expectedProject": "Example",
-        "screenPath": "Overview",
+        "screenPath": "/Overview",
         "itemNames": [
           "StatusText"
         ]
@@ -22584,9 +22611,7 @@
         "softwarePath": "HMI_RT_1",
         "expectedProject": "Example",
         "screenPath": "/Overview",
-        "itemName": "MotorFaceplate_1",
-        "typePath": "/Faceplates/MotorFaceplate",
-        "version": "&lt;version from target discovery&gt;"
+        "itemName": "MotorFaceplate_1"
       }
     },
     {
@@ -22615,7 +22640,7 @@
         "confirmDelete": false,
         "dryRun": true,
         "action": "read",
-        "objectPath": "Popup_1"
+        "objectPath": "/Popup_1"
       }
     },
     {
@@ -24060,6 +24085,22 @@
           "templateDirectory": "C:\\Examples\\templates",
           "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
           "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzePlcCrossReferences",
+        "currentName": "AnalyzePlcCrossReferences",
+        "sourceName": "AnalyzePlcCrossReferences",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "devices/PLC_1/PLC_1",
+          "groupPath": "",
+          "recursive": true,
+          "maxBlocks": 128
         },
         "envelopeVersion": 4
       },
@@ -32872,6 +32913,22 @@
           "templateDirectory": "C:\\Examples\\templates",
           "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
           "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzePlcCrossReferences",
+        "currentName": "AnalyzePlcCrossReferences",
+        "sourceName": "AnalyzePlcCrossReferences",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "devices/PLC_1/PLC_1",
+          "groupPath": "",
+          "recursive": true,
+          "maxBlocks": 128
         },
         "envelopeVersion": 4
       },
@@ -42029,6 +42086,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "AnalyzePlcCrossReferences",
+        "currentName": "AnalyzePlcCrossReferences",
+        "sourceName": "AnalyzePlcCrossReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "devices/PLC_1/PLC_1",
+          "groupPath": "",
+          "recursive": true,
+          "maxBlocks": 128
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AnalyzePlcReferences",
         "currentName": "AnalyzePlcReferences",
         "sourceName": "AnalyzePlcReferences",
@@ -42686,7 +42758,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenName": "Overview"
+          "screenName": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -42711,7 +42783,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
+          "tagTableName": "/Default tag table",
           "tagName": "Ready"
         },
         "envelopeVersion": 4
@@ -42725,7 +42797,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table"
+          "tagTableName": "/Default tag table"
         },
         "envelopeVersion": 4
       },
@@ -42936,7 +43008,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenName": "Screen_1",
+          "screenName": "/Screen_1",
           "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
           "exportOptions": "WithDefaults"
         },
@@ -42951,7 +43023,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
+          "tagTableName": "/Default tag table",
           "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
           "exportOptions": "WithDefaults"
         },
@@ -44005,7 +44077,7 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
-          "objectPath": "Popup_1"
+          "objectPath": "/Popup_1"
         },
         "envelopeVersion": 4
       },
@@ -45953,7 +46025,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview"
+          "screenPath": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -47065,6 +47137,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "AnalyzePlcCrossReferences",
+        "currentName": "AnalyzePlcCrossReferences",
+        "sourceName": "AnalyzePlcCrossReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "devices/PLC_1/PLC_1",
+          "groupPath": "",
+          "recursive": true,
+          "maxBlocks": 128
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AnalyzePlcReferences",
         "currentName": "AnalyzePlcReferences",
         "sourceName": "AnalyzePlcReferences",
@@ -47762,7 +47849,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenName": "Overview"
+          "screenName": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -47787,7 +47874,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
+          "tagTableName": "/Default tag table",
           "tagName": "Ready"
         },
         "envelopeVersion": 4
@@ -47801,7 +47888,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table"
+          "tagTableName": "/Default tag table"
         },
         "envelopeVersion": 4
       },
@@ -48044,7 +48131,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenName": "Screen_1",
+          "screenName": "/Screen_1",
           "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
           "exportOptions": "WithDefaults"
         },
@@ -48059,7 +48146,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
+          "tagTableName": "/Default tag table",
           "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
           "exportOptions": "WithDefaults"
         },
@@ -49264,7 +49351,7 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
-          "objectPath": "Popup_1"
+          "objectPath": "/Popup_1"
         },
         "envelopeVersion": 4
       },
@@ -51409,7 +51496,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview"
+          "screenPath": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -52696,6 +52783,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "AnalyzePlcCrossReferences",
+        "currentName": "AnalyzePlcCrossReferences",
+        "sourceName": "AnalyzePlcCrossReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "devices/PLC_1/PLC_1",
+          "groupPath": "",
+          "recursive": true,
+          "maxBlocks": 128
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AnalyzePlcReferences",
         "currentName": "AnalyzePlcReferences",
         "sourceName": "AnalyzePlcReferences",
@@ -53418,7 +53520,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenName": "Overview"
+          "screenName": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -53443,7 +53545,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
+          "tagTableName": "/Default tag table",
           "tagName": "Ready"
         },
         "envelopeVersion": 4
@@ -53457,7 +53559,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table"
+          "tagTableName": "/Default tag table"
         },
         "envelopeVersion": 4
       },
@@ -53742,7 +53844,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenName": "Screen_1",
+          "screenName": "/Screen_1",
           "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
           "exportOptions": "WithDefaults"
         },
@@ -53757,7 +53859,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
+          "tagTableName": "/Default tag table",
           "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
           "exportOptions": "WithDefaults"
         },
@@ -55045,7 +55147,7 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
-          "objectPath": "Popup_1"
+          "objectPath": "/Popup_1"
         },
         "envelopeVersion": 4
       },
@@ -57423,7 +57525,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview"
+          "screenPath": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -58777,6 +58879,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "AnalyzePlcCrossReferences",
+        "currentName": "AnalyzePlcCrossReferences",
+        "sourceName": "AnalyzePlcCrossReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "devices/PLC_1/PLC_1",
+          "groupPath": "",
+          "recursive": true,
+          "maxBlocks": 128
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AnalyzePlcReferences",
         "currentName": "AnalyzePlcReferences",
         "sourceName": "AnalyzePlcReferences",
@@ -59499,7 +59616,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenName": "Overview"
+          "screenName": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -59524,7 +59641,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
+          "tagTableName": "/Default tag table",
           "tagName": "Ready"
         },
         "envelopeVersion": 4
@@ -59538,7 +59655,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table"
+          "tagTableName": "/Default tag table"
         },
         "envelopeVersion": 4
       },
@@ -59882,7 +59999,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenName": "Screen_1",
+          "screenName": "/Screen_1",
           "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
           "exportOptions": "WithDefaults"
         },
@@ -59897,7 +60014,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
+          "tagTableName": "/Default tag table",
           "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
           "exportOptions": "WithDefaults"
         },
@@ -61252,7 +61369,7 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
-          "objectPath": "Popup_1"
+          "objectPath": "/Popup_1"
         },
         "envelopeVersion": 4
       },
@@ -63750,7 +63867,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview"
+          "screenPath": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -65227,6 +65344,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "AnalyzePlcCrossReferences",
+        "currentName": "AnalyzePlcCrossReferences",
+        "sourceName": "AnalyzePlcCrossReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "devices/PLC_1/PLC_1",
+          "groupPath": "",
+          "recursive": true,
+          "maxBlocks": 128
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AnalyzePlcReferences",
         "currentName": "AnalyzePlcReferences",
         "sourceName": "AnalyzePlcReferences",
@@ -66002,7 +66134,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenName": "Overview"
+          "screenName": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -66027,7 +66159,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
+          "tagTableName": "/Default tag table",
           "tagName": "Ready"
         },
         "envelopeVersion": 4
@@ -66041,7 +66173,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table"
+          "tagTableName": "/Default tag table"
         },
         "envelopeVersion": 4
       },
@@ -66401,7 +66533,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenName": "Screen_1",
+          "screenName": "/Screen_1",
           "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
           "exportOptions": "WithDefaults"
         },
@@ -66416,7 +66548,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
+          "tagTableName": "/Default tag table",
           "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
           "exportOptions": "WithDefaults"
         },
@@ -67838,7 +67970,7 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
-          "objectPath": "Popup_1"
+          "objectPath": "/Popup_1"
         },
         "envelopeVersion": 4
       },
@@ -70568,7 +70700,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview"
+          "screenPath": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -72071,6 +72203,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "AnalyzePlcCrossReferences",
+        "currentName": "AnalyzePlcCrossReferences",
+        "sourceName": "AnalyzePlcCrossReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "devices/PLC_1/PLC_1",
+          "groupPath": "",
+          "recursive": true,
+          "maxBlocks": 128
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AnalyzePlcReferences",
         "currentName": "AnalyzePlcReferences",
         "sourceName": "AnalyzePlcReferences",
@@ -72132,7 +72279,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "layout": {
             "columns": 1,
             "cellWidth": 160,
@@ -72146,7 +72293,8 @@
                 "text": "Ready"
               }
             ]
-          }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -72159,7 +72307,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "design": {
             "screen": {
               "name": "Overview",
@@ -72177,7 +72325,8 @@
                 "text": "Ready"
               }
             ]
-          }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -72190,7 +72339,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "theme": {
             "name": "Example",
             "palette": {
@@ -72199,7 +72348,8 @@
               "Text": "0xFF202020",
               "Border": "0xFF808080"
             }
-          }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -72264,10 +72414,11 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "itemName": "StatusText",
           "propertyName": "Visible",
-          "tagName": "Ready"
+          "tagName": "Ready",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -73093,7 +73244,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "groupPath": "Examples",
+          "groupPath": "/Examples",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -73193,7 +73344,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down",
           "dryRun": true
@@ -73209,7 +73360,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "itemName": "StatusText",
           "propertyName": "Visible",
           "dryRun": true
@@ -73238,7 +73389,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenName": "Overview"
+          "screenName": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -73251,7 +73402,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_Unified_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "itemName": "StatusText"
         },
         "envelopeVersion": 4
@@ -73277,7 +73428,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
+          "tagTableName": "/Default tag table",
           "tagName": "Ready"
         },
         "envelopeVersion": 4
@@ -73291,7 +73442,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table"
+          "tagTableName": "/Default tag table"
         },
         "envelopeVersion": 4
       },
@@ -73358,7 +73509,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down"
         },
@@ -73494,11 +73645,12 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down",
           "actionKind": "set-bit",
-          "targetTag": "Ready"
+          "targetTag": "Ready",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -73511,9 +73663,10 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
-          "eventType": "Down"
+          "eventType": "Down",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -73525,7 +73678,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "hmiSoftwarePath": "HMI_RT_1"
+          "hmiSoftwarePath": "HMI_RT_1",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -73538,9 +73692,10 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "itemName": "StatusText",
-          "propertyName": "Visible"
+          "propertyName": "Visible",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -73553,7 +73708,8 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview"
+          "screenName": "/Overview",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -73566,8 +73722,9 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
-          "itemName": "StatusText"
+          "screenName": "/Overview",
+          "itemName": "StatusText",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -73583,7 +73740,8 @@
           "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
           "tagName": "Ready",
           "plcName": "PLC_1",
-          "plcTag": "&lt;exact PLC tag name from project reads&gt;"
+          "plcTag": "&lt;exact PLC tag name from project reads&gt;",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -73596,7 +73754,8 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "tagTableName": "/HmiTags/Diagnostic/DiagInfo"
+          "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -73850,7 +74009,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenName": "Screen_1",
+          "screenName": "/Screen_1",
           "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
           "exportOptions": "WithDefaults"
         },
@@ -73865,7 +74024,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
+          "tagTableName": "/Default tag table",
           "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
           "exportOptions": "WithDefaults"
         },
@@ -75375,7 +75534,7 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
-          "objectPath": "Popup_1"
+          "objectPath": "/Popup_1"
         },
         "envelopeVersion": 4
       },
@@ -77080,10 +77239,15 @@
             },
             {
               "property": "ScreenItems",
-              "name": "StartButton"
+              "name": "MotorFaceplate_1"
+            },
+            {
+              "property": "Interface",
+              "key": "PropertyName",
+              "name": "Speed"
             }
           ],
-          "propertyName": "Visible",
+          "propertyName": "Value",
           "confirmDelete": false,
           "dryRun": true,
           "action": "read"
@@ -77141,7 +77305,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "family": "screens",
-          "groupPath": "Examples",
+          "groupPath": "/Examples",
           "action": "create",
           "dryRun": true
         },
@@ -77187,12 +77351,13 @@
             },
             {
               "property": "ScreenItems",
-              "name": "StartButton"
+              "name": "MotorFaceplate_1"
             }
           ],
           "confirmDelete": false,
           "dryRun": true,
-          "action": "read"
+          "action": "read",
+          "collectionProperty": "Interface"
         },
         "envelopeVersion": 4
       },
@@ -77221,7 +77386,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "plantPath": "ExampleArea",
+          "plantPath": "/ExampleArea/ExampleUnit",
           "action": "create",
           "plantObjectType": "&lt;existing plant object type from this project library&gt;",
           "dryRun": true
@@ -78359,7 +78524,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview"
+          "screenPath": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -78934,9 +79099,7 @@
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
           "screenPath": "/Overview",
-          "itemName": "MotorFaceplate_1",
-          "typePath": "/Faceplates/MotorFaceplate",
-          "version": "&lt;version from target discovery&gt;"
+          "itemName": "MotorFaceplate_1"
         },
         "envelopeVersion": 4
       },
@@ -78964,7 +79127,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "itemNames": [
             "StatusText"
           ]
@@ -78980,7 +79143,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down"
         },
@@ -78995,7 +79158,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "itemName": "StatusText",
           "propertyName": "Visible"
         },
@@ -79010,7 +79173,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "itemName": "StatusText"
         },
         "envelopeVersion": 4
@@ -79046,7 +79209,12 @@
             },
             {
               "property": "ScreenItems",
-              "name": "StartButton"
+              "name": "MotorFaceplate_1"
+            },
+            {
+              "property": "Interface",
+              "key": "PropertyName",
+              "name": "Speed"
             }
           ]
         },
@@ -79653,7 +79821,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down",
           "scriptCode": "HMIRuntime.Tags(\"Ready\").Read();"
@@ -79926,6 +80094,10 @@
           "dryRun": true,
           "objectPath": [
             {
+              "property": "ScreenGroups",
+              "name": "Production"
+            },
+            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -79948,7 +80120,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "plantPath": "Plant_1",
+          "plantPath": "/Plant_1",
           "dryRun": true,
           "objectPath": [],
           "properties": {

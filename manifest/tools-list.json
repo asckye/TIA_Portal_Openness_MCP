@@ -3,20 +3,20 @@
   "generatedAt": "2026-10-30T17:43:26.5754723+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
-  "exeSha256": "83053e6bf3aa5efb2633669730982ea5fce017b613d3fa00b4665c3c13274d39",
-  "workerSha256": "7551733b4844bd106174c31ff9d39418457c983b90b6fecd7af624cd53095e1d",
-  "toolCount": 516,
+  "exeSha256": "1fa0479210ca9e0e8951dcd642360aa9a62d4d0fc4cc22e978b7b8029dd69947",
+  "workerSha256": "705e77a39cf1d0a2d0fe9b54602008ee5ec20c490583ca5b0599326b9fccfcd0",
+  "toolCount": 517,
   "note": "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2599,
-    "parametersUndocumented": 853,
-    "parametersFromVocabulary": 702,
-    "toolsWithUndocumentedParameters": 205,
-    "toolsWithEnumHints": 161,
-    "enumHints": 250,
-    "defaultHints": 1444,
-    "examplesCurated": 516,
-    "recipes": 36
+    "parameters": 2616,
+    "parametersUndocumented": 866,
+    "parametersFromVocabulary": 715,
+    "toolsWithUndocumentedParameters": 218,
+    "toolsWithEnumHints": 164,
+    "enumHints": 255,
+    "defaultHints": 1462,
+    "examplesCurated": 517,
+    "recipes": 37
   },
   "categories": [
     {
@@ -2373,7 +2373,7 @@
         "exportOptions"
       ],
       "description": "[L2][HMI-Classic][WRITE] Classic WinCC screen objects beyond plain screens: objectKind popup (ScreenPopup: read / export / delete, objectPath folder/.../name), template (ScreenTemplate: read / export / delete), slidein (ScreenSlidein addressed by SlideinType Top/Bottom/Left/Right: read / export; no native Delete), overview (ScreenOverview: read / export / import) and globalElements (ScreenGlobalElements: read / export / import). export defaults to WithDefaults and writes a NEW absolute XML file and hashes it; import (objectPath = target folder for popups / templates, importOptions None/Override) uses ScreenPopupComposition / ScreenTemplateComposition / ScreenSlideinComposition.Import or HmiTarget.ImportScreenOverview / ImportScreenGlobalElements and returns the imported names. Deletion and Override import need confirmDelete=true besides dryRun=false; every delete is verified by Find. No save/compile/download; Plain screen and tag-table deletion and single-tag XML exchange are outside the 4.0 tool surface; use ExportHmiScreen for classic screen content. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageClassicHmiScreenObject\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"objectKind\":\"popup\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\",\"objectPath\":\"Popup_1\"}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"objectKind\":\"popup\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\",\"objectPath\":\"/Popup_1\"}"
     },
     {
       "name": "ManageClassicHmiGraphic",
@@ -2784,25 +2784,6 @@
       "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact device item from GetProjectTree\\u003E\"],\"action\":\"create\",\"kind\":\"standard\",\"name\":\"ExampleTransfer\",\"type\":\"IN\",\"positionNumber\":0,\"confirmDelete\":false,\"dryRun\":true}"
     },
     {
-      "name": "ImportTechnologyObjectsFromDirectory",
-      "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-Software",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "ImportTechnologyObjectsFromDirectoryV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "folderPath",
-        "dir",
-        "regexName",
-        "overwrite"
-      ],
-      "description": "[L2][PLC-Software][WRITE]Batch import PLC technology object .xml files from a directory (best-effort) Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ImportTechnologyObjectsFromDirectory\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"folderPath\":\"\",\"dir\":\"C:\\\\Examples\\\\exports\"}"
-    },
-    {
       "name": "ManageUmcUsers",
       "layer": "L2",
       "category": "project",
@@ -2828,6 +2809,25 @@
       "example": "{\"confirmChange\":false,\"dryRun\":true,\"action\":\"read\"}"
     },
     {
+      "name": "ManageUnifiedCwcPackage",
+      "layer": "L2",
+      "category": "hmi",
+      "domain": "HMI-Unified",
+      "operation": "FILE",
+      "operationInferred": false,
+      "method": "ManageUnifiedCwcPackageV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "directory",
+        "action",
+        "outputPath",
+        "dryRun",
+        "expectedPackageHash"
+      ],
+      "description": "[L2][HMI-Unified][FILE] Inspect or build a custom web control folder using the documented WinCC Unified V17–V21 package conventions: root manifest.json, identity GUID, control start file and local icon. action inspect/build; default dryRun=true. Preview returns packageFingerprint and GUID ZIP filename. build with dryRun=false requires the same fingerprint and a NEW absolute outputPath outside source folder. Takes a bounded content snapshot; no overwrites, script execution, TIA import or faceplate/library rename. Full manifest schema, JS semantics, extensions and runtime support remain unvalidated. Examples: GetToolUsage(toolName: \"ManageUnifiedCwcPackage\"), optionally operation or language.",
+      "example": "{\"directory\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"action\":\"inspect\"}"
+    },
+    {
       "name": "ManageUnifiedDynamization",
       "layer": "L2",
       "category": "hmi",
@@ -2848,7 +2848,7 @@
         "mappingEntries"
       ],
       "description": "[L2][HMI-Unified][WRITE] Read/create/update/delete the dynamization of one exact property (propertyName) on an exact Unified screen/item object path. dynamizationKind Tag/Script/ResourceList/Flashing/Expression/TagParameter maps to native Create<T>(propertyName). properties contains exact scalar property names and values, with colors as #AARRGGBB. mappingEntries appends [{kind:Simple|Range|Bitmask,properties:{...}}] entries. delete needs confirmDelete=true. Default preview; readback verified; tag/formula semantics not validated; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ManageUnifiedDynamization\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"objectPath\":[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}],\"propertyName\":\"Visible\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\"}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"objectPath\":[{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"MotorFaceplate_1\"},{\"property\":\"Interface\",\"key\":\"PropertyName\",\"name\":\"Speed\"}],\"propertyName\":\"Value\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\"}"
     },
     {
       "name": "WritePlcSclSourceFile",
@@ -2896,7 +2896,7 @@
         "objectPath"
       ],
       "description": "[L2][HMI-Unified][READ] Call native parameterless Validate on one exact Unified object. Returns errors/warnings; apiCallSuccess and validationPassed differ. No compile, script SyntaxCheck or project edit. Examples: GetToolUsage(toolName: \"ValidateUnifiedObject\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"objectPath\":[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"objectPath\":[{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]}"
     },
     {
       "name": "ValidatePlcDocumentSchemas",
@@ -3179,7 +3179,7 @@
         "properties"
       ],
       "description": "[L2][HMI-Unified][WRITE] Public scalar CPM interface/member properties at exact plant path and property-only JSON address. Default preview, checks readback, no implicit save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"SetUnifiedPlantObject\"), optionally operation or language.",
-      "example": "{\"plantPath\":\"Plant_1\",\"dryRun\":true,\"objectPath\":[],\"properties\":{\"\\u003Cexact supported field from this operation/read result\\u003E\":\"\\u003Cvalue of that field\\u0027s documented type\\u003E\"}}"
+      "example": "{\"plantPath\":\"/Plant_1\",\"dryRun\":true,\"objectPath\":[],\"properties\":{\"\\u003Cexact supported field from this operation/read result\\u003E\":\"\\u003Cvalue of that field\\u0027s documented type\\u003E\"}}"
     },
     {
       "name": "SetUnifiedObjectProperties",
@@ -3197,7 +3197,7 @@
         "properties"
       ],
       "description": "[L2][HMI-Unified][WRITE] Edit public scalar properties on a precisely addressed Unified object or nested settings. dryRun=true; no renaming, parent traversal, root RuntimeSettings edit, save/compile/download. TimeSpan uses invariant c string. Partial changes reported; readback checked. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"SetUnifiedObjectProperties\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"dryRun\":true,\"objectPath\":[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}],\"properties\":{\"\\u003Cexact supported field from this operation/read result\\u003E\":\"\\u003Cvalue of that field\\u0027s documented type\\u003E\"}}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"dryRun\":true,\"objectPath\":[{\"property\":\"ScreenGroups\",\"name\":\"Production\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}],\"properties\":{\"\\u003Cexact supported field from this operation/read result\\u003E\":\"\\u003Cvalue of that field\\u0027s documented type\\u003E\"}}"
     },
     {
       "name": "SetUnifiedMultilingualProperty",
@@ -3217,7 +3217,7 @@
         "objectPath"
       ],
       "description": "[L2][HMI-Unified][WRITE] Edit one existing language entry of a precisely addressed Unified object property. Raw text preserved; verifies requested language and unchanged other languages. Default preview; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"SetUnifiedMultilingualProperty\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"property\":\"Text\",\"culture\":\"zh-CN\",\"rawText\":\"\\u8FD0\\u884C\\u72B6\\u6001\",\"dryRun\":true,\"objectPath\":[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"property\":\"Text\",\"culture\":\"zh-CN\",\"rawText\":\"\\u8FD0\\u884C\\u72B6\\u6001\",\"dryRun\":true,\"objectPath\":[{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]}"
     },
     {
       "name": "SetUnifiedLogDuration",
@@ -3281,7 +3281,7 @@
         "syntaxCheck"
       ],
       "description": "[L2][HMI-Unified][WRITE]Set ScriptCode on a Unified HMI button event ScriptDynamization. SyntaxCheck is OFF by default because on TIA V21 it can crash the Portal process and lose the script (issue #36); pass syntaxCheck=true only when you need that evidence. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"SetUnifiedHmiButtonEventScriptCode\"), optionally operation or language.",
-      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"Overview\",\"buttonName\":\"StartButton\",\"eventType\":\"Down\",\"scriptCode\":\"HMIRuntime.Tags(\\u0022Ready\\u0022).Read();\"}"
+      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"/Overview\",\"buttonName\":\"StartButton\",\"eventType\":\"Down\",\"scriptCode\":\"HMIRuntime.Tags(\\u0022Ready\\u0022).Read();\"}"
     },
     {
       "name": "SetUnifiedGlobalScript",
@@ -3398,23 +3398,6 @@
       "example": "{\"files\":[{\"fileName\":\"FC_Add.scl\",\"kind\":\"scl\",\"content\":\"FUNCTION \\u0022FC_Add\\u0022 : Int\\nVAR_INPUT\\n    A : Int;\\n    B : Int;\\nEND_VAR\\nBEGIN\\n    #FC_Add := #A \\u002B #B;\\nEND_FUNCTION\\n\"}],\"dryRun\":true}"
     },
     {
-      "name": "SetPlcProgram",
-      "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-Software",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "UpdatePlcProgramV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "confirmUpdate",
-        "dryRun"
-      ],
-      "description": "[L2][PLC-Software][WRITE] Native PlcSoftware.UpdateProgram() (TIA 'Update program') for one exact PLC software path. Returns void natively; PLC scalars before/after are reported, program content changes are not enumerated. Default preview; real execution requires dryRun=false AND confirmUpdate=true and an Offline PLC. No save/compile/download. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"SetPlcProgram\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"confirmUpdate\":false,\"dryRun\":true}"
-    },
-    {
       "name": "WritePlcWebVars",
       "layer": "L2",
       "category": "runtime",
@@ -3435,6 +3418,25 @@
       ],
       "description": "[L2][Online-Monitoring][ONLINE-WRITE] Write values to PLC variables by SYMBOLIC name through the SIMATIC S7 Web server API (PlcProgram.Write). This changes values in a RUNNING CPU. Defaults to PREVIEW (dryRun=true): validates the writes and reads the CURRENT values only, no write is sent. A real write needs dryRun=false AND confirmWrite=true; anything else is refused. Every variable is read before the write, written one by one, then read back and compared (items[].verified); a readback mismatch (e.g. the program overwrites the variable cyclically) is reported as an error, never as success. Values must be JSON bool/number/string scalars; structs/arrays are refused. The user needs 'write variables' permission. No force, no CPU mode change, no TIA project change. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"WritePlcWebVars\"), optionally operation or language.",
       "example": "{\"host\":\"192.0.2.10\",\"username\":\"\\u003Cconfigured user\\u003E\",\"password\":\"\\u003Cpassword supplied for this target\\u003E\",\"writes\":[{\"name\":\"\\u0022DB_Status\\u0022.\\u0022Ready\\u0022\",\"value\":true}],\"confirmWrite\":false,\"dryRun\":true}"
+    },
+    {
+      "name": "WriteUnifiedRuntimeTags",
+      "layer": "L2",
+      "category": "runtime",
+      "domain": "Online-Monitoring",
+      "operation": "ONLINE-WRITE",
+      "operationInferred": false,
+      "method": "WriteUnifiedRuntimeTagsV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "pipeName",
+        "timeoutMs",
+        "confirmWrite",
+        "dryRun",
+        "writes"
+      ],
+      "description": "[L2][Online-Monitoring][ONLINE-WRITE] Write values to WinCC Unified RUNTIME tags through WinCC Unified Open Pipe (WriteTag on \\\\.\\pipe\\HmiRuntime). PLC-connected HMI tags forward the value to the PLC, so this changes a running system. Defaults to PREVIEW (dryRun=true): validates the writes and reads the CURRENT values (ReadTag) only. A real write needs dryRun=false AND confirmWrite=true; anything else is refused. After WriteTag the tags are read back and compared (items[].verified); a mismatch or a per-tag WriteTag error is reported as failure. Values: JSON bool/number/string scalars (the Runtime converts to the tag's data type). Local only; user must be in the 'SIMATIC HMI' group. No TIA project change. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"WriteUnifiedRuntimeTags\"), optionally operation or language.",
+      "example": "{\"writes\":[{\"name\":\"Ready\",\"value\":true}],\"confirmWrite\":false,\"dryRun\":true}"
     },
     {
       "name": "GetPortalConnectionReadiness",
@@ -3682,25 +3684,6 @@
       "example": "{}"
     },
     {
-      "name": "WriteUnifiedRuntimeTags",
-      "layer": "L2",
-      "category": "runtime",
-      "domain": "Online-Monitoring",
-      "operation": "ONLINE-WRITE",
-      "operationInferred": false,
-      "method": "WriteUnifiedRuntimeTagsV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "pipeName",
-        "timeoutMs",
-        "confirmWrite",
-        "dryRun",
-        "writes"
-      ],
-      "description": "[L2][Online-Monitoring][ONLINE-WRITE] Write values to WinCC Unified RUNTIME tags through WinCC Unified Open Pipe (WriteTag on \\\\.\\pipe\\HmiRuntime). PLC-connected HMI tags forward the value to the PLC, so this changes a running system. Defaults to PREVIEW (dryRun=true): validates the writes and reads the CURRENT values (ReadTag) only. A real write needs dryRun=false AND confirmWrite=true; anything else is refused. After WriteTag the tags are read back and compared (items[].verified); a mismatch or a per-tag WriteTag error is reported as failure. Values: JSON bool/number/string scalars (the Runtime converts to the tag's data type). Local only; user must be in the 'SIMATIC HMI' group. No TIA project change. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"WriteUnifiedRuntimeTags\"), optionally operation or language.",
-      "example": "{\"writes\":[{\"name\":\"Ready\",\"value\":true}],\"confirmWrite\":false,\"dryRun\":true}"
-    },
-    {
       "name": "PrefillWorkbenchForm",
       "layer": "L1",
       "category": "session",
@@ -3716,6 +3699,22 @@
       ],
       "description": "[L1][Workbench][UI] Set or clear an allowed UI form prefill owned by this MCP session. A human keeps or clears it; success awaits confirmation. Uses an already running local Workbench; no TIA calls or automatic launch. Examples: GetToolUsage(toolName: \"PrefillWorkbenchForm\"), optionally operation or language.",
       "example": "{\"form\":\"inspectionRules\",\"mode\":\"set\",\"fields\":{\"namePattern\":\"^FB_\"}}"
+    },
+    {
+      "name": "GetWorkbenchSelection",
+      "layer": "L1",
+      "category": "session",
+      "domain": "Workbench",
+      "operation": "READ",
+      "operationInferred": false,
+      "method": "FoundationV4Tool.InvokeAsync",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "offset",
+        "limit"
+      ],
+      "description": "[L1][Workbench][READ] Read frozen Workbench selection with offset paging, up to 256 checked blocks. Uses an already running local Workbench; no TIA calls or automatic launch. Examples: GetToolUsage(toolName: \"GetWorkbenchSelection\"), optionally operation or language.",
+      "example": "{\"offset\":0,\"limit\":100}"
     },
     {
       "name": "GetWorkbenchState",
@@ -3807,6 +3806,24 @@
       ],
       "description": "[L1][Workbench][UI] Show an allowed Workbench page. Human activity, modal dialogs and the UI control switch can refuse the request. Uses an already running local Workbench; no TIA calls or automatic launch. Examples: GetToolUsage(toolName: \"ShowWorkbenchPage\"), optionally operation or language.",
       "example": "{\"page\":\"overview\"}"
+    },
+    {
+      "name": "AnalyzePlcCrossReferences",
+      "layer": "L2",
+      "category": "plc",
+      "domain": "PLC-Software",
+      "operation": "READ",
+      "operationInferred": false,
+      "method": "FoundationV4Tool.InvokeAsync",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "groupPath",
+        "recursive",
+        "maxBlocks"
+      ],
+      "description": "[PLC foundation; native unverified][READ] [L2][PLC-Software][READ] Export and analyse an ordinary PLC software or exact block group in one call, bounded by maxBlocks (1..256). Uses the existing XML export path and offline AnalyzePlcReferences engine, never native CrossReferenceService. Exports retained under the session output root. Returns callers, callees and global reference sites per indexed block, export failures and unindexed files. Scope states exported block count and omitted blocks; SCL bodies, software units, system blocks, indirect calls, HMI and external clients are not covered. Partial/empty is never proof of no references or safe deletion. No compile, save or project change. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"AnalyzePlcCrossReferences\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"devices/PLC_1/PLC_1\",\"groupPath\":\"\",\"recursive\":true,\"maxBlocks\":128}"
     },
     {
       "name": "CreatePlcUserConstant",
@@ -3943,20 +3960,40 @@
       "example": "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"filePath\":\"C:/Examples/FC_Add.scl\",\"allowedFilePath\":\"C:\\\\Examples\\\\FC_Add.scl\",\"dryRun\":true,\"confirm\":false}"
     },
     {
-      "name": "GetWorkbenchSelection",
-      "layer": "L1",
-      "category": "session",
-      "domain": "Workbench",
-      "operation": "READ",
+      "name": "SetPlcProgram",
+      "layer": "L2",
+      "category": "plc",
+      "domain": "PLC-Software",
+      "operation": "WRITE",
       "operationInferred": false,
-      "method": "FoundationV4Tool.InvokeAsync",
+      "method": "UpdatePlcProgramV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "offset",
-        "limit"
+        "softwarePath",
+        "confirmUpdate",
+        "dryRun"
       ],
-      "description": "[L1][Workbench][READ] Read frozen Workbench selection with offset paging, up to 256 checked blocks. Uses an already running local Workbench; no TIA calls or automatic launch. Examples: GetToolUsage(toolName: \"GetWorkbenchSelection\"), optionally operation or language.",
-      "example": "{\"offset\":0,\"limit\":100}"
+      "description": "[L2][PLC-Software][WRITE] Native PlcSoftware.UpdateProgram() (TIA 'Update program') for one exact PLC software path. Returns void natively; PLC scalars before/after are reported, program content changes are not enumerated. Default preview; real execution requires dryRun=false AND confirmUpdate=true and an Offline PLC. No save/compile/download. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"SetPlcProgram\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"confirmUpdate\":false,\"dryRun\":true}"
+    },
+    {
+      "name": "ImportTechnologyObjectsFromDirectory",
+      "layer": "L2",
+      "category": "plc",
+      "domain": "PLC-Software",
+      "operation": "WRITE",
+      "operationInferred": false,
+      "method": "ImportTechnologyObjectsFromDirectoryV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "folderPath",
+        "dir",
+        "regexName",
+        "overwrite"
+      ],
+      "description": "[L2][PLC-Software][WRITE]Batch import PLC technology object .xml files from a directory (best-effort) Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ImportTechnologyObjectsFromDirectory\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"folderPath\":\"\",\"dir\":\"C:\\\\Examples\\\\exports\"}"
     },
     {
       "name": "SetPlcCpuSettings",
@@ -3973,24 +4010,6 @@
       ],
       "description": "[L2][Hardware][WRITE] Set CPU common settings using exactAttributes object only after reading exact attribute names from GetDeviceItemInfo/GetDeviceItemNetworkInfo. The tool writes only those exact attributes, rejects missing/non-writable attributes, and returns readback evidence. Examples: GetToolUsage(toolName: \"SetPlcCpuSettings\"), optionally operation or language.",
       "example": "{\"cpuPath\":\"PLC_1/CPU_1\",\"settings\":{\"exactAttributes\":{\"Name\":\"PLC_1\"}}}"
-    },
-    {
-      "name": "SetOpcUaInterfaceEnabled",
-      "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-OpcUA",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "SetOpcUaInterfaceEnabledV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "interfaceName",
-        "enabled",
-        "interfaceType"
-      ],
-      "description": "[L2][Category:PLC-OpcUA][PreCondition:ConnectPortal+OpenProject][WRITE] Enable or disable an OPC UA server interface, SIMATIC interface, or reference namespace. Setting Enabled=true activates the interface — download to PLC is required for the change to take effect on the CPU. interfaceType options: 'ServerInterface' (default), 'SimaticInterface', 'ReferenceNamespace'. Workflow: GetPlcOpcUaConfiguration → SetOpcUaInterfaceEnabled → DownloadPlc. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"SetOpcUaInterfaceEnabled\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"interfaceName\":\"Server interface_1\",\"enabled\":false}"
     },
     {
       "name": "SetDeviceItemIoAddress",
@@ -4340,7 +4359,7 @@
         "properties"
       ],
       "description": "[L2][HMI-Unified][WRITE] Exact Unified screen: read scalars incl. background colors and size, update public scalar/Color properties, resize (native ResizeScreen to device display), rename, create (path to a Screens composition plus name) or delete (confirmDelete=true; removes all items). No screen copy/duplicate exists in the public V21/V20 API; layout-field export/import is the SiVArc option's LayoutData screen service (ManageSivarcScreenLayout, V21). Default preview; readback verified; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ManageUnifiedScreenLayout\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"objectPath\":[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"}],\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\"}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"objectPath\":[{\"property\":\"Screens\",\"name\":\"Overview\"}],\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\"}"
     },
     {
       "name": "ManageUnifiedScreenItem",
@@ -4366,7 +4385,7 @@
         "properties"
       ],
       "description": "[L2][HMI-Unified][WRITE] Any screen item type on one exact Unified screen (screenPath = absolute /Group/Screen; relative and backslash paths are refused): list (name/type/geometry, paged), read (scalars, #AARRGGBB colors, parts and collections to depth, every MultilingualText language, features, event/dynamization counts), create (itemType from DescribeUnifiedScreenItemType via native Create<T>(name) or Create<T>(name, containedType) for faceplate/custom widget containers, with initial properties; the three container types require a verbatim containedType copied from an existing container, every other type refuses it), update, delete (confirmDelete=true). properties accepts scalars or one level of parts ({\"Font\":{\"Size\":14},\"BackColor\":\"#FF0000FF\"}) and multilingual texts per culture ({\"Text\":{\"en-US\":\"Start\"}}); at most 50 leaves, every leaf is read back. Default preview; no save/compile/download. Events: ManageUnifiedEvent; dynamizations: ManageUnifiedDynamization. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ManageUnifiedScreenItem\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenPath\":\"Overview\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\",\"itemName\":\"StatusText\"}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenPath\":\"/Overview\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\",\"itemName\":\"StatusText\"}"
     },
     {
       "name": "ManageUnifiedPlantNode",
@@ -4385,7 +4404,7 @@
         "properties"
       ],
       "description": "[L2][HMI-Unified][WRITE] Exact PlantView/node create/update/delete. Optional native CPM type for child creation. Leaf/empty deletion only. Default preview, no implicit save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageUnifiedPlantNode\"), optionally operation or language.",
-      "example": "{\"plantPath\":\"ExampleArea\",\"action\":\"create\",\"plantObjectType\":\"\\u003Cexisting plant object type from this project library\\u003E\",\"dryRun\":true}"
+      "example": "{\"plantPath\":\"/ExampleArea/ExampleUnit\",\"action\":\"create\",\"plantObjectType\":\"\\u003Cexisting plant object type from this project library\\u003E\",\"dryRun\":true}"
     },
     {
       "name": "ManageUnifiedOpcUaAlarmType",
@@ -4429,7 +4448,7 @@
         "properties"
       ],
       "description": "[L2][HMI-Unified][WRITE] UI.Parts sub-objects (trend areas, trends, axes, thresholds, columns, selection items, help lines, scaling entries, pressed-state tags...) of one exact object path. read without collectionProperty lists collections; read with exact collectionProperty lists parts with partIndex. create uses the native Create(string)/Create() of that composition (partName only for named parts; columns/thresholds have no Create). update writes public scalar/Color (#AARRGGBB) properties via properties; delete needs exact partName or partIndex plus confirmDelete=true. Default preview; readback verified; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ManageUnifiedObjectParts\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"objectPath\":[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}],\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\"}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"objectPath\":[{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"MotorFaceplate_1\"}],\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\",\"collectionProperty\":\"Interface\"}"
     },
     {
       "name": "ManageUnifiedLoggingTag",
@@ -4490,8 +4509,8 @@
         "newName",
         "dryRun"
       ],
-      "description": "[L2][HMI-Unified][WRITE] Create, rename or deleteEmpty a user folder. family=screens/tags; groupPath is an exact relative nested path. newName is one segment for rename. Default dryRun=true. Missing parents created, root/nonempty deletion refused. No save/compile/download. Unified script folders are not exposed by the supported API. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ManageUnifiedHmiGroup\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"family\":\"screens\",\"groupPath\":\"Examples\",\"action\":\"create\",\"dryRun\":true}"
+      "description": "[L2][HMI-Unified][WRITE] Create, rename or deleteEmpty a user folder. family=screens/tags; groupPath is an absolute /Group/Sub path with URI-escaped segments; relative and backslash paths are refused. newName is one segment for rename. Default dryRun=true. Missing parents created, root/nonempty deletion refused. No save/compile/download. Unified script folders are not exposed by the supported API. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ManageUnifiedHmiGroup\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"family\":\"screens\",\"groupPath\":\"/Examples\",\"action\":\"create\",\"dryRun\":true}"
     },
     {
       "name": "ManageUnifiedEvent",
@@ -4513,7 +4532,7 @@
         "scriptProperties"
       ],
       "description": "[L2][HMI-Unified][WRITE] Exact screen/control event or property event read/create/update/delete. Object JSON path. Updates preserve omitted script fields. Mutations need preview token. No Script SyntaxCheck, script execution, save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageUnifiedEvent\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"eventType\":\"Down\",\"dryRun\":true,\"action\":\"read\",\"objectPath\":[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"eventType\":\"Down\",\"dryRun\":true,\"action\":\"read\",\"objectPath\":[{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]}"
     },
     {
       "name": "ManageUnifiedEngineeringObject",
@@ -5129,23 +5148,47 @@
       "example": "{\"leftFilePath\":\"C:\\\\Examples\\\\before\\\\Main.xml\",\"rightFilePath\":\"C:\\\\Examples\\\\after\\\\Main.xml\",\"outputPath\":\"C:\\\\Examples\\\\generated\\\\result.xml\"}"
     },
     {
-      "name": "ManageUnifiedCwcPackage",
+      "name": "SetOpcUaInterfaceEnabled",
       "layer": "L2",
-      "category": "hmi",
-      "domain": "HMI-Unified",
-      "operation": "FILE",
+      "category": "plc",
+      "domain": "PLC-OpcUA",
+      "operation": "WRITE",
       "operationInferred": false,
-      "method": "ManageUnifiedCwcPackageV4",
+      "method": "SetOpcUaInterfaceEnabledV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "directory",
-        "action",
-        "outputPath",
-        "dryRun",
-        "expectedPackageHash"
+        "softwarePath",
+        "interfaceName",
+        "enabled",
+        "interfaceType"
       ],
-      "description": "[L2][HMI-Unified][FILE] Inspect or build a custom web control folder using the documented WinCC Unified V17–V21 package conventions: root manifest.json, identity GUID, control start file and local icon. action inspect/build; default dryRun=true. Preview returns packageFingerprint and GUID ZIP filename. build with dryRun=false requires the same fingerprint and a NEW absolute outputPath outside source folder. Takes a bounded content snapshot; no overwrites, script execution, TIA import or faceplate/library rename. Full manifest schema, JS semantics, extensions and runtime support remain unvalidated. Examples: GetToolUsage(toolName: \"ManageUnifiedCwcPackage\"), optionally operation or language.",
-      "example": "{\"directory\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"action\":\"inspect\"}"
+      "description": "[L2][Category:PLC-OpcUA][PreCondition:ConnectPortal+OpenProject][WRITE] Enable or disable an OPC UA server interface, SIMATIC interface, or reference namespace. Setting Enabled=true activates the interface — download to PLC is required for the change to take effect on the CPU. interfaceType options: 'ServerInterface' (default), 'SimaticInterface', 'ReferenceNamespace'. Workflow: GetPlcOpcUaConfiguration → SetOpcUaInterfaceEnabled → DownloadPlc. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"SetOpcUaInterfaceEnabled\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"interfaceName\":\"Server interface_1\",\"enabled\":false}"
+    },
+    {
+      "name": "ManageSinumerikArchive",
+      "layer": "L2",
+      "category": "hardware",
+      "domain": "Hardware",
+      "operation": "WRITE",
+      "operationInferred": false,
+      "method": "ManageSinumerikArchive",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "action",
+        "filePath",
+        "devicePath",
+        "itemPath",
+        "modifiedDevicePath",
+        "modifiedItemPath",
+        "mode",
+        "comment",
+        "author",
+        "password",
+        "dryRun"
+      ],
+      "description": "[L2][Hardware][WRITE] SINUMERIK Project.HwUtilities archive/retrieve/fAddressArchive (.dsf). Exact device/item paths are Arrays. archive mode OnlyHardware/HardwareAndAllProgramBlocks; F-address archive selects productive and modified PLC items. Optional comment/author/password; passwords are not logged. dryRun defaults true. Existing output files refused; outputs hashed. Retrieve inserts a device without save; V16 returns void and provides no device identity, V17 and later return its name. Available on V16-V20. F-address archive is unavailable on V17. Password Archive/F-address overloads require V19; password Retrieve requires V20. Requires SINUMERIK option; no API in the supplied V21 SDK. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageSinumerikArchive\"), optionally operation or language.",
+      "example": "{\"action\":\"archive\",\"filePath\":\"C:\\\\Examples\\\\exports\\\\Example.dsf\",\"dryRun\":true,\"devicePath\":[\"\\u003Cexact SINUMERIK device from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact NCU PLC item\\u003E\"]}"
     },
     {
       "name": "ImportTechnologyObject",
@@ -5163,23 +5206,6 @@
       ],
       "description": "[L2][PLC-Software][WRITE]Import one PLC Technology Object XML file into PLC software (best-effort) Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ImportTechnologyObject\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"folderPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\"}"
-    },
-    {
-      "name": "ImportProjectTexts",
-      "layer": "L2",
-      "category": "project",
-      "domain": "Project",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "ImportProjectTextsV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "filePath",
-        "updateSourceLanguage",
-        "dryRun"
-      ],
-      "description": "[L2][Project][WRITE] Native project text import. updateSourceLanguage explicitly controls updating SOURCE language, not a generic overwrite switch. Default preview; returns native diagnostics; no save/compile/download. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Examples: GetToolUsage(toolName: \"ImportProjectTexts\"), optionally operation or language.",
-      "example": "{\"filePath\":\"C:\\\\Examples\\\\exports\\\\ProjectTexts.xlsx\",\"updateSourceLanguage\":false,\"dryRun\":true}"
     },
     {
       "name": "ImportPlcWatchTableOffline",
@@ -5216,7 +5242,7 @@
         "maxMembers"
       ],
       "description": "[L2][HMI-Unified][READ]Describe a Unified HMI button event handler Script property and its current object members/attributes. Examples: GetToolUsage(toolName: \"DescribeUnifiedHmiButtonEventScript\"), optionally operation or language.",
-      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"Overview\",\"buttonName\":\"StartButton\",\"eventType\":\"Down\"}"
+      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"/Overview\",\"buttonName\":\"StartButton\",\"eventType\":\"Down\"}"
     },
     {
       "name": "DescribeService",
@@ -5305,7 +5331,7 @@
         "maxMembers"
       ],
       "description": "[L2][HMI][READ]Describe one HMI tag table object (members/methods) by name under an HMI software. Examples: GetToolUsage(toolName: \"DescribeHmiTagTable\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"tagTableName\":\"Default tag table\"}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"tagTableName\":\"/Default tag table\"}"
     },
     {
       "name": "DescribeHmiTag",
@@ -5323,7 +5349,7 @@
         "maxMembers"
       ],
       "description": "[L2][HMI][READ]Describe one HMI tag object (members/methods) by name under an HMI tag table. Examples: GetToolUsage(toolName: \"DescribeHmiTag\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"tagTableName\":\"Default tag table\",\"tagName\":\"Ready\"}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"tagTableName\":\"/Default tag table\",\"tagName\":\"Ready\"}"
     },
     {
       "name": "DescribeHmiSoftware",
@@ -5357,7 +5383,7 @@
         "maxMembers"
       ],
       "description": "[L2][HMI][READ]V19-V21 WinCC Unified only. Classic WinCC refuses with UNSUPPORTED_CAPABILITY; use ExportHmiScreen for classic screen XML. Describe one HMI screen item (widget) by name under an HMI screen. Examples: GetToolUsage(toolName: \"DescribeHmiScreenItem\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"Overview\",\"itemName\":\"StatusText\"}"
+      "example": "{\"softwarePath\":\"HMI_Unified_1\",\"screenName\":\"/Overview\",\"itemName\":\"StatusText\"}"
     },
     {
       "name": "DescribeHmiScreen",
@@ -5374,7 +5400,7 @@
         "maxMembers"
       ],
       "description": "[L2][HMI][READ]Describe one HMI screen object (members/methods) by exact absolute /Group/Sub/Screen path or unambiguous name under an HMI software. Relative slash paths and backslashes are refused with the corrected form. Examples: GetToolUsage(toolName: \"DescribeHmiScreen\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"Overview\"}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"/Overview\"}"
     },
     {
       "name": "DeleteUnifiedHmiDynamization",
@@ -5394,7 +5420,7 @@
         "previewToken"
       ],
       "description": "[L2][HMI-Unified][WRITE]Delete exactly one property dynamization; default preview only. Real deletion requires previewToken and complete readback. Does not save or delete events. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"DeleteUnifiedHmiDynamization\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenPath\":\"Overview\",\"itemName\":\"StatusText\",\"propertyName\":\"Visible\",\"dryRun\":true}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenPath\":\"/Overview\",\"itemName\":\"StatusText\",\"propertyName\":\"Visible\",\"dryRun\":true}"
     },
     {
       "name": "DeleteUnifiedHmiButtonEvent",
@@ -5415,7 +5441,7 @@
         "onlyIfEmpty"
       ],
       "description": "[L2][HMI-Unified][WRITE]Delete exactly one button event. Default dryRun=true; real deletion requires a matching previewToken from read/preview. onlyIfEmpty defaults true. No save, no other event is targeted. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"DeleteUnifiedHmiButtonEvent\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenPath\":\"Overview\",\"buttonName\":\"StartButton\",\"eventType\":\"Down\",\"dryRun\":true}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenPath\":\"/Overview\",\"buttonName\":\"StartButton\",\"eventType\":\"Down\",\"dryRun\":true}"
     },
     {
       "name": "DeletePlcType",
@@ -5432,7 +5458,7 @@
         "dryRun",
         "crossReferences"
       ],
-      "description": "[L2][PLC-Software][WRITE] Preview or delete ONE PLC user data type (UDT / PlcType) by its exact path. Defaults to dryRun=true. Deleting a UDT breaks every DB and block interface declared with it; native cross references are disabled by default at the server-process level (see GetPlcCrossReferences) and also require crossReferences=true (the TIA CrossReferenceService query took TIA Portal V21 down during a DeletePlcBlock dry run on the maintainer's project, 2026-09-21), so review dependencies before deletion; an unavailable query is not evidence it is unused. Regex and wildcards are rejected. Export the type first with ExportPlcType, and CompilePlcSoftware afterwards. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"DeletePlcType\"), optionally operation or language.",
+      "description": "[L2][PLC-Software][WRITE] Preview or delete ONE PLC user data type (UDT / PlcType) by its exact path. Defaults to dryRun=true. Deleting a UDT breaks every DB and block interface declared with it; native cross references are allowed by default through V20 where supported; V21 requires the human session switch or process opt-in (see GetPlcCrossReferences). Queries also require crossReferences=true (the TIA CrossReferenceService query took TIA Portal V21 down during a DeletePlcBlock dry run on the maintainer's project, 2026-09-21), so review dependencies before deletion; an unavailable query is not evidence it is unused. Regex and wildcards are rejected. Export the type first with ExportPlcType, and CompilePlcSoftware afterwards. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"DeletePlcType\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"typePath\":\"UDT_Status\",\"dryRun\":true}"
     },
     {
@@ -5466,7 +5492,7 @@
         "dryRun",
         "crossReferences"
       ],
-      "description": "[L2][PLC-Software][WRITE] Preview or delete ONE PLC tag table (variable table / tag list) by name, including tables nested in user groups. Defaults to dryRun=true, which only reports what the table contains and deletes nothing. DANGER: deleting a tag table removes the SYMBOLS of every tag in it. HMI panels bind PLC tags by symbolic name, so the PLC may still compile clean while the HMI silently loses its bindings - always review the previewed tag list first. Native cross references are disabled by default at the server-process level; see GetPlcCrossReferences. They are queried only with crossReferences=true (the same TIA CrossReferenceService that took TIA Portal V21 down during a DeletePlcBlock dry run on the maintainer's project, 2026-09-21) and may be unavailable at tag-table level anyway; the response says explicitly whether they were queried and obtained. Regex and wildcards are rejected. Back up first with ExportPlcTagTable. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"DeletePlcTagTable\"), optionally operation or language.",
+      "description": "[L2][PLC-Software][WRITE] Preview or delete ONE PLC tag table (variable table / tag list) by name, including tables nested in user groups. Defaults to dryRun=true, which only reports what the table contains and deletes nothing. DANGER: deleting a tag table removes the SYMBOLS of every tag in it. HMI panels bind PLC tags by symbolic name, so the PLC may still compile clean while the HMI silently loses its bindings - always review the previewed tag list first. Native cross references are allowed by default through V20 where supported; V21 requires the human session switch or process opt-in (GetPlcCrossReferences). They are queried only with crossReferences=true (the same TIA CrossReferenceService that took TIA Portal V21 down during a DeletePlcBlock dry run on the maintainer's project, 2026-09-21) and may be unavailable at tag-table level anyway; the response says explicitly whether they were queried and obtained. Regex and wildcards are rejected. Back up first with ExportPlcTagTable. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"DeletePlcTagTable\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"tagTableName\":\"Default tag table\",\"dryRun\":true}"
     },
     {
@@ -5484,7 +5510,7 @@
         "dryRun",
         "crossReferences"
       ],
-      "description": "[L2][PLC-Software][WRITE] Preview or delete exactly one PLC block by its exact path, including blocks inside nested groups. THIS IS ALSO THE TOOL FOR DELETING A DATA BLOCK: global DB, instance DB, ARRAY DB, FB, FC and OB are all PLC blocks, so there is no separate DeleteGlobalDb / DeleteDb / DeleteFunctionBlock tool - use this one. Defaults to dryRun=true, which changes nothing and reports the resolved target (pinned block number, warnings). Native cross references are disabled by default at the server-process level; see GetPlcCrossReferences. They also require crossReferences=true: on the maintainer's real project (2026-09-21) that CrossReferenceService query took TIA Portal V21 down during a dry run, so it is off by default and the response says 'not queried' - never read that as 'nobody uses it'. It never deletes instance DBs or callers automatically. Before dryRun=false, back the block up with ExportPlcBlockDocuments and review dependencies (an unavailable query does not prove it is unused); compile with CompilePlcSoftware after deletion and before SaveProject. Regex and wildcards are rejected. To delete a tag table use DeletePlcTagTable, a UDT use DeletePlcType. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"DeletePlcBlock\"), optionally operation or language.",
+      "description": "[L2][PLC-Software][WRITE] Preview or delete exactly one PLC block by its exact path, including blocks inside nested groups. THIS IS ALSO THE TOOL FOR DELETING A DATA BLOCK: global DB, instance DB, ARRAY DB, FB, FC and OB are all PLC blocks, so there is no separate DeleteGlobalDb / DeleteDb / DeleteFunctionBlock tool - use this one. Defaults to dryRun=true, which changes nothing and reports the resolved target (pinned block number, warnings). Native cross references are allowed by default through V20 where supported; V21 requires the human session switch or process opt-in (GetPlcCrossReferences). They also require crossReferences=true: on the maintainer's real project (2026-09-21) that CrossReferenceService query took TIA Portal V21 down during a dry run, so this optional check is off by default and the response says 'not queried' - never read that as 'nobody uses it'. It never deletes instance DBs or callers automatically. Before dryRun=false, back the block up with ExportPlcBlockDocuments and review dependencies (an unavailable query does not prove it is unused); compile with CompilePlcSoftware after deletion and before SaveProject. Regex and wildcards are rejected. To delete a tag table use DeletePlcTagTable, a UDT use DeletePlcType. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"DeletePlcBlock\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\",\"dryRun\":true}"
     },
     {
@@ -5536,7 +5562,7 @@
         "dryRun"
       ],
       "description": "[L2][HMI-Unified][WRITE]Delete an empty screen group by absolute /Group/Subgroup path. Default preview only. Nonempty, ambiguous or root targets are rejected; no recursive deletion or save. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"DeleteEmptyUnifiedHmiScreenGroup\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"groupPath\":\"Examples\",\"dryRun\":true}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"groupPath\":\"/Examples\",\"dryRun\":true}"
     },
     {
       "name": "DeleteEmptyPlcBlockGroup",
@@ -5784,7 +5810,7 @@
         "exportOptions"
       ],
       "description": "[L2][HMI][FILE]Export one HMI tag table to a file (Classic WinCC only; default exportOptions=WithDefaults) Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportHmiTagTable\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"tagTableName\":\"Default tag table\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportHmiTagTable.xml\"}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"tagTableName\":\"/Default tag table\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportHmiTagTable.xml\",\"exportOptions\":\"WithDefaults\"}"
     },
     {
       "name": "ExportHmiScreen",
@@ -5801,8 +5827,8 @@
         "exportPath",
         "exportOptions"
       ],
-      "description": "[L2][HMI][FILE]Export one HMI screen to a file (Classic WinCC only; default exportOptions=WithDefaults) Current native policy; V4 safety behavior is not yet accepted. Example: {\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"Screen_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportHmiScreen.xml\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ExportHmiScreen\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"Screen_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportHmiScreen.xml\"}"
+      "description": "[L2][HMI][FILE]Export one HMI screen to a file (Classic WinCC only; default exportOptions=WithDefaults) Current native policy; V4 safety behavior is not yet accepted. Example: {\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"/Screen_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportHmiScreen.xml\",\"exportOptions\":\"WithDefaults\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ExportHmiScreen\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"/Screen_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportHmiScreen.xml\",\"exportOptions\":\"WithDefaults\"}"
     },
     {
       "name": "ExportHmiProgram",
@@ -5821,7 +5847,7 @@
         "exportOptions"
       ],
       "description": "[L2][HMI][FILE]Batch export classic WinCC screens/tagtables into a directory; default exportOptions=WithDefaults Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportHmiProgram\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"exportDir\":\"C:\\\\Examples\\\\exports\"}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"exportDir\":\"C:\\\\Examples\\\\exports\",\"exportOptions\":\"WithDefaults\"}"
     },
     {
       "name": "ExportHmiConnection",
@@ -5839,7 +5865,7 @@
         "exportOptions"
       ],
       "description": "[L2][HMI][FILE]Export one HMI connection to a file (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportHmiConnection\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"connectionName\":\"PLC_Connection\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportHmiConnection.xml\"}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"connectionName\":\"PLC_Connection\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportHmiConnection.xml\",\"exportOptions\":\"WithDefaults\"}"
     },
     {
       "name": "ExportDeviceAml",
@@ -6084,10 +6110,11 @@
       "returnType": "CallToolResult",
       "parameters": [
         "hmiSoftwarePath",
-        "tagTableName"
+        "tagTableName",
+        "dryRun"
       ],
-      "description": "[L2][HMI-Unified][WRITE] Create or verify a Unified HMI tag table exists. Requires: ConnectPortal + OpenProject + Unified HMI. Idempotent. Create tag tables before adding tags with EnsureUnifiedHmiTag. Use the exact tag table name or absolute /Group/Sub/Table path. Existing nested groups are resolved; missing groups are refused without root fallback. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiTagTable\"), optionally operation or language.",
-      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"tagTableName\":\"Default tag table\"}"
+      "description": "[L2][HMI-Unified][WRITE] Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified] Create or verify a Unified HMI tag table exists. Requires: ConnectPortal + OpenProject + Unified HMI. Idempotent. Create tag tables before adding tags with EnsureUnifiedHmiTag. Use the exact tag table name or absolute /Group/Sub/Table path. Existing nested groups are resolved; missing groups are refused without root fallback. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiTagTable\"), optionally operation or language.",
+      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"tagTableName\":\"/HmiTags/Diagnostic/DiagInfo\",\"dryRun\":true}"
     },
     {
       "name": "EnsureUnifiedHmiTag",
@@ -6107,10 +6134,11 @@
         "hmiDataType",
         "connectionName",
         "address",
-        "requireVerifiedBinding"
+        "requireVerifiedBinding",
+        "dryRun"
       ],
-      "description": "[L2][HMI-Unified][WRITE] Create or verify a Unified HMI external tag. For PLC-backed tags pass plcTag and address in the same call; the address must read back in Address/LogicalAddress, e.g. %DB200.DBX0.0. Requires: ConnectPortal + OpenProject + EnsureUnifiedHmiConnection + EnsureUnifiedHmiTagTable. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiTag\"), optionally operation or language.",
-      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"tagTableName\":\"Default tag table\",\"tagName\":\"Ready\",\"plcName\":\"\\u003CplcName: resolve from the parameter description/current project\\u003E\",\"plcTag\":\"\\u003CplcTag: resolve from the parameter description/current project\\u003E\"}"
+      "description": "[L2][HMI-Unified][WRITE] Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified] Create or verify a Unified HMI external tag. For PLC-backed tags pass plcTag and address in the same call; the address must read back in Address/LogicalAddress, e.g. %DB200.DBX0.0. Requires: ConnectPortal + OpenProject + EnsureUnifiedHmiConnection + EnsureUnifiedHmiTagTable. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiTag\"), optionally operation or language.",
+      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"tagTableName\":\"/HmiTags/Diagnostic/DiagInfo\",\"tagName\":\"Ready\",\"plcName\":\"PLC_1\",\"plcTag\":\"\\u003Cexact PLC tag name from project reads\\u003E\",\"dryRun\":true}"
     },
     {
       "name": "EnsureUnifiedHmiScreenItem",
@@ -6130,10 +6158,11 @@
         "top",
         "width",
         "height",
-        "text"
+        "text",
+        "dryRun"
       ],
-      "description": "[L2][HMI-Unified][WRITE]Non-empty text refuses before changes because no culture is specified; use SetUnifiedMultilingualProperty with an explicit culture.  Create or verify a single Unified HMI control (button, lamp, IO field, etc.) on a screen. Requires: ConnectPortal + OpenProject + EnsureUnifiedHmiScreen. itemType: Button, Rectangle (lamp/indicator/background — has NO text), Text (static text label = HmiText), IOField (value display/entry), or full CLR type name. For a text caption/label ALWAYS use Text, never Rectangle (a Rectangle has no Text property and renders blank if given text). For a complete screen layout use ApplyUnifiedHmiScreenDesign instead. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiScreenItem\"), optionally operation or language.",
-      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"Overview\",\"itemName\":\"StatusText\"}"
+      "description": "[L2][HMI-Unified][WRITE] Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified]Non-empty text refuses before changes because no culture is specified; use SetUnifiedMultilingualProperty with an explicit culture.  Create or verify a single Unified HMI control (button, lamp, IO field, etc.) on a screen. Requires: ConnectPortal + OpenProject + EnsureUnifiedHmiScreen. itemType: Button, Rectangle (lamp/indicator/background — has NO text), Text (static text label = HmiText), IOField (value display/entry), or full CLR type name. For a text caption/label ALWAYS use Text, never Rectangle (a Rectangle has no Text property and renders blank if given text). For a complete screen layout use ApplyUnifiedHmiScreenDesign instead. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiScreenItem\"), optionally operation or language.",
+      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"/Overview\",\"itemName\":\"StatusText\",\"dryRun\":true}"
     },
     {
       "name": "EnsureUnifiedHmiScreen",
@@ -6148,10 +6177,11 @@
         "hmiSoftwarePath",
         "screenName",
         "width",
-        "height"
+        "height",
+        "dryRun"
       ],
-      "description": "[L2][HMI-Unified][WRITE] Create or verify a WinCC Unified HMI screen exists. Requires: ConnectPortal + OpenProject + Unified HMI. Idempotent. After creating a screen, add tags with EnsureUnifiedHmiTag, add controls with EnsureUnifiedHmiScreenItem, or apply a complete layout with ApplyUnifiedHmiScreenDesign. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiScreen\"), optionally operation or language.",
-      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"Overview\"}"
+      "description": "[L2][HMI-Unified][WRITE] Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified] Create or verify a WinCC Unified HMI screen exists. Requires: ConnectPortal + OpenProject + Unified HMI. Idempotent. After creating a screen, add tags with EnsureUnifiedHmiTag, add controls with EnsureUnifiedHmiScreenItem, or apply a complete layout with ApplyUnifiedHmiScreenDesign. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiScreen\"), optionally operation or language.",
+      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"/Overview\",\"dryRun\":true}"
     },
     {
       "name": "EnsureUnifiedHmiDynamization",
@@ -6167,10 +6197,11 @@
         "screenName",
         "itemName",
         "propertyName",
-        "dynamizationType"
+        "dynamizationType",
+        "dryRun"
       ],
-      "description": "[L2][HMI-Unified][WRITE]Only documented Tag (default), Script, ResourceList, Flashing, Expression and TagParameter kinds are accepted; the last two require V20+. Ensure a Unified HMI item property dynamization exists using a concrete dynamization type and return its API shape. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiDynamization\"), optionally operation or language.",
-      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"Overview\",\"itemName\":\"StatusText\",\"propertyName\":\"Visible\"}"
+      "description": "[L2][HMI-Unified][WRITE] Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified]Only documented Tag (default), Script, ResourceList, Flashing, Expression and TagParameter kinds are accepted; the last two require V20+. Ensure a Unified HMI item property dynamization exists using a concrete dynamization type and return its API shape. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiDynamization\"), optionally operation or language.",
+      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"/Overview\",\"itemName\":\"StatusText\",\"propertyName\":\"Visible\",\"dryRun\":true}"
     },
     {
       "name": "EnsureUnifiedHmiConnection",
@@ -6184,10 +6215,11 @@
       "parameters": [
         "hmiSoftwarePath",
         "connectionName",
-        "plcName"
+        "plcName",
+        "dryRun"
       ],
-      "description": "[L2][HMI-Unified][WRITE]Automatic creation/configuration is refused until CommunicationDriver and InitialAddress are verified; use ManageUnifiedEngineeringObject with explicit documented properties. Partner/Station/Node are readback only; DriverProperties are never guessed.  Create or verify the PLC↔HMI communication connection (HMI_Connection_1 by default). Requires: ConnectPortal + OpenProject + both PLC and Unified HMI devices. Must exist before PLC-backed HMI tags can exchange data. Call before EnsureUnifiedHmiTag with plcTag binding. UNIFIED PANELS ONLY: on Classic/Comfort/Basic panels (KTP Basic, TP/KTP Comfort) this connection cannot be created via Openness (CommunicationConnections service is not exposed); if the project needs end-to-end HMI automation, use a WinCC Unified panel instead of a classic one. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiConnection\"), optionally operation or language.",
-      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\"}"
+      "description": "[L2][HMI-Unified][WRITE] Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified]Automatic creation/configuration is refused until CommunicationDriver and InitialAddress are verified; use ManageUnifiedEngineeringObject with explicit documented properties. Partner/Station/Node are readback only; DriverProperties are never guessed.  Create or verify the PLC↔HMI communication connection (HMI_Connection_1 by default). Requires: ConnectPortal + OpenProject + both PLC and Unified HMI devices. Must exist before PLC-backed HMI tags can exchange data. Call before EnsureUnifiedHmiTag with plcTag binding. UNIFIED PANELS ONLY: on Classic/Comfort/Basic panels (KTP Basic, TP/KTP Comfort) this connection cannot be created via Openness (CommunicationConnections service is not exposed); if the project needs end-to-end HMI automation, use a WinCC Unified panel instead of a classic one. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiConnection\"), optionally operation or language.",
+      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"dryRun\":true}"
     },
     {
       "name": "EnsureUnifiedHmiButtonEventHandler",
@@ -6202,10 +6234,11 @@
         "hmiSoftwarePath",
         "screenName",
         "buttonName",
-        "eventType"
+        "eventType",
+        "dryRun"
       ],
-      "description": "[L2][HMI-Unified][WRITE]Ensure a Unified HMI button event handler exists and return its API shape. eventType must match HmiButtonEventType. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiButtonEventHandler\"), optionally operation or language.",
-      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"Overview\",\"buttonName\":\"StartButton\",\"eventType\":\"Down\"}"
+      "description": "[L2][HMI-Unified][WRITE] Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified]Ensure a Unified HMI button event handler exists and return its API shape. eventType must match HmiButtonEventType. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiButtonEventHandler\"), optionally operation or language.",
+      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"/Overview\",\"buttonName\":\"StartButton\",\"eventType\":\"Down\",\"dryRun\":true}"
     },
     {
       "name": "EnsureUnifiedHmiButtonAction",
@@ -6223,10 +6256,11 @@
         "eventType",
         "actionKind",
         "targetTag",
-        "syntaxCheck"
+        "syntaxCheck",
+        "dryRun"
       ],
-      "description": "[L2][HMI-Unified][WRITE]Generate and apply a deterministic Unified HMI button action. Only set-bit/reset-bit/toggle-bit are applied; high-risk or TODO recipes are rejected. SyntaxCheck is OFF by default (issue #36: it can crash TIA V21). Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiButtonAction\"), optionally operation or language.",
-      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"Overview\",\"buttonName\":\"StartButton\",\"eventType\":\"Down\",\"actionKind\":\"set-bit\",\"targetTag\":\"Ready\"}"
+      "description": "[L2][HMI-Unified][WRITE] Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified]Generate and apply a deterministic Unified HMI button action. Only set-bit/reset-bit/toggle-bit are applied; high-risk or TODO recipes are rejected. SyntaxCheck is OFF by default (issue #36: it can crash TIA V21). Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiButtonAction\"), optionally operation or language.",
+      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"/Overview\",\"buttonName\":\"StartButton\",\"eventType\":\"Down\",\"actionKind\":\"set-bit\",\"targetTag\":\"Ready\",\"dryRun\":true}"
     },
     {
       "name": "EnsureSubnet",
@@ -6654,10 +6688,11 @@
         "hmiSoftwarePath",
         "screenName",
         "buttonName",
-        "tagName"
+        "tagName",
+        "dryRun"
       ],
-      "description": "[L2][HMI-Unified][WRITE]Bind a Unified HMI button PressedStateTags entry to an HMI tag (momentary press behavior, best-effort). Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"BindUnifiedHmiButtonPressedTag\"), optionally operation or language.",
-      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"Overview\",\"buttonName\":\"StartButton\",\"tagName\":\"Ready\"}"
+      "description": "[L2][HMI-Unified][WRITE] Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified]Bind a Unified HMI button PressedStateTags entry to an HMI tag (momentary press behavior, best-effort). Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"BindUnifiedHmiButtonPressedTag\"), optionally operation or language.",
+      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"/Overview\",\"buttonName\":\"StartButton\",\"tagName\":\"Ready\",\"dryRun\":true}"
     },
     {
       "name": "AuditEngineeringExports",
@@ -6740,10 +6775,11 @@
       "parameters": [
         "hmiSoftwarePath",
         "screenName",
+        "dryRun",
         "theme"
       ],
-      "description": "[L2][HMI-Unified][WRITE] Apply a theme/palette to a real Unified HMI screen through ApplyUnifiedHmiScreenDesign. Requires a connected TIA project; verify with DescribeHmiScreenItem/readback before saving. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ApplyUnifiedHmiTheme\"), optionally operation or language.",
-      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"Overview\",\"theme\":{\"name\":\"Example\",\"palette\":{\"Page\":\"0xFFFFFFFF\",\"Surface\":\"0xFFF4F6F8\",\"Text\":\"0xFF202020\",\"Border\":\"0xFF808080\"}}}"
+      "description": "[L2][HMI-Unified][WRITE] Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified] Apply a theme/palette to a real Unified HMI screen through ApplyUnifiedHmiScreenDesign. Requires a connected TIA project; verify with DescribeHmiScreenItem/readback before saving. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ApplyUnifiedHmiTheme\"), optionally operation or language.",
+      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"/Overview\",\"theme\":{\"name\":\"Example\",\"palette\":{\"Page\":\"0xFFFFFFFF\",\"Surface\":\"0xFFF4F6F8\",\"Text\":\"0xFF202020\",\"Border\":\"0xFF808080\"}},\"dryRun\":true}"
     },
     {
       "name": "ApplyUnifiedHmiScreenDesign",
@@ -6758,10 +6794,11 @@
         "hmiSoftwarePath",
         "screenName",
         "strict",
+        "dryRun",
         "design"
       ],
-      "description": "[L2][HMI-Unified][WRITE] Apply layout JSON. For language text use items[].text, culture (default zh-CN), textProperty (default Text; also AlternateText/ToolTipText). Omit text to preserve, empty string clears, null is invalid. Exact language match required; data.evidence.textReadback contains verified raw text by language. ok=false on any failed write, including strict=false partial results. Changes are not transactional. Requires ConnectPortal + OpenProject. Use type Text for labels; Rectangle has no text. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ApplyUnifiedHmiScreenDesign\"), optionally operation or language.",
-      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"Overview\",\"design\":{\"screen\":{\"name\":\"Overview\",\"width\":800,\"height\":480},\"items\":[{\"type\":\"Text\",\"name\":\"StatusText\",\"left\":20,\"top\":20,\"width\":160,\"height\":40,\"text\":\"Ready\"}]}}"
+      "description": "[L2][HMI-Unified][WRITE] Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified] Apply layout JSON. For language text use items[].text, culture (default zh-CN), textProperty (default Text; also AlternateText/ToolTipText). Omit text to preserve, empty string clears, null is invalid. Exact language match required; data.evidence.textReadback contains verified raw text by language. ok=false on any failed write, including strict=false partial results. Changes are not transactional. Requires ConnectPortal + OpenProject. Use type Text for labels; Rectangle has no text. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ApplyUnifiedHmiScreenDesign\"), optionally operation or language.",
+      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"/Overview\",\"design\":{\"screen\":{\"name\":\"Overview\",\"width\":800,\"height\":480},\"items\":[{\"type\":\"Text\",\"name\":\"StatusText\",\"left\":20,\"top\":20,\"width\":160,\"height\":40,\"text\":\"Ready\"}]},\"dryRun\":true}"
     },
     {
       "name": "ApplyUnifiedHmiLayout",
@@ -6775,10 +6812,11 @@
       "parameters": [
         "hmiSoftwarePath",
         "screenName",
+        "dryRun",
         "layout"
       ],
-      "description": "[L2][HMI-Unified][WRITE] Apply a grid layout to a real Unified HMI screen through ApplyUnifiedHmiScreenDesign. Requires a connected TIA project; verify changed items with DescribeHmiScreenItem/readback before saving. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ApplyUnifiedHmiLayout\"), optionally operation or language.",
-      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"Overview\",\"layout\":{\"columns\":1,\"cellWidth\":160,\"cellHeight\":40,\"items\":[{\"name\":\"StatusText\",\"type\":\"Text\",\"row\":0,\"col\":0,\"text\":\"Ready\"}]}}"
+      "description": "[L2][HMI-Unified][WRITE] Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified] Apply a grid layout to a real Unified HMI screen through ApplyUnifiedHmiScreenDesign. Requires a connected TIA project; verify changed items with DescribeHmiScreenItem/readback before saving. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ApplyUnifiedHmiLayout\"), optionally operation or language.",
+      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"/Overview\",\"layout\":{\"columns\":1,\"cellWidth\":160,\"cellHeight\":40,\"items\":[{\"name\":\"StatusText\",\"type\":\"Text\",\"row\":0,\"col\":0,\"text\":\"Ready\"}]},\"dryRun\":true}"
     },
     {
       "name": "ApplyToolBatch",
@@ -6882,10 +6920,11 @@
         "tagName",
         "dataType",
         "plcTag",
-        "address"
+        "address",
+        "dryRun"
       ],
-      "description": "[L2][HMI-Unified][WRITE]Ensure a Unified HMI TagDynamization exists for an item property and bind it to an HMI tag. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"BindUnifiedHmiTagDynamization\"), optionally operation or language.",
-      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"Overview\",\"itemName\":\"StatusText\",\"propertyName\":\"Visible\",\"tagName\":\"Ready\"}"
+      "description": "[L2][HMI-Unified][WRITE] Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified]Ensure a Unified HMI TagDynamization exists for an item property and bind it to an HMI tag. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"BindUnifiedHmiTagDynamization\"), optionally operation or language.",
+      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"/Overview\",\"itemName\":\"StatusText\",\"propertyName\":\"Visible\",\"tagName\":\"Ready\",\"dryRun\":true}"
     },
     {
       "name": "BuildReleaseDiagnosticReport",
@@ -7378,7 +7417,7 @@
         "fallbackHeight"
       ],
       "description": "[L2][HMI-Unified][OFFLINE]Offline-only helper: convert one Unified HMI template JSON file into the execution JSON accepted by ApplyUnifiedHmiScreenDesign, with layout QA attached. It does not connect to TIA Portal or modify projects. Examples: GetToolUsage(toolName: \"BuildUnifiedHmiTemplateApplyDesign\"), optionally operation or language.",
-      "example": "{\"templateFile\":\"C:\\\\Examples\\\\templates\\\\Screen.xml\"}"
+      "example": "{\"templateFile\":\"C:\\\\Examples\\\\templates\\\\Screen.json\"}"
     },
     {
       "name": "BuildUnifiedHmiLayoutDesign",
@@ -7546,7 +7585,7 @@
         "propertyName"
       ],
       "description": "[L2][HMI-Unified][READ]Read exactly one screen item dynamization by PropertyName. Returns a bounded snapshot with coverage and a token; never creates objects. Examples: GetToolUsage(toolName: \"GetUnifiedHmiDynamization\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenPath\":\"Overview\",\"itemName\":\"StatusText\",\"propertyName\":\"Visible\"}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenPath\":\"/Overview\",\"itemName\":\"StatusText\",\"propertyName\":\"Visible\"}"
     },
     {
       "name": "GetUnifiedHmiButtonEvent",
@@ -7564,7 +7603,7 @@
         "eventType"
       ],
       "description": "[L2][HMI-Unified][READ]Read an EXISTING button event's script, global definitions, Async and content token. Never creates events. screenPath is a unique name or /Group/Screen from ListHmiScreenPaths. Examples: GetToolUsage(toolName: \"GetUnifiedHmiButtonEvent\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenPath\":\"Overview\",\"buttonName\":\"StartButton\",\"eventType\":\"Down\"}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenPath\":\"/Overview\",\"buttonName\":\"StartButton\",\"eventType\":\"Down\"}"
     },
     {
       "name": "GetUnifiedGraphicSelection",
@@ -7585,7 +7624,7 @@
         "budgetMs"
       ],
       "description": "[L2][HMI-Unified][READ]Locate a caller-defined graphical selection by 1..128 exact case-sensitive object names, including unnamed editor groups via known members. itemNames is an array. Require expectedProject, explicit HMI softwarePath and absolute screenPath. Page raw Left/Top/Width/Height, one-hop engineering owner, advertised relationship metadata and a raw coordinate envelope. This does NOT prove native group membership or transformed group bounds; native-group coverage remains an explicit unsupported gap. No writes, exports, broad property recursion or auto-rebind. Keep scope unchanged with nextCursor; retain every data.page for before/after comparison. A page budget is checked between objects, not during synchronous Openness calls. Examples: GetToolUsage(toolName: \"GetUnifiedGraphicSelection\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\",\"screenPath\":\"Overview\",\"itemNames\":[\"StatusText\"]}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\",\"screenPath\":\"/Overview\",\"itemNames\":[\"StatusText\"]}"
     },
     {
       "name": "GetUnifiedGlobalScript",
@@ -7627,8 +7666,8 @@
         "limit",
         "budgetMs"
       ],
-      "description": "[L2][HMI-Unified][READ]Trace one exact screen faceplate instance to its caller-selected library type/version. Reads interface assignments, events and property bindings; verifies native library-version GUID before exporting internals. Mismatch or unavailable version service is an explicit gap; never substitutes a default version or scans other types. Examples: GetToolUsage(toolName: \"GetUnifiedFaceplateInstance\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\",\"screenPath\":\"Overview\",\"itemName\":\"StatusText\",\"typePath\":\"UDT_Status\",\"version\":\"\\u003Cversion from target discovery\\u003E\"}"
+      "description": "[L2][HMI-Unified][READ]Trace one exact faceplate instance using its LibraryTypeInstanceInfo.LibraryTypeVersion. typePath/version are optional verification constraints. Reads interface assignments, events and bindings, and exports the connected version directly. Unavailable service/version is an explicit gap; no guessed type or default version. Examples: GetToolUsage(toolName: \"GetUnifiedFaceplateInstance\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\",\"screenPath\":\"/Overview\",\"itemName\":\"MotorFaceplate_1\"}"
     },
     {
       "name": "GetUnifiedCrossReferences",
@@ -7644,8 +7683,8 @@
         "filter",
         "objectPath"
       ],
-      "description": "[L2][HMI-Unified][READ] Native Unified cross references for exact object. DISABLED BY DEFAULT: CrossReferenceService queries have terminated TIA Portal V21. Refusal means NOT QUERIED, never zero references. Controlled diagnosis on a saved test project requires the server-process setting TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1, shared with PLC queries; do not enable it automatically. Compilation does not guarantee crash safety. Strict errors; bounded Sources/References/Locations. Does not expand runtime script names or claim all native fields complete. Examples: GetToolUsage(toolName: \"GetUnifiedCrossReferences\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"objectPath\":[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]}"
+      "description": "[L2][HMI-Unified][READ] Read native Unified cross references on an exact typed object path. Allowed by default through V20 where the API exists (Unified V19+). V21 requires the human Workbench Allow native cross references (V21) switch for this session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. V21 TIA exits recorded: save before the first query; compilation is no guarantee. Not queried never means zero references; decoded results retain partial-coverage limits. Reflection cannot bypass the policy. No automatic retry after TIA exit. No complete offline replacement for Unified references is established. Native acceptance pending. Examples: GetToolUsage(toolName: \"GetUnifiedCrossReferences\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"objectPath\":[{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]}"
     },
     {
       "name": "GetUnifiedAuditSettings",
@@ -7794,7 +7833,7 @@
         "textProperty"
       ],
       "description": "[L0][HMI-Unified][READ] Read language codes and raw text without serializing native language objects. Requires ConnectPortal + OpenProject. Supports Text, AlternateText and ToolTipText when present on the control. Check ok and meta.completeness. Examples: GetToolUsage(toolName: \"GetUnifiedHmiTexts\"), optionally operation or language.",
-      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"Overview\",\"itemName\":\"StatusText\"}"
+      "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"/Overview\",\"itemName\":\"StatusText\"}"
     },
     {
       "name": "GetSessionState",
@@ -8068,7 +8107,7 @@
         "budgetMs"
       ],
       "description": "[L2][HMI-Unified][READ]Read/native-export ONE exact project-library type AND version. typePath=/Folder/Type, version exact (never default). Uses advertised document format; non-script types with no document formats use the separate official Export(FileInfo, WithReadOnly) XML action once. XML file acquisition is separate from unverified internal-content coverage. No guessed formats, edit mode, instantiation, whole-library traversal or automatic retry after failure. Direct dependency identifiers, original files, hashes and explicit gaps are returned. Examples: GetToolUsage(toolName: \"GetUnifiedLibraryType\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\",\"typePath\":\"UDT_Status\",\"version\":\"\\u003Cversion from target discovery\\u003E\"}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\",\"typePath\":\"/Faceplates/MotorFaceplate\",\"version\":\"\\u003Cversion from target discovery\\u003E\"}"
     },
     {
       "name": "GetUnifiedObjectEvents",
@@ -8086,7 +8125,7 @@
         "objectPath"
       ],
       "description": "[L2][HMI-Unified][READ] Enumerate every EventHandlers and PropertyEventHandlers entry (event type, property name, raw script fields) of one exact Unified screen or screen item addressed by object JSON path [{property:Screens,name:X},{property:ScreenItems,name:Y}]. Also lists the event types the native composition can create. Live offset/limit pagination; no script execution, SyntaxCheck or write. Examples: GetToolUsage(toolName: \"GetUnifiedObjectEvents\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"objectPath\":[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"objectPath\":[{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"MotorFaceplate_1\"},{\"property\":\"Interface\",\"key\":\"PropertyName\",\"name\":\"Speed\"}]}"
     },
     {
       "name": "GetUnifiedObjectProperties",
@@ -8701,29 +8740,21 @@
       "example": "{\"ip\":\"192.0.2.10\"}"
     },
     {
-      "name": "ManageSinumerikArchive",
+      "name": "ImportProjectTexts",
       "layer": "L2",
-      "category": "hardware",
-      "domain": "Hardware",
+      "category": "project",
+      "domain": "Project",
       "operation": "WRITE",
       "operationInferred": false,
-      "method": "ManageSinumerikArchive",
+      "method": "ImportProjectTextsV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "action",
         "filePath",
-        "devicePath",
-        "itemPath",
-        "modifiedDevicePath",
-        "modifiedItemPath",
-        "mode",
-        "comment",
-        "author",
-        "password",
+        "updateSourceLanguage",
         "dryRun"
       ],
-      "description": "[L2][Hardware][WRITE] SINUMERIK Project.HwUtilities archive/retrieve/fAddressArchive (.dsf). Exact device/item paths are Arrays. archive mode OnlyHardware/HardwareAndAllProgramBlocks; F-address archive selects productive and modified PLC items. Optional comment/author/password; passwords are not logged. dryRun defaults true. Existing output files refused; outputs hashed. Retrieve inserts a device without save; V16 returns void and provides no device identity, V17 and later return its name. Available on V16-V20. F-address archive is unavailable on V17. Password Archive/F-address overloads require V19; password Retrieve requires V20. Requires SINUMERIK option; no API in the supplied V21 SDK. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageSinumerikArchive\"), optionally operation or language.",
-      "example": "{\"action\":\"archive\",\"filePath\":\"C:\\\\Examples\\\\exports\\\\Example.dsf\",\"dryRun\":true,\"devicePath\":[\"\\u003Cexact SINUMERIK device from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact NCU PLC item\\u003E\"]}"
+      "description": "[L2][Project][WRITE] Native project text import. updateSourceLanguage explicitly controls updating SOURCE language, not a generic overwrite switch. Default preview; returns native diagnostics; no save/compile/download. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Examples: GetToolUsage(toolName: \"ImportProjectTexts\"), optionally operation or language.",
+      "example": "{\"filePath\":\"C:\\\\Examples\\\\exports\\\\ProjectTexts.xlsx\",\"updateSourceLanguage\":false,\"dryRun\":true}"
     },
     {
       "name": "GetPlcPutGetAccess",
@@ -9416,7 +9447,7 @@
         "unitName",
         "unitKind"
       ],
-      "description": "[L2][PLC-Software][READ] Native Step7 block/type/tag/system-constant cross references, including software and safety units. DISABLED BY DEFAULT: CrossReferenceService queries have terminated TIA Portal V21, even after returning a result. Refusal means NOT QUERIED, never zero references. Controlled diagnosis on a saved test project requires the server-process setting TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1; do not enable it automatically. Even with opt-in, any uncompiled block or unreadable IsConsistent refuses the query. Compilation does not guarantee crash safety. Prefer exported PLC documents for partial offline call/reference analysis (GeneratePlcDocumentation); that is not a complete replacement for native references. Delete tools share this policy even with crossReferences=true. Rows carry the location address, type name and referenced-as name (CrossReference.Location). CrossReferenceService does not cover PLC user constants. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Example: {\"softwarePath\":\"PLC_1\",\"objectPath\":\"Main\",\"objectKind\":\"Block\",\"filter\":\"AllObjects\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GetPlcCrossReferences\"), optionally operation or language.",
+      "description": "[L2][PLC-Software][READ] Native Step7 block/type/tag/system-constant cross references, including software and safety units where supported. Allowed by default through V20 where the API exists (this tool requires V18+). V21 remains opt-in: the human Workbench Allow native cross references (V21) switch for this session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save before the first query: V21 queries have terminated TIA Portal even after returning results; compilation is no guarantee. Any false/unknown IsConsistent still refuses; reflection cannot bypass the guard. Refusal means NOT QUERIED, never zero references. AnalyzePlcCrossReferences provides bounded export-based partial analysis without CrossReferenceService. Delete tools share the release policy and still require crossReferences=true. No automatic retry after TIA exit. Rows carry location address, type and referenced-as name. PLC user constants are not covered. Returns a V4 envelope; inspect outcome, execution and completeness. Native acceptance is pending. Example: {\"softwarePath\":\"PLC_1\",\"objectPath\":\"Main\",\"objectKind\":\"Block\",\"filter\":\"AllObjects\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GetPlcCrossReferences\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"objectPath\":\"Main\",\"objectKind\":\"Block\",\"filter\":\"AllObjects\"}"
     },
     {
@@ -9750,7 +9781,7 @@
         "maxNodes"
       ],
       "description": "[L2][HMI][READ]Read a bounded screen object graph. Prefer absolute /Group/Screen paths to avoid a project-wide name search. apiCallSuccess and dataComplete are separate; inspect failures, quarantined getters and limits. Connection faults stop traversal and block further HMI step operations until an explicit successful AttachOpenProject; inspect logs first, do not automatically rebind/retry. Not a restorable backup. maxDepth 1..12; maxNodes 1..10000. Large responses use GetExportContent. Examples: GetToolUsage(toolName: \"GetHmiScreenSnapshot\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenPath\":\"Overview\"}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenPath\":\"/Overview\"}"
     },
     {
       "name": "GetHmiProgramInfo",

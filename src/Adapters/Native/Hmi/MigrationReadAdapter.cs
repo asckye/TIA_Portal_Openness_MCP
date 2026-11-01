@@ -109,7 +109,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             foreach (var name in new[] { "VersionNumber", "Guid", "State" })
                 foreach (var row in MigrationRead.Property(version, name, path + "/" + name, (v, p) => MigrationRead.Graph(v, p))) yield return row;
         }
-        public HmiMessage ReadUnifiedFaceplateInstance(string softwarePath, string expectedProject, string screenPath, string itemName, string typePath, string version, string cursor = "", int pageSize = 100, int budgetMs = 5000)
+        public HmiMessage ReadUnifiedFaceplateInstance(string softwarePath, string expectedProject, string screenPath, string itemName, string typePath = "", string version = "", string cursor = "", int pageSize = 100, int budgetMs = 5000)
             => MigrationPage("ReadUnifiedFaceplateInstance", softwarePath, expectedProject, new HmiObject { ["screenPath"] = screenPath, ["itemName"] = itemName, ["typePath"] = typePath, ["version"] = version }, cursor, pageSize, budgetMs,
                 hmi => FaceplateInstance(hmi, MigrationRead.Get(_session.CurrentProject!, "ProjectLibrary")!, screenPath, itemName, typePath, version));
         private static IEnumerable<HmiObject> FaceplateInstance(object hmi, object library, string screenPath, string itemName, string typePath, string version)
@@ -117,18 +117,24 @@ namespace TiaMcp.Adapters.Native.Hmi
             var item = MigrationRead.Named(MigrationRead.Get(MigrationRead.Screen(hmi, screenPath), "ScreenItems")!, itemName);
             if (item.GetType().Name != "HmiFaceplateContainer") throw new ArgumentException("Selected screen item is not a Unified faceplate container.");
             var path = "/Screens" + screenPath + "/ScreenItems/" + MigrationRead.Segment(itemName);
-            var link = UnifiedNativeRead.InstanceLink(item, path + "/$libraryVersion"); yield return link;
+            var link = UnifiedNativeRead.InstanceLink(item, path + "/$libraryVersion", out var linkedVersion); yield return link;
             foreach (var row in MigrationRead.Graph(item, path)) yield return row;
-            var type = UnifiedNativeRead.ExactType(library, typePath); var selected = UnifiedNativeRead.ExactVersion(type, version);
-            var selectedGuid = MigrationRead.Get(selected, "Guid")?.ToString();
-            bool matched = link["status"]?.ToString() == "ok" && link["versionGuid"]?.ToString() == selectedGuid;
+            bool matched = linkedVersion != null && link["status"]?.ToString() == "ok";
+            var selectedGuid = link["versionGuid"]?.ToString();
+            if (matched && !string.IsNullOrEmpty(version)) matched = version == link["version"]?.ToString();
+            if (matched && !string.IsNullOrEmpty(typePath))
+            {
+                var selected = UnifiedNativeRead.ExactVersion(UnifiedNativeRead.ExactType(library, typePath), link["version"]!.ToString()!);
+                matched = selectedGuid != null && selectedGuid == MigrationRead.Get(selected, "Guid")?.ToString();
+            }
             yield return new HmiObject { ["path"] = path + "/$trace", ["kind"] = "faceplateTrace", ["status"] = matched ? "ok" : "unsupported",
-                ["instancePath"] = path, ["interfaceAssignmentsPath"] = path + "/Interface", ["typePath"] = typePath, ["version"] = version,
+                ["instancePath"] = path, ["interfaceAssignmentsPath"] = path + "/Interface", ["typePath"] = string.IsNullOrEmpty(typePath) ? null : typePath,
+                ["typeName"] = link["typeName"], ["typeGuid"] = link["typeGuid"], ["version"] = link["version"],
                 ["typeVersionGuid"] = selectedGuid, ["instanceVersionVerified"] = matched,
-                ["reason"] = matched ? null : "Caller-selected type/version is not verified against the instance. Do not claim this type's internals are the instance's internals.",
-                ["bindingResolution"] = "Raw interface values and native internal binding paths are returned for exact-name joining; dynamic expressions require resolution." };
+                ["reason"] = matched ? null : linkedVersion == null ? link["reason"] ?? link["error"] : "Optional typePath/version constraint differs from the instance's connected library version; internals were not exported.",
+                ["bindingResolution"] = "Raw interface values and native internal binding paths; dynamic expressions require resolution." };
             if (!matched) yield break;
-            foreach (var row in UnifiedNativeRead.LibraryType(library, typePath, version)) yield return row;
+            foreach (var row in UnifiedNativeRead.LibraryVersion(linkedVersion!, path + "/$connectedLibraryVersion")) yield return row;
         }
         public HmiMessage ReleaseUnifiedReadCursor(string cursor)
             => new HmiMessage { Message = "Collection state released; no TIA project or process was closed.", Meta = HmiMeta.Unstamped(true, ("readOnly", true), ("released", _session.MigrationPages.Cancel(cursor))) };

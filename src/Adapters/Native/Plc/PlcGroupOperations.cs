@@ -38,11 +38,11 @@ namespace TiaMcp.Adapters.Native.Plc
             try { return info.Invoke(target, args)!; }
             catch (TargetInvocationException ex) { System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex.InnerException ?? ex).Throw(); throw; }
         }
-        internal static object Group(object root, string path, string firstGroups = "Groups")
+        internal static object Group(object root, string path, string firstGroups = "Groups", Func<string, string[]>? pathParts = null)
         {
             object current = root;
             bool first = true;
-            foreach (var part in Parts(path, true))
+            foreach (var part in pathParts != null ? pathParts(path) : Parts(path, true))
             {
                 current = Find(Get(current, first ? firstGroups : "Groups"), part)
                     ?? throw new PlcSoftwareException("NotFound", "Group not found: " + path);
@@ -51,10 +51,10 @@ namespace TiaMcp.Adapters.Native.Plc
             return current;
         }
         internal static Dictionary<string, object?> Manage(object root, string path, string action, string newName, bool dryRun,
-            string contents, string firstGroups = "Groups")
+            string contents, string firstGroups = "Groups", Func<string, string[]>? pathParts = null)
         {
             if (action != "create" && action != "rename" && action != "deleteEmpty") throw new ArgumentException("action must be create, rename or deleteEmpty.");
-            var parts = Parts(path);
+            var parts = pathParts != null ? pathParts(path) : Parts(path);
             if (action == "create")
             {
                 var collection = Get(root, firstGroups);
@@ -64,10 +64,11 @@ namespace TiaMcp.Adapters.Native.Plc
                 return PlcGroupCreation.Execute<object>(root, path, dryRun,
                     g => Items(Get(g, ReferenceEquals(g, root) ? firstGroups : "Groups")),
                     g => Get(g, "Name").ToString()!,
-                    (g, name) => Call(Get(g, ReferenceEquals(g, root) ? firstGroups : "Groups"), "Create", new[] { typeof(string) }, name), false);
+                    (g, name) => Call(Get(g, ReferenceEquals(g, root) ? firstGroups : "Groups"), "Create", new[] { typeof(string) }, name), false, pathParts);
             }
             var parentPath = string.Join("/", parts.Take(parts.Length - 1));
-            var parent = Group(root, parentPath, firstGroups);
+            if (pathParts != null) parentPath = "/" + string.Join("/", parts.Take(parts.Length - 1).Select(Uri.EscapeDataString));
+            var parent = Group(root, parentPath, firstGroups, pathParts);
             var siblings = Get(parent, parts.Length == 1 ? firstGroups : "Groups");
             var target = Find(siblings, parts.Last()) ?? throw new PlcSoftwareException("NotFound", "Group not found: " + path);
             var result = new Dictionary<string, object?> { ["groupPath"] = path, ["action"] = action, ["dryRun"] = dryRun, ["changed"] = false };

@@ -2794,6 +2794,1314 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
+      "descriptionSha256": "2f3de8ace21934d956e30c80c550c5a37015aa1c68a6dcdb1b7b122ac4d1eab0",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "groupPath": {
+            "default": "",
+            "description": "Exact foundation argument: groupPath",
+            "type": "string"
+          },
+          "maxBlocks": {
+            "default": 128,
+            "description": "Exact foundation argument: maxBlocks",
+            "type": "integer"
+          },
+          "recursive": {
+            "default": true,
+            "description": "Exact foundation argument: recursive",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "AnalyzePlcCrossReferences",
+      "outputSchema": {
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "ACCESS_DENIED"
+                  },
+                  "details": {
+                    "properties": {
+                      "operation": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "target": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "operation",
+                      "target"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "ALREADY_EXISTS"
+                  },
+                  "details": {
+                    "properties": {
+                      "target": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "target"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "AUTHENTICATION_REQUIRED"
+                  },
+                  "details": {
+                    "properties": {
+                      "capability": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "capability"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "CANCELLED"
+                  },
+                  "details": {
+                    "properties": {
+                      "stage": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "stage"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "COMPILE_ERRORS"
+                  },
+                  "details": {
+                    "properties": {
+                      "errorCount": {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "errors": {
+                        "items": {
+                          "properties": {
+                            "description": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "path": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "path",
+                            "description"
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "warningCount": {
+                        "minimum": 0,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "errorCount",
+                      "warningCount",
+                      "errors"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "CONFIRMATION_REQUIRED"
+                  },
+                  "details": {
+                    "properties": {
+                      "planHash": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "reason": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "requestId": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "reason",
+                      "planHash",
+                      "requestId"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "IDENTITY_MISMATCH"
+                  },
+                  "details": {
+                    "properties": {
+                      "actual": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "expected": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "target": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "target",
+                      "expected",
+                      "actual"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "INTERNAL_ERROR"
+                  },
+                  "details": {
+                    "properties": {
+                      "diagnosticId": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "diagnosticId"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "INVALID_ARGUMENT"
+                  },
+                  "details": {
+                    "properties": {
+                      "allowedValues": {
+                        "items": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "type": "array"
+                      },
+                      "parameter": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "parameters": {
+                        "items": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "parameter",
+                      "allowedValues",
+                      "parameters"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "IO_FAILED"
+                  },
+                  "details": {
+                    "properties": {
+                      "operation": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "path": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "operation",
+                      "path"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "LIMIT_EXCEEDED"
+                  },
+                  "details": {
+                    "properties": {
+                      "actual": {
+                        "anyOf": [
+                          {
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "limit": {
+                        "anyOf": [
+                          {
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "parameter": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "parameter",
+                      "limit",
+                      "actual"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "NATIVE_OPERATION_FAILED"
+                  },
+                  "details": {
+                    "properties": {
+                      "evidence": {
+                        "type": "object"
+                      },
+                      "nativeCode": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "nativeMessage": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "nativeCode",
+                      "nativeMessage",
+                      "evidence"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "NOT_EXECUTED"
+                  },
+                  "details": {
+                    "properties": {
+                      "causeIndex": {
+                        "anyOf": [
+                          {
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "causeIndex"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "NOT_FOUND"
+                  },
+                  "details": {
+                    "properties": {
+                      "target": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "target"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "OFFLINE_REQUIRED"
+                  },
+                  "details": {
+                    "properties": {
+                      "targets": {
+                        "items": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "targets"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "OUTCOME_UNKNOWN"
+                  },
+                  "details": {
+                    "properties": {
+                      "evidence": {
+                        "type": "object"
+                      },
+                      "reason": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "stage": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "stage",
+                      "evidence",
+                      "reason"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "PARTIAL_FAILURE"
+                  },
+                  "details": {
+                    "properties": {
+                      "failed": {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "notExecuted": {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "succeeded": {
+                        "minimum": 0,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "succeeded",
+                      "failed",
+                      "notExecuted"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "PLAN_STALE"
+                  },
+                  "details": {
+                    "properties": {
+                      "planHash": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "previewToken": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "reason": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "planHash",
+                      "reason",
+                      "previewToken"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "PRECONDITION_FAILED"
+                  },
+                  "details": {
+                    "properties": {
+                      "condition": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "parameter": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "target": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "condition",
+                      "target",
+                      "parameter"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "PROJECT_NOT_BOUND"
+                  },
+                  "details": {
+                    "properties": {},
+                    "required": [],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "RESOURCE_UNAVAILABLE"
+                  },
+                  "details": {
+                    "properties": {
+                      "resource": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "resource"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "SESSION_RESET_REQUIRED"
+                  },
+                  "details": {
+                    "properties": {
+                      "reason": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "reason"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "TARGET_AMBIGUOUS"
+                  },
+                  "details": {
+                    "properties": {
+                      "candidates": {
+                        "items": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "type": "array"
+                      },
+                      "target": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "target",
+                      "candidates"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "TIMEOUT"
+                  },
+                  "details": {
+                    "properties": {
+                      "stage": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "stage"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "TOOL_NOT_FOUND"
+                  },
+                  "details": {
+                    "properties": {
+                      "tool": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "tool"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "const": "UNSUPPORTED_CAPABILITY"
+                  },
+                  "details": {
+                    "properties": {
+                      "action": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "capability": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "releaseKey": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "releaseKey",
+                      "capability",
+                      "action"
+                    ],
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "minLength": 1,
+                    "not": {
+                      "enum": [
+                        "ACCESS_DENIED",
+                        "ALREADY_EXISTS",
+                        "AUTHENTICATION_REQUIRED",
+                        "CANCELLED",
+                        "COMPILE_ERRORS",
+                        "CONFIRMATION_REQUIRED",
+                        "IDENTITY_MISMATCH",
+                        "INTERNAL_ERROR",
+                        "INVALID_ARGUMENT",
+                        "IO_FAILED",
+                        "LIMIT_EXCEEDED",
+                        "NATIVE_OPERATION_FAILED",
+                        "NOT_EXECUTED",
+                        "NOT_FOUND",
+                        "OFFLINE_REQUIRED",
+                        "OUTCOME_UNKNOWN",
+                        "PARTIAL_FAILURE",
+                        "PLAN_STALE",
+                        "PRECONDITION_FAILED",
+                        "PROJECT_NOT_BOUND",
+                        "RESOURCE_UNAVAILABLE",
+                        "SESSION_RESET_REQUIRED",
+                        "TARGET_AMBIGUOUS",
+                        "TIMEOUT",
+                        "TOOL_NOT_FOUND",
+                        "UNSUPPORTED_CAPABILITY"
+                      ]
+                    },
+                    "type": "string"
+                  },
+                  "details": {
+                    "type": "object"
+                  },
+                  "message": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message",
+                  "details"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "meta": {
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ],
+                "type": "string"
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ],
+                "type": "string"
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ],
+                "type": "string"
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ],
+                "type": "string"
+              },
+              "paging": {
+                "properties": {
+                  "complete": {
+                    "type": "boolean"
+                  },
+                  "cursor": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "limit": {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "mode": {
+                    "enum": [
+                      "offset",
+                      "cursor"
+                    ],
+                    "type": "string"
+                  },
+                  "nextCursor": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "nextOffset": {
+                    "anyOf": [
+                      {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "offset": {
+                    "anyOf": [
+                      {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "total": {
+                    "anyOf": [
+                      {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "unit": {
+                    "enum": [
+                      "items",
+                      "utf16"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "mode",
+                  "offset",
+                  "limit",
+                  "nextOffset",
+                  "cursor",
+                  "nextCursor",
+                  "total",
+                  "complete",
+                  "unit"
+                ],
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "format": "date-time",
+                "type": "string"
+              },
+              "tool": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "properties": {
+                    "code": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "details"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
       "descriptionSha256": "0fcd8f324c82a9579211e62c6b5422a137496c28c755258c11881ca25964fe5a",
       "inputSchema": {
         "additionalProperties": false,
@@ -9369,10 +10677,15 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "d7c61847abad22425c36b5551184910ac4f9bdf7e3b61bb285713448ea42ce93",
+      "descriptionSha256": "fc61df8af0854f2130a01881d72394f91b96d1e25d1500c72ea380bcb243a955",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
           "hmiSoftwarePath": {
             "description": "hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')",
             "type": "string"
@@ -10916,7 +12229,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "47be78677498136ea29f09882073324b2ecdef2a189112e70e44dc2c0449d778",
+      "descriptionSha256": "cdcfca32455878832414850dcbe33d1b039d452fc0d4bda25ef20f928dee127e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -11331,6 +12644,11 @@
               "items"
             ],
             "type": "object"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
           },
           "hmiSoftwarePath": {
             "description": "hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')",
@@ -12632,10 +13950,15 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "b0ec2c12de59d51c51575351954f374590d820bb71ab1ca2c9fd52314ce3bf29",
+      "descriptionSha256": "a316c518ba28d1c6ff0a8eb4ebddd6120f54fa3eeba20fd5711c386feb4c516e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
           "hmiSoftwarePath": {
             "description": "hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')",
             "type": "string"
@@ -19320,7 +20643,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "dab355896657e8a692396e1df6d270652abffaeba299a848b54f455ffbdd1c2f",
+      "descriptionSha256": "70b7490b892f5d42aae4f568a6c59eaa6be6a319f12fb66b3910e71e5a463b23",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -19333,6 +20656,11 @@
             "default": "Bool",
             "description": "dataType: tag data type, e.g. Bool, Int, Real",
             "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
           },
           "hmiSoftwarePath": {
             "description": "hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')",
@@ -106428,7 +107756,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "2e1ef24e5f3e9055cb2b936a4a4eefc740a29ccdbe7587284f2591ac77e32c34",
+      "descriptionSha256": "b44d8a4413c2a20e57bf9ca582db89ba919a118d1c9809fc6c31428acdff6246",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -106438,7 +107766,7 @@
           },
           "crossReferences": {
             "default": false,
-            "description": "crossReferences: false (default) skips native references; true requests them but does not bypass the default-disabled process policy. Controlled diagnosis requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 on the server; do not enable it automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
+            "description": "crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
             "type": "boolean"
           },
           "dryRun": {
@@ -109059,13 +110387,13 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "569dee8e8c5714efb912e9bf198c905847aad7e96780d25e836fb2aece6cbfed",
+      "descriptionSha256": "3cb5992d60ef96bb44ca0937fb5f5a77d7f1fb561f96a029e8a513fe0f327512",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "crossReferences": {
             "default": false,
-            "description": "crossReferences: false (default) skips native references; true requests them but does not bypass the default-disabled process policy. Controlled diagnosis requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 on the server; do not enable it automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
+            "description": "crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
             "type": "boolean"
           },
           "dryRun": {
@@ -110367,13 +111695,13 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "509992b86115c4c22db1914e6c818dd9f7a44810065085bd307a56fa0903a8df",
+      "descriptionSha256": "01e61628519a0b845bf1680297b52ec4a5fd2b110d3dd6b6c3d9c6bc40d9ed98",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "crossReferences": {
             "default": false,
-            "description": "crossReferences: false (default) skips native references; true requests them but does not bypass the default-disabled process policy. Controlled diagnosis requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 on the server; do not enable it automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
+            "description": "crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
             "type": "boolean"
           },
           "dryRun": {
@@ -139232,7 +140560,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "81735a1a7c69d3586870cdb3234aa31032e487c71b574728a3fd9203b022a102",
+      "descriptionSha256": "2ca2dde274b249b63987afab4e912f08fe25b93f5002cae95c2d1b1f91d14885",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -139243,6 +140571,11 @@
           "buttonName": {
             "description": "buttonName: HMI button item name",
             "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
           },
           "eventType": {
             "description": "eventType: HmiButtonEventType value, e.g. Down (press), Up (release), Tapped — NOT Pressed/Released",
@@ -140555,13 +141888,18 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "2ddde5bf264991a30a61cf14fd3f493e2c2238773d42d21e9418ede6ccd3dd85",
+      "descriptionSha256": "60f75d0f53913a3e901dfcb113bd43a08126e1445b4e90ebf200399cb9d34b21",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "buttonName": {
             "description": "buttonName: HMI button item name",
             "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
           },
           "eventType": {
             "description": "eventType: HmiButtonEventType value, e.g. Tapped, Down, Up; use ListUnifiedHmiApiTypes('HmiButtonEventType') to inspect",
@@ -141863,7 +143201,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "eae07c4a0c3ac78358459797c63bd9f3b32e343f9456744cb305ea98c079bdde",
+      "descriptionSha256": "8ff3db1686432d149164134eda2c9df6ed42e52b5515efbeb9c93e02fb56074c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -141871,6 +143209,11 @@
             "default": "HMI_Connection_1",
             "description": "connectionName: HMI connection name",
             "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
           },
           "hmiSoftwarePath": {
             "description": "hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')",
@@ -143166,10 +144509,15 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "27df25345e352a84ba33d0b9e5cc4804b47ba1e4aeb858a51e05143ad3606dcd",
+      "descriptionSha256": "dc147030ac2d04def64dc686d1abc05c94ae96392c96edd197e8bc9618cd5312",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
           "dynamizationType": {
             "default": "",
             "description": "dynamizationType: type short name/full name; empty tries common candidates and returns errors if unsupported",
@@ -144479,10 +145827,15 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e54743ebfb2e81b59d6952842e16e845b7baff2325f3ffa3384fd9ac4509b25c",
+      "descriptionSha256": "1cbfad3276eb59654d03e2f64206b705041e353326c492eddcd94dd28c4e9c97",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
           "height": {
             "default": 0,
             "description": "height: optional screen height, 0 means keep current",
@@ -145787,10 +147140,15 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "4aa940521112937d1b83a00ed85662e25acf9d5d46431ec90e03a287318e62e7",
+      "descriptionSha256": "d56a6f3bf4e0316ba1db678ce5e3e4e3e040fed1e2680abf0a09aeee0e8c583c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
           "height": {
             "default": 40,
             "description": "height: item height",
@@ -147120,7 +148478,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "4bde5955ac24d5a2bfc17a11d3fa7d36982da597a74f2ddb040cc48a9d6a2ed4",
+      "descriptionSha256": "da4ac2507b59a6d4424e42fc1d36cdf5376c01eac6ee8a052da9add1cd7bf35c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -147133,6 +148491,11 @@
             "default": "",
             "description": "connectionName: HMI connection name; empty keeps current/auto",
             "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
           },
           "hmiDataType": {
             "default": "Bool",
@@ -148453,10 +149816,15 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "5031cd023583ce9e200c29c0ce4dc1316df9997159f1e327be8bac24d2f571d5",
+      "descriptionSha256": "405e03626d1a63443a4ad9f7e46f26a36a175688f4df3733e6ee1f53dcc4bb03",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
           "hmiSoftwarePath": {
             "description": "hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')",
             "type": "string"
@@ -168277,7 +169645,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e7c6d13551ecf280e7505e89fc24287a2fbed437da71b4a1fe00312e13eb8ae2",
+      "descriptionSha256": "f4652134565c4bd685e7a0ac91350703b955396bcc493c173507b2b8152e7e0c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -168288,6 +169656,9 @@
               "None",
               "WithDefaults",
               "WithReadOnly"
+            ],
+            "examples": [
+              "WithDefaults"
             ],
             "type": "string"
           },
@@ -168301,7 +169672,7 @@
           "screenName": {
             "description": "screenName: the screen name to export",
             "examples": [
-              "Screen_1"
+              "/Screen_1"
             ],
             "type": "string"
           },
@@ -209213,6 +210584,13 @@
                   "maximum": 2147483647,
                   "minimum": 0,
                   "type": "integer"
+                },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
                 },
                 "name": {
                   "minLength": 1,
@@ -253676,7 +255054,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "91d705b665d71e38cad33b5a479675b71251a59bdc06b7cde087073dafbd250f",
+      "descriptionSha256": "e86d2beb6c8819857d72d2eabee74b7e7dda792cc7658d081d187d114ff5ef74",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -290316,6 +291694,11 @@
         "properties": {
           "category": {
             "description": "category: the category - the tool description lists the accepted values.",
+            "enum": [
+              "alarmClasses",
+              "discreteAlarms",
+              "analogAlarms"
+            ],
             "type": "string"
           },
           "limit": {
@@ -291631,6 +293014,10 @@
         "properties": {
           "category": {
             "description": "category: the category - the tool description lists the accepted values.",
+            "enum": [
+              "alarmAuditClasses",
+              "auditTrails"
+            ],
             "type": "string"
           },
           "limit": {
@@ -292940,7 +294327,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "dd18beb0fbae976c452e9b0895681015b49f519ca22ac272e75c14738f5f8b97",
+      "descriptionSha256": "2409d5a27d80ee1abbd654b728536bcbe5e395fbc6dfac1d554376961e880a9a",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -292963,6 +294350,13 @@
                   "maximum": 2147483647,
                   "minimum": 0,
                   "type": "integer"
+                },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
                 },
                 "name": {
                   "minLength": 1,
@@ -294272,7 +295666,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "0f23edd0909bae0d0147c29506ce5a6d357ab567118ca8bb43e7041d22ae91a1",
+      "descriptionSha256": "aaecc527d7060822986c028ad0c57bf969eebb7197e2c2f0a524a0de06939e4b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -294309,10 +295703,12 @@
             "type": "string"
           },
           "typePath": {
+            "default": "",
             "description": "typePath: 'Group/Name' of the PLC data type as GetSoftwareTree shows it.",
             "type": "string"
           },
           "version": {
+            "default": "",
             "description": "version: catalog / firmware version string, e.g. 'V2.9'.",
             "type": "string"
           }
@@ -294321,9 +295717,7 @@
           "softwarePath",
           "expectedProject",
           "screenPath",
-          "itemName",
-          "typePath",
-          "version"
+          "itemName"
         ],
         "type": "object"
       },
@@ -303525,6 +304919,13 @@
                   "minimum": 0,
                   "type": "integer"
                 },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
+                },
                 "name": {
                   "minLength": 1,
                   "type": "string"
@@ -304864,6 +306265,13 @@
                   "minimum": 0,
                   "type": "integer"
                 },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
+                },
                 "name": {
                   "minLength": 1,
                   "type": "string"
@@ -306201,6 +307609,13 @@
                   "maximum": 2147483647,
                   "minimum": 0,
                   "type": "integer"
+                },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
                 },
                 "name": {
                   "minLength": 1,
@@ -403934,6 +405349,13 @@
                   "minimum": 0,
                   "type": "integer"
                 },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
+                },
                 "name": {
                   "minLength": 1,
                   "type": "string"
@@ -414343,6 +415765,19 @@
         "properties": {
           "category": {
             "description": "category: the category - the tool description lists the accepted values.",
+            "enum": [
+              "alarmClasses",
+              "discreteAlarms",
+              "analogAlarms",
+              "alarmLogs",
+              "dataLogs",
+              "textLists",
+              "graphicLists",
+              "systemTags",
+              "systemTextLists",
+              "auditTrails",
+              "opcUaAlarmTypes"
+            ],
             "type": "string"
           },
           "limit": {
@@ -503809,6 +505244,13 @@
                   "minimum": 0,
                   "type": "integer"
                 },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
+                },
                 "name": {
                   "minLength": 1,
                   "type": "string"
@@ -524720,6 +526162,13 @@
                   "minimum": 0,
                   "type": "integer"
                 },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
+                },
                 "name": {
                   "minLength": 1,
                   "type": "string"
@@ -526068,6 +527517,19 @@
           },
           "category": {
             "description": "category: the category - the tool description lists the accepted values.",
+            "enum": [
+              "alarmClasses",
+              "discreteAlarms",
+              "analogAlarms",
+              "alarmLogs",
+              "dataLogs",
+              "textLists",
+              "graphicLists",
+              "systemTags",
+              "systemTextLists",
+              "auditTrails",
+              "opcUaAlarmTypes"
+            ],
             "type": "string"
           },
           "dryRun": {
@@ -527430,6 +528892,13 @@
                   "minimum": 0,
                   "type": "integer"
                 },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
+                },
                 "name": {
                   "minLength": 1,
                   "type": "string"
@@ -528770,7 +530239,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e9b6d0774ea9c19170a705de040d8fd54b79a2ad7d055a2e565345859b729490",
+      "descriptionSha256": "3f6f143314cf9958c9468a35c78dc978e0bdaf457969523b4e17b10ccb801a4f",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -530114,6 +531583,11 @@
           },
           "category": {
             "description": "category: the category - the tool description lists the accepted values.",
+            "enum": [
+              "textLists",
+              "graphicLists",
+              "systemTextLists"
+            ],
             "type": "string"
           },
           "confirmDelete": {
@@ -531512,6 +532986,13 @@
                   "minimum": 0,
                   "type": "integer"
                 },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
+                },
                 "name": {
                   "minLength": 1,
                   "type": "string"
@@ -532860,6 +534341,13 @@
                   "maximum": 2147483647,
                   "minimum": 0,
                   "type": "integer"
+                },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
                 },
                 "name": {
                   "minLength": 1,
@@ -538305,6 +539793,13 @@
                   "maximum": 2147483647,
                   "minimum": 0,
                   "type": "integer"
+                },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
                 },
                 "name": {
                   "minLength": 1,
@@ -627093,6 +628588,13 @@
                   "minimum": 0,
                   "type": "integer"
                 },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
+                },
                 "name": {
                   "minLength": 1,
                   "type": "string"
@@ -628459,6 +629961,13 @@
                   "minimum": 0,
                   "type": "integer"
                 },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
+                },
                 "name": {
                   "minLength": 1,
                   "type": "string"
@@ -629801,6 +631310,13 @@
                   "maximum": 2147483647,
                   "minimum": 0,
                   "type": "integer"
+                },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
                 },
                 "name": {
                   "minLength": 1,
@@ -631154,6 +632670,13 @@
                   "maximum": 2147483647,
                   "minimum": 0,
                   "type": "integer"
+                },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
                 },
                 "name": {
                   "minLength": 1,
@@ -657463,6 +658986,13 @@
                   "maximum": 2147483647,
                   "minimum": 0,
                   "type": "integer"
+                },
+                "key": {
+                  "enum": [
+                    "Name",
+                    "PropertyName"
+                  ],
+                  "type": "string"
                 },
                 "name": {
                   "minLength": 1,

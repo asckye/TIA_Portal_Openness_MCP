@@ -20,6 +20,14 @@
 同一干净提交的成功 nightly `release-evidence.json` 可直接采纳，仍逐项验证 tree、输入、机器与原有全量门禁。
 merge/affected/quick 报告不能用于发布；合并验证与 nightly 操作见[验证分层](validation.md)。
 
+`release`（含演练与 `-AdoptEvidence`）在任何版本改写或构建之前检查生态/伴随 Python，选定的绝对路径传给全部子检查。
+路径按 `-EcosystemPython`、`-CompanionPython`、`TIA_MCP_PLC_TOOLS_PYTHON`、本地已准备环境的顺序选择；
+缺失时打印准确路径，先用 `tia install-plc-tools` 准备 Python 3.12+ 环境，再明确传入其 `python.exe`。
+`prerequisites` 也检查同一路径及依赖。发布、`preflight`、`prerequisites` 和 `check-release-evidence` 还比较跟踪文件的
+原始字节与 Git 规范化字节；即使 `git status` 干净，CRLF/LF 差异也会提前失败并列出全部文件。
+先保留编辑内容，再按 `.gitattributes` 修正列出的文件（通常为 UTF-8/LF）；仅对可丢弃编辑的文件使用
+`git -c core.autocrlf=false restore --worktree -- <paths>`。重新检查并在修正后的干净提交上收集新证据，不改写已有证据哈希。
+
 [`scripts/operations/delivery-files.json`](../../scripts/operations/delivery-files.json) 是唯一交付规则文件。
 `include.files` 为精确路径，`include.prefixes` 为以 `/` 结尾的目录前缀，`exclude` 优先；未匹配的跟踪文件不交付。
 Python 打包器、资产核验、仓库/布局检查与 .NET release tool 校验器、更新器均读取它。运行文件仍只来自构建记录，

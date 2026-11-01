@@ -29,11 +29,12 @@ namespace TiaMcp.Adapters
         }
         public HmiReply ExecuteUnified(UnifiedRequest request, bool dryRun = true)
         {
-            Check();
+            EngineeringInputValidation.Request(request);
             if (UnifiedCapabilities.UsesPreview(request.Operation) && request.DryRun != dryRun)
                 throw new ArgumentException("Conflicting Unified preview mode.");
             var unavailable = UnifiedCapabilities.Unsupported(ReleaseKey, request);
             if (unavailable != null) throw new NotSupportedException(unavailable);
+            Check();
             var previousInputs = UnifiedRequestValues.Inputs;
             var previousMajor = UnifiedRequestValues.Major;
             var previousRenderer = HmiValues.Renderer;

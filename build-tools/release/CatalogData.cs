@@ -84,6 +84,11 @@ internal sealed class CatalogData
         var classifications = Regex.Matches(metadata, "\\[\"([^\"\\n]+)\"\\] = new Classification\\(\"L1\", \"Project\", \"(READ|FILE|OFFLINE|WRITE)\",").ToDictionary(m => m.Groups[1].Value, m => m.Groups[2].Value);
         CatalogJson.Require(packages.All(p => classifications.GetValueOrDefault(p.Key) == p.Value), "Package classification differs");
         foreach (var p in packages) HostOnly.Add(p.Key, p.Value);
+        // XREF (beta.3): the export-based cross-reference analysis is served by the Foundation host on all eight releases.
+        var xref = Additions.Where(p => CatalogJson.Text(p.Value!["owner"]) == "XREF").ToDictionary(p => p.Key, p => CatalogJson.Text(p.Value!["operation"]));
+        CatalogJson.Require(xref.Keys.SequenceEqual(new[] { "AnalyzePlcCrossReferences" }) &&
+            CatalogJson.Source(root, "src/FoundationHost/PlcCrossReferenceAnalysis.cs").Contains("new(\"AnalyzePlcCrossReferences\"", StringComparison.Ordinal), "Closed XREF roster differs");
+        foreach (var p in xref) HostOnly.Add(p.Key, p.Value);
         foreach (var (path, source) in Engine.Sources)
             foreach (Match m in Regex.Matches(source, "\\[McpServerTool\\(Name\\s*=\\s*\"([^\"]+)\""))
             {
@@ -144,7 +149,8 @@ internal sealed class CatalogData
             ["RenderPlcBlock"] = ("P6-48", "FILE"), ["RenderPlcProgramAtlas"] = ("P6-48", "FILE"),
             ["StageImportFiles"] = ("P6-67", "FILE"), ["ListStagedImportFiles"] = ("P6-67", "READ"), ["CleanupStagedImportFiles"] = ("P6-67", "FILE"),
             ["ListStandardPackages"] = ("P8-31d", "READ"), ["ManageStandardPackage"] = ("P8-31d", "FILE"), ["ValidateStandardPackage"] = ("P8-31d", "OFFLINE"), ["DescribeStandardPackage"] = ("P8-31d", "READ"), ["ManageMachineDescription"] = ("P8-31d", "FILE"),
-            ["PlanProjectGeneration"] = ("P8-31e", "READ"), ["ApplyGenerationPlan"] = ("P8-31e", "WRITE"), ["GetGenerationRun"] = ("P8-31e", "READ")
+            ["PlanProjectGeneration"] = ("P8-31e", "READ"), ["ApplyGenerationPlan"] = ("P8-31e", "WRITE"), ["GetGenerationRun"] = ("P8-31e", "READ"),
+            ["AnalyzePlcCrossReferences"] = ("XREF", "READ")
         };
         foreach (var (name, node) in additions)
         {

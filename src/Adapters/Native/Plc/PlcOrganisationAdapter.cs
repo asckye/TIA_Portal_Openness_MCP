@@ -163,7 +163,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 if (!crossReferences)
                 warnings.Add("Cross references were not queried (crossReferences=false, the default). CrossReferenceService.GetCrossReferences "
                     + "previously terminated TIA Portal V21 during a DeletePlcBlock dry run, so it is no longer automatic. Use SaveProject first "
-                    + "and prefer offline analysis of exported documents. Native diagnostics require the explicit server-process opt-in; compilation cannot guarantee stability.");
+                    + "and prefer offline analysis of exported documents. Native queries are allowed through V20 where supported; V21 requires the human Workbench session switch or server-process opt-in. Compilation cannot guarantee stability.");
                 else warnings.Add("Block cross references are unavailable (" + (crossRefReason ?? "unknown reason") + "); this does not establish that the block has no callers. "
                     + "Back up with ExportPlcBlockDocuments before deletion, then run CompilePlcSoftware and inspect errors.");
             }
@@ -296,7 +296,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 if (!crossReferences)
                 warnings.Add("Cross references were not queried (crossReferences=false, the default). CrossReferenceService.GetCrossReferences "
                     + "previously terminated TIA Portal V21 during a DeletePlcBlock dry run, so it is no longer automatic. Use SaveProject first "
-                    + "and prefer offline analysis of exported documents. Native diagnostics require the explicit server-process opt-in; compilation cannot guarantee stability.");
+                    + "and prefer offline analysis of exported documents. Native queries are allowed through V20 where supported; V21 requires the human Workbench session switch or server-process opt-in. Compilation cannot guarantee stability.");
                 else warnings.Add("Table cross references are unavailable; see crossReferenceUnavailableReason. "
                     + "This does not establish that there are no references. Back up with ExportPlcTagTable, "
                     + "then use GetPlcCrossReferences for blocks that may use these symbols, or inspect references manually in TIA.");
@@ -396,7 +396,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 if (!crossReferences)
                 warnings.Add("Cross references were not queried (crossReferences=false, the default). CrossReferenceService.GetCrossReferences "
                     + "previously terminated TIA Portal V21 during a DeletePlcBlock dry run, so it is no longer automatic. Use SaveProject first "
-                    + "and prefer offline analysis of exported documents. Native diagnostics require the explicit server-process opt-in; compilation cannot guarantee stability.");
+                    + "and prefer offline analysis of exported documents. Native queries are allowed through V20 where supported; V21 requires the human Workbench session switch or server-process opt-in. Compilation cannot guarantee stability.");
                 else warnings.Add("⚠️ Cross-references for this UDT could not be retrieved (" + (crossRefReason ?? "unknown reason") + "); this **does not mean** the UDT is unused."
                     + "Back up with ExportPlcType before deletion; compile with CompilePlcSoftware afterwards.");
             }
@@ -512,7 +512,7 @@ namespace TiaMcp.Adapters.Native.Plc
             object table, string resolvedPath, out string? reason, out bool queried)
         {
             queried = false;
-            reason = PlcCrossReferencePolicy.PolicyRefusal(Environment.GetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable));
+            reason = PlcCrossReferencePolicy.PolicyRefusal(Environment.GetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable), release: PlcCrossReferencePolicy.ReleaseKey, sessionAllowed: TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Enabled);
             if (reason != null) return null;
             try
             {

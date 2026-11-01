@@ -748,7 +748,8 @@
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
           "connectionName": "HMI_Connection_1",
-          "plcName": "PLC_1"
+          "plcName": "PLC_1",
+          "dryRun": false
         },
         "expect": "connection present"
       },
@@ -756,11 +757,12 @@
         "tool": "EnsureUnifiedHmiTag",
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
+          "tagTableName": "/Default tag table",
           "tagName": "<Tag>",
           "hmiDataType": "Bool",
           "plcName": "PLC_1",
-          "plcTag": "<PLC tag>"
+          "plcTag": "<PLC tag>",
+          "dryRun": false
         },
         "expect": "AbsoluteVerified true"
       },
@@ -768,7 +770,8 @@
         "tool": "EnsureUnifiedHmiScreen",
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "<Screen>"
+          "screenName": "/<Screen>",
+          "dryRun": false
         },
         "expect": "screen present"
       },
@@ -776,14 +779,15 @@
         "tool": "EnsureUnifiedHmiScreenItem",
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "<Screen>",
+          "screenName": "/<Screen>",
           "itemName": "btnStart",
           "itemType": "Button",
           "left": 20,
           "top": 20,
           "width": 120,
           "height": 40,
-          "text": "Start"
+          "text": "Start",
+          "dryRun": false
         },
         "expect": "item present"
       },
@@ -791,11 +795,12 @@
         "tool": "EnsureUnifiedHmiButtonAction",
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "<Screen>",
+          "screenName": "/<Screen>",
           "buttonName": "btnStart",
           "eventType": "Down",
           "actionKind": "set-bit",
-          "targetTag": "<Tag>"
+          "targetTag": "<Tag>",
+          "dryRun": false
         },
         "expect": "handler written"
       },
@@ -3935,6 +3940,137 @@
           "runId": "00000000000000000000000000000000"
         },
         "expect": "Use the returned runId; retain evidence and replan after a stopped run."
+      }
+    ]
+  },
+  {
+    "id": "sequence/hmi-faceplate-interface",
+    "topic": "hmi-faceplate-interface",
+    "purpose": "Inspect an exact existing faceplate interface item, its events and dynamizations, then preview a typed Value change.",
+    "preconditions": "Bind HMI_RT_1, screen, faceplate and PropertyName to the intended existing instance. Read the current Value runtime type before selecting a compatible preview value.",
+    "notes": "No faceplate type or ContainedType format is guessed. key only accepts Name/PropertyName. Null current Value or impossible conversion refuses with conversionRefusal. The example Value=42 requires a compatible numeric current Value. Preview performs no write; explicit dryRun=false uses the existing Workbench approval gate and reads back. Native behavior current / NOT RUN; no save/compile/download.",
+    "releaseKeys": [
+      "19",
+      "20",
+      "21"
+    ],
+    "kind": "call-sequence",
+    "validation": "Offline schema and addressing self-check only; native TIA NOT RUN.",
+    "steps": [
+      {
+        "tool": "ManageUnifiedObjectParts",
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "objectPath": [
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "MotorFaceplate_1"
+            }
+          ],
+          "action": "read",
+          "collectionProperty": "Interface",
+          "dryRun": true
+        },
+        "expect": "Read exact PropertyName and the current scalar Value; bind the following selections to the intended item."
+      },
+      {
+        "tool": "GetUnifiedObjectProperties",
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "objectPath": [
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "MotorFaceplate_1"
+            },
+            {
+              "property": "Interface",
+              "key": "PropertyName",
+              "name": "Speed"
+            }
+          ]
+        },
+        "expect": "Inspect current Value before deciding the replacement type."
+      },
+      {
+        "tool": "GetUnifiedObjectEvents",
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "objectPath": [
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "MotorFaceplate_1"
+            },
+            {
+              "property": "Interface",
+              "key": "PropertyName",
+              "name": "Speed"
+            }
+          ]
+        },
+        "expect": "Read existing PropertyEventHandlers on the selected interface item."
+      },
+      {
+        "tool": "ManageUnifiedDynamization",
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "objectPath": [
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "MotorFaceplate_1"
+            },
+            {
+              "property": "Interface",
+              "key": "PropertyName",
+              "name": "Speed"
+            }
+          ],
+          "action": "read",
+          "propertyName": "Value",
+          "dryRun": true
+        },
+        "expect": "Read the current property dynamization without creating one."
+      },
+      {
+        "tool": "SetUnifiedObjectProperties",
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "objectPath": [
+            {
+              "property": "Screens",
+              "name": "Overview"
+            },
+            {
+              "property": "ScreenItems",
+              "name": "MotorFaceplate_1"
+            },
+            {
+              "property": "Interface",
+              "key": "PropertyName",
+              "name": "Speed"
+            }
+          ],
+          "properties": {
+            "Value": 42
+          },
+          "dryRun": true
+        },
+        "expect": "Only preview after confirming the current Value has a compatible numeric runtime type."
       }
     ]
   }

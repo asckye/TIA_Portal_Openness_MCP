@@ -102,8 +102,10 @@ namespace TiaMcp.Adapters.Native.Hmi
             return current;
         }
 
-        internal static object? TagTable(object software, string nameOrPath)
+        internal static object? TagTable(object software, string nameOrPath) => ResolveTagTable(software, nameOrPath, out _);
+        private static object? ResolveTagTable(object software, string nameOrPath, out object? parent)
         {
+            parent = null;
             EngineeringInputValidation.NameOrAbsolutePath(nameOrPath);
             if (string.IsNullOrWhiteSpace(nameOrPath)) throw new PlcSoftwareException("InvalidParams", "Tag table name/path is required.");
             object root = Get(software, "TagFolder") ?? software;
@@ -114,19 +116,22 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (parts.Length > 65 || parts.Any(string.IsNullOrEmpty)) throw new PlcSoftwareException("InvalidParams", "Invalid absolute tag table path.");
                 int slash = nameOrPath.LastIndexOf('/');
                 var folder = Folder(root, nameOrPath.Substring(0, slash), groupsName);
+                parent = folder;
                 return Find(Get(folder, "TagTables") ?? throw new PlcSoftwareException("NotFound", "TagTables unavailable."),
                     Uri.UnescapeDataString(nameOrPath.Substring(slash + 1)));
             }
-            var found = new List<object>();
+            var found = new List<(object Table, object Folder)>();
             Walk(root, groupsName, 0, new HashSet<object>());
             if (found.Count > 1) throw new PlcSoftwareException("InvalidParams", "Ambiguous tag table: " + nameOrPath + "; use a complete path.");
-            return found.SingleOrDefault();
+            if (found.Count == 0) return null;
+            parent = found[0].Folder;
+            return found[0].Table;
             void Walk(object folder, string childProperty, int depth, HashSet<object> ancestors)
             {
                 if (depth > 64 || !ancestors.Add(folder)) throw new InvalidOperationException("HMI folder cycle or traversal limit.");
                 var tables = Get(folder, "TagTables");
                 if (tables != null) found.AddRange(Items(tables).Where(x => string.Equals(Get(x, "Name") as string,
-                    nameOrPath, StringComparison.OrdinalIgnoreCase)));
+                    nameOrPath, StringComparison.OrdinalIgnoreCase)).Select(table => (table, folder)));
                 var groups = Get(folder, childProperty);
                 if (groups != null) foreach (var child in Items(groups)) Walk(child, childProperty == "Folders" ? "Folders" : "Groups", depth + 1, ancestors);
                 ancestors.Remove(folder);
@@ -137,8 +142,8 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             EngineeringInputValidation.NameOrAbsolutePath(nameOrPath);
             object root = Get(software, "TagFolder") ?? software;
-            var existing = TagTable(software, nameOrPath);
-            if (existing != null) return existing;
+            var existing = ResolveTagTable(software, nameOrPath, out var existingParent);
+            if (existing != null) return VerifyParent(existing, existingParent!);
             var tables = Get(Get(software, "TagFolder") ?? software, "TagTables")
                 ?? throw new PlcSoftwareException("NotFound", "TagTables unavailable.");
             string name = nameOrPath;
@@ -149,10 +154,17 @@ namespace TiaMcp.Adapters.Native.Hmi
                 tables = Get(root, "TagTables") ?? throw new PlcSoftwareException("NotFound", "TagTables unavailable.");
                 name = Uri.UnescapeDataString(nameOrPath.Substring(slash + 1));
             }
+            object VerifyParent(object table, object expectedParent)
+            {
+                var parent = Get(table, "Parent");
+                if (!ReferenceEquals(parent, expectedParent) && !Equals(parent, expectedParent))
+                    throw new InvalidOperationException("Tag table Parent readback does not match the requested folder: " + nameOrPath);
+                return table;
+            }
             var create = tables.GetType().GetMethod("Create", new[] { typeof(string) })
                 ?? throw new NotSupportedException("Documented TagTables.Create(string) unavailable.");
             beforeWrite();
-            try { return create.Invoke(tables, new object[] { name }) ?? throw new InvalidOperationException("Tag table creation returned null."); }
+            try { return VerifyParent(create.Invoke(tables, new object[] { name }) ?? throw new InvalidOperationException("Tag table creation returned null."), root); }
             catch (TargetInvocationException error) when (error.InnerException != null)
             { throw new InvalidOperationException(error.InnerException.GetType().FullName + ": " + error.InnerException.Message, error.InnerException); }
         }

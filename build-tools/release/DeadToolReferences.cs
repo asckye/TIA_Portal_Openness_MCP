@@ -43,6 +43,8 @@ internal static class DeadToolReferences
         foreach (var source in sources.Values)
         {
             foreach (Match m in Regex.Matches(source, "McpServerTool\\(Name\\s*=\\s*\"([A-Za-z0-9_]+)\"")) names.Add(m.Groups[1].Value);
+            // Foundation host tools declared by a static Definition (XREF AnalyzePlcCrossReferences) are registered tools too.
+            foreach (Match m in Regex.Matches(source, "Definition\\s+Definition\\s*=\\s*new\\(\"([A-Za-z0-9_]+)\"")) names.Add(m.Groups[1].Value);
             foreach (Match m in Regex.Matches(source, "McpServerPrompt\\(Name\\s*=\\s*\"([A-Za-z0-9_]+)\"")) prompts.Add(m.Groups[1].Value);
         }
         var bad = new Dictionary<string, List<string>>();
@@ -154,7 +156,7 @@ internal static class DeadToolReferences
     internal static int Run(string root, bool fix)
     {
         var sources = new Dictionary<string, string>();
-        foreach (var folder in new[] { "src/Engine", "src/EngineHost", "src/Logic", "src/Shared" }) foreach (var path in SourceCheck.Files(Path.Combine(root, folder)).Where(p => p.EndsWith(".cs", StringComparison.Ordinal))) sources[path] = Repository.ReadSource(path);
+        foreach (var folder in new[] { "src/Engine", "src/EngineHost", "src/FoundationHost", "src/Logic", "src/Shared" }) foreach (var path in SourceCheck.Files(Path.Combine(root, folder)).Where(p => p.EndsWith(".cs", StringComparison.Ordinal))) sources[path] = Repository.ReadSource(path);
         foreach (var name in new[] { "CrossReferenceTreeReader.cs", "OpennessReleaseContract.cs" })
         {
             var path = Path.Combine(root, "src/Adapters/Policy", name);

@@ -75,6 +75,37 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal static bool SameValue(object? actual, object? expected) => actual is Color a && expected is Color e ? a.ToArgb() == e.ToArgb() : UnifiedScalar.SameValue(actual, expected);
         internal static UnifiedNode? Json(object? value) => value is Color c ? UnifiedValues.Value(ColorText(c)) : UnifiedScalar.Json(value);
 
+        internal static UnifiedObject VerifiedWrite(object target, string propertyName, UnifiedNode? requested, Func<bool> trySet, Func<bool>? fallback = null)
+        {
+            var result = new UnifiedObject { ["property"] = propertyName, ["requested"] = requested?.DeepClone(), ["trySetResult"] = false, ["verified"] = false };
+            try
+            {
+                var written = trySet(); result["trySetResult"] = written;
+                if (!written && fallback != null) { written = fallback(); result["attributeSetResult"] = written; }
+                object? actual;
+                var property = FindProperty(target.GetType(), propertyName);
+                if (property?.GetMethod?.IsPublic == true && property.GetIndexParameters().Length == 0) actual = property.GetValue(target);
+                else
+                {
+                    var api = target.GetType().GetInterface("Siemens.Engineering.IEngineeringObject");
+                    var getter = api?.GetMethod("GetAttribute", new[] { typeof(string) }) ?? target.GetType().GetMethod("GetAttribute", new[] { typeof(string) });
+                    if (getter == null) throw new NotSupportedException("Property/attribute readback unavailable: " + propertyName);
+                    actual = getter.Invoke(target, new object[] { propertyName });
+                }
+                result["readback"] = Json(actual);
+                var expected = actual == null || requested == null || actual.GetType().IsInstanceOfType(requested)
+                    ? requested : ConvertValue(requested, actual.GetType());
+                result["verified"] = written && SameValue(actual, expected);
+                if (!result["verified"]!.GetValue<bool>()) result["error"] = written ? "Property readback differs." : "Property/attribute write returned false.";
+            }
+            catch (Exception error)
+            {
+                result["error"] = error.GetBaseException().Message;
+                if (HmiReadSafety.ConnectionUnavailable(error)) throw;
+            }
+            return result;
+        }
+
         // Public scalar read plus System.Drawing.Color rendered as #AARRGGBB; Color leaves excludedComplexProperties.
         internal static UnifiedObject Scalars(object target)
         {
@@ -124,9 +155,9 @@ namespace TiaMcp.Adapters.Native.Hmi
             public string[] Path = Array.Empty<string>(); public PropertyInfo Property = null!; public object? Value;
             public string Name => string.Join(".", Path.Concat(new[] { Property.Name }));
         }
-        // Validates a nested propertiesJson against CLR shape only: scalar and Color leaves need a public setter,
-        // JSON objects descend into readable engineering sub-objects. No native call is made here.
-        internal static List<Edit> PrepareNested(Type type, UnifiedObject changes, string[]? path = null, int budget = 50)
+        // Validates nested propertiesJson: scalar and Color leaves need a public setter,
+        // JSON objects descend into readable engineering sub-objects; interface Value reads its current runtime type.
+        internal static List<Edit> PrepareNested(Type type, UnifiedObject changes, string[]? path = null, int budget = 50, object? target = null, UnifiedObject? evidence = null)
         {
             path ??= Array.Empty<string>();
             if (path.Length > 6) throw new ArgumentException("Nested property depth exceeds 6.");
@@ -141,16 +172,36 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (!leaf && change.Value is UnifiedObject nested)
                 {
                     if (typeof(IEnumerable).IsAssignableFrom(property.PropertyType) && property.PropertyType != typeof(string)) throw new NotSupportedException("Collections need a dedicated action, not nested properties: " + change.Key);
-                    result.AddRange(PrepareNested(property.PropertyType, nested, path.Concat(new[] { change.Key }).ToArray(), budget));
+                    result.AddRange(PrepareNested(property.PropertyType, nested, path.Concat(new[] { change.Key }).ToArray(), budget, target == null ? null : property.GetValue(target), evidence));
                     continue;
                 }
                 if (!leaf) throw new NotSupportedException("Complex/reference property requires a JSON object of nested scalars or a dedicated adapter: " + property.PropertyType.FullName);
                 if (property.SetMethod?.IsPublic != true) throw new NotSupportedException("Public writable property unavailable (V20 may expose it only as a dynamic attribute): " + type.FullName + "." + change.Key);
-                result.Add(new Edit { Path = path, Property = property, Value = UnifiedAccess.ConvertField(changes, change.Key, property.PropertyType) });
+                object? converted;
+                try { converted = ConvertField(target, type, changes, change.Key, property.PropertyType); }
+                catch (ArgumentException error)
+                {
+                    if (evidence != null) evidence["conversionRefusal"] = error.Message;
+                    throw;
+                }
+                result.Add(new Edit { Path = path, Property = property, Value = converted });
                 if (result.Count > budget) throw new ArgumentException("At most " + budget + " leaf properties per request.");
             }
             return result;
         }
+        private static object? ConvertField(object? target, Type type, UnifiedObject changes, string name, Type declaredType)
+        {
+            if (declaredType != typeof(object) || name != "Value" || type.GetProperty("PropertyName") == null)
+                return UnifiedAccess.ConvertField(changes, name, declaredType);
+            var current = target == null ? null : type.GetProperty(name)!.GetValue(target);
+            if (current == null) throw new ArgumentException("Interface Value conversion refused: expected runtime type is unavailable because the current Value is null.");
+            var expected = current.GetType();
+            if (expected == typeof(object)) throw new ArgumentException("Interface Value requires System.Object, but no concrete scalar runtime type is available; JSON token type is not used to guess it.");
+            try { return UnifiedAccess.ConvertField(changes, name, expected); }
+            catch (Exception error) when (error is ArgumentException || error is FormatException || error is OverflowException || error is NotSupportedException || error is InvalidOperationException)
+            { throw new ArgumentException("Interface Value requires " + expected.FullName + ": " + error.Message, error); }
+        }
+
         internal static void ApplyNested(object target, List<Edit> edits, UnifiedObject meta)
         {
             var applied = new UnifiedArray(); meta["appliedProperties"] = applied;

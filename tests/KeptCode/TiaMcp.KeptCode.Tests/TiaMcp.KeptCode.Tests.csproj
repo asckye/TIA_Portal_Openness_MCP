@@ -45,6 +45,7 @@
     <Compile Include="../../../src/Shared/HmiExchangeTools.cs" />
     <Compile Include="../../../src/Shared/UnifiedHmiContract.cs" />
     <Compile Include="../../../src/Shared/UnifiedHmiPortService.cs" />
+    <Compile Include="../../../src/Shared/UnifiedPortService.cs" />
     <Compile Include="../../../src/Shared/UnifiedScreenItemsService.cs" />
     <PackageReference Include="Esprima" Version="3.0.5" />
     <PackageReference Include="YamlDotNet" Version="13.7.1" />

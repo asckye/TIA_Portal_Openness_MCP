@@ -2722,6 +2722,13 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "AnalyzePlcCrossReferences": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "AnalyzePlcReferences": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
@@ -34912,7 +34919,7 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Native queries are allowed by default through V20 where the API exists. V21 requires the human Workbench Allow native cross references (V21) switch for the selected session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save before the first query: V21 TIA exits recorded; compilation is no guarantee. PLC false/unknown consistency and reflection refusals remain. Not queried / partial never means zero references. No automatic retry after a TIA exit."
         },
         "DeletePlcTagTable": {
           "arguments": {
@@ -34927,7 +34934,7 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Native queries are allowed by default through V20 where the API exists. V21 requires the human Workbench Allow native cross references (V21) switch for the selected session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save before the first query: V21 TIA exits recorded; compilation is no guarantee. PLC false/unknown consistency and reflection refusals remain. Not queried / partial never means zero references. No automatic retry after a TIA exit."
         },
         "DeletePlcType": {
           "arguments": {
@@ -34942,7 +34949,7 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Native queries are allowed by default through V20 where the API exists. V21 requires the human Workbench Allow native cross references (V21) switch for the selected session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save before the first query: V21 TIA exits recorded; compilation is no guarantee. PLC false/unknown consistency and reflection refusals remain. Not queried / partial never means zero references. No automatic retry after a TIA exit."
         },
         "ManagePlcBlockProtection": {
           "arguments": {
@@ -35482,7 +35489,8 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "inline": true
+          "inline": true,
+          "note": "Native queries are allowed by default through V20 where the API exists. V21 requires the human Workbench Allow native cross references (V21) switch for the selected session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save before the first query: V21 TIA exits recorded; compilation is no guarantee. PLC false/unknown consistency and reflection refusals remain. Not queried / partial never means zero references. No automatic retry after a TIA exit."
         },
         "CompileDevice": {
           "arguments": {
@@ -38257,7 +38265,7 @@
         "DescribeHmiScreen": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "screenName": "Overview"
+            "screenName": "/Overview"
           },
           "parameters": {
             "maxMembers": {
@@ -38270,7 +38278,7 @@
         "DescribeHmiTagTable": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "tagTableName": "Default tag table"
+            "tagTableName": "/Default tag table"
           },
           "parameters": {
             "maxMembers": {
@@ -38283,7 +38291,7 @@
         "DescribeHmiTag": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "tagTableName": "Default tag table",
+            "tagTableName": "/Default tag table",
             "tagName": "Ready"
           },
           "parameters": {
@@ -38297,7 +38305,7 @@
         "DescribeHmiScreenItem": {
           "arguments": {
             "softwarePath": "HMI_Unified_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "itemName": "StatusText"
           },
           "parameters": {
@@ -38348,7 +38356,7 @@
         "ExportHmiScreen": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "screenName": "Screen_1",
+            "screenName": "/Screen_1",
             "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
             "exportOptions": "WithDefaults"
           },
@@ -38364,7 +38372,7 @@
         "ExportHmiTagTable": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "tagTableName": "Default tag table",
+            "tagTableName": "/Default tag table",
             "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
             "exportOptions": "WithDefaults"
           },
@@ -38498,7 +38506,7 @@
         "GetHmiScreenSnapshot": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "screenPath": "Overview"
+            "screenPath": "/Overview"
           },
           "parameters": {
             "maxDepth": {
@@ -38564,7 +38572,7 @@
             "confirmDelete": false,
             "dryRun": true,
             "action": "read",
-            "objectPath": "Popup_1"
+            "objectPath": "/Popup_1"
           },
           "parameters": {
             "filePath": {
@@ -40591,7 +40599,7 @@
         "ApplyUnifiedHmiLayout": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "layout": {
               "columns": 1,
               "cellWidth": 160,
@@ -40605,20 +40613,29 @@
                   "text": "Ready"
                 }
               ]
+            },
+            "dryRun": true
+          },
+          "parameters": {
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
             }
           },
-          "parameters": {},
           "operations": {},
           "validation": "V19/V20/V21 PublicAPI metadata and reflection shape reviewed offline. Native engineering acceptance NOT RUN; use only an explicitly bound disposable test project.",
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
           "pitfalls": [
             "Available on V19 or later only. Keep the existing approval, preview, confirmation and content-token rules; a sample does not prove the target exists."
+          ],
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
           ]
         },
         "ApplyUnifiedHmiScreenDesign": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "design": {
               "screen": {
                 "name": "Overview",
@@ -40636,11 +40653,16 @@
                   "text": "Ready"
                 }
               ]
-            }
+            },
+            "dryRun": true
           },
           "parameters": {
             "strict": {
               "exampleValue": true
+            },
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
             }
           },
           "operations": {},
@@ -40648,12 +40670,15 @@
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
           "pitfalls": [
             "Available on V19 or later only. Keep the existing approval, preview, confirmation and content-token rules; a sample does not prove the target exists."
+          ],
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
           ]
         },
         "ApplyUnifiedHmiTheme": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "theme": {
               "name": "Example",
               "palette": {
@@ -40662,23 +40687,33 @@
                 "Text": "0xFF202020",
                 "Border": "0xFF808080"
               }
+            },
+            "dryRun": true
+          },
+          "parameters": {
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
             }
           },
-          "parameters": {},
           "operations": {},
           "validation": "V19/V20/V21 PublicAPI metadata and reflection shape reviewed offline. Native engineering acceptance NOT RUN; use only an explicitly bound disposable test project.",
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
           "pitfalls": [
             "Available on V19 or later only. Keep the existing approval, preview, confirmation and content-token rules; a sample does not prove the target exists."
+          ],
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
           ]
         },
         "BindUnifiedHmiTagDynamization": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "itemName": "StatusText",
             "propertyName": "Visible",
-            "tagName": "Ready"
+            "tagName": "Ready",
+            "dryRun": true
           },
           "parameters": {
             "dataType": {
@@ -40690,6 +40725,10 @@
             },
             "address": {
               "exampleValue": "%M0.0"
+            },
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
             }
           },
           "operations": {},
@@ -40697,12 +40736,15 @@
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
           "pitfalls": [
             "Available on V19 or later only. Keep the existing approval, preview, confirmation and content-token rules; a sample does not prove the target exists."
+          ],
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
           ]
         },
         "DeleteEmptyUnifiedHmiScreenGroup": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "groupPath": "Examples",
+            "groupPath": "/Examples",
             "dryRun": true
           },
           "parameters": {},
@@ -40716,7 +40758,7 @@
         "DeleteUnifiedHmiButtonEvent": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "screenPath": "Overview",
+            "screenPath": "/Overview",
             "buttonName": "StartButton",
             "eventType": "Down",
             "dryRun": true
@@ -40740,7 +40782,7 @@
         "DeleteUnifiedHmiDynamization": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "screenPath": "Overview",
+            "screenPath": "/Overview",
             "itemName": "StatusText",
             "propertyName": "Visible",
             "dryRun": true
@@ -40761,7 +40803,7 @@
         "DescribeUnifiedHmiButtonEventScript": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "buttonName": "StartButton",
             "eventType": "Down"
           },
@@ -40795,15 +40837,20 @@
         "EnsureUnifiedHmiButtonAction": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "buttonName": "StartButton",
             "eventType": "Down",
             "actionKind": "set-bit",
-            "targetTag": "Ready"
+            "targetTag": "Ready",
+            "dryRun": true
           },
           "parameters": {
             "syntaxCheck": {
               "exampleValue": false
+            },
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
             }
           },
           "operations": {},
@@ -40811,26 +40858,39 @@
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
           "pitfalls": [
             "Available on V19 or later only. Keep the existing approval, preview, confirmation and content-token rules; a sample does not prove the target exists."
+          ],
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
           ]
         },
         "EnsureUnifiedHmiButtonEventHandler": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "buttonName": "StartButton",
-            "eventType": "Down"
+            "eventType": "Down",
+            "dryRun": true
           },
-          "parameters": {},
+          "parameters": {
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
+            }
+          },
           "operations": {},
           "validation": "V19/V20/V21 PublicAPI metadata and reflection shape reviewed offline. Native engineering acceptance NOT RUN; use only an explicitly bound disposable test project.",
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
           "pitfalls": [
             "Available on V19 or later only. Keep the existing approval, preview, confirmation and content-token rules; a sample does not prove the target exists."
+          ],
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
           ]
         },
         "EnsureUnifiedHmiConnection": {
           "arguments": {
-            "hmiSoftwarePath": "HMI_RT_1"
+            "hmiSoftwarePath": "HMI_RT_1",
+            "dryRun": true
           },
           "parameters": {
             "connectionName": {
@@ -40838,6 +40898,10 @@
             },
             "plcName": {
               "exampleValue": "PLC_1"
+            },
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
             }
           },
           "operations": {},
@@ -40846,19 +40910,27 @@
           "pitfalls": [
             "Available on V19 or later only. Keep the existing approval, preview, confirmation and content-token rules; a sample does not prove the target exists.",
             "Automatic connection creation refuses unverified driver/address values. Configure via TIA or ManageUnifiedEngineeringObject with documented CommunicationDriver/InitialAddress, then read back Partner/Station/Node. The shortcut stops when the connection step fails; DriverProperties are never guessed."
+          ],
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
           ]
         },
         "EnsureUnifiedHmiDynamization": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "itemName": "StatusText",
-            "propertyName": "Visible"
+            "propertyName": "Visible",
+            "dryRun": true
           },
           "parameters": {
             "dynamizationType": {
               "exampleValue": "<dynamizationType from this operation's target or user input>",
               "requiresBinding": true
+            },
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
             }
           },
           "operations": {},
@@ -40866,12 +40938,16 @@
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
           "pitfalls": [
             "Available on V19 or later only. Keep the existing approval, preview, confirmation and content-token rules; a sample does not prove the target exists."
+          ],
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
           ]
         },
         "EnsureUnifiedHmiScreen": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview"
+            "screenName": "/Overview",
+            "dryRun": true
           },
           "parameters": {
             "width": {
@@ -40879,6 +40955,10 @@
             },
             "height": {
               "exampleValue": 0
+            },
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
             }
           },
           "operations": {},
@@ -40886,17 +40966,21 @@
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
           "pitfalls": [
             "Available on V19 or later only. Keep the existing approval, preview, confirmation and content-token rules; a sample does not prove the target exists."
+          ],
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
           ]
         },
         "EnsureUnifiedHmiScreenItem": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
-            "itemName": "StatusText"
+            "screenName": "/Overview",
+            "itemName": "StatusText",
+            "dryRun": true
           },
           "parameters": {
             "itemType": {
-              "exampleValue": "T4TiaProject"
+              "exampleValue": "HmiButton"
             },
             "left": {
               "exampleValue": 0
@@ -40912,6 +40996,10 @@
             },
             "text": {
               "exampleValue": ""
+            },
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
             }
           },
           "operations": {},
@@ -40920,6 +41008,9 @@
           "pitfalls": [
             "Available on V19 or later only. Keep the existing approval, preview, confirmation and content-token rules; a sample does not prove the target exists.",
             "Non-empty text refuses before changes: use SetUnifiedMultilingualProperty with an explicit culture."
+          ],
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
           ]
         },
         "EnsureUnifiedHmiTag": {
@@ -40928,7 +41019,8 @@
             "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
             "tagName": "Ready",
             "plcName": "PLC_1",
-            "plcTag": "<exact PLC tag name from project reads>"
+            "plcTag": "<exact PLC tag name from project reads>",
+            "dryRun": true
           },
           "parameters": {
             "hmiDataType": {
@@ -40950,6 +41042,10 @@
             },
             "requireVerifiedBinding": {
               "exampleValue": true
+            },
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
             }
           },
           "operations": {},
@@ -40957,25 +41053,37 @@
           "note": "tagTableName uses the absolute /Group/Sub/Table form. HmiTags/Diagnostic must already exist; URI-escape each segment. Missing folders and relative slash names are refused without root creation. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
           "pitfalls": [
             "Available on V19 or later only. Keep the existing approval, preview, confirmation and content-token rules; a sample does not prove the target exists."
+          ],
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
           ]
         },
         "EnsureUnifiedHmiTagTable": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "tagTableName": "/HmiTags/Diagnostic/DiagInfo"
+            "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
+            "dryRun": true
           },
-          "parameters": {},
+          "parameters": {
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
+            }
+          },
           "operations": {},
           "validation": "V19/V20/V21 PublicAPI metadata and reflection shape reviewed offline. Native engineering acceptance NOT RUN; use only an explicitly bound disposable test project.",
           "note": "tagTableName uses the absolute /Group/Sub/Table form. HmiTags/Diagnostic must already exist; URI-escape each segment. Missing folders and relative slash names are refused without root creation. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
           "pitfalls": [
             "Available on V19 or later only. Keep the existing approval, preview, confirmation and content-token rules; a sample does not prove the target exists."
+          ],
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
           ]
         },
         "GetUnifiedHmiButtonEvent": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "screenPath": "Overview",
+            "screenPath": "/Overview",
             "buttonName": "StartButton",
             "eventType": "Down"
           },
@@ -40989,7 +41097,7 @@
         "GetUnifiedHmiDynamization": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "screenPath": "Overview",
+            "screenPath": "/Overview",
             "itemName": "StatusText",
             "propertyName": "Visible"
           },
@@ -41003,7 +41111,7 @@
         "GetUnifiedHmiTexts": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "itemName": "StatusText"
           },
           "parameters": {
@@ -41038,7 +41146,7 @@
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "family": "screens",
-            "groupPath": "Examples",
+            "groupPath": "/Examples",
             "action": "create",
             "dryRun": true
           },
@@ -41168,7 +41276,7 @@
         "SetUnifiedHmiButtonEventScriptCode": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "buttonName": "StartButton",
             "eventType": "Down",
             "scriptCode": "HMIRuntime.Tags(\"Ready\").Read();"
@@ -42070,7 +42178,7 @@
               "exampleValue": ""
             },
             "typePath": {
-              "exampleValue": "UDT_Status"
+              "exampleValue": "/UDT_Status"
             },
             "typeVersion": {
               "exampleValue": "1.0.0"
@@ -42083,20 +42191,20 @@
             "create": {
               "arguments": {
                 "action": "create",
-                "typePath": "UDT_Status"
+                "typePath": "/UDT_Status"
               }
             },
             "createFromType": {
               "arguments": {
                 "action": "createFromType",
-                "typePath": "UDT_Status",
+                "typePath": "/UDT_Status",
                 "typeVersion": "1.0.0"
               }
             },
             "delete": {
               "arguments": {
                 "action": "delete",
-                "typePath": "UDT_Status"
+                "typePath": "/UDT_Status"
               }
             }
           },
@@ -42310,19 +42418,7 @@
               "meaning": "Select the SiVArc rule family: screens | tags | advancedTags | alarms | copies | textLists."
             },
             "objectPath": {
-              "exampleValue": [
-                {
-                  "property": "ScreenFolder"
-                },
-                {
-                  "property": "Screens",
-                  "name": "Overview"
-                },
-                {
-                  "property": "ScreenItems",
-                  "name": "StartButton"
-                }
-              ],
+              "exampleValue": [],
               "meaning": "JSON string encoding property steps: [{property,name?}]. A property is followed directly; name selects an exact member of that collection. This differs from devicePath name arrays."
             },
             "offset": {
@@ -44334,7 +44430,7 @@
           },
           "parameters": {
             "objectPath": {
-              "exampleValue": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
+              "exampleValue": [],
               "meaning": "JSON string encoding property steps: [{property,name?}]. A property is followed directly; name selects an exact member of that collection. This differs from devicePathJson name arrays."
             },
             "offset": {
@@ -44356,6 +44452,10 @@
             "dryRun": true,
             "objectPath": [
               {
+                "property": "ScreenGroups",
+                "name": "Production"
+              },
+              {
                 "property": "Screens",
                 "name": "Overview"
               },
@@ -44373,12 +44473,40 @@
               "requiresBinding": true
             }
           },
-          "operations": {},
+          "operations": {
+            "setFaceplateInterface": {
+              "arguments": {
+                "objectPath": [
+                  {
+                    "property": "Screens",
+                    "name": "Overview"
+                  },
+                  {
+                    "property": "ScreenItems",
+                    "name": "MotorFaceplate_1"
+                  },
+                  {
+                    "property": "Interface",
+                    "key": "PropertyName",
+                    "name": "Speed"
+                  }
+                ],
+                "properties": {
+                  "Value": 42
+                },
+                "dryRun": true
+              },
+              "requiresBinding": true,
+              "note": "Read current Value first. The example numeric value requires a numeric runtime Value; conversion refuses with the expected runtime type and successful writes are read back."
+            }
+          },
           "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
           "notes": [
-            "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
-          ]
+            "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access.",
+            "For interface Value edits, read GetToolUsage(exampleId=\"sequence/hmi-faceplate-interface\") and inspect the current runtime type first. A null current Value cannot establish a conversion type. Conversion refusals retain the expected type in conversionRefusal."
+          ],
+          "requiresBinding": true
         },
         "SetUnifiedMultilingualProperty": {
           "arguments": {
@@ -44451,7 +44579,7 @@
           "notes": [
             "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
           ],
-          "note": "Resolve exact target names from this session. Native Unified cross references are disabled by default (PRECONDITION_FAILED, not queried). Controlled diagnosis on a saved test project requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 in the server process before startup, shared with PLC queries. Compilation does not guarantee crash safety. After a TIA exit, inspect the project and MCP/TIA logs before explicitly recovering the session and rebinding; do not enable automatically or retry."
+          "note": "Native queries are allowed by default through V20 where the API exists. V21 requires the human Workbench Allow native cross references (V21) switch for the selected session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save before the first query: V21 TIA exits recorded; compilation is no guarantee. PLC false/unknown consistency and reflection refusals remain. Not queried / partial never means zero references. No automatic retry after a TIA exit."
         },
         "ManageUnifiedLoggingTag": {
           "arguments": {
@@ -44583,10 +44711,10 @@
           "arguments": {},
           "parameters": {
             "plantPath": {
-              "exampleValue": "Plant_1"
+              "exampleValue": "/Plant_1"
             },
             "objectPath": {
-              "exampleValue": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
+              "exampleValue": [],
               "meaning": "JSON string encoding property steps: [{property,name?}]. A property is followed directly; name selects an exact member of that collection. This differs from devicePathJson name arrays."
             },
             "offset": {
@@ -44604,7 +44732,7 @@
         },
         "ManageUnifiedPlantNode": {
           "arguments": {
-            "plantPath": "ExampleArea",
+            "plantPath": "/ExampleArea/ExampleUnit",
             "action": "create",
             "plantObjectType": "<existing plant object type from this project library>",
             "dryRun": true
@@ -44616,6 +44744,11 @@
             "properties": {
               "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
               "requiresBinding": true
+            },
+            "plantPath": {
+              "exampleValue": "/ExampleArea/ExampleUnit",
+              "requiresBinding": true,
+              "origin": "Use an existing parent plant node such as /ExampleArea; create the typed instance at its child path."
             }
           },
           "operations": {
@@ -44627,24 +44760,26 @@
                 "action": "update",
                 "properties": {
                   "<exact supported field from this operation/read result>": "<value of that field's documented type>"
-                }
+                },
+                "plantObjectType": ""
               }
             },
             "delete": {
               "arguments": {
-                "action": "delete"
+                "action": "delete",
+                "plantObjectType": ""
               }
             }
           },
           "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "note": "Typed CPM creation needs an existing parent node (/ExampleArea in this example); bind the child path and an exact project-library plantObjectType. update/delete omit plantObjectType. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
           "notes": [
             "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
           ]
         },
         "SetUnifiedPlantObject": {
           "arguments": {
-            "plantPath": "Plant_1",
+            "plantPath": "/Plant_1",
             "dryRun": true,
             "objectPath": [],
             "properties": {
@@ -44673,7 +44808,12 @@
               },
               {
                 "property": "ScreenItems",
-                "name": "StartButton"
+                "name": "MotorFaceplate_1"
+              },
+              {
+                "property": "Interface",
+                "key": "PropertyName",
+                "name": "Speed"
               }
             ]
           },
@@ -44685,7 +44825,28 @@
               "exampleValue": 100
             }
           },
-          "operations": {},
+          "operations": {
+            "readFaceplateInterfaceEvents": {
+              "arguments": {
+                "objectPath": [
+                  {
+                    "property": "Screens",
+                    "name": "Overview"
+                  },
+                  {
+                    "property": "ScreenItems",
+                    "name": "MotorFaceplate_1"
+                  },
+                  {
+                    "property": "Interface",
+                    "key": "PropertyName",
+                    "name": "Speed"
+                  }
+                ]
+              },
+              "note": "Reads PropertyEventHandlers on the exact interface item; the same objectPath can address its Dynamizations."
+            }
+          },
           "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
           "notes": [
             "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
@@ -44701,12 +44862,13 @@
               },
               {
                 "property": "ScreenItems",
-                "name": "StartButton"
+                "name": "MotorFaceplate_1"
               }
             ],
             "confirmDelete": false,
             "dryRun": true,
-            "action": "read"
+            "action": "read",
+            "collectionProperty": "Interface"
           },
           "parameters": {
             "collectionProperty": {
@@ -44757,6 +44919,23 @@
                 "collectionProperty": "<collection property returned by read>",
                 "partName": "Part_1"
               }
+            },
+            "readFaceplateInterface": {
+              "arguments": {
+                "objectPath": [
+                  {
+                    "property": "Screens",
+                    "name": "Overview"
+                  },
+                  {
+                    "property": "ScreenItems",
+                    "name": "MotorFaceplate_1"
+                  }
+                ],
+                "collectionProperty": "Interface",
+                "action": "read"
+              },
+              "note": "Interface members expose PropertyName and Value; use key=PropertyName for exact subsequent navigation."
             }
           },
           "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
@@ -44775,10 +44954,15 @@
               },
               {
                 "property": "ScreenItems",
-                "name": "StartButton"
+                "name": "MotorFaceplate_1"
+              },
+              {
+                "property": "Interface",
+                "key": "PropertyName",
+                "name": "Speed"
               }
             ],
-            "propertyName": "Visible",
+            "propertyName": "Value",
             "confirmDelete": false,
             "dryRun": true,
             "action": "read"
@@ -45199,7 +45383,7 @@
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "expectedProject": "Example",
-            "screenPath": "Overview",
+            "screenPath": "/Overview",
             "itemNames": [
               "StatusText"
             ]
@@ -45600,9 +45784,7 @@
             "softwarePath": "HMI_RT_1",
             "expectedProject": "Example",
             "screenPath": "/Overview",
-            "itemName": "MotorFaceplate_1",
-            "typePath": "/Faceplates/MotorFaceplate",
-            "version": "<version from target discovery>"
+            "itemName": "MotorFaceplate_1"
           },
           "parameters": {
             "version": {
@@ -45626,7 +45808,8 @@
           "operations": {},
           "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
           "notes": [
-            "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
+            "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access.",
+            "The connected library type/version is derived from LibraryTypeInstanceInfo when available. Optional typePath/version only constrain the traced identity; unavailable service/version is reported explicitly."
           ]
         },
         "ReleaseUnifiedReadCursor": {
@@ -45713,6 +45896,19 @@
           },
           "operations": {},
           "validation": "Project-wide multilingual graphics: project.Graphics on V14 SP1-V20, project.GetService<GraphicsProvider>().Graphics on V21. softwarePath is retained for compatibility and does not select a graphics owner. Native acceptance NOT RUN."
+        },
+        "AnalyzePlcCrossReferences": {
+          "arguments": {
+            "softwarePath": "devices/PLC_1/PLC_1",
+            "groupPath": "",
+            "recursive": true,
+            "maxBlocks": 128
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema and sandbox fixture checked; native export NOT RUN. Available on all eight releases via ordinary XML block export.",
+          "inline": true,
+          "note": "READ. Exports into a fresh session output directory using the existing bounded XML export, then runs AnalyzePlcReferences without native CrossReferenceService. Use the exact software path from GetProjectTree. Narrow groupPath if maxBlocks is exceeded (1..256). Inspect exportedBlocks, exports item Status, analysis.failures, unresolvedCalls, truncated and scope. Callers, callees and global reference sites cover indexed exported blocks only; SCL bodies, software units, system blocks and omitted exports are excluded. Empty / not queried / partial is never proof of no references or safe deletion."
         }
       },
       "full-engine": {
@@ -45938,7 +46134,7 @@
         "ApplyUnifiedHmiLayout": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "layout": {
               "columns": 1,
               "cellWidth": 160,
@@ -45952,17 +46148,26 @@
                   "text": "Ready"
                 }
               ]
+            },
+            "dryRun": true
+          },
+          "parameters": {
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
             }
           },
-          "parameters": {},
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
+          ]
         },
         "ApplyUnifiedHmiScreenDesign": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "design": {
               "screen": {
                 "name": "Overview",
@@ -45980,21 +46185,29 @@
                   "text": "Ready"
                 }
               ]
-            }
+            },
+            "dryRun": true
           },
           "parameters": {
             "strict": {
               "exampleValue": true
+            },
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
             }
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
+          ]
         },
         "ApplyUnifiedHmiTheme": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "theme": {
               "name": "Example",
               "palette": {
@@ -46003,12 +46216,21 @@
                 "Text": "0xFF202020",
                 "Border": "0xFF808080"
               }
+            },
+            "dryRun": true
+          },
+          "parameters": {
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
             }
           },
-          "parameters": {},
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
+          ]
         },
         "ArchiveSavedProject": {
           "arguments": {
@@ -46099,22 +46321,32 @@
         "BindUnifiedHmiButtonPressedTag": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "buttonName": "StartButton",
-            "tagName": "Ready"
+            "tagName": "Ready",
+            "dryRun": true
           },
-          "parameters": {},
+          "parameters": {
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
+            }
+          },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
+          ]
         },
         "BindUnifiedHmiTagDynamization": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "itemName": "StatusText",
             "propertyName": "Visible",
-            "tagName": "Ready"
+            "tagName": "Ready",
+            "dryRun": true
           },
           "parameters": {
             "dataType": {
@@ -46126,11 +46358,18 @@
             },
             "address": {
               "exampleValue": "%M0.0"
+            },
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
             }
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
+          ]
         },
         "InitializeEnvironment": {
           "arguments": {},
@@ -47149,7 +47388,7 @@
         "DeleteEmptyUnifiedHmiScreenGroup": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "groupPath": "Examples",
+            "groupPath": "/Examples",
             "dryRun": true
           },
           "parameters": {},
@@ -47183,7 +47422,7 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Native queries are allowed by default through V20 where the API exists. V21 requires the human Workbench Allow native cross references (V21) switch for the selected session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save before the first query: V21 TIA exits recorded; compilation is no guarantee. PLC false/unknown consistency and reflection refusals remain. Not queried / partial never means zero references. No automatic retry after a TIA exit."
         },
         "DeletePlcExternalSource": {
           "arguments": {
@@ -47263,7 +47502,7 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Native queries are allowed by default through V20 where the API exists. V21 requires the human Workbench Allow native cross references (V21) switch for the selected session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save before the first query: V21 TIA exits recorded; compilation is no guarantee. PLC false/unknown consistency and reflection refusals remain. Not queried / partial never means zero references. No automatic retry after a TIA exit."
         },
         "DeletePlcType": {
           "arguments": {
@@ -47278,12 +47517,12 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Native queries are allowed by default through V20 where the API exists. V21 requires the human Workbench Allow native cross references (V21) switch for the selected session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save before the first query: V21 TIA exits recorded; compilation is no guarantee. PLC false/unknown consistency and reflection refusals remain. Not queried / partial never means zero references. No automatic retry after a TIA exit."
         },
         "DeleteUnifiedHmiButtonEvent": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "screenPath": "Overview",
+            "screenPath": "/Overview",
             "buttonName": "StartButton",
             "eventType": "Down",
             "dryRun": true
@@ -47304,7 +47543,7 @@
         "DeleteUnifiedHmiDynamization": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "screenPath": "Overview",
+            "screenPath": "/Overview",
             "itemName": "StatusText",
             "propertyName": "Visible",
             "dryRun": true
@@ -47322,7 +47561,7 @@
         "DescribeHmiScreen": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "screenName": "Overview"
+            "screenName": "/Overview"
           },
           "parameters": {
             "maxMembers": {
@@ -47335,7 +47574,7 @@
         "DescribeHmiScreenItem": {
           "arguments": {
             "softwarePath": "HMI_Unified_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "itemName": "StatusText"
           },
           "parameters": {
@@ -47361,7 +47600,7 @@
         "DescribeHmiTag": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "tagTableName": "Default tag table",
+            "tagTableName": "/Default tag table",
             "tagName": "Ready"
           },
           "parameters": {
@@ -47375,7 +47614,7 @@
         "DescribeHmiTagTable": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "tagTableName": "Default tag table"
+            "tagTableName": "/Default tag table"
           },
           "parameters": {
             "maxMembers": {
@@ -47454,7 +47693,7 @@
         "DescribeUnifiedHmiButtonEventScript": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "buttonName": "StartButton",
             "eventType": "Down"
           },
@@ -47657,36 +47896,54 @@
         "EnsureUnifiedHmiButtonAction": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "buttonName": "StartButton",
             "eventType": "Down",
             "actionKind": "set-bit",
-            "targetTag": "Ready"
+            "targetTag": "Ready",
+            "dryRun": true
           },
           "parameters": {
             "syntaxCheck": {
               "exampleValue": false
+            },
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
             }
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
+          ]
         },
         "EnsureUnifiedHmiButtonEventHandler": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "buttonName": "StartButton",
-            "eventType": "Down"
+            "eventType": "Down",
+            "dryRun": true
           },
-          "parameters": {},
+          "parameters": {
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
+            }
+          },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
+          ]
         },
         "EnsureUnifiedHmiConnection": {
           "arguments": {
-            "hmiSoftwarePath": "HMI_RT_1"
+            "hmiSoftwarePath": "HMI_RT_1",
+            "dryRun": true
           },
           "parameters": {
             "connectionName": {
@@ -47694,6 +47951,10 @@
             },
             "plcName": {
               "exampleValue": "PLC_1"
+            },
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
             }
           },
           "operations": {},
@@ -47701,29 +47962,41 @@
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
           "pitfalls": [
             "Automatic connection creation refuses unverified driver/address values. Configure via TIA or ManageUnifiedEngineeringObject with documented CommunicationDriver/InitialAddress, then read back Partner/Station/Node. The shortcut stops when the connection step fails; DriverProperties are never guessed."
+          ],
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
           ]
         },
         "EnsureUnifiedHmiDynamization": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "itemName": "StatusText",
-            "propertyName": "Visible"
+            "propertyName": "Visible",
+            "dryRun": true
           },
           "parameters": {
             "dynamizationType": {
               "exampleValue": "<dynamizationType from this operation's target or user input>",
               "requiresBinding": true
+            },
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
             }
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
+          ]
         },
         "EnsureUnifiedHmiScreen": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview"
+            "screenName": "/Overview",
+            "dryRun": true
           },
           "parameters": {
             "width": {
@@ -47731,21 +48004,29 @@
             },
             "height": {
               "exampleValue": 0
+            },
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
             }
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
+          ]
         },
         "EnsureUnifiedHmiScreenItem": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
-            "itemName": "StatusText"
+            "screenName": "/Overview",
+            "itemName": "StatusText",
+            "dryRun": true
           },
           "parameters": {
             "itemType": {
-              "exampleValue": "T4TiaProject"
+              "exampleValue": "HmiButton"
             },
             "left": {
               "exampleValue": 0
@@ -47761,6 +48042,10 @@
             },
             "text": {
               "exampleValue": ""
+            },
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
             }
           },
           "operations": {},
@@ -47768,6 +48053,9 @@
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
           "pitfalls": [
             "Non-empty text refuses before changes: use SetUnifiedMultilingualProperty with an explicit culture."
+          ],
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
           ]
         },
         "EnsureUnifiedHmiTag": {
@@ -47776,7 +48064,8 @@
             "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
             "tagName": "Ready",
             "plcName": "PLC_1",
-            "plcTag": "<exact PLC tag name from project reads>"
+            "plcTag": "<exact PLC tag name from project reads>",
+            "dryRun": true
           },
           "parameters": {
             "hmiDataType": {
@@ -47798,21 +48087,37 @@
             },
             "requireVerifiedBinding": {
               "exampleValue": true
+            },
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
             }
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "tagTableName uses the absolute /Group/Sub/Table form. HmiTags/Diagnostic must already exist; URI-escape each segment. Missing folders and relative slash names are refused without root creation. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "tagTableName uses the absolute /Group/Sub/Table form. HmiTags/Diagnostic must already exist; URI-escape each segment. Missing folders and relative slash names are refused without root creation. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
+          ]
         },
         "EnsureUnifiedHmiTagTable": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "tagTableName": "/HmiTags/Diagnostic/DiagInfo"
+            "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
+            "dryRun": true
           },
-          "parameters": {},
+          "parameters": {
+            "dryRun": {
+              "exampleValue": true,
+              "description": "Preview by default. Set false explicitly to apply through the existing Workbench approval gate."
+            }
+          },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "tagTableName uses the absolute /Group/Sub/Table form. HmiTags/Diagnostic must already exist; URI-escape each segment. Missing folders and relative slash names are refused without root creation. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "tagTableName uses the absolute /Group/Sub/Table form. HmiTags/Diagnostic must already exist; URI-escape each segment. Missing folders and relative slash names are refused without root creation. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "notes": [
+            "Default dryRun=true returns planned changes without a native call. Review the plan and pass dryRun=false for an approved write; preview does not validate TIA semantics."
+          ]
         },
         "ExchangeCfcCharts": {
           "arguments": {
@@ -48233,7 +48538,7 @@
         "ExportHmiScreen": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "screenName": "Screen_1",
+            "screenName": "/Screen_1",
             "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
             "exportOptions": "WithDefaults"
           },
@@ -48249,7 +48554,7 @@
         "ExportHmiTagTable": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "tagTableName": "Default tag table",
+            "tagTableName": "/Default tag table",
             "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
             "exportOptions": "WithDefaults"
           },
@@ -49712,7 +50017,7 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "Resolve exact target names from this session. Native Unified cross references are disabled by default (PRECONDITION_FAILED, not queried). Controlled diagnosis on a saved test project requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 in the server process before startup, shared with PLC queries. Compilation does not guarantee crash safety. After a TIA exit, inspect the project and MCP/TIA logs before explicitly recovering the session and rebinding; do not enable automatically or retry."
+          "note": "Native queries are allowed by default through V20 where the API exists. V21 requires the human Workbench Allow native cross references (V21) switch for the selected session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save before the first query: V21 TIA exits recorded; compilation is no guarantee. PLC false/unknown consistency and reflection refusals remain. Not queried / partial never means zero references. No automatic retry after a TIA exit."
         },
         "GetVersionControlStatus": {
           "arguments": {},
@@ -51218,7 +51523,7 @@
             "confirmDelete": false,
             "dryRun": true,
             "action": "read",
-            "objectPath": "Popup_1"
+            "objectPath": "/Popup_1"
           },
           "parameters": {
             "filePath": {
@@ -55692,7 +55997,7 @@
               "exampleValue": ""
             },
             "typePath": {
-              "exampleValue": "UDT_Status"
+              "exampleValue": "/UDT_Status"
             },
             "typeVersion": {
               "exampleValue": "1.0.0"
@@ -55705,20 +56010,20 @@
             "create": {
               "arguments": {
                 "action": "create",
-                "typePath": "UDT_Status"
+                "typePath": "/UDT_Status"
               }
             },
             "createFromType": {
               "arguments": {
                 "action": "createFromType",
-                "typePath": "UDT_Status",
+                "typePath": "/UDT_Status",
                 "typeVersion": "1.0.0"
               }
             },
             "delete": {
               "arguments": {
                 "action": "delete",
-                "typePath": "UDT_Status"
+                "typePath": "/UDT_Status"
               }
             }
           },
@@ -56734,10 +57039,15 @@
               },
               {
                 "property": "ScreenItems",
-                "name": "StartButton"
+                "name": "MotorFaceplate_1"
+              },
+              {
+                "property": "Interface",
+                "key": "PropertyName",
+                "name": "Speed"
               }
             ],
-            "propertyName": "Visible",
+            "propertyName": "Value",
             "confirmDelete": false,
             "dryRun": true,
             "action": "read"
@@ -56882,7 +57192,7 @@
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "family": "screens",
-            "groupPath": "Examples",
+            "groupPath": "/Examples",
             "action": "create",
             "dryRun": true
           },
@@ -57023,12 +57333,13 @@
               },
               {
                 "property": "ScreenItems",
-                "name": "StartButton"
+                "name": "MotorFaceplate_1"
               }
             ],
             "confirmDelete": false,
             "dryRun": true,
-            "action": "read"
+            "action": "read",
+            "collectionProperty": "Interface"
           },
           "parameters": {
             "collectionProperty": {
@@ -57079,6 +57390,23 @@
                 "collectionProperty": "<collection property returned by read>",
                 "partName": "Part_1"
               }
+            },
+            "readFaceplateInterface": {
+              "arguments": {
+                "objectPath": [
+                  {
+                    "property": "Screens",
+                    "name": "Overview"
+                  },
+                  {
+                    "property": "ScreenItems",
+                    "name": "MotorFaceplate_1"
+                  }
+                ],
+                "collectionProperty": "Interface",
+                "action": "read"
+              },
+              "note": "Interface members expose PropertyName and Value; use key=PropertyName for exact subsequent navigation."
             }
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
@@ -57109,7 +57437,7 @@
         },
         "ManageUnifiedPlantNode": {
           "arguments": {
-            "plantPath": "ExampleArea",
+            "plantPath": "/ExampleArea/ExampleUnit",
             "action": "create",
             "plantObjectType": "<existing plant object type from this project library>",
             "dryRun": true
@@ -57121,6 +57449,11 @@
             "properties": {
               "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
               "requiresBinding": true
+            },
+            "plantPath": {
+              "exampleValue": "/ExampleArea/ExampleUnit",
+              "requiresBinding": true,
+              "origin": "Use an existing parent plant node such as /ExampleArea; create the typed instance at its child path."
             }
           },
           "operations": {
@@ -57132,17 +57465,19 @@
                 "action": "update",
                 "properties": {
                   "<exact supported field from this operation/read result>": "<value of that field's documented type>"
-                }
+                },
+                "plantObjectType": ""
               }
             },
             "delete": {
               "arguments": {
-                "action": "delete"
+                "action": "delete",
+                "plantObjectType": ""
               }
             }
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "Typed CPM creation needs an existing parent node (/ExampleArea in this example); bind the child path and an exact project-library plantObjectType. update/delete omit plantObjectType. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
         },
         "ManageUnifiedScreenItem": {
           "arguments": {
@@ -58031,7 +58366,7 @@
         "GetHmiScreenSnapshot": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "screenPath": "Overview"
+            "screenPath": "/Overview"
           },
           "parameters": {
             "maxDepth": {
@@ -58578,19 +58913,7 @@
               "meaning": "Select the SiVArc rule family: screens | tags | advancedTags | alarms | copies | textLists."
             },
             "objectPath": {
-              "exampleValue": [
-                {
-                  "property": "ScreenFolder"
-                },
-                {
-                  "property": "Screens",
-                  "name": "Overview"
-                },
-                {
-                  "property": "ScreenItems",
-                  "name": "StartButton"
-                }
-              ],
+              "exampleValue": [],
               "meaning": "JSON string encoding property steps: [{property,name?}]. A property is followed directly; name selects an exact member of that collection. This differs from devicePath name arrays."
             },
             "offset": {
@@ -58796,9 +59119,7 @@
             "softwarePath": "HMI_RT_1",
             "expectedProject": "Example",
             "screenPath": "/Overview",
-            "itemName": "MotorFaceplate_1",
-            "typePath": "/Faceplates/MotorFaceplate",
-            "version": "<version from target discovery>"
+            "itemName": "MotorFaceplate_1"
           },
           "parameters": {
             "version": {
@@ -58820,7 +59141,10 @@
             }
           },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "notes": [
+            "The connected library type/version is derived from LibraryTypeInstanceInfo when available. Optional typePath/version only constrain the traced identity; unavailable service/version is reported explicitly."
+          ]
         },
         "GetUnifiedGlobalScript": {
           "arguments": {
@@ -58847,7 +59171,7 @@
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "expectedProject": "Example",
-            "screenPath": "Overview",
+            "screenPath": "/Overview",
             "itemNames": [
               "StatusText"
             ]
@@ -58870,7 +59194,7 @@
         "GetUnifiedHmiButtonEvent": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "screenPath": "Overview",
+            "screenPath": "/Overview",
             "buttonName": "StartButton",
             "eventType": "Down"
           },
@@ -58881,7 +59205,7 @@
         "GetUnifiedHmiDynamization": {
           "arguments": {
             "softwarePath": "HMI_RT_1",
-            "screenPath": "Overview",
+            "screenPath": "/Overview",
             "itemName": "StatusText",
             "propertyName": "Visible"
           },
@@ -58892,7 +59216,7 @@
         "GetUnifiedHmiTexts": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "itemName": "StatusText"
           },
           "parameters": {
@@ -58942,7 +59266,12 @@
               },
               {
                 "property": "ScreenItems",
-                "name": "StartButton"
+                "name": "MotorFaceplate_1"
+              },
+              {
+                "property": "Interface",
+                "key": "PropertyName",
+                "name": "Speed"
               }
             ]
           },
@@ -58954,7 +59283,28 @@
               "exampleValue": 100
             }
           },
-          "operations": {},
+          "operations": {
+            "readFaceplateInterfaceEvents": {
+              "arguments": {
+                "objectPath": [
+                  {
+                    "property": "Screens",
+                    "name": "Overview"
+                  },
+                  {
+                    "property": "ScreenItems",
+                    "name": "MotorFaceplate_1"
+                  },
+                  {
+                    "property": "Interface",
+                    "key": "PropertyName",
+                    "name": "Speed"
+                  }
+                ]
+              },
+              "note": "Reads PropertyEventHandlers on the exact interface item; the same objectPath can address its Dynamizations."
+            }
+          },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
         "GetUnifiedObjectProperties": {
@@ -58963,7 +59313,7 @@
           },
           "parameters": {
             "objectPath": {
-              "exampleValue": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
+              "exampleValue": [],
               "meaning": "JSON string encoding property steps: [{property,name?}]. A property is followed directly; name selects an exact member of that collection. This differs from devicePathJson name arrays."
             },
             "offset": {
@@ -58980,10 +59330,10 @@
           "arguments": {},
           "parameters": {
             "plantPath": {
-              "exampleValue": "Plant_1"
+              "exampleValue": "/Plant_1"
             },
             "objectPath": {
-              "exampleValue": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
+              "exampleValue": [],
               "meaning": "JSON string encoding property steps: [{property,name?}]. A property is followed directly; name selects an exact member of that collection. This differs from devicePathJson name arrays."
             },
             "offset": {
@@ -59784,7 +60134,7 @@
         "SetUnifiedHmiButtonEventScriptCode": {
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "Overview",
+            "screenName": "/Overview",
             "buttonName": "StartButton",
             "eventType": "Down",
             "scriptCode": "HMIRuntime.Tags(\"Ready\").Read();"
@@ -60164,6 +60514,10 @@
             "dryRun": true,
             "objectPath": [
               {
+                "property": "ScreenGroups",
+                "name": "Production"
+              },
+              {
                 "property": "Screens",
                 "name": "Overview"
               },
@@ -60181,13 +60535,43 @@
               "requiresBinding": true
             }
           },
-          "operations": {},
+          "operations": {
+            "setFaceplateInterface": {
+              "arguments": {
+                "objectPath": [
+                  {
+                    "property": "Screens",
+                    "name": "Overview"
+                  },
+                  {
+                    "property": "ScreenItems",
+                    "name": "MotorFaceplate_1"
+                  },
+                  {
+                    "property": "Interface",
+                    "key": "PropertyName",
+                    "name": "Speed"
+                  }
+                ],
+                "properties": {
+                  "Value": 42
+                },
+                "dryRun": true
+              },
+              "requiresBinding": true,
+              "note": "Read current Value first. The example numeric value requires a numeric runtime Value; conversion refuses with the expected runtime type and successful writes are read back."
+            }
+          },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "requiresBinding": true,
+          "notes": [
+            "For interface Value edits, read GetToolUsage(exampleId=\"sequence/hmi-faceplate-interface\") and inspect the current runtime type first. A null current Value cannot establish a conversion type. Conversion refusals retain the expected type in conversionRefusal."
+          ]
         },
         "SetUnifiedPlantObject": {
           "arguments": {
-            "plantPath": "Plant_1",
+            "plantPath": "/Plant_1",
             "dryRun": true,
             "objectPath": [],
             "properties": {
@@ -60554,7 +60938,8 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "inline": true
+          "inline": true,
+          "note": "Native queries are allowed by default through V20 where the API exists. V21 requires the human Workbench Allow native cross references (V21) switch for the selected session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save before the first query: V21 TIA exits recorded; compilation is no guarantee. PLC false/unknown consistency and reflection refusals remain. Not queried / partial never means zero references. No automatic retry after a TIA exit."
         },
         "GetExportContent": {
           "arguments": {
@@ -64523,6 +64908,19 @@
           "resultReading": [
             "Inspect data.items and their run references. Only an exact reviewed framework staging directory can be cleaned."
           ]
+        },
+        "AnalyzePlcCrossReferences": {
+          "arguments": {
+            "softwarePath": "devices/PLC_1/PLC_1",
+            "groupPath": "",
+            "recursive": true,
+            "maxBlocks": 128
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema and sandbox fixture checked; native export NOT RUN. Available on all eight releases via ordinary XML block export.",
+          "inline": true,
+          "note": "READ. Exports into a fresh session output directory using the existing bounded XML export, then runs AnalyzePlcReferences without native CrossReferenceService. Use the exact software path from GetProjectTree. Narrow groupPath if maxBlocks is exceeded (1..256). Inspect exportedBlocks, exports item Status, analysis.failures, unresolvedCalls, truncated and scope. Callers, callees and global reference sites cover indexed exported blocks only; SCL bodies, software units, system blocks and omitted exports are excluded. Empty / not queried / partial is never proof of no references or safe deletion."
         }
       }
     }
@@ -65277,7 +65675,8 @@
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
             "connectionName": "HMI_Connection_1",
-            "plcName": "PLC_1"
+            "plcName": "PLC_1",
+            "dryRun": false
           },
           "expect": "connection present"
         },
@@ -65285,11 +65684,12 @@
           "tool": "EnsureUnifiedHmiTag",
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "tagTableName": "Default tag table",
+            "tagTableName": "/Default tag table",
             "tagName": "<Tag>",
             "hmiDataType": "Bool",
             "plcName": "PLC_1",
-            "plcTag": "<PLC tag>"
+            "plcTag": "<PLC tag>",
+            "dryRun": false
           },
           "expect": "AbsoluteVerified true"
         },
@@ -65297,7 +65697,8 @@
           "tool": "EnsureUnifiedHmiScreen",
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "<Screen>"
+            "screenName": "/<Screen>",
+            "dryRun": false
           },
           "expect": "screen present"
         },
@@ -65305,14 +65706,15 @@
           "tool": "EnsureUnifiedHmiScreenItem",
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "<Screen>",
+            "screenName": "/<Screen>",
             "itemName": "btnStart",
             "itemType": "Button",
             "left": 20,
             "top": 20,
             "width": 120,
             "height": 40,
-            "text": "Start"
+            "text": "Start",
+            "dryRun": false
           },
           "expect": "item present"
         },
@@ -65320,11 +65722,12 @@
           "tool": "EnsureUnifiedHmiButtonAction",
           "arguments": {
             "hmiSoftwarePath": "HMI_RT_1",
-            "screenName": "<Screen>",
+            "screenName": "/<Screen>",
             "buttonName": "btnStart",
             "eventType": "Down",
             "actionKind": "set-bit",
-            "targetTag": "<Tag>"
+            "targetTag": "<Tag>",
+            "dryRun": false
           },
           "expect": "handler written"
         },
@@ -68466,6 +68869,137 @@
           "expect": "Use the returned runId; retain evidence and replan after a stopped run."
         }
       ]
+    },
+    {
+      "id": "sequence/hmi-faceplate-interface",
+      "topic": "hmi-faceplate-interface",
+      "purpose": "Inspect an exact existing faceplate interface item, its events and dynamizations, then preview a typed Value change.",
+      "preconditions": "Bind HMI_RT_1, screen, faceplate and PropertyName to the intended existing instance. Read the current Value runtime type before selecting a compatible preview value.",
+      "notes": "No faceplate type or ContainedType format is guessed. key only accepts Name/PropertyName. Null current Value or impossible conversion refuses with conversionRefusal. The example Value=42 requires a compatible numeric current Value. Preview performs no write; explicit dryRun=false uses the existing Workbench approval gate and reads back. Native behavior current / NOT RUN; no save/compile/download.",
+      "releaseKeys": [
+        "19",
+        "20",
+        "21"
+      ],
+      "kind": "call-sequence",
+      "validation": "Offline schema and addressing self-check only; native TIA NOT RUN.",
+      "steps": [
+        {
+          "tool": "ManageUnifiedObjectParts",
+          "arguments": {
+            "softwarePath": "HMI_RT_1",
+            "objectPath": [
+              {
+                "property": "Screens",
+                "name": "Overview"
+              },
+              {
+                "property": "ScreenItems",
+                "name": "MotorFaceplate_1"
+              }
+            ],
+            "action": "read",
+            "collectionProperty": "Interface",
+            "dryRun": true
+          },
+          "expect": "Read exact PropertyName and the current scalar Value; bind the following selections to the intended item."
+        },
+        {
+          "tool": "GetUnifiedObjectProperties",
+          "arguments": {
+            "softwarePath": "HMI_RT_1",
+            "objectPath": [
+              {
+                "property": "Screens",
+                "name": "Overview"
+              },
+              {
+                "property": "ScreenItems",
+                "name": "MotorFaceplate_1"
+              },
+              {
+                "property": "Interface",
+                "key": "PropertyName",
+                "name": "Speed"
+              }
+            ]
+          },
+          "expect": "Inspect current Value before deciding the replacement type."
+        },
+        {
+          "tool": "GetUnifiedObjectEvents",
+          "arguments": {
+            "softwarePath": "HMI_RT_1",
+            "objectPath": [
+              {
+                "property": "Screens",
+                "name": "Overview"
+              },
+              {
+                "property": "ScreenItems",
+                "name": "MotorFaceplate_1"
+              },
+              {
+                "property": "Interface",
+                "key": "PropertyName",
+                "name": "Speed"
+              }
+            ]
+          },
+          "expect": "Read existing PropertyEventHandlers on the selected interface item."
+        },
+        {
+          "tool": "ManageUnifiedDynamization",
+          "arguments": {
+            "softwarePath": "HMI_RT_1",
+            "objectPath": [
+              {
+                "property": "Screens",
+                "name": "Overview"
+              },
+              {
+                "property": "ScreenItems",
+                "name": "MotorFaceplate_1"
+              },
+              {
+                "property": "Interface",
+                "key": "PropertyName",
+                "name": "Speed"
+              }
+            ],
+            "action": "read",
+            "propertyName": "Value",
+            "dryRun": true
+          },
+          "expect": "Read the current property dynamization without creating one."
+        },
+        {
+          "tool": "SetUnifiedObjectProperties",
+          "arguments": {
+            "softwarePath": "HMI_RT_1",
+            "objectPath": [
+              {
+                "property": "Screens",
+                "name": "Overview"
+              },
+              {
+                "property": "ScreenItems",
+                "name": "MotorFaceplate_1"
+              },
+              {
+                "property": "Interface",
+                "key": "PropertyName",
+                "name": "Speed"
+              }
+            ],
+            "properties": {
+              "Value": 42
+            },
+            "dryRun": true
+          },
+          "expect": "Only preview after confirming the current Value has a compatible numeric runtime type."
+        }
+      ]
     }
   ],
   "parameterSources": {
@@ -69076,6 +69610,9 @@
     "EnsureUnifiedHmiConnection": {
       "input": "Verifies a preconfigured connection using documented readback properties. Unknown driver strings, InitialAddress syntax and read-only Partner/Station/Node are not guessed. Use ManageUnifiedEngineeringObject with verified explicit values or configure in TIA.",
       "profile": "full-engine"
+    },
+    "AnalyzePlcCrossReferences": {
+      "input": "READ; existing XML export plus offline reference engine. Retained session exports, bounded ordinary software/group scope. No native CrossReferenceService, compile or save. Always partial; inspect export and indexing failures. Blocks not exported are not analysed."
     }
   }
 }

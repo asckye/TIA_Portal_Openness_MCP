@@ -2,6 +2,24 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)：最新版本在前，日期为 ISO 8601；当前版本说明在 `docs/releases/`，历史正文保留在 Git 历史与 GitHub Releases，交付包在 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)。版本号从 2.8.0 起按[语义化版本](https://semver.org/lang/zh-CN/)：**MAJOR** = 工具名 / 参数 / 返回形状的不兼容改动或删除工具；**MINOR** = 新工具、新参数、新功能、内部重构；**PATCH** = 修缺陷、改文案 / 文档、只动交付脚本。2.7.x 及之前每版都可能新增工具，未按此规则。预发布版本为 X.Y.Z-beta.N 或 X.Y.Z-rc.N，条目写作 `## [4.0.0-beta.1] - YYYY-MM-DD`，与正式版本相同，在发布命令前写入；`## [Unreleased]` 不被视为版本条目。
 
+## [Unreleased]
+
+## [4.0.0-beta.3] - 2026-11-01
+
+4.0 的第三个预发布版本，同样在 GitHub 上标为预发布、不设为最新版，3.3 的更新器和工作台更新检查不会提示它。产品对外名称改为“自动化工程工作台（Automation Engineering Workbench，原 TIA Portal Openness MCP）”；程序文件名、插件 ID、MCP 服务名 `tia-portal`、交付包名和仓库地址不变。本版仍未在真实 TIA Portal 上验收。
+
+- 对外名称改为自动化工程工作台（窗口标题、工作台内英文简称 AE Workbench、README、NOTICE、插件描述），说明项目来源并补充维护者版权行与西门子商标声明。
+- 新增 3.3 到 4.0 的手动迁移指南、按版本的真机核对清单、缺陷/真机结果/功能建议问题表单和测试者反馈台账。
+- 内部检查与发布：重复工作只做一次、合并只跑受影响的检查、每日完整 nightly（失败阻止下一次发布）、失败即停、恢复并行构建；未删除或放宽任何检查。
+- 发布前统一检查并传递生态/伴随 Python 路径；发布、证据采纳和独立证据核验提前拒绝 Git 规范化与工作字节不同的跟踪文件，列出路径和修复方法。
+- 主机注册文件发布遇到共享冲突时短暂重试，失败记日志；工作台读取允许原子替换，文件暂时缺失、不完整或被占用时在下一轮重试。
+- 原生交叉引用：V14 SP1–V20 在 API 可用时恢复默认允许；V21 保留 opt-in，新增仅人工可改的工作台会话开关（en / zh-CN），环境变量仍可替代。首次查询前保存工程；一致性、反射拒绝和退出后不重试的保护不变，V21 真机确认待完成。
+- 新增八版 READ 工具 `AnalyzePlcCrossReferences`：一次有界普通 PLC/块组 XML 导出后离线分析每块调用者、被调用者和引用位置，文件保留在会话输出目录，无原生 CrossReferenceService 调用。明确报告导出范围、失败和索引缺口；部分/未查询/空结果不等于没有引用。
+- HMI beta.3 复核（HMI-B3）：对象路径支持按 `PropertyName` 选择面板接口项；接口 `Value` 按现值的运行时类型转换并回读，无法确定类型时拒绝。
+- 旧 `EnsureUnifiedHmi*`、`ApplyUnifiedHmi*`、`BindUnifiedHmi*` 工具默认 `dryRun=true`，返回计划；显式 `false` 继续走原审批门禁。画面设计拒绝重命名和同名异类冲突，几何、属性及变量动态化保留逐项写入结果与回读；变量表核对父目录。
+- HMI 类别、动作与路径在原生调用前校验；组与 Plant 路径统一为绝对 `/Group/Sub/Name`，错误路径带改正写法。面板追溯从实例的库版本服务取得身份，`typePath/version` 变为可选核对条件；Classic 面板库类型按类型名及继承关系匹配并返回版本。
+- 新增八版 HMI 示例离线自检，核对维护的调用及操作示例的必填参数、对象路径、绝对路径和控件类型目录。原生行为仍待真实 TIA 确认。
+
 ## [4.0.0-beta.2] - 2026-10-27
 
 4.0 的第二个预发布版本，同样在 GitHub 上标为预发布、不设为最新版，3.3 的更新器和工作台更新检查不会提示它。本版仍未在真实 TIA Portal 上验证，说明见 [v4.0.0-beta.2](docs/releases/v4.0.0-beta.2.md)。

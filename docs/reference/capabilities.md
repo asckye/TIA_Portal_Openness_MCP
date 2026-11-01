@@ -66,6 +66,6 @@
 
 已移植能力及尚未移植的在线、Unified 和选件能力以[版本目录](version-tools.md)为准。旧版只有至少一个已实现动作具有对应 API 时才注册工具；其他动作在原生调用前拒绝。SDK 中有 API 不代表已有执行入口或已通过真机验收。
 
-Unified 脚本库类型改名仍有实测崩溃；`p2051[0]` BICO 读取修正尚未原生复测；PLC 原生交叉引用默认关闭。这些限制统一记录在[已知限制](../troubleshooting/openness-limitations.md)，不另建调用规范系统。
+Unified 脚本库类型改名仍有实测崩溃；`p2051[0]` BICO 读取修正尚未原生复测；原生交叉引用在 V14 SP1–V20 的 API 可用版本默认允许；V21 保留人工会话开关或环境变量 opt-in，真机确认待完成。这些限制统一记录在[已知限制](../troubleshooting/openness-limitations.md)，不另建调用规范系统。
 
 历版能力叙述已移出本页。[原能力文档快照](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/reference/capabilities.md)仅供追溯，不能代替当前矩阵。
