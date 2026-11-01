@@ -29,14 +29,15 @@
 | [0015](0015-microsoft-design-spec-baseline.md) | 项目设计规范以 Microsoft 规范为基线 | 已采纳 | 2026-10-11 | B39 |
 | [0016](0016-architecture-decision-records.md) | 设计决策用 ADR 记录，一页一个决定 | 已采纳 | 2026-10-11 | B40 |
 | [0017](0017-own-openness-group-code.md) | Openness 用户组检查改用自有代码，不再分发 Siemens.Collaboration.Net | 已采纳 | 2026-10-18 | — |
-| [0018](0018-workbench-ant-design.md) | 工作台界面采用 Ant Design v5 的视觉规范和布局 | 已采纳；视觉部分正由 EplanMcp 工作台设计系统取代 | 2026-10-18 | — |
+| [0018](0018-workbench-ant-design.md) | 工作台界面采用 Ant Design v5 的视觉规范和布局 | 已采纳；视觉部分被 0028 取代 | 2026-10-18 | — |
 | [0019](0019-incremental-check-all.md) | check-all 复用输入未变的上次通过结果 | 已采纳 | 2026-10-18 | — |
 | [0020](0020-prereleases-tested-by-users.md) | 4.0 以 GitHub 预发布交给测试者，我们按真机核对清单做 VM 回归 | 已采纳（2026-11-01 修订） | 2026-10-20 | — |
-| [0021](0021-workbench-eplanmcp-font-and-style.md) | 工作台字体与风格与 EplanMCP 工作台一致（正文为英文） | 已采纳；视觉部分正由 EplanMcp 工作台设计系统取代 | 2026-10-22 | — |
+| [0021](0021-workbench-eplanmcp-font-and-style.md) | 工作台字体与风格与 EplanMCP 工作台一致（正文为英文） | 已采纳；视觉部分被 0028 取代 | 2026-10-22 | — |
 | [0022](0022-engine-retirement-and-eight-release-unification.md) | 引擎退役，八个版本共用一套逻辑与流程 | 已采纳 | 2026-10-13 | — |
 | [0023](0023-release-4-0-final-criteria.md) | 4.0 正式版在全部 4.0 任务合并、检查通过、rc 与维护者确认后发布 | 已采纳 | 2026-10-30 | — |
 | [0024](0024-ci-does-not-block-merges.md) | 合并以本机受影响的检查为门，GitHub CI 不阻塞合并和发布 | 已采纳 | 2026-10-30 | B35 |
 | [0025](0025-release-evidence-nightly-and-verified-build-units.md) | 发布证据采用最近一次通过的 nightly 与已验证的增量构建单元 | 已采纳（实现见 RULES-1） | 2026-11-01 | — |
+| [0028](0028-workbench-visual-design-eplanmcp.md) | 工作台视觉设计采用 EplanMcp 设计系统（取代 0018、0021 的视觉部分） | 已采纳（实施见 UI-2a…UI-2d） | 2026-11-01 | — |
 
 ## 待补写的决定
 
