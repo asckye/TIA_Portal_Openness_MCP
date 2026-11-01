@@ -1,10 +1,13 @@
 using PlcNative = TiaMcp.Adapters.Native.Plc.PlcBlockPrimitives;
 using System;
+using TiaMcp.Adapters.Native.Plc;
 using System.Collections.Generic;
 using System.Linq;
 using Siemens.Engineering;
 using Siemens.Engineering.SW.Blocks;
 using Siemens.Engineering.SW.Types;
+using Siemens.Engineering.SW.Tags;
+using Siemens.Engineering.SW.ExternalSources;
 
 namespace TiaMcp.Adapters
 {
@@ -37,6 +40,17 @@ namespace TiaMcp.Adapters
             var types=PlcNative.TypeGroup(selected.Value);
             if(types==null) throw new InvalidOperationException("PLC resolved but TypeGroup is unavailable; incomplete tree is not returned.");
             sections.Add(SnapshotTypes(types,"PLC data types",selected.ExactPath+"/types",budget,0));
+            foreach (var unit in PlcUnitScope.Units(selected.Value))
+            {
+                var path = selected.ExactPath + "/units/" + Uri.EscapeDataString(unit.Key);
+                budget.Add(unit.Key, path, unit.Key);
+                sections.Add(new PlcSoftwareTreeNode { Name = unit.Key, Path = path, Kind = "unit", Display = unit.Key + " [Software unit]", Children = new[] {
+                    SnapshotBlocks(PlcUnitScope.Blocks(selected.Value, unit.Value), "Program blocks", path + "/blocks", warnings, budget, 0),
+                    SnapshotTypes(PlcUnitScope.Types(selected.Value, unit.Value), "PLC data types", path + "/types", budget, 0),
+                    SnapshotTables(PlcUnitScope.Tags(selected.Value, unit.Value), "PLC tags", path + "/tag-tables", budget, 0),
+                    SnapshotSources(PlcUnitScope.Sources(selected.Value, unit.Value), "External sources", path + "/external-sources", budget, 0)
+                }});
+            }
             var snapshot=sections.ToArray();
             var tree=PlcSoftwareReadPolicy.Render(PlcNative.Name(selected.Value),snapshot);
             return new PlcSoftwareTreeDetails {
@@ -45,6 +59,30 @@ namespace TiaMcp.Adapters
                     ["paths"]=PlcSoftwareReadPolicy.Paths(snapshot),["unavailableDisplayAttributes"]=warnings.ToArray()
                 }
             };
+        }
+        private static PlcSoftwareTreeNode SnapshotTables(PlcTagTableGroup group, string label, string path, PlcSoftwareReadBudget budget, int depth)
+        {
+            Depth(depth); budget.Add(label, path, label);
+            var children = new List<PlcSoftwareTreeNode>();
+            foreach (var table in group.TagTables)
+            {
+                var address = PlcSoftwareReadPolicy.ChildPath(path, table.Name); budget.Add(table.Name, address, table.Name);
+                children.Add(new PlcSoftwareTreeNode { Name = table.Name, Path = address, Kind = "tag-table", Display = table.Name });
+            }
+            foreach (var child in group.Groups) children.Add(SnapshotTables(child, child.Name, PlcSoftwareReadPolicy.ChildPath(path, child.Name), budget, depth + 1));
+            return new PlcSoftwareTreeNode { Name = label, Path = path, Kind = "tag-group", Display = label, Children = children.ToArray() };
+        }
+        private static PlcSoftwareTreeNode SnapshotSources(PlcExternalSourceGroup group, string label, string path, PlcSoftwareReadBudget budget, int depth)
+        {
+            Depth(depth); budget.Add(label, path, label);
+            var children = new List<PlcSoftwareTreeNode>();
+            foreach (var source in group.ExternalSources)
+            {
+                var address = PlcSoftwareReadPolicy.ChildPath(path, source.Name); budget.Add(source.Name, address, source.Name);
+                children.Add(new PlcSoftwareTreeNode { Name = source.Name, Path = address, Kind = "external-source", Display = source.Name });
+            }
+            foreach (var child in group.Groups) children.Add(SnapshotSources(child, child.Name, PlcSoftwareReadPolicy.ChildPath(path, child.Name), budget, depth + 1));
+            return new PlcSoftwareTreeNode { Name = label, Path = path, Kind = "source-group", Display = label, Children = children.ToArray() };
         }
         private static PlcSoftwareTreeNode SnapshotBlocks(PlcBlockGroup group,string label,string path,List<string> warnings,PlcSoftwareReadBudget budget,int depth)
         {

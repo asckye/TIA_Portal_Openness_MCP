@@ -14,6 +14,8 @@ namespace TiaMcp.Adapters
     public sealed class PlcBatchImportRequest
     {
         internal string Release="",Project="",Software="",Directory="",BlockGroup="",TypeGroup="",TagGroup="",Regex="",ExpectedHash="",ExpectedProject="",TechnologyGroup="";
+        internal string UnitName="";
+        internal string[] SwImportOptions=Array.Empty<string>(),ImportOptions=Array.Empty<string>();
         internal int ProcessId,MaxItems=128;
         internal bool Program,Overwrite,CompileAfter,Confirm,DryRun=true,StopOnImportFailure=true;
         internal string[] Order=new string[0];
@@ -68,6 +70,8 @@ namespace TiaMcp.Adapters
         }
         internal static void ValidateOptions(PlcBatchImportRequest request)
         {
+            var unsupported=PlcImportOptionPolicy.Unsupported(request.Release,"block",request.SwImportOptions,request.ImportOptions,request.UnitName);
+            if(unsupported!=null) throw new AdapterPreconditionException(unsupported,PlcImportOptionPolicy.UnsupportedCondition,null);
             TiaOpenness.Shared.NativeExportPolicy.RequireBatchOptions(request.CompileAfter,request.StopOnImportFailure,request.TechnologyGroup);
             if(request.MaxItems<1 || request.MaxItems>256) throw new AdapterPreconditionException("maxItems must be 1..256.","maxItems");
             if(request.Regex.Length>1024) throw new AdapterPreconditionException("Regex exceeds bounded length.","regexName");
@@ -143,6 +147,7 @@ namespace TiaMcp.Adapters
             {
                 return RunCore(request,existing,recheck,(file,item)=>{issued=true;return import(file,item);},backup,restore,recoveryDirectory,recoveryPrecheck,inspectBlocker);
             }
+            catch(NotSupportedException) { throw; }
             catch(AdapterPreconditionException) { throw; }
             catch(Exception error) when(!issued)
             { throw new AdapterPreconditionException("Batch import admission failed before any import: "+error.Message,request.InputParameter,false,error); }
@@ -160,7 +165,7 @@ namespace TiaMcp.Adapters
             var locks=new List<FileStream>();
             try
             {
-                var result=new PlcBatchImportResult {Executed=!request.DryRun,ProjectFile=request.Project,SoftwarePath=request.Software,Release=request.Release,Recursive=request.Program};
+                var result=new PlcScopedBatchImportResult {Executed=!request.DryRun,ProjectFile=request.Project,SoftwarePath=request.Software,Release=request.Release,Recursive=request.Program,UnitName=request.UnitName,SwImportOptions=request.SwImportOptions,ImportOptions=request.ImportOptions};
                 var items=new List<PlcBatchImportItem>();long total=0;
                 TiaOpenness.Shared.NativeInputPolicy.Read(request.InputParameter,()=>
                 {
@@ -185,6 +190,8 @@ namespace TiaMcp.Adapters
                     if(bytes.LongLength!=expectedLength || stream.Length!=expectedLength) throw new AdapterPreconditionException("Input changed while locked.",request.InputParameter);
                     PlcBatchImportObject planned;PlcBatchImportDependency[] dependencies;
                     using(var input=new MemoryStream(bytes,false)) planned=Parse(input,request,out dependencies);
+                    var unsupportedOptions=PlcImportOptionPolicy.Unsupported(request.Release,planned.Kind,request.SwImportOptions,request.ImportOptions,request.UnitName);
+                    if(unsupportedOptions!=null) throw new AdapterPreconditionException(unsupportedOptions,PlcImportOptionPolicy.UnsupportedCondition,null);
                     if(dependencies.Any(dependency=>!inventory.Concat(items.Select(x=>x.Planned)).Any(x=>x.Name==dependency.Name && x.Kind==dependency.Kind))) throw new AdapterPreconditionException("Recognized type/instance dependency missing or ordered after its consumer; explicit order is not dependency proof.","importOrder");
                     if(items.Any(x=>Namespace(x.Planned.Kind)==Namespace(planned.Kind) && string.Equals(x.Planned.Name,planned.Name,StringComparison.OrdinalIgnoreCase))) throw new AdapterPreconditionException("Duplicate logical input object name: "+planned.Name,request.InputParameter);
                     var collisions=inventory.Where(x=>Namespace(x.Kind)==Namespace(planned.Kind) && string.Equals(x.Name,planned.Name,StringComparison.OrdinalIgnoreCase)).ToArray();
@@ -200,6 +207,7 @@ namespace TiaMcp.Adapters
                 result.Items=items.ToArray();
                 var canonical=string.Concat(new[]{"batch-import-v1",request.Release,request.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture),request.Project,request.Software,root,request.BlockGroup,request.TypeGroup,request.TagGroup,request.Program.ToString(),request.Regex,request.Overwrite ? "Override" : "None","stop-on-first-failure"}.Select(Field));
                 canonical+=string.Concat(inventory.Select(Identity).OrderBy(x=>x,StringComparer.Ordinal).Select(Field));
+                if(request.UnitName!="" || request.SwImportOptions.Length>0 || request.ImportOptions.Length>0) canonical+=Field(request.UnitName)+Field(string.Join(",",request.SwImportOptions))+Field(string.Join(",",request.ImportOptions));
                 canonical+=string.Concat(items.Select(x=>Field(x.RelativePath)+Field(x.InputSha256)+Field(Identity(x.Planned))+(request.Overwrite ? Field(x.Action)+Field(x.Replaced==null ? "" : Identity(x.Replaced))+Field(x.Replaced?.BackupBlocker ?? "") : "")));
                 result.PlanHash=Hash(Encoding.UTF8.GetBytes(canonical));
                 // Approval is optional. Apply admission must precede recovery access and every native export/import.

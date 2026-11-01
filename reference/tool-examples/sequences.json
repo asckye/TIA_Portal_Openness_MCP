@@ -4073,5 +4073,75 @@
         "expect": "Only preview after confirming the current Value has a compatible numeric runtime type."
       }
     ]
+  },
+  {
+    "id": "sequence/software-unit-preview",
+    "topic": "software-unit-preview",
+    "purpose": "Preview unit-relative XML import, read unit declarations and review publication on V16–V21.",
+    "profile": "plc-foundation",
+    "releaseKeys": [
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ],
+    "preconditions": "Bind an exact PLC softwarePath, existing standard unit and target group. Use an XML export from the same release; no input rewrite. V14 SP1 and V15.1 have no software units.",
+    "notes": "SWImportOptions and culture options default off. For V19–V21 optionally add importOptions:[\"SkipInactiveCultures\"] OR [\"ActivateInactiveCultures\"]; never both. Tag-table imports cannot take SWImportOptions. Review previews before separate Workbench-approved apply calls. No save/compile/download is implied.",
+    "validation": "Schema and sandbox fixtures; native execution NOT RUN.",
+    "steps": [
+      {
+        "tool": "GetSoftwareTree",
+        "arguments": {
+          "softwarePath": "<exact softwarePath>"
+        }
+      },
+      {
+        "tool": "ImportPlcBlock",
+        "arguments": {
+          "softwarePath": "<exact softwarePath>",
+          "unitName": "<exact unitName>",
+          "groupPath": "",
+          "importPath": "<same-release block XML on TIA machine>",
+          "swImportOptions": [
+            "IgnoreMissingReferencedObjects",
+            "IgnoreUnitAttributes"
+          ],
+          "importOptions": [],
+          "overwrite": false,
+          "dryRun": true
+        }
+      },
+      {
+        "tool": "ListPlcTags",
+        "arguments": {
+          "plc": "<exact softwarePath>",
+          "table": "",
+          "unitName": "<exact unitName>",
+          "includeUnits": false
+        }
+      },
+      {
+        "tool": "ListPlcUserConstants",
+        "arguments": {
+          "plc": "<exact softwarePath>",
+          "table": "",
+          "unitName": "",
+          "includeUnits": true
+        }
+      },
+      {
+        "tool": "SetPlcUnitObjectAccess",
+        "arguments": {
+          "softwarePath": "<exact softwarePath>",
+          "unitName": "<exact unitName>",
+          "objectKind": "block",
+          "objectPath": "<relative block path>",
+          "access": "Published",
+          "dryRun": true
+        }
+      }
+    ]
   }
 ]

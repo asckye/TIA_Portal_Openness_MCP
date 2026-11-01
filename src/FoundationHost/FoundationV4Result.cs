@@ -147,6 +147,10 @@ internal static class FoundationV4Result
             return Reject(release, name, id, new Error(HostBehavior.SafeDiagnostic(worker.Message) ?? "The requested capability is unavailable.",
                 new UnsupportedCapabilityDetails(release, name, null)), true);
         exception ??= new InvalidOperationException();
+        string? condition = worker?.Condition ?? TiaOpenness.Shared.HostFailurePolicy.Precondition(exception)?.Condition;
+        if ((!dispatched || worker?.KnownNoMutation == true) && condition == TiaMcp.Adapters.Contracts.PlcImportOptionPolicy.UnsupportedCondition)
+            return Reject(release, name, id, new Error("The selected release or XML object does not support the requested import options.",
+                new UnsupportedCapabilityDetails(release, "PLC-Software", name)), true);
         bool lost = dispatched && exception.Data["foundationSessionPoisoned"] is true;
         var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(exception, dispatched, !mutation, worker?.Outcome, worker?.Code, exceptionType);
         string? parameter = worker?.Parameter ?? TiaOpenness.Shared.HostFailurePolicy.Parameter(exception);

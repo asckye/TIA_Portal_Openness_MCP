@@ -8,7 +8,7 @@ namespace TiaMcp.FoundationHost;
 
 internal static class PlcCrossReferenceAnalysis
 {
-    internal static readonly Definition Definition = new("AnalyzePlcCrossReferences", "AnalyzePlcCrossReferences", "[L2][PLC-Software][READ] Export and analyse an ordinary PLC software or exact block group in one call, bounded by maxBlocks (1..256). Uses the existing XML export path and offline AnalyzePlcReferences engine, never native CrossReferenceService. Exports retained under the session output root. Returns callers, callees and global reference sites per indexed block, export failures and unindexed files. Scope states exported block count and omitted blocks; SCL bodies, software units, system blocks, indirect calls, HMI and external clients are not covered. Partial/empty is never proof of no references or safe deletion. No compile, save or project change.", new[]{new Argument("softwarePath"),new Argument("groupPath","string",false,""),new Argument("recursive","boolean",false,true),new Argument("maxBlocks","integer",false,128)}, "CrossReferenceAnalysis");
+    internal static readonly Definition Definition = new("AnalyzePlcCrossReferences", "AnalyzePlcCrossReferences", "[L2][PLC-Software][READ] Export and analyse an ordinary PLC software or exact block group in one call, bounded by maxBlocks (1..256). Uses the existing XML export path and offline AnalyzePlcReferences engine, never native CrossReferenceService. Exports retained under the session output root. Returns callers, callees and global reference sites per indexed block, export failures and unindexed files. Scope states exported block count and omitted blocks; SCL bodies, unselected units, system blocks, indirect calls, HMI and external clients are not covered. Partial/empty is never proof of no references or safe deletion. Optional unitName selects a standard software unit V16–V21; scope lists the selected units. No compile, save or project change.", new[]{new Argument("softwarePath"),new Argument("groupPath","string",false,""),new Argument("recursive","boolean",false,true),new Argument("maxBlocks","integer",false,128),new Argument("unitName","string",false,"","Exact standard software unit, V16–V21; paths relative to its block root.")}, "CrossReferenceAnalysis");
     internal static FoundationTool Create(IFoundationWorker worker) => new(Definition, worker);
 
     private sealed class OutputRoot
@@ -25,7 +25,7 @@ internal static class PlcCrossReferenceAnalysis
         ValidateMaximum(maximum);
         string directory = Path.Combine(Roots.GetValue(worker, _ => new OutputRoot()).Path, Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
-        var export = new JsonObject { ["softwarePath"] = software, ["groupPath"] = values["groupPath"]!.DeepClone(),
+        var export = new JsonObject { ["unitName"] = values["unitName"]?.DeepClone() ?? JsonValue.Create(""), ["softwarePath"] = software, ["groupPath"] = values["groupPath"]!.DeepClone(),
             ["recursive"] = values["recursive"]!.DeepClone(), ["exportPath"] = directory, ["maxItems"] = maximum,
             ["dryRun"] = true, ["expectedInventoryHash"] = "" };
         var preview = await worker.Call("ExportBlocks", export, token).ConfigureAwait(false);
@@ -35,7 +35,10 @@ internal static class PlcCrossReferenceAnalysis
         token.ThrowIfCancellationRequested();
         var result = await worker.Call("ExportBlocks", export, token).ConfigureAwait(false);
         BatchExportContract.Validate(result, false);
-        return Report(software, directory, result!.AsObject());
+        var report = Report(software, directory, result!.AsObject());
+        report["unitName"] = values["unitName"]?.DeepClone() ?? JsonValue.Create("");
+        report["scope"] = "Selected units: " + ((string?)values["unitName"] is { Length: > 0 } unit ? unit : "none (PLC root)") + ". " + (string)report["scope"]!;
+        return report;
     }
 
     private static void ValidateMaximum(int maxBlocks)
@@ -87,7 +90,7 @@ internal static class PlcCrossReferenceAnalysis
             ["requiresSessionReset"] = (bool?)export["RequiresSessionReset"] == true,
             ["coverageComplete"] = false, ["dataComplete"] = false, ["safeToDelete"] = false,
             ["scope"] = "Covers " + exported + " exported blocks of software " + software
-                + "; blocks not exported are not analysed. Only ordinary root/user block groups; software units and system blocks are excluded. "
+                + "; blocks not exported are not analysed. Only selected root/user or software-unit block groups; other units and system blocks are excluded. "
                 + "Only explicit SimaticML calls and global symbol sites are indexed; text SCL, indirect/dynamic calls, HMI and external clients are not covered. "
                 + "Not queried or partial never means zero references; an empty result is not proof of no references."
         };

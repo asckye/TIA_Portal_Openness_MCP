@@ -73,6 +73,7 @@ namespace Siemens.Engineering.SW
         public string Name = "PLC";
         public Blocks.PlcBlockSystemGroup BlockGroup = new();
         public Types.PlcTypeSystemGroup? TypeGroup = new();
+        public Dictionary<string, TiaMcp.Adapters.Native.Plc.TestUnit> UnitScopes = new(StringComparer.Ordinal);
     }
 }
 namespace TiaMcp.Adapters

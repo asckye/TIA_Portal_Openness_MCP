@@ -73,13 +73,14 @@ namespace Siemens.Engineering.SW.Tags
     public class PlcSystemConstantComposition : List<PlcSystemConstant> { }
     public class PlcTagTable
     {
+        public string Name { get; set; } = "";
         public PlcTagComposition Tags => throw new NotSupportedException();
         public PlcSystemConstantComposition SystemConstants => throw new NotSupportedException();
     }
     public class PlcTagTableGroup
     {
-        public PlcTagTableComposition TagTables => throw new NotSupportedException();
-        public PlcTagTableUserGroupComposition Groups => throw new NotSupportedException();
+        public PlcTagTableComposition TagTables { get; } = new();
+        public PlcTagTableUserGroupComposition Groups { get; } = new();
     }
     public class PlcTagTableUserGroup : PlcTagTableGroup { public string Name => throw new NotSupportedException(); }
     public class PlcTagTableComposition : List<PlcTagTable> { }
@@ -102,12 +103,12 @@ namespace Siemens.Engineering.SW.WatchAndForceTables
 }
 namespace Siemens.Engineering.SW.ExternalSources
 {
-    public class PlcExternalSource { }
+    public class PlcExternalSource { public string Name { get; set; } = ""; }
     public class PlcExternalSourceComposition : List<PlcExternalSource> { }
     public class PlcExternalSourceGroup
     {
-        public PlcExternalSourceComposition ExternalSources => throw new NotSupportedException();
-        public PlcExternalSourceUserGroupComposition Groups => throw new NotSupportedException();
+        public PlcExternalSourceComposition ExternalSources { get; } = new();
+        public PlcExternalSourceUserGroupComposition Groups { get; } = new();
     }
     public class PlcExternalSourceUserGroup : PlcExternalSourceGroup { public string Name => throw new NotSupportedException(); }
     public class PlcExternalSourceUserGroupComposition : List<PlcExternalSourceUserGroup> { }

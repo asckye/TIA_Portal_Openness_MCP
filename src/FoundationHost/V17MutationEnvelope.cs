@@ -14,6 +14,11 @@ internal static class V17MutationEnvelope
         string Wire(string name)=>McpJsonUtilities.DefaultOptions.PropertyNamingPolicy?.ConvertName(name)??name;
         var meta=new JsonObject { ["timestamp"]=DateTimeOffset.UtcNow.ToString("O"),["success"]=true,["executed"]=executed,["dryRun"]=dryRun,["projectFile"]=projectFile,["contractVersion"]="v17-exchange-safe-v1",["nativeAcceptance"]="unverified" };
         foreach(var name in new[]{"OutputFile","InputFile","InputSha256","AffectedNames","RecoveryDirectory","XmlContent","FullProgramRestoreSupported","Warnings"}) if(result[name]!=null) meta[Wire(name)]=result[name]!.DeepClone();
+        if(result["InputFile"]!=null)
+        {
+            foreach(var name in new[]{"UnitName","SwImportOptions","ImportOptions"}) if(result[name]!=null) meta[Wire(name)]=result[name]!.DeepClone();
+        }
+        else if((string?)result["UnitName"] is { Length: > 0 } unit) meta[Wire("UnitName")]=unit;
         var response=new JsonObject { [Wire("Message")]=executed ? tool+" completed" : tool+" preview validated; no operation executed",[Wire("Meta")]=meta };
         if(shape=="ExportFile") response[Wire("ExportPath")]=result["OutputFile"]?.DeepClone() ?? throw new InvalidDataException("Export result lacks an output path.");
         return response;

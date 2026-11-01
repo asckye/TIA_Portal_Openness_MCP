@@ -250,16 +250,36 @@ Withdrawn by decision (2026-10-20): on V20 the four whole-block composers that w
 `BuildPlcFbBlock`, `BuildPlcLadFcBlock`, `BuildPlcAliasAlarmLad`) are not registered, and `BuildAndImportPlcArtifact` refuses
 `kind` fc/fb below V21. They stay on V21. They open on V20 only after an import of their output there has been verified.
 
+SU-1 software-unit coverage (native acceptance **NOT RUN**):
+
+| Scope / option | 14 SP1 | 15.1 | 16 | 17 | 18 | 19 | 20 | 21 |
+|---|---|---|---|---|---|---|---|---|
+| Exact `unitName`, tree units, unit declarations, unit reference-export scope, object publication | absent | absent | implemented | implemented | implemented | implemented | implemented | implemented |
+| `IgnoreStructuralChanges`, `IgnoreMissingReferencedObjects` (block/type XML only) | absent | implemented | implemented | implemented | implemented | implemented | implemented | implemented |
+| `IgnoreUnitAttributes` (block/type XML only) | absent | absent | implemented | implemented | implemented | implemented | implemented | implemented |
+| `SkipInactiveCultures` OR `ActivateInactiveCultures` | absent | absent | absent | absent | absent | implemented | implemented | implemented |
+
+`ImportPlcBlock`, `ImportPlcType`, `ImportPlcTagTable`, their existing directory variants,
+`ImportPlcProgramFromDirectory`, `ExportPlcBlock`, `ExportPlcType`, `ExportPlcTagTable`,
+`ExportPlcBlocks` and `ExportPlcTypes` select the exact standard unit by `unitName`;
+group paths are relative to that unit's root. Empty `unitName` preserves root selection.
+The unit groups use `PlcUnit.BlockGroup` / `TypeGroup` / `TagTableGroup` / `ExternalSourceGroup`
+on V16/V17 and inherited `PlcUnitBase` properties from V18. `GetSoftwareTree` includes all four groups.
+External-source creation/generation in a unit continues through `ManagePlcExternalSources`;
+program-directory XML import does not imply source generation or a complete program restore.
+
+Import flags are opt-in arrays, empty by default and included in preview evidence and plan hashes.
+Unknown/duplicate/unavailable flags and both culture flags together return `UNSUPPORTED_CAPABILITY`.
+`PlcTagTableComposition.Import(FileInfo, ImportOptions)` has no `SWImportOptions` overload;
+SW flags for a tag table, including a mixed program batch, refuse before imports.
+The existing V16–V21 WRITE tool `SetPlcUnitObjectAccess` uses the documented `Access` attribute
+with `UnitAccessType.Published` / `Unpublished`, default preview, Workbench approval and readback.
+`ListPlcTags`, `ListPlcUserConstants`, `ListPlcSystemConstants` accept one unit or `includeUnits=true`
+for the root and all standard units. `AnalyzePlcCrossReferences` can export a selected unit's blocks;
+its scope identifies selected units and still disclaims completeness and safe deletion.
+
 Official APIs in this family that no 4.0 tool uses:
 
-- Software-unit scope for the candidate import/export and batch tools (`PlcUnitBase.BlockGroup`, `TypeGroup`, `TagTableGroup`,
-  `ExternalSourceGroup`, 16-21). ImportPlcBlock, ImportPlcType, ImportPlcTagTable, their directory variants, ExportPlcBlock,
-  ExportPlcBlocks, ExportPlcTypes and ImportPlcProgramFromDirectory work on the PLC root groups only; ManagePlcExternalSources and
-  ManagePlcBlockDocuments take `unitName`.
-- `SWImportOptions` (`IgnoreStructuralChanges`, `IgnoreMissingReferencedObjects` 15.1-21, `IgnoreUnitAttributes` 16-21) and the
-  culture options `ImportOptions.SkipInactiveCultures` / `ActivateInactiveCultures` (19-21). A file exported from a software unit,
-  one that references objects not yet in the project, or one with inactive cultures is therefore refused by TIA; the import
-  failure names these options.
 - SIMATIC SD for FBD, F-FBD, SCL and mixed-language blocks on V21 (V21 "What's new"). The SD document tools accept LAD and DB blocks
   (and UDTs) on V20 and V21; V20 documents exactly that set.
 - `PlcBlock.Export(FileInfo, ExportOptions, DocumentInfoOptions)` (18-21) and `ExportOptions.WithReadOnly` outside

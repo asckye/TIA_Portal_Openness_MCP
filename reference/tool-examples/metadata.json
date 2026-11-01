@@ -113,6 +113,16 @@
         "ListExportHandles"
       ],
       "meaning": "Copy data.export.id from a parked V4 response or data.items[].export.id from ListExportHandles; GetExportContent pages continue with meta.paging.nextOffset."
+    },
+    "unitName": {
+      "tools": [
+        "GetSoftwareTree",
+        "ListPlcSoftwareUnits"
+      ],
+      "meaning": "Exact unit name, V16–V21. For scoped XML imports/exports and declaration reads, empty selects the root; paths are relative to that unit root. Safety-unit support is endpoint-specific; inspect unitKind where offered."
+    },
+    "swImportOptions": {
+      "meaning": "Default [] explicit names: IgnoreStructuralChanges / IgnoreMissingReferencedObjects V15.1–V21, IgnoreUnitAttributes V16–V21. Block/type SimaticML only; tag tables and documents refuse these flags."
     }
   },
   "resultReading": {
@@ -609,6 +619,8 @@
       "input": "Verifies a preconfigured connection using documented readback properties. Unknown driver strings, InitialAddress syntax and read-only Partner/Station/Node are not guessed. Use ManageUnifiedEngineeringObject with verified explicit values or configure in TIA.",
       "profile": "full-engine"
     },
-    "AnalyzePlcCrossReferences": {"input": "READ; existing XML export plus offline reference engine. Retained session exports, bounded ordinary software/group scope. No native CrossReferenceService, compile or save. Always partial; inspect export and indexing failures. Blocks not exported are not analysed."}
+    "AnalyzePlcCrossReferences": {
+      "input": "READ; existing XML export plus offline reference engine. Retained session exports, bounded ordinary software/group scope. No native CrossReferenceService, compile or save. Always partial; inspect export and indexing failures. Blocks not exported are not analysed."
+    }
   }
 }

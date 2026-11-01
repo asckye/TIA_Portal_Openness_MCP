@@ -162,12 +162,12 @@ internal sealed class FoundationV4Tool : McpServerTool
         if (importCandidate)
         {
             schema = JsonNode.Parse(PlcImportContract.Schema(Name(source.Name), release).GetRawText())!.AsObject();
-            description = "[PLC foundation][WRITE] Same-release PLC import candidate. Preview returns original file hashes, exact target groups, complete inventory, overwrite capability and plan. Apply requires confirmation, expectedPlanHash and expectedProjectFile. Directory importOrder is explicit. One import per item with content readback; stop on first failure, unknown requires session reset. No source rewrite, compile, save, retry or rollback. Test/accepted behaviorPolicy=safe-v4.";
+            description = "[PLC foundation][WRITE] Same-release PLC import candidate. Optional unitName V16–V21 selects a unit root. Explicit swImportOptions: IgnoreStructuralChanges / IgnoreMissingReferencedObjects V15.1–V21, IgnoreUnitAttributes V16–V21 (blocks/types only); importOptions SkipInactiveCultures OR ActivateInactiveCultures V19–V21. Both arrays default empty; preview shows the opt-ins; unsupported combinations refuse. Preview returns original file hashes, exact target groups, complete inventory, overwrite capability and plan. Apply requires confirmation, expectedPlanHash and expectedProjectFile. Directory importOrder is explicit. One import per item with content readback; stop on first failure, unknown requires session reset. No source rewrite, compile, save, retry or rollback. Test/accepted behaviorPolicy=safe-v4.";
         }
         if (exportCandidate)
         {
             schema = JsonNode.Parse(PlcExportContract.Schema(Name(source.Name), release).GetRawText())!.AsObject();
-            description = "[PLC foundation][WRITE] Reviewed export candidate. Default preview lists objects and destination identities without writes. Apply requires confirmation, expectedPlanHash and expectedProjectFile. One export per item in synchronous worker dispatch, sibling staging then host publication, content/path readback. Stop and retain staging on failure; unknown requires session reset. No scope expansion. Test/accepted behaviorPolicy=safe-v4.";
+            description = "[PLC foundation][WRITE] Reviewed export candidate. Optional exact unitName V16–V21 selects a unit root; paths are relative to it. Default preview lists objects and destination identities without writes. Apply requires confirmation, expectedPlanHash and expectedProjectFile. One export per item in synchronous worker dispatch, sibling staging then host publication, content/path readback. Stop and retain staging on failure; unknown requires session reset. No scope expansion. Test/accepted behaviorPolicy=safe-v4.";
         }
         if (sessionCandidate)
         {
@@ -287,6 +287,8 @@ internal sealed class FoundationV4Tool : McpServerTool
             if (validation.Error != null) return Recorded(deviceCandidate
                 ? FoundationV4Result.DeviceCandidate(DeviceCreationSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted))
                 : FoundationV4Result.Reject(release, tool.Name, id, validation.Error, inner is FoundationTool { IsNative: true }));
+            if (SoftwareUnitCapabilityError(release, tool.Name, args) is { } unitCapability)
+                return Recorded(FoundationV4Result.Reject(release, tool.Name, id, unitCapability, true));
             try { CallerInputFiles.RefuseHumanSettingsTargets(JsonSerializer.SerializeToNode(args)!.AsObject()); }
             catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
             { return Recorded(FoundationV4Result.Reject(release, tool.Name, id, new Error(error.Message,
@@ -453,5 +455,25 @@ internal sealed class FoundationV4Tool : McpServerTool
         catch (Exception) /* swallow(privacy): return a value-free V4 failure; implementation details are not protocol data */
         { return Recorded(FoundationV4Result.HostFailure(release, tool.Name, id)); }
         finally { lane?.Dispose(); }
+    }
+
+    internal static Error? SoftwareUnitCapabilityError(string release, string tool, IReadOnlyDictionary<string, JsonElement> args)
+    {
+        bool import = PlcImportContract.Entries.Contains(tool, StringComparer.Ordinal);
+        bool scoped = import || PlcExportContract.Entries.Contains(tool, StringComparer.Ordinal)
+            || tool is "ListPlcTags" or "ListPlcUserConstants" or "ListPlcSystemConstants" or "AnalyzePlcCrossReferences";
+        if (!scoped) return null;
+        string unit = args.TryGetValue("unitName", out var selected) ? selected.GetString() ?? "" : "";
+        if (args.TryGetValue("includeUnits", out var all) && all.GetBoolean())
+        {
+            if (unit != "") return new Error("unitName and includeUnits cannot be combined.", new InvalidArgumentDetails("includeUnits", Array.Empty<string>()));
+            unit = "*";
+        }
+        string[] Options(string key) => args.TryGetValue(key, out var options) && options.ValueKind != JsonValueKind.Null
+            ? options.EnumerateArray().Select(option => option.GetString()!).ToArray() : Array.Empty<string>();
+        string? unsupported = TiaMcp.Adapters.Contracts.PlcImportOptionPolicy.Unsupported(release,
+            PlcImportContract.IsDocuments(tool) ? "documents" : tool.Contains("Tag") ? "TagTable" : "block",
+            import ? Options("swImportOptions") : null, import ? Options("importOptions") : null, unit);
+        return unsupported == null ? null : new Error(unsupported, new UnsupportedCapabilityDetails(release, "software-unit-import-options", tool));
     }
 }

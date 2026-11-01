@@ -8875,6 +8875,30 @@
             "default": "false",
             "description": "overwrite: false (default) refuses an existing tag table of the same name before its import; true replaces it (Siemens.Engineering.ImportOptions.Override).",
             "value": false
+          },
+          "unitName": {
+            "type": "string",
+            "default": "\"\"",
+            "description": "unitName: exact standard software unit, V16–V21; empty selects the PLC root. Paths are relative to the selected root.",
+            "value": ""
+          },
+          "swImportOptions": {
+            "type": "string[]?",
+            "default": "null",
+            "description": "swImportOptions: empty by default; all SWImportOptions are refused for tag tables because their import API has no such overload.",
+            "value": null
+          },
+          "importOptions": {
+            "type": "string[]?",
+            "default": "null",
+            "description": "importOptions: optional SkipInactiveCultures OR ActivateInactiveCultures on V19–V21; empty by default. Override remains controlled by overwrite.",
+            "value": null
+          },
+          "dryRun": {
+            "type": "bool",
+            "default": "false",
+            "description": "dryRun: false (default) retains the existing directory import behavior; true previews files, unit scope and options without imports.",
+            "value": false
           }
         },
         "arguments": {
@@ -28275,6 +28299,30 @@
             "type": "bool",
             "default": "false",
             "description": "overwrite: false (default) refuses an existing tag table of the same name before its import; true replaces it (Siemens.Engineering.ImportOptions.Override).",
+            "value": false
+          },
+          "unitName": {
+            "type": "string",
+            "default": "\"\"",
+            "description": "unitName: exact standard software unit, V16–V21; empty selects the PLC root. Paths are relative to the selected root.",
+            "value": ""
+          },
+          "swImportOptions": {
+            "type": "string[]?",
+            "default": "null",
+            "description": "swImportOptions: empty by default; all SWImportOptions are refused for tag tables because their import API has no such overload.",
+            "value": null
+          },
+          "importOptions": {
+            "type": "string[]?",
+            "default": "null",
+            "description": "importOptions: optional SkipInactiveCultures OR ActivateInactiveCultures on V19–V21; empty by default. Override remains controlled by overwrite.",
+            "value": null
+          },
+          "dryRun": {
+            "type": "bool",
+            "default": "false",
+            "description": "dryRun: false (default) retains the existing directory import behavior; true previews files, unit scope and options without imports.",
             "value": false
           }
         },

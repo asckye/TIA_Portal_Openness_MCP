@@ -8,11 +8,14 @@ internal static class DeclarationReadContract
 {
     internal static void ValidateArguments(JsonObject arguments)
     {
-        foreach(var key in new[]{"plc","table"})
+        bool scoped=(bool?)arguments["includeUnits"]==true || !string.IsNullOrEmpty((string?)arguments["unitName"]);
+        if((bool?)arguments["includeUnits"]==true && !string.IsNullOrEmpty((string?)arguments["unitName"]))
+            throw new ArgumentException("unitName and includeUnits cannot be combined.");
+        foreach(var key in scoped ? new[]{"plc"} : new[]{"plc","table"})
             if(string.IsNullOrWhiteSpace(arguments[key]?.GetValue<string>()))
                 throw new ArgumentException("An exact nonempty "+key+" path is required.");
     }
-    internal static JsonArray Validate(string tool,string table,JsonNode? result)
+    internal static JsonArray Validate(string tool,string table,JsonNode? result,string unitName="",bool includeUnits=false)
     {
         string kind=tool switch { "ReadPlcTags"=>"tag", "ReadPlcUserConstants"=>"user-constant", "ReadPlcSystemConstants"=>"system-constant", _=>throw new InvalidDataException("Unknown declaration reader.") };
         if(result is not JsonArray rows) throw new InvalidDataException("Worker returned an invalid declaration list for "+tool);
@@ -30,9 +33,23 @@ internal static class DeclarationReadContract
             string name=row["Name"]!.GetValue<string>(), path=row["Path"]!.GetValue<string>();
             string leaf="/"+Uri.EscapeDataString(name);
             string? rowPrefix=path.EndsWith(leaf,StringComparison.Ordinal) ? path.Substring(0,path.Length-leaf.Length) : null;
-            bool knownPrefix=rowPrefix==table || (!table.Contains('/') && rowPrefix==Uri.EscapeDataString(table));
+            string? relative=rowPrefix;
+            if(rowPrefix?.StartsWith("units/",StringComparison.Ordinal)==true && (includeUnits || unitName!=""))
+            {
+                var parts=rowPrefix.Split('/');
+                if(parts.Length<4 || parts[2]!="tag-tables" || string.IsNullOrWhiteSpace(Uri.UnescapeDataString(parts[1]))
+                    || Uri.EscapeDataString(Uri.UnescapeDataString(parts[1]))!=parts[1] || unitName!="" && parts[1]!=Uri.EscapeDataString(unitName))
+                    throw new InvalidDataException("Worker returned conflicting unit declaration identity.");
+                relative=string.Join("/",parts.Skip(3));
+            }
+            else if(includeUnits && rowPrefix?.StartsWith("root/tag-tables/",StringComparison.Ordinal)==true) relative=rowPrefix.Substring("root/tag-tables/".Length);
+            else if(includeUnits) relative=null;
+            else if(unitName!="") relative=null;
+            bool scoped=includeUnits || unitName!="";
+            bool canonical=relative!=null && relative.Split('/').All(segment=>!string.IsNullOrWhiteSpace(Uri.UnescapeDataString(segment)) && Uri.UnescapeDataString(segment) is not ("." or "..") && Uri.EscapeDataString(Uri.UnescapeDataString(segment))==segment);
+            bool knownPrefix=canonical && (relative==table || (!table.Contains('/') && relative==Uri.EscapeDataString(table)) || scoped && table=="");
             if(string.IsNullOrWhiteSpace(name) || row["Kind"]!.GetValue<string>()!=kind || !knownPrefix ||
-                (prefix!=null && rowPrefix!=prefix) || !paths.Add(path))
+                (!scoped && prefix!=null && rowPrefix!=prefix) || !paths.Add(path))
                 throw new InvalidDataException("Worker returned conflicting declaration identity for "+tool);
             prefix=rowPrefix;
         }

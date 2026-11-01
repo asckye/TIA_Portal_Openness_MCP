@@ -9,6 +9,7 @@ namespace TiaMcp.Adapters.Contracts.Candidates
     public sealed class PlcExportRequest
     {
         public string SoftwarePath { get; set; } = "";
+        public string UnitName { get; set; } = "";
         public string ObjectPath { get; set; } = "";
         public string GroupPath { get; set; } = "";
         public string OutputPath { get; set; } = "";

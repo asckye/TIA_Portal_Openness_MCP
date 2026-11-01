@@ -3345,7 +3345,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "2f3de8ace21934d956e30c80c550c5a37015aa1c68a6dcdb1b7b122ac4d1eab0",
+      "descriptionSha256": "e238b5a87a90edb4e30d38954f65ebe17e6521e1c7f25b731845ecf66c249d52",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -3366,6 +3366,11 @@
           },
           "softwarePath": {
             "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "Exact standard software unit, V16–V21; paths relative to its block root.",
             "type": "string"
           }
         },
@@ -168402,7 +168407,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "04a41a37566bd66014acbbc1443f9a21f31efd641800599cd2a59ae4734818a8",
+      "descriptionSha256": "07bffd5b5c7d624a79fae7c3e2f4f4d2f0c1bebff1c429317b500b0bc5e5783d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -168436,6 +168441,11 @@
           },
           "softwarePath": {
             "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
             "type": "string"
           }
         },
@@ -169725,7 +169735,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "10f763b34adec64e2959b7b69c5558e34911678274bbf2cafe0f15cac98efb67",
+      "descriptionSha256": "f754658ad902a8d49b1d6aca9da978b918d62c9b08778df77da4f4c7c20a6d5b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -169769,6 +169779,11 @@
           },
           "softwarePath": {
             "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
             "type": "string"
           }
         },
@@ -172380,7 +172395,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e04f034823f76d8e866d93263bd0f4dd856d8a1afaa83749d63f03bb0b2054dc",
+      "descriptionSha256": "c4ce26db70efaec3f97189e56d1cf288767c38e9def6abff7fa0d228c671afd6",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -172409,6 +172424,11 @@
           },
           "tagTableName": {
             "description": "Exact foundation argument: tagTableName",
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
             "type": "string"
           }
         },
@@ -173698,7 +173718,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "c4ff4d8ad5777ba417c26bb24ec55e66fe2f940ccf4b24aa96281f700ea366e5",
+      "descriptionSha256": "bdb0e8858f5f23bd219d2df701134a52c128164dfc72776cd2641ac4ddc63d5e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -173732,6 +173752,11 @@
           },
           "typePath": {
             "description": "Exact foundation argument: typePath",
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
             "type": "string"
           }
         },
@@ -175021,7 +175046,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "4b0b275bf45d2e9dd6d38c228eb79c86b28a3954a41f256f1ff62a0b02f597cb",
+      "descriptionSha256": "57e7efc8fe711c2b0719c504fc74f319855d8706a1a04e2210168f6716e73a32",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -175065,6 +175090,11 @@
           },
           "softwarePath": {
             "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
             "type": "string"
           }
         },
@@ -277253,7 +277283,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "94219212191232b0fcf6c199f3fce5099c6b6e0626926ffd73da89fc370a206d",
+      "descriptionSha256": "0134bb4861bae0e3fc7b00222c0333206317bce9ba9c8b7674cadc1e7a03bef7",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -323364,7 +323394,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "ee242b3941c0ad7e34a5d721ce471cb51ba61bbb3e4e66aca3613d65a61fc1d0",
+      "descriptionSha256": "7b8871ae1ad28fa561245bcf81c411a4bcfb97ffeb5263d8f830dd7cbeed4aa0",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -323387,6 +323417,14 @@
             "description": "Exact foundation argument: groupPath",
             "type": "string"
           },
+          "importOptions": {
+            "default": [],
+            "description": "Opt-in, default empty: SkipInactiveCultures OR ActivateInactiveCultures V19–V21. overwrite remains separate.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "importPath": {
             "description": "Exact foundation argument: importPath",
             "type": "string"
@@ -323398,6 +323436,19 @@
           },
           "softwarePath": {
             "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "swImportOptions": {
+            "default": [],
+            "description": "Opt-ins, default empty: IgnoreStructuralChanges / IgnoreMissingReferencedObjects V15.1–V21, IgnoreUnitAttributes V16–V21. Blocks/types only; unsupported releases/combinations refuse.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "unitName": {
+            "default": "",
+            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
             "type": "string"
           }
         },
@@ -326060,6 +326111,14 @@
             "description": "Exact foundation argument: groupPath",
             "type": "string"
           },
+          "importOptions": {
+            "default": [],
+            "description": "Opt-in, default empty: SkipInactiveCultures OR ActivateInactiveCultures V19–V21. overwrite remains separate.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "importOrder": {
             "default": [],
             "description": "Exact foundation argument: importOrder",
@@ -326085,6 +326144,19 @@
           },
           "softwarePath": {
             "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "swImportOptions": {
+            "default": [],
+            "description": "Opt-ins, default empty: IgnoreStructuralChanges / IgnoreMissingReferencedObjects V15.1–V21, IgnoreUnitAttributes V16–V21. Blocks/types only; unsupported releases/combinations refuse.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "unitName": {
+            "default": "",
+            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
             "type": "string"
           }
         },
@@ -328697,7 +328769,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "9c5edb20df52da9ce46921855839b4ee4659118688baa4b39990666c8897a3f9",
+      "descriptionSha256": "cc13e6699758a69dd32bcd6013c89c1d1c27a11b46910b59cf80c84a2e0c0c3c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -328730,6 +328802,14 @@
             "default": "",
             "description": "Exact foundation argument: expectedProjectFile",
             "type": "string"
+          },
+          "importOptions": {
+            "default": [],
+            "description": "Opt-in, default empty: SkipInactiveCultures OR ActivateInactiveCultures V19–V21. overwrite remains separate.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "importOrder": {
             "default": [],
@@ -328767,6 +328847,14 @@
             "description": "Exact foundation argument: stopOnImportFailure",
             "type": "boolean"
           },
+          "swImportOptions": {
+            "default": [],
+            "description": "Opt-ins, default empty: IgnoreStructuralChanges / IgnoreMissingReferencedObjects V15.1–V21, IgnoreUnitAttributes V16–V21. Blocks/types only; unsupported releases/combinations refuse.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "tagFolderPath": {
             "default": "",
             "description": "Exact foundation argument: tagFolderPath",
@@ -328780,6 +328868,11 @@
           "typeGroupPath": {
             "default": "",
             "description": "Exact foundation argument: typeGroupPath",
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
             "type": "string"
           }
         },
@@ -330068,7 +330161,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "1ecbaca3174560b5de14b51a70e0353c56337f92bf29f4b9fe93cafe08ef6520",
+      "descriptionSha256": "514ad714d50911c75731c31661b7fd2277696cec65518db0cb0d1b2b1a4c69a5",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -330091,6 +330184,14 @@
             "description": "Exact foundation argument: folderPath",
             "type": "string"
           },
+          "importOptions": {
+            "default": [],
+            "description": "Opt-in, default empty: SkipInactiveCultures OR ActivateInactiveCultures V19–V21. overwrite remains separate.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "importPath": {
             "description": "Exact foundation argument: importPath",
             "type": "string"
@@ -330102,6 +330203,19 @@
           },
           "softwarePath": {
             "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "swImportOptions": {
+            "default": [],
+            "description": "Opt-ins, default empty: IgnoreStructuralChanges / IgnoreMissingReferencedObjects V15.1–V21, IgnoreUnitAttributes V16–V21. Blocks/types only; unsupported releases/combinations refuse.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "unitName": {
+            "default": "",
+            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
             "type": "string"
           }
         },
@@ -331391,7 +331505,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "dc8062141285a1602803612c7b6d46bb149995926a7e36817d34abbcfef13bee",
+      "descriptionSha256": "eb1f104e18a59709583c13bb9cb856d7f9cbd989ae946065f5e26e5cf3a77e8f",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -331399,9 +331513,21 @@
             "description": "dir: directory containing PLC tag table XML files",
             "type": "string"
           },
+          "dryRun": {
+            "default": false,
+            "description": "dryRun: false (default) retains the existing directory import behavior; true previews files, unit scope and options without imports.",
+            "type": "boolean"
+          },
           "folderPath": {
             "description": "folderPath: optional tag table group path (use empty for root)",
             "type": "string"
+          },
+          "importOptions": {
+            "description": "importOptions: optional SkipInactiveCultures OR ActivateInactiveCultures on V19–V21; empty by default. Override remains controlled by overwrite.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "overwrite": {
             "default": false,
@@ -331415,6 +331541,18 @@
           },
           "softwarePath": {
             "description": "softwarePath: path in the project structure to the PLC software",
+            "type": "string"
+          },
+          "swImportOptions": {
+            "description": "swImportOptions: empty by default; all SWImportOptions are refused for tag tables because their import API has no such overload.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "unitName": {
+            "default": "",
+            "description": "unitName: exact standard software unit, V16–V21; empty selects the PLC root. Paths are relative to the selected root.",
             "type": "string"
           }
         },
@@ -332704,7 +332842,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "c37f62e1db1a195e743badbe16ede2901f208337e0d4d39db6ad4e895262b7fa",
+      "descriptionSha256": "447ce606b5458b5d4d22929908318b295a0ef2035923ebf98909c64560776512",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -332727,6 +332865,14 @@
             "description": "Exact foundation argument: groupPath",
             "type": "string"
           },
+          "importOptions": {
+            "default": [],
+            "description": "Opt-in, default empty: SkipInactiveCultures OR ActivateInactiveCultures V19–V21. overwrite remains separate.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "importPath": {
             "description": "Exact foundation argument: importPath",
             "type": "string"
@@ -332738,6 +332884,19 @@
           },
           "softwarePath": {
             "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "swImportOptions": {
+            "default": [],
+            "description": "Opt-ins, default empty: IgnoreStructuralChanges / IgnoreMissingReferencedObjects V15.1–V21, IgnoreUnitAttributes V16–V21. Blocks/types only; unsupported releases/combinations refuse.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "unitName": {
+            "default": "",
+            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
             "type": "string"
           }
         },
@@ -376503,16 +376662,26 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "192353250502d0902b3a6234dc4066312085d1e1944b515ef8357044919405ea",
+      "descriptionSha256": "156a96f7e98b054ecbfeb6055589279aca44c9d736c41daaf1b28189aea4fa41",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "includeUnits": {
+            "default": false,
+            "description": "V16–V21: include the root and every standard software unit; unitName must be empty. Empty table selects all tables in this mode or with unitName.",
+            "type": "boolean"
+          },
           "plc": {
             "description": "Exact foundation argument: plc",
             "type": "string"
           },
           "table": {
             "description": "Exact foundation argument: table",
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
             "type": "string"
           }
         },
@@ -380411,16 +380580,26 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "5be4732c79b314c32d8bc85e33d5ec751ad843a7781cbd4c2805238f024ed953",
+      "descriptionSha256": "8e7a9b3388060982b4e255ac228fdaa197e0dbafd1ed7ff7c2ecdb7cf6332e24",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "includeUnits": {
+            "default": false,
+            "description": "V16–V21: include the root and every standard software unit; unitName must be empty. Empty table selects all tables in this mode or with unitName.",
+            "type": "boolean"
+          },
           "plc": {
             "description": "Exact foundation argument: plc",
             "type": "string"
           },
           "table": {
             "description": "Exact foundation argument: table",
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
             "type": "string"
           }
         },
@@ -383007,16 +383186,26 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "cb9b8971651a1ebff855b1e3d8c4c97d988cc685e51a08a319b57496656376ef",
+      "descriptionSha256": "f394af2c9e645e09945b7c26b6b3ee424c7138caf383ea2c424bcf56e13abd6a",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "includeUnits": {
+            "default": false,
+            "description": "V16–V21: include the root and every standard software unit; unitName must be empty. Empty table selects all tables in this mode or with unitName.",
+            "type": "boolean"
+          },
           "plc": {
             "description": "Exact foundation argument: plc",
             "type": "string"
           },
           "table": {
             "description": "Exact foundation argument: table",
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
             "type": "string"
           }
         },
@@ -595434,7 +595623,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "ce081464aa72742d058d7b065be0b952abafad0daf89cbdac2a15a7ec4b24f6c",
+      "descriptionSha256": "bd8b62c9912e4b0311ce75411c6219a102f2557cf43623f45832542100717645",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

@@ -94,6 +94,8 @@ namespace TiaMcp.Adapters.Contracts.Candidates
                     target = new PlcImportObject { Name = name, Kind = kind, Number = number, GroupPath = kind == "UDT" ? request.TypeGroupPath : kind == "TagTable" ? request.TagFolderPath : request.BlockGroupPath };
                     files = new[] { path }; contentHash = XmlHash(bytes);
                 }
+                var unsupported = PlcImportOptionPolicy.Unsupported(release, documents ? "documents" : target.Kind, request.SwImportOptions, request.ImportOptions, request.UnitName);
+                if (unsupported != null) CandidatePrimitives.Unsupported(release, unsupported);
                 result.Add(new PlcImportInput { Path = path, Files = files, Target = target, ContentHash = contentHash, Documents = documents });
             }
             return result;

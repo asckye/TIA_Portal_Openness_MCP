@@ -99,7 +99,7 @@ namespace TiaMcp.Logic.V4
                 var warnings = Array.Empty<Warning>();
                 var hash = DeviceCreationSession.Hash(new { releaseKey = release, tool, argumentsHash, identity = planIdentity, inputHashes, inventoryHash, operations, warnings });
                 var plan = new Plan(hash, release, tool, argumentsHash, planIdentity, inputHashes, inventoryHash, operations, warnings);
-                data = new JsonObject { ["plan"] = JsonNode.Parse(V4Json.Serialize(plan)), ["objects"] = JsonNode.Parse(V4Json.Serialize(objects)), ["destinations"] = JsonNode.Parse(V4Json.Serialize(planFiles)),
+                data = new JsonObject { ["unitName"] = request.UnitName, ["plan"] = JsonNode.Parse(V4Json.Serialize(plan)), ["objects"] = JsonNode.Parse(V4Json.Serialize(objects)), ["destinations"] = JsonNode.Parse(V4Json.Serialize(planFiles)),
                     ["contentObservation"] = "Only readable content is hashed; unavailable content is explicit in each object.", ["overwriteSupported"] = overwrite };
                 if (mode == "preview")
                 {

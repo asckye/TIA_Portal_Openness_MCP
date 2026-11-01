@@ -76,8 +76,10 @@ namespace TiaMcpServer.Siemens.Services
                 SimaticMlImportWindow.Require(HardwareContract.ReleaseKey, TiaOpenness.Shared.NativeInputPolicy.Read(parameter, () => File.ReadAllBytes(file)), parameter);
         }
 
-        public ResponseImportBatch ImportPlcTagTablesFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = false)
+        public ResponseImportBatch ImportPlcTagTablesFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = false, string unitName = "", string[]? swImportOptions = null, string[]? importOptions = null, bool dryRun = false)
         {
+            var unsupported = PlcImportOptionPolicy.Unsupported(HardwareContract.ReleaseKey, "TagTable", swImportOptions, importOptions, unitName);
+            if (unsupported != null) throw new NotSupportedException(unsupported);
             if (hasProject()) TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,
                 new PlcArtifactPortSession(this, "ImportPlcTagTablesFromDirectory").SoftwarePath(softwarePath), true);
 
@@ -110,14 +112,32 @@ namespace TiaMcpServer.Siemens.Services
                 foreach (var file in files)
                 {
                     var name = Path.GetFileNameWithoutExtension(file);
-                    try { new PlcArtifactPortSession(this, "ImportPlcTagTablesFromDirectory").ImportPlcTagTable(softwarePath, folderPath, file, overwrite); imported.Add(name); }
+                    try {
+                        if (!dryRun && unitName == "" && (importOptions == null || importOptions.Length == 0))
+                            new PlcArtifactPortSession(this, "ImportPlcTagTablesFromDirectory").ImportPlcTagTable(softwarePath, folderPath, file, overwrite);
+                        else {
+                            var arguments = new JsonObject { ["softwarePath"] = softwarePath, ["folderPath"] = folderPath, ["importPath"] = file,
+                                ["overwrite"] = overwrite, ["dryRun"] = dryRun, ["unitName"] = unitName,
+                                ["swImportOptions"] = JsonSerializer.SerializeToNode(swImportOptions ?? Array.Empty<string>()), ["importOptions"] = JsonSerializer.SerializeToNode(importOptions ?? Array.Empty<string>()) };
+                            if (!dryRun) { arguments["confirm"] = true; arguments["expectedProjectFile"] = projectIdentity(); }
+                            var response = call("ImportTagTables", arguments) as JsonObject ?? throw new InvalidOperationException("Missing tag-table import result.");
+                            if ((bool?)response["Executed"] != !dryRun) throw new InvalidOperationException("Conflicting tag-table preview result.");
+                        }
+                        if (!dryRun) imported.Add(name);
+                    }
                     catch (PortalException pex) { failed.Add(new ImportFailure { Path = file, Error = pex.Message }); }
                     // overwrite=false: the worker refuses an existing table before its import; the batch records that file as failed.
                     catch (AdapterPreconditionException refusal) when (imported.Count + failed.Count > 0) { failed.Add(new ImportFailure { Path = file, Error = refusal.Message }); }
                 }
 
-                return new ResponseImportBatch { Imported = imported, Failed = failed };
+                var meta = ResponseMeta.Basic(DateTime.Now, failed.Count == 0);
+                meta["dryRun"] = dryRun; meta["unitName"] = unitName;
+                meta["swImportOptions"] = JsonSerializer.SerializeToNode(swImportOptions ?? Array.Empty<string>());
+                meta["importOptions"] = JsonSerializer.SerializeToNode(importOptions ?? Array.Empty<string>());
+                meta["previewFiles"] = dryRun ? JsonSerializer.SerializeToNode(files) : null;
+                return new ResponseImportBatch { Imported = imported, Failed = failed, Meta = meta };
             }
+            catch (NotSupportedException) { throw; }
             catch (AdapterPreconditionException) { throw; }
             catch (Exception ex)
             {

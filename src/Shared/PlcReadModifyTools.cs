@@ -369,34 +369,42 @@ namespace TiaMcpServer.ModelContextProtocol
                 try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true); } catch {  /* swallow(cleanup): Temporary logic export cleanup must not replace the analysis result or export error. */}
             }
         }
-        [McpServerTool(Name = "ImportPlcTagTablesFromDirectory"), Description("[L2][PLC-Software]Batch import PLC tag table .xml files from a directory (best-effort). folderPath must name an existing tag table group exactly; an unresolved group is refused, never redirected to the root group. Every file's SimaticML Engineering version must be inside this release's documented import window (checked for all files before the first import; the header is never rewritten). overwrite=false (default) records an existing tag table of the same name as a failed file before its import; overwrite=true replaces it (Siemens.Engineering.ImportOptions.Override). Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "ImportPlcTagTablesFromDirectory"), Description("[L2][PLC-Software][WRITE] Optional dryRun=true previews without imports; dryRun=false preserves the existing directory-import default. Optional exact unitName V16–V21 selects a unit root; paths are relative to it. importOptions opts into SkipInactiveCultures OR ActivateInactiveCultures on V19–V21, empty by default and shown in preview. swImportOptions is always refused: PlcTagTableComposition has no SWImportOptions overload. Batch import PLC tag table .xml files from a directory (best-effort). folderPath must name an existing tag table group exactly; an unresolved group is refused, never redirected to the root group. Every file's SimaticML Engineering version must be inside this release's documented import window (checked for all files before the first import; the header is never rewritten). overwrite=false (default) records an existing tag table of the same name as a failed file before its import; overwrite=true replaces it (Siemens.Engineering.ImportOptions.Override). Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ImportPlcTagTablesFromDirectoryV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
             [Description("folderPath: optional tag table group path (use empty for root)")] string folderPath,
             [Description("dir: directory containing PLC tag table XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
-            [Description("overwrite: false (default) refuses an existing tag table of the same name before its import; true replaces it (Siemens.Engineering.ImportOptions.Override).")] bool overwrite = false)
-            => PlcToolContract.Run("ImportPlcTagTablesFromDirectory", true, true, () => ImportPlcTagTablesFromDirectory(softwarePath, folderPath, dir, regexName, overwrite));
+            [Description("overwrite: false (default) refuses an existing tag table of the same name before its import; true replaces it (Siemens.Engineering.ImportOptions.Override).")] bool overwrite = false,
+            [Description("unitName: exact standard software unit, V16–V21; empty selects the PLC root. Paths are relative to the selected root.")] string unitName = "",
+            [Description("swImportOptions: empty by default; all SWImportOptions are refused for tag tables because their import API has no such overload.")] string[]? swImportOptions = null,
+            [Description("importOptions: optional SkipInactiveCultures OR ActivateInactiveCultures on V19–V21; empty by default. Override remains controlled by overwrite.")] string[]? importOptions = null,
+            [Description("dryRun: false (default) retains the existing directory import behavior; true previews files, unit scope and options without imports.")] bool dryRun = false)
+            => PlcToolContract.Run("ImportPlcTagTablesFromDirectory", !dryRun, true, () => ImportPlcTagTablesFromDirectory(softwarePath, folderPath, dir, regexName, overwrite, unitName, swImportOptions, importOptions, dryRun));
 
         public ResponseImportBatch ImportPlcTagTablesFromDirectory(
             string softwarePath,
             string folderPath,
             string dir,
             string regexName = "",
-            bool overwrite = false)
+            bool overwrite = false,
+            string unitName = "",
+            string[]? swImportOptions = null,
+            string[]? importOptions = null,
+            bool dryRun = false)
         {
             try
             {
-                var result = _service.ImportPlcTagTablesFromDirectory(softwarePath, folderPath, dir, regexName, overwrite);
+                var result = _service.ImportPlcTagTablesFromDirectory(softwarePath, folderPath, dir, regexName, overwrite, unitName, swImportOptions, importOptions, dryRun);
                 return new ResponseImportBatch
                 {
                     Message = $"Imported {result.Imported?.Count() ?? 0} PLC tag tables from '{dir}'. Failed={result.Failed?.Count() ?? 0}",
                     Imported = result.Imported,
                     Failed = result.Failed,
-                    Meta = ResponseMeta.Basic(DateTime.Now, (result.Failed == null || !result.Failed.Any()))
+                    Meta = result.Meta ?? ResponseMeta.Basic(DateTime.Now, (result.Failed == null || !result.Failed.Any()))
                 };
             }
-            catch (Exception ex) when (ex is not McpException && ex is not TiaMcp.Adapters.Contracts.AdapterPreconditionException)
+            catch (Exception ex) when (ex is not NotSupportedException && ex is not McpException && ex is not TiaMcp.Adapters.Contracts.AdapterPreconditionException)
             {
                 throw new McpException($"Unexpected error importing PLC tag tables from '{dir}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
             }

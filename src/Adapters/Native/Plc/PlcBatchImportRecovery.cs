@@ -51,7 +51,8 @@ namespace TiaMcp.Adapters
                 if(release!="") {request.Release=release;request.Project=project;request.ProcessId=processId;}
                 PlcBatchImportPolicy.ValidateOptions(request);
                 foreach(var group in new[]{request.BlockGroup,request.TypeGroup,request.TagGroup}) PlcExchangePolicy.ObjectPath(group,true);
-                var adapter=new PlcImportAdapter(request.Release,()=>throw new NotSupportedException(),()=>software,recheck,true);
+                var adapter=new PlcImportAdapter(request.Release,()=>throw new NotSupportedException(),()=>software,recheck,true) {
+                    UnitName=request.UnitName,SwImportOptions=request.SwImportOptions,CultureImportOptions=request.ImportOptions };
                 var inventory=adapter.ReadBatchInventory().Where(x=>!x.Kind.StartsWith("group-",StringComparison.Ordinal)).ToArray();
                 PlcBatchImportObject Map(PlcImportObject item)=>new PlcBatchImportObject {Name=item.Name,Kind=item.Kind,GroupPath=item.GroupPath,Number=item.Number};
                 PlcImportInput Input(FileInfo file,PlcBatchImportObject item)=>new PlcImportInput {Path=file.FullName,Target=new PlcImportObject {Name=item.Name,Kind=item.Kind,GroupPath=item.GroupPath,Number=item.Number}};
@@ -61,9 +62,10 @@ namespace TiaMcp.Adapters
                 return PlcBatchImportPolicy.Run(request,inventory.Select(Map),recheck,
                     (file,item)=>new[]{Map(adapter.Import(Input(file,item),request.Overwrite))},
                     (item,file)=>adapter.ExportRecovery(inventory.Single(x=>x.Name==item.Name && x.Kind==item.Kind && x.GroupPath==item.GroupPath),file),
-                    (file,item)=>new[]{Map(adapter.Import(Input(file,item),true))},PlcBatchImportRecovery.Directory,PlcBatchImportRecovery.Precheck,
+                    (file,item)=>new[]{Map(adapter.Restore(Input(file,item)))},PlcBatchImportRecovery.Directory,PlcBatchImportRecovery.Precheck,
                     item=>adapter.RecoveryBlocker(inventory.Single(x=>x.Name==item.Name && x.Kind==item.Kind && x.GroupPath==item.GroupPath)));
             }
+            catch(NotSupportedException) { throw; }
             catch(AdapterPreconditionException) { throw; }
             catch(Exception error) when(!prepared)
             { throw new AdapterPreconditionException("Batch target admission failed before any import: "+error.Message,request.InputParameter,false,error); }

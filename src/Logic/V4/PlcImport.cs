@@ -67,6 +67,9 @@ namespace TiaMcp.Logic.V4
                 if (request.OnError != "stop") Unsupported(release, "onError");
                 if (request.CompileAfter) Unsupported(release, "compileAfter");
                 if (request.TechnologyFolderPath != "") Unsupported(release, "technology-objects");
+                var unsupportedOptions = TiaMcp.Adapters.Contracts.PlcImportOptionPolicy.Unsupported(release,
+                    PlcImportContract.IsDocuments(tool) ? "documents" : tool.Contains("Tag") ? "TagTable" : "block", request.SwImportOptions, request.ImportOptions, request.UnitName);
+                if (unsupportedOptions != null) Unsupported(release, unsupportedOptions);
                 int limit = PlcImportContract.MaximumItems(tool, release);
                 if (request.MaxItems < 1 || request.MaxItems > limit)
                     Refuse("The import item budget is outside this release's limit.", new LimitExceededDetails("maxItems", limit, request.MaxItems));
@@ -106,7 +109,7 @@ namespace TiaMcp.Logic.V4
                 var plan = new Plan(hash, release, tool, argsHash, planIdentity, inputHashes, inventoryHash, operations, warnings);
                 data = new JsonObject { ["plan"] = JsonNode.Parse(V4Json.Serialize(plan)), ["files"] = JsonNode.Parse(V4Json.Serialize(files)),
                     ["targets"] = JsonNode.Parse(V4Json.Serialize(targets)), ["inventory"] = JsonNode.Parse(V4Json.Serialize(inventory)),
-                    ["conflicts"] = JsonNode.Parse(V4Json.Serialize(conflicts)), ["importIssued"] = false, ["dependencyStatus"] = "unverified-caller-order-required" };
+                    ["conflicts"] = JsonNode.Parse(V4Json.Serialize(conflicts)), ["importIssued"] = false, ["dependencyStatus"] = "unverified-caller-order-required", ["unitName"] = request.UnitName, ["swImportOptions"] = JsonSerializer.SerializeToNode(request.SwImportOptions), ["importOptions"] = JsonSerializer.SerializeToNode(request.ImportOptions) };
                 if (mode == "preview")
                 {
                     if (plans.Count >= 128 && !plans.ContainsKey(hash)) Refuse("The session plan budget is exhausted.", new LimitExceededDetails("plans", 128, plans.Count + 1));

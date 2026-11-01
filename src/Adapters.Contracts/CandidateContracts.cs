@@ -35,7 +35,10 @@ namespace TiaMcp.Adapters.Contracts.Candidates
     public sealed class PlcImportRequest
     {
         public string SoftwarePath { get; set; } = "";
+        public string UnitName { get; set; } = "";
         public string InputPath { get; set; } = "";
+        public string[] SwImportOptions { get; set; } = Array.Empty<string>();
+        public string[] ImportOptions { get; set; } = Array.Empty<string>();
         public string BlockGroupPath { get; set; } = "";
         public string TypeGroupPath { get; set; } = "";
         public string TagFolderPath { get; set; } = "";

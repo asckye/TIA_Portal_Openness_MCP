@@ -21,6 +21,7 @@ namespace TiaMcp.Adapters.Native.Plc
         public Func<PlcSoftware> Software { private get; set; }
         public Action RequireOffline { private get; set; }
         public bool OverwriteSupported { private get; set; }
+        public string UnitName { get; set; } = "";
         private readonly string release;
         private readonly string scopeId = Guid.NewGuid().ToString("N");
 
@@ -48,19 +49,20 @@ namespace TiaMcp.Adapters.Native.Plc
             void Blocks(PlcBlockGroup group, string path, int depth)
             {
                 Add(group, "block", path, depth);
-                foreach (var child in group.Groups) { if (!object.Equals(child.Parent, group)) throw new InvalidDataException("Block group parent mismatch."); Blocks(child, path == "" ? child.Name : path + "/" + child.Name, depth + 1); }
+                foreach (var child in group.Groups) { if (!object.Equals(child.Parent, group)) throw new InvalidDataException("Block group parent mismatch."); Blocks(child, path == "" ? Uri.EscapeDataString(child.Name) : path + "/" + Uri.EscapeDataString(child.Name), depth + 1); }
             }
             void Types(PlcTypeGroup group, string path, int depth)
             {
                 Add(group, "type", path, depth);
-                foreach (var child in group.Groups) { if (!object.Equals(child.Parent, group)) throw new InvalidDataException("Type group parent mismatch."); Types(child, path == "" ? child.Name : path + "/" + child.Name, depth + 1); }
+                foreach (var child in group.Groups) { if (!object.Equals(child.Parent, group)) throw new InvalidDataException("Type group parent mismatch."); Types(child, path == "" ? Uri.EscapeDataString(child.Name) : path + "/" + Uri.EscapeDataString(child.Name), depth + 1); }
             }
             void Tags(PlcTagTableGroup group, string path, int depth)
             {
                 Add(group, "tag", path, depth);
-                foreach (var child in group.Groups) { if (!object.Equals(child.Parent, group)) throw new InvalidDataException("Tag group parent mismatch."); Tags(child, path == "" ? child.Name : path + "/" + child.Name, depth + 1); }
+                foreach (var child in group.Groups) { if (!object.Equals(child.Parent, group)) throw new InvalidDataException("Tag group parent mismatch."); Tags(child, path == "" ? Uri.EscapeDataString(child.Name) : path + "/" + Uri.EscapeDataString(child.Name), depth + 1); }
             }
-            Blocks(software.BlockGroup, "", 0); Types(software.TypeGroup, "", 0); Tags(software.TagTableGroup, "", 0);
+            var unit = PlcUnitScope.Optional(software, UnitName);
+            Blocks(PlcUnitScope.Blocks(software, unit), "", 0); Types(PlcUnitScope.Types(software, unit), "", 0); Tags(PlcUnitScope.Tags(software, unit), "", 0);
         }
         private PlcImportObject Describe(object value, object parent, string path)
         {
@@ -101,6 +103,7 @@ namespace TiaMcp.Adapters.Native.Plc
         {
             if (!new[] { "ExportPlcBlock", "ExportPlcType", "ExportPlcTagTable", "ExportPlcBlocks", "ExportPlcTypes", "ExportPlcBlockDocuments", "ExportPlcBlocksDocuments" }.Contains(tool, StringComparer.Ordinal))
                 CandidatePrimitives.Unsupported(release, "export-entry");
+            UnitName = request.UnitName;
             bool batch = tool == "ExportPlcBlocks" || tool == "ExportPlcTypes" || tool == "ExportPlcBlocksDocuments";
             bool documents = tool.EndsWith("Documents", StringComparison.Ordinal);
             if (documents && release != "20" && release != "21") CandidatePrimitives.Unsupported(release, "documents");

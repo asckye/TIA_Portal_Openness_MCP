@@ -12,7 +12,7 @@ namespace TiaMcp.Adapters
         public string DataType { get; internal set; } = "";
         public string Value { get; internal set; } = "";
     }
-    public sealed class PlcMutationResult
+    public class PlcMutationResult
     {
         public string Operation { get; internal set; } = "";
         public bool Executed { get; internal set; }

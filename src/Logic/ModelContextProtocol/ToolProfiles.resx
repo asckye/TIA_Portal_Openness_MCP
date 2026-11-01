@@ -6989,7 +6989,11 @@
       "example": {
         "softwarePath": "PLC_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports"
+        "dir": "C:\\Examples\\exports",
+        "unitName": "",
+        "swImportOptions": [],
+        "importOptions": [],
+        "dryRun": true
       }
     },
     {
@@ -9340,7 +9344,11 @@
       "example": {
         "softwarePath": "PLC_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports"
+        "dir": "C:\\Examples\\exports",
+        "unitName": "",
+        "swImportOptions": [],
+        "importOptions": [],
+        "dryRun": true
       }
     },
     {
@@ -12080,7 +12088,11 @@
       "example": {
         "softwarePath": "PLC_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports"
+        "dir": "C:\\Examples\\exports",
+        "unitName": "",
+        "swImportOptions": [],
+        "importOptions": [],
+        "dryRun": true
       }
     },
     {
@@ -15105,7 +15117,11 @@
       "example": {
         "softwarePath": "PLC_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports"
+        "dir": "C:\\Examples\\exports",
+        "unitName": "",
+        "swImportOptions": [],
+        "importOptions": [],
+        "dryRun": true
       }
     },
     {
@@ -18480,7 +18496,11 @@
       "example": {
         "softwarePath": "PLC_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports"
+        "dir": "C:\\Examples\\exports",
+        "unitName": "",
+        "swImportOptions": [],
+        "importOptions": [],
+        "dryRun": true
       }
     },
     {
@@ -23028,7 +23048,11 @@
       "example": {
         "softwarePath": "PLC_1",
         "folderPath": "",
-        "dir": "C:\\Examples\\exports"
+        "dir": "C:\\Examples\\exports",
+        "unitName": "",
+        "swImportOptions": [],
+        "importOptions": [],
+        "dryRun": true
       }
     },
     {
@@ -24100,7 +24124,8 @@
           "softwarePath": "devices/PLC_1/PLC_1",
           "groupPath": "",
           "recursive": true,
-          "maxBlocks": 128
+          "maxBlocks": 128,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -26154,7 +26179,8 @@
           "blockPath": "Main",
           "exportPath": "&lt;existing caller-selected export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -26189,7 +26215,8 @@
           "groupPath": "",
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -26239,7 +26266,8 @@
           "tagTableName": "默认变量表",
           "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -26257,7 +26285,8 @@
           "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -26275,7 +26304,8 @@
           "groupPath": "",
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -27867,7 +27897,10 @@
           "importPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -27943,7 +27976,10 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -27982,7 +28018,10 @@
           "regexName": "^Main\\.xml$",
           "overwrite": false,
           "compileAfter": false,
-          "stopOnImportFailure": true
+          "stopOnImportFailure": true,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -28001,7 +28040,10 @@
           "importPath": "&lt;data.outputFile from completed ExportPlcTagTable&gt;",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -28034,7 +28076,10 @@
           "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -28523,7 +28568,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -28564,7 +28611,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -28593,7 +28642,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -32935,7 +32986,8 @@
           "softwarePath": "devices/PLC_1/PLC_1",
           "groupPath": "",
           "recursive": true,
-          "maxBlocks": 128
+          "maxBlocks": 128,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -35196,7 +35248,8 @@
           "blockPath": "Main",
           "exportPath": "&lt;existing caller-selected export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -35231,7 +35284,8 @@
           "groupPath": "",
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -35281,7 +35335,8 @@
           "tagTableName": "默认变量表",
           "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -35299,7 +35354,8 @@
           "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -35317,7 +35373,8 @@
           "groupPath": "",
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -36908,7 +36965,10 @@
           "importPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -36984,7 +37044,10 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -37023,7 +37086,10 @@
           "regexName": "^Main\\.xml$",
           "overwrite": false,
           "compileAfter": false,
-          "stopOnImportFailure": true
+          "stopOnImportFailure": true,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -37042,7 +37108,10 @@
           "importPath": "&lt;data.outputFile from completed ExportPlcTagTable&gt;",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -37075,7 +37144,10 @@
           "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -37548,7 +37620,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -37589,7 +37663,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -37618,7 +37694,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -42114,7 +42192,8 @@
           "softwarePath": "devices/PLC_1/PLC_1",
           "groupPath": "",
           "recursive": true,
-          "maxBlocks": 128
+          "maxBlocks": 128,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -42955,7 +43034,8 @@
           "blockPath": "Main",
           "exportPath": "&lt;existing caller-selected export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -42971,7 +43051,8 @@
           "groupPath": "",
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -43059,7 +43140,8 @@
           "tagTableName": "默认变量表",
           "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -43103,7 +43185,8 @@
           "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -43119,7 +43202,8 @@
           "groupPath": "",
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -43662,7 +43746,10 @@
           "importPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -43680,7 +43767,10 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -43816,7 +43906,10 @@
           "regexName": "^Main\\.xml$",
           "overwrite": false,
           "compileAfter": false,
-          "stopOnImportFailure": true
+          "stopOnImportFailure": true,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -43833,7 +43926,10 @@
           "importPath": "&lt;data.outputFile from completed ExportPlcTagTable&gt;",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -43847,7 +43943,11 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "folderPath": "",
-          "dir": "C:\\Examples\\exports"
+          "dir": "C:\\Examples\\exports",
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": [],
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -43878,7 +43978,10 @@
           "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -46223,7 +46326,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -46261,7 +46366,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -46274,7 +46381,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -47165,7 +47274,8 @@
           "softwarePath": "devices/PLC_1/PLC_1",
           "groupPath": "",
           "recursive": true,
-          "maxBlocks": 128
+          "maxBlocks": 128,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -48078,7 +48188,8 @@
           "blockPath": "Main",
           "exportPath": "&lt;existing caller-selected export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -48094,7 +48205,8 @@
           "groupPath": "",
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -48196,7 +48308,8 @@
           "tagTableName": "默认变量表",
           "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -48269,7 +48382,8 @@
           "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -48285,7 +48399,8 @@
           "groupPath": "",
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -48909,7 +49024,10 @@
           "importPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -48927,7 +49045,10 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -49076,7 +49197,10 @@
           "regexName": "^Main\\.xml$",
           "overwrite": false,
           "compileAfter": false,
-          "stopOnImportFailure": true
+          "stopOnImportFailure": true,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -49093,7 +49217,10 @@
           "importPath": "&lt;data.outputFile from completed ExportPlcTagTable&gt;",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -49107,7 +49234,11 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "folderPath": "",
-          "dir": "C:\\Examples\\exports"
+          "dir": "C:\\Examples\\exports",
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": [],
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -49152,7 +49283,10 @@
           "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -51737,7 +51871,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -51775,7 +51911,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -51788,7 +51926,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -52811,7 +52951,8 @@
           "softwarePath": "devices/PLC_1/PLC_1",
           "groupPath": "",
           "recursive": true,
-          "maxBlocks": 128
+          "maxBlocks": 128,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -53791,7 +53932,8 @@
           "blockPath": "Main",
           "exportPath": "&lt;existing caller-selected export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -53807,7 +53949,8 @@
           "groupPath": "",
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -53909,7 +54052,8 @@
           "tagTableName": "默认变量表",
           "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -53998,7 +54142,8 @@
           "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -54014,7 +54159,8 @@
           "groupPath": "",
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -54671,7 +54817,10 @@
           "importPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -54689,7 +54838,10 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -54856,7 +55008,10 @@
           "regexName": "^Main\\.xml$",
           "overwrite": false,
           "compileAfter": false,
-          "stopOnImportFailure": true
+          "stopOnImportFailure": true,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -54873,7 +55028,10 @@
           "importPath": "&lt;data.outputFile from completed ExportPlcTagTable&gt;",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -54887,7 +55045,11 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "folderPath": "",
-          "dir": "C:\\Examples\\exports"
+          "dir": "C:\\Examples\\exports",
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": [],
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -54960,7 +55122,10 @@
           "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -57804,7 +57969,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -57842,7 +58009,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -57855,7 +58024,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -58907,7 +59078,8 @@
           "softwarePath": "devices/PLC_1/PLC_1",
           "groupPath": "",
           "recursive": true,
-          "maxBlocks": 128
+          "maxBlocks": 128,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -59946,7 +60118,8 @@
           "blockPath": "Main",
           "exportPath": "&lt;existing caller-selected export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -59962,7 +60135,8 @@
           "groupPath": "",
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -60079,7 +60253,8 @@
           "tagTableName": "默认变量表",
           "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -60195,7 +60370,8 @@
           "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -60211,7 +60387,8 @@
           "groupPath": "",
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -60881,7 +61058,10 @@
           "importPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -60899,7 +61079,10 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -61066,7 +61249,10 @@
           "regexName": "^Main\\.xml$",
           "overwrite": false,
           "compileAfter": false,
-          "stopOnImportFailure": true
+          "stopOnImportFailure": true,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -61083,7 +61269,10 @@
           "importPath": "&lt;data.outputFile from completed ExportPlcTagTable&gt;",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -61097,7 +61286,11 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "folderPath": "",
-          "dir": "C:\\Examples\\exports"
+          "dir": "C:\\Examples\\exports",
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": [],
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -61170,7 +61363,10 @@
           "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -64146,7 +64342,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -64184,7 +64382,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -64197,7 +64397,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -65372,7 +65574,8 @@
           "softwarePath": "devices/PLC_1/PLC_1",
           "groupPath": "",
           "recursive": true,
-          "maxBlocks": 128
+          "maxBlocks": 128,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -66480,7 +66683,8 @@
           "blockPath": "Main",
           "exportPath": "&lt;existing caller-selected export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -66496,7 +66700,8 @@
           "groupPath": "",
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -66613,7 +66818,8 @@
           "tagTableName": "默认变量表",
           "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -66729,7 +66935,8 @@
           "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -66745,7 +66952,8 @@
           "groupPath": "",
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -67449,7 +67657,10 @@
           "importPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -67467,7 +67678,10 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -67634,7 +67848,10 @@
           "regexName": "^Main\\.xml$",
           "overwrite": false,
           "compileAfter": false,
-          "stopOnImportFailure": true
+          "stopOnImportFailure": true,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -67651,7 +67868,10 @@
           "importPath": "&lt;data.outputFile from completed ExportPlcTagTable&gt;",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -67665,7 +67885,11 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "folderPath": "",
-          "dir": "C:\\Examples\\exports"
+          "dir": "C:\\Examples\\exports",
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": [],
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -67756,7 +67980,10 @@
           "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -70979,7 +71206,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -71017,7 +71246,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -71030,7 +71261,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -72231,7 +72464,8 @@
           "softwarePath": "devices/PLC_1/PLC_1",
           "groupPath": "",
           "recursive": true,
-          "maxBlocks": 128
+          "maxBlocks": 128,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -73956,7 +74190,8 @@
           "blockPath": "Main",
           "exportPath": "&lt;existing caller-selected export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -73972,7 +74207,8 @@
           "groupPath": "",
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -74089,7 +74325,8 @@
           "tagTableName": "默认变量表",
           "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -74205,7 +74442,8 @@
           "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -74221,7 +74459,8 @@
           "groupPath": "",
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "unitName": ""
         },
         "envelopeVersion": 4
       },
@@ -74947,7 +75186,10 @@
           "importPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -74965,7 +75207,10 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -75147,7 +75392,10 @@
           "regexName": "^Main\\.xml$",
           "overwrite": false,
           "compileAfter": false,
-          "stopOnImportFailure": true
+          "stopOnImportFailure": true,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -75164,7 +75412,10 @@
           "importPath": "&lt;data.outputFile from completed ExportPlcTagTable&gt;",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -75178,7 +75429,11 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "folderPath": "",
-          "dir": "C:\\Examples\\exports"
+          "dir": "C:\\Examples\\exports",
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": [],
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -75269,7 +75524,10 @@
           "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false
+          "overwrite": false,
+          "unitName": "",
+          "swImportOptions": [],
+          "importOptions": []
         },
         "envelopeVersion": 4
       },
@@ -78803,7 +79061,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -78841,7 +79101,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },
@@ -78854,7 +79116,9 @@
         ],
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表"
+          "table": "默认变量表",
+          "unitName": "",
+          "includeUnits": false
         },
         "envelopeVersion": 4
       },

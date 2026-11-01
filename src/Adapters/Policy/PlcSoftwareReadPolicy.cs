@@ -26,7 +26,7 @@ namespace TiaMcp.Adapters
     }
     internal static class PlcSoftwareReadPolicy
     {
-        internal const string Scope = "ordinary PLC root/user block and type groups; excludes system groups, software units, tag tables, external sources and technology objects";
+        internal const string Scope = "PLC root/user block and type groups; V16–V21 standard software units with block/type/tag-table/external-source groups; excludes system groups, safety units and technology objects";
         internal static string ChildPath(string parent,string name) => parent + "/" + Uri.EscapeDataString(name);
         internal static string Render(string softwareName,PlcSoftwareTreeNode[] sections)
         {
@@ -51,11 +51,18 @@ namespace TiaMcp.Adapters
         internal static Dictionary<string,string>[] Paths(PlcSoftwareTreeNode[] sections)
         {
             // Render validates identity/depth first; this is only called on that snapshot.
-            return sections.SelectMany(section=>Flatten(section).Select(n=>new Dictionary<string,string> {
+            return sections.SelectMany(section => section.Kind == "unit"
+                ? new[] { new Dictionary<string,string> { ["name"]=section.Name,["path"]=section.Path,["kind"]="unit",["objectPath"]=section.Name,["selectorParameter"]="unitName",["unitName"]=section.Name } }
+                    .Concat(section.Children.SelectMany(child=>SectionPaths(child,section.Name)))
+                : SectionPaths(section, "")).ToArray();
+        }
+        private static IEnumerable<Dictionary<string,string>> SectionPaths(PlcSoftwareTreeNode section,string unitName)
+        {
+            return Flatten(section).Select(n=> { var row = new Dictionary<string,string> {
                 ["name"]=n.Name,["path"]=n.Path,["kind"]=n.Kind,
                 ["objectPath"]=n.Path==section.Path ? "" : n.Path.Substring(section.Path.Length+1),
-                ["selectorParameter"]=n.Kind=="block" ? "blockPath" : n.Kind=="type" ? "typePath" : "groupPath"
-            })).ToArray();
+                ["selectorParameter"]=n.Kind=="block" ? "blockPath" : n.Kind=="type" ? "typePath" : n.Kind=="tag-table" ? "table" : n.Kind=="external-source" ? "externalSourceName" : "groupPath"
+            }; if(unitName!="") row["unitName"]=unitName; return row; });
         }
         private static IEnumerable<PlcSoftwareTreeNode> Flatten(PlcSoftwareTreeNode node)
         {

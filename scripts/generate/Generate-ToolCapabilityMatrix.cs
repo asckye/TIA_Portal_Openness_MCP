@@ -37,7 +37,7 @@ var operationMeaning = new Dictionary<string, string>(StringComparer.Ordinal)
 };
 
 var sb = new StringBuilder();
-void Line(string value = "") => sb.Append(value).Append(Environment.NewLine);
+void Line(string value = "") => sb.Append(value).Append('\n');
 string Esc(string? value) => (value ?? "").Replace("|", "\\|", StringComparison.Ordinal).Replace("\r", " ", StringComparison.Ordinal).Replace("\n", " ", StringComparison.Ordinal).Trim();
 string StripPrefix(string? value) => MatrixPatterns.Prefix().Replace(value ?? "", "");
 int CountTools(Func<JsonObject, bool> predicate) => tools.Count(predicate);

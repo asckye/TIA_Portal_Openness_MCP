@@ -40,14 +40,25 @@ internal static class SoftwareReadContract
                 if(item is not JsonObject path) throw new InvalidDataException("Worker returned an invalid tree identity.");
                 RequireString(path,"name"); var kind=RequireString(path,"kind"); var address=RequireString(path,"path");
                 var plc=meta["softwarePath"]!.GetValue<string>();
-                var root=kind is "block" or "block-group" ? plc+"/blocks" : kind is "type" or "type-group" ? plc+"/types" : throw new InvalidDataException("Worker returned unknown tree kind.");
-                var selector=kind=="block" ? "blockPath" : kind=="type" ? "typePath" : "groupPath";
+                string unit=path["unitName"]?.GetValue<string>() ?? "";
+                string scope=unit=="" ? plc : plc+"/units/"+Uri.EscapeDataString(unit);
+                if(kind=="unit")
+                {
+                    if(unit=="" || path["name"]?.GetValue<string>()!=unit || address!=scope || path["objectPath"]?.GetValue<string>()!=unit || path["selectorParameter"]?.GetValue<string>()!="unitName" || !seen.Add(kind+"\0"+address))
+                        throw new InvalidDataException("Worker returned conflicting unit identity.");
+                    continue;
+                }
+                if(unit!="" && !seen.Contains("unit\0"+scope)) throw new InvalidDataException("Worker returned a path without its unit identity.");
+                var root=kind is "block" or "block-group" ? scope+"/blocks" : kind is "type" or "type-group" ? scope+"/types"
+                    : unit!="" && kind is "tag-table" or "tag-group" ? scope+"/tag-tables"
+                    : unit!="" && kind is "external-source" or "source-group" ? scope+"/external-sources" : throw new InvalidDataException("Worker returned unknown tree kind.");
+                var selector=kind=="block" ? "blockPath" : kind=="type" ? "typePath" : kind=="tag-table" ? "table" : kind=="external-source" ? "externalSourceName" : "groupPath";
                 if(!Under(address,root) || !seen.Add(kind+"\0"+address))
                     throw new InvalidDataException("Worker returned conflicting tree identities.");
                 if(path["objectPath"] is not JsonValue selected || !selected.TryGetValue<string>(out var relative) ||
                     path["selectorParameter"]?.GetValue<string>()!=selector ||
                     relative!=(address==root ? "" : address.Substring(root.Length+1)) ||
-                    (relative.Length==0 && kind is "block" or "type"))
+                    (relative.Length==0 && kind is "block" or "type" or "tag-table" or "external-source"))
                     throw new InvalidDataException("Worker returned an invalid tree selector.");
                 if(relative.Length!=0 && relative.Split('/').Any(segment=>
                     string.IsNullOrWhiteSpace(Uri.UnescapeDataString(segment)) || Uri.UnescapeDataString(segment) is "." or ".." ||

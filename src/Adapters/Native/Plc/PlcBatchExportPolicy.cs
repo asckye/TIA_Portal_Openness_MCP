@@ -20,7 +20,7 @@ namespace TiaMcp.Adapters
         internal const int MaximumItems=256;
         internal static string Hash(string value)
         { using(var sha=SHA256.Create()) return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(value))).Replace("-","").ToLowerInvariant(); }
-        internal static PlcBatchExportResult Run(string kind,string project,string software,string group,bool recursive,string directory,int maxItems,bool dryRun,string expectedInventoryHash,IEnumerable<PlcBatchExportSource> inventory,Action requireOffline,Func<FileInfo,Action<FileInfo>,string?>? publish=null)
+        internal static PlcBatchExportResult Run(string kind,string project,string software,string group,bool recursive,string directory,int maxItems,bool dryRun,string expectedInventoryHash,IEnumerable<PlcBatchExportSource> inventory,Action requireOffline,Func<FileInfo,Action<FileInfo>,string?>? publish=null,string unitName="")
         {
             if(kind!="blocks" && kind!="types") throw new AdapterPreconditionException("Unknown batch kind.","kind");
             if(maxItems<1 || maxItems>MaximumItems) throw new AdapterPreconditionException("maxItems must be between 1 and 256; oversized inventories are refused, never truncated.","maxItems");
@@ -33,7 +33,7 @@ namespace TiaMcp.Adapters
             if(sources.Length>maxItems) throw new AdapterPreconditionException("Complete inventory exceeds maxItems; narrow the exact group scope.","groupPath");
             if(sources.Select(x=>x.Path).Distinct(StringComparer.Ordinal).Count()!=sources.Length) throw new AdapterPreconditionException("Ambiguous inventory paths.","groupPath");
             TiaOpenness.Shared.NativeExportPolicy.RequireConsistent(kind,sources.Where(x=>!x.Consistent).Select(x=>x.Path),"groupPath");
-            var result=new PlcBatchExportResult { Executed=!dryRun,ProjectFile=project,SoftwarePath=software,GroupPath=group,Recursive=recursive };
+            var result=new PlcScopedBatchExportResult { Executed=!dryRun,ProjectFile=project,SoftwarePath=software,UnitName=unitName,GroupPath=group,Recursive=recursive };
             result.Items=sources.Select(source=>new PlcBatchExportItem {
                 ObjectPath=PlcExchangePolicy.ObjectPath(source.Path),
                 // Hash the full canonical path; never place a PLC name in a filesystem path.
@@ -42,7 +42,7 @@ namespace TiaMcp.Adapters
                 Status=source.Consistent ? "planned" : "inconsistent",XmlContent=source.Capability.Content,Warnings=source.Capability.Warnings
             }).ToArray();
             if(result.Items.Select(x=>x.OutputFile).Distinct(StringComparer.OrdinalIgnoreCase).Count()!=sources.Length) throw new AdapterPreconditionException("Export destination collision.","exportPath");
-            result.InventoryHash=Hash(kind+"\n"+project+"\n"+software+"\n"+group+"\n"+recursive+"\n"+string.Join("\n",result.Items.Select(x=>x.ObjectPath+"\t"+x.Status+"\t"+x.XmlContent+"\t"+x.OutputFile)));
+            result.InventoryHash=Hash(kind+"\n"+project+"\n"+software+"\n"+group+"\n"+recursive+"\n"+string.Join("\n",result.Items.Select(x=>x.ObjectPath+"\t"+x.Status+"\t"+x.XmlContent+"\t"+x.OutputFile))+(unitName=="" ? "" : "\nunit:"+unitName));
             if(dryRun) return result;
             if(!string.Equals(expectedInventoryHash,result.InventoryHash,StringComparison.Ordinal)) throw new AdapterPreconditionException("Execution requires the exact inventory hash from a fresh preview.","expectedInventoryHash");
             publish=publish ?? PlcExportPublication.Publish;

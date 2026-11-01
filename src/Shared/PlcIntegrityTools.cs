@@ -106,7 +106,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string masterCopyPath="",
             string copyMode="")
             => _integrity.ManagePlcSoftwareUnit(softwarePath,action,name,relatedUnit,relationType,propertiesJson,dryRun,unitKind,commentsJson,libraryName,masterCopyPath,copyMode);
-        [McpServerTool(Name="SetPlcUnitObjectAccess"), Description("[L2][PLC-Software][WRITE] Publish/unpublish a block or PLC type inside an exact software unit using official Access attribute. access=Published/Unpublished. objectPath includes nested groups relative to the unit's block/type root; OB publication is refused by native API. dryRun=true default; writes require Offline and readback. No save/compile/download. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name="SetPlcUnitObjectAccess"), Description("[L2][PLC-Software][WRITE] V16–V21: publish/unpublish a block or PLC type inside an exact software unit using official Access attribute. access=Published/Unpublished. objectPath includes nested groups relative to the unit's block/type root; OB publication is refused by native API. dryRun=true default; writes require Offline and readback. No save/compile/download. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult SetPlcUnitObjectAccessV4(
             string softwarePath,
             string unitName,

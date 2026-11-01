@@ -46,6 +46,7 @@ namespace TiaMcp.Adapters
                     importCandidateAdapters.Add(new KeyValuePair<PlcSoftware, PlcImportAdapter>(selected.Value, adapter));
                 }
                 adapter.Identity = Identity; adapter.Software = Software; adapter.RequireOffline = () => RequireTargetOffline(ReadSelection(candidate.Request.SoftwarePath));
+                adapter.UnitName = candidate.Request.UnitName; adapter.SwImportOptions = candidate.Request.SwImportOptions; adapter.CultureImportOptions = candidate.Request.ImportOptions;
                 adapter.OverwriteSupported = !CandidateImportNames.IsDirectory(candidate.Tool);
                 switch (candidate.Action)
                 {

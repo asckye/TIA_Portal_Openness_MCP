@@ -45,6 +45,7 @@ namespace TiaMcp.Adapters
                     exportCandidateAdapters.Add(new KeyValuePair<PlcSoftware, PlcExportAdapter>(selected.Value, adapter));
                 }
                 adapter.Identity = Identity; adapter.Software = Software; adapter.RequireOffline = () => RequireTargetOffline(ReadSelection(candidate.Request.SoftwarePath));
+                adapter.UnitName = candidate.Request.UnitName;
                 adapter.OverwriteSupported = false;
                 switch (candidate.Action)
                 {

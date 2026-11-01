@@ -21,6 +21,9 @@ namespace TiaMcp.Adapters.Native.Plc
         public Func<PlcSoftware> Software { private get; set; }
         public Action RequireOffline { private get; set; }
         public bool OverwriteSupported { private get; set; }
+        public string UnitName { get; set; } = "";
+        public string[] SwImportOptions { get; set; } = Array.Empty<string>();
+        public string[] CultureImportOptions { get; set; } = Array.Empty<string>();
         private readonly string release;
         private readonly string scopeId = Guid.NewGuid().ToString("N");
 
@@ -42,6 +45,8 @@ namespace TiaMcp.Adapters.Native.Plc
         {
             if (key != release) CandidatePrimitives.Unsupported(key, "adapter-release");
             var inputs = TiaOpenness.Shared.NativeInputPolicy.Read(tool == "ImportPlcProgramFromDirectory" ? "sourceDir" : tool.EndsWith("FromDirectory", StringComparison.Ordinal) ? "dir" : "importPath", () => CandidateImportFiles.Read(key, tool, request, locks));
+            UnitName = request.UnitName; SwImportOptions = request.SwImportOptions; CultureImportOptions = request.ImportOptions;
+            foreach (var input in inputs) PlcNativeImportOptions.Validate(release, input.Documents ? "documents" : input.Target.Kind, SwImportOptions, CultureImportOptions, UnitName);
             contentTargets.Clear();
             foreach (var input in inputs) contentTargets.Add(Key(Space(input.Target.Kind), input.Target.Name));
             return inputs;
@@ -70,19 +75,20 @@ namespace TiaMcp.Adapters.Native.Plc
             void Blocks(PlcBlockGroup group, string path, int depth)
             {
                 Add(group, "block", path, depth);
-                foreach (var child in group.Groups) { if (!object.Equals(child.Parent, group)) throw new InvalidDataException("Block group parent mismatch."); Blocks(child, path == "" ? child.Name : path + "/" + child.Name, depth + 1); }
+                foreach (var child in group.Groups) { if (!object.Equals(child.Parent, group)) throw new InvalidDataException("Block group parent mismatch."); Blocks(child, path == "" ? Uri.EscapeDataString(child.Name) : path + "/" + Uri.EscapeDataString(child.Name), depth + 1); }
             }
             void Types(PlcTypeGroup group, string path, int depth)
             {
                 Add(group, "type", path, depth);
-                foreach (var child in group.Groups) { if (!object.Equals(child.Parent, group)) throw new InvalidDataException("Type group parent mismatch."); Types(child, path == "" ? child.Name : path + "/" + child.Name, depth + 1); }
+                foreach (var child in group.Groups) { if (!object.Equals(child.Parent, group)) throw new InvalidDataException("Type group parent mismatch."); Types(child, path == "" ? Uri.EscapeDataString(child.Name) : path + "/" + Uri.EscapeDataString(child.Name), depth + 1); }
             }
             void Tags(PlcTagTableGroup group, string path, int depth)
             {
                 Add(group, "tag", path, depth);
-                foreach (var child in group.Groups) { if (!object.Equals(child.Parent, group)) throw new InvalidDataException("Tag group parent mismatch."); Tags(child, path == "" ? child.Name : path + "/" + child.Name, depth + 1); }
+                foreach (var child in group.Groups) { if (!object.Equals(child.Parent, group)) throw new InvalidDataException("Tag group parent mismatch."); Tags(child, path == "" ? Uri.EscapeDataString(child.Name) : path + "/" + Uri.EscapeDataString(child.Name), depth + 1); }
             }
-            Blocks(software.BlockGroup, "", 0); Types(software.TypeGroup, "", 0); Tags(software.TagTableGroup, "", 0);
+            var unit = PlcUnitScope.Optional(software, UnitName);
+            Blocks(PlcUnitScope.Blocks(software, unit), "", 0); Types(PlcUnitScope.Types(software, unit), "", 0); Tags(PlcUnitScope.Tags(software, unit), "", 0);
         }
         private PlcImportObject Describe(object value, object parent, string path)
         {
@@ -107,22 +113,23 @@ namespace TiaMcp.Adapters.Native.Plc
             // Single imports resolve only their destination group and named objects.
             // Unrelated groups and the complete batch-inventory budget do not apply.
             var software = Software();
+            var unit = PlcUnitScope.Optional(software, UnitName);
             object group;
             if (kind == "UDT")
             {
-                PlcTypeGroup current = software.TypeGroup;
+                PlcTypeGroup current = PlcUnitScope.Types(software, unit);
                 foreach (var segment in groupPath.Split('/').Where(s => s.Length > 0)) current = current.Groups.Find(Uri.UnescapeDataString(segment)) ?? throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Destination type group is unavailable.", "groupPath");
                 group = current;
             }
             else if (kind == "TagTable")
             {
-                PlcTagTableGroup current = software.TagTableGroup;
+                PlcTagTableGroup current = PlcUnitScope.Tags(software, unit);
                 foreach (var segment in groupPath.Split('/').Where(s => s.Length > 0)) current = current.Groups.Find(Uri.UnescapeDataString(segment)) ?? throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Destination tag group is unavailable.", "groupPath");
                 group = current;
             }
             else
             {
-                PlcBlockGroup current = software.BlockGroup;
+                PlcBlockGroup current = PlcUnitScope.Blocks(software, unit);
                 foreach (var segment in groupPath.Split('/').Where(s => s.Length > 0)) current = current.Groups.Find(Uri.UnescapeDataString(segment)) ?? throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Destination block group is unavailable.", "groupPath");
                 group = current;
             }
@@ -160,9 +167,16 @@ namespace TiaMcp.Adapters.Native.Plc
             return result;
         }
         public PlcImportObject Import(PlcImportInput input, bool overwrite)
+            => ImportCore(input, overwrite, false);
+        public PlcImportObject Restore(PlcImportInput input)
+            => ImportCore(input, true, true);
+        private PlcImportObject ImportCore(PlcImportInput input, bool overwrite, bool recovery)
         {
             var group = groups[Key(Space(input.Target.Kind), input.Target.GroupPath)]; object[] imported;
-            var option = overwrite ? ImportOptions.Override : ImportOptions.None;
+            var sw = recovery ? Array.Empty<string>() : SwImportOptions;
+            var cultures = recovery ? Array.Empty<string>() : CultureImportOptions;
+            PlcNativeImportOptions.Validate(release, input.Documents ? "documents" : input.Target.Kind, sw, cultures, UnitName);
+            var option = PlcNativeImportOptions.General(overwrite, cultures);
             if (input.Documents)
             {
 #if PLC_DOCUMENT_EXPORT
@@ -175,9 +189,9 @@ namespace TiaMcp.Adapters.Native.Plc
                 throw new NotSupportedException("Document import is not available on this exact release.");
 #endif
             }
-            else if (input.Target.Kind == "UDT") imported = ((PlcTypeGroup)group).Types.Import(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(input.Path)), option).Take(2).Cast<object>().ToArray();
+            else if (input.Target.Kind == "UDT") imported = PlcNativeImportOptions.Types(((PlcTypeGroup)group).Types, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(input.Path)), option, sw).Take(2).Cast<object>().ToArray();
             else if (input.Target.Kind == "TagTable") imported = ((PlcTagTableGroup)group).TagTables.Import(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(input.Path)), option).Take(2).Cast<object>().ToArray();
-            else imported = ((PlcBlockGroup)group).Blocks.Import(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(input.Path)), option).Take(2).Cast<object>().ToArray();
+            else imported = PlcNativeImportOptions.Blocks(((PlcBlockGroup)group).Blocks, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(input.Path)), option, sw).Take(2).Cast<object>().ToArray();
             if (imported.Length != 1) throw new InvalidDataException("Native import must return exactly one reviewed object.");
             return Describe(imported[0], group, input.Target.GroupPath);
         }

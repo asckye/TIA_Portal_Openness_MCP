@@ -22,7 +22,7 @@ namespace TiaMcp.Logic.V4
             void Text(string key, bool needed, string value = "")
             { properties[key] = new JsonObject { ["type"] = "string" }; if (needed) required.Add(key); else properties[key]!["default"] = value; }
             void Flag(string key) => properties[key] = new JsonObject { ["type"] = "boolean", ["default"] = false };
-            Text("softwarePath", true);
+            Text("softwarePath", true); Text("unitName", false);
             if (entry == "ImportPlcProgramFromDirectory")
             { Text("sourceDir", true); foreach (var key in new[] { "typeGroupPath", "tagFolderPath", "technologyFolderPath", "blockGroupPath" }) Text(key, false); }
             else
@@ -40,6 +40,9 @@ namespace TiaMcp.Logic.V4
                 properties["maxItems"] = new JsonObject { ["type"] = "integer", ["minimum"] = 1, ["maximum"] = MaximumItems(entry, release), ["default"] = IsDocuments(entry) ? 16 : 128 };
             }
             if (entry == "ImportPlcBlockDocuments") Text("fileNameWithoutExtension", true);
+            foreach (var key in new[] { "swImportOptions", "importOptions" })
+                properties[key] = new JsonObject { ["type"] = "array", ["items"] = new JsonObject { ["type"] = "string" }, ["default"] = new JsonArray(),
+                    ["description"] = key == "swImportOptions" ? "Explicit opt-ins: IgnoreStructuralChanges / IgnoreMissingReferencedObjects V15.1–V21; IgnoreUnitAttributes V16–V21. Blocks/types only." : "Explicit culture opt-in V19–V21: SkipInactiveCultures OR ActivateInactiveCultures. Empty by default." };
             Flag("overwrite");
             properties["versionPolicy"] = new JsonObject { ["type"] = "string", ["enum"] = new JsonArray("exact"), ["default"] = "exact" };
             properties["onError"] = new JsonObject { ["type"] = "string", ["enum"] = new JsonArray("stop"), ["default"] = "stop" };

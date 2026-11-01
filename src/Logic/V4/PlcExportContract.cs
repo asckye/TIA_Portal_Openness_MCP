@@ -18,7 +18,7 @@ namespace TiaMcp.Logic.V4
             var properties = new JsonObject(); var required = new JsonArray();
             void Text(string key, bool needed) { properties[key] = new JsonObject { ["type"] = "string" }; if (needed) required.Add(key); else properties[key]!["default"] = ""; }
             void Flag(string key) => properties[key] = new JsonObject { ["type"] = "boolean", ["default"] = false };
-            Text("softwarePath", true); Text("exportPath", true);
+            Text("softwarePath", true); Text("unitName", false); Text("exportPath", true);
             Text(Batch(tool) ? "groupPath" : tool == "ExportPlcType" ? "typePath" : tool == "ExportPlcTagTable" ? "tagTableName" : "blockPath", true);
             if (Batch(tool))
             {

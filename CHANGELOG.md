@@ -9,6 +9,7 @@
 - expectedProject 明确为工程名称并提前拒绝路径；修复共享绑定的状态投影，补齐覆盖 PLC 块可能丢失库类型链接的预览警告，提前拒绝不支持的 Unified 标签绑定。
 - DES-1：宿主工具、生成规划与工作台操作端统一读取 worker 缓存的会话身份、worker 代次和重置要求，修复已附着工程仍被生成规划判为未连接的问题。`GetSessionState` 报告当前会话的原生交叉引用生效来源和只读审批状态。
 - 工作台 MCP 页列出同一数据目录的宿主 PID、版本、启动时间、传输与 HTTP 端点，标记旧版或未知版本；人工确认后可停止宿主或按已保存配置重启 HTTP 宿主。stdio 宿主由所属 MCP 客户端重启；AI 工具与管道没有服务启停入口。
+- SU-1：PLC XML 导入导出和目录导入支持精确 `unitName`（V16–V21）；默认根范围不变。新增显式 `swImportOptions`（V15.1–V21，IgnoreUnitAttributes 从 V16）和文化 `importOptions`（V19–V21），默认关闭、预览可见，不支持的成员/组合返回 UNSUPPORTED_CAPABILITY。软件树包含单元与四类组，变量/常量读取支持单元或全部标准单元，离线交叉引用分析可选择单元。复用 V16–V21 的 WRITE 发布工具 SetPlcUnitObjectAccess（预览、审批、回读）；真实 TIA 确认仍为 NOT RUN。
 
 ## [4.0.0-beta.3] - 2026-11-01
 
