@@ -11149,7 +11149,9 @@
         "preferredMlfb": "6ES7 513-1AM03-0AB0",
         "preferredVersion": "V3.1",
         "deviceName": "PLC_2",
-        "family": "S7-1500"
+        "family": "S7-1500",
+        "dryRun": true,
+        "confirm": false
       },
       "parameters": {
         "preferredVersion": {
@@ -11169,7 +11171,7 @@
     },
     "CreateGsdDevice": {
       "arguments": {
-        "keyword": "1513",
+        "keyword": "<exact catalog TypeIdentifier from SearchInstalledGsdDevices>",
         "deviceName": "PLC_2"
       },
       "parameters": {
@@ -11189,7 +11191,7 @@
     },
     "CreateHardwareCatalogDevice": {
       "arguments": {
-        "keyword": "1513",
+        "keyword": "<exact TypeIdentifier from SearchHardwareCatalog>",
         "deviceName": "PLC_2"
       },
       "parameters": {
@@ -11299,7 +11301,7 @@
     "ApplyUnifiedHmiLayout": {
       "arguments": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "layout": {
           "columns": 1,
           "cellWidth": 160,
@@ -11313,7 +11315,8 @@
               "text": "Ready"
             }
           ]
-        }
+        },
+        "dryRun": true
       },
       "parameters": {},
       "operations": {},
@@ -11323,7 +11326,7 @@
     "ApplyUnifiedHmiScreenDesign": {
       "arguments": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "design": {
           "screen": {
             "name": "Overview",
@@ -11341,7 +11344,8 @@
               "text": "Ready"
             }
           ]
-        }
+        },
+        "dryRun": true
       },
       "parameters": {
         "strict": {
@@ -11355,7 +11359,7 @@
     "ApplyUnifiedHmiTheme": {
       "arguments": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "theme": {
           "name": "Example",
           "palette": {
@@ -11364,7 +11368,8 @@
             "Text": "0xFF202020",
             "Border": "0xFF808080"
           }
-        }
+        },
+        "dryRun": true
       },
       "parameters": {},
       "operations": {},
@@ -11397,7 +11402,8 @@
     },
     "AttachOpenProject": {
       "arguments": {
-        "projectName": "项目1"
+        "projectName": "<file name without extension from selected projectPath>",
+        "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
       },
       "parameters": {},
       "operations": {},
@@ -11434,9 +11440,10 @@
     "BindUnifiedHmiButtonPressedTag": {
       "arguments": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "buttonName": "StartButton",
-        "tagName": "Ready"
+        "tagName": "Ready",
+        "dryRun": true
       },
       "parameters": {},
       "operations": {},
@@ -11446,10 +11453,11 @@
     "BindUnifiedHmiTagDynamization": {
       "arguments": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "itemName": "StatusText",
         "propertyName": "Visible",
-        "tagName": "Ready"
+        "tagName": "Ready",
+        "dryRun": true
       },
       "parameters": {
         "dataType": {
@@ -11684,7 +11692,10 @@
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
     },
     "CloseProject": {
-      "arguments": {},
+      "arguments": {
+        "dryRun": true,
+        "confirm": false
+      },
       "parameters": {},
       "operations": {},
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
@@ -12044,7 +12055,9 @@
     },
     "CompilePlcDiagnostics": {
       "arguments": {
-        "softwarePath": "PLC_1"
+        "softwarePath": "<exact softwarePath from GetProjectTree>",
+        "dryRun": true,
+        "confirm": false
       },
       "parameters": {
         "password": {
@@ -12062,7 +12075,9 @@
     },
     "CompilePlcSoftware": {
       "arguments": {
-        "softwarePath": "PLC_1"
+        "softwarePath": "<exact softwarePath from GetProjectTree>",
+        "dryRun": true,
+        "confirm": false
       },
       "parameters": {
         "password": {
@@ -12121,7 +12136,7 @@
     },
     "ConnectPortal": {
       "arguments": {
-        "projectName": "项目1"
+        "processId": 12345
       },
       "parameters": {
         "allowStart": {
@@ -12265,8 +12280,10 @@
     },
     "CreateProject": {
       "arguments": {
-        "directoryPath": "C:\\Projects",
-        "projectName": "Demo"
+        "directoryPath": "<existing caller-selected project directory>",
+        "projectName": "<fresh caller-selected project name>",
+        "dryRun": true,
+        "confirm": false
       },
       "parameters": {
         "closeForeignProject": {
@@ -12317,7 +12334,7 @@
     "DeleteEmptyUnifiedHmiScreenGroup": {
       "arguments": {
         "softwarePath": "HMI_RT_1",
-        "groupPath": "Examples",
+        "groupPath": "/Examples",
         "dryRun": true
       },
       "parameters": {},
@@ -12356,7 +12373,10 @@
     "DeletePlcExternalSource": {
       "arguments": {
         "softwarePath": "PLC_1",
-        "externalSourceName": "FC_Add"
+        "groupPath": "",
+        "externalSourceName": "FC_Add.scl",
+        "dryRun": true,
+        "confirm": false
       },
       "parameters": {},
       "operations": {},
@@ -12399,7 +12419,7 @@
     "DeleteUnifiedHmiButtonEvent": {
       "arguments": {
         "softwarePath": "HMI_RT_1",
-        "screenPath": "Overview",
+        "screenPath": "/Overview",
         "buttonName": "StartButton",
         "eventType": "Down",
         "dryRun": true
@@ -12420,7 +12440,7 @@
     "DeleteUnifiedHmiDynamization": {
       "arguments": {
         "softwarePath": "HMI_RT_1",
-        "screenPath": "Overview",
+        "screenPath": "/Overview",
         "itemName": "StatusText",
         "propertyName": "Visible",
         "dryRun": true
@@ -12438,7 +12458,7 @@
     "DescribeHmiScreen": {
       "arguments": {
         "softwarePath": "HMI_RT_1",
-        "screenName": "Overview"
+        "screenName": "/Overview"
       },
       "parameters": {
         "maxMembers": {
@@ -12450,8 +12470,8 @@
     },
     "DescribeHmiScreenItem": {
       "arguments": {
-        "softwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "softwarePath": "HMI_Unified_1",
+        "screenName": "/Overview",
         "itemName": "StatusText"
       },
       "parameters": {
@@ -12477,7 +12497,7 @@
     "DescribeHmiTag": {
       "arguments": {
         "softwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table",
+        "tagTableName": "/Default tag table",
         "tagName": "Ready"
       },
       "parameters": {
@@ -12491,7 +12511,7 @@
     "DescribeHmiTagTable": {
       "arguments": {
         "softwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table"
+        "tagTableName": "/Default tag table"
       },
       "parameters": {
         "maxMembers": {
@@ -12567,7 +12587,7 @@
     "DescribeUnifiedHmiButtonEventScript": {
       "arguments": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "buttonName": "StartButton",
         "eventType": "Down"
       },
@@ -12758,11 +12778,12 @@
     "EnsureUnifiedHmiButtonAction": {
       "arguments": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "buttonName": "StartButton",
         "eventType": "Down",
         "actionKind": "set-bit",
-        "targetTag": "Ready"
+        "targetTag": "Ready",
+        "dryRun": true
       },
       "parameters": {
         "syntaxCheck": {
@@ -12776,9 +12797,10 @@
     "EnsureUnifiedHmiButtonEventHandler": {
       "arguments": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "buttonName": "StartButton",
-        "eventType": "Down"
+        "eventType": "Down",
+        "dryRun": true
       },
       "parameters": {},
       "operations": {},
@@ -12787,7 +12809,8 @@
     },
     "EnsureUnifiedHmiConnection": {
       "arguments": {
-        "hmiSoftwarePath": "HMI_RT_1"
+        "hmiSoftwarePath": "HMI_RT_1",
+        "dryRun": true
       },
       "parameters": {
         "connectionName": {
@@ -12804,9 +12827,10 @@
     "EnsureUnifiedHmiDynamization": {
       "arguments": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "itemName": "StatusText",
-        "propertyName": "Visible"
+        "propertyName": "Visible",
+        "dryRun": true
       },
       "parameters": {
         "dynamizationType": {
@@ -12821,7 +12845,8 @@
     "EnsureUnifiedHmiScreen": {
       "arguments": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview"
+        "screenName": "/Overview",
+        "dryRun": true
       },
       "parameters": {
         "width": {
@@ -12838,8 +12863,9 @@
     "EnsureUnifiedHmiScreenItem": {
       "arguments": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
-        "itemName": "StatusText"
+        "screenName": "/Overview",
+        "itemName": "StatusText",
+        "dryRun": true
       },
       "parameters": {
         "itemType": {
@@ -12868,8 +12894,11 @@
     "EnsureUnifiedHmiTag": {
       "arguments": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table",
-        "tagName": "Ready"
+        "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
+        "tagName": "Ready",
+        "plcName": "PLC_1",
+        "plcTag": "<exact PLC tag name from project reads>",
+        "dryRun": true
       },
       "parameters": {
         "hmiDataType": {
@@ -12899,7 +12928,8 @@
     "EnsureUnifiedHmiTagTable": {
       "arguments": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table"
+        "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
+        "dryRun": true
       },
       "parameters": {},
       "operations": {},
@@ -12909,7 +12939,7 @@
     "ExchangeCfcCharts": {
       "arguments": {
         "softwarePath": "PLC_1",
-        "action": "export",
+        "action": "import",
         "filePath": "C:\\Examples\\exports\\Charts.xml.zip",
         "dryRun": true,
         "modelVersion": "V2.0"
@@ -13233,7 +13263,7 @@
     "ExportAlarmClasses": {
       "arguments": {
         "softwarePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
       },
       "parameters": {},
       "operations": {},
@@ -13242,7 +13272,7 @@
     "ExportAlarmInstanceTexts": {
       "arguments": {
         "softwarePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
       },
       "parameters": {
         "includeInfoText": {
@@ -13261,7 +13291,7 @@
     "ExportAlarmTextLists": {
       "arguments": {
         "softwarePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
       },
       "parameters": {},
       "operations": {},
@@ -13284,7 +13314,8 @@
       "arguments": {
         "softwarePath": "HMI_RT_1",
         "connectionName": "PLC_Connection",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+        "exportOptions": "WithDefaults"
       },
       "parameters": {},
       "operations": {},
@@ -13293,7 +13324,8 @@
     "ExportHmiProgram": {
       "arguments": {
         "softwarePath": "HMI_RT_1",
-        "exportDir": "C:\\Examples\\exports"
+        "exportDir": "C:\\Examples\\exports",
+        "exportOptions": "WithDefaults"
       },
       "parameters": {
         "exportScreens": {
@@ -13309,8 +13341,9 @@
     "ExportHmiScreen": {
       "arguments": {
         "softwarePath": "HMI_RT_1",
-        "screenName": "Screen_1",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
+        "screenName": "/Screen_1",
+        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+        "exportOptions": "WithDefaults"
       },
       "parameters": {},
       "operations": {},
@@ -13320,8 +13353,9 @@
     "ExportHmiTagTable": {
       "arguments": {
         "softwarePath": "HMI_RT_1",
-        "tagTableName": "Default tag table",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
+        "tagTableName": "/Default tag table",
+        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+        "exportOptions": "WithDefaults"
       },
       "parameters": {},
       "operations": {},
@@ -13343,9 +13377,11 @@
     },
     "ExportPlcBlock": {
       "arguments": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "<exact softwarePath from GetProjectTree>",
         "blockPath": "Main",
-        "exportPath": "C:\\Examples\\exports"
+        "exportPath": "<existing caller-selected export directory>",
+        "dryRun": true,
+        "confirm": false
       },
       "parameters": {
         "preservePath": {
@@ -13362,9 +13398,11 @@
     },
     "ExportPlcBlocks": {
       "arguments": {
-        "softwarePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports",
-        "regexName": ""
+        "softwarePath": "<exact softwarePath from GetProjectTree>",
+        "groupPath": "",
+        "exportPath": "<existing caller-selected batch export directory>",
+        "dryRun": true,
+        "confirm": false
       },
       "parameters": {
         "preservePath": {
@@ -13398,9 +13436,11 @@
     },
     "ExportPlcTagTable": {
       "arguments": {
-        "softwarePath": "PLC_1",
-        "tagTableName": "Default tag table",
-        "exportPath": "C:\\Examples\\exports\\ExportPlcTagTable.xml"
+        "softwarePath": "<exact softwarePath from GetProjectTree>",
+        "tagTableName": "默认变量表",
+        "exportPath": "<new absolute Tags.xml file in an existing caller-selected directory>",
+        "dryRun": true,
+        "confirm": false
       },
       "parameters": {},
       "operations": {},
@@ -13413,9 +13453,11 @@
     },
     "ExportPlcType": {
       "arguments": {
-        "softwarePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports",
-        "typePath": "UDT_Status"
+        "softwarePath": "<exact softwarePath from GetProjectTree>",
+        "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
+        "typePath": "UDT_Status",
+        "dryRun": true,
+        "confirm": false
       },
       "parameters": {
         "preservePath": {
@@ -13431,8 +13473,11 @@
     },
     "ExportPlcTypes": {
       "arguments": {
-        "softwarePath": "PLC_1",
-        "exportPath": "C:\\Examples\\exports"
+        "softwarePath": "<exact softwarePath from GetProjectTree>",
+        "groupPath": "",
+        "exportPath": "<existing caller-selected batch export directory>",
+        "dryRun": true,
+        "confirm": false
       },
       "parameters": {
         "regexName": {
@@ -13451,9 +13496,11 @@
     },
     "ExportPlcWatchTable": {
       "arguments": {
-        "softwarePath": "PLC_1",
-        "watchTableName": "WT1",
-        "exportPath": "C:\\Examples\\exports\\ExportPlcWatchTable.xml"
+        "softwarePath": "<exact softwarePath from GetProjectTree>",
+        "watchTableName": "Watch_1",
+        "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+        "dryRun": true,
+        "confirm": false
       },
       "parameters": {},
       "operations": {},
@@ -13521,10 +13568,11 @@
     },
     "ExportTechnologyObject": {
       "arguments": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "<exact softwarePath from GetProjectTree>",
         "toName": "SpeedAxis_1",
-        "exportPath": "C:\\Examples\\exports\\ExportTechnologyObject.xml",
-        "dryRun": true
+        "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
+        "dryRun": true,
+        "confirm": false
       },
       "parameters": {
         "dryRun": {
@@ -13627,7 +13675,9 @@
     "GenerateBlocksFromExternalSource": {
       "arguments": {
         "softwarePath": "PLC_1",
-        "externalSourceName": "FC_Add"
+        "externalSourceName": "FC_Add.scl",
+        "dryRun": true,
+        "confirm": false
       },
       "parameters": {},
       "operations": {},
@@ -13988,7 +14038,7 @@
     },
     "GetPlcBlockHierarchy": {
       "arguments": {
-        "softwarePath": "PLC_1"
+        "softwarePath": "<exact softwarePath from GetProjectTree>"
       },
       "parameters": {},
       "operations": {},
@@ -13997,7 +14047,7 @@
     },
     "GetPlcBlockInfo": {
       "arguments": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "<exact softwarePath from GetProjectTree>",
         "blockPath": "Main"
       },
       "parameters": {},
@@ -14054,7 +14104,7 @@
     },
     "GetPlcTypeInfo": {
       "arguments": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "<exact softwarePath from GetProjectTree>",
         "typePath": "UDT_Status"
       },
       "parameters": {},
@@ -14106,7 +14156,7 @@
     },
     "GetSoftwareInfo": {
       "arguments": {
-        "softwarePath": "PLC_1"
+        "softwarePath": "<exact softwarePath from GetProjectTree>"
       },
       "parameters": {},
       "operations": {},
@@ -14115,7 +14165,7 @@
     },
     "GetSoftwareTree": {
       "arguments": {
-        "softwarePath": "PLC_1"
+        "softwarePath": "<exact softwarePath from GetProjectTree>"
       },
       "parameters": {},
       "operations": {},
@@ -14130,7 +14180,7 @@
     },
     "ListTechnologyObjects": {
       "arguments": {
-        "softwarePath": "PLC_1"
+        "softwarePath": "<exact softwarePath from GetProjectTree>"
       },
       "parameters": {},
       "operations": {},
@@ -14138,8 +14188,7 @@
     },
     "GetToolUsage": {
       "arguments": {
-        "toolName": "ListPlcBlocks",
-        "exampleKind": "all"
+        "toolName": "ListPlcBlocks"
       },
       "parameters": {
         "query": {
@@ -14175,9 +14224,6 @@
       "arguments": {
         "softwarePath": "HMI_RT_1",
         "objectPath": [
-          {
-            "property": "ScreenFolder"
-          },
           {
             "property": "Screens",
             "name": "Overview"
@@ -14269,7 +14315,7 @@
     "ImportAlarmClasses": {
       "arguments": {
         "softwarePath": "PLC_1",
-        "importPath": "C:\\Examples\\exports\\Main.xml"
+        "importPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
       },
       "parameters": {},
       "operations": {},
@@ -14279,7 +14325,7 @@
     "ImportAlarmTextLists": {
       "arguments": {
         "softwarePath": "PLC_1",
-        "importPath": "C:\\Examples\\exports\\Main.xml"
+        "importPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
       },
       "parameters": {},
       "operations": {},
@@ -14470,9 +14516,12 @@
     },
     "ImportPlcBlock": {
       "arguments": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "<exact softwarePath from GetProjectTree>",
         "groupPath": "",
-        "importPath": "C:\\Temp\\FB_Pump.xml"
+        "importPath": "<data.outputFile from completed ExportPlcBlock>",
+        "dryRun": true,
+        "confirm": false,
+        "overwrite": false
       },
       "parameters": {},
       "operations": {},
@@ -14508,11 +14557,12 @@
     "ImportPlcBlocksFromDirectory": {
       "arguments": {
         "softwarePath": "<exact softwarePath from GetProjectTree>",
-        "groupPath": "Examples",
-        "dir": "C:\\Examples\\exports",
+        "groupPath": "",
+        "dir": "<existing dedicated import directory containing only intended native XML files>",
         "dryRun": true,
-        "overwrite": false,
-        "regexName": "^Main\\.xml$"
+        "confirm": false,
+        "regexName": "^Main\\.xml$",
+        "overwrite": false
       },
       "parameters": {
         "regexName": {
@@ -14587,7 +14637,9 @@
       "arguments": {
         "softwarePath": "PLC_1",
         "groupPath": "",
-        "filePath": "C:\\Examples\\FC_Add.scl"
+        "filePath": "C:/Examples/FC_Add.scl",
+        "dryRun": true,
+        "confirm": false
       },
       "parameters": {},
       "operations": {},
@@ -14600,10 +14652,11 @@
     "ImportPlcProgramFromDirectory": {
       "arguments": {
         "softwarePath": "<exact softwarePath from GetProjectTree>",
-        "sourceDir": "C:\\Examples\\exports",
+        "sourceDir": "<existing dedicated import directory containing only intended native XML files>",
         "dryRun": true,
-        "overwrite": false,
+        "confirm": false,
         "regexName": "^Main\\.xml$",
+        "overwrite": false,
         "compileAfter": false,
         "stopOnImportFailure": true
       },
@@ -14702,9 +14755,12 @@
     },
     "ImportPlcTagTable": {
       "arguments": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "<exact softwarePath from GetProjectTree>",
         "folderPath": "",
-        "importPath": "C:\\Temp\\Tags.xml"
+        "importPath": "<data.outputFile from completed ExportPlcTagTable>",
+        "dryRun": true,
+        "confirm": false,
+        "overwrite": false
       },
       "parameters": {},
       "operations": {},
@@ -14741,9 +14797,12 @@
     },
     "ImportPlcType": {
       "arguments": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "<exact softwarePath from GetProjectTree>",
         "groupPath": "",
-        "importPath": "C:\\Examples\\exports\\UDT_Status.xml"
+        "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
+        "dryRun": true,
+        "confirm": false,
+        "overwrite": false
       },
       "parameters": {},
       "operations": {},
@@ -14995,8 +15054,7 @@
     },
     "ListPlcBlocks": {
       "arguments": {
-        "softwarePath": "PLC_1",
-        "regexName": "FB_.*"
+        "softwarePath": "<exact softwarePath from GetProjectTree>"
       },
       "parameters": {},
       "operations": {},
@@ -15013,7 +15071,7 @@
     },
     "ListPlcTagTables": {
       "arguments": {
-        "softwarePath": "PLC_1"
+        "softwarePath": "<exact softwarePath from GetProjectTree>"
       },
       "parameters": {},
       "operations": {},
@@ -15022,7 +15080,7 @@
     },
     "ListPlcTypes": {
       "arguments": {
-        "softwarePath": "PLC_1"
+        "softwarePath": "<exact softwarePath from GetProjectTree>"
       },
       "parameters": {
         "regexName": {
@@ -15035,7 +15093,7 @@
     },
     "ListPlcWatchTables": {
       "arguments": {
-        "softwarePath": "PLC_1"
+        "softwarePath": "<exact softwarePath from GetProjectTree>"
       },
       "parameters": {},
       "operations": {},
@@ -15196,7 +15254,8 @@
           "arguments": {
             "action": "export",
             "filePath": "C:\\Examples\\exports\\Main.xml",
-            "cycleName": "<cycleName from this operation's target or user input>"
+            "cycleName": "<cycleName from this operation's target or user input>",
+            "exportOptions": "WithDefaults"
           }
         },
         "import": {
@@ -15289,7 +15348,8 @@
           "arguments": {
             "action": "export",
             "filePath": "C:\\Examples\\exports\\Main.xml",
-            "name": "Example_1"
+            "name": "Example_1",
+            "exportOptions": "WithDefaults"
           }
         },
         "import": {
@@ -15316,7 +15376,7 @@
         "confirmDelete": false,
         "dryRun": true,
         "action": "read",
-        "objectPath": "Popup_1"
+        "objectPath": "/Popup_1"
       },
       "parameters": {
         "filePath": {
@@ -15333,7 +15393,8 @@
         "export": {
           "arguments": {
             "action": "export",
-            "filePath": "C:\\Examples\\exports\\Main.xml"
+            "filePath": "C:\\Examples\\exports\\Main.xml",
+            "exportOptions": "WithDefaults"
           }
         },
         "import": {
@@ -15380,7 +15441,8 @@
         "export": {
           "arguments": {
             "action": "export",
-            "filePath": "C:\\Examples\\exports\\Main.xml"
+            "filePath": "C:\\Examples\\exports\\Main.xml",
+            "exportOptions": "WithDefaults"
           }
         },
         "import": {
@@ -15487,7 +15549,8 @@
           "arguments": {
             "action": "export",
             "filePath": "C:\\Examples\\exports\\Main.xml",
-            "listName": "StatusTexts"
+            "listName": "StatusTexts",
+            "exportOptions": "WithDefaults"
           }
         },
         "import": {
@@ -15619,7 +15682,7 @@
         "import": {
           "arguments": {
             "action": "import",
-            "filePath": "C:\\Examples\\exports\\Main.xml"
+            "filePath": "C:\\Examples\\DCB-extension.zip"
           }
         }
       },
@@ -16031,7 +16094,7 @@
         "updateParameter": {
           "arguments": {
             "action": "updateParameter",
-            "partner": {
+            "properties": {
               "ParameterText": "Example"
             }
           }
@@ -16238,9 +16301,9 @@
         "setPermissions": {
           "arguments": {
             "action": "setPermissions",
-            "permissions": {
-              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
-            },
+            "permissions": [
+              "<exact supported permission name from the device-user permission catalog>"
+            ],
             "userName": "ExampleUser"
           }
         },
@@ -18290,7 +18353,9 @@
         "stage": {
           "arguments": {
             "action": "stage",
-            "filesJson": "[\"PLC_1/FC_Ready.scl\"]"
+            "files": [
+              "PLC_1/FC_Ready.scl"
+            ]
           }
         },
         "commit": {
@@ -18820,7 +18885,9 @@
         "update": {
           "arguments": {
             "action": "update",
-            "propertiesJson": "{\"Name\":\"Ready_2\"}"
+            "properties": {
+              "Name": "Ready_2"
+            }
           }
         },
         "delete": {
@@ -19770,20 +19837,20 @@
         "create": {
           "arguments": {
             "action": "create",
-            "typePath": "UDT_Status"
+            "typePath": "/UDT_Status"
           }
         },
         "createFromType": {
           "arguments": {
             "action": "createFromType",
-            "typePath": "UDT_Status",
+            "typePath": "/UDT_Status",
             "typeVersion": "1.0.0"
           }
         },
         "delete": {
           "arguments": {
             "action": "delete",
-            "typePath": "UDT_Status"
+            "typePath": "/UDT_Status"
           }
         }
       },
@@ -20192,7 +20259,7 @@
             "itemId": "<Teamcenter item id>",
             "revisionId": "<Teamcenter revision id>",
             "datasetName": "<exact dataset name>",
-            "datasetType": "<dataset type>"
+            "datasetType": "T4TiaProjectDataset"
           }
         }
       },
@@ -20793,18 +20860,20 @@
         "softwarePath": "HMI_RT_1",
         "objectPath": [
           {
-            "property": "ScreenFolder"
-          },
-          {
             "property": "Screens",
             "name": "Overview"
           },
           {
             "property": "ScreenItems",
-            "name": "StartButton"
+            "name": "MotorFaceplate_1"
+          },
+          {
+            "property": "Interface",
+            "key": "PropertyName",
+            "name": "Speed"
           }
         ],
-        "propertyName": "Visible",
+        "propertyName": "Value",
         "confirmDelete": false,
         "dryRun": true,
         "action": "read"
@@ -20897,9 +20966,6 @@
         "action": "read",
         "objectPath": [
           {
-            "property": "ScreenFolder"
-          },
-          {
             "property": "Screens",
             "name": "Overview"
           },
@@ -20952,7 +21018,7 @@
       "arguments": {
         "softwarePath": "HMI_RT_1",
         "family": "screens",
-        "groupPath": "Examples",
+        "groupPath": "/Examples",
         "action": "create",
         "dryRun": true
       },
@@ -21088,20 +21154,18 @@
         "softwarePath": "HMI_RT_1",
         "objectPath": [
           {
-            "property": "ScreenFolder"
-          },
-          {
             "property": "Screens",
             "name": "Overview"
           },
           {
             "property": "ScreenItems",
-            "name": "StartButton"
+            "name": "MotorFaceplate_1"
           }
         ],
         "confirmDelete": false,
         "dryRun": true,
-        "action": "read"
+        "action": "read",
+        "collectionProperty": "Interface"
       },
       "parameters": {
         "collectionProperty": {
@@ -21152,6 +21216,23 @@
             "collectionProperty": "<collection property returned by read>",
             "partName": "Part_1"
           }
+        },
+        "readFaceplateInterface": {
+          "arguments": {
+            "objectPath": [
+              {
+                "property": "Screens",
+                "name": "Overview"
+              },
+              {
+                "property": "ScreenItems",
+                "name": "MotorFaceplate_1"
+              }
+            ],
+            "collectionProperty": "Interface",
+            "action": "read"
+          },
+          "note": "Interface members expose PropertyName and Value; use key=PropertyName for exact subsequent navigation."
         }
       },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
@@ -21182,7 +21263,7 @@
     },
     "ManageUnifiedPlantNode": {
       "arguments": {
-        "plantPath": "ExampleArea",
+        "plantPath": "/ExampleArea/ExampleUnit",
         "action": "create",
         "plantObjectType": "<existing plant object type from this project library>",
         "dryRun": true
@@ -21205,12 +21286,14 @@
             "action": "update",
             "properties": {
               "<exact supported field from this operation/read result>": "<value of that field's documented type>"
-            }
+            },
+            "plantObjectType": ""
           }
         },
         "delete": {
           "arguments": {
-            "action": "delete"
+            "action": "delete",
+            "plantObjectType": ""
           }
         }
       },
@@ -21220,7 +21303,7 @@
     "ManageUnifiedScreenItem": {
       "arguments": {
         "softwarePath": "HMI_RT_1",
-        "screenPath": "Overview",
+        "screenPath": "/Overview",
         "confirmDelete": false,
         "dryRun": true,
         "action": "read",
@@ -21266,8 +21349,8 @@
         "create": {
           "arguments": {
             "action": "create",
-            "itemName": "StatusText",
-            "itemType": "TextBox"
+            "itemName": "IOField_1",
+            "itemType": "Widgets.HmiIOField"
           }
         },
         "update": {
@@ -21285,6 +21368,23 @@
             "action": "delete",
             "itemName": "StatusText"
           }
+        },
+        "createFaceplateContainer": {
+          "arguments": {
+            "action": "create",
+            "itemName": "MotorFaceplate_2",
+            "itemType": "HmiFaceplateContainer",
+            "containedType": "<exact ContainedType read from MotorFaceplate_1>",
+            "dryRun": true
+          },
+          "parameters": {
+            "containedType": {
+              "requiresBinding": true,
+              "source": "ManageUnifiedScreenItem read of /Overview itemName=MotorFaceplate_1: item.values.ContainedType in the returned evidence"
+            }
+          },
+          "requiresBinding": true,
+          "note": "First read an existing HmiFaceplateContainer and copy its ContainedType verbatim. Do not construct a type/version identifier. Preview first; native ContainedType format and create behavior are unverified."
         }
       },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
@@ -21294,9 +21394,6 @@
       "arguments": {
         "softwarePath": "HMI_RT_1",
         "objectPath": [
-          {
-            "property": "ScreenFolder"
-          },
           {
             "property": "Screens",
             "name": "Overview"
@@ -21326,9 +21423,6 @@
             "action": "create",
             "name": "Overview_2",
             "objectPath": [
-              {
-                "property": "ScreenFolder"
-              },
               {
                 "property": "Screens"
               }
@@ -21452,7 +21546,9 @@
     },
     "OpenProject": {
       "arguments": {
-        "path": "C:\\Examples\\Example.ap{extension}"
+        "path": "<exact caller-selected closed project file for this release>",
+        "dryRun": true,
+        "confirm": false
       },
       "parameters": {
         "closeForeignProject": {
@@ -22053,7 +22149,7 @@
     "GetHmiScreenSnapshot": {
       "arguments": {
         "softwarePath": "HMI_RT_1",
-        "screenPath": "Overview"
+        "screenPath": "/Overview"
       },
       "parameters": {
         "maxDepth": {
@@ -22812,10 +22908,8 @@
       "arguments": {
         "softwarePath": "HMI_RT_1",
         "expectedProject": "Example",
-        "screenPath": "Overview",
-        "itemName": "StatusText",
-        "typePath": "UDT_Status",
-        "version": "<version from target discovery>"
+        "screenPath": "/Overview",
+        "itemName": "MotorFaceplate_1"
       },
       "parameters": {
         "version": {
@@ -22860,7 +22954,7 @@
       "arguments": {
         "softwarePath": "HMI_RT_1",
         "expectedProject": "Example",
-        "screenPath": "Overview",
+        "screenPath": "/Overview",
         "itemNames": [
           "StatusText"
         ]
@@ -22883,7 +22977,7 @@
     "GetUnifiedHmiButtonEvent": {
       "arguments": {
         "softwarePath": "HMI_RT_1",
-        "screenPath": "Overview",
+        "screenPath": "/Overview",
         "buttonName": "StartButton",
         "eventType": "Down"
       },
@@ -22894,7 +22988,7 @@
     "GetUnifiedHmiDynamization": {
       "arguments": {
         "softwarePath": "HMI_RT_1",
-        "screenPath": "Overview",
+        "screenPath": "/Overview",
         "itemName": "StatusText",
         "propertyName": "Visible"
       },
@@ -22905,7 +22999,7 @@
     "GetUnifiedHmiTexts": {
       "arguments": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "itemName": "StatusText"
       },
       "parameters": {
@@ -22920,7 +23014,7 @@
       "arguments": {
         "softwarePath": "HMI_RT_1",
         "expectedProject": "Example",
-        "typePath": "UDT_Status",
+        "typePath": "/Faceplates/MotorFaceplate",
         "version": "<version from target discovery>"
       },
       "parameters": {
@@ -22946,15 +23040,17 @@
         "softwarePath": "HMI_RT_1",
         "objectPath": [
           {
-            "property": "ScreenFolder"
-          },
-          {
             "property": "Screens",
             "name": "Overview"
           },
           {
             "property": "ScreenItems",
-            "name": "StartButton"
+            "name": "MotorFaceplate_1"
+          },
+          {
+            "property": "Interface",
+            "key": "PropertyName",
+            "name": "Speed"
           }
         ]
       },
@@ -22966,7 +23062,28 @@
           "exampleValue": 100
         }
       },
-      "operations": {},
+      "operations": {
+        "readFaceplateInterfaceEvents": {
+          "arguments": {
+            "objectPath": [
+              {
+                "property": "Screens",
+                "name": "Overview"
+              },
+              {
+                "property": "ScreenItems",
+                "name": "MotorFaceplate_1"
+              },
+              {
+                "property": "Interface",
+                "key": "PropertyName",
+                "name": "Speed"
+              }
+            ]
+          },
+          "note": "Reads PropertyEventHandlers on the exact interface item; the same objectPath can address its Dynamizations."
+        }
+      },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
     },
     "GetUnifiedObjectProperties": {
@@ -23209,8 +23326,6 @@
     },
     "RunCapabilitySelfTest": {
       "arguments": {
-        "expectedPlcSoftwarePath": "PLC_1",
-        "expectedHmiSoftwarePath": "HMI_RT_1",
         "connectIfNeeded": false,
         "includeProjectTree": false,
         "inspectPortalProcesses": false
@@ -23439,7 +23554,10 @@
       ]
     },
     "SaveProject": {
-      "arguments": {},
+      "arguments": {
+        "dryRun": true,
+        "confirm": false
+      },
       "parameters": {},
       "operations": {},
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
@@ -23450,7 +23568,7 @@
     },
     "BuildProjectScaffold": {
       "arguments": {
-        "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+        "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AM03-0AB0\",\"plcVersion\":\"V3.0\"}",
         "dryRun": true
       },
       "parameters": {},
@@ -23508,8 +23626,7 @@
     },
     "SearchHardwareCatalog": {
       "arguments": {
-        "keyword": "1513",
-        "limit": 10
+        "keyword": "1513"
       },
       "parameters": {},
       "operations": {},
@@ -23690,7 +23807,8 @@
     },
     "SetPlcPutGetAccess": {
       "arguments": {
-        "devicePath": "PLC_1"
+        "devicePath": "PLC_1",
+        "dryRun": true
       },
       "parameters": {
         "enable": {
@@ -23704,7 +23822,7 @@
     "SetUnifiedHmiButtonEventScriptCode": {
       "arguments": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview",
+        "screenName": "/Overview",
         "buttonName": "StartButton",
         "eventType": "Down",
         "scriptCode": "HMIRuntime.Tags(\"Ready\").Read();"
@@ -24058,9 +24176,6 @@
         "dryRun": true,
         "objectPath": [
           {
-            "property": "ScreenFolder"
-          },
-          {
             "property": "Screens",
             "name": "Overview"
           },
@@ -24081,7 +24196,8 @@
         "dryRun": true,
         "objectPath": [
           {
-            "property": "ScreenFolder"
+            "property": "ScreenGroups",
+            "name": "Production"
           },
           {
             "property": "Screens",
@@ -24101,13 +24217,39 @@
           "requiresBinding": true
         }
       },
-      "operations": {},
+      "operations": {
+        "setFaceplateInterface": {
+          "arguments": {
+            "objectPath": [
+              {
+                "property": "Screens",
+                "name": "Overview"
+              },
+              {
+                "property": "ScreenItems",
+                "name": "MotorFaceplate_1"
+              },
+              {
+                "property": "Interface",
+                "key": "PropertyName",
+                "name": "Speed"
+              }
+            ],
+            "properties": {
+              "Value": 42
+            },
+            "dryRun": true
+          },
+          "requiresBinding": true,
+          "note": "Read current Value first. The example numeric value requires a numeric runtime Value; conversion refuses with the expected runtime type and successful writes are read back."
+        }
+      },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
       "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
     },
     "SetUnifiedPlantObject": {
       "arguments": {
-        "plantPath": "Plant_1",
+        "plantPath": "/Plant_1",
         "dryRun": true,
         "objectPath": [],
         "properties": {
@@ -24248,9 +24390,6 @@
       "arguments": {
         "softwarePath": "HMI_RT_1",
         "objectPath": [
-          {
-            "property": "ScreenFolder"
-          },
           {
             "property": "Screens",
             "name": "Overview"
@@ -24420,7 +24559,9 @@
       "arguments": {
         "softwarePath": "PLC_1",
         "blockPath": "Main",
-        "exportPath": "C:\\Examples\\exports"
+        "exportPath": "C:\\Examples\\exports",
+        "dryRun": true,
+        "confirm": false
       },
       "parameters": {
         "preservePath": {
@@ -24438,7 +24579,9 @@
       "arguments": {
         "softwarePath": "PLC_1",
         "exportPath": "C:\\Examples\\exports",
-        "regexName": "FB_.*"
+        "dryRun": true,
+        "confirm": false,
+        "groupPath": "<exact caller-selected block group containing the intended FB blocks>"
       },
       "parameters": {
         "preservePath": {
@@ -24490,7 +24633,7 @@
     },
     "ListPlcExternalSources": {
       "arguments": {
-        "softwarePath": "PLC_1"
+        "softwarePath": "<exact softwarePath from GetProjectTree>"
       },
       "parameters": {},
       "operations": {},
@@ -24505,7 +24648,11 @@
         "softwarePath": "PLC_1",
         "groupPath": "",
         "importPath": "C:\\Examples\\documents",
-        "regexName": ""
+        "dryRun": true,
+        "confirm": false,
+        "fileNamesWithoutExtension": [
+          "<exact document basename from the import directory>"
+        ]
       },
       "parameters": {
         "importOption": {
@@ -24526,7 +24673,9 @@
         "groupPath": "",
         "importPath": "C:\\Examples\\documents",
         "fileNameWithoutExtension": "FC_Add",
-        "importOption": "Override"
+        "dryRun": true,
+        "confirm": false,
+        "overwrite": true
       },
       "parameters": {},
       "operations": {},
@@ -24634,6 +24783,7 @@
     },
     "BuildFlgNetCall": {
       "arguments": {
+        "outputReleaseKey": "21",
         "flgNet": {
           "callName": "FC_Ready",
           "parameters": [
@@ -24683,7 +24833,11 @@
     },
     "BuildPlcSymbolManifestFromPath": {
       "arguments": {
-        "path": "C:\\Examples\\snapshot"
+        "inputRoot": "<existing caller-owned immutable symbol export directory>",
+        "files": [
+          "<relative tag-table XML from ExportPlcTagTable or global DB export>"
+        ],
+        "expectedOrigin": "caller-owned-immutable-export-snapshot"
       },
       "parameters": {
         "path": {
@@ -24739,6 +24893,7 @@
     },
     "BuildStructuredText": {
       "arguments": {
+        "outputReleaseKey": "21",
         "structuredText": {
           "operations": [
             {
@@ -24761,7 +24916,7 @@
     },
     "BuildUnifiedHmiTemplateApplyDesign": {
       "arguments": {
-        "templateFile": "C:\\Examples\\templates\\Screen.xml"
+        "templateFile": "C:\\Examples\\templates\\Screen.json"
       },
       "parameters": {
         "fallbackWidth": {
@@ -24796,6 +24951,7 @@
     },
     "BuildPlcFbBlock": {
       "arguments": {
+        "outputReleaseKey": "21",
         "fbBlock": {
           "blockName": "FB_Ready",
           "blockNumber": 11,
@@ -24825,6 +24981,7 @@
     },
     "BuildPlcFcBlock": {
       "arguments": {
+        "outputReleaseKey": "21",
         "fcBlock": {
           "blockName": "FC_Ready",
           "blockNumber": 10,
@@ -24854,6 +25011,7 @@
     },
     "BuildPlcLadFcBlock": {
       "arguments": {
+        "outputReleaseKey": "21",
         "ladFcBlock": {
           "blockName": "FC_Lad",
           "blockNumber": 12,
@@ -25049,7 +25207,7 @@
     "ValidatePlcDocumentSchemas": {
       "arguments": {
         "filePath": "C:\\Examples\\exports\\Main.xml",
-        "schemaDirectory": "C:\\Siemens\\PublicAPI\\V{major}\\Schemas"
+        "schemaDirectory": "<absolute PublicAPI Schemas folder for the selected TIA release>"
       },
       "parameters": {},
       "operations": {},
@@ -25096,8 +25254,8 @@
     },
     "RenderPlcBlock": {
       "arguments": {
-        "inputPath": "C:\\Examples\\exports\\Main.xml",
-        "outputPath": "C:/Examples/reports/RenderPlcBlock.html"
+        "inputPath": "<data.outputFile from completed ExportPlcBlock>",
+        "outputPath": "<new absolute Block.html in an existing caller-selected directory>"
       },
       "parameters": {
         "inputPath": {
@@ -25117,8 +25275,8 @@
     },
     "RenderPlcProgramAtlas": {
       "arguments": {
-        "inputPath": "C:\\Examples\\exports",
-        "outputPath": "C:/Examples/reports/RenderPlcProgramAtlas.html"
+        "inputPath": "<data.outputFile from completed ExportPlcBlock>",
+        "outputPath": "<new absolute Atlas.html in an existing caller-selected directory>"
       },
       "parameters": {
         "inputPath": {
@@ -28035,7 +28193,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -28092,7 +28250,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -28570,7 +28728,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -28578,7 +28736,7 @@
               "exampleValue": "<exact softwarePath from GetProjectTree>"
             },
             "blockPath": {
-              "meaning": "Use paths.objectPath from GetSoftwareTree where selectorParameter=blockPath. Preserve escaped group segments."
+              "meaning": "Use paths.objectPath from GetSoftwareTree where selectorParameter=blockPath: the group-qualified path such as 07_Miscellaneous/FC_Ready (a bare name finds only root blocks). Preserve escaped group segments. ListPlcBlocks rows carry path=null and do not supply it."
             },
             "exportPath": {
               "meaning": "Existing absolute directory selected by the caller; never pass Main.xml here. The tool writes <block>.xml inside this directory and refuses an existing file.",
@@ -28639,7 +28797,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -28714,7 +28872,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -28781,7 +28939,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -28844,7 +29002,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -28911,7 +29069,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -28973,7 +29131,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -29045,7 +29203,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -29053,7 +29211,7 @@
               "exampleValue": "<exact softwarePath from GetProjectTree>"
             },
             "blockPath": {
-              "meaning": "Use paths.objectPath from GetSoftwareTree where selectorParameter=blockPath. Preserve escaped group segments."
+              "meaning": "Use paths.objectPath from GetSoftwareTree where selectorParameter=blockPath: the group-qualified path such as 07_Miscellaneous/FC_Ready (a bare name finds only root blocks). Preserve escaped group segments. ListPlcBlocks rows carry path=null and do not supply it."
             }
           },
           "operations": {},
@@ -29076,7 +29234,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -29109,7 +29267,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -29137,7 +29295,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -29166,7 +29324,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -29196,7 +29354,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -29260,7 +29418,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -29288,7 +29446,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -29335,7 +29493,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -29415,7 +29573,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -29446,7 +29604,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -29484,7 +29642,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -29561,7 +29719,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -29652,7 +29810,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -29765,7 +29923,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -29838,7 +29996,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -46998,7 +47156,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -47055,7 +47213,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -48590,7 +48748,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -48598,7 +48756,7 @@
               "exampleValue": "<exact softwarePath from GetProjectTree>"
             },
             "blockPath": {
-              "meaning": "Use paths.objectPath from GetSoftwareTree where selectorParameter=blockPath. Preserve escaped group segments."
+              "meaning": "Use paths.objectPath from GetSoftwareTree where selectorParameter=blockPath: the group-qualified path such as 07_Miscellaneous/FC_Ready (a bare name finds only root blocks). Preserve escaped group segments. ListPlcBlocks rows carry path=null and do not supply it."
             },
             "exportPath": {
               "meaning": "Existing absolute directory selected by the caller; never pass Main.xml here. The tool writes <block>.xml inside this directory and refuses an existing file.",
@@ -48659,7 +48817,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -48752,7 +48910,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -48819,7 +48977,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -48881,7 +49039,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -48956,7 +49114,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -49079,7 +49237,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -49646,7 +49804,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -49675,7 +49833,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -49683,7 +49841,7 @@
               "exampleValue": "<exact softwarePath from GetProjectTree>"
             },
             "blockPath": {
-              "meaning": "Use paths.objectPath from GetSoftwareTree where selectorParameter=blockPath. Preserve escaped group segments."
+              "meaning": "Use paths.objectPath from GetSoftwareTree where selectorParameter=blockPath: the group-qualified path such as 07_Miscellaneous/FC_Ready (a bare name finds only root blocks). Preserve escaped group segments. ListPlcBlocks rows carry path=null and do not supply it."
             }
           },
           "operations": {},
@@ -49754,7 +49912,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -49848,7 +50006,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -49876,7 +50034,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -49923,7 +50081,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -50317,7 +50475,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -50414,7 +50572,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -50572,7 +50730,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -50685,7 +50843,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -50783,7 +50941,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -51102,7 +51260,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -51143,7 +51301,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -51173,7 +51331,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -51206,7 +51364,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"
@@ -60964,7 +61122,7 @@
           },
           "parameters": {
             "softwarePath": {
-              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1, or device-groups/%2BS1/devices/ET%20200SP%20station_1/%2BS1-K1 for a station inside a device group; preserve URL-encoded group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
               "requiresBinding": true,
               "tools": [
                 "GetProjectTree"

@@ -24180,7 +24180,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "layout": {
             "columns": 1,
             "cellWidth": 160,
@@ -24194,7 +24194,8 @@
                 "text": "Ready"
               }
             ]
-          }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -24207,7 +24208,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "design": {
             "screen": {
               "name": "Overview",
@@ -24225,7 +24226,8 @@
                 "text": "Ready"
               }
             ]
-          }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -24238,7 +24240,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "theme": {
             "name": "Example",
             "palette": {
@@ -24247,7 +24249,8 @@
               "Text": "0xFF202020",
               "Border": "0xFF808080"
             }
-          }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -24314,10 +24317,11 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "itemName": "StatusText",
           "propertyName": "Visible",
-          "tagName": "Ready"
+          "tagName": "Ready",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -24429,6 +24433,7 @@
           "plc-foundation"
         ],
         "arguments": {
+          "outputReleaseKey": "21",
           "flgNet": {
             "callName": "FC_Ready",
             "parameters": [
@@ -24544,7 +24549,7 @@
           "full"
         ],
         "arguments": {
-          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AM03-0AB0\",\"plcVersion\":\"V3.0\"}",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -24608,6 +24613,7 @@
           "plc-foundation"
         ],
         "arguments": {
+          "outputReleaseKey": "21",
           "structuredText": {
             "operations": [
               {
@@ -24667,7 +24673,7 @@
           "full"
         ],
         "arguments": {
-          "templateFile": "C:\\Examples\\templates\\Screen.xml"
+          "templateFile": "C:\\Examples\\templates\\Screen.json"
         },
         "envelopeVersion": 4
       },
@@ -25170,7 +25176,7 @@
           "full"
         ],
         "arguments": {
-          "keyword": "1513",
+          "keyword": "&lt;exact catalog TypeIdentifier from SearchInstalledGsdDevices&gt;",
           "deviceName": "PLC_2"
         },
         "envelopeVersion": 4
@@ -25183,7 +25189,7 @@
           "full"
         ],
         "arguments": {
-          "keyword": "1513",
+          "keyword": "&lt;exact TypeIdentifier from SearchHardwareCatalog&gt;",
           "deviceName": "PLC_2"
         },
         "envelopeVersion": 4
@@ -25386,7 +25392,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "groupPath": "Examples",
+          "groupPath": "/Examples",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -25488,7 +25494,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down",
           "dryRun": true
@@ -25504,7 +25510,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "itemName": "StatusText",
           "propertyName": "Visible",
           "dryRun": true
@@ -25520,7 +25526,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenName": "Overview"
+          "screenName": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -25532,8 +25538,8 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "softwarePath": "HMI_Unified_1",
+          "screenName": "/Overview",
           "itemName": "StatusText"
         },
         "envelopeVersion": 4
@@ -25559,7 +25565,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
+          "tagTableName": "/Default tag table",
           "tagName": "Ready"
         },
         "envelopeVersion": 4
@@ -25573,7 +25579,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table"
+          "tagTableName": "/Default tag table"
         },
         "envelopeVersion": 4
       },
@@ -25655,7 +25661,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down"
         },
@@ -25767,11 +25773,12 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down",
           "actionKind": "set-bit",
-          "targetTag": "Ready"
+          "targetTag": "Ready",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -25784,9 +25791,10 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
-          "eventType": "Down"
+          "eventType": "Down",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -25798,7 +25806,8 @@
           "full"
         ],
         "arguments": {
-          "hmiSoftwarePath": "HMI_RT_1"
+          "hmiSoftwarePath": "HMI_RT_1",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -25811,9 +25820,10 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "itemName": "StatusText",
-          "propertyName": "Visible"
+          "propertyName": "Visible",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -25826,7 +25836,8 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview"
+          "screenName": "/Overview",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -25839,8 +25850,9 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
-          "itemName": "StatusText"
+          "screenName": "/Overview",
+          "itemName": "StatusText",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -25853,8 +25865,11 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
-          "tagName": "Ready"
+          "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
+          "tagName": "Ready",
+          "plcName": "PLC_1",
+          "plcTag": "&lt;exact PLC tag name from project reads&gt;",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -25867,7 +25882,8 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table"
+          "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -25880,7 +25896,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "action": "export",
+          "action": "import",
           "filePath": "C:\\Examples\\exports\\Charts.xml.zip",
           "dryRun": true,
           "modelVersion": "V2.0"
@@ -26008,7 +26024,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
         },
         "envelopeVersion": 4
       },
@@ -26021,7 +26037,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
         },
         "envelopeVersion": 4
       },
@@ -26034,7 +26050,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
         },
         "envelopeVersion": 4
       },
@@ -26061,7 +26077,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -26074,7 +26091,8 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDir": "C:\\Examples\\exports"
+          "exportDir": "C:\\Examples\\exports",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -26087,8 +26105,9 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenName": "Screen_1",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
+          "screenName": "/Screen_1",
+          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -26101,8 +26120,9 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
+          "tagTableName": "/Default tag table",
+          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -26783,7 +26803,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview"
+          "screenPath": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -27397,9 +27417,6 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -27421,10 +27438,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "screenPath": "Overview",
-          "itemName": "StatusText",
-          "typePath": "UDT_Status",
-          "version": "&lt;version from target discovery&gt;"
+          "screenPath": "/Overview",
+          "itemName": "MotorFaceplate_1"
         },
         "envelopeVersion": 4
       },
@@ -27452,7 +27467,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "itemNames": [
             "StatusText"
           ]
@@ -27468,7 +27483,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down"
         },
@@ -27483,7 +27498,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "itemName": "StatusText",
           "propertyName": "Visible"
         },
@@ -27498,7 +27513,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "itemName": "StatusText"
         },
         "envelopeVersion": 4
@@ -27513,7 +27528,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "typePath": "UDT_Status",
+          "typePath": "/Faceplates/MotorFaceplate",
           "version": "&lt;version from target discovery&gt;"
         },
         "envelopeVersion": 4
@@ -27529,15 +27544,17 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
             {
               "property": "ScreenItems",
-              "name": "StartButton"
+              "name": "MotorFaceplate_1"
+            },
+            {
+              "property": "Interface",
+              "key": "PropertyName",
+              "name": "Speed"
             }
           ]
         },
@@ -27672,7 +27689,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "importPath": "C:\\Examples\\exports\\Main.xml"
+          "importPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
         },
         "envelopeVersion": 4
       },
@@ -27685,7 +27702,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "importPath": "C:\\Examples\\exports\\Main.xml"
+          "importPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
         },
         "envelopeVersion": 4
       },
@@ -28866,7 +28883,7 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
-          "objectPath": "Popup_1"
+          "objectPath": "/Popup_1"
         },
         "envelopeVersion": 4
       },
@@ -30594,18 +30611,20 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
             {
               "property": "ScreenItems",
-              "name": "StartButton"
+              "name": "MotorFaceplate_1"
+            },
+            {
+              "property": "Interface",
+              "key": "PropertyName",
+              "name": "Speed"
             }
           ],
-          "propertyName": "Visible",
+          "propertyName": "Value",
           "confirmDelete": false,
           "dryRun": true,
           "action": "read"
@@ -30642,9 +30661,6 @@
           "action": "read",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -30666,7 +30682,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "family": "screens",
-          "groupPath": "Examples",
+          "groupPath": "/Examples",
           "action": "create",
           "dryRun": true
         },
@@ -30724,20 +30740,18 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
             {
               "property": "ScreenItems",
-              "name": "StartButton"
+              "name": "MotorFaceplate_1"
             }
           ],
           "confirmDelete": false,
           "dryRun": true,
-          "action": "read"
+          "action": "read",
+          "collectionProperty": "Interface"
         },
         "envelopeVersion": 4
       },
@@ -30766,7 +30780,7 @@
           "full"
         ],
         "arguments": {
-          "plantPath": "ExampleArea",
+          "plantPath": "/ExampleArea/ExampleUnit",
           "action": "create",
           "plantObjectType": "&lt;existing plant object type from this project library&gt;",
           "dryRun": true
@@ -30782,7 +30796,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
@@ -30800,9 +30814,6 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
@@ -32270,7 +32281,8 @@
           "full"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": "PLC_1",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -32349,7 +32361,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down",
           "scriptCode": "HMIRuntime.Tags(\"Ready\").Read();"
@@ -32411,9 +32423,6 @@
           "dryRun": true,
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -32437,7 +32446,8 @@
           "dryRun": true,
           "objectPath": [
             {
-              "property": "ScreenFolder"
+              "property": "ScreenGroups",
+              "name": "Production"
             },
             {
               "property": "Screens",
@@ -32462,7 +32472,7 @@
           "full"
         ],
         "arguments": {
-          "plantPath": "Plant_1",
+          "plantPath": "/Plant_1",
           "dryRun": true,
           "objectPath": [],
           "properties": {
@@ -32728,7 +32738,7 @@
         ],
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "schemaDirectory": "C:\\Siemens\\PublicAPI\\V{major}\\Schemas"
+          "schemaDirectory": "&lt;absolute PublicAPI Schemas folder for the selected TIA release&gt;"
         },
         "envelopeVersion": 4
       },
@@ -32756,9 +32766,6 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
@@ -33008,7 +33015,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "layout": {
             "columns": 1,
             "cellWidth": 160,
@@ -33022,7 +33029,8 @@
                 "text": "Ready"
               }
             ]
-          }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -33035,7 +33043,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "design": {
             "screen": {
               "name": "Overview",
@@ -33053,7 +33061,8 @@
                 "text": "Ready"
               }
             ]
-          }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -33066,7 +33075,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "theme": {
             "name": "Example",
             "palette": {
@@ -33075,7 +33084,8 @@
               "Text": "0xFF202020",
               "Border": "0xFF808080"
             }
-          }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -33142,9 +33152,10 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
-          "tagName": "Ready"
+          "tagName": "Ready",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -33157,10 +33168,11 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "itemName": "StatusText",
           "propertyName": "Visible",
-          "tagName": "Ready"
+          "tagName": "Ready",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -33335,6 +33347,7 @@
           "plc-foundation"
         ],
         "arguments": {
+          "outputReleaseKey": "21",
           "flgNet": {
             "callName": "FC_Ready",
             "parameters": [
@@ -33386,6 +33399,7 @@
           "plc-foundation"
         ],
         "arguments": {
+          "outputReleaseKey": "21",
           "fbBlock": {
             "blockName": "FB_Ready",
             "blockNumber": 11,
@@ -33419,6 +33433,7 @@
           "plc-foundation"
         ],
         "arguments": {
+          "outputReleaseKey": "21",
           "fcBlock": {
             "blockName": "FC_Ready",
             "blockNumber": 10,
@@ -33477,6 +33492,7 @@
           "plc-foundation"
         ],
         "arguments": {
+          "outputReleaseKey": "21",
           "ladFcBlock": {
             "blockName": "FC_Lad",
             "blockNumber": 12,
@@ -33575,7 +33591,7 @@
           "full"
         ],
         "arguments": {
-          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AM03-0AB0\",\"plcVersion\":\"V3.0\"}",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -33639,6 +33655,7 @@
           "plc-foundation"
         ],
         "arguments": {
+          "outputReleaseKey": "21",
           "structuredText": {
             "operations": [
               {
@@ -33698,7 +33715,7 @@
           "full"
         ],
         "arguments": {
-          "templateFile": "C:\\Examples\\templates\\Screen.xml"
+          "templateFile": "C:\\Examples\\templates\\Screen.json"
         },
         "envelopeVersion": 4
       },
@@ -34201,7 +34218,7 @@
           "full"
         ],
         "arguments": {
-          "keyword": "1513",
+          "keyword": "&lt;exact catalog TypeIdentifier from SearchInstalledGsdDevices&gt;",
           "deviceName": "PLC_2"
         },
         "envelopeVersion": 4
@@ -34214,7 +34231,7 @@
           "full"
         ],
         "arguments": {
-          "keyword": "1513",
+          "keyword": "&lt;exact TypeIdentifier from SearchHardwareCatalog&gt;",
           "deviceName": "PLC_2"
         },
         "envelopeVersion": 4
@@ -34417,7 +34434,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "groupPath": "Examples",
+          "groupPath": "/Examples",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -34519,7 +34536,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down",
           "dryRun": true
@@ -34535,7 +34552,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "itemName": "StatusText",
           "propertyName": "Visible",
           "dryRun": true
@@ -34551,7 +34568,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenName": "Overview"
+          "screenName": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -34563,8 +34580,8 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "softwarePath": "HMI_Unified_1",
+          "screenName": "/Overview",
           "itemName": "StatusText"
         },
         "envelopeVersion": 4
@@ -34590,7 +34607,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
+          "tagTableName": "/Default tag table",
           "tagName": "Ready"
         },
         "envelopeVersion": 4
@@ -34604,7 +34621,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table"
+          "tagTableName": "/Default tag table"
         },
         "envelopeVersion": 4
       },
@@ -34686,7 +34703,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down"
         },
@@ -34798,11 +34815,12 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down",
           "actionKind": "set-bit",
-          "targetTag": "Ready"
+          "targetTag": "Ready",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -34815,9 +34833,10 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
-          "eventType": "Down"
+          "eventType": "Down",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -34829,7 +34848,8 @@
           "full"
         ],
         "arguments": {
-          "hmiSoftwarePath": "HMI_RT_1"
+          "hmiSoftwarePath": "HMI_RT_1",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -34842,9 +34862,10 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "itemName": "StatusText",
-          "propertyName": "Visible"
+          "propertyName": "Visible",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -34857,7 +34878,8 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview"
+          "screenName": "/Overview",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -34870,8 +34892,9 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
-          "itemName": "StatusText"
+          "screenName": "/Overview",
+          "itemName": "StatusText",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -34884,8 +34907,11 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
-          "tagName": "Ready"
+          "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
+          "tagName": "Ready",
+          "plcName": "PLC_1",
+          "plcTag": "&lt;exact PLC tag name from project reads&gt;",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -34898,7 +34924,8 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table"
+          "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -34911,7 +34938,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "action": "export",
+          "action": "import",
           "filePath": "C:\\Examples\\exports\\Charts.xml.zip",
           "dryRun": true,
           "modelVersion": "V2.0"
@@ -35039,7 +35066,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
         },
         "envelopeVersion": 4
       },
@@ -35052,7 +35079,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
         },
         "envelopeVersion": 4
       },
@@ -35065,7 +35092,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
         },
         "envelopeVersion": 4
       },
@@ -35092,7 +35119,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -35105,7 +35133,8 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDir": "C:\\Examples\\exports"
+          "exportDir": "C:\\Examples\\exports",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -35118,8 +35147,9 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenName": "Screen_1",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
+          "screenName": "/Screen_1",
+          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -35132,8 +35162,9 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
+          "tagTableName": "/Default tag table",
+          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -35801,7 +35832,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview"
+          "screenPath": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -36427,9 +36458,6 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -36451,10 +36479,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "screenPath": "Overview",
-          "itemName": "StatusText",
-          "typePath": "UDT_Status",
-          "version": "&lt;version from target discovery&gt;"
+          "screenPath": "/Overview",
+          "itemName": "MotorFaceplate_1"
         },
         "envelopeVersion": 4
       },
@@ -36482,7 +36508,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "itemNames": [
             "StatusText"
           ]
@@ -36498,7 +36524,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down"
         },
@@ -36513,7 +36539,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "itemName": "StatusText",
           "propertyName": "Visible"
         },
@@ -36528,7 +36554,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "itemName": "StatusText"
         },
         "envelopeVersion": 4
@@ -36543,7 +36569,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "typePath": "UDT_Status",
+          "typePath": "/Faceplates/MotorFaceplate",
           "version": "&lt;version from target discovery&gt;"
         },
         "envelopeVersion": 4
@@ -36559,15 +36585,17 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
             {
               "property": "ScreenItems",
-              "name": "StartButton"
+              "name": "MotorFaceplate_1"
+            },
+            {
+              "property": "Interface",
+              "key": "PropertyName",
+              "name": "Speed"
             }
           ]
         },
@@ -36702,7 +36730,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "importPath": "C:\\Examples\\exports\\Main.xml"
+          "importPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
         },
         "envelopeVersion": 4
       },
@@ -36715,7 +36743,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "importPath": "C:\\Examples\\exports\\Main.xml"
+          "importPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
         },
         "envelopeVersion": 4
       },
@@ -37890,7 +37918,7 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
-          "objectPath": "Popup_1"
+          "objectPath": "/Popup_1"
         },
         "envelopeVersion": 4
       },
@@ -39729,18 +39757,20 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
             {
               "property": "ScreenItems",
-              "name": "StartButton"
+              "name": "MotorFaceplate_1"
+            },
+            {
+              "property": "Interface",
+              "key": "PropertyName",
+              "name": "Speed"
             }
           ],
-          "propertyName": "Visible",
+          "propertyName": "Value",
           "confirmDelete": false,
           "dryRun": true,
           "action": "read"
@@ -39777,9 +39807,6 @@
           "action": "read",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -39801,7 +39828,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "family": "screens",
-          "groupPath": "Examples",
+          "groupPath": "/Examples",
           "action": "create",
           "dryRun": true
         },
@@ -39859,20 +39886,18 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
             {
               "property": "ScreenItems",
-              "name": "StartButton"
+              "name": "MotorFaceplate_1"
             }
           ],
           "confirmDelete": false,
           "dryRun": true,
-          "action": "read"
+          "action": "read",
+          "collectionProperty": "Interface"
         },
         "envelopeVersion": 4
       },
@@ -39901,7 +39926,7 @@
           "full"
         ],
         "arguments": {
-          "plantPath": "ExampleArea",
+          "plantPath": "/ExampleArea/ExampleUnit",
           "action": "create",
           "plantObjectType": "&lt;existing plant object type from this project library&gt;",
           "dryRun": true
@@ -39917,7 +39942,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
@@ -39935,9 +39960,6 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
@@ -41405,7 +41427,8 @@
           "full"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": "PLC_1",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -41484,7 +41507,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down",
           "scriptCode": "HMIRuntime.Tags(\"Ready\").Read();"
@@ -41546,9 +41569,6 @@
           "dryRun": true,
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -41572,7 +41592,8 @@
           "dryRun": true,
           "objectPath": [
             {
-              "property": "ScreenFolder"
+              "property": "ScreenGroups",
+              "name": "Production"
             },
             {
               "property": "Screens",
@@ -41597,7 +41618,7 @@
           "full"
         ],
         "arguments": {
-          "plantPath": "Plant_1",
+          "plantPath": "/Plant_1",
           "dryRun": true,
           "objectPath": [],
           "properties": {
@@ -41883,7 +41904,7 @@
         ],
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "schemaDirectory": "C:\\Siemens\\PublicAPI\\V{major}\\Schemas"
+          "schemaDirectory": "&lt;absolute PublicAPI Schemas folder for the selected TIA release&gt;"
         },
         "envelopeVersion": 4
       },
@@ -41911,9 +41932,6 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
@@ -80485,7 +80503,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "layout": {
             "columns": 1,
             "cellWidth": 160,
@@ -80499,7 +80517,8 @@
                 "text": "Ready"
               }
             ]
-          }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -80512,7 +80531,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "design": {
             "screen": {
               "name": "Overview",
@@ -80530,7 +80549,8 @@
                 "text": "Ready"
               }
             ]
-          }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -80543,7 +80563,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "theme": {
             "name": "Example",
             "palette": {
@@ -80552,7 +80572,8 @@
               "Text": "0xFF202020",
               "Border": "0xFF808080"
             }
-          }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -80593,7 +80614,8 @@
           "lite"
         ],
         "arguments": {
-          "projectName": "项目1"
+          "projectName": "&lt;file name without extension from selected projectPath&gt;",
+          "expectedProjectFile": "&lt;exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile&gt;"
         },
         "envelopeVersion": 4
       },
@@ -80618,10 +80640,11 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "itemName": "StatusText",
           "propertyName": "Visible",
-          "tagName": "Ready"
+          "tagName": "Ready",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -80731,6 +80754,7 @@
           "full"
         ],
         "arguments": {
+          "outputReleaseKey": "21",
           "flgNet": {
             "callName": "FC_Ready",
             "parameters": [
@@ -80780,7 +80804,11 @@
           "full"
         ],
         "arguments": {
-          "path": "C:\\Examples\\snapshot"
+          "inputRoot": "&lt;existing caller-owned immutable symbol export directory&gt;",
+          "files": [
+            "&lt;relative tag-table XML from ExportPlcTagTable or global DB export&gt;"
+          ],
+          "expectedOrigin": "caller-owned-immutable-export-snapshot"
         },
         "envelopeVersion": 4
       },
@@ -80837,7 +80865,7 @@
           "full"
         ],
         "arguments": {
-          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AM03-0AB0\",\"plcVersion\":\"V3.0\"}",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -80899,6 +80927,7 @@
           "full"
         ],
         "arguments": {
+          "outputReleaseKey": "21",
           "structuredText": {
             "operations": [
               {
@@ -80958,7 +80987,7 @@
           "full"
         ],
         "arguments": {
-          "templateFile": "C:\\Examples\\templates\\Screen.xml"
+          "templateFile": "C:\\Examples\\templates\\Screen.json"
         },
         "envelopeVersion": 4
       },
@@ -81074,7 +81103,10 @@
           "full",
           "lite"
         ],
-        "arguments": {},
+        "arguments": {
+          "dryRun": true,
+          "confirm": false
+        },
         "envelopeVersion": 4
       },
       {
@@ -81332,7 +81364,9 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -81344,7 +81378,9 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -81411,7 +81447,7 @@
           "lite"
         ],
         "arguments": {
-          "projectName": "项目1"
+          "processId": 12345
         },
         "envelopeVersion": 4
       },
@@ -81463,7 +81499,7 @@
           "full"
         ],
         "arguments": {
-          "keyword": "1513",
+          "keyword": "&lt;exact catalog TypeIdentifier from SearchInstalledGsdDevices&gt;",
           "deviceName": "PLC_2"
         },
         "envelopeVersion": 4
@@ -81476,7 +81512,7 @@
           "full"
         ],
         "arguments": {
-          "keyword": "1513",
+          "keyword": "&lt;exact TypeIdentifier from SearchHardwareCatalog&gt;",
           "deviceName": "PLC_2"
         },
         "envelopeVersion": 4
@@ -81493,7 +81529,9 @@
           "preferredMlfb": "6ES7 513-1AM03-0AB0",
           "preferredVersion": "V3.1",
           "deviceName": "PLC_2",
-          "family": "S7-1500"
+          "family": "S7-1500",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -81562,8 +81600,10 @@
           "lite"
         ],
         "arguments": {
-          "directoryPath": "C:\\Projects",
-          "projectName": "Demo"
+          "directoryPath": "&lt;existing caller-selected project directory&gt;",
+          "projectName": "&lt;fresh caller-selected project name&gt;",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -81615,7 +81655,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "groupPath": "Examples",
+          "groupPath": "/Examples",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -81672,7 +81712,10 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "externalSourceName": "FC_Add"
+          "groupPath": "",
+          "externalSourceName": "FC_Add.scl",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -81713,7 +81756,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down",
           "dryRun": true
@@ -81729,7 +81772,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "itemName": "StatusText",
           "propertyName": "Visible",
           "dryRun": true
@@ -81746,7 +81789,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenName": "Overview"
+          "screenName": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -81758,8 +81801,8 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "softwarePath": "HMI_Unified_1",
+          "screenName": "/Overview",
           "itemName": "StatusText"
         },
         "envelopeVersion": 4
@@ -81785,7 +81828,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
+          "tagTableName": "/Default tag table",
           "tagName": "Ready"
         },
         "envelopeVersion": 4
@@ -81799,7 +81842,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table"
+          "tagTableName": "/Default tag table"
         },
         "envelopeVersion": 4
       },
@@ -81866,7 +81909,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down"
         },
@@ -81977,11 +82020,12 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down",
           "actionKind": "set-bit",
-          "targetTag": "Ready"
+          "targetTag": "Ready",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -81994,9 +82038,10 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
-          "eventType": "Down"
+          "eventType": "Down",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -82008,7 +82053,8 @@
           "full"
         ],
         "arguments": {
-          "hmiSoftwarePath": "HMI_RT_1"
+          "hmiSoftwarePath": "HMI_RT_1",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -82021,9 +82067,10 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "itemName": "StatusText",
-          "propertyName": "Visible"
+          "propertyName": "Visible",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -82036,7 +82083,8 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview"
+          "screenName": "/Overview",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -82049,8 +82097,9 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
-          "itemName": "StatusText"
+          "screenName": "/Overview",
+          "itemName": "StatusText",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -82063,8 +82112,11 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
-          "tagName": "Ready"
+          "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
+          "tagName": "Ready",
+          "plcName": "PLC_1",
+          "plcTag": "&lt;exact PLC tag name from project reads&gt;",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -82077,7 +82129,8 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table"
+          "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -82090,7 +82143,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "action": "export",
+          "action": "import",
           "filePath": "C:\\Examples\\exports\\Charts.xml.zip",
           "dryRun": true,
           "modelVersion": "V2.0"
@@ -82218,7 +82271,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
         },
         "envelopeVersion": 4
       },
@@ -82231,7 +82284,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
         },
         "envelopeVersion": 4
       },
@@ -82244,7 +82297,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
         },
         "envelopeVersion": 4
       },
@@ -82271,7 +82324,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -82284,7 +82338,8 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDir": "C:\\Examples\\exports"
+          "exportDir": "C:\\Examples\\exports",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -82297,8 +82352,9 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenName": "Screen_1",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
+          "screenName": "/Screen_1",
+          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -82311,8 +82367,9 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
+          "tagTableName": "/Default tag table",
+          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -82339,9 +82396,11 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main",
-          "exportPath": "C:\\Examples\\exports"
+          "exportPath": "&lt;existing caller-selected export directory&gt;",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -82355,7 +82414,9 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "blockPath": "Main",
-          "exportPath": "C:\\Examples\\exports"
+          "exportPath": "C:\\Examples\\exports",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -82367,9 +82428,11 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports",
-          "regexName": ""
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "groupPath": "",
+          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -82383,7 +82446,9 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports",
-          "regexName": "FB_.*"
+          "dryRun": true,
+          "confirm": false,
+          "groupPath": "&lt;exact caller-selected block group containing the intended FB blocks&gt;"
         },
         "envelopeVersion": 4
       },
@@ -82411,9 +82476,11 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
-          "tagTableName": "Default tag table",
-          "exportPath": "C:\\Examples\\exports\\ExportPlcTagTable.xml"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "tagTableName": "默认变量表",
+          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -82426,9 +82493,11 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports",
-          "typePath": "UDT_Status"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
+          "typePath": "UDT_Status",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -82440,8 +82509,11 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "groupPath": "",
+          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -82453,9 +82525,11 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
-          "watchTableName": "WT1",
-          "exportPath": "C:\\Examples\\exports\\ExportPlcWatchTable.xml"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "watchTableName": "Watch_1",
+          "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -82522,10 +82596,11 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "toName": "SpeedAxis_1",
-          "exportPath": "C:\\Examples\\exports\\ExportTechnologyObject.xml",
-          "dryRun": true
+          "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -82608,7 +82683,9 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "externalSourceName": "FC_Add"
+          "externalSourceName": "FC_Add.scl",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -82949,7 +83026,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview"
+          "screenPath": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -83117,7 +83194,7 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -83130,7 +83207,7 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main"
         },
         "envelopeVersion": 4
@@ -83292,7 +83369,7 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "typePath": "UDT_Status"
         },
         "envelopeVersion": 4
@@ -83461,7 +83538,7 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -83474,7 +83551,7 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -83499,8 +83576,7 @@
           "lite"
         ],
         "arguments": {
-          "toolName": "ListPlcBlocks",
-          "exampleKind": "all"
+          "toolName": "ListPlcBlocks"
         },
         "envelopeVersion": 4
       },
@@ -83541,9 +83617,6 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -83565,10 +83638,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "screenPath": "Overview",
-          "itemName": "StatusText",
-          "typePath": "UDT_Status",
-          "version": "&lt;version from target discovery&gt;"
+          "screenPath": "/Overview",
+          "itemName": "MotorFaceplate_1"
         },
         "envelopeVersion": 4
       },
@@ -83596,7 +83667,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "itemNames": [
             "StatusText"
           ]
@@ -83612,7 +83683,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down"
         },
@@ -83627,7 +83698,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "itemName": "StatusText",
           "propertyName": "Visible"
         },
@@ -83642,7 +83713,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "itemName": "StatusText"
         },
         "envelopeVersion": 4
@@ -83657,7 +83728,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "typePath": "UDT_Status",
+          "typePath": "/Faceplates/MotorFaceplate",
           "version": "&lt;version from target discovery&gt;"
         },
         "envelopeVersion": 4
@@ -83673,15 +83744,17 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
             {
               "property": "ScreenItems",
-              "name": "StartButton"
+              "name": "MotorFaceplate_1"
+            },
+            {
+              "property": "Interface",
+              "key": "PropertyName",
+              "name": "Speed"
             }
           ]
         },
@@ -83789,7 +83862,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "importPath": "C:\\Examples\\exports\\Main.xml"
+          "importPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
         },
         "envelopeVersion": 4
       },
@@ -83802,7 +83875,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "importPath": "C:\\Examples\\exports\\Main.xml"
+          "importPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
         },
         "envelopeVersion": 4
       },
@@ -83961,9 +84034,12 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "importPath": "C:\\Temp\\FB_Pump.xml"
+          "importPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
+          "dryRun": true,
+          "confirm": false,
+          "overwrite": false
         },
         "envelopeVersion": 4
       },
@@ -83979,7 +84055,9 @@
           "groupPath": "",
           "importPath": "C:\\Examples\\documents",
           "fileNameWithoutExtension": "FC_Add",
-          "importOption": "Override"
+          "dryRun": true,
+          "confirm": false,
+          "overwrite": true
         },
         "envelopeVersion": 4
       },
@@ -84011,7 +84089,11 @@
           "softwarePath": "PLC_1",
           "groupPath": "",
           "importPath": "C:\\Examples\\documents",
-          "regexName": ""
+          "dryRun": true,
+          "confirm": false,
+          "fileNamesWithoutExtension": [
+            "&lt;exact document basename from the import directory&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -84024,11 +84106,12 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "groupPath": "Examples",
-          "dir": "C:\\Examples\\exports",
+          "groupPath": "",
+          "dir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
           "dryRun": true,
-          "overwrite": false,
-          "regexName": "^Main\\.xml$"
+          "confirm": false,
+          "regexName": "^Main\\.xml$",
+          "overwrite": false
         },
         "envelopeVersion": 4
       },
@@ -84043,7 +84126,9 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "groupPath": "",
-          "filePath": "C:\\Examples\\FC_Add.scl"
+          "filePath": "C:/Examples/FC_Add.scl",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -84056,10 +84141,11 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "sourceDir": "C:\\Examples\\exports",
+          "sourceDir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
           "dryRun": true,
-          "overwrite": false,
+          "confirm": false,
           "regexName": "^Main\\.xml$",
+          "overwrite": false,
           "compileAfter": false,
           "stopOnImportFailure": true
         },
@@ -84074,9 +84160,12 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "folderPath": "",
-          "importPath": "C:\\Temp\\Tags.xml"
+          "importPath": "&lt;data.outputFile from completed ExportPlcTagTable&gt;",
+          "dryRun": true,
+          "confirm": false,
+          "overwrite": false
         },
         "envelopeVersion": 4
       },
@@ -84103,9 +84192,12 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "importPath": "C:\\Examples\\exports\\UDT_Status.xml"
+          "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
+          "dryRun": true,
+          "confirm": false,
+          "overwrite": false
         },
         "envelopeVersion": 4
       },
@@ -84532,8 +84624,7 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
-          "regexName": "FB_.*"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -84545,7 +84636,7 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -84606,7 +84697,7 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -84619,7 +84710,7 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -84631,7 +84722,7 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -84689,7 +84780,7 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -84891,7 +84982,7 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
-          "objectPath": "Popup_1"
+          "objectPath": "/Popup_1"
         },
         "envelopeVersion": 4
       },
@@ -86040,18 +86131,20 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
             {
               "property": "ScreenItems",
-              "name": "StartButton"
+              "name": "MotorFaceplate_1"
+            },
+            {
+              "property": "Interface",
+              "key": "PropertyName",
+              "name": "Speed"
             }
           ],
-          "propertyName": "Visible",
+          "propertyName": "Value",
           "confirmDelete": false,
           "dryRun": true,
           "action": "read"
@@ -86088,9 +86181,6 @@
           "action": "read",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -86112,7 +86202,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "family": "screens",
-          "groupPath": "Examples",
+          "groupPath": "/Examples",
           "action": "create",
           "dryRun": true
         },
@@ -86170,20 +86260,18 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
             {
               "property": "ScreenItems",
-              "name": "StartButton"
+              "name": "MotorFaceplate_1"
             }
           ],
           "confirmDelete": false,
           "dryRun": true,
-          "action": "read"
+          "action": "read",
+          "collectionProperty": "Interface"
         },
         "envelopeVersion": 4
       },
@@ -86212,7 +86300,7 @@
           "full"
         ],
         "arguments": {
-          "plantPath": "ExampleArea",
+          "plantPath": "/ExampleArea/ExampleUnit",
           "action": "create",
           "plantObjectType": "&lt;existing plant object type from this project library&gt;",
           "dryRun": true
@@ -86228,7 +86316,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
@@ -86246,9 +86334,6 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
@@ -86317,7 +86402,9 @@
           "lite"
         ],
         "arguments": {
-          "path": "C:\\Examples\\Example.ap{extension}"
+          "path": "&lt;exact caller-selected closed project file for this release&gt;",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -86568,8 +86655,8 @@
           "full"
         ],
         "arguments": {
-          "inputPath": "C:\\Examples\\exports\\Main.xml",
-          "outputPath": "C:/Examples/reports/RenderPlcBlock.html"
+          "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
+          "outputPath": "&lt;new absolute Block.html in an existing caller-selected directory&gt;"
         },
         "envelopeVersion": 4
       },
@@ -86591,8 +86678,8 @@
           "full"
         ],
         "arguments": {
-          "inputPath": "C:\\Examples\\exports",
-          "outputPath": "C:/Examples/reports/RenderPlcProgramAtlas.html"
+          "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
+          "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
         },
         "envelopeVersion": 4
       },
@@ -86680,8 +86767,6 @@
           "full"
         ],
         "arguments": {
-          "expectedPlcSoftwarePath": "PLC_1",
-          "expectedHmiSoftwarePath": "HMI_RT_1",
           "connectIfNeeded": false,
           "includeProjectTree": false,
           "inspectPortalProcesses": false
@@ -86901,7 +86986,10 @@
           "full",
           "lite"
         ],
-        "arguments": {},
+        "arguments": {
+          "dryRun": true,
+          "confirm": false
+        },
         "envelopeVersion": 4
       },
       {
@@ -86950,8 +87038,7 @@
           "lite"
         ],
         "arguments": {
-          "keyword": "1513",
-          "limit": 10
+          "keyword": "1513"
         },
         "envelopeVersion": 4
       },
@@ -87107,7 +87194,8 @@
           "full"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": "PLC_1",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -87186,7 +87274,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down",
           "scriptCode": "HMIRuntime.Tags(\"Ready\").Read();"
@@ -87248,9 +87336,6 @@
           "dryRun": true,
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -87274,7 +87359,8 @@
           "dryRun": true,
           "objectPath": [
             {
-              "property": "ScreenFolder"
+              "property": "ScreenGroups",
+              "name": "Production"
             },
             {
               "property": "Screens",
@@ -87299,7 +87385,7 @@
           "full"
         ],
         "arguments": {
-          "plantPath": "Plant_1",
+          "plantPath": "/Plant_1",
           "dryRun": true,
           "objectPath": [],
           "properties": {
@@ -87495,7 +87581,7 @@
         ],
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "schemaDirectory": "C:\\Siemens\\PublicAPI\\V{major}\\Schemas"
+          "schemaDirectory": "&lt;absolute PublicAPI Schemas folder for the selected TIA release&gt;"
         },
         "envelopeVersion": 4
       },
@@ -87509,9 +87595,6 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
@@ -87729,7 +87812,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "layout": {
             "columns": 1,
             "cellWidth": 160,
@@ -87743,7 +87826,8 @@
                 "text": "Ready"
               }
             ]
-          }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -87756,7 +87840,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "design": {
             "screen": {
               "name": "Overview",
@@ -87774,7 +87858,8 @@
                 "text": "Ready"
               }
             ]
-          }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -87787,7 +87872,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "theme": {
             "name": "Example",
             "palette": {
@@ -87796,7 +87881,8 @@
               "Text": "0xFF202020",
               "Border": "0xFF808080"
             }
-          }
+          },
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -87837,7 +87923,8 @@
           "lite"
         ],
         "arguments": {
-          "projectName": "项目1"
+          "projectName": "&lt;file name without extension from selected projectPath&gt;",
+          "expectedProjectFile": "&lt;exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile&gt;"
         },
         "envelopeVersion": 4
       },
@@ -87862,9 +87949,10 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
-          "tagName": "Ready"
+          "tagName": "Ready",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -87877,10 +87965,11 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "itemName": "StatusText",
           "propertyName": "Visible",
-          "tagName": "Ready"
+          "tagName": "Ready",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -88053,6 +88142,7 @@
           "full"
         ],
         "arguments": {
+          "outputReleaseKey": "21",
           "flgNet": {
             "callName": "FC_Ready",
             "parameters": [
@@ -88102,6 +88192,7 @@
           "full"
         ],
         "arguments": {
+          "outputReleaseKey": "21",
           "fbBlock": {
             "blockName": "FB_Ready",
             "blockNumber": 11,
@@ -88133,6 +88224,7 @@
           "full"
         ],
         "arguments": {
+          "outputReleaseKey": "21",
           "fcBlock": {
             "blockName": "FC_Ready",
             "blockNumber": 10,
@@ -88188,6 +88280,7 @@
           "full"
         ],
         "arguments": {
+          "outputReleaseKey": "21",
           "ladFcBlock": {
             "blockName": "FC_Lad",
             "blockNumber": 12,
@@ -88221,7 +88314,11 @@
           "full"
         ],
         "arguments": {
-          "path": "C:\\Examples\\snapshot"
+          "inputRoot": "&lt;existing caller-owned immutable symbol export directory&gt;",
+          "files": [
+            "&lt;relative tag-table XML from ExportPlcTagTable or global DB export&gt;"
+          ],
+          "expectedOrigin": "caller-owned-immutable-export-snapshot"
         },
         "envelopeVersion": 4
       },
@@ -88278,7 +88375,7 @@
           "full"
         ],
         "arguments": {
-          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AM03-0AB0\",\"plcVersion\":\"V3.0\"}",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -88340,6 +88437,7 @@
           "full"
         ],
         "arguments": {
+          "outputReleaseKey": "21",
           "structuredText": {
             "operations": [
               {
@@ -88399,7 +88497,7 @@
           "full"
         ],
         "arguments": {
-          "templateFile": "C:\\Examples\\templates\\Screen.xml"
+          "templateFile": "C:\\Examples\\templates\\Screen.json"
         },
         "envelopeVersion": 4
       },
@@ -88515,7 +88613,10 @@
           "full",
           "lite"
         ],
-        "arguments": {},
+        "arguments": {
+          "dryRun": true,
+          "confirm": false
+        },
         "envelopeVersion": 4
       },
       {
@@ -88773,7 +88874,9 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -88785,7 +88888,9 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -88852,7 +88957,7 @@
           "lite"
         ],
         "arguments": {
-          "projectName": "项目1"
+          "processId": 12345
         },
         "envelopeVersion": 4
       },
@@ -88904,7 +89009,7 @@
           "full"
         ],
         "arguments": {
-          "keyword": "1513",
+          "keyword": "&lt;exact catalog TypeIdentifier from SearchInstalledGsdDevices&gt;",
           "deviceName": "PLC_2"
         },
         "envelopeVersion": 4
@@ -88917,7 +89022,7 @@
           "full"
         ],
         "arguments": {
-          "keyword": "1513",
+          "keyword": "&lt;exact TypeIdentifier from SearchHardwareCatalog&gt;",
           "deviceName": "PLC_2"
         },
         "envelopeVersion": 4
@@ -88934,7 +89039,9 @@
           "preferredMlfb": "6ES7 513-1AM03-0AB0",
           "preferredVersion": "V3.1",
           "deviceName": "PLC_2",
-          "family": "S7-1500"
+          "family": "S7-1500",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -89003,8 +89110,10 @@
           "lite"
         ],
         "arguments": {
-          "directoryPath": "C:\\Projects",
-          "projectName": "Demo"
+          "directoryPath": "&lt;existing caller-selected project directory&gt;",
+          "projectName": "&lt;fresh caller-selected project name&gt;",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -89056,7 +89165,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "groupPath": "Examples",
+          "groupPath": "/Examples",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -89113,7 +89222,10 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "externalSourceName": "FC_Add"
+          "groupPath": "",
+          "externalSourceName": "FC_Add.scl",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -89154,7 +89266,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down",
           "dryRun": true
@@ -89170,7 +89282,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "itemName": "StatusText",
           "propertyName": "Visible",
           "dryRun": true
@@ -89187,7 +89299,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenName": "Overview"
+          "screenName": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -89199,8 +89311,8 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "softwarePath": "HMI_Unified_1",
+          "screenName": "/Overview",
           "itemName": "StatusText"
         },
         "envelopeVersion": 4
@@ -89226,7 +89338,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
+          "tagTableName": "/Default tag table",
           "tagName": "Ready"
         },
         "envelopeVersion": 4
@@ -89240,7 +89352,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table"
+          "tagTableName": "/Default tag table"
         },
         "envelopeVersion": 4
       },
@@ -89307,7 +89419,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down"
         },
@@ -89418,11 +89530,12 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down",
           "actionKind": "set-bit",
-          "targetTag": "Ready"
+          "targetTag": "Ready",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -89435,9 +89548,10 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
-          "eventType": "Down"
+          "eventType": "Down",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -89449,7 +89563,8 @@
           "full"
         ],
         "arguments": {
-          "hmiSoftwarePath": "HMI_RT_1"
+          "hmiSoftwarePath": "HMI_RT_1",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -89462,9 +89577,10 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "itemName": "StatusText",
-          "propertyName": "Visible"
+          "propertyName": "Visible",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -89477,7 +89593,8 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview"
+          "screenName": "/Overview",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -89490,8 +89607,9 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
-          "itemName": "StatusText"
+          "screenName": "/Overview",
+          "itemName": "StatusText",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -89504,8 +89622,11 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
-          "tagName": "Ready"
+          "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
+          "tagName": "Ready",
+          "plcName": "PLC_1",
+          "plcTag": "&lt;exact PLC tag name from project reads&gt;",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -89518,7 +89639,8 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table"
+          "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -89531,7 +89653,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "action": "export",
+          "action": "import",
           "filePath": "C:\\Examples\\exports\\Charts.xml.zip",
           "dryRun": true,
           "modelVersion": "V2.0"
@@ -89659,7 +89781,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
         },
         "envelopeVersion": 4
       },
@@ -89672,7 +89794,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
         },
         "envelopeVersion": 4
       },
@@ -89685,7 +89807,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
         },
         "envelopeVersion": 4
       },
@@ -89712,7 +89834,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -89725,7 +89848,8 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDir": "C:\\Examples\\exports"
+          "exportDir": "C:\\Examples\\exports",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -89738,8 +89862,9 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenName": "Screen_1",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
+          "screenName": "/Screen_1",
+          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -89752,8 +89877,9 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "tagTableName": "Default tag table",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
+          "tagTableName": "/Default tag table",
+          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
+          "exportOptions": "WithDefaults"
         },
         "envelopeVersion": 4
       },
@@ -89780,9 +89906,11 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main",
-          "exportPath": "C:\\Examples\\exports"
+          "exportPath": "&lt;existing caller-selected export directory&gt;",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -89796,7 +89924,9 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "blockPath": "Main",
-          "exportPath": "C:\\Examples\\exports"
+          "exportPath": "C:\\Examples\\exports",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -89808,9 +89938,11 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports",
-          "regexName": ""
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "groupPath": "",
+          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -89824,7 +89956,9 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports",
-          "regexName": "FB_.*"
+          "dryRun": true,
+          "confirm": false,
+          "groupPath": "&lt;exact caller-selected block group containing the intended FB blocks&gt;"
         },
         "envelopeVersion": 4
       },
@@ -89852,9 +89986,11 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
-          "tagTableName": "Default tag table",
-          "exportPath": "C:\\Examples\\exports\\ExportPlcTagTable.xml"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "tagTableName": "默认变量表",
+          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -89867,9 +90003,11 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports",
-          "typePath": "UDT_Status"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
+          "typePath": "UDT_Status",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -89881,8 +90019,11 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "groupPath": "",
+          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -89894,9 +90035,11 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
-          "watchTableName": "WT1",
-          "exportPath": "C:\\Examples\\exports\\ExportPlcWatchTable.xml"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "watchTableName": "Watch_1",
+          "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -89950,10 +90093,11 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "toName": "SpeedAxis_1",
-          "exportPath": "C:\\Examples\\exports\\ExportTechnologyObject.xml",
-          "dryRun": true
+          "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -90036,7 +90180,9 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "externalSourceName": "FC_Add"
+          "externalSourceName": "FC_Add.scl",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -90377,7 +90523,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview"
+          "screenPath": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -90557,7 +90703,7 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -90570,7 +90716,7 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main"
         },
         "envelopeVersion": 4
@@ -90732,7 +90878,7 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "typePath": "UDT_Status"
         },
         "envelopeVersion": 4
@@ -90901,7 +91047,7 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -90914,7 +91060,7 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -90939,8 +91085,7 @@
           "lite"
         ],
         "arguments": {
-          "toolName": "ListPlcBlocks",
-          "exampleKind": "all"
+          "toolName": "ListPlcBlocks"
         },
         "envelopeVersion": 4
       },
@@ -90981,9 +91126,6 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -91005,10 +91147,8 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "screenPath": "Overview",
-          "itemName": "StatusText",
-          "typePath": "UDT_Status",
-          "version": "&lt;version from target discovery&gt;"
+          "screenPath": "/Overview",
+          "itemName": "MotorFaceplate_1"
         },
         "envelopeVersion": 4
       },
@@ -91036,7 +91176,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "itemNames": [
             "StatusText"
           ]
@@ -91052,7 +91192,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down"
         },
@@ -91067,7 +91207,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "itemName": "StatusText",
           "propertyName": "Visible"
         },
@@ -91082,7 +91222,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "itemName": "StatusText"
         },
         "envelopeVersion": 4
@@ -91097,7 +91237,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
-          "typePath": "UDT_Status",
+          "typePath": "/Faceplates/MotorFaceplate",
           "version": "&lt;version from target discovery&gt;"
         },
         "envelopeVersion": 4
@@ -91113,15 +91253,17 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
             {
               "property": "ScreenItems",
-              "name": "StartButton"
+              "name": "MotorFaceplate_1"
+            },
+            {
+              "property": "Interface",
+              "key": "PropertyName",
+              "name": "Speed"
             }
           ]
         },
@@ -91229,7 +91371,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "importPath": "C:\\Examples\\exports\\Main.xml"
+          "importPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
         },
         "envelopeVersion": 4
       },
@@ -91242,7 +91384,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "importPath": "C:\\Examples\\exports\\Main.xml"
+          "importPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
         },
         "envelopeVersion": 4
       },
@@ -91401,9 +91543,12 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "importPath": "C:\\Temp\\FB_Pump.xml"
+          "importPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
+          "dryRun": true,
+          "confirm": false,
+          "overwrite": false
         },
         "envelopeVersion": 4
       },
@@ -91419,7 +91564,9 @@
           "groupPath": "",
           "importPath": "C:\\Examples\\documents",
           "fileNameWithoutExtension": "FC_Add",
-          "importOption": "Override"
+          "dryRun": true,
+          "confirm": false,
+          "overwrite": true
         },
         "envelopeVersion": 4
       },
@@ -91451,7 +91598,11 @@
           "softwarePath": "PLC_1",
           "groupPath": "",
           "importPath": "C:\\Examples\\documents",
-          "regexName": ""
+          "dryRun": true,
+          "confirm": false,
+          "fileNamesWithoutExtension": [
+            "&lt;exact document basename from the import directory&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -91464,11 +91615,12 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "groupPath": "Examples",
-          "dir": "C:\\Examples\\exports",
+          "groupPath": "",
+          "dir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
           "dryRun": true,
-          "overwrite": false,
-          "regexName": "^Main\\.xml$"
+          "confirm": false,
+          "regexName": "^Main\\.xml$",
+          "overwrite": false
         },
         "envelopeVersion": 4
       },
@@ -91483,7 +91635,9 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "groupPath": "",
-          "filePath": "C:\\Examples\\FC_Add.scl"
+          "filePath": "C:/Examples/FC_Add.scl",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -91496,10 +91650,11 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "sourceDir": "C:\\Examples\\exports",
+          "sourceDir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
           "dryRun": true,
-          "overwrite": false,
+          "confirm": false,
           "regexName": "^Main\\.xml$",
+          "overwrite": false,
           "compileAfter": false,
           "stopOnImportFailure": true
         },
@@ -91514,9 +91669,12 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "folderPath": "",
-          "importPath": "C:\\Temp\\Tags.xml"
+          "importPath": "&lt;data.outputFile from completed ExportPlcTagTable&gt;",
+          "dryRun": true,
+          "confirm": false,
+          "overwrite": false
         },
         "envelopeVersion": 4
       },
@@ -91543,9 +91701,12 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "importPath": "C:\\Examples\\exports\\UDT_Status.xml"
+          "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
+          "dryRun": true,
+          "confirm": false,
+          "overwrite": false
         },
         "envelopeVersion": 4
       },
@@ -91956,8 +92117,7 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
-          "regexName": "FB_.*"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -91969,7 +92129,7 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -92030,7 +92190,7 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -92043,7 +92203,7 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -92055,7 +92215,7 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -92123,7 +92283,7 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -92325,7 +92485,7 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
-          "objectPath": "Popup_1"
+          "objectPath": "/Popup_1"
         },
         "envelopeVersion": 4
       },
@@ -93585,18 +93745,20 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
             {
               "property": "ScreenItems",
-              "name": "StartButton"
+              "name": "MotorFaceplate_1"
+            },
+            {
+              "property": "Interface",
+              "key": "PropertyName",
+              "name": "Speed"
             }
           ],
-          "propertyName": "Visible",
+          "propertyName": "Value",
           "confirmDelete": false,
           "dryRun": true,
           "action": "read"
@@ -93633,9 +93795,6 @@
           "action": "read",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -93657,7 +93816,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "family": "screens",
-          "groupPath": "Examples",
+          "groupPath": "/Examples",
           "action": "create",
           "dryRun": true
         },
@@ -93715,20 +93874,18 @@
           "softwarePath": "HMI_RT_1",
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
             {
               "property": "ScreenItems",
-              "name": "StartButton"
+              "name": "MotorFaceplate_1"
             }
           ],
           "confirmDelete": false,
           "dryRun": true,
-          "action": "read"
+          "action": "read",
+          "collectionProperty": "Interface"
         },
         "envelopeVersion": 4
       },
@@ -93757,7 +93914,7 @@
           "full"
         ],
         "arguments": {
-          "plantPath": "ExampleArea",
+          "plantPath": "/ExampleArea/ExampleUnit",
           "action": "create",
           "plantObjectType": "&lt;existing plant object type from this project library&gt;",
           "dryRun": true
@@ -93773,7 +93930,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "screenPath": "Overview",
+          "screenPath": "/Overview",
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
@@ -93791,9 +93948,6 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
@@ -93862,7 +94016,9 @@
           "lite"
         ],
         "arguments": {
-          "path": "C:\\Examples\\Example.ap{extension}"
+          "path": "&lt;exact caller-selected closed project file for this release&gt;",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -94113,8 +94269,8 @@
           "full"
         ],
         "arguments": {
-          "inputPath": "C:\\Examples\\exports\\Main.xml",
-          "outputPath": "C:/Examples/reports/RenderPlcBlock.html"
+          "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
+          "outputPath": "&lt;new absolute Block.html in an existing caller-selected directory&gt;"
         },
         "envelopeVersion": 4
       },
@@ -94136,8 +94292,8 @@
           "full"
         ],
         "arguments": {
-          "inputPath": "C:\\Examples\\exports",
-          "outputPath": "C:/Examples/reports/RenderPlcProgramAtlas.html"
+          "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
+          "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
         },
         "envelopeVersion": 4
       },
@@ -94225,8 +94381,6 @@
           "full"
         ],
         "arguments": {
-          "expectedPlcSoftwarePath": "PLC_1",
-          "expectedHmiSoftwarePath": "HMI_RT_1",
           "connectIfNeeded": false,
           "includeProjectTree": false,
           "inspectPortalProcesses": false
@@ -94446,7 +94600,10 @@
           "full",
           "lite"
         ],
-        "arguments": {},
+        "arguments": {
+          "dryRun": true,
+          "confirm": false
+        },
         "envelopeVersion": 4
       },
       {
@@ -94495,8 +94652,7 @@
           "lite"
         ],
         "arguments": {
-          "keyword": "1513",
-          "limit": 10
+          "keyword": "1513"
         },
         "envelopeVersion": 4
       },
@@ -94652,7 +94808,8 @@
           "full"
         ],
         "arguments": {
-          "devicePath": "PLC_1"
+          "devicePath": "PLC_1",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -94731,7 +94888,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
+          "screenName": "/Overview",
           "buttonName": "StartButton",
           "eventType": "Down",
           "scriptCode": "HMIRuntime.Tags(\"Ready\").Read();"
@@ -94793,9 +94950,6 @@
           "dryRun": true,
           "objectPath": [
             {
-              "property": "ScreenFolder"
-            },
-            {
               "property": "Screens",
               "name": "Overview"
             },
@@ -94819,7 +94973,8 @@
           "dryRun": true,
           "objectPath": [
             {
-              "property": "ScreenFolder"
+              "property": "ScreenGroups",
+              "name": "Production"
             },
             {
               "property": "Screens",
@@ -94844,7 +94999,7 @@
           "full"
         ],
         "arguments": {
-          "plantPath": "Plant_1",
+          "plantPath": "/Plant_1",
           "dryRun": true,
           "objectPath": [],
           "properties": {
@@ -95060,7 +95215,7 @@
         ],
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "schemaDirectory": "C:\\Siemens\\PublicAPI\\V{major}\\Schemas"
+          "schemaDirectory": "&lt;absolute PublicAPI Schemas folder for the selected TIA release&gt;"
         },
         "envelopeVersion": 4
       },
@@ -95074,9 +95229,6 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "objectPath": [
-            {
-              "property": "ScreenFolder"
-            },
             {
               "property": "Screens",
               "name": "Overview"
