@@ -15,7 +15,7 @@ namespace TiaMcp.Adapters
             try
             {
                 Check();
-                if (ReleaseKey != "19") CandidatePrimitives.Unsupported(ReleaseKey, "device-candidate");
+                if (ReleaseKey != "18" && ReleaseKey != "19") CandidatePrimitives.Unsupported(ReleaseKey, "device-candidate");
                 var candidateProject = Project();
                 var candidatePortal = Portal();
                 CandidateIdentity Identity()

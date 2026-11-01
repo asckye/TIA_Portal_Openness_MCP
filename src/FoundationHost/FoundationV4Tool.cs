@@ -90,7 +90,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         this.sharedSession = sharedSession || inner is FoundationTool { SharedWorker: true };
         var source = inner.ProtocolTool;
         if (inner is WorkbenchControlTool) { tool = source; return; }
-        deviceCandidate = source.Name == "AddDeviceWithFallback" && release == "19"
+        deviceCandidate = source.Name == "AddDeviceWithFallback" && (release is "18" or "19")
             && (policyForTest?.Invoke("P6-DEVICE") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-DEVICE")) == BehaviorPolicy.SafeV4;
         importCandidate = PlcImportContract.Entries.Contains(Name(source.Name), StringComparer.Ordinal)
             && (policyForTest?.Invoke("P6-IMPORT") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-IMPORT")) == BehaviorPolicy.SafeV4;
@@ -155,8 +155,9 @@ internal sealed class FoundationV4Tool : McpServerTool
         if (deviceCandidate)
         {
             schema = JsonNode.Parse(new DeviceCreationContract().InputSchema.GetRawText())!.AsObject();
-            schema["properties"]!["family"]!["enum"] = new JsonArray("S7-1200", "S7-1500");
-            description = "[PLC foundation][WRITE] Exact catalog device creation, restricted to CPU 1211C 6ES7211-1BE40-0XB0 and CPU 1513 6ES7513-1AM03-0AB0. Default preview; apply needs confirm=true, expectedPlanHash and expectedProjectFile. One Create, no fallback, save, compile or download. Test/accepted behaviorPolicy=safe-v4.";
+            schema["properties"]!["family"] = new JsonObject { ["type"] = "string", ["minLength"] = 1, ["maxLength"] = 64,
+                ["description"] = "Descriptive device label; any exact OrderNumber catalog row may be selected, without an article or family whitelist." };
+            description = "[PLC foundation][WRITE] Create any exact OrderNumber catalog row; family is a descriptive label, with no article or family whitelist. Default preview; apply needs confirm=true, expectedPlanHash and expectedProjectFile. Complete catalog and inventory checks, duplicate-name protection and readback remain required. One Create, no fallback, save, compile or download. Test/accepted behaviorPolicy=safe-v4.";
         }
         if (importCandidate)
         {

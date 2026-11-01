@@ -62,13 +62,40 @@ public sealed class DeviceCreationBoundaryTests
     }
 
     [Theory]
-    [InlineData("{\"typeIdentifier\":\"X\",\"deviceName\":\"X\",\"family\":\"HMI\"}")]
+    [InlineData("{\"typeIdentifier\":\"X\",\"deviceName\":\"X\",\"family\":\"\"}")]
     [InlineData("{\"typeIdentifier\":\"X\",\"deviceName\":\"X\",\"family\":\"S7-1500\",\"mode\":\"execute\"}")]
     [InlineData("{\"typeIdentifier\":null,\"deviceName\":\"X\",\"family\":\"S7-1500\"}")]
     public async Task CandidateRejectsUnsupportedArgumentsBeforeWorker(string json)
     {
         var worker = new CandidateWorkerFixture(); var result = Body(await Tool(worker, true).InvokeAsync(Request(json)));
         Assert.Equal(ErrorCode.InvalidArgument, result.Error!.Code); Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("18", "6ES7510-1DJ01-0AB0", "ET 200SP")]
+    [InlineData("19", "6ES7510-1DJ01-0AB0", "ET 200SP")]
+    [InlineData("18", "6ES7516-3AN03-0AB0", "S7-1500")]
+    [InlineData("19", "6ES7516-3AN03-0AB0", "S7-1500")]
+    [InlineData("18", "6AV2123-3GB32-0AW0", "HMI")]
+    [InlineData("19", "6AV2123-3GB32-0AW0", "HMI")]
+    public async Task BothFoundationCandidatesAcceptAnyReviewedExactCatalogRow(string release, string article, string family)
+    {
+        using var approval = new DisabledApprovalState();
+        var worker = new CandidateWorkerFixture(); var entry = worker.Device.Entry;
+        entry.ArticleNumber = article; entry.TypeIdentifier = "OrderNumber:" + article + "/" + entry.Version;
+        var tool = Tool(worker, true, release, approval.Load); var schema = tool.ProtocolTool.InputSchema.GetProperty("properties").GetProperty("family");
+        Assert.False(schema.TryGetProperty("enum", out _)); Assert.Equal(64, schema.GetProperty("maxLength").GetInt32());
+        var args = new JsonObject { ["typeIdentifier"] = entry.TypeIdentifier, ["deviceName"] = "PLC_2", ["family"] = family };
+        var preview = Body(await tool.InvokeAsync(Request(args.ToJsonString())));
+        Assert.True(preview.Ok); Assert.Equal(release, preview.Meta.ReleaseKey); Assert.Equal(BehaviorPolicy.SafeV4, preview.Meta.BehaviorPolicy);
+        Assert.Equal(0, worker.Device.Creates);
+        args["mode"] = "apply"; args["confirm"] = true; args["expectedPlanHash"] = preview.Data!.Value.GetProperty("plan").GetProperty("hash").GetString(); args["expectedProjectFile"] = @"C:\Test.ap19";
+        var applied = Body(await tool.InvokeAsync(Request(args.ToJsonString())));
+        Assert.True(applied.Ok); AssertApprovalDisabled(applied); Assert.Equal(1, worker.Device.Creates);
+        Assert.Equal("CreateHardwareDeviceCandidate", worker.Operation); Assert.Equal(Execution.Completed, applied.Meta.Execution);
+        Assert.Equal(entry.TypeIdentifier, applied.Data!.Value.GetProperty("catalogEntry").GetProperty("typeIdentifier").GetString());
+        var replay = Body(await tool.InvokeAsync(Request(args.ToJsonString())));
+        Assert.Equal(ErrorCode.PlanStale, replay.Error!.Code); Assert.Equal(1, worker.Device.Creates);
     }
 
     [Theory]

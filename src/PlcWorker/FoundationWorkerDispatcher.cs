@@ -50,7 +50,7 @@ namespace TiaMcp.PlcWorker
 #endif
             // Only this application's typed facade is reflected; no arbitrary Siemens
             // type/member names or object handles are accepted on the wire.
-            bool deviceCandidateEnabled = releaseKey == "19" && TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(policyAssembly, releaseKey, "P6-DEVICE");
+            bool deviceCandidateEnabled = (releaseKey == "18" || releaseKey == "19") && TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(policyAssembly, releaseKey, "P6-DEVICE");
             bool compileCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(policyAssembly, releaseKey, "P6-COMPILE");
             bool sourceCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(policyAssembly, releaseKey, "P6-SOURCE");
             engine.SourceCandidateEnabled = sourceCandidateEnabled;

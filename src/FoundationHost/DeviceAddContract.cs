@@ -16,11 +16,12 @@ internal static class DeviceAddContract
             string article = (string?)data["catalogEntry"]?["articleNumber"] ?? "";
             string version = (string?)data["catalogEntry"]?["version"] ?? "";
             string family = (string?)request["family"] ?? "";
-            bool allowed = family == "S7-1200" ? article is "6ES7211-1BE40-0XB0" or "6ES7 211-1BE40-0XB0"
-                : family == "S7-1500" && article is "6ES7513-1AM03-0AB0" or "6ES7 513-1AM03-0AB0";
-            if (!allowed || version.Length == 0 || (string?)request["typeIdentifier"] != "OrderNumber:" + article + "/" + version
+            if (string.IsNullOrWhiteSpace(family) || family.Length > 64 || family.Trim() != family || family.Any(char.IsControl)
+                || string.IsNullOrWhiteSpace(article) || article.Length > 256 || string.IsNullOrWhiteSpace(version) || version.Length > 64
+                || article.Any(c => c == '*' || c == '?' || c == '/' || char.IsControl(c)) || version.Any(c => c == '*' || c == '?' || c == '/' || char.IsControl(c))
+                || (string?)request["typeIdentifier"] != "OrderNumber:" + article + "/" + version
                 || (string?)data["capabilityScope"]?["host"] != "foundation" || (string?)data["capabilityScope"]?["family"] != family)
-                throw new InvalidDataException("Candidate model is outside Foundation capability.");
+                throw new InvalidDataException("Candidate catalog identity is not an exact OrderNumber selection.");
             if (data["createIssued"]?.GetValue<bool>() != apply
                 || result.Meta.Execution != (apply ? TiaMcp.Logic.V4.Execution.Completed : TiaMcp.Logic.V4.Execution.ReadOnly)
                 || apply && ((string?)data["created"]?["name"] != (string?)request["deviceName"] || (string?)data["residueCheck"]?["status"] != "checked"))

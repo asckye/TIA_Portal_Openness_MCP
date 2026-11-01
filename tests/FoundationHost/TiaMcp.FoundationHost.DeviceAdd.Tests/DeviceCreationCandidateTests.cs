@@ -27,7 +27,7 @@ public sealed class DeviceCreationCandidateTests
         public DeviceInventoryItem Create(string typeIdentifier, string deviceName)
         {
             Creates++;
-            Assert.Equal(Identifier, typeIdentifier);
+            Assert.Equal(Catalog.Single().TypeIdentifier, typeIdentifier);
             if (Fault == "during-before-residue") throw new IOException();
             var item = new DeviceInventoryItem { Id = "created", Name = deviceName, ParentId = RootId };
             Items.Add(item);
@@ -174,20 +174,95 @@ public sealed class DeviceCreationCandidateTests
     }
 
     [Theory]
-    [InlineData("14sp1")][InlineData("15.1")][InlineData("16")][InlineData("17")][InlineData("18")][InlineData("20")][InlineData("21")]
+    [InlineData("14sp1")][InlineData("15.1")][InlineData("16")][InlineData("17")][InlineData("20")][InlineData("21")]
     public void FoundationDoesNotExpandReleaseRange(string release)
     { var a = new Adapter(); Rejected(Run(new(), a, release: release), ErrorCode.UnsupportedCapability, a); Assert.Equal(0, a.IdReads); }
 
     [Theory]
-    [InlineData("6ES7516-3AN03-0AB0", "S7-1500", false)]
-    [InlineData("6ES7513-1AM03-0AB0", "S7-1200", false)]
-    [InlineData("6ES7211-1BE40-0XB0", "S7-1200", true)]
-    [InlineData("6ES7513-1AM03-0AB0", "S7-1500", true)]
-    [InlineData("6AV2123-3GB32-0AW0", "HMI", false)]
-    public void FoundationRetainsModelWhitelist(string article, string family, bool accepted)
+    [InlineData("6ES7510-1DJ01-0AB0", "ET 200SP")]
+    [InlineData("6ES7516-3AN03-0AB0", "S7-1500")]
+    [InlineData("6ES7513-1AM03-0AB0", "S7-1200")]
+    [InlineData("6ES7211-1BE40-0XB0", "S7-1200")]
+    [InlineData("6ES7513-1AM03-0AB0", "S7-1500")]
+    [InlineData("6AV2123-3GB32-0AW0", "HMI")]
+    public void FoundationAcceptsAnyExactCatalogRow(string article, string family)
     {
-        var a = new Adapter(); var row = a.Catalog[0]; row.ArticleNumber = article; row.TypeIdentifier = "OrderNumber:" + article + "/V3.0";
-        var result = Run(new(), a, identifier: row.TypeIdentifier, family: family); Assert.Equal(accepted, result.Ok); Assert.Equal(0, a.Creates);
+        foreach (var release in new[] { "18", "19" })
+        {
+            var a = new Adapter(); var session = new DeviceCreationSession();
+            var row = a.Catalog[0]; row.ArticleNumber = article; row.TypeIdentifier = "OrderNumber:" + article + "/V3.0";
+            var preview = Run(session, a, identifier: row.TypeIdentifier, family: family, release: release);
+            Assert.True(preview.Ok); Assert.Equal(0, a.Creates);
+            Assert.Empty(preview.Data!.Value.GetProperty("capabilityScope").GetProperty("modelWhitelist").EnumerateArray());
+            var request = new JsonObject { ["requestId"] = "test-request", ["typeIdentifier"] = row.TypeIdentifier, ["deviceName"] = "PLC_2", ["family"] = family };
+            Assert.True(TiaMcp.FoundationHost.DeviceAddContract.ValidateCandidate(JsonNode.Parse(V4Json.Serialize(preview)), request, release).Ok);
+            var applied = Run(session, a, "apply", Hash(preview), true, identifier: row.TypeIdentifier, family: family, release: release);
+            Assert.True(applied.Ok); Assert.Equal(1, a.Creates); Assert.Equal(Execution.Completed, applied.Meta.Execution);
+            request["mode"] = "apply"; request["confirm"] = true; request["expectedPlanHash"] = Hash(preview); request["expectedProjectFile"] = a.Project;
+            Assert.True(TiaMcp.FoundationHost.DeviceAddContract.ValidateCandidate(JsonNode.Parse(V4Json.Serialize(applied)), request, release).Ok);
+            Assert.Equal(ErrorCode.PlanStale, Run(session, a, "apply", Hash(preview), true, identifier: row.TypeIdentifier, family: family, release: release).Error!.Code);
+            Assert.Equal(1, a.Creates);
+        }
+    }
+
+    [Theory]
+    [InlineData("missing-version")][InlineData("missing-article")][InlineData("identifier-version")]
+    [InlineData("article-wildcard")][InlineData("article-slash")][InlineData("version-wildcard")]
+    [InlineData("not-order-number")]
+    public void FoundationStillRequiresAnExactOrderNumberRow(string fault)
+    {
+        foreach (var release in new[] { "18", "19" })
+        {
+            var a = new Adapter(); var row = a.Catalog[0];
+            if (fault == "missing-version") row.Version = "";
+            if (fault == "missing-article") row.ArticleNumber = "";
+            if (fault == "article-wildcard") row.ArticleNumber += "?";
+            if (fault == "article-slash") row.ArticleNumber += "/extra";
+            if (fault == "version-wildcard") row.Version += "?";
+            row.TypeIdentifier = "OrderNumber:" + row.ArticleNumber + "/" + row.Version;
+            if (fault == "identifier-version") row.TypeIdentifier += ".changed";
+            if (fault == "not-order-number") row.TypeIdentifier = "GSD:exact/version";
+            Rejected(Run(new(), a, identifier: row.TypeIdentifier, family: "ET 200SP", release: release), ErrorCode.InvalidArgument, a);
+        }
+    }
+
+    [Theory]
+    [InlineData("18")][InlineData("19")]
+    public void FoundationRetainsAllReviewedCreationGuardsForOtherCatalogRows(string release)
+    {
+        foreach (var fault in new[] { "confirm", "missing-hash", "stale-hash", "missing-project", "relative-project", "wrong-project",
+            "catalog-version", "catalog-duplicate", "catalog-missing", "inventory-name", "inventory-duplicate", "inventory-parent", "new-group", "duplicate-name" })
+        {
+            var a = new Adapter(); var session = new DeviceCreationSession(); var row = a.Catalog[0];
+            row.ArticleNumber = "6ES7510-1DJ01-0AB0"; row.TypeIdentifier = "OrderNumber:" + row.ArticleNumber + "/V3.0";
+            string type = row.TypeIdentifier; var preview = Run(session, a, identifier: type, family: "ET 200SP", release: release); Assert.True(preview.Ok);
+            string hash = Hash(preview), project = a.Project; bool confirm = true; var code = ErrorCode.PlanStale;
+            if (fault == "confirm") { confirm = false; code = ErrorCode.ConfirmationRequired; }
+            if (fault == "missing-hash") { hash = ""; code = ErrorCode.InvalidArgument; }
+            if (fault == "stale-hash") hash = new string('a', 64);
+            if (fault == "missing-project") { project = ""; code = ErrorCode.InvalidArgument; }
+            if (fault == "relative-project") { project = "Example.ap19"; code = ErrorCode.InvalidArgument; }
+            if (fault == "wrong-project") { project = @"C:\Other.ap19"; code = ErrorCode.IdentityMismatch; }
+            if (fault == "catalog-version") { row.Version = "V4.0"; row.TypeIdentifier = "OrderNumber:" + row.ArticleNumber + "/V4.0"; }
+            if (fault == "catalog-duplicate") a.Catalog.Add(row);
+            if (fault == "catalog-missing") a.Catalog.Clear();
+            if (fault == "inventory-name") a.Items[0].Name = "changed";
+            if (fault == "inventory-duplicate") { a.Items.Add(a.Items[0]); code = ErrorCode.PreconditionFailed; }
+            if (fault == "inventory-parent") { a.Items[0].ParentId = ""; code = ErrorCode.PreconditionFailed; }
+            if (fault == "new-group") a.Items.Add(new() { Id = "group", Name = "Group", ParentId = "root", IsGroup = true });
+            if (fault == "duplicate-name") { a.Items[0].Name = "plc_2"; code = ErrorCode.AlreadyExists; }
+            Rejected(Run(session, a, "apply", hash, confirm, identifier: type, family: "ET 200SP", release: release, project: project), code, a);
+        }
+    }
+
+    [Fact]
+    public void NativeCandidateOptInAdmitsV18AndV19Only()
+    {
+        var assembly = System.Reflection.Emit.AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("DeviceCandidateOptIn"), System.Reflection.Emit.AssemblyBuilderAccess.Run);
+        assembly.SetCustomAttribute(new System.Reflection.Emit.CustomAttributeBuilder(typeof(AssemblyMetadataAttribute).GetConstructor(new[] { typeof(string), typeof(string) })!,
+            new object[] { BehaviorCapabilities.TestProperty, BehaviorCapabilities.DeviceCandidate }));
+        foreach (var release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+            Assert.Equal(release is "18" or "19", CandidatePolicy.Enabled(assembly, release, "P6-DEVICE"));
     }
 
     [Fact]
@@ -204,21 +279,26 @@ public sealed class DeviceCreationCandidateTests
     }
 
     [Fact]
-    public void FoundationResponseBoundaryPreservesWhitelistAndVerifiedSuccess()
+    public void FoundationResponseBoundaryPreservesExactSelectionAndVerifiedSuccess()
     {
         var unlisted = new Adapter();
         unlisted.Catalog[0].ArticleNumber = "6 ES7513-1AM03-0AB0";
         unlisted.Catalog[0].TypeIdentifier = "OrderNumber:" + unlisted.Catalog[0].ArticleNumber + "/V3.0";
-        Rejected(Run(new(), unlisted, identifier: unlisted.Catalog[0].TypeIdentifier), ErrorCode.UnsupportedCapability, unlisted);
+        Assert.True(Run(new(), unlisted, identifier: unlisted.Catalog[0].TypeIdentifier).Ok);
+        Assert.Equal(0, unlisted.Creates);
         var session = new DeviceCreationSession(); var adapter = new Adapter();
         var preview = Run(session, adapter);
         var request = new JsonObject { ["requestId"] = "test-request", ["typeIdentifier"] = Identifier, ["deviceName"] = "PLC_2", ["family"] = "S7-1500" };
         var payload = JsonNode.Parse(V4Json.Serialize(preview))!;
         Assert.True(TiaMcp.FoundationHost.DeviceAddContract.ValidateCandidate(payload, request).Ok);
-        foreach (string fault in new[] { "model", "issued", "host", "correlation" })
+        foreach (string fault in new[] { "model", "version", "identifier", "family", "plan-family", "issued", "host", "correlation" })
         {
             var invalid = payload.DeepClone();
             if (fault == "model") invalid["data"]!["catalogEntry"]!["articleNumber"] = "6ES7516-3AN02-0AB0";
+            if (fault == "version") invalid["data"]!["catalogEntry"]!["version"] = "";
+            if (fault == "identifier") invalid["data"]!["catalogEntry"]!["typeIdentifier"] = "OrderNumber:other/V3.0";
+            if (fault == "family") invalid["data"]!["capabilityScope"]!["family"] = "other";
+            if (fault == "plan-family") invalid["data"]!["plan"]!["operations"]![0]!["arguments"]!["family"] = "other";
             if (fault == "issued") invalid["data"]!["createIssued"] = true;
             if (fault == "host") invalid["data"]!["capabilityScope"]!["host"] = "full-engine";
             if (fault == "correlation") invalid["meta"]!["requestId"] = "other";

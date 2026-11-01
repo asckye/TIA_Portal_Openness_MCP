@@ -81,11 +81,12 @@ internal sealed class CandidateWorkerFixture : IFoundationWorker
         internal string Fault = "";
         internal long Epoch = 1;
         internal Action? Before;
+        internal DeviceCatalogEntry Entry = new() { TypeIdentifier = Identifier, ArticleNumber = "6ES7513-1AM03-0AB0", Version = "V3.0" };
         internal readonly List<DeviceInventoryItem> Rows = new();
         public string RootId => "root";
         public CandidateIdentity ReadIdentity() => new(42, DateTimeOffset.Parse("2026-10-03T00:00:00Z"), @"C:\Test.ap19", Epoch);
-        public IReadOnlyList<DeviceCatalogEntry> ReadCatalog(string type) => type == Identifier
-            ? new[] { new DeviceCatalogEntry { TypeIdentifier = Identifier, ArticleNumber = "6ES7513-1AM03-0AB0", Version = "V3.0" } } : Array.Empty<DeviceCatalogEntry>();
+        public IReadOnlyList<DeviceCatalogEntry> ReadCatalog(string type) => type == Entry.TypeIdentifier
+            ? new[] { Entry } : Array.Empty<DeviceCatalogEntry>();
         public IReadOnlyList<DeviceInventoryItem> ReadInventory()
         { if (Creates > 0 && Fault == "after") throw new IOException(); return Rows; }
         public void BeforeCreate() { Before?.Invoke(); if (Fault == "before") throw new IOException(); }

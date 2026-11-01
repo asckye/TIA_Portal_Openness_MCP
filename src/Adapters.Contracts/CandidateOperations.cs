@@ -57,7 +57,7 @@ namespace TiaMcp.Adapters.Contracts.Candidates
             var known = new[] { "DEVICE", "IMPORT", "EXPORT", "SESSION", "CLOSE", "SOURCE", "COMPILE", "FALLBACK" }.Select(f => "P6-" + f + ":safe-v4").ToArray();
             if (tokens.Any(t => !known.Contains(t, StringComparer.Ordinal)) || tokens.Distinct(StringComparer.Ordinal).Count() != tokens.Length)
                 throw new InvalidOperationException("Invalid test policy build metadata.");
-            return (family != "P6-DEVICE" || release == "19") && tokens.Contains(family + ":safe-v4", StringComparer.Ordinal);
+            return (family != "P6-DEVICE" || release == "18" || release == "19") && tokens.Contains(family + ":safe-v4", StringComparer.Ordinal);
         }
     }
 }

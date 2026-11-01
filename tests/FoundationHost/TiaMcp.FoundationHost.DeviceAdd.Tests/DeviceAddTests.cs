@@ -10,13 +10,26 @@ internal static class DeviceAddTests
         PlcDeviceAddItem Item(string name="PLC_1",string id="one")=>new(){Name=name,Identity=id,ParentIdentity="root",ParentVerified=true};
         var items=new List<PlcDeviceAddItem>();var rows=new List<PlcHardwareCatalogCandidate>();int calls=0,checks=0;
         void Reset(){items=new(){Item()};rows=new(){Candidate()};calls=0;checks=0;}
-        PlcDeviceAddResult Run(PlcDeviceAddRequest r,Func<string,string,PlcDeviceAddItem>? create=null,Action? check=null)=>PlcDeviceAddPolicy.Run(r,()=>rows,()=>items,check??(()=>checks++),create??((id,name)=>{calls++;Check(id==Candidate().TypeIdentifier,"exact ID retained");var added=Item(name,"two");items.Add(added);return added;}));
+        PlcDeviceAddResult Run(PlcDeviceAddRequest r,Func<string,string,PlcDeviceAddItem>? create=null,Action? check=null)=>PlcDeviceAddPolicy.Run(r,()=>rows,()=>items,check??(()=>checks++),create??((id,name)=>{calls++;Check(id==rows.Single().TypeIdentifier,"exact ID retained");var added=Item(name,"two");items.Add(added);return added;}));
         PlcDeviceAddRequest Apply(){var r=Request();r.ExpectedHash=Run(r).PlanHash;r.DryRun=false;r.Confirm=true;r.ExpectedProject=r.Project;return r;}
         Reset();var result=Run(Request());Check(!result.Attempted&&!result.Executed&&calls==0&&result.PlanHash.Length==64,"preview no writes");
         foreach(var release in new[]{"19","20","21"}) {Reset();var r=Request();r.Release=release;Check(Run(r).Release==release,"exact enabled release");}
         foreach(var release in new[]{"14sp1","15.1","16","17","unknown"}) {Reset();var r=Request();r.Release=release;Reject(()=>Run(r),"gate");Check(checks==0&&calls==0,"gate before access");}
         foreach(var name in new[]{""," ","../x","a/b","a\\b","a\n","a*","a?","a:","a ",".","..",new string('x',129)}) {Reset();var r=Request();r.Name=name;Reject(()=>Run(r),"name");}
-        foreach(var family in new[]{"","S7-300","WinCCUnifiedPC","s7-1500"}) {Reset();var r=Request();r.Family=family;Reject(()=>Run(r),"unsupported family");}
+        foreach(var family in new[]{""," ","a\n",new string('x',129)}) {Reset();var r=Request();r.Family=family;Reject(()=>Run(r),"invalid descriptive family label");}
+        foreach(var family in new[]{"S7-300","WinCCUnifiedPC","s7-1500"}) {Reset();var r=Request();r.Family=family;Check(Run(r).Family==family&&calls==0,"family label does not restrict exact row");}
+        foreach(var release in new[]{"18","19","20","21"})
+        foreach(var selection in new[]{("6ES7510-1DJ01-0AB0","V2.9","ET 200SP"),("6ES7516-3AN03-0AB0","V3.0","S7-1500"),("6AV2123-3GB32-0AW0","V1","HMI")})
+        foreach(var fullIdentifier in new[]{false,true})
+        {
+            Reset();var r=Request();r.Release=release;r.Family=selection.Item3;
+            rows[0]=new(){ArticleNumber=selection.Item1,Version=selection.Item2,TypeIdentifier="OrderNumber:"+selection.Item1+"/"+selection.Item2};
+            r.PreferredMlfb=fullIdentifier?rows[0].TypeIdentifier!:selection.Item1;r.PreferredVersion=fullIdentifier?"":selection.Item2;
+            var preview=Run(r);Check(preview.TypeIdentifier==rows[0].TypeIdentifier&&calls==0,"any exact row preview without writes");
+            r.ExpectedHash=preview.PlanHash;r.DryRun=false;r.Confirm=true;r.ExpectedProject=r.Project;
+            Check(Run(r).Executed&&calls==1,"any exact row creates once with reviewed identity");
+            Reject(()=>Run(r),"any exact row duplicate name refused");Check(calls==1,"duplicate never creates again");
+        }
         foreach(var value in new[]{""," ","a\n",new string('x',257)}) {Reset();var r=Request();r.PreferredMlfb=value;Reject(()=>Run(r),"identifier bounds");}
         foreach(var value in new[]{""," ","a\n",new string('x',65)}) {Reset();var r=Request();r.PreferredVersion=value;Reject(()=>Run(r),"version bounds");}
         Reset();var exact=Request();exact.PreferredMlfb=Candidate().TypeIdentifier!;exact.PreferredVersion="";Check(Run(exact).TypeIdentifier==exact.PreferredMlfb,"full identifier selection");exact.PreferredVersion="V1";Reject(()=>Run(exact),"conflicting version");
@@ -35,7 +48,7 @@ internal static class DeviceAddTests
         Reset();items[0].ParentVerified=false;Reject(()=>Run(Request()),"wrong parent");
         Reset();items=Enumerable.Range(0,4097).Select(i=>Item("N"+i,"I"+i)).ToList();Reject(()=>Run(Request()),"inventory budget");
         Reset();var apply=Apply();result=Run(apply);Check(calls==1&&result.Attempted&&result.Executed&&!result.RequiresSessionReset&&items.Count==2,"exactly one creation");
-        foreach(var mutate in new Action<PlcDeviceAddRequest>[] {r=>r.Confirm=false,r=>r.ExpectedHash="",r=>r.ExpectedProject=@"C:\Other.ap19",r=>r.ProcessId=43,r=>r.RootIdentity="changed",r=>r.Name="changed",r=>r.Family="S7-1200"}) {Reset();apply=Apply();mutate(apply);Reject(()=>Run(apply),"changed bound field");Check(calls==0,"changed bound field no creation");}
+        foreach(var mutate in new Action<PlcDeviceAddRequest>[] {r=>r.Confirm=false,r=>r.ExpectedHash="",r=>r.ExpectedHash=new string('a',64),r=>r.ExpectedProject="",r=>r.ExpectedProject="Test.ap19",r=>r.ExpectedProject=@"C:\Other.ap19",r=>r.PreferredVersion="V2",r=>r.ProcessId=43,r=>r.RootIdentity="changed",r=>r.Name="changed",r=>r.Family="S7-1200"}) {Reset();apply=Apply();mutate(apply);Reject(()=>Run(apply),"changed bound field");Check(calls==0,"changed bound field no creation");}
         Reset();apply=Apply();items[0].Identity="replaced";Reject(()=>Run(apply),"identity replacement");Check(calls==0,"replacement no create");
         Reset();apply=Apply();rows[0].TypeIdentifier="OrderNumber:different/V1";Reject(()=>Run(apply),"catalog change");Check(calls==0,"catalog changed no create");
         Reset();apply=Apply();int checkNo=0;Reject(()=>Run(apply,check:()=>{if(++checkNo==2)items[0].Name="changed";}),"late inventory change");Check(calls==0,"late inventory no create");
@@ -80,7 +93,7 @@ internal static class DeviceAddTests
         BadResponse("Status","created-verified");BadResponse("DeviceName","different");BadResponse("TypeIdentifier","OrderNumber:different/V1");
         BadResponse("Version","V2");BadResponse("ArticleNumber","different");BadResponse("Policy","other");BadResponse("Save","saved");BadResponse("Inventory",new[]{"PLC_2"});BadResponse("Unexpected",true);BadResponse("Release","17");BadResponse("PlanHash","bad");
         requestJson["preferredMlfb"]=Candidate().TypeIdentifier;requestJson["preferredVersion"]="";BadResponse("TypeIdentifier","OrderNumber:different/V1");
-        Reset();rows[0].ArticleNumber="6AV2123-3GB32-0AW0";rows[0].TypeIdentifier="OrderNumber:6AV2123-3GB32-0AW0/V1";var hmi=Request();hmi.PreferredMlfb=rows[0].TypeIdentifier!;hmi.PreferredVersion="";Reject(()=>Run(hmi),"HMI identifier cannot bypass PLC family gate");
+        Reset();rows[0].ArticleNumber="6AV2123-3GB32-0AW0";rows[0].TypeIdentifier="OrderNumber:6AV2123-3GB32-0AW0/V1";var hmi=Request();hmi.PreferredMlfb=rows[0].TypeIdentifier!;hmi.PreferredVersion="";Check(Run(hmi).TypeIdentifier==hmi.PreferredMlfb&&calls==0,"HMI exact identifier is not restricted by PLC family label");
         Reset();rows[0].TypeIdentifier+="*";Reject(()=>Run(Request()),"wildcard selected identifier fails");
         Reset();apply=Apply();items[0].ParentIdentity="moved-group";Reject(()=>Run(apply),"device move invalidates preview");Check(calls==0,"move no create");
         engine=Engine();result=Preview(engine);engine.BoundProject.DeviceGroups.Add(new(){Parent=engine.BoundProject});Reject(()=>Execute(engine,result.PlanHash),"new empty group invalidates preview");Check(engine.BoundProject.Devices.Calls==0,"group graph change no create");

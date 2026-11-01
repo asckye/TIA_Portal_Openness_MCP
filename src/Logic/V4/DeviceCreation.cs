@@ -45,7 +45,7 @@ namespace TiaMcp.Logic.V4
                 if (mode == "apply" && !confirm) Refuse("Apply requires explicit confirmation.", new ConfirmationRequiredDetails(expectedPlanHash));
                 if (mode == "apply" && (expectedPlanHash.Length != 64 || expectedPlanHash.Any(c => !"0123456789abcdef".Contains(c)))) Invalid("expectedPlanHash");
                 if (mode == "apply") CanonicalProject(expectedProjectFile);
-                if (foundation && release != "19") Refuse("Device creation is outside this Foundation release's capability.", new UnsupportedCapabilityDetails(release, "P6-DEVICE", "create"));
+                if (foundation && release != "18" && release != "19") Refuse("Device creation is outside this Foundation release's capability.", new UnsupportedCapabilityDetails(release, "P6-DEVICE", "create"));
 
                 identity = CandidateHostMapping.Plan(adapter.ReadIdentity());
                 if (mode == "apply")
@@ -151,13 +151,20 @@ namespace TiaMcp.Logic.V4
                 : family == "GSD" ? entry.TypeIdentifier.StartsWith("GSD", StringComparison.Ordinal)
                 : family == "Hardware" && !foundation;
             if (tool == "CreateGsdDevice" && family != "GSD") match = false;
-            if (foundation) match &= (family == "S7-1200" && (entry.ArticleNumber == "6ES7211-1BE40-0XB0" || entry.ArticleNumber == "6ES7 211-1BE40-0XB0")
-                || family == "S7-1500" && (entry.ArticleNumber == "6ES7513-1AM03-0AB0" || entry.ArticleNumber == "6ES7 513-1AM03-0AB0"))
-                && entry.TypeIdentifier == "OrderNumber:" + entry.ArticleNumber + "/" + entry.Version && !string.IsNullOrEmpty(entry.Version);
+            if (foundation)
+            {
+                if (string.IsNullOrWhiteSpace(entry.ArticleNumber) || entry.ArticleNumber.Length > 256
+                    || string.IsNullOrWhiteSpace(entry.Version) || entry.Version.Length > 64
+                    || entry.TypeIdentifier != "OrderNumber:" + entry.ArticleNumber + "/" + entry.Version
+                    || entry.ArticleNumber.Any(c => c == '*' || c == '?' || c == '/' || char.IsControl(c))
+                    || entry.Version.Any(c => c == '*' || c == '?' || c == '/' || char.IsControl(c))) Invalid("typeIdentifier");
+                TiaMcp.Adapters.Contracts.DeviceCreationRules.RequireUnifiedPanelVersion(entry.TypeIdentifier, "", int.Parse(release, System.Globalization.CultureInfo.InvariantCulture));
+                match = true; // Family is a descriptive label; the observed exact catalog row is authoritative.
+            }
             if (!match) Refuse("The exact catalog entry is outside the requested device family capability.", new UnsupportedCapabilityDetails(release, family, "create"));
             return new JsonObject { ["releaseKey"] = release, ["host"] = foundation ? "foundation" : "full-engine", ["family"] = family,
-                ["placement"] = "project-root", ["selection"] = "exact-type-identifier", ["modelWhitelist"] = foundation
-                    ? new JsonArray("6ES7211-1BE40-0XB0", "6ES7513-1AM03-0AB0") : new JsonArray(), ["save"] = false, ["compile"] = false, ["download"] = false };
+                ["placement"] = "project-root", ["selection"] = "exact-type-identifier", ["modelWhitelist"] = new JsonArray(),
+                ["save"] = false, ["compile"] = false, ["download"] = false };
         }
 
         private static DeviceInventoryItem[] Inventory(IReadOnlyList<DeviceInventoryItem> rows)
