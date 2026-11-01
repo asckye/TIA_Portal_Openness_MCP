@@ -405,6 +405,18 @@ namespace TiaMcp.Adapters.Native.Hmi
         private void BindUnifiedHmiTagToPlcSymbol(object tag, string connectionName, string plcName,
             string plcTagSymbol, string hmiDataType, HmiArray writeResults, string address = "")
         {
+            var prepared = UnifiedRequestScalar.Prepare(tag.GetType(), UnifiedTagBindingChanges(connectionName, plcName, plcTagSymbol, hmiDataType, address));
+            var evidence = new HmiObject();
+            try { UnifiedRequestScalar.Apply(tag, prepared, evidence); }
+            finally
+            {
+                if (evidence["mayHaveChanged"] is true) _session.MarkHmiChanged();
+                foreach (var pair in evidence) writeResults.Add(pair.Key + "=" + pair.Value);
+            }
+        }
+
+        private static HmiObject UnifiedTagBindingChanges(string connectionName, string plcName, string plcTagSymbol, string hmiDataType, string address)
+        {
             bool absolute = !string.IsNullOrWhiteSpace(address) || plcTagSymbol.StartsWith("%", StringComparison.Ordinal)
                 || Regex.IsMatch(plcTagSymbol, @"^(DB|IW|QW|ID|QD|IB|QB|MB|MW|MD)\d", RegexOptions.IgnoreCase);
             var changes = new HmiObject {
@@ -415,14 +427,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             };
             if (!string.IsNullOrWhiteSpace(plcName)) changes["PlcName"] = plcName;
             if (!string.IsNullOrWhiteSpace(connectionName)) changes["Connection"] = connectionName;
-            var prepared = UnifiedRequestScalar.Prepare(tag.GetType(), changes);
-            var evidence = new HmiObject();
-            try { UnifiedRequestScalar.Apply(tag, prepared, evidence); }
-            finally
-            {
-                if (evidence["mayHaveChanged"] is true) _session.MarkHmiChanged();
-                foreach (var pair in evidence) writeResults.Add(pair.Key + "=" + pair.Value);
-            }
+            return changes;
         }
 
         public HmiMessage EnsureUnifiedHmiTag(string hmiSoftwarePath, string tagTableName, string tagName, string hmiDataType = "Bool", string plcName = "", string plcTag = "", string connectionName = "", string address = "", bool requireVerifiedBinding = true)
@@ -432,14 +437,22 @@ namespace TiaMcp.Adapters.Native.Hmi
             {
                 EngineeringInputValidation.NameOrAbsolutePath(tagTableName);
                 var sw = _session.ResolveHmiSoftwareOrThrow(hmiSoftwarePath);
+                // Check the documented Create return type before creating either a table or tag.
+                // Unsupported binding properties must not leave a newly created internal tag behind.
+                var deviceTags = TryGetPropertyValue(sw, "Tags") ?? throw new NotSupportedException("Unified Tags unavailable.");
+                var existingTag = HmiExchangePolicy.Find(deviceTags, tagName);
+                var tagType = existingTag?.GetType() ?? deviceTags.GetType().GetMethod("Create", new[] { typeof(string), typeof(string) })?.ReturnType
+                    ?? throw new NotSupportedException("Documented Tags.Create(name, tagTableName) unavailable.");
+                UnifiedRequestScalar.Prepare(tagType, UnifiedTagBindingChanges(connectionName, plcName, plcTag, hmiDataType, address));
                 var tagTable = EnsureHmiTagTableObject(sw, tagTableName);
                 var tags = TryGetPropertyValue(tagTable, "Tags");
                 if (tags == null) throw new InvalidOperationException($"Tags collection not found on tag table '{tagTableName}'.");
 
-                var existed = HmiExchangePolicy.Find(TryGetPropertyValue(sw, "Tags")
-                    ?? throw new NotSupportedException("Unified Tags unavailable."), tagName) != null;
-                var tag = HmiExchangePolicy.EnsureTag(sw, tagTable, tagName, () => meta["mayHaveChanged"] = true);
-                var action = existed ? "exists" : "created";
+                bool createIssued = false;
+                var tag = HmiExchangePolicy.EnsureTag(sw, tagTable, tagName, () => { meta["mayHaveChanged"] = true; createIssued = true; });
+                var action = createIssued ? "created" : "exists";
+                meta["action"] = action;
+                meta["tagCreateConfirmed"] = createIssued;
 
                 var writeResults = new HmiArray();
                 var targetPlcTag = plcTag;

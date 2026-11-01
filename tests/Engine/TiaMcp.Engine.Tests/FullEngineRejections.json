@@ -7375,7 +7375,8 @@
           },
           "expectedProject": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
           },
           "screenPath": {
             "type": "string",
@@ -7433,7 +7434,8 @@
           },
           "expectedProject": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
           },
           "moduleName": {
             "type": "string",
@@ -7475,7 +7477,8 @@
           },
           "expectedProject": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
           },
           "screenPath": {
             "type": "string",
@@ -7622,7 +7625,8 @@
           },
           "expectedProject": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
           },
           "typePath": {
             "type": "string",
@@ -7827,7 +7831,8 @@
           },
           "expectedProject": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
           },
           "fields": {
             "type": "string[]",
@@ -7889,7 +7894,8 @@
           },
           "expectedProject": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
           },
           "screenPath": {
             "type": "string",
@@ -10390,7 +10396,8 @@
           },
           "expectedProject": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
           },
           "cursor": {
             "type": "string",
@@ -10444,7 +10451,8 @@
           },
           "expectedProject": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
           },
           "folderPath": {
             "type": "string",
@@ -10485,7 +10493,8 @@
           },
           "expectedProject": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
           },
           "cursor": {
             "type": "string",
@@ -18371,7 +18380,8 @@
           },
           "expectedProject": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
           },
           "changes": {
             "type": "AttributeMap<Scalar>",
@@ -26766,7 +26776,8 @@
           },
           "expectedProject": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
           },
           "screenPath": {
             "type": "string",
@@ -26824,7 +26835,8 @@
           },
           "expectedProject": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
           },
           "moduleName": {
             "type": "string",
@@ -26866,7 +26878,8 @@
           },
           "expectedProject": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
           },
           "screenPath": {
             "type": "string",
@@ -27013,7 +27026,8 @@
           },
           "expectedProject": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
           },
           "typePath": {
             "type": "string",
@@ -27218,7 +27232,8 @@
           },
           "expectedProject": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
           },
           "fields": {
             "type": "string[]",
@@ -27280,7 +27295,8 @@
           },
           "expectedProject": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
           },
           "screenPath": {
             "type": "string",
@@ -29814,7 +29830,8 @@
           },
           "expectedProject": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
           },
           "cursor": {
             "type": "string",
@@ -29868,7 +29885,8 @@
           },
           "expectedProject": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
           },
           "folderPath": {
             "type": "string",
@@ -29909,7 +29927,8 @@
           },
           "expectedProject": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
           },
           "cursor": {
             "type": "string",
@@ -38302,7 +38321,8 @@
           },
           "expectedProject": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
           },
           "changes": {
             "type": "AttributeMap<Scalar>",

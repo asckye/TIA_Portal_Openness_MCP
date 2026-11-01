@@ -122,6 +122,13 @@ internal static class HardwareFamilyWire
             // Contract replies of the ported families without step members, as WorkerJson writes them.
             "ExecuteOnline" => Exactly(reply, ("Value", Any), ("Failure", OptionalObject), ("MayHaveChanged", Flag),
                 ("RequiresSessionReset", Flag), ("BlockReadsAfterUncertain", Flag)),
+            "ExecutePlcOrganisation" => Exactly(reply, ("Report", OptionalObject), ("Names", node => node == null || Texts(node)),
+                ("TagAddresses", OptionalObject), ("Message", Text), ("Meta", Object), ("Data", OptionalObject),
+                ("Created", Texts), ("References", node => node == null || Objects(node)), ("Reason", OptionalText),
+                ("Queried", Flag), ("Batch", OptionalObject), ("Compiler", OptionalObject), ("Found", Flag),
+                ("Failure", node => node == null || Exactly(node, ("Code", Text), ("Message", Text),
+                    ("Candidates", values => values == null || Texts(values)), ("Evidence", Object))),
+                ("RequiresSessionReset", Flag), ("MayHaveChanged", Flag), ("BlockReadsAfterUncertain", Flag)),
             "ExecuteHmi" or "ExecuteUnified" or "ExecuteUnifiedHmi" or "ExecuteUnifiedHmiMetadata" or "ReleaseUnifiedReadCursor" => Exactly(reply,
                 ("Value", Any), ("Notes", OptionalText), ("Failure", OptionalObject), ("MayHaveChanged", Flag),
                 ("RequiresSessionReset", Flag), ("BlockReadsAfterUncertain", Flag)),

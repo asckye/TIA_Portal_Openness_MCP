@@ -150,9 +150,12 @@ namespace TiaMcp.Adapters
             {
                 reply.Failure = new PlcSoftwareFailure { Code = error is PlcSoftwareException native ? native.Code : error.GetType().Name, Message = error.Message,
                     Candidates = (error as PlcSoftwareException)?.Candidates?.ToArray() };
+                reply.Failure.Evidence["nativeExceptionType"] = error.GetBaseException().GetType().FullName;
+                reply.Failure.Evidence["nativeMessage"] = error.GetBaseException().Message;
                 reply.MayHaveChanged = adapter.MutationStarted; reply.RequiresSessionReset = adapter.MutationStarted;
                 for (Exception? current = error; current != null; current = current.InnerException)
-                    if (current.Data["nativeResultEvidence"] is Dictionary<string, object?> evidence) reply.Failure.Evidence = evidence;
+                    if (current.Data["nativeResultEvidence"] is Dictionary<string, object?> evidence)
+                        foreach (var pair in evidence) reply.Failure.Evidence[pair.Key] = pair.Value;
             }
             reply.MayHaveChanged |= adapter.MutationStarted;
             return reply;

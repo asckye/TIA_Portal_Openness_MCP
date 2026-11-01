@@ -47,7 +47,7 @@ namespace TiaMcp.PlcWorker
         }
 
         private static string EvidenceCore(Exception cause) => Serialize(new {
-            exceptionType = (TiaOpenness.Shared.HostFailurePolicy.Precondition(cause) ?? cause).GetType().Name,
+            exceptionType = (TiaOpenness.Shared.HostFailurePolicy.Precondition(cause) ?? TiaOpenness.Shared.HostFailurePolicy.Unwrap(cause)).GetType().Name,
             parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(cause),
             isArgument = TiaOpenness.Shared.HostFailurePolicy.Precondition(cause)?.IsArgument,
             inputFile=cause.Data["inputFile"],inputSha256=cause.Data["inputSha256"],outputFile=cause.Data["outputFile"],
@@ -127,6 +127,13 @@ namespace TiaMcp.PlcWorker
                 if (p.ParameterType == typeof(int)) return (object)int.Parse(value.GetRawText(), CultureInfo.InvariantCulture);
                 return JsonSerializer.Deserialize(value.GetRawText(), p.ParameterType, Options);
             }).ToArray();
+        }
+
+        // Called only after dispatcher admission has validated the host mutation guards.
+        internal static object?[] FacadeArguments(ParameterInfo[] parameters, Dictionary<string, JsonElement> values)
+        {
+            if (!parameters.Any(p => p.Name == "dryRun")) values.Remove("dryRun");
+            return Arguments(parameters, values);
         }
 
         private static string Floating(string value) => value.IndexOfAny(new[] { '.', 'E', 'e' }) < 0 ? value + ".0" : value;

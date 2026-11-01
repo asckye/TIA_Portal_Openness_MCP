@@ -440,3 +440,16 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 记录服务（FoundationHost 与 worker）版本和文件哈希、TIA 版本/已知补丁、精确工程与 PLC、工具参数（排除凭据）、预览与实际结果、读回内容、编译错误/警告以及是否保存。失败或结果不确定时保留对应日志，先确认工程实际状态，再决定下一步。最新构建不会覆盖上述历史证据。
 
 预发布测试者的报告先登记在[测试者反馈台账](../development/tester-feedback.md)；复核后满足上述要求的通过结果再写入本台账，并注明反馈编号。
+
+### VMFIX-1 待复验（2026-11-01）
+
+以下只登记需要测试者确认的改动，状态均为 **NOT RUN**；未连接 TIA、PLC 或 VM，离线测试不构成原生验收。复验时按本节要求补充构建哈希、TIA 补丁、工程副本身份、参数、关联 ID 和实际读回。
+
+| 缺陷 / 路径 | 需要的原生复验 |
+|---|---|
+| worker 超时与附件释放 | 保持默认读取 120 秒及现有长操作预算；验证读超时立即报告 requiresSessionReset=true，关闭输入后已返回的原生调用在原所属线程调用一次分离 / TiaPortal.Dispose；既有优雅退出期限内仍不响应才终止。核对租约是否仅在确认分离后释放，硬终止仍需重启 TIA；不得自动重放请求。 |
+| DCC / Startdrive、库和工程比较、SiVArc、Safety 读取 | 各诱发一次缺选件、无对象和连接失效；首个失败与后续会话状态的重置标志一致，信封保留脱敏后的原生异常类型和消息。 |
+| L2 PLC / 硬件原语 | CreatePlcBlockGroup 嵌套组、MovePlcBlockToGroup、RepairAndReimportPlcBlock、ImportPlcTagTablesFromDirectory、CreateDevice、CreateHardwareCatalogDevice；核对原调用顺序、STA/MTA 归属、回复转换、前置拒绝与实际读回。 |
+| 精确目录设备创建 | 取消两颗示例 CPU 和 family 白名单，保留既有 Unified 面板版本必须匹配 Portal major 的真实故障保护；从同一目录读取得到 ET 200SP、其他 S7-1500 CPU、HMI 面板的精确 OrderNumber 行，预览不创建，确认工程文件和哈希后只调用一次 CreateWithItem。核对根设备/未分组系统组父对象与完整库存读回；HMI 子类型标识需真实目录和 API 确认，禁止猜测、候选探测或回退。 |
+| HMI 与共享状态 | expectedProject 传工程名称可读、传文件路径在调用前 INVALID_ARGUMENT；PlanProjectGeneration 和 GetWorkbenchState 核对同一 MCP 绑定；不支持的标签绑定须在创建前拒绝，已确认部分创建须报告 partial 与重置要求。 |
+| 覆盖库类型块 | 预览须提示 XML overwrite 可能断开库类型链接，备份无法恢复链接；预览恢复状态为 not-attempted-preview，执行报告实际备份结果，核对库实例、调用者和编译，不将备份文件哈希不稳定误判为导入内容已改变。 |

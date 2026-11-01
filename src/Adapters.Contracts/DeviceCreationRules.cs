@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace TiaMcp.Adapters.Contracts;
 
@@ -12,6 +13,17 @@ namespace TiaMcp.Adapters.Contracts;
 public static class DeviceCreationRules
 {
     public const int CandidateListLimit = 12;
+
+    public static void RequireUnifiedPanelVersion(string identifier, string version, int portalMajor)
+    {
+        var text = (identifier ?? "") + "/" + (version ?? "");
+        if (text.Replace(" ", "").IndexOf("6AV2128-", StringComparison.OrdinalIgnoreCase) < 0) return;
+        var match = Regex.Match(text, @"/V?(\d+)\.(\d+)", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+        if (!match.Success) return;
+        if (int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) != portalMajor)
+            throw new AdapterPreconditionException("WinCC Unified panel version " + match.Value.TrimStart('/') + " does not match TIA Portal V" + portalMajor
+                + ": on the real machine a Unified Comfort panel created with a /20.0.0.0 identifier made TIA Portal V21 exit (NonRecoverable). Use the catalog entry ending in /" + portalMajor + ".0.0.0 (SearchHardwareCatalog); no create attempted.", "typeIdentifier");
+    }
 
     public static bool IsFullTypeIdentifier(string value)
     {

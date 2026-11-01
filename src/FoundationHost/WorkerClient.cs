@@ -178,7 +178,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 : outcome.Poisoned;
             if (faulted && faultEvidence == null) faultEvidence = WorkerSupervisorReplies.Fault(channel?.LastFault ?? new IOException("Worker exited."),
                 "idle", false, channel?.BindingEpoch, channel?.LastRequestId, process?.Id);
-            var identity = SharedSession ? sharedStatus?["binding"] : HostSnapshot()["binding"];
+            JsonNode? identity = SharedSession ? sharedStatus?["binding"] is { } binding
+                ? new JsonObject { ["identity"] = binding.DeepClone() } : null : HostSnapshot()["binding"];
             var environment = ready["environment"];
             var legacy = HostSnapshot();
             JsonNode? observedReadiness = ready;
@@ -245,7 +246,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             if ((process == null && (!startForStatus || !CanStartForStatus())) || Poisoned || disconnecting || !serial.Wait(0)) return;
             HostSessionCall.LaneChanged(true);
             using var lane = new Lane(this, false); lane.Activate();
-            await Observe("status", new JsonObject(), token);
+            var observed = await Observe("status", new JsonObject(), token);
+            if (observed is JsonObject status) sharedStatus = (JsonObject)status.DeepClone();
         }
         else if (process != null && !Poisoned && !disconnecting) await Call("ReadState", new JsonObject(), token);
     }
@@ -523,11 +525,9 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         lock (stateSync)
         {
             priorUnknownRequestId ??= activeRequestId;
-            channel?.Dispose();
             if (process != null)
             {
-                try { WorkerShutdown.KillOwned(process); }
-                catch (WorkerTerminationException refusal) { RetainStopRefusal(refusal); throw; }
+                if (WorkerShutdown.Stop(process, channel, disposeProcess: false) is { } refusal) { RetainStopRefusal(refusal); throw refusal; }
                 if (ReleaseCatalogData.Releases[releaseKey].ExtendedWorkerStatus) { process.Dispose(); process = null; channel = null; }
             }
             disconnectAcknowledgement = DisconnectContract.Recovery(DisconnectContract.Idle(), true, priorUnknownRequestId);

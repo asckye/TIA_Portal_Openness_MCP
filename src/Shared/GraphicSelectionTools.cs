@@ -21,7 +21,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "GetUnifiedGraphicSelection"), Description("[L2][HMI-Unified][READ]Locate a caller-defined graphical selection by 1..128 exact case-sensitive object names, including unnamed editor groups via known members. itemNames is an array. Require expectedProject, explicit HMI softwarePath and absolute screenPath. Page raw Left/Top/Width/Height, one-hop engineering owner, advertised relationship metadata and a raw coordinate envelope. This does NOT prove native group membership or transformed group bounds; native-group coverage remains an explicit unsupported gap. No writes, exports, broad property recursion or auto-rebind. Keep scope unchanged with nextCursor; retain every data.page for before/after comparison. A page budget is checked between objects, not during synchronous Openness calls.")]
         public CallToolResult ReadUnifiedGraphicSelectionV4(
             string softwarePath,
-            string expectedProject,
+            [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.")] string expectedProject,
             string screenPath,
             [Description("itemNames: Array of screen item names.")] string[] itemNames,
             string cursor = "",
@@ -31,7 +31,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public ResponseMessage ReadUnifiedGraphicSelection(
             string softwarePath,
-            string expectedProject,
+            [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.")] string expectedProject,
             string screenPath,
             [Description("itemNamesJson: JSON array of screen item names.")] string itemNamesJson,
             string cursor = "",

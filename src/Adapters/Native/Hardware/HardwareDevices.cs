@@ -524,15 +524,7 @@ namespace TiaMcp.Adapters
         // Comfort panel of the PREVIOUS device version - made TIA Portal V21 exit; the same panel with /21.0.0.0 was created normally.
         // The device version of a Unified panel has to match the Portal major version.
         private void GuardUnifiedPanelVersion(string orderNumber, string version)
-        {
-            var text = (orderNumber ?? "") + "/" + (version ?? "");
-            if (NormalizeOrderNumber(text).IndexOf("6AV2128-", StringComparison.OrdinalIgnoreCase) < 0) return;
-            var match = Regex.Match(text, @"/V?(\d+)\.(\d+)");
-            if (!match.Success) return;
-            if (int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) != HardwareMajorVersion)
-                throw new AdapterPreconditionException("WinCC Unified panel version " + match.Value.TrimStart('/') + " does not match TIA Portal V" + HardwareMajorVersion
-                    + ": on the real machine a Unified Comfort panel created with a /20.0.0.0 identifier made TIA Portal V21 exit (NonRecoverable). Use the catalog entry ending in /" + HardwareMajorVersion + ".0.0.0 (SearchHardwareCatalog); no create attempted.", "typeIdentifier");
-        }
+            => DeviceCreationRules.RequireUnifiedPanelVersion(orderNumber, version, HardwareMajorVersion);
 
         internal static string NormalizeOrderNumber(string s)
         {

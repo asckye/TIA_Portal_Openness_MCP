@@ -169,7 +169,9 @@ namespace TiaMcp.PlcWorker
                     catch(ArgumentException ex) { throw new AdapterPreconditionException(ex.Message,"expectedProjectFile",true,ex); }
                 }
                 var parameters = method.GetParameters();
-                var call = WorkerJson.Arguments(parameters, values);
+                // Host mutation guards are transport metadata for primitive methods without a preview parameter.
+                // Validate them above, then bind only the native facade's declared arguments.
+                var call = WorkerJson.FacadeArguments(parameters, values);
                 enteredOperation=true;
                 if(name=="Disconnect") disconnectAttempted=true;
                 var result = method.Invoke(engine, call);

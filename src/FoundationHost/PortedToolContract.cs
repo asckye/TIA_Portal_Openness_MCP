@@ -216,6 +216,9 @@ internal sealed partial class FoundationTool
         {
             var arguments = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
             var input = JsonSerializer.SerializeToElement(arguments);
+            if (arguments.TryGetValue("expectedProject", out var expectedProject) && expectedProject.ValueKind == JsonValueKind.String
+                && HostBehavior.ExpectedProjectArgument(expectedProject.GetString()) is { } projectError)
+                return new ValueTask<CallToolResult>(McpServer.V4TargetReject(owner.tool.Name, projectError, current: true));
             if (UnifiedPortService.ValidateNavigation(owner.tool.Name, ProtocolTool.InputSchema, input) is { } navigationError)
             {
                 var rejected = McpServer.V4TargetReject(owner.tool.Name, navigationError, current: true);
@@ -435,6 +438,10 @@ internal sealed partial class FoundationTool
         Func<string> identity = () => (string?)state?["ProjectFile"] ?? "";
         bool missingPortal = state != null && state["ProcessId"] == null && (bool?)state["IsAttached"] != true && !hasProject();
         bool portalDispatchRefused = false;
+        Exception? workerFailure = null;
+        JsonObject? nativeDiagnostics = null;
+        JsonObject? lastReply = null;
+        bool operationDispatched = false;
         JsonNode? Call(string operation, JsonObject input)
         {
             if (missingPortal && TiaMcp.PlcWorker.WorkerOperations.RequiresPortal(operation))
@@ -442,9 +449,18 @@ internal sealed partial class FoundationTool
                 portalDispatchRefused = true;
                 throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.PortalRequired);
             }
-            try { return worker.Call(operation, input, token).GetAwaiter().GetResult(); }
+            try
+            {
+                operationDispatched = true;
+                var reply = worker.Call(operation, input, token).GetAwaiter().GetResult();
+                var objectReply = reply as JsonObject;
+                lastReply = objectReply;
+                nativeDiagnostics = FoundationV4Result.NativeDiagnostics(reply) ?? nativeDiagnostics;
+                return reply;
+            }
             catch (WorkerOperationException error) when (PortedToolContract.IsDeviceRefusal(operation, error))
             { throw PortedToolContract.DeviceRefusal(error); }
+            catch (Exception error) { workerFailure = error; throw; }
         }
         Func<string, JsonObject, JsonNode?> call = Call;
         var service = new HardwareAddressingService(call, hasProject, identity);
@@ -529,9 +545,9 @@ internal sealed partial class FoundationTool
         var values = portedMethod!.GetParameters().Select(p => p.ParameterType == typeof(RequestContext<CallToolRequestParams>) ? request
             : arguments.TryGetValue(p.Name!, out var value)
             ? JsonSerializer.Deserialize(value.GetRawText(), p.ParameterType, new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = false }) : p.DefaultValue).ToArray();
+        using var nativeCalls = InvocationJournal.BeginNativeCallScope();
         try
         {
-            using var nativeCalls = InvocationJournal.BeginNativeCallScope();
             var invocation = portedMethod.Invoke(target, values)!;
             var result = invocation is Task<CallToolResult> pending ? pending.GetAwaiter().GetResult() : (CallToolResult)invocation;
             // Preserve typed refusals and offline previews. A missing session can
@@ -543,8 +559,39 @@ internal sealed partial class FoundationTool
                 return McpServer.V4Result(tool.Name, result.StructuredContent?["data"] is JsonObject data ? (JsonObject)data.DeepClone() : null,
                     new Error(TiaOpenness.Shared.SessionBehavior.PortalRequired, new PreconditionFailedDetails("ConnectPortal", null)),
                     Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current: true);
-            return result;
+            if (workerFailure != null && result.IsError == true
+                && (workerFailure is WorkerOperationException || workerFailure.Data.Contains("foundationRequestSent")))
+            {
+                bool mutation = portedDescriptor!.Classification?.Operation is not ("READ" or "OFFLINE")
+                    && !(portedDescriptor.DryRun.Present && (arguments.TryGetValue("dryRun", out var preview)
+                        ? preview.ValueKind == JsonValueKind.True : portedDescriptor.DryRun.Default));
+                result = FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
+                    workerFailure.Data["foundationRequestSent"] is not false, mutation, result.StructuredContent?["data"], workerFailure);
+            }
+            return FoundationV4Result.ReconcileWorker(result, worker is IFoundationSessionWorker { Poisoned: true }, nativeDiagnostics);
         }
-        catch (TargetInvocationException error) when (error.InnerException != null) { throw error.InnerException; }
+        catch (TargetInvocationException error) when (error.InnerException != null)
+        {
+            var cause = workerFailure ?? error.InnerException;
+            bool mutation = portedDescriptor!.Classification?.Operation is not ("READ" or "OFFLINE")
+                && !(portedDescriptor.DryRun.Present && (arguments.TryGetValue("dryRun", out var dry)
+                    ? dry.ValueKind == JsonValueKind.True : portedDescriptor.DryRun.Default));
+            if (workerFailure == null && lastReply?["Failure"] is JsonObject failure)
+            {
+                string code = (string?)failure["Code"] ?? cause.GetType().Name;
+                bool changed = (bool?)lastReply["MayHaveChanged"] == true;
+                cause = new WorkerOperationException((string?)failure["Message"] ?? cause.Message,
+                    code == nameof(ArgumentException) ? -32602 : -32603,
+                    changed ? "unknown" : mutation ? "rejected-before-operation" : "read-failed",
+                    new JsonObject { ["exceptionType"] = code }.ToJsonString());
+                cause.Data["foundationSessionPoisoned"] = worker is IFoundationSessionWorker { Poisoned: true };
+            }
+            if (!operationDispatched && cause is global::ModelContextProtocol.McpException { ErrorCode: global::ModelContextProtocol.McpErrorCode.InvalidParams })
+                cause = new WorkerOperationException(cause.Message, -32602, "rejected-before-operation");
+            var result = FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
+                operationDispatched && (cause.Data["foundationRequestSent"] is bool sent ? sent
+                    : cause is WorkerOperationException || nativeCalls.NativeCallIssued), mutation, null, cause);
+            return FoundationV4Result.ReconcileWorker(result, worker is IFoundationSessionWorker { Poisoned: true }, nativeDiagnostics);
+        }
     }
 }

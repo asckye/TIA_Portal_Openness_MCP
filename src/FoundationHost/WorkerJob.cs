@@ -81,7 +81,7 @@ internal static class WorkerShutdown
         Task.WhenAll(Owners.Keys.Select(owner => Task.Run(owner.Dispose))).GetAwaiter().GetResult();
     }
     internal static WorkerTerminationException? Stop(Process? process, TiaMcp.WorkerChannel.ChannelClient? channel,
-        Func<Process, string?>? image = null)
+        Func<Process, string?>? image = null, bool disposeProcess = true)
     {
         bool busy = channel?.InFlight == true || channel?.OutcomeUnknown == true && channel.CanDisconnect != true;
         try
@@ -99,7 +99,7 @@ internal static class WorkerShutdown
             if (process != null && !Exited(process))
             { var refusal = new WorkerTerminationException("Unable to confirm the owned worker has exited.", error); Trace.TraceError(refusal.ToString()); return refusal; }
         }
-        process?.Dispose();
+        if (disposeProcess) process?.Dispose();
         return null;
     }
     internal static void KillOwned(Process process)

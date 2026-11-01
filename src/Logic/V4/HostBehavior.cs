@@ -101,8 +101,12 @@ namespace TiaMcp.Logic.V4
                 HostFailureKind.Cancelled => new Error("Request cancelled before operation.", new CancelledDetails(stage)),
                 HostFailureKind.Unknown => new Error("The operation outcome is unknown; inspect the retained evidence before a new session.", new OutcomeUnknownDetails("tool-call", evidence, reason)),
                 HostFailureKind.InternalError => new Error("The host operation could not be completed.", new InternalErrorDetails(null)),
-                _ => new Error("The native read could not be completed.", new NativeOperationFailedDetails(null, nativeMessage, evidence))
+                _ => new Error("The native read could not be completed.", new NativeOperationFailedDetails(null, nativeMessage ?? EvidenceMessage(evidence), evidence))
             };
+
+        private static string? EvidenceMessage(IReadOnlyDictionary<string, JsonElement> evidence)
+            => evidence.TryGetValue("workerMessage", out var message) && message.ValueKind == JsonValueKind.String
+                ? SafeDiagnostic(message.GetString()) : null;
 
         internal static string? SafeDiagnostic(string? message)
         {
@@ -128,11 +132,18 @@ namespace TiaMcp.Logic.V4
                 && (reportedCode == -32602 || reportedOutcome == "rejected-before-operation") ? SafeDiagnostic(error.Message) : null;
         }
 
-        // Retain bounded, redacted I/O diagnostics; other untyped exceptions remain value-free.
+        // Retain bounded, redacted diagnostics so native failures can be investigated from the envelope.
         internal static IReadOnlyDictionary<string, JsonElement> FailureEvidence(string? exceptionType, string? message = null)
             => new Dictionary<string, JsonElement> {
                 ["exceptionType"] = JsonSerializer.SerializeToElement(exceptionType),
-                ["workerMessage"] = JsonSerializer.SerializeToElement(exceptionType == nameof(System.IO.IOException) ? SafeDiagnostic(message) : null) };
+                ["workerMessage"] = JsonSerializer.SerializeToElement(SafeDiagnostic(message)) };
+
+        internal static Error? ExpectedProjectArgument(string? expectedProject)
+        {
+            if (expectedProject == null || expectedProject.IndexOfAny(new[] { '/', '\\', ':' }) < 0) return null;
+            return new Error("expectedProject must be the exact project NAME, for example 'AutomaticDipCoatingMachine'. Use expectedProjectFile only when the tool requests an absolute project file path.",
+                new InvalidArgumentDetails("expectedProject", Array.Empty<string>()));
+        }
         internal static JsonObject RetainedRecoveryEvidence(Exception error)
         {
             var retained = new JsonObject();

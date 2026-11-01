@@ -16,6 +16,54 @@ internal static class FoundationV4Result
             Content = new[] { new TextContentBlock { Text = result.Content[0].Text } } };
     }
     internal static readonly JsonElement Schema = EnvelopeSchema.Value;
+    internal static JsonObject? NativeDiagnostics(JsonNode? reply)
+    {
+        if (reply is not JsonObject value) return null;
+        var failure = value["Failure"] as JsonObject;
+        var failureEvidence = failure?["Evidence"] as JsonObject;
+        string? message = Text(value, "nativeMessage") ?? (failureEvidence == null ? null : Text(failureEvidence, "nativeMessage"))
+            ?? (failure == null ? null : Text(failure, "Message")) ?? value["error"]?.ToString();
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            string type = Text(value, "nativeExceptionType") ?? (failureEvidence == null ? null : Text(failureEvidence, "nativeExceptionType"))
+                ?? (failure == null ? null : Text(failure, "Code")) ?? "NativeOperation";
+            int colon = message.IndexOf(':');
+            if (type == "NativeOperation" && colon > 0 && colon < 256
+                && message[..colon].All(c => char.IsLetterOrDigit(c) || c is '.' or '_' or '+')) type = message[..colon];
+            return new JsonObject { ["exceptionType"] = type, ["nativeMessage"] = HostBehavior.SafeDiagnostic(message) };
+        }
+        foreach (string member in new[] { "Meta", "Value", "Step", "Probe", "Import" })
+            if (NativeDiagnostics(value[member]) is { } diagnostic) return diagnostic;
+        return null;
+    }
+
+    internal static CallToolResult ReconcileWorker(CallToolResult result, bool reset, JsonObject? diagnostics)
+    {
+        if (result.StructuredContent is not JsonObject source) return result;
+        var body = (JsonObject)source.DeepClone();
+        if (reset && body["meta"] is JsonObject meta)
+        {
+            meta["requiresSessionReset"] = true;
+            var data = body["data"] as JsonObject ?? new JsonObject();
+            data["recovery"] = TiaOpenness.Shared.SessionBehavior.Recovery;
+            body["data"] = data;
+        }
+        if (diagnostics != null && body["error"] is JsonObject error && error["details"] is JsonObject details)
+        {
+            var evidence = details["evidence"] as JsonObject ?? new JsonObject();
+            foreach (var pair in diagnostics) evidence[pair.Key] = pair.Value?.DeepClone();
+            // Error detail variants have fixed fields. Retain diagnostics in data for variants without evidence.
+            if (details.ContainsKey("evidence")) details["evidence"] = evidence;
+            else
+            {
+                var data = body["data"] as JsonObject ?? new JsonObject();
+                data["nativeDiagnostics"] = diagnostics.DeepClone(); body["data"] = data;
+            }
+            if (details.ContainsKey("nativeMessage")) details["nativeMessage"] = diagnostics["nativeMessage"]?.DeepClone();
+        }
+        return new CallToolResult { IsError = result.IsError, StructuredContent = body,
+            Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
+    }
     private static readonly IReadOnlyDictionary<string, JsonElement> Empty = new Dictionary<string, JsonElement>();
     internal static Error Invalid(string parameter) => new("Invalid Foundation argument. Nothing was executed.", new InvalidArgumentDetails(parameter, Array.Empty<string>()));
     internal static CallToolResult Reject(string release, string name, string id, Error error, bool current = false)
@@ -62,6 +110,8 @@ internal static class FoundationV4Result
         if (worker?.EvidenceJson != null && worker.EvidenceJson != "null")
         {
             var retained = JsonNode.Parse(worker.EvidenceJson);
+            if (retained is JsonObject retainedObject && retainedObject["nativeMessage"] is JsonValue nativeMessage)
+                retainedObject["nativeMessage"] = HostBehavior.SafeDiagnostic(nativeMessage.GetValue<string>());
             data ??= new JsonObject();
             data["evidence"] = retained;
             if ((string?)retained?["recoveryStatus"] == "backup-skipped")
@@ -78,18 +128,30 @@ internal static class FoundationV4Result
             return Reject(release, name, id, new Error("Worker request exceeds its byte limit. Nothing was executed.", new LimitExceededDetails("arguments", workerLimit, null)), true);
         if (!dispatched && exception?.Data["foundationSessionPoisoned"] is true)
             return Reject(release, name, id, HostBehavior.SessionReset(), true);
+        if (!dispatched && exception?.GetBaseException() is NotSupportedException unavailable)
+            return Reject(release, name, id, new Error(HostBehavior.SafeDiagnostic(unavailable.Message) ?? "The requested capability is unavailable.",
+                new UnsupportedCapabilityDetails(release, name, null)), true);
+        if (worker is { Outcome: "rejected-before-operation", ExceptionType: nameof(NotSupportedException) })
+            return Reject(release, name, id, new Error(HostBehavior.SafeDiagnostic(worker.Message) ?? "The requested capability is unavailable.",
+                new UnsupportedCapabilityDetails(release, name, null)), true);
         exception ??= new InvalidOperationException();
+        bool lost = dispatched && exception.Data["foundationSessionPoisoned"] is true;
         var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(exception, dispatched, !mutation, worker?.Outcome, worker?.Code, exceptionType);
         string? parameter = worker?.Parameter ?? TiaOpenness.Shared.HostFailurePolicy.Parameter(exception);
-        var details = HostBehavior.FailureEvidence(exceptionType, exception.Message);
+        bool nativeDiagnostic = !TiaOpenness.Shared.HostFailurePolicy.SuppressAdmissionDiagnostic(exception)
+            && (worker == null || worker.Outcome != "rejected-before-operation"
+                && !string.IsNullOrWhiteSpace(exceptionType) && exceptionType != nameof(WorkerOperationException));
+        var details = HostBehavior.FailureEvidence(exceptionType, dispatched && nativeDiagnostic ? exception.Message : null);
+        if (lost) { data ??= new JsonObject(); data["recovery"] = TiaOpenness.Shared.SessionBehavior.Recovery; }
         string? reason = TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ExceptionReason(exception);
         bool readCancelled = dispatched && !mutation && kind == TiaOpenness.Shared.HostFailureKind.Cancelled;
         return Wire(release, name, id, data, readCancelled ? Outcome.ReadFailed : HostBehavior.OutcomeOf(kind),
             readCancelled ? Execution.ReadOnly : HostBehavior.ExecutionOf(kind), HostBehavior.CompletenessOf(kind),
             HostBehavior.FailureError(kind, parameter, details,
-                exception.Data["foundationSuppressAdmissionDiagnostic"] is true ? null : HostBehavior.AdmissionDiagnostic(exception, worker?.Code, worker?.Outcome, worker?.ExceptionType),
+                TiaOpenness.Shared.HostFailurePolicy.SuppressAdmissionDiagnostic(exception) ? null : HostBehavior.AdmissionDiagnostic(exception, worker?.Code, worker?.Outcome, worker?.ExceptionType)
+                    ?? (dispatched && nativeDiagnostic ? HostBehavior.SafeDiagnostic(exception.Message) : null),
                 reason, dispatched ? "tool-call" : "tool-queue", worker?.Condition ?? TiaOpenness.Shared.HostFailurePolicy.Precondition(exception)?.Condition),
-            true, kind == TiaOpenness.Shared.HostFailureKind.Unknown);
+            true, lost || kind == TiaOpenness.Shared.HostFailureKind.Unknown);
     }
 
     internal static CallToolResult Worker(string release, Definition definition, string id, JsonObject args, JsonNode? raw, JsonNode? validated)

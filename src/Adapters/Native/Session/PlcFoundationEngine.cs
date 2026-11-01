@@ -426,7 +426,11 @@ namespace TiaMcp.Adapters
                     }
                     var result=Mutation(operation,dryRun,dryRun ? null : import());
                     capability?.Apply(result);
-                    result.InputFile=input.FullName; result.InputSha256=hash; result.RecoveryDirectory=recoveryDirectory; result.RecoveryFiles=recoveryFiles; result.RecoveryStatus=recoveryWarning!=null ? "backup-skipped" : recoveryDirectory!=null ? "backup-ready" : "not-needed";
+                    result.InputFile=input.FullName; result.InputSha256=hash; result.RecoveryDirectory=recoveryDirectory; result.RecoveryFiles=recoveryFiles; result.RecoveryStatus=dryRun && backups!=null ? "not-attempted-preview" : recoveryWarning!=null ? "backup-skipped" : recoveryDirectory!=null ? "backup-ready" : "not-needed";
+                    if (operation == "ImportBlocks" && backups != null)
+                        result.Warnings = result.Warnings.Concat(new[] { "XML overwrite can detach a block from its library type. Review library instances and their callers before execution; the XML backup does not restore a library type link. Use the library type workflow when the link must be preserved." }).ToArray();
+                    if (dryRun && backups != null)
+                        result.Warnings = result.Warnings.Concat(new[] { "Preview does not export recovery files. Apply reports backup-ready or backup-skipped from the actual backup attempt; inspect that result before further work." }).ToArray();
                     result.RecoveryWarning=recoveryWarning; result.RecoverySkipped=recoverySkipped;
                     return result;
                 }

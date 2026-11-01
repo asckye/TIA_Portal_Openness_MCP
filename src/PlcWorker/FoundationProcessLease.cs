@@ -16,15 +16,17 @@ namespace TiaMcp.PlcWorker
         private readonly Action _refresh, _clear, _invalidate, _dispose;
         private readonly Action<string> _lock;
         private readonly Func<string?>? _bindingFault;
+        private readonly Action? _detachOnShutdown;
         internal string? Fault { get; private set; }
 
         internal WorkerSessionRecovery(WorkerSessionOutcomeState outcome, Func<bool> detached,
             Action refresh, Action clear, Action<string> lockBinding, Action invalidate, Action dispose,
-            Func<string?>? bindingFault = null)
+            Func<string?>? bindingFault = null, Action? detachOnShutdown = null)
         {
             _outcome = outcome; _detached = detached; _refresh = refresh; _clear = clear;
             _lock = lockBinding; _invalidate = invalidate; _dispose = dispose;
             _bindingFault = bindingFault;
+            _detachOnShutdown = detachOnShutdown;
         }
 
         internal void ObserveFailure(Exception error)
@@ -69,7 +71,13 @@ namespace TiaMcp.PlcWorker
 
         internal void DisposeSession()
         {
-            if (_outcome.RequiresReset) _invalidate();
+            if (_outcome.RequiresReset)
+            {
+                // EOF is processed on the owning lane after any native call has returned.
+                // A bounded host grace period permits a clean detach; a native hang still ends in termination.
+                try { _detachOnShutdown?.Invoke(); }
+                finally { if (!_detached()) _invalidate(); }
+            }
             _dispose();
         }
     }
@@ -185,7 +193,7 @@ namespace TiaMcp.PlcWorker
                 // clean exit releases; a job-object kill never reaches this finally.
                 lease?.BeginRequest();
                 disposeEngine();
-                if (!uncertain) ReleaseCleanly();
+                if (!uncertain || detached()) ReleaseCleanly();
             }
             catch { lease?.CompleteRequest(true); throw; }
             finally { lease?.Dispose(); lease = null; }

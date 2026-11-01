@@ -23,7 +23,8 @@ namespace TiaMcp.Adapters
         {
             if(deviceAddOutcomeUnknown) throw new InvalidOperationException("Prior device creation outcome unknown; inspect explicitly and establish a new session. Never replay.");
             var request=new PlcDeviceAddRequest {Release=ReleaseKey,PreferredMlfb=preferredMlfb,PreferredVersion=preferredVersion,Name=deviceName,Family=family,DryRun=dryRun,ExpectedHash=expectedPlanHash,Confirm=confirm,ExpectedProject=expectedProjectFile};
-            PlcDeviceAddPolicy.ValidateOptions(request);
+            try { PlcDeviceAddPolicy.ValidateOptions(request); }
+            catch (ArgumentException error) { throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(error.Message, error.ParamName ?? "arguments", true, error); }
 #if PLC_HARDWARE_CATALOG
             RequireHardwareCatalogBinding();
             // The borrowed engine path keeps its served behavior until the worker switch.
@@ -59,6 +60,7 @@ namespace TiaMcp.Adapters
                 if(lifecycle.ProcessId!=request.ProcessId || !object.Equals(Project(),project) || !object.Equals(Portal(),portal)) throw new InvalidOperationException("Project/process/session identity changed.");
             };
             Func<IEnumerable<PlcHardwareCatalogCandidate>> catalog=()=>portal.HardwareCatalog.Find(preferredMlfb).Select(entry=>new PlcHardwareCatalogCandidate {TypeIdentifier=NativeHardware.TypeIdentifier(entry),ArticleNumber=NativeHardware.ArticleNumber(entry),Version=NativeHardware.Version(entry)});
+            object? ungroupedRoot=null;
             Func<IEnumerable<PlcDeviceAddItem>> inventory=()=> {
                 // Complete root, grouped and ungrouped device inventory; no software/online reads.
                 var rows=new List<PlcDeviceAddItem>();var groups=new List<object>();int visited=0;
@@ -79,14 +81,17 @@ namespace TiaMcp.Adapters
                 };
                 devices(NativeHardware.Devices(project),project);
                 var ungrouped=project.UngroupedDevicesGroup??throw new InvalidOperationException("Ungrouped system group unavailable.");
-                rows.Add(new PlcDeviceAddItem {Name="$ungrouped",Identity=DeviceAddIdentity(ungrouped),ParentIdentity=request.RootIdentity,IsGroup=true,ParentVerified=object.Equals(ungrouped.Parent,project)});
+                ungroupedRoot=ungrouped;
+                rows.Add(new PlcDeviceAddItem {Name="$ungrouped",Identity=DeviceAddIdentity(ungrouped),ParentIdentity=request.RootIdentity,IsGroup=true,IsUngroupedSystemGroup=true,ParentVerified=object.Equals(ungrouped.Parent,project)});
                 devices(ungrouped.Devices,ungrouped);
                 foreach(var group in project.DeviceGroups) visit(group,project,0);
                 return rows;
             };
             var result=PlcDeviceAddPolicy.Run(request,catalog,inventory,check,(identifier,name)=> {
                 var created=NativeHardware.CreateWithItem(NativeHardware.Devices(project),identifier,name,name);
-                return created==null ? null! : new PlcDeviceAddItem {Name=created.Name,Identity=DeviceAddIdentity(created),ParentIdentity=request.RootIdentity,ParentVerified=object.Equals(created.Parent,project)};
+                if(created==null) return null!;
+                var createdName=created.Name; var parent=created.Parent;
+                return new PlcDeviceAddItem {Name=createdName,Identity=DeviceAddIdentity(created),ParentIdentity=DeviceAddIdentity(parent),ParentVerified=object.Equals(parent,project) || object.Equals(parent,ungroupedRoot)};
             });
             if(result.RequiresSessionReset) deviceAddOutcomeUnknown=true;
             return result;

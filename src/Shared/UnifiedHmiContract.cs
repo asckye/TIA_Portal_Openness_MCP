@@ -106,6 +106,14 @@ namespace TiaMcpServer.ModelContextProtocol
             bool uncertainItem = items?.Any(i => Flag(i, "success") != true && Flag(i, "mayHaveChanged") != false) == true;
             bool incomplete = Incomplete(evidence) || Incomplete(data["items"]);
             bool unconfirmed = Unconfirmed(evidence) || otherFailures > failed;
+            if (writes && success != true && Flag(evidence, "tagCreateConfirmed") == true
+                && failureCode == "UNSUPPORTED_CAPABILITY" && !unconfirmed)
+            {
+                evidence["requiresSessionReset"] = true;
+                data["partialWrite"] = "The tag was created, but the requested binding is unsupported. Inspect the tag and its binding before a new session; no rollback was attempted.";
+                return Result(tool, data, new Error("The tag was created but its requested binding did not complete.",
+                    new PartialFailureDetails(1, 1, 0)), Outcome.Partial, Completeness.Partial, writes, current);
+            }
             if (writes && (unconfirmed || uncertainItem || success != true && Flag(evidence, "mayHaveChanged") != false
                 && !(failed > 0 && passed > 0 && items!.All(i => Flag(i, "success") == true || Flag(i, "mayHaveChanged") == false))))
                 return Result(tool, data, Unknown(evidence), Outcome.Unknown, Completeness.Unknown, writes, current);
@@ -171,7 +179,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 : outcome == Outcome.Partial ? Execution.Partial : writes ? Execution.Completed : Execution.ReadOnly;
             var meta = new Meta(DateTimeOffset.UtcNow, McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
                 outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired
-                    || Flag(data?["evidence"], "connectionUnavailable") == true || Flag(data?["evidence"], "requiresExplicitRebind") == true,
+                    || Flag(data?["evidence"], "connectionUnavailable") == true || Flag(data?["evidence"], "requiresExplicitRebind") == true
+                    || Flag(data?["evidence"], "requiresSessionReset") == true,
                 current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings);
             var mapped = McpResult.From(Envelope.Create(data, error, meta));
             return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),

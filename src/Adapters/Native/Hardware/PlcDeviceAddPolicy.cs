@@ -19,6 +19,7 @@ namespace TiaMcp.Adapters
         // Top-level device item names (CPU/head item): CreateWithItem names the head item with deviceName as well.
         internal string[] ItemNames=new string[0];
         internal bool IsGroup;
+        internal bool IsUngroupedSystemGroup;
         internal bool ParentVerified;
     }
     internal static class PlcDeviceAddPolicy
@@ -26,7 +27,7 @@ namespace TiaMcp.Adapters
         internal static void ValidateOptions(PlcDeviceAddRequest r)
         {
             PlcHardwareCatalogPolicy.RequireRelease(r.Release);
-            if(r.Family!="S7-1200" && r.Family!="S7-1500") throw new ArgumentException("Only explicit S7-1200/S7-1500 hints are accepted; no HMI or family fallback.");
+            Text(r.Family,128,"Family is a descriptive label; an exact catalog selection is required.");
             Text(r.PreferredMlfb,256,"Exact catalog identifier or article number required.");
             if(r.PreferredMlfb.StartsWith("OrderNumber:",StringComparison.Ordinal))
             {
@@ -61,8 +62,8 @@ namespace TiaMcp.Adapters
             var chosen=matched[0];
             if(!chosen.TypeIdentifier!.StartsWith("OrderNumber:",StringComparison.Ordinal)) throw new ArgumentException("Only exact Siemens OrderNumber identifiers are accepted.");
             Text(chosen.ArticleNumber!,256,"Selected article number required."); Text(chosen.Version!,64,"Selected version required.");
-            var allowed=r.Family=="S7-1200" ? new[]{"6ES7211-1BE40-0XB0","6ES7 211-1BE40-0XB0"} : new[]{"6ES7513-1AM03-0AB0","6ES7 513-1AM03-0AB0"};
-            if(!allowed.Contains(chosen.ArticleNumber,StringComparer.Ordinal) || chosen.TypeIdentifier!="OrderNumber:"+chosen.ArticleNumber+"/"+chosen.Version || chosen.Version!.Any(c=>c=='*'||c=='?'||c=='/'||char.IsControl(c))) throw new NotSupportedException("Only the two documented standard PLC article identities are admitted, with the matching family and exact catalog identifier/version; all other types fail closed.");
+            if(chosen.TypeIdentifier!="OrderNumber:"+chosen.ArticleNumber+"/"+chosen.Version || chosen.ArticleNumber!.Any(c=>c=='*'||c=='?'||c=='/'||char.IsControl(c)) || chosen.Version!.Any(c=>c=='*'||c=='?'||c=='/'||char.IsControl(c))) throw new AdapterPreconditionException("An exact OrderNumber:<articleNumber>/<version> catalog identifier is required.", "preferredMlfb/preferredVersion", true);
+            DeviceCreationRules.RequireUnifiedPanelVersion(chosen.TypeIdentifier!, "", int.Parse(r.Release, System.Globalization.CultureInfo.InvariantCulture));
             return chosen;
         }
         private static PlcDeviceAddItem[] Snapshot(Func<IEnumerable<PlcDeviceAddItem>> read)
@@ -81,7 +82,7 @@ namespace TiaMcp.Adapters
         private static string Field(string s)=>s.Length.ToString(System.Globalization.CultureInfo.InvariantCulture)+":"+s;
         private static string Hash(PlcDeviceAddRequest r,PlcHardwareCatalogCandidate c,PlcDeviceAddItem[] items)
         {
-            var fields=new[]{"exact-catalog-root-device-add-v1",r.Release,MutationIdentityPolicy.AbsoluteFile(r.Project).ToUpperInvariant(),r.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture),r.RootIdentity,r.PreferredMlfb,r.PreferredVersion,r.Name,r.Family,c.TypeIdentifier!,c.ArticleNumber!,c.Version!}.Concat(items.SelectMany(x=>new[]{x.Identity,x.Name,x.ParentIdentity,x.IsGroup?"group":"device"}));
+            var fields=new[]{"exact-catalog-root-device-add-v1",r.Release,MutationIdentityPolicy.AbsoluteFile(r.Project).ToUpperInvariant(),r.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture),r.RootIdentity,r.PreferredMlfb,r.PreferredVersion,r.Name,r.Family,c.TypeIdentifier!,c.ArticleNumber!,c.Version!}.Concat(items.SelectMany(x=>new[]{x.Identity,x.Name,x.ParentIdentity,x.IsUngroupedSystemGroup?"ungrouped":x.IsGroup?"group":"device"}));
             using(var sha=SHA256.Create()) return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(string.Concat(fields.Select(Field))))).Replace("-","").ToLowerInvariant();
         }
         internal static PlcDeviceAddResult Run(PlcDeviceAddRequest r,Func<IEnumerable<PlcHardwareCatalogCandidate>> catalog,Func<IEnumerable<PlcDeviceAddItem>> inventory,Action check,Func<string,string,PlcDeviceAddItem> create)
@@ -110,9 +111,11 @@ namespace TiaMcp.Adapters
             try
             {
                 var created=create(selected.TypeIdentifier!,r.Name); // Exactly one call, including on native exception.
-                if(created==null || !created.ParentVerified || created.Name!=r.Name || created.IsGroup || created.ParentIdentity!=r.RootIdentity || string.IsNullOrWhiteSpace(created.Identity) || before.Any(x=>x.Identity==created.Identity)) throw new InvalidOperationException("Returned created device identity not verified.");
+                if(created==null || !created.ParentVerified || created.Name!=r.Name || created.IsGroup
+                    || !(created.ParentIdentity==r.RootIdentity || before.Any(x=>x.IsGroup && x.IsUngroupedSystemGroup && x.ParentIdentity==r.RootIdentity && x.Identity==created.ParentIdentity))
+                    || string.IsNullOrWhiteSpace(created.Identity) || before.Any(x=>x.Identity==created.Identity)) throw new InvalidOperationException("Returned created device identity not verified.");
                 check(); var after=Snapshot(inventory);
-                if(after.Length!=before.Length+1 || !after.Any(x=>x.Identity==created.Identity && x.Name==r.Name && !x.IsGroup && x.ParentIdentity==r.RootIdentity) || !before.All(x=>after.Any(y=>y.Identity==x.Identity && y.Name==x.Name && y.ParentIdentity==x.ParentIdentity && y.IsGroup==x.IsGroup))) throw new InvalidOperationException("Post-create inventory differs from the one planned addition.");
+                if(after.Length!=before.Length+1 || !after.Any(x=>x.Identity==created.Identity && x.Name==r.Name && !x.IsGroup && x.ParentIdentity==created.ParentIdentity) || !before.All(x=>after.Any(y=>y.Identity==x.Identity && y.Name==x.Name && y.ParentIdentity==x.ParentIdentity && y.IsGroup==x.IsGroup && y.IsUngroupedSystemGroup==x.IsUngroupedSystemGroup))) throw new InvalidOperationException("Post-create inventory differs from the one planned addition.");
                 result.Status="created-verified"; result.Executed=true;
             }
             catch(Exception ex) { result.Status="outcome-unknown";result.RequiresSessionReset=true;var error=ex.GetType().Name+": "+ex.Message;result.Error=error.Length<=2048?error:error.Substring(0,2048); }

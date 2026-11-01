@@ -46,6 +46,8 @@ namespace TiaMcp.Adapters
             {
                 EngineeringPlcSession.RecordExportFailure(error);
                 meta["error"] = error.ToString();
+                meta["nativeExceptionType"] = error.GetBaseException().GetType().FullName;
+                meta["nativeMessage"] = error.GetBaseException().Message;
                 meta["operationSuccess"] = false; meta["apiCallSuccess"] = false; meta["dataComplete"] = false;
                 meta["status"] = error.GetBaseException() is PlcSoftwareException native ? native.Code
                     : error.GetBaseException() is HardwareAddressingException hardware ? hardware.Status : "ReadOrWriteFailed";
