@@ -1,16 +1,16 @@
 # V4 工具协议规范
 
-状态：现行 · 最后核对：2026-10-11，master `3a227657`
+状态：现行 · 最后核对：2026-11-01，master `27675208`（删去历史证据与快照计数、Microsoft 对照集中到附录 C、第 5.1 节 nativeMessage 取舍）；其余为 2026-10-11，master `3a227657`
 
 [设计规范索引](README.md) · [V4 协议偏差清单](deviations/protocol.md)
 
 > **依据**：master `3a227657` 的源码、`manifest/contracts/v4/baseline/*.json`（契约快照格式 1）与 `manifest/contracts/v4/responses/*.json`（响应快照格式 3，`captureMode=sdk-only-fixture`，stdio）。本文描述 4.0 的现行协议，同时是新工作的规范：新工具和新代码必须满足标为 MUST 的规则。现有实现与本文或基线的差异逐条列在 [V4 协议偏差清单](deviations/protocol.md)，其中 4.0 前的修改由 P8-60 实施。
 >
-> **基线（维护者决定 2026-10-11）**：首要基线是 MCP 规范（现行修订 [2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28)；当前依赖的 C# SDK `ModelContextProtocol 0.3.0-preview.4` 内含的协议版本字符串最高为 `2025-06-18`，所以实际协商的是 [2025-06-18](https://modelcontextprotocol.io/specification/2025-06-18) 修订；4.0 保持这一修订，见第 0.4 节）。次要基线是 Microsoft REST API Guidelines：[Azure REST API Guidelines](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md)、[Considerations for Service Design](https://github.com/microsoft/api-guidelines/blob/vNext/azure/ConsiderationsForServiceDesign.md) 和已归档的 [Microsoft REST API Guidelines](https://github.com/microsoft/api-guidelines/blob/vNext/graph/Guidelines-deprecated.md)。Microsoft 指南用于错误结构、分页、长任务和版本这几类概念；REST 专属规则在第 0.3 节说明不适用的原因。
+> **基线（维护者决定 2026-10-11）**：首要基线是 MCP 规范（现行修订 [2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28)；当前依赖的 C# SDK `ModelContextProtocol 0.3.0-preview.4` 内含的协议版本字符串最高为 `2025-06-18`，所以实际协商的是 [2025-06-18](https://modelcontextprotocol.io/specification/2025-06-18) 修订；4.0 保持这一修订，见第 0.4 节）。次要基线是 Microsoft REST API Guidelines：[Azure REST API Guidelines](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md)、[Considerations for Service Design](https://github.com/microsoft/api-guidelines/blob/vNext/azure/ConsiderationsForServiceDesign.md) 和已归档的 [Microsoft REST API Guidelines](https://github.com/microsoft/api-guidelines/blob/vNext/graph/Guidelines-deprecated.md)。Microsoft 指南用于错误结构、分页、长任务和版本这几类概念；REST 概念映射、不适用的 REST 规则和逐节对照集中在附录 C。
 >
 > **规范用语**：MUST / MUST NOT / SHOULD / SHOULD NOT / MAY 按 RFC 2119 / RFC 8174 解释。“生产者”指 MCP 宿主与工具实现；“消费者”指 MCP 客户端、CLI 调用方以及读取信封的桥接、批次和工作台代码。标为“现状”的句子只描述已有行为，不是规范要求。
 >
-> 每节末尾有 **MCP 基线** 与 **Microsoft 基线** 两段说明，其中的偏差编号（`MCP-nn`、`API-nn`）对应 [偏差清单](deviations/protocol.md) 的条目。
+> 各节末尾的 **MCP 基线** 说明与附录 C 的 Microsoft 对照中，偏差编号（`MCP-nn`、`API-nn`）对应 [偏差清单](deviations/protocol.md) 的条目。
 
 ## 0. 基线与映射总则
 
@@ -36,29 +36,15 @@
 | CLI | `src/Engine/Cli/CliBoundary.cs`、`CliCommands.cs`、`CliToolExecution.cs` |
 | 操作类别 | `src/Logic/ModelContextProtocol/ToolTaxonomy.cs`、`ToolMetadata.cs`、`docs/reference/tool-matrix.md` |
 
-数量统计用 Python 脚本直接读取八份快照。并集为 514 个工具，各发布版本为 215/237/253/260/267/277/503/514 个（`docs/releases/v4.0.0.md` 的表格仍是 214–514 的旧数，并标注了 TODO）。响应快照共 7466 次调用，其中 3192 次只记录摘要，4263 个完整 V4 信封（含批次子信封）参与了组合统计。快照主要覆盖准入拒绝和离线调用；离线环境无法产生的原生成功、部分成功和未知结果，结论来自源码。
+数量统计用 Python 脚本直接读取八份快照（2026-10-11）。工具并集与各发布版本的数量以[生成的版本工具目录](../../reference/version-tool-catalog.md)和[机器可读版本清单](../../../manifest/version-tools.json)为准，本页不写字面数量。响应快照共 7466 次调用，其中 3192 次只记录摘要，4263 个完整 V4 信封（含批次子信封）参与了组合统计。快照主要覆盖准入拒绝和离线调用；离线环境无法产生的原生成功、部分成功和未知结果，结论来自源码。
 
 ### 0.2 REST 概念到 MCP/V4 的映射
 
-| Microsoft REST 概念 | MCP 层 | V4 层（本协议） |
-|---|---|---|
-| 资源 URL + HTTP 方法 | `tools/call` 的 `name` + `arguments` | 工具名（动词 + 对象）与类型化参数；`Manage*` 工具用 `action` 选择操作 |
-| HTTP 状态码 | JSON-RPC error（协议错误）或 `CallToolResult.isError` | `meta.outcome` 与 `isError = !ok` |
-| `x-ms-error-code` 头 + `error.code` | 无 | `error.code`（闭集，UPPER_SNAKE） |
-| `error.target` / `details[]` / `innererror` | 无 | 按错误码定型的 `error.details` 对象 |
-| `api-version` 查询参数 | 协商的 MCP 协议版本（2026-07-28 起每个请求放在 `_meta`） | 发布键（宿主进程级）+ `schemaVersion: 4`（固定） |
-| `nextLink` / `top` / `skip` / `maxpagesize` | 列表方法的 `cursor` / `nextCursor` | 工具参数 `offset`/`limit` 或 `cursor`/`limit`，结果放在 `meta.paging` |
-| `Operation-Location` 状态监视资源 | tasks 扩展（2026-07-28 为官方扩展） | 无通用机制；调用同步阻塞，生成运行有 `runId` + `GetGenerationRun` |
-| `Retry-After` | 进度通知可用于重置超时 | 无 |
-| ETag / `If-Match` / 412 | 无 | `expectedPlanHash` 等 `expected*` 参数；`PLAN_STALE`、`IDENTITY_MISMATCH` |
-| `If-None-Match: *` | 无 | `overwrite: false`；`ALREADY_EXISTS` |
-| `Repeatability-Request-ID` | 2026-07-28 要求断流后用新请求 ID 重发 | 不提供去重；未知结果禁止重放，会话被锁定 |
-| `x-ms-client-request-id` / traceparent | `_meta` 中的 `traceparent`（2026-07-28） | `meta.requestId` 由服务器生成；不读取客户端追踪上下文 |
-| `azure-deprecating` 头 | 规范层的功能生命周期政策 | 无；硬切换，靠迁移表 |
+见附录 C.1。
 
 ### 0.3 不适用的 REST 规则
 
-以下 REST 规则没有对应的 MCP 载体，本协议不采用，也不计为偏差：URL 结构与路径版本、HTTP 方法语义（GET/PUT/PATCH/DELETE 的幂等约定）、HTTP 状态码的选取、`ETag`/`Last-Modified` 响应头与 304、`Location`/`Operation-Location` 头、CORS、`$select`/`$expand`/`$filter`/`$orderby` OData 查询语言、`Retry-After` 头、JSON Merge Patch。这些规则表达的语义如果在 V4 中有等价物（幂等、条件写、长任务、分页），在对应章节单独评估。
+见附录 C.2。
 
 ### 0.4 MCP 修订与 V4 会话（维护者决定 2026-10-11）
 
@@ -105,8 +91,6 @@
 - CLI 工具命令向 stdout 输出一行同样的 JSON，诊断信息只写 stderr（第 14 节）。
 
 > **MCP 基线**：[Tools §Tool Result / §Structured Content](https://modelcontextprotocol.io/specification/2026-07-28/server/tools#structured-content) 规定，返回 `structuredContent` 时 SHOULD 同时在 TextContent 中给出序列化 JSON。V4 符合，而且两者逐字节相同。[§Error Handling](https://modelcontextprotocol.io/specification/2026-07-28/server/tools#error-handling) 区分协议错误与工具执行错误，并把输入校验错误归为工具执行错误；[CallToolResult](https://modelcontextprotocol.io/specification/2026-07-28/schema#calltoolresult) 要求工具产生的错误放在结果中并设置 `isError: true`。V4 符合：未知工具返回 `-32602`，参数错误返回 `isError` 结果。V4 在 `structuredContent` 内另加了一层自己的信封（MCP-04），而且 `isError` 对 `partial` 和 `unknown` 也为 true（见第 4.7 节）。2026-07-28 的结果级 `_meta`/`resultType` 需要升级 SDK 才能提供（MCP-15）。
->
-> **Microsoft 基线**：[Azure Guidelines §Handling Errors](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#handling-errors) 要求错误码同时出现在 `x-ms-error-code` 头和响应体中。MCP 没有响应头，V4 只在信封中给出 `error.code`，并用 `isError` 承担“非成功”标志。这是传输适配，不计偏差。
 
 ## 2. 信封
 
@@ -161,8 +145,6 @@
 现状限制：审批预检标记、审批装饰和恢复提示是在序列化之后直接修改 JSON 的（`ApprovalPrecheck.Mark`、`ApprovalResult.Decorate`、`RecoveryHints.Attach`），不会重新经过上述校验（API-28）。
 
 > **MCP 基线**：2026-07-28 允许 `structuredContent` 为任意 JSON 值（[Tools §Structured Content](https://modelcontextprotocol.io/specification/2026-07-28/server/tools#structured-content)）；V4 固定使用对象，这个选择是允许的。信封是 V4 在 MCP 之上加的一层，与 MCP 的 `isError`、JSON-RPC `id` 部分重叠（MCP-04，有意保留：同一形状要同时服务 CLI、批次、worker 通道和审批审计）。
->
-> **Microsoft 基线**：[Azure §JSON](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#json) 要求字段名用 camelCase、区分大小写、缩写词不全大写，V4 符合。同一节要求省略 null 字段，V4 有意始终输出 null（API-05）。时间戳规则要求 RFC 3339 且至多 3 位小数，V4 最多 7 位（API-13）。未知请求字段要拒绝，V4 符合。
 
 ## 3. meta
 
@@ -181,8 +163,6 @@
 | `warnings` | 数组 | 第 6 节；按发出顺序排列，装饰类警告追加在末尾 |
 
 > **MCP 基线**：2026-07-28 用请求 `_meta` 传协议版本、客户端信息和追踪上下文，并建议在结果 `_meta` 中给出 `io.modelcontextprotocol/serverInfo`（[Basic §_meta](https://modelcontextprotocol.io/specification/2026-07-28/basic/index#meta)）。V4 的 `meta` 位于 `structuredContent` 内部，是应用层元数据，不占用 MCP 的 `_meta`；V4 也不读取 `traceparent`（MCP-12）。
->
-> **Microsoft 基线**：[Azure §Distributed Tracing & Telemetry](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#distributed-tracing--telemetry) 希望支持 W3C 追踪上下文。`requestId` 只是本地关联 ID（MCP-12）。
 
 ## 4. outcome、execution 与 completeness
 
@@ -213,15 +193,17 @@
 
 ### 4.4 允许的组合
 
-| outcome | execution | completeness（观察到的取值） | 快照中出现次数 |
-|---|---|---|---|
-| succeeded | read-only | complete / partial | 76 / 4 |
-| succeeded | completed | complete / partial | 0（离线夹具没有原生写入） |
-| rejected-before-operation | not-started | none | 4177（INVALID_ARGUMENT 4013、RESOURCE_UNAVAILABLE 64、PROJECT_NOT_BOUND 58、UNSUPPORTED_CAPABILITY 22、CONFIRMATION_REQUIRED 16、PRECONDITION_FAILED 2、NOT_FOUND 2） |
-| read-failed | read-only | none / unknown | 4 / 2（都是 NATIVE_OPERATION_FAILED） |
-| failed | completed | none / partial / complete | 0 |
-| partial | partial | partial | 0 |
-| unknown | unknown | unknown | 0 |
+| outcome | execution | completeness |
+|---|---|---|
+| succeeded | read-only | complete / partial |
+| succeeded | completed | complete / partial |
+| rejected-before-operation | not-started | none |
+| read-failed | read-only | none / unknown |
+| failed | completed | none / partial / complete |
+| partial | partial | partial |
+| unknown | unknown | unknown |
+
+2026-10-11 离线快照中各组合的出现次数是历史证据，见 Git 历史中本文的 `5a01c6f1` 版本。
 
 规则：`succeeded` 的 execution **MUST** 是 `read-only` 或 `completed`，其余 outcome 各对应唯一的 execution（`V4Validation.Meta`）。
 
@@ -239,11 +221,9 @@
 - 引擎侧的旧实现映射器根据 `operationSuccess`、`success`、`ok`、`mayHaveChanged`、`verified`、`state` 和原生结果状态推断 outcome（`PlcToolContract.Map` 等）。原生返回 `PartialSuccess` 或 `None` 时一律视为 `unknown`（`NativeResultState.TryUnsuccessful`）。
 - `HostFailureKind.InternalError` 映射为 `read-failed`（仅限只读路径）。
 
-### 4.7 MCP / Microsoft 对照
+### 4.7 MCP 对照（Microsoft 对照见附录 C.3）
 
 > **MCP 基线**：MCP 只有布尔的 `isError`。V4 对除 `succeeded` 以外的所有 outcome 都置 `isError: true`，这与 [CallToolResult.isError](https://modelcontextprotocol.io/specification/2026-07-28/schema#calltoolresult) 的含义一致（“调用以错误结束”）。但 `partial` 和 `unknown` 的结果仍带有有效数据和证据，消费者 **MUST** 读取 `structuredContent`，不能只看 `isError` 就丢弃结果。MCP 没有“结果未知”的概念，这一层由 V4 补充（MCP-04）。
->
-> **Microsoft 基线**：没有对应的状态码分层。可以粗略对照为：`rejected-before-operation` ≈ 4xx（400/404/409/412）；`read-failed`/`failed` ≈ 4xx 或 5xx；`partial` ≈ 批量 207 风格；`unknown` 在 REST 中没有对应，最接近的是超时后状态不明，由 [Azure §Exactly Once Behavior](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#exactly-once-behavior--client-retries--service-idempotency) 处理的情形。V4 以“禁止重放 + 会话锁定”代替幂等重试（API-09）。
 
 ### 4.8 注解与输出 schema
 
@@ -261,7 +241,7 @@
 - `message` **MUST** 是非空英文文本，供人和模型阅读。它不是机器契约，消费者 **SHOULD NOT** 解析它。
 - 参数错误（`INVALID_ARGUMENT`、`LIMIT_EXCEEDED` 等带 `parameter` 的错误）**MUST** 在 `details.parameter` 中指出出错的参数，`message` 文本保持稳定，不因填写参数而改变（维护者 2026-10-11 决定）。`parameter` 表示第一个字段或 JSON 路径；`parameters` 数组列出全部出错字段，始终输出。填充字段 MUST NOT 改变 message 文本。整体或重复字段错误可指向 arguments。
 - `details` **MUST** 是该错误码对应的定型对象（`ErrorDetails` 封闭联合，`V4Json.ErrorConverter`）。details 中的文本字段为 `string|null`，列表为 `string[]`（无值时为 `[]`）。
-- details 和 data **MUST NOT** 包含堆栈或凭据。现状的清理手段：`Clean()` 删除键名含 `stack` 或等于 `password` 的字段，并把含 `"\n   "` 的多行字符串替换为 `"Diagnostic details retained in the server log."`；`HostBehavior.SafeDiagnostic` 把盘符或 UNC 路径替换为 `<path>`。
+- details 和 data **MUST NOT** 包含堆栈或凭据。现状的清理手段：`Clean()` 删除键名含 `stack` 或等于 `password` 的字段，并把含 `"\n   "` 的多行字符串替换为 `"Diagnostic details retained in the server log."`；`HostBehavior.SafeDiagnostic` 把盘符或 UNC 路径替换为 `<path>`。与第 5.2 节 `nativeMessage` 的取舍（维护者 2026-11-01 决定，DES-4 实施）：`NATIVE_OPERATION_FAILED` 返回去敏后的原生消息首行、原生异常类型、HResult 和关联服务器日志的诊断编号（`diagnosticId`），堆栈与多行详情只进日志；错误对象另按 Microsoft REST 错误模型增加 `innererror`。
 
 ### 5.2 错误码
 
@@ -318,8 +298,6 @@
 消费者 **SHOULD** 只把这些值当作诊断信息，不据此分支。生产者 **MUST** 使用 kebab-case 短语。
 
 > **MCP 基线**：MCP 不定义工具错误的结构，只要求错误放在结果中、提供可执行的反馈，让模型能够自我纠正（[Tools §Error Handling](https://modelcontextprotocol.io/specification/2026-07-28/server/tools#error-handling)）。V4 的错误码和 `RECOVERY_GUIDANCE` 满足这一要求，而且超出了它。JSON-RPC 层没有使用自定义错误码，也就没有占用 [Basic §Error Codes](https://modelcontextprotocol.io/specification/2026-07-28/basic/index#error-codes) 中保留的 -32020…-32099 区段。
->
-> **Microsoft 基线**：[Azure §Handling Errors](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#handling-errors) 和 [7.10.2 Error condition responses](https://github.com/microsoft/api-guidelines/blob/vNext/graph/Guidelines-deprecated.md#7102-error-condition-responses) 定义的结构是 `error{code, message, target?, details[]?, innererror?}`，示例中的错误码用 PascalCase，可恢复的错误要有不同的错误码，顶层错误码属于契约（[Considerations §Errors](https://github.com/microsoft/api-guidelines/blob/vNext/azure/ConsiderationsForServiceDesign.md#errors)），新错误码应放进 innererror 或作为可扩展枚举处理。V4 的定型 `details` 相当于 innererror 加 target，结构上有意不同（API-01）；错误码使用 UPPER_SNAKE（API-02）；没有逐字段的 `details[]`（API-04）；错误码闭集且读取端严格（API-03）；部分路径误用错误码（API-14）。
 
 ## 6. 警告
 
@@ -343,8 +321,6 @@
 `RECOVERY_GUIDANCE` 中的示例参数取自嵌入的示例库，**MUST NOT** 包含调用方的参数。这条警告不授权、不重试、也不执行任何写入（`docs/reference/recovery-guidance.md`）。它的 message 以装饰性字符 `▶ RECOVERY:` 开头。
 
 > **MCP 基线**：MCP 没有警告概念，只要求错误结果可执行，V4 的警告是附加层。
->
-> **Microsoft 基线**：Azure 只有 `azure-deprecating` 头这种响应级提示，没有响应体中的警告（API-17，有意保留）。
 
 ## 7. 分页
 
@@ -395,11 +371,9 @@ GetExportContent 和大响应寄存以 UTF-16 码元为单位（`string.Length`�
 
 FindTools 的中间页报 `completeness: complete`。GetOpennessGuidance 的中间页（`offset 0, limit 20, total 282`）则报 `completeness: partial` 并加上 `INCOMPLETE_DATA`，原因是旧字段 `dataComplete=false`。规则尚未统一（API-31）。
 
-> **MCP 基线**：MCP 的分页（[Pagination](https://modelcontextprotocol.io/specification/2026-07-28/server/utilities/pagination)）只适用于 `tools/list` 等列表方法：游标不透明，页大小由服务器决定，缺少 `nextCursor` 表示结束，空串也是有效游标，无效游标返回 -32602。V4 工具结果的分页属于应用层，MCP 不作规定。V4 的 cursor 模式与 MCP 的语义一致；offset 模式让客户端自己选页大小、暴露偏移量运算，最后一页的 next 字段输出 null 而不是省略（MCP-08，有意保留 offset，因为它对模型更直观）。V4 的 `tools/list` 一次返回全部工具（最多 514 个），这是允许的。
->
-> **Microsoft 基线**：[Azure §Collections](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#collections) 用 `value` 数组加不透明的 `nextLink`（最后一页省略），可选参数为 [`top`](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#top)、[`skip`](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#skip)、[`maxpagesize`](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#maxpagesize)，不使用快照时要说明页之间可能有遗漏或重复。V4 的形状不同（API-06，保留）；参数名不统一（API-07）；offset 模式缺少一致性说明（API-08）；字符分页的单位未声明，对应 [Returning String Offsets & Lengths](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#returning-string-offsets--lengths-substrings)（API-15）。
+> **MCP 基线**：MCP 的分页（[Pagination](https://modelcontextprotocol.io/specification/2026-07-28/server/utilities/pagination)）只适用于 `tools/list` 等列表方法：游标不透明，页大小由服务器决定，缺少 `nextCursor` 表示结束，空串也是有效游标，无效游标返回 -32602。V4 工具结果的分页属于应用层，MCP 不作规定。V4 的 cursor 模式与 MCP 的语义一致；offset 模式让客户端自己选页大小、暴露偏移量运算，最后一页的 next 字段输出 null 而不是省略（MCP-08，有意保留 offset，因为它对模型更直观）。V4 的 `tools/list` 一次返回全部工具（数量见[生成的版本工具目录](../../reference/version-tool-catalog.md)），这是允许的。
 
-### 7.4 一致性、单位与本页完整度
+### 7.6 一致性、单位与本页完整度
 
 offset 分页 MUST 明确不提供快照一致性：活动工程在页间变化时，条目可能重复或遗漏，total 也可能变化。需要稳定观察时使用提供快照的 cursor 工具，或先导出再分页。cursor 只能在所属 V4 会话、绑定纪元及查询快照内使用。
 
@@ -429,8 +403,6 @@ meta.completeness 描述本页是否完整交付；meta.paging.complete 表示�
 V20/V21 worker 通道的单帧上限为 1 MiB：超限的请求在派发前以 `LIMIT_EXCEEDED` 拒绝，超大的回复保存为导出句柄（`docs/releases/v4.0.0.md`）。
 
 > **MCP 基线**：MCP 原生处理大内容的方式是 `resource_link` 或嵌入资源（[Tools §Resource Links](https://modelcontextprotocol.io/specification/2026-07-28/server/tools#resource-links)），V4 没有使用（MCP-09）。2026-07-28 的 [Stateful Tools](https://modelcontextprotocol.io/specification/2026-07-28/server/tools#stateful-tools) 建议用服务器签发的不透明句柄、在描述中说明有效期、过期时返回工具执行错误。V4 的导出句柄满足这三点，但作用域绑定在 MCP 会话上（MCP-01）。
->
-> **Microsoft 基线**：没有直接对应的规则；[Bring your own Storage](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#bring-your-own-storage-byos) 是类似的思路。
 
 ## 9. 写操作：预览、确认、审批与计划哈希
 
@@ -518,8 +490,6 @@ PlanFile = {path, exists, byteLength|null, sha256|null}；PlanOperation = {tool,
 V4 计划、审批和 PLAN_STALE 中的 `planHash`、`argumentsHash`、`inventoryHash` 以及文件的 `sha256` 都是 64 位小写十六进制；生成计划使用 `sha256:<hex>` 形式，`ApprovalProtocol` 对 `kind == plan` 两种都接受（API-21）。
 
 > **MCP 基线**：MCP 要求有人能在环中拒绝工具调用，SHOULD 为敏感操作提供确认（[Tools §User Interaction Model](https://modelcontextprotocol.io/specification/2026-07-28/server/tools#user-interaction-model)、[§Security Considerations](https://modelcontextprotocol.io/specification/2026-07-28/server/tools#security-considerations)）。V4 在服务器侧用工作台审批实现人在环中，比规范要求更强。MCP 原生的确认途径是客户端确认，以及 2026-07-28 的 MRTR/elicitation（[MRTR](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/mrtr)）；V4 有意使用带外的可信工作台（MCP-13）。审批等待会阻塞 `tools/call`；MCP 的 [tasks 扩展](https://modelcontextprotocol.io/extensions/tasks/overview) 明确把人工审批列为适用场景（MCP-05）。工具注解由 ToolMetadata 和实际发布的描述符生成，采用最有副作用的动作/参数组合；dryRun 的默认预览仍由输入 schema 和描述表达（MCP-02）。
->
-> **Microsoft 基线**：`expected*` 参数对应 [Azure §Conditional Requests](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#conditional-requests) 中的 `If-Match`/412，`overwrite: false` 对应 `If-None-Match: *`；V4 保留了这个概念，但没有对读取统一返回 ETag（API-10），而且参数命名不一（API-18）。[Performing an Action](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#performing-an-action) 把动作建模为 POST，对应 V4 的 apply 调用。Microsoft 指南没有关于预览（dry-run）的规定，因此不计偏差。
 
 ## 10. 未知结果、会话重置与禁止重放
 
@@ -555,8 +525,6 @@ V4 计划、审批和 PLAN_STALE 中的 `planHash`、`argumentsHash`、`inventor
 - 派发前收到取消，返回 `CANCELLED`（`tool-queue`）；审批预检中取消，返回 `CANCELLED`（`approval-precheck`）；派发后宿主忽略取消，等待真实结果。
 
 > **MCP 基线**：[Cancellation](https://modelcontextprotocol.io/specification/2026-07-28/basic/utilities/cancellation#behavior-requirements) 规定，服务器收到取消后 SHOULD 停止处理且 SHOULD NOT 再发送响应，无法取消时 MAY 忽略。V4 在派发后忽略取消，这是允许的；派发前仍会返回一个 `CANCELLED` 结果（MCP-07，保留：CLI、批次和审计需要这个记录）。[Timeouts](https://modelcontextprotocol.io/specification/2026-07-28/basic/utilities/cancellation#timeouts) 允许客户端在收到进度通知时重置超时，V4 对携带 progress token 的调用每 15 秒发送单调递增的 heartbeat，并保留原生批量进度（MCP-06）。2026-07-28 的 [Statelessness](https://modelcontextprotocol.io/specification/2026-07-28/basic/index#statelessness) 要求跨请求的状态通过显式标识引用，服务器不得把连接或进程身份当作会话。V4 的恢复步骤“开启新的 MCP 会话”以及会话锁、租约、计划和句柄的作用域都依赖传输层会话（MCP-01）。
->
-> **Microsoft 基线**：[Repeatability of requests](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#repeatability-of-requests) 用 `Repeatability-Request-ID` 让 POST 可以安全重试；[Exactly Once Behavior](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#exactly-once-behavior--client-retries--service-idempotency) 要求操作幂等。TIA Openness 无法去重或回滚，所以 V4 有意采用“至多一次 + 锁定 + 人工核实”（API-09）。
 
 ## 11. 批次与桥接
 
@@ -581,8 +549,6 @@ V4 计划、审批和 PLAN_STALE 中的 `planHash`、`argumentsHash`、`inventor
 | 其他（没有成功项） | failed / read-failed | `PRECONDITION_FAILED`（`batch-results`，API-37） |
 
 > **MCP 基线**：MCP 没有批次或工具代理的概念；JSON-RPC 批处理在 2025-06-18 中已被移除。CallTool 是 V4 的应用层代理，用来在 lite 配置下访问完整目录。
->
-> **Microsoft 基线**：Azure 指南没有批处理规则，不计偏差。
 
 ## 12. 版本与发布键
 
@@ -599,8 +565,6 @@ V4 计划、审批和 PLAN_STALE 中的 `planHash`、`argumentsHash`、`inventor
 兼容规则：生产者按当前版本闭集校验；消费者容忍未知诊断码和增量字段。全部工具共享输出信封 schema，具体演进政策见第 12.1 节。
 
 > **MCP 基线**：MCP 的版本由协议协商决定（2026-07-28 起每个请求都带版本）。规范层采用功能生命周期政策，弃用窗口至少 12 个月（[Changelog §Governance](https://modelcontextprotocol.io/specification/2026-07-28/changelog)）。V4 的 `schemaVersion` 是应用层版本，与 MCP 版本无关，这样做可以接受。SDK 落后于现行修订（MCP-15）。
->
-> **Microsoft 基线**：[Azure §API Versioning](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#api-versioning) 要求每个请求带日期式的 `api-version`、不做破坏性变更、使用[可扩展枚举](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#use-extensible-enums)，并[通知弃用](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#deprecating-behavior-notification)。V4 是进程级版本加一次硬切换（API-11，按 2026-10-03 的决定保留），使用闭集枚举（API-03），没有弃用信号（API-12）。
 
 ### 12.1 4.x 演进规则
 
@@ -612,7 +576,7 @@ TIMEOUT 仅用于宿主可证明没有派发的超时。worker 超时属于通�
 
 ### 13.1 工具名
 
-- **MUST** 是 PascalCase 的“动词 + 领域对象 + 必要限定”，只用 ASCII 字母和数字。现状：514 个工具中最长的 45 个字符（`ProbeHardwareHmiConnectionWhitelistedServices`），没有连续大写的缩写，`Plc`、`Hmi`、`OpcUa`、`Db` 都写成单词形式。
+- **MUST** 是 PascalCase 的“动词 + 领域对象 + 必要限定”，只用 ASCII 字母和数字。现状：全部工具（数量见[生成的版本工具目录](../../reference/version-tool-catalog.md)）中最长的 45 个字符（`ProbeHardwareHmiConnectionWhitelistedServices`），没有连续大写的缩写，`Plc`、`Hmi`、`OpcUa`、`Db` 都写成单词形式。
 - 动词 **MUST** 取自 `build-tools/release/CatalogData.cs` 的闭集，包含经维护者批准的 Prefill 和 Publish。生成器检查所有最终工具名，包括新增入口；`PublishGenerationRecord` 保留名称（API-38，维护者 2026-10-11）。
 - 单个对象用单数，批量操作用复数（`ExportPlcBlock` / `ExportPlcBlocks`）。`Manage*` 工具的对象单复数不统一（`ManageDeviceUsers`、`ManagePlcExternalSources`、`ManageDcbLibraries`）。
 - 名称 **MUST NOT** 暴露 `Json`、`Xml`、`Xlsx` 等序列化格式；`SimaticMl`、`Aml`、`Scl`、`FlgNet` 是领域语言名称，保留。
@@ -648,8 +612,6 @@ PreviewData 保留给 safe-v4 行为族；CursorScope 保留给快照游标宿�
 旧实现的 `message` 改名为 `data.summary`；数组放在 `data.items`；旧的 meta 内容放在 `data.evidence`。
 
 > **MCP 基线**：[Tools §Tool Names](https://modelcontextprotocol.io/specification/2026-07-28/server/tools#tool-names) 规定工具名 SHOULD 为 1–128 个字符、区分大小写、只用 `[A-Za-z0-9_.-]`、在服务器内唯一。V4 各入口均按精确大小写匹配工具名。MCP 的工具还有可选的 `title` 和 `icons`，V4 没有提供；分类标签写在描述文本里（MCP-14）。
->
-> **Microsoft 基线**：[Azure §JSON](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#json)（camelCase、缩写不全大写）V4 符合。[Considerations §Use Good Names](https://github.com/microsoft/api-guidelines/blob/vNext/azure/ConsiderationsForServiceDesign.md#use-good-names) 要求同一概念始终用同一个名字。分页使用 offset/limit，预览绑定使用 previewToken 与 expectedDocumentHash/expectedPackageHash，项目身份输入使用 expectedProjectFile。既有确认开关保留各工具的语义（API-20）。Manage 多路复用工具（API-16）是 MCP 工具预算下的有意取舍。
 
 协议层时间（meta.timestamp、data.timestamp、createdUtc、expiresUtc 等）MUST 使用 UTC RFC3339，固定七位小数并以 Z 结尾。API-13 采用清单允许的七位格式，以保留进程绑定和计划身份的时间精度。原生证据和数值 ticks 保持原有精度。
 
@@ -671,52 +633,9 @@ PreviewData 保留给 safe-v4 行为族；CursorScope 保留给快照游标宿�
 
 加粗的三行是 `CliBoundary.Write` 根据完整度覆盖的规则，是规范性覆盖规则（API-33）。stdout 只输出一份信封 JSON，诊断写 stderr。用户要求的人类可读报告属于 data 中的文件或内容，**MUST NOT** 影响机器退出码。
 
-## 15. 旧规范与本次修改前实现的差异（历史证据）
+## 15. 历史证据
 
-`docs/development/phase6-review.md` 第 3 节（已归档）与 `docs/releases/v4.0.0.md` 相比，现状有以下变化：
-
-1. **错误码与警告码**：phase6 的“初始闭集”中没有 `COMPILE_ERRORS`、`RECOVERY_GUIDANCE`、`BACKUP_SKIPPED`、`APPROVAL_PRECHECK_REFUSED`、`STAGING_FOLDER_RETAINED`。v4.0.0.md 已经列出它们，但它链接的规范仍然是 phase6（文中有 TODO P7-11b）。
-2. **“下列字段均始终存在”**：`PRECONDITION_FAILED.details.parameter` 和 `OUTCOME_UNKNOWN.details.reason` 是可选字段，null 时被省略。
-3. **CallTool 派发前失败**：phase6 写的是 `meta.tool=CallTool`；现状是目标字段级的参数错误使用目标工具名。
-4. **第 4 节 D1**：其中的 mode、confirm、expectedProjectFile 和 `data.plan` 只适用于 safe-v4 候选。4.0 的发布配置全部是 current 政策，预览使用 `dryRun=true` 和旧的数据形状。
-5. **CLI**：succeeded 时还会按完整度返回 3/4/5，非工具动词的异常退出码为 2。
-6. **TIMEOUT**：phase6 说只读超时用 TIMEOUT；现状中 worker 超时一律为 OUTCOME_UNKNOWN，TIMEOUT 只用于工作台控制。
-7. **requiresSessionReset**：phase6 只写“unknown 时为 true”。实际上只有发出过原生调用的写入才会锁会话，v4.0.0.md 已经说明。
-8. **CONFIRMATION_REQUIRED**：客户端在审批等待期间取消，会返回 `denied`。
-9. **导出句柄**：phase6 只定义了 `data.export`。现状中 GetExportContent 返回的是扩展字段加 `text/plain`，分页以 UTF-16 码元为单位，句柄有效期为 24 小时。
-10. **批次**：结果中多出 `rollbackPerformed` 和 `row.outcomeUnknown`。
-11. **其他过时内容**：`docs/development/tool-development.md` 的“抛异常与返回失败”一节仍然写着“新代码沿用所在文件的族（F1–F6），直到阶段 6”，没有像 response-and-errors.md 那样加上“当前调用约定”的说明。v4.0.0.md 的工具数表格也是旧数。
-
-## 附录 A　修改前响应摘录（历史快照，键已排序）
-
-**NOT_FOUND**（V20，`GetExportContent`，句柄不存在）：
-
-```json
-{"data": null, "error": {"code": "NOT_FOUND", "details": {"target": "<exportId from response>"},
- "message": "Export handle is missing, expired or evicted in this engine session."},
- "meta": {"behaviorPolicy": "not-applicable", "completeness": "none", "execution": "not-started",
-          "outcome": "rejected-before-operation", "paging": null, "releaseKey": "20", "requiresSessionReset": false,
-          "tool": "GetExportContent", "warnings": [], "...": "..."}, "ok": false, "schemaVersion": 4}
-```
-
-**UNSUPPORTED_CAPABILITY**（V20，`CallTool` 的目标是 V21 专有工具；直接调用同一工具则返回 JSON-RPC `-32602`）：
-
-```json
-{"error": {"code": "UNSUPPORTED_CAPABILITY",
-           "details": {"action": null, "capability": "ListCommunicationConnections", "releaseKey": "20"},
-           "message": "ListCommunicationConnections requires the V21 HW.CommunicationConnections API; unavailable on V20."},
- "meta": {"tool": "CallTool", "outcome": "rejected-before-operation", "...": "..."}}
-```
-
-**PROJECT_NOT_BOUND，data 中残留旧字段**（V20，`ExchangeSystemDiagnosticsSettings`）：
-
-```json
-{"data": {"error": "Native observation failed; details are available in the local diagnostic log.",
-          "operationSuccess": false, "status": "InvalidState"},
- "error": {"code": "PROJECT_NOT_BOUND", "details": {}, "message": "No project is bound."}, "...": "..."}
-```
-
-**本应是参数错误、却被归为原生失败**（V20，`CheckProductUpdate {"repository":"x"}`）：`outcome: read-failed`，`error.code: NATIVE_OPERATION_FAILED`，`data.summary: "repository must be 'owner/name', e.g. asckye/TIA_Portal_Openness_MCP."`（API-14）。
+旧规范与修改前实现的差异清单及修改前的响应摘录已删除，见 Git 历史中本文的 `5a01c6f1` 版本（第 15 节与附录 A）。
 
 ## 附录 B　MCP 现行修订中需要关注的变化（2026-07-28 相对 2025-06-18/2025-11-25）
 
@@ -733,6 +652,50 @@ PreviewData 保留给 safe-v4 行为族；CursorScope 保留给快照游标宿�
 - `inputSchema`/`outputSchema` 放宽为任意 2020-12 关键字，`structuredContent` 放宽为任意 JSON 值。
 
 这些变化对 V4 的影响分别记在 MCP-01、MCP-05、MCP-12、MCP-13、MCP-15。
+
+## 附录 C　Microsoft REST API Guidelines 对照
+
+Microsoft REST API Guidelines 是次要基线（见文首）。本附录集中列出概念映射、不适用的规则和逐节对照，各节正文只写 MCP 基线。
+
+### C.1 REST 概念到 MCP/V4 的映射
+
+| Microsoft REST 概念 | MCP 层 | V4 层（本协议） |
+|---|---|---|
+| 资源 URL + HTTP 方法 | `tools/call` 的 `name` + `arguments` | 工具名（动词 + 对象）与类型化参数；`Manage*` 工具用 `action` 选择操作 |
+| HTTP 状态码 | JSON-RPC error（协议错误）或 `CallToolResult.isError` | `meta.outcome` 与 `isError = !ok` |
+| `x-ms-error-code` 头 + `error.code` | 无 | `error.code`（闭集，UPPER_SNAKE） |
+| `error.target` / `details[]` / `innererror` | 无 | 按错误码定型的 `error.details` 对象 |
+| `api-version` 查询参数 | 协商的 MCP 协议版本（2026-07-28 起每个请求放在 `_meta`） | 发布键（宿主进程级）+ `schemaVersion: 4`（固定） |
+| `nextLink` / `top` / `skip` / `maxpagesize` | 列表方法的 `cursor` / `nextCursor` | 工具参数 `offset`/`limit` 或 `cursor`/`limit`，结果放在 `meta.paging` |
+| `Operation-Location` 状态监视资源 | tasks 扩展（2026-07-28 为官方扩展） | 无通用机制；调用同步阻塞，生成运行有 `runId` + `GetGenerationRun` |
+| `Retry-After` | 进度通知可用于重置超时 | 无 |
+| ETag / `If-Match` / 412 | 无 | `expectedPlanHash` 等 `expected*` 参数；`PLAN_STALE`、`IDENTITY_MISMATCH` |
+| `If-None-Match: *` | 无 | `overwrite: false`；`ALREADY_EXISTS` |
+| `Repeatability-Request-ID` | 2026-07-28 要求断流后用新请求 ID 重发 | 不提供去重；未知结果禁止重放，会话被锁定 |
+| `x-ms-client-request-id` / traceparent | `_meta` 中的 `traceparent`（2026-07-28） | `meta.requestId` 由服务器生成；不读取客户端追踪上下文 |
+| `azure-deprecating` 头 | 规范层的功能生命周期政策 | 无；硬切换，靠迁移表 |
+
+### C.2 不适用的 REST 规则
+
+以下 REST 规则没有对应的 MCP 载体，本协议不采用，也不计为偏差：URL 结构与路径版本、HTTP 方法语义（GET/PUT/PATCH/DELETE 的幂等约定）、HTTP 状态码的选取、`ETag`/`Last-Modified` 响应头与 304、`Location`/`Operation-Location` 头、CORS、`$select`/`$expand`/`$filter`/`$orderby` OData 查询语言、`Retry-After` 头、JSON Merge Patch。这些规则表达的语义如果在 V4 中有等价物（幂等、条件写、长任务、分页），在对应章节单独评估。
+
+### C.3 逐节对照
+
+| 章节 | Microsoft 规则与 V4 的处理 |
+|---|---|
+| 第 1 节 传输映射 | [Azure Guidelines §Handling Errors](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#handling-errors) 要求错误码同时出现在 `x-ms-error-code` 头和响应体中。MCP 没有响应头，V4 只在信封中给出 `error.code`，并用 `isError` 承担“非成功”标志。这是传输适配，不计偏差。 |
+| 第 2 节 信封 | [Azure §JSON](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#json) 要求字段名用 camelCase、区分大小写、缩写词不全大写，V4 符合。同一节要求省略 null 字段，V4 有意始终输出 null（API-05）。时间戳规则要求 RFC 3339 且至多 3 位小数，V4 最多 7 位（API-13）。未知请求字段要拒绝，V4 符合。 |
+| 第 3 节 meta | [Azure §Distributed Tracing & Telemetry](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#distributed-tracing--telemetry) 希望支持 W3C 追踪上下文。`requestId` 只是本地关联 ID（MCP-12）。 |
+| 第 4 节 outcome、execution 与 completeness | 没有对应的状态码分层。可以粗略对照为：`rejected-before-operation` ≈ 4xx（400/404/409/412）；`read-failed`/`failed` ≈ 4xx 或 5xx；`partial` ≈ 批量 207 风格；`unknown` 在 REST 中没有对应，最接近的是超时后状态不明，由 [Azure §Exactly Once Behavior](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#exactly-once-behavior--client-retries--service-idempotency) 处理的情形。V4 以“禁止重放 + 会话锁定”代替幂等重试（API-09）。 |
+| 第 5 节 error | [Azure §Handling Errors](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#handling-errors) 和 [7.10.2 Error condition responses](https://github.com/microsoft/api-guidelines/blob/vNext/graph/Guidelines-deprecated.md#7102-error-condition-responses) 定义的结构是 `error{code, message, target?, details[]?, innererror?}`，示例中的错误码用 PascalCase，可恢复的错误要有不同的错误码，顶层错误码属于契约（[Considerations §Errors](https://github.com/microsoft/api-guidelines/blob/vNext/azure/ConsiderationsForServiceDesign.md#errors)），新错误码应放进 innererror 或作为可扩展枚举处理。V4 的定型 `details` 相当于 innererror 加 target，结构上有意不同（API-01）；错误码使用 UPPER_SNAKE（API-02）；没有逐字段的 `details[]`（API-04）；错误码闭集且读取端严格（API-03）；部分路径误用错误码（API-14）。 |
+| 第 6 节 警告 | Azure 只有 `azure-deprecating` 头这种响应级提示，没有响应体中的警告（API-17，有意保留）。 |
+| 第 7 节 分页 | [Azure §Collections](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#collections) 用 `value` 数组加不透明的 `nextLink`（最后一页省略），可选参数为 [`top`](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#top)、[`skip`](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#skip)、[`maxpagesize`](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#maxpagesize)，不使用快照时要说明页之间可能有遗漏或重复。V4 的形状不同（API-06，保留）；参数名不统一（API-07）；offset 模式缺少一致性说明（API-08）；字符分页的单位未声明，对应 [Returning String Offsets & Lengths](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#returning-string-offsets--lengths-substrings)（API-15）。 |
+| 第 8 节 大响应与导出句柄 | 没有直接对应的规则；[Bring your own Storage](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#bring-your-own-storage-byos) 是类似的思路。 |
+| 第 9 节 写操作：预览、确认、审批与计划哈希 | `expected*` 参数对应 [Azure §Conditional Requests](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#conditional-requests) 中的 `If-Match`/412，`overwrite: false` 对应 `If-None-Match: *`；V4 保留了这个概念，但没有对读取统一返回 ETag（API-10），而且参数命名不一（API-18）。[Performing an Action](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#performing-an-action) 把动作建模为 POST，对应 V4 的 apply 调用。Microsoft 指南没有关于预览（dry-run）的规定，因此不计偏差。 |
+| 第 10 节 未知结果、会话重置与禁止重放 | [Repeatability of requests](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#repeatability-of-requests) 用 `Repeatability-Request-ID` 让 POST 可以安全重试；[Exactly Once Behavior](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#exactly-once-behavior--client-retries--service-idempotency) 要求操作幂等。TIA Openness 无法去重或回滚，所以 V4 有意采用“至多一次 + 锁定 + 人工核实”（API-09）。 |
+| 第 11 节 批次与桥接 | Azure 指南没有批处理规则，不计偏差。 |
+| 第 12 节 版本与发布键 | [Azure §API Versioning](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#api-versioning) 要求每个请求带日期式的 `api-version`、不做破坏性变更、使用[可扩展枚举](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#use-extensible-enums)，并[通知弃用](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#deprecating-behavior-notification)。V4 是进程级版本加一次硬切换（API-11，按 2026-10-03 的决定保留），使用闭集枚举（API-03），没有弃用信号（API-12）。 |
+| 第 13 节 命名 | [Azure §JSON](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#json)（camelCase、缩写不全大写）V4 符合。[Considerations §Use Good Names](https://github.com/microsoft/api-guidelines/blob/vNext/azure/ConsiderationsForServiceDesign.md#use-good-names) 要求同一概念始终用同一个名字。分页使用 offset/limit，预览绑定使用 previewToken 与 expectedDocumentHash/expectedPackageHash，项目身份输入使用 expectedProjectFile。既有确认开关保留各工具的语义（API-20）。Manage 多路复用工具（API-16）是 MCP 工具预算下的有意取舍。 |
 
 ## 文案、行为披露与审计的来源
 

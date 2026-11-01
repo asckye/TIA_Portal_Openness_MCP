@@ -414,7 +414,7 @@ stateDiagram-v2
 | Studio 桥接与 Studio 适配器删除（P8-21f） | 未开始；V16–V19 版本控制页用桥接只读 VCI，禁用工作区到工程的同步 | `ReadOnlyVciBridge.cs`；工作台控制设计决定 4 |
 | 工作台控制端到端验收（P8-20e） | 未完成 | 工作台控制设计第 6 节 |
 | 生成记录与发布工具（P8-31e5）、SafeV4 规则（e6）、审批抽屉计划视图（h1） | 未实现 | [分阶段生成设计](../design/p8-31-staged-generation.md) 第 10 节 |
-| 真机验收 | 八版 D1 行为族、旧版启用的已移植族、V20/V21 在 Foundation 宿主上的验收（P7-07）均为 `NOT RUN`；我们不做真机验收，4.0 以 GitHub 预发布交给其他用户测试，未验证项列在预发布说明中 | 交接、真机台账；[ADR 0020](../decisions/0020-prereleases-tested-by-users.md) |
+| 真机验收 | 八版 D1 行为族、旧版启用的已移植族、V20/V21 在 Foundation 宿主上的验收（P7-07）均为 `NOT RUN`；4.0 以 GitHub 预发布交给测试者，我们在 VM 上按真机核对清单回归（2026-11-01 修订），未验证项列在预发布说明中 | 交接、真机台账；[ADR 0020](../decisions/0020-prereleases-tested-by-users.md) |
 | `TiaSharedAdapterPaths` | 默认 `false`；引擎领域的共享原语路径在真机验收前不启用 | `src/Shared/TiaSharedAdapterPaths.props` |
 | PLC worker 调用超时 | P8-64 已消除：八版共用按类超时与配置覆盖；超预算仍为结果未知并锁定会话。预算见 [4.0 发布说明](../../releases/v4.0.0.md) | `src/FoundationHost/WorkerClient.cs`；[设计规范决定](README.md#决定摘要) |
 | Foundation 绑定快照生命周期 | 观测原语已有，worker 生命周期尚未接入；旧版附着仍只凭 PID | [版本框架](../unified-version-framework.md) |

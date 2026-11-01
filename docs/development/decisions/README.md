@@ -1,8 +1,8 @@
 # 架构决策记录
 
-状态：现行 · 最后核对：2026-10-11，master `3a227657`
+状态：现行 · 最后核对：2026-11-01，master `27675208`
 
-[设计规范索引](../design-spec/README.md) · [文档写作规范](../design-spec/documentation-style.md) · [ADR 模板](0000-template.md) · [当前交接](../handoff.md)
+[设计规范索引](../design-spec/README.md) · [文档写作规范](../design-spec/documentation-style.md) · [ADR 模板](0000-template.md) · [当前交接](../handoff.md) · [发布计划](../../status/release-plan.md)
 
 本目录用架构决策记录（ADR）记录影响结构、契约、安全边界、发布规则或外部基线的决定，一页一个决定，只追加不改写（[ADR 0016](0016-architecture-decision-records.md)）。何时必须写 ADR、文件命名、状态值和模板见 [文档写作规范](../design-spec/documentation-style.md) 第 14 节；新 ADR 从 [模板](0000-template.md) 开始，写好后在下表登记。
 
@@ -17,26 +17,30 @@
 | [0003](0003-workbench-approval-for-mcp-writes.md) | MCP 写调用默认须在工作台审批，工作台功能纳入 4.0 | 已采纳 | 2026-10-05 | B21 |
 | [0004](0004-precheck-before-approval.md) | 写请求先预检再审批，批准后复核再执行 | 已采纳 | 2026-10-06 | B28 |
 | [0005](0005-v20-v21-on-foundation-host.md) | V20/V21 与其他六个版本采用同一架构：FoundationHost 加每版本 worker | 已采纳 | 2026-10-08 | B07 |
-| [0006](0006-engine-exe-as-v20-v21-worker.md) | 复用引擎 EXE 作为 V20/V21 的 worker，引擎宿主层退役 | 已采纳 | 2026-10-08 | B08 |
+| [0006](0006-engine-exe-as-v20-v21-worker.md) | 复用引擎 EXE 作为 V20/V21 的 worker，引擎宿主层退役 | 已被 0022 取代 | 2026-10-08 | B08 |
 | [0007](0007-one-worker-per-mcp-session.md) | 每个 MCP 会话一个 worker | 已采纳 | 2026-10-08 | B09 |
 | [0008](0008-worker-timeouts-and-faults.md) | worker 调用按类超时，故障使 worker 代次失效且从不重放 | 已采纳 | 2026-10-08 | B10 |
 | [0009](0009-port-v20-v21-tools-to-foundation-adapters.md) | V20/V21 专有工具按能力族移入 Foundation 适配器，之后引擎退役 | 已采纳 | 2026-10-08 | B11 |
 | [0010](0010-discovery-and-batch-tools-on-all-releases.md) | 发现、桥接与批处理工具在全部八个版本发布 | 已采纳 | 2026-10-08 | B16 |
 | [0011](0011-tia-process-lease-on-all-releases.md) | 八个版本都用 TIA 进程租约把一个 TIA 进程保留给一个 MCP 会话 | 已采纳 | 2026-10-08 | B19 |
 | [0012](0012-old-release-tool-registration.md) | 旧版只注册至少有一个动作能在该版 API 上运行的工具 | 已采纳 | 2026-10-09 | B14 |
-| [0013](0013-release-4-0-after-phases-7-and-8.md) | 4.0 在阶段 7 与阶段 8 全部完成后发布，真机验收最后集中进行一次 | 已采纳，真机验收部分被 0020 取代 | 2026-10-09 | B33 |
+| [0013](0013-release-4-0-after-phases-7-and-8.md) | 4.0 在阶段 7 与阶段 8 全部完成后发布，真机验收最后集中进行一次 | 已被取代：真机验收部分被 0020、放行条件被 0023 取代 | 2026-10-09 | B33 |
 | [0014](0014-tool-counts-follow-official-api.md) | 各版本的工具数量按官方 API 支持决定，不为一致而拉平 | 已采纳 | 2026-10-10 | B15 |
 | [0015](0015-microsoft-design-spec-baseline.md) | 项目设计规范以 Microsoft 规范为基线 | 已采纳 | 2026-10-11 | B39 |
 | [0016](0016-architecture-decision-records.md) | 设计决策用 ADR 记录，一页一个决定 | 已采纳 | 2026-10-11 | B40 |
 | [0017](0017-own-openness-group-code.md) | Openness 用户组检查改用自有代码，不再分发 Siemens.Collaboration.Net | 已采纳 | 2026-10-18 | — |
-| [0018](0018-workbench-ant-design.md) | 工作台界面采用 Ant Design v5 的视觉规范和布局 | 已采纳 | 2026-10-18 | — |
+| [0018](0018-workbench-ant-design.md) | 工作台界面采用 Ant Design v5 的视觉规范和布局 | 已采纳；视觉部分正由 EplanMcp 工作台设计系统取代 | 2026-10-18 | — |
 | [0019](0019-incremental-check-all.md) | check-all 复用输入未变的上次通过结果 | 已采纳 | 2026-10-18 | — |
-| [0020](0020-prereleases-tested-by-users.md) | 我们不做真机验收，4.0 以 GitHub 预发布交给其他用户测试 | 已采纳 | 2026-10-20 | — |
-| [0021](0021-workbench-eplanmcp-font-and-style.md) | Workbench font and style aligned with the EplanMCP Workbench | 已采纳 | 2026-10-22 | — |
+| [0020](0020-prereleases-tested-by-users.md) | 4.0 以 GitHub 预发布交给测试者，我们按真机核对清单做 VM 回归 | 已采纳（2026-11-01 修订） | 2026-10-20 | — |
+| [0021](0021-workbench-eplanmcp-font-and-style.md) | 工作台字体与风格与 EplanMCP 工作台一致（正文为英文） | 已采纳；视觉部分正由 EplanMcp 工作台设计系统取代 | 2026-10-22 | — |
+| [0022](0022-engine-retirement-and-eight-release-unification.md) | 引擎退役，八个版本共用一套逻辑与流程 | 已采纳 | 2026-10-13 | — |
+| [0023](0023-release-4-0-final-criteria.md) | 4.0 正式版在全部 4.0 任务合并、检查通过、rc 与维护者确认后发布 | 已采纳 | 2026-10-30 | — |
+| [0024](0024-ci-does-not-block-merges.md) | 合并以本机受影响的检查为门，GitHub CI 不阻塞合并和发布 | 已采纳 | 2026-10-30 | B35 |
+| [0025](0025-release-evidence-nightly-and-verified-build-units.md) | 发布证据采用最近一次通过的 nightly 与已验证的增量构建单元 | 已采纳（实现见 RULES-1） | 2026-11-01 | — |
 
 ## 待补写的决定
 
-以下决定已经做出（B27 除外），但还没有 ADR。“现记录位置”列出今天能找到该决定的地方；只有协调记录的，补写时以维护者确认为准。被后续决定修改的仍建议回溯记录，以保留方向变化的原因。“4.0 前”为“是”的条目在整合 P7-11b 文档时补写（P8-63）。
+以下决定已经做出（B27 除外），但还没有 ADR。2026-11-01 起，“4.0 前”为“是”的条目随文档重组补写（[发布计划](../../status/release-plan.md) DOCS）。“现记录位置”列出今天能找到该决定的地方；只有协调记录的，补写时以维护者确认为准。被后续决定修改的仍建议回溯记录，以保留方向变化的原因。
 
 | 待办编号 | 日期 | 决定 | 现记录位置 | 建议状态 | 4.0 前 |
 |---|---|---|---|---|---|
@@ -49,7 +53,7 @@
 | B17 | 2026-10-08 | 新开与审批管道分开的工作台控制通道，提供显示、读取、预填三类共 8 个宿主工具；通道上不提供审批、审批开关、服务启停；“允许 AI 控制界面”默认开启，人正在操作时优先 | `phase8-workbench-control.md` §0、§4 与“维护者决定（2026-10-08）”；`runtime-layout.md`“工作台控制通道” | 已采纳 | 是 |
 | B18 | 2026-10-08 | 工程操作页改为共享 MCP 会话的操作面板：默认附着 AI 正在使用的会话；没有 AI 会话时只在工作台启动的宿主中自建会话；面板发起的写仍须审批；“人/AI”由传输决定 | `phase8-workbench-control.md` §5 与“维护者决定”；`refactor-plan.md` P8-21 | 已采纳 | 是 |
 | B20 | 2026-10-08 | 审计链只记录写调用与审批；工作台控制调用只进调用日志与工作台控制日志；迁移期 V16–V19 版本控制页经 Studio 桥接只读 VCI；`--mock` 演示只显示离线页面 | `phase8-workbench-control.md`“维护者决定”与 §5.6 | 已采纳 | 否 |
-| B22 | 2026-10-08 | 生成框架用可替换的标准包（JSON 清单与分部文件、zip 分发、JSON Schema 2020-12 校验、声明式规则不执行包内代码）；规范 JSON 机器描述是唯一生成输入；编排器在宿主内；已有工程只补缺 | `phase8-generation-framework.md`“维护者决定（2026-10-08）”；`roadmap.md` | 已采纳 | 是 |
+| B22 | 2026-10-08 | 生成框架用可替换的标准包（JSON 清单与分部文件、zip 分发、JSON Schema 2020-12 校验、声明式规则不执行包内代码）；规范 JSON 机器描述是唯一生成输入；编排器在宿主内；已有工程只补缺 | [生成框架设计入口](../phase8-generation-framework.md)（正文在 `design/project-generation-framework.md`）“维护者决定（2026-10-08）”；`roadmap.md` | 已采纳 | 是 |
 | B23 | 2026-10-08 | 首批标准包为中性基础包 `tiamcp.basic` 与自写的状态模型包；专有标准不入库，只能由用户自备 | `phase8-generation-framework.md`“维护者决定”§5 | 已采纳 | 否 |
 | B24 | 2026-10-08 | 生成写入每次执行审批一次：审批绑定计划哈希与全部步骤，之后逐步执行、逐步审计，失败即停 | `phase8-generation-framework.md`“维护者决定”与 §6.6 | 已采纳（由 B26 细化） | 是 |
 | B25 | 2026-10-07 | 宿主机上的 AI 经导入暂存把文本源发到 TIA 电脑；目录导入支持 `overwrite: true`，替换前导出备份，失败时按依赖顺序恢复 | `refactor-plan.md` P6-67；`configuration.md`“Import staging on the TIA machine”；`v4.0.0.md` | 已采纳 | 是 |
@@ -60,7 +64,7 @@
 | B31 | 2026-10-03 | 源码哈希只在发布时严格校验，日常 CI 只校验 manifest 结构与版本一致；manifest 与测试哈希只由构建生成 | `refactor-plan.md` 约束 2、P1-01；`CLAUDE.md` | 已采纳 | 否 |
 | B32 | 2026-10-03 | 改变原生路径的共享适配器原语用构建开关 `TiaSharedAdapterPaths` 隔离在发布二进制之外，默认关闭，真机验收后才开启 | `adapter-merge.md`“迁移顺序”与 D2；`refactor-plan.md` 阶段 4、6 | 已采纳 | 否 |
 | B34 | 2026-10-08 | 原定 4.0 之后的工作立即作为阶段 8 并行开展；4.0 照常在 V20/V21 真机验收后发布 | `refactor-plan.md` 阶段 8 开头；`roadmap.md`“阶段 8” | 已被 0013 取代 | 否（回溯） |
-| B35 | 2026-10-10 | 合并门禁：合并前只跑快速闸门，原先合并前的全部检查在合并后对合并提交运行，失败在 master 上向前修复；完整发布候选只在改动发布链时运行，最后再生成一次虚拟机测试包 | `handoff.md`（2026-10-10 的门禁调整）；仓库外的任务说明；时间目标仅协调记录 | 已采纳 | 是 |
+| B35 | 2026-10-10 | 合并门禁：合并前只跑快速闸门，原先合并前的全部检查在合并后对合并提交运行，失败在 master 上向前修复；完整发布候选只在改动发布链时运行，最后再生成一次虚拟机测试包 | `handoff.md`（2026-10-10 的门禁调整）；仓库外的任务说明；时间目标仅协调记录 | 已被 0024 取代 | 否（回溯） |
 | B36 | 2026-10-10 | 不删除、跳过、过滤或放宽任何功能检查、测试、断言、阈值和门禁，除非维护者批准；行为按设计改变时，可用仓库内正式工具重新生成基线和 golden 文件，差异在合并时逐项审查（2026-10-11 补充） | `AGENTS.md`“范围”；提交 `59731d94`、`3a227657` | 已采纳 | 是 |
 | B37 | 2026-10-11 | 实现代理在独立 worktree 的沙箱中工作，不提交；审查者复跑完整检查集后提交并合并；代理可以在 127.0.0.1 上启动测试夹具；研究与方案由 Claude 完成，代码任务交给 Codex | `AGENTS.md`；提交 `c1bdd1ec`；`refactor-plan.md`“任务流程” | 已采纳 | 否 |
 | B38 | 2026-10-03 | 只维护 master：每个任务在临时分支或 worktree 完成，验收后变基并快进合并；英文提交信息，不加 AI 署名 | `refactor-plan.md` 约束 4 与“任务流程”；`CLAUDE.md` | 已采纳 | 否 |

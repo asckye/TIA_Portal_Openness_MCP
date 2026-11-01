@@ -35,7 +35,7 @@ Native follow-up is recorded in the [API audit VM checklist](https://github.com/
 
 Counts exclude AddIn assemblies, constructors, explicit interfaces, private API and common collection/engineering boilerplate. Signature counts retain overloads; member-name counts combine overloads of one owner/name. Direct references match compiled IL call-site owners and method/property names; comments and inactive source branches are not counted.
 
-The six legacy columns use the selected PLC adapter; V20/V21 use the full compiled engines. A referenced member may be in an unadvertised adapter path, inherited/generic calls can require manual mapping, and reflection can reach some unreferenced members. Therefore these are review candidates, not missing-tool counts, a coverage percentage or proof of native behavior.
+The six legacy columns use the selected PLC adapter; the V20/V21 columns were measured on the compiled V20/V21 engines before the engine was removed (P8-04j2) and have not been re-measured on the PLC worker. A referenced member may be in an unadvertised adapter path, inherited/generic calls can require manual mapping, and reflection can reach some unreferenced members. Therefore these are review candidates, not missing-tool counts, a coverage percentage or proof of native behavior.
 
 The historical PLC migration backlog contained seven pending tool names at baseline
 `c5379c1`; this batch adds scoped external-source creation and generation, leaving
@@ -177,13 +177,13 @@ types do not inherit support from a nearby release number.
 
 ## V20/V21 optional tools and scope
 
-These V4 tools are registered by the full engines. Exact parameters and examples
+These V4 tools are registered on V20/V21. Exact parameters and examples
 come from `GetToolUsage`; registration does not prove that an optional product is
 installed or that a native operation has passed acceptance.
 
 | V4 tool | Release scope | Current boundary |
 |---|---|---|
-| `GetOpennessCompatibility` | V20/V21 | Reports loaded Siemens assembly identity, engine identity, cross-reference policy, and known issue links. Installed update/hotfix state remains unknown unless directly supplied. |
+| `GetOpennessCompatibility` | V20/V21 | Reports loaded Siemens assembly identity, server build identity, cross-reference policy, and known issue links. Installed update/hotfix state remains unknown unless directly supplied. |
 | `InspectSimaticSdCompatibility` | V20/V21 | Offline checks `.s7dcl` for known language and format risks. It is not a complete parser; no warning does not establish import compatibility. |
 | `GetNativeInvocationLog` | V20/V21 | Reads bounded native-call diagnostics. It records call stages, not every native path, and omits credentials and engineering payloads. |
 | `GetPlcBlockScopes` | V20/V21 | Enumerates root, software-unit, and safety-unit PLC blocks. Partial enumeration is not reported as a complete empty result. |

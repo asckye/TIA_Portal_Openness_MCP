@@ -4,9 +4,9 @@
 
 ## 预发布例外
 
-维护者决定（2026-10-20）：我们不做真机测试，预发布（`X.Y.Z-beta.N`、`X.Y.Z-rc.N`）交给其他用户测试。下文“发布前必须在真机上完成”
+维护者决定（2026-10-20，2026-11-01 修订）：预发布（`X.Y.Z-beta.N`、`X.Y.Z-rc.N`）交给测试者测试，维护方在虚拟机上按[预发布真机验证清单](../guides/beta-tester-checklist.md)回归。下文“发布前必须在真机上完成”
 “失败即停止发布”等真机门槛不约束预发布；预发布说明必须带由本台账与[官方 API 审计 VM 核对清单](api-audit-vm-checklist.md)生成的
-“Not verified on a real TIA Portal”清单（`generate-prerelease-notes`）。正式版本 `X.Y.Z` 仍须遵守本台账的全部真机门槛。
+“Not verified on a real TIA Portal”清单（`generate-prerelease-notes`）。正式版本 `X.Y.Z` 的放行条件见 [ADR 0023](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/decisions/0023-release-4-0-final-criteria.md)：本台账列出需要真机确认的项目，由 VM 回归按 [ADR 0020](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/decisions/0020-prereleases-tested-by-users.md) 覆盖。
 
 ## 未发布改动的验收边界
 
@@ -82,14 +82,14 @@ A、C、D 可以在虚拟机上用 AI 客户端执行，也可以由虚拟机启
 
 ## V20/V21 host + worker acceptance (P6-54)
 
-The host + worker implementation keeps the existing V20/V21 engine and tool sets. These VM steps remain **NOT RUN** until performed on the exact release candidate with the corresponding TIA version and a disposable project copy. They are a release-default gate; offline startup tests do not satisfy it.
+Since P8-04j2, V20/V21 run on FoundationHost with the PLC worker like the other releases; their tool sets are unchanged. These VM steps remain **NOT RUN** until performed on the exact release candidate with the corresponding TIA version and a disposable project copy. They are a release-default gate; offline startup tests do not satisfy it.
 
 | releaseKey | State | Required isolated-mode acceptance |
 |---|---|---|
 | 20 | **NOT RUN** | On the V20 VM, connect to the intended TIA process and explicitly bind a disposable project copy; verify project identity and read state. Import one fixture and export it back to a separate directory; read back both sides. Compile the selected PLC software and record full nested diagnostics. Induce the approved worker timeout/fault fixture, inspect actual project state, restart the idle worker, connect and explicitly bind the project again, then read back state. |
 | 21 | **NOT RUN** | Repeat the same sequence on the V21 VM using a V21 project copy and version-matched import/export fixtures. Connect and explicitly bind, verify project identity, import and export with read-back, compile and retain nested diagnostics, induce worker timeout/fault, inspect state, restart, explicitly rebind, and read back again. |
 
-For each row record Windows/TIA build and patch, engine/worker/adapter SHA-256, test project copy identity, worker mode and timeout, tool arguments with credentials removed, MCP request IDs, before/after project state, call ordering, thread apartment, restart and rebind evidence, import/export output hashes, compile errors/warnings and nested messages, logs, and whether the project was explicitly saved. A timeout/crash after worker dispatch is not a pre-operation refusal; never repeat an operation until project state is inspected. Do not use a production project or connect to a PLC for this gate.
+For each row record Windows/TIA build and patch, host/worker/adapter SHA-256, test project copy identity, worker mode and timeout, tool arguments with credentials removed, MCP request IDs, before/after project state, call ordering, thread apartment, restart and rebind evidence, import/export output hashes, compile errors/warnings and nested messages, logs, and whether the project was explicitly saved. A timeout/crash after worker dispatch is not a pre-operation refusal; never repeat an operation until project state is inspected. Do not use a production project or connect to a PLC for this gate.
 
 The current release property remains `workerIsolation.enabledByDefault=false` for both keys. Change it only after both rows pass and the acceptance evidence is reviewed. If either row fails, keep the default off and retain the findings.
 
@@ -98,7 +98,7 @@ The current release property remains `workerIsolation.enabledByDefault=false` fo
 以下为[4.0 规范](../development/phase6-review.md)的新增验收项目，**全部 NOT RUN**，仅登记计划，不授权连接 TIA、PLC、VM 或网络。
 每行按实际广告能力逐版本记录，八个发布键为 14sp1、15.1、16、17、18、19、20、21；无该能力的版本记录 N/A 并附目录证据，不能跳过而标记通过。
 原生行为只有该版本/族的基线与候选回放均通过才可切换为 safe-v4；未验收族保持 current，且不解除上文阶段 4 的发布限制。
-共用证据要求：精确 SDK/TIA 补丁、工程副本/目标身份、引擎/adapter 哈希、前后调用顺序及参数、MTA/STA 所属线程、关联 ID、预览哈希、故障后实际状态、回读/编译及是否显式保存。
+共用证据要求：精确 SDK/TIA 补丁、工程副本/目标身份、宿主/worker/adapter 哈希、前后调用顺序及参数、MTA/STA 所属线程、关联 ID、预览哈希、故障后实际状态、回读/编译及是否显式保存。
 
 | ID / 行为族 | 状态 / 版本范围 | 验收项目与切换门槛 |
 |---|---|---|
@@ -135,7 +135,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 ### 4.0 发布前仍需的真实机器步骤
 
 以下均为 **NOT RUN**，只能由维护者在各精确 TIA 版本 VM 上用测试工程副本完成；版本/补丁、候选 SHA-256、
-引擎/worker/adapter 哈希、完整日志、错误后的工程状态、回读和显式保存结果须登记。失败即停止正式版本发布（预发布见上方例外）。
+宿主/worker/adapter 哈希、完整日志、错误后的工程状态、回读和显式保存结果须登记。失败即停止正式版本发布（预发布见上方例外）。
 
 | 门槛 | 必须完成的机器步骤 |
 |---|---|
@@ -437,6 +437,6 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 
 ## 新记录应包含什么
 
-记录引擎版本和文件哈希、TIA 版本/已知补丁、精确工程与 PLC、工具参数（排除凭据）、预览与实际结果、读回内容、编译错误/警告以及是否保存。失败或结果不确定时保留对应日志，先确认工程实际状态，再决定下一步。最新构建不会覆盖上述历史证据。
+记录服务（FoundationHost 与 worker）版本和文件哈希、TIA 版本/已知补丁、精确工程与 PLC、工具参数（排除凭据）、预览与实际结果、读回内容、编译错误/警告以及是否保存。失败或结果不确定时保留对应日志，先确认工程实际状态，再决定下一步。最新构建不会覆盖上述历史证据。
 
 预发布测试者的报告先登记在[测试者反馈台账](../development/tester-feedback.md)；复核后满足上述要求的通过结果再写入本台账，并注明反馈编号。

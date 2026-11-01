@@ -202,8 +202,8 @@ V14 SP1 的生成 API 不返回生成对象列表，因此应查看导入前后�
 - [配置指南](configuration.md)：两种连接模式、客户端配置、升级和故障处理。
 - [逐版本工具](../reference/version-tools.md)：所选版本实际提供的工具及差异。
 - [统一工具示例说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/official-tool-usage.md)：让 AI 使用 `GetToolUsage` 获取参数、语言示例、调用序列和结果解释。
-- [命令行指南](cli.md)：V20/V21 的生成、导入导出和编译流程。
-- [工作台说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/工作台/README.md)：桌面工具的工作流和支持范围。
+- [命令行指南](cli.md)：八版宿主的 `doctor`、`audit verify`、`config` 等命令。
+- [工作台说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/Studio/README.md)：桌面工具的工作流和支持范围。
 - [文档目录](../README.md)：PLC、HMI、硬件和其他专题。
 
 软件自己的连接记录、界面偏好、普通日志、审计记录和调用诊断分别保存在交付包的 `data\config`、`data\ui`、`data\logs` 和 `data\diagnostics` 中，更新会保留 `data`。MCP 写操作默认在派发前等待工作台审批；`SaveProject`、`SaveProjectCopy`（save-as）和 `CloseProject` 即使在目录中标为 `SESSION` 也须审批；连接、附着、打开和断开仍不审批。拒绝、超时或工作台未连接都不会开始操作。审计写入 `data\logs\audit`，可由 `tia audit verify` 校验保留链，但哈希链不能证明整段记录未被删除。数据根可由绝对路径环境变量 `TIA_MCP_DATA_DIRECTORY` 指定，诊断还可由 `TIA_MCP_DIAGNOSTICS_DIRECTORY` 单独覆盖。包目录不可写或无法定位时，配置仍使用 `%LOCALAPPDATA%\TiaPortalMcp`，诊断仍使用 `%LOCALAPPDATA%\TiaMcp\diagnostics`；首次使用新配置或偏好目录只复制缺失文件，不删除旧记录。伴随 PLC Tools 的 Python 默认解释器是 `%LOCALAPPDATA%\TiaMcp\ecosystem-python\Scripts\python.exe`，可用 `TIA_MCP_PLC_TOOLS_PYTHON` 覆盖。详见[配置说明](configuration.md)。

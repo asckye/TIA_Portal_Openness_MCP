@@ -1,10 +1,10 @@
 # 设计规范
 
-状态：现行 · 最后核对：2026-10-11，master `3a227657`
+状态：现行 · 最后核对：2026-11-01，master `27675208`（ADR 列表、计划任务与偏差状态）；其余部分为 2026-10-11，`3a227657`
 
 [文档目录](../../README.md) · [当前交接](../handoff.md) · [重构计划](../refactor-plan.md) · [架构决策记录](../decisions/README.md)
 
-本目录是自动化工程工作台（Automation Engineering Workbench，原名 TIA Portal Openness MCP）的设计规范：说明 4.0 的运行架构，并规定 C# 代码、V4 工具协议、工作台界面和文档写作的规则。维护者于 2026-10-11 决定以 Microsoft 规范为基线编写这些规范（[ADR 0015](../decisions/0015-microsoft-design-spec-baseline.md)）。规范对新工作是规范性的：新代码、新工具、新界面和新文档必须满足其中的 MUST 规则。现有代码和文档与规范的差异逐条记在偏差清单中，每条的状态已在同日决定，4.0 前的修改分配给任务 P8-60–P8-64。
+本目录是自动化工程工作台（Automation Engineering Workbench，原名 TIA Portal Openness MCP）的设计规范：说明 4.0 的运行架构，并规定 C# 代码、V4 工具协议、工作台界面和文档写作的规则。维护者于 2026-10-11 决定以 Microsoft 规范为基线编写这些规范（[ADR 0015](../decisions/0015-microsoft-design-spec-baseline.md)）。规范对新工作是规范性的：新代码、新工具、新界面和新文档必须满足其中的 MUST 规则。现有代码和文档与规范的差异逐条记在偏差清单中，每条的状态已在同日决定，4.0 前的修改分配给任务 P8-60–P8-64；P8-60、P8-61、P8-62、P8-64 已合并，已完成的条目在清单中标为“已完成”。
 
 ## 规范与基线
 
@@ -31,13 +31,14 @@
 ## 偏差与决定的记录方式
 
 - 每份规范有一份偏差清单，条目编号（`CS-nn`、`MCP-nn`、`API-nn`、`UI-nn`、`DOC-nn`）不重复使用。每条记录规则、证据、影响、建议和状态。
-- 状态只有三种：
+- 状态有四种：
 
 | 状态 | 含义 |
 |---|---|
-| 4.0 前 - P8-6x | 4.0 发布前修改，由对应任务实施（见下文“计划任务”） |
+| 4.0 前 - P8-6x（或其他任务编号） | 4.0 发布前修改，由对应任务实施（见下文“计划任务”） |
 | 4.0 后 | 4.0 发布后修改；规则对新代码立即生效 |
 | 有意偏差（已接受） | 长期保留，理由写在清单中，规范已据此写明项目取舍 |
+| 已完成（提交号或任务） | 已按建议修改并合并；条目暂留在清单中，文档重组时归档 |
 
 - 默认按清单的“建议”决定；维护者另有决定的条目在清单中注明日期。一条中有部分内容另行处理时，状态列写明（例如“4.0 后；`src/Studio` 为有意偏差”）。
 - 新工作需要长期偏离 MUST 规则时，先在清单中新增条目再合并，不在代码中散布抑制；规则的严重性只收紧，不放宽。
@@ -55,17 +56,17 @@
   - 工作台（4.0 前）：高对比主题与 UI Automation 名称；焦点管理与访问键；文字对比 4.5:1，测试门槛相应提高；更小的最小窗口；风险确认默认选择取消；可见的预填标记（[工作台界面设计规范](workbench-ui.md) 第 0.4 节）。
   - worker 超时：P8-64 已实现，V14 SP1–V21 共用按类超时策略（[架构概览](architecture.md) 第 4、9 节；[ADR 0008](../decisions/0008-worker-timeouts-and-faults.md)）。
   - C#：4.0 前加入 `.editorconfig` 与分析器配置，列入发布源码清单，先启用最小规则集（[C# 规范](csharp-design.md) 第 13.3 节的 4.0 规则集；CS-55）；`src/Studio` 保留 `TiaOpenness` 命名空间，其余代码 4.0 后迁到 `TiaMcp`（N-07、CS-30）；新代码 SHOULD 每行不超过 120 字符，现有代码不重新排版（S-12、CS-19）。
-  - 文档：改正 `--isolate-openness` 的指导（DOC-01）；工具数量由生成器写入（DOC-02）；刷新状态类文档（DOC-05）；4.0 前写出首批约 10 份 ADR（已写入 [0001–0016](../decisions/README.md)）。
+  - 文档：改正 `--isolate-openness` 的指导（DOC-01）；工具数量由生成器写入（DOC-02）；刷新状态类文档（DOC-05）；4.0 前写出首批约 10 份 ADR（已写入 [0001–0016](../decisions/README.md)，之后的决定见 0017 起）。
 
 ## 计划任务
 
-| 任务 | 范围 | 偏差 |
+| 任务 | 范围 | 状态 |
 |---|---|---|
-| P8-60 | V4 协议 | [V4 协议偏差清单](deviations/protocol.md) 中状态为“4.0 前 - P8-60”的 26 项，以及 6 项有意偏差的规范补写 |
-| P8-61 | 工作台界面 | [工作台偏差清单](deviations/workbench.md) 中“4.0 前 - P8-61”的 32 项 |
-| P8-62 | C# | [C# 偏差清单](deviations/csharp.md) 中“4.0 前 - P8-62”的 11 项，以及 CS-31 的线程安全审查 |
-| P8-63 | 文档（与 P7-11b 一起） | [文档偏差清单](deviations/docs.md) 中“4.0 前 - P8-63”的 21 项，以及 4.0 前待补写的 ADR |
-| P8-64 | 旧版 worker 超时 | 已实现：八版共用按类超时策略（[架构概览](architecture.md) 第 9 节） |
+| P8-60 | V4 协议：[V4 协议偏差清单](deviations/protocol.md) 中“4.0 前 - P8-60”的 26 项，以及 6 项有意偏差的规范补写 | 已合并；beta.2 真机测试表明 API-04、API-14、API-18/19、API-25 在原生路径上仍未完全落实，由 VMFIX-1 与 DES-4 继续 |
+| P8-61 | 工作台界面：[工作台偏差清单](deviations/workbench.md) 中“4.0 前 - P8-61”的 32 项 | 已合并 |
+| P8-62 | C#：[C# 偏差清单](deviations/csharp.md) 中“4.0 前 - P8-62”的 11 项，以及 CS-31 的线程安全审查 | 已合并（含 P8-62b、P8-62c） |
+| P8-63 | 文档（与 P7-11b 一起）：[文档偏差清单](deviations/docs.md) 中“4.0 前 - P8-63”的 21 项，以及 4.0 前待补写的 ADR | 进行中，并入 4.0 前的文档重组 |
+| P8-64 | 旧版 worker 超时：八版共用按类超时策略（[架构概览](architecture.md) 第 9 节） | 已合并 |
 
 ## 文件
 
@@ -92,20 +93,29 @@
 - [0003 MCP 写调用默认须在工作台审批，工作台功能纳入 4.0](../decisions/0003-workbench-approval-for-mcp-writes.md)
 - [0004 写请求先预检再审批，批准后复核再执行](../decisions/0004-precheck-before-approval.md)
 - [0005 V20/V21 与其他六个版本采用同一架构](../decisions/0005-v20-v21-on-foundation-host.md)
-- [0006 复用引擎 EXE 作为 V20/V21 的 worker，引擎宿主层退役](../decisions/0006-engine-exe-as-v20-v21-worker.md)
+- [0006 复用引擎 EXE 作为 V20/V21 的 worker，引擎宿主层退役](../decisions/0006-engine-exe-as-v20-v21-worker.md)（已被 0022 取代）
 - [0007 每个 MCP 会话一个 worker](../decisions/0007-one-worker-per-mcp-session.md)
 - [0008 worker 调用按类超时，故障使 worker 代次失效且从不重放](../decisions/0008-worker-timeouts-and-faults.md)
 - [0009 V20/V21 专有工具按能力族移入 Foundation 适配器，之后引擎退役](../decisions/0009-port-v20-v21-tools-to-foundation-adapters.md)
 - [0010 发现、桥接与批处理工具在全部八个版本发布](../decisions/0010-discovery-and-batch-tools-on-all-releases.md)
 - [0011 八个版本都用 TIA 进程租约](../decisions/0011-tia-process-lease-on-all-releases.md)
 - [0012 旧版只注册至少有一个动作能在该版 API 上运行的工具](../decisions/0012-old-release-tool-registration.md)
-- [0013 4.0 在阶段 7 与阶段 8 全部完成后发布](../decisions/0013-release-4-0-after-phases-7-and-8.md)
+- [0013 4.0 在阶段 7 与阶段 8 全部完成后发布](../decisions/0013-release-4-0-after-phases-7-and-8.md)（放行条件部分已被 0023 取代）
 - [0014 各版本的工具数量按官方 API 支持决定](../decisions/0014-tool-counts-follow-official-api.md)
 - [0015 项目设计规范以 Microsoft 规范为基线](../decisions/0015-microsoft-design-spec-baseline.md)
 - [0016 设计决策用 ADR 记录](../decisions/0016-architecture-decision-records.md)
+- [0017 Openness 用户组检查改用自有代码，不再分发 Siemens.Collaboration.Net](../decisions/0017-own-openness-group-code.md)
+- [0018 工作台界面采用 Ant Design v5 的视觉规范和布局](../decisions/0018-workbench-ant-design.md)（视觉部分正由 [EplanMcp 工作台设计系统](https://claude.ai/artifact/Kbjk7iPWb7cMGxdVLbaQsg)取代）
+- [0019 check-all 复用输入未变的上次通过结果](../decisions/0019-incremental-check-all.md)
+- [0020 4.0 以 GitHub 预发布交给测试者，我们按真机核对清单做 VM 回归](../decisions/0020-prereleases-tested-by-users.md)
+- [0021 工作台字体与风格与 EplanMCP 工作台一致](../decisions/0021-workbench-eplanmcp-font-and-style.md)（视觉部分同上）
+- [0022 引擎退役，八个版本共用一套逻辑与流程](../decisions/0022-engine-retirement-and-eight-release-unification.md)
+- [0023 4.0 正式版在全部 4.0 任务合并、检查通过、rc 与维护者确认后发布](../decisions/0023-release-4-0-final-criteria.md)
+- [0024 合并以本机受影响的检查为门，GitHub CI 不阻塞合并和发布](../decisions/0024-ci-does-not-block-merges.md)
+- [0025 发布证据采用最近一次通过的 nightly 与已验证的增量构建单元](../decisions/0025-release-evidence-nightly-and-verified-build-units.md)
 
 设计记录：
 
 - [阶段 7 设计：V20/V21 改用 Foundation 宿主与引擎 worker](../design/p7-host-worker-split.md)（历史记录）
 - [P8-31 分阶段生成执行设计](../design/p8-31-staged-generation.md)（现行）
-- [P8-04 引擎退役与八版统一设计](../design/p8-04-engine-retirement.md)（现行）
+- [P8-04 引擎退役与八版统一设计](../design/p8-04-engine-retirement.md)（引擎程序已删除；P8-04l2、l3、n 完成后归档，决定见 [ADR 0022](../decisions/0022-engine-retirement-and-eight-release-unification.md)）

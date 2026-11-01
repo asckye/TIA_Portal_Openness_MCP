@@ -1,6 +1,6 @@
 # P8-01 迁移清单与方案：V20/V21 独有工具迁入 Foundation 适配器
 
-状态：现行 · 最后核对：2026-10-11，任务启动基线 master `578a05ee`
+状态：历史记录（35 个能力族已全部迁完，V20/V21 引擎已删除，见 [ADR 0022](decisions/0022-engine-retirement-and-eight-release-unification.md)；文档重组时归档） · 最后核对：2026-11-01；正文为 2026-10-11，任务启动基线 master `578a05ee`
 
 历史调研基线（只读调查，未改动仓库其他文件，未构建、未连接 TIA/VM）。日期 2026-10-08，基于 master `5623a784` 的当前工作区。
 上游任务：[重构计划](refactor-plan.md) 阶段 8 P8-01；背景见 [路线图](roadmap.md)“阶段 8”与 [差距复查](gap-review-2026-10.md)。

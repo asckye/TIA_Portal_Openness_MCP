@@ -13,9 +13,9 @@ V14 SP1–V21 均提供外部源导入、生成块和编译工具，但宿主与
 
 查询结果包括完整声明、实现、文件编码、适用版本及常见错误。按返回的 `releaseKeys` 选择例子；不要只复制函数体而漏掉接口声明、实例或返回值。
 
-## 按所选引擎完成导入
+## 按所选版本完成导入
 
-| 引擎 | 调用序列 |
+| 版本 | 调用序列 |
 |---|---|
 | V14 SP1–V19 宿主 | `GetToolUsage(exampleId="sequence/plc-scl-block-foundation")` |
 | V20/V21 | `GetToolUsage(exampleId="sequence/plc-scl-block")` |

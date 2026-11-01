@@ -8,7 +8,7 @@
 |---|---|---|
 | Siemens `tia-portal-ai-extensions` | 官方 Openness 指南供检索和统一示例引用；资料不会自行执行。 | [固定来源](../../reference/siemens-openness/UPSTREAM.json) |
 | Siemens Openness Code Snippets | C# 官方示例作为参考语料纳入统一示例库，区分官方源代码与本项目 MCP 参数。 | [固定来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/siemens-code-snippets/UPSTREAM.json) |
-| `asckye/tia-openness-studio` | 已合入桌面工程；八个直接 Openness 适配器、共用工作流、中英界面，不再使用 MCP 通道。 | [工作台 说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/工作台/README.md)、[来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/tia-openness-studio/UPSTREAM.json) |
+| `asckye/tia-openness-studio` | 已合入桌面工程；八个直接 Openness 适配器、共用工作流、中英界面，不再使用 MCP 通道。 | [工作台 说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/Studio/README.md)、[来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/tia-openness-studio/UPSTREAM.json) |
 | EidoTia工作台 | `PlanArtifactImportOrder` 复用依赖排序算法，八版共用；移除原 V21 域启发式假设。 | [改动与 MIT 许可](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/eido-import-planner/README.md) |
 | `Czarnak/tia-git-addin` | MIT Core 的 SimaticML 解析、结构差异和 LAD 布局；结合本项目 HTML/Git 适配器。未复制桌面 UI。 | [固定来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/TiaGitAddIn.Core/UPSTREAM.json) |
 | `core-engineering/siemens-plc-tools` | 固定版本的 Python 包和 CLI，通过独立伴随进程调用；安装环境另外准备。 | [固定来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/siemens-plc-tools/UPSTREAM.json) |
@@ -61,7 +61,7 @@ V20/V21 V20/V21通过安装布局解析器定位包根，再读取 `reference/si
 
 [生态目录快照](../../reference/v21-ecosystem.json)保存当次检索证据。上游 README 声称支持 V21，不等于本项目验收；`not_confirmed`、`adaptation_required`、`unsupported_v21` 不能视为可用。目录数量与 GitHub 星数均不作为成熟度或覆盖率结论。
 
-这份 JSON 是目录的唯一可编辑源，构建时直接嵌入 V20/V21 引擎；随包副本缺失不影响 `GetV21EcosystemCatalog`，修改磁盘副本也不会覆盖编译进引擎的数据。目录更新需要重新构建。
+这份 JSON 是目录的唯一可编辑源，构建时直接嵌入 MCP 服务程序（FoundationHost）；随包副本缺失不影响 `GetV21EcosystemCatalog`，修改磁盘副本也不会覆盖编译进服务程序的数据。目录更新需要重新构建。
 
 - 官方 Openness Explorer 可辅助检查对象模型；Project Check、Modular Application Creator 和 SiOME 仍需独立安装及各自环境，没有自动安装或整包嵌入。
 - TiaImportExport.VSExt 的已审阅公开树不足以复用完整扩展核心；TIAOpennessManager / AnyAutomation 工作台 也未建立可直接并入的许可核心证据。

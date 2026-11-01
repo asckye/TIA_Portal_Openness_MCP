@@ -5,7 +5,7 @@
 | 内容 | 入口 | 使用方式 |
 |---|---|---|
 | 加法、状态、定时、数组 | `GetToolUsage(language="scl")` | 读取完整源、声明及版本要求，再走外部源导入 |
-| 通用启停、步序、缩放等模板 | `scl-library-*` 示例 ID | 从语言目录选择当前引擎实际返回的例子 |
+| 通用启停、步序、缩放等模板 | `scl-library-*` 示例 ID | 从语言目录选择当前服务实际返回的例子 |
 | UDT / Global DB JSON | `BuildPlcUdt` / `BuildPlcGlobalDb` | 显式选择 `outputReleaseKey`，返回 XML 后另行导入 |
 | PLC 变量表和 FC-call LAD 网络 | 相应 builder 的 `GetToolUsage` | 当前输出仍是 V21 候选格式 |
 | 完整项目蓝图 | [项目生成](../project-generation.md) | PLC + Unified 工程流程使用 V20/V21 完整工具；模板格式需逐项核对 |

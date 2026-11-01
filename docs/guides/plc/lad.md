@@ -6,7 +6,7 @@
 
 | 场景 | 路径 |
 |---|---|
-| 导入同版本 TIA 导出的程序块 | 使用该引擎的 `ImportPlcBlock` 示例导入 SimaticML XML |
+| 导入同版本 TIA 导出的程序块 | 使用该版本服务的 `ImportPlcBlock` 示例导入 SimaticML XML |
 | 编写通用触点、线圈、沿和混合网络 | V21 的 SIMATIC SD 文档例子；按 `ImportPlcBlockDocuments` 示例导入 |
 | 用 XML 组装一个或多个 FC 调用网络 | `BuildFlgNetCall` / `BuildPlcLadFcBlock`；输出为 V21 候选 XML |
 

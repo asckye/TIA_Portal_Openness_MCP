@@ -21,7 +21,7 @@ F28 迁移后的 V19/V20/V21 PLC worker 也使用下表的 Esprima 3.0.5 和 Yam
 | `Microsoft.Extensions.*.dll`（28 个）、`Microsoft.Bcl.AsyncInterfaces.dll`、`Microsoft.Bcl.Memory.dll`、`System.Text.Json.dll`、`System.IO.Pipelines.dll`、`System.Net.ServerSentEvents.dll`、`System.Text.Encodings.Web.dll`、`System.Diagnostics.DiagnosticSource.dll`、`System.Threading.Channels.dll`、`System.Threading.Tasks.Dataflow.dll`、`System.CodeDom.dll`、`System.Security.AccessControl.dll`、`System.Security.Principal.Windows.dll`、`System.IO.FileSystem.AccessControl.dll`、`System.Buffers.dll`、`System.Memory.dll`、`System.Numerics.Vectors.dll`、`System.Runtime.CompilerServices.Unsafe.dll`、`System.Threading.Tasks.Extensions.dll` | .NET 运行时/扩展包（Microsoft.Extensions.* 10.0.0-preview.4 等，见 `manifest/release-build.json`） | MIT | © .NET Foundation and Contributors / © Microsoft Corporation | [DotNet-Foundation-MIT.txt](DotNet-Foundation-MIT.txt) |
 | `System.Reactive.dll` | System.Reactive 5.0.0 | MIT | © .NET Foundation and Contributors | 同上 |
 | `Microsoft.IO.RecyclableMemoryStream.dll` | Microsoft.IO.RecyclableMemoryStream 3.0.0 | MIT | © Microsoft Corporation | 同上 |
-| `Siemens.Collaboration.Net.dll`、`.CoreExtensions.dll`、`.Logging.dll`、`.OperatingSystem.Windows.dll`、`.Windows.Authentication.dll`（3.0.1725521661）、`.TiaPortal.Openness.Resolver.dll`（1.1.1725480302） | Siemens.Collaboration.Net.* | **Siemens 免版税软件条款**（见下） | © Siemens AG | [Siemens.Collaboration.Net.md](Siemens.Collaboration.Net.md) |
+| `Siemens.Collaboration.Net.dll`、`.CoreExtensions.dll`、`.Logging.dll`、`.OperatingSystem.Windows.dll`、`.Windows.Authentication.dll`（3.0.1725521661）、`.TiaPortal.Openness.Resolver.dll`（1.1.1725480302） | Siemens.Collaboration.Net.* | **4.0 起不再随包分发**；3.x 交付包适用 Siemens 免版税软件条款（见下） | © Siemens AG | [Siemens.Collaboration.Net.md](Siemens.Collaboration.Net.md) |
 | `Siemens.Simatic.S7.Webserver.API.dll`（2.7.18 起，S7 Web 服务器 API 运行时通道） | Siemens.Simatic.S7.Webserver.API 3.3.76 | MIT | © 2023 Siemens Aktiengesellschaft | [Siemens.Simatic.S7.Webserver.API-3.3.76.txt](Siemens.Simatic.S7.Webserver.API-3.3.76.txt) |
 | `Newtonsoft.Json.dll`（2.7.18 起，Webserver API 依赖） | Newtonsoft.Json 13.0.4 | MIT | © 2007 James Newton-King | [Newtonsoft.Json-13.0.4.txt](Newtonsoft.Json-13.0.4.txt) |
 | `MimeMapping.dll`（2.7.18 起，Webserver API 依赖） | MimeMapping 4.0.0 | MIT | Matthew Little | [MimeMapping-4.0.0.txt](MimeMapping-4.0.0.txt) |
@@ -56,7 +56,7 @@ F28 迁移后的 V19/V20/V21 PLC worker 也使用下表的 Esprima 3.0.5 和 Yam
 
 ## 关于 Siemens.Collaboration.Net 条款的说明
 
-上述 6 个 Siemens 程序集目前仅由待退役的 V20/V21 引擎以**目标码**形式随包分发，路径为 `runtime/v20/worker/` 和 `runtime/v21/worker/`。P8-76 已从全部八版 PlcWorker 删除包引用、嵌入资源及解析分支；FoundationHost 也不携带它们。其包内许可证（[Siemens.Collaboration.Net.md](Siemens.Collaboration.Net.md)）的结构是：
+上述 6 个 Siemens 程序集只在 3.x 及 4.0 早期的交付包中由 V20/V21 引擎以**目标码**形式随包分发（`runtime/v20/worker/`、`runtime/v21/worker/`）。4.0 交付包不再包含它们：P8-76 已从全部八版 PlcWorker 删除包引用、嵌入资源及解析分支，FoundationHost 不携带它们，P8-04j2 起交付包不含引擎，`scripts/operations/delivery-files.json` 对八个发布键的宿主与 worker 目录都排除这六个文件。其包内许可证（[Siemens.Collaboration.Net.md](Siemens.Collaboration.Net.md)）的结构是：
 
 - 第 2 条：MIT 许可**仅适用于源码及生成的源码**。
 - 第 3 条：对目标码适用"Royalty-Free Siemens Software Conditions"——授予**免版税、非独占、不可再许可、不可转让**的使用权，限于"开发和测试可与 Siemens 产品配合使用的软件"这一预期用途。
@@ -64,7 +64,7 @@ F28 迁移后的 V19/V20/V21 PLC worker 也使用下表的 Esprima 3.0.5 和 Yam
 
 维护者于 2026-10-18 决定不得再分发这六个目标码程序集，改用自有 Windows 用户组代码（P8-76）。自有实现依据公开 Windows API 与 Siemens Openness 用户组要求，不从这些程序集反编译、反汇编、提取或反射获得实现。PlcWorker 的有效成员资格仍以登录令牌为准；本机组的直接 SID 成员记录作为诊断，加入后必须注销并重新登录。
 
-引擎的 Resolver 及包引用在 P8-04l 删除引擎时一并移除；本任务不改变引擎。当前过渡包仍因引擎携带表中六个 DLL，**不代表再分发许可已解决，不能据此发布 4.0**。保留本表与许可原文，直至引擎残留被移除。交付规则排除八版宿主和六版已交付 PlcWorker 目录中的六个 DLL；二进制门禁还拒绝任意八版 PlcWorker/宿主的引用、资源及同目录残留文件。受跟踪的历史构建记录由正式发布工具重新生成，不手改哈希。
+引擎程序已在 P8-04l 第 1 阶段删除（`287bbac2`），4.0 交付包不再携带表中六个 DLL，这一项不再阻塞 4.0 发布。本表与许可原文保留，供 3.x 交付包参考。交付规则排除八版宿主和 PlcWorker 目录中的六个 DLL；二进制门禁还拒绝任意八版 PlcWorker/宿主的引用、资源及同目录残留文件。受跟踪的历史构建记录由正式发布工具重新生成，不手改哈希。
 
 ## 维护规则
 

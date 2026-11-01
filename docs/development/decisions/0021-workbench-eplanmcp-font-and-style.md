@@ -1,6 +1,6 @@
 # 0021 Workbench font and style aligned with the EplanMCP Workbench
 
-- 状态：已采纳
+- 状态：已采纳；视觉部分正由 2026-11-01 采用的 [EplanMcp 工作台设计系统](https://claude.ai/artifact/Kbjk7iPWb7cMGxdVLbaQsg)取代（随 4.0.0-beta.3 的 UI-v2 实施，届时另写 ADR）
 - 日期：2026-10-22
 - 决策者：维护者
 - 置信度：高

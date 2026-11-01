@@ -6,7 +6,7 @@
 - 原始版权：**Copyright (c) 2026 bulaofen0036-coder**。
 - 原项目贡献者包括 bulaofen0036-coder / bulaofen、xl 及其他贡献者。原有成果的作者身份和权利不因仓库独立维护而转移。
 - 当前维护者版权：**Copyright (c) 2026 asckye**。
-- 完整 MIT 许可证、原始版权声明和当前维护者版权声明保存在根目录 [LICENSE](LICENSE)，必须随软件的复制件或实质性部分一同保留。随包分发的第三方程序集及其许可证逐项列于 [第三方组件许可证清单](docs/licenses/THIRD-PARTY-NOTICES.md)，原文在 [docs/licenses](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/licenses)。其中 `Siemens.Collaboration.Net.*` 程序集适用 Siemens 免版税软件条款而非 MIT，其再分发边界见该清单说明。
+- 完整 MIT 许可证、原始版权声明和当前维护者版权声明保存在根目录 [LICENSE](LICENSE)，必须随软件的复制件或实质性部分一同保留。随包分发的第三方程序集及其许可证逐项列于 [第三方组件许可证清单](docs/licenses/THIRD-PARTY-NOTICES.md)，原文在 [docs/licenses](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/licenses)。4.0 起交付包不再包含 `Siemens.Collaboration.Net.*` 程序集（自有用户组代码取代，P8-76）；该清单保留其许可原文和说明，供 3.x 交付包参考。
 
 独立维护、仓库所有者、插件发布者以及 Git 快照导入者均不等于全部原始代码的作者。新的 Git 根提交表示现有许可代码的导入和独立维护起点，不宣称全部代码为重新创作，也不代表原作者对本项目的背书。
 
@@ -30,7 +30,7 @@ TIA Portal, SIMATIC, STEP 7, WinCC and Openness are trademarks of Siemens AG; th
 
 2026-10-03: TIA Openness Studio desktop, mock and inspection sources are integrated under `src/Studio`, from asckye/tia-openness-studio commit `87099c576fbc06e6b6ac523ddbf763fe0aa2ce02`, MIT, copyright 2026 asckye. The upstream license, file hashes, full source snapshot and Git history are retained there. The integrated desktop uses its own direct Openness bridge; the MCP dependency has been removed.
 
-The workbench embeds Noto Sans SC and JetBrains Mono under SIL Open Font License 1.1. The fonts, original licenses and source records are retained together in [the Studio font directory](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/Studio/Gui/Fonts); see [the third-party notices](docs/licenses/THIRD-PARTY-NOTICES.md).
+The workbench embeds Maple Mono CN under SIL Open Font License 1.1. The fonts, original license and source records are retained together in [the Studio font directory](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/Studio/Gui/Fonts); see [the third-party notices](docs/licenses/THIRD-PARTY-NOTICES.md).
 
 The shared import dependency planner incorporates MIT-licensed code from EidoAut/EidoTiaWorkbench, copyright (c) 2026 EIDO AUTOMATION, S.L.U.; see [license and pinned provenance](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/eido-import-planner/README.md).
 

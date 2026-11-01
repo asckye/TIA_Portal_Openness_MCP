@@ -1,6 +1,6 @@
 # 文档写作规范
 
-状态：现行 · 最后核对：2026-10-11，master `3a227657`
+状态：现行 · 最后核对：2026-11-01，master `27675208`（术语表“引擎”“服务”“项目”行、第 14.4 节与附录 B）；其余为 2026-10-11，master `3a227657`
 
 [设计规范索引](README.md) · [文档偏差清单](deviations/docs.md)
 
@@ -156,14 +156,15 @@ MCP 工具描述、参数说明和错误消息不属于本规范，它们的语�
 | 包根 | 包根 | bundle root | `--bundle-root`、`TIA_MCP_BUNDLE_ROOT` | 安装根、仓库根（指交付包时） | 含 `manifest/package-manifest.json` 的目录 |
 | 数据根 | 数据根 | data root | `<包根>/data`、`TIA_MCP_DATA_DIRECTORY` | 数据目录（泛指时可用） | 见运行时布局 |
 | 工作台 | 工作台 | Workbench | `TiaOpenness.exe`（包根启动器）→ `runtime/studio/TiaOpenness.exe` | 配置器、统一工作台、统一桌面、Studio（指整个程序时） | 3.x 的独立配置器只在历史记录中称“配置器” |
-| 工作台页面 | **MCP 与客户端** 页、**工程操作** 页、**AI 调用**、**审批**、**审计日志**、**环境**、**版本控制** | **MCP & clients**、**Engineering** 等 | 不适用 | 配置页、Studio 页 | 按界面实际文字，加粗 |
-| Studio | Studio（只作源码名） | Studio | `src/Studio` | 用来称呼用户界面 | 用户文档写“工作台”或“工程操作页” |
+| 工作台页面 | **MCP 与客户端** 页、**项目** 页（原工程概览、程序块和工程操作页已合并）、**AI 调用**、**审批**、**审计日志**、**环境**、**版本控制** | **MCP & clients**、**Engineering** 等 | 不适用 | 配置页、Studio 页 | 按界面实际文字，加粗 |
+| Studio | Studio（只作源码名） | Studio | `src/Studio` | 用来称呼用户界面 | 用户文档写“工作台”或“项目页” |
 | MCP 宿主 | 宿主（MCP 宿主进程）；指程序时写 FoundationHost | MCP host；FoundationHost | `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>` | 主机、Foundation 主机、基础宿主、基础引擎、PLC 基础引擎、foundation host（小写）、LegacyHost（只作代码名） | 八个版本都用同一个宿主程序 |
 | 宿主机 | 宿主机 | host computer | 不适用 | 宿主、主机（指虚拟机外的电脑时） | 只指运行虚拟机的物理电脑，与“宿主”严格区分 |
 | worker | worker（总称） | worker | 不适用 | 工作进程、子进程（作术语时） | 由宿主为每个 MCP 会话启动的 net48 进程 |
 | PLC worker | PLC worker | PLC worker | `runtime/v<发布键>/worker/TiaMcp.PlcWorker.<发布键>.exe` | 基础 worker、Foundation worker（混用） | 八个版本；V14 SP1–V19 为 STA 线程，V20/V21 为 MTA 线程 |
 | 引擎 worker | 引擎 worker | engine worker | `TiaMcp.Engine.V20.exe --engine-worker`（V21 同理） | 完整引擎（指运行形态时）、full engine、引擎宿主 | 已退役：P8-04j2 起 V20/V21 也使用 PLC worker，交付包不含引擎；只在历史记录或仓库交叉检查中出现 |
-| 引擎 | 引擎 | engine | `TiaMcp.Engine.V20.exe`、`TiaMcp.Engine.V21.exe` | 完整引擎 | 只指这两个程序；不再交付，只作为 `bin-build/engine-compat` 下的兼容副本供仓库交叉检查，由 P8-04l 删除 |
+| 引擎 | 引擎（只作历史名词） | engine | `TiaMcp.Engine.V20.exe`、`TiaMcp.Engine.V21.exe` | 完整引擎；用“引擎”指当前产品、MCP 宿主或其 worker | 只指这两个已退役的程序：P8-04l 第 1 阶段已删除引擎程序和构建路线，`src/Engine` 剩余源码由 P8-04l2 删除（[ADR 0022](../decisions/0022-engine-retirement-and-eight-release-unification.md)）；只在历史记录中出现 |
+| 服务（界面用语） | 服务、MCP 服务 | service、MCP service | 不适用 | 引擎、MCP 引擎、引擎设置 | 工作台界面和用户文档对 MCP 宿主及其 worker 的总称（维护者 2026-11-01 决定；工作台界面字符串在后续代码任务中修改）；开发文档按对象写宿主、FoundationHost 或 worker |
 | V20/V21 专有工具 | V20/V21 专有工具 | V20/V21-only tools | 不适用 | 完整引擎工具 | 35 个能力族已移入 Foundation 适配器，原生调用在 PLC worker 中执行 |
 | Foundation 适配器 | Foundation 适配器 | Foundation adapters | `TiaMcp.Adapter.<发布键>.dll`、`src/Adapters` | 共享适配器、Foundation 代码（混用） | 按发布键编译八次 |
 | 能力族 | 能力族（F01–F35） | capability family | `PortedFamilies` | 族、工具族（混用） | 已移入适配器的称“已移植族” |
@@ -191,7 +192,7 @@ MCP 工具描述、参数说明和错误消息不属于本规范，它们的语�
 | 暂存 | 导入暂存 | import staging | `<包根>/staging/<会话>/<批次>/` | 上传目录 | 不在数据根下 |
 | V4 会话 | V4 会话；上下文清楚时简称会话 | V4 session | 不适用 | 连接（指会话状态时） | 宿主为一个 MCP 会话维护的全部状态（worker、租约、绑定、会话锁、计划、句柄等），4.0 中由 MCP 传输会话承载，定义见 [V4 工具协议规范](v4-protocol.md) 第 0.4 节 |
 | worker 代次 | worker 代次 | worker generation | 不适用 | worker 代（混用） | 一次 worker 进程的生命周期；故障后经 `RestartOpennessWorker` 或 `DisconnectPortal` 开始新代次 |
-| TIA 工程 | 工程 | project | `.ap<主版本>` 文件 | 项目（在文档中混用） | 文档统一写“工程”；工作台界面字符串的用词按工作台规范 LOC-07 决定 |
+| TIA 项目 | 项目 | project | `.ap<主版本>` 文件 | 工程（新文档中指 TIA Portal 项目时） | 跟随 TIA Portal 中文界面写“项目”（维护者 2026-11-01 决定，取代原“统一写工程”的规定）；现有文档的“工程”在文档重组时逐步改写，工作台界面字符串在后续代码任务中统一 |
 | 写栅栏 | 生成写栅栏 | generation write fence | `generation-run-active` | 围栏 | 生成运行期间拒绝同一会话中不属于该运行的写调用 |
 | 发散 | 发散 | divergence | `diverged` | 偏离（指生成运行时） | 执行前的工具预览与已批准的计划不符，运行停止且不写入 |
 | 偏差 | 偏差（规范偏差） | deviation | `CS-nn`、`MCP-nn`、`API-nn`、`UI-nn`、`DOC-nn` | 偏离（混用） | 现有代码或文档与设计规范的差异，记在偏差清单并标明状态 |
@@ -270,35 +271,7 @@ MCP 工具描述、参数说明和错误消息不属于本规范，它们的语�
 
 ### 14.4 模板
 
-```markdown
-# NNNN 决定的标题（陈述句）
-
-- 状态：提议 | 已采纳 | 已拒绝 | 已被 NNNN 取代 | 已废弃
-- 日期：YYYY-MM-DD（决定日期）
-- 决策者：维护者（提出者：…）
-- 置信度：高 | 中 | 低
-- 相关：ADR NNNN；设计文档链接；任务编号
-
-## 背景
-
-需要解决的问题、约束和推动因素。只写做决定时已知的事实。
-
-## 选项
-
-1. 选项 A：要点；优点；缺点。
-2. 选项 B：要点；优点；缺点。
-
-## 决定
-
-采用的选项，以及一句话理由。
-
-## 后果
-
-- 正面：…
-- 负面与取舍：…
-- 后续工作：…
-- 验证方式：用什么检查或验收证明决定被执行。
-```
+新 ADR 从 [ADR 模板](../decisions/0000-template.md) 开始；模板只在该文件中维护。
 
 模板结合了 Nygard 模板的“背景、决定、状态、后果”与 Azure WAF 建议的“备选方案、取舍、置信度”。详细推导写在设计文档中并从“相关”链接，ADR 本身必须能独立读懂。
 
@@ -351,14 +324,6 @@ MCP 工具描述、参数说明和错误消息不属于本规范，它们的语�
 | 中文 | [Chinese (Simplified) Localization Style Guide](https://aka.ms/chinese-simplified-styleguide)（[全部语言列表](https://learn.microsoft.com/en-us/globalization/reference/microsoft-style-guides)） | §2.1（语气与灵活改写）、§3.2（无障碍：选择而非点击）、§4.1.1–§4.1.2（缩写）、§4.1.9（修饰语）、§4.1.10（数字与量词）、§4.1.12（代词：你）、§4.1.13（标点）、§5.2（产品名）、§5.5（错误消息、键名） |
 | ADR | [Maintain an architecture decision record (ADR)](https://learn.microsoft.com/en-us/azure/well-architected/architect-role/architecture-decision-record)、[Documenting Architecture Decisions](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions) | 14 |
 
-## 附录 B 与基线的有意偏差汇总
+## 附录 B 与基线的有意偏差
 
-| 编号 | 规则 | 基线 | 本项目做法 | 理由 |
-|---|---|---|---|---|
-| DOC-15（部分） | 中文文档中界面元素的标记 | zh-CN §4.1.13：文档中用中文双引号 | 加粗，不加引号 | 与英文 MS 规则一致；Markdown 中便于检查 |
-| DOC-24 | 随包文档链接不分发文件 | 无（MS 只要求链接文字具体） | GitHub `blob/master` 绝对链接，发布记录固定到标签 | 交付包不含开发文档，相对链接会失效 |
-| DOC-29 | 范围符号 | zh-CN §4.1.13：数字范围用波浪线；MS：英文用 from…through 或 en dash | 中英文统一 en dash | 版本范围在全部文本中写法一致 |
-| DOC-30 | 日期格式 | MS：month day, year | ISO 8601 | 可排序，不受地区格式影响 |
-| DOC-19 | 归档文档中的 HTML | 本规范 7 | 已冻结的归档文档保留原样 | 归档内容不再维护 |
-| DOC-20（部分） | 标题编号与任务号 | MS Headings 的读者导向 | 设计记录与 ADR 可保留 | 记录类文档需要与任务对照 |
-| DOC-25（部分） | 历史发布记录中的裸 URL | MS URLs | `CHANGELOG.md` 的历史条目不改写 | 历史记录保持原文 |
+有意偏差只在 [文档偏差清单](deviations/docs.md) 中维护（状态为“有意偏差（已接受）”的条目），本规范不再重复汇总。

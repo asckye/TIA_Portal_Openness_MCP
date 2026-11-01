@@ -1,6 +1,8 @@
 # 验证分层
 
-状态：现行 · 最后核对：2026-10-11，任务启动基线 master `578a05ee`
+状态：现行 · 最后核对：2026-10-11，任务启动基线 master `578a05ee`；2026-11-01 补充下面的规则说明
+
+> 2026-11-01 维护者决定：合并门为本机受影响的检查，GitHub CI 不阻塞合并（[ADR 0024](decisions/0024-ci-does-not-block-merges.md)）；发布证据改为最近一次通过的 nightly 加已验证构建单元，nightly 门槛由三十分钟改为 45 分钟（[ADR 0025](decisions/0025-release-evidence-nightly-and-verified-build-units.md)）。两项由 RULES-1 实现；实现合并前，本页描述的同提交冷运行采纳规则和三十分钟门槛仍是工具的实际行为。检查可以在合并、nightly 与 CI 之间移动或按身份复用，不可以删除或放宽。
 
 [文档目录](../README.md) · [发布流程](release-workflow.md) · [当前交接](handoff.md)
 
@@ -9,7 +11,7 @@
 
 | 证据 | 位置和用途 |
 |---|---|
-| V20/V21 完整构建 | [release-build.json](../../manifest/release-build.json)：编译、离线、实际进程、API 形状及诊断记录 |
+| V20/V21 完整构建（历史） | [release-build.json](../../manifest/release-build.json)：引擎时期的编译、离线、实际进程、API 形状及诊断记录；P8-04j2 起不再交付，引擎删除后不再生成 |
 | 配置器 | [configurator-build.json](../../manifest/configurator-build.json)：源码/文件哈希及界面功能测试 |
 | 全版本交付 | [multi-version-build.json](../../manifest/multi-version-build.json)：八版 worker/Studio 适配器、文件与源码哈希 |
 | 统一示例 | [tool-usage-coverage.json](../../manifest/tool-usage-coverage.json)：所有注册工具/操作的检索与可执行离线示例 |
@@ -103,7 +105,7 @@ Studio 测试收到既有的 bundle 根目录覆盖；bridge 载荷来自对应�
 全集低于三十分钟与检查通过是两个独立条件，任何一个不满足都返回非零状态。
 每次结束时另写 `release-evidence.json`：提交、tree id、开始时的工作树状态与全部输入文件 SHA-256、PublicAPI/NuGet 配置/SDK/Python/机器标识、
 运行模式、计划作业与每个作业的结果和日志哈希、注册套件计数及退出状态。`-NoBuildCache` 关闭文件程序构建缓存并随之关闭结果缓存；
-发布只采纳干净提交上 `-Profile nightly`、`-Clean`（或 `-Cold`）且带 `-NoBuildCache` 的完整通过运行，规则见[发布流程](release-workflow.md#采纳同一提交的-check-all-与-ci-证据-adoptevidence)。
+发布目前只采纳干净提交上 `-Profile nightly`、`-Clean`（或 `-Cold`）且带 `-NoBuildCache` 的完整通过运行，规则见[发布流程](release-workflow.md#采纳同一提交的-check-all-与-ci-证据-adoptevidence)；按 ADR 0025 改为采纳最近一次通过的 nightly 加已验证构建单元，由 RULES-1 实现。
 
 可选 `-CiCovered <候选 JSON>` 将同一提交的部分检查交给 Windows CI；不传时全部本机执行。
 原计划的每个 shard、gate 和静态作业仍有一条结果：本机执行，或 `covered by CI`，并列出 run ID、attempt、job ID 与 job 名。
@@ -628,8 +630,7 @@ python scripts/checks/Snapshot-ToolContracts.py compare --baseline manifest/cont
 返回结构另用当前 V4 的 `manifest/contracts/v4/responses` 守护。P8-04j2 起 V20/V21 与其他六版一样经 FoundationHost 抓取：先构建 Release 的
 FoundationHost，再用 `dotnet run --project build-tools/release -- build-plc-worker-fixtures -PublicApiRoot <SDK-root>` 构建 V20/V21 的
 PlcWorker SDK 夹具；八版的 `--exe` 都指向同一个宿主，V20/V21 另用 `--plc-worker` 指定夹具（与发布链 PLC 后继作业的参数相同，见
-`build-tools/release/PlcReleaseChecks.cs`）。发布候选还用 `bin-build/engine-compat` 下的引擎兼容副本经 `--engine-worker`、`--engine-catalog`
-做交叉比较，由发布工具组装参数，不需要手工运行。
+`build-tools/release/PlcReleaseChecks.cs`）。引擎兼容副本及其交叉比较已随 P8-04l 第 1 阶段删除（`287bbac2`），发布候选不再构建或比较引擎。
 
 V20/V21 经 PlcWorker 夹具抓取时，脚本为宿主进程设置仅测试用的 `TIA_MCP_PLC_WORKER_SDK_READY=1`（`--packaged-no-tia` 时不设置），
 并创建临时 SDK 安装布局，执行与真实 EXE 相同的工具调用清单。产品默认审批保持开启，写操作会在派发前被拒绝。该标记只在带

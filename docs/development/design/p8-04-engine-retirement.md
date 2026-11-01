@@ -1,6 +1,6 @@
 # P8-04 引擎退役与八版统一设计
 
-状态：现行（设计）· P8-04b、P8-04d1 已合并，其余任务状态以 [重构计划](../refactor-plan.md) 为准 · 最后核对：2026-10-13，master `69229795`
+状态：现行（设计）· P8-04b–k3b、j2 与 l 第 1 阶段（`287bbac2`，引擎程序删除）已合并；剩余 l2、l3、n，见[重构计划](../refactor-plan.md)与[发布计划](../../status/release-plan.md)；决定见 [ADR 0022](../decisions/0022-engine-retirement-and-eight-release-unification.md)。D8 已按 ADR 0020 取消；“检查时长”“范围”“许可”三行已被后续决定取代（ADR 0024、0025，2026-10-22 的 4.1 推迟，P8-04l） · 最后核对：2026-11-01，master `27675208`（正文为 2026-10-13，`69229795`）
 
 [设计规范索引](../design-spec/README.md) · [架构决策记录](../decisions/README.md) · [阶段 7 设计](p7-host-worker-split.md)（历史记录） · [阶段 8 迁移方案](../phase8-port-plan.md)
 

@@ -1,12 +1,14 @@
 # 重构计划
 
 
-状态：现行 · 最后核对：2026-10-21，master `62ebf86e`（阶段 8 任务状态）
+状态：现行（阶段 0–8；4.0 正式版后归档）· 最后核对：2026-11-01，master `27675208`（阶段 8 任务状态）
 
-[当前交接](handoff.md) · [路线图](roadmap.md) · [验证分层](validation.md) · [版本框架](unified-version-framework.md) · [引擎拆分设计](engine-decomposition.md) · [适配器合并设计](adapter-merge.md) · [响应与异常设计](response-and-errors.md) · [运行时布局与清理](runtime-layout.md) · [工具开发](tool-development.md)
+> 2026-10-22 之后的新任务、按版本的范围（beta.3、beta.4、4.0 正式版、4.1）和放行门槛只在[发布计划](../status/release-plan.md)中维护。本页只刷新阶段 0–8 已有任务的状态，不再加入新功能范围。
 
-本页是重构的唯一计划和任务清单。Claude 负责架构决策、任务说明、验收与合并；Codex 按任务说明在独立
-worktree 中实现；维护者负责决策点、真机授权和发布。机器路径、会话 ID 和执行日志不写入本页。
+[发布计划](../status/release-plan.md) · [当前交接](handoff.md) · [路线图](roadmap.md) · [验证分层](validation.md) · [版本框架](unified-version-framework.md) · [引擎拆分设计](engine-decomposition.md) · [适配器合并设计](adapter-merge.md) · [响应与异常设计](response-and-errors.md) · [运行时布局与清理](runtime-layout.md) · [工具开发](tool-development.md)
+
+本页是阶段 0–8 的计划和任务清单。Claude 负责架构决策、研究、任务说明、审查、主机测试与合并；Codex 按任务说明在独立
+worktree 中实现全部新代码；维护者负责决策点、真机授权和发布。机器路径、会话 ID 和执行日志不写入本页。
 
 ## 重构起点的目标（历史统计）
 
@@ -32,7 +34,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 3. **原生语义不变。** 改动西门子调用路径的任务必须在报告中列出改动前后的调用序列；
    涉及原生路径的阶段在完成时用真机基线（P0-03）回放。编译、模拟对象和传输测试不证明原生语义。
 4. **仅维护 master。** 每个任务在临时分支/worktree 中完成，验收后合并回 master，合并后删除分支。
-   每次合并后 master 必须能构建、离线测试通过、兼容快照无差异。
+   每次合并后 master 必须能构建、离线测试通过、兼容快照无差异；合并门是本机受影响的检查，GitHub CI 不阻塞合并（[ADR 0024](decisions/0024-ci-does-not-block-merges.md)）。
 5. 仓库其他规则见 [CLAUDE.md](../../CLAUDE.md)：显式 `git add` 路径、英文提交信息、不加 AI 署名、
    C# 无 BOM UTF-8 与 LF、运行二进制和 SDK 不进 Git。
 
@@ -41,8 +43,8 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 1. Claude 写任务说明：范围（允许修改的路径）、目标结构、不变量、验收命令、预期结果。
 2. 从当前 master 建 worktree 和 `refactor/<任务 ID>` 分支，Codex 以 `workspace-write` 沙箱执行，
    改动留在 worktree，不提交（worktree 的 Git 元数据不在沙箱可写范围内）。
-3. Claude 在 worktree 中复跑验收命令、审查 diff 后在任务分支提交；不合格则带具体问题退回同一 Codex 会话。
-4. 验收通过后变基到 master、快进合并，更新本页任务状态。
+3. Codex 交付前运行一次 `check-all -Affected -Quick`（约 15 分钟上限）并报告。Claude 审查 diff、在主机运行受影响的检查后在任务分支提交；不合格则先查明原因，再带具体修改说明退回同一 Codex 会话。
+4. 验收通过后变基到 master 并推送，更新[发布计划](../status/release-plan.md)或本页的任务状态。完整冷全集由每日 nightly 运行（[ADR 0025](decisions/0025-release-evidence-nightly-and-verified-build-units.md)）。
 5. 阶段结束时跑完整八版本构建（L3）；涉及原生路径的阶段再做真机回放（L5）。
 
 ### 验收层级
@@ -61,7 +63,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 
 ## 阶段与任务
 
-状态：`todo` / `doing` / `review` / `done` / `blocked`。
+状态：`todo` / `doing` / `review` / `done` / `blocked`；`deferred` 表示暂缓或推迟到 4.1，`superseded` 表示已被后续决定取代（见该行说明）。
 
 ### 阶段 0：基线
 
@@ -131,7 +133,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P4-C | 第 C 步：版本特性集中到一张表，证明各项目 DefineConstants 与织入清单不变；`src/Shared/TiaFeatures.props` + `Check-TiaFeatures.py`（validate 流程） | done |
 | P4-02 | Foundation worker 迁移到共享适配器（第 D 步完成：46 个源码原样移入 `TiaMcp.Adapters/Native`、`Policy`，`OpennessAdapter` 以委托实现会话、程序、数据接口；第 E 步：worker 改 net48（P4-E1 完成，三个旧版本冒烟通过，真机验收已登记）与协议 2（P4-E2 完成：`TiaMcp.WorkerChannel`、握手与不重放规则、`worker-channel` 套件 98 项，预览规则逐条映射；P4-A 完成：删除 `TiaMcp.WorkerProtocol.*`（约 10,700 行、6,676 个断言），删除前补 155 项规则测试，`worker-channel` 253 项）） | doing |
 | P4-03 | Studio 桥接进程迁移到共享适配器（第 F 步完成：桥接改用 `TiaMcp.WorkerChannel` 协议 2 的 Studio profile，方法名、DTO 与 UI 错误文本不变，已处理错误保持会话；Core 108、GUI 1388、配置 197、三版桥接冒烟 15、worker-channel 253；真机验收前不发布；第 G 步：基于共享适配器重写会话，构建开关后）。第 G 步第 1 部分（P4-G1）完成：Studio 原生代码（会话、PLC/HMI 导航、VCI、扩展）作为扩展面并入各版织入的 `TiaMcp.Adapter.<key>`，契约增加 Studio 接口与 DTO、STA 守卫；Studio 仍加载 `StudioOpenness.V*`（1926 个方法体 IL 不变），行为不变；第 2 部分（P4-G2）完成：`TiaOpenness.Core` 增加基于适配器扩展面的第二个 `ITiaSession`，由构建开关 `TiaSharedAdapterPaths`（共享 props，默认 false）选择；默认变体输出与测试不变，开关变体打包 `bridge/adapters/v<key>/TiaMcp.Adapter.<key>.dll`（Core 391、GUI 1407、三版桥接冒烟 15），CI 构建并测试两种变体；开关在真机验收（台账）前保持 false，`StudioOpenness.V*` 待第 G3 步删除 | doing |
-| P4-04 | V20/V21 引擎的 PLC 路径迁移到共享适配器；HMI、设备等 V20+ 专有能力保留在 V20/V21 专属适配器；第 H 步完成：引擎引用同版织入适配器、固定共用 PublicAPI 目录、接通同文件同关联 ID 日志并加入未启用的 PLC 借用入口，打包复验及跨程序集查找检查已接入，原生调用不变；P4-I1：五个 VCI 工具统一调用单份原语源码，默认引擎本地链接、开启开关后调用适配器，领域外 IL 保持相同，VCI 按展开后的分支调用图和生成的完整类别迁移/增减清单验收，真机项目已入台账；P4-I2：监控/强制表及工艺对象类型化调用已抽取为单份原语，默认/共享变体与八版适配器按同变体基线及宿主方法范围证明通过（accepted: true），11 项形状断言保留并通过，真机台账已登记；P4-I3：硬件目录条目读取与设备创建接入单份原语，保留引擎候选重试和 Foundation 单次精确创建策略，同开关基线的领域外 IL、调用图与精确去重证明通过（accepted: true），device-add/hardware-catalog 原断言全过，真机项目已入台账；P4-I4b：文档与外部源已接入单份原语及借用工程入口，保留宿主策略，离线快照无差异，八版静态证明通过，Foundation 仅迁移八个方法且领域外 IL 保持相同，真机待验项目已登记，开关保持默认 false；P4-I4a：块服务与软件编译已共用原语并借用当前工程，Foundation/Studio 按迁移方法限域且软件读取 257 项断言通过，两种 V20/V21 引擎调用图、非域 IL 与精确原生差量通过；Studio 反射缓存回调按无原生调用的框架回调记录后，八版[静态证明](evidence/p4-i4a-native-evidence.json)通过（accepted: true），真机项目已入台账 | doing |
+| P4-04 | V20/V21 引擎的 PLC 路径迁移到共享适配器；HMI、设备等 V20+ 专有能力保留在 V20/V21 专属适配器；第 H 步完成：引擎引用同版织入适配器、固定共用 PublicAPI 目录、接通同文件同关联 ID 日志并加入未启用的 PLC 借用入口，打包复验及跨程序集查找检查已接入，原生调用不变；P4-I1：五个 VCI 工具统一调用单份原语源码，默认引擎本地链接、开启开关后调用适配器，领域外 IL 保持相同，VCI 按展开后的分支调用图和生成的完整类别迁移/增减清单验收，真机项目已入台账；P4-I2：监控/强制表及工艺对象类型化调用已抽取为单份原语，默认/共享变体与八版适配器按同变体基线及宿主方法范围证明通过（accepted: true），11 项形状断言保留并通过，真机台账已登记；P4-I3：硬件目录条目读取与设备创建接入单份原语，保留引擎候选重试和 Foundation 单次精确创建策略，同开关基线的领域外 IL、调用图与精确去重证明通过（accepted: true），device-add/hardware-catalog 原断言全过，真机项目已入台账；P4-I4b：文档与外部源已接入单份原语及借用工程入口，保留宿主策略，离线快照无差异，八版静态证明通过，Foundation 仅迁移八个方法且领域外 IL 保持相同，真机待验项目已登记，开关保持默认 false；P4-I4a：块服务与软件编译已共用原语并借用当前工程，Foundation/Studio 按迁移方法限域且软件读取 257 项断言通过，两种 V20/V21 引擎调用图、非域 IL 与精确原生差量通过；Studio 反射缓存回调按无原生调用的框架回调记录后，八版[静态证明](evidence/p4-i4a-native-evidence.json)通过（accepted: true），真机项目已入台账 | superseded（V20/V21 已改用 PlcWorker，引擎已删除，[ADR 0022](decisions/0022-engine-retirement-and-eight-release-unification.md)） |
 
 ### 阶段 5：桌面端
 
@@ -207,7 +209,7 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | P6-39 | 引擎/Studio 日志、Python 默认环境及 CLI 私人 workspace/fixture 显式输入；[路径清单](phase6-review.md#phase6-path-p6-39) | 38 | T；只读安装、LocalAppData 不可写、显式 Python、私人默认值消失、并发日志 | done |
 | P6-40 | 更新 `reference/tool-examples`、`src/EngineHost/ModelContextProtocol/McpPrompts.cs`、`plugin/skill` 及现行文档；运行 `build-tools/release/ToolUsageGenerator.cs`、`Generate-ToolCapabilityMatrix.cs`；[路径清单](phase6-review.md#phase6-path-p6-40) | 35、39、44–48 | 八版示例检索/schema 对齐、lite 每项实参例子；C；不手改嵌入 JSON 和 manifest 哈希 | done |
 | P6-41 | 按规范第 7 节在 `manifest/contracts/v4` 建立逐发布键快照和 CI 检查；现有 Snapshot-ToolContracts/Responses 脚本生成，3.x 基线逐字节归档至 `manifest/history/contracts-v3`，禁止用改哈希掩盖差异；P6-41a 已提前完成 3.x 归档、归档守护与静态 V4 检查；[路径清单](phase6-review.md#phase6-path-p6-41) | 40 | C、T、V；清洁 checkout 两次生成相同；布局扫描命中逐项关闭或注明历史证据 | done |
-| P6-42 | 发布候选完整八版构建/离线/重定位/严格验包及真实行为台账复核，列出实际纳入和延期族；[路径清单](phase6-review.md#phase6-path-p6-42) | 41；纳入族各自 L5，阶段 4 发布门槛也须满足 | L3、V、L5、只读安装；完整包启动/连接冒烟；未验收族不得误切 safe-v4 | todo |
+| P6-42 | 发布候选完整八版构建/离线/重定位/严格验包及真实行为台账复核，列出实际纳入和延期族；[路径清单](phase6-review.md#phase6-path-p6-42) | 41；纳入族各自 L5，阶段 4 发布门槛也须满足 | L3、V、L5、只读安装；完整包启动/连接冒烟；未验收族不得误切 safe-v4 | superseded（4.0 正式版改为 rc 加 VM 回归，见 [ADR 0020](decisions/0020-prereleases-tested-by-users.md)、[ADR 0023](decisions/0023-release-4-0-final-criteria.md)） |
 | P6-43 | **最后任务：发布说明**生成旧→新工具名/参数/产品入口对照，类型/信封/安全策略/目录变更及实际验收状态；[路径清单](phase6-review.md#phase6-path-p6-43) | 42 | 对照表逐版与发布产物一致、链接可执行示例、刷新客户端工具缓存说明；仅文档，无程序转换层 | done |
 | P6-44 | 工作台写操作审批：宿主按调用的写分类、待批队列与超时、当前用户命名管道、审批开关与 meta 披露；Studio 审批视图；ConfirmationRequiredDetails 拒绝原因（先改规范第 3 节）；见规范第 8 节；[路径清单](phase6-review.md#phase6-path-p6-44) | 25、39；D1 已切换族在 apply 处接入 | T 宿主/Studio Core/GUI、V；只读不排队、批次逐项、拒绝/超时/工作台未连接均为操作前拒绝、批准一次性且绑定 planHash、MCP 客户端不能自批；N 调用不变 | done |
 | P6-45 | 工作台 AI 调用面板：读取调用日志实时显示、详情展开（截断/脱敏）、待批置顶、复制连接信息；[路径清单](phase6-review.md#phase6-path-p6-45) | 44 | T GUI/Core；轮转/并发/中断行、脱敏、中英文；不新增采集通道 | done |
@@ -263,69 +265,84 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | P7-04b | 在共享会话上恢复 P7-04 停用的 5 个生命周期工具（RetrieveProjectArchive、SaveProjectCopy、ManageMultiuserSession、BuildProjectScaffold、ConnectIsolatedPortal），名称与输入结构同原 V4 基线；worker 内统一的生命周期接口保证绑定、租约与锁定只有一份；ConnectProject 作为重复连接入口保持停用 | P7-04 | T、V；共享会话夹具；契约迁移比较 | done |
 | P7-05 | worker 健壮性：超时策略（长操作按类放宽）、派发后取消、超大请求与响应（转入导出句柄）、进度转发、worker 崩溃/卡死/TIA 进程丢失后的代次失效与锁定、故障注入夹具 | P7-04 | T、V；故障注入夹具 | done |
 | P7-06 | 打包与布局切换：20/21 默认以 Foundation 主机加 `worker/` 子目录中的引擎 worker 运行；发布工具、BundleLayout 与版本目录产品类型、Studio、更新器按清单校验、插件与清单；候选包经 Foundation 主机截取 20/21（stdio 与 HTTP） | P7-04 | T、V；包校验、重定位、冒烟、更新器升级 | done |
-| P7-07 | V20/V21 真机验收：与 V14 SP1–V19 相同的验收流程，加上只在 V20/V21 存在的工具、worker 重启与重新绑定、进程丢失 | P7-04b、P7-05、P7-06 | L5：V20、V21 | todo |
+| P7-07 | V20/V21 真机验收：与 V14 SP1–V19 相同的验收流程，加上只在 V20/V21 存在的工具、worker 重启与重新绑定、进程丢失 | P7-04b、P7-05、P7-06 | L5：V20、V21 | superseded（改为按真机核对清单的 VM 回归，[ADR 0020](decisions/0020-prereleases-tested-by-users.md)） |
 | P7-07a | V20 真机第一轮发现 37–42：每个 MCP 会话一个引擎 worker；V20/V21 HTTP 主机补 `/mcp/ready` 与版本号；进程租约拒绝原因透传；结果未知后 DisconnectPortal 可恢复（空闲时干净分离并释放租约，忙或丢失时结束 worker 并提示重启 TIA，八版同一规则）；空闲 worker 重启先分离；导入导出调用前检查格式、目录与目标文件，未写出文件的导出异常为类型化失败；修正示例扩展名 | P7-07 第一轮 | T、V；HTTP 会话回归（修改前失败）；L5 复验 | done |
 | P7-07b | V20/V21 真机第二轮发现 43–48：只写文件的工具在原生调用返回明确错误/失败状态时报 NATIVE_OPERATION_FAILED（不锁会话），可能改动工程的导入、上传、下载仍为结果未知；SiVArc 块级工具只接受 FB/FC；V20/V21 拒绝 CFC 图表保护与导出（导入保留，原因写入拒绝信息）；Git 仓库路径缺失为类型化拒绝；原生调用先落盘后执行，新会话可按时间读取全部会话的调用日志；`SaveProjectCopy` 说明为 TIA 另存为、分类改为 SESSION 并返回前后工程文件 | P7-07 第二轮 | T、V；L5 复验 | done |
 | P7-08 | 退役引擎主机层（stdio/HTTP/隔离入口与相关文件），引擎程序无参数时提示新用法；隔离时期的说明经评审更新基线 | P8-03a（同批文件；2026-10-09 起不再等 P7-07） | T、V；CLI 与原生调用清单不变 | done |
 | P7-10 | 仓库整理第一部分：源码根目录清单集中、失效检查与孤立脚本清理、已删除 PowerShell 脚本的引用、解决方案补齐、历史记录归档、Studio 服务文件拆分、第三方来源文件名统一 | — | V、仓库检查 | done |
 | P7-11a | 仓库整理第二部分（先行）：项目、目录、程序集与命名空间按统一架构改名（发布的 EXE/DLL 文件名不变），测试目录按主机/引擎/适配器/通道重组，同名文件、重复的梯形图样例与临时目录整理（清单见 `bin-build/refactor/tasks/P7-11-survey.md`）。提前到 P7-07a 合并后进行，使阶段 8 的代码任务建立在新名称上；P7-08 要删除的文件不在范围内 | P7-07a | V、仓库检查；八版契约与响应零差异 | done |
-| P7-11b | 仓库整理第二部分（收尾）：引擎主机层剩余文件归位、阶段 7 失效的文档与架构图、阶段 6 资料归档、插件钩子路径、发布工具命令改名 | P7-08 | V、仓库检查 | doing |
+| P7-11b | 仓库整理第二部分（收尾）：引擎主机层剩余文件归位、阶段 7 失效的文档与架构图、阶段 6 资料归档、插件钩子路径、发布工具命令改名；剩余的失效文档并入文档重组（[发布计划](../status/release-plan.md) DOCS） | P7-08 | V、仓库检查 | doing |
 
 ### 阶段 8：原定 4.0 之后的工作（4.0 发布前完成）
 
-最后核对：2026-10-21，master `62ebf86e`（任务状态；方案部分为 2026-10-13，`69229795`）。4.0 在阶段 7、8 全部完成后发布，见 [ADR 0013](decisions/0013-release-4-0-after-phases-7-and-8.md)。维护者 2026-10-20 决定（[ADR 0020](decisions/0020-prereleases-tested-by-users.md)，取代 ADR 0013 中最后集中真机验收的部分）：我们不做真机验收；4.0 先以 GitHub 预发布（`v4.0.0-beta.N`，不设为最新版）交给其他用户测试，未验证项列在预发布说明中，每次发布前由维护者确认。正式 4.0 的放行条件仍待维护者决定（见[待维护者决定](#待维护者决定)第 3 项）。此前关于部分成果进入 4.1 的安排是历史决定，已被取代。
+最后核对：2026-11-01，master `27675208`（任务状态；方案部分为 2026-10-13，`69229795`）。4.0 先以 GitHub 预发布（`v4.0.0-beta.N`，不设为最新版）交给测试者，我们按真机核对清单在 VM 上回归（[ADR 0020](decisions/0020-prereleases-tested-by-users.md)，2026-11-01 修订）；已发布 beta.1（2026-10-22）、beta.2（2026-10-30）；beta.3 的发布运行已停止，范围按 2026-11-01 的决定扩大（见[发布计划](../status/release-plan.md)）。4.0 正式版的条件见 [ADR 0023](decisions/0023-release-4-0-final-criteria.md)，取代 [ADR 0013](decisions/0013-release-4-0-after-phases-7-and-8.md) 的放行部分。维护者 2026-10-22 决定 P8-31f–i 与 P8-40 推迟到 4.1；其余阶段 8 收尾项的排期见[发布计划](../status/release-plan.md)。
 
-已合并事实：移植 B1–B12（含 B10a、B10b），35 个族全部迁完；引擎退役 P8-04b、P8-04d1、P8-04h、P8-04i、P8-04j1a、P8-04j1b、P8-04j2、P8-04k1–P8-04k3b；Python 批 1、2、3、7；工作台控制 a–d、共享面板 a–e；生成模型、规划、标准包、分阶段执行 e1–e5；API 复核 P8-04a；八版超时 P8-64；设计规范对照 P8-60、P8-61、P8-62（含警告棘轮 P8-62b）、P8-63 首批与离线工具 P8-65；检查修复 P8-51；挂起检测 P8-50e；工具注解 P8-60b；单文件脚本棘轮 P8-62c。上述父任务仍有未完成子项，状态为 doing；计划状态不代表 L5 已通过。
+已合并事实：移植 B1–B12（含 B10a、B10b），35 个族全部迁完；引擎退役 P8-04b、P8-04d1、P8-04h、P8-04i、P8-04j1a、P8-04j1b、P8-04j2、P8-04k1–P8-04k3b；Python 批 1、2、3、7；工作台控制 a–d、共享面板 a–e；生成模型、规划、标准包、分阶段执行 e1–e5（e5 `4d3818f2`）；API 复核修复 P8-81a–g；摘要脱敏 P8-83；发布证据采纳 P8-93；测试包 P8-94；HMI 修复 P8-96a；异步桥接 P8-stab-2b；工作台字体与风格 P8-80d、P8-80e；引擎删除 P8-04l 第 1 阶段；API 复核 P8-04a；八版超时 P8-64；设计规范对照 P8-60、P8-61、P8-62（含警告棘轮 P8-62b）、P8-63 首批与离线工具 P8-65；检查修复 P8-51；挂起检测 P8-50e；工具注解 P8-60b；单文件脚本棘轮 P8-62c。上述父任务仍有未完成子项，状态为 doing；计划状态不代表 L5 已通过。
 
 2026-10-13 维护者要求重新审查整个项目，并按审查结果确定 4.0 前的方案：阶段 0 先恢复可信的基线，随后是引擎退役、八版统一、工作台收尾、发布准备，最后是最终 RC 与八版真机验收（真机验收部分已被 ADR 0020 取代）。方案、维护者决定和统一项清单见 [P8-04 引擎退役与八版统一设计](design/p8-04-engine-retirement.md)。
 
-维护者要求合并前快速检查、合并后运行全部门禁。完整发布候选在发布链变更时及最终测试包生成时运行；任何检查不得删除、跳过或放宽。
+合并门是本机 `check-all -Affected` 加受影响的检查，GitHub CI 不阻塞合并和发布（[ADR 0024](decisions/0024-ci-does-not-block-merges.md)）；完整冷全集每日在 nightly 运行，发布证据见 [ADR 0025](decisions/0025-release-evidence-nightly-and-verified-build-units.md)。任何检查不得删除、跳过或放宽，除非维护者批准。
 
 | 任务 | 内容 | 依赖 | 验收 | 状态 |
 |---|---|---|---|---|
 | P8-01 | 迁移清单与方案（研究）：V20/V21 独有的约 420/431 个工具按能力族归类；逐族列出所用引擎服务、在 V14 SP1–V19 上的 Openness API 可用性（以本地 PublicAPI 元数据为准，不按名称推断）、版本差异与迁移顺序、每批的验收方式；同时列出 V20/V21 补深度与官方差距中落在各族里的项。方案见[阶段 8 迁移方案](phase8-port-plan.md)（35 个族、12 批、样板族 F19 硬件地址） | — | 评审；方案文档 | done |
 | P8-02 | 迁移框架与样板族：Foundation 适配器承载一个能力族的结构（共用逻辑与版本 API 差异分开维护）；同一族在 PlcWorker 与 V20/V21 worker 中由适配器执行、引擎实现删除；每族契约与响应零差异门禁；旧版按 API 支持的启用开关与 `current / NOT RUN` 标记；以 P8-01 选出的第一族为样板 | P8-01、P7-11a | T、V；样板族零差异；L5 复验 | done |
-| P8-03 | 按族分批迁移（批次表在 P8-01 方案中维护，每批 2–4 族）：V20/V21 改由适配器执行并删除对应引擎代码，真机复验；同一族在 V14 SP1–V19 按 API 支持启用并真机验收。35 个族已全部合并（B1–B12，含 B10a/B10b），V20/V21 的引擎实现已删除；最终八版虚拟机验收已取消（维护者 2026-10-20 决定我们不做真机测试），需真机确认的项列入预发布说明，由测试者反馈 | P8-02 | 每批 T、V | doing |
-| P8-04 | 引擎退役：全部族迁完后 V20/V21 改用与其他六版同结构的 PlcWorker，引擎程序与引擎 worker 退役，八版同一套写法。方案与维护者决定见 bin-build/refactor/P8-04-plan/plan.md（2026-10-13）：实施分为 P8-04b–m（P8-04b 源文件归位已合并）；宿主保留命令行子集（doctor、audit verify、schema、version、config、install-plc-tools、help），其余命令由 MCP 工具与生成框架取代；除工具集合与官方 API 差异外，八个版本使用同一套逻辑与流程（维护者决定，2026-10-13）：替换 worker 时契约与响应保持零差异，引擎删除后由 P8-04n 统一对外呈现（八版均提供精简工具清单并默认启用、统一服务器说明、提示词与资源、档案名、包装与审批路径、行为披露规则），基线由工具重新生成并逐项审查；Foundation 通道在八个版本上增加请求关联号、超大回复落盘与结果暂存。原定切换前在 V20、V21 虚拟机上各跑一次引擎基线（D8），维护者 2026-10-20 决定取消。进度：P8-04h、i、j1a（c680d48d）、j1b（38ca2883）、k1、k2、k3a、k3b 已合并；P8-04j2 已完成（62ebf86e，2026-10-21）：V20/V21 默认改用 PlcWorker，交付包不再含引擎 EXE、引擎 worker 文件和 `tool-catalog.json`，引擎只作为 `bin-build/engine-compat` 下的私有兼容副本供交叉检查，宿主以退出码 64 拒绝 `--engine-*` 选项；之后 l、m、n | P8-03 | T、V | doing |
-| P8-10 | 自有 Python 改为 C#（清单与分批）：CI 与发布检查、虚拟机验收与诊断工具、生成器、打包、vci-watch；生成结果逐字节一致；插件生态调用的第三方 Python 包及其两个桥接脚本保留。清单与分批见[Python 改 C# 方案](phase8-python-plan.md)（98 个文件、8 批） | P7-11a | 每批 V；生成结果逐字节一致 | doing |
-| P8-20 | 工作台控制通道（设计与实现）：与审批管道分开，沿用当前用户限定与双向身份核对；显示类（打开页面、定位块或调用记录、打开梯形图与图集）、读取类（当前项目、页面与选择）和预填类（预填表单，由人确认）工具；不在该通道上提供审批、审批开关与服务启停，不经工作台自身的 TIA 会话写项目。设计与维护者决定见[工作台控制设计](design/workbench-control-and-shared-session.md)（实施分为 P8-20a–e；P8-20a–d 已合并，端到端待验收，P8-20e 端到端待验收） | P7-11a | T、V；工作台与 MCP 端到端 | doing |
-| P8-21 | 工程操作页改为共享 MCP 会话的操作面板：页面按钮调用与 AI 相同的工具（同一 Foundation 主机与 worker、同一审批与审计，记录区分人与 AI），实时显示共享会话状态；随后移除工作台重复的 TIA 适配代码。默认附着 AI 会话（维护者决定）；实施分为 P8-21a–f，见[工作台控制设计](design/workbench-control-and-shared-session.md) | P8-20 | T、V；L5 | doing |
+| P8-03 | 按族分批迁移（批次表在 P8-01 方案中维护，每批 2–4 族）：V20/V21 改由适配器执行并删除对应引擎代码，真机复验；同一族在 V14 SP1–V19 按 API 支持启用并真机验收。35 个族已全部合并（B1–B12，含 B10a/B10b），V20/V21 的引擎实现已删除；最终八版虚拟机验收已取消（维护者 2026-10-20 决定我们不做真机测试），需真机确认的项列入预发布说明，由测试者反馈。2026-11-01：全部批次已合并；真机复验按 ADR 0020（2026-11-01 修订）改为 VM 回归 | P8-02 | 每批 T、V | done |
+| P8-04 | 引擎退役：全部族迁完后 V20/V21 改用与其他六版同结构的 PlcWorker，引擎程序与引擎 worker 退役，八版同一套写法。方案与维护者决定见 bin-build/refactor/P8-04-plan/plan.md（2026-10-13）：实施分为 P8-04b–m（P8-04b 源文件归位已合并）；宿主保留命令行子集（doctor、audit verify、schema、version、config、install-plc-tools、help），其余命令由 MCP 工具与生成框架取代；除工具集合与官方 API 差异外，八个版本使用同一套逻辑与流程（维护者决定，2026-10-13）：替换 worker 时契约与响应保持零差异，引擎删除后由 P8-04n 统一对外呈现（八版均提供精简工具清单并默认启用、统一服务器说明、提示词与资源、档案名、包装与审批路径、行为披露规则），基线由工具重新生成并逐项审查；Foundation 通道在八个版本上增加请求关联号、超大回复落盘与结果暂存。原定切换前在 V20、V21 虚拟机上各跑一次引擎基线（D8），维护者 2026-10-20 决定取消。进度：P8-04h、i、j1a（c680d48d）、j1b（38ca2883）、k1、k2、k3a、k3b 已合并；P8-04j2 已完成（62ebf86e，2026-10-21）：V20/V21 默认改用 PlcWorker，交付包不再含引擎 EXE、引擎 worker 文件和 `tool-catalog.json`，引擎只作为 `bin-build/engine-compat` 下的私有兼容副本供交叉检查，宿主以退出码 64 拒绝 `--engine-*` 选项；之后 l、m、n。2026-11-01：P8-04l 第 1 阶段已合并（`287bbac2`，删除引擎程序和构建、启动引擎的路线，[ADR 0022](decisions/0022-engine-retirement-and-eight-release-unification.md)）；剩余 P8-04l2、P8-04l3、P8-04n 见下方各行，P8-04m 并入文档重组 | P8-03 | T、V | doing |
+| P8-10 | 自有 Python 改为 C#（清单与分批）：CI 与发布检查、虚拟机验收与诊断工具、生成器、打包、vci-watch；生成结果逐字节一致；插件生态调用的第三方 Python 包及其两个桥接脚本保留。清单与分批见[Python 改 C# 方案](phase8-python-plan.md)（98 个文件、8 批）。2026-11-01：批 1、2、3、7 已合并；批 4–6（P8-10d/e/f）在 `refactor/P8-10d`、`refactor/P8-10e` 上只有未验证的 WIP，维护者 2026-10-22 决定在 4.0 正式版前合并并重新移植 10-21 以来的发布链修复 | P7-11a | 每批 V；生成结果逐字节一致 | doing |
+| P8-20 | 工作台控制通道（设计与实现）：与审批管道分开，沿用当前用户限定与双向身份核对；显示类（打开页面、定位块或调用记录、打开梯形图与图集）、读取类（当前项目、页面与选择）和预填类（预填表单，由人确认）工具；不在该通道上提供审批、审批开关与服务启停，不经工作台自身的 TIA 会话写项目。设计与维护者决定见[工作台控制设计](design/workbench-control-and-shared-session.md)（实施分为 P8-20a–e；P8-20a–d 已合并，端到端待验收，P8-20e 端到端待验收）。2026-11-01：端到端验收改为预发布真机验证清单 T10，由测试者和我们的 VM 回归完成 | P7-11a | T、V；工作台与 MCP 端到端 | doing |
+| P8-21 | 工程操作页改为共享 MCP 会话的操作面板：页面按钮调用与 AI 相同的工具（同一 Foundation 主机与 worker、同一审批与审计，记录区分人与 AI），实时显示共享会话状态；随后移除工作台重复的 TIA 适配代码。默认附着 AI 会话（维护者决定）；实施分为 P8-21a–f，见[工作台控制设计](design/workbench-control-and-shared-session.md)。2026-11-01：剩余 P8-21f（删除工作台重复的 TIA 适配代码），排在 beta.3 | P8-20 | T、V；L5 | doing |
 | P8-30 | 项目生成框架设计：可替换、可导入导出、带版本的“标准包”（命名规则、项目结构、设备与网络组态、标准功能块库、运行模式与状态机、报警模型、HMI 约定、从设备清单展开的生成规则）；标准包格式、设备清单输入格式与首批标准需维护者决定。选项与决定见[项目生成框架](design/project-generation-framework.md)：基础包加状态模型包，每次执行审批一次 | P8-01 | 评审；维护者确认 | done |
-| P8-31 | 项目生成框架实现：工作台模块（标准包编辑、生成向导、预览、结果与检查报告）与对应 MCP 工具；生成经现有工具执行（照常审批与审计）；同一标准包驱动风格指南检查 | P8-30、P8-03 中所需各族 | T、V；L5 | doing |
-| P8-40 | 对照官方补齐其余工作流：表格批量导入设备与硬件；ECAD（XML/AML）导入并生成设备、连接与变量，含一致性检查；Classic VB 脚本迁移到 Unified JS；V20/V21 补深度中未落入 P8-03 的项；PLC 与 Classic HMI 构建工具按版本输出，在虚拟机上逐版导入验证后在该版开放（维护者决定，2026-10-11） | P8-02 | 每项 T、V、L5 | todo |
+| P8-31 | 项目生成框架实现：工作台模块（标准包编辑、生成向导、预览、结果与检查报告）与对应 MCP 工具；生成经现有工具执行（照常审批与审计）；同一标准包驱动风格指南检查。2026-11-01：a–e5 已合并（e5 `4d3818f2`）；P8-31f–i、e6、h1 按维护者 2026-10-22 决定推迟到 4.1；j1 的排期待维护者决定（见[发布计划](../status/release-plan.md)） | P8-30、P8-03 中所需各族 | T、V；L5 | deferred（剩余项 4.1） |
+| P8-40 | 对照官方补齐其余工作流：表格批量导入设备与硬件；ECAD（XML/AML）导入并生成设备、连接与变量，含一致性检查；Classic VB 脚本迁移到 Unified JS；V20/V21 补深度中未落入 P8-03 的项；PLC 与 Classic HMI 构建工具按版本输出，在虚拟机上逐版导入验证后在该版开放（维护者决定，2026-10-11）。维护者 2026-10-22 决定推迟到 4.1 | P8-02 | 每项 T、V、L5 | deferred（4.1） |
 | P8-04a | 按官方 API 复核旧版关闭的工具/版本组合（161 组，调研见 bin-build/refactor/P8-04-recheck.md）：开放 15 组（其中 4 组列入最终虚拟机验收），`ImportMasterCopyFromGlobalLibrary` 在 16–18 关闭，只生成 V21 文件的 6 个离线构建工具在 V14 SP1–V19 关闭，修正 `ValidatePlcDocumentSchemas` 不匹配 SCL/STL 片段 | P8-03 | T、V | done |
-| P8-50 | 一条命令运行全部检查（`check-all`）：只构建一次，按实测耗时调度，长套件分片，稳定性检查在保留核心上隔离；不删除、不跳过、不放宽任何检查；目标原为 5 分钟（维护者决定，2026-10-10），2026-10-13 改为 30 分钟，快速门禁仍为 5 分钟；每次套件运行带 5 分钟挂起检测，挂起即失败并记录测试名与转储（P8-50e）；提速见 P8-72 | — | T、V；主机实测三轮 | doing |
+| P8-50 | 一条命令运行全部检查（`check-all`）：只构建一次，按实测耗时调度，长套件分片，稳定性检查在保留核心上隔离；不删除、不跳过、不放宽任何检查；目标原为 5 分钟（维护者决定，2026-10-10），2026-10-13 改为 30 分钟，快速门禁仍为 5 分钟；每次套件运行带 5 分钟挂起检测，挂起即失败并记录测试名与转储（P8-50e）；提速见 P8-72。2026-10-30 起合并门为 `check-all -Affected`（目标少于 10 分钟），完整冷全集每日 nightly；2026-11-01 nightly 门槛改为 45 分钟（[ADR 0025](decisions/0025-release-evidence-nightly-and-verified-build-units.md)，RULES-1 实施） | — | T、V；主机实测三轮 | doing |
 | P8-51 | 修复维护者批准的四项检查：三项过期检查与 GUI 测试隔离（RadioButton 分组泄漏） | P8-50 | T、V | done |
 | P8-60 | V4 协议对照[设计规范](design-spec/v4-protocol.md)：MCP 规范为主，2025-06-18 版本保留到 4.0；工具注解从 ToolMetadata 生成；V4 错误补 `details.parameter`，消息文本不变；其余差异按[协议差异表](design-spec/deviations/protocol.md)处理 | P8-03 中涉及的批次 | T、V；契约与响应重新生成并逐项审查 | done |
 | P8-61 | 工作台界面对照[设计规范](design-spec/workbench-ui.md)：高对比度与 UIA 名称、焦点与访问键、4.5:1 对比度（测试阈值相应提高）、更小的最小窗口、风险确认默认取消、预填标记可见；按 WCAG 2.2 AA 验收 | P8-21 | T、V | done |
 | P8-62 | C# 代码对照[设计规范](design-spec/csharp-design.md)：`.editorconfig` 与内置分析器的最小规则集（纳入发布源清单）；Studio 保留 TiaOpenness 命名空间，其余在 4.0 之后统一；新代码行宽建议不超过 120，不批量重排；单文件 C# 脚本纳入警告棘轮并修复其警告（P8-62c，维护者决定，2026-10-12） | — | T、V | done |
-| P8-63 | 文档对照[设计规范](design-spec/documentation-style.md)（含 P7-11b）：修正 `--isolate-openness` 说明，工具数量由生成器写入，刷新状态文档，补首批 ADR | P8-03 | 链接、路径、版本与引用检查 | doing |
+| P8-63 | 文档对照[设计规范](design-spec/documentation-style.md)（含 P7-11b）：修正 `--isolate-openness` 说明，工具数量由生成器写入，刷新状态文档，补首批 ADR。2026-11-01：剩余项并入文档重组（[发布计划](../status/release-plan.md) DOCS） | P8-03 | 链接、路径、版本与引用检查 | doing |
 | P8-70 | 修复 2026-10-13 审查确认的现有缺陷：V20/V21 文档导出与导入总被拒绝；Teamcenter 工作流在 V18/V19 失败；V20 构建工具生成 V21 格式；旧版导入文件的工程版本头；违反注册规则的工具；归档后缀与写错版本号的提示。已合并（0f69de58，2026-10-14）；剩余的 V20 构建工具输出 V21 格式问题，按维护者 2026-10-20 决定在 V20 撤下 6 个构建工具，归入 P8-81d/e | — | T、V；基线逐项审查 | done |
 | P8-71 | 打包链：交付宿主加载的全部程序集（V20/V21 的 `TiaMcp.Runtime.dll`），打包时检查依赖闭包；打包步骤不再重编正在运行的发布工具 | — | T、V；发布候选打包 | doing |
 | P8-72 | `check-all` 提速，目标 30 分钟：保留计时历史、修复从未命中的构建缓存、修复重复计数、作业超时、并行输出比对；维护者批准的四项（时间敏感用例按方法划分、保留核心、去掉内部重复执行、提高过时的最低通过数）。检查本身全部保留。已合并（227e4abe，小机器降级布局 P8-72b 06158d72）；CI 的 Foundation 测试组拆到 4 台 runner，并用统一门禁按原门槛检查（P8-ci-ft，42b88f8e） | P8-50 | T、V；主机实测 | done |
 | P8-73 | 工作台与插件缺陷：修复环境按钮、版本控制页在 V16–V19 只读、插件写保护钩子、打包后更新检查的安装根。已合并（7f20c58b、e3dcd8db，2026-10-14）；P8-04i 之后环境修复按钮把 `doctor --fix` 的退出码 2（已加入用户组、待重新登录）当成失败，另由 P8-73b 修复（8b3ce068，2026-10-21） | — | T、V | done |
 | P8-76 | 2026-10-18 许可决定：不再分发六个 Siemens.Collaboration.Net 目标码程序集；八版 PlcWorker 改用自有 Windows 用户组查询及经确认的提权修复，保留令牌就绪语义；引擎包引用和 Resolver 留待 P8-04l 删除。维护者 2026-10-18 批准令牌就绪语义和五种修复结果文字。已合并（4678fd25，[ADR 0017](decisions/0017-own-openness-group-code.md)） | — | 八版构建、无残留清单、离线字节零差异、既有套件与新增用例；审查者执行测试 | done |
-| P8-80 | 工作台界面按 Ant Design v5 重画（维护者 2026-10-18 决定，[ADR 0018](decisions/0018-workbench-ant-design.md)）：token 与组件样式、侧边菜单加顶栏的布局、“项目”页合并工程概览与程序块、各页页头与卡片、对话框按钮按显示顺序；视图模型与工具调用不变。窄窗口布局 P8-80b（86a2c6e6）与评审发现的四项布局缺陷 P8-80c（6063f564：侧边菜单只高亮一项、页面只有一条纵向滚动条、日志页绑定错误、客户端名称换行）已合并 | — | Studio GUI/Core/配置测试两种模式、渲染与截图测试；布局断言更新经维护者批准 | done |
+| P8-80 | 工作台界面按 Ant Design v5 重画（维护者 2026-10-18 决定，[ADR 0018](decisions/0018-workbench-ant-design.md)）：token 与组件样式、侧边菜单加顶栏的布局、“项目”页合并工程概览与程序块、各页页头与卡片、对话框按钮按显示顺序；视图模型与工具调用不变。窄窗口布局 P8-80b（86a2c6e6）与评审发现的四项布局缺陷 P8-80c（6063f564：侧边菜单只高亮一项、页面只有一条纵向滚动条、日志页绑定错误、客户端名称换行）已合并；EplanMCP 字体与风格 P8-80d（`dbf51538`，[ADR 0021](decisions/0021-workbench-eplanmcp-font-and-style.md)）与 Maple Mono CN 文字不截断 P8-80e（`b8573680`）已合并 | — | Studio GUI/Core/配置测试两种模式、渲染与截图测试；布局断言更新经维护者批准 | done |
 | P8-64 | V14 SP1–V19 的 PLC worker 采用与 V20/V21 引擎 worker 相同的超时策略（按类别：默认 120 秒、首次附着 300 秒、长操作 30 分钟，覆盖参数相同），取代固定 2 分钟 | — | T、V | done |
 | P8-77 | `check-all` 增量结果缓存：某项检查的全部输入不变时复用它上次的干净结果；CI、branch-gate、发布候选链、`-Clean` 与 `-NoResultCache` 从不复用（[ADR 0019](decisions/0019-incremental-check-all.md)）。已合并（e3598019） | P8-72 | T、V | done |
-| P8-81 | 对照官方 API 复核适配器代码并分批修复（2026-10-19 复核，150 项发现，其中 39 项缺陷）：P8-81a 在线与下载、P8-81b 硬件与网络、P8-81c 会话（含 UMAC，c89b7c20）已合并；P8-81d PLC、P8-81e HMI、P8-81f 库/VCI/安全/反射、P8-81g 安全设置与选件待做。维护者决定：不猜型号与属性名，匹配不到就拒绝；工具注册范围跟随官方 API；新覆盖只补 UMAC 受保护项目，其余记入覆盖文档留 4.1；导入不改写 SimaticML 工程版本，超出官方窗口即拒绝；导入的 overwrite 默认 false；需真机确认的项列入预发布的未验证清单 | P8-03 | T、V；八版契约与响应逐项审查 | doing |
-| P8-90 | 预发布：发布工具支持 `X.Y.Z-beta.N` 与 `X.Y.Z-rc.N`，GitHub 上标为预发布且不设为最新版，3.3 的更新器不会提示；预发布说明附“未在真实 TIA Portal 上验证”清单。维护者 2026-10-20 决定（[ADR 0020](decisions/0020-prereleases-tested-by-users.md)）：我们不做真机测试，由其他用户测试预发布；第一个预发布在 P8-04j2 之后，发布前由维护者确认。发布工具支持已合并（4fb25a79）；P8-04j2 已合并，下一步是 4.0.0-beta.1 | P8-04j2 | T、V；完整发布演练 | doing |
+| P8-81 | 对照官方 API 复核适配器代码并分批修复（2026-10-19 复核，150 项发现，其中 39 项缺陷）：P8-81a 在线与下载、P8-81b 硬件与网络、P8-81c 会话（含 UMAC，c89b7c20）已合并；P8-81d PLC、P8-81e HMI、P8-81f 库/VCI/安全/反射、P8-81g 安全设置与选件待做。维护者决定：不猜型号与属性名，匹配不到就拒绝；工具注册范围跟随官方 API；新覆盖只补 UMAC 受保护项目，其余记入覆盖文档留 4.1；导入不改写 SimaticML 工程版本，超出官方窗口即拒绝；导入的 overwrite 默认 false；需真机确认的项列入预发布的未验证清单。2026-11-01：P8-81d PLC（`43bf82de`）、e HMI（`e69a3332`）、f 库/VCI/Safety/反射（`ad392e47`）、g 安全设置与选件（`52958f12`）已合并，整合后再生成 `5fe00833`、`7fac8eb4` | P8-03 | T、V；八版契约与响应逐项审查 | done |
+| P8-90 | 预发布：发布工具支持 `X.Y.Z-beta.N` 与 `X.Y.Z-rc.N`，GitHub 上标为预发布且不设为最新版，3.3 的更新器不会提示；预发布说明附“未在真实 TIA Portal 上验证”清单。维护者 2026-10-20 决定（[ADR 0020](decisions/0020-prereleases-tested-by-users.md)）：我们不做真机测试，由其他用户测试预发布；第一个预发布在 P8-04j2 之后，发布前由维护者确认。发布工具支持已合并（4fb25a79）；P8-04j2 已合并，下一步是 4.0.0-beta.1。2026-11-01：beta.1（`bc5dcc5a`，2026-10-22）、beta.2（`7e9c4c65`，2026-10-30）已发布，发布工具的预发布支持完成；后续预发布按[发布计划](../status/release-plan.md)进行 | P8-04j2 | T、V；完整发布演练 | done |
 | P8-82 | 批处理准入复核（维护者 2026-10-20）：47 个经审查的读取工具放入只读批处理；4 个可能很慢的读取工具在 4.0 保持关闭；GetUnifiedCrossReferences 与 GetExportContent 移出批处理；OFFLINE、WRITE、FILE 维持关闭。复核见 bin-build/refactor/batch-flag-review.md。已合并（c2b4af38）；协议规范改按审查后的 BatchRead/BatchWrite 标志描述两种批处理的准入（P8-82d，b920ff46） | P8-04k3b | T、V；八版契约与响应零差异 | done |
-| P8-91 | 4.0 前的稳定性：master 上连续 20 次干净通过；偶发失败集中按 worker 生命周期竞态排查和修复，不放宽任何期限（维护者 2026-10-18、2026-10-20 决定）。P8-stab-1 已合并（44f4aa3c）：`WorkerShutdown.KillOwned` 把探测映像期间已退出的子进程视为已停止；Foundation 审批窗口在预检之后、开始等待前才计时；截在 200 个批次的暂存列表带 `INCOMPLETE_DATA` 警告，不再失败；测试修复未放宽任何预算、期限或断言 | — | 每个修复配确定性回归用例；20 次重复 | doing |
+| P8-91 | 4.0 前的稳定性：master 上连续 20 次干净通过；偶发失败集中按 worker 生命周期竞态排查和修复，不放宽任何期限（维护者 2026-10-18、2026-10-20 决定）。P8-stab-1 已合并（44f4aa3c）：`WorkerShutdown.KillOwned` 把探测映像期间已退出的子进程视为已停止；Foundation 审批窗口在预检之后、开始等待前才计时；截在 200 个批次的暂存列表带 `INCOMPLETE_DATA` 警告，不再失败；测试修复未放宽任何预算、期限或断言。P8-stab-2b（`cadac580`，桥接调用改为异步）已合并。“连续 20 次”条件由维护者 2026-10-30 取消（[ADR 0023](decisions/0023-release-4-0-final-criteria.md)） | — | 每个修复配确定性回归用例；20 次重复 | superseded |
 | P8-92 | `check-all` 快照清理：被中断的 `-Clean` 运行留下的快照在其所属进程结束（或进程号被重用）后删除，没有任何标记的快照在 24 小时无变化后删除；运行中、其他 worktree 与本次运行的快照保留。已合并（f494a595） | — | T、V | done |
+| P8-04l2 | 删除 `src/Engine` 剩余的非编译源码、生成器中的引擎行、诊断成员链接、宿主引擎客户端和死条件分支；随后退役 `Compare-SharedNativePaths.py` | P8-04l | T、V | todo（4.0） |
+| P8-04l3 | 为 P8-04l 退役的 34 个引擎候选 check-all 作业补 PLC worker 版（维护者 2026-10-22 批准先退役） | P8-04l | T、V | todo（4.0） |
+| P8-04n | 八版统一对外呈现：精简清单默认启用、服务器说明、提示词与资源、档案名、包装与审批路径、行为披露 | P8-04l | T、V；基线逐项审查 | todo（beta.3） |
+| P8-83 | 审批、审计与计划摘要排除敏感值；大参数下脱敏保持确定且快速（P8-83b）。已合并（`e7e9da54`、`05416b57`） | — | T、V | done |
+| P8-84 | 工作台 TIA 进程选择器：多个 TIA 进程时由用户选择，按 PID 精确附着；MCP 契约不变 | P8-81c | T | todo（beta.3） |
+| P8-93 | 发布采纳同一提交的 check-all 与 CI 证据（`-AdoptEvidence`），发布链独立阶段并行。已合并（`0e437555`）；P8-93b（未被 check-all 覆盖的检查并入 check-all）排在 4.0 前 | P8-04l | T、V | done |
+| P8-94 | `package-test` 命令：几分钟内从 checkout 生成不发布的测试包。已合并（`4b26860f`）；P8-94b（统一构建属性、报告退役文件与日志排除）排在 4.0 前 | — | T | done |
+| P8-95 | EplanMCP 借鉴项 a–g（VM HTTP 加固、“工程内容是数据”说明、防误点、退出确认与单实例、MSIX 配置路径、CI 加固、doctor/audit `schemaVersion`）。维护者 2026-11-01 决定推迟到 4.1 | — | 每项 T | deferred（4.1） |
+| P8-96a | beta.2 的 HMI 复核修复（批 B1、B3、B4、B5）。已合并（`489e6298` 等）；HMI-B3（B6–B8、D6）已合并（`e5c3d365`），随 beta.3 发布 | P8-81e | T、V | done |
+| P8-97 | 编译范围：a 真机核对项已作为预发布清单 T03；b 单块、块组编译在官方 API 核对后随 T-IA 批次排在 beta.4 | — | T | doing |
 
 ## 待维护者决定
 
 1. 线程模型：建议八个版本统一用 MTA，真机验证后定案（见 [P8-04 设计](design/p8-04-engine-retirement.md) 第 3 节）。
-2. 4.0 是否推迟 P8-40、P8-10 第 4–6 批、P8-31f–i 和大的架构整理：目前全部纳入，排在最后再定。
-3. 4.0 正式版的放行条件：维护者 2026-10-20 决定我们不做真机验收，预发布交给其他用户测试；正式版以哪些测试反馈为准尚待决定。
-4. 是否继续使用预览版依赖（MCP SDK 与 Microsoft.Extensions 预览包）发布 4.0。
+2. 是否继续使用预览版依赖（MCP SDK 与 Microsoft.Extensions 预览包）发布 4.0。
+
+其余待决定事项见[发布计划](../status/release-plan.md)“待维护者决定”。
+
+已决定（原第 2、3 项）：
+
+- 2026-10-22：P8-31f–i 与 P8-40 推迟到 4.1；P8-10 第 4–6 批在 4.0 正式版前合并。
+- 2026-10-30：4.0 正式版条件为全部 4.0 任务合并、检查通过、rc 与维护者确认（[ADR 0023](decisions/0023-release-4-0-final-criteria.md)）；2026-11-01 预发布改为测试者测试加我们的 VM 回归（[ADR 0020](decisions/0020-prereleases-tested-by-users.md)）。
 
 ## 风险
 
 | 风险 | 应对 |
 |---|---|
-| 原生语义静默回归 | 兼容快照只守接口；原生语义靠 P0-03 基线在阶段 3、4 结束时回放 |
+| 原生语义静默回归 | 兼容快照只守接口；P0-03 基线未录制，原生语义改由预发布测试者和按真机核对清单的 VM 回归发现（ADR 0020） |
 | 合并前验证覆盖不全（2026-10-20 出现过：引擎测试模式和旧版本响应比对未跑，回归在合并后才发现） | 改动产品行为时，合并前补跑受影响的 check-all 作业和八个版本的响应比对；CI 每个失败步骤都要读，不只看第一个 |
 | 并行任务冲突 | 同一时刻只并行改动路径不重叠的任务；阶段 3 按领域分文件 |
 | 阶段中途需要发版 | 按 [发布流程](release-workflow.md) 完整重建 manifest；不在阶段中间留半迁移状态 |

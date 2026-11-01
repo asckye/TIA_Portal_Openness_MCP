@@ -1,10 +1,10 @@
 # V4 协议偏差清单
 
-状态：现行 · 最后核对：2026-10-11，master `3a227657`
+状态：现行 · 最后核对：2026-11-01，master `27675208`（MCP-02 与 API-04、API-14、API-18、API-19、API-25 的状态）；其余为 2026-10-11，master `3a227657`
 
 > 依据 master `3a227657` 的源码与 `manifest/contracts/v4` 快照，对照 MCP 规范与 Microsoft REST API Guidelines。协议规范见 [V4 工具协议规范](../v4-protocol.md)。
 >
-> 状态：按维护者 2026-10-11 的决定填写。默认采用各条建议；另有决定的条目（MCP-01、MCP-02、MCP-15、API-04）在该条的“状态”中注明；“4.0 前 - P8-60”的条目由任务 P8-60 实施。状态取值见 [设计规范索引](../README.md)。
+> 状态：按维护者 2026-10-11 的决定填写。默认采用各条建议；另有决定的条目（MCP-01、MCP-02、MCP-15、API-04）在该条的“状态”中注明；“4.0 前 - P8-60”的条目由任务 P8-60 实施；P8-60 已合并（`5a01c6f1`、`17731c7f`、`b812237b`），其余条目逐项核对后再标“已完成”。状态取值见 [设计规范索引](../README.md)。
 >
 > 基线优先级（维护者决定 2026-10-11）：先对照 MCP（现行修订 [2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28)；SDK 0.3.0-preview.4 实际协商的最高版本是 [2025-06-18](https://modelcontextprotocol.io/specification/2025-06-18)），再对照 Microsoft REST API Guidelines（[Azure Guidelines](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md)、[Considerations](https://github.com/microsoft/api-guidelines/blob/vNext/azure/ConsiderationsForServiceDesign.md)、[归档版 Microsoft REST API Guidelines](https://github.com/microsoft/api-guidelines/blob/vNext/graph/Guidelines-deprecated.md)）。
 >
@@ -18,9 +18,10 @@
 
 | 状态 | MCP-nn | API-01…17（Microsoft） | API-18…39（内部一致性） | 合计 |
 |---|---:|---:|---:|---:|
-| 4.0 前 - P8-60 | 4 | 7 | 15 | **26** |
+| 4.0 前 - P8-60 | 3 | 7 | 15 | **25** |
 | 4.0 后 | 6 | 1 | 0 | **7** |
 | 有意偏差（已接受） | 6 | 9 | 7 | **22** |
+| 已完成（2026-11-01 核实） | 1 | 0 | 0 | **1** |
 | 合计 | 16 | 17 | 22 | **55** |
 
 4.0 前的 26 项中，API-08 和 API-15 只需要修改文档，API-36 主要是“保留还是删除”的决定。其余为代码或 schema 修改，多数集中在 `src/Logic/V4`、各个 `*ToolContract.cs` 映射器和工具参数定义；修改后需要按照 `docs/development/validation.md` 重新生成八版契约和响应快照。另外，有意偏差中有 6 项需要在 4.0 前把现状写成规范规则：API-11（4.x 演进政策）、API-26、API-32、API-39、MCP-07、MCP-11，这部分文档工作也由 P8-60 完成。MCP-01 要求的“V4 会话”定义已写入 [V4 工具协议规范](../v4-protocol.md) 第 0.4 节。
@@ -47,7 +48,7 @@
 | 编号 | 类别 | 主题 | 建议 | 状态 |
 |---|---|---|---|---|
 | MCP-01 | MCP | 状态绑定在 MCP 传输会话上（现行规范为无状态） | 4.0 后 | 4.0 后 |
-| MCP-02 | MCP | 工具注解缺失，与操作类别不一致 | 4.0 前 | 4.0 前 - P8-60 |
+| MCP-02 | MCP | 工具注解缺失，与操作类别不一致 | 4.0 前 | 已完成（P8-60 `5a01c6f1`、P8-60b `87d99809`） |
 | MCP-03 | MCP | `outputSchema` 覆盖不全、未定型、封闭 | 4.0 前 | 4.0 前 - P8-60 |
 | MCP-04 | MCP | `structuredContent` 内另加信封层 | 保留 | 有意偏差（已接受） |
 | MCP-05 | MCP | 长操作同步阻塞，未使用 tasks 扩展 | 4.0 后 | 4.0 后 |
@@ -65,7 +66,7 @@
 | API-01 | MS | 错误对象结构（没有 target、details[]、innererror） | 保留 | 有意偏差（已接受） |
 | API-02 | MS | 错误码大小写风格（UPPER_SNAKE） | 保留 | 有意偏差（已接受） |
 | API-03 | MS | 闭集枚举、严格读取端、封闭的 meta schema | 4.0 前 | 4.0 前 - P8-60 |
-| API-04 | MS | 多字段校验错误的表达 | 4.0 前 | 4.0 前 - P8-60 |
+| API-04 | MS | 多字段校验错误的表达 | 4.0 前 | 4.0 前 - P8-60（P8-60 已合并；beta.2 真机仍复现，见 DES-4/VMFIX-1） |
 | API-05 | MS | 始终输出 null | 保留 | 有意偏差（已接受） |
 | API-06 | MS | 集合与分页的形状 | 保留 | 有意偏差（已接受） |
 | API-07 | MS | 分页参数名与默认值不统一 | 4.0 前 | 4.0 前 - P8-60 |
@@ -75,18 +76,18 @@
 | API-11 | MS | 版本策略：进程级版本、硬切换、没有演进政策 | 保留 + 文档 | 有意偏差（已接受）；规范补写 P8-60 |
 | API-12 | MS | 没有弃用信号 | 4.0 后 | 4.0 后 |
 | API-13 | MS | 时间戳精度与 data 中的时间格式 | 4.0 前 | 4.0 前 - P8-60 |
-| API-14 | MS | 错误码粒度不足与误用 | 4.0 前 | 4.0 前 - P8-60 |
+| API-14 | MS | 错误码粒度不足与误用 | 4.0 前 | 4.0 前 - P8-60（P8-60 已合并；beta.2 真机仍复现，见 DES-4/VMFIX-1） |
 | API-15 | MS | 字符偏移单位未声明 | 4.0 前（文档） | 4.0 前 - P8-60 |
 | API-16 | MS | `Manage*` 多路复用工具 | 保留 | 有意偏差（已接受） |
 | API-17 | MS | 响应体中的警告 | 保留 | 有意偏差（已接受） |
-| API-18 | 内部 | 预览绑定参数五种叫法 | 4.0 前 | 4.0 前 - P8-60 |
-| API-19 | 内部 | `expectedProject` 的语义不一 | 4.0 前 | 4.0 前 - P8-60 |
+| API-18 | 内部 | 预览绑定参数五种叫法 | 4.0 前 | 4.0 前 - P8-60（P8-60 已合并；beta.2 真机仍复现，见 DES-4/VMFIX-1） |
+| API-19 | 内部 | `expectedProject` 的语义不一 | 4.0 前 | 4.0 前 - P8-60（P8-60 已合并；beta.2 真机仍复现，见 DES-4/VMFIX-1） |
 | API-20 | 内部 | 20 种确认开关（19 个 `confirm*` 加 `allowWrite`） | 保留 | 有意偏差（已接受） |
 | API-21 | 内部 | 计划哈希的两种格式 | 4.0 前 | 4.0 前 - P8-60 |
 | API-22 | 内部 | 计划过期时错误码不一，PLAN_STALE 中放令牌 | 4.0 前 | 4.0 前 - P8-60 |
 | API-23 | 内部 | details 中字符串词表混乱 | 4.0 前 | 4.0 前 - P8-60 |
 | API-24 | 内部 | 省略 null 的例外；COMPILE_ERRORS 绕过校验 | 4.0 前 | 4.0 前 - P8-60 |
-| API-25 | 内部 | `requiresSessionReset` 与实际锁定不一致 | 4.0 前 | 4.0 前 - P8-60 |
+| API-25 | 内部 | `requiresSessionReset` 与实际锁定不一致 | 4.0 前 | 4.0 前 - P8-60（P8-60 已合并；beta.2 真机仍复现，见 DES-4/VMFIX-1） |
 | API-26 | 内部 | TIMEOUT 不用于只读，worker 超时一律为 unknown | 保留（文档） | 有意偏差（已接受）；规范补写 P8-60 |
 | API-27 | 内部 | 取消的映射不一致 | 4.0 前 | 4.0 前 - P8-60 |
 | API-28 | 内部 | 序列化后修改 JSON，绕过校验 | 4.0 前 | 4.0 前 - P8-60 |
@@ -139,7 +140,7 @@
   
   主要风险是 197 个推断出来的分类需要人工核对。
 - **建议：4.0 前修改。** 理由：4.0 是所有客户端刷新工具缓存的时间点，分类数据已经存在。同时把注解纳入契约快照，并增加一致性检查：注解必须与描述前缀的操作类别一致；有 `dryRun` 参数的工具 `readOnlyHint` 必须为 false。
-- **状态**：4.0 前 - P8-60。维护者 2026-10-11 决定：由 `ToolMetadata` 生成工具注解并纳入契约快照；197 个按工具名推断的分类在用于注解前逐个人工核对。
+- **状态**：已完成（P8-60 `5a01c6f1`、P8-60b `87d99809`：注解由 `ToolMetadata` 生成并纳入契约快照；2026-11-01 核实）。原状态：4.0 前 - P8-60。维护者 2026-10-11 决定：由 `ToolMetadata` 生成工具注解并纳入契约快照；197 个按工具名推断的分类在用于注解前逐个人工核对。
 
 ### MCP-03　`outputSchema` 覆盖不全、未定型、封闭
 
@@ -325,7 +326,7 @@
 - **外部影响**：在 `InvalidArgumentDetails` 中新增 `parameters: string[]`（始终输出），是 details 的增量字段。按 API-03 的严格读取端，4.0 之后再加就是破坏性变更，所以应在 4.0 前完成。
 - **成本与风险**：中低。共 45 个构造点，主要在共享准入层；需要重新生成快照。
 - **建议：4.0 前修改。** `parameter` 只放一个字段（第一个出错的字段或 JSON 路径），新增 `parameters` 数组列出全部，**不再**拼接字符串。
-- **状态**：4.0 前 - P8-60。维护者 2026-10-11 决定：V4 错误填写 `details.parameter`，`message` 文本保持不变（C# 侧见 CS-39，由 P8-62 提供辅助方法）。
+- **状态**：仍未结（P8-60 已合并，但 2026-10-31 beta.2 真机测试仍复现，见 DES-4/VMFIX-1 与 `bin-build/vm-test/beta2-20261031/failures.md`）。原状态：4.0 前 - P8-60。维护者 2026-10-11 决定：V4 错误填写 `details.parameter`，`message` 文本保持不变（C# 侧见 CS-39，由 P8-62 提供辅助方法）。
 
 ### API-05　始终输出 null
 
@@ -424,7 +425,7 @@
 - **外部影响**：错误码和 outcome 会改变（参数错误从 read-failed 变为 rejected-before-operation），这些是契约变化；4.0 前修改不额外破坏 3.x 客户端。
 - **成本与风险**：中。需要逐个检查这些映射器的兜底分支，补充类型化的拒绝（旧实现的 status、`PortalErrorCode` 等已经提供了足够的信号），并重新生成响应快照。
 - **建议：4.0 前修改。** 原则：兜底分支 MUST NOT 选用 `INVALID_ARGUMENT`，除非确实能证明是输入错误；无法分类时，宁可使用 `NATIVE_OPERATION_FAILED` 或 `INTERNAL_ERROR`，并保留证据。
-- **状态**：4.0 前 - P8-60
+- **状态**：仍未结（P8-60 已合并，但 2026-10-31 beta.2 真机测试仍复现，见 DES-4/VMFIX-1 与 `bin-build/vm-test/beta2-20261031/failures.md`）。原状态：4.0 前 - P8-60
 
 ### API-15　字符偏移单位未声明
 
@@ -469,7 +470,7 @@
 - **外部影响**：改名会改变 9 个工具的输入 schema；4.0 前修改不额外破坏 3.x 客户端。
 - **成本与风险**：低到中。需要同步示例库、迁移表和快照。
 - **建议：4.0 前修改。** 只保留两类名称：内容摘要统一为 `expected<Thing>Hash`（`expectedPlanHash`、`expectedInventoryHash`；`expectedFingerprint` 改为 `expectedDocumentHash` 或 `expectedPackageHash`）；一次性令牌统一为 `previewToken`（取代 `expectedToken` 和 `token`）。同时修正泄露实现细节的描述。
-- **状态**：4.0 前 - P8-60
+- **状态**：仍未结（P8-60 已合并，但 2026-10-31 beta.2 真机测试仍复现，见 DES-4/VMFIX-1 与 `bin-build/vm-test/beta2-20261031/failures.md`）。原状态：4.0 前 - P8-60
 
 ### API-19　`expectedProject` 的语义不一
 
@@ -477,7 +478,7 @@
 - **外部影响**：`ApplyGenerationPlan` 是 4.0 新增的工具，改名不影响 3.x 客户端。
 - **成本与风险**：低，只涉及 1 个工具。
 - **建议：4.0 前修改。** 把 `ApplyGenerationPlan.expectedProject` 改名为 `expectedProjectFile`；规范中规定 `expectedProject` 只表示工程名。
-- **状态**：4.0 前 - P8-60
+- **状态**：仍未结（P8-60 已合并，但 2026-10-31 beta.2 真机测试仍复现，见 DES-4/VMFIX-1 与 `bin-build/vm-test/beta2-20261031/failures.md`）。原状态：4.0 前 - P8-60
 
 ### API-20　20 种确认开关
 
@@ -534,7 +535,7 @@
 - **外部影响**：如果改为字段等于实际锁定状态，部分 unknown 信封的 `requiresSessionReset` 会变成 false，同时需要放宽校验。另一种做法是保留 true，但把字段定义成“建议重建会话”。两种做法都改变契约的语义。
 - **成本与风险**：低到中。这个字段直接指导模型是否执行恢复流程，含义必须明确。
 - **建议：4.0 前修改。** 推荐让 `requiresSessionReset` 表示“后续 Openness 调用会被拒绝，直到完成恢复”，与实际锁定状态严格一致；unknown 但未锁定的情况仍然禁止重放（OUTCOME_UNKNOWN 本身就带有这一要求）。同步修改 `V4Validation`。
-- **状态**：4.0 前 - P8-60
+- **状态**：仍未结（P8-60 已合并，但 2026-10-31 beta.2 真机测试仍复现，见 DES-4/VMFIX-1 与 `bin-build/vm-test/beta2-20261031/failures.md`）。原状态：4.0 前 - P8-60
 
 ### API-26　TIMEOUT 不用于只读；worker 超时一律为 unknown
 

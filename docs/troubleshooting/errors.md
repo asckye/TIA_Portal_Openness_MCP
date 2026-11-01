@@ -2,7 +2,7 @@
 
 ## V20/V21：Openness 环境未就绪
 
-V20/V21 MCP 服务可以在没有 TIA、TIA 版本与引擎不匹配、Openness API 初始化失败或用户组检查失败时启动，以保留诊断入口。运行 `InitializeEnvironment` 和 `GetEnvironmentDiagnostics` 查看原因及修复步骤。
+V20/V21 MCP 服务可以在没有 TIA、TIA 版本与服务的发布版本不匹配、Openness API 初始化失败或用户组检查失败时启动，以保留诊断入口。运行 `InitializeEnvironment` 和 `GetEnvironmentDiagnostics` 查看原因及修复步骤。
 
 需要 TIA 的调用此时返回 V4 `RESOURCE_UNAVAILABLE`，`error.details.resource` 为 `tia-openness-environment`，`meta.outcome` 为 `rejected-before-operation`、`meta.execution` 为 `not-started`。这表示工具未将操作派发给 Siemens API。修复安装、版本或用户组后重启服务，再读取 `GetOpennessWorkerStatus` 确认环境就绪。
 
@@ -22,6 +22,6 @@ V20/V21 MCP 服务可以在没有 TIA、TIA 版本与引擎不匹配、Openness 
 
 V20/V21可用 `GetOpennessCompatibility` 查看加载程序集版本，用 `GetNativeInvocationLog` 读取已记录的调用边界。日志中的 `BEFORE` / `RETURNED` / `THREW` 用于定位时间和调用；它们不替代业务结果，也不能单独确认 Siemens 崩溃根因。HMI 快照的独立日志及完整性说明见[快照诊断](hmi-snapshots.md)。
 
-需要本机退出证据时，在工作台环境页导出“诊断包”。它会收集最近 24 小时的匹配 Windows 事件、TIA/引擎进程和转储文件清单，以及存在的原生导出日志；转储文件内容不会复制。包内日志和事件经过脱敏，但分享前仍应复核，因为系统消息可能包含私有路径或工程信息。
+需要本机退出证据时，在工作台环境页导出“诊断包”。它会收集最近 24 小时的匹配 Windows 事件、TIA/MCP 服务进程和转储文件清单，以及存在的原生导出日志；转储文件内容不会复制。包内日志和事件经过脱敏，但分享前仍应复核，因为系统消息可能包含私有路径或工程信息。
 
 开发者应沿用现有错误类型和结果封装，不在本页维护第二套编码、异常装饰或日志规范。仓库行尾与编码以 `.gitattributes` 和现有构建检查为准。

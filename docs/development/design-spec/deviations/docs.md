@@ -1,6 +1,6 @@
 # 文档偏差清单
 
-状态：现行 · 测量与最后核对：2026-10-11，master `3a227657`
+状态：现行 · 测量与最后核对：2026-10-11，master `3a227657`；2026-11-01（master `27675208`）复核状态：P8-63 并入 4.0 前的文档重组，条目状态未变，引擎退役后的条目在重组时重测
 
 本清单把现有文档与 [文档写作规范](../documentation-style.md) 及其 Microsoft 基线逐条比较。每项给出规则出处、位置与计数、示例、建议和状态。建议分三类：**4.0 前修改**、**4.0 后修改**、**有意偏差**（写入规范附录 B，不再修改）。状态按维护者 2026-10-11 的决定填写：默认采用建议，另有决定的条目（DOC-01、DOC-02、DOC-05）在状态中注明；“4.0 前 - P8-63”的条目由任务 P8-63 与 P7-11b 一起完成。状态取值见 [设计规范索引](../README.md)。测量覆盖 `docs/**/*.md`、`README.md`、`README.zh-CN.md`、`CLAUDE.md`、`AGENTS.md`、`scripts/README.md`、`plugin/skill/SKILL.md`，必要时加上 `CHANGELOG.md`、`runtime/README.md`、`src/Studio/README.md`。除特别说明外，计数不含生成文档（`tool-matrix.md`、`version-tool-catalog.md`、`v4.0.0-tool-migration.md`）和 `docs/licenses/` 下的许可证原文。计数由临时脚本按正则统计，排除了代码块；接近边界的数字（如硬换行）是近似值，示例均已人工核对。
 

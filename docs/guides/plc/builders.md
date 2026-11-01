@@ -1,6 +1,6 @@
 # PLC XML builders
 
-The builders create XML without connecting to TIA. Their presence in a version's tool list does not mean every XML format they produce belongs to that version. Read `GetToolUsage(toolName="...")` on the selected engine for the current parameters and examples.
+The builders create XML without connecting to TIA. Their presence in a version's tool list does not mean every XML format they produce belongs to that version. Read `GetToolUsage(toolName="...")` on the selected release's service for the current parameters and examples.
 
 ## Select the output format
 
@@ -15,7 +15,7 @@ The builders create XML without connecting to TIA. Their presence in a version's
 | `BuildPlcFbBlock` | SCL FB, without an instance DB | V21 candidate XML |
 | `BuildPlcLadFcBlock` | LAD FC containing FC-call networks | V21 candidate XML |
 
-Use the exact release key: `14sp1`, `15.1`, `16`, `17`, `18`, `19`, `20`, or `21`. Foundation engines require an explicit `outputReleaseKey`; V20/V21 engines default to `21`, so pass the intended target explicitly. Changing an XML version marker is not a format conversion.
+Use the exact release key: `14sp1`, `15.1`, `16`, `17`, `18`, `19`, `20`, or `21`. On V14 SP1–V19 the builders require an explicit `outputReleaseKey`; on V20/V21 they default to `21`, so pass the intended target explicitly. Changing an XML version marker is not a format conversion.
 
 The declaration builders use Interface/v2 for V14 SP1, v3 for V15.1, v4 for V16/V17, and v5 for V18–V21. Interface-fragment XSD checks do not establish that an entire document, CPU or user-defined datatype can be imported into a real project.
 
@@ -24,7 +24,7 @@ The declaration builders use Interface/v2 for V14 SP1, v3 for V15.1, v4 for V16/
 1. Read the selected tool's example with `GetToolUsage`. Builder input is a JSON **string** parameter, such as `udtJson` or `globalDbJson`; do not pass its members as top-level tool arguments.
 2. Build XML for the intended release and inspect the returned content. Build-only tools neither save a file nor import it.
 3. Save the returned XML on the computer running TIA/MCP. Resolve the PLC and group paths from the actual project tree.
-4. Use the current engine's `ImportPlcType`, `ImportPlcBlock` or `ImportPlcTagTable` example for the relevant artifact. Check the actual imported object and path.
+4. Use the current release's `ImportPlcType`, `ImportPlcBlock` or `ImportPlcTagTable` example for the relevant artifact. Check the actual imported object and path.
 5. Compile the PLC and examine the error count and nested diagnostics. Save the project after reviewing the result.
 
 V20/V21 additionally expose `BuildAndImportPlcArtifact`. Its `dryRun=true` produces a plan; `dryRun=false` executes the import. Read its own example and output-format limits before using it. It is absent from the V14 SP1–V19 foundation catalog.

@@ -1,7 +1,7 @@
 # V4 refusal recovery guidance
 
-Both the Foundation host and the V20/V21 engine add one `RECOVERY_GUIDANCE`
-entry to `meta.warnings` for `INVALID_ARGUMENT`, `PRECONDITION_FAILED`,
+FoundationHost adds one `RECOVERY_GUIDANCE` entry on all eight releases to
+`meta.warnings` for `INVALID_ARGUMENT`, `PRECONDITION_FAILED`,
 `SESSION_RESET_REQUIRED`, and `CONFIRMATION_REQUIRED` refusals. Successful
 responses do not receive this warning. The original error code, message,
 parameter, outcome, and execution evidence remain intact.

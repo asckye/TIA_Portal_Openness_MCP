@@ -1,6 +1,6 @@
 # 0006 复用引擎 EXE 作为 V20/V21 的 worker，引擎宿主层退役
 
-- 状态：已采纳
+- 状态：已被 [0022](0022-engine-retirement-and-eight-release-unification.md) 取代（P8-04j2 起 V20/V21 使用 PlcWorker，P8-04l 删除引擎程序）
 - 日期：2026-10-08
 - 决策者：主导者受维护者委托
 - 置信度：高

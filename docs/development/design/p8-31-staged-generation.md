@@ -1,6 +1,6 @@
 # P8-31 分阶段生成执行设计
 
-状态：现行（设计）· P8-31e1–e4 已实施，e5、e6、h1、j1 未实施，任务状态以 [重构计划](../refactor-plan.md) 为准 · 最后核对：2026-10-11，master `3a227657`
+状态：现行（设计）· P8-31e1–e5 已实施（e5 `4d3818f2`）；e6、h1 随 P8-31f–i 推迟到 4.1，j1 的排期待维护者决定；任务状态以 [重构计划](../refactor-plan.md) 和[发布计划](../../status/release-plan.md)为准 · 最后核对：2026-11-01，master `27675208`
 
 [设计规范索引](../design-spec/README.md) · [架构决策记录](../decisions/README.md) · [生成框架方案](project-generation-framework.md) · [架构概览](../design-spec/architecture.md)
 
@@ -419,7 +419,7 @@ SafeV4 候选形态（e6）共用一条 `v4-candidate/1` 规则：
 
 ### 10.1 子任务
 
-子任务状态以 [重构计划](../refactor-plan.md) 的 P8-31 行为准（2026-10-11：e1–e4 已合并，e5、e6、h1、j1 未实施）。
+子任务状态以 [重构计划](../refactor-plan.md) 的 P8-31 行为准（2026-11-01：e1–e5 已合并；e6、h1 推迟到 4.1；j1 待定）。
 
 | 编号 | 对应 §7 行 | 内容 | 主要文件 | 验收 | 依赖 |
 |---|---|---|---|---|---|

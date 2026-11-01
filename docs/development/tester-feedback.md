@@ -4,7 +4,7 @@
 
 [真机验收台账](../reference/real-machine-ledger.md) · [预发布真机验证清单](../guides/beta-tester-checklist.md) · [Issue 表单](../../.github/ISSUE_TEMPLATE) · [当前交接](handoff.md)
 
-本页记录预发布测试者（和维护者自己在真机上看到的现象）的报告及处理结果。维护者不做真机测试（[ADR 0020](decisions/0020-prereleases-tested-by-users.md)），4.0 的真机信息全部来自这里。
+本页记录预发布测试者（和维护者自己在真机上看到的现象）的报告及处理结果。我们在 VM 上按[预发布真机验证清单](../guides/beta-tester-checklist.md)做的回归结果也记在这里（[ADR 0020](decisions/0020-prereleases-tested-by-users.md)，2026-11-01 修订），4.0 的真机信息全部来自这里。2026-10-31 至 11-01 在 V21 上测试 v4.0.0-beta.2 的结果尚待登记（[发布计划](../status/release-plan.md) FB-VM）。
 
 ## 为什么不写进真机验收台账
 
