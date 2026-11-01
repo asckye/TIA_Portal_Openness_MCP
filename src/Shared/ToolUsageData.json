@@ -11149,9 +11149,7 @@
         "preferredMlfb": "6ES7 513-1AM03-0AB0",
         "preferredVersion": "V3.1",
         "deviceName": "PLC_2",
-        "family": "S7-1500",
-        "dryRun": true,
-        "confirm": false
+        "family": "S7-1500"
       },
       "parameters": {
         "preferredVersion": {
@@ -11315,8 +11313,7 @@
               "text": "Ready"
             }
           ]
-        },
-        "dryRun": true
+        }
       },
       "parameters": {},
       "operations": {},
@@ -11344,8 +11341,7 @@
               "text": "Ready"
             }
           ]
-        },
-        "dryRun": true
+        }
       },
       "parameters": {
         "strict": {
@@ -11368,8 +11364,7 @@
             "Text": "0xFF202020",
             "Border": "0xFF808080"
           }
-        },
-        "dryRun": true
+        }
       },
       "parameters": {},
       "operations": {},
@@ -11402,8 +11397,7 @@
     },
     "AttachOpenProject": {
       "arguments": {
-        "projectName": "<file name without extension from selected projectPath>",
-        "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        "projectName": "<file name without extension from selected projectPath>"
       },
       "parameters": {},
       "operations": {},
@@ -11442,8 +11436,7 @@
         "hmiSoftwarePath": "HMI_RT_1",
         "screenName": "/Overview",
         "buttonName": "StartButton",
-        "tagName": "Ready",
-        "dryRun": true
+        "tagName": "Ready"
       },
       "parameters": {},
       "operations": {},
@@ -11456,8 +11449,7 @@
         "screenName": "/Overview",
         "itemName": "StatusText",
         "propertyName": "Visible",
-        "tagName": "Ready",
-        "dryRun": true
+        "tagName": "Ready"
       },
       "parameters": {
         "dataType": {
@@ -11692,10 +11684,7 @@
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
     },
     "CloseProject": {
-      "arguments": {
-        "dryRun": true,
-        "confirm": false
-      },
+      "arguments": {},
       "parameters": {},
       "operations": {},
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
@@ -12055,9 +12044,7 @@
     },
     "CompilePlcDiagnostics": {
       "arguments": {
-        "softwarePath": "<exact softwarePath from GetProjectTree>",
-        "dryRun": true,
-        "confirm": false
+        "softwarePath": "<exact softwarePath from GetProjectTree>"
       },
       "parameters": {
         "password": {
@@ -12075,9 +12062,7 @@
     },
     "CompilePlcSoftware": {
       "arguments": {
-        "softwarePath": "<exact softwarePath from GetProjectTree>",
-        "dryRun": true,
-        "confirm": false
+        "softwarePath": "<exact softwarePath from GetProjectTree>"
       },
       "parameters": {
         "password": {
@@ -12136,7 +12121,7 @@
     },
     "ConnectPortal": {
       "arguments": {
-        "processId": 12345
+        "projectName": "项目1"
       },
       "parameters": {
         "allowStart": {
@@ -12281,9 +12266,7 @@
     "CreateProject": {
       "arguments": {
         "directoryPath": "<existing caller-selected project directory>",
-        "projectName": "<fresh caller-selected project name>",
-        "dryRun": true,
-        "confirm": false
+        "projectName": "<fresh caller-selected project name>"
       },
       "parameters": {
         "closeForeignProject": {
@@ -12373,10 +12356,7 @@
     "DeletePlcExternalSource": {
       "arguments": {
         "softwarePath": "PLC_1",
-        "groupPath": "",
-        "externalSourceName": "FC_Add.scl",
-        "dryRun": true,
-        "confirm": false
+        "externalSourceName": "FC_Add.scl"
       },
       "parameters": {},
       "operations": {},
@@ -12782,8 +12762,7 @@
         "buttonName": "StartButton",
         "eventType": "Down",
         "actionKind": "set-bit",
-        "targetTag": "Ready",
-        "dryRun": true
+        "targetTag": "Ready"
       },
       "parameters": {
         "syntaxCheck": {
@@ -12799,8 +12778,7 @@
         "hmiSoftwarePath": "HMI_RT_1",
         "screenName": "/Overview",
         "buttonName": "StartButton",
-        "eventType": "Down",
-        "dryRun": true
+        "eventType": "Down"
       },
       "parameters": {},
       "operations": {},
@@ -12809,8 +12787,7 @@
     },
     "EnsureUnifiedHmiConnection": {
       "arguments": {
-        "hmiSoftwarePath": "HMI_RT_1",
-        "dryRun": true
+        "hmiSoftwarePath": "HMI_RT_1"
       },
       "parameters": {
         "connectionName": {
@@ -12829,8 +12806,7 @@
         "hmiSoftwarePath": "HMI_RT_1",
         "screenName": "/Overview",
         "itemName": "StatusText",
-        "propertyName": "Visible",
-        "dryRun": true
+        "propertyName": "Visible"
       },
       "parameters": {
         "dynamizationType": {
@@ -12845,8 +12821,7 @@
     "EnsureUnifiedHmiScreen": {
       "arguments": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "/Overview",
-        "dryRun": true
+        "screenName": "/Overview"
       },
       "parameters": {
         "width": {
@@ -12864,8 +12839,7 @@
       "arguments": {
         "hmiSoftwarePath": "HMI_RT_1",
         "screenName": "/Overview",
-        "itemName": "StatusText",
-        "dryRun": true
+        "itemName": "StatusText"
       },
       "parameters": {
         "itemType": {
@@ -12895,10 +12869,7 @@
       "arguments": {
         "hmiSoftwarePath": "HMI_RT_1",
         "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
-        "tagName": "Ready",
-        "plcName": "PLC_1",
-        "plcTag": "<exact PLC tag name from project reads>",
-        "dryRun": true
+        "tagName": "Ready"
       },
       "parameters": {
         "hmiDataType": {
@@ -12928,8 +12899,7 @@
     "EnsureUnifiedHmiTagTable": {
       "arguments": {
         "hmiSoftwarePath": "HMI_RT_1",
-        "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
-        "dryRun": true
+        "tagTableName": "/HmiTags/Diagnostic/DiagInfo"
       },
       "parameters": {},
       "operations": {},
@@ -13314,8 +13284,7 @@
       "arguments": {
         "softwarePath": "HMI_RT_1",
         "connectionName": "PLC_Connection",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
-        "exportOptions": "WithDefaults"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
       },
       "parameters": {},
       "operations": {},
@@ -13324,8 +13293,7 @@
     "ExportHmiProgram": {
       "arguments": {
         "softwarePath": "HMI_RT_1",
-        "exportDir": "C:\\Examples\\exports",
-        "exportOptions": "WithDefaults"
+        "exportDir": "C:\\Examples\\exports"
       },
       "parameters": {
         "exportScreens": {
@@ -13342,8 +13310,7 @@
       "arguments": {
         "softwarePath": "HMI_RT_1",
         "screenName": "/Screen_1",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
-        "exportOptions": "WithDefaults"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
       },
       "parameters": {},
       "operations": {},
@@ -13354,8 +13321,7 @@
       "arguments": {
         "softwarePath": "HMI_RT_1",
         "tagTableName": "/Default tag table",
-        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
-        "exportOptions": "WithDefaults"
+        "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
       },
       "parameters": {},
       "operations": {},
@@ -13379,9 +13345,7 @@
       "arguments": {
         "softwarePath": "<exact softwarePath from GetProjectTree>",
         "blockPath": "Main",
-        "exportPath": "<existing caller-selected export directory>",
-        "dryRun": true,
-        "confirm": false
+        "exportPath": "<existing caller-selected export directory>"
       },
       "parameters": {
         "preservePath": {
@@ -13399,10 +13363,8 @@
     "ExportPlcBlocks": {
       "arguments": {
         "softwarePath": "<exact softwarePath from GetProjectTree>",
-        "groupPath": "",
         "exportPath": "<existing caller-selected batch export directory>",
-        "dryRun": true,
-        "confirm": false
+        "regexName": ""
       },
       "parameters": {
         "preservePath": {
@@ -13438,9 +13400,7 @@
       "arguments": {
         "softwarePath": "<exact softwarePath from GetProjectTree>",
         "tagTableName": "默认变量表",
-        "exportPath": "<new absolute Tags.xml file in an existing caller-selected directory>",
-        "dryRun": true,
-        "confirm": false
+        "exportPath": "<new absolute Tags.xml file in an existing caller-selected directory>"
       },
       "parameters": {},
       "operations": {},
@@ -13455,9 +13415,7 @@
       "arguments": {
         "softwarePath": "<exact softwarePath from GetProjectTree>",
         "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
-        "typePath": "UDT_Status",
-        "dryRun": true,
-        "confirm": false
+        "typePath": "UDT_Status"
       },
       "parameters": {
         "preservePath": {
@@ -13474,10 +13432,7 @@
     "ExportPlcTypes": {
       "arguments": {
         "softwarePath": "<exact softwarePath from GetProjectTree>",
-        "groupPath": "",
-        "exportPath": "<existing caller-selected batch export directory>",
-        "dryRun": true,
-        "confirm": false
+        "exportPath": "<existing caller-selected batch export directory>"
       },
       "parameters": {
         "regexName": {
@@ -13498,9 +13453,7 @@
       "arguments": {
         "softwarePath": "<exact softwarePath from GetProjectTree>",
         "watchTableName": "Watch_1",
-        "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
-        "dryRun": true,
-        "confirm": false
+        "exportPath": "C:\\Examples\\exports\\Watch_1.xml"
       },
       "parameters": {},
       "operations": {},
@@ -13571,8 +13524,7 @@
         "softwarePath": "<exact softwarePath from GetProjectTree>",
         "toName": "SpeedAxis_1",
         "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
-        "dryRun": true,
-        "confirm": false
+        "dryRun": true
       },
       "parameters": {
         "dryRun": {
@@ -13675,9 +13627,7 @@
     "GenerateBlocksFromExternalSource": {
       "arguments": {
         "softwarePath": "PLC_1",
-        "externalSourceName": "FC_Add.scl",
-        "dryRun": true,
-        "confirm": false
+        "externalSourceName": "FC_Add.scl"
       },
       "parameters": {},
       "operations": {},
@@ -14188,7 +14138,8 @@
     },
     "GetToolUsage": {
       "arguments": {
-        "toolName": "ListPlcBlocks"
+        "toolName": "ListPlcBlocks",
+        "exampleKind": "all"
       },
       "parameters": {
         "query": {
@@ -14518,10 +14469,7 @@
       "arguments": {
         "softwarePath": "<exact softwarePath from GetProjectTree>",
         "groupPath": "",
-        "importPath": "<data.outputFile from completed ExportPlcBlock>",
-        "dryRun": true,
-        "confirm": false,
-        "overwrite": false
+        "importPath": "<data.outputFile from completed ExportPlcBlock>"
       },
       "parameters": {},
       "operations": {},
@@ -14560,9 +14508,8 @@
         "groupPath": "",
         "dir": "<existing dedicated import directory containing only intended native XML files>",
         "dryRun": true,
-        "confirm": false,
-        "regexName": "^Main\\.xml$",
-        "overwrite": false
+        "overwrite": false,
+        "regexName": "^Main\\.xml$"
       },
       "parameters": {
         "regexName": {
@@ -14637,9 +14584,7 @@
       "arguments": {
         "softwarePath": "PLC_1",
         "groupPath": "",
-        "filePath": "C:/Examples/FC_Add.scl",
-        "dryRun": true,
-        "confirm": false
+        "filePath": "C:/Examples/FC_Add.scl"
       },
       "parameters": {},
       "operations": {},
@@ -14654,9 +14599,8 @@
         "softwarePath": "<exact softwarePath from GetProjectTree>",
         "sourceDir": "<existing dedicated import directory containing only intended native XML files>",
         "dryRun": true,
-        "confirm": false,
-        "regexName": "^Main\\.xml$",
         "overwrite": false,
+        "regexName": "^Main\\.xml$",
         "compileAfter": false,
         "stopOnImportFailure": true
       },
@@ -14757,10 +14701,7 @@
       "arguments": {
         "softwarePath": "<exact softwarePath from GetProjectTree>",
         "folderPath": "",
-        "importPath": "<data.outputFile from completed ExportPlcTagTable>",
-        "dryRun": true,
-        "confirm": false,
-        "overwrite": false
+        "importPath": "<data.outputFile from completed ExportPlcTagTable>"
       },
       "parameters": {},
       "operations": {},
@@ -14799,10 +14740,7 @@
       "arguments": {
         "softwarePath": "<exact softwarePath from GetProjectTree>",
         "groupPath": "",
-        "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
-        "dryRun": true,
-        "confirm": false,
-        "overwrite": false
+        "importPath": "C:\\Examples\\exports\\UDT_Status.xml"
       },
       "parameters": {},
       "operations": {},
@@ -15054,7 +14992,8 @@
     },
     "ListPlcBlocks": {
       "arguments": {
-        "softwarePath": "<exact softwarePath from GetProjectTree>"
+        "softwarePath": "<exact softwarePath from GetProjectTree>",
+        "regexName": "FB_.*"
       },
       "parameters": {},
       "operations": {},
@@ -21164,8 +21103,7 @@
         ],
         "confirmDelete": false,
         "dryRun": true,
-        "action": "read",
-        "collectionProperty": "Interface"
+        "action": "read"
       },
       "parameters": {
         "collectionProperty": {
@@ -21546,9 +21484,7 @@
     },
     "OpenProject": {
       "arguments": {
-        "path": "<exact caller-selected closed project file for this release>",
-        "dryRun": true,
-        "confirm": false
+        "path": "<exact caller-selected closed project file for this release>"
       },
       "parameters": {
         "closeForeignProject": {
@@ -22909,7 +22845,9 @@
         "softwarePath": "HMI_RT_1",
         "expectedProject": "Example",
         "screenPath": "/Overview",
-        "itemName": "MotorFaceplate_1"
+        "itemName": "MotorFaceplate_1",
+        "typePath": "UDT_Status",
+        "version": "<version from target discovery>"
       },
       "parameters": {
         "version": {
@@ -23326,6 +23264,8 @@
     },
     "RunCapabilitySelfTest": {
       "arguments": {
+        "expectedPlcSoftwarePath": "PLC_1",
+        "expectedHmiSoftwarePath": "HMI_RT_1",
         "connectIfNeeded": false,
         "includeProjectTree": false,
         "inspectPortalProcesses": false
@@ -23554,10 +23494,7 @@
       ]
     },
     "SaveProject": {
-      "arguments": {
-        "dryRun": true,
-        "confirm": false
-      },
+      "arguments": {},
       "parameters": {},
       "operations": {},
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
@@ -23626,7 +23563,8 @@
     },
     "SearchHardwareCatalog": {
       "arguments": {
-        "keyword": "1513"
+        "keyword": "1513",
+        "limit": 10
       },
       "parameters": {},
       "operations": {},
@@ -23807,8 +23745,7 @@
     },
     "SetPlcPutGetAccess": {
       "arguments": {
-        "devicePath": "PLC_1",
-        "dryRun": true
+        "devicePath": "PLC_1"
       },
       "parameters": {
         "enable": {
@@ -24559,9 +24496,7 @@
       "arguments": {
         "softwarePath": "PLC_1",
         "blockPath": "Main",
-        "exportPath": "C:\\Examples\\exports",
-        "dryRun": true,
-        "confirm": false
+        "exportPath": "C:\\Examples\\exports"
       },
       "parameters": {
         "preservePath": {
@@ -24579,9 +24514,7 @@
       "arguments": {
         "softwarePath": "PLC_1",
         "exportPath": "C:\\Examples\\exports",
-        "dryRun": true,
-        "confirm": false,
-        "groupPath": "<exact caller-selected block group containing the intended FB blocks>"
+        "regexName": "FB_.*"
       },
       "parameters": {
         "preservePath": {
@@ -24648,11 +24581,7 @@
         "softwarePath": "PLC_1",
         "groupPath": "",
         "importPath": "C:\\Examples\\documents",
-        "dryRun": true,
-        "confirm": false,
-        "fileNamesWithoutExtension": [
-          "<exact document basename from the import directory>"
-        ]
+        "regexName": ""
       },
       "parameters": {
         "importOption": {
@@ -24673,9 +24602,7 @@
         "groupPath": "",
         "importPath": "C:\\Examples\\documents",
         "fileNameWithoutExtension": "FC_Add",
-        "dryRun": true,
-        "confirm": false,
-        "overwrite": true
+        "importOption": "Override"
       },
       "parameters": {},
       "operations": {},
@@ -24783,7 +24710,6 @@
     },
     "BuildFlgNetCall": {
       "arguments": {
-        "outputReleaseKey": "21",
         "flgNet": {
           "callName": "FC_Ready",
           "parameters": [
@@ -24833,11 +24759,7 @@
     },
     "BuildPlcSymbolManifestFromPath": {
       "arguments": {
-        "inputRoot": "<existing caller-owned immutable symbol export directory>",
-        "files": [
-          "<relative tag-table XML from ExportPlcTagTable or global DB export>"
-        ],
-        "expectedOrigin": "caller-owned-immutable-export-snapshot"
+        "path": "C:\\Examples\\snapshot"
       },
       "parameters": {
         "path": {
@@ -24893,7 +24815,6 @@
     },
     "BuildStructuredText": {
       "arguments": {
-        "outputReleaseKey": "21",
         "structuredText": {
           "operations": [
             {
@@ -24951,7 +24872,6 @@
     },
     "BuildPlcFbBlock": {
       "arguments": {
-        "outputReleaseKey": "21",
         "fbBlock": {
           "blockName": "FB_Ready",
           "blockNumber": 11,
@@ -24981,7 +24901,6 @@
     },
     "BuildPlcFcBlock": {
       "arguments": {
-        "outputReleaseKey": "21",
         "fcBlock": {
           "blockName": "FC_Ready",
           "blockNumber": 10,
@@ -25011,7 +24930,6 @@
     },
     "BuildPlcLadFcBlock": {
       "arguments": {
-        "outputReleaseKey": "21",
         "ladFcBlock": {
           "blockName": "FC_Lad",
           "blockNumber": 12,

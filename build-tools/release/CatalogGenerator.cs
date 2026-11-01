@@ -163,7 +163,7 @@ internal static class CatalogGenerator
         var servedEngineReleases = new JsonObject();
         foreach (var (key, rows) in engineReleases)
             servedEngineReleases[key] = new JsonArray(rows!.AsArray().Select(row => { var copy = row!.DeepClone(); var name = Text(copy["currentName"]);
-                copy["arguments"] = CurrentArguments(name, copy["arguments"]!.AsObject(), calls["full-engine"]?[name]?["arguments"] as JsonObject); return (JsonNode?)copy; }).ToArray());
+                copy["arguments"] = CurrentArguments(name, copy["arguments"]!.AsObject(), calls["full-engine"]?[name]?["arguments"] as JsonObject, sourceKeys: true); return (JsonNode?)copy; }).ToArray());
         var runtime = new JsonObject { ["schemaVersion"] = 1, ["contractVersion"] = 4, ["foundationLite"] = true, ["behaviorPolicies"] = policies, ["behaviorEntries"] = entries, ["releases"] = releases, ["engineSourceReleases"] = servedEngineReleases };
         var rejections = new JsonObject { ["contractVersion"] = 4, ["releases"] = new JsonObject() };
         var defaultSources = string.Join('\n', Repository.GitFiles(root, "src/Engine", "src/Logic")
@@ -208,11 +208,18 @@ internal static class CatalogGenerator
         else { var finish = ledger.IndexOf('\n', ledger.IndexOf("| P6-PRODUCT ", StringComparison.Ordinal)); outputs["docs/reference/real-machine-ledger.md"] = ledger[..finish] + "\n\n" + block + ledger[finish..]; }
         return outputs;
     }
-    internal static JsonObject CurrentArguments(string name, JsonObject source, JsonObject? curated)
+    internal static JsonObject CurrentArguments(string name, JsonObject source, JsonObject? curated, bool sourceKeys = false)
     {
         // Frozen engine examples remain comparison and rejection evidence. Live examples are the
         // maintained call library whenever it has an entry, and must satisfy every declared input pattern.
+        // Engine-source rows keep the frozen parameter set (the engine schema) and take the library values.
         var arguments = (curated ?? source).DeepClone().AsObject();
+        if (sourceKeys && curated != null)
+        {
+            arguments = new JsonObject();
+            foreach (var parameter in source)
+                arguments[parameter.Key] = (curated.ContainsKey(parameter.Key) ? curated[parameter.Key] : parameter.Value)?.DeepClone();
+        }
         foreach (var parameter in arguments)
         {
             var pattern = TiaMcpServer.ModelContextProtocol.ToolMetadata.Parameter(name, parameter.Key)?.Pattern;

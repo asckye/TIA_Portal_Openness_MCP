@@ -62,10 +62,11 @@ public sealed class HmiTagPathCatalogTests
             var row = catalog["releases"]![release]!.AsArray().Single(r => (string?)r!["currentName"] == "DeleteHmiTag")!;
             Assert.Equal("/Table", (string?)row["arguments"]?["tagTablePath"]);
         }
-        // GetToolUsage serves the engine-source rows on 20/21: every argument comes from the maintained
-        // call library (real-machine V21 test 2026-10-31: frozen engine values were wrong examples), while the
-        // frozen fixture stays byte-equal comparison and rejection evidence.
-        var frozen = CatalogJson.Read(root, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceExamples.json")["DeleteHmiTag"]!["arguments"]!.AsObject();
+        // GetToolUsage serves the engine-source rows on 20/21: they keep the frozen parameter set (the engine
+        // schema) and take every value the maintained call library has (real-machine V21 test 2026-10-31: frozen
+        // engine values were wrong examples), while the frozen fixture stays byte-equal comparison and rejection evidence.
+        var fixture = CatalogJson.Read(root, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceExamples.json");
+        var frozen = fixture["DeleteHmiTag"]!["arguments"]!.AsObject();
         var calls = CatalogJson.Read(root, "reference/tool-examples/calls.json")["profiles"]!["full-engine"]!.AsObject();
         string pattern = TiaMcpServer.ModelContextProtocol.ToolMetadata.Parameter("DeleteHmiTag", "tagTablePath")!.Pattern!;
         Assert.Equal("exact", (string?)frozen["tagTablePath"]);
@@ -74,8 +75,11 @@ public sealed class HmiTagPathCatalogTests
             foreach (var row in catalog["engineSourceReleases"]![release]!.AsArray())
             {
                 string name = (string)row!["currentName"]!;
-                if (calls[name]?["arguments"] is JsonObject library)
-                    Assert.True(JsonNode.DeepEquals(library, row["arguments"]), release + "/" + name);
+                if (calls[name]?["arguments"] is not JsonObject library || fixture[name]?["arguments"] is not JsonObject source) continue;
+                var served = row["arguments"]!.AsObject();
+                Assert.Equal(source.Select(p => p.Key), served.Select(p => p.Key));
+                foreach (var (key, value) in served)
+                    Assert.True(JsonNode.DeepEquals(library.ContainsKey(key) ? library[key] : source[key], value), release + "/" + name + "/" + key);
             }
             var arguments = catalog["engineSourceReleases"]![release]!.AsArray().Single(r => (string?)r!["currentName"] == "DeleteHmiTag")!["arguments"]!.AsObject();
             Assert.Equal("/Table", (string?)arguments["tagTablePath"]);

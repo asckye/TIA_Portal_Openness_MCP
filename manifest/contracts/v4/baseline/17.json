@@ -23538,7 +23538,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "8816261bce62776d16a62a5dd0d6a61b1c8dbb15aaea2f818433a351a6469d74",
+      "descriptionSha256": "46aedf5f96eaf70876aecf14d7033b79b624c8335737c5ec8d26cc325fa772f1",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -23553,7 +23553,7 @@
           "spec": {
             "description": "spec: JSON object describing the project to generate. See tool description for keys.",
             "examples": [
-              "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}"
+              "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AM03-0AB0\",\"plcVersion\":\"V3.0\"}"
             ],
             "type": "string"
           }

@@ -80517,8 +80517,7 @@
                 "text": "Ready"
               }
             ]
-          },
-          "dryRun": true
+          }
         },
         "envelopeVersion": 4
       },
@@ -80549,8 +80548,7 @@
                 "text": "Ready"
               }
             ]
-          },
-          "dryRun": true
+          }
         },
         "envelopeVersion": 4
       },
@@ -80572,8 +80570,7 @@
               "Text": "0xFF202020",
               "Border": "0xFF808080"
             }
-          },
-          "dryRun": true
+          }
         },
         "envelopeVersion": 4
       },
@@ -80614,8 +80611,7 @@
           "lite"
         ],
         "arguments": {
-          "projectName": "&lt;file name without extension from selected projectPath&gt;",
-          "expectedProjectFile": "&lt;exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile&gt;"
+          "projectName": "&lt;file name without extension from selected projectPath&gt;"
         },
         "envelopeVersion": 4
       },
@@ -80643,8 +80639,7 @@
           "screenName": "/Overview",
           "itemName": "StatusText",
           "propertyName": "Visible",
-          "tagName": "Ready",
-          "dryRun": true
+          "tagName": "Ready"
         },
         "envelopeVersion": 4
       },
@@ -80754,7 +80749,6 @@
           "full"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
           "flgNet": {
             "callName": "FC_Ready",
             "parameters": [
@@ -80804,11 +80798,7 @@
           "full"
         ],
         "arguments": {
-          "inputRoot": "&lt;existing caller-owned immutable symbol export directory&gt;",
-          "files": [
-            "&lt;relative tag-table XML from ExportPlcTagTable or global DB export&gt;"
-          ],
-          "expectedOrigin": "caller-owned-immutable-export-snapshot"
+          "path": "C:\\Examples\\snapshot"
         },
         "envelopeVersion": 4
       },
@@ -80927,7 +80917,6 @@
           "full"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
           "structuredText": {
             "operations": [
               {
@@ -81103,10 +81092,7 @@
           "full",
           "lite"
         ],
-        "arguments": {
-          "dryRun": true,
-          "confirm": false
-        },
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -81364,9 +81350,7 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "dryRun": true,
-          "confirm": false
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -81378,9 +81362,7 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "dryRun": true,
-          "confirm": false
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -81447,7 +81429,7 @@
           "lite"
         ],
         "arguments": {
-          "processId": 12345
+          "projectName": "项目1"
         },
         "envelopeVersion": 4
       },
@@ -81529,9 +81511,7 @@
           "preferredMlfb": "6ES7 513-1AM03-0AB0",
           "preferredVersion": "V3.1",
           "deviceName": "PLC_2",
-          "family": "S7-1500",
-          "dryRun": true,
-          "confirm": false
+          "family": "S7-1500"
         },
         "envelopeVersion": 4
       },
@@ -81601,9 +81581,7 @@
         ],
         "arguments": {
           "directoryPath": "&lt;existing caller-selected project directory&gt;",
-          "projectName": "&lt;fresh caller-selected project name&gt;",
-          "dryRun": true,
-          "confirm": false
+          "projectName": "&lt;fresh caller-selected project name&gt;"
         },
         "envelopeVersion": 4
       },
@@ -81712,10 +81690,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "groupPath": "",
-          "externalSourceName": "FC_Add.scl",
-          "dryRun": true,
-          "confirm": false
+          "externalSourceName": "FC_Add.scl"
         },
         "envelopeVersion": 4
       },
@@ -82024,8 +81999,7 @@
           "buttonName": "StartButton",
           "eventType": "Down",
           "actionKind": "set-bit",
-          "targetTag": "Ready",
-          "dryRun": true
+          "targetTag": "Ready"
         },
         "envelopeVersion": 4
       },
@@ -82040,8 +82014,7 @@
           "hmiSoftwarePath": "HMI_RT_1",
           "screenName": "/Overview",
           "buttonName": "StartButton",
-          "eventType": "Down",
-          "dryRun": true
+          "eventType": "Down"
         },
         "envelopeVersion": 4
       },
@@ -82053,8 +82026,7 @@
           "full"
         ],
         "arguments": {
-          "hmiSoftwarePath": "HMI_RT_1",
-          "dryRun": true
+          "hmiSoftwarePath": "HMI_RT_1"
         },
         "envelopeVersion": 4
       },
@@ -82069,8 +82041,7 @@
           "hmiSoftwarePath": "HMI_RT_1",
           "screenName": "/Overview",
           "itemName": "StatusText",
-          "propertyName": "Visible",
-          "dryRun": true
+          "propertyName": "Visible"
         },
         "envelopeVersion": 4
       },
@@ -82083,8 +82054,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "/Overview",
-          "dryRun": true
+          "screenName": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -82098,8 +82068,7 @@
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
           "screenName": "/Overview",
-          "itemName": "StatusText",
-          "dryRun": true
+          "itemName": "StatusText"
         },
         "envelopeVersion": 4
       },
@@ -82113,10 +82082,7 @@
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
           "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
-          "tagName": "Ready",
-          "plcName": "PLC_1",
-          "plcTag": "&lt;exact PLC tag name from project reads&gt;",
-          "dryRun": true
+          "tagName": "Ready"
         },
         "envelopeVersion": 4
       },
@@ -82129,8 +82095,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
-          "dryRun": true
+          "tagTableName": "/HmiTags/Diagnostic/DiagInfo"
         },
         "envelopeVersion": 4
       },
@@ -82324,8 +82289,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
-          "exportOptions": "WithDefaults"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
         },
         "envelopeVersion": 4
       },
@@ -82338,8 +82302,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDir": "C:\\Examples\\exports",
-          "exportOptions": "WithDefaults"
+          "exportDir": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -82353,8 +82316,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "screenName": "/Screen_1",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
-          "exportOptions": "WithDefaults"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
         },
         "envelopeVersion": 4
       },
@@ -82368,8 +82330,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "/Default tag table",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
-          "exportOptions": "WithDefaults"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
         },
         "envelopeVersion": 4
       },
@@ -82398,9 +82359,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main",
-          "exportPath": "&lt;existing caller-selected export directory&gt;",
-          "dryRun": true,
-          "confirm": false
+          "exportPath": "&lt;existing caller-selected export directory&gt;"
         },
         "envelopeVersion": 4
       },
@@ -82414,9 +82373,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "blockPath": "Main",
-          "exportPath": "C:\\Examples\\exports",
-          "dryRun": true,
-          "confirm": false
+          "exportPath": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -82429,10 +82386,8 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "groupPath": "",
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
-          "dryRun": true,
-          "confirm": false
+          "regexName": ""
         },
         "envelopeVersion": 4
       },
@@ -82446,9 +82401,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports",
-          "dryRun": true,
-          "confirm": false,
-          "groupPath": "&lt;exact caller-selected block group containing the intended FB blocks&gt;"
+          "regexName": "FB_.*"
         },
         "envelopeVersion": 4
       },
@@ -82478,9 +82431,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
-          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
-          "dryRun": true,
-          "confirm": false
+          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;"
         },
         "envelopeVersion": 4
       },
@@ -82495,9 +82446,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
-          "typePath": "UDT_Status",
-          "dryRun": true,
-          "confirm": false
+          "typePath": "UDT_Status"
         },
         "envelopeVersion": 4
       },
@@ -82510,10 +82459,7 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "groupPath": "",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
-          "dryRun": true,
-          "confirm": false
+          "exportPath": "&lt;existing caller-selected batch export directory&gt;"
         },
         "envelopeVersion": 4
       },
@@ -82527,9 +82473,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "watchTableName": "Watch_1",
-          "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
-          "dryRun": true,
-          "confirm": false
+          "exportPath": "C:\\Examples\\exports\\Watch_1.xml"
         },
         "envelopeVersion": 4
       },
@@ -82599,8 +82543,7 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "toName": "SpeedAxis_1",
           "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
-          "dryRun": true,
-          "confirm": false
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -82683,9 +82626,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "externalSourceName": "FC_Add.scl",
-          "dryRun": true,
-          "confirm": false
+          "externalSourceName": "FC_Add.scl"
         },
         "envelopeVersion": 4
       },
@@ -83576,7 +83517,8 @@
           "lite"
         ],
         "arguments": {
-          "toolName": "ListPlcBlocks"
+          "toolName": "ListPlcBlocks",
+          "exampleKind": "all"
         },
         "envelopeVersion": 4
       },
@@ -83639,7 +83581,9 @@
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
           "screenPath": "/Overview",
-          "itemName": "MotorFaceplate_1"
+          "itemName": "MotorFaceplate_1",
+          "typePath": "UDT_Status",
+          "version": "&lt;version from target discovery&gt;"
         },
         "envelopeVersion": 4
       },
@@ -84036,10 +83980,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "importPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "dryRun": true,
-          "confirm": false,
-          "overwrite": false
+          "importPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;"
         },
         "envelopeVersion": 4
       },
@@ -84055,9 +83996,7 @@
           "groupPath": "",
           "importPath": "C:\\Examples\\documents",
           "fileNameWithoutExtension": "FC_Add",
-          "dryRun": true,
-          "confirm": false,
-          "overwrite": true
+          "importOption": "Override"
         },
         "envelopeVersion": 4
       },
@@ -84089,11 +84028,7 @@
           "softwarePath": "PLC_1",
           "groupPath": "",
           "importPath": "C:\\Examples\\documents",
-          "dryRun": true,
-          "confirm": false,
-          "fileNamesWithoutExtension": [
-            "&lt;exact document basename from the import directory&gt;"
-          ]
+          "regexName": ""
         },
         "envelopeVersion": 4
       },
@@ -84109,9 +84044,8 @@
           "groupPath": "",
           "dir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
           "dryRun": true,
-          "confirm": false,
-          "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "regexName": "^Main\\.xml$"
         },
         "envelopeVersion": 4
       },
@@ -84126,9 +84060,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "groupPath": "",
-          "filePath": "C:/Examples/FC_Add.scl",
-          "dryRun": true,
-          "confirm": false
+          "filePath": "C:/Examples/FC_Add.scl"
         },
         "envelopeVersion": 4
       },
@@ -84143,9 +84075,8 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "sourceDir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
           "dryRun": true,
-          "confirm": false,
-          "regexName": "^Main\\.xml$",
           "overwrite": false,
+          "regexName": "^Main\\.xml$",
           "compileAfter": false,
           "stopOnImportFailure": true
         },
@@ -84162,10 +84093,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "folderPath": "",
-          "importPath": "&lt;data.outputFile from completed ExportPlcTagTable&gt;",
-          "dryRun": true,
-          "confirm": false,
-          "overwrite": false
+          "importPath": "&lt;data.outputFile from completed ExportPlcTagTable&gt;"
         },
         "envelopeVersion": 4
       },
@@ -84194,10 +84122,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
-          "dryRun": true,
-          "confirm": false,
-          "overwrite": false
+          "importPath": "C:\\Examples\\exports\\UDT_Status.xml"
         },
         "envelopeVersion": 4
       },
@@ -84624,7 +84549,8 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "regexName": "FB_.*"
         },
         "envelopeVersion": 4
       },
@@ -86270,8 +86196,7 @@
           ],
           "confirmDelete": false,
           "dryRun": true,
-          "action": "read",
-          "collectionProperty": "Interface"
+          "action": "read"
         },
         "envelopeVersion": 4
       },
@@ -86402,9 +86327,7 @@
           "lite"
         ],
         "arguments": {
-          "path": "&lt;exact caller-selected closed project file for this release&gt;",
-          "dryRun": true,
-          "confirm": false
+          "path": "&lt;exact caller-selected closed project file for this release&gt;"
         },
         "envelopeVersion": 4
       },
@@ -86767,6 +86690,8 @@
           "full"
         ],
         "arguments": {
+          "expectedPlcSoftwarePath": "PLC_1",
+          "expectedHmiSoftwarePath": "HMI_RT_1",
           "connectIfNeeded": false,
           "includeProjectTree": false,
           "inspectPortalProcesses": false
@@ -86986,10 +86911,7 @@
           "full",
           "lite"
         ],
-        "arguments": {
-          "dryRun": true,
-          "confirm": false
-        },
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -87038,7 +86960,8 @@
           "lite"
         ],
         "arguments": {
-          "keyword": "1513"
+          "keyword": "1513",
+          "limit": 10
         },
         "envelopeVersion": 4
       },
@@ -87194,8 +87117,7 @@
           "full"
         ],
         "arguments": {
-          "devicePath": "PLC_1",
-          "dryRun": true
+          "devicePath": "PLC_1"
         },
         "envelopeVersion": 4
       },
@@ -87826,8 +87748,7 @@
                 "text": "Ready"
               }
             ]
-          },
-          "dryRun": true
+          }
         },
         "envelopeVersion": 4
       },
@@ -87858,8 +87779,7 @@
                 "text": "Ready"
               }
             ]
-          },
-          "dryRun": true
+          }
         },
         "envelopeVersion": 4
       },
@@ -87881,8 +87801,7 @@
               "Text": "0xFF202020",
               "Border": "0xFF808080"
             }
-          },
-          "dryRun": true
+          }
         },
         "envelopeVersion": 4
       },
@@ -87923,8 +87842,7 @@
           "lite"
         ],
         "arguments": {
-          "projectName": "&lt;file name without extension from selected projectPath&gt;",
-          "expectedProjectFile": "&lt;exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile&gt;"
+          "projectName": "&lt;file name without extension from selected projectPath&gt;"
         },
         "envelopeVersion": 4
       },
@@ -87951,8 +87869,7 @@
           "hmiSoftwarePath": "HMI_RT_1",
           "screenName": "/Overview",
           "buttonName": "StartButton",
-          "tagName": "Ready",
-          "dryRun": true
+          "tagName": "Ready"
         },
         "envelopeVersion": 4
       },
@@ -87968,8 +87885,7 @@
           "screenName": "/Overview",
           "itemName": "StatusText",
           "propertyName": "Visible",
-          "tagName": "Ready",
-          "dryRun": true
+          "tagName": "Ready"
         },
         "envelopeVersion": 4
       },
@@ -88142,7 +88058,6 @@
           "full"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
           "flgNet": {
             "callName": "FC_Ready",
             "parameters": [
@@ -88192,7 +88107,6 @@
           "full"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
           "fbBlock": {
             "blockName": "FB_Ready",
             "blockNumber": 11,
@@ -88224,7 +88138,6 @@
           "full"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
           "fcBlock": {
             "blockName": "FC_Ready",
             "blockNumber": 10,
@@ -88280,7 +88193,6 @@
           "full"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
           "ladFcBlock": {
             "blockName": "FC_Lad",
             "blockNumber": 12,
@@ -88314,11 +88226,7 @@
           "full"
         ],
         "arguments": {
-          "inputRoot": "&lt;existing caller-owned immutable symbol export directory&gt;",
-          "files": [
-            "&lt;relative tag-table XML from ExportPlcTagTable or global DB export&gt;"
-          ],
-          "expectedOrigin": "caller-owned-immutable-export-snapshot"
+          "path": "C:\\Examples\\snapshot"
         },
         "envelopeVersion": 4
       },
@@ -88437,7 +88345,6 @@
           "full"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
           "structuredText": {
             "operations": [
               {
@@ -88613,10 +88520,7 @@
           "full",
           "lite"
         ],
-        "arguments": {
-          "dryRun": true,
-          "confirm": false
-        },
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -88874,9 +88778,7 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "dryRun": true,
-          "confirm": false
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -88888,9 +88790,7 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "dryRun": true,
-          "confirm": false
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4
       },
@@ -88957,7 +88857,7 @@
           "lite"
         ],
         "arguments": {
-          "processId": 12345
+          "projectName": "项目1"
         },
         "envelopeVersion": 4
       },
@@ -89039,9 +88939,7 @@
           "preferredMlfb": "6ES7 513-1AM03-0AB0",
           "preferredVersion": "V3.1",
           "deviceName": "PLC_2",
-          "family": "S7-1500",
-          "dryRun": true,
-          "confirm": false
+          "family": "S7-1500"
         },
         "envelopeVersion": 4
       },
@@ -89111,9 +89009,7 @@
         ],
         "arguments": {
           "directoryPath": "&lt;existing caller-selected project directory&gt;",
-          "projectName": "&lt;fresh caller-selected project name&gt;",
-          "dryRun": true,
-          "confirm": false
+          "projectName": "&lt;fresh caller-selected project name&gt;"
         },
         "envelopeVersion": 4
       },
@@ -89222,10 +89118,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "groupPath": "",
-          "externalSourceName": "FC_Add.scl",
-          "dryRun": true,
-          "confirm": false
+          "externalSourceName": "FC_Add.scl"
         },
         "envelopeVersion": 4
       },
@@ -89534,8 +89427,7 @@
           "buttonName": "StartButton",
           "eventType": "Down",
           "actionKind": "set-bit",
-          "targetTag": "Ready",
-          "dryRun": true
+          "targetTag": "Ready"
         },
         "envelopeVersion": 4
       },
@@ -89550,8 +89442,7 @@
           "hmiSoftwarePath": "HMI_RT_1",
           "screenName": "/Overview",
           "buttonName": "StartButton",
-          "eventType": "Down",
-          "dryRun": true
+          "eventType": "Down"
         },
         "envelopeVersion": 4
       },
@@ -89563,8 +89454,7 @@
           "full"
         ],
         "arguments": {
-          "hmiSoftwarePath": "HMI_RT_1",
-          "dryRun": true
+          "hmiSoftwarePath": "HMI_RT_1"
         },
         "envelopeVersion": 4
       },
@@ -89579,8 +89469,7 @@
           "hmiSoftwarePath": "HMI_RT_1",
           "screenName": "/Overview",
           "itemName": "StatusText",
-          "propertyName": "Visible",
-          "dryRun": true
+          "propertyName": "Visible"
         },
         "envelopeVersion": 4
       },
@@ -89593,8 +89482,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "/Overview",
-          "dryRun": true
+          "screenName": "/Overview"
         },
         "envelopeVersion": 4
       },
@@ -89608,8 +89496,7 @@
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
           "screenName": "/Overview",
-          "itemName": "StatusText",
-          "dryRun": true
+          "itemName": "StatusText"
         },
         "envelopeVersion": 4
       },
@@ -89623,10 +89510,7 @@
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
           "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
-          "tagName": "Ready",
-          "plcName": "PLC_1",
-          "plcTag": "&lt;exact PLC tag name from project reads&gt;",
-          "dryRun": true
+          "tagName": "Ready"
         },
         "envelopeVersion": 4
       },
@@ -89639,8 +89523,7 @@
         ],
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "tagTableName": "/HmiTags/Diagnostic/DiagInfo",
-          "dryRun": true
+          "tagTableName": "/HmiTags/Diagnostic/DiagInfo"
         },
         "envelopeVersion": 4
       },
@@ -89834,8 +89717,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "connectionName": "PLC_Connection",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml",
-          "exportOptions": "WithDefaults"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiConnection.xml"
         },
         "envelopeVersion": 4
       },
@@ -89848,8 +89730,7 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "exportDir": "C:\\Examples\\exports",
-          "exportOptions": "WithDefaults"
+          "exportDir": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -89863,8 +89744,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "screenName": "/Screen_1",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml",
-          "exportOptions": "WithDefaults"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiScreen.xml"
         },
         "envelopeVersion": 4
       },
@@ -89878,8 +89758,7 @@
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "/Default tag table",
-          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml",
-          "exportOptions": "WithDefaults"
+          "exportPath": "C:\\Examples\\exports\\ExportHmiTagTable.xml"
         },
         "envelopeVersion": 4
       },
@@ -89908,9 +89787,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "blockPath": "Main",
-          "exportPath": "&lt;existing caller-selected export directory&gt;",
-          "dryRun": true,
-          "confirm": false
+          "exportPath": "&lt;existing caller-selected export directory&gt;"
         },
         "envelopeVersion": 4
       },
@@ -89924,9 +89801,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "blockPath": "Main",
-          "exportPath": "C:\\Examples\\exports",
-          "dryRun": true,
-          "confirm": false
+          "exportPath": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -89939,10 +89814,8 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "groupPath": "",
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
-          "dryRun": true,
-          "confirm": false
+          "regexName": ""
         },
         "envelopeVersion": 4
       },
@@ -89956,9 +89829,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports",
-          "dryRun": true,
-          "confirm": false,
-          "groupPath": "&lt;exact caller-selected block group containing the intended FB blocks&gt;"
+          "regexName": "FB_.*"
         },
         "envelopeVersion": 4
       },
@@ -89988,9 +89859,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
-          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
-          "dryRun": true,
-          "confirm": false
+          "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;"
         },
         "envelopeVersion": 4
       },
@@ -90005,9 +89874,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
-          "typePath": "UDT_Status",
-          "dryRun": true,
-          "confirm": false
+          "typePath": "UDT_Status"
         },
         "envelopeVersion": 4
       },
@@ -90020,10 +89887,7 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "groupPath": "",
-          "exportPath": "&lt;existing caller-selected batch export directory&gt;",
-          "dryRun": true,
-          "confirm": false
+          "exportPath": "&lt;existing caller-selected batch export directory&gt;"
         },
         "envelopeVersion": 4
       },
@@ -90037,9 +89901,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "watchTableName": "Watch_1",
-          "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
-          "dryRun": true,
-          "confirm": false
+          "exportPath": "C:\\Examples\\exports\\Watch_1.xml"
         },
         "envelopeVersion": 4
       },
@@ -90096,8 +89958,7 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "toName": "SpeedAxis_1",
           "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
-          "dryRun": true,
-          "confirm": false
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -90180,9 +90041,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "externalSourceName": "FC_Add.scl",
-          "dryRun": true,
-          "confirm": false
+          "externalSourceName": "FC_Add.scl"
         },
         "envelopeVersion": 4
       },
@@ -91085,7 +90944,8 @@
           "lite"
         ],
         "arguments": {
-          "toolName": "ListPlcBlocks"
+          "toolName": "ListPlcBlocks",
+          "exampleKind": "all"
         },
         "envelopeVersion": 4
       },
@@ -91148,7 +91008,9 @@
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
           "screenPath": "/Overview",
-          "itemName": "MotorFaceplate_1"
+          "itemName": "MotorFaceplate_1",
+          "typePath": "UDT_Status",
+          "version": "&lt;version from target discovery&gt;"
         },
         "envelopeVersion": 4
       },
@@ -91545,10 +91407,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "importPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
-          "dryRun": true,
-          "confirm": false,
-          "overwrite": false
+          "importPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;"
         },
         "envelopeVersion": 4
       },
@@ -91564,9 +91423,7 @@
           "groupPath": "",
           "importPath": "C:\\Examples\\documents",
           "fileNameWithoutExtension": "FC_Add",
-          "dryRun": true,
-          "confirm": false,
-          "overwrite": true
+          "importOption": "Override"
         },
         "envelopeVersion": 4
       },
@@ -91598,11 +91455,7 @@
           "softwarePath": "PLC_1",
           "groupPath": "",
           "importPath": "C:\\Examples\\documents",
-          "dryRun": true,
-          "confirm": false,
-          "fileNamesWithoutExtension": [
-            "&lt;exact document basename from the import directory&gt;"
-          ]
+          "regexName": ""
         },
         "envelopeVersion": 4
       },
@@ -91618,9 +91471,8 @@
           "groupPath": "",
           "dir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
           "dryRun": true,
-          "confirm": false,
-          "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "regexName": "^Main\\.xml$"
         },
         "envelopeVersion": 4
       },
@@ -91635,9 +91487,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "groupPath": "",
-          "filePath": "C:/Examples/FC_Add.scl",
-          "dryRun": true,
-          "confirm": false
+          "filePath": "C:/Examples/FC_Add.scl"
         },
         "envelopeVersion": 4
       },
@@ -91652,9 +91502,8 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "sourceDir": "&lt;existing dedicated import directory containing only intended native XML files&gt;",
           "dryRun": true,
-          "confirm": false,
-          "regexName": "^Main\\.xml$",
           "overwrite": false,
+          "regexName": "^Main\\.xml$",
           "compileAfter": false,
           "stopOnImportFailure": true
         },
@@ -91671,10 +91520,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "folderPath": "",
-          "importPath": "&lt;data.outputFile from completed ExportPlcTagTable&gt;",
-          "dryRun": true,
-          "confirm": false,
-          "overwrite": false
+          "importPath": "&lt;data.outputFile from completed ExportPlcTagTable&gt;"
         },
         "envelopeVersion": 4
       },
@@ -91703,10 +91549,7 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "",
-          "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
-          "dryRun": true,
-          "confirm": false,
-          "overwrite": false
+          "importPath": "C:\\Examples\\exports\\UDT_Status.xml"
         },
         "envelopeVersion": 4
       },
@@ -92117,7 +91960,8 @@
           "lite"
         ],
         "arguments": {
-          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "regexName": "FB_.*"
         },
         "envelopeVersion": 4
       },
@@ -93884,8 +93728,7 @@
           ],
           "confirmDelete": false,
           "dryRun": true,
-          "action": "read",
-          "collectionProperty": "Interface"
+          "action": "read"
         },
         "envelopeVersion": 4
       },
@@ -94016,9 +93859,7 @@
           "lite"
         ],
         "arguments": {
-          "path": "&lt;exact caller-selected closed project file for this release&gt;",
-          "dryRun": true,
-          "confirm": false
+          "path": "&lt;exact caller-selected closed project file for this release&gt;"
         },
         "envelopeVersion": 4
       },
@@ -94381,6 +94222,8 @@
           "full"
         ],
         "arguments": {
+          "expectedPlcSoftwarePath": "PLC_1",
+          "expectedHmiSoftwarePath": "HMI_RT_1",
           "connectIfNeeded": false,
           "includeProjectTree": false,
           "inspectPortalProcesses": false
@@ -94600,10 +94443,7 @@
           "full",
           "lite"
         ],
-        "arguments": {
-          "dryRun": true,
-          "confirm": false
-        },
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -94652,7 +94492,8 @@
           "lite"
         ],
         "arguments": {
-          "keyword": "1513"
+          "keyword": "1513",
+          "limit": 10
         },
         "envelopeVersion": 4
       },
@@ -94808,8 +94649,7 @@
           "full"
         ],
         "arguments": {
-          "devicePath": "PLC_1",
-          "dryRun": true
+          "devicePath": "PLC_1"
         },
         "envelopeVersion": 4
       },

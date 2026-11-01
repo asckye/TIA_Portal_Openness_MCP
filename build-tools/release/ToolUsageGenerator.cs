@@ -103,7 +103,7 @@ internal static class ToolUsageGenerator
         foreach (var (name, row) in engineSourceCalls.AsObject().ToList())
         {
             if (row?["arguments"] is JsonObject sourceArguments)
-                row["arguments"] = CatalogGenerator.CurrentArguments(name, sourceArguments, calls["profiles"]?["full-engine"]?[name]?["arguments"] as JsonObject);
+                row["arguments"] = CatalogGenerator.CurrentArguments(name, sourceArguments, calls["profiles"]?["full-engine"]?[name]?["arguments"] as JsonObject, sourceKeys: true);
             if (row != null && calls["profiles"]?["full-engine"]?[name]?["operations"] is JsonObject operations)
                 row["operations"] = operations.DeepClone();
         }

@@ -134,7 +134,9 @@ namespace TiaMcp.Engine.Tests
             foreach (var e in ToolExamples.All)
                 check(JsonNode.Parse(e.ArgumentsJson) is JsonObject, "examples: '" + e.Tool + "' is a JSON object");
             var decorated = ToolExamples.Decorate("ListPlcBlocks", "[L1][PLC-Software][READ] List blocks.");
-            check(decorated.StartsWith("[L1][PLC-Software][READ] List blocks. Example: {\"softwarePath\":\"PLC_1\",\"regexName\":\"FB_.*\"} (") && decorated.EndsWith(")."), "examples: description decorated with the example sentence");
+            var listExample = JsonNode.Parse(ToolExamples.Find("ListPlcBlocks")!.ArgumentsJson)!;
+            check(decorated.StartsWith("[L1][PLC-Software][READ] List blocks. Example: " + ToolExamples.Find("ListPlcBlocks")!.ArgumentsJson + " (") && decorated.EndsWith(").")
+                && ((string?)listExample["softwarePath"])?.Contains("softwarePath from GetProjectTree") == true && (string?)listExample["regexName"] == "FB_.*", "examples: description decorated with the example sentence");
             check(ReferenceEquals(ToolExamples.Decorate("ProbeResult", "x"), "x") || ToolExamples.Decorate("ProbeResult", "x") == "x", "examples: tools without an example keep their description");
             // Validate every example against the tools this suite links (the build gate validates all of them against the engine).
             IReadOnlyList<KeyValuePair<string, bool>>? Specs(string tool)
