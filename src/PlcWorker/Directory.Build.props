@@ -1,4 +1,5 @@
 <Project>
+  <Import Project="$(MSBuildThisFileDirectory)../Shared/DependencyVersions.props" Condition="'$(TiaMcpDependencyVersionsImported)' != 'true'" />
   <PropertyGroup><TiaFeatureProfile>Worker</TiaFeatureProfile></PropertyGroup>
   <Import Project="$(MSBuildThisFileDirectory)../Shared/TiaFeatures.props" />
   <ItemGroup>

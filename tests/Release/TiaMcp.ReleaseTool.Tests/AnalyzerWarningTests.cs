@@ -258,6 +258,7 @@ public sealed class AnalyzerWarningTests
     {
         using var tree = new StaticTree();
         tree.Copy(".editorconfig"); tree.Copy("src/Shared/CodeAnalysis.props"); tree.Copy("Directory.Build.props");
+        tree.Copy("src/Shared/DependencyVersions.props");
         var config = tree.Write("offline.config", "<configuration><packageSources><clear /></packageSources></configuration>");
         var source = "#!/usr/bin/env dotnet\n#:property PublishAot=false\nConsole.WriteLine(1);\n";
         var program = tree.Write("scripts/fixture.cs", source);

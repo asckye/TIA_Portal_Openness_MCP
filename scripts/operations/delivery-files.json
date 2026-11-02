@@ -41,6 +41,7 @@
       ".editorconfig",
       "Directory.Build.props",
       "src/Shared/CodeAnalysis.props",
+      "src/Shared/DependencyVersions.props",
       "runtime/tools/TiaMcp.PluginLauncher.exe",
       "runtime/tools/TiaMcp.PluginLauncher.dll",
       "runtime/tools/TiaMcp.PluginLauncher.deps.json",

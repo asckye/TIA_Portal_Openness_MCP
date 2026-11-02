@@ -62,7 +62,7 @@
     <Compile Include="../../../src/Shared/PlcToolContract.cs" Link="McpServer.BlockLogic.cs" />
 
     <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0-preview.4.25258.110" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(TiaMcpDotnetPackageVersion)" />
     <Compile Include="../../../src/Engine/EngineServices.cs" Link="EngineServices.cs" />
     <Compile Include="../../../src/Engine/EngineRegistration.cs" Link="EngineRegistration.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ToolCatalog.cs" Link="ToolCatalog.cs" />

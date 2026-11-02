@@ -423,6 +423,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 
 | 已知现场事项 | 当前结论与证据 |
 |---|---|
+| DEP-1 稳定版 JSON 依赖加载 | **NOT RUN**：需在至少一个 V14 SP1–V19 版本确认 net48 worker 能在 Siemens 程序集旁加载 System.Text.Json、System.Text.Encodings.Web 和 Microsoft.Bcl.AsyncInterfaces 10.0.12；离线构建与响应比对不代替原生加载验收。 |
 | `ManageStartdriveParameter` 读取 `p2051[0]` | 用户报告 TIA 崩溃。现代码按官方 BICO 路线做单值读取，去掉无关元数据遍历；原生复测未运行，根因未确认。详见[限制与结果解释](../troubleshooting/openness-limitations.md)。 |
 | Unified 脚本模块库类型改名 | 2026-10-01，在项目库和独立全局库中的样本均出现 `NonRecoverableException` 并伴随测试 TIA 退出；没有已验证修复。[机器可读证据](../../manifest/history/unified-library-rename-native-20261001.json)。 |
 | PLC 原生交叉引用 | 有 V21 退出历史。2026-10-30 决定：V14 SP1–V20 在 API 可用时默认允许；V21 保留人工会话开关或环境变量 opt-in，真机确认 pending / NOT RUN。编译成功不能保证查询稳定。离线引用分析仅覆盖成功导出且可索引的输入。 |

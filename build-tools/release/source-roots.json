@@ -1027,6 +1027,15 @@
         "validation",
         "validationMulti"
       ]
+    },
+    {
+      "path": "src/Shared/DependencyVersions.props",
+      "inventories": [
+        "engine",
+        "multi",
+        "validation",
+        "validationMulti"
+      ]
     }
   ],
   "requiredFiles": [
@@ -1546,6 +1555,15 @@
         "package"
       ],
       "repositoryLabel": "C# analyzer configuration"
+    },
+    {
+      "path": "src/Shared/DependencyVersions.props",
+      "consumers": [
+        "repository",
+        "bundle",
+        "package"
+      ],
+      "repositoryLabel": ".NET dependency versions"
     }
   ]
 }

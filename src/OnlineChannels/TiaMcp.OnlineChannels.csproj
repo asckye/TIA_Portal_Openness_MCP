@@ -12,7 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Preserve the engine dependency version when resolving the OPC UA client independently. -->
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0-preview.4.25258.110" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(TiaMcpDotnetPackageVersion)" />
     <PackageReference Include="Sharp7" Version="1.1.84" />
     <PackageReference Include="Workstation.UaClient" Version="3.2.3" />
     <PackageReference Include="Siemens.Simatic.S7.Webserver.API" Version="3.3.76" />

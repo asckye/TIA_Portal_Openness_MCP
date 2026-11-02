@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <TiaMcpDependencyVersionsImported>true</TiaMcpDependencyVersionsImported>
+    <!-- Keep .NET packages aligned with the runtime in build-tools/bundled-dotnet.json. -->
+    <TiaMcpDotnetPackageVersion>10.0.12</TiaMcpDotnetPackageVersion>
+  </PropertyGroup>
+</Project>

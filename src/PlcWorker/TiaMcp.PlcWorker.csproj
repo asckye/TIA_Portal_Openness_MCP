@@ -91,7 +91,7 @@
     <Compile Include="../Shared/SessionBehavior.cs" Link="Shared/SessionBehavior.cs" />
     <ProjectReference Include="$(SelectedAdapterProject)" Condition="'$(SelectedAdapterProject)' != ''"
                       GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;TargetFramework;RuntimeIdentifier;TiaMcpTestPolicy;TiaMcpPlcWorkerSdkFixture;TiaMcpPlcWorkerFixtureRoot" />
-    <PackageReference Include="System.Text.Json" Version="10.0.0-preview.4.25258.110" />
+    <PackageReference Include="System.Text.Json" Version="$(TiaMcpDotnetPackageVersion)" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net48' and '$(UseReferenceAssemblyPackage)' == 'true'" />
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(TiaMcpTestPolicy)' != ''"><_Parameter1>TiaMcpTestPolicy</_Parameter1><_Parameter2>$(TiaMcpTestPolicy)</_Parameter2></AssemblyAttribute>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(TiaMcpPlcWorkerSdkFixture)' == 'true'"><_Parameter1>TiaMcpPlcWorkerSdkFixture</_Parameter1><_Parameter2>true</_Parameter2></AssemblyAttribute>

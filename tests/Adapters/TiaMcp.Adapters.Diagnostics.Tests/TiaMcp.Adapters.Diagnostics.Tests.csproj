@@ -8,7 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="System.Text.Json" Version="10.0.0-preview.4.25258.110" />
+    <PackageReference Include="System.Text.Json" Version="$(TiaMcpDotnetPackageVersion)" />
     <Compile Include="../../Engine/TiaMcp.Engine.Diagnostics.Tests/InvocationJournalGoldenTests.cs" Link="InvocationJournalGoldenTests.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="../../../src/Adapters/Diagnostics/InvocationJournal.cs" Link="InvocationJournal.cs" />

@@ -41,3 +41,5 @@ Source code is MIT under section 2 of the complete retained
 [Siemens license](docs/licenses/SiemensCodeSnippets-LICENSE.md).
 The files are reference data, not compiled dependencies; Siemens SDK binaries and
 sample engineering archives are excluded. See [scope and provenance](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/official-tool-usage.md).
+
+The .NET 10 extension packages, System.Text.Json and preview.4 companion dependencies use stable 10.0.12, aligned with the bundled runtime. The MCP SDK remains at 0.3.0-preview.4; license terms are unchanged. See [the third-party notices](docs/licenses/THIRD-PARTY-NOTICES.md).
