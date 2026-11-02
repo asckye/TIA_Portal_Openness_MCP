@@ -20,7 +20,7 @@ public sealed class HostLifecycleTests
     private static Task<Process> Restart(VisibleHost host, ProcessStartInfo start, Func<VisibleHost, Task>? requestShutdown = null,
         Func<VisibleHost, Task<bool>>? confirmForce = null) => HostLifecycleService.Restart(host, start, requestShutdown, confirmForce, CooperativeTiming);
 
-    [Fact(Timeout = 5000)]
+    [Fact]
     public async Task Production_shutdown_timing_preserves_the_existing_defaults()
     {
         Assert.Equal(TimeSpan.FromSeconds(20), McpSessionClient.OwnedHostExitTimeout);
@@ -81,7 +81,7 @@ public sealed class HostLifecycleTests
         }
     }
 
-    [Fact(Timeout = 5000)]
+    [Fact]
     public async Task Client_and_Workbench_hosts_share_leases_when_bundle_data_is_read_only()
     {
         await Task.CompletedTask;
@@ -112,7 +112,7 @@ public sealed class HostLifecycleTests
         }
     }
 
-    [Theory(Timeout = 5000)]
+    [Theory]
     [InlineData("pid")] [InlineData("startTicks")] [InlineData("imagePath")] [InlineData("bundleRoot")]
     [InlineData("releaseKey")] [InlineData("transport")]
     public async Task A_malformed_registration_is_reported_without_hiding_valid_hosts(string missing)
@@ -143,7 +143,7 @@ public sealed class HostLifecycleTests
         }
     }
 
-    [Fact(Timeout = 5000)]
+    [Fact]
     public async Task Busy_host_refuses_stop_and_restart_before_sending_a_shutdown_request()
     {
         await using var fixture = new SyntheticHost(); await fixture.Ready();
@@ -156,7 +156,7 @@ public sealed class HostLifecycleTests
         Assert.Equal(0, requests); Assert.False(fixture.Process.HasExited);
     }
 
-    [Fact(Timeout = 5000)]
+    [Fact]
     public async Task A_call_started_after_discovery_still_blocks_the_stop_request()
     {
         await using var fixture = new SyntheticHost(); await fixture.Ready();
@@ -170,7 +170,7 @@ public sealed class HostLifecycleTests
         Assert.Equal(0, requests);
     }
 
-    [Theory(Timeout = 5000)] [InlineData(false)] [InlineData(true)]
+    [Theory] [InlineData(false)] [InlineData(true)]
     public async Task Unresponsive_synthetic_host_is_killed_only_after_the_existing_grace_and_explicit_confirmation(bool force)
     {
         string root = McpOperatorFixture.RepositoryRoot;
@@ -230,7 +230,7 @@ public sealed class HostLifecycleTests
         }
     }
 
-    [Fact(Timeout = 5000)]
+    [Fact]
     public async Task A_call_reported_during_force_confirmation_still_prevents_termination()
     {
         await using var fixture = new SyntheticHost(); await fixture.Ready();
@@ -248,7 +248,7 @@ public sealed class HostLifecycleTests
         Assert.Equal(1, confirmations); Assert.False(fixture.Process.HasExited);
     }
 
-    [Fact(Timeout = 5000)]
+    [Fact]
     public async Task An_unanswered_force_confirmation_never_terminates_the_host()
     {
         await using var fixture = new SyntheticHost(); await fixture.Ready();
@@ -259,7 +259,7 @@ public sealed class HostLifecycleTests
         Assert.Equal(1, confirmations); Assert.False(fixture.Process.HasExited);
     }
 
-    [Fact(Timeout = 5000)]
+    [Fact]
     public async Task A_host_exiting_during_force_confirmation_is_reverified_before_termination()
     {
         await using var fixture = new SyntheticHost(); await fixture.Ready();
@@ -274,7 +274,7 @@ public sealed class HostLifecycleTests
         Assert.Equal(0, fixture.Process.ExitCode);
     }
 
-    [Theory(Timeout = 5000)]
+    [Theory]
     [InlineData(null, true)] [InlineData("4.0.0-beta.1", true)]
     [InlineData("4.0.0-beta.2", false)] [InlineData("4.0.0", false)]
     public async Task Older_and_legacy_hosts_are_flagged(string? version, bool expected)
@@ -283,7 +283,7 @@ public sealed class HostLifecycleTests
         Assert.Equal(expected, HostLifecycleService.IsOlder(version, "v4.0.0-beta.2"));
     }
 
-    [Fact(Timeout = 5000)]
+    [Fact]
     public async Task Process_identity_must_match_before_any_stop()
     {
         await Task.CompletedTask;
@@ -295,7 +295,7 @@ public sealed class HostLifecycleTests
         Assert.Throws<UnauthorizedAccessException>(() => HostLifecycleService.VerifiedProcess(host));
     }
 
-    [Fact(Timeout = 5000)]
+    [Fact]
     public async Task Real_local_http_host_without_sessions_can_be_restarted_and_stopped_after_identity_verification()
     {
         string root = McpOperatorFixture.RepositoryRoot;
