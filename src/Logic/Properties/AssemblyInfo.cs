@@ -6,6 +6,5 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("TiaMcp.Adapters.Diagnostics.Tests")]
 [assembly: InternalsVisibleTo("TiaMcp.Engine.Diagnostics.Tests")]
 [assembly: InternalsVisibleTo("TiaMcp.FoundationHost.Tests")]
-[assembly: InternalsVisibleTo("TiaMcp.Engine.Tests")]
 [assembly: InternalsVisibleTo("TiaMcp.Offline.Fixtures")]
 [assembly: InternalsVisibleTo("TiaMcp.KeptCode.Tests")]

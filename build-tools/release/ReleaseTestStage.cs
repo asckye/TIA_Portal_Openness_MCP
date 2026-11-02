@@ -492,7 +492,7 @@ internal static partial class ReleaseCommands
         var commonPath = Path.Combine(Root, "manifest/release-build.json");
         var common = JsonNode.Parse(File.ReadAllText(commonPath))!.AsObject();
         var commonValidation = common["validation"]!.AsObject();
-        foreach (var (suite, field) in new[] { ("offline", "offlinePassed"), ("kept-code", "keptCodePassed"), ("write-guard", "writeGuardPassed"),
+        foreach (var (suite, field) in new[] { ("kept-code", "keptCodePassed"), ("write-guard", "writeGuardPassed"),
             ("crash-evidence", "crashEvidencePassed"), ("version-policy", "versionPolicySdkPassed"), ("updater", "updaterPassed") })
             commonValidation[field] = suites[suite]!["passed"]!.DeepClone();
         commonValidation["nativeMcpSafetyPassed"] = RequireCount("nativeMcpSafety", results.Checks["native-mcp-session-self-test"].StandardOutput,

@@ -38,22 +38,9 @@
     "maximumSkipped": 0,
     "arguments": []
   },
-  "offline": {
-    "project": "tests/Engine/TiaMcp.Engine.Tests/TiaMcp.Engine.Tests.csproj",
-    "minimumPassed": 303,
-    "maximumSkipped": 0,
-    "arguments": [],
-    "platforms": {
-      "linux": {
-        "minimumPassed": 302,
-        "reason": "OfficialWorkflowTests checks the MTA apartment of the attach worker only on Windows"
-      }
-    }
-  },
   "kept-code": {
-    "splitFrom": "offline",
     "project": "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj",
-    "minimumPassed": 4854,
+    "minimumPassed": 5155,
     "maximumSkipped": 0,
     "arguments": []
   },
@@ -286,7 +273,7 @@
   },
   "source-contracts": {
     "project": "tests/Repository/TiaMcp.SourceContracts.Tests/TiaMcp.SourceContracts.Tests.csproj",
-    "minimumPassed": 148,
+    "minimumPassed": 140,
     "maximumSkipped": 0,
     "arguments": []
   },

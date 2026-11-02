@@ -461,12 +461,12 @@ public sealed class ReleaseRecordConsumerTests
         // P8-04l: the eight-release record no longer embeds release-build.json; its release-wide counts stay in that record.
         using var tree = new StaticTree();
         var (engine, multi) = Records(tree);
-        engine["validation"] = new JsonObject { ["offlinePassed"] = 123 };
+        engine["validation"] = new JsonObject { ["keptCodePassed"] = 123 };
         Assert.False(multi.ContainsKey("engineCompatibility"));
         Validate(tree.Root, multi);
         var rows = Compare(engine, multi);
         Assert.DoesNotContain(rows, row => row.Status is "missing" or "different");
-        var offline = Assert.Single(rows.Where(row => row.EngineField == "validation.offlinePassed"));
+        var offline = Assert.Single(rows.Where(row => row.EngineField == "validation.keptCodePassed"));
         Assert.Null(offline.MultiField);
         Assert.Contains("release-build.json evidence", offline.Status, StringComparison.Ordinal);
         Assert.Contains(rows, row => row.EngineField == "release" && row.MultiField == "release" && row.Status == "equal");
@@ -813,7 +813,7 @@ public sealed class ReleaseRecordConsumerTests
         plan = plan with { SkippedChecks = policy.Checks.Except(plan.SelectedChecks, StringComparer.Ordinal).ToArray() };
         var validation = new JsonObject
         {
-            ["offlinePassed"] = 303, ["offlineV20Passed"] = 303, ["keptCodePassed"] = 4854, ["keptCodeV20Passed"] = 4854, ["versionPolicySdkPassed"] = 10,
+            ["keptCodePassed"] = 5155, ["keptCodeV20Passed"] = 5155, ["versionPolicySdkPassed"] = 10,
             ["writeGuardPassed"] = 8, ["crashEvidencePassed"] = 7, ["updaterPassed"] = 33, ["nativeMcpSafetyPassed"] = 8
         };
         var record = new JsonObject

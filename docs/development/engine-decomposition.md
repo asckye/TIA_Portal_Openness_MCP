@@ -204,9 +204,9 @@ P3-18 删除迁移期嵌套 `*ToolSupport` 和 HMI 编译转发。目录枚举�
 
 ### PLC 块、编辑与用户组
 
-[PlcBlocksTools](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) 承载
+[PlcBlocksTools](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) 承载
 P3-13a 的 27 个工具：块读取、导入导出、编译诊断、逻辑描述、保护/快照/指纹、离线编辑、验证导入、删除和 PLC 用户组。
-[PlcBlocksService](../../src/Engine/Siemens/Services/PlcBlocksService.cs) 承载这些工具独有的
+[PlcBlocksService](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/src/Engine/Siemens/Services/PlcBlocksService.cs) 承载这些工具独有的
 Portal 实现，包括批量块导出、删除、保护/快照/指纹、验证导入及组管理；`_blockGroupDeleteGate` 随服务实例迁移。
 两者按约定注册为非 `IDisposable` 单例。`ManageUnifiedHmiGroup` 留在原混合文件。
 
@@ -288,7 +288,7 @@ CLI 使用的 `DescribeObjectProperty`、`GetObjectProperty`、`ListObjectChildr
 ### HMI 离线替身边界
 
 需要离线替身的领域服务接收不含 Siemens 类型的窄会话接口，不因此为每个服务增加接口。
-[IHmiToolSession](../../src/Engine/Siemens/IHmiToolSession.cs) 由 `Portal` 显式转发，
+[IHmiToolSession](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/src/Engine/Siemens/IHmiToolSession.cs) 由 `Portal` 显式转发，
 与 `IEngineeringSession` 解析为同一个会话单例；五个服务和工具类仍按 `EngineRegistration` 约定注册，均不实现 `IDisposable`。
 
 | 成员 | 用途 |
@@ -341,15 +341,15 @@ VCI 的 `_vciOwnerProject`、`_vciCached`、`_vciKeepAlive` 成为服务实例�
 |---|---|---|
 | 报警 | [AlarmsService](../../src/Shared/PlcB5Services.cs) / [AlarmsTools](../../src/Shared/AlarmsTools.cs) | 8 |
 | OPC UA | [OpcUaService](../../src/Shared/PlcB5Services.cs) / [OpcUaTools](../../src/Shared/OpcUaTools.cs) | 8 |
-| 工艺对象 | [TechnologyObjectsService](../../src/Engine/Siemens/Services/TechnologyObjectsService.cs) / [TechnologyObjectsTools](../../src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) | 7 |
+| 工艺对象 | [TechnologyObjectsService](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/src/Engine/Siemens/Services/TechnologyObjectsService.cs) / [TechnologyObjectsTools](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) | 7 |
 
 报警服务包括 `Step7Leftovers` 中的 XLSX 交换以及 `PlcBlockServices` 中的实例文本导入、文本列表管理；
 OPC UA 服务包括 `HardwareServices` 中的访问控制；工艺对象工具包括 `EngineeringManagement` 中的管理入口。
 这些工具没有 CLI 静态调用点。通用 PLC 程序批量导入仍使用 `Portal.ImportTechnologyObject`，因此其两个重载
-保留在 [Portal.Software.TechnologyObjects.cs](../../src/Engine/Siemens/Portal/Portal.Software.TechnologyObjects.cs)，
+保留在 [Portal.Software.TechnologyObjects.cs](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/src/Engine/Siemens/Portal/Portal.Software.TechnologyObjects.cs)，
 工艺对象服务通过会话接口复用带 `overwrite` 和 `importedNames` 的重载。
 
-[Portal.TechnologyMapping.cs](../../src/Engine/Siemens/Portal/Portal.TechnologyMapping.cs)
+[Portal.TechnologyMapping.cs](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/src/Engine/Siemens/Portal/Portal.TechnologyMapping.cs)
 保留 Motion 和 Startdrive 使用的 `ParameterRow`、`TechnologyObjectRow`、`TypedMotionView`、`InterfaceRow`、
 `MappingRow`、`ConnectTyped`、`DisconnectTyped`、`IsConnectedTyped`，以及它们依赖的
 `ModuleRef`、`ChannelRef`、`AxisEncoderInterfaceRow`、`TorqueInterfaceRow`、`MeasuringInputRow`、`OutputCamRow`、
@@ -444,7 +444,7 @@ P3-11a 将 22 个工具迁入五个单例领域；网络工具及硬件服务留
 
 | 领域 | 服务 / 工具类 | 工具数 |
 |---|---|---|
-| Devices | [DevicesService](../../src/Engine/Siemens/Services/DevicesService.cs) / [DevicesTools](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) | 14 |
+| Devices | [DevicesService](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/src/Engine/Siemens/Services/DevicesService.cs) / [DevicesTools](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) | 14 |
 | HardwareManagement | [HardwareManagementService](../../src/Shared/HardwareManagementService.cs) / [HardwareManagementTools](../../src/Shared/HardwareManagementTools.cs) | 1 |
 | HardwareAml | [HardwareAmlService](../../src/Shared/HardwareAmlService.cs) / [HardwareAmlTools](../../src/Shared/HardwareAmlTools.cs) | 3 |
 | Modules | [ModulesService](../../src/Shared/HardwareModulesService.cs) / [ModulesTools](../../src/Shared/ModulesTools.cs) | 2 |
@@ -466,7 +466,7 @@ P3-11a 将 22 个工具迁入五个单例领域；网络工具及硬件服务留
 `EnumerateAllDevices`、`GetPlcSoftwareNamesForDesktop`、`ValidateAutomationContext`、`FormatExceptionDetail`、
 `ToJsonArray`。保留原日志类别，不新增会话写入。
 
-CLI 直接解析 [DevicesTools](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs)
+CLI 直接解析 [DevicesTools](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/src/Engine/ModelContextProtocol/Tools/DevicesTools.cs)
 调用八个入口：`GetProjectTree`、`GetDeviceInfo`、`ValidateAutomationContext`、`CreateDevice`、
 `CreateHardwareDevice`、`SearchInstalledGsdDevices`、`SearchHardwareCatalog`、`CreateHardwareCatalogDevice`。
 名称按 V4 注册目录列出；其余签名、描述、返回及错误首行不变。`Test-DomainTools.py` 覆盖全部 22 个工具，包含旧式抛异常、
@@ -734,11 +734,11 @@ Test-DomainTools 的三个运行时领域覆盖全部 20 个工具、full/lite �
 避免打开协议连接、探测本机模拟实例或扩大耗时屏蔽规则。TiaMcp.Engine.Harness 另外核对实例单例、会话依赖与程序集归属。
 ### 会话与工程工具
 
-[SessionTools](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs)
+[SessionTools](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/src/Engine/ModelContextProtocol/Tools/SessionTools.cs)
 承载 9 个会话工具；
-[ProjectSessionTools](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs)
+[ProjectSessionTools](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs)
 承载 11 个工程工具；
-[DiagnosticsTools](../../src/Engine/ModelContextProtocol/Tools/DiagnosticsTools.cs)
+[DiagnosticsTools](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/src/Engine/ModelContextProtocol/Tools/DiagnosticsTools.cs)
 承载 `RunCapabilitySelfTest`、`RunOnlineMonitoringSafetySelfTest`、`GenerateAcceptanceReport`、`GenerateErrorReport`。
 三者直接接收 `IEngineeringSession`，由 `EngineRegistration` 按工具类型约定注册为
 非 `IDisposable` 单例，不增加领域服务，也不接收具体 `Portal`。`Portal` 继续管理连接、工程句柄和事务状态，

@@ -556,7 +556,7 @@ public sealed class ReleaseSingleStageTests
         File.WriteAllText(binary, "changed");
         Assert.Contains("binary changed", Reason(pending: true));
         File.WriteAllText(binary, "producer bytes");
-        foreach (var (name, count) in new[] { ("offlinePassed", 303), ("versionPolicySdkPassed", 10), ("keptCodePassed", 4854),
+        foreach (var (name, count) in new[] { ("versionPolicySdkPassed", 10), ("keptCodePassed", 5155),
             ("writeGuardPassed", 8), ("crashEvidencePassed", 7), ("updaterPassed", 33), ("nativeMcpSafetyPassed", 8) }) validation[name] = count;
         Assert.Equal("", Reason(pending: false));
         record["checkPlan"]!["productionRelease"] = false;

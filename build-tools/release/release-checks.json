@@ -39,7 +39,6 @@
     "swallowedexceptions-self-test",
     "toolslist-self-test",
     "nativecallorder-self-test",
-    "sharednativepaths-self-test",
     "responseenvelopes-self-test",
     "domaintools-self-test",
     "dotnetsuites-self-test",
@@ -158,7 +157,6 @@
         "swallowedexceptions-self-test",
         "toolslist-self-test",
         "nativecallorder-self-test",
-        "sharednativepaths-self-test",
         "responseenvelopes-self-test",
         "domaintools-self-test",
         "dotnetsuites-self-test",
@@ -321,12 +319,6 @@
       ]
     },
     {
-      "path": "scripts/checks/Compare-SharedNativePaths.py",
-      "checks": [
-        "sharednativepaths-self-test"
-      ]
-    },
-    {
       "path": "build-tools/release/ResponseEnvelopes.cs",
       "checks": [
         "responseenvelopes-self-test"
@@ -444,7 +436,6 @@
         "swallowedexceptions-self-test",
         "toolslist-self-test",
         "nativecallorder-self-test",
-        "sharednativepaths-self-test",
         "responseenvelopes-self-test",
         "domaintools-self-test",
         "dotnetsuites-self-test",
@@ -729,13 +720,6 @@
     {
       "check": "nativecallorder-self-test",
       "script": "scripts/checks/Compare-NativeCallOrder.py",
-      "arguments": [
-        "--self-test"
-      ]
-    },
-    {
-      "check": "sharednativepaths-self-test",
-      "script": "scripts/checks/Compare-SharedNativePaths.py",
       "arguments": [
         "--self-test"
       ]

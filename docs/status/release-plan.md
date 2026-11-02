@@ -95,7 +95,7 @@ SPD-3d 的 P-C 已于 2026-11-01 批准：合并和 nightly 的 check 构建统�
 
 | 编号 | 内容 | 状态 |
 |---|---|---|
-| P8-04l2 | 删除 `src/Engine` 剩余的非编译源码、生成器中的引擎行、诊断成员链接、宿主引擎客户端和死条件分支；随后退役 `Compare-SharedNativePaths.py`，归档 `docs/development/evidence/*.json` | 未开始 |
+| P8-04l2 | Q1 移除生成器引擎读取；Q2 删除 `src/Engine` 残余源码、引擎专属测试/脚本/夹具与诊断链接，保留代码的测试转入 KeptCode；不保留残余源码、不要求引擎专属测试的继任测试（维护者 2026-11-02，ADR 0022）。宿主引擎客户端、目录和死条件分支另由 Q3 清理 | 残余源码清理完成（Q2，待审查与主机验证）；Q3 待执行 |
 | P8-04l3 | 为 P8-04l 退役的 34 个引擎候选 check-all 作业补 PLC worker 版 | 未开始 |
 | P8-10d/e/f | 发布链 Python 改 C#（快照、打包、验包），重新移植 10-21 以来的发布链修复，rc 证明字节一致 | 进行中（`refactor/P8-10d`、`refactor/P8-10e` 有未验证的 WIP） |
 | P8-93b、P8-94b | 未被 check-all 覆盖的发布链检查并入 check-all；TiaMcp.Logic 统一构建属性，package-test 报告退役文件与日志排除 | 未开始 |

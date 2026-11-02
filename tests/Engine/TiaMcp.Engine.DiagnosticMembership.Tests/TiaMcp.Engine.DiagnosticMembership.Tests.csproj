@@ -7,8 +7,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../src/FoundationHost/TiaMcp.FoundationHost.csproj" Aliases="foundationhost" />
-    <Compile Include="../../../src/Engine/Siemens/Openness.cs" Link="Openness.cs" />
-    <Compile Include="../../../src/Shared/OpennessGroup.cs" Link="OpennessGroup.cs" />
     <Compile Include="../../../src/Shared/WindowsOpennessGroup.cs" Link="WindowsOpennessGroup.cs" />
     <Compile Include="../../../src/Shared/WindowsOpennessGroupPlatform.cs" Link="WindowsOpennessGroupPlatform.cs" />
   </ItemGroup>

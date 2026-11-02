@@ -37,9 +37,9 @@ internal static class DeadToolReferences
         }
         return Visit(new CSharpLexer(source).Scan().Tokens, false);
     }
-    internal static (HashSet<string> Names, Dictionary<string, List<string>> Bad) Scan(IReadOnlyDictionary<string, string> sources, ISet<string> historical, string? extra = null)
+    internal static (HashSet<string> Names, Dictionary<string, List<string>> Bad) Scan(IReadOnlyDictionary<string, string> sources, ISet<string> historical, string? extra = null, IEnumerable<string>? registered = null)
     {
-        var names = new HashSet<string>(); var prompts = new HashSet<string>();
+        var names = new HashSet<string>(registered ?? []); var prompts = new HashSet<string>();
         foreach (var source in sources.Values)
         {
             foreach (Match m in Regex.Matches(source, "McpServerTool\\(Name\\s*=\\s*\"([A-Za-z0-9_]+)\"")) names.Add(m.Groups[1].Value);
@@ -156,7 +156,7 @@ internal static class DeadToolReferences
     internal static int Run(string root, bool fix)
     {
         var sources = new Dictionary<string, string>();
-        foreach (var folder in new[] { "src/Engine", "src/EngineHost", "src/FoundationHost", "src/Logic", "src/Shared" }) foreach (var path in SourceCheck.Files(Path.Combine(root, folder)).Where(p => p.EndsWith(".cs", StringComparison.Ordinal))) sources[path] = Repository.ReadSource(path);
+        foreach (var folder in new[] { "src/EngineHost", "src/FoundationHost", "src/Logic", "src/Shared" }) foreach (var path in SourceCheck.Files(Path.Combine(root, folder)).Where(p => p.EndsWith(".cs", StringComparison.Ordinal))) sources[path] = Repository.ReadSource(path);
         foreach (var name in new[] { "CrossReferenceTreeReader.cs", "OpennessReleaseContract.cs" })
         {
             var path = Path.Combine(root, "src/Adapters/Policy", name);
@@ -166,9 +166,10 @@ internal static class DeadToolReferences
         var historical = ContractNames(root, "manifest/history/contracts-v3/baseline");
         var current = ContractNames(root, "manifest/contracts/v4/baseline");
         var renames = MigrationNames(root);
+        var registrations = ScriptToolCalls.Registrations(root);
         if (fix)
         {
-            var registered = Scan(sources, historical).Names;
+            var registered = Scan(sources, historical, registered: registrations).Names;
             foreach (var (path, source) in sources.OrderBy(p => p.Key, StringComparer.Ordinal).ToArray())
             {
                 var result = RewriteGuidance(source, renames, registered);
@@ -176,11 +177,11 @@ internal static class DeadToolReferences
                 if (result.Source != source) { File.WriteAllText(path, result.Source, new UTF8Encoding(false)); sources[path] = result.Source; }
             }
         }
-        var names = Scan(sources, historical).Names;
-        var sentinel = names.Order(StringComparer.Ordinal).First().ToUpperInvariant();
-        if (!Duplicates(sources, $"[McpServerTool(Name = \"{sentinel}\"), Description(\"sentinel\")]").ContainsKey(sentinel.ToLowerInvariant()) || !Scan(sources, historical, "[McpServerTool(Name = \"SentinelTool\"), Description(\"Use GetNonexistentSentinelTool first.\")]").Bad.ContainsKey("GetNonexistentSentinelTool")) throw new ReleaseException("Dead reference sentinel failed", 2);
+        var names = Scan(sources, historical, registered: registrations).Names;
+        var sentinel = Scan(sources, historical).Names.Order(StringComparer.Ordinal).First().ToUpperInvariant();
+        if (!Duplicates(sources, $"[McpServerTool(Name = \"{sentinel}\"), Description(\"sentinel\")]").ContainsKey(sentinel.ToLowerInvariant()) || !Scan(sources, historical, "[McpServerTool(Name = \"SentinelTool\"), Description(\"Use GetNonexistentSentinelTool first.\")]", registrations).Bad.ContainsKey("GetNonexistentSentinelTool")) throw new ReleaseException("Dead reference sentinel failed", 2);
         var errors = Duplicates(sources).Select(p => "Duplicate tool name: " + p.Key).ToList();
-        errors.AddRange(Scan(sources, historical).Bad.Select(p => p.Key + ": " + string.Join(", ", p.Value.Distinct().Take(4))));
+        errors.AddRange(Scan(sources, historical, registered: registrations).Bad.Select(p => p.Key + ": " + string.Join(", ", p.Value.Distinct().Take(4))));
         var listing = ProcessRunner.Run("git", ["ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", "*.md"], root);
         var documents = (listing.ExitCode == 0 ? listing.StandardOutput.Split('\0', StringSplitOptions.RemoveEmptyEntries) : Directory.EnumerateFiles(root, "*.md", SearchOption.AllDirectories).Select(p => Path.GetRelativePath(root, p).Replace('\\', '/'))).Where(p => File.Exists(Path.Combine(root, p))).Distinct().ToDictionary(p => p, p => Repository.ReadSource(Path.Combine(root, p)));
         var retired = renames.Where(p => historical.Contains(p.Key) && !current.Contains(p.Key) && p.Key != p.Value).ToDictionary(p => p.Key, p => p.Value);

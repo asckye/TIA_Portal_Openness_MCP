@@ -387,15 +387,15 @@ public sealed class ReleaseValidationTests
     public void BuildOutputDirectoriesAreExcludedFromSourceInputs()
     {
         var directory = Path.Combine(Path.GetTempPath(), "release-sources-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(Path.Combine(directory, "src/Engine/bin"));
+        Directory.CreateDirectory(Path.Combine(directory, "src/PlcWorker/bin"));
         try
         {
             File.WriteAllText(Path.Combine(directory, "Version.props"), "<Project />");
-            File.WriteAllText(Path.Combine(directory, "src/Engine/included.cs"), "source");
-            File.WriteAllText(Path.Combine(directory, "src/Engine/bin/ignored.cs"), "generated");
+            File.WriteAllText(Path.Combine(directory, "src/PlcWorker/included.cs"), "source");
+            File.WriteAllText(Path.Combine(directory, "src/PlcWorker/bin/ignored.cs"), "generated");
             var paths = ReleaseRecords.GetSources(directory, "engine").Select(row => row.Path).ToArray();
-            Assert.Contains("src/Engine/included.cs", paths);
-            Assert.DoesNotContain("src/Engine/bin/ignored.cs", paths);
+            Assert.Contains("src/PlcWorker/included.cs", paths);
+            Assert.DoesNotContain("src/PlcWorker/bin/ignored.cs", paths);
         }
         finally { Directory.Delete(directory, true); }
     }

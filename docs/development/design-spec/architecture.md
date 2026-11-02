@@ -117,7 +117,7 @@ flowchart LR
 
 ## 4 宿主内部结构
 
-两条宿主路径共用同一套宿主层代码（源码归属 `src/EngineHost`，以 `TIA_ENGINE_HOST` 编译为 net10；V20/V21 引擎链接这些源码），差别在工具从哪里来、发往哪个 worker。
+八个版本共用同一套宿主层代码（源码归属 `src/EngineHost`，FoundationHost 以 `TIA_ENGINE_HOST` 编译为 net10），工具派发到所选发布键的 PlcWorker；残余引擎源码已由 Q2 删除。
 
 | 方面 | V14 SP1–V19 | V20/V21 |
 |---|---|---|
@@ -362,8 +362,8 @@ stateDiagram-v2
 | worker 客户端、job object、关停 | `src/FoundationHost/WorkerClient.cs`、`EngineWorkerClient.cs`、`WorkerJob.cs` |
 | worker 通道协议、超时、回复转存、故障注入 | `src/WorkerChannel/` |
 | PLC worker | `src/PlcWorker/Program.cs`、`FoundationWorkerDispatcher.cs`、`WorkerOperations.cs`、`WorkerOperationModule.cs`、`FoundationProcessLease.cs` |
-| 引擎 worker 与目录导出 | `src/Engine/Program.cs`、`src/Engine/WorkerMode/EngineWorkerHost.cs`、`SharedSessionLifecycle.cs`、`src/Engine/Cli/ToolCatalogExport.cs` |
-| V20/V21 专有工具实现 | `src/Engine/ModelContextProtocol/Tools/*Tools.cs`、`src/Engine/Siemens/Services/`、`src/Engine/Siemens/Portal/` |
+| 引擎 worker 与目录导出（历史） | 引擎程序已退役；残余 `src/Engine` 源码由 Q2 删除，历史实现见提交 `ab5a89af` |
+| V20/V21 工具实现 | 与其他六版共用 `src/Shared` 声明和 `src/Adapters/Native` 实现，版本 API 差异位于适配器 |
 | 已移植族的声明与宿主契约 | `src/Shared/*Tools.cs`、`src/Shared/*PortService.cs`、`PortedToolDeclarations.cs`、`DeclaredToolMetadata.cs`、`src/FoundationHost/PortedToolContract.cs` |
 | 族与发布键的注册表 | `src/Adapters.Contracts/PortedFamilies.cs` |
 | Foundation 适配器 | `src/Adapters/Native/{Session,Plc,Hardware,Libraries,Engineering,Reflection,Vci}`、`src/Adapters/Policy`、`src/Adapters/V*/`、`src/Adapters/build/Adapter.Sources.props`、`src/Shared/shared-native/` |

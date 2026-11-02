@@ -1,6 +1,6 @@
 # 仓库结构
 
-状态：现行 · 最后核对：2026-10-11，任务启动基线 master `578a05ee`
+状态：现行 · 最后核对：2026-11-02，Q2（基线 `3cfc2580`）
 
 [文档目录](../README.md) · [当前交接](handoff.md)
 
@@ -8,12 +8,12 @@
 
 | 路径 | 用途 |
 |---|---|
-| `TiaPortalOpenness.slnx` | 61 个开发工程，按 Engine、PlcAdapters、Studio、Tools、Tests 分组；不包含 reference 示例、LibraryRenameProbe 和必须逐版本构建的 PlcWorker |
-| `TiaPortalOpenness.Offline.slnx` | 40 个不需要 Siemens 程序集的工程，包含 CI 离线套件和 Studio 客户端；完整构建需要 Windows/.NET 10 SDK |
+| `TiaPortalOpenness.slnx` | 73 个开发工程，按 Engine、PlcAdapters、Studio、Tools、Tests 分组；不包含 reference 示例、LibraryRenameProbe 和必须逐版本构建的 PlcWorker |
+| `TiaPortalOpenness.Offline.slnx` | 53 个不需要 Siemens 程序集的工程，包含 CI 离线套件和 Studio 客户端；完整构建需要 Windows/.NET 10 SDK |
 | `src/Shared/TiaPublicApi.props` | 按精确版本查找本机 PublicAPI 的共享路径表；由需要 SDK 的工程显式导入并由 .NET release tool 收录源码哈希 |
 | `Version.props` | 产品发布版本的唯一来源；引擎、基础宿主、Studio 显式导入，配置器构建脚本读取 |
-| `src/Engine`、`src/FoundationHost`、`src/PlcWorker` | V20/V21 引擎（不再交付，只构建为仓库交叉检查的兼容副本，P8-04l 删除）、八版 FoundationHost 宿主（含命令行）、八版 PLC worker |
-| `src/EngineHost` | V20/V21 宿主包装链库；宿主实现和链接源集中在这里 |
+| `src/FoundationHost`、`src/PlcWorker` | 八版 FoundationHost 宿主（含命令行）和 PLC worker；`src/Engine` 残余源码已在 Q2 删除 |
+| `src/EngineHost` | 八版共享的宿主包装链代码；历史名称保留，宿主实现和链接源集中在这里 |
 | `src/Adapters`、`src/Adapters.Contracts`、`src/OnlineChannels`、`src/WorkerChannel` | 类型化适配器、契约、运行通道与进程通道 |
 | `src/Logic` | net48/net10.0 纯逻辑库；共享 XML/JSON Builders、MCP 策略和运行通道数据转换，不引用 Siemens 或 MCP SDK |
 | `src/Studio/Launcher` | 仅保留兼容启动器 `Launcher.cs`，由 Framework csc 编译 |
@@ -25,7 +25,7 @@
 | `third_party` | 固定版本的第三方组件及其许可证 |
 | `third_party/tia-openness-studio` | Studio 上游 LICENSE、`UPSTREAM.json` 和完整源码/历史归档；来源记录内的导入路径仍相对原上游目录 |
 | `build-tools/native-call-weaver` | 仅构建期使用的原生调用点诊断插桩工具 |
-| `tests/Engine`、`tests/Studio`、`tests/test-suites.json` | 功能、协议、API、诊断、离线及可选原生测试；测试按 Shared、FoundationHost、Engine、Adapters、WorkerChannel、Studio、Release、Tools、Updater 分组，目录与工程文件同名 |
+| `tests/Engine`、`tests/KeptCode`、`tests/Fixtures`、`tests/Studio`、`tests/test-suites.json` | 功能、协议、API、诊断、离线及可选原生测试；测试按 Shared、FoundationHost、Engine、Adapters、WorkerChannel、Studio、Release、Tools、Updater 分组，目录与工程文件同名 |
 | `plugin/skill` | Claude Code 插件技能，引导 AI 使用当前版本的 GetToolUsage 示例 |
 | `scripts/operations/vci-watch` | 可选 V20/V21 工作区导出与本地 Git 提交脚本，不纳入交付包 |
 | `docs/development/evidence` | 历史迁移台账和手工验收清单 |
@@ -101,15 +101,15 @@ Siemens PublicAPI 是本机构建输入，默认查找仓库根目录下的八�
 开发目录只维护当前入口。已失效的源代码候选页、一次性日期审计、旧机器状态和重复交接页由 Git
 历史保存；其有效结论并入当前架构、验证或限制页。机器可读 API 证据与官方示例语料继续保留。
 
-## 引擎源码
+## 工具与原生实现
 
-`src/Engine` 只构建为仓库交叉检查的兼容副本，不进入交付包，由 P8-04l 删除。其中的 `ModelContextProtocol/Tools` 声明工具，
-纯算法位于 `src/Logic/ModelContextProtocol/Builders`，引擎的 `ModelContextProtocol/Builders`
-保留依赖工程环境或原生调用的编排；`Siemens/Portal` 放工程调用，`Siemens/Hmi`
-放 HMI 访问层；`Runtime` 是 PLC/OPC UA/Web API/Open Pipe 通道，`Cli` 是命令入口。
+`src/Engine` 的非编译残余源码和只验证它的测试已按维护者 2026-11-02 的决定删除。
+历史源码引用固定到提交 `ab5a89af`。工具声明与响应映射在 `src/Shared`，宿主工具在
+`src/Shared/Host`，原生调用在 `src/Adapters/Native`，纯算法在 `src/Logic`。
 新增原生能力应同时检查工具声明、类型化调用、版本策略、示例及有意义的功能验证。
 
-所有 C# 源码使用无 BOM UTF-8、仓库内 LF。宿主和离线测试通过项目引用复用 `TiaMcp.Logic`，尚未迁移的
-引擎源文件继续以相对路径链接。`src/Shared` 保持共享源码链接；统一示例资源嵌入读取它的
-逻辑库。原生调用诊断和接触 Openness 对象的代码保留在受插桩的引擎程序集内。Foundation 与完整引擎
-使用不同契约；共享边界见[版本框架](unified-version-framework.md)。
+所有 C# 源码使用无 BOM UTF-8、仓库内 LF。宿主和离线测试通过项目引用复用 `TiaMcp.Logic`；
+`src/Shared` 保持共享源码链接，统一示例资源嵌入逻辑库。KeptCode 的六份源码仍保留在
+`tests/Engine/TiaMcp.Engine.Tests` 原路径，Harness 的屏幕遍历测试及 PLC renderer 夹具也保留。
+`tests/Engine` 继续容纳 Harness、原生安全、诊断、API 编译、提示注册、版本策略和共享会话套件。
+共享边界见[版本框架](unified-version-framework.md)。

@@ -76,7 +76,7 @@ public sealed class CheckAllProfileTests
             Assert.True(CheckAllProfiles.RunsSeparately(name, "nightly", plan));
             Assert.Equal(!plan.Mappings.ContainsKey(name), CheckAllProfiles.RunsSeparately(name, "merge", plan));
         }
-        foreach (var name in new[] { "offline", "compile-candidate", "fallback-vci-modern",
+        foreach (var name in new[] { "compile-candidate", "fallback-vci-modern",
             "fallback-vci-initial", "fallback-vci-classic", "plc-exchange-worker-v20", "plc-exchange-worker-v21" })
             Assert.True(CheckAllProfiles.RunsSeparately(name, "merge", plan));
         Assert.Equal(new[] { "nightly" }, CheckAllProfiles.Profiles("foundation-shard-0", plan));
@@ -317,7 +317,7 @@ public sealed class CheckAllProfileTests
         var builds = (CheckBuild[])typeof(ReleaseCommands).GetMethod("CheckAllBuildInventory",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!.Invoke(null, [Catalog, Path.Combine(Root, "sdk")])!;
         Assert.DoesNotContain(builds, unit => unit.Properties.Any(property => property is "-p:TiaSharedAdapterPaths=true"));
-        foreach (var name in new[] { "studio-core", "studio-gui", "offline", "kept-code" })
+        foreach (var name in new[] { "studio-core", "studio-gui", "kept-code" })
         {
             var project = (string)Catalog[name]!["project"]!;
             Assert.Empty(Assert.Single(builds, unit => unit.Project == project).Properties);

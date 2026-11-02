@@ -42,9 +42,6 @@ public sealed class PlcSoftwareAuditWiring
         Assert.Contains("SimaticMlImportWindow.Require(_session.ReleaseKey, bytes, parameter);", EXCHANGE, StringComparison.Ordinal);
         Assert.DoesNotContain("Regex.Replace", EXCHANGE, StringComparison.Ordinal);
         Assert.DoesNotContain("EngineeringVersion", EXCHANGE, StringComparison.Ordinal);
-        var engine = Read("src/Engine/Siemens/Portal/Portal.Blocks.cs");
-        Assert.Contains("SimaticMlImportWindow.Require(", engine, StringComparison.Ordinal);
-        Assert.DoesNotContain("<Engineering version=\\\"V{major}\\\" />", engine, StringComparison.Ordinal);
     }
 
     [Fact]

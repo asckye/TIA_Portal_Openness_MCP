@@ -131,7 +131,7 @@ internal static class CheckAllJobInputs
     {
         // These checks intentionally scan repository-wide source or documentation.
         "check-all-speedup-self-tests" => [],
-        "contract-self-tests" => ["src/Engine", "src/EngineHost", "src/FoundationHost", "src/Logic/V4", "src/Logic/ModelContextProtocol/ToolProfiles.resx", "src/Adapters.Contracts/PortedFamilies.cs", "manifest/contracts/v4/baseline"],
+        "contract-self-tests" => ["src/EngineHost", "src/FoundationHost", "src/Logic/V4", "src/Logic/ModelContextProtocol/ToolProfiles.resx", "src/Adapters.Contracts/PortedFamilies.cs", "manifest/contracts/v4/baseline"],
         "domain-source" => ["src", "tests", "reference"],
         "contract-verify" or "response-verify" => ["src", "reference", "manifest/contracts/v4"],
         "plc-script-self-tests" or "plc-harness-self-tests" => ["build-tools/release/CheckAll.cs", "build-tools/release/CheckAllInventory.cs", "tests/Engine/TiaMcp.Engine.Harness"],

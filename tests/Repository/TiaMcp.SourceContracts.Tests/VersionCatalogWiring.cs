@@ -7,7 +7,6 @@ namespace TiaMcp.SourceContracts.Tests;
 public sealed partial class VersionCatalogWiring
 {
     private static readonly string ROOT = Repository.FindRoot(AppContext.BaseDirectory);
-    private static readonly string SRC = Path.Combine(ROOT, "src/Engine");
     private static readonly string LOGIC = Path.Combine(ROOT, "src/Logic");
     private static readonly EngineSources Sources = new(ROOT);
     private static string Read(string path) => Repository.ReadSource(path);
@@ -31,19 +30,9 @@ public sealed partial class VersionCatalogWiring
         var wrapper = Sources.Member("InvokeAsync", owner: "VersionPolicyTool");
         Assert.True(Find(wrapper, "V4Admission") < Find(wrapper, "return inner.InvokeAsync"));
         Assert.DoesNotContain("VersionCallProblem", wrapper, StringComparison.Ordinal);
-        var binding = Sources.Member("BindV4Call");
-        Assert.True(Find(binding, "VersionCallProblem") < Find(binding, "ToolInputSchema"));
         var profile = (Sources.Member("GetLiteTools") + Sources.Member("GetAllTools"));
         Assert.Contains("CatalogView.Lite", profile, StringComparison.Ordinal);
         Assert.Contains("CatalogView.All", profile, StringComparison.Ordinal);
-        Assert.Contains("includeUnavailable || McpServer.VersionToolProblem(pair.Key).Length == 0", Sources.Member("View", owner: "ToolCatalog"), StringComparison.Ordinal);
-        var invoke = Sources.Member("InvokeToolMethod");
-        var version = Find(invoke, "VersionCallProblem");
-        var binding_check = Find(invoke, "ValidateRuntimeBinding(method)");
-        var target = Find(invoke, "object? target = method.IsStatic ? null : EngineServices.Get(method.DeclaringType!);");
-        Assert.True(((version < binding_check) && (binding_check < target) && (target < Find(invoke, "method.Invoke(target, call)"))));
-        Assert.Contains("AvailableToolMethods(((ToolCatalog)CatalogView).Methods, includeUnavailable)", Sources.Member("AllToolMethods", owner: "McpServer"), StringComparison.Ordinal);
-        Assert.Contains("includeUnavailable || VersionToolProblem(kv.Key).Length == 0", Sources.Member("AvailableToolMethods"), StringComparison.Ordinal);
         Assert.Equal("=> CallToolAsync(name, arguments).GetAwaiter().GetResult();",
             Sources.Member("CallTool", tool: true, bodyOnly: true).Trim());
         Assert.Equal("=> CallToolCoreAsync(name, arguments);", Sources.Member("CallToolAsync", bodyOnly: true).Trim());

@@ -96,7 +96,6 @@ internal static partial class ReleaseCommands
             release, releaseDate, fileVersion, package, generatedAt = DateTimeOffset.UtcNow.ToString("o"),
             validation = new
             {
-                offlinePassed = GetJsonInt(common, "offlinePassed"), offlineV20Passed = GetJsonInt(common, "offlineV20Passed"),
                 keptCodePassed = GetJsonInt(common, "keptCodePassed"), keptCodeV20Passed = GetJsonInt(common, "keptCodeV20Passed"),
                 writeGuardPassed = GetJsonInt(common, "writeGuardChecksPassed"),
                 crashEvidencePassed = GetJsonInt(common, "crashEvidenceChecksPassed"),
@@ -158,12 +157,12 @@ internal static partial class ReleaseCommands
         var plan = ReleasePlan(options);
         var suiteResults = Path.Combine(outputDirectory, "dotnet-suites");
         Directory.CreateDirectory(suiteResults);
-        int writeGuardPassed = 0, crashEvidencePassed = 0, offlinePassed = 0, offlineV20Passed = 0, keptCodePassed = 0, keptCodeV20Passed = 0, versionPolicyPassed = 0, updaterPassed = 0, nativeMcpSafety = 0;
+        int writeGuardPassed = 0, crashEvidencePassed = 0, keptCodePassed = 0, keptCodeV20Passed = 0, versionPolicyPassed = 0, updaterPassed = 0, nativeMcpSafety = 0;
         Match lifecycleMatch = Match.Empty;
         // An adopted publication (TIA_MCP_RELEASE_ADOPTION) takes this stage's suite counts from the verified evidence of its commit.
         var adopted = options.Has("DeferTests") ? null : ReleaseEvidence.LoadAdoption();
         if (plan.Includes("offline-suites") && adopted is not null)
-            (writeGuardPassed, crashEvidencePassed, offlinePassed, offlineV20Passed, keptCodePassed, keptCodeV20Passed, versionPolicyPassed, updaterPassed, nativeMcpSafety, lifecycleMatch) =
+            (writeGuardPassed, crashEvidencePassed, keptCodePassed, keptCodeV20Passed, versionPolicyPassed, updaterPassed, nativeMcpSafety, lifecycleMatch) =
                 AdoptedCommonValidation(adopted, dotnet, python, outputDirectory, runTemp, cliHome, apiRoot);
         if (plan.Includes("offline-suites") && adopted is null && !options.Has("DeferTests"))
         {
@@ -189,7 +188,6 @@ internal static partial class ReleaseCommands
                 RestoreBuildProject(dotnet, Path.Combine(Root, project), nuget, outputDirectory, runTemp, cliHome, apiRoot);
             foreach (var name in ReleaseCommandTable.OfflineSuites)
                 RunDotnetSuiteForRelease(name, name, dotnet, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
-            offlinePassed = ReadSuitePassed(suiteResults, "offline");
             keptCodePassed = ReadSuitePassed(suiteResults, "kept-code");
             var versionPolicyProject = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.VersionPolicy.Tests/TiaMcp.Engine.VersionPolicy.Tests.csproj");
             RestoreBuildProject(dotnet, versionPolicyProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
@@ -241,7 +239,7 @@ internal static partial class ReleaseCommands
         }
         var common = new { diagnosticTests = diagnostics, crashEvidenceChecksPassed = crashEvidencePassed, writeGuardChecksPassed = writeGuardPassed, updaterPassed,
             nativeMcpSafetyChecksPassed = nativeMcpSafety, nativeSupervisorChecksPassed = (lifecycleMatch.Success ? int.Parse(lifecycleMatch.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) : 0),
-            offlinePassed, offlineV20Passed, keptCodePassed, keptCodeV20Passed, versionPolicySdkPassed = versionPolicyPassed, updaterFiles };
+            keptCodePassed, keptCodeV20Passed, versionPolicySdkPassed = versionPolicyPassed, updaterFiles };
         WriteJson(Path.Combine(outputDirectory, "common.json"), common);
         using var result = JsonDocument.Parse(JsonSerializer.Serialize(common, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
         return result.RootElement.Clone();

@@ -277,10 +277,10 @@ maxObjects/walkTrace、失败后重取句柄和继续处理的策略，以及按
 两个宿主分别传入现有选择。组合枚举用值类型包装保留原来的类型化 `GetEnumerator` 分派；引擎逐项枚举，
 Studio 仍在原位置 `ToList()`，不能为了共用代码提前物化或省掉重复读取。
 
-**领域扩展（P4-I0）**：证明工具统一为 [Compare-SharedNativePaths.py](../../scripts/checks/Compare-SharedNativePaths.py)、
-[SharedNativeIlReader.cs](../../scripts/checks/SharedNativeIlReader.cs) 和
-[Test-SharedNativeMigration.cs](../../scripts/checks/Test-SharedNativeMigration.cs)。每个领域只新增
-`scripts/checks/shared-native/<domain>.json`，VCI 配置见 [vci.json](../../scripts/checks/shared-native/vci.json)。
+**领域扩展（P4-I0）**：证明工具统一为 [Compare-SharedNativePaths.py](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/scripts/checks/Compare-SharedNativePaths.py)、
+[SharedNativeIlReader.cs](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/scripts/checks/SharedNativeIlReader.cs) 和
+[Test-SharedNativeMigration.cs](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/scripts/checks/Test-SharedNativeMigration.cs)。每个领域只新增
+`scripts/checks/shared-native/<domain>.json`，VCI 配置见 [vci.json](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/scripts/checks/shared-native/vci.json)。
 配置中的 `engine.types/releases` 声明引擎服务与编译版本，`adapter.releases` 列出需验证的适配器版本，
 `hosts` 按名称声明 Studio 和/或 Foundation 的类型与编译版本；每个类型的原有方法均须保持展开调用图。
 `primitives` 逐项指定适配器类型与 `engineNamespace`，本地类型沿用原语的短类型名；
@@ -371,7 +371,7 @@ python scripts/checks/Compare-SharedNativePaths.py --config scripts/checks/share
 自测保留 P4-I1 的 18 项，并覆盖第二个合成领域的多服务、多原语、Foundation 宿主、不同工具入口、
 未编译版本与证据生成，以及跨领域差量抵消和类型前缀混淆。另覆盖 master 已切换一个领域后再迁移第二个领域、
 错用基线的拒绝，以及宿主方法范围、未选中方法 IL 改动/新增和选中方法残留直接调用的拒绝。
-驱动器先运行比较器自测和 [IL 读取器自测](../../scripts/checks/Test-SharedNativeIlReader.py)；后者离线编译合成 C#，
+驱动器先运行比较器自测和 [IL 读取器自测](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/scripts/checks/Test-SharedNativeIlReader.py)；后者离线编译合成 C#，
 通过真实读取器验证委托与空值守卫的正反例，不加载或执行 Siemens 类型。直接运行读取器自测前需构建 NativeCallWeaver，
 其 Mono.Cecil 仅用于元数据解析。所有生成的测试文件和日志留在当前 worktree 的 `bin-build`。
 随后跑离线 TRX 数量门禁、全部 TiaMcp.Engine.Harness 模式、VersionControl 领域逐字节比较、P0-06 原始响应和契约快照、
