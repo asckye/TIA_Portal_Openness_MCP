@@ -42,6 +42,7 @@
       "Directory.Build.props",
       "src/Shared/CodeAnalysis.props",
       "src/Shared/DependencyVersions.props",
+      "src/Shared/ReproducibleBuild.props",
       "runtime/tools/TiaMcp.PluginLauncher.exe",
       "runtime/tools/TiaMcp.PluginLauncher.dll",
       "runtime/tools/TiaMcp.PluginLauncher.deps.json",

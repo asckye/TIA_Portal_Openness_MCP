@@ -32,7 +32,7 @@ internal static partial class ReleaseCommands
             return result.ExitCode;
         }
         RequireCheckAllWorktreeRootHeadroom(worktree);
-        // -NoBuildCache: no verified file-app or build cache reuse, and with it no result cache (a release may adopt only such a run).
+        // -NoBuildCache keeps cold hashes/provenance without copying unit payloads.
         if (options.Has("NoBuildCache")) Environment.SetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED", "1");
         int parallelism;
         int shards = FastSuites.Positive(options, "Shards", 8);
@@ -44,6 +44,9 @@ internal static partial class ReleaseCommands
         var output = Path.GetFullPath(options.Get("OutputDirectory", Path.Combine(Root, "bin-build/check-all/" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture) + "-" + Guid.NewGuid().ToString("N")[..6])));
         if (Directory.Exists(output) && !NightlyRuns.ManagedFreshOutput(output)) throw new ReleaseException("Output directory must be fresh: " + output, 64);
         Directory.CreateDirectory(output);
+        Environment.SetEnvironmentVariable("TIA_MCP_BUILD_CACHE_RUN_ID", Path.GetFileName(output));
+        Environment.SetEnvironmentVariable("TIA_MCP_CHECK_PARITY_CACHE", Path.Combine(Path.GetFullPath(options.Get("CacheDirectory",
+            Path.Combine(Environment.GetEnvironmentVariable("TIA_MCP_CHECK_ORIGINAL_ROOT") ?? Root, "bin-build/cache/check-all"))), "parity"));
         var python = options.Get("Python", Py); var dotnet = options.Get("Dotnet", Dotnet);
         if (!OperatingSystem.IsWindows()) throw new ReleaseException("check-all CPU isolation requires Windows", 64);
         var companionPython = CheckAllCompanionPython(options);
@@ -55,6 +58,7 @@ internal static partial class ReleaseCommands
         CheckAllProfiles.WriteInventory(catalog, output, checkProfile, derivations);
         if (options.Get("BaselineReport") is { } timingBaseline)
             SuiteCosts.ImportReport(Path.GetDirectoryName(Path.GetFullPath(timingBaseline))!, Path.Combine(Root, "bin-build/check-timings"));
+        SeedCheckAllHistory(Root);
         var history = Path.Combine(Root, "bin-build/check-timings/check-costs.json");
         var costs = File.Exists(history) ? JsonSerializer.Deserialize<Dictionary<string, double>>(File.ReadAllText(history))! : new Dictionary<string, double>();
         var baselineReport = options.Get("BaselineReport") ?? (File.Exists(Path.Combine(Root, "bin-build/reviewer-run1/report.json")) ? Path.Combine(Root, "bin-build/reviewer-run1/report.json") : null);
@@ -116,8 +120,11 @@ internal static partial class ReleaseCommands
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException) { coverageMachine = "unavailable:" + Guid.NewGuid().ToString("N"); }
         var nightlyCoverage = new CheckAllNightlyCoverage(output, coverageMachine, options.Has("Affected") && !options.Has("Quick") &&
             !options.Has("NoResultCache") && !options.Has("NoBuildCache") && !options.Has("ProveEquivalence") && !options.Has("SequentialBaselineDirectory")
-            ? Path.Combine(NightlyRuns.DirectoryFor(Root), "latest-passed.json") : null, recordPasses: recordIdentities);
+            ? NightlyRuns.LatestPassedFor(Root) : null, recordPasses: recordIdentities);
         var nightlyOnly = new List<string>();
+        var (tierChanges, tierFallback) = CheckAllAffected.ChangeSet(options.Get("Base", "origin/master"),
+            args => ProcessRunner.Run(options.Get("Git", "git"), args, Root));
+        var mergePolicy = new CheckAllMergePolicy(tierChanges, tierFallback);
         bool Early(string name) => CheckAllEarly(name) && (!options.Has("Affected") || CheckAllJobInputs.AlwaysRun(name));
         // The release may adopt this run (P8-93): bind the commit, the tree and every input before anything is regenerated.
         var releaseEvidence = ReleaseEvidence.BeginSafely(() => ReleaseEvidence.Begin(Root, "git", options, ReleaseEvidence.ProbeExternal(Root, api, nuget, Dotnet, python, companionPython),
@@ -220,13 +227,14 @@ internal static partial class ReleaseCommands
         }
         var runtimeManifest = Path.Combine(output, "build/runtime-paths.tsv");
         var runtimeReady = new TaskCompletionSource<CommandResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var buildInputsReady = new TaskCompletionSource<CommandResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         CheckJob? parity = null;
         Task<CheckTiming>? parityTask = null;
-        if (!options.Has("BuildOnly") && !options.Has("Quick"))
+        if (!options.Has("BuildOnly") && !options.Has("Quick") && mergePolicy.Includes("suite-output-parity", checkProfile))
         {
             parity = new("suite-output-parity", () => CheckAllLayout.Verify(Root, builds, dotnet, nuget, api,
                 Path.Combine(output, "suite-output-parity"), runtimeManifest, buildParallelism, independent: true,
-                awaitRuntime: () => CheckScheduler.AwaitRuntime(runtimeReady.Task)), ["generate-tool-usage", "generate-release-migration", "prepare-decoder-python"]);
+                awaitRuntime: () => CheckScheduler.AwaitRuntime(runtimeReady.Task), awaitInputs: () => CheckScheduler.AwaitRuntime(buildInputsReady.Task)), ["generate-tool-usage", "generate-release-migration", "prepare-decoder-python"]);
             parity = parity with { Priority = 2, Affinity = layout.General, EstimatedSeconds = CheckAllJobCost(parity, costs), Timeout = CheckScheduler.JobTimeout(parity, costs) };
             if (!packing.CanAdmit(parity, layout.General, [])) throw new ReleaseException("Parity exceeds the available check CPU/memory budget.");
             parityTask = CheckScheduler.Start(parity, Path.Combine(output, "logs"));
@@ -236,25 +244,35 @@ internal static partial class ReleaseCommands
         {
             try
             {
-                var result = CheckAllCachedBuild(options, builds, output, dotnet, api, nuget, buildParallelism);
+                var result = CheckAllCachedBuild(options, builds, output, dotnet, api, nuget, buildParallelism, parallelism,
+                    () => buildInputsReady.TrySetResult(new(0, "", "")));
                 runtimeReady.TrySetResult(result);
                 return result;
             }
             catch (Exception ex) { runtimeReady.TrySetResult(new(1, "", ex.Message)); throw; }
+            finally { buildInputsReady.TrySetResult(new(1, "", "Build inputs were not prepared.")); }
         });
         jobs[^1] = jobs[^1] with { Priority = 2, Affinity = available };
         Add("analyzer-warnings", () =>
         {
             var directory = Path.Combine(output, "build/analyzer-warnings");
             var result = Tool("analyzer-warnings", "check-analyzer-warnings", "-Check", "-Complete", "-DiagnosticsDirectory", directory);
-            if (result.ExitCode == 0) AnalyzerWarnings.RememberDirectory(Root, directory);
+            if (result.ExitCode == 0)
+            {
+                AnalyzerWarnings.RememberDirectory(Root, directory);
+                CheckAllAnalyzerResult.Write(Root, directory, Path.Combine(output, "analyzer-result.json"));
+            }
             return result;
         }, ["build-once"]);
-        if (!options.Has("BuildOnly")) jobs.AddRange(staticJobs.Where(job => Early(job.Name))
+        if (!options.Has("BuildOnly")) jobs.AddRange(staticJobs.Where(job => Early(job.Name) && mergePolicy.Includes(job.Name, checkProfile))
             .Select(CheckAllEarlyDependencies).Select(job => BindEarly(job with { Priority = 1, Affinity = layout.General })));
         try { Wave(["generate-tool-usage", "prepare-decoder-python"]); }
-        finally { runtimeReady.TrySetResult(new(1, "", "Build wave did not publish runtime outputs.")); }
-        if (!CheckAllPrerequisitesPassed(timings.Where(row => row.Name is "generate-catalogs" or "generate-tool-usage" or "build-once")))
+        finally
+        {
+            runtimeReady.TrySetResult(new(1, "", "Build wave did not publish runtime outputs."));
+            buildInputsReady.TrySetResult(new(1, "", "Build wave did not prepare inputs."));
+        }
+        if (!CheckAllPrerequisitesPassed(timings.Where(row => row.Name is "generate-catalogs" or "prepare-decoder-python" or "generate-tool-usage" or "build-once")))
         {
             if (parityTask != null) { planned.Add(parity!.Name); allJobs.Add(parity); timings.Add(parityTask.GetAwaiter().GetResult()); }
             return Finish();
@@ -327,7 +345,7 @@ internal static partial class ReleaseCommands
                     var script = "scripts/checks/Snapshot-Tool" + (category == "contracts" ? "Contracts" : "Responses") + ".py";
                     var args = new List<string> { "capture", "--repo-root", Root, "--public-api-root", api, "--releases", key, "--exe", key + "=" + host, "--output", captureDirectory };
                     if (plc) args.AddRange(["--engine-host", host, "--plc-worker", key + "=" + CheckAllPlcFixture(key)]);
-                    if (category == "responses") args.AddRange(["--temp-root", FastSuites.TemporaryDirectory()]);
+                    if (category == "responses") args.AddRange(["--temp-root", FastSuites.TemporaryDirectory(), "--check-profile", checkProfile == "merge" ? "merge" : "full"]);
                     var result = Python(name, script, args.ToArray());
                     if (result.ExitCode != 0) return result;
                     // Both the existing semantic comparison and an exact-byte check.
@@ -343,12 +361,12 @@ internal static partial class ReleaseCommands
             if (key is "20" or "21")
             {
                 var plcName = CheckAllPlcSuccessor(usageName);
-                Add(plcName, () => Python(plcName, "scripts/checks/Test-FoundationTransport.py", "--plc-worker",
+                Add(plcName, () => Python(plcName, "scripts/checks/Test-FoundationTransport.py", "--check-profile", checkProfile == "merge" ? "merge" : "full", "--plc-worker",
                     "--fixture", Path.Combine(Root, "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe"),
                     "--host-exe", host, "--releases", key, "--plc-sdk-worker", key + "=" + CheckAllPlcFixture(key),
                     "--public-api-root", api, "--temp-root", FastSuites.TemporaryDirectory(), "--output", Path.Combine(output, plcName)));
             }
-            else Add(usageName, () => Python(usageName, "scripts/checks/Test-FoundationTransport.py", "--fixture", Path.Combine(Root, "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe"),
+            else Add(usageName, () => Python(usageName, "scripts/checks/Test-FoundationTransport.py", "--check-profile", checkProfile == "merge" ? "merge" : "full", "--fixture", Path.Combine(Root, "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe"),
                 "--host-exe", host, "--releases", key, "--temp-root", FastSuites.TemporaryDirectory(), "--output", Path.Combine(output, usageName)));
             var sourceUsageName = "usage-v" + key;
             if (key is "20" or "21")
@@ -461,6 +479,26 @@ internal static partial class ReleaseCommands
         }
         ValidateCheckAllPlcScriptJobs(jobs);
         ValidateCheckAllPlcHarnessJobs(jobs);
+        AddAdoptionEvidenceJobs(jobs, output, api, nuget, dotnet, runtimeManifest, Isolated);
+        for (var index = 0; index < jobs.Count; index++)
+        {
+            var job = jobs[index];
+            if (job.Name.StartsWith("adapter-coverage-v", StringComparison.Ordinal))
+            {
+                var major = job.Name["adapter-coverage-v".Length..];
+                jobs[index] = BinaryCheckReceipts.Bind(job, Root, output, new Dictionary<string, string> { ["worker"] = CheckAllPlcFixture(major) });
+                continue;
+            }
+            var key = CatalogJson.Keys.FirstOrDefault(key => job.Name.Contains("-v" + key + "-", StringComparison.Ordinal) ||
+                job.Name == "contracts-v" + key || job.Name == "responses-v" + key);
+            if (key is null || !(job.Name.StartsWith("stability-", StringComparison.Ordinal) || job.Name.StartsWith("harness-", StringComparison.Ordinal) ||
+                job.Name.StartsWith("transport-usage-", StringComparison.Ordinal) || job.Name.StartsWith("contracts-", StringComparison.Ordinal) || job.Name.StartsWith("responses-", StringComparison.Ordinal))) continue;
+            var worker = key is "20" or "21" ? CheckAllPlcFixture(key) : CheckAllBuild.TestAssembly(Root,
+                new("src/PlcWorker/TiaMcp.PlcWorker.csproj", "", ["-p:TiaReleaseKey=" + key,
+                    "-p:SiemensEngineeringDirectory=" + Path.GetFullPath(Path.Combine(api, PlcWorkerApi(key).Directory))]), runtimeManifest)!;
+            jobs[index] = BinaryCheckReceipts.Bind(job, Root, output, new Dictionary<string, string>
+                { ["host"] = host, ["worker"] = worker, ["harness"] = harness });
+        }
         var declaredPlan = allJobs.Concat(jobs).ToArray();
         Add("affected-inputs-self-test", () => CheckAllJobInputs.Validate(declaredPlan, catalog));
         CiCoverage.RequirePlan([.. allJobs, .. jobs], ciCovered);
@@ -472,22 +510,27 @@ internal static partial class ReleaseCommands
             Priority = job.Priority > 0 || !staticJobs.Any(item => item.Name == job.Name) ? job.Priority : 1
         }).ToList();
         var sensitiveLanes = CheckAffinity.AssignLanes(scheduled, layout, sensitiveWorkers.Workers);
-        workerCopies.Prepare(Root, scheduled, runtimeManifest);
+        scheduled = mergePolicy.Apply(scheduled, checkProfile).ToList();
+        var copiesTask = Task.Run(() => workerCopies.Prepare(Root, scheduled, runtimeManifest));
         var resultCache = new CheckAllResultCache(Root, output, runtimeManifest, api, nuget, dotnet, python, companionPython, options,
             JsonSerializer.Serialize(new { parallelism, shards, stabilityParallelism, lanes = sensitiveLanes, available, stability = layout.Stability,
                 sensitive = layout.Sensitive, general = layout.General }));
         // Merge evidence is either fresh execution or the same job identity from
         // the latest passed nightly. The developer result cache is not merge evidence.
-        scheduled = scheduled.Select(job =>
+        var preparation = scheduled.ToArray();
+        Parallel.For(0, preparation.Length, new ParallelOptions { MaxDegreeOfParallelism = 4 }, index =>
         {
-            if (job.ResultInputs is not { } spec) return job;
-            try { return job with { ResultInputs = resultCache.Prepare(spec) }; }
+            var job = preparation[index];
+            if (job.ResultInputs is not { } spec) return;
+            try { preparation[index] = job with { ResultInputs = resultCache.Prepare(spec) }; }
             catch (Exception ex) when (CheckAllNightlyCoverage.InputError(ex))
             {
-                affected?.RequireFull("Cannot derive suite identity closure: " + job.Name + ": " + ex.Message);
-                return job with { ResultInputs = null, ResultCachePolicy = "execute: identity closure unavailable" };
+                lock (preparation) affected?.RequireFull("Cannot derive suite identity closure: " + job.Name + ": " + ex.Message);
+                preparation[index] = job with { ResultInputs = null, ResultCachePolicy = "execute: identity closure unavailable" };
             }
-        }).ToList();
+        });
+        copiesTask.GetAwaiter().GetResult();
+        scheduled = preparation.ToList();
         affected?.Map(scheduled, catalog);
         if (checkProfile == "merge")
         {
@@ -495,6 +538,7 @@ internal static partial class ReleaseCommands
             scheduled.RemoveAll(job => CheckAllJobInputs.NightlyOnly(job.Name));
         }
         if (affected != null) scheduled = affected.QuickPlan(scheduled, catalog).ToList();
+        scheduled = CheckAllMergePolicy.UpdaterTail(scheduled).ToList();
         var plan = scheduled.Select(job =>
         {
             var declaration = CheckAllJobInputs.Find(job, catalog);
@@ -546,6 +590,8 @@ internal static partial class ReleaseCommands
             var performance = CheckScheduler.Performance(allJobs, timings, DateTime.UtcNow - clock.Elapsed, clock.Elapsed.TotalSeconds);
             affected?.Write(output, timings, nightlyOnly, nightlyCoverage?.NightlyId);
             nightlyCoverage?.Save();
+            mergePolicy.Write(output);
+            CheckAllFailureLedger.Append(CheckAllFailureLedger.RootFor(Root, Environment.GetEnvironmentVariable("TIA_MCP_CHECK_ORIGINAL_ROOT")), output, timings);
             var report = new { schemaVersion = 1, profile = checkProfile, quick = options.Has("Quick"), affected = options.Has("Affected"),
                 coverage = new { executed = timings.Count(row => row.ReusedRunId == null), reused = timings.Count(row => row.ReusedRunId != null),
                     nightlyRunId = nightlyCoverage?.NightlyId, nightlyOnly = nightlyOnly.Count,
@@ -556,7 +602,8 @@ internal static partial class ReleaseCommands
                 wallSeconds = clock.Elapsed.TotalSeconds, underThirtyMinutes = clock.Elapsed.TotalSeconds < 1800, buildOnly = options.Has("BuildOnly"), nativeTiaExecuted = false,
                 passed = timings.Count(CheckTiming.Passed), reused = timings.Count(row => row.Status == "passed (reused)"),
                 ciCovered = timings.Count(row => row.Status == "covered by CI"),
-                failed = timings.Count(row => !CheckTiming.Passed(row)), drift, performance, checks = timings };
+                failed = timings.Count(row => !CheckTiming.Passed(row)), drift, performance, checks = timings,
+                buildCache = File.Exists(Path.Combine(output, "build-cache.json")) ? JsonNode.Parse(File.ReadAllText(Path.Combine(output, "build-cache.json"))) : null };
             File.WriteAllText(Path.Combine(output, "report.json"), JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }) + "\n");
             WriteTimingComparison(output, timings, options.Get("BaselineReport"), layout);
             File.AppendAllText(Path.Combine(output, "comparison.md"), $"\nSensitive workers: {sensitiveWorkers.Workers} configured / {sensitiveWorkers.RequestedWorkers} requested. {sensitiveWorkers.Reason}\n");
@@ -650,6 +697,7 @@ internal static partial class ReleaseCommands
             units.Add(new("src/PlcWorker/TiaMcp.PlcWorker.csproj", "", ["-p:TiaReleaseKey=" + key,
                 "-p:SiemensEngineeringDirectory=" + Path.GetFullPath(Path.Combine(apiRoot, ReleaseCommands.PlcWorkerApi(key).Directory))]));
         units.AddRange(CheckAllPlcFixtureBuilds(apiRoot));
+        units.AddRange(new[] { "20", "21" }.Select(HostParity.Unit));
         foreach (var mode in new[] { "false", "true" })
         foreach (var project in new[] { "src/Studio/Bridge/TiaOpenness.Bridge.csproj", "src/Studio/Gui/TiaOpenness.Gui.csproj", "tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj", "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj" })
             units.Add(new(project, "", ["-p:TiaSharedAdapterPaths=" + mode]));

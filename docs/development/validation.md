@@ -91,8 +91,9 @@ dotnet run --project build-tools/release -- check-all -Profile nightly -Clean -N
 `-Clean` 在当前 worktree 的 `bin-build` 内建立保留现有源码修改的 detached checkout，往返复制 `bin-build/check-timings` 的用例、类与整项历史；
 干净 checkout 根目录比原 worktree 最多增加 24 个字符，入口和自检都校验这个余量；暂存生命周期夹具在仓库的
 `bin-build` 下创建自有短目录并清理，避免隔离程序集目录消耗产品的 MAX_PATH 余量。
-`-Cold` 先清理已列入构建图的输出，记录冷构建耗时。暖运行不加 `-Clean`，在同一 worktree 内保留 `obj` 和 `bin` 做增量构建，
-不恢复或重写缓存输出。构建复用 SDK 的引用准备目标收集实际节点及全局属性，包含目标执行时修改的引用属性、框架协商和 NuGet 加入的传递引用。
+`-Cold` 先清理已列入构建图的输出；与 `-NoBuildCache` 同用时强制冷编译，并验证或填充构建单元缓存。
+暖运行可恢复已经冷编译验证的单元，恢复前后都核对全部输出文件的 SHA-256；未命中的单元继续编译。
+构建复用 SDK 的引用准备目标收集实际节点及全局属性，包含目标执行时修改的引用属性、框架协商和 NuGet 加入的传递引用。
 每轮 Restore 后重新求值，节点与属性集合稳定后才开始一次编译；失败或四轮后仍不稳定立即停止。节点标识在求值前按项目路径及实际全局属性字典计算，区分显式全局值与项目的同值默认值，也区分同目录中的不同项目。
 每个项目/属性组合使用固定的 obj/bin 目录，适配器显式关闭的 Directory.Build 导入也由本入口统一启用；编译前另核对节点标识和完整 SHA-256 收据，冲突立即失败。
 较长项目名的生成 editorconfig 使用同一中间目录内的短文件名，避免 Windows 增量检查把超过 MAX_PATH 的输入误判为缺失而重复编译。
@@ -101,13 +102,18 @@ dotnet run --project build-tools/release -- check-all -Profile nightly -Clean -N
 构建或生成失败立即停止全集并写出失败报告，不能继续使用旧输出。运行时按 MSBuild 返回的实际路径复制到原发现布局，文件内容不变时不重写；注册套件用对应变体的准确 TargetPath 执行。
 release CLI 保留已经启动的普通目录副本，避免覆盖外层启动器持有的 DLL；检查命令使用私有 driver，release-tool 套件使用准确的变体程序集。
 Foundation 的 transport、Engine fault 与 PLC fault 等 `ReferenceOutputAssembly=false` 夹具也作为构建入口取得 runtime receipt，先投影到测试发现路径；新 checkout 和清单缓存命中都不依赖普通 parity 构建顺便生成这些夹具。
-Studio 测试收到既有的 bundle 根目录覆盖；bridge 载荷来自对应的隔离编译变体。新增 suite-output-parity 比较每个套件变体普通构建与隔离构建的文件清单，内容缺失即失败。普通构建在单个 MSBuild 遍历中生成清单，各入口及入口内部的引用写入依次执行；即使入口属性相同，引用边删除或增加全局属性后也可能产生写同一 obj 的不同节点，不能同时调度这些入口；每个变体完成后立即保存文件存在性和普通输出，避免后续变体改写比较依据。清单按源码、构建属性、SDK/运行时身份的输入哈希缓存，测试结果不缓存。清单缓存仍只在当前 checkout 内复用，-Clean 不携带清单；缓存命中仍逐项检查普通和隔离输出中的全部预期文件，每次都恢复 runtime；缓存缺失时先构建普通基线。
+Studio 测试收到既有的 bundle 根目录覆盖；bridge 载荷来自对应的隔离编译变体。suite-output-parity 比较每个套件变体普通构建与隔离构建的文件清单，内容缺失即失败。普通构建在单个 MSBuild 遍历中生成清单，各入口及入口内部的引用写入依次执行；即使入口属性相同，引用边删除或增加全局属性后也可能产生写同一 obj 的不同节点，不能同时调度这些入口；每个变体完成后立即保存文件存在性和普通输出，避免后续变体改写比较依据。基线清单使用构建输入闭包和冷构建验证收据，在同一 worktree 的缓存目录中跨隔离 checkout 复用；缓存命中仍逐项检查全部预期文件，每次都恢复 runtime。`-NoBuildCache` 始终重建普通基线；同键清单或输出字节变化会删除条目并使本轮失败。测试结果不随构建缓存复用。
+parity 键计算按普通构建的属性组执行：每组一次 restore，随后并行探测引用闭包；跨组和 afterKey 阶段只复用不可变外部输入的哈希，仓库文件、assets、import 和 MSBuild 求值均重新读取。`phases.json` 记录 `keySeconds`、`afterKeySeconds`、两阶段 restore 与探测进程数；截止时间到达时以 `ParityKeys` 超时失败，不降为不可缓存。
+check-all 的合并和 nightly 构建统一设置 `TiaCheckBuild=true` 与固定 `SourceRevisionId=check`（信息版本后缀为 `+check`），包含 file-based app；构建单元和 parity 缓存身份不再包含 HEAD。仅改变闭包以外文件的提交可以恢复经冷编译验证的相同字节，闭包变化仍重建，恢复后的逐文件哈希检查和冷编译抽查保持。release 不使用此标记，仍写入发布提交号；采纳检查证据只复用验证证据，发布仍独立构建并按哈希验证自己的二进制。
 `-BuildParallelism` 单独控制 MSBuild 并发，沙箱中可设为 1。`-BuildOnly` 只测生成与构建，用于无改动、单文件改动诊断，不能替代全集验收。
 每次 `-OutputDirectory` 必须使用新目录。报告保存每个进程的计时、日志、TRX 合并计数、源码漂移和三十分钟门槛（`underThirtyMinutes`）。
 全集低于三十分钟与检查通过是两个独立条件，任何一个不满足都返回非零状态。
 每次结束时另写 `release-evidence.json`：提交、tree id、开始时的工作树状态与全部输入文件 SHA-256、PublicAPI/NuGet 配置/SDK/Python/机器标识、
-运行模式、计划作业与每个作业的结果和日志哈希、注册套件计数及退出状态。`-NoBuildCache` 关闭文件程序构建缓存并随之关闭结果缓存；
-发布目前只采纳干净提交上 `-Profile nightly`、`-Clean`（或 `-Cold`）且带 `-NoBuildCache` 的完整通过运行，规则见[发布流程](release-workflow.md#采纳同一提交的-check-all-与-ci-证据-adoptevidence)；按 ADR 0025 改为采纳最近一次通过的 nightly 加已验证构建单元，由 RULES-1 实现。
+运行模式、计划作业与每个作业的结果和日志哈希、注册套件计数及退出状态，以及每个构建单元的输入键、输出哈希、冷编译运行编号和恢复来源。
+`-NoBuildCache` 禁止读取缓存输出，仍允许冷编译验证和填充条目，并随之关闭结果缓存。
+发布只采纳干净提交上 `-Profile nightly` 的完整通过运行：`-Clean`（或 `-Cold`）且带 `-NoBuildCache`，或结果缓存关闭且全部恢复单元已冷编译验证；采纳时重新计算输出哈希，默认随机冷编译抽查一个恢复单元（`-SpotCheckColdUnits N`）。旧格式证据仍要求 `-Clean`（或 `-Cold`）与 `-NoBuildCache`，规则见[发布流程](release-workflow.md#采纳同一提交的-check-all-与-ci-证据-adoptevidence)。按 ADR 0025 改为采纳最近一次通过的 nightly 加已验证构建单元，由 RULES-1 实现。
+
+夜间执行 `dotnet run --project build-tools/release -- build-reproducibility -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -OutputDirectory bin-build/repro/nightly`，从两个源码路径冷编译代表单元并逐文件比较，包括 PDB。每次使用新输出目录。`-SelfTest` 使用无 SDK 的小夹具；`-SharedLibrariesOnly -NuGetConfig <offline-nuget.config>` 另生成六个共享库的八版字节比较和去重前后的构建图计时。完整冷 check-all 使用 `-Cold -NoBuildCache`；用于发布证据的暖 check-all 使用 `-NoResultCache`。
 
 可选 `-CiCovered <候选 JSON>` 将同一提交的部分检查交给 Windows CI；不传时全部本机执行。
 原计划的每个 shard、gate 和静态作业仍有一条结果：本机执行，或 `covered by CI`，并列出 run ID、attempt、job ID 与 job 名。

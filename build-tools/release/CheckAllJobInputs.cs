@@ -23,6 +23,7 @@ internal static class CheckAllJobInputs
         ["python-script-self-tests"] = "Check-ScriptToolCalls.py --self-test",
         ["python-script-calls"] = "Check-ScriptToolCalls.py",
         ["campaign-runner-self-tests"] = "Test-CampaignInputs.py --self-test",
+        ["check-all-speedup-self-tests"] = "Test-CheckAllSpeedups.py",
         ["plc-script-self-tests"] = "Test-PlcScriptSuccessors.py",
         ["plc-harness-self-tests"] = "Test-PlcHarnessSuccessors.py",
         ["campaign-validator-self-tests"] = "Test-CampaignInputs.py --validator-self-test",
@@ -51,7 +52,8 @@ internal static class CheckAllJobInputs
             return new("registered suite", ["tests/test-suites.json"], [(string)catalog[suite]!["project"]!],
                 catalog[suite]!.ToJsonString(), [], Release: SuiteRelease(catalog[suite]!.AsObject()), Aggregate: job.ResultInputs == null);
         if (Scripts.TryGetValue(job.Name, out var command))
-            return new("scripts/checks/" + command.Split(' ')[0], ["scripts", "src", "tests", "reference", "manifest", "templates", "catalog", "third_party"],
+            return new("scripts/checks/" + command.Split(' ')[0],
+                [.. CheckAllScriptInputs.Closure("scripts/checks/" + command.Split(' ')[0]), .. ScriptData(job.Name)],
                 job.Name == "campaign-validator-self-tests" ? ["src/Logic/TiaMcp.Logic.csproj"] : [], command, [],
                 FilePrograms: job.Name == "campaign-validator-self-tests" ? ["scripts/checks/Test-CampaignInputs.cs"] : null,
                 SourceOnly: ReleaseCommands.CheckAllSourceOnly(job.Name));
@@ -65,7 +67,7 @@ internal static class CheckAllJobInputs
                     : job.Name == "match-plc-name-source" ? ["bin-build/check-scripts/Test-MatchPlcName"] : null,
                 SourceOnly: ReleaseCommands.CheckAllSourceOnly(job.Name), DefaultPython: job.Name == "static-python-csharp-parity");
         if (job.Name == "usage-audit-plc")
-            return new("scripts/checks/Test-ToolUsage.py", ["scripts/checks", "reference", "manifest", "catalog"], [Host, Worker],
+            return new("scripts/checks/Test-ToolUsage.py", [.. CheckAllScriptInputs.Closure("scripts/checks/Test-ToolUsage.py"), .. CheckAllScriptInputs.Data("usage"), "manifest/tool-usage-coverage.json"], [Host, Worker],
                 "coverage; CatalogAudits.Usage; exact manifest bytes", [], Aggregate: true);
         var match = Regex.Match(job.Name, @"^(?<family>contracts|responses|transport-usage|usage|campaign-inputs|approval|resources|ecosystem|stability|harness|adapter-coverage)-v(?<key>14sp1|15\.1|16|17|18|19|20|21)(?<suffix>.*)$");
         if (!match.Success) return null;
@@ -84,7 +86,8 @@ internal static class CheckAllJobInputs
         if (family is "harness" or "stability" or "ecosystem" or "approval") projects.Add(Harness);
         if (family == "transport-usage") projects.Add(Transport);
         if (family == "adapter-coverage") projects.Add("build-tools/native-call-weaver/NativeCallWeaver.csproj");
-        var paths = new List<string> { "scripts", "reference", "manifest/contracts/v4", "templates", "catalog", "third_party", "src/Shared/ToolUsageData.json", "src/Logic/ModelContextProtocol/ToolTaxonomy.cs" };
+        var paths = new List<string>(CheckAllScriptInputs.Data(family));
+        if (script != null) paths.AddRange(CheckAllScriptInputs.Closure("scripts/checks/" + script));
         if (family == "harness" && job.Name.Contains("native-diagnostics-only", StringComparison.Ordinal))
         {
             projects.AddRange(["tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj", Transport,
@@ -94,7 +97,9 @@ internal static class CheckAllJobInputs
         }
         string[] outputs = family switch
         {
-            "contracts" or "responses" => [(key is "20" or "21" ? family + "-plc/" : family + "/") + key + ".json"],
+            "responses" => [(key is "20" or "21" ? "responses-plc/" : "responses/") + key + ".json",
+                (key is "20" or "21" ? "responses-plc" : "responses") + "-latency-" + key + ".json"],
+            "contracts" => [(key is "20" or "21" ? "contracts-plc/" : "contracts/") + key + ".json"],
             "usage" or "resources" or "adapter-coverage" => [job.Name + ".json"], _ => [job.Name]
         };
         return new(script == null ? "native-call-weaver verify" : "scripts/checks/" + script,
@@ -104,6 +109,19 @@ internal static class CheckAllJobInputs
                 (job.Name.Contains("script-inputs-only", StringComparison.Ordinal) || job.Name.Contains("check-modes-self-test", StringComparison.Ordinal))
                 ? ["scripts/checks/Test-CampaignInputs.cs"] : null);
     }
+
+    private static string[] ScriptData(string name) => name switch
+    {
+        // These checks intentionally scan repository-wide source or documentation.
+        "python-repository" => ["src", "tests", "scripts", "build-tools", "docs", "reference", "manifest", "templates", "catalog", "third_party", "README.md", "CHANGELOG.md"],
+        "python-script-calls" => ["scripts", "src/Engine", "src/Logic/ModelContextProtocol/ToolProfiles.resx"],
+        "python-script-self-tests" or "check-all-speedup-self-tests" => [],
+        "contract-self-tests" => ["src/Engine", "src/EngineHost", "src/FoundationHost", "src/Logic/V4", "src/Logic/ModelContextProtocol/ToolProfiles.resx", "src/Adapters.Contracts/PortedFamilies.cs", "manifest/contracts/v4/baseline"],
+        "domain-source" => ["src", "tests", "reference"],
+        "contract-verify" or "response-verify" => ["src", "reference", "manifest/contracts/v4"],
+        "plc-script-self-tests" or "plc-harness-self-tests" => ["build-tools/release/CheckAll.cs", "build-tools/release/CheckAllInventory.cs", "tests/Engine/TiaMcp.Engine.Harness"],
+        _ => CheckAllScriptInputs.Data(name)
+    };
 
     private static string? SuiteRelease(JsonObject suite)
     {

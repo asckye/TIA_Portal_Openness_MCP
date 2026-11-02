@@ -59,6 +59,8 @@ elapsed-time, PID, arbitrary GUID or blanket temp-path mask is used by the captu
 Unknown paths/encodings remain visible and must fail the consecutive-capture gate.
 """
 import argparse
+import time
+from call_latency import Samples
 import copy
 from collections import Counter
 from contextlib import contextmanager
@@ -708,12 +710,19 @@ def missing_tia_cause(text, release):
             or f'TIA Portal V{release} or its Openness API files were not found.' in text)
 
 
+LATENCIES = None
+LATENCY_TRANSPORT = 'stdio'
+
+
 def recorder(rpc, entries, profile, release, path_roots=None):
     inventory = behavior_entries(release)
     def call(name, arguments):
         key = profile, name, canonical(arguments)
         if key not in entries:
+            started = time.perf_counter()
             reply = rpc('tools/call', params={'name': name, 'arguments': arguments})
+            if LATENCIES is not None:
+                LATENCIES.record(release, LATENCY_TRANSPORT, time.perf_counter() - started)
             raw_blocks = raw_text_blocks(reply, name, path_roots)
             raw_evidence = [dict(contentIndex=index, text=mask_raw_text(block['text'], name, path_roots))
                             for index, block in enumerate(reply.get('result', {}).get('content', []))
@@ -1050,7 +1059,11 @@ def capture_foundation(args, release, exe):
 
 
 def capture(args):
+    global LATENCIES, LATENCY_TRANSPORT
+    LATENCIES, LATENCY_TRANSPORT = Samples('responses', args.check_profile), args.transport
     root = args.repo_root.resolve()
+    if args.check_profile == 'merge' and args.output.resolve().is_relative_to(root / 'manifest'):
+        raise ValueError('Baseline regeneration requires the full two-capture determinism proof')
     api_root = (args.public_api_root or root).resolve()
     executables = {}
     for override in args.exe:
@@ -1061,6 +1074,7 @@ def capture(args):
     snapshots = {}
     requested_host = args.engine_host
     for release in args.releases:
+        LATENCY_TRANSPORT = args.transport if release in FULL_RELEASES else 'stdio'
         exe = executables.get(release, root / 'runtime' / ('v' + release) / 'TiaMcp.FoundationHost.exe')
         if release in FULL_RELEASES:
             args.engine_host = requested_host or exe
@@ -1068,10 +1082,10 @@ def capture(args):
             if api is not None and release == '21':
                 api /= 'net48'
             first = capture_release(args, release, exe, api)
-            second = capture_release(args, release, exe, api)
+            second = capture_release(args, release, exe, api) if args.check_profile != 'merge' else first
         else:
             first = capture_foundation(args, release, exe)
-            second = capture_foundation(args, release, exe)
+            second = capture_foundation(args, release, exe) if args.check_profile != 'merge' else first
         difference = first_difference(first, second)
         if difference:
             args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -1083,10 +1097,14 @@ def capture(args):
         print(f'V{release}: {len(first["calls"])} calls, {len(c["directRejectedTools"])}/{c["registeredTools"]} '
               f'direct refusals, {len(c["bridgeRejectedTools"])} bridge argument refusals, '
               f'{len(c.get("bridgeSelfGuardTools", []))} bridge self-guard, '
-              f'{len(snapshot_text(first).encode("utf-8"))} bytes; two captures identical', flush=True)
+              f'{len(snapshot_text(first).encode("utf-8"))} bytes; ' + ('single merge capture' if args.check_profile == 'merge' else 'two captures identical'), flush=True)
     args.output.mkdir(parents=True, exist_ok=True)
     for release, snapshot in snapshots.items():
         (args.output / (release + '.json')).write_text(snapshot_text(snapshot), encoding='utf-8', newline='\n')
+    latency_args = {} if args.latency_baseline is None else {'baseline': args.latency_baseline}
+    LATENCIES.finish(args.output.parent / (args.output.name + '-latency-' + '-'.join(args.releases) + '.json'),
+                     record_revision=args.record_latency_baseline, **latency_args)
+    LATENCIES = None
     return 0
 
 
@@ -1843,6 +1861,9 @@ def main():
                                 help='Keep complete normalized and masked raw responses for a text-only migration proof')
     capture_parser.add_argument('--temp-root', type=Path, default=Path(tempfile.gettempdir()),
                                 help='Parent for disposable host journals (use a writable worktree directory in a sandbox)')
+    capture_parser.add_argument('--check-profile', choices=('merge', 'full'), default='full')
+    capture_parser.add_argument('--latency-baseline', type=Path)
+    capture_parser.add_argument('--record-latency-baseline', metavar='MASTER_REVISION')
     capture_parser.set_defaults(run=capture)
     verify_parser = commands.add_parser('verify', help='Check static V4 inventories, rosters and captured response coverage')
     verify_parser.add_argument('--repo-root', type=Path, default=Path(__file__).resolve().parents[2])

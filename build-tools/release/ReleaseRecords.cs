@@ -650,6 +650,23 @@ internal static class ReleaseRecords
         return Convert.ToHexStringLower(SHA256.HashData(stream));
     }
 
+    internal static string HashFile(string path, Action? checkDeadline)
+    {
+        if (checkDeadline == null) return HashFile(path);
+        checkDeadline();
+        using var stream = File.OpenRead(path);
+        using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        var buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(128 * 1024);
+        try
+        {
+            int read;
+            while ((read = stream.Read(buffer)) != 0) { checkDeadline(); hash.AppendData(buffer, 0, read); }
+            checkDeadline();
+            return Convert.ToHexStringLower(hash.GetHashAndReset());
+        }
+        finally { System.Buffers.ArrayPool<byte>.Shared.Return(buffer); }
+    }
+
     private static int GetInt(JsonElement element, string name) => element.TryGetProperty(name, out var value) && value.TryGetInt32(out var result) ? result : 0;
     private static long GetLong(JsonElement element, string name) => element.TryGetProperty(name, out var value) && value.TryGetInt64(out var result) ? result : 0;
     private static bool GetBool(JsonElement element, string name) => element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.True;

@@ -10,7 +10,7 @@ namespace TiaMcp.ReleaseTool;
 
 internal static partial class ReleaseCommands
 {
-    private static int RunReleaseProduction(Options options)
+    private static int RunReleaseProduction(Options options, CandidatePreparation? preparation = null)
     {
         var version = options.Get("Version")!;
         var releaseVersion = ReleaseVersions.Require(version, "-Version must be X.Y.Z, or X.Y.Z-beta.N / X.Y.Z-rc.N for a pre-release");
@@ -43,11 +43,12 @@ internal static partial class ReleaseCommands
         }
 
         var token = "";
-        if (dryRun)
+        if (dryRun || preparation is not null)
         {
             // A rehearsal runs every local step of the publication flow on this checkout and stops before staging. It needs no token,
             // never reads or writes origin, and works on any branch and on uncommitted changes; publication keeps every prerequisite.
-            Console.WriteLine($"DRY RUN Release {version}{(releaseVersion.IsPrerelease ? " (pre-release)" : "")}: local rehearsal; the token, origin, branch and clean-tree prerequisites, staging, commit, push, tag and GitHub steps are skipped.");
+            if (preparation is not null) Console.WriteLine($"PREPARE Release {version}: full local checks and immutable package; no tag or GitHub publication.");
+            else Console.WriteLine($"DRY RUN Release {version}{(releaseVersion.IsPrerelease ? " (pre-release)" : "")}: local rehearsal; the token, origin, branch and clean-tree prerequisites, staging, commit, push, tag and GitHub steps are skipped.");
         }
         else
         {
@@ -64,7 +65,7 @@ internal static partial class ReleaseCommands
         }
         // Publication refuses every running engine or host; the rehearsal only refuses those started from this checkout,
         // because a process of another worktree cannot lock this checkout's runtime folders.
-        RefuseOrStopStrayEngines(options.Has("KillStrayEngine"), dryRun ? Root : null);
+        RefuseOrStopStrayEngines(options.Has("KillStrayEngine"), dryRun || preparation is not null ? Root : null);
 
         var changelog = File.ReadAllText(Path.Combine(Root, "CHANGELOG.md"));
         var entry = Regex.Match(changelog, "(?m)^## \\[(" + ReleaseVersions.VersionPattern + ")\\][^\\r\\n]*\\r?\\n");
@@ -90,7 +91,7 @@ internal static partial class ReleaseCommands
         // Adoption is verified before anything is archived, bumped or built: the evidence binds this clean commit (P8-93).
         JsonObject? adoption = null;
         if (adopt is not null)
-            clock.Run("adopt-evidence", () => adoption = AdoptReleaseEvidence(options, version, git, publicApiRoot, nugetConfig, python, logRoot, token, dryRun));
+            clock.Run("adopt-evidence", () => adoption = AdoptReleaseEvidence(options, version, git, publicApiRoot, nugetConfig, python, logRoot, token, dryRun || preparation is not null));
         // Publication never trusts cached outputs or prior validation records, including -Resume.
         var archiveRecord = TryReadBuildRecord("manifest/release-build.json");
         var archiveOutput = ReleaseRecords.MovePreviousReleaseOutput(Root, version);
@@ -146,13 +147,31 @@ internal static partial class ReleaseCommands
         // only its own output directory. They run side by side; the candidate checks start once all four passed.
         clock.Run("record-checks-and-candidate-package", () => RunReleaseParallel(
         [
-            ("compare-release-records", () => RunReleaseCommand(["compare-release-records"], "release record comparison", logRoot, runTemp, publicApiRoot)),
-            ("preflight", () => RunReleaseCommand(["preflight"], "release preflight", logRoot, runTemp, publicApiRoot)),
-            ("strict-delivery-validation", () => RunReleaseCommand(["validate-bundle", "-Strict"], "strict delivery validation", logRoot, runTemp, publicApiRoot)),
-            ("candidate-package", () => RunReleaseExternal(python, [Path.Combine(Root, "build-tools/Package-Release.py"), "--local", "--output-directory", candidateOutput, .. ReleaseValidation.PackageToolArguments()],
-                "candidate-package", logRoot, runTemp, publicApiRoot))
+            ("compare-release-records", () => clock.Run("compare-release-records", () => RunReleaseCommand(["compare-release-records"], "release record comparison", logRoot, runTemp, publicApiRoot))),
+            ("preflight", () => clock.Run("preflight", () => RunReleaseCommand(["preflight"], "release preflight", logRoot, runTemp, publicApiRoot))),
+            ("strict-delivery-validation", () => clock.Run("strict-delivery-validation", () => RunReleaseCommand(["validate-bundle", "-Strict"], "strict delivery validation", logRoot, runTemp, publicApiRoot))),
+            ("candidate-package", () => clock.Run("candidate-package", () => RunReleaseExternal(python, [Path.Combine(Root, "build-tools/Package-Release.py"), "--local", "--output-directory", candidateOutput, .. ReleaseValidation.PackageToolArguments()],
+                "candidate-package", logRoot, runTemp, publicApiRoot)))
         ], Path.Combine(logRoot, "record-checks"), 4));
+        string? frozenZip = null, frozenZipHash = null;
+        JsonObject? frozenRuntimes = null;
+        if (preparation is not null)
+        {
+            frozenZip = ReleaseEvidence.Text(ReleaseCandidate.Read(Path.Combine(candidateOutput, "package-result.json"))["path"]);
+            frozenZipHash = ReleaseRecords.HashFile(frozenZip);
+            frozenRuntimes = ReleaseCandidate.PackageInventory(frozenZip);
+            ReleaseCandidate.RequireRuntimeFiles(Root, frozenRuntimes);
+        }
         clock.Run("candidate-checks", () => RunProductionCandidateChecks(plan, options, publicApiRoot, logRoot, candidateOutput, runTemp, python));
+        if (preparation is not null)
+        {
+            clock.Run("candidate-runtime-bindings", () =>
+            {
+                ReleaseCandidate.RequireRuntimeFiles(Root, frozenRuntimes!);
+                if (ReleaseRecords.HashFile(frozenZip!) != frozenZipHash) throw new ReleaseException("Candidate ZIP changed during its checks");
+            });
+            return FinishPreparedCandidate(options, preparation, adoption, plan, logRoot, candidateOutput, clock, python, runTemp, publicApiRoot, frozenZipHash!);
+        }
         WriteTierRecord(plan, passed: true);
         if (adoption is not null) RequireAdoptedRecordChanges(git, adoption);
         if (dryRun)
@@ -181,9 +200,7 @@ internal static partial class ReleaseCommands
         RunGitChecked(git, ["push", "origin", "master"], "push master");
         var headSha = GitText(git, ["rev-parse", "HEAD"]);
         var apiBase = options.Get("ApiBaseUrl", "https://api.github.com");
-        if (!options.Has("NoWait")) clock.Run("release-commit-ci", () => WaitForWorkflows(ReleaseEvidence.PushWorkflows, headSha, apiBase, token,
-            options.Get("Repository", "asckye/TIA_Portal_Openness_MCP"), int.Parse(options.Get("CiTimeoutMinutes", "50"), System.Globalization.CultureInfo.InvariantCulture)));
-        else Console.WriteLine("not waiting for CI (-NoWait)");
+        Console.WriteLine("CI is checked asynchronously with release-publication-check after publication.");
         if (options.Has("NoTag")) { Console.WriteLine("stopped before tag (-NoTag)"); return 0; }
 
         var tag = "v" + version;
@@ -208,8 +225,7 @@ internal static partial class ReleaseCommands
         var publishedPath = Path.Combine(packageDir, "published-release.json");
         if (!File.Exists(publishedPath)) throw new ReleaseException("Release publisher left no published-release.json");
         using (var published = JsonDocument.Parse(File.ReadAllText(publishedPath))) Console.WriteLine("published: " + GetJsonString(published.RootElement, "html_url"));
-        if (!options.Has("NoWait")) WaitForWorkflows(["Verify " + tag], headSha, apiBase, token,
-            options.Get("Repository", "asckye/TIA_Portal_Openness_MCP"), int.Parse(options.Get("CiTimeoutMinutes", "50"), System.Globalization.CultureInfo.InvariantCulture));
+        WritePublicationState(version, headSha, null, packageDir);
         Console.WriteLine($"DONE {tag}. Record publication in docs/development/handoff.md and handoff-checklist.md, then commit that separately.");
         _ = paths;
         return 0;

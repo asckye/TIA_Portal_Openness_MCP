@@ -107,30 +107,46 @@ internal static class CheckAllLayout
     }
 
     internal static CommandResult Verify(string root, IEnumerable<CheckBuild> builds, string dotnet, string nuget, string api, string directory, string manifest, int parallelism = 1, bool independent = false,
-        Func<CommandResult>? awaitRuntime = null)
+        Func<CommandResult>? awaitRuntime = null, Func<CommandResult>? awaitInputs = null, BuildUnitDeadline? budget = null)
     {
         Directory.CreateDirectory(directory);
+        if (awaitInputs?.Invoke() is { ExitCode: not 0 } unavailable) return unavailable;
         var clock = Stopwatch.StartNew();
         double? baselineSeconds = null, runtimeWaitSeconds = null, comparisonStarted = null;
         bool runtimeManifestRead = false;
-        var inputs = SourceInventory(root).Where(file => File.Exists(Path.Combine(root, file)))
-            .Select(file => new KeyValuePair<string, string>(file, InputHash(root, file))).ToArray();
-        inputs = inputs.Concat(Directory.EnumerateFiles(api, "*.dll", SearchOption.AllDirectories)
-            .Select(file => new KeyValuePair<string, string>("sdk/" + Path.GetRelativePath(api, file), ReleaseRecords.HashFile(file)))).ToArray();
-        var sdk = ProcessRunner.Run(dotnet, ["--version"], root); ProcessRunner.RequireSuccess(sdk, "Output inventory SDK version");
-        var sdkIdentity = sdk.StandardOutput.Trim() + "/" + Environment.Version + "/" + System.Runtime.InteropServices.RuntimeInformation.RuntimeIdentifier;
         var receipts = new List<object>();
         var failures = new List<string>();
+        var deadline = budget ?? new BuildUnitDeadline();
+        var keyPhase = new KeyPhase(deadline);
+        var afterKeyPhase = new KeyPhase(deadline);
         int rebuilt = 0;
         try
         {
             var units = builds.Where(unit => unit.Project.StartsWith("tests/", StringComparison.Ordinal)).GroupBy(unit => unit.Project + "|" + unit.Variant).Select(group => group.First()).ToArray();
-            var keys = units.ToDictionary(unit => unit, unit => InputKey(inputs, [unit.Project, unit.Variant, .. unit.Properties, api, nuget, ReleaseRecords.HashFile(nuget), sdkIdentity]));
-            var pending = units.Where(unit => !File.Exists(Path.Combine(root, "bin-build/check-layout", keys[unit] + ".json"))).ToArray();
+            if (deadline.Expired && deadline.ForUnits(units.Length, parallelism, "ParityKeys", _ => { }) is { } timeout)
+                throw new ReleaseException(timeout);
+            var inputs = SourceInventory(root).Where(file => File.Exists(Path.Combine(root, file)))
+                .Select(file => new KeyValuePair<string, string>(file, InputHash(root, file))).ToArray();
+            inputs = inputs.Concat(Directory.EnumerateFiles(api, "*.dll", SearchOption.AllDirectories)
+                .Select(file => new KeyValuePair<string, string>("sdk/" + Path.GetRelativePath(api, file), ReleaseRecords.HashFile(file)))).ToArray();
+            var sdk = ProcessRunner.Run(dotnet, ["--version"], root); ProcessRunner.RequireSuccess(sdk, "Output inventory SDK version");
+            var sdkIdentity = sdk.StandardOutput.Trim() + "/" + Environment.Version + "/" + System.Runtime.InteropServices.RuntimeInformation.RuntimeIdentifier;
+            var noReads = Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED") == "1";
+            var cacheRoot = Environment.GetEnvironmentVariable("TIA_MCP_CHECK_PARITY_CACHE") ?? Path.Combine(root, "bin-build/cache/parity");
+            var sourceRevision = BuildReproducibility.SourceRevision(root);
+            var keys = keyPhase.Compute(root, units, dotnet, nuget, api, directory, parallelism, "keys");
+            var hits = units.ToDictionary(unit => unit, unit => !noReads && keys[unit] != null &&
+                new BuildOutputCache(cacheRoot, unit.Project + " " + unit.Variant).RestoreVerified(keys[unit]!, BaselineManifest(root, keys[unit]!)));
+            var pending = units.Where(unit => !hits[unit]).ToArray();
             if (pending.Length != 0)
             {
                 rebuilt = pending.Length;
                 var baselineRoot = independent ? CopyBaselineSources(root, inputs.Where(pair => !pair.Key.StartsWith("sdk/", StringComparison.Ordinal)).Select(pair => pair.Key)) : root;
+                if (independent)
+                {
+                    Directory.CreateDirectory(Path.Combine(baselineRoot, "bin-build"));
+                    File.WriteAllText(Path.Combine(baselineRoot, "bin-build/source-revision.txt"), sourceRevision);
+                }
                 var result = BuildInventories(baselineRoot, pending, dotnet, nuget, api, directory, parallelism);
                 if (result.ExitCode != 0) return result;
             }
@@ -142,6 +158,8 @@ internal static class CheckAllLayout
                 if (ready.ExitCode != 0) return new(ready.ExitCode, "", "Runtime build failed before output parity comparison.\n" + ready.StandardError);
             }
             comparisonStarted = clock.Elapsed.TotalSeconds;
+            var afterKeys = afterKeyPhase.Compute(root, pending.Where(unit => keys[unit] != null).ToArray(), dotnet, nuget, api,
+                directory, parallelism, "after-keys", keyPhase.Memo);
             var runtime = File.ReadLines(manifest).Select(line => line.Split('\t')).ToArray();
             runtimeManifestRead = true;
             foreach (var unit in units)
@@ -151,11 +169,11 @@ internal static class CheckAllLayout
                 // Cache only its file inventory, never a test result. Every invocation
                 // still checks every expected file in the actual isolated output.
                 var key = keys[unit];
-                var cache = Path.Combine(root, "bin-build/check-layout", key + ".json");
+                var cache = key == null ? null : Path.Combine(BaselineManifest(root, key), "inventory.json");
                 var baseline = row[3];
                 var ordinaryOutput = row[3];
                 string[] files;
-                if (File.Exists(cache)) files = ReadInventory(cache);
+                if (hits[unit]) files = ReadInventory(cache!);
                 else
                 {
                     var lines = File.ReadAllLines(Receipt(directory, unit));
@@ -170,10 +188,21 @@ internal static class CheckAllLayout
                         _ => throw new ReleaseException("Invalid ordinary output receipt: " + unit.Project)
                     }).Where(file => file != null).Cast<string>().Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.Ordinal).ToArray();
                     if (files.Length == 0) return new(1, "", "Ordinary build produced no output inventory: " + unit.Project);
-                    Directory.CreateDirectory(Path.GetDirectoryName(cache)!); File.WriteAllText(cache, JsonSerializer.Serialize(files) + "\n");
+                    var afterKey = key == null ? null : afterKeys[unit];
+                    if (cache != null && key == afterKey)
+                    {
+                        Directory.CreateDirectory(Path.GetDirectoryName(cache)!); File.WriteAllText(cache, JsonSerializer.Serialize(files) + "\n");
+                        // This manifest came from an ordinary build in a fresh source copy.
+                        // A cold nightly compares it to the previous manifest before replacing it.
+                        new BuildOutputCache(cacheRoot, unit.Project + " " + unit.Variant).RecordBuild(key!, Path.GetDirectoryName(cache)!,
+                            Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_RUN_ID") ?? Path.GetFileName(Path.GetDirectoryName(directory)!), cold: independent);
+                    }
                 }
                 var missing = Missing(baseline, row[2], files);
-                receipts.Add(new { unit.Project, unit.Variant, defaultOutput = ordinaryOutput, checkOutput = row[2], files, missing, inputKey = key });
+                var record = key == null ? null : new BuildOutputCache(cacheRoot, unit.Project + " " + unit.Variant).Record(key);
+                receipts.Add(new { unit.Project, unit.Variant, defaultOutput = ordinaryOutput, checkOutput = row[2], files, missing, inputKey = key,
+                    provenance = hits[unit] ? "restored" : "cold", sourceRunId = record?.RunId, coldRunIds = record?.ColdRunIds,
+                    manifest = cache, manifestSha256 = cache != null && File.Exists(cache) ? ReleaseRecords.HashFile(cache) : null });
                 if (missing.Length != 0)
                 {
                     failures.Add("Missing registered output files: " + unit.Project + "/" + unit.Variant + ": " + string.Join(", ", missing));
@@ -181,7 +210,7 @@ internal static class CheckAllLayout
             }
             File.WriteAllText(Path.Combine(directory, "comparison.json"), JsonSerializer.Serialize(receipts, new JsonSerializerOptions { WriteIndented = true }) + "\n");
             File.WriteAllText(Path.Combine(directory, "inventory-cache.json"), JsonSerializer.Serialize(new {
-                sdkIdentity, variants = receipts.Count, rebuilt, cached = receipts.Count - rebuilt, runtimeProjectionRequired = !independent
+                sdkIdentity, variants = receipts.Count, rebuilt, cached = receipts.Count - rebuilt, runtimeProjectionRequired = !independent, units = receipts
             }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
             return new(failures.Count == 0 ? 0 : 1, $"Suite output parity: {receipts.Count} variants, {failures.Count} with missing files; {rebuilt} inventories rebuilt.\n", string.Join("\n", failures));
         }
@@ -190,11 +219,91 @@ internal static class CheckAllLayout
             File.WriteAllText(Path.Combine(directory, "phases.json"), JsonSerializer.Serialize(new {
                 baselineSeconds = baselineSeconds ?? clock.Elapsed.TotalSeconds, runtimeWaitSeconds = runtimeWaitSeconds ?? 0,
                 comparisonSeconds = comparisonStarted == null ? 0 : clock.Elapsed.TotalSeconds - comparisonStarted,
+                keySeconds = keyPhase.Seconds, afterKeySeconds = afterKeyPhase.Seconds,
+                keyRestores = keyPhase.Restores, afterKeyRestores = afterKeyPhase.Restores,
+                keyProbeProcesses = keyPhase.ProbeProcesses, afterKeyProbeProcesses = afterKeyPhase.ProbeProcesses,
                 runtimeManifestRead, independent
             }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
             // Ordinary builds may share their default outputs. Restore each isolated
             // production/fixture payload before any check starts.
             if (!independent) ReleaseCommands.PrepareCheckAllRuntime(root, builds, manifest);
+        }
+    }
+    private static string BaselineManifest(string root, string key) => Path.Combine(root, "bin-build/check-layout/verified", key);
+
+    internal static string[] BaselineArguments(string root, CheckBuild unit, string nuget, string api) =>
+        ["build", Path.Combine(root, unit.Project), "-c", "Release", "-p:RestoreConfigFile=" + nuget, "-p:NuGetAudit=false", "-p:TiaPublicApiRoot=" + api,
+            .. BuildReproducibility.CheckArguments, "-p:UseSharedCompilation=false", .. unit.Properties];
+
+    private static IEnumerable<IGrouping<string, CheckBuild>> PropertyGroups(IEnumerable<CheckBuild> units) =>
+        units.GroupBy(unit => string.Join(";", unit.Properties.Order(StringComparer.Ordinal)));
+
+    internal sealed class KeyPhase(BuildUnitDeadline deadline)
+    {
+        internal double Seconds { get; private set; }
+        internal int Restores { get; private set; }
+        internal int ProbeProcesses { get; private set; }
+        internal BuildKeyMemo? Memo { get; private set; }
+
+        internal Dictionary<CheckBuild, string?> Compute(string root, CheckBuild[] units, string dotnet, string nuget, string api,
+            string directory, int parallelism, string phase, BuildKeyMemo? previous = null)
+        {
+            var keys = new Dictionary<CheckBuild, string?>();
+            if (units.Length == 0) return keys;
+            var timer = Stopwatch.StartNew();
+            try
+            {
+                int index = 0;
+                foreach (var group in PropertyGroups(units))
+                {
+                    var members = group.ToArray();
+                    // Restore can replace shared assets/imports. Only immutable external
+                    // hashes survive a property-group boundary or the ordinary build.
+                    var memo = Memo = previous?.ForCompletion() ?? new BuildKeyMemo(deadline.Check);
+                    previous = memo;
+                    var path = Path.Combine(directory, "parity-restore-" + phase + "-" + index++ + ".proj");
+                    var restore = new Lazy<CommandResult>(() =>
+                    {
+                        deadline.Check();
+                        Directory.CreateDirectory(directory);
+                        new XDocument(new XElement("Project",
+                            new XElement("ItemGroup", members.Select(unit => Path.Combine(root, unit.Project)).Distinct(StringComparer.OrdinalIgnoreCase)
+                                .Select(project => new XElement("ParityProject", new XAttribute("Include", project)))),
+                            new XElement("Target", new XAttribute("Name", "Restore"),
+                                new XElement("MSBuild", new XAttribute("Projects", "@(ParityProject)"), new XAttribute("Targets", "Restore"),
+                                    new XAttribute("BuildInParallel", "true"))))).Save(path);
+                        Restores++;
+                        var arguments = ReleaseCommands.CacheRestoreArguments(path, BaselineArguments(root, members[0], nuget, api))
+                            .Select(arg => arg == "-m:1" ? "-m:" + Math.Max(1, parallelism) : arg).ToArray();
+                        return ProcessRunner.Run(dotnet, arguments, root, logPath: Path.ChangeExtension(path, ".log"));
+                    });
+                    var values = new string?[members.Length];
+                    string? timeout;
+                    try
+                    {
+                        timeout = deadline.ForUnits(members.Length, parallelism, "ParityKeys", member =>
+                        {
+                            var unit = members[member];
+                            try
+                            {
+                                ProcessRunner.RequireSuccess(restore.Value, "Restore parity input closure");
+                                deadline.Check();
+                                values[member] = ReleaseCommands.BuildKey(dotnet, Path.Combine(root, unit.Project),
+                                    BaselineArguments(root, unit, nuget, api), root, memo: memo).Key;
+                            }
+                            catch (Exception ex) when (!deadline.Expired && ex is (ReleaseException or IOException or JsonException or InvalidOperationException))
+                            {
+                                Console.WriteLine("Parity manifest cannot be cached: " + unit.Project + ": " + ex.Message);
+                            }
+                        });
+                    }
+                    finally { ProbeProcesses += memo.ProbeProcesses; }
+                    if (timeout != null) throw new ReleaseException(timeout);
+                    for (int member = 0; member < members.Length; member++) keys.Add(members[member], values[member]);
+                }
+                return keys;
+            }
+            finally { Seconds = timer.Elapsed.TotalSeconds; }
         }
     }
     private static string Receipt(string directory, CheckBuild unit) => Path.Combine(directory, InputKey([], [unit.Project, unit.Variant]) + ".tsv");
@@ -213,7 +322,7 @@ internal static class CheckAllLayout
         var graph = new XElement("Project");
         var build = new XElement("Target", new XAttribute("Name", "Build"));
         int index = 0;
-        foreach (var group in units.GroupBy(unit => string.Join(";", unit.Properties.Order(StringComparer.Ordinal))))
+        foreach (var group in PropertyGroups(units))
         {
             var item = "Layout" + index++;
             foreach (var unit in group)
@@ -280,6 +389,7 @@ internal static class CheckAllLayout
         var path = Path.Combine(directory, "ordinary.proj"); new XDocument(graph).Save(path);
         return ProcessRunner.Run(dotnet, ["msbuild", path, "-t:Build", "-m:" + parallelism, "-nodeReuse:false", "-v:minimal",
             "-p:Configuration=Release", "-p:NuGetAudit=false", "-p:UseSharedCompilation=false", "-p:TiaSharedAdapterPaths=false", "-p:RestoreConfigFile=" + nuget,
+            .. BuildReproducibility.CheckArguments,
             "-p:TiaPublicApiRoot=" + api, "-p:PublicApiRoot=" + api], root,
             new Dictionary<string, string?> { ["TIA_MCP_TEST_PUBLIC_API_ROOT"] = null,
                 ["TIA_MCP_ANALYZER_REPORT_DIRECTORY"] = Path.Combine(directory, "analyzer-warnings") }, logPath: Path.Combine(directory, "ordinary-build.log"));

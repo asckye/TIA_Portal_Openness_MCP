@@ -30,6 +30,23 @@ internal static class NightlyRuns
     internal static string DirectoryFor(string root) => Path.GetFullPath(Environment.GetEnvironmentVariable("TIA_MCP_NIGHTLY_ROOT") ??
         Path.Combine(Environment.GetEnvironmentVariable("TIA_MCP_CHECK_ORIGINAL_ROOT") ?? root, "bin-build/nightly"));
 
+    internal static string LatestPassedFor(string root, string? mainRoot = null, string? explicitDirectory = null)
+    {
+        var configured = explicitDirectory ?? Environment.GetEnvironmentVariable("TIA_MCP_NIGHTLY_ROOT");
+        var local = Path.GetFullPath(Path.Combine(configured ?? DirectoryFor(root), "latest-passed.json"));
+        if (File.Exists(local) || configured != null) return local;
+        // New worktrees have no local nightly yet. Read the main checkout's passing evidence;
+        // the existing machine, complete-run, input-identity and artifact-byte guards still apply.
+        if (mainRoot == null)
+        {
+            var common = ProcessRunner.Run("git", ["rev-parse", "--path-format=absolute", "--git-common-dir"], root);
+            if (common.ExitCode != 0) return local;
+            mainRoot = Path.GetDirectoryName(common.StandardOutput.Trim());
+        }
+        var main = mainRoot == null ? local : Path.GetFullPath(Path.Combine(mainRoot, "bin-build/nightly/latest-passed.json"));
+        return File.Exists(main) ? main : local;
+    }
+
     internal static void Save(string directory, NightlyRun run)
     {
         Directory.CreateDirectory(directory);
@@ -183,6 +200,8 @@ internal static partial class ReleaseCommands
             File.WriteAllText(Path.Combine(checkout, ".git/packed-refs"), ReleaseEvidence.GitText(Root, git, "for-each-ref", "--format=%(objectname) %(refname)").Replace("\r\n", "\n", StringComparison.Ordinal) + "\n");
             ProcessRunner.RequireSuccess(ProcessRunner.Run(git, ["read-tree", "HEAD"], checkout), "nightly detached index");
             ProcessRunner.RequireSuccess(ProcessRunner.Run(git, ["checkout-index", "--all"], checkout), "nightly committed source");
+            SeedCheckAllHistory(Root);
+            CopyCheckAllHistory(Path.Combine(Root, "bin-build/check-timings"), Path.Combine(checkout, "bin-build/check-timings"));
             // Run this revision's tool, never the caller's binary. -Clean retains
             // the existing clean-snapshot and cold-build semantics.
             var args = new List<string> { "run", "--project", Path.Combine(checkout, "build-tools/release"), "--", "check-all", "-Profile", "nightly", "-Clean", "-NoBuildCache", "-OutputDirectory", output };

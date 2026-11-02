@@ -1,4 +1,5 @@
 <Project>
+  <Import Project="$(MSBuildThisFileDirectory)ReproducibleBuild.props" Condition="'$(TiaReproducibleBuildImported)' != 'true'" />
   <PropertyGroup>
     <TiaMcpCodeAnalysisImported>true</TiaMcpCodeAnalysisImported>
     <!-- SDK analyzers also apply to net48 and netstandard2.0; severities live in .editorconfig. -->

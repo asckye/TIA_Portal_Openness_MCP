@@ -19,12 +19,15 @@ import subprocess
 import tempfile
 import threading
 import time
+from call_latency import Samples
 import urllib.error
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[2]
 KEYS = ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']
 USAGE_REPORTS = []
+LATENCIES = None
+CHECK_PROFILE = 'full'
 INIT = {'protocolVersion': '2025-03-26', 'capabilities': {}, 'clientInfo': {'name': 'foundation-transport-test', 'version': '1'}}
 spec = importlib.util.spec_from_file_location('transport_resources', Path(__file__).with_name('Test-ResourceDiscovery.py'))
 resources = importlib.util.module_from_spec(spec)
@@ -119,13 +122,17 @@ def tool(client, name, args=None):
 
 
 def exercise(client, key, logfile, expected_before):
+    if LATENCIES is not None:
+        LATENCIES.instrument(client, key, 'http' if isinstance(client, Http) else 'stdio')
     initialized = client.call('initialize', INIT)
     assert 'GetToolUsage' in initialized.get('instructions', '')
     tools = client.call('tools/list', {})['tools']
     names = {t['name'] for t in tools}
+    client._tool_inventory = tools
     # check_usage reads the V4 envelope (Foundation plan fields are camelCase since P6-59).
     # The release's usage audit requires every receipt to have retrieved and hash-checked the source texts, as Test-ToolUsage.py does.
-    USAGE_REPORTS.append(check_usage(lambda name, args: tool(client, name, args), tools, key, verify_documents=True))
+    if CHECK_PROFILE != 'merge' or isinstance(client, Http):
+        USAGE_REPORTS.append(check_usage(lambda name, args: tool(client, name, args), tools, key, verify_documents=True))
     assert 'CallTool' in names and 'Bootstrap' not in names and 'Connect' not in names
     for name in names:
         refused = client.call('tools/call', {'name': name, 'arguments': {'__invalid': True}})
@@ -164,6 +171,8 @@ def exercise(client, key, logfile, expected_before):
 
 
 def exercise_engine(client, key, close=True, ready=False):
+    if LATENCIES is not None:
+        LATENCIES.instrument(client, key, 'http' if isinstance(client, Http) else 'stdio')
     capabilities = client.call('initialize', INIT)['capabilities']
     if ready:
         # SDK/synthetic readiness is observed on the first cached worker operation.
@@ -171,6 +180,7 @@ def exercise_engine(client, key, close=True, ready=False):
     # Per-session tool collections must not drop the resource and prompt capabilities of the engine host.
     assert {'tools', 'resources', 'prompts'} <= set(capabilities), capabilities
     tools = client.call('tools/list', {})['tools']
+    client._tool_inventory = tools
     expected = json.loads((ROOT / f'manifest/contracts/v4/baseline/{key}.json').read_text('utf-8'))
     assert {t['name'] for t in tools} == {t['name'] for t in expected['tools']}
     for entry in tools:
@@ -193,6 +203,37 @@ class ProcessEntry(ctypes.Structure):
                 ('th32DefaultHeapID', ctypes.c_size_t), ('th32ModuleID', ctypes.c_ulong), ('cntThreads', ctypes.c_ulong),
                 ('th32ParentProcessID', ctypes.c_ulong), ('pcPriClassBase', ctypes.c_long), ('dwFlags', ctypes.c_ulong),
                 ('szExeFile', ctypes.c_wchar * 260)]
+
+
+def exercise_isolation(client, first, key, full=False, ready=False):
+    if LATENCIES is not None:
+        LATENCIES.instrument(client, key, 'http')
+    initialized = client.call('initialize', INIT)
+    assert 'tools' in initialized['capabilities']
+    if full:
+        assert {'tools', 'resources', 'prompts'} <= set(initialized['capabilities'])
+    tools = client.call('tools/list', {})['tools']
+    assert tools == first._tool_inventory, 'Session tool catalogs differ'
+    if full:
+        # SDK fixtures never enter Openness. Preserve admission checks for the three lifecycle tools.
+        for name in ('ConnectPortal', 'GetProjectTree', 'DisconnectPortal'):
+            reply = client.call('tools/call', {'name': name, 'arguments': {'__invalid': True}})
+            body = json.loads(reply['content'][0]['text'])
+            assert reply['isError'] and body == reply['structuredContent']
+            assert body['meta']['execution'] == 'not-started'
+            assert body['error']['code'] in ('INVALID_ARGUMENT', 'RESOURCE_UNAVAILABLE', 'UNSUPPORTED_CAPABILITY')
+        if ready:
+            tool(client, 'GetSessionState')
+        result = client.call('tools/call', {'name': 'InitializeEnvironment', 'arguments': {}})
+        assert json.loads(result['content'][0]['text'])['data']['ready'] == ready
+    else:
+        attached = tool(client, 'ConnectPortal', {'processId': 31415})
+        assert '31415' in json.dumps(attached)
+        assert '生产线' in json.dumps(tool(client, 'GetProjectTree'), ensure_ascii=False)
+        assert tool(client, 'DisconnectPortal')['data']['workerAcknowledged'] is True
+        client.close()
+    assert first.sid and client.sid and first.sid != client.sid
+    return len(tools)
 
 
 def worker_handles(host_pid, worker_name):
@@ -220,6 +261,25 @@ def worker_handles(host_pid, worker_name):
     finally:
         kernel.CloseHandle(snapshot)
     return kernel, handles
+
+
+def worker_nonce(handle):
+    # Query only the two already-owned session worker handles; no WMI or foreign-process probe.
+    query = ctypes.WinDLL('ntdll').NtQueryInformationProcess
+    query.argtypes = [wintypes.HANDLE, wintypes.ULONG, ctypes.c_void_p, wintypes.ULONG, ctypes.POINTER(wintypes.ULONG)]
+    query.restype = wintypes.LONG
+    required = wintypes.ULONG()
+    query(handle, 60, None, 0, ctypes.byref(required))  # ProcessCommandLineInformation
+    assert required.value > 0, 'Worker command line query returned no size'
+    buffer = ctypes.create_string_buffer(required.value)
+    assert query(handle, 60, buffer, len(buffer), ctypes.byref(required)) == 0, 'Worker command line query failed'
+    class UnicodeString(ctypes.Structure):
+        _fields_ = [('length', wintypes.USHORT), ('maximum', wintypes.USHORT), ('buffer', ctypes.c_void_p)]
+    text = ctypes.cast(buffer, ctypes.POINTER(UnicodeString)).contents
+    command = ctypes.wstring_at(text.buffer, text.length // 2)
+    match = re.search(r'--native-session\s+\S+\s+(?:"[^"]*"|\S+)\s+([0-9a-f]{64})(?:\s|$)', command)
+    assert match, 'Missing protocol-2 launch nonce on owned worker'
+    return match.group(1)
 
 
 class SharedStdio:
@@ -309,8 +369,14 @@ def plc_transports(args, temp, counts):
                 command = unready[0].args
                 url = command[command.index('--http-prefix') + 1].rstrip('/')
                 secret = command[command.index('--http-api-key') + 1]
-                for _ in range(2):
-                    exercise_engine(Http(url, secret), key, ready=False)
+                unready_first = Http(url, secret)
+                exercise_engine(unready_first, key, ready=False)
+                unready_second = Http(url, secret)
+                if CHECK_PROFILE == 'merge':
+                    exercise_isolation(unready_second, unready_first, key, full=True)
+                    unready_second.close()
+                else:
+                    exercise_engine(unready_second, key, ready=False)
         logfile = temp / f'http-{key}.jsonl'
         env['TIA_FIXTURE_LOG'] = str(logfile)
         owned = []
@@ -340,11 +406,17 @@ def plc_transports(args, temp, counts):
                     assert ready == {'mcpHostReady': True, 'releaseKey': key, 'nativeAcceptance': 'NOT RUN'}
             for client in (first, second):
                 if full:
-                    exercise_engine(client, key, close=False, ready=True)
+                    if CHECK_PROFILE == 'merge' and client is second:
+                        exercise_isolation(client, first, key, full=True, ready=True)
+                    else:
+                        exercise_engine(client, key, close=False, ready=True)
                     tool(client, 'GetSessionState')
                 else:
                     before = len(logfile.read_text('utf-8').splitlines()) if logfile.exists() else 0
-                    exercise(client, key, logfile, before)
+                    if CHECK_PROFILE == 'merge' and client is second:
+                        exercise_isolation(client, first, key)
+                    else:
+                        exercise(client, key, logfile, before)
                     deadline = time.monotonic() + 10
                     while sum(json.loads(line)['stage'] == 'exit' for line in logfile.read_text('utf-8').splitlines()) < (1 if client is first else 2):
                         assert time.monotonic() < deadline
@@ -356,6 +428,8 @@ def plc_transports(args, temp, counts):
                     kernel.GetProcessId.argtypes = [wintypes.HANDLE]
                     pids = [kernel.GetProcessId(handle) for handle in handles]
                     assert len(pids) == 2 and len(set(pids)) == 2, ('Expected two session workers', pids)
+                    nonces = [worker_nonce(handle) for handle in handles]
+                    assert len(set(nonces)) == 2, 'Session workers reused a launch nonce'
                     first.close()
                     deadline = time.monotonic() + 10
                     while sum(kernel.WaitForSingleObject(handle, 0) == 0 for handle in handles) != 1:
@@ -375,6 +449,7 @@ def plc_transports(args, temp, counts):
 
 
 def main():
+    global LATENCIES, CHECK_PROFILE
     parser = argparse.ArgumentParser()
     parser.add_argument('--fixture', type=Path)
     parser.add_argument('--plc-worker', action='store_true', help='Exercise opt-in PLC workers on 20/21 as well as all six old releases')
@@ -385,7 +460,12 @@ def main():
     parser.add_argument('--temp-root', type=Path, help='New worktree directory for retained fixture logs; avoids restricted system TEMP directories')
     parser.add_argument('--host-exe', type=Path, help='Fresh worktree Foundation host used for each exact release')
     parser.add_argument('--stdio-only', action='store_true', help='Run no HTTP/socket checks when network services are prohibited')
+    parser.add_argument('--check-profile', choices=('merge', 'full'), default='full')
+    parser.add_argument('--latency-baseline', type=Path)
+    parser.add_argument('--record-latency-baseline', metavar='MASTER_REVISION')
     args = parser.parse_args()
+    CHECK_PROFILE = args.check_profile
+    LATENCIES = Samples('transport', CHECK_PROFILE)
     # P8-04l: V20/V21 run only on the PLC worker (the engine transport branch is retired).
     if not args.plc_worker and set(args.releases) & {'20', '21'}:
         parser.error('V20/V21 transport checks require --plc-worker')
@@ -458,7 +538,10 @@ def main():
                     while '"exit"' not in logfile.read_text('utf-8'):
                         assert time.monotonic() < deadline
                         time.sleep(.05)
-                    exercise(second, key, logfile, len(logfile.read_text('utf-8').splitlines()))
+                    if CHECK_PROFILE == 'merge':
+                        exercise_isolation(second, first, key)
+                    else:
+                        exercise(second, key, logfile, len(logfile.read_text('utf-8').splitlines()))
                     assert first.sid and second.sid and first.sid != second.sid
                     starts = [json.loads(line) for line in logfile.read_text('utf-8').splitlines() if '"start"' in line]
                     assert len(starts) == 2 and starts[0]['pid'] != starts[1]['pid']
@@ -473,7 +556,10 @@ def main():
     if args.plc_worker:
         report['plcWorkers'] = worker_evidence
         report['httpSessions'] += 0 if args.stdio_only else 2 * len(set(args.releases) & {'20', '21'})
+    report['checkProfile'] = CHECK_PROFILE
     (args.output / 'result.json').write_text(json.dumps(report, indent=2), 'utf-8')
+    latency_args = {} if args.latency_baseline is None else {'baseline': args.latency_baseline}
+    LATENCIES.finish(args.output / 'call-latency.json', record_revision=args.record_latency_baseline, **latency_args)
     print(f'COMPLETE: {sum(counts.values()) * (1 if args.stdio_only else 3)} Foundation transport checks passed; {len(counts)} releases; native TIA NOT RUN')
 
 

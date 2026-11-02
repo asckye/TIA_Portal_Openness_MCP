@@ -69,8 +69,8 @@ public sealed class CheckAllProfileTests
         Assert.Equal("nightly", CheckAllProfiles.Parse(Options.Parse(["-Profile", "nightly"], new HashSet<string>())));
         Assert.Throws<ReleaseException>(() => CheckAllProfiles.Parse(Options.Parse(["-Profile", "quick"], new HashSet<string>())));
         Assert.Equal(12, CheckAllProfiles.Derived.Count);
-        Assert.Equal(new[] { "kept-code-v20", "shared-lifecycle-plc", "shared-pipeline", "workbench-control-host", "worker-robustness" }, plan.Fallbacks.Keys.Order());
-        Assert.Equal(7, plan.Mappings.Count);
+        Assert.Empty(plan.Fallbacks);
+        Assert.Equal(12, plan.Mappings.Count);
         foreach (var name in catalog.Select(pair => pair.Key).Except(CheckAllProfiles.StudioSuites))
         {
             Assert.True(CheckAllProfiles.RunsSeparately(name, "nightly", plan));
@@ -80,10 +80,10 @@ public sealed class CheckAllProfileTests
             "fallback-vci-initial", "fallback-vci-classic", "plc-exchange-worker-v20", "plc-exchange-worker-v21" })
             Assert.True(CheckAllProfiles.RunsSeparately(name, "merge", plan));
         Assert.Equal(new[] { "nightly" }, CheckAllProfiles.Profiles("foundation-shard-0", plan));
-        Assert.Equal(new[] { "merge", "nightly" }, CheckAllProfiles.Profiles("kept-code-v20-shard-0", plan));
+        Assert.Equal(new[] { "nightly" }, CheckAllProfiles.Profiles("kept-code-v20-shard-0", plan));
         var jobs = new List<CheckJob>(); using var temp = new OfflineFixtures();
         CheckAllProfiles.AddDerived(jobs, catalog, temp.DirectoryPath, plan);
-        Assert.Equal(7, jobs.Count);
+        Assert.Equal(12, jobs.Count);
         Assert.All(jobs, job => { Assert.Null(job.ResultInputs); Assert.True(job.AllowFailedDependencies); });
         CheckAllProfiles.AddNightlyProofs(jobs = [], catalog, temp.DirectoryPath);
         Assert.Equal(12, jobs.Count);
@@ -94,7 +94,7 @@ public sealed class CheckAllProfileTests
         }
         CheckAllProfiles.WriteInventory(catalog, temp.DirectoryPath, "merge", plan);
         var inventory = JsonNode.Parse(File.ReadAllText(Path.Combine(temp.DirectoryPath, "profile-inventory.json")))!;
-        Assert.Contains(inventory["suites"]!.AsArray(), row => (string?)row!["name"] == "kept-code-v20" && (string?)row["fallbackReason"] == "different project, variant or build unit");
+        Assert.Contains(inventory["suites"]!.AsArray(), row => (string?)row!["name"] == "kept-code-v20" && row["fallbackReason"] == null && (string?)row["mergeDerivedFrom"] == "kept-code");
     }
 
     [Theory]

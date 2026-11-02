@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -72,7 +71,7 @@ internal static class CheckAllInputClosure
             if (additions is not JsonArray paths) throw new ReleaseException("resultCacheInputs must be an additive path array: " + project);
             roots.AddRange(paths.Select(path => SafePath(path!.GetValue<string>())));
         }
-        var projects = ProjectClosure(root, project, reasons);
+        var projects = EvaluatedProjects(root, project, dotnet, arguments);
         if (fallbacks.Count != 0) roots.AddRange(layout.Select(path => path.Replace('\\', '/').Split('/')[0]).Where(path => path != "bin-build"));
         return new(project, sources, projects, Minimize(roots), references.Distinct().ToArray(), reasons.Distinct().ToArray())
             { SourceIdentity = SourceKey(root, project, evaluation, arguments), Dotnet = dotnet, BuildArguments = arguments,
@@ -339,18 +338,17 @@ internal static class CheckAllInputClosure
 
     private static bool BuildDirectory(string path) => path.Split('/').Any(part => part is "bin" or "obj" || part.StartsWith("bin-", StringComparison.Ordinal) || part.StartsWith("obj-", StringComparison.Ordinal));
 
-    private sealed record CompileEvaluation(string[] Sources, string[] Imports, string ImportIdentity);
+    private sealed record CompileEvaluation(string[] Sources, string[] Imports, string ImportIdentity, string[] Projects);
 
     internal static string[] BuildInputs(string root, CheckBuild unit, string dotnet, string api)
     {
-        var reasons = new List<CheckAllInputFinding>();
+        string[] arguments = ["-p:Configuration=Release", .. unit.Properties, "-p:TiaPublicApiRoot=" + api];
         var files = new List<string>();
-        foreach (var project in ProjectClosure(root, unit.Project, reasons))
+        foreach (var project in EvaluatedProjects(root, unit.Project, dotnet, arguments))
         {
-            var evaluated = Evaluate(root, project, dotnet, ["-p:Configuration=Release", .. unit.Properties, "-p:TiaPublicApiRoot=" + api]);
+            var evaluated = Evaluate(root, project, dotnet, arguments);
             files.AddRange(evaluated.Sources); files.AddRange(evaluated.Imports); files.Add(project);
         }
-        if (reasons.Count != 0) throw new IOException(string.Join("; ", reasons.Select(reason => reason.Detail)));
         return files.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
     }
     private static readonly ConcurrentDictionary<string, Lazy<CompileEvaluation>> Evaluations = new(StringComparer.Ordinal);
@@ -381,7 +379,7 @@ internal static class CheckAllInputClosure
         {
             // Evaluation only: no targets, restore, build or test execution.
             var result = ProcessRunner.Run(dotnet, ["msbuild", Path.Combine(root, project), "-nologo", "-nodeReuse:false",
-                "-getItem:Compile", "-getProperty:MSBuildAllProjects", .. arguments], root,
+                "-getItem:Compile,ProjectReference", "-getProperty:MSBuildAllProjects", .. arguments], root,
                 new Dictionary<string, string?> { ["TIA_MCP_TEST_PUBLIC_API_ROOT"] = null });
             ProcessRunner.RequireSuccess(result, "result cache Compile evaluation: " + project);
             int json = result.StandardOutput.IndexOf('{');
@@ -393,66 +391,25 @@ internal static class CheckAllInputClosure
             var sources = Paths(items.Select(item => item.GetProperty("FullPath").GetString()!));
             var imports = Paths(document.RootElement.GetProperty("Properties").GetProperty("MSBuildAllProjects").GetString()!.Split(';')
                 .Concat(items.Select(item => item.GetProperty("DefiningProjectFullPath").GetString()!)));
-            return new(sources, imports, ImportKey(imports));
+            var projects = Paths(document.RootElement.GetProperty("Items").GetProperty("ProjectReference").EnumerateArray()
+                .Select(item => item.GetProperty("FullPath").GetString()!));
+            if (projects.Any(path => path.Contains('$') || !File.Exists(Path.Combine(root, path))))
+                throw new IOException("Unresolved or missing evaluated ProjectReference: " + project);
+            return new(sources, imports, ImportKey(imports), projects);
         })).Value;
     }
 
-    private static IEnumerable<(XElement Item, string Owner)> Items(string project)
-    {
-        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        IEnumerable<(XElement, string)> Read(string path)
-        {
-            if (!File.Exists(path) || !seen.Add(path)) yield break;
-            foreach (var item in XDocument.Load(path).Root!.Elements())
-            {
-                if (item.Name.LocalName == "Import" && item.Attribute("Project") is { } import)
-                {
-                    var value = import.Value.Replace("$(MSBuildThisFileDirectory)", Path.GetDirectoryName(path)! + Path.DirectorySeparatorChar, StringComparison.Ordinal);
-                    if (value.Contains('$')) { yield return (item, path); continue; }
-                    foreach (var imported in Read(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(path)!, value)))) yield return imported;
-                }
-                else if (item.Name.LocalName == "ItemGroup") foreach (var child in item.Elements()) yield return (child, path);
-            }
-        }
-        return Read(project);
-    }
-
-    private static IEnumerable<string> ExpandItems(string? value, string owner, string directory, List<CheckAllInputFinding> reasons, string root)
-    {
-        if (value == null) yield break;
-        value = value.Replace("$(MSBuildThisFileDirectory)", Path.GetDirectoryName(owner)! + Path.DirectorySeparatorChar, StringComparison.Ordinal)
-            .Replace("$(MSBuildProjectDirectory)", directory, StringComparison.Ordinal).Replace("$(ProjectDir)", directory + Path.DirectorySeparatorChar, StringComparison.Ordinal);
-        foreach (var item in value.Split(';', StringSplitOptions.RemoveEmptyEntries))
-        {
-            if (item.Contains('$')) { reasons.Add(new(Relative(root, owner), 1, "unresolved Compile/ProjectReference item: " + item)); continue; }
-            var path = Path.GetFullPath(Path.Combine(directory, item));
-            int wildcard = path.IndexOfAny(['*', '?']);
-            if (wildcard < 0) { yield return path; continue; }
-            var prefix = path[..wildcard]; var baseDirectory = prefix.EndsWith('\\') || prefix.EndsWith('/') ? prefix.TrimEnd('\\', '/') : Path.GetDirectoryName(prefix)!;
-            if (!Directory.Exists(baseDirectory)) continue;
-            var pattern = "^" + Regex.Escape(path.Replace('\\', '/')).Replace(@"\*\*/", "(?:.*/)?", StringComparison.Ordinal).Replace(@"\*", "[^/]*", StringComparison.Ordinal).Replace(@"\?", "[^/]", StringComparison.Ordinal) + "$";
-            foreach (var file in Directory.EnumerateFiles(baseDirectory, "*", SearchOption.AllDirectories))
-                if (!BuildDirectory(Relative(baseDirectory, file)) && Regex.IsMatch(file.Replace('\\', '/'), pattern, RegexOptions.IgnoreCase)) yield return file;
-        }
-    }
-
-    private static string[] ProjectClosure(string root, string project, List<CheckAllInputFinding> reasons)
+    private static string[] EvaluatedProjects(string root, string project, string dotnet, string[] arguments)
     {
         var projects = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        void Visit(string file)
+        void Visit(string path)
         {
-            if (!File.Exists(file) || !projects.Add(Relative(root, file))) return;
-            foreach (var (item, owner) in Items(file).Where(pair => pair.Item.Name.LocalName == "ProjectReference"))
-            {
-                var include = item.Attribute("Include")?.Value;
-                // A property inside a literal project path names a finite family
-                // (e.g. Engine.V$(EngineRelease)); include every matching variant.
-                // An entirely computed path cannot be bounded and remains live.
-                if (include != null && include.IndexOf('$') > 0) include = Regex.Replace(include, @"\$\([^)]+\)", "*");
-                foreach (var reference in ExpandItems(include, owner, Path.GetDirectoryName(file)!, reasons, root)) Visit(reference);
-            }
+            if (!projects.Add(path)) return;
+            if (!File.Exists(Path.Combine(root, path))) throw new IOException("Missing project: " + path);
+            foreach (var reference in Evaluate(root, path, dotnet, arguments).Projects) Visit(reference);
         }
-        Visit(Path.GetFullPath(Path.Combine(root, project))); return projects.Order(StringComparer.Ordinal).ToArray();
+        Visit(project);
+        return projects.Order(StringComparer.Ordinal).ToArray();
     }
 
     internal static string[] DataFiles(string root, CheckAllSuiteClosure closure)

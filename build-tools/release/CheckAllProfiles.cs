@@ -38,6 +38,7 @@ internal static class CheckAllProfiles
 
     internal static DerivationPlan Plan(JsonObject catalog, string api, string nuget, string? companion, string dotnet)
     {
+        IncludeApprovedSubsets(catalog);
         var executions = catalog.ToDictionary(pair => pair.Key, pair =>
         {
             string? sdk = pair.Key == "foundation-api" || pair.Value!["publicApiRoot"]?.GetValue<bool>() == true ? api : null;
@@ -58,6 +59,29 @@ internal static class CheckAllProfiles
         return ValidatePlan(catalog, executions);
     }
 
+    internal static void IncludeApprovedSubsets(JsonObject catalog)
+    {
+        if (catalog["foundation-api"] is not JsonObject source) return;
+        var arguments = source["arguments"]!.AsArray();
+        int filter = Enumerable.Range(0, arguments.Count).FirstOrDefault(index => (string?)arguments[index] == "--filter", -1);
+        if (filter < 0) return; // Unfiltered already contains every approved subset.
+        var terms = ((string)arguments[filter + 1]!).Split('|').ToList();
+        foreach (var name in new[] { "worker-robustness", "workbench-control-host", "shared-pipeline", "shared-lifecycle-plc" })
+        {
+            if (catalog[name] is not JsonObject subset) continue;
+            var args = subset["arguments"]!.AsArray();
+            int index = Enumerable.Range(0, args.Count).FirstOrDefault(i => (string?)args[i] == "--filter", -1);
+            if (index >= 0) terms.AddRange(((string)args[index + 1]!).Split('|'));
+        }
+        // Expand the superset rather than assume that a subset's future method names cannot contain "Operator".
+        arguments[filter + 1] = string.Join('|', terms.Distinct(StringComparer.Ordinal));
+    }
+
+    private static bool ApprovedCompileVariant(string name, string source, CheckBuild target, CheckBuild parent) =>
+        name == "kept-code-v20" && source == "kept-code" &&
+        target.Project == "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj" && target.Project == parent.Project &&
+        target.Properties.SequenceEqual(new[] { "-p:DefineConstants=TIA_V20" }) && parent.Properties.Length == 0;
+
     internal static DerivationPlan ValidatePlan(JsonObject catalog, IReadOnlyDictionary<string, SuiteExecution> executions)
     {
         var accepted = new Dictionary<string, string>(StringComparer.Ordinal); var rejected = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -76,7 +100,7 @@ internal static class CheckAllProfiles
             !executions.TryGetValue(name, out var target) || !executions.TryGetValue(source, out var parent)) return "missing suite execution";
         bool SameUnit(CheckBuild left, CheckBuild right) => left.Project == right.Project && left.Variant == right.Variant &&
             left.Properties.Order(StringComparer.Ordinal).SequenceEqual(right.Properties.Order(StringComparer.Ordinal));
-        if (!SameUnit(target.Unit, CheckAllBuild.Suite(subset)) || !SameUnit(parent.Unit, CheckAllBuild.Suite(superset)) || !SameUnit(target.Unit, parent.Unit))
+        if (!SameUnit(target.Unit, CheckAllBuild.Suite(subset)) || !SameUnit(parent.Unit, CheckAllBuild.Suite(superset)) || (!SameUnit(target.Unit, parent.Unit) && !ApprovedCompileVariant(name, source, target.Unit, parent.Unit)))
             return "different project, variant or build unit";
         if (target.Executable != parent.Executable || target.Runner != parent.Runner || target.Runner != "FastSuites.RunShard" || target.Approval != parent.Approval || target.Approval != "enabled=true;timeoutSeconds=120")
             return "different runner or configuration";

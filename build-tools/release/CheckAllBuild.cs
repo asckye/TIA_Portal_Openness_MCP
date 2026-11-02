@@ -45,7 +45,8 @@ internal static class CheckAllBuild
         "-p:ImportDirectoryBuildProps=true", "-p:ImportDirectoryBuildTargets=true",
         "-p:CheckAllVariant=" + unit.Variant];
 
-    internal static CommandResult Run(string root, IReadOnlyList<CheckBuild> units, string directory, string dotnet, string? api, string? nuget, int parallelism, bool cold)
+    internal static CommandResult Run(string root, IReadOnlyList<CheckBuild> units, string directory, string dotnet, string? api, string? nuget, int parallelism, bool cold,
+        string? cacheRoot = null, bool noCacheReads = false, string? runId = null, Action? prerequisitesReady = null, int keyParallelism = 1)
     {
         Directory.CreateDirectory(directory);
         var taskAssembly = Path.Combine(Path.GetDirectoryName(typeof(CheckAllBuild).Assembly.Location)!, "TiaMcp.CheckBuild.dll");
@@ -81,15 +82,33 @@ internal static class CheckAllBuild
                 new XElement("MSBuild", new XAttribute("Projects", "@(CheckProject)"), new XAttribute("Targets", "Clean"), new XAttribute("BuildInParallel", "true"))),
             new XElement("Target", new XAttribute("Name", "BuildPrerequisites"),
                 new XElement("MSBuild", new XAttribute("Projects", "@(CheckPrerequisite)"), new XAttribute("Targets", "StageCheckPrerequisite"), new XAttribute("BuildInParallel", "true"))),
-            new XElement("Target", new XAttribute("Name", "BuildChecks"), new XAttribute("DependsOnTargets", cold ? "InitializeNodes;CleanChecks;BuildPrerequisites" : "InitializeNodes;BuildPrerequisites"),
-                new XElement("MSBuild", new XAttribute("Projects", "@(CheckProject)"), new XAttribute("Targets", "Build"), new XAttribute("BuildInParallel", "true")),
+            new XElement("Target", new XAttribute("Name", "BuildChecks"), new XAttribute("DependsOnTargets", "InitializeNodes"),
+                new XElement("MSBuild", new XAttribute("Projects", "@(CheckProject)"), new XAttribute("Targets", "CheckCachedBuild"), new XAttribute("BuildInParallel", "true")),
                 new XElement("MSBuild", new XAttribute("Projects", "@(CheckProject)"), new XAttribute("Targets", "GetCheckRuntime"), new XAttribute("BuildInParallel", "true"),
                     new XElement("Output", new XAttribute("TaskParameter", "TargetOutputs"), new XAttribute("ItemName", "CheckRuntime"))),
                 new XElement("WriteLinesToFile", new XAttribute("File", Path.Combine(directory, "runtime-paths.tsv")), new XAttribute("Overwrite", "true"),
                     new XAttribute("Lines", "@(CheckRuntime->'%(Identity)\t%(Variant)\t%(Source)\t%(Destination)\t%(Assembly)')"))));
+        // AdditionalProperties is understood by MSBuild; property removal must
+        // also be passed explicitly, including on traversal roots/prerequisites.
+        foreach (var task in graph.Descendants("MSBuild").ToArray())
+        {
+            var projects = task.Attribute("Projects")!.Value;
+            if (projects == "@(CheckProject);@(CheckPrerequisite)")
+            {
+                var prerequisite = new XElement(task);
+                prerequisite.SetAttributeValue("Projects", "@(CheckPrerequisite)");
+                prerequisite.SetAttributeValue("RemoveProperties", "%(CheckPrerequisite.GlobalPropertiesToRemove)");
+                task.SetAttributeValue("Projects", "@(CheckProject)");
+                task.SetAttributeValue("RemoveProperties", "%(CheckProject.GlobalPropertiesToRemove)");
+                task.AddAfterSelf(prerequisite);
+            }
+            else if (projects.StartsWith("@(", StringComparison.Ordinal))
+                task.SetAttributeValue("RemoveProperties", "%(" + projects[2..^1] + ".GlobalPropertiesToRemove)");
+        }
         var path = Path.Combine(directory, "build.proj"); new XDocument(graph).Save(path);
         var arguments = new List<string> { "-m:" + parallelism, "-nodeReuse:false", "-v:minimal",
             "-p:Configuration=Release", "-p:NuGetAudit=false", "-p:UseSharedCompilation=false", "-p:TiaSharedAdapterPaths=false", "-p:BuildInParallel=true" };
+        arguments.AddRange(BuildReproducibility.CheckArguments);
         if (api != null) arguments.Add("-p:TiaPublicApiRoot=" + api);
         if (nuget != null) arguments.Add("-p:RestoreConfigFile=" + nuget);
         var environment = new Dictionary<string, string?> { ["TIA_MCP_TEST_PUBLIC_API_ROOT"] = null,
@@ -115,7 +134,17 @@ internal static class CheckAllBuild
             if (before == ReleaseRecords.HashFile(nodesPath)) { stable = true; break; }
         }
         if (!stable) return new(1, Combined(1).StandardOutput, Combined(1).StandardError + "Check build graph did not stabilize after Restore; compilation was not started.\n");
+        if (cold && Step("InitializeNodes;CleanChecks", "clean.log").ExitCode != 0) return Combined(results[^1].ExitCode);
+        if (cacheRoot != null) environment["TIA_MCP_CHECK_CACHE_HITS"] = Path.Combine(directory, "cache-hits");
+        if (Step("InitializeNodes;BuildPrerequisites", "prerequisites.log").ExitCode != 0) return Combined(results[^1].ExitCode);
+        prerequisitesReady?.Invoke();
+        var cache = cacheRoot == null ? null : new CheckAllUnitCache(root, directory, cacheRoot, dotnet, environment, noCacheReads,
+            runId ?? Path.GetFileName(Path.GetDirectoryName(directory)!), keyParallelism);
+        cache?.Prepare(nodesPath);
+        if (cache != null) environment["TIA_MCP_CHECK_CACHE_HITS"] = cache.Hits;
         var build = Step("BuildChecks", "build.log");
+        cache?.Complete(Path.Combine(Path.GetDirectoryName(directory)!, "build-cache.json"), build.ExitCode == 0,
+            checkDeadline => ReleaseCommands.PrepareCheckAllRuntime(root, units, Path.Combine(directory, "runtime-paths.tsv"), checkDeadline));
         return Combined(build.ExitCode);
     }
 

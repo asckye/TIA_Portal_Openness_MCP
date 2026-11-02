@@ -22,10 +22,13 @@ internal static partial class ReleaseCommands
         "preflight" => Preflight(options),
         "prerequisites" => Prerequisites(options),
         "release" => Release(options),
+        "release-prepare" => PrepareReleaseCandidate(options),
+        "release-publication-check" => CheckReleasePublication(options),
         "run-release-build" => RunReleaseBuild(options),
         "branch-gate" => BranchGate(options),
         "check-all" => CheckAll(options),
         "nightly" => Nightly(options),
+        "build-reproducibility" => BuildReproducibility.Run(Root, options),
         "check-release-evidence" => CheckReleaseEvidence(options),
         "ci-coverage" => CiCoverage.Command(Root, options),
         "build-tool" => BuildTool(options),
@@ -106,6 +109,8 @@ internal static partial class ReleaseCommands
         try { ReleaseEvidence.RequireNormalizedWorkingBytes(Root, options.Get("Git", "git")); }
         catch (ReleaseException error) { normalizationError = error.Message; Console.WriteLine("FAIL Git working-byte normalization: " + error.Message); }
         NightlyRuns.RequireRelease(Root, options.Get("Git", "git"));
+        if (options.Has("FromCandidate"))
+            return ReleaseFromCandidate(Options.Parse([.. options.Arguments(), "-DryRun"], new HashSet<string> { "DryRun" }));
         var checks = PreflightChecks();
 
         if (options.Get("Tier") == "package") checks = checks.Where(check => check.Name is "repository, links, shipped-document links, CHANGELOG version" or "dead tool references (descriptions and current docs)" or "strict bundle rules" or "release documentation rules").ToList();
@@ -155,7 +160,7 @@ internal static partial class ReleaseCommands
         return 0;
     }
 
-    private static int Prerequisites(Options options)
+    private static int Prerequisites(Options options, bool publicationCredentials = true)
     {
         if (options.Has("SelfTest"))
         {
@@ -208,11 +213,6 @@ internal static partial class ReleaseCommands
                 if (other.Length != 0) throw new ReleaseException("Working tree must be clean apart from release-managed files; commit or revert: " + string.Join(", ", other.Take(5)));
                 return managed.Length == 0 ? "clean" : $"clean apart from {managed.Length} release-managed file(s) from an earlier run";
             }),
-            new("GitHub token", () =>
-            {
-                var available = ReleasePrerequisites.GetToken(token, ResolveApplication(git), repo, options.Has("Offline"));
-                return ReleasePrerequisites.RequireToken(available);
-            }),
             new("Free disk space", () =>
             {
                 var drive = new DriveInfo(Path.GetPathRoot(repo)!);
@@ -220,6 +220,12 @@ internal static partial class ReleaseCommands
                 return ReleasePrerequisites.RequireFreeSpace(drive.AvailableFreeSpace, minimum);
             })
         };
+        if (publicationCredentials) probes.Insert(4, new("GitHub token", () =>
+        {
+            var available = ReleasePrerequisites.GetToken(token, ResolveApplication(git), repo, options.Has("Offline"));
+            return ReleasePrerequisites.RequireToken(available);
+        }));
+        else Console.WriteLine("Publication credentials are checked by release -FromCandidate immediately before tagging/upload.");
 
         var apiRoot = options.Get("PublicApiRoot");
         if (string.IsNullOrWhiteSpace(apiRoot))
@@ -297,6 +303,7 @@ internal static partial class ReleaseCommands
 
     private static int Release(Options options)
     {
+        if (options.Has("FromCandidate")) return ReleaseFromCandidate(options);
         if (options.Has("SelfTest"))
             return RunChild(Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", "--filter", "Category=ReleaseParity"], Root, "Release reuse/archive tests");
         if (options.Has("DocumentationOnly"))
@@ -675,6 +682,7 @@ internal static partial class ReleaseCommands
             var checkArgs = new List<string> { "-Root", root };
             if (noBinaries) checkArgs.Add("-NoBinaries");
             if (package) checkArgs.Add("-PackageMode");
+            if (options.Get("AnalyzerResult") is { } analyzerResult) checkArgs.AddRange(["-AnalyzerResult", analyzerResult]);
             var repositoryCheck = RunStaticCaptured("check-repository", checkArgs.ToArray());
             if (repositoryCheck.ExitCode != 0)
             {
@@ -956,8 +964,14 @@ internal static partial class ReleaseCommands
     {
         EnsureWindows("build-configurator");
         var windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
-        var compiler = Path.Combine(windows, "Microsoft.NET/Framework64/v4.0.30319/csc.exe");
-        if (!File.Exists(compiler)) throw new ReleaseException(".NET Framework 4.8 developer tools are required (csc.exe missing)");
+        var framework = Path.Combine(windows, "Microsoft.NET/Framework64/v4.0.30319");
+        if (!File.Exists(Path.Combine(framework, "mscorlib.dll"))) throw new ReleaseException(".NET Framework 4.8 developer tools are required (mscorlib.dll missing)");
+        // The framework's C# 5 compiler writes a random MVID and PE timestamp.
+        // Use the selected SDK's deterministic compiler with the same C# 5 language
+        // and framework references; the launcher still targets the installed CLR 4.
+        var sdkProbe = ProcessRunner.Run(Dotnet, ["msbuild", Path.Combine(Root, "build-tools/release/TiaMcp.ReleaseTool.csproj"), "-nologo", "-getProperty:MSBuildToolsPath"], Root);
+        ProcessRunner.RequireSuccess(sdkProbe, "Locate deterministic launcher compiler");
+        var compiler = Path.Combine(sdkProbe.StandardOutput.Trim(), "Roslyn/bincore/csc.dll");
         var studio = Path.Combine(Root, "src/Studio");
         var resourceOutput = Path.Combine(Root, "bin-build/configurator-resources");
         Directory.CreateDirectory(resourceOutput);
@@ -969,31 +983,37 @@ internal static partial class ReleaseCommands
             $"[assembly: AssemblyVersion(\"{desktopVersion.Core}\")]\n[assembly: AssemblyFileVersion(\"{desktopVersion.FileVersion}\")]\n[assembly: AssemblyInformationalVersion(\"{desktopVersion.Label}\")]\n[assembly: AssemblyMetadata(\"TiaMcpRelease\", \"{desktopVersion.Label}\")]\n", new System.Text.UTF8Encoding(false));
         var output = Path.Combine(resourceOutput, "TiaOpenness.exe");
         var wpf = Path.Combine(windows, "Microsoft.NET/Framework64/v4.0.30319/WPF");
-        var references = new[] { "/r:System.Windows.Forms.dll", "/r:System.Web.Extensions.dll", "/r:System.Security.dll", "/r:System.Core.dll", "/r:System.Xaml.dll", $"/r:{Path.Combine(wpf, "WindowsBase.dll")}", $"/r:{Path.Combine(wpf, "PresentationFramework.dll")}", $"/r:{Path.Combine(wpf, "PresentationCore.dll")}" };
-        var args = new List<string> { "/nologo", "/target:winexe", "/optimize+", "/utf8output", $"/out:{output}" };
+        var references = new[] { "mscorlib.dll", "System.dll", "System.Windows.Forms.dll", "System.Web.Extensions.dll", "System.Security.dll", "System.Core.dll", "System.Xaml.dll" }
+            .Select(file => "/r:" + Path.Combine(framework, file)).Concat(new[] { "WindowsBase.dll", "PresentationFramework.dll", "PresentationCore.dll" }.Select(file => "/r:" + Path.Combine(wpf, file))).ToArray();
+        var args = new List<string> { "/nologo", "/noconfig", "/nostdlib+", "/langversion:5", "/deterministic+", "/pathmap:" + Root + "=/_/repo", "/target:winexe", "/optimize+", "/utf8output", $"/out:{output}" };
         args.AddRange(references);
         args.AddRange([Path.Combine(studio, "Launcher", "Launcher.cs"), Path.Combine(Root, "src", "Shared", "ProcessArguments.cs"), metadata]);
         var cacheDirectory = Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DIRECTORY");
         var cacheKey = BuildOutputCache.Key(args.Where(File.Exists).Select(path => new ReleaseArtifact(CacheInputPath(path, Root), ReleaseRecords.HashFile(path)))
-            .Concat(Directory.EnumerateFiles(Path.GetDirectoryName(compiler)!, "*.dll").Concat(Directory.EnumerateFiles(wpf, "*.dll")).Append(compiler)
+            .Concat(Directory.EnumerateFiles(Path.GetDirectoryName(compiler)!, "*.dll").Concat(Directory.EnumerateFiles(wpf, "*.dll")).Concat(references.Select(reference => reference[3..])).Append(compiler)
                 .Select(path => new ReleaseArtifact(CacheInputPath(path, Root), ReleaseRecords.HashFile(path)))),
             [.. args.Select(arg => NormalizeCacheText(arg, Root)), .. EffectiveCacheEnvironment(Root)]);
         var cacheOutput = Path.Combine(resourceOutput, "payload");
-        var hit = cacheDirectory is not null && Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED") != "1" && new BuildOutputCache(cacheDirectory, "configurator", CacheLimit()).Restore(cacheKey, cacheOutput);
+        var hit = cacheDirectory is not null && Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED") != "1" && new BuildOutputCache(cacheDirectory, "configurator", CacheLimit()).RestoreVerified(cacheKey, cacheOutput);
         if (hit) File.Copy(Path.Combine(cacheOutput, "TiaOpenness.exe"), output, true);
         else
         {
-            ProcessRunner.RequireSuccess(ProcessRunner.Run(compiler, args, Root), "Configurator build");
-            if (cacheDirectory is not null && Environment.GetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED") != "1")
+            ProcessRunner.RequireSuccess(ProcessRunner.Run(Dotnet, new[] { compiler }.Concat(args), Root), "Configurator build");
+            if (cacheDirectory is not null)
             {
                 Directory.CreateDirectory(cacheOutput);
                 File.Copy(output, Path.Combine(cacheOutput, "TiaOpenness.exe"), true);
                 if (BuildOutputCache.EmbeddedPath(cacheOutput, Root) is null)
-                    new BuildOutputCache(cacheDirectory, "configurator", CacheLimit()).Populate(cacheKey, cacheOutput);
+                    new BuildOutputCache(cacheDirectory, "configurator", CacheLimit()).RecordBuild(cacheKey, cacheOutput, CacheRunId(), cold: true);
                 else Console.WriteLine("Cache not populated: output records the worktree path: configurator");
             }
         }
-        if (cacheDirectory is not null) CacheEvent(new("configurator", cacheKey, hit ? "hit" : "miss", hit ? "verified payload" : "cold compiler invocation"));
+        if (cacheDirectory is not null)
+        {
+            var record = new BuildOutputCache(cacheDirectory, "configurator", CacheLimit()).Record(cacheKey);
+            CacheEvent(new("configurator", cacheKey, hit ? "hit" : "miss", hit ? "verified payload" : "cold compiler invocation", record?.Outputs,
+                hit ? "restored" : "cold", record?.RunId, record?.ColdRunIds));
+        }
         var launcher = Path.Combine(Root, "TiaOpenness.exe");
         File.Copy(output, launcher, true);
         Console.WriteLine("Configurator launcher built: TiaOpenness.exe");

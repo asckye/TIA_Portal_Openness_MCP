@@ -22,7 +22,7 @@ internal static class ReleaseEvidence
     internal const string AdoptionSchema = "tia-mcp/release-adoption/1";
     internal static readonly string[] PushWorkflows = ["validate-bundle", "offline-checks"];
     internal static readonly string[] StudioJobs = ["configuration-page", "studio-core-false", "studio-core-true", "studio-gui-false", "studio-gui-true"];
-    internal static readonly string[] CheckAllStages = ["build-once", "analyzer-warnings", "suite-output-parity", "tracked-tree-drift", "usage-audit"];
+    internal static readonly string[] CheckAllStages = ["prepare-decoder-python", "build-once", "analyzer-warnings", "suite-output-parity", "tracked-tree-drift", "usage-audit"];
     // The release rewrites only these tracked paths; an adopted publication commits nothing else.
     internal static readonly string[] RecordFiles = ["docs/reference/tool-matrix.md", "docs/reference/version-tool-catalog.md"];
     internal const string Unavailable = "unavailable: ";
@@ -247,6 +247,8 @@ internal static class ReleaseEvidence
             }
         var cache = Path.Combine(output, "build-cache.json");
         evidence["buildCache"] = File.Exists(cache) ? JsonNode.Parse(File.ReadAllText(cache)) : null;
+        var parity = Path.Combine(output, "suite-output-parity/inventory-cache.json");
+        evidence["parityCache"] = File.Exists(parity) ? JsonNode.Parse(File.ReadAllText(parity)) : null;
         evidence["planned"] = Strings(planned.Distinct(StringComparer.Ordinal));
         evidence["jobs"] = jobs;
         evidence["suites"] = suites;
@@ -260,6 +262,12 @@ internal static class ReleaseEvidence
         {
             ["report"] = HashIfPresent(Path.Combine(output, "report.json")), ["cpuPlan"] = HashIfPresent(Path.Combine(output, "cpu-plan.json"))
         };
+        var binaryReceipts = new JsonObject();
+        var binaryDirectory = Path.Combine(output, "binary-receipts");
+        if (Directory.Exists(binaryDirectory))
+            foreach (var file in Directory.GetFiles(binaryDirectory, "*.json").Order(StringComparer.Ordinal))
+                binaryReceipts[Path.GetFileNameWithoutExtension(file)] = ReleaseCandidate.FileBinding(output, file);
+        evidence["binaryReceipts"] = binaryReceipts;
         var path = Path.Combine(output, FileName);
         File.WriteAllText(path, evidence.ToJsonString(Indented).Replace("\r\n", "\n", StringComparison.Ordinal) + "\n", new UTF8Encoding(false));
         return path;
@@ -297,12 +305,15 @@ internal static class ReleaseEvidence
             jobs.Add(("stability-v" + key + "-c16", false));
         }
         jobs.AddRange(CheckAllStages.Select(name => (name, name != "usage-audit")));
+        foreach (var key in new[] { "20", "21" })
+            foreach (var name in new[] { "host-behavior-parity-v" + key, "native-safety-v" + key + "-plc", "native-coverage-v" + key + "-plc",
+                "adapter-coverage-v" + key, "harness-v" + key + "-native-diagnostics-only-plc" }) jobs.Add((name, true));
         return jobs;
     }
 
     // TimeGateException: a maintainer's recorded one-time acceptance of a run whose only failure is the 30-minute gate.
     internal sealed record Inputs(string Root, string Git, string EvidencePath, EvidenceExternal Current, DateTimeOffset Now,
-        Func<JsonObject, JsonArray>? VerifyCiCoverage = null, string? TimeGateException = null);
+        Func<JsonObject, JsonArray>? VerifyCiCoverage = null, string? TimeGateException = null, int SpotCheckColdUnits = 1, bool AllowRecordChanges = false);
 
     // Every refusal reason is collected; the release reports them together.
     internal static JsonObject Verify(Inputs inputs)
@@ -342,10 +353,12 @@ internal static class ReleaseEvidence
         if (result["drift"] is not JsonArray drift || drift.Count != 0) problems.Add("check-all reported tracked-tree drift: " + string.Join(", ", (result["drift"] as JsonArray ?? []).Select(Text).Take(5)));
         if (!Bool(result["underThirtyMinutes"]) && !timeGateExcepted) problems.Add("check-all did not finish within its 30-minute gate");
         if (Bool(mode["buildOnly"])) problems.Add("check-all ran -BuildOnly (partial run)");
-        if (!Bool(mode["clean"]) && !Bool(mode["cold"])) problems.Add("check-all was neither -Clean nor -Cold (incremental build outputs)");
+        var verifiedBuild = VerifiedBuildEvidence.Validate(inputs.Root, evidence["buildCache"] as JsonObject, problems, 0);
+        VerifiedBuildEvidence.ValidateParity(inputs.Root, evidence["parityCache"] as JsonObject, problems);
+        if (!verifiedBuild && !Bool(mode["clean"]) && !Bool(mode["cold"])) problems.Add("check-all was neither -Clean nor -Cold (incremental build outputs without verified unit evidence)");
         if (Bool(mode["resultCacheEnabled"])) problems.Add("check-all ran with its result cache enabled");
-        if (!Bool(mode["buildCacheDisabled"])) problems.Add("check-all ran without -NoBuildCache");
-        if (evidence["buildCache"] is JsonObject buildCache && Int(buildCache["outputsRestored"]) != 0) problems.Add("check-all restored cached build outputs");
+        if (!verifiedBuild && !Bool(mode["buildCacheDisabled"])) problems.Add("check-all ran without -NoBuildCache and lacks verified build unit evidence");
+        if (!verifiedBuild && evidence["buildCache"] is JsonObject buildCache && Int(buildCache["outputsRestored"]) != 0) problems.Add("check-all restored cached build outputs without cold verification");
 
         // The complete job list: every planned job ran, passed and left the log the evidence hashes.
         var jobs = (evidence["jobs"] as JsonArray ?? []).OfType<JsonObject>().ToArray();
@@ -409,10 +422,13 @@ internal static class ReleaseEvidence
         if (Text(source["commit"]) != state.Commit) problems.Add($"evidence is for commit {Text(source["commit"])}, HEAD is {state.Commit}");
         if (Text(source["tree"]) != state.Tree) problems.Add($"evidence is for tree {Text(source["tree"])}, HEAD's tree is {state.Tree}");
         if (!Bool(source["cleanAtStart"])) problems.Add("check-all started on a dirty tree");
-        if (state.Status.Length != 0) problems.Add("the working tree is dirty: " + string.Join(", ", state.Status.Take(5)));
+        if (inputs.AllowRecordChanges) ReleaseCandidate.RequireRecordOnly(ReleaseCommands.EnumerateReleaseChanges(inputs.Root, inputs.Git));
+        else if (state.Status.Length != 0) problems.Add("the working tree is dirty: " + string.Join(", ", state.Status.Take(5)));
         var current = Inventory(inputs.Root, inputs.Git);
         var recordedInputs = source["inputs"] as JsonObject ?? new JsonObject();
-        if (Text(recordedInputs["sha256"]) != Digest(current) || Int(recordedInputs["count"]) != current.Count)
+        var recordChangesOnly = inputs.AllowRecordChanges && current.Keys.Union((recordedInputs["files"] as JsonObject ?? new JsonObject()).Select(pair => pair.Key), StringComparer.Ordinal)
+            .All(file => ReleaseCandidate.RecordPaths.Contains(file, StringComparer.Ordinal) || Text(recordedInputs["files"]?[file]) == current.GetValueOrDefault(file));
+        if (!recordChangesOnly && (Text(recordedInputs["sha256"]) != Digest(current) || Int(recordedInputs["count"]) != current.Count))
         {
             var recordedFiles = recordedInputs["files"] as JsonObject ?? new JsonObject();
             var changed = current.Keys.Union(recordedFiles.Select(pair => pair.Key), StringComparer.Ordinal)
@@ -451,6 +467,8 @@ internal static class ReleaseEvidence
                 catch (ReleaseException ex) { problems.Add(ex.Message); }
             }
         }
+        if (problems.Count == 0 && verifiedBuild && inputs.SpotCheckColdUnits != 0)
+            VerifiedBuildEvidence.Validate(inputs.Root, evidence["buildCache"] as JsonObject, problems, inputs.SpotCheckColdUnits);
         if (problems.Count != 0)
             throw new ReleaseException($"Adoption refused; {problems.Count} problem(s) with {path}:{Environment.NewLine}  " + string.Join(Environment.NewLine + "  ", problems));
 
@@ -474,7 +492,7 @@ internal static class ReleaseEvidence
                     ["file"] = relative.StartsWith("../", StringComparison.Ordinal) || Path.IsPathRooted(relative) ? Path.GetFileName(directory) + "/" + FileName : relative,
                     ["sha256"] = ReleaseRecords.HashFile(path), ["runId"] = Text(evidence["runId"]), ["commit"] = state.Commit, ["tree"] = state.Tree,
                     ["inputsSha256"] = Text(recordedInputs["sha256"]), ["startedUtc"] = Text(evidence["startedUtc"]), ["completedUtc"] = Text(evidence["completedUtc"]),
-                    ["wallSeconds"] = (double?)result["wallSeconds"] ?? 0, ["jobs"] = jobs.Length, ["mode"] = Bool(mode["clean"]) ? "clean" : "cold",
+                    ["wallSeconds"] = (double?)result["wallSeconds"] ?? 0, ["jobs"] = jobs.Length, ["mode"] = verifiedBuild ? "verified-build-units" : Bool(mode["clean"]) ? "clean" : "cold",
                     ["profile"] = mode["profile"]?.DeepClone() ?? JsonValue.Create("full"),
                     ["dotnetSdk"] = Text(external["dotnetSdk"]), ["python"] = Text(external["python"])
                 },
@@ -483,6 +501,7 @@ internal static class ReleaseEvidence
                 ["ciCoveredJobs"] = new JsonArray(jobs.Where(job => Text(job["status"]) == "covered by CI").Select(job => (JsonNode?)new JsonObject
                     { ["name"] = Text(job["name"]), ["ci"] = job["ci"]!.DeepClone() }).ToArray()),
                 ["suites"] = counts,
+                ["buildCache"] = evidence["buildCache"]?.DeepClone(),
                 ["adoptedChecks"] = Strings(AdoptedChecks),
                 ["localChecks"] = new JsonArray()
             }

@@ -115,7 +115,7 @@ internal static class RepositoryChecks
         catch (Exception ex) when (ex is IOException or ReleaseException or InvalidOperationException or System.Text.Json.JsonException) { errors.Add("Contract archive: " + ex.Message); }
         return errors;
     }
-    internal static (int Count, List<string> Errors) Check(string root, bool noBinaries, bool packageMode)
+    internal static (int Count, List<string> Errors) Check(string root, bool noBinaries, bool packageMode, string? analyzerResult = null)
     {
         var rules = DeliveryRules.Load(root);
         packageMode |= !File.Exists(Path.Combine(root, "Version.props"));
@@ -200,8 +200,13 @@ internal static class RepositoryChecks
         foreach (var name in new[] { "manifest/history/contracts-v3/README.md", "manifest/history/contracts-v3/provenance.json" }.Concat(new[] { "manifest/history/contracts-v3", "manifest/contracts/v4" }.SelectMany(d => new[] { "baseline", "responses" }.SelectMany(c => TiaFeatures.Releases.Select(r => $"{d}/{c}/{r}.json"))))) Required(name, "contract snapshot");
         foreach (var kind in RatchetChecks.Baselines.Keys)
             if (RatchetChecks.Run(root, Options.Parse(["-Kind", kind], new HashSet<string>())) != 0) errors.Add(kind + " baseline check failed (see diagnostics above)");
-        if (AnalyzerWarnings.Run(root, Options.Parse(["-Check"], new HashSet<string> { "Check" })) != 0)
-            errors.Add("analyzer warning baseline check failed (see diagnostics above)");
+        if (analyzerResult == null)
+        {
+            if (AnalyzerWarnings.Run(root, Options.Parse(["-Check"], new HashSet<string> { "Check" })) != 0)
+                errors.Add("analyzer warning baseline check failed (see diagnostics above)");
+        }
+        else if (!CheckAllAnalyzerResult.Valid(root, analyzerResult)) errors.Add("analyzer warning result missing, stale or changed: " + analyzerResult);
+        else Console.WriteLine("Analyzer warnings: verified same-run passed result " + analyzerResult);
         if (BundleLayoutChecks.Run(root) != 0) errors.Add("Bundle-layout resource check failed (see diagnostics above)");
         return (count, errors);
     }
@@ -209,7 +214,7 @@ internal static class RepositoryChecks
     {
         var source = Path.Combine(root, "docs/README.md");
         if (LocalTarget(root, source, "../README.md") is not null || LocalTarget(root, source, "../__missing_repository_check__.md") is null || LocalTarget(root, source, "../../../__outside__.md") is null) throw new ReleaseException("Repository link sentinel failed", 2);
-        var result = Check(root, options.Has("NoBinaries"), options.Has("PackageMode"));
+        var result = Check(root, options.Has("NoBinaries"), options.Has("PackageMode"), options.Get("AnalyzerResult"));
         return SourceCheck.Report("Repository check", result.Errors, $"Checked {result.Count} Markdown files and repository entrypoints.");
     }
 }

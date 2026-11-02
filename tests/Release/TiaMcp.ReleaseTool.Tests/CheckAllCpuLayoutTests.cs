@@ -261,10 +261,12 @@ public sealed class CheckAllCpuLayoutTests(ITestOutputHelper output)
         for (int bit = 0; bit < 64 && BitOperations.PopCount(mask) < 2; bit++) mask |= available & (1UL << bit);
         var runDirectory = Path.Combine(root, "degraded-run");
         CommandResult result;
+        // Exercise the complete fallback plan independently of the caller's changed-file set.
         using (CheckAffinity.Enter(mask))
             result = ProcessRunner.Run(dotnet, [typeof(ReleaseCommands).Assembly.Location, "check-all", "-PublicApiRoot", root,
                 "-NuGetConfig", Path.Combine(root, "offline.config"), "-Dotnet", Path.Combine(root, "bin/Release/net10.0/fake.exe"),
                 "-CompanionPython", Path.Combine(root, "bin/Release/net10.0/fake.exe"), "-Python", Path.Combine(root, "bin/Release/net10.0/fake.exe"),
+                "-Base", "refs/tests/check-all-missing-" + Guid.NewGuid().ToString("N"),
                 "-BuildParallelism", "1", "-MaxParallelism", "16", "-Profile", profile, "-OutputDirectory", runDirectory], Repository.FindRoot());
         output.WriteLine("Degraded fake build: available mask={0:X}, check-all mask={1:X}", available, mask);
         output.WriteLine(result.StandardOutput + result.StandardError);
@@ -285,7 +287,9 @@ public sealed class CheckAllCpuLayoutTests(ITestOutputHelper output)
         Assert.Equal(new[] { "generate-catalogs", "prepare-decoder-python", "generate-tool-usage", "generate-release-migration", "build-once", "analyzer-warnings",
             "catalog-drift", "tool-counts-drift", "usage-drift", "migration-drift", "tools-list", "script-calls", "dead-references",
             "adapter-boundary", "tia-features", "bundle", "release-documentation", "python-repository", "python-script-self-tests",
-            "python-script-calls", "domain-source", "contract-self-tests", "contract-verify", "response-verify", "suite-output-parity", "tracked-tree-drift" }, checks.Select(row => (string)row!["Name"]!));
+            "python-script-calls", "check-all-speedup-self-tests", "domain-source", "contract-self-tests", "contract-verify", "response-verify", "suite-output-parity", "tracked-tree-drift" }, checks.Select(row => (string)row!["Name"]!));
+        var selection = JsonNode.Parse(File.ReadAllText(Path.Combine(runDirectory, "merge-tier-selection.json")))!;
+        Assert.StartsWith("Cannot resolve merge-base", (string?)selection["fallback"]);
         Assert.Equal("failed", (string)checks[4]!["Status"]!);
         Assert.Equal("blocked", (string)checks[5]!["Status"]!);
         var comparison = File.ReadAllLines(Path.Combine(runDirectory, "comparison.md"));

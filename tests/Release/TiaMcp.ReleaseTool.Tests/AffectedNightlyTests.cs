@@ -95,10 +95,6 @@ public sealed class AffectedNightlyTests
     }
 
     [Theory]
-    [InlineData("build-tools/release/CheckAll.cs")]
-    [InlineData("build-tools/release/CheckAllJobInputs.cs")]
-    [InlineData("build-tools/release/CheckAllProfiles.cs")]
-    [InlineData("tests/test-suites.json")]
     [InlineData("Directory.Build.props")]
     [InlineData("src/Directory.Build.targets")]
     [InlineData("global.json")]
@@ -110,6 +106,21 @@ public sealed class AffectedNightlyTests
         selection.Map([Job("usage-v20-plc")], Catalog);
         Assert.NotNull(selection.Fallback);
         Assert.True(selection.Selected(Job("usage-v21-plc"), CheckAllJobInputs.Find(Job("usage-v21-plc"), Catalog)));
+    }
+
+    [Theory]
+    [InlineData("build-tools/release/CheckAll.cs")]
+    [InlineData("build-tools/release/CheckAllJobInputs.cs")]
+    [InlineData("build-tools/release/CheckAllProfiles.cs")]
+    [InlineData("tests/test-suites.json")]
+    public void PipelineInputsSelectTheirDeclaredChecksWithoutWideFallback(string path)
+    {
+        var job = Job("tools-list");
+        var selection = new CheckAllAffected([path], [], null, true);
+        selection.Map([job], Catalog);
+        Assert.Null(selection.Fallback);
+        Assert.True(selection.Selected(job, CheckAllJobInputs.Find(job, Catalog)));
+        Assert.Equal(job.Name, Assert.Single(selection.QuickPlan([job], Catalog)).Name);
     }
 
     [Theory]
@@ -246,7 +257,7 @@ public sealed class AffectedNightlyTests
     public void NightlyJobIdentityBindsLoadedBinaryBytesDataDefinitionAndMachineState()
     {
         using var fixture = new OfflineFixtures(); string root = fixture.DirectoryPath;
-        foreach (var path in new[] { "data/input.json", "outputs/product.dll", "sdk/api.dll", "offline.config" })
+        foreach (var path in new[] { "data/input.json", "outputs/product.dll", "sdk/api.dll", "offline.config", "runtime/decoder-python/stdlib.zip" })
         {
             string file = Path.Combine(root, path); Directory.CreateDirectory(Path.GetDirectoryName(file)!); File.WriteAllText(file, "initial");
         }
@@ -263,6 +274,10 @@ public sealed class AffectedNightlyTests
         string binary = Path.Combine(root, "outputs/product.dll"); var timestamp = File.GetLastWriteTimeUtc(binary);
         File.WriteAllText(binary, "changed"); File.SetLastWriteTimeUtc(binary, timestamp); Assert.NotEqual(initial, Identity());
         File.WriteAllText(binary, "initial"); Assert.Equal(initial, Identity());
+        string decoder = Path.Combine(root, "runtime/decoder-python/stdlib.zip");
+        timestamp = File.GetLastWriteTimeUtc(decoder);
+        File.WriteAllText(decoder, "changed"); File.SetLastWriteTimeUtc(decoder, timestamp); Assert.NotEqual(initial, Identity());
+        File.WriteAllText(decoder, "initial"); Assert.Equal(initial, Identity());
         File.WriteAllText(Path.Combine(root, "data/input.json"), "changed"); Assert.NotEqual(initial, Identity());
         File.WriteAllText(Path.Combine(root, "data/input.json"), "initial");
         Assert.NotEqual(initial, cache.JobIdentity(Job("example"), spec with { Definition = "different" }, declaration));

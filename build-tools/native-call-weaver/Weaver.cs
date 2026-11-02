@@ -46,7 +46,7 @@ internal static class Weaver
             var data = JsonSerializer.SerializeToUtf8Bytes(new { schemaVersion = 1, instrumenter = "native-call-weaver/1", instrumenterSha256 = Fingerprint, scope = "Engine-owned direct, reflective, interface and external-enumeration boundaries; no Siemens assembly is modified", count = sites.Count, sites }, new JsonSerializerOptions { WriteIndented = true });
             module.Resources.Add(new EmbeddedResource(Resource, ManifestResourceAttributes.Private, data));
             string temp = path + ".instrumented";
-            try { module.Write(temp); File.Move(temp, path, true); } finally { if (File.Exists(temp)) File.Delete(temp); }
+            try { module.Write(temp, new WriterParameters { DeterministicMvid = true, Timestamp = 0 }); File.Move(temp, path, true); } finally { if (File.Exists(temp)) File.Delete(temp); }
         }
         Verify(module);
         var resource = (EmbeddedResource)module.Resources.Single(r => r.Name == Resource);

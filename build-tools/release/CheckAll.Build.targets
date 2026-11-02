@@ -73,6 +73,11 @@
       <Output TaskParameter="Nodes" ItemName="_CheckReferenceNodes" />
     </AssignCheckBuildNodes>
     <ItemGroup><_MSBuildProjectReferenceExistent Remove="@(_MSBuildProjectReferenceExistent)" /><_MSBuildProjectReferenceExistent Include="@(_CheckReferenceNodes)" /></ItemGroup>
+    <ItemGroup Condition="'$(TIA_MCP_CHECK_CACHE_HITS)' != ''">
+      <_MSBuildProjectReferenceExistent Condition="'%(_MSBuildProjectReferenceExistent.Targets)' == '' or '%(_MSBuildProjectReferenceExistent.Targets)' == 'Build'">
+        <Targets>CheckCachedBuild</Targets>
+      </_MSBuildProjectReferenceExistent>
+    </ItemGroup>
   </Target>
   <Target Name="AssignCheckInnerIdentities" AfterTargets="_ComputeTargetFrameworkItems">
     <AssignCheckBuildNodes Projects="@(_InnerBuildProjects)"><Output TaskParameter="Nodes" ItemName="_CheckInnerNodes" /></AssignCheckBuildNodes>
@@ -107,6 +112,25 @@
   <Target Name="VerifyCheckOutputIdentity" BeforeTargets="PrepareForBuild" Condition="'$(CheckAllVariant)' != ''">
     <PropertyGroup><_CheckVerifyNodeId Condition="!$([System.String]::Copy('$(MSBuildProjectName)').EndsWith('_wpftmp'))">$(CheckAllNodeId)</_CheckVerifyNodeId></PropertyGroup>
     <VerifyCheckBuildIdentity Project="$(MSBuildProjectFullPath)" Directory="$(IntermediateOutputPath)" NodeId="$(_CheckVerifyNodeId)" />
+  </Target>
+  <PropertyGroup>
+    <!-- Keep Build in the ordinary target dependency chain. CallTarget uses a
+         separate scope when a node is also reached by framework negotiation or
+         an outer build, so its reference outputs need not reach the caller.
+         Outer builds dispatch their inner nodes; they have no GetTargetPath. -->
+    <_CheckCacheHit Condition="'$(IsCrossTargetingBuild)' != 'true' and '$(TIA_MCP_CHECK_CACHE_HITS)' != '' and Exists('$(TIA_MCP_CHECK_CACHE_HITS)/$(CheckAllNodeId)')">true</_CheckCacheHit>
+    <_CheckCachedBuildDependsOn Condition="'$(_CheckCacheHit)' == 'true'">GetTargetPath</_CheckCachedBuildDependsOn>
+    <_CheckCachedBuildDependsOn Condition="'$(_CheckCacheHit)' != 'true'">Build</_CheckCachedBuildDependsOn>
+  </PropertyGroup>
+  <Target Name="CheckCachedBuild" DependsOnTargets="$(_CheckCachedBuildDependsOn)" Returns="@(TargetPathWithTargetPlatformMoniker);@(InnerOutput)">
+    <Message Importance="high" Condition="'$(_CheckCacheHit)' == 'true'" Text="Verified cached unit: $(MSBuildProjectFullPath) [$(CheckAllNodeId)]" />
+  </Target>
+  <Target Name="ForceUncachedCheckCompilation" BeforeTargets="CoreCompile"
+          Condition="'$(TIA_MCP_CHECK_CACHE_HITS)' != '' and !Exists('$(TIA_MCP_CHECK_CACHE_HITS)/$(CheckAllNodeId)')">
+    <!-- A miss must be a new compiler invocation, even in an in-place warm run.
+         Do not Clean individual nodes: that could delete a shared verified reference. -->
+    <WriteLinesToFile File="$(IntermediateOutputPath)cache-cold-build.input" Lines="$(MSBuildProjectFullPath)" Overwrite="true" WriteOnlyWhenDifferent="false" />
+    <ItemGroup><CustomAdditionalCompileInputs Include="$(IntermediateOutputPath)cache-cold-build.input" /></ItemGroup>
   </Target>
   <Target Name="StageCheckPrerequisite" DependsOnTargets="Build">
     <ItemGroup><_CheckPrerequisiteFiles Include="$(TargetDir)**/*" /></ItemGroup>

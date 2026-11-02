@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 namespace TiaMcp.ReleaseTool;
 
 internal sealed record PublishOptions(string Version, string Token, string Repository, string ApiBaseUrl,
-    bool DraftOnly, bool DeleteDraft, int RetryCount = 6, int RetryDelaySeconds = 15, string GitExecutable = "git");
+    bool DraftOnly, bool DeleteDraft, int RetryCount = 6, int RetryDelaySeconds = 15, string GitExecutable = "git", string? CandidatePath = null);
 
 // The JSON bodies of the two release writes. A plain release is drafted with prerelease=false and make_latest="false", then
 // published as the latest release. A pre-release (X.Y.Z-beta.N, X.Y.Z-rc.N) carries prerelease=true and make_latest="false" in both
@@ -36,12 +36,14 @@ internal static class ReleasePublisher
 
 
         var tag = version.Tag;
-        var output = Path.Combine(root, "bin-build/releases", tag);
-        var resultPath = Path.Combine(output, "package-result.json");
+        var prepared = options.CandidatePath is null ? null : ReleaseCandidate.Read(options.CandidatePath);
+        if (prepared is not null) ReleaseCandidate.Verify(root, options.GitExecutable, prepared);
+        var output = options.CandidatePath is null ? Path.Combine(root, "bin-build/releases", tag) : Path.GetDirectoryName(options.CandidatePath)!;
+        var resultPath = prepared is null ? Path.Combine(output, "package-result.json") : ReleaseCandidate.Resolve(root, ReleaseEvidence.Text(prepared["packageResult"]?["path"]));
         if (!File.Exists(resultPath)) throw new ReleaseException("no package-result.json in " + output + " - run Package-Release.py first");
         using var result = JsonDocument.Parse(File.ReadAllText(resultPath));
         var resultRoot = result.RootElement;
-        ReleaseCheckPolicy.RequireFullRecord(resultRoot);
+        if (prepared is null) ReleaseCheckPolicy.RequireFullRecord(resultRoot);
         var zip = JsonString(resultRoot, "path");
         if (zip.Length == 0) throw new ReleaseException("package-result.json is missing its path");
         zip = Path.GetFullPath(Path.IsPathRooted(zip) ? zip : Path.Combine(root, zip));
@@ -51,7 +53,8 @@ internal static class ReleasePublisher
         var digest = HashFile(zip);
         if (digest != JsonString(resultRoot, "sha256") || zipInfo.Length != JsonLong(resultRoot, "size"))
             throw new ReleaseException("ZIP differs from package-result.json (size or sha256)");
-        ReleaseCheckPolicy.Load(root).RequireFullPackage(zip, requireColdBuild: true);
+        if (prepared is null) ReleaseCheckPolicy.Load(root).RequireFullPackage(zip, requireColdBuild: true);
+        else ReleaseCandidate.RequirePackage(root, zip);
         // Pre-release only: the notes must list what was not verified on a real TIA Portal (checked before credentials or requests).
         var releaseNote = Path.Combine(root, "docs/releases", tag + ".md");
         if (version.IsPrerelease && (!File.Exists(releaseNote) || !PrereleaseNotes.HasSection(File.ReadAllText(releaseNote, Encoding.UTF8))))
@@ -60,7 +63,7 @@ internal static class ReleasePublisher
         if (string.IsNullOrWhiteSpace(token)) throw new ReleaseException("No GitHub token: pass -Token, set GITHUB_TOKEN, or sign in with Git Credential Manager; token value is never printed");
         var baseUri = new Uri(options.ApiBaseUrl.TrimEnd('/') + "/");
         var api = new GitHubApi(http, baseUri, repoPath, token);
-        var commit = JsonString(resultRoot, "sourceCommit");
+        var commit = prepared is null ? JsonString(resultRoot, "sourceCommit") : ReleaseEvidence.Text(prepared["commit"]);
         if (commit.Length == 0) throw new ReleaseException("package-result.json is missing sourceCommit");
         var deliveryPath = Path.Combine(root, "manifest/delivery.json");
         using var delivery = JsonDocument.Parse(File.ReadAllText(deliveryPath));

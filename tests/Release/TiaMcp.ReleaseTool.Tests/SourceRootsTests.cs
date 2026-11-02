@@ -55,7 +55,7 @@ public sealed class SourceRootsTests
         try
         {
             File.WriteAllText(Path.Combine(root, "Version.props"), "<Project />");
-            var names = new[] { ".editorconfig", "Directory.Build.props", "src/Shared/CodeAnalysis.props", "src/Shared/DependencyVersions.props" };
+            var names = new[] { ".editorconfig", "Directory.Build.props", "src/Shared/CodeAnalysis.props", "src/Shared/DependencyVersions.props", "src/Shared/ReproducibleBuild.props" };
             var policy = SourceRoots.Load(Root);
             var delivery = JsonNode.Parse(File.ReadAllText(Path.Combine(Root, "scripts/operations/delivery-files.json")))!;
             foreach (var name in names)
