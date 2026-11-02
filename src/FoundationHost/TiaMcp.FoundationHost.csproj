@@ -8,6 +8,8 @@
     <AppHostDotNetSearch>AppRelative;EnvironmentVariable;Global</AppHostDotNetSearch>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../Shared/HttpAccessKeyStore.cs" Link="Shared/HttpAccessKeyStore.cs" />
+    <Compile Include="../Shared/RemoteProxyPolicy.cs" Link="Shared/RemoteProxyPolicy.cs" />
     <Compile Include="../Shared/Host/InstallPlcToolsCommand.cs" Link="Cli/InstallPlcToolsCommand.cs" />
     <ProjectReference Include="../WorkerChannel/TiaMcp.WorkerChannel.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <ProjectReference Include="../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />

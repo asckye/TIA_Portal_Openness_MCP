@@ -287,8 +287,10 @@ internal static partial class Strings
                 "Exit the selected clients first to avoid concurrent configuration writes.\nOther settings will be preserved and the original files backed " +
                 "up:\n\n",
                 "请先退出所选客户端，避免配置同时写入。\n将保留其它设置并备份原文件：\n\n"),
-        ("Config.WriteClientsContinue", "\n\nClient configurations store the secret in their own format. Do not share files or backups. Continue?",
-                "\n\n客户端配置按其格式保存密钥，请勿分享文件或备份。继续？"),
+            ("Config.WriteClientsContinue",
+                    "\n\nRemote access keys stay in the protected Workbench store. Existing backups may contain older credentials; keep them private. " +
+                    "Continue?",
+                    "\n\n远程访问密钥保留在工作台的用户保护存储中。已有备份可能含旧凭据，请妥善保管。继续？"),
         ("Config.ClientSaved", "{0} saved: {1}", "{0} 已保存：{1}"),
         ("Config.RestartClients",
                 "Restart the configured clients and use {0} to read the project tree. Do not let multiple AIs modify the same project at the same time.",

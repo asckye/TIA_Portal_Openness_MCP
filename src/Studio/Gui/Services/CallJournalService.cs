@@ -75,7 +75,7 @@ public sealed class CallJournalService : ObservableObject, ICallJournalService, 
             var settings = document.RootElement;
             string address = settings.GetProperty("Address").GetString()!;
             int port = settings.GetProperty("Port").GetInt32();
-            return new(ConfigCore.Prefix(address, port) + "mcp", "HTTP", ClientProfiles.ConnectionSnippet(address, port));
+            return new(ConfigCore.Prefix(address, port) + "mcp", "HTTP", ClientProfiles.ConnectionSnippet(address, port, _release));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or ArgumentException or InvalidOperationException or KeyNotFoundException)
         { return new("", "", "{}"); }

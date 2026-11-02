@@ -173,7 +173,7 @@
                 <TextBlock Text="{l:Tr Mcp.Clients}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,0,4,0"/>
                 <TextBlock x:Name="ClientSelection" Focusable="True" AutomationProperties.Name="{l:Tr Config.ClientInstructionsCaption}" KeyDown="OnClientGuidanceKey" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}" Cursor="Hand"/>
               </DockPanel>
-              <TextBlock TextWrapping="Wrap" Margin="0,4,0,0" Text="{l:Tr Mcp.ClientsNote}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
+              <TextBlock x:Name="RelayNote" TextWrapping="Wrap" Margin="0,4,0,0" Text="{l:Tr Mcp.ClientsNote}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
             </StackPanel>
           </Border>
           <ListBox x:Name="ClientChoices" AutomationProperties.Name="{l:Tr Mcp.Clients}" Grid.Row="1" Style="{StaticResource Primer.List}" SelectionMode="Multiple" ItemContainerStyle="{StaticResource Primer.ClientRow}" ItemTemplate="{StaticResource Primer.ClientContent}" Margin="10,10,10,4" Padding="0" VerticalAlignment="Top">

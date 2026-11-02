@@ -11,6 +11,32 @@
 - Transport checks retain the full profile and check up to four releases at a time, respecting `-MaxParallelism` with deterministic report ordering.
 
 ## [4.0.0-beta.3] - 2026-11-04
+- 精简第三方目录：移除未交付的上游测试、文档和 Studio 参考归档，保留交付源码、许可、来源记录及本项目生态桥接检查。
+- 新增可恢复的 `upload-draft` / `publish-prepared` 预发布路径：复用已验证的草稿资产，核对候选和标签后发布；发布阶段不构建、测试或打包，硬限时 300 秒，失败后重跑恢复。
+
+- 发布测试阶段复用 Foundation 分片执行器及已批准的套件派生门槛，收集全部作业失败后统一返回；诊断模式使用仓库外临时目录。
+
+- 发布诊断新增 `release -TestStageOnly [-Only <作业名,...>]`，复用已暂存产物执行测试，不绑定发布记录或生成发布包。
+
+- Derive reviewed release availability from ordered ranges and the version catalog without changing shipped contracts.
+- Centralize NuGet package versions in Directory.Packages.props and align the Studio core tests on Newtonsoft.Json 13.0.4.
+- **维护**：工具契约基线升级为格式 2，每个文件按 SHA-256 去重输出 schema；八版契约语义和逐字节捕获比较保持不变。
+
+- **维护**：SafeV4 候选实现归档到 `archive/safev4-candidates` 后删除，取消 P8-04l3、延后 P8-31e6；发布行为与契约保持不变。
+
+- Deduplicate host foundation checks through foundation-api in both profiles and retire the kept-code-v20 suite and release count.
+
+- Remove unshipped residual engine sources and engine-only tests, fixtures and scripts; retain kept-code coverage and published contract bytes.
+
+- Freeze engine source catalog inputs and declare final V4 tool names without runtime rewriting; remove the stale documentation coverage copy.
+- **开发检查**：删除已有 C# 实现的 10 个 Python 检查及重复作业；打包复用 C# 仓库检查，C# 工具调用检查同时覆盖 Python、PowerShell 和 JSON 计划。
+
+## [4.0.0-beta.3] - 2026-11-03
+- RELAY-1：远程客户端使用随包 stdio 中继，私网与回环地址绕过代理，其他地址遵守环境/系统代理及 NO_PROXY；HTTP 密钥由宿主和中继读取当前用户 DPAPI 保护存储，不再写入新命令或客户端配置。已有直连配置确认后迁移并备份，新增中英双语“代理与远程连接”体检及迁移入口。
+- HTTP 请求逐次校验 Host 与 Origin，拒绝不可信来源并写入审计；`--http-api-key` 保留一个发布周期并提示弃用。
+
+## [4.0.0-beta.3] - 2026-11-0X
+<!-- set on release day -->
 
 4.0 的第三个预发布版本，同样在 GitHub 上标为预发布、不设为最新版，3.3 的更新器和工作台更新检查不会提示它。产品对外名称改为“自动化工程工作台（Automation Engineering Workbench，原 TIA Portal Openness MCP）”；程序文件名、插件 ID、MCP 服务名 `tia-portal`、交付包名和仓库地址不变。beta.2 在 V21 虚拟机上做过一轮真机测试，本版修复了其中的发现；这些修复和本版新功能尚未在真实 TIA Portal 上复验。说明见 [v4.0.0-beta.3](docs/releases/v4.0.0-beta.3.md)。
 

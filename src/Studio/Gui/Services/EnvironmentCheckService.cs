@@ -27,10 +27,10 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
     public IReadOnlyList<EnvironmentGroup> Groups { get; private set; }
     public IReadOnlyList<string> LogTail { get; private set; } = [];
 
-    public EnvironmentCheckService() : this(EnvironmentServiceContext.Current, WindowsEnvironmentSources.Create, RunDoctorFix, true) { }
-    internal EnvironmentCheckService(bool allowFix) : this(EnvironmentServiceContext.Current, WindowsEnvironmentSources.Create, RunDoctorFix, allowFix) { }
+    public EnvironmentCheckService() : this(EnvironmentServiceContext.Current, ProxyConnectionInspector.Sources, RunDoctorFix, true) { }
+    internal EnvironmentCheckService(bool allowFix) : this(EnvironmentServiceContext.Current, ProxyConnectionInspector.Sources, RunDoctorFix, allowFix) { }
     internal EnvironmentCheckService(bool allowFix, Func<string> release)
-        : this(() => EnvironmentServiceContext.Current(release()), WindowsEnvironmentSources.Create, RunDoctorFix, allowFix) { }
+        : this(() => EnvironmentServiceContext.Current(release()), ProxyConnectionInspector.Sources, RunDoctorFix, allowFix) { }
     // A fix action that only receives the host path returns no doctor report; when it returns, the checks run again.
     public EnvironmentCheckService(Func<EnvironmentCheckContext> context, Func<EnvironmentProbeSources> sources, Action<string> fixMembership)
         : this(context, sources, fixMembership, true) { }
@@ -197,7 +197,7 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
                 .Where(r => r.Id is "installations" or "membership" or "openness-readiness" or "confirmation" or "openness-allowlist").ToArray()),
         new(LocalizedText.Key("Env.Runtime"), rows.Where(r => r.Id is "framework" or "runtime").ToArray()),
         new(LocalizedText.Key("Env.Application"), rows.Where(r => r.Id.StartsWith("engine-", StringComparison.Ordinal) || r.Id == "data").ToArray()),
-        new(LocalizedText.Key("Env.Network"), rows.Where(r => r.Id is "port" or "url" or "firewall").ToArray()),
+        new(LocalizedText.Key("Env.Network"), rows.Where(r => r.Id is "port" or "url" or "firewall" or "proxy-remote").ToArray()),
     ];
 }
 
@@ -226,6 +226,23 @@ public static class EnvironmentServiceContext
     {
         try
         {
+            var endpoints = new List<string>();
+            foreach (string path in Directory.Exists(context.ConfigDirectory) ? Directory.GetFiles(context.ConfigDirectory, "*.json") : [])
+            {
+                if (!Path.GetFileName(path).StartsWith("http-v", StringComparison.Ordinal) && !Path.GetFileName(path)
+                        .StartsWith("remote-", StringComparison.Ordinal) && Path.GetFileName(path) != "client.json")
+                    continue;
+                using var record = JsonDocument.Parse(File.ReadAllText(path));
+                if (record.RootElement.TryGetProperty("Endpoint", out var endpoint)) endpoints
+                    .Add(HttpAccessKeyStore.Endpoint(endpoint.GetString()!).AbsoluteUri);
+                else if (record.RootElement.TryGetProperty("Address", out var address))
+                    endpoints
+                        .Add(ConfigCore
+                            .Prefix(address.GetString() ?? throw new InvalidDataException("Missing remote address."), record.RootElement.GetProperty("Port")
+                                .GetInt32())
+                            + "mcp");
+            }
+            context.RemoteEndpoints = endpoints.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
             var configurations = Directory.Exists(context.ConfigDirectory) ? Directory.GetFiles(context.ConfigDirectory, "http-v*.json") : [];
             var latest = configurations.OrderByDescending(File.GetLastWriteTimeUtc).FirstOrDefault();
             if (latest == null) return;
@@ -247,7 +264,7 @@ public static class EnvironmentCheckCatalogue
             "installations" => "Env.Installations", "membership" => "Env.Membership", "openness-readiness" => "Env.OpennessReadiness", "framework" =>
                 "Env.Framework", "engines" => "Env.Engines",
             "runtime" => "Env.BundledRuntime", "data" => "Env.Data", "port" => "Env.Port", "url" => "Env.Url",
-            "firewall" => "Env.Firewall", "openness-allowlist" => "Env.OpennessAllowList", _ => "Env.FirstConnection",
+            "firewall" => "Env.Firewall", "proxy-remote" => "Env.ProxyRemote", "openness-allowlist" => "Env.OpennessAllowList", _ => "Env.FirstConnection",
         });
 
     public static LocalizedText Fix(string id, bool newLogon = false) => LocalizedText.Key(FixKey(id, newLogon));
@@ -256,8 +273,8 @@ public static class EnvironmentCheckCatalogue
         "installations" => "Env.FixInstall", "membership" => newLogon ? "Env.FixLogon" : "Env.FixMembership",
         "openness-readiness" => "Env.FixOpennessReadiness",
         "framework" => "Env.FixFramework", "runtime" => "Env.FixRuntime", "data" => "Env.FixData",
-        "port" => "Env.FixPort", "url" => "Env.FixUrl", "firewall" => "Env.FixFirewall", "openness-allowlist" => "Env.FixOpennessAllowList", _ =>
-            "Env.FirstConnectionHelp",
+        "port" => "Env.FixPort", "url" => "Env.FixUrl", "firewall" => "Env.FixFirewall", "proxy-remote" => "Env.FixProxyRemote", "openness-allowlist" =>
+            "Env.FixOpennessAllowList", _ => "Env.FirstConnectionHelp",
     };
 
     public static EnvironmentCheck Unchecked(string id) =>
@@ -270,7 +287,9 @@ public static class EnvironmentCheckCatalogue
         var result = LocalizedText.Key(ResultKey(finding));
         string evidence = new DiagnosticRedactor().Redact(finding.Evidence ?? "").Text;
         return new(finding.Id, status, Name(finding.Id), result,
-            LocalizedText.Key(finding.Id == "membership" && finding.Result != "NewLogon" && status == CheckStatus.Fail ? "Env.FixButton" : "Env.ManualButton"),
+            LocalizedText
+                .Key(finding.Id == "proxy-remote" ? "Env.ProxyFixButton" : finding.Id == "membership" && finding.Result != "NewLogon" && status == CheckStatus
+                    .Fail ? "Env.FixButton" : "Env.ManualButton"),
             LocalizedText.Key("Env.CheckDetail", result, Fix(finding.Id, finding.Result == "NewLogon"), evidence));
     }
 
@@ -278,6 +297,7 @@ public static class EnvironmentCheckCatalogue
     {
         "Pass" => "Env.Passed", "Fail" => "Env.Failed", "Unknown" => "Env.Unknown", "NewLogon" => "Env.NewLogon",
         "NotReady" => "Env.NotReady",
+        "ProxyCaptured" => "Env.ProxyCaptured",
         "FixFailed" => "Env.FixFailed",
         "Fallback" => "Env.Fallback", "PortUsed" => "Env.PortUsed", "NoEndpoint" => "Env.NoEndpoint", _ => "Env.Guidance",
     };

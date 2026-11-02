@@ -61,11 +61,40 @@ namespace TiaMcpConfigurator
 
     public static class ClientProfiles
     {
-        public static string ConnectionSnippet(string address, int port)
+        public static string ConnectionSnippet(string address, int port, string releaseKey = "21")
         {
-            var profile = new ClientProfile("claude-code", "Claude Code", "", "");
-            var servers = new Dictionary<string, object> { { ServerName(profile, true), Entry(profile, true, address, port, "••••", "", "21", "") } };
-            return ConfigCore.Json().Serialize(new Dictionary<string, object> { { RootKey(profile), servers } });
+            var entry = new Dictionary<string, object> {
+                ["type"] = "stdio", ["command"] = "<bundle>/runtime/v" + TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(releaseKey).Key
+                    + "/TiaMcp.FoundationHost.exe",
+                ["args"] = new[] { "--bundle-root", "<bundle>", "--relay", ConfigCore.Prefix(address, port) + "mcp" } };
+            return ConfigCore.Json()
+                .Serialize(new Dictionary<string, object> { ["mcpServers"] = new Dictionary<string, object> { ["tia-portal-vm"] = entry } });
+        }
+
+        internal static bool HasRemoteEntry(ClientProfile profile, string endpoint)
+        {
+            if (!File.Exists(profile.Path)) return false;
+            string text = File.ReadAllText(profile.Path);
+            if (profile.Client == "codex")
+            {
+                const string table = "(?:mcp_servers|\"mcp_servers\"|'mcp_servers')\\s*\\.\\s*(?:tia-portal-vm|\"tia-portal-vm\"|'tia-portal-vm')";
+                var match = Regex.Match(text, @"(?ms)^\s*\[\s*" + table + @"\s*\][^\r\n]*\r?\n(?<body>.*?)(?=^\s*\[|\z)");
+                if (!match.Success) return false;
+                string body = match.Groups["body"].Value;
+                var url = Regex.Match(body, "(?m)^\\s*url\\s*=\\s*[\"'](?<url>[^\"']*)[\"']");
+                return (url.Success && url.Groups["url"].Value == endpoint) || body.Contains(TomlString(endpoint));
+            }
+            var root = ConfigCore.Json().DeserializeObject(StripJsonComments(text)) as Dictionary<string, object>;
+            if (root == null || !root.TryGetValue(RootKey(profile), out var raw) || raw is not Dictionary<string, object> servers
+                || !servers.TryGetValue("tia-portal-vm", out var entry) || entry is not Dictionary<string, object> fields) return false;
+            if (new[] { "url", "httpUrl" }.Any(name => fields.TryGetValue(name, out var value) && value is string url && url == endpoint)) return true;
+            object command;
+            var arguments = fields.TryGetValue("args", out var args) ? args : fields.TryGetValue("command", out command) && command is not string ? command
+                : null;
+            if (arguments is not System.Collections.IEnumerable values) return false;
+            string[] launch = values.Cast<object>().Select(value => Convert.ToString(value) ?? "").ToArray();
+            int relay = Array.IndexOf(launch, "--relay");
+            return relay >= 0 && relay + 1 < launch.Length && launch[relay + 1] == endpoint;
         }
 
         public static string ClientLabel(string client)
@@ -270,9 +299,9 @@ namespace TiaMcpConfigurator
             object> Entry(ClientProfile profile, bool remote, string address, int port, string key, string engine, string version, string tia)
         {
             string client = profile.Client;
-            if (!remote)
+            if (remote) ConfigCore.ValidateKey(key);
             {
-                var localArgs = ConfigCore.LocalArguments(engine, version, tia);
+                var localArgs = remote ? ConfigCore.RelayArguments(engine, version, address, port) : ConfigCore.LocalArguments(engine, version, tia);
                 // OpenCode: command is one array that starts with the executable.
                 if (client == "opencode")
                     return new Dictionary<string, object> {
@@ -281,15 +310,6 @@ namespace TiaMcpConfigurator
                 if (client == "claude-code" || client == "vscode" || client == "cursor" || client == "codebuddy") local["type"] = "stdio";
                 return local;
             }
-            ConfigCore.ValidateKey(key);
-            string url = ConfigCore.Prefix(address, port) + "mcp";
-            var entry = new Dictionary<string, object> {
-                { UrlKey(profile), url },
-                { "headers", new Dictionary<string, object> { { "Authorization", "Bearer " + key } } } };
-            if (client == "claude-code" || client == "vscode" || client == "codebuddy") entry["type"] = "http";
-            // qwen-agent / Kimi / Gemini / Qwen Code / Cursor: url (or httpUrl) + headers is the whole entry - a "type" field is not read.
-            if (client == "opencode") { entry["type"] = "remote"; entry["enabled"] = true; }
-            return entry;
         }
 
         public static void Save(ClientProfile profile, bool remote, string address, int port, string key, string engine, int version, string tia,
@@ -298,7 +318,11 @@ namespace TiaMcpConfigurator
 
         public static void Save(ClientProfile profile, bool remote, string address, int port, string key, string engine, string version, string tia,
                 bool confirmed = false)
-        { PrepareSave(profile, remote, address, port, key, engine, version, tia).Apply(confirmed); }
+        {
+            var change = PrepareSave(profile, remote, address, port, key, engine, version, tia);
+            if (remote) change.BeforeApply = () => ConfigCore.SaveRemoteKey(address, port, key);
+            change.Apply(confirmed);
+        }
 
         public static ClientConfigurationChange PrepareSave(ClientProfile profile, bool remote, string address, int port, string key, string engine,
                 string version, string tia)
@@ -312,9 +336,9 @@ namespace TiaMcpConfigurator
             if (profile.Client == "codex")
             {
                 string merged = MergeToml(text, name, remote, address, port, key, engine, version, tia);
-                bool migration = false;
+                bool migration = remote && original != null;
                 if (!remote) merged = MigrateToml(text, name, engine, ConfigCore.LocalArguments(engine, version, tia), merged, out migration);
-                return new ClientConfigurationChange(profile.Path, original, merged, migration, remote ? null : engine);
+                return new ClientConfigurationChange(profile.Path, original, merged, migration, engine);
             }
             string rootKey = RootKey(profile);
             var root = original != null ? ConfigCore.Json().DeserializeObject(StripJsonComments(text)) as Dictionary<string, object> : new Dictionary<string,
@@ -324,6 +348,12 @@ namespace TiaMcpConfigurator
             var servers = root.TryGetValue(rootKey, out raw) ? raw as Dictionary<string, object> : new Dictionary<string, object>();
             if (servers == null) throw new InvalidDataException(Loc.Current.T("Config.InvalidServerMap", rootKey));
             bool migrate = false;
+            if (remote && servers.TryGetValue(name, out var oldRemote))
+            {
+                var previousRemote = oldRemote as Dictionary<string, object>;
+                migrate = previousRemote != null
+                    && (previousRemote.ContainsKey("url") || previousRemote.ContainsKey("httpUrl") || previousRemote.ContainsKey("headers"));
+            }
             if (!remote && servers.TryGetValue(name, out var previous))
             {
                 var existing = previous as Dictionary<string, object>;
@@ -343,7 +373,7 @@ namespace TiaMcpConfigurator
                 }
             }
             servers[name] = entry; root[rootKey] = servers;
-            return new ClientConfigurationChange(profile.Path, original, ConfigCore.Json().Serialize(root), migrate, remote ? null : engine);
+            return new ClientConfigurationChange(profile.Path, original, ConfigCore.Json().Serialize(root), migrate, engine);
         }
 
         private static string MigrateToml(string text, string name, string engine, string[] arguments, string added, out bool migration)
@@ -472,16 +502,14 @@ namespace TiaMcpConfigurator
             }
             if (multiline != null) throw new InvalidDataException(Loc.Current["Config.UnclosedTomlMultiline"]);
             var block = new StringBuilder(); block.AppendLine("[mcp_servers." + name + "]");
-            if (remote)
             {
-                ConfigCore.ValidateKey(key);
-                block.AppendLine("url = " + TomlString(ConfigCore.Prefix(address, port) + "mcp"));
-                block.AppendLine("http_headers = { Authorization = " + TomlString("Bearer " + key) + " }");
-            }
-            else
-            {
+                if (remote) ConfigCore.ValidateKey(key);
                 block.AppendLine("command = " + TomlString(engine));
-                block.AppendLine("args = [" + string.Join(", ", ConfigCore.LocalArguments(engine, version, tia).Select(TomlString)) + "]");
+                block
+                    .AppendLine("args = [" + string
+                        .Join(", ", (remote ? ConfigCore.RelayArguments(engine, version, address, port) : ConfigCore.LocalArguments(engine, version, tia))
+                            .Select(TomlString))
+                        + "]");
             }
             block.AppendLine("startup_timeout_sec = 120"); block.AppendLine("tool_timeout_sec = 300");
             return kept.ToString() + (kept.Length > 0 ? Environment.NewLine : "") + block;

@@ -24,6 +24,12 @@ public partial class EnvironmentView : UserControl
     {
         e.Handled = true;
         var row = (EnvironmentRow)((Button)sender).DataContext;
+        if (row.Check.Id == "proxy-remote" && Window.GetWindow(this) is MainWindow window)
+        {
+            window.ShowConfiguration();
+            window.Configuration?.RepairRemoteClients();
+            return;
+        }
         Model.Run(() => Model.Environment.Fix(row.Check.Id));
     }
 }

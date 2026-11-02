@@ -255,6 +255,8 @@ namespace TiaMcpConfigurator
         // Mode changes only presentation; existing configuration values stay in place.
         private void Mode(bool remote)
         {
+            RelayNote.Text = Loc.Current[remote ? "Config.RelayLabel" : "Mcp.ClientsNote"];
+            RelayNote.ToolTip = remote ? Loc.Current["Config.RelayMode"] : null;
             Find<TextBlock>("PageStep").Text = Loc.Current["Config.Eyebrow"];
             Find<TextBlock>("PageTitle").Text = Loc.Current[remote ? "Config.RemoteTitle" : "Config.LocalTitle"];
             Find<TextBlock>("PageSubtitle").Text = Loc.Current[remote ? "Config.RemoteSubtitle" : "Config.LocalSubtitle"];
@@ -399,6 +401,7 @@ namespace TiaMcpConfigurator
         {
             int port = int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture); string ip = Text("ServerAddress"), secret = Secret();
             ConfigCore.Prefix(ip, port); ConfigCore.ValidateKey(secret);
+            ConfigCore.SaveRemoteKey(ip, port, secret);
             ConfigCore
                 .AtomicJson(Path.Combine(ConfigCore.StateDirectory, "client.json"), new ServerSettings {
                     Address = ip, Port = port, ProtectedKey = ConfigCore.Protect(secret) });
@@ -415,7 +418,7 @@ namespace TiaMcpConfigurator
             string engine = null, ip = null, secret = null; int port = 0;
             if (remote) {
                 ip = Text("ServerAddress"); port = int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture); secret = Secret();
-                ConfigCore.Prefix(ip, port); ConfigCore.ValidateKey(secret);
+                ConfigCore.Prefix(ip, port); ConfigCore.ValidateKey(secret); engine = ConfigCore.Engine(root, SelectedVersion);
             }
             else { engine = ConfigCore.Engine(root, SelectedVersion); ConfigCore.ValidateTia(Text("TiaPath"), SelectedVersion); }
             // DeepSeek / 智谱 / Grok are brand cards over the same OpenCode file: write it once, name every brand.
@@ -423,6 +426,7 @@ namespace TiaMcpConfigurator
                 .Select(g => new { Profile = g.First(), Names = string.Join(" / ", g.Select(x => x.Name)),
                     Change = ClientProfiles.PrepareSave(g.First(), remote, ip, port, secret, engine, SelectedVersion, Text("TiaPath")) }).ToList();
             string message = Loc.Current["Config.WriteClientsPrompt"] + string.Join("\n", targets.Select(x => x.Names + "\n" + x.Profile.Path));
+            if (remote) message += "\n\n" + Loc.Current["Config.RelayMode"];
             if (targets.Any(x => x.Change.RequiresMigration))
                 message += "\n\n" + Loc.Current["Config.MigrateClientsPrompt"] + "\n" + string
                     .Join("\n", targets.Where(x => x.Change.RequiresMigration).Select(x => x.Profile.Path + " → " + x.Change.TargetCommand));
@@ -435,6 +439,7 @@ namespace TiaMcpConfigurator
             {
                 try
                 {
+                    if (remote) target.Change.BeforeApply = () => ConfigCore.SaveRemoteKey(ip!, port, secret!);
                     target.Change.Apply(true); saved++; Append(Loc.Current.T("Config.ClientSaved", target.Names, target.Profile.Path));
                     if (target.Change.BackupPath != null) Append(Loc.Current.T("Config.ClientBackupSaved", target.Change.BackupPath));
                 }
@@ -446,6 +451,22 @@ namespace TiaMcpConfigurator
             SetStatus("Config.ClientsConfigured", saved);
             Append(Loc.Current.T("Config.RestartClients", remote ? "tia-portal-vm" : "tia-portal"));
             if (errors.Count > 0) throw new InvalidOperationException(Loc.Current.T("Config.SomeClientsNotSaved", string.Join("\n", errors)));
+        }
+
+        internal void RepairRemoteClients()
+        {
+            Guard(() => {
+                Find<RadioButton>("RemoteNav").IsChecked = true;
+                if (Text("ServerAddress").Length == 0 || Secret().Length == 0)
+                    throw new InvalidOperationException(Loc.Current["Config.RelayNeedsConnection"]);
+                var choices = Find<ListBox>("ClientChoices");
+                choices.SelectedItems.Clear();
+                string endpoint = ConfigCore.Prefix(Text("ServerAddress"), int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture))
+                    + "mcp";
+                foreach (ClientProfile profile in choices.Items)
+                    if (ClientProfiles.HasRemoteEntry(profile, endpoint)) choices.SelectedItems.Add(profile);
+                SaveClients(true);
+            });
         }
         private void SetBusy(bool value)
         {
@@ -580,7 +601,7 @@ namespace TiaMcpConfigurator
         {
             if (server != null && !server.HasExited) throw new InvalidOperationException(Loc.Current["Config.ServiceAlreadyStarted"]);
             var settings = Settings(); ConfigCore.CheckListener(ConfigCore.Prefix(settings.Address, settings.Port));
-            ConfigCore.AtomicJson(StatePath, settings); runningKey = Secret();
+            ConfigCore.AtomicJson(StatePath, settings); runningKey = Secret(); ConfigCore.SaveRemoteKey(settings.Address, settings.Port, runningKey);
             var info = new ProcessStartInfo(ConfigCore.Engine(root, SelectedVersion), ConfigCore.Arguments(settings, runningKey, root)) {
                 WorkingDirectory = root, UseShellExecute = false, CreateNoWindow = true,
                 RedirectStandardOutput = true, RedirectStandardError = true, RedirectStandardInput = true,

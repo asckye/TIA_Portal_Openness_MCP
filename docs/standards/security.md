@@ -99,11 +99,13 @@
 
 ### SEC-05 HTTP 传输
 
-- 默认前缀是 `http://127.0.0.1:8735/`。HTTP 传输要求前缀是明确的 IP 字面量，并要求非空且不含控制字符的 `--http-api-key`。
+- 默认前缀是 `http://127.0.0.1:8735/`。HTTP 传输要求前缀是明确的 IP 字面量，并从工作台的当前用户 DPAPI 保护存储读取非空且不含控制字符的密钥。`--http-api-key` 仅兼容一个发布周期并输出不含密钥的弃用提示；工作台生成的命令不再包含它。
+- 所有请求（包括健康检查）在鉴权前校验 Host 和可选 Origin。允许配置端点、同端口回环源与 `--http-allowed-origins` 明确列出的源；其他值返回 403 并记录不含原始头值的审计事件，防止 DNS rebinding。
 - 除 `/mcp/health` 外，所有请求必须带 `Authorization: Bearer <密钥>`，用定长比较核对，不符返回 401。`/mcp/health` 不需要密钥，只返回版本、发布键和档位。
 - 工作台生成 24 字节随机密钥，以 DPAPI（当前用户）保存。工作台只接受 IPv4 字面量，拒绝 `0.0.0.0` 和广播地址，允许局域网地址。配置网络时，以提升权限添加只授予当前用户的 URL ACL，并添加只允许本地子网的入站防火墙规则。
-- 实现：`src/FoundationHost/HostOptions.cs`、`src/FoundationHost/EngineReleaseHost.cs`、`src/Studio/Gui/Configuration/ConfigCore.cs`、`src/Shared/WindowsFirewallRule.cs`。
-- 测试：`tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpSessionTests.cs`、`HttpHostOptionsTests.cs`、`tests/Studio/TiaOpenness.Core.Tests/WindowsFirewallRuleTests.cs`。
+- 远程客户端使用随包 stdio 中继，命令和客户端配置不含密钥；中继从同一用户的数据目录读取按端点绑定的保护记录。私网、回环和链路本地地址绕过代理，其他地址遵守环境/系统代理及 NO_PROXY。不跟随重定向，不记录 HTTP 异常正文或凭据，不自动重放请求。
+- 实现：`src/FoundationHost/HostOptions.cs`、`EngineReleaseHost.cs`、`HttpRequestBoundary.cs`、`StdioHttpRelay.cs`、`src/Shared/HttpAccessKeyStore.cs`、`RemoteProxyPolicy.cs`、`src/Studio/Gui/Configuration/ConfigCore.cs`、`src/Shared/WindowsFirewallRule.cs`。
+- 测试：`tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpSessionTests.cs`、`HttpHostOptionsTests.cs`、`HttpRequestBoundaryTests.cs`、`HttpRelayTests.cs`、`tests/Studio/TiaOpenness.Gui.Tests/RemoteConfigurationTests.cs`、`tests/Studio/TiaOpenness.Core.Tests/WindowsFirewallRuleTests.cs`。
 
 ### SEC-06 敏感值与诊断信息不外泄
 
@@ -163,8 +165,8 @@
 
 | 项目 | 现状 | 处理 |
 |---|---|---|
-| HTTP 请求的 Origin 与 Host 头 | 代码中没有 Origin 或 Host 校验 | 未决定；随 P8-95a–g 中的虚拟机 HTTP 加固评估 |
-| HTTP 访问密钥在命令行和客户端配置中是明文 | 宿主经 `--http-api-key` 接收；客户端配置写入 `Authorization` 头 | 未决定 |
+| HTTP 请求的 Origin 与 Host 头 | RELAY-1 已实现每请求校验、403 与审计，含伪造头测试 | 已补齐；新增可信源须显式配置 |
+| HTTP 访问密钥在命令行和客户端配置中是明文 | RELAY-1 的宿主与中继读取 DPAPI 存储；新配置仅含 stdio 中继命令 | 新路径已补齐；弃用的 `--http-api-key` 在下一发布周期移除，旧备份仍可能包含明文 |
 | 更新包没有签名 | 只有同源 `.sha256` | 未决定 |
 | 凭据按参数名替换 | 没有 UMAC、PLC 保护、Web 服务器凭据的专用名单 | 新增带凭据参数的工具时按 SEC-06 的命名规则命名，并在测试中证明被替换 |
 | 原生失败的诊断信息 | `NATIVE_OPERATION_FAILED` 的 `nativeMessage` 多数为空 | 维护者 2026-11-01 决定返回去敏后的原生消息首行、原生异常类型、HResult 和关联日志的诊断编号，堆栈只进日志（DES-4，尚未实现；见[设计规范](design.md)第 6.5 节） |

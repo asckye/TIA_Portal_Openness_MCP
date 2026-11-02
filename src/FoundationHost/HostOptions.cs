@@ -30,6 +30,7 @@ internal sealed class HostOptions
     public string Transport { get; init; } = "stdio";
     public string HttpPrefix { get; init; } = "http://127.0.0.1:8735/";
     public string ApiKey { get; init; } = "";
+    public string[] HttpAllowedOrigins { get; init; } = [];
     public int EngineTimeoutSeconds { get; init; } = 120;
     public string? WorkerTimeoutConfig { get; init; }
     public bool WithUi { get; init; }
@@ -54,8 +55,8 @@ internal sealed class HostOptions
         var flags = new HashSet<string>(StringComparer.Ordinal);
         var valued = new[] {
             "--release-key", "--tia-major-version", "--worker-exe", "--public-api", "--tia-portal-location", "--transport", "--http-prefix", "--http-api-key",
-                "--logging", "--worker-timeout-seconds", "--worker-timeout-config", "--profile", "--host-command", "--operator-owner", "--catalog-tools-list",
-                "--catalog-package", "--catalog-generated-at"
+                "--http-allowed-origins", "--logging", "--worker-timeout-seconds", "--worker-timeout-config", "--profile", "--host-command", "--operator-owner",
+                "--catalog-tools-list", "--catalog-package", "--catalog-generated-at"
         };
         for (int i = 0; i < args.Length; i++)
         {
@@ -101,12 +102,24 @@ internal sealed class HostOptions
         if (transport == "operator" && operatorOwner == null) throw new ArgumentException("Operator transport requires --operator-owner.");
         var prefix = Value("--http-prefix", "http://127.0.0.1:8735/");
         var key = Value("--http-api-key");
+        var allowedOrigins = Value("--http-allowed-origins").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        foreach (string allowed in allowedOrigins)
+        {
+            var origin = TiaOpenness.Shared.HttpAccessKeyStore.Endpoint(allowed);
+            if (origin.AbsolutePath != "/") throw new ArgumentException("Allowed HTTP origins must be HTTP(S) authorities without a path.");
+        }
         if (transport == "http")
         {
             if (!Uri.TryCreate(prefix, UriKind.Absolute, out var uri) || uri.Scheme != "http" || uri.AbsolutePath != "/" || !System.Net.IPAddress
-                    .TryParse(uri.Host, out _) || uri.Query.Length != 0)
+                    .TryParse(uri.Host, out _) || uri.Query.Length != 0 || uri.Fragment.Length != 0 || uri.UserInfo.Length != 0)
                 throw new ArgumentException("HTTP prefix must be an explicit IP address and port at the root path.");
-            if (string.IsNullOrWhiteSpace(key) || key.Any(char.IsControl)) throw new ArgumentException("HTTP requires a nonempty --http-api-key.");
+            if (options.ContainsKey("--http-api-key"))
+                Console.Error
+                    .WriteLine("Deprecated: --http-api-key will be removed after this release. Save the HTTP access key in the Workbench protected " +
+                    "configuration store.");
+            else key = TiaOpenness.Shared.HttpAccessKeyStore
+                .ReadHost(TiaOpenness.Shared.DataLocations.Current.ConfigDirectory, release, new Uri(new Uri(prefix), "mcp"));
+            TiaOpenness.Shared.HttpAccessKeyStore.Validate(key);
         }
         var api = Value("--public-api");
         string? apiSource = string.IsNullOrWhiteSpace(api) ? null : "host-option";
@@ -126,7 +139,7 @@ internal sealed class HostOptions
             api = version.FindApiDirectory(location) ?? "";
         }
         return new HostOptions {
-            BundleRoot = bundleRoot, ReleaseKey = release,
+            BundleRoot = bundleRoot, ReleaseKey = release, HttpAllowedOrigins = allowedOrigins,
             OperatorOwner = operatorOwner,
             HostCommand = options.ContainsKey("--host-command") ? Value("--host-command") : null,
             EngineTimeoutSeconds = timeout, WithUi = flags.Contains("--with-ui"),

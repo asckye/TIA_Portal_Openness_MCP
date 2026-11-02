@@ -47,11 +47,11 @@ namespace TiaMcpConfigurator
         public static string Protect(string key)
         {
             ValidateKey(key);
-            return Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(key), null, DataProtectionScope.CurrentUser));
+            return TiaOpenness.Shared.HttpAccessKeyStore.Protect(key);
         }
         public static string Unprotect(string value)
         {
-            return Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(value), null, DataProtectionScope.CurrentUser));
+            return TiaOpenness.Shared.HttpAccessKeyStore.Unprotect(value);
         }
         public static void ValidateKey(string key)
         {
@@ -186,13 +186,22 @@ namespace TiaMcpConfigurator
             AtomicJson(path, root);
         }
 
-        public static Dictionary<string, object> RemoteEntry(string address, int port, string key)
+        public static Dictionary<string, object> RemoteEntry(string address, int port, string key, string? engine = null, string version = "21")
         {
             ValidateKey(key);
-            return new Dictionary<string, object> {
-                { "type", "http" }, { "url", Prefix(address, port) + "mcp" },
-                { "headers", new Dictionary<string, object> { { "Authorization", "Bearer " + key } } } };
+            var profile = new ClientProfile("claude-code", "Claude Code", "", "");
+            return ClientProfiles.Entry(profile, true, address, port, key, engine ?? Engine(null, version), version, null);
         }
+
+        public static string[] RelayArguments(string engine, string versionKey, string address, int port)
+        {
+            // Reuse the bundle resolution and executable identity checks of the local launcher.
+            var local = LocalArguments(engine, versionKey, "");
+            return new[] { local[0], local[1], "--relay", Prefix(address, port) + "mcp" };
+        }
+
+        public static void SaveRemoteKey(string address, int port, string key)
+            => TiaOpenness.Shared.HttpAccessKeyStore.Save(StateDirectory, new Uri(Prefix(address, port) + "mcp"), key);
 
         public static string VersionArgument(string releaseKey)
         { return TiaOpenness.Shared.BundleLayout.GetProduct(releaseKey).VersionOption; }
@@ -205,7 +214,7 @@ namespace TiaMcpConfigurator
                 .Join(" ", new[] {
                     "--bundle-root", root, VersionArgument(settings.EffectiveReleaseKey), settings.EffectiveReleaseKey, "--tia-portal-location", settings
                         .TiaPath,
-                "--transport", "http", "--http-prefix", Prefix(settings.Address, settings.Port), "--http-api-key", key, "--logging", "1" }.Select(Quote));
+                "--transport", "http", "--http-prefix", Prefix(settings.Address, settings.Port), "--logging", "1" }.Select(Quote));
         }
 
         public static void CheckListener(string prefix)

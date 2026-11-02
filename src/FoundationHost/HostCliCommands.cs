@@ -244,6 +244,8 @@ namespace TiaMcp.FoundationHost
 
 USAGE
   TiaMcp.FoundationHost.exe <verb> [options] [--release-key KEY]
+  TiaMcp.FoundationHost.exe --bundle-root PATH --relay URL   Relay local stdio to streamable HTTP; reads the
+                                                          protected Workbench key, bypasses private-address proxies
   tia doctor [--fix] [--json]                             Inspect installation, API, worker readiness,
                                                           .NET Framework, blocked files, group and AI host configs
   tia audit verify [--path ABSOLUTE_DIRECTORY]              Verify audit chains; JSON, exit 0 intact / 3 broken
@@ -254,6 +256,10 @@ USAGE
   tia install-plc-tools [--python PATH] [--environment-path DIR]
                                                           Install companion dependencies for Python 3.12+
   tia help
+
+HTTP: --transport http --http-prefix http://IP:PORT/ reads the key saved by the Workbench.
+  --http-api-key is deprecated for this release; never put keys in new launch commands or client configurations.
+  --http-allowed-origins https://trusted.example:PORT,... adds explicit Origin/Host authorities.
 
 RELEASES: 14sp1, 15.1, 16, 17, 18, 19, 20, 21. Original V14/V15 are unsupported.
   --tia-version KEY and --tia-major-version N are aliases for --release-key.

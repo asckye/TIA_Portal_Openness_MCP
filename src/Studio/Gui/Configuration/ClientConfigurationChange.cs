@@ -13,6 +13,7 @@ namespace TiaMcpConfigurator
         public bool RequiresMigration { get; }
         public string TargetCommand { get; }
         public string BackupPath { get; private set; }
+        internal Action? BeforeApply { get; set; }
 
         internal ClientConfigurationChange(string path, byte[] original, string text, bool migration, string command)
         { Path = path; this.original = original; this.text = text; RequiresMigration = migration; TargetCommand = command; }
@@ -33,7 +34,7 @@ namespace TiaMcpConfigurator
                 using (var backup = new FileStream(BackupPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
                     backup.Write(original, 0, original.Length);
             }
-            try { write(Path, text); }
+            try { BeforeApply?.Invoke(); write(Path, text); }
             catch (Exception failure)
             {
                 try

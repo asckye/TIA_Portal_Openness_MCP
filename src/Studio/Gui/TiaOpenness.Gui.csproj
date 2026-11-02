@@ -20,6 +20,8 @@
   <ItemGroup><ProjectReference Include="../../Logic/TiaMcp.Logic.csproj" Aliases="PlcRendering" /></ItemGroup>
   <ItemGroup><ProjectReference Include="../Bridge/TiaOpenness.Bridge.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" /></ItemGroup>
   <ItemGroup>
+    <Compile Include="../../Shared/HttpAccessKeyStore.cs" Link="Configuration/HttpAccessKeyStore.cs" />
+    <Compile Include="../../Shared/RemoteProxyPolicy.cs" Link="Configuration/RemoteProxyPolicy.cs" />
     <Compile Include="../../Shared/OpennessEnvironment.cs" Link="Configuration/OpennessEnvironment.cs" />
     <Compile Include="../../Shared/WindowsFirewallRule.cs" Link="Configuration/WindowsFirewallRule.cs" />
     <Compile Include="../../Shared/BundleLayout.cs" Link="Configuration/BundleLayout.cs" />

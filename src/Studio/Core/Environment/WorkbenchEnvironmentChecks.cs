@@ -85,6 +85,7 @@ namespace TiaOpenness.Core.Environment
         public string HttpPrefix { get; set; }
         public string HttpConfigurationPath { get; set; }
         public string HttpEndpointError { get; set; }
+        public string[] RemoteEndpoints { get; set; } = Array.Empty<string>();
     }
 
     // The same policies run with Windows sources and isolated offline fakes.
@@ -102,6 +103,7 @@ namespace TiaOpenness.Core.Environment
         public Func<string, AllowListEntry> AllowListEntry { get; set; }
         // UTC modification time and SHA-256 of a file, as the Openness firewall computes them.
         public Func<string, KeyValuePair<DateTime, byte[]>> FileIdentity { get; set; }
+        public Func<string[], EnvironmentFinding> ProxyConnection { get; set; }
     }
 
     public sealed class WorkbenchEnvironmentChecks
@@ -113,7 +115,7 @@ namespace TiaOpenness.Core.Environment
 
         public static IReadOnlyList<string> Ids => new[] { "installations", "membership", "openness-readiness", "framework", "runtime" }
             .Concat(TiaVersionCatalog.All.Select(v => "engine-" + v.Key))
-            .Concat(new[] { "data", "port", "url", "firewall", "confirmation", "openness-allowlist" }).ToArray();
+            .Concat(new[] { "data", "port", "url", "firewall", "proxy-remote", "confirmation", "openness-allowlist" }).ToArray();
 
         public IReadOnlyList<EnvironmentFinding> Run()
         {
@@ -133,6 +135,8 @@ namespace TiaOpenness.Core.Environment
             try
             {
                 if (id == "confirmation") return Finding(EnvironmentFindingStatus.Guidance, "Guidance");
+                if (id == "proxy-remote") return sources.ProxyConnection?.Invoke(context.RemoteEndpoints)
+                    ?? Finding(EnvironmentFindingStatus.Unknown, "Unknown");
                 if (id == "openness-allowlist") return AllowList(Finding);
                 if (id == "openness-readiness")
                 {

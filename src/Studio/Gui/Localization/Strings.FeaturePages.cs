@@ -4,6 +4,18 @@ internal static partial class Strings
 {
     private static (string Key, string En, string Zh)[] FeaturePageCatalogue =>
     [
+        ("Env.ProxyRemote", "Proxy and remote connection", "代理与远程连接"),
+        ("Env.ProxyFixButton", "Use relay…", "使用中继…"),
+        ("Env.ProxyCaptured", "A proxy captures remote HTTP traffic", "代理会接管远程 HTTP 流量"),
+        ("Env.ProxyDirect", "direct", "直连"),
+        ("Env.ProxySystem", "system proxy", "系统代理"),
+        ("Env.ProxyEvidence", "{0}\nClient HTTP route: {1}; direct HTTP {2}; proxy HTTP {3}; relay: {4}. Expected: 401 without a key; 0 means unreachable.",
+                "{0}\n客户端 HTTP 路由：{1}；直连 HTTP {2}；代理 HTTP {3}；中继：{4}。无密钥时应返回 401；0 表示不可达。"),
+        ("Env.FixProxyRemote",
+                "Use relay mode to keep the key protected and bypass proxies for private addresses. Review and confirm the client migration before writing. " +
+                "For a manually managed HTTP client, add the remote host to NO_PROXY in the client's actual environment; some desktop clients replace " +
+                "NO_PROXY when starting sessions.",
+                "使用中继模式可保护密钥并让私网地址绕过代理。写入前请审查并确认客户端迁移。手动管理 HTTP 客户端时，在客户端实际运行环境的 NO_PROXY 中加入远程主机；部分桌面客户端启动会话时会替换 NO_PROXY。"),
         ("Audit.Older", "Older 1,000", "前 1,000 条"),
         ("Audit.Latest", "Latest 1,000", "最近 1,000 条"),
         ("Feature.NotConnected", "Not connected yet.", "尚未接入。"),

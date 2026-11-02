@@ -33,7 +33,7 @@ public sealed class CallJournalPanelTests(WpfContext wpf)
                 Assert.Equal("http://127.0.0.1:8765/mcp", service.Connection.Address);
                 Assert.Equal("HTTP", service.Connection.Transport);
                 Assert.Equal(TiaMcpConfigurator.ClientProfiles.ConnectionSnippet("127.0.0.1", 8765), service.Connection.ConfigurationJson);
-                Assert.Contains("Bearer ••••", service.Connection.ConfigurationJson); Assert.DoesNotContain("private-", service.Connection.ConfigurationJson);
+                Assert.Contains("--relay", service.Connection.ConfigurationJson); Assert.DoesNotContain("Authorization", service.Connection.ConfigurationJson); Assert.DoesNotContain("private-", service.Connection.ConfigurationJson);
                 File.WriteAllText(Path.Combine(root, "http-v20.json"), "{broken private-key");
                 service.SetRelease("20"); service.Refresh(); Assert.Empty(service.Connection.Address);
             }

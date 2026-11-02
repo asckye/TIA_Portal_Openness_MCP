@@ -10,7 +10,8 @@ public sealed class CallJournalServiceStub : ObservableObject, ICallJournalServi
 {
     public IReadOnlyList<CallRecord> Calls => Array.Empty<CallRecord>();
     public ConnectionInfo Connection { get; } =
-        new("", "", "{\"mcpServers\":{\"tia-portal-vm\":{\"type\":\"http\",\"url\":\"<MCP address>\",\"headers\":{\"Authorization\":\"Bearer ••••\"}}}}");
+        new("", "",
+            "{\"mcpServers\":{\"tia-portal-vm\":{\"type\":\"stdio\",\"command\":\"<bundled FoundationHost>\",\"args\":[\"--relay\",\"<MCP address>\"]}}}");
 }
 
 // Stub until P6-46: retention is memory-only; no files or integrity results are fabricated.

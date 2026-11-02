@@ -134,10 +134,9 @@ namespace TiaMcpConfigurator
                 var local = ClientProfiles.Entry(profile, false, null, 0, null, engine, release.Key, "TIA path");
                 string[] launch = profile.Client == "opencode" ? ((string[])local["command"]).Skip(1).ToArray() : (string[])local["args"];
                 Assert(launch.SequenceEqual(new[] { "--bundle-root", temp, ConfigCore.VersionArgument(release.Key), release.Key, "--tia-portal-location", "TIA path" }), profile.Id + " " + release.Key + " product arguments");
-                var remote = ClientProfiles.Entry(profile, true, "127.0.0.1", 8765, "fixture-key", null, release.Key, null);
+                var remote = ClientProfiles.Entry(profile, true, "127.0.0.1", 8765, "fixture-key", engine, release.Key, null);
                 Assert(ClientProfiles.ServerName(profile, false) == "tia-portal" && ClientProfiles.ServerName(profile, true) == "tia-portal-vm"
-                    && (string)remote[ClientProfiles.UrlKey(profile)] == "http://127.0.0.1:8765/mcp"
-                    && (string)((Dictionary<string, object>)remote["headers"])["Authorization"] == "Bearer fixture-key", profile.Id + " " + release.Key + " stable connection fields");
+                    && RelayShape(profile, remote, engine, release.Key, "127.0.0.1", "fixture-key"), profile.Id + " " + release.Key + " protected relay connection fields");
             }
             string path = Path.Combine(temp, "migration.json");
             var target = new ClientProfile("claude-code", "Claude Code", path, "");
@@ -153,6 +152,16 @@ namespace TiaMcpConfigurator
                 File.WriteAllText(file, "partial"); throw new IOException("injected write failure");
             }), "migration write failure is reported");
             Assert(File.ReadAllText(path) == original, "migration write failure restores original bytes");
+        }
+
+        private static bool RelayShape(ClientProfile profile, Dictionary<string, object> entry, string engine, string release, string address, string secret)
+        {
+            string[] Values(object value) => ((System.Collections.IEnumerable)value).Cast<object>().Select(Convert.ToString).ToArray();
+            string[] args = profile.Client == "opencode" ? Values(entry["command"]).Skip(1).ToArray() : Values(entry["args"]);
+            string command = profile.Client == "opencode" ? Values(entry["command"])[0] : (string)entry["command"];
+            string json = ConfigCore.Json().Serialize(entry);
+            return command == engine && args.SequenceEqual(ConfigCore.RelayArguments(engine, release, address, 8765))
+                && !entry.ContainsKey("headers") && !entry.ContainsKey("url") && !entry.ContainsKey("httpUrl") && !json.Contains(secret);
         }
 
         private static void WorkbenchUiTests(string output)
@@ -495,22 +504,23 @@ namespace TiaMcpConfigurator
                 Reject<FileNotFoundException>(() => ConfigCore.Engine(temp, 21), "missing runtime in a valid bundle gives actionable failure");
                 Reject(() => ConfigCore.ValidateTia(temp, 21), "missing TIA API rejected");
 
+                VersionCatalogTests(Path.Combine(temp, "version-catalog"));
+                string relayEngine = ConfigCore.Engine(Path.Combine(temp, "version-catalog"), "21");
                 string config = Path.Combine(temp, "claude.json");
                 string original = "{\"theme\":\"dark\",\"projects\":{\"D:/demo\":{\"allowedTools\":[\"one\"]}},\"mcpServers\":{\"other\":{\"command\":\"keep.exe\"},\"tia-portal-vm\":{\"url\":\"old\"}}}";
                 File.WriteAllText(config, original);
-                ConfigCore.MergeServer(config, "tia-portal-vm", ConfigCore.RemoteEntry("192.0.2.10", 8765, secret));
+                ConfigCore.MergeServer(config, "tia-portal-vm", ConfigCore.RemoteEntry("192.0.2.10", 8765, secret, relayEngine));
                 var root = ConfigCore.Json().Deserialize<Dictionary<string, object>>(File.ReadAllText(config));
                 var servers = (Dictionary<string, object>)root["mcpServers"];
                 Assert((string)root["theme"] == "dark" && root.ContainsKey("projects") && servers.ContainsKey("other"), "merge preserves unrelated settings and servers");
                 Assert(File.ReadAllText(Directory.GetFiles(temp, "claude.json.bak_*").Single()) == original, "exact pre-write backup");
                 var remote = (Dictionary<string, object>)servers["tia-portal-vm"];
-                Assert((string)remote["url"] == "http://192.0.2.10:8765/mcp" && (string)((Dictionary<string, object>)remote["headers"])["Authorization"] == "Bearer " + secret, "remote config schema and secret roundtrip");
+                Assert(RelayShape(new ClientProfile("claude-code", "Claude Code", "", ""), remote, relayEngine, "21", "192.0.2.10", secret), "remote relay schema excludes plaintext secret");
                 string bad = Path.Combine(temp, "bad.json"); File.WriteAllText(bad, "{broken");
                 Reject(() => ConfigCore.MergeServer(bad, "x", remote), "malformed JSON is rejected");
                 Assert(File.ReadAllText(bad) == "{broken", "malformed config untouched");
                 File.WriteAllText(bad, "{\"mcpServers\":[]}");
                 Reject(() => ConfigCore.MergeServer(bad, "x", remote), "non-object server map rejected");
-                VersionCatalogTests(Path.Combine(temp, "version-catalog"));
 
                 string[] roundtrip = { "", secret, "C:\\space path\\", "a\\\"b", "\"", "a&echo nope", "end\\\\" };
                 var info = new ProcessStartInfo(Application.ExecutablePath, "--echo " + string.Join(" ", roundtrip.Select(ConfigCore.Quote))) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, StandardOutputEncoding = Encoding.UTF8 };
@@ -529,7 +539,7 @@ namespace TiaMcpConfigurator
                 Assert(profiles.First(x => x.Id == "zhipu").Name == "GLM", "2.8.0: the Zhipu card is named GLM (maintainer)");
                 Assert(profiles[0].Id == "claude-code" && profiles[1].Id == "codex", "Claude Code and Codex are the first two cards");
                 Assert(profiles.TakeWhile(x => x.Kind == "CLI").Count() == 9 && profiles[9].Kind == "Desktop" && profiles.Skip(10).All(x => x.Kind == "IDE"), "CLI cards, then the desktop assistant, then IDE cards");
-                // 2.7.61: detection never throws, every card carries evidence text, and the qwen-agent file is url + headers without a type
+                // Detection never throws; every card carries evidence; Qwen Agent uses command/args without a type.
                 var previousLanguage = Loc.Current.Language;
                 try
                 {
@@ -543,8 +553,8 @@ namespace TiaMcpConfigurator
                 }
                 finally { Loc.Current.Language = previousLanguage; }
                 var agent = profiles.First(x => x.Id == "qwen-agent");
-                var agentEntry = ClientProfiles.Entry(agent, true, "192.0.2.10", 8765, secret, null, 21, null);
-                Assert(agent.Path.EndsWith(Path.Combine(".qwen-agent", "mcp.json")) && ClientProfiles.RootKey(agent) == "mcpServers" && agentEntry.ContainsKey("url") && !agentEntry.ContainsKey("type") && ((Dictionary<string, object>)agentEntry["headers"]).ContainsKey("Authorization"), "Qwen Agent writes ~/.qwen-agent/mcp.json with url + Bearer header and no type");
+                var agentEntry = ClientProfiles.Entry(agent, true, "192.0.2.10", 8765, secret, relayEngine, 21, null);
+                Assert(agent.Path.EndsWith(Path.Combine(".qwen-agent", "mcp.json")) && ClientProfiles.RootKey(agent) == "mcpServers" && RelayShape(agent, agentEntry, relayEngine, "21", "192.0.2.10", secret) && !agentEntry.ContainsKey("type"), "Qwen Agent writes ~/.qwen-agent/mcp.json with relay command/args and no type");
                 Assert(ClientProfiles.OnPath("cmd") != null && ClientProfiles.OnPath("no-such-executable-2761") == null, "PATH lookup finds cmd.exe and nothing for a bogus name");
                 Assert(profiles.First(x => x.Id == "vscode").Path.EndsWith(Path.Combine("User", "mcp.json")), "VS Code writes the user mcp.json of the edition present on this machine");
                 Assert(!profiles.Any(x => x.Id == "windsurf" || x.Id == "cline" || x.Id == "claude"), "Windsurf, Cline and Claude Desktop cards are gone");
@@ -554,7 +564,7 @@ namespace TiaMcpConfigurator
                     var testProfile = new ClientProfile(profile.Id, profile.Name, Path.Combine(temp, profile.Id + (profile.Client == "codex" ? ".toml" : ".json")), profile.Hint, profile.Client, profile.Kind);
                     if (profile.Client == "codex") File.WriteAllText(testProfile.Path, "# preserved\r\nmodel = \"keep\"\r\n[mcp_servers.other]\r\ncommand = \"other.exe\"\r\n");
                     else File.WriteAllText(testProfile.Path, "{ // existing settings\n\"keep\": true, \"" + ClientProfiles.RootKey(profile) + "\": {\"other\":{\"command\":\"keep.exe\"},},}");
-                    ClientProfiles.Save(testProfile, true, "192.0.2.10", 8765, secret, null, 21, null, confirmed: true);
+                    ClientProfiles.Save(testProfile, true, "192.0.2.10", 8765, secret, relayEngine, 21, null, confirmed: true);
                     string saved = File.ReadAllText(testProfile.Path);
                     Assert(saved.Contains("other") && saved.Contains("keep") && saved.Contains("tia-portal-vm"), profile.Name + " remote merge preserves other config");
                     if (profile.Client != "codex")
@@ -562,34 +572,34 @@ namespace TiaMcpConfigurator
                         var doc = ConfigCore.Json().Deserialize<Dictionary<string, object>>(saved);
                         var map = (Dictionary<string, object>)doc[ClientProfiles.RootKey(profile)];
                         var entry = (Dictionary<string, object>)map[ClientProfiles.ServerName(profile, true)];
-                        Assert((string)entry[ClientProfiles.UrlKey(profile)] == "http://192.0.2.10:8765/mcp", profile.Name + " native HTTP schema");
+                        Assert(RelayShape(profile, entry, relayEngine, "21", "192.0.2.10", secret), profile.Name + " native stdio relay schema");
                     }
                     ClientProfiles.Save(testProfile, false, null, 0, null, ConfigCore.Engine(Path.Combine(temp, "version-catalog"), "21"), 21, @"C:\Siemens\Portal V21", confirmed: true);
                     Assert(File.ReadAllText(testProfile.Path).Contains("--tia-portal-location"), profile.Name + " local stdio saves explicit TIA path");
                 }
-                // 国产模型入口的客户端各自有独立 schema，泛型循环只核对了 URL 字段；这里盯住会被静默接受但客户端读不懂的形状。
-                var qwen = ClientProfiles.Entry(profiles.First(x => x.Id == "qwen"), true, "192.0.2.10", 8765, secret, null, 21, null);
-                Assert(qwen.ContainsKey("httpUrl") && !qwen.ContainsKey("url") && !qwen.ContainsKey("type"), "Qwen → Qwen Code uses Gemini-style httpUrl without a type field");
-                var kimi = ClientProfiles.Entry(profiles.First(x => x.Id == "kimi"), true, "192.0.2.10", 8765, secret, null, 21, null);
-                Assert(kimi.ContainsKey("url") && !kimi.ContainsKey("type") && ((Dictionary<string, object>)kimi["headers"]).ContainsKey("Authorization"), "Kimi → Kimi Code CLI uses plain url + headers");
+                // 各客户端继续使用自己的 stdio schema；远程参数指向 relay，不能写入 HTTP 密钥。
+                var qwen = ClientProfiles.Entry(profiles.First(x => x.Id == "qwen"), true, "192.0.2.10", 8765, secret, relayEngine, 21, null);
+                Assert(RelayShape(profiles.First(x => x.Id == "qwen"), qwen, relayEngine, "21", "192.0.2.10", secret) && !qwen.ContainsKey("type"), "Qwen → Qwen Code uses stdio relay without a type field");
+                var kimi = ClientProfiles.Entry(profiles.First(x => x.Id == "kimi"), true, "192.0.2.10", 8765, secret, relayEngine, 21, null);
+                Assert(RelayShape(profiles.First(x => x.Id == "kimi"), kimi, relayEngine, "21", "192.0.2.10", secret) && !kimi.ContainsKey("type"), "Kimi → Kimi Code CLI uses stdio relay command/args");
                 Assert(profiles.First(x => x.Id == "kimi").Path.EndsWith("mcp.json"), "Kimi Code CLI writes mcp.json, not config.toml");
-                var buddy = ClientProfiles.Entry(profiles.First(x => x.Id == "codebuddy"), true, "192.0.2.10", 8765, secret, null, 21, null);
-                Assert((string)buddy["type"] == "http" && buddy.ContainsKey("url") && profiles.First(x => x.Id == "codebuddy").Path.EndsWith(".mcp.json"), "Yuanbao → CodeBuddy uses type=http in .codebuddy\\.mcp.json");
+                var buddy = ClientProfiles.Entry(profiles.First(x => x.Id == "codebuddy"), true, "192.0.2.10", 8765, secret, relayEngine, 21, null);
+                Assert((string)buddy["type"] == "stdio" && RelayShape(profiles.First(x => x.Id == "codebuddy"), buddy, relayEngine, "21", "192.0.2.10", secret) && profiles.First(x => x.Id == "codebuddy").Path.EndsWith(".mcp.json"), "Yuanbao → CodeBuddy uses type=stdio in .codebuddy\\.mcp.json");
                 var brands = profiles.Where(x => x.Client == "opencode").ToList();
                 Assert(brands.Select(x => x.Id).SequenceEqual(new[] { "deepseek", "zhipu", "grok" }) && brands.Select(x => x.Path).Distinct().Count() == 1, "DeepSeek / 智谱 / Grok are brand cards over one OpenCode file");
                 Assert(brands.All(x => x.CategoryBase == "CLI · OpenCode") && profiles.First(x => x.Id == "qwen").CategoryBase == "CLI · Qwen Code" && profiles.First(x => x.Id == "codex").CategoryBase == "CLI" && agent.CategoryBase == "Desktop", "brand cards show the client they write to; native cards show only the kind");
-                var openRemote = ClientProfiles.Entry(brands[0], true, "192.0.2.10", 8765, secret, null, 21, null);
-                Assert((string)openRemote["type"] == "remote" && (bool)openRemote["enabled"] && (string)openRemote["url"] == "http://192.0.2.10:8765/mcp", "OpenCode remote entry carries type=remote and enabled");
+                var openRemote = ClientProfiles.Entry(brands[0], true, "192.0.2.10", 8765, secret, relayEngine, 21, null);
+                Assert((string)openRemote["type"] == "local" && (bool)openRemote["enabled"] && RelayShape(brands[0], openRemote, relayEngine, "21", "192.0.2.10", secret), "OpenCode relay entry carries type=local and enabled");
                 var openLocal = ClientProfiles.Entry(brands[0], false, null, 0, null, ConfigCore.Engine(Path.Combine(temp, "version-catalog"), "21"), 21, @"C:\Siemens\Portal V21");
                 var openCommand = (string[])openLocal["command"];
                 Assert((string)openLocal["type"] == "local" && openCommand[0] == ConfigCore.Engine(Path.Combine(temp, "version-catalog"), "21") && openCommand.Contains("--tia-portal-location") && !openLocal.ContainsKey("args"), "OpenCode local entry is one command array starting with the executable");
                 Assert(ClientProfiles.RootKey(brands[0]) == "mcp" && ClientProfiles.RootKey(profiles.First(x => x.Id == "qwen")) == "mcpServers", "OpenCode servers live under 'mcp', the CLIs under 'mcpServers'");
                 string originalToml = "model = \"keep\"\r\n[mcp_servers.\"tia-portal-vm\"] # old\r\nurl = \"old\"\r\n[mcp_servers.\"tia-portal-vm\".http_headers]\r\nAuthorization = \"oldsecret\"\r\n[projects.\"D:/work\"]\r\ntrust_level = \"trusted\"\r\n";
-                string changedToml = ClientProfiles.MergeToml(originalToml, "tia-portal-vm", true, "192.0.2.10", 8765, secret, null, 21, null);
+                string changedToml = ClientProfiles.MergeToml(originalToml, "tia-portal-vm", true, "192.0.2.10", 8765, secret, relayEngine, 21, null);
                 Assert(changedToml.Contains("[projects.\"D:/work\"]\r\ntrust_level = \"trusted\"\r\n") && !changedToml.Contains("oldsecret"), "Codex removes only target tables and preserves unrelated bytes");
-                Reject(() => ClientProfiles.MergeToml("mcp_servers = {}", "tia-portal-vm", true, "192.0.2.10", 8765, secret, null, 21, null), "Codex inline MCP table rejected without destructive merge");
+                Reject(() => ClientProfiles.MergeToml("mcp_servers = {}", "tia-portal-vm", true, "192.0.2.10", 8765, secret, relayEngine, 21, null), "Codex inline MCP table rejected without destructive merge");
                 string multi = "instructions = \"\"\"\n[mcp_servers.tia-portal-vm]\nthis is text, not a table\n\"\"\"\n";
-                Assert(ClientProfiles.MergeToml(multi, "tia-portal-vm", true, "192.0.2.10", 8765, secret, null, 21, null).StartsWith(multi), "Codex multiline instructions remain byte-identical");
+                Assert(ClientProfiles.MergeToml(multi, "tia-portal-vm", true, "192.0.2.10", 8765, secret, relayEngine, 21, null).StartsWith(multi), "Codex multiline instructions remain byte-identical");
                 Assert(profiles.All(x => ClientProfiles.ServerName(x, true) == "tia-portal-vm" && ClientProfiles.ServerName(x, false) == "tia-portal"), "every card uses tia-portal-vm remotely and tia-portal locally, matching the plugin");
                 string jsonc = "{\"url\":\"http://example/a/*b*/\",/*comment*/\"list\":[1,],}";
                 var parsedJsonc = ConfigCore.Json().Deserialize<Dictionary<string, object>>(ClientProfiles.StripJsonComments(jsonc));

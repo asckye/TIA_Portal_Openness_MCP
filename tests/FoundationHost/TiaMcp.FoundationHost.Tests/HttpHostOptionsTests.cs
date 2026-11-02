@@ -8,6 +8,18 @@ using HttpHostOptions = foundationhost::TiaMcp.FoundationHost.HttpHostOptions;
 // The HTTP hosts must not watch the working directory they were started from.
 public sealed class HttpHostOptionsTests
 {
+    [Theory]
+    [InlineData("http://user:fixture-secret@127.0.0.1:8765/")]
+    [InlineData("http://127.0.0.1:8765/#fixture-secret")]
+    public void Http_listener_rejects_credentials_and_fragments_without_echoing_them(string prefix)
+    {
+        string root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
+        var error = Assert.Throws<ArgumentException>(() => foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(
+            ["--bundle-root", root, "--release-key", "21", "--transport", "http", "--http-prefix", prefix, "--http-api-key", "synthetic-key"],
+            Path.Combine(root, "bin-build", "relay-option-fixture")));
+        Assert.DoesNotContain("fixture-secret", error.Message); Assert.DoesNotContain("synthetic-key", error.Message);
+    }
+
     [Fact]
     public void Http_hosts_use_the_host_folder_as_content_root_without_configuration_reload()
     {

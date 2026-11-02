@@ -15,6 +15,27 @@ try
 }
 catch (TiaOpenness.Shared.BundleResourceUnavailableException ex) { Console.Error.WriteLine(ex.Message); return 70; }
 catch (ArgumentException ex) { Console.Error.WriteLine("RESOURCE_UNAVAILABLE: " + ex.Message); return 64; }
+if (args.Length > 0 && args[0] == "--relay")
+{
+    using var stopping = new CancellationTokenSource();
+    try
+    {
+        if (args.Length != 2) throw new ArgumentException("Use --relay <HTTP(S) endpoint> without other host options.");
+        var endpoint = TiaOpenness.Shared.HttpAccessKeyStore.Endpoint(args[1]);
+        var key = TiaOpenness.Shared.HttpAccessKeyStore.Read(TiaOpenness.Shared.DataLocations.Current.ConfigDirectory, endpoint);
+        Console.CancelKeyPress += (_, e) => { e.Cancel = true; stopping.Cancel(); };
+        using var input = new StreamReader(Console.OpenStandardInput(), new UTF8Encoding(false));
+        return await StdioHttpRelay.Run(endpoint, key, input, Console.Out, token: stopping.Token);
+    }
+    catch (OperationCanceledException) when (stopping.IsCancellationRequested) /* swallow(teardown): explicit relay shutdown closes the transport without replaying requests */ { return 0; }
+    catch (Exception)
+    {
+        // Never print an HTTP exception: it may contain a credential or an untrusted response body.
+        Console.Error
+            .WriteLine("RELAY_CONNECTION_FAILED: Check the endpoint, protected Workbench access key and proxy settings. The relay did not replay any request.");
+        return 2;
+    }
+}
 if (HostCliOptions.IsCommand(args))
 {
     HostCliOptions command;
