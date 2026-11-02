@@ -18,6 +18,7 @@
   <SolidColorBrush x:Key="Primer.accent" Color="{DynamicResource {x:Static SystemColors.HotTrackColorKey}}"/>
   <SolidColorBrush x:Key="Primer.onAccent" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
   <SolidColorBrush x:Key="Primer.primaryBg" Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}"/>
+  <SolidColorBrush x:Key="Primer.onPrimary" Color="{DynamicResource {x:Static SystemColors.HighlightTextColorKey}}"/>
   <SolidColorBrush x:Key="Primer.warn" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
   <SolidColorBrush x:Key="Primer.warnBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
   <SolidColorBrush x:Key="Primer.ok" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>

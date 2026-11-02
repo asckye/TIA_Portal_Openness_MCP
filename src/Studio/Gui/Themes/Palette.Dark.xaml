@@ -16,8 +16,9 @@
   <SolidColorBrush x:Key="Primer.textFaint" Color="#AEAEB2"/>
   <SolidColorBrush x:Key="Primer.checkBorder" Color="#8E8E93"/>
   <SolidColorBrush x:Key="Primer.accent" Color="#409CFF"/>
-  <SolidColorBrush x:Key="Primer.onAccent" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.onAccent" Color="#000000"/>
   <SolidColorBrush x:Key="Primer.primaryBg" Color="#0071E3"/>
+  <SolidColorBrush x:Key="Primer.onPrimary" Color="#FFFFFF"/>
   <SolidColorBrush x:Key="Primer.warn" Color="#FFB340"/>
   <SolidColorBrush x:Key="Primer.warnBg" Color="#3A2A12"/>
   <SolidColorBrush x:Key="Primer.ok" Color="#30D158"/>

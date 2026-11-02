@@ -35,7 +35,7 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
 
     [Theory]
     [InlineData("Light", "#F2F2F7 #FFFFFF #F2F2F7 #E3E3E8 #D1D1D6 #D1D1D6 #F2F2F7 #86868B #E5E5EA #E3E3E8 #FFFFFF #1D1D1F #636366 #636366 #86868B #0066CC #FFFFFF #0071E3 #B25000 #FFF4E5 #1A7431 #E9F7EE #E8F1FC #0066CC #0066CC #F2F2F7 #1D1D1F #1A7431 #D70015 #FFFFFF #FFFFFF #FFF4E5 #0071E3 #FFFFFF #1D1D1F #1D1D1F #0071E3 #0063C7 #0055AB #0055AB #E3E3E8 #FFFFFF #D1D1D6 #D70015 #FDECEC #D70015 #D70015 #BD0012 #A30010 #994500 #16632A #E5E5EA #F2F2F7 #8E8E93 #40000000 #F01E1E1E #FFFFFF #1F000000 #38000000 Transparent")]
-    [InlineData("Dark", "#000000 #1C1C1E #2C2C2E #3A3A3C #38383A #38383A #2C2C2E #8E8E93 #3A3A3C #3A3A3C #1C1C1E #F5F5F7 #AEAEB2 #AEAEB2 #8E8E93 #409CFF #FFFFFF #0071E3 #FFB340 #3A2A12 #30D158 #12301B #0A2540 #409CFF #409CFF #2C2C2E #F5F5F7 #30D158 #FF6961 #FFFFFF #1E1E1E #3A2A12 #409CFF #1E1E1E #F5F5F7 #F5F5F7 #0071E3 #0063C7 #0055AB #4095F0 #3A3A3C #FFFFFF #38383A #FF6961 #3B1517 #FF6961 #D70015 #BD0012 #A30010 #994500 #16632A #3A3A3C #2C2C2E #8E8E93 #80000000 #F53A3A3C #FFFFFF #1FFFFFFF #99000000 Transparent")]
+    [InlineData("Dark", "#000000 #1C1C1E #2C2C2E #3A3A3C #38383A #38383A #2C2C2E #8E8E93 #3A3A3C #3A3A3C #1C1C1E #F5F5F7 #AEAEB2 #AEAEB2 #8E8E93 #409CFF #000000 #0071E3 #FFB340 #3A2A12 #30D158 #12301B #0A2540 #409CFF #409CFF #2C2C2E #F5F5F7 #30D158 #FF6961 #FFFFFF #1E1E1E #3A2A12 #409CFF #1E1E1E #F5F5F7 #F5F5F7 #0071E3 #0063C7 #0055AB #4095F0 #3A3A3C #FFFFFF #38383A #FF6961 #3B1517 #FF6961 #D70015 #BD0012 #A30010 #994500 #16632A #3A3A3C #2C2C2E #8E8E93 #80000000 #F53A3A3C #FFFFFF #1FFFFFFF #99000000 Transparent")]
     public void Handoff_surface_text_and_semantic_tokens_are_preserved(string theme, string colors)
     {
         wpf.Run(() =>
@@ -43,7 +43,8 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
             var palette = new ResourceDictionary { Source = new Uri(ThemeManager.PackPrefix + "Palette." + theme + ".xaml") };
             string[] keys = ["bg", "card", "cardSoft", "cardSel", "cardBorder", "divider", "input", "inputBorder", "pill", "pillHover", "menuBg", "text", "textMuted", "textFaint", "checkBorder", "accent", "onAccent", "primaryBg", "warn", "warnBg", "ok", "okBg", "noteBg", "noteBorder", "noteAccent", "codeBg", "codeText", "diffGreen", "diffRed", "primaryText", "warningText", "countWarningBg", "focusOuter", "focusInner", "selectedText", "hoverText", "Ant.colorPrimary", "Ant.colorPrimaryHover", "Ant.colorPrimaryActive", "Ant.colorLinkHover", "Ant.controlItemBgActiveHover", "Ant.colorWhite", "Ant.colorBorder", "Ant.colorError", "Ant.colorErrorBg", "Ant.colorErrorBorder", "Ant.colorErrorSolid", "Ant.colorErrorSolidHover", "Ant.colorErrorSolidActive", "Ant.colorWarningBorder", "Ant.colorSuccessBorder", "Ant.colorFillSecondary", "Ant.colorBgContainerDisabled", "Ant.colorTextDisabled", "Ant.colorBgMask", "Ant.colorBgSpotlight", "Ant.colorTextLightSolid", "Ant.boxShadowKey", "Ant.boxShadowUmbra", "Ant.boxShadowAmbient"];
             string[] expected = colors.Split(' ');
-            Assert.Equal(keys.Length + 3, palette.Count);
+            Assert.Equal(keys.Length + 4, palette.Count);
+            Assert.Equal(Colors.White, ((SolidColorBrush)palette["Primer.onPrimary"]).Color);
             Assert.Equal(theme == "Light" ? "#FFFFFFFF" : "#FF1E1E1E", ((SolidColorBrush)palette["Primer.window"]).Color.ToString());
             Assert.Equal(theme == "Light" ? "#FFEBEBED" : "#FF2A2A2C", ((SolidColorBrush)palette["Primer.sidebar"]).Color.ToString());
             Assert.Equal(0, ((SolidColorBrush)palette["Primer.hcOutline"]).Color.A);
@@ -230,14 +231,14 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
                 {
                     var foreground = ((SolidColorBrush)foregroundBrush).Color;
                     var background = ((SolidColorBrush)backgroundBrush).Color;
-                    Assert.Equal(Token("onAccent"), foreground);
+                    Assert.Equal(Token("onPrimary"), foreground);
                     Assert.Equal(Token("primaryBg"), background);
                     Assert.NotEqual(Token("accent"), background);
                     double first = Luminance(foreground), second = Luminance(background);
                     double ratio = (Math.Max(first, second) + .05) / (Math.Min(first, second) + .05);
                     Assert.True(ratio >= 4.5, $"{theme}: solid primary contrast {ratio:F2} < 4.5");
                 }
-                Assert.Equal(Colors.White, Token("onAccent"));
+                Assert.Equal(Colors.White, Token("onPrimary"));
                 foreach (string key in new[] { "Primary", "Run" })
                 {
                     var button = new Button { Content = "Action", Style = (Style)Application.Current.FindResource("Primer." + key) };
@@ -250,6 +251,75 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
                     input.ApplyTemplate();
                     Check(input.SelectionTextBrush, input.SelectionBrush);
                 }
+            }
+            finally
+            {
+                ThemeManager.Current.HighContrastOverride = previousContrast;
+                ThemeManager.Current.Theme = previous;
+            }
+        });
+    }
+
+    [Theory]
+    [InlineData("Light")]
+    [InlineData("Dark")]
+    [InlineData("HighContrast")]
+    public void Primary_and_accent_foreground_brushes_meet_AA_in_every_palette(string theme)
+    {
+        wpf.Run(() =>
+        {
+            var palette = new ResourceDictionary { Source = new Uri(ThemeManager.PackPrefix + "Palette." + theme + ".xaml") };
+            Color Token(string key) => ((SolidColorBrush)palette[key]).Color;
+            (string Foreground, string Background)[] pairs =
+            [
+                ("Primer.onAccent", "Primer.accent"),
+                ("Primer.onPrimary", "Primer.primaryBg"),
+                ("Primer.primaryText", "Primer.primaryBg"),
+                ("Ant.colorWhite", "Primer.primaryBg"),
+                ("Ant.colorWhite", "Ant.colorPrimary"),
+                ("Primer.onPrimary", "Ant.colorPrimaryHover"),
+                ("Primer.onPrimary", "Ant.colorPrimaryActive"),
+                ("Primer.onPrimary", "Ant.colorErrorSolid"),
+                ("Primer.onPrimary", "Ant.colorErrorSolidHover"),
+                ("Primer.onPrimary", "Ant.colorErrorSolidActive"),
+            ];
+            foreach (var pair in pairs)
+            {
+                var background = Composite(Token(pair.Background), Token("Primer.bg"));
+                var foreground = Composite(Token(pair.Foreground), background);
+                double first = Luminance(foreground), second = Luminance(background);
+                double ratio = (Math.Max(first, second) + .05) / (Math.Min(first, second) + .05);
+                Assert.True(ratio >= 4.5, $"{theme}: {pair.Foreground}/{pair.Background} {ratio:F2} < 4.5");
+            }
+
+            var previous = ThemeManager.Current.Theme;
+            var previousContrast = ThemeManager.Current.HighContrastOverride;
+            ThemeManager.Current.HighContrastOverride = theme == "HighContrast";
+            ThemeManager.Current.Theme = theme == "Dark" ? AppTheme.Dark : AppTheme.Light;
+            try
+            {
+                var onPrimary = ((SolidColorBrush)Application.Current.FindResource("Primer.onPrimary")).Color;
+                var primaryBg = ((SolidColorBrush)Application.Current.FindResource("Primer.primaryBg")).Color;
+                foreach (string key in new[] { "Primary", "Run" })
+                {
+                    var button = new Button { Style = (Style)Application.Current.FindResource("Primer." + key) };
+                    button.ApplyTemplate();
+                    Assert.Equal(onPrimary, ((SolidColorBrush)button.Foreground).Color);
+                    Assert.Equal(primaryBg, ((SolidColorBrush)button.Background).Color);
+                }
+                foreach (string key in new[] { "Input", "MonoInput" })
+                {
+                    var input = new TextBox { Style = (Style)Application.Current.FindResource("Primer." + key) };
+                    input.ApplyTemplate();
+                    Assert.Equal(onPrimary, ((SolidColorBrush)input.SelectionTextBrush).Color);
+                    Assert.Equal(primaryBg, ((SolidColorBrush)input.SelectionBrush).Color);
+                    Assert.Equal(1, input.SelectionOpacity);
+                }
+                var secret = new PasswordBox { Style = (Style)Application.Current.FindResource("Primer.SecretInput") };
+                secret.ApplyTemplate();
+                Assert.Equal(onPrimary, ((SolidColorBrush)secret.SelectionTextBrush).Color);
+                Assert.Equal(primaryBg, ((SolidColorBrush)secret.SelectionBrush).Color);
+                Assert.Equal(1, secret.SelectionOpacity);
             }
             finally
             {

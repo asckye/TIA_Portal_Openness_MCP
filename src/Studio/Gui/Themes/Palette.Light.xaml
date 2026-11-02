@@ -18,6 +18,7 @@
   <SolidColorBrush x:Key="Primer.accent" Color="#0066CC"/>
   <SolidColorBrush x:Key="Primer.onAccent" Color="#FFFFFF"/>
   <SolidColorBrush x:Key="Primer.primaryBg" Color="#0071E3"/>
+  <SolidColorBrush x:Key="Primer.onPrimary" Color="#FFFFFF"/>
   <SolidColorBrush x:Key="Primer.warn" Color="#B25000"/>
   <SolidColorBrush x:Key="Primer.warnBg" Color="#FFF4E5"/>
   <SolidColorBrush x:Key="Primer.ok" Color="#1A7431"/>

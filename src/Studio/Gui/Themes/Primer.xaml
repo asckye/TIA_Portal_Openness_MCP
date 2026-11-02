@@ -477,7 +477,7 @@
     <Setter Property="ux:Ux.Variant" Value="Primary"/>
     <Setter Property="BorderBrush" Value="{DynamicResource Primer.primaryBg}"/>
     <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
-    <Setter Property="Foreground" Value="{DynamicResource Primer.primaryText}"/>
+    <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
   </Style>
   <!-- color="primary" variant="outlined". -->
   <Style x:Key="Primer.OutlinedAccent" TargetType="ButtonBase" BasedOn="{StaticResource Primer.Secondary}">
@@ -601,7 +601,7 @@
     <Setter Property="VerticalContentAlignment" Value="Center"/>
     <Setter Property="CaretBrush" Value="{DynamicResource Primer.text}"/>
     <Setter Property="SelectionBrush" Value="{DynamicResource Primer.primaryBg}"/>
-    <Setter Property="SelectionTextBrush" Value="{DynamicResource Primer.onAccent}"/>
+    <Setter Property="SelectionTextBrush" Value="{DynamicResource Primer.onPrimary}"/>
     <Setter Property="SelectionOpacity" Value="1"/>
     <Setter Property="Validation.ErrorTemplate" Value="{StaticResource Primer.ValidationNone}"/>
     <Setter Property="Template">
@@ -1452,7 +1452,7 @@
     <Setter Property="ux:Ux.Variant" Value="Primary"/>
     <Setter Property="BorderBrush" Value="{DynamicResource Primer.primaryBg}"/>
     <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
-    <Setter Property="Foreground" Value="{DynamicResource Primer.primaryText}"/>
+    <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
   </Style>
   <!-- Risky confirmations: the solid danger button. -->
   <Style x:Key="Primer.WarningAction" TargetType="ButtonBase" BasedOn="{StaticResource Primer.Secondary}">
@@ -1461,7 +1461,7 @@
     <Setter Property="FocusVisualStyle" Value="{StaticResource Primer.Focus}"/>
     <Setter Property="Background" Value="{DynamicResource Ant.colorErrorSolid}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource Ant.colorErrorSolid}"/>
-    <Setter Property="Foreground" Value="{DynamicResource Primer.primaryText}"/>
+    <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
   </Style>
   <!-- Card head: transparent over the card, colorBorderSecondary rule. -->
   <Style x:Key="Primer.HeaderStrip" TargetType="Border" BasedOn="{StaticResource Primer.HighContrastBorder}">
@@ -1883,6 +1883,8 @@
     <Setter Property="BorderBrush" Value="{DynamicResource Primer.inputBorder}"/>
     <Setter Property="CaretBrush" Value="{DynamicResource Primer.text}"/>
     <Setter Property="SelectionBrush" Value="{DynamicResource Primer.primaryBg}"/>
+    <Setter Property="SelectionTextBrush" Value="{DynamicResource Primer.onPrimary}"/>
+    <Setter Property="SelectionOpacity" Value="1"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="PasswordBox">
@@ -2882,7 +2884,7 @@
       <Trigger Property="Tag" Value="Current">
         <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource Primer.primaryBg}"/>
-        <Setter Property="TextElement.Foreground" Value="{DynamicResource Primer.primaryText}"/>
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource Primer.onPrimary}"/>
       </Trigger>
     </Style.Triggers>
   </Style>
