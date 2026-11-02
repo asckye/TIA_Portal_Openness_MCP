@@ -13,6 +13,14 @@ internal sealed class OperatorEndpoint : IAsyncDisposable
     private readonly Process? owner;
     private readonly bool operatorOnly;
     private readonly CancellationTokenSource stopping = new();
+    private readonly CancellationTokenSource shutdown = new();
+    internal CancellationToken ShutdownToken => shutdown.Token;
+    private void RequestShutdown() { shutdown.Cancel(); stopping.Cancel(); }
+    internal bool ShutdownFromOwnedInput()
+    {
+        if (!registration.TryBeginShutdown()) return false;
+        RequestShutdown(); return true;
+    }
     private readonly SemaphoreSlim slots = new(OperatorPipe.MaximumInstances - 1);
     private readonly object sync = new();
     private readonly HashSet<Task> connections = new();
@@ -134,7 +142,7 @@ internal sealed class OperatorEndpoint : IAsyncDisposable
         {
             try
             {
-                var connection = new OperatorConnection(registration, create, pid => owner != null && !owner.HasExited && owner.Id == pid, OwnedSessionEnded);
+                var connection = new OperatorConnection(registration, create, pid => owner != null && !owner.HasExited && owner.Id == pid, OwnedSessionEnded, RequestShutdown);
                 await connection.Serve(pipe, verify(pipe), stopping.Token).ConfigureAwait(false);
             }
             catch (Exception error) when (error is IOException or OperationCanceledException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception or McpException)
@@ -149,7 +157,7 @@ internal sealed class OperatorEndpoint : IAsyncDisposable
         Task[] active; lock (sync) active = connections.ToArray();
         await Task.WhenAll(active).ConfigureAwait(false);
         if (watchingOwner != null) await watchingOwner.ConfigureAwait(false);
-        registration.Dispose(); owner?.Dispose(); slots.Dispose(); stopping.Dispose();
+        registration.Dispose(); owner?.Dispose(); slots.Dispose(); stopping.Dispose(); shutdown.Dispose();
     }
     private sealed class PipeListener(NamedPipeServerStream initial, Func<NamedPipeServerStream> create) : IOperatorListener
     {

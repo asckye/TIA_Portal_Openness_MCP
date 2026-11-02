@@ -17,16 +17,19 @@ namespace TiaMcp.PlcWorker
         private readonly Action<string> _lock;
         private readonly Func<string?>? _bindingFault;
         private readonly Action? _detachOnShutdown;
+        private readonly Func<bool> _canDetachOnShutdown;
         internal string? Fault { get; private set; }
+        internal JsonArray ShutdownEvidence { get; } = new JsonArray();
 
         internal WorkerSessionRecovery(WorkerSessionOutcomeState outcome, Func<bool> detached,
             Action refresh, Action clear, Action<string> lockBinding, Action invalidate, Action dispose,
-            Func<string?>? bindingFault = null, Action? detachOnShutdown = null)
+            Func<string?>? bindingFault = null, Action? detachOnShutdown = null, Func<bool>? canDetachOnShutdown = null)
         {
             _outcome = outcome; _detached = detached; _refresh = refresh; _clear = clear;
             _lock = lockBinding; _invalidate = invalidate; _dispose = dispose;
             _bindingFault = bindingFault;
             _detachOnShutdown = detachOnShutdown;
+            _canDetachOnShutdown = canDetachOnShutdown ?? (() => true);
         }
 
         internal void ObserveFailure(Exception error)
@@ -71,14 +74,46 @@ namespace TiaMcp.PlcWorker
 
         internal void DisposeSession()
         {
-            if (_outcome.RequiresReset)
+            try
             {
-                // EOF is processed on the owning lane after any native call has returned.
-                // A bounded host grace period permits a clean detach; a native hang still ends in termination.
-                try { _detachOnShutdown?.Invoke(); }
-                finally { if (!_detached()) _invalidate(); }
+                if (_outcome.RequiresReset)
+                {
+                    // EOF runs on the native owner lane. Disposing an owned/unknown-lifetime
+                    // portal could close TIA while the write outcome is still unknown.
+                    try
+                    {
+                        if (_canDetachOnShutdown()) _detachOnShutdown?.Invoke();
+                        else RecordShutdown("retained-uncertain-portal", null);
+                    }
+                    catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error) { RecordShutdown("detach", error); }
+                    catch (NotSupportedException error) { RecordShutdown("detach", error); }
+                    catch (InvalidOperationException error) { RecordShutdown("detach", error); }
+                    finally { if (!_detached()) _invalidate(); }
+                }
             }
-            _dispose();
+            catch (Exception error) /* swallow(teardown): retain shutdown evidence and always finish managed cleanup */
+            { RecordShutdown("invalidate", error); }
+            finally
+            {
+                try { _dispose(); }
+                catch (Exception error) /* swallow(teardown): Dispose must not escape the worker's shutdown boundary */
+                { RecordShutdown("dispose", error); }
+            }
+        }
+
+        private void RecordShutdown(string phase, Exception? error)
+        {
+            if (error != null) _outcome.MarkUncertain();
+            string? message = error?.Message;
+            if (message != null)
+            {
+                int line = message.IndexOfAny(new[] { '\r', '\n' });
+                if (line >= 0) message = message.Substring(0, line);
+                if (message.Length > 1024) message = message.Substring(0, 1024);
+            }
+            ShutdownEvidence.Add(new JsonObject { ["phase"] = phase, ["exceptionType"] = error?.GetType().Name,
+                ["message"] = message, ["requiresSessionReset"] = _outcome.RequiresReset });
+            Console.Error.WriteLine("PlcWorker shutdown: " + ShutdownEvidence[ShutdownEvidence.Count - 1]!.ToJsonString());
         }
     }
 
@@ -191,12 +226,28 @@ namespace TiaMcp.PlcWorker
             {
                 // Preserve the existing native teardown boundary. Only an acknowledged
                 // clean exit releases; a job-object kill never reaches this finally.
-                lease?.BeginRequest();
+                try { lease?.BeginRequest(); }
+                catch (Exception error) /* swallow(teardown): a lease write failure must not skip native cleanup */
+                { uncertain = true; Console.Error.WriteLine("PlcWorker lease shutdown begin: " + error.GetType().Name); }
                 disposeEngine();
+                uncertain |= requiresReset();
                 if (!uncertain || detached()) ReleaseCleanly();
+                else lease?.CompleteRequest(true);
             }
-            catch { lease?.CompleteRequest(true); throw; }
-            finally { lease?.Dispose(); lease = null; }
+            catch (Exception error) /* swallow(teardown): preserve an uncertain lease and finish shutdown */
+            {
+                try { lease?.CompleteRequest(true); }
+                catch (Exception markerError) /* swallow(teardown): a failed uncertainty marker cannot prevent releasing the file handle */
+                { Console.Error.WriteLine("PlcWorker lease shutdown marker: " + markerError.GetType().Name); }
+                Console.Error.WriteLine("PlcWorker lease shutdown: " + error.GetType().Name);
+            }
+            finally
+            {
+                try { lease?.Dispose(); }
+                catch (Exception error) /* swallow(teardown): shutdown records cleanup failure without escaping Dispose */
+                { Console.Error.WriteLine("PlcWorker lease shutdown dispose: " + error.GetType().Name); }
+                lease = null;
+            }
         }
     }
 }

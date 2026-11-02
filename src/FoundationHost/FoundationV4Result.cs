@@ -8,6 +8,15 @@ namespace TiaMcp.FoundationHost;
 
 internal static class FoundationV4Result
 {
+    internal static bool Classified(JsonNode? body) => body is JsonObject source && source["meta"] is JsonObject meta && meta["outcome"] is JsonValue outcome
+        && outcome.TryGetValue<string>(out var value) && value is "succeeded" or "rejected-before-operation" or "read-failed" or "failed" or "partial" or "unknown";
+    internal static CallToolResult WorkerFailure(CallToolResult result, string release, string name, string id, bool mutation, Exception? failure)
+    {
+        if (failure == null || result.IsError != true || Classified(result.StructuredContent)
+            || failure is not WorkerOperationException && !failure.Data.Contains("foundationRequestSent")) return result;
+        return Failure(release, name, id, failure.Data["foundationRequestSent"] is not false, mutation,
+            (result.StructuredContent as JsonObject)?["data"], failure);
+    }
     internal static CallToolResult ImportCandidate(Envelope envelope) => DeviceCandidate(envelope);
     internal static CallToolResult DeviceCandidate(Envelope envelope)
     {
@@ -22,7 +31,7 @@ internal static class FoundationV4Result
         var failure = value["Failure"] as JsonObject;
         var failureEvidence = failure?["Evidence"] as JsonObject;
         string? message = Text(value, "nativeMessage") ?? (failureEvidence == null ? null : Text(failureEvidence, "nativeMessage"))
-            ?? (failure == null ? null : Text(failure, "Message")) ?? value["error"]?.ToString();
+            ?? (failure == null ? null : Text(failure, "Message")) ?? Text(value, "error");
         if (!string.IsNullOrWhiteSpace(message))
         {
             string type = Text(value, "nativeExceptionType") ?? (failureEvidence == null ? null : Text(failureEvidence, "nativeExceptionType"))
@@ -61,6 +70,8 @@ internal static class FoundationV4Result
             }
             if (details.ContainsKey("nativeMessage")) details["nativeMessage"] = diagnostics["nativeMessage"]?.DeepClone();
         }
+        HostBehavior.SanitizeEvidence(body["data"], evidence: false);
+        HostBehavior.SanitizeEvidence(body["error"]?["details"]);
         return new CallToolResult { IsError = result.IsError, StructuredContent = body,
             Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
     }
@@ -112,6 +123,7 @@ internal static class FoundationV4Result
             var retained = JsonNode.Parse(worker.EvidenceJson);
             if (retained is JsonObject retainedObject && retainedObject["nativeMessage"] is JsonValue nativeMessage)
                 retainedObject["nativeMessage"] = HostBehavior.SafeDiagnostic(nativeMessage.GetValue<string>());
+            HostBehavior.SanitizeEvidence(retained);
             data ??= new JsonObject();
             data["evidence"] = retained;
             if ((string?)retained?["recoveryStatus"] == "backup-skipped")
@@ -139,9 +151,9 @@ internal static class FoundationV4Result
         var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(exception, dispatched, !mutation, worker?.Outcome, worker?.Code, exceptionType);
         string? parameter = worker?.Parameter ?? TiaOpenness.Shared.HostFailurePolicy.Parameter(exception);
         bool nativeDiagnostic = !TiaOpenness.Shared.HostFailurePolicy.SuppressAdmissionDiagnostic(exception)
-            && (worker == null || worker.Outcome != "rejected-before-operation"
+            && (worker == null ? exception is IOException : worker.Outcome != "rejected-before-operation"
                 && !string.IsNullOrWhiteSpace(exceptionType) && exceptionType != nameof(WorkerOperationException));
-        var details = HostBehavior.FailureEvidence(exceptionType, dispatched && nativeDiagnostic ? exception.Message : null);
+        var details = HostBehavior.FailureEvidence(exceptionType, dispatched && nativeDiagnostic ? exception.Message : null, native: worker != null);
         if (lost) { data ??= new JsonObject(); data["recovery"] = TiaOpenness.Shared.SessionBehavior.Recovery; }
         string? reason = TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ExceptionReason(exception);
         bool readCancelled = dispatched && !mutation && kind == TiaOpenness.Shared.HostFailureKind.Cancelled;

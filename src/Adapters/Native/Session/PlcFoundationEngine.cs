@@ -105,6 +105,23 @@ namespace TiaMcp.Adapters
             localSession=session as Siemens.Engineering.Multiuser.LocalSession;
 #endif
         }
+        public bool CanDetachOnUncertainShutdown => ownsPortal == false;
+        private bool uncertainShutdown;
+        public void InvalidateUncertainShutdown()
+        {
+            // Set the guard before managed invalidation: even a failing callback
+            // must never let Dispose close an owned portal with an unknown write.
+            uncertainShutdown = true;
+            if (ownsPortal == false) InvalidateSharedSession();
+            else
+            {
+                Check(true);
+                _resetWorkerFamilyState?.Invoke();
+                // Keep owned/unknown-lifetime native handles alive until worker exit.
+                // Their disposal could close the TIA instance whose write is uncertain.
+            }
+        }
+
         public void InvalidateSharedSession()
         {
             Check(true);
@@ -567,6 +584,7 @@ namespace TiaMcp.Adapters
             try
             {
                 PlcLifecyclePolicy.RequireOwner(ReleaseKey, ownerThread);
+                if (uncertainShutdown) return;
                 try { if (!disconnect.Attempted) Disconnect(); }
                 // Shutdown with a project still open in a worker-started portal: dispose it once anyway.
                 catch (AdapterPreconditionException refused) when (!disconnect.Attempted)

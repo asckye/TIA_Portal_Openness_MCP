@@ -86,8 +86,8 @@ internal static class Program
                 );
             recovery = new WorkerSessionRecovery(dispatcher.SessionOutcome, () => dispatcher.Detached,
                 engine.RefreshWorkerSessionBinding, engine.ClearWorkerSessionBinding, engine.LockWorkerSessionBinding,
-                engine.InvalidateSharedSession, engine.Dispose, () => engine.WorkerSessionBindingFault,
-                () => { engine.Disconnect(); dispatcher.EndSharedSession(); });
+                engine.InvalidateUncertainShutdown, engine.Dispose, () => engine.WorkerSessionBindingFault,
+                () => { engine.Disconnect(); dispatcher.EndSharedSession(); }, () => engine.CanDetachOnUncertainShutdown);
             using var session = new FoundationProcessLease(() => TiaOpenness.Shared.DataLocations.Current.LeasesDirectory,
                 request => recovery.Dispatch(request, dispatcher.Dispatch),
                 () => dispatcher.State.IsAttached, () => dispatcher.Detached, () => dispatcher.SessionOutcome.RequiresReset,

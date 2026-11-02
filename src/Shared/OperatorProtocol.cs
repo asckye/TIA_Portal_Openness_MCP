@@ -53,7 +53,7 @@ namespace TiaOpenness.Shared
                 || request.Workbench == null || request.Workbench.Pid <= 0
                 || string.IsNullOrWhiteSpace(request.Workbench.Version) || request.Workbench.Version.Length > 128)
                 throw new InvalidDataException("Invalid operator handshake.");
-            if (request.Action != "list" && request.Action != "attach" && request.Action != "create" && request.Action != "native-cross-references")
+            if (request.Action != "list" && request.Action != "attach" && request.Action != "create" && request.Action != "native-cross-references" && request.Action != "shutdown")
                 throw new InvalidDataException("Unknown operator action.");
             if (request.Action is "attach" or "native-cross-references" ? !Guid.TryParseExact(request.SessionKey, "N", out _) : request.SessionKey != null)
                 throw new InvalidDataException("Invalid operator session key.");

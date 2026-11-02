@@ -132,7 +132,8 @@ namespace TiaMcp.PlcWorker
         // Called only after dispatcher admission has validated the host mutation guards.
         internal static object?[] FacadeArguments(ParameterInfo[] parameters, Dictionary<string, JsonElement> values)
         {
-            if (!parameters.Any(p => p.Name == "dryRun")) values.Remove("dryRun");
+            if (!parameters.Any(p => p.Name == "dryRun") && Get(values, "dryRun").ValueKind == JsonValueKind.False)
+                values.Remove("dryRun");
             return Arguments(parameters, values);
         }
 

@@ -78,7 +78,11 @@ internal static class SharedReleaseHost
             pipeline.RegisterHandlers(mcp);
             using var host = builder.Build();
             using var stopping = host.Services.GetRequiredService<IHostApplicationLifetime>().ApplicationStopping.Register(WorkerShutdown.StopAll);
-            await host.RunAsync(stoppingToken);
+            using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken, operatorEndpoint?.ShutdownToken ?? CancellationToken.None);
+            // Registration is visible before transport startup. A control request
+            // during startup must join normal shutdown after StartAsync completes.
+            await host.StartAsync(stoppingToken);
+            await host.WaitForShutdownAsync(lifetime.Token);
         }
         return 0;
     }
@@ -233,7 +237,35 @@ internal static class SharedReleaseHost
         using var stopping = app.Lifetime.ApplicationStopping.Register(WorkerShutdown.StopAll);
         using var started = app.Lifetime.ApplicationStarted.Register(() => LocalStabilityTelemetry.StartupStage("http.listening"));
         LocalStabilityTelemetry.StartupStage("http.run.begin");
-        await ((IHost)app).RunAsync(stoppingToken);
+        using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken, operatorEndpoint?.ShutdownToken ?? CancellationToken.None);
+        // Console's synchronized reader can block even from ReadLineAsync. It must
+        // never hold up HTTP startup or shutdown; this reader ends with the process.
+        try
+        {
+            await app.StartAsync(stoppingToken);
+            if (Environment.GetEnvironmentVariable("TIA_MCP_WORKBENCH_STARTED") == "1" && Console.IsInputRedirected)
+                _ = Task.Run(() => ReadOwnedControl(operatorEndpoint, lifetime.Token));
+            await app.WaitForShutdownAsync(lifetime.Token);
+        }
+        finally { lifetime.Cancel(); await app.DisposeAsync(); }
+    }
+
+    private static async Task ReadOwnedControl(OperatorEndpoint? endpoint, CancellationToken token)
+    {
+        try
+        {
+            while (await Console.In.ReadLineAsync(token).ConfigureAwait(false) is { } line)
+            {
+                // The launcher owns this redirected input handle; EOF alone never stops an HTTP host.
+                if (line == "tiamcp.host-control/1 shutdown")
+                {
+                    if (endpoint?.ShutdownFromOwnedInput() == true) return;
+                    Console.Error.WriteLine("Host control: HOST_BUSY");
+                }
+            }
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) /* swallow(teardown): host shutdown cancels its owned control reader */ { }
+        catch (IOException error) { OperatorEndpoint.Report(error); }
     }
 
 }

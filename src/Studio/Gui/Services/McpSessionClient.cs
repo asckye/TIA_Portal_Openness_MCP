@@ -227,7 +227,7 @@ public sealed class McpSessionClient : IMcpSessionClient, IHumanCrossReferenceSe
         var start = new ProcessStartInfo(Image(releaseKey)) { UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = root };
         foreach (string argument in new[] { "--bundle-root", root, "--release-key", releaseKey, "--transport", "operator", "--operator-owner", Environment.ProcessId.ToString() })
             start.ArgumentList.Add(argument);
-        start.Environment["TIA_MCP_DATA_DIRECTORY"] = dataRoot;
+        HostLifecycleService.PrepareWorkbenchHost(start);
         ownedHost = startHost(start);
         try
         {

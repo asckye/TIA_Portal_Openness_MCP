@@ -158,7 +158,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     private readonly Queue<string> diagnostics = new();
     private JsonObject approvalIdentity = new();
     internal string ApprovalIdentity => SharedSession ? sharedStatus?["binding"]?.ToJsonString() ?? "{}" : approvalIdentity.ToJsonString();
-    internal bool Poisoned => WorkerFaulted || SessionLocked?.Invoke() == true;
+    internal bool Poisoned => WorkerFaulted || (bool?)sharedStatus?["sessionLocked"] == true
+        || (bool?)sharedStatus?["requiresSessionReset"] == true || SessionLocked?.Invoke() == true;
     internal IDisposable? HostPipeline { get; set; }
     internal object HostSessionKey { get; private set; } = new();
     private string? hostProcessStartUtc;
@@ -168,6 +169,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     private int queued, active;
     private readonly JsonArray previousGenerations = new();
     private JsonObject? faultEvidence;
+    private bool stopping;
+    private readonly object shutdownSync = new();
     internal JsonObject SupervisorSnapshot(JsonObject ready)
     {
         lock (stateSync)
@@ -187,17 +190,22 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 observedReadiness = sharedStatus?["readiness"]?.DeepClone() ?? new JsonObject { ["ready"] = ready["ready"]?.DeepClone(), ["cause"] = ready["cause"]?.DeepClone(),
                     ["groupOk"] = environment?["opennessGroupOk"]?.DeepClone(), ["recommendedFix"] = ready["recommendedFix"]?.DeepClone(),
                     ["recommendedFixZh"] = ready["recommendedFixZh"]?.DeepClone() };
-            return WorkerSupervisorReplies.Snapshot(releaseKey, new WorkerSupervisorState(legacy, faulted, process != null,
+            var snapshot = WorkerSupervisorReplies.Snapshot(releaseKey, new WorkerSupervisorState(legacy, faulted, process != null,
                 generation, Volatile.Read(ref active), Volatile.Read(ref queued), timeouts.For("status").TotalSeconds,
                 JsonSerializer.SerializeToNode(timeouts.Budgets.ToDictionary(p => p.Key, p => p.Value.TotalSeconds)), Poisoned,
                 faultEvidence, observedReadiness, SharedSession ? identity : attachedProcessId.HasValue ? identity : null, previousGenerations));
+            if (stopping) snapshot["state"] = "Stopping";
+            return snapshot;
         }
     }
     JsonObject IFoundationWorkerSupervisor.OperatorSnapshot() => OperatorSnapshot();
     internal JsonObject OperatorSnapshot()
     {
         lock (stateSync) return new JsonObject { ["pid"] = process?.Id, ["generation"] = generation,
-            ["disconnected"] = disconnecting, ["sessionLocked"] = Poisoned,
+            ["disconnected"] = disconnecting, ["stopping"] = stopping,
+            ["connected"] = SharedSession ? sharedStatus?["session"]?["isConnected"]?.DeepClone()
+                : JsonValue.Create((bool?)hostState?["IsAttached"] ?? attachedProcessId.HasValue),
+            ["sessionLocked"] = Poisoned,
             ["binding"] = new JsonObject { ["processId"] = SharedSession ? JsonValue.Create(attachedProcessId) : approvalIdentity["ProcessId"]?.DeepClone(),
                 ["projectFile"] = SharedSession ? (sharedStatus?["binding"]?["identity"]?["projectPath"] ?? sharedStatus?["binding"]?["projectPath"])?.DeepClone()
                     : (approvalIdentity["ProjectFile"] ?? approvalIdentity["ProjectPath"])?.DeepClone(),
@@ -262,6 +270,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         var previous = Snapshot(); previous.Remove("previousGenerations");
         var detached = await Disconnect(token);
         bool restartTia = (bool?)detached?["RequiresTiaRestart"] == true;
+        lock (shutdownSync)
         lock (stateSync)
         {
             if (WorkerShutdown.Stop(process, channel) is { } refusal)
@@ -322,7 +331,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 && !(WorkerOperations.IsIndependentRuntime(operation) && process is { HasExited: false } && channel?.CanCallIndependentRuntime == true))
                 throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.Recovery);
             if (!WorkerOperations.IsIndependentRuntime(operation)) { outcome.RequireUsable();
-                if (SessionLocked?.Invoke() == true) throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.Recovery); }
+                if ((bool?)sharedStatus?["sessionLocked"] == true || (bool?)sharedStatus?["requiresSessionReset"] == true
+                    || SessionLocked?.Invoke() == true) throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.Recovery); }
             token.ThrowIfCancellationRequested();
             if (disconnectAcknowledgement != null)
             {
@@ -443,7 +453,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             if(usableAtEntry && channel?.Poisoned==true) outcome.Failed(true,new IOException("Worker channel is poisoned."));
             ex.Data["foundationRequestSent"] = sent;
             outcome.Failed(sent,ex);
-            ex.Data["foundationSessionPoisoned"] = outcome.Poisoned;
+            ex.Data["foundationSessionPoisoned"] = Poisoned;
             if(outcome.Poisoned || statusProbe && !(ex is OperationCanceledException && token.IsCancellationRequested))
             {
                 if (!managed && outcome.Poisoned) priorUnknownRequestId ??= activeRequestId;
@@ -522,12 +532,27 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
 
     private JsonNode TerminateForDisconnect()
     {
+        lock (shutdownSync) return TerminateForDisconnectCore();
+    }
+    private JsonNode TerminateForDisconnectCore()
+    {
+        Process? stoppingProcess;
+        ChannelClient? stoppingChannel;
         lock (stateSync)
         {
             priorUnknownRequestId ??= activeRequestId;
-            if (process != null)
+            stopping = true;
+            stoppingProcess = process; stoppingChannel = channel;
+        }
+        // Closing stdin can spend the full detach grace period. Managed snapshots
+        // must remain available while the worker is on its owner-thread shutdown path.
+        var refusal = WorkerShutdown.Stop(stoppingProcess, stoppingChannel, disposeProcess: false);
+        lock (stateSync)
+        {
+            stopping = false;
+            if (refusal != null) { RetainStopRefusal(refusal); throw refusal; }
+            if (stoppingProcess != null && ReferenceEquals(process, stoppingProcess))
             {
-                if (WorkerShutdown.Stop(process, channel, disposeProcess: false) is { } refusal) { RetainStopRefusal(refusal); throw refusal; }
                 if (ReleaseCatalogData.Releases[releaseKey].ExtendedWorkerStatus) { process.Dispose(); process = null; channel = null; }
             }
             disconnectAcknowledgement = DisconnectContract.Recovery(DisconnectContract.Idle(), true, priorUnknownRequestId);
@@ -540,10 +565,19 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     {
         HostPipeline?.Dispose(); HostPipeline = null;
         disconnecting = true;
-        lock (stateSync)
+        lock (shutdownSync)
         {
-            if (WorkerShutdown.Stop(process, channel) is { } refusal) { RetainStopRefusal(refusal); return; }
-            WorkerShutdown.Unregister(this); channel = null; process = null;
+            Process? stoppingProcess;
+            ChannelClient? stoppingChannel;
+            lock (stateSync) { stopping = true; stoppingProcess = process; stoppingChannel = channel; }
+            var refusal = WorkerShutdown.Stop(stoppingProcess, stoppingChannel, disposeProcess: false);
+            lock (stateSync)
+            {
+                stopping = false;
+                if (refusal != null) { RetainStopRefusal(refusal); return; }
+                WorkerShutdown.Unregister(this); channel = null; process = null;
+                stoppingProcess?.Dispose();
+            }
         }
         // An interrupted async caller still releases its lane in finally.
     }

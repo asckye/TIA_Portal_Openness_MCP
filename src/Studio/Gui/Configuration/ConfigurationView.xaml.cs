@@ -19,6 +19,9 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using TiaMcp.Versioning;
 using TiaOpenness.Gui.Localization;
+using TiaOpenness.Gui.Controls;
+using TiaOpenness.Gui.Services;
+using TiaOpenness.Shared;
 
 namespace TiaMcpConfigurator
 {
@@ -515,8 +518,7 @@ namespace TiaMcpConfigurator
                 WorkingDirectory = root, UseShellExecute = false, CreateNoWindow = true,
                 RedirectStandardOutput = true, RedirectStandardError = true, RedirectStandardInput = true,
                 StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8 };
-            info.Environment["TIA_MCP_WORKBENCH_STARTED"] = "1";
-            info.Environment["TIA_MCP_DATA_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.WorkbenchDataDirectory;
+            HostLifecycleService.PrepareWorkbenchHost(info);
             var process = new Process { StartInfo = info, EnableRaisingEvents = true };
             process.OutputDataReceived += delegate(object sender, DataReceivedEventArgs e) { if (e.Data != null) Append(e.Data); };
             process.ErrorDataReceived += delegate(object sender, DataReceivedEventArgs e) { if (e.Data != null) Append(e.Data); };
@@ -540,14 +542,24 @@ namespace TiaMcpConfigurator
         private async Task OnStopServer()
         {
             if (server == null || server.HasExited) return;
-            if (TiaOpenness.Gui.Controls.WorkbenchMessageBox.Show(Window, Loc.Current["Config.StopServicePrompt"], Loc.Current["Config.StopServiceCaption"], MessageBoxButton.OKCancel, MessageBoxImage.Warning) != MessageBoxResult.OK) return;
             var process = server;
+            var identity = new HostLifecycleService(DataLocations.Current.WorkbenchDataDirectory, TiaOpenness.Gui.ViewModels.MainViewModel.AppVersion)
+                .Discover().FirstOrDefault(host => host.Pid == process.Id && host.StartTicks == process.StartTime.ToUniversalTime().Ticks)
+                ?? new VisibleHost(process.Id, process.StartTime.ToUniversalTime().Ticks, SelectedVersion, process.StartInfo.FileName,
+                    root, "http", null, null, true, false);
+            if (identity.CallInProgress) throw new InvalidOperationException(Loc.Current["Hosts.Busy"]);
+            if (TiaOpenness.Gui.Controls.WorkbenchMessageBox.Show(Window, Loc.Current["Config.StopServicePrompt"], Loc.Current["Config.StopServiceCaption"], MessageBoxButton.OKCancel, MessageBoxImage.Warning) != MessageBoxResult.OK) return;
             SetBusy(true);
-            try { await Task.Run(() => {
-                if (!string.Equals(Path.GetFullPath(process.MainModule.FileName), Path.GetFullPath(process.StartInfo.FileName), StringComparison.OrdinalIgnoreCase))
-                    throw new UnauthorizedAccessException("Host process identity changed.");
-                process.Kill(); process.WaitForExit();
-            }); }
+            try
+            {
+                Func<VisibleHost, Task>? requestShutdown = identity.PipeName != null ? null : async _ => {
+                    await process.StandardInput.WriteLineAsync("tiamcp.host-control/1 shutdown");
+                    await process.StandardInput.FlushAsync();
+                };
+                await HostLifecycleService.Stop(identity, requestShutdown, target => Window.Dispatcher.InvokeAsync(() => WorkbenchMessageBox.Show(Window,
+                    Loc.Current.T("Hosts.ForceConfirm", target.Display), Loc.Current["Hosts.Stop"],
+                    MessageBoxButton.OKCancel, MessageBoxImage.Warning) == MessageBoxResult.OK).Task);
+            }
             finally { SetBusy(false); }
         }
         private async void OnClosing(object sender, CancelEventArgs e)

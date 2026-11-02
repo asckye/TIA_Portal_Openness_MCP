@@ -46,6 +46,18 @@ public sealed class VmDefectRegressionTests
     public static bool PreviewPrimitive(bool dryRun = true) => dryRun;
 
     [Fact]
+    public void Unsupported_facade_preview_is_refused_before_mutation()
+    {
+        var method = typeof(VmDefectRegressionTests).GetMethod(nameof(CreatePrimitive))!;
+        var input = WorkerJson.ParseArguments("{\"identifier\":\"OrderNumber:6ES7 512-1DK01-0AB0/V2.9\",\"name\":\"MCP_TEST_PLC\",\"dryRun\":true}");
+        var error = Assert.Throws<ArgumentException>(() => WorkerJson.FacadeArguments(method.GetParameters(), input));
+        var classification = WorkerFailurePolicy.Classify(error, false, false);
+        Assert.Equal(-32602, classification.Code);
+        Assert.Equal(ChannelOutcome.RejectedBeforeNative, classification.Outcome);
+        Assert.True(input["dryRun"].GetBoolean());
+    }
+
+    [Fact]
     public void Validated_transport_preview_does_not_become_an_unknown_native_argument()
     {
         var method = typeof(VmDefectRegressionTests).GetMethod(nameof(CreatePrimitive))!;

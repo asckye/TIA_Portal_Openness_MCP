@@ -8,6 +8,61 @@ using Xunit;
 
 public sealed class WorkerSessionRecoveryTests
 {
+    [Fact]
+    public void Lease_disposal_records_failed_shutdown_without_throwing_or_releasing_uncertain_ownership()
+    {
+        string repository = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
+        string root = Path.Combine(repository, "bin-build", "fix-r1-dispose-" + Guid.NewGuid().ToString("N"));
+        int disposals = 0;
+        using var lease = new FoundationProcessLease(() => root, _ => ChannelResponse.Success("{}"), () => true, () => false, () => true,
+            () => { disposals++; throw new IOException("Fixture detach failed"); });
+        try
+        {
+            lease.ReserveCreatedProcess(Environment.ProcessId);
+            Assert.Null(Record.Exception(lease.Dispose));
+            Assert.Equal(1, disposals);
+            Assert.Equal("UNCERTAIN\n", File.ReadAllText(Directory.GetFiles(root, "*.lease").Single()));
+            lease.Dispose(); Assert.Equal(1, disposals);
+        }
+        finally
+        {
+            Assert.StartsWith(Path.Combine(repository, "bin-build") + Path.DirectorySeparatorChar, Path.GetFullPath(root), StringComparison.OrdinalIgnoreCase);
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Theory]
+    [InlineData("AdapterPreconditionException")]
+    [InlineData("NotSupportedException")]
+    [InlineData("InvalidOperationException")]
+    public void Shutdown_detach_refusals_are_evidence_and_never_skip_disposal(string kind)
+    {
+        var outcome = new WorkerSessionOutcomeState(); outcome.MarkUncertain();
+        int invalidations = 0, disposals = 0;
+        Exception failure = kind == "AdapterPreconditionException" ? new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Open project")
+            : kind == "NotSupportedException" ? new NotSupportedException("Unknown portal lifetime") : new InvalidOperationException("RequireActive");
+        var recovery = new WorkerSessionRecovery(outcome, () => false, () => { }, () => { }, _ => { },
+            () => invalidations++, () => disposals++, detachOnShutdown: () => throw failure);
+        Assert.Null(Record.Exception(recovery.DisposeSession));
+        Assert.Equal(1, invalidations); Assert.Equal(1, disposals);
+        Assert.Equal(kind, (string?)Assert.Single(recovery.ShutdownEvidence)!["exceptionType"]);
+        Assert.Equal(failure.Message, (string?)recovery.ShutdownEvidence[0]?["message"]);
+    }
+
+    [Theory]
+    [InlineData(null)] [InlineData(true)]
+    public void Uncertain_owned_or_unknown_lifetime_portal_is_abandoned_without_native_disposal(bool? owned)
+    {
+        var outcome = new WorkerSessionOutcomeState(); outcome.MarkUncertain();
+        int detaches = 0, disposals = 0; bool retainedHandle = true;
+        var recovery = new WorkerSessionRecovery(outcome, () => false, () => { }, () => { }, _ => { },
+            () => retainedHandle = false, () => { Assert.False(retainedHandle); disposals++; },
+            detachOnShutdown: () => detaches++, canDetachOnShutdown: () => owned == false);
+        recovery.DisposeSession();
+        Assert.Equal(0, detaches); Assert.Equal(1, disposals); Assert.True(outcome.RequiresReset);
+        Assert.Equal("retained-uncertain-portal", (string?)Assert.Single(recovery.ShutdownEvidence)!["phase"]);
+    }
+
     private sealed class Fixture : IDisposable
     {
         internal readonly WorkerSessionOutcomeState Outcome = new();

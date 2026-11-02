@@ -66,8 +66,13 @@ namespace TiaMcpServer.ModelContextProtocol
                             Content = new[] { new TextContentBlock { Text = wire.Content[0].Text } } };
                     }
             for (Exception? cause = exception; cause != null; cause = cause.InnerException)
-                if (cause.Data["nativeResultEvidence"] is JsonObject nativeEvidence && NativeResultState.TryUnsuccessful(nativeEvidence, writes, out var nativeOutcome, out var nativeError, tool))
-                    return Result(tool, new JsonObject { ["evidence"] = nativeEvidence.DeepClone() }, nativeError, nativeOutcome, Completeness.Unknown, current, writes);
+                if (cause.Data["nativeResultEvidence"] is JsonObject nativeEvidence)
+                {
+                    var safeEvidence = (JsonObject)nativeEvidence.DeepClone();
+                    HostBehavior.SanitizeEvidence(safeEvidence);
+                    if (NativeResultState.TryUnsuccessful(safeEvidence, writes, out var nativeOutcome, out var nativeError, tool))
+                        return Result(tool, new JsonObject { ["evidence"] = safeEvidence }, nativeError, nativeOutcome, Completeness.Unknown, current, writes);
+                }
             if (exception is RejectionException rejection)
                 return Result(tool, null, rejection.Error, Outcome.RejectedBeforeOperation, Completeness.None, current);
             #if !TIA_ENGINE_HOST
@@ -99,6 +104,7 @@ namespace TiaMcpServer.ModelContextProtocol
             root["summary"] = summary;
             root["evidence"] = evidence;
             HostBehavior.ExportPreview(root);
+            HostBehavior.SanitizeEvidence(root, evidence: false);
             Clean(root);
 
             if (NativeResultState.TryUnsuccessful(evidence, writes, out var nativeOutcome, out var nativeError, tool))

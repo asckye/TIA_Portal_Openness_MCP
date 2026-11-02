@@ -19,6 +19,8 @@ internal interface IHostSession : IDisposable
     public void BindAi(IMcpServer server);
     public IDisposable AttachOperator();
     public void SetNativeCrossReferences(bool enabled, int workbenchPid) => throw new NotSupportedException("Human session settings unavailable.");
+    public bool TryBeginHostShutdown() => false;
+    public void CancelHostShutdown() { }
 }
 
 internal sealed class HostSession : IHostSession
@@ -36,6 +38,8 @@ internal sealed class HostSession : IHostSession
     private long revision;
     private int operators;
     private bool disposed;
+    private bool hostStopping;
+    private int activeCalls;
     private JsonObject? finalWorkerState;
     private JsonObject observedWorkerState;
     private SessionNotifications? aiNotifications;
@@ -134,7 +138,8 @@ internal sealed class HostSession : IHostSession
                 ["owner"] = OperatorOwned ? "workbench" : "mcp", ["endedBy"] = endedBy, ["endReason"] = endReason,
                 ["participants"] = new JsonObject { ["mcpClient"] = clientName, ["mcpClientVerified"] = false, ["workbench"] = operators },
                 ["worker"] = new JsonObject { ["pid"] = worker["pid"]?.DeepClone(), ["generation"] = worker["generation"]?.DeepClone(),
-                    ["state"] = disconnected ? "disconnected" : locked ? "poisoned" : lane != null ? "busy" : "idle" },
+                    ["state"] = hostStopping || (bool?)worker["stopping"] == true ? "stopping" : disconnected ? "disconnected" : locked ? "poisoned" : activeCalls > 0 || lane != null ? "busy" : "idle" },
+                ["callInProgress"] = activeCalls > 0 || lane != null,
                 ["lane"] = lane?.DeepClone(), ["binding"] = worker["binding"]?.DeepClone(), ["sessionLocked"] = locked,
                 ["sessionState"] = sessionState,
                 ["nativeCrossReferencesAllowed"] = !disposed && ((bool?)sessionState?["switches"]?["nativeCrossReferences"]?["humanSessionAllowed"]
@@ -179,9 +184,30 @@ internal sealed class HostSession : IHostSession
             catch (Exception error) { OperatorEndpoint.Report(error); }
         }
     }
+    public bool TryBeginHostShutdown()
+    {
+        lock (sync)
+        {
+            if (activeCalls > 0 || lane != null) return false;
+            hostStopping = true;
+            return true;
+        }
+    }
+    public void CancelHostShutdown() { lock (sync) hostStopping = false; }
+
     internal async ValueTask<CallToolResult> Invoke(McpServerTool inner, RequestContext<CallToolRequestParams> request, bool workbench, CancellationToken token)
     {
-        lock (sync) if (disposed) throw new InvalidOperationException("The host session has ended; initialize a new session.");
+        lock (sync)
+        {
+            if (disposed || hostStopping) throw new InvalidOperationException("The host session has ended; initialize a new session.");
+            activeCalls++;
+        }
+        Changed();
+        try { return await InvokeCore(inner, request, workbench, token).ConfigureAwait(false); }
+        finally { lock (sync) activeCalls--; Changed(); }
+    }
+    private async ValueTask<CallToolResult> InvokeCore(McpServerTool inner, RequestContext<CallToolRequestParams> request, bool workbench, CancellationToken token)
+    {
         if (!workbench) BindAi(request.Server);
         string id = Guid.NewGuid().ToString("N"), actor = workbench ? ActorScope.Workbench : ActorScope.Mcp;
         using var crossReferenceSession = TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.EnterSession(NativeCrossReferenceSessionFile, NativeCrossReferenceSessionSecret);

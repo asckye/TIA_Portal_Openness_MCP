@@ -460,7 +460,13 @@ internal sealed partial class FoundationTool
             }
             catch (WorkerOperationException error) when (PortedToolContract.IsDeviceRefusal(operation, error))
             { throw PortedToolContract.DeviceRefusal(error); }
-            catch (Exception error) { workerFailure = error; throw; }
+            catch (Exception error)
+            {
+                workerFailure = error;
+                error.Data["foundationKnownNoMutation"] = error is WorkerOperationException { KnownNoMutation: true }
+                    || error.Data["foundationRequestSent"] is false;
+                throw;
+            }
         }
         Func<string, JsonObject, JsonNode?> call = Call;
         var service = new HardwareAddressingService(call, hasProject, identity);
@@ -559,19 +565,18 @@ internal sealed partial class FoundationTool
                 return McpServer.V4Result(tool.Name, result.StructuredContent?["data"] is JsonObject data ? (JsonObject)data.DeepClone() : null,
                     new Error(TiaOpenness.Shared.SessionBehavior.PortalRequired, new PreconditionFailedDetails("ConnectPortal", null)),
                     Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current: true);
-            if (workerFailure != null && result.IsError == true
-                && (workerFailure is WorkerOperationException || workerFailure.Data.Contains("foundationRequestSent")))
-            {
-                bool mutation = portedDescriptor!.Classification?.Operation is not ("READ" or "OFFLINE")
-                    && !(portedDescriptor.DryRun.Present && (arguments.TryGetValue("dryRun", out var preview)
-                        ? preview.ValueKind == JsonValueKind.True : portedDescriptor.DryRun.Default));
-                result = FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
-                    workerFailure.Data["foundationRequestSent"] is not false, mutation, result.StructuredContent?["data"], workerFailure);
-            }
-            return FoundationV4Result.ReconcileWorker(result, worker is IFoundationSessionWorker { Poisoned: true }, nativeDiagnostics);
+            bool mutation = portedDescriptor!.Classification?.Operation is not ("READ" or "OFFLINE")
+                && !(portedDescriptor.DryRun.Present && (arguments.TryGetValue("dryRun", out var preview)
+                    ? preview.ValueKind == JsonValueKind.True : portedDescriptor.DryRun.Default));
+            result = FoundationV4Result.WorkerFailure(result, portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId), mutation, workerFailure);
+            return FoundationV4Result.ReconcileWorker(result, SharedSessionState.For(worker).RequiresReset(lastReply), nativeDiagnostics);
         }
         catch (TargetInvocationException error) when (error.InnerException != null)
         {
+            if (FoundationV4Result.Classified(lastReply))
+                return FoundationV4Result.ReconcileWorker(new CallToolResult { IsError = (bool?)lastReply!["ok"] != true,
+                    StructuredContent = lastReply.DeepClone(), Content = new[] { new TextContentBlock { Text = lastReply.ToJsonString() } } },
+                    SharedSessionState.For(worker).RequiresReset(lastReply), nativeDiagnostics);
             var cause = workerFailure ?? error.InnerException;
             bool mutation = portedDescriptor!.Classification?.Operation is not ("READ" or "OFFLINE")
                 && !(portedDescriptor.DryRun.Present && (arguments.TryGetValue("dryRun", out var dry)
@@ -580,18 +585,20 @@ internal sealed partial class FoundationTool
             {
                 string code = (string?)failure["Code"] ?? cause.GetType().Name;
                 bool changed = (bool?)lastReply["MayHaveChanged"] == true;
+                var evidence = failure["Evidence"] is JsonObject retained ? (JsonObject)retained.DeepClone() : new JsonObject();
+                evidence["exceptionType"] ??= code;
                 cause = new WorkerOperationException((string?)failure["Message"] ?? cause.Message,
                     code == nameof(ArgumentException) ? -32602 : -32603,
                     changed ? "unknown" : mutation ? "rejected-before-operation" : "read-failed",
-                    new JsonObject { ["exceptionType"] = code }.ToJsonString());
-                cause.Data["foundationSessionPoisoned"] = worker is IFoundationSessionWorker { Poisoned: true };
+                    evidence.ToJsonString());
+                cause.Data["foundationSessionPoisoned"] = SharedSessionState.For(worker).RequiresReset(lastReply);
             }
             if (!operationDispatched && cause is global::ModelContextProtocol.McpException { ErrorCode: global::ModelContextProtocol.McpErrorCode.InvalidParams })
                 cause = new WorkerOperationException(cause.Message, -32602, "rejected-before-operation");
             var result = FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
                 operationDispatched && (cause.Data["foundationRequestSent"] is bool sent ? sent
-                    : cause is WorkerOperationException || nativeCalls.NativeCallIssued), mutation, null, cause);
-            return FoundationV4Result.ReconcileWorker(result, worker is IFoundationSessionWorker { Poisoned: true }, nativeDiagnostics);
+                    : cause is WorkerOperationException || nativeCalls.NativeCallIssued), mutation, lastReply?["Failure"] != null ? lastReply : null, cause);
+            return FoundationV4Result.ReconcileWorker(result, SharedSessionState.For(worker).RequiresReset(lastReply), nativeDiagnostics);
         }
     }
 }

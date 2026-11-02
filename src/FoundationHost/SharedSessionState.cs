@@ -15,6 +15,11 @@ internal sealed class SharedSessionState
     private SharedSessionState(IFoundationWorker worker) => this.worker = worker;
     internal static SharedSessionState For(IFoundationWorker worker) => States.GetValue(worker, key => new(key));
 
+    internal bool RequiresReset(JsonNode? reply = null) => (worker as IFoundationSessionWorker)?.Poisoned == true
+        || (bool?)reply?["requiresSessionReset"] == true || (bool?)reply?["RequiresSessionReset"] == true
+        || (bool?)reply?["meta"]?["requiresSessionReset"] == true
+        || (bool?)(worker as IFoundationWorkerSupervisor)?.OperatorSnapshot()["sessionLocked"] == true;
+
     internal JsonObject? Identity
     {
         get
@@ -53,9 +58,10 @@ internal sealed class SharedSessionState
             if ((string?)identity["projectPath"] is string file) identity["projectName"] ??= Path.GetFileNameWithoutExtension(file);
         }
         bool ended = (bool?)transport["disconnected"] == true;
-        bool locked = (worker as IFoundationSessionWorker)?.Poisoned == true;
-        bool connected = worker is WorkerClient { SharedSession: true } plc
-            ? (bool?)plc.SharedStatus?["session"]?["isConnected"] == true : identity?["processId"] != null;
+        bool locked = (bool?)transport["sessionLocked"] == true || (worker as IFoundationSessionWorker)?.Poisoned == true;
+        bool connected = (bool?)transport["connected"] ?? (transport["binding"]?["processId"] != null
+            || worker is WorkerClient { SharedSession: true } plc && (bool?)plc.SharedStatus?["session"]?["isConnected"] == true
+            || worker is not IFoundationWorkerSupervisor && identity?["processId"] != null);
         var switches = Switches(release);
         if (ended) switches["nativeCrossReferences"]!["allowed"] = false;
         return new JsonObject { ["binding"] = identity == null ? null : new JsonObject { ["identity"] = identity },
@@ -69,9 +75,10 @@ internal sealed class SharedSessionState
         var state = Snapshot(release, transport);
         var identity = state["binding"]?["identity"];
         return new JsonObject { ["pid"] = transport["pid"]?.DeepClone(), ["generation"] = state["workerGeneration"]?.DeepClone(),
-            ["disconnected"] = state["disconnected"]?.DeepClone(), ["sessionLocked"] = state["requiresSessionReset"]?.DeepClone(),
-            ["binding"] = new JsonObject { ["processId"] = identity?["processId"]?.DeepClone(),
-                ["projectFile"] = identity?["projectPath"]?.DeepClone(), ["bindingEpoch"] = identity?["generation"]?.DeepClone() },
+            ["disconnected"] = state["disconnected"]?.DeepClone(), ["stopping"] = transport["stopping"]?.DeepClone(),
+            ["sessionLocked"] = state["requiresSessionReset"]?.DeepClone(),
+            ["binding"] = new JsonObject { ["processId"] = transport["binding"]?["processId"]?.DeepClone(),
+                ["projectFile"] = identity?["projectPath"]?.DeepClone(), ["bindingEpoch"] = transport["binding"]?["bindingEpoch"]?.DeepClone() },
             ["sessionState"] = state };
     }
 }

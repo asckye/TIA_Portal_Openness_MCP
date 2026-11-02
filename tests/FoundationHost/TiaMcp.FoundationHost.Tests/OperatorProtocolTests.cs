@@ -18,6 +18,28 @@ using Registration = foundationhost::TiaMcp.FoundationHost.HostRegistration;
 [Collection(BundleSelectionCollection.Name)]
 public sealed class OperatorProtocolTests
 {
+    [Theory] [InlineData(false)] [InlineData(true)]
+    public async Task Operator_shutdown_refuses_busy_calls_and_only_signals_after_the_acknowledgement(bool busy)
+    {
+        using var fixture = new OperatorSessionTests.Fixture("21"); using var registration = fixture.Register();
+        using var session = new Session("21", "fixture", false, [], [], () => new JsonObject(), () => { });
+        using var member = registration.Register(session);
+        if (busy) session.LaneChanged(true, "SyntheticNativeCall", "mcp", "fixture");
+        bool shutdown = false;
+        var (host, client) = OperatorSessionTests.Streams(); using (host) using (client)
+        {
+            var connection = new Connection(registration, _ => throw new InvalidOperationException("Unexpected create"), _ => false, shutdown: () => shutdown = true);
+            using var deadline = new CancellationTokenSource(OperatorSessionTests.Peer.HandshakeBudget);
+            var serving = connection.Serve(host, Environment.ProcessId, deadline.Token);
+            await OperatorProtocol.Write(client, Handshake("shutdown"), deadline.Token);
+            var response = await OperatorProtocol.Read<OperatorHandshakeResult>(client, deadline.Token);
+            await serving.WaitAsync(OperatorSessionTests.Peer.HandshakeBudget);
+            Assert.Equal(!busy, response.Accepted); Assert.Equal(busy ? "HOST_BUSY" : null, response.Error);
+            Assert.Equal(!busy, shutdown);
+        }
+        session.LaneChanged(false, "SyntheticNativeCall", "mcp", "fixture");
+    }
+
     [Fact]
     public async Task Failed_session_creation_is_reported_before_the_handshake_read_can_hang()
     {

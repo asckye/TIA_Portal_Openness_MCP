@@ -19,11 +19,13 @@ internal static class EngineSessionFixture
             Environment.ProcessId, foundation ? args[Array.IndexOf(args, "--native-session") + 3] : Environment.GetEnvironmentVariable("TIA_MCP_ENGINE_NONCE")!);
         int? attached = null;
         PortalProcessLease? lease = null;
-        long epoch = 0; bool uncertain = false;
+        long epoch = 0; bool uncertain = false, hasProject = true, lockOnNextFamily = false, locked = false;
+        string? slowShutdownMarker = null;
         string? leaseRoot = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT");
         JsonObject Status() => new() { ["releaseKey"] = release, ["readiness"] = new JsonObject { ["ready"] = true },
             ["behaviorCapabilities"] = BehaviorCapabilities.Table(typeof(BehaviorCapabilities).Assembly, release),
-            ["binding"] = attached == null ? null : new JsonObject {
+            ["sessionLocked"] = locked,
+            ["binding"] = attached == null || !hasProject ? null : new JsonObject {
                 ["tiaMajorVersion"] = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release),
                 ["processId"] = attached, ["processStartUtc"] = "2026-10-05T00:00:00Z",
                 ["projectPath"] = "C:/fixture.ap" + release, ["projectName"] = "fixture", ["generation"] = epoch },
@@ -43,6 +45,20 @@ internal static class EngineSessionFixture
                     Environment.GetEnvironmentVariable("TIA_MCP_WORKER_SPILLS_DIRECTORY") ?? DataLocations.Current.WorkerSpillsDirectory, full));
             }
             var input = JsonNode.Parse(request.ArgumentsJson)!.AsObject();
+            if (request.Method == "adapter.FixtureNoProject") { hasProject = false; return ChannelResponse.Success("{}"); }
+            if (request.Method == "adapter.FixtureSlowShutdown") { slowShutdownMarker = (string)input["marker"]!; return ChannelResponse.Success("{}"); }
+            if (request.Method == "adapter.FixtureLockOnNextFamily") { lockOnNextFamily = true; return ChannelResponse.Success("{}"); }
+            if (locked && request.Method != "adapter.Disconnect")
+                return ChannelResponse.Error(new ChannelFailureException(SessionBehavior.Recovery, -32603, ChannelOutcome.RejectedBeforeNative));
+            if (lockOnNextFamily && request.Method == "adapter.plc-software.ExecutePlcOrganisation")
+            {
+                var outcome = new TiaMcp.PlcWorker.WorkerSessionOutcomeState();
+                var recovery = new TiaMcp.PlcWorker.WorkerSessionRecovery(outcome, () => false, () => { }, () => { }, _ => { }, () => { }, () => { },
+                    bindingFault: () => "Fixture binding refresh failed");
+                var response = recovery.Synchronize(request, ChannelResponse.Success(TiaMcp.PlcWorker.WorkerJson.Serialize(new TiaMcp.Adapters.Contracts.PlcSoftwareReply { Found = true })));
+                locked = outcome.RequiresReset;
+                return response;
+            }
             if (request.Method == "engine.observe" && (string?)input["operation"] == "assemblies")
                 return ChannelResponse.Success("[]");
             if (request.Method == "adapter.Attach")
@@ -102,7 +118,11 @@ internal static class EngineSessionFixture
             return response;
         }, foundation ? ChannelProfile.Foundation : ChannelProfile.Engine);
         try { server.Run(); }
-        finally { if (!uncertain) lease?.ReleaseCleanly(); lease?.Dispose(); }
+        finally
+        {
+            if (slowShutdownMarker != null) { File.WriteAllText(slowShutdownMarker, "stopping"); Thread.Sleep(2000); }
+            if (!uncertain) lease?.ReleaseCleanly(); lease?.Dispose();
+        }
         return 0;
     }
 }

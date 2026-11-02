@@ -389,7 +389,10 @@ stdio 的输入输出流由 MCP 客户端持有，需在该客户端重启。ope
    使用同一 `LocalPipeSecurity`；宿主核对客户端 SID 与映像（必须是同包 `TiaOpenness.exe`，这里是强制的，因为“人”的归属依赖它）。
 2. 发现：宿主在 `<data>/run/hosts/<pid>-<startTicks>.json` 原子写入一条记录（版本、`hostInstanceId`、发布键、传输方式、管道名、是否由工作台启动），退出时删除；
    工作台按 PID + 启动时间判断存活（复用 `ImportStagingStore.OwnerState` 的判断方式，`ImportStagingStore.cs:363-380`），并核对管道服务端 PID 与记录一致。
-3. 握手：首帧 `{protocol:"tiamcp.operator", version:1, action:"list"|"attach"|"create", sessionKey?, workbench:{pid, version}}`。
+3. 握手：首帧 `{protocol:"tiamcp.operator", version:1, action:"list"|"attach"|"create"|"native-cross-references"|"shutdown", sessionKey?, workbench:{pid, version}}`。
+   `shutdown` 不带 sessionKey，仍须通过同用户、同 bundle 工作台映像与内核 PID 校验。宿主在同一准入边界检查所有会话；有调用或占用 lane 时返回 `HOST_BUSY`，否则封闭新调用和新会话准入，先确认握手，再触发现有宿主停止路径及 `WorkerShutdown.StopAll`。工作台沿用 20 秒宿主退出预算（包含 worker 的 10 秒宽限），只有超时后经单独人工确认才强制终止；Restart 等旧宿主退出后启动。
+   工作台直接启动并持有重定向 stdin 的 HTTP 子进程还接受一行 `tiamcp.host-control/1 shutdown`；仅 `TIA_MCP_WORKBENCH_STARTED=1` 且 stdin 重定向时启用，走相同准入和停止路径。EOF 不停止 HTTP 宿主。此控制输入不属于 MCP 工具接口；发现其他宿主仍使用经过身份验证的操作端管道。
+   宿主注册记录的 `sessions[].callInProgress` 和 `worker.state=busy/stopping` 用于禁用 Stop / Restart。注册文件只是提示，最终忙碌检查由宿主执行。
    `list` 返回该宿主的会话（`sessionKey`、MCP 客户端名（不可验证）、创建时间、绑定工程、worker 状态）后关闭；`attach`/`create` 成功后，同一管道切换为 MCP JSON-RPC，
    宿主以 `McpServerFactory` + `StreamServerTransport`、工作台以 `McpClientFactory` + `StreamClientTransport` 通信（两者在 ModelContextProtocol.Core 0.3.0-preview.4 中已有；实现前先用最小夹具验证）。
 4. 宿主侧引入 `IHostSession`：V14 SP1–V19 包装（`WorkerClient` + 本会话工具集合），V20/V21 包装（`EngineWorkerClient` + `EngineHostPipeline`）；在 `Program.cs:53-67`、`83-95` 与 `EngineReleaseHost.cs:87-107` 注册与注销。

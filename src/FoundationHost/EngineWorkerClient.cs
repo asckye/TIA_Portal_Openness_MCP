@@ -62,7 +62,9 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
     {
         var snapshot = Snapshot();
         lock (stateSync) return new JsonObject { ["pid"] = process?.Id, ["generation"] = generation,
-            ["disconnected"] = disconnecting, ["sessionLocked"] = snapshot["sessionLocked"]?.DeepClone(),
+            ["disconnected"] = disconnecting, ["stopping"] = (string?)snapshot["state"] == "Stopping",
+            ["connected"] = status["session"]?["isConnected"]?.DeepClone(),
+            ["sessionLocked"] = snapshot["sessionLocked"]?.DeepClone(),
             ["binding"] = new JsonObject { ["processId"] = attachedProcessId,
                 ["projectFile"] = (binding?["identity"]?["projectPath"] ?? binding?["projectPath"])?.DeepClone(),
                 ["bindingEpoch"] = channel?.BindingEpoch } };
@@ -82,7 +84,8 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
     public JsonNode? Binding { get { lock (stateSync) return binding?.DeepClone(); } }
     public object SessionKey { get { lock (stateSync) return sessionKey; } }
     public string ApprovalIdentity => Binding?.ToJsonString() ?? "{}";
-    public bool Poisoned => foundationOutcome.Poisoned || Faulted || SessionLocked?.Invoke() == true;
+    public bool Poisoned => foundationOutcome.Poisoned || Faulted || (bool?)status["sessionLocked"] == true
+        || (bool?)status["requiresSessionReset"] == true || SessionLocked?.Invoke() == true;
     public bool Bundled => true;
     public bool SharedSession => true;
     public TiaMcp.Logic.ModelContextProtocol.ImportStagingSession? StagingOwner => EngineHostConfiguration.CurrentOrNull?.StagingOwner?.Invoke();
@@ -225,7 +228,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
             return WorkerSupervisorReplies.Snapshot(options.ReleaseKey, new WorkerSupervisorState(new JsonObject(), Faulted, process != null,
                 generation, Volatile.Read(ref active), Volatile.Read(ref queued), timeouts.For("status").TotalSeconds,
                 JsonSerializer.SerializeToNode(timeouts.Budgets.ToDictionary(p => p.Key, p => p.Value.TotalSeconds)),
-                Faulted || foundationOutcome.Poisoned || SessionLocked?.Invoke() == true, faultEvidence, status["readiness"], binding, previousGenerations));
+                Poisoned, faultEvidence, status["readiness"], binding, previousGenerations));
         }
     }
     private void RecordFault(Exception error, string operation, bool dispatched)

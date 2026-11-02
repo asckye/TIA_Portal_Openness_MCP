@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -111,6 +112,12 @@ namespace TiaMcp.Logic.V4
         internal static string? SafeDiagnostic(string? message)
         {
             if (string.IsNullOrWhiteSpace(message)) return null;
+            // Exception.ToString() and nested native messages can contain a whole stack.
+            // Only the first message line belongs on the wire; the full diagnostic stays in the log.
+            int end = message.IndexOfAny(new[] { '\r', '\n', '\u0085', '\u2028', '\u2029' });
+            if (end >= 0) message = message.Substring(0, end);
+            int inner = message.IndexOf(" ---> ", StringComparison.Ordinal);
+            if (inner >= 0) message = message.Substring(0, inner);
             string json = DiagnosticPayload.Sanitize(JsonSerializer.Serialize(message));
             try
             {
@@ -132,11 +139,44 @@ namespace TiaMcp.Logic.V4
                 && (reportedCode == -32602 || reportedOutcome == "rejected-before-operation") ? SafeDiagnostic(error.Message) : null;
         }
 
-        // Retain bounded, redacted diagnostics so native failures can be investigated from the envelope.
-        internal static IReadOnlyDictionary<string, JsonElement> FailureEvidence(string? exceptionType, string? message = null)
+        internal static void SanitizeEvidence(JsonNode? node, bool evidence = true)
+        {
+            if (node is JsonObject obj)
+                foreach (var pair in obj.ToArray())
+                {
+                    bool sourceText = !evidence && (pair.Key.Equals("code", StringComparison.OrdinalIgnoreCase)
+                        || pair.Key.Equals("sourceCode", StringComparison.OrdinalIgnoreCase)
+                        || pair.Key.Equals("source", StringComparison.OrdinalIgnoreCase)
+                        || pair.Key.Equals("content", StringComparison.OrdinalIgnoreCase)
+                        || pair.Key.Equals("text", StringComparison.OrdinalIgnoreCase));
+                    if (evidence && pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0
+                        && (pair.Value is JsonArray || pair.Value is JsonValue stackValue && stackValue.TryGetValue<string>(out _))
+                        || pair.Key.Equals("stackTrace", StringComparison.OrdinalIgnoreCase)
+                        || pair.Key.Equals("nativeStackTrace", StringComparison.OrdinalIgnoreCase)
+                        || pair.Key.Equals("password", StringComparison.OrdinalIgnoreCase))
+                        obj.Remove(pair.Key);
+                    else if (pair.Value is JsonValue value && value.TryGetValue<string>(out var text)
+                        && (pair.Key.Equals("nativeMessage", StringComparison.OrdinalIgnoreCase)
+                            || pair.Key.Equals("workerMessage", StringComparison.OrdinalIgnoreCase)
+                            || pair.Key.Equals("message", StringComparison.OrdinalIgnoreCase)
+                            || pair.Key.Equals("error", StringComparison.OrdinalIgnoreCase)
+                            || !sourceText && (text.Contains("\n   at ") || text.Contains(" ---> "))))
+                        obj[pair.Key] = SafeDiagnostic(text);
+                    else SanitizeEvidence(pair.Value, evidence || pair.Key.Equals("evidence", StringComparison.OrdinalIgnoreCase));
+                }
+            else if (node is JsonArray rows)
+                for (int index = 0; index < rows.Count; index++)
+                    if (rows[index] is JsonValue value && value.TryGetValue<string>(out var text)
+                        && (text.Contains("\n   at ") || text.Contains(" ---> "))) rows[index] = SafeDiagnostic(text);
+                    else SanitizeEvidence(rows[index], evidence);
+        }
+
+        // Host implementation details remain private. A worker's native diagnostic is
+        // explicitly identified by its caller; ordinary host errors expose only IO failures.
+        internal static IReadOnlyDictionary<string, JsonElement> FailureEvidence(string? exceptionType, string? message = null, bool native = false)
             => new Dictionary<string, JsonElement> {
                 ["exceptionType"] = JsonSerializer.SerializeToElement(exceptionType),
-                ["workerMessage"] = JsonSerializer.SerializeToElement(SafeDiagnostic(message)) };
+                ["workerMessage"] = JsonSerializer.SerializeToElement(native || exceptionType == nameof(System.IO.IOException) ? SafeDiagnostic(message) : null) };
 
         internal static Error? ExpectedProjectArgument(string? expectedProject)
         {

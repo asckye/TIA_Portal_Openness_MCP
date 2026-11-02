@@ -5,7 +5,7 @@ using TiaOpenness.Shared;
 namespace TiaMcp.FoundationHost;
 
 internal sealed class OperatorConnection(HostRegistration registration, Func<CancellationToken, Task<IHostSession>> create, Func<int, bool> isOwner,
-    Action? ownedSessionEnded = null)
+    Action? ownedSessionEnded = null, Action? shutdown = null)
 {
     internal async Task Serve(Stream pipe, int? verifiedPeer, CancellationToken token)
     {
@@ -21,6 +21,17 @@ internal sealed class OperatorConnection(HostRegistration registration, Func<Can
             if (request.Workbench.Pid != verifiedPeer) return;
             IHostSession? session = null;
             string? error = request.Version != 1 ? "UNSUPPORTED_VERSION" : null;
+            if (error == null && request.Action == "shutdown")
+            {
+                error = shutdown == null ? "SHUTDOWN_UNAVAILABLE" : registration.TryBeginShutdown() ? null : "HOST_BUSY";
+                try
+                {
+                    await OperatorProtocol.Write(pipe, new OperatorHandshakeResult { Accepted = error == null, Error = error }, deadline.Token).ConfigureAwait(false);
+                }
+                catch { if (error == null) registration.CancelShutdown(); throw; }
+                if (error == null) shutdown!();
+                return;
+            }
             if (error == null && (request.Action == "attach" || request.Action == "native-cross-references"))
             {
                 session = registration.Find(request.SessionKey!);

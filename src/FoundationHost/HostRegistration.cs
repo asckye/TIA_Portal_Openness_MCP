@@ -14,6 +14,7 @@ internal sealed class HostRegistration : IDisposable
     private readonly Action<Exception> report;
     private readonly Action? sharingRetry;
     private bool disposed;
+    private bool stopping;
     internal string FilePath { get; }
     internal string PipeName { get; }
     internal HostRegistration(HostOptions options, string sid, string dataRoot, Action<Exception> report, Action? sharingRetry = null)
@@ -80,7 +81,7 @@ internal sealed class HostRegistration : IDisposable
     {
         lock (sync)
         {
-            if (disposed) throw new ObjectDisposedException(nameof(HostRegistration));
+            if (disposed || stopping) throw new ObjectDisposedException(nameof(HostRegistration));
             sessions.Add(session.SessionKey, session);
             session.StateChanged += Refresh;
             Refresh();
@@ -94,6 +95,29 @@ internal sealed class HostRegistration : IDisposable
     }
     internal JsonObject[] List()
     { lock (sync) return sessions.Values.Select(s => s.Snapshot()).ToArray(); }
+    internal bool TryBeginShutdown()
+    {
+        lock (sync)
+        {
+            if (disposed || stopping) return false;
+            var admitted = new List<IHostSession>();
+            foreach (var session in sessions.Values)
+            {
+                if (!session.TryBeginHostShutdown())
+                {
+                    foreach (var prior in admitted) prior.CancelHostShutdown();
+                    return false;
+                }
+                admitted.Add(session);
+            }
+            stopping = true;
+            return true;
+        }
+    }
+    internal void CancelShutdown()
+    {
+        lock (sync) { stopping = false; foreach (var session in sessions.Values) session.CancelHostShutdown(); }
+    }
     internal IHostSession? Find(string key)
     { lock (sync) return sessions.GetValueOrDefault(key); }
     private sealed class Membership(HostRegistration owner, IHostSession session) : IDisposable

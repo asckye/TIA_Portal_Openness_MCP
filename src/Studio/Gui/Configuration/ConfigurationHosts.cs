@@ -46,22 +46,26 @@ public sealed partial class ConfigurationView
             HostList.ItemsSource = found;
             HostList.SelectedItem = selected == null ? null : found.FirstOrDefault(host => host.Pid == selected.Pid && host.StartTicks == selected.StartTicks);
             UpdateHostActions();
+            if (server != null && !server.HasExited)
+                Find<Button>("StopServer").IsEnabled = !busy && found.FirstOrDefault(host => host.Pid == server.Id)?.CallInProgress != true;
         }
         finally { refreshingHosts = false; }
     }
     private void UpdateHostActions()
     {
         var host = HostList.SelectedItem as VisibleHost;
-        StopHost.IsEnabled = !busy && host != null;
-        RestartHost.IsEnabled = !busy && host?.Transport == "http";
+        StopHost.IsEnabled = !busy && host is { CallInProgress: false };
+        RestartHost.IsEnabled = !busy && host is { Transport: "http", CallInProgress: false };
         HostDetail.Text = host == null ? Loc.Current["Hosts.Hint"]
             : (host.OlderVersion ? Loc.Current["Hosts.Older"] + "\n" : "")
                 + (host.WorkbenchStarted ? Loc.Current["Hosts.Owned"] : Loc.Current["Hosts.External"])
-                + (host.Transport == "stdio" ? "\n" + Loc.Current["Hosts.Stdio"] : "");
+                + (host.Transport == "stdio" ? "\n" + Loc.Current["Hosts.Stdio"] : "")
+                + (host.CallInProgress ? "\n" + Loc.Current["Hosts.Busy"] : "");
     }
     private async Task ChangeHost(bool restart)
     {
         if (HostList.SelectedItem is not VisibleHost host) return;
+        if (host.CallInProgress) throw new InvalidOperationException(Loc.Current["Hosts.Busy"]);
         // Make a restart concrete and validate it before stopping a running process.
         System.Diagnostics.ProcessStartInfo? start = null;
         string restartEndpoint = "";
@@ -77,8 +81,7 @@ public sealed partial class ConfigurationView
                 throw new InvalidOperationException(Loc.Current["Hosts.ConfigMismatch"]);
             start = new(ConfigCore.Engine(root, host.ReleaseKey), ConfigCore.Arguments(settings, ConfigCore.Unprotect(settings.ProtectedKey), root))
                 { WorkingDirectory = root, UseShellExecute = false, CreateNoWindow = true };
-            start.Environment["TIA_MCP_DATA_DIRECTORY"] = DataLocations.Current.WorkbenchDataDirectory;
-            start.Environment["TIA_MCP_WORKBENCH_STARTED"] = "1";
+            HostLifecycleService.PrepareWorkbenchHost(start);
         }
         string prompt = Loc.Current.T("Hosts.Confirm", host.Display);
         if (start != null) prompt += "\n\n" + Loc.Current.T("Hosts.RestartTarget", restartEndpoint, start.FileName);
@@ -87,11 +90,14 @@ public sealed partial class ConfigurationView
         SetBusy(true);
         try
         {
+            Task<bool> ConfirmForce(VisibleHost target) => Window.Dispatcher.InvokeAsync(() => WorkbenchMessageBox.Show(Window,
+                Loc.Current.T("Hosts.ForceConfirm", target.Display), Loc.Current["Hosts.Stop"],
+                MessageBoxButton.OKCancel, MessageBoxImage.Warning) == MessageBoxResult.OK).Task;
             if (start != null)
             {
-                using var process = await HostLifecycleService.Restart(host, start);
+                using var process = await HostLifecycleService.Restart(host, start, confirmForce: ConfirmForce);
             }
-            else await HostLifecycleService.Stop(host);
+            else await HostLifecycleService.Stop(host, confirmForce: ConfirmForce);
             await RefreshHostListAsync();
         }
         finally { SetBusy(false); UpdateHostActions(); }

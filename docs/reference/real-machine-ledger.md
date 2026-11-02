@@ -453,3 +453,15 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 精确目录设备创建 | 取消两颗示例 CPU 和 family 白名单，保留既有 Unified 面板版本必须匹配 Portal major 的真实故障保护；从同一目录读取得到 ET 200SP、其他 S7-1500 CPU、HMI 面板的精确 OrderNumber 行，预览不创建，确认工程文件和哈希后只调用一次 CreateWithItem。核对根设备/未分组系统组父对象与完整库存读回；HMI 子类型标识需真实目录和 API 确认，禁止猜测、候选探测或回退。 |
 | HMI 与共享状态 | expectedProject 传工程名称可读、传文件路径在调用前 INVALID_ARGUMENT；PlanProjectGeneration 和 GetWorkbenchState 核对同一 MCP 绑定；不支持的标签绑定须在创建前拒绝，已确认部分创建须报告 partial 与重置要求。 |
 | 覆盖库类型块 | 预览须提示 XML overwrite 可能断开库类型链接，备份无法恢复链接；预览恢复状态为 not-attempted-preview，执行报告实际备份结果，核对库实例、调用者和编译，不将备份文件哈希不稳定误判为导入内容已改变。 |
+
+### FIX-R1 待复验（2026-11-01）
+
+以下项目均为 **NOT RUN**。本次只运行离线和本机回环合成夹具，未连接 TIA、PLC 或 VM。
+
+| 路径 | 需要的原生复验 |
+|---|---|
+| 工作台 Stop / Restart | 在真实 TIA 附着会话上验证：调用进行中禁用操作，空闲时经宿主停止路径在原 owner 线程分离，等待退出后再启动新宿主；超出宽限期后才显示单独的强制终止确认，并提示 TIA 可能需要重启。 |
+| 结果未知时关闭 worker | 分别覆盖非自有附着、headless 自有 Portal 和所有权未知的 Portal。只对明确非自有附着尝试分离；自有或所有权未知时保留 TIA，不调用会关闭它的 TiaPortal.Dispose，保留不确定租约和关闭证据。 |
+| Unified 面板版本保护 | V18 / V19 Portal 下的旧版面板，核对 RequireUnifiedPanelVersion 的真实目录版本和拒绝边界。 |
+| 设备创建父对象和设备项 | 核对 CreateWithItem 的 UngroupedDevicesGroup 父对象，以及 ET 200SP / HMI 的真实 device-item 路径；不得用猜测路径替代原生读回。 |
+| Unified 标签创建 | 在 V17–V19 核对 Tags.Create(name, table) 的实际返回类型和后续属性访问。 |
