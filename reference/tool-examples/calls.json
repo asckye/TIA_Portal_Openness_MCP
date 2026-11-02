@@ -850,8 +850,7 @@
           "blockPath": "Main",
           "exportPath": "<existing caller-selected export directory>",
           "dryRun": true,
-          "confirm": false,
-          "unitName": ""
+          "confirm": false
         },
         "parameters": {
           "softwarePath": {
@@ -882,15 +881,6 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
           }
         },
         "operations": {},
@@ -936,8 +926,7 @@
           "groupPath": "",
           "exportPath": "<existing caller-selected batch export directory>",
           "dryRun": true,
-          "confirm": false,
-          "unitName": ""
+          "confirm": false
         },
         "parameters": {
           "softwarePath": {
@@ -977,15 +966,6 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
           }
         },
         "operations": {},
@@ -1031,8 +1011,7 @@
           "tagTableName": "默认变量表",
           "exportPath": "<new absolute Tags.xml file in an existing caller-selected directory>",
           "dryRun": true,
-          "confirm": false,
-          "unitName": ""
+          "confirm": false
         },
         "parameters": {
           "softwarePath": {
@@ -1064,15 +1043,6 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
           }
         },
         "operations": {},
@@ -1248,8 +1218,7 @@
           "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
-          "confirm": false,
-          "unitName": ""
+          "confirm": false
         },
         "parameters": {
           "softwarePath": {
@@ -1278,15 +1247,6 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
           }
         },
         "operations": {},
@@ -1330,8 +1290,7 @@
           "groupPath": "",
           "exportPath": "<existing caller-selected batch export directory>",
           "dryRun": true,
-          "confirm": false,
-          "unitName": ""
+          "confirm": false
         },
         "parameters": {
           "softwarePath": {
@@ -1371,15 +1330,6 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
           }
         },
         "operations": {},
@@ -1872,10 +1822,7 @@
           "importPath": "<data.outputFile from completed ExportPlcBlock>",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false,
-          "unitName": "",
-          "swImportOptions": [],
-          "importOptions": []
+          "overwrite": false
         },
         "parameters": {
           "softwarePath": {
@@ -1908,28 +1855,6 @@
             "tools": [
               "ListPortalProcessProjects",
               "GetSessionState"
-            ]
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
-          },
-          "swImportOptions": {
-            "meaning": "Explicit opt-ins, default []: IgnoreStructuralChanges and IgnoreMissingReferencedObjects V15.1–V21; IgnoreUnitAttributes V16–V21. Combine supported names in the array. Only block/type SimaticML compositions have the SWImportOptions overload; tag tables (also inside a program batch) refuse it before any native import. Unknown, duplicate or unavailable names return UNSUPPORTED_CAPABILITY. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "IgnoreMissingReferencedObjects",
-              "IgnoreUnitAttributes"
-            ]
-          },
-          "importOptions": {
-            "meaning": "Explicit culture opt-in V19–V21, default []: choose [\"SkipInactiveCultures\"] OR [\"ActivateInactiveCultures\"]. Both together, unknown names, duplicates and earlier releases return UNSUPPORTED_CAPABILITY. overwrite remains the separate bool. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "SkipInactiveCultures"
             ]
           }
         },
@@ -1984,10 +1909,7 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false,
-          "unitName": "",
-          "swImportOptions": [],
-          "importOptions": []
+          "overwrite": false
         },
         "parameters": {
           "softwarePath": {
@@ -2035,28 +1957,6 @@
             "tools": [
               "ListPortalProcessProjects",
               "GetSessionState"
-            ]
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
-          },
-          "swImportOptions": {
-            "meaning": "Explicit opt-ins, default []: IgnoreStructuralChanges and IgnoreMissingReferencedObjects V15.1–V21; IgnoreUnitAttributes V16–V21. Combine supported names in the array. Only block/type SimaticML compositions have the SWImportOptions overload; tag tables (also inside a program batch) refuse it before any native import. Unknown, duplicate or unavailable names return UNSUPPORTED_CAPABILITY. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "IgnoreMissingReferencedObjects",
-              "IgnoreUnitAttributes"
-            ]
-          },
-          "importOptions": {
-            "meaning": "Explicit culture opt-in V19–V21, default []: choose [\"SkipInactiveCultures\"] OR [\"ActivateInactiveCultures\"]. Both together, unknown names, duplicates and earlier releases return UNSUPPORTED_CAPABILITY. overwrite remains the separate bool. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "SkipInactiveCultures"
             ]
           }
         },
@@ -2110,10 +2010,7 @@
           "regexName": "^Main\\.xml$",
           "overwrite": false,
           "compileAfter": false,
-          "stopOnImportFailure": true,
-          "unitName": "",
-          "swImportOptions": [],
-          "importOptions": []
+          "stopOnImportFailure": true
         },
         "parameters": {
           "softwarePath": {
@@ -2186,28 +2083,6 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
-          },
-          "swImportOptions": {
-            "meaning": "Explicit opt-ins, default []: IgnoreStructuralChanges and IgnoreMissingReferencedObjects V15.1–V21; IgnoreUnitAttributes V16–V21. Combine supported names in the array. Only block/type SimaticML compositions have the SWImportOptions overload; tag tables (also inside a program batch) refuse it before any native import. Unknown, duplicate or unavailable names return UNSUPPORTED_CAPABILITY. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "IgnoreMissingReferencedObjects",
-              "IgnoreUnitAttributes"
-            ]
-          },
-          "importOptions": {
-            "meaning": "Explicit culture opt-in V19–V21, default []: choose [\"SkipInactiveCultures\"] OR [\"ActivateInactiveCultures\"]. Both together, unknown names, duplicates and earlier releases return UNSUPPORTED_CAPABILITY. overwrite remains the separate bool. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "SkipInactiveCultures"
-            ]
           }
         },
         "operations": {},
@@ -2258,10 +2133,7 @@
           "importPath": "<data.outputFile from completed ExportPlcTagTable>",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false,
-          "unitName": "",
-          "swImportOptions": [],
-          "importOptions": []
+          "overwrite": false
         },
         "parameters": {
           "softwarePath": {
@@ -2294,28 +2166,6 @@
             "tools": [
               "ListPortalProcessProjects",
               "GetSessionState"
-            ]
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
-          },
-          "swImportOptions": {
-            "meaning": "Explicit opt-ins, default []: IgnoreStructuralChanges and IgnoreMissingReferencedObjects V15.1–V21; IgnoreUnitAttributes V16–V21. Combine supported names in the array. Only block/type SimaticML compositions have the SWImportOptions overload; tag tables (also inside a program batch) refuse it before any native import. Unknown, duplicate or unavailable names return UNSUPPORTED_CAPABILITY. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "IgnoreMissingReferencedObjects",
-              "IgnoreUnitAttributes"
-            ]
-          },
-          "importOptions": {
-            "meaning": "Explicit culture opt-in V19–V21, default []: choose [\"SkipInactiveCultures\"] OR [\"ActivateInactiveCultures\"]. Both together, unknown names, duplicates and earlier releases return UNSUPPORTED_CAPABILITY. overwrite remains the separate bool. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "SkipInactiveCultures"
             ]
           }
         },
@@ -2366,10 +2216,7 @@
           "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false,
-          "unitName": "",
-          "swImportOptions": [],
-          "importOptions": []
+          "overwrite": false
         },
         "parameters": {
           "softwarePath": {
@@ -2398,28 +2245,6 @@
             "tools": [
               "ListPortalProcessProjects",
               "GetSessionState"
-            ]
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
-          },
-          "swImportOptions": {
-            "meaning": "Explicit opt-ins, default []: IgnoreStructuralChanges and IgnoreMissingReferencedObjects V15.1–V21; IgnoreUnitAttributes V16–V21. Combine supported names in the array. Only block/type SimaticML compositions have the SWImportOptions overload; tag tables (also inside a program batch) refuse it before any native import. Unknown, duplicate or unavailable names return UNSUPPORTED_CAPABILITY. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "IgnoreMissingReferencedObjects",
-              "IgnoreUnitAttributes"
-            ]
-          },
-          "importOptions": {
-            "meaning": "Explicit culture opt-in V19–V21, default []: choose [\"SkipInactiveCultures\"] OR [\"ActivateInactiveCultures\"]. Both together, unknown names, duplicates and earlier releases return UNSUPPORTED_CAPABILITY. overwrite remains the separate bool. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "SkipInactiveCultures"
             ]
           }
         },
@@ -2632,9 +2457,7 @@
       "ListPlcSystemConstants": {
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表",
-          "unitName": "",
-          "includeUnits": false
+          "table": "默认变量表"
         },
         "parameters": {
           "plc": {
@@ -2652,19 +2475,6 @@
               "ListPlcTagTables"
             ],
             "exampleValue": "默认变量表"
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
-          },
-          "includeUnits": {
-            "meaning": "V16–V21 false by default. true reads the root and all standard software units; leave unitName empty. table=\"\" reads all tables in this mode, or in one named unit. Root rows use root/tag-tables/<table>/<declaration>. Unit paths use units/<escaped unit>/tag-tables/<table>/<declaration> for unit rows; duplicate names across units retain distinct identities. Safety units are excluded.",
-            "exampleValue": true
           }
         },
         "operations": {},
@@ -2696,9 +2506,7 @@
       "ListPlcTags": {
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表",
-          "unitName": "",
-          "includeUnits": false
+          "table": "默认变量表"
         },
         "parameters": {
           "plc": {
@@ -2716,19 +2524,6 @@
               "ListPlcTagTables"
             ],
             "exampleValue": "默认变量表"
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
-          },
-          "includeUnits": {
-            "meaning": "V16–V21 false by default. true reads the root and all standard software units; leave unitName empty. table=\"\" reads all tables in this mode, or in one named unit. Root rows use root/tag-tables/<table>/<declaration>. Unit paths use units/<escaped unit>/tag-tables/<table>/<declaration> for unit rows; duplicate names across units retain distinct identities. Safety units are excluded.",
-            "exampleValue": true
           }
         },
         "operations": {},
@@ -2760,9 +2555,7 @@
       "ListPlcUserConstants": {
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表",
-          "unitName": "",
-          "includeUnits": false
+          "table": "默认变量表"
         },
         "parameters": {
           "plc": {
@@ -2780,19 +2573,6 @@
               "ListPlcTagTables"
             ],
             "exampleValue": "默认变量表"
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
-          },
-          "includeUnits": {
-            "meaning": "V16–V21 false by default. true reads the root and all standard software units; leave unitName empty. table=\"\" reads all tables in this mode, or in one named unit. Root rows use root/tag-tables/<table>/<declaration>. Unit paths use units/<escaped unit>/tag-tables/<table>/<declaration> for unit rows; duplicate names across units retain distinct identities. Safety units are excluded.",
-            "exampleValue": true
           }
         },
         "operations": {},
@@ -7961,9 +7741,6 @@
           "softwarePath": "PLC_1",
           "folderPath": "",
           "dir": "C:\\Examples\\exports",
-          "unitName": "",
-          "swImportOptions": [],
-          "importOptions": [],
           "dryRun": true
         },
         "parameters": {
@@ -7973,28 +7750,6 @@
           },
           "overwrite": {
             "exampleValue": false
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
-          },
-          "swImportOptions": {
-            "meaning": "Explicit opt-ins, default []: IgnoreStructuralChanges and IgnoreMissingReferencedObjects V15.1–V21; IgnoreUnitAttributes V16–V21. Combine supported names in the array. Only block/type SimaticML compositions have the SWImportOptions overload; tag tables (also inside a program batch) refuse it before any native import. Unknown, duplicate or unavailable names return UNSUPPORTED_CAPABILITY. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "IgnoreMissingReferencedObjects",
-              "IgnoreUnitAttributes"
-            ]
-          },
-          "importOptions": {
-            "meaning": "Explicit culture opt-in V19–V21, default []: choose [\"SkipInactiveCultures\"] OR [\"ActivateInactiveCultures\"]. Both together, unknown names, duplicates and earlier releases return UNSUPPORTED_CAPABILITY. overwrite remains the separate bool. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "SkipInactiveCultures"
-            ]
           }
         },
         "operations": {},
@@ -18655,20 +18410,9 @@
           "softwarePath": "devices/PLC_1/PLC_1",
           "groupPath": "",
           "recursive": true,
-          "maxBlocks": 128,
-          "unitName": ""
+          "maxBlocks": 128
         },
-        "parameters": {
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
-          }
-        },
+        "parameters": {},
         "operations": {},
         "validation": "Schema and sandbox fixture checked; native export NOT RUN. Available on all eight releases via ordinary XML block export.",
         "inline": true,
@@ -21360,8 +21104,7 @@
           "blockPath": "Main",
           "exportPath": "<existing caller-selected export directory>",
           "dryRun": true,
-          "confirm": false,
-          "unitName": ""
+          "confirm": false
         },
         "parameters": {
           "softwarePath": {
@@ -21392,15 +21135,6 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
           }
         },
         "operations": {},
@@ -21446,8 +21180,7 @@
           "groupPath": "",
           "exportPath": "<existing caller-selected batch export directory>",
           "dryRun": true,
-          "confirm": false,
-          "unitName": ""
+          "confirm": false
         },
         "parameters": {
           "softwarePath": {
@@ -21487,15 +21220,6 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
           }
         },
         "operations": {},
@@ -21559,8 +21283,7 @@
           "tagTableName": "默认变量表",
           "exportPath": "<new absolute Tags.xml file in an existing caller-selected directory>",
           "dryRun": true,
-          "confirm": false,
-          "unitName": ""
+          "confirm": false
         },
         "parameters": {
           "softwarePath": {
@@ -21592,15 +21315,6 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
           }
         },
         "operations": {},
@@ -21646,8 +21360,7 @@
           "exportPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "typePath": "UDT_Status",
           "dryRun": true,
-          "confirm": false,
-          "unitName": ""
+          "confirm": false
         },
         "parameters": {
           "softwarePath": {
@@ -21676,15 +21389,6 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
           }
         },
         "operations": {},
@@ -21728,8 +21432,7 @@
           "groupPath": "",
           "exportPath": "<existing caller-selected batch export directory>",
           "dryRun": true,
-          "confirm": false,
-          "unitName": ""
+          "confirm": false
         },
         "parameters": {
           "softwarePath": {
@@ -21769,15 +21472,6 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
           }
         },
         "operations": {},
@@ -23195,10 +22889,7 @@
           "importPath": "<data.outputFile from completed ExportPlcBlock>",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false,
-          "unitName": "",
-          "swImportOptions": [],
-          "importOptions": []
+          "overwrite": false
         },
         "parameters": {
           "softwarePath": {
@@ -23231,28 +22922,6 @@
             "tools": [
               "ListPortalProcessProjects",
               "GetSessionState"
-            ]
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
-          },
-          "swImportOptions": {
-            "meaning": "Explicit opt-ins, default []: IgnoreStructuralChanges and IgnoreMissingReferencedObjects V15.1–V21; IgnoreUnitAttributes V16–V21. Combine supported names in the array. Only block/type SimaticML compositions have the SWImportOptions overload; tag tables (also inside a program batch) refuse it before any native import. Unknown, duplicate or unavailable names return UNSUPPORTED_CAPABILITY. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "IgnoreMissingReferencedObjects",
-              "IgnoreUnitAttributes"
-            ]
-          },
-          "importOptions": {
-            "meaning": "Explicit culture opt-in V19–V21, default []: choose [\"SkipInactiveCultures\"] OR [\"ActivateInactiveCultures\"]. Both together, unknown names, duplicates and earlier releases return UNSUPPORTED_CAPABILITY. overwrite remains the separate bool. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "SkipInactiveCultures"
             ]
           }
         },
@@ -23327,10 +22996,7 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false,
-          "unitName": "",
-          "swImportOptions": [],
-          "importOptions": []
+          "overwrite": false
         },
         "parameters": {
           "softwarePath": {
@@ -23378,28 +23044,6 @@
             "tools": [
               "ListPortalProcessProjects",
               "GetSessionState"
-            ]
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
-          },
-          "swImportOptions": {
-            "meaning": "Explicit opt-ins, default []: IgnoreStructuralChanges and IgnoreMissingReferencedObjects V15.1–V21; IgnoreUnitAttributes V16–V21. Combine supported names in the array. Only block/type SimaticML compositions have the SWImportOptions overload; tag tables (also inside a program batch) refuse it before any native import. Unknown, duplicate or unavailable names return UNSUPPORTED_CAPABILITY. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "IgnoreMissingReferencedObjects",
-              "IgnoreUnitAttributes"
-            ]
-          },
-          "importOptions": {
-            "meaning": "Explicit culture opt-in V19–V21, default []: choose [\"SkipInactiveCultures\"] OR [\"ActivateInactiveCultures\"]. Both together, unknown names, duplicates and earlier releases return UNSUPPORTED_CAPABILITY. overwrite remains the separate bool. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "SkipInactiveCultures"
             ]
           }
         },
@@ -23520,10 +23164,7 @@
           "regexName": "^Main\\.xml$",
           "overwrite": false,
           "compileAfter": false,
-          "stopOnImportFailure": true,
-          "unitName": "",
-          "swImportOptions": [],
-          "importOptions": []
+          "stopOnImportFailure": true
         },
         "parameters": {
           "softwarePath": {
@@ -23596,28 +23237,6 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
-          },
-          "swImportOptions": {
-            "meaning": "Explicit opt-ins, default []: IgnoreStructuralChanges and IgnoreMissingReferencedObjects V15.1–V21; IgnoreUnitAttributes V16–V21. Combine supported names in the array. Only block/type SimaticML compositions have the SWImportOptions overload; tag tables (also inside a program batch) refuse it before any native import. Unknown, duplicate or unavailable names return UNSUPPORTED_CAPABILITY. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "IgnoreMissingReferencedObjects",
-              "IgnoreUnitAttributes"
-            ]
-          },
-          "importOptions": {
-            "meaning": "Explicit culture opt-in V19–V21, default []: choose [\"SkipInactiveCultures\"] OR [\"ActivateInactiveCultures\"]. Both together, unknown names, duplicates and earlier releases return UNSUPPORTED_CAPABILITY. overwrite remains the separate bool. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "SkipInactiveCultures"
-            ]
           }
         },
         "operations": {},
@@ -23668,10 +23287,7 @@
           "importPath": "<data.outputFile from completed ExportPlcTagTable>",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false,
-          "unitName": "",
-          "swImportOptions": [],
-          "importOptions": []
+          "overwrite": false
         },
         "parameters": {
           "softwarePath": {
@@ -23704,28 +23320,6 @@
             "tools": [
               "ListPortalProcessProjects",
               "GetSessionState"
-            ]
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
-          },
-          "swImportOptions": {
-            "meaning": "Explicit opt-ins, default []: IgnoreStructuralChanges and IgnoreMissingReferencedObjects V15.1–V21; IgnoreUnitAttributes V16–V21. Combine supported names in the array. Only block/type SimaticML compositions have the SWImportOptions overload; tag tables (also inside a program batch) refuse it before any native import. Unknown, duplicate or unavailable names return UNSUPPORTED_CAPABILITY. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "IgnoreMissingReferencedObjects",
-              "IgnoreUnitAttributes"
-            ]
-          },
-          "importOptions": {
-            "meaning": "Explicit culture opt-in V19–V21, default []: choose [\"SkipInactiveCultures\"] OR [\"ActivateInactiveCultures\"]. Both together, unknown names, duplicates and earlier releases return UNSUPPORTED_CAPABILITY. overwrite remains the separate bool. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "SkipInactiveCultures"
             ]
           }
         },
@@ -23774,9 +23368,6 @@
           "softwarePath": "PLC_1",
           "folderPath": "",
           "dir": "C:\\Examples\\exports",
-          "unitName": "",
-          "swImportOptions": [],
-          "importOptions": [],
           "dryRun": true
         },
         "parameters": {
@@ -23786,28 +23377,6 @@
           },
           "overwrite": {
             "exampleValue": false
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
-          },
-          "swImportOptions": {
-            "meaning": "Explicit opt-ins, default []: IgnoreStructuralChanges and IgnoreMissingReferencedObjects V15.1–V21; IgnoreUnitAttributes V16–V21. Combine supported names in the array. Only block/type SimaticML compositions have the SWImportOptions overload; tag tables (also inside a program batch) refuse it before any native import. Unknown, duplicate or unavailable names return UNSUPPORTED_CAPABILITY. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "IgnoreMissingReferencedObjects",
-              "IgnoreUnitAttributes"
-            ]
-          },
-          "importOptions": {
-            "meaning": "Explicit culture opt-in V19–V21, default []: choose [\"SkipInactiveCultures\"] OR [\"ActivateInactiveCultures\"]. Both together, unknown names, duplicates and earlier releases return UNSUPPORTED_CAPABILITY. overwrite remains the separate bool. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "SkipInactiveCultures"
-            ]
           }
         },
         "operations": {},
@@ -23837,10 +23406,7 @@
           "importPath": "C:\\Examples\\exports\\UDT_Status.xml",
           "dryRun": true,
           "confirm": false,
-          "overwrite": false,
-          "unitName": "",
-          "swImportOptions": [],
-          "importOptions": []
+          "overwrite": false
         },
         "parameters": {
           "softwarePath": {
@@ -23869,28 +23435,6 @@
             "tools": [
               "ListPortalProcessProjects",
               "GetSessionState"
-            ]
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
-          },
-          "swImportOptions": {
-            "meaning": "Explicit opt-ins, default []: IgnoreStructuralChanges and IgnoreMissingReferencedObjects V15.1–V21; IgnoreUnitAttributes V16–V21. Combine supported names in the array. Only block/type SimaticML compositions have the SWImportOptions overload; tag tables (also inside a program batch) refuse it before any native import. Unknown, duplicate or unavailable names return UNSUPPORTED_CAPABILITY. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "IgnoreMissingReferencedObjects",
-              "IgnoreUnitAttributes"
-            ]
-          },
-          "importOptions": {
-            "meaning": "Explicit culture opt-in V19–V21, default []: choose [\"SkipInactiveCultures\"] OR [\"ActivateInactiveCultures\"]. Both together, unknown names, duplicates and earlier releases return UNSUPPORTED_CAPABILITY. overwrite remains the separate bool. Preview shows the array and binds it to the plan.",
-            "exampleValue": [
-              "SkipInactiveCultures"
             ]
           }
         },
@@ -35400,9 +34944,7 @@
       "ListPlcSystemConstants": {
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表",
-          "unitName": "",
-          "includeUnits": false
+          "table": "默认变量表"
         },
         "parameters": {
           "plc": {
@@ -35420,19 +34962,6 @@
               "ListPlcTagTables"
             ],
             "exampleValue": "默认变量表"
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
-          },
-          "includeUnits": {
-            "meaning": "V16–V21 false by default. true reads the root and all standard software units; leave unitName empty. table=\"\" reads all tables in this mode, or in one named unit. Root rows use root/tag-tables/<table>/<declaration>. Unit paths use units/<escaped unit>/tag-tables/<table>/<declaration> for unit rows; duplicate names across units retain distinct identities. Safety units are excluded.",
-            "exampleValue": true
           }
         },
         "operations": {},
@@ -35464,9 +34993,7 @@
       "ListPlcTags": {
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表",
-          "unitName": "",
-          "includeUnits": false
+          "table": "默认变量表"
         },
         "parameters": {
           "plc": {
@@ -35484,19 +35011,6 @@
               "ListPlcTagTables"
             ],
             "exampleValue": "默认变量表"
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
-          },
-          "includeUnits": {
-            "meaning": "V16–V21 false by default. true reads the root and all standard software units; leave unitName empty. table=\"\" reads all tables in this mode, or in one named unit. Root rows use root/tag-tables/<table>/<declaration>. Unit paths use units/<escaped unit>/tag-tables/<table>/<declaration> for unit rows; duplicate names across units retain distinct identities. Safety units are excluded.",
-            "exampleValue": true
           }
         },
         "operations": {},
@@ -35528,9 +35042,7 @@
       "ListPlcUserConstants": {
         "arguments": {
           "plc": "PLC_1",
-          "table": "默认变量表",
-          "unitName": "",
-          "includeUnits": false
+          "table": "默认变量表"
         },
         "parameters": {
           "plc": {
@@ -35548,19 +35060,6 @@
               "ListPlcTagTables"
             ],
             "exampleValue": "默认变量表"
-          },
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
-          },
-          "includeUnits": {
-            "meaning": "V16–V21 false by default. true reads the root and all standard software units; leave unitName empty. table=\"\" reads all tables in this mode, or in one named unit. Root rows use root/tag-tables/<table>/<declaration>. Unit paths use units/<escaped unit>/tag-tables/<table>/<declaration> for unit rows; duplicate names across units retain distinct identities. Safety units are excluded.",
-            "exampleValue": true
           }
         },
         "operations": {},
@@ -38157,20 +37656,9 @@
           "softwarePath": "devices/PLC_1/PLC_1",
           "groupPath": "",
           "recursive": true,
-          "maxBlocks": 128,
-          "unitName": ""
+          "maxBlocks": 128
         },
-        "parameters": {
-          "unitName": {
-            "meaning": "V16–V21 exact case-sensitive standard software unit name from GetSoftwareTree or ListPlcSoftwareUnits. Empty retains the PLC root. All group/object paths are relative to that unit root. V14 SP1/V15.1 refuse a nonempty name with UNSUPPORTED_CAPABILITY.",
-            "exampleValue": "Unit_1",
-            "tools": [
-              "GetSoftwareTree",
-              "ListPlcSoftwareUnits"
-            ],
-            "requiresBinding": true
-          }
-        },
+        "parameters": {},
         "operations": {},
         "validation": "Schema and sandbox fixture checked; native export NOT RUN. Available on all eight releases via ordinary XML block export.",
         "inline": true,

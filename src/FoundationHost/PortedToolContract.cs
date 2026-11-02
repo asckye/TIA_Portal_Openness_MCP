@@ -194,7 +194,7 @@ internal sealed partial class FoundationTool
     internal FoundationTool(IFoundationWorker worker, string release, MethodInfo method, string name)
     {
         this.worker = worker; portedMethod = method; portedRelease = release;
-        var declaration = DeclaredToolMetadata.Create(name, method, _ => throw new InvalidOperationException("Metadata only."), out var descriptor);
+        var declaration = DeclaredToolMetadata.Create(name, method, _ => throw new InvalidOperationException("Metadata only."), out var descriptor, release);
         DeclaredToolMetadata.V4(declaration.ProtocolTool, foundation: true);
         portedDescriptor = descriptor; tool = declaration.ProtocolTool;
         definition = new Definition(name, PortedFamilies.ForTool(name).OperationPrefix, descriptor.RawDescription,

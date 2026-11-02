@@ -263,6 +263,10 @@ SU-1 software-unit coverage (native acceptance **NOT RUN**):
 `ImportPlcProgramFromDirectory`, `ExportPlcBlock`, `ExportPlcType`, `ExportPlcTagTable`,
 `ExportPlcBlocks` and `ExportPlcTypes` select the exact standard unit by `unitName`;
 group paths are relative to that unit's root. Empty `unitName` preserves root selection.
+The SU-1 `unitName` / `includeUnits` schema parameters appear only on V16–V21;
+`swImportOptions` appears on supported block/type XML routes from V15.1, and culture
+`importOptions` appears only on V19–V21. Older schemas omit these additions, so callers
+must not send them. Parameters already present before SU-1 retain their existing schemas.
 The unit groups use `PlcUnit.BlockGroup` / `TypeGroup` / `TagTableGroup` / `ExternalSourceGroup`
 on V16/V17 and inherited `PlcUnitBase` properties from V18. `GetSoftwareTree` includes all four groups.
 External-source creation/generation in a unit continues through `ManagePlcExternalSources`;
@@ -271,7 +275,8 @@ program-directory XML import does not imply source generation or a complete prog
 Import flags are opt-in arrays, empty by default and included in preview evidence and plan hashes.
 Unknown/duplicate/unavailable flags and both culture flags together return `UNSUPPORTED_CAPABILITY`.
 `PlcTagTableComposition.Import(FileInfo, ImportOptions)` has no `SWImportOptions` overload;
-SW flags for a tag table, including a mixed program batch, refuse before imports.
+Tag-table tools do not advertise `swImportOptions`. A mixed program batch using SW flags
+for a tag table still refuses before imports.
 The existing V16–V21 WRITE tool `SetPlcUnitObjectAccess` uses the documented `Access` attribute
 with `UnitAccessType.Published` / `Unpublished`, default preview, Workbench approval and readback.
 `ListPlcTags`, `ListPlcUserConstants`, `ListPlcSystemConstants` accept one unit or `includeUnits=true`

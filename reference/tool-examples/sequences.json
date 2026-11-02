@@ -4108,7 +4108,6 @@
             "IgnoreMissingReferencedObjects",
             "IgnoreUnitAttributes"
           ],
-          "importOptions": [],
           "overwrite": false,
           "dryRun": true
         }
@@ -4139,6 +4138,82 @@
           "objectKind": "block",
           "objectPath": "<relative block path>",
           "access": "Published",
+          "dryRun": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "sequence/software-import-options-preview",
+    "topic": "software-import-options-preview",
+    "purpose": "Preview explicit software import options",
+    "profile": "plc-foundation",
+    "releaseKeys": [
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ],
+    "preconditions": "Bind an exact PLC softwarePath and existing root group; use a same-release XML file on the TIA machine. These examples do not select a software unit.",
+    "notes": "Explicit opt-in previews only; native acceptance NOT RUN. Omitted options retain native defaults. Review each preview before a separately confirmed apply; no save/compile/download.",
+    "validation": "Schema and sandbox fixtures; native execution NOT RUN.",
+    "steps": [
+      {
+        "tool": "ImportPlcBlock",
+        "arguments": {
+          "softwarePath": "<exact softwarePath>",
+          "groupPath": "",
+          "importPath": "<same-release block XML on TIA machine>",
+          "swImportOptions": [
+            "IgnoreStructuralChanges",
+            "IgnoreMissingReferencedObjects"
+          ],
+          "overwrite": false,
+          "dryRun": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "sequence/culture-import-options-preview",
+    "topic": "culture-import-options-preview",
+    "purpose": "Preview explicit culture import options",
+    "profile": "plc-foundation",
+    "releaseKeys": [
+      "19",
+      "20",
+      "21"
+    ],
+    "preconditions": "Bind an exact PLC softwarePath and existing root group; use a same-release XML file on the TIA machine. These examples do not select a software unit.",
+    "notes": "Explicit opt-in previews only; native acceptance NOT RUN. Omitted options retain native defaults. Review each preview before a separately confirmed apply; no save/compile/download.",
+    "validation": "Schema and sandbox fixtures; native execution NOT RUN.",
+    "steps": [
+      {
+        "tool": "ImportPlcTagTable",
+        "arguments": {
+          "softwarePath": "<exact softwarePath>",
+          "folderPath": "",
+          "importPath": "<same-release tag-table XML on TIA machine>",
+          "importOptions": [
+            "ActivateInactiveCultures"
+          ],
+          "overwrite": false,
+          "dryRun": true
+        }
+      },
+      {
+        "tool": "ImportPlcBlock",
+        "arguments": {
+          "softwarePath": "<exact softwarePath>",
+          "groupPath": "",
+          "importPath": "<same-release block XML on TIA machine>",
+          "importOptions": [
+            "SkipInactiveCultures"
+          ],
+          "overwrite": false,
           "dryRun": true
         }
       }

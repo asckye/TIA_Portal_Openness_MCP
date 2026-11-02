@@ -3175,11 +3175,6 @@
           "softwarePath": {
             "description": "Exact foundation argument: softwarePath",
             "type": "string"
-          },
-          "unitName": {
-            "default": "",
-            "description": "Exact standard software unit, V16–V21; paths relative to its block root.",
-            "type": "string"
           }
         },
         "required": [
@@ -104768,11 +104763,6 @@
           "softwarePath": {
             "description": "Exact foundation argument: softwarePath",
             "type": "string"
-          },
-          "unitName": {
-            "default": "",
-            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
-            "type": "string"
           }
         },
         "required": [
@@ -106106,11 +106096,6 @@
           "softwarePath": {
             "description": "Exact foundation argument: softwarePath",
             "type": "string"
-          },
-          "unitName": {
-            "default": "",
-            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
-            "type": "string"
           }
         },
         "required": [
@@ -107428,11 +107413,6 @@
           },
           "tagTableName": {
             "description": "Exact foundation argument: tagTableName",
-            "type": "string"
-          },
-          "unitName": {
-            "default": "",
-            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
             "type": "string"
           }
         },
@@ -108756,11 +108736,6 @@
           },
           "typePath": {
             "description": "Exact foundation argument: typePath",
-            "type": "string"
-          },
-          "unitName": {
-            "default": "",
-            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
             "type": "string"
           }
         },
@@ -110094,11 +110069,6 @@
           },
           "softwarePath": {
             "description": "Exact foundation argument: softwarePath",
-            "type": "string"
-          },
-          "unitName": {
-            "default": "",
-            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
             "type": "string"
           }
         },
@@ -220012,14 +219982,6 @@
             "description": "Exact foundation argument: groupPath",
             "type": "string"
           },
-          "importOptions": {
-            "default": [],
-            "description": "Opt-in, default empty: SkipInactiveCultures OR ActivateInactiveCultures V19–V21. overwrite remains separate.",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
           "importPath": {
             "description": "Exact foundation argument: importPath",
             "type": "string"
@@ -220040,11 +220002,6 @@
               "type": "string"
             },
             "type": "array"
-          },
-          "unitName": {
-            "default": "",
-            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
-            "type": "string"
           }
         },
         "required": [
@@ -222706,14 +222663,6 @@
             "description": "Exact foundation argument: groupPath",
             "type": "string"
           },
-          "importOptions": {
-            "default": [],
-            "description": "Opt-in, default empty: SkipInactiveCultures OR ActivateInactiveCultures V19–V21. overwrite remains separate.",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
           "importOrder": {
             "default": [],
             "description": "Exact foundation argument: importOrder",
@@ -222748,11 +222697,6 @@
               "type": "string"
             },
             "type": "array"
-          },
-          "unitName": {
-            "default": "",
-            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
-            "type": "string"
           }
         },
         "required": [
@@ -225398,14 +225342,6 @@
             "description": "Exact foundation argument: expectedProjectFile",
             "type": "string"
           },
-          "importOptions": {
-            "default": [],
-            "description": "Opt-in, default empty: SkipInactiveCultures OR ActivateInactiveCultures V19–V21. overwrite remains separate.",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
           "importOrder": {
             "default": [],
             "description": "Exact foundation argument: importOrder",
@@ -225463,11 +225399,6 @@
           "typeGroupPath": {
             "default": "",
             "description": "Exact foundation argument: typeGroupPath",
-            "type": "string"
-          },
-          "unitName": {
-            "default": "",
-            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
             "type": "string"
           }
         },
@@ -226779,14 +226710,6 @@
             "description": "Exact foundation argument: folderPath",
             "type": "string"
           },
-          "importOptions": {
-            "default": [],
-            "description": "Opt-in, default empty: SkipInactiveCultures OR ActivateInactiveCultures V19–V21. overwrite remains separate.",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
           "importPath": {
             "description": "Exact foundation argument: importPath",
             "type": "string"
@@ -226798,19 +226721,6 @@
           },
           "softwarePath": {
             "description": "Exact foundation argument: softwarePath",
-            "type": "string"
-          },
-          "swImportOptions": {
-            "default": [],
-            "description": "Opt-ins, default empty: IgnoreStructuralChanges / IgnoreMissingReferencedObjects V15.1–V21, IgnoreUnitAttributes V16–V21. Blocks/types only; unsupported releases/combinations refuse.",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "unitName": {
-            "default": "",
-            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
             "type": "string"
           }
         },
@@ -228117,13 +228027,6 @@
             "description": "folderPath: optional tag table group path (use empty for root)",
             "type": "string"
           },
-          "importOptions": {
-            "description": "importOptions: optional SkipInactiveCultures OR ActivateInactiveCultures on V19–V21; empty by default. Override remains controlled by overwrite.",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
           "overwrite": {
             "default": false,
             "description": "overwrite: false (default) refuses an existing tag table of the same name before its import; true replaces it (Siemens.Engineering.ImportOptions.Override).",
@@ -228136,18 +228039,6 @@
           },
           "softwarePath": {
             "description": "softwarePath: path in the project structure to the PLC software",
-            "type": "string"
-          },
-          "swImportOptions": {
-            "description": "swImportOptions: empty by default; all SWImportOptions are refused for tag tables because their import API has no such overload.",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "unitName": {
-            "default": "",
-            "description": "unitName: exact standard software unit, V16–V21; empty selects the PLC root. Paths are relative to the selected root.",
             "type": "string"
           }
         },
@@ -229460,14 +229351,6 @@
             "description": "Exact foundation argument: groupPath",
             "type": "string"
           },
-          "importOptions": {
-            "default": [],
-            "description": "Opt-in, default empty: SkipInactiveCultures OR ActivateInactiveCultures V19–V21. overwrite remains separate.",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
           "importPath": {
             "description": "Exact foundation argument: importPath",
             "type": "string"
@@ -229488,11 +229371,6 @@
               "type": "string"
             },
             "type": "array"
-          },
-          "unitName": {
-            "default": "",
-            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
-            "type": "string"
           }
         },
         "required": [
@@ -264042,22 +263920,12 @@
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
-          "includeUnits": {
-            "default": false,
-            "description": "V16–V21: include the root and every standard software unit; unitName must be empty. Empty table selects all tables in this mode or with unitName.",
-            "type": "boolean"
-          },
           "plc": {
             "description": "Exact foundation argument: plc",
             "type": "string"
           },
           "table": {
             "description": "Exact foundation argument: table",
-            "type": "string"
-          },
-          "unitName": {
-            "default": "",
-            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
             "type": "string"
           }
         },
@@ -267960,22 +267828,12 @@
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
-          "includeUnits": {
-            "default": false,
-            "description": "V16–V21: include the root and every standard software unit; unitName must be empty. Empty table selects all tables in this mode or with unitName.",
-            "type": "boolean"
-          },
           "plc": {
             "description": "Exact foundation argument: plc",
             "type": "string"
           },
           "table": {
             "description": "Exact foundation argument: table",
-            "type": "string"
-          },
-          "unitName": {
-            "default": "",
-            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
             "type": "string"
           }
         },
@@ -270566,22 +270424,12 @@
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
-          "includeUnits": {
-            "default": false,
-            "description": "V16–V21: include the root and every standard software unit; unitName must be empty. Empty table selects all tables in this mode or with unitName.",
-            "type": "boolean"
-          },
           "plc": {
             "description": "Exact foundation argument: plc",
             "type": "string"
           },
           "table": {
             "description": "Exact foundation argument: table",
-            "type": "string"
-          },
-          "unitName": {
-            "default": "",
-            "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
             "type": "string"
           }
         },

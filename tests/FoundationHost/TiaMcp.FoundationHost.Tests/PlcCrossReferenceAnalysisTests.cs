@@ -355,10 +355,12 @@ public sealed class PlcCrossReferenceAnalysisTests
             registered.ProtocolTool.InputSchema.GetProperty("properties").EnumerateObject(),
             property => property.Name is "allowNativeCrossReferences" or "nativeCrossReferencesEnabled" or "nativeCrossReferencesAllowed"
                 or "nativeCrossReferenceSessionFile" or "nativeCrossReferenceSessionSecret"));
-        var tool = PlcCrossReferenceAnalysis.Create(worker);
+        var tool = PlcCrossReferenceAnalysis.Create(worker, release);
         Assert.Equal("READ", ToolTaxonomy.OperationOf(tool.ProtocolTool.Name, tool.ProtocolTool.Description).Operation);
         Assert.False(((FoundationTool)tool).IsWrite);
-        Assert.Equal(new[] { "softwarePath", "groupPath", "recursive", "maxBlocks" }, tool.ProtocolTool.InputSchema.GetProperty("properties").EnumerateObject().Select(p => p.Name));
+        Assert.Equal(release is "14sp1" or "15.1"
+            ? new[] { "softwarePath", "groupPath", "recursive", "maxBlocks" }
+            : new[] { "softwarePath", "groupPath", "recursive", "maxBlocks", "unitName" }, tool.ProtocolTool.InputSchema.GetProperty("properties").EnumerateObject().Select(p => p.Name));
         Assert.False(tool.ProtocolTool.InputSchema.GetProperty("additionalProperties").GetBoolean());
     }
 

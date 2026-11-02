@@ -95,6 +95,8 @@ internal static class FoundationTools
         .Where(a => a.Name.StartsWith("umac", StringComparison.Ordinal)).ToArray();
     internal static Definition ForRelease(Definition definition, string releaseKey)
     {
+        var arguments = definition.Arguments.Where(a => TiaMcp.Logic.V4.PlcSoftwareUnitSchema.Available(releaseKey, FoundationV4Tool.Name(definition.Name), a.Name)).ToArray();
+        if (arguments.Length != definition.Arguments.Length) definition = definition with { Arguments = arguments };
         if (definition.Name != "OpenProject") return definition;
         return TiaMcp.Versioning.TiaVersionCatalog.Get(releaseKey).MajorVersion >= 15
             ? definition with { Description = definition.Description + " Protected (UMAC) projects: pass umacUserName and umacPassword (umacUserType Project or Global); without them a protected project is refused as PRECONDITION_FAILED naming the missing credentials." }

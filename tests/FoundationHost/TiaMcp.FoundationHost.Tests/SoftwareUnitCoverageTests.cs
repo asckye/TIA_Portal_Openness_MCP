@@ -9,6 +9,66 @@ using Xunit;
 
 public sealed class SoftwareUnitCoverageTests
 {
+    [Theory]
+    [InlineData("14sp1", false, false, false)]
+    [InlineData("15.1", false, true, false)]
+    [InlineData("16", true, true, false)]
+    [InlineData("17", true, true, false)]
+    [InlineData("18", true, true, false)]
+    [InlineData("19", true, true, true)]
+    [InlineData("20", true, true, true)]
+    [InlineData("21", true, true, true)]
+    public void RegisteredSchemasExposeOnlySupportedAdditionsAndKeepExistingUnitParameters(string release, bool units, bool software, bool cultures)
+    {
+        using var worker = new SchemaWorker();
+        var tools = LegacyHostToolRegistry.Create(worker, release, false).ToDictionary(t => t.ProtocolTool.Name, t => t.ProtocolTool);
+        foreach (var name in new[] { "AnalyzePlcCrossReferences", "ExportPlcBlock", "ExportPlcType", "ExportPlcTagTable", "ExportPlcBlocks", "ExportPlcTypes",
+            "ImportPlcBlock", "ImportPlcType", "ImportPlcTagTable", "ImportPlcBlocksFromDirectory", "ImportPlcTagTablesFromDirectory", "ImportPlcProgramFromDirectory",
+            "ListPlcTags", "ListPlcUserConstants", "ListPlcSystemConstants" })
+        {
+            var properties = tools[name].InputSchema.GetProperty("properties");
+            Assert.Equal(units, properties.TryGetProperty("unitName", out _));
+            if (name.StartsWith("List", StringComparison.Ordinal)) Assert.Equal(units, properties.TryGetProperty("includeUnits", out _));
+            if (name.StartsWith("Import", StringComparison.Ordinal))
+            {
+                Assert.Equal(software && !name.Contains("Tag", StringComparison.Ordinal), properties.TryGetProperty("swImportOptions", out _));
+                Assert.Equal(cultures, properties.TryGetProperty("importOptions", out _));
+                var candidate = PlcImportContract.Schema(name, release).GetProperty("properties");
+                Assert.Equal(units, candidate.TryGetProperty("unitName", out _));
+                Assert.Equal(software && !name.Contains("Tag", StringComparison.Ordinal), candidate.TryGetProperty("swImportOptions", out _));
+                Assert.Equal(cultures, candidate.TryGetProperty("importOptions", out _));
+            }
+        }
+        Assert.True(tools["ManagePlcExternalSources"].InputSchema.GetProperty("properties").TryGetProperty("unitName", out _));
+        Assert.True(tools["ImportPlcTagTablesFromDirectory"].InputSchema.GetProperty("properties").TryGetProperty("dryRun", out _));
+    }
+
+    [Theory]
+    [InlineData("14sp1", "ListPlcTags", "unitName")]
+    [InlineData("15.1", "ListPlcTags", "includeUnits")]
+    [InlineData("18", "ImportPlcBlock", "importOptions")]
+    [InlineData("21", "ImportPlcTagTable", "swImportOptions")]
+    public void UnavailableAdditionsAreUnknownArguments(string release, string name, string parameter)
+    {
+        using var worker = new SchemaWorker();
+        var tool = LegacyHostToolRegistry.Create(worker, release, false).Single(t => t.ProtocolTool.Name == name).ProtocolTool;
+        var arguments = name == "ListPlcTags"
+            ? new JsonObject { ["plc"]="PLC_1", ["table"]="Tags" }
+            : new JsonObject { ["softwarePath"]="PLC_1", [name == "ImportPlcTagTable" ? "folderPath" : "groupPath"]="", ["importPath"]="C:/Fixture.xml" };
+        arguments[parameter] = parameter.EndsWith("Options", StringComparison.Ordinal) ? new JsonArray("Imaginary")
+            : parameter == "includeUnits" ? JsonValue.Create(true) : JsonValue.Create("Unit_1");
+        var error = new TiaMcp.Logic.V4.Inputs.InputSchema(tool.InputSchema).Validate(JsonSerializer.SerializeToElement(arguments), "arguments");
+        Assert.NotNull(error);
+        Assert.Equal(ErrorCode.InvalidArgument, error.Code);
+    }
+
+    private sealed class SchemaWorker : IFoundationWorker
+    {
+        public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
+            => throw new InvalidOperationException("Schema inspection must not dispatch a worker operation.");
+        public void Dispose() { }
+    }
+
     [Flags]
     private enum SoftwareFlags { None = 0, IgnoreStructuralChanges = 2, IgnoreMissingReferencedObjects = 8, IgnoreUnitAttributes = 32 }
     [Flags]

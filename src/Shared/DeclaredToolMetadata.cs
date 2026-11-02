@@ -161,10 +161,10 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (node is JsonArray array)
                 foreach (var child in array) if (child != null) RebaseReferences(child, root);
         }
-        private static string RenderSignature(string name, MethodInfo m)
+        private static string RenderSignature(string name, MethodInfo m, string release)
         {
             var parts = new List<string>();
-            foreach (var p in m.GetParameters())
+            foreach (var p in m.GetParameters().Where(p => PlcSoftwareUnitSchema.Available(release, name, p.Name!)))
             {
                 string t = FriendlyTypeName(p.ParameterType);
                 // Optional params are what a model most often gets wrong, so show the actual
@@ -224,8 +224,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     schema["properties"]![parameter.Name!] = JsonNode.Parse(original.GetProperty("properties").GetProperty(parameter.Name!).GetRawText());
         }
 
-        internal static McpServerTool Create(string name, MethodInfo method, Func<RequestContext<CallToolRequestParams>, object> target, out ToolDescriptor descriptor)
+        internal static McpServerTool Create(string name, MethodInfo method, Func<RequestContext<CallToolRequestParams>, object> target, out ToolDescriptor descriptor, string? release = null)
         {
+            release ??= HardwareContract.ReleaseKey;
             var attribute = method.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
             var description = attribute?.Description ?? "";
             var decorated = method.GetCustomAttribute<TiaMcp.Logic.V4.BehaviorCandidateAttribute>() != null
@@ -236,15 +237,19 @@ namespace TiaMcpServer.ModelContextProtocol
                 : CreateToolCore(method, new McpServerToolCreateOptions { Name = name, Description = decorated }, target);
             // Enum / default / examples hints in the input schema (McpServer.CallDiscipline.cs).
             var hinted = McpServer.WithSchemaHints(tool, name, SpecsOf(method), (schema, original) => PreserveTypedSchemas(schema, original, method));
+            var schema = JsonNode.Parse(hinted.ProtocolTool.InputSchema.GetRawText())!.AsObject();
+            PlcSoftwareUnitSchema.Apply(schema, name, release);
+            hinted.ProtocolTool.InputSchema = JsonSerializer.SerializeToElement(schema);
             var specs = SpecsOf(method);
             var parameters = method.GetParameters().Where(p => !McpServer.IsInfrastructureParameter(p.ParameterType)).Select((p, i) =>
                 new ToolParameterDescriptor(p.Name!, specs[i].Kind, p.ParameterType.FullName!, specs[i].Required, specs[i].DefaultText,
-                    p.DefaultValue?.ToString(), specs[i].Description, specs[i].Synthesized, specs[i].AllowedValues)).ToArray();
+                    p.DefaultValue?.ToString(), specs[i].Description, specs[i].Synthesized, specs[i].AllowedValues))
+                .Where(p => PlcSoftwareUnitSchema.Available(release, name, p.Name)).ToArray();
             var classification = ClassificationOf(method);
             var dryRun = method.GetParameters().FirstOrDefault(p => p.Name == "dryRun" && p.ParameterType == typeof(bool));
             descriptor = new ToolDescriptor(name, description, hinted.ProtocolTool, classification == null ? null :
                 new ToolDescriptorClassification(classification.Layer, classification.Domain, classification.Operation, classification.BatchRead, classification.BatchWrite),
-                RenderSignature(name, method), parameters, new ToolDryRunDescriptor(dryRun != null,
+                RenderSignature(name, method, release), parameters, new ToolDryRunDescriptor(dryRun != null,
                     dryRun?.DefaultValue is not bool value || value), method.GetCustomAttribute<BehaviorCandidateAttribute>()?.Family,
                 ToolExecution.Table.TryGetValue(name, out var execution) ? execution : "worker");
             return hinted;

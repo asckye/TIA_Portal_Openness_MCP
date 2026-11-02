@@ -70,7 +70,7 @@ public sealed class ApprovalPrecheckTests
     [MemberData(nameof(PreviewWriteTools))]
     public async Task Every_current_preview_write_refuses_missing_confirmation_with_approval_disabled(string source)
     {
-        var definition=FoundationTools.Definitions.Single(d=>d.Name==source);var worker=new Worker();
+        var definition=FoundationTools.ForRelease(FoundationTools.Definitions.Single(d=>d.Name==source),"18");var worker=new Worker();
         var tool=new FoundationV4Tool(new FoundationTool(definition,worker),"18",_=>TiaMcp.Logic.V4.BehaviorPolicy.Current,
             ()=>new(false,1),(pending,current,_)=> { Assert.False(current.Enabled);return Task.FromResult(new ApprovalOutcome(pending,true,null)); });
         var args=new JsonObject();

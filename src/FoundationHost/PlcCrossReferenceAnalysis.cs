@@ -9,7 +9,7 @@ namespace TiaMcp.FoundationHost;
 internal static class PlcCrossReferenceAnalysis
 {
     internal static readonly Definition Definition = new("AnalyzePlcCrossReferences", "AnalyzePlcCrossReferences", "[L2][PLC-Software][READ] Export and analyse an ordinary PLC software or exact block group in one call, bounded by maxBlocks (1..256). Uses the existing XML export path and offline AnalyzePlcReferences engine, never native CrossReferenceService. Exports retained under the session output root. Returns callers, callees and global reference sites per indexed block, export failures and unindexed files. Scope states exported block count and omitted blocks; SCL bodies, unselected units, system blocks, indirect calls, HMI and external clients are not covered. Partial/empty is never proof of no references or safe deletion. Optional unitName selects a standard software unit V16–V21; scope lists the selected units. No compile, save or project change.", new[]{new Argument("softwarePath"),new Argument("groupPath","string",false,""),new Argument("recursive","boolean",false,true),new Argument("maxBlocks","integer",false,128),new Argument("unitName","string",false,"","Exact standard software unit, V16–V21; paths relative to its block root.")}, "CrossReferenceAnalysis");
-    internal static FoundationTool Create(IFoundationWorker worker) => new(Definition, worker);
+    internal static FoundationTool Create(IFoundationWorker worker, string release = "21") => new(FoundationTools.ForRelease(Definition, release), worker);
 
     private sealed class OutputRoot
     {
