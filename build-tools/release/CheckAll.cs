@@ -288,8 +288,8 @@ internal static partial class ReleaseCommands
         BindEngineHostResult(jobs, Root, output, runtimeManifest);
         CheckAllProfiles.AddStudio(jobs, Root, catalog, Path.Combine(output, "suites"), dotnet, checkProfile, runtimeManifest,
             history: costs, processFor: SuiteProcessFor, api: api);
-        if (checkProfile == "merge") CheckAllProfiles.AddDerived(jobs, catalog, Path.Combine(output, "suites"), derivations);
-        else CheckAllProfiles.AddNightlyProofs(jobs, catalog, Path.Combine(output, "suites"));
+        CheckAllProfiles.AddDerived(jobs, catalog, Path.Combine(output, "suites"), derivations, checkProfile);
+        if (checkProfile == "nightly") CheckAllProfiles.AddNightlyProofs(jobs, catalog, Path.Combine(output, "suites"));
         jobs.AddRange(staticJobs.Where(job => !Early(job.Name)));
         // Preflight also depends on the source-only checks completed in the build
         // wave. Retain their results in its aggregate instead of executing twice.

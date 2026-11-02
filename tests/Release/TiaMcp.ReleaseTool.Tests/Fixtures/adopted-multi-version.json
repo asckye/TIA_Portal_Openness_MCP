@@ -543,14 +543,6 @@
           "minimumPassed": 57,
           "maximumSkipped": 0
         },
-        "kept-code-v20": {
-          "passed": 4976,
-          "failed": 0,
-          "skipped": 0,
-          "total": 4976,
-          "minimumPassed": 4854,
-          "maximumSkipped": 0
-        },
         "kept-code": {
           "passed": 4976,
           "failed": 0,
@@ -565,14 +557,6 @@
           "skipped": 0,
           "total": 50,
           "minimumPassed": 48,
-          "maximumSkipped": 0
-        },
-        "offline-v20": {
-          "passed": 4127,
-          "failed": 0,
-          "skipped": 0,
-          "total": 4127,
-          "minimumPassed": 303,
           "maximumSkipped": 0
         },
         "offline": {

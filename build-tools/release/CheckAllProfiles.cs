@@ -165,9 +165,11 @@ internal static class CheckAllProfiles
     }
 
     internal static bool RunsSeparately(string name, string profile, DerivationPlan plan) => !StudioSuites.Contains(name) &&
-        (profile == "nightly" || !plan.Mappings.ContainsKey(name));
+        (profile == "nightly" && name != "foundation" || !plan.Mappings.ContainsKey(name));
 
-    internal static string[] Profiles(string job, DerivationPlan plan) => CheckAllJobInputs.NightlyOnly(job) || job.EndsWith("-coverage-proof", StringComparison.Ordinal) ? ["nightly"] : plan.Mappings.Keys.Any(name => job.StartsWith(name + "-shard-", StringComparison.Ordinal)
+    internal static string[] Profiles(string job, DerivationPlan plan) => plan.Mappings.ContainsKey("foundation") &&
+        (job.StartsWith("foundation-shard-", StringComparison.Ordinal) || job is "foundation-sequential" or "foundation-coverage-proof") ? [] :
+        CheckAllJobInputs.NightlyOnly(job) || job.EndsWith("-coverage-proof", StringComparison.Ordinal) ? ["nightly"] : plan.Mappings.Keys.Any(name => job.StartsWith(name + "-shard-", StringComparison.Ordinal)
         || job == name + "-sequential") ? ["nightly"] : ["merge", "nightly"];
 
     internal static void WriteInventory(JsonObject catalog, string output, string profile, DerivationPlan plan)
@@ -175,8 +177,8 @@ internal static class CheckAllProfiles
         var rows = catalog.Select(pair => new
         {
             name = pair.Key, buildProfiles = new[] { "merge", "nightly" },
-            processProfiles = plan.Mappings.ContainsKey(pair.Key) ? new[] { "nightly" } : new[] { "merge", "nightly" },
-            fullProfiles = plan.Mappings.ContainsKey(pair.Key) ? new[] { "nightly" } : new[] { "merge", "nightly" },
+            processProfiles = plan.Mappings.ContainsKey(pair.Key) ? pair.Key == "foundation" ? [] : new[] { "nightly" } : new[] { "merge", "nightly" },
+            fullProfiles = plan.Mappings.ContainsKey(pair.Key) && pair.Key != "foundation" ? new[] { "nightly" } : new[] { "merge", "nightly" },
             mergeDerivedFrom = plan.Mappings.GetValueOrDefault(pair.Key),
             fallbackReason = plan.Fallbacks.GetValueOrDefault(pair.Key),
             guiShards = pair.Key == "studio-gui" ? 3 : (int?)null,
@@ -186,9 +188,9 @@ internal static class CheckAllProfiles
             new JsonSerializerOptions { WriteIndented = true }) + "\n");
     }
 
-    internal static void AddDerived(List<CheckJob> jobs, JsonObject catalog, string output, DerivationPlan plan)
+    internal static void AddDerived(List<CheckJob> jobs, JsonObject catalog, string output, DerivationPlan plan, string profile = "merge")
     {
-        foreach (var (name, source) in plan.Mappings)
+        foreach (var (name, source) in plan.Mappings.Where(pair => profile == "merge" || pair.Key == "foundation"))
         {
             var suite = catalog[name]!.AsObject();
             jobs.Add(new(name + "-gate", () => DerivedSuiteGates.Evaluate(name, suite, Path.Combine(output, source + ".trx"),
@@ -198,7 +200,7 @@ internal static class CheckAllProfiles
 
     internal static void AddNightlyProofs(List<CheckJob> jobs, JsonObject catalog, string output)
     {
-        foreach (var (name, source) in Derived)
+        foreach (var (name, source) in Derived.Where(pair => pair.Key != "foundation"))
         {
             var suite = catalog[name]!.AsObject();
             jobs.Add(new(name + "-coverage-proof", () => DerivedSuiteGates.CompareSameRun(name, suite,

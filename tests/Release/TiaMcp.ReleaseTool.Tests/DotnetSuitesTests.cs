@@ -17,12 +17,13 @@ public class DotnetSuitesTests
     }
 
     [Fact]
-    public void KeptSuiteVariantsKeepTheirDefineAndPlatformGates()
+    public void KeptSuiteKeepsItsDefineAndPlatformGates()
     {
         var root = Repository.FindRoot();
         var windows = DotnetSuites.LoadCatalog(Path.Combine(root, "tests/test-suites.json"), root, "windows");
         var linux = DotnetSuites.LoadCatalog(Path.Combine(root, "tests/test-suites.json"), root, "linux");
         var features = TiaFeatures.ProjectCases(root);
+        Assert.Equal(new[] { "kept-code" }, ReleaseCommandTable.OfflineSuites);
         foreach (var name in ReleaseCommandTable.OfflineSuites)
         {
             int Minimum(JsonObject catalog, string name) => catalog[name]!["minimumPassed"]!.GetValue<int>();
@@ -32,7 +33,7 @@ public class DotnetSuitesTests
             Assert.Equal(0, windows[name]!["maximumSkipped"]!.GetValue<int>());
             Assert.Equal(0, linux[name]!["maximumSkipped"]!.GetValue<int>());
             Assert.Contains(features, row => row.Project == (string?)windows[name]!["project"] &&
-                row.Properties.GetValueOrDefault("DefineConstants") == (name.EndsWith("-v20", StringComparison.Ordinal) ? "TIA_V20" : null));
+                row.Properties.GetValueOrDefault("DefineConstants") == null);
         }
         Assert.True(TimeSensitiveTests.ReserveShard((string)windows["kept-code"]!["project"]!));
     }

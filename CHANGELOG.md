@@ -12,6 +12,8 @@
 
 - 发布诊断新增 `release -TestStageOnly [-Only <作业名,...>]`，复用已暂存产物执行测试，不绑定发布记录或生成发布包。
 
+- Deduplicate host foundation checks through foundation-api in both profiles and retire the kept-code-v20 suite and release count.
+
 - Remove unshipped residual engine sources and engine-only tests, fixtures and scripts; retain kept-code coverage and published contract bytes.
 
 - Freeze engine source catalog inputs and declare final V4 tool names without runtime rewriting; remove the stale documentation coverage copy.

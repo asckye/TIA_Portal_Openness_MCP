@@ -436,8 +436,7 @@ def main():
             data = files[row['path']].decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
             require(sha(data) == row['sha256'], f"Multi-version source changed after validation: {row['path']}")
     if 'offline-suites' in selected:
-        for suite, key in (('kept-code', 'keptCodePassed'),):
-            require(metadata['validation'].get(key, 0) > 0, f'No {suite} suite result')
+        require(metadata['validation'].get('keptCodePassed', 0) > 0, 'No kept-code suite result')
     if not candidate.get('productionRelease'):
         check_stability(files, multi, selected, release)
     check_script_parsers(files)

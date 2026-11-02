@@ -66,7 +66,8 @@ dotnet run --project build-tools/release -- check-all -PublicApiRoot <SDK-root> 
 当前 foundation、worker-robustness、workbench-control-host、shared-pipeline、shared-lifecycle-plc 从 foundation-api 派生；
 四个 GUI 子集从 studio-gui、vci-read-only-binding 从 studio-core、shared-lifecycle 从 shared-session 派生。
 全部使用交付默认配置 `TiaSharedAdapterPaths=false`；offline-v20、kept-code-v20 的重复编译配置已移除；compile-candidate-no-safety 保留，以覆盖 V14 SP1/V15.1/V16 的非 PLC_SAFETY 分支。
-FoundationChecks 仅归一化 producer 行号；额外的 16 条 API XSD 行有精确识别规则。
+主机的 merge 和 nightly 均只执行 foundation-api，foundation 保留同轮派生门禁；kept-code 只执行一次。
+FoundationChecks 仅归一化 producer 行号；额外的 16 条 API XSD 行有精确识别规则。无 SDK 的 foundation 配置继续在 CI 运行，Linux/macOS 门槛保留。
 
 **maintainer decision 2026-11-03（整套精简，SLIM-1）**：删除延迟门禁、八版延迟基准、HTTP stability/full/lite 作业、独占安静阶段和 suite-output-parity 及其恢复流程；
 `call_latency.py` 只保存调用中位数证据，数值不影响退出状态。WorkbenchControlLoadTests 保留请求完成、读取可用和调用次数断言，
@@ -79,7 +80,7 @@ Studio 名称去掉 false 后缀时沿用旧命名的计时最大值、资源记
 GUI 使用实测类耗时做 LPT 三分片，缺失计时时使用估值和确定性类分配。计时条目过期、增加或重命名不导致门禁失败。
 测试显示窗口并检查键盘焦点，因此三片保持同一独占通道并顺序执行；累计时间仍按原未分片作业的预算判定。
 
-`-Profile nightly` 完整执行单一交付配置的每个注册套件及完整 GUI，还执行全部 11 项 `*-coverage-proof`：
+`-Profile nightly` 完整执行单一交付配置的其余注册套件及完整 GUI，foundation 仍从 foundation-api 派生，不再独立执行或生成 foundation-coverage-proof；其余 10 项 `*-coverage-proof` 保留：
 将该轮独立子集的身份多重集与同轮超集派生结果比较，保留类名、方法、规范化显示名和重数。缺失、重复、替换会失败并列出差异类。
 新增或重命名测试在两边同步出现即可通过，无需提交用例基线或先运行另一轮 nightly。注册数量、跳过和失败门禁仍独立判定，nightly 证明失败会阻止发布采纳。
 nightly 禁用结果缓存，确实启动本轮测试进程；它需要本机同轮 TRX，因此拒绝只有聚合收据的 `-CiCovered` 分工。merge 仍可使用 CI 分工。
@@ -420,7 +421,7 @@ B8 识别没有 Meta 且字面消息含失败/拒绝提示的 `ResponseMessage`�
 中央 `TiaMcpServer.ModelContextProtocol.ResponseMeta` 类型自身仍出现在清点中，但不计作手写调用点；此识别与路径无关。
 任一总数增长即失败，减少允许且报告；`-UpdateBaseline` 仅收缩上限，首次经审查建立基线才使用 `-AllowGrowth`。
 
-`ResponseMetaTests` 已迁至 kept-code，每版保留 421 项 E1/E2 检查。每种构造器与注明文件/行号的原初始化器
+`ResponseMetaTests` 已迁至 kept-code，保留 421 项 E1/E2 检查。每种构造器与注明文件/行号的原初始化器
 在同一固定时钟下比较四条序列化路径的 UTF-8 字节；测试的选项与 POCO 替身另对照 TiaMcp.Engine.Harness/Golden 中
 V20/V21 的全部 36 项 E1 序列化记录。覆盖键追加、success 原位覆盖、null Meta、Local/UTC、数值 CLR 类型及异步时钟隔离。
 `ResponseClock.Pin` 仅在当前执行上下文生效，可嵌套并在释放时恢复；测试进程临时固定 +08:00 时区并恢复 BCL 缓存。
@@ -437,7 +438,7 @@ kept-code 的数据行数量没有平台差异；平台专用实现的测试保�
 `splitFrom` 注册字段记录拆分来源；CI 的 TRX 门禁自检拒绝 CI 工作流或 release 执行清单遗漏任何拆分子套件。
 ImportSelection 的 10 项已并入 offline；BindingSnapshot、ExternalSourcePlan、ExternalSourceDelete 的 199 项已并入 foundation。
 foundation 至少 29000 项通过、最多 1 项跳过；foundation-api 至少 30000 项通过、最多 1 项跳过。PromptRegistration、SoftwareRead、SpecialExportShape、DeviceAdd、HardwareCatalog、DiagnosticMembership 分别要求 195、258、12、175、57、4 项通过，均不允许跳过。
-门禁按请求顺序执行（两种编译符号共享输出目录），拒绝失败、数量不足、超限跳过、零执行及缺失或不一致的 trx；
+门禁按请求顺序执行，拒绝失败、数量不足、超限跳过、零执行及缺失或不一致的 trx；
 每次清除同名旧结果，在 `bin-build/test-results/` 写入 `<suite>.trx` 和按测试类/方法统计的 `<suite>.json`，失败时也保存诊断。
 可用 `--results-directory <dir>`、`--dotnet <path>`、`--no-restore` 或重复的 `--dotnet-arg=<arg>` 定制执行。
 开发时可直接运行 `dotnet test <csproj> -c Release`（使用交付默认配置），正式门禁仍用脚本核对数量。

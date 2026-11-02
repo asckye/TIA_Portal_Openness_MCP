@@ -291,7 +291,7 @@ internal static class ReleaseEvidence
     {
         var registry = SuiteRegistry(root);
         var jobs = registry.Keys.Select(suite => (suite + "-gate", true)).ToList();
-        jobs.AddRange(CheckAllProfiles.Derived.Where(pair => registry.ContainsKey(pair.Key) && registry.ContainsKey(pair.Value))
+        jobs.AddRange(CheckAllProfiles.Derived.Where(pair => pair.Key != "foundation" && registry.ContainsKey(pair.Key) && registry.ContainsKey(pair.Value))
             .Select(pair => (pair.Key + "-coverage-proof", true)));
         jobs.AddRange(StudioJobs.Select(name => (name, true)));
         foreach (var key in CatalogJson.Keys)

@@ -532,10 +532,10 @@ public sealed class ReleaseEvidenceTests
     [Trait("Category", "ReleaseParity")]
     public void AdoptedSuiteCountsKeepTheReleaseSuiteGate()
     {
-        var adoption = Adoption(("kept-code", 5155, 0, 0), ("kept-code-v20", 10, 0, 1), ("updater", 0, 0, 0));
+        var adoption = Adoption(("kept-code", 5155, 0, 0), ("version-policy", 10, 0, 1), ("updater", 0, 0, 0));
 
         Assert.Equal(5155, ReleaseEvidence.SuitePassed(adoption, "kept-code"));
-        Assert.Contains("did not meet", Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "kept-code-v20")).Message);
+        Assert.Contains("did not meet", Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "version-policy")).Message);
         Assert.Contains("did not meet", Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "updater")).Message);
         Assert.Contains("no result", Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "write-guard")).Message);
     }
