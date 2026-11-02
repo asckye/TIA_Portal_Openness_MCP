@@ -133,11 +133,10 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
     public void Approval_choices_have_equal_secondary_cells_and_wrap_plain_labels(int width)
     {
         foreach (var language in new[] { AppLanguage.Chinese, AppLanguage.English })
-        foreach (var theme in new[] { AppTheme.Light, AppTheme.Dark })
             wpf.RunWithLanguage(language, () =>
             {
                 var previous = ThemeManager.Current.Theme;
-                ThemeManager.Current.Theme = theme;
+                ThemeManager.Current.Theme = AppTheme.Light;
                 using var model = new FeaturePagesViewModel(FeaturePageFixtures.Approvals(), new FeaturePageFixtures.Journal(),
                     new FeaturePageFixtures.Audit(), new FeaturePageFixtures.Environment(), new FeaturePageFixtures.Diagnostics(), () => FeaturePageFixtures.Now);
                 var view = new ApprovalsDrawer { DataContext = model };
@@ -153,30 +152,38 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                         host.Measure(new Size(host.Width, 780)); host.Arrange(new Rect(0, 0, host.Width, 780)); host.UpdateLayout();
                         WpfContext.Drain(); host.UpdateLayout();
                     }
-                    Layout();
-                    var approve = Descendants<Button>(host).Single(button => button.Name == "ApproveRequest" && ((ApprovalRow)button.DataContext).Pending);
-                    var deny = Descendants<Button>(host).Single(button => button.Name == "DenyRequest" && ((ApprovalRow)button.DataContext).Pending);
-                    Assert.Same(approve.Style, deny.Style);
-                    Assert.Same(Application.Current.FindResource("Primer.Secondary"), approve.Style.BasedOn);
-                    foreach (var button in new[] { deny, approve })
+                    foreach (var theme in new[] { AppTheme.Light, AppTheme.Dark })
                     {
-                        Assert.False(button.IsDefault); Assert.False(button.IsCancel);
-                        Assert.Equal("", Ux.GetVariant(button));
-                        Assert.Empty(Descendants<AccessText>(button));
-                        Assert.DoesNotContain('_', Assert.IsType<string>(button.Content));
+                        ThemeManager.Current.Theme = theme;
+                        WorkbenchRenderTests.ApplyCurrentPalette(host);
+                        Layout();
+                        var approve = Descendants<Button>(host).Single(button => button.Name == "ApproveRequest" && ((ApprovalRow)button.DataContext).Pending);
+                        var deny = Descendants<Button>(host).Single(button => button.Name == "DenyRequest" && ((ApprovalRow)button.DataContext).Pending);
+                        Assert.Same(Application.Current.FindResource("Primer.pill"), approve.Background);
+                        Assert.Same(approve.Style, deny.Style);
+                        Assert.Same(Application.Current.FindResource("Primer.Secondary"), approve.Style.BasedOn);
+                        foreach (var button in new[] { deny, approve })
+                        {
+                            Assert.False(button.IsDefault); Assert.False(button.IsCancel);
+                            Assert.Equal("", Ux.GetVariant(button));
+                            Assert.Empty(Descendants<AccessText>(button));
+                            Assert.DoesNotContain('_', Assert.IsType<string>(button.Content));
+                        }
+                        var originalContent = approve.Content;
+                        double original = approve.ActualHeight;
+                        approve.Content = "A_long_label -> != " + string.Join(" ", Enumerable.Repeat("Maple Mono approval", 8));
+                        Layout();
+                        Assert.Equal(deny.ActualWidth, approve.ActualWidth, precision: 4);
+                        Assert.Equal(deny.ActualHeight, approve.ActualHeight, precision: 4);
+                        Assert.True(approve.ActualHeight > original);
+                        var label = Assert.Single(Descendants<TextBlock>(approve));
+                        Assert.Equal(Assert.IsType<string>(approve.Content), label.Text);
+                        Assert.Equal(TextWrapping.Wrap, label.TextWrapping);
+                        Assert.Empty(Descendants<AccessText>(approve));
+                        approve.Content = originalContent;
                     }
-                    double original = approve.ActualHeight;
-                    approve.Content = "A_long_label -> != " + string.Join(" ", Enumerable.Repeat("Maple Mono approval", 8));
-                    Layout();
-                    Assert.Equal(deny.ActualWidth, approve.ActualWidth, precision: 4);
-                    Assert.Equal(deny.ActualHeight, approve.ActualHeight, precision: 4);
-                    Assert.True(approve.ActualHeight > original);
-                    var label = Assert.Single(Descendants<TextBlock>(approve));
-                    Assert.Equal(Assert.IsType<string>(approve.Content), label.Text);
-                    Assert.Equal(TextWrapping.Wrap, label.TextWrapping);
-                    Assert.Empty(Descendants<AccessText>(approve));
                 }
-                finally { ThemeManager.Current.Theme = previous; }
+                finally { host.Child = null; ThemeManager.Current.Theme = previous; }
             });
     }
 
@@ -186,12 +193,11 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
     public void Catalog_client_names_wrap_only_between_words_without_truncation_and_sider_title_fits(int width, int height)
     {
         foreach (var language in new[] { AppLanguage.Chinese, AppLanguage.English })
-        foreach (var theme in new[] { AppTheme.Light, AppTheme.Dark })
         foreach (bool detected in new[] { false, true })
             wpf.RunWithLanguage(language, () =>
             {
                 var previous = ThemeManager.Current.Theme;
-                ThemeManager.Current.Theme = theme;
+                ThemeManager.Current.Theme = AppTheme.Light;
                 // Take the names from the real catalog, but keep all configuration paths synthetic.
                 var clients = ClientProfiles.All().Select((client, i) => new ClientProfile(client.Id, client.Name,
                     @"C:\fixture\" + i + ".json", "layout fixture") { Detected = detected }).ToList();
@@ -204,26 +210,32 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                     window.ShowConfiguration(false);
                     var host = WorkbenchRenderTests.CreateHost(window, width, height);
                     var list = (ListBox)window.Configuration!.FindName("ClientChoices");
-                    foreach (bool selected in new[] { false, true })
+                    foreach (var theme in new[] { AppTheme.Light, AppTheme.Dark })
                     {
-                        if (selected) list.SelectAll(); else list.UnselectAll();
-                        Layout(host, width, height);
-                        string context = $"{width}x{height} {language} {theme} detected={detected} selected={selected}";
-                        var title = (TextBlock)window.FindName("BrandTitle");
-                        Assert.Equal(Loc.Current["Shell.Brand"], title.Text);
-                        AssertSingleLine(title, context);
-                        var version = (Border)window.FindName("BrandVersion");
-                        Assert.Equal(Visibility.Visible, version.Visibility);
-                        AssertSingleLine((TextBlock)window.FindName("RailVersion"), context);
-                        Assert.True(version.TranslatePoint(new Point(0, version.ActualHeight), host).Y <= 56, context);
-                        for (int i = 0; i < clients.Count; i++)
+                        ThemeManager.Current.Theme = theme;
+                        WorkbenchRenderTests.ApplyCurrentPalette(host);
+                        foreach (bool selected in new[] { false, true })
                         {
-                            var row = Assert.IsType<ListBoxItem>(list.ItemContainerGenerator.ContainerFromIndex(i));
-                            var name = Descendants<TextBlock>(row).Single(text => text.Name == "ClientName");
-                            Assert.Equal(clients[i].DisplayName, name.Text);
-                            Assert.Equal(clients[i].DisplayName, name.ToolTip);
-                            AssertClientName(name, context);
-                            Assert.Equal(selected, row.IsSelected);
+                            if (selected) list.SelectAll(); else list.UnselectAll();
+                            Layout(host, width, height);
+                            Assert.Same(Application.Current.FindResource("Primer.bg"), ((Grid)window.FindName("Root")).Background);
+                            string context = $"{width}x{height} {language} {theme} detected={detected} selected={selected}";
+                            var title = (TextBlock)window.FindName("BrandTitle");
+                            Assert.Equal(Loc.Current["Shell.Brand"], title.Text);
+                            AssertSingleLine(title, context);
+                            var version = (Border)window.FindName("BrandVersion");
+                            Assert.Equal(Visibility.Visible, version.Visibility);
+                            AssertSingleLine((TextBlock)window.FindName("RailVersion"), context);
+                            Assert.True(version.TranslatePoint(new Point(0, version.ActualHeight), host).Y <= 56, context);
+                            for (int i = 0; i < clients.Count; i++)
+                            {
+                                var row = Assert.IsType<ListBoxItem>(list.ItemContainerGenerator.ContainerFromIndex(i));
+                                var name = Descendants<TextBlock>(row).Single(text => text.Name == "ClientName");
+                                Assert.Equal(clients[i].DisplayName, name.Text);
+                                Assert.Equal(clients[i].DisplayName, name.ToolTip);
+                                AssertClientName(name, context);
+                                Assert.Equal(selected, row.IsSelected);
+                            }
                         }
                     }
                 }
@@ -243,11 +255,10 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
         string? output = string.IsNullOrWhiteSpace(render) ? null : Path.Combine(Path.GetFullPath(render), "font-layout");
         if (output != null) Directory.CreateDirectory(output);
         foreach (var language in new[] { AppLanguage.Chinese, AppLanguage.English })
-        foreach (var theme in new[] { AppTheme.Light, AppTheme.Dark })
             wpf.RunWithLanguage(language, () =>
             {
                 var previous = ThemeManager.Current.Theme;
-                ThemeManager.Current.Theme = theme;
+                ThemeManager.Current.Theme = AppTheme.Light;
                 var window = new MainWindow(ProjectPageTestSupport.Model(results: true, release: "21"), false,
                     FeaturePageFixtures.Approvals(), new FeaturePageFixtures.Diagnostics());
                 try
@@ -256,62 +267,69 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                         new FeaturePageFixtures.Environment(), new FeaturePageFixtures.Notification(), () => FeaturePageFixtures.Now);
                     window.ShowConfiguration(false);
                     var host = WorkbenchRenderTests.CreateHost(window, width, height);
-                    string suffix = $"{width}x{height}-{language}-{theme}";
-                    foreach (string page in new[] { "Mcp", "Engineering", "VersionControl", "Calls", "Audit", "Environment", "Log" })
+                    foreach (var theme in new[] { AppTheme.Light, AppTheme.Dark })
                     {
-                        window.Navigate(page); Layout(host, width, height);
-                        string context = page + " " + suffix;
-                        AssertSingleLine((TextBlock)window.FindName("BrandTitle"), context);
-                        AssertWholeWords(Descendants<TextBlock>((DependencyObject)window.FindName("RailEnvironment"))
-                            .Single(text => text.Text == Loc.Current["Shell.Environment"]), context);
-                        if (page == "Mcp")
+                        ThemeManager.Current.Theme = theme;
+                        WorkbenchRenderTests.ApplyCurrentPalette(host);
+                        string suffix = $"{width}x{height}-{language}-{theme}";
+                        foreach (string page in new[] { "Mcp", "Engineering", "VersionControl", "Calls", "Audit", "Environment", "Log" })
                         {
-                            AssertWholeWords((TextBlock)window.Configuration!.FindName("PageSubtitle"), context);
-                            var steps = (DependencyObject)window.Configuration!.FindName("SetupSteps");
-                            foreach (string key in new[] { "Config.StepInstallationHint", "Config.StepServiceHint", "Config.StepClientsHint" })
-                                AssertWholeWords(Descendants<TextBlock>(steps).Single(text => text.Text == Loc.Current[key]), context);
+                            window.Navigate(page); Layout(host, width, height);
+                            Assert.Same(Application.Current.FindResource("Primer.bg"), ((Grid)window.FindName("Root")).Background);
+                            string context = page + " " + suffix;
+                            AssertSingleLine((TextBlock)window.FindName("BrandTitle"), context);
+                            AssertWholeWords(Descendants<TextBlock>((DependencyObject)window.FindName("RailEnvironment"))
+                                .Single(text => text.Text == Loc.Current["Shell.Environment"]), context);
+                            if (page == "Mcp")
+                            {
+                                AssertWholeWords((TextBlock)window.Configuration!.FindName("PageSubtitle"), context);
+                                var steps = (DependencyObject)window.Configuration!.FindName("SetupSteps");
+                                foreach (string key in new[] { "Config.StepInstallationHint", "Config.StepServiceHint", "Config.StepClientsHint" })
+                                    AssertWholeWords(Descendants<TextBlock>(steps).Single(text => text.Text == Loc.Current[key]), context);
+                            }
+                            if (page == "Engineering")
+                            {
+                                var blocks = (DependencyObject)window.FindName("BlocksContent");
+                                foreach (var header in Descendants<TextBlock>(blocks).Where(text =>
+                                    ReferenceEquals(text.Style, Application.Current.FindResource("Primer.TableHeader"))))
+                                    AssertWholeWords(header, context);
+                                foreach (var text in Descendants<TextBlock>(blocks).Where(text => text.DataContext is BlockRow row
+                                    && (text.Text == row.Name || Grid.GetColumn(text) == 10))) AssertWholeWords(text, context);
+                                AssertWholeWords((TextBlock)ProjectPageTestSupport.Find(window, "BlocksSummary"), context);
+                            }
+                            if (page == "VersionControl")
+                                AssertSingleLine((TextBlock)ProjectPageTestSupport.Find(window, "MappedMeta"), context);
+                            if (page == "Audit")
+                            {
+                                var audit = (DependencyObject)window.FindName("AuditContent");
+                                AssertWholeWords(Descendants<TextBlock>(audit).Single(text => text.Text == Loc.Current["Audit.FileSize"]), context);
+                                foreach (var text in Descendants<TextBlock>(audit).Where(text => text.DataContext is AuditRow row
+                                    && (text.Text == row.Type || text.Text == row.Actor))) AssertSingleLine(text, context);
+                            }
+                            if (page == "Calls")
+                            {
+                                var calls = (UserControl)window.FindName("CallsContent");
+                                var statistics = (DependencyObject)calls.FindName("CallStatistics");
+                                foreach (string key in new[] { "Calls.StatTotal", "Calls.StatPending", "Calls.StatFailed", "Calls.StatAverage" })
+                                    AssertWholeWords(Descendants<TextBlock>(statistics).Single(text => text.Text == Loc.Current[key]), context);
+                                foreach (var header in Descendants<TextBlock>(calls).Where(text =>
+                                    ReferenceEquals(text.Style, Application.Current.FindResource("Primer.TableHeader"))))
+                                    AssertWholeWords(header, context);
+                                foreach (var text in Descendants<TextBlock>(calls).Where(text => text.DataContext is CallRow row
+                                    && text.Text == row.Actor)) AssertSingleLine(text, context);
+                            }
+                            if (output != null) WorkbenchRenderTests.SaveRender(host,
+                                Path.Combine(output, page + "-" + suffix + ".png"), width, height);
                         }
-                        if (page == "Engineering")
-                        {
-                            var blocks = (DependencyObject)window.FindName("BlocksContent");
-                            foreach (var header in Descendants<TextBlock>(blocks).Where(text =>
-                                ReferenceEquals(text.Style, Application.Current.FindResource("Primer.TableHeader"))))
-                                AssertWholeWords(header, context);
-                            foreach (var text in Descendants<TextBlock>(blocks).Where(text => text.DataContext is BlockRow row
-                                && (text.Text == row.Name || Grid.GetColumn(text) == 10))) AssertWholeWords(text, context);
-                            AssertWholeWords((TextBlock)ProjectPageTestSupport.Find(window, "BlocksSummary"), context);
-                        }
-                        if (page == "VersionControl")
-                            AssertSingleLine((TextBlock)ProjectPageTestSupport.Find(window, "MappedMeta"), context);
-                        if (page == "Audit")
-                        {
-                            var audit = (DependencyObject)window.FindName("AuditContent");
-                            AssertWholeWords(Descendants<TextBlock>(audit).Single(text => text.Text == Loc.Current["Audit.FileSize"]), context);
-                            foreach (var text in Descendants<TextBlock>(audit).Where(text => text.DataContext is AuditRow row
-                                && (text.Text == row.Type || text.Text == row.Actor))) AssertSingleLine(text, context);
-                        }
-                        if (page == "Calls")
-                        {
-                            var calls = (UserControl)window.FindName("CallsContent");
-                            var statistics = (DependencyObject)calls.FindName("CallStatistics");
-                            foreach (string key in new[] { "Calls.StatTotal", "Calls.StatPending", "Calls.StatFailed", "Calls.StatAverage" })
-                                AssertWholeWords(Descendants<TextBlock>(statistics).Single(text => text.Text == Loc.Current[key]), context);
-                            foreach (var header in Descendants<TextBlock>(calls).Where(text =>
-                                ReferenceEquals(text.Style, Application.Current.FindResource("Primer.TableHeader"))))
-                                AssertWholeWords(header, context);
-                            foreach (var text in Descendants<TextBlock>(calls).Where(text => text.DataContext is CallRow row
-                                && text.Text == row.Actor)) AssertSingleLine(text, context);
-                        }
+                        window.Navigate("Calls");
+                        window.Features.OpenCall(window.Features.Calls.Single(call => call.Tool == "ExportBlock"));
+                        Layout(host, width, height);
+                        var detail = (DependencyObject)window.FindName("CallDetailContent");
+                        AssertSingleLine(Descendants<TextBlock>(detail).Single(text => text.Text == Loc.Current["Calls.Host"]), suffix);
                         if (output != null) WorkbenchRenderTests.SaveRender(host,
-                            Path.Combine(output, page + "-" + suffix + ".png"), width, height);
+                            Path.Combine(output, "CallDetail-" + suffix + ".png"), width, height);
+                        UnifiedDesktopTests.ClickControl(Descendants<Button>((DependencyObject)window.FindName("DrawerHeading")).Single());
                     }
-                    window.Navigate("Calls");
-                    window.Features.OpenCall(window.Features.Calls.Single(call => call.Tool == "ExportBlock"));
-                    Layout(host, width, height);
-                    var detail = (DependencyObject)window.FindName("CallDetailContent");
-                    AssertSingleLine(Descendants<TextBlock>(detail).Single(text => text.Text == Loc.Current["Calls.Host"]), suffix);
-                    if (output != null) WorkbenchRenderTests.SaveRender(host,
-                        Path.Combine(output, "CallDetail-" + suffix + ".png"), width, height);
                 }
                 finally { window.Close(); ThemeManager.Current.Theme = previous; }
             });

@@ -85,13 +85,10 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                     if (state.Name == "mcp-zh-light")
                     {
                         var metrics = new List<string>();
-                        double rowHeight = Assert.IsType<double>(Application.Current.FindResource("Ui.RowHeight"));
-                        Assert.Equal(36, rowHeight);
                         foreach (string name in new[] { "RailMcp", "RailEngineering", "RailCalls", "RailAudit", "RailEnvironment", "RailLog" })
                         {
                             var element = (FrameworkElement)window.FindName(name);
                             var point = element.TransformToAncestor(host).Transform(new Point());
-                            Assert.Equal(rowHeight, element.ActualHeight);
                             Assert.Equal(5, point.X);
                             metrics.Add($"{name}: {point.X},{point.Y} {element.ActualWidth}x{element.ActualHeight}");
                         }
@@ -190,20 +187,20 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                 });
     }
 
-    [WorkbenchRenderFact]
+    [Fact]
     public void Render_shared_themes_in_both_languages()
     {
-        string output = Path.Combine(Path.GetFullPath(Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR")!), "shared-themes");
-        Directory.CreateDirectory(output);
+        string? render = Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR");
+        string? output = string.IsNullOrWhiteSpace(render) ? null : Path.Combine(Path.GetFullPath(render), "shared-themes");
+        if (output != null) Directory.CreateDirectory(output);
         foreach (var language in new[] { AppLanguage.Chinese, AppLanguage.English })
-        foreach (string theme in new[] { "Light", "Dark", "HighContrast" })
             wpf.RunWithLanguage(language, () =>
             {
                 using var trace = new BindingPathTests.BindingTrace();
                 var previous = ThemeManager.Current.Theme;
                 var previousContrast = ThemeManager.Current.HighContrastOverride;
-                ThemeManager.Current.HighContrastOverride = theme == "HighContrast";
-                ThemeManager.Current.Theme = theme == "Dark" ? AppTheme.Dark : AppTheme.Light;
+                ThemeManager.Current.HighContrastOverride = false;
+                ThemeManager.Current.Theme = AppTheme.Light;
                 var window = new MainWindow(ProjectPageTestSupport.Model(results: true, release: "21"), false,
                     FeaturePageFixtures.Approvals(), new FeaturePageFixtures.Diagnostics());
                 try
@@ -211,9 +208,24 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                     window.ShowConfiguration(false);
                     window.Navigate("Engineering");
                     var host = CreateHost(window, 1366, 860);
-                    string suffix = (language == AppLanguage.Chinese ? "zh" : "en") + "-" + theme.ToLowerInvariant();
-                    SaveRender(host, Path.Combine(output, suffix + ".png"), 1366, 860);
-                    Assert.True(string.IsNullOrWhiteSpace(trace.Text), trace.Text);
+                    foreach (string theme in new[] { "Light", "Dark", "HighContrast" })
+                    {
+                        ThemeManager.Current.HighContrastOverride = theme == "HighContrast";
+                        ThemeManager.Current.Theme = theme == "Dark" ? AppTheme.Dark : AppTheme.Light;
+                        ApplyCurrentPalette(host);
+                        WpfContext.Drain(); host.UpdateLayout();
+                        Assert.Same(Application.Current.FindResource("Primer.bg"), ((Grid)window.FindName("Root")).Background);
+                        double rowHeight = Assert.IsType<double>(Application.Current.FindResource("Ui.RowHeight"));
+                        Assert.Equal(36, rowHeight);
+                        foreach (string name in new[] { "RailMcp", "RailEngineering", "RailCalls", "RailAudit", "RailEnvironment", "RailLog" })
+                        {
+                            var element = (FrameworkElement)window.FindName(name);
+                            Assert.Equal(rowHeight, element.ActualHeight);
+                        }
+                        string suffix = (language == AppLanguage.Chinese ? "zh" : "en") + "-" + theme.ToLowerInvariant();
+                        if (output != null) SaveRender(host, Path.Combine(output, suffix + ".png"), 1366, 860);
+                        Assert.True(string.IsNullOrWhiteSpace(trace.Text), trace.Text);
+                    }
                 }
                 finally
                 {
@@ -240,6 +252,15 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
     }
 
     internal static Border CreateHost(MainWindow window) => CreateHost(window, 1200, 780);
+
+    // Detached render hosts are outside Application.Windows. Refresh their resources when reusing them across themes.
+    internal static void ApplyCurrentPalette(FrameworkElement host)
+    {
+        var palettes = host.Resources.MergedDictionaries;
+        var palette = Application.Current.Resources.MergedDictionaries[0];
+        if (palettes.Count == 0) palettes.Add(palette);
+        else palettes[0] = palette;
+    }
 
     internal static Border CreateHost(MainWindow window, double width, double height)
     {
