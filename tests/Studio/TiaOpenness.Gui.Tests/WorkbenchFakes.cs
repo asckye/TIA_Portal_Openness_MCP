@@ -11,6 +11,10 @@ namespace TiaOpenness.Gui.Tests;
 
 internal sealed class FakeDialogService : IDialogService
 {
+    public int? SelectedProcessId { get; set; }
+    public List<IReadOnlyList<PortalProcessInfo>> ProcessRequests { get; } = [];
+    public int? PickPortalProcess(IReadOnlyList<PortalProcessInfo> processes)
+    { ProcessRequests.Add(processes); return SelectedProcessId; }
     public DialogResult Result { get; set; } = DialogResult.Cancel;
     public string[]? Files { get; set; }
     public string? Folder { get; set; }
@@ -72,8 +76,13 @@ internal sealed class FakeProjectClient : IProjectClient, IStudioClient
         IsRunning = true;
         IsMock = forceMock;
     }
-    public Task<SessionState> ConnectAsync(bool withUserInterface) => Reply("Connect", new SessionState
-        { Connected = true, OpennessVersion = "21", OpenProject = AttachedProject! }, withUserInterface);
+    public Func<int?, Task<SessionState>>? ConnectHandler { get; set; }
+    public Task<SessionState> ConnectAsync(bool withUserInterface, int? processId = null)
+    {
+        if (ConnectHandler != null) { Record("Connect", withUserInterface, processId); return ConnectHandler(processId); }
+        return Reply("Connect", new SessionState
+            { Connected = true, OpennessVersion = "21", OpenProject = AttachedProject! }, withUserInterface);
+    }
     public Task<SessionState> DisconnectAsync() => Reply("Disconnect", new SessionState { Connected = false });
     public Task<ProjectInfo> OpenProjectAsync(string path) => Reply("OpenProject", new ProjectInfo { Name = "Line", Path = path }, path);
     public Task SaveProjectAsync() { Record("Save"); return Task.CompletedTask; }

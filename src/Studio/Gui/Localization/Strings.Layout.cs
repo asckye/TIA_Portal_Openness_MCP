@@ -5,6 +5,20 @@ internal static partial class Strings
     // Workbench shell navigation and page sections.
     internal static (string Key, string En, string Zh)[] LayoutCatalogue =>
     [
+        ("ProcessPicker.Title", "Choose a TIA Portal instance", "选择 TIA Portal 实例"),
+        ("ProcessPicker.Hint", "Several TIA Portal instances are running. Select the project to connect. Enter cancels.",
+                "检测到多个 TIA Portal 实例。请选择要连接的项目；回车将取消。"),
+        ("ProcessPicker.List", "Running TIA Portal instances", "运行中的 TIA Portal 实例"),
+        ("ProcessPicker.Project", "Project", "项目"),
+        ("ProcessPicker.Release", "Release", "版本"),
+        ("ProcessPicker.Mode", "UI mode", "界面模式"),
+        ("ProcessPicker.NoProject", "no project", "无项目"),
+        ("ProcessPicker.WithUi", "With UI", "有用户界面"),
+        ("ProcessPicker.WithoutUi", "Without UI", "无用户界面"),
+        ("ProcessPicker.UnknownMode", "Unknown", "未知"),
+        ("ProcessPicker.Row", "PID {0}, {1}, {2}, {3}", "PID {0}，{1}，{2}，{3}"),
+        ("ProcessPicker.Cancel", "_Cancel", "取消(_C)"),
+        ("ProcessPicker.Connect", "C_onnect", "连接(_O)"),
         ("Shell.Approvals", "Approvals", "审批"),
         ("Shell.Logs", "Logs & diagnostics", "日志与诊断"),
         ("Shell.NoProject", "Open a project first.", "请先打开项目。"),

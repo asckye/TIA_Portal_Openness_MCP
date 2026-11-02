@@ -7,6 +7,10 @@ namespace TiaOpenness.Core.Adapters
 {
     internal static class StudioDtoMap
     {
+        internal static PortalProcessInfo Map(A.PortalProcessInfo value) => value == null ? null : new PortalProcessInfo
+        {
+            ProcessId = value.ProcessId, ProjectPath = value.ProjectPath, Release = value.Release, UiMode = value.UiMode,
+        };
         internal static List<TResult> MapList<TSource, TResult>(IReadOnlyList<TSource> values, Func<TSource, TResult> map)
         {
             if (values == null) return null;

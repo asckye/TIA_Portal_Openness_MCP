@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using TiaOpenness.Contracts.Models;
+
 namespace TiaOpenness.Gui.Services;
 
 public enum DialogButtons { OKCancel, YesNoCancel }
@@ -12,6 +15,7 @@ public sealed record ConfirmationLabels(ConfirmationAction Action)
 /// <summary>The workbench's confirmation and file/folder choices, independent of WPF dialogs.</summary>
 public interface IDialogService
 {
+    public int? PickPortalProcess(IReadOnlyList<PortalProcessInfo> processes);
     public DialogResult ShowMessage(string text, string caption, DialogButtons buttons, DialogIcon icon);
     public DialogResult ShowMessage(string text, string caption, DialogButtons buttons, DialogIcon icon, ConfirmationLabels labels)
         => ShowMessage(text, caption, buttons, icon);

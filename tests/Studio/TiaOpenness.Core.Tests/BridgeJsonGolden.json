@@ -27,5 +27,6 @@
   "RpcError": {"code":-32002,"message":"native 轴 failed","data":{"type":"System.IO.IOException","stack":"first\r\nsecond","inner":"inner 轴"}},
   "RpcResponse": {"jsonrpc":"2.0","id":"17","result":{"Name":"轴","CreationTime":"2020-02-03T04:05:06+00:00","Number":null}},
   "RpcNotification": {"jsonrpc":"2.0","method":"progress","params":{"operation":"export","current":1,"total":2,"message":"轴"}},
-  "ProgressPayload": {"operation":"export","current":1,"total":2,"message":"轴"}
+  "ProgressPayload": {"operation":"export","current":1,"total":2,"message":"轴"},
+  "PortalProcessInfo": {"ProcessId":123,"ProjectPath":"D:\\项目\\Line.ap21","Release":"21.0","UiMode":"WithUserInterface"}
 }

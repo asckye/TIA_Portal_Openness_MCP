@@ -64,8 +64,8 @@ namespace TiaMcp.Adapters
         public bool HasProject => guard.Run(() => session.HasProject);
         public SessionState AttachVciReadOnly(int processId, long startUtcTicks, string projectFile) =>
             guard.Run(() => session.AttachVciReadOnly(processId, startUtcTicks, projectFile));
-        public SessionState Connect(bool withUserInterface, bool attachToRunning, string version) =>
-            guard.Run(() => session.Connect(withUserInterface, attachToRunning, version));
+        public SessionState Connect(bool withUserInterface, bool attachToRunning, string version, int? processId = null) =>
+            guard.Run(() => session.Connect(withUserInterface, attachToRunning, version, processId));
         public void Disconnect() => guard.Run(session.Disconnect);
         public SessionState GetState() => guard.Run(session.GetState);
         public ProjectInfo OpenProject(string path) => guard.Run(() => session.OpenProject(path));

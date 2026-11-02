@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TiaOpenness.Client;
 using TiaOpenness.Contracts.Models;
+using TiaOpenness.Contracts.Models.Errors;
 using TiaOpenness.Core.Abstractions;
 using TiaOpenness.Core.Inspection;
 using TiaOpenness.Gui.Localization;
@@ -75,16 +76,29 @@ public sealed class McpProjectClient : IProjectClient
         // Approval is performed by the host's ordinary FoundationV4Tool; the panel cannot grant it.
         return await Read(tool, arguments, token);
     }
-    public async Task<SessionState> ConnectAsync(bool withUserInterface)
+    public async Task<SessionState> ConnectAsync(bool withUserInterface, int? processId = null)
     {
         var data = await Read("ListPortalProcessProjects");
         var processes = (data["processes"] as JsonArray ?? data["items"] as JsonArray ?? new()).Select(Decode).OfType<JsonObject>().ToArray();
-        var selected = processes.Where(p => ProcessId > 0 ? (int?)p["processId"] == ProcessId :
+        int requested = processId ?? ProcessId;
+        var selected = processes.Where(p => requested != 0 ? (int?)p["processId"] == requested :
             !string.IsNullOrEmpty(ExpectedProjectFile) && string.Equals((string?)p["projectPath"], ExpectedProjectFile, StringComparison.OrdinalIgnoreCase))
                 .ToArray();
+        if (requested == 0 && selected.Length != 1 && processes.Length > 1)
+        {
+            var info = await Read("GetPortalInfo", new() { ["includeProcesses"] = true, ["includeSessions"] = false, ["includeProducts"] = false });
+            var modes = (info["evidence"]?["processes"] as JsonArray ?? new()).Select(Decode).OfType<JsonObject>()
+                .ToDictionary(p => (int)p["id"]!, p => (string?)p["mode"]);
+            throw new PortalProcessSelectionRequiredException(processes.Select(p => new PortalProcessInfo
+            {
+                ProcessId = (int)p["processId"]!, ProjectPath = (string?)p["projectPath"],
+                Release = (string?)data["releaseKey"] ?? (string?)Session.State?["releaseKey"] ?? "",
+                UiMode = modes.TryGetValue((int)p["processId"]!, out var mode) ? mode : null,
+            }).ToArray());
+        }
         if (selected.Length != 1) throw new InvalidOperationException("Choose a TIA process ID and exact project file. Start TIA manually if none is listed.");
         int pid = (int)selected[0]["processId"]!;
-        string file = (string?)selected[0]["projectPath"] ?? ExpectedProjectFile;
+        string file = (string?)selected[0]["projectPath"] ?? "";
         ProcessId = pid;
         if (Supports("ConnectPortal", "mode"))
             await Write("ConnectPortal", CandidateProcess(selected[0]), expectedProject: "");

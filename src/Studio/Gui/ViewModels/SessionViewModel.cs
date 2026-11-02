@@ -8,6 +8,8 @@ using System.Windows.Threading;
 using TiaOpenness.Gui.Common;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.Services;
+using TiaOpenness.Contracts.Models;
+using TiaOpenness.Contracts.Models.Errors;
 
 namespace TiaOpenness.Gui.ViewModels;
 
@@ -202,11 +204,18 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
     /// Take over whatever project a running TIA already had open. Right when the operator asked
     /// only to connect; wrong when they named a project to open, which would be overwritten.
     /// </param>
-    private async Task ConnectCoreAsync(bool adoptOpenProject)
+    private async Task<bool> ConnectCoreAsync(bool adoptOpenProject)
     {
         EnsureBridge();
         if (_client is McpProjectClient project) project.ExpectedProjectFile = ProjectPath;
-        var state = await _client.ConnectAsync(!Headless);
+        SessionState state;
+        try { state = await _client.ConnectAsync(!Headless); }
+        catch (PortalProcessSelectionRequiredException selection)
+        {
+            var processId = _dialogs.PickPortalProcess(selection.Processes);
+            if (!processId.HasValue) { _activity.SetStatus("Status.NotConnected"); return false; }
+            state = await _client.ConnectAsync(!Headless, processId);
+        }
         IsConnected = true;
         SetOpennessVersion(state.OpennessVersion);
         _activity.SetStatus("Status.Connected", state.Mode, state.OpennessVersion);
@@ -219,6 +228,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
             _activity.AppendLocalized("Log.Attached", state.OpenProject.Name);
             await _loadProject(ProjectName);
         }
+        return true;
     }
 
     private void SetOpennessVersion(string? version)
@@ -236,7 +246,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         // session.connect first." - a rule the app knows and can follow itself.
         if (!IsConnected)
         {
-            await ConnectCoreAsync(adoptOpenProject: false);
+            if (!await ConnectCoreAsync(adoptOpenProject: false)) return;
             _activity.SetStatus("Status.OpeningProject");
         }
 

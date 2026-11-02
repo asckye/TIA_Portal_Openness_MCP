@@ -98,7 +98,7 @@ public sealed class VciReadOnlyBindingTests : IDisposable
         public void Disconnect() => mock.Disconnect();
         public void Dispose() => mock.Dispose();
         private InvalidOperationException Unexpected() { UnexpectedCalls++; return new("Unexpected backend call."); }
-        public SessionState Connect(bool ui, bool attach, string version) => throw Unexpected();
+        public SessionState Connect(bool ui, bool attach, string version, int? processId = null) => throw Unexpected();
         public ProjectInfo OpenProject(string path) => throw Unexpected();
         public ProjectInfo GetProjectInfo() => mock.GetProjectInfo();
         public void SaveProject() => throw Unexpected();

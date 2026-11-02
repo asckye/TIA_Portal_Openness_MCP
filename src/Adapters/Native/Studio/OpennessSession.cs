@@ -17,9 +17,11 @@ using Siemens.Engineering.SW.Types;
 #if TIA_ADAPTER_INTERNAL_VERSIONING
 using TiaMcp.Adapters.Contracts.Studio;
 using TiaMcp.Adapters.Contracts.Studio.Errors;
+using TiaMcp.Adapters.Contracts.Studio.Policies;
 #else
 using TiaOpenness.Contracts.Models;
 using TiaOpenness.Contracts.Models.Errors;
+using TiaOpenness.Contracts.Models.Policies;
 #endif
 #if TIA_ADAPTER_INTERNAL_VERSIONING
 using IVersionControl = TiaMcp.Adapters.Contracts.IVersionControl;
@@ -118,27 +120,48 @@ namespace TiaOpenness.Openness
             catch { Disconnect(); throw; }
         }
 
-        public SessionState Connect(bool withUserInterface, bool attachToRunning, string version)
+        public SessionState Connect(bool withUserInterface, bool attachToRunning, string version, int? processId = null)
         {
-            if (_portal != null) return GetState();
+            if (_portal != null)
+            {
+                if (processId.HasValue && _portal.GetCurrentProcess().Id != processId.Value)
+                    throw new InvalidOperationException("Studio is already connected to another TIA Portal process. Disconnect before choosing a different " +
+                        "PID.");
+                return GetState();
+            }
 
             _withUi = withUserInterface;
 
-            if (attachToRunning)
+            if (attachToRunning || processId.HasValue)
             {
                 // F10: attach only to an exactly selected process. Several running instances are refused, never guessed;
                 // a failed or denied attach is reported and never followed by a silent new instance.
                 var processes = TiaPortal.GetProcesses();
-                if (processes.Count > 1)
-                    throw new InvalidOperationException("Several TIA Portal processes are running ("
-                        + string.Join("; ", processes.Select(p => "PID " + p.Id + ": " + (ProcessProject(p) ?? "no project")))
-                        + "). Studio attaches only to an exactly selected instance: close the other TIA Portal instances, or use an MCP session "
-                        + "(ConnectPortal with the processId) to select one.");
-                if (processes.Count == 1)
+                TiaPortalProcess target = null;
+                if (processId.HasValue)
                 {
-                    _portal = AttachExactly(processes[0]);
+                    var selected = PortalProcessSelection.Select(processes.Select(p => new PortalProcessInfo { ProcessId = p.Id }).ToList(),
+                        processId, _boundVersion, ProcessIsRunning);
+                    target = processes.Single(p => p.Id == selected.ProcessId);
+                    _portal = AttachExactly(target);
+                }
+                else
+                {
+                    if (processes.Count > 1)
+                        throw new PortalProcessSelectionRequiredException(processes.Select(p => new PortalProcessInfo
+                        {
+                            ProcessId = p.Id, ProjectPath = ProcessProject(p), Release = _boundVersion, UiMode = p.Mode.ToString(),
+                        }).ToList());
+                    if (processes.Count == 1)
+                    {
+                        target = processes[0];
+                        _portal = AttachExactly(processes[0]);
+                    }
+                }
+                if (_portal != null)
+                {
                     _startedPortal = false;
-                    Console.Error.WriteLine("[bridge] attached to the running TIA Portal (PID " + processes[0].Id + ")");
+                    Console.Error.WriteLine("[bridge] attached to the running TIA Portal (PID " + target.Id + ")");
                     Console.Error.Flush();
 
                     // An attached instance keeps its project; bind the primary one (secondary projects are read-only and hidden).
@@ -167,6 +190,12 @@ namespace TiaOpenness.Openness
         {
             try { return process.ProjectPath?.FullName; }
             catch (Exception) /* swallow(probe-optional): the refusal still lists the PID when the project path is unreadable */ { return null; }
+        }
+
+        private static bool ProcessIsRunning(int processId)
+        {
+            try { using (var process = Process.GetProcessById(processId)) return !process.HasExited; }
+            catch (ArgumentException) /* swallow(env-probe): an exited PID is the expected negative liveness result reported by the connection refusal */ { return false; }
         }
 
         private static TiaPortal AttachExactly(TiaPortalProcess process)

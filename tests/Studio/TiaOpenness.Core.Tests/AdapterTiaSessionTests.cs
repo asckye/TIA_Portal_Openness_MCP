@@ -61,6 +61,7 @@ public sealed class AdapterTiaSessionTests
                 progress.Add(BridgeJson.Serialize(new object[] { operation, count, total, message }));
             });
             if (p.ParameterType == typeof(bool)) return populated;
+            if (p.ParameterType == typeof(int?)) return populated ? 123 : null;
             if (p.ParameterType.IsEnum) return Enum.ToObject(p.ParameterType, populated ? 1 : 0);
             if (p.ParameterType == typeof(string)) return populated ? p.Name + " /轴\\\"\r\n" : null;
             if (p.ParameterType == typeof(IReadOnlyList<string>)) return populated ? new[] { "Z/轴", null, "", "a" } : null;
@@ -158,6 +159,22 @@ public sealed class AdapterTiaSessionTests
     public static IEnumerable<object[]> Dtos() => typeof(D.SessionState).Assembly.GetExportedTypes()
         .Where(t => t.Namespace == typeof(D.SessionState).Namespace && t.IsClass && t != typeof(D.ProgressCallback))
         .Select(t => new object[] { t.Name });
+
+    [Fact]
+    public void Process_selection_refusal_maps_all_candidates_to_the_local_bridge_contract()
+    {
+        var state = new FakeState();
+        var candidates = new[] { new D.PortalProcessInfo { ProcessId = 456, ProjectPath = @"D:\项目\Line.ap21", Release = "21.0", UiMode = "WithUserInterface" } };
+        state.Failure = new D.Errors.PortalProcessSelectionRequiredException(candidates);
+        var current = new AdapterTiaSession(FakeSurface.Create<A.IOpennessAdapter>(state));
+        try
+        {
+            var error = Assert.Throws<TiaOpenness.Contracts.Models.Errors.PortalProcessSelectionRequiredException>(() => current.Connect(true, true, null));
+            Assert.Equal(BridgeJson.Serialize(candidates), BridgeJson.Serialize(error.Processes));
+            Assert.Single(state.Calls);
+        }
+        finally { state.Failure = null; current.Dispose(); }
+    }
 
     [Theory]
     [InlineData("Abstractions/SessionFactoryLoader.cs", 2)]

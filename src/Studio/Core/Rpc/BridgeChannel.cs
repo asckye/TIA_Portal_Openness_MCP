@@ -96,7 +96,8 @@ namespace TiaOpenness.Core.Rpc
             });
             if (response.Error != null)
             {
-                var outcome = !dispatcher.BackendEntered ? ChannelOutcome.RejectedBeforeNative :
+                var outcome = !dispatcher.BackendEntered || response.Error.Code == RpcErrorCodes.ProcessSelectionRequired
+                    ? ChannelOutcome.RejectedBeforeNative :
                     BridgeChannel.IsReadOnly(request.Method) ? ChannelOutcome.ReadFailed : ChannelOutcome.Unknown;
                 return ChannelResponse.Error(new ChannelFailureException(response.Error.Message, -32603, outcome,
                     rpcErrorJson: BridgeJson.Serialize(response.Error)));

@@ -73,6 +73,10 @@ namespace TiaOpenness.Core.Rpc
             {
                 return RpcResponse.Fail(request.Id, RpcErrorCodes.InvalidParams, ex.Message);
             }
+            catch (PortalProcessSelectionRequiredException ex)
+            {
+                return RpcResponse.Fail(request.Id, RpcErrorCodes.ProcessSelectionRequired, ex.Message, BridgeJson.ToElement(ex.Processes));
+            }
             catch (InvalidOperationException ex)
             {
                 return RpcResponse.Fail(request.Id, SessionFailureCode(ex), ex.Message);
@@ -132,11 +136,12 @@ namespace TiaOpenness.Core.Rpc
                     return OpennessDoctor.Run();
 
                 case RpcMethods.SessionConnect:
+                    var processId = ProcessId(p);
                     EnsureSession();
                     return _session.Connect(
                         Bool(p, "withUserInterface", true),
                         Bool(p, "attachToRunning", true),
-                        Str(p, "version", null));
+                        Str(p, "version", null), processId);
 
                 case RpcMethods.SessionDisconnect:
                     if (_session != null) { BackendEntered = true; _session.Dispose(); _session = null; }
@@ -315,6 +320,14 @@ namespace TiaOpenness.Core.Rpc
         }
 
         // ---- parameter helpers ---------------------------------------------
+
+        private static int? ProcessId(JsonElement p)
+        {
+            if (!p.TryGetProperty("processId", out var value) || value.ValueKind == JsonValueKind.Null) return null;
+            if (value.ValueKind != JsonValueKind.Number || !value.TryGetInt32(out var id) || id <= 0)
+                throw new ArgumentException("Parameter 'processId' must be a positive 32-bit integer.");
+            return id;
+        }
 
         private static string Required(JsonElement p, string name)
         {

@@ -4,6 +4,8 @@ namespace TiaOpenness.Gui.Services;
 
 public sealed class WpfDialogService : IDialogService
 {
+    public int? PickPortalProcess(System.Collections.Generic.IReadOnlyList<TiaOpenness.Contracts.Models.PortalProcessInfo> processes)
+        => Controls.PortalProcessPicker.Show(processes);
     public DialogResult ShowMessage(string text, string caption, DialogButtons buttons, DialogIcon icon, ConfirmationLabels labels)
         => Controls.WorkbenchMessageBox.Show(text, caption,
             buttons == DialogButtons.OKCancel ? MessageBoxButton.OKCancel : MessageBoxButton.YesNoCancel,

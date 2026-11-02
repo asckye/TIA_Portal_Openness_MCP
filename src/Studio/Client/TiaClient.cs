@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using TiaOpenness.Contracts.Models;
+using TiaOpenness.Contracts.Models.Errors;
 using TiaOpenness.Contracts.Rpc;
 
 namespace TiaOpenness.Client
@@ -33,11 +34,18 @@ namespace TiaOpenness.Client
             return _bridge.CallAsync<DoctorReport>(RpcMethods.DoctorRun, null, ct);
         }
 
-        public Task<SessionState> ConnectAsync(bool withUserInterface = true, bool attachToRunning = true,
-            string version = null, CancellationToken ct = default)
+        public async Task<SessionState> ConnectAsync(bool withUserInterface = true, bool attachToRunning = true,
+            string version = null, int? processId = null, CancellationToken ct = default)
         {
-            return _bridge.CallAsync<SessionState>(RpcMethods.SessionConnect,
-                new { withUserInterface, attachToRunning, version }, ct);
+            try
+            {
+                return await _bridge.CallAsync<SessionState>(RpcMethods.SessionConnect,
+                    new { withUserInterface, attachToRunning, version, processId }, ct).ConfigureAwait(false);
+            }
+            catch (BridgeRpcException error) when (error.Code == RpcErrorCodes.ProcessSelectionRequired)
+            {
+                throw new PortalProcessSelectionRequiredException(BridgeJson.Deserialize<List<PortalProcessInfo>>(error.Data2));
+            }
         }
 
         public Task<SessionState> DisconnectAsync(CancellationToken ct = default)

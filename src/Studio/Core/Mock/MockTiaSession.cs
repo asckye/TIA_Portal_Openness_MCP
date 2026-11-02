@@ -33,8 +33,9 @@ namespace TiaOpenness.Core.Mock
         /// <summary>Present once a project is open; the mock always claims V21-level support.</summary>
         public IVersionControl VersionControl { get { return _versionControl; } }
 
-        public SessionState Connect(bool withUserInterface, bool attachToRunning, string version)
+        public SessionState Connect(bool withUserInterface, bool attachToRunning, string version, int? processId = null)
         {
+            if (processId.HasValue) throw new InvalidOperationException("Mock sessions cannot attach to a TIA Portal process.");
             _connected = true;
             _withUi = withUserInterface;
             _version = string.IsNullOrWhiteSpace(version) ? "21.0" : version;

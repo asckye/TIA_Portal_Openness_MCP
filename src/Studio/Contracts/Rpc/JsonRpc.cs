@@ -22,6 +22,8 @@ namespace TiaOpenness.Contracts.Rpc
         public const int EnvironmentUnusable = -32003;
         /// <summary>The open project exposes no Version Control Interface service.</summary>
         public const int VersionControlUnsupported = -32004;
+        /// <summary>Choose one of the process snapshots in Data and retry with its processId.</summary>
+        public const int ProcessSelectionRequired = -32005;
     }
 
     /// <summary>A JSON-RPC request, newline-delimited on the bridge's stdin.</summary>

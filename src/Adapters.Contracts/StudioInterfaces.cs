@@ -24,7 +24,7 @@ namespace TiaMcp.Adapters.Contracts
         public SessionMode Mode { get; }
         public bool IsConnected { get; }
         public bool HasProject { get; }
-        public SessionState Connect(bool withUserInterface, bool attachToRunning, string version);
+        public SessionState Connect(bool withUserInterface, bool attachToRunning, string version, int? processId = null);
         public void Disconnect();
         public SessionState GetState();
         public ProjectInfo OpenProject(string path);

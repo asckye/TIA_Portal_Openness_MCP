@@ -29,7 +29,8 @@ namespace TiaOpenness.Core.Abstractions
         /// <param name="withUserInterface">Show the TIA window. Headless is faster but cannot be watched.</param>
         /// <param name="attachToRunning">Prefer an already-running instance over starting a new one.</param>
         /// <param name="version">Openness version to bind, e.g. "21.0". Null picks the newest installed.</param>
-        public SessionState Connect(bool withUserInterface, bool attachToRunning, string version);
+        /// <param name="processId">When supplied, attach only to this PID, regardless of attachToRunning.</param>
+        public SessionState Connect(bool withUserInterface, bool attachToRunning, string version, int? processId = null);
 
         public void Disconnect();
         public SessionState GetState();

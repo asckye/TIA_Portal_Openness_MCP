@@ -15,7 +15,7 @@ public interface IProjectClient : IDisposable
     public event EventHandler<ProgressEventArgs> Progress;
     public event EventHandler Exited;
     public void Start(bool forceMock, string opennessVersion);
-    public Task<SessionState> ConnectAsync(bool withUserInterface);
+    public Task<SessionState> ConnectAsync(bool withUserInterface, int? processId = null);
     public Task<SessionState> DisconnectAsync();
     public Task<ProjectInfo> OpenProjectAsync(string path);
     public Task SaveProjectAsync();

@@ -31,8 +31,15 @@ namespace TiaOpenness.Core.Adapters
         public SessionState AttachVciReadOnly(int processId, long startUtcTicks, string projectFile) =>
             StudioDtoMap.Map((session as IStudioVciReader ?? throw new NotSupportedException("VCI read attachment is unavailable."))
                 .AttachVciReadOnly(processId, startUtcTicks, projectFile));
-        public SessionState Connect(bool withUserInterface, bool attachToRunning, string version) =>
-            StudioDtoMap.Map(session.Connect(withUserInterface, attachToRunning, version));
+        public SessionState Connect(bool withUserInterface, bool attachToRunning, string version, int? processId = null)
+        {
+            try { return StudioDtoMap.Map(session.Connect(withUserInterface, attachToRunning, version, processId)); }
+            catch (A.Errors.PortalProcessSelectionRequiredException error)
+            {
+                throw new TiaOpenness.Contracts.Models.Errors.PortalProcessSelectionRequiredException(
+                    StudioDtoMap.MapList(error.Processes, StudioDtoMap.Map));
+            }
+        }
         public void Disconnect() => session.Disconnect();
         public SessionState GetState() => StudioDtoMap.Map(session.GetState());
         public ProjectInfo OpenProject(string path) => StudioDtoMap.Map(session.OpenProject(path));

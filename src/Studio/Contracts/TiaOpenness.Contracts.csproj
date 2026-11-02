@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><TargetFramework>netstandard2.0</TargetFramework></PropertyGroup>
+  <PropertyGroup><TargetFramework>netstandard2.0</TargetFramework><DefineConstants>$(DefineConstants);TIA_STUDIO_LOCAL_CONTRACTS</DefineConstants></PropertyGroup>
+  <ItemGroup><Compile Include="../../Adapters.Contracts/Studio/PortalProcessSelection.cs" Link="Models/PortalProcessSelection.cs" /></ItemGroup>
   <ItemGroup><PackageReference Include="System.Text.Json" /></ItemGroup>
 </Project>
