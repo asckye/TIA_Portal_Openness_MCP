@@ -13,10 +13,12 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class HostLifecycleTests
 {
     internal static readonly HostLifecycleTiming ShortTiming = new(TimeSpan.FromMilliseconds(400), TimeSpan.FromMilliseconds(20), TimeSpan.FromSeconds(2));
-    private static Task Stop(VisibleHost host, Func<VisibleHost, Task>? requestShutdown = null, Func<VisibleHost, Task<bool>>? confirmForce = null)
-        => HostLifecycleService.Stop(host, requestShutdown, confirmForce, ShortTiming);
+    private static readonly HostLifecycleTiming CooperativeTiming = ShortTiming with { Grace = TimeSpan.FromSeconds(15), ConfirmationWait = TimeSpan.FromSeconds(15) };
+    private static Task Stop(VisibleHost host, Func<VisibleHost, Task>? requestShutdown = null,
+        Func<VisibleHost, Task<bool>>? confirmForce = null, HostLifecycleTiming? timing = null)
+        => HostLifecycleService.Stop(host, requestShutdown, confirmForce, timing ?? CooperativeTiming);
     private static Task<Process> Restart(VisibleHost host, ProcessStartInfo start, Func<VisibleHost, Task>? requestShutdown = null,
-        Func<VisibleHost, Task<bool>>? confirmForce = null) => HostLifecycleService.Restart(host, start, requestShutdown, confirmForce, ShortTiming);
+        Func<VisibleHost, Task<bool>>? confirmForce = null) => HostLifecycleService.Restart(host, start, requestShutdown, confirmForce, CooperativeTiming);
 
     [Fact(Timeout = 5000)]
     public async Task Production_shutdown_timing_preserves_the_existing_defaults()
@@ -59,7 +61,11 @@ public sealed class HostLifecycleTests
             }
             Assert.Contains(service.Discover(), host => host.Pid == Process.Id);
         }
-        internal async Task Shutdown(VisibleHost _) { await Process.StandardInput.WriteLineAsync("tiamcp.host-control/1 shutdown"); await Process.StandardInput.FlushAsync(); }
+        internal async Task Shutdown(VisibleHost _)
+        {
+            await Process.StandardInput.WriteLineAsync("tiamcp.host-control/1 shutdown"); await Process.StandardInput.FlushAsync();
+            await Process.WaitForExitAsync().WaitAsync(CooperativeTiming.Grace);
+        }
         public async ValueTask DisposeAsync()
         {
             try
@@ -176,7 +182,11 @@ public sealed class HostLifecycleTests
         start.Environment["TIA_MCP_WORKBENCH_STARTED"] = "1";
         using var process = Process.Start(start) ?? throw new IOException("Synthetic host did not start");
         var identity = new VisibleHost(process.Id, process.StartTime.ToUniversalTime().Ticks, "21", image, root, "http", null, null, true, false);
-        async Task Graceful(VisibleHost _) { await process.StandardInput.WriteLineAsync("tiamcp.host-control/1 shutdown"); await process.StandardInput.FlushAsync(); }
+        async Task Graceful(VisibleHost _)
+        {
+            await process.StandardInput.WriteLineAsync("tiamcp.host-control/1 shutdown"); await process.StandardInput.FlushAsync();
+            await process.WaitForExitAsync().WaitAsync(CooperativeTiming.Grace);
+        }
         var confirmationRequested = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var confirmation = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         try
@@ -196,14 +206,19 @@ public sealed class HostLifecycleTests
                 Assert.False(process.HasExited);
                 confirmationRequested.TrySetResult(true);
                 return await confirmation.Task;
-            });
+            }, ShortTiming);
             await confirmationRequested.Task.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.False(stopping.IsCompleted); Assert.False(process.HasExited);
             await Task.Delay(ShortTiming.PollInterval);
             Assert.False(stopping.IsCompleted); Assert.False(process.HasExited);
             confirmation.TrySetResult(force);
             if (force) { await stopping; Assert.True(process.HasExited); Assert.NotEqual(0, process.ExitCode); }
-            else { await Assert.ThrowsAsync<TimeoutException>(() => stopping); Assert.False(process.HasExited); }
+            else
+            {
+                var refusal = await Assert.ThrowsAsync<TimeoutException>(() => stopping);
+                Assert.Equal("The host did not stop gracefully. TIA may need a restart if the host is forcibly terminated.", refusal.Message);
+                Assert.False(process.HasExited);
+            }
             Assert.Equal(1, confirmations);
         }
         finally
@@ -229,7 +244,7 @@ public sealed class HostLifecycleTests
             await Task.Delay(ShortTiming.PollInterval);
             Assert.False(fixture.Process.HasExited);
             return true;
-        }));
+        }, ShortTiming));
         Assert.Equal(1, confirmations); Assert.False(fixture.Process.HasExited);
     }
 
@@ -252,9 +267,8 @@ public sealed class HostLifecycleTests
         var error = await Record.ExceptionAsync(() => Stop(fixture.Identity, _ => Task.CompletedTask, async host => {
             confirmations++;
             await fixture.Shutdown(host);
-            while (!fixture.Process.HasExited) await Task.Delay(ShortTiming.PollInterval);
             return true;
-        }));
+        }, ShortTiming with { ConfirmationWait = CooperativeTiming.ConfirmationWait }));
         Assert.True(error is ArgumentException or UnauthorizedAccessException, error?.ToString());
         Assert.Equal(1, confirmations); Assert.True(fixture.Process.HasExited);
         Assert.Equal(0, fixture.Process.ExitCode);
@@ -304,6 +318,7 @@ public sealed class HostLifecycleTests
             var owned = host.Pid == process.Id ? process : replacement!;
             await owned.StandardInput.WriteLineAsync("tiamcp.host-control/1 shutdown");
             await owned.StandardInput.FlushAsync();
+            await owned.WaitForExitAsync().WaitAsync(CooperativeTiming.Grace);
         }
         try
         {

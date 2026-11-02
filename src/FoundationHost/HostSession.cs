@@ -203,7 +203,7 @@ internal sealed class HostSession : IHostSession
             activeCalls++;
         }
         bool recorded = false;
-        try { return await InvokeCore(inner, request, workbench, token, () => recorded = true).ConfigureAwait(false); }
+        try { return await InvokeCore(inner, request, workbench, () => recorded = true, token).ConfigureAwait(false); }
         finally
         {
             // Setup can fail before InvokeCore enters its call-record finally.
@@ -211,7 +211,7 @@ internal sealed class HostSession : IHostSession
         }
     }
     private async ValueTask<CallToolResult> InvokeCore(McpServerTool inner, RequestContext<CallToolRequestParams> request,
-        bool workbench, CancellationToken token, Action markRecorded)
+        bool workbench, Action markRecorded, CancellationToken token)
     {
         if (!workbench) BindAi(request.Server);
         string id = Guid.NewGuid().ToString("N"), actor = workbench ? ActorScope.Workbench : ActorScope.Mcp;
