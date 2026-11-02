@@ -10,7 +10,7 @@ public sealed partial class PipelineTests
     [Theory]
     [InlineData("SaveProject", "project")]
     [InlineData("WritePlcSclSourceFile", "mojibake")]
-    public void Multiple_description_words_need_a_name_or_alias_hit(string name, string capability)
+    public async Task Multiple_description_words_need_a_name_or_alias_hit(string name, string capability)
     {
         using var fixture = new Fixture(all: true);
         var descriptor = fixture.Catalog.All[name];
@@ -22,6 +22,16 @@ public sealed partial class PipelineTests
         Assert.Single(McpServer.FindTools("uniqueincidentalneedle").Items!.Where((_, i) => i % 3 == 0));
         Assert.Empty(McpServer.FindTools(description).Items ?? Array.Empty<string>());
         Assert.Single(McpServer.FindTools(capability + " uniqueincidentalneedle").Items!.Where((_, i) => i % 3 == 0));
+        async Task<JsonArray> Search(string query)
+        {
+            var result = await fixture.Call("FindTools", JsonSerializer.Serialize(new { query }));
+            Assert.False(result.IsError ?? false);
+            return result.StructuredContent!["data"]!["items"]!.AsArray();
+        }
+        Assert.Equal(3, (await Search("uniqueincidentalneedle")).Count);
+        Assert.Empty(await Search(description));
+        Assert.Equal(3, (await Search(capability + " uniqueincidentalneedle")).Count);
+        Assert.Empty(fixture.Worker.Calls);
     }
 
     [Fact]

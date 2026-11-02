@@ -210,7 +210,7 @@ public sealed class AnalyzerWarningTests
         var name = "AnalyzerFixture" + Guid.NewGuid().ToString("N");
         // A compiler can use a different TEMP from preflight's checking process.
         var temporary = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "analyzer-sdk-" + Guid.NewGuid().ToString("N"))).FullName;
-        var directory = Path.Combine(temporary, "dotnet/runfile", name + "-" + new string('a', 64));
+        var directory = Path.Combine(temporary, "dotnet/runfile", AnalyzerWarnings.RunfileProgramDirectory(Path.Combine(tree.Root, name + ".cs")));
         var template = Path.Combine(directory, "obj/release/" + name + ".cs.GlobalUsings.g.cs");
         Directory.CreateDirectory(Path.GetDirectoryName(template)!);
         try
@@ -237,6 +237,30 @@ public sealed class AnalyzerWarningTests
             Assert.Throws<ReleaseException>(() => AnalyzerWarnings.Collect(tree.Root, reports));
         }
         finally { Directory.Delete(temporary, recursive: true); }
+    }
+
+    [Fact]
+    public void ForeignRunfileInputsAreIgnoredButStaleInputsOfThisCheckoutStillFail()
+    {
+        using var tree = new StaticTree(); using var foreign = new StaticTree();
+        var reports = Reports(tree);
+        var program = "scripts/Probe.cs";
+        var runfile = Path.Combine(tree.Root, "temp/dotnet/runfile");
+        var ownDirectory = AnalyzerWarnings.RunfileProgramDirectory(Path.Combine(tree.Root, program));
+        var foreignDirectory = AnalyzerWarnings.RunfileProgramDirectory(Path.Combine(foreign.Root, program));
+        Assert.NotEqual(ownDirectory, foreignDirectory);
+        var own = tree.Write("temp/dotnet/runfile/" + ownDirectory + "/obj/release/Probe.cs.AssemblyInfo.cs", "// generated input\n");
+        var other = tree.Write("temp/dotnet/runfile/" + foreignDirectory + "/obj/release/Probe.cs.AssemblyInfo.cs", "// foreign generated input\n");
+        var missing = Path.Combine(runfile, foreignDirectory, "obj/release/Probe.cs.GlobalUsings.g.cs");
+        var receipt = Path.Combine(reports, "a.inputs");
+        var original = File.ReadAllText(receipt).Replace("C.csproj", program + ".csproj", StringComparison.Ordinal);
+        File.WriteAllText(receipt, original + other + "|" + new string('0', 64) + "\n" + missing + "|" + new string('0', 64) + "\n" + own + "|" + ReleaseRecords.HashFile(own) + "\n");
+        Assert.True(File.Exists(other));
+        Assert.False(File.Exists(missing));
+        Assert.Single(AnalyzerWarnings.Collect(tree.Root, reports).Entries);
+        File.AppendAllText(own, "// stale input\n");
+        var error = Assert.Throws<ReleaseException>(() => AnalyzerWarnings.Collect(tree.Root, reports));
+        Assert.Contains("Stale or invalid file-based SDK generated input: " + own, error.Message);
     }
 
     [Fact]

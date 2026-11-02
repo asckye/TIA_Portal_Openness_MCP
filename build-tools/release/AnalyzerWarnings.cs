@@ -163,6 +163,14 @@ internal static class AnalyzerWarnings
         return Regex.IsMatch(local, pattern, RegexOptions.CultureInvariant);
     }
 
+    internal static string RunfileProgramDirectory(string program)
+    {
+        var path = Path.GetFullPath(program);
+        // The SDK keys file apps by their absolute source path, case folded on Windows.
+        var identity = OperatingSystem.IsWindows() ? path.ToUpperInvariant() : path;
+        return Path.GetFileNameWithoutExtension(path) + "-" + Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(identity)));
+    }
+
     internal static AnalyzerWarningCollection Collect(string root, string directory)
     {
         directory = LocalDirectory(directory);
@@ -216,6 +224,8 @@ internal static class AnalyzerWarnings
                 if (project.EndsWith(".cs.csproj", StringComparison.Ordinal) && runfile != null &&
                     RunfileInput(parts[0], project[..^7], contextParts[2], runfile))
                 {
+                    var ownDirectory = runfile + "/" + RunfileProgramDirectory(Path.Combine(root, project[..^7])) + "/";
+                    if (!parts[0].Replace('\\', '/').StartsWith(ownDirectory, StringComparison.Ordinal)) continue;
                     ReportFile(Path.GetPathRoot(Path.GetFullPath(runfile))!, parts[0]);
                     if (!File.Exists(parts[0]) || !ReleaseRecords.HashFile(parts[0]).Equals(parts[1], StringComparison.OrdinalIgnoreCase))
                         throw new ReleaseException("Stale or invalid file-based SDK generated input: " + parts[0]);

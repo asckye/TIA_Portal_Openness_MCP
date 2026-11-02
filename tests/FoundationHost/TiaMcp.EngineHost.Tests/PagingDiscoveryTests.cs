@@ -26,8 +26,9 @@ public sealed partial class PipelineTests
         ((IDictionary<string, ToolDescriptor>)fixture.Catalog.All)[descriptor.Name] = new ToolDescriptor(descriptor.Name,
             descriptor.Tool.Description, descriptor.Tool, descriptor.Classification, descriptor.Signature, descriptor.Parameters,
             descriptor.DryRun, descriptor.CandidateFamily, descriptor.Execution);
-        Assert.Empty(McpServer.FindTools("uniqueincidentalneedle").Items ?? Array.Empty<string>());
-        Assert.Single(McpServer.FindTools("uniqueincidentalneedle secondneedle").Items!.Where((_, i) => i % 3 == 0));
+        // Single words match descriptions (ranked after names); several description-only words need a name or alias hit.
+        Assert.Single(McpServer.FindTools("uniqueincidentalneedle").Items!.Where((_, i) => i % 3 == 0), line => line.Contains("SaveProject"));
+        Assert.Empty(McpServer.FindTools("uniqueincidentalneedle secondneedle").Items ?? Array.Empty<string>());
     }
 
     [Theory]

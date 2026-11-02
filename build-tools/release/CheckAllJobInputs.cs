@@ -35,7 +35,7 @@ internal static class CheckAllJobInputs
         ["approval-self-tests"] = "Test-ReleaseApprovalGate.py --self-test",
         ["relocation-self-tests"] = "Test-RelocatedBundle.py --self-test"
     };
-    internal static readonly string[] ToolJobs = ["generate-catalogs", "generate-tool-usage", "generate-release-migration", "prepare-decoder-python", "build-once",
+    internal static readonly string[] ToolJobs = ["generate-catalogs", "prepare-decoder-python", "generate-tool-usage", "generate-release-migration", "build-once",
         "analyzer-warnings", "suite-output-parity", "tracked-tree-drift", "catalog-drift", "tool-counts-drift", "usage-drift", "migration-drift",
         "tools-list-self-tests", "tools-list", "script-calls", "dead-references", "repository", "repository-self-tests", "suite-runner-self-tests",
         "adapter-boundary", "tia-features", "bundle", "bundle-self-tests", "release-documentation", "release-dry-run", "preflight",
