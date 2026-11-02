@@ -59,7 +59,7 @@ internal static class TiaFeatures
         void WriteCapture(string path, JsonArray table)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
-            File.WriteAllText(path, (PythonJson.Dumps(table, indent: 2) + "\n").Replace("\n", Environment.NewLine, StringComparison.Ordinal), new UTF8Encoding(false));
+            File.WriteAllText(path, PythonJson.Dumps(table, indent: 2) + "\n", new UTF8Encoding(false));
         }
         var actual = Capture(root, options.Get("Dotnet", "dotnet"));
         if (options.Get("Capture") is { } capture) { WriteCapture(capture, actual); Console.WriteLine($"Captured {actual.Count} project/framework evaluations in {capture}."); return 0; }

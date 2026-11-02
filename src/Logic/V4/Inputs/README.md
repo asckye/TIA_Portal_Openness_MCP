@@ -45,10 +45,10 @@ a dictionary. Input errors do not echo JSON, values, keys or parser diagnostics.
 | C | `ToolCall[]`, `ToolArguments` / `ToolCallValidator` | Caller supplies target schema and business validator, release catalog admission flags and budget. Read/preview 1–50, transaction 1–20, no nested orchestration, preview forces dryRun after input validation. `McpServer.Batch.cs:73–97`, `ToolTransactionRules.cs:12–28`. No invocation occurs. |
 | W | `WriteValue[]` / `WriteValueValidator` | 1–500, trimmed ordinal unique names, channel-specific value policy, dryRun or confirmWrite required. `RuntimeChannelsLogic.cs:111–160`, `RuntimeChannelTools.cs:103–121,378–392`. Simulation may explicitly retain duplicate names (`uniqueNames:false`) from `PlcSimAdvancedLogic.cs:122–145`; per-tag primitive policy uses the type already read by the caller. |
 
-Source paths above are under `src/Logic/Siemens`, `src/Logic/Runtime`,
-`src/Engine/Siemens`, `src/Engine/Siemens/Portal`, `src/Engine/Siemens/Services`, or
-`src/Engine/ModelContextProtocol/Tools` as appropriate. Tests give full paths beside
-the executable legacy samples.
+Retained source paths above are under `src/Logic/Siemens`, `src/Logic/Runtime`,
+`src/Shared` and `src/Adapters/Native`. Historical engine paths refer to commit
+`ab5a89af`; Q2 removes those engine-only subjects. KeptCode tests retain the
+executable legacy samples and their source citations.
 
 `InputBudget` bounds raw text length **before parsing**, and also measures characters
 on compact V4 JSON **before** business trimming for every entry point. Whitespace

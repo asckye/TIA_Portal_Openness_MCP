@@ -60,7 +60,6 @@ internal static class DotnetSuiteSelfTests
     {
         var root = Repository.FindRoot();
         var catalog = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "tests/test-suites.json")))!.AsObject();
-        Require((string?)catalog["kept-code"]?["splitFrom"] == "offline" && (string?)catalog["kept-code-v20"]?["splitFrom"] == "offline-v20");
         var errors = SplitSuiteCoverageErrors(catalog, File.ReadAllText(Path.Combine(root, ".github/workflows/offline-checks.yml")), ReleaseCommandTable.OfflineSuites);
         if (errors.Count != 0) throw new ReleaseException(string.Join("\n", errors));
         foreach (var name in ReleaseCommandTable.OfflineSuites)

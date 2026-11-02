@@ -38,7 +38,6 @@
     <Project Path="tests/Engine/TiaMcp.Engine.PromptRegistration.Tests/TiaMcp.Engine.PromptRegistration.Tests.csproj" />
     <Project Path="tests/FoundationHost/TiaMcp.FoundationHost.SoftwareRead.Tests/TiaMcp.FoundationHost.SoftwareRead.Tests.csproj" />
     <Project Path="tests/FoundationHost/TiaMcp.FoundationHost.SpecialExportShape.Tests/TiaMcp.FoundationHost.SpecialExportShape.Tests.csproj" />
-    <Project Path="tests/Engine/TiaMcp.Engine.Tests/TiaMcp.Engine.Tests.csproj" />
     <Project Path="tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/TiaMcp.WorkerChannel.TransportFixture.csproj" />
     <Project Path="tests/Engine/TiaMcp.Engine.VersionPolicy.Tests/TiaMcp.Engine.VersionPolicy.Tests.csproj" />
   </Folder>

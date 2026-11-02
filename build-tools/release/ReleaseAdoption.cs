@@ -316,7 +316,7 @@ internal static partial class ReleaseCommands
 
     // build-release under adoption: the suite counts of its record come from the evidence; the self-tests that report counts and the
     // tool usage check still run here.
-    internal sealed record AdoptedCommonCounts(int WriteGuard, int CrashEvidence, int Offline, int OfflineV20, int KeptCode, int KeptCodeV20,
+    internal sealed record AdoptedCommonCounts(int WriteGuard, int CrashEvidence, int KeptCode, int KeptCodeV20,
         int VersionPolicy, int Updater, int NativeMcpSafety, Match Lifecycle);
 
     private static AdoptedCommonCounts AdoptedCommonValidation(JsonObject adoption, string dotnet, string python, string outputDirectory, string runTemp, string cliHome, string apiRoot)
@@ -333,7 +333,6 @@ internal static partial class ReleaseCommands
         _ = ReleaseEvidence.SuitePassed(adoption, "source-contracts");
         foreach (var suite in ReleaseCommandTable.OfflineSuites) _ = ReleaseEvidence.SuitePassed(adoption, suite);
         return new AdoptedCommonCounts(ReleaseEvidence.SuitePassed(adoption, "write-guard"), ReleaseEvidence.SuitePassed(adoption, "crash-evidence"),
-            ReleaseEvidence.SuitePassed(adoption, "offline"), ReleaseEvidence.SuitePassed(adoption, "offline-v20"),
             ReleaseEvidence.SuitePassed(adoption, "kept-code"), ReleaseEvidence.SuitePassed(adoption, "kept-code-v20"),
             ReleaseEvidence.SuitePassed(adoption, "version-policy"), ReleaseEvidence.SuitePassed(adoption, "updater"), nativeMcpSafety, lifecycleMatch);
     }

@@ -4,7 +4,7 @@
 
 [重构计划](refactor-plan.md) · [仓库结构](repository-layout.md) · [验证分层](validation.md) · [响应与异常设计](response-and-errors.md)
 
-尚未移植的 V20/V21 工具声明位于 `src/Engine/ModelContextProtocol/Tools`。
+八版工具声明共用 `src/Shared` 和 `src/Shared/Host`；原生实现位于 `src/Adapters/Native`。
 新增工具时同时检查所属文件、类型化调用、版本策略和注册目录；示例、参数来源及结果解释统一维护在
 `reference/tool-examples`，按验证分层执行受影响版本的构建、离线测试和契约快照。
 
@@ -13,7 +13,7 @@
 工具使用随包指南、模板或伴随脚本时，复用 `src/Shared/BundleLayout.cs` 的资源表与安装/开发锚点。
 各调用方的显式覆盖和兼容回退并不相同；不要复制向上探测仓库的旧逻辑。
 新增资源的清单、布局测试和仓库外验证步骤见[运行时布局](runtime-layout.md#新增运行时资源)。
-`reference/v21-ecosystem.json` 由 V20/V21 引擎直接嵌入；修改该源文件后须重建，运行时不会从磁盘覆盖嵌入数据。
+`reference/v21-ecosystem.json` 由 `src/EngineHost/TiaMcp.EngineHost.csproj` 直接嵌入；修改该源文件后须重建，运行时不会从磁盘覆盖嵌入数据。
 
 ## MCP 文案语言
 
@@ -67,4 +67,4 @@ XML/报告构造器里的异常和消息仍受检查。只减不增门禁不授�
 
 ## 现行工具归属
 
-已移植工具的声明与响应映射在 `src/Shared`，无 Openness 的宿主工具在 `src/Shared/Host`；原生实现位于 `src/Adapters/Native`。FoundationHost 和 EngineHost 链接同一份声明，禁止在引擎中重建已移植实现。尚未移植的专有工具保留在 `src/Engine/ModelContextProtocol/Tools`，按能力族继续迁移，见 [ADR 0009](decisions/0009-port-v20-v21-tools-to-foundation-adapters.md)。注册与动作范围以生成目录为准；新增声明后依次运行 `generate-catalogs`、`generate-tool-usage`、`generate-tool-counts`，再构建与捕获。
+已移植工具的声明与响应映射在 `src/Shared`，无 Openness 的宿主工具在 `src/Shared/Host`；原生实现位于 `src/Adapters/Native`。FoundationHost 和 EngineHost 链接同一份声明；`src/Engine` 残余源码已按 [ADR 0022](decisions/0022-engine-retirement-and-eight-release-unification.md) 删除。注册与动作范围以生成目录为准；新增声明后依次运行 `generate-catalogs`、`generate-tool-usage`、`generate-tool-counts`，再构建与捕获。

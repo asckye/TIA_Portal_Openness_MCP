@@ -902,7 +902,7 @@ CASES['Session'] = [
     ('GetSessionState', 'disconnected', {}),
     ('DisconnectPortal', 'disconnected', {}),
     ('InitializeEnvironment', 'offline', {}),
-    ('ConnectProject', 'invalid-identity', {'processId': -1, 'processStartUtc': 'invalid', 'projectPath': ''}),
+    ('ConnectPortal', 'invalid-process-id', {'processId': -1}),
     ('GetPortalInfo', 'disconnected', {'includeProcesses': False, 'includeSessions': False, 'includeProducts': False}),
 ]
 CASES['ProjectSession'] = [
@@ -1183,6 +1183,9 @@ def check_coverage(domains):
     def declarations(type_name):
         names = {name for name, row in frozen['registrations'].items()
                  if row['owner'] == type_name and row['path'].startswith('src/Engine/')}
+        # The frozen engine roster names the retired combined connection helper.
+        # Its invalid-process fixture now calls the published connection tool.
+        names = {'ConnectPortal' if name == 'ConnectProject' else name for name in names}
         if any(re.search(r'\b(?:class|struct|interface)\s+' + re.escape(type_name) + r'\b', text)
                for text in sources.sources.values()):
             names.update(re.findall(r'\[McpServerTool\(Name\s*=\s*"(\w+)"', sources.type_text(type_name)))

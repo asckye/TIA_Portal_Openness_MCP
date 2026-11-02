@@ -1,7 +1,7 @@
 # 0022 引擎退役，八个版本共用一套逻辑与流程
 
 - 状态：已采纳
-- 日期：2026-10-13（八版统一原则）；2026-10-22（引擎程序删除）
+- 日期：2026-10-13（八版统一原则）；2026-10-22（引擎程序删除）；2026-11-02（残余源码与专属测试删除）
 - 决策者：维护者
 - 置信度：高
 - 相关：取代 [ADR 0006](0006-engine-exe-as-v20-v21-worker.md)；细化 [ADR 0009](0009-port-v20-v21-tools-to-foundation-adapters.md)；[ADR 0005](0005-v20-v21-on-foundation-host.md)、[0012](0012-old-release-tool-registration.md)、[0014](0014-tool-counts-follow-official-api.md)；[P8-04 设计](../design/p8-04-engine-retirement.md)；[重构计划](../refactor-plan.md) P8-04；[发布计划](../../status/release-plan.md)
@@ -24,11 +24,12 @@ ADR 0006 让 V20/V21 暂时以引擎 EXE 作为 worker，ADR 0009 决定按能�
 - 原则（维护者 2026-10-13）：除注册的工具集合与官方 API 要求的差异外，V14 SP1、V15.1、V16–V21 八个版本使用同一套逻辑与流程。工具只在官方 API 至少支持它的一个操作时注册；API 写法不同的地方用 `src/Shared/TiaFeatures.props` 的特性符号区分。其他按版本的逻辑、默认值、文字或包装都要统一。
 - V20/V21 改用 PlcWorker（P8-04j2，`62ebf86e`，2026-10-21）；交付包不再含引擎 EXE、引擎 worker 文件和 `tool-catalog.json`。
 - 引擎程序、引擎命令行和构建或启动引擎的路线删除（P8-04l 第 1 阶段，`287bbac2`，2026-10-22）；宿主以退出码 64 拒绝 `--engine-*` 选项。宿主保留命令行子集 `doctor`、`audit verify`、`schema`、`version`、`config`、`install-plc-tools`、`help`。
-- 剩余工作：P8-04l2 删除 `src/Engine` 剩余的非编译源码；P8-04l3 为退役的 34 个引擎候选 check-all 作业补 PLC worker 版；P8-04n 统一八版对外呈现；DES-2 让每项功能只保留一个实现。排期见[发布计划](../../status/release-plan.md)。
+- 维护者决定（2026-11-02，Q2）：P8-04l2 的残余源码清理完成；删除 `src/Engine`、只验证引擎的测试、脚本和夹具，不再把残余源码作为冻结夹具保留，也不要求为引擎专属测试补继任测试。此决定取代此前“保留残余源码”和“必须补继任测试”的要求。KeptCode/Harness 仍编译的测试及现有 Oracle 夹具保留；版本目录检查和两组 Logic/Adapters HMI 理论转入 KeptCode。
+- 剩余工作：Q3 删除宿主引擎客户端、目录和死条件分支；P8-04l3 为退役的 34 个引擎候选 check-all 作业补 PLC worker 版；P8-04n 统一八版对外呈现；DES-2 让每项功能只保留一个实现。排期见[发布计划](../../status/release-plan.md)。
 
 ## 后果
 
 - 正面：八个版本只有一种宿主、一种 worker、一条调用路径；文档和检查不再区分“引擎版本”。
 - 负面与取舍：V20/V21 切换到 PlcWorker 时没有引擎真机基线可对照（D8 已按 ADR 0020 取消）；beta.2 真机测试显示部分重复的旧工具在 V21 上失败，统一尚未完成（DES-2）。
-- 后续工作：P8-04l2、P8-04l3、P8-04n、DES-2；文档中描述引擎在运行的段落按文档重组改写，“引擎”只作历史名词。
+- 后续工作：Q3、P8-04l3、P8-04n、DES-2；文档中描述引擎在运行的段落按文档重组改写，“引擎”只作历史名词。
 - 验证方式：八版契约与响应快照；交付包清单不含引擎文件；宿主拒绝 `--engine-*` 的测试；P8-04l2 完成后仓库中没有 `src/Engine`。

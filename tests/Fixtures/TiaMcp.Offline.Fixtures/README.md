@@ -1,7 +1,7 @@
 # Offline parity fixture
 
 This non-test library supplies the existing Foundation parity oracle. It does not build or reference `src/Engine` or `TiaMcp.Engine.Tests`.
-`Oracle/` freezes eight dispatcher, service-registration, release-selection, verification-DTO and software-lookup files from the P8-04k1 launch source. They are fixture infrastructure, never production sources or successor subjects. The original engine tests still compile and test the original implementations unchanged. `oracle-sources.json` records their byte identities.
+`Oracle/` freezes eight dispatcher, service-registration, release-selection, verification-DTO and software-lookup files from the P8-04k1 launch source. They are fixture infrastructure, never production sources or successor subjects. Q2 deletes the residual production engine sources and engine-only tests. KeptCode and Foundation parity continue to use this existing oracle; the version-catalog checks now use its `EngineRouter`. `oracle-sources.json` records their byte identities.
 
 The shared/host tools under observation continue to compile from their retained production source paths. The old `enginefixture` alias is preserved to avoid edits to Foundation assertions. The parity scenarios keep their explicit catalogs and service registration. The reset catalog contains the four infrastructure probe types; the unused HMI probe targets are omitted. No parity scenario calls those reset targets.
 

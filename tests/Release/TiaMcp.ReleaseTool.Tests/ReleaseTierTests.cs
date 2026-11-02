@@ -59,7 +59,7 @@ public sealed class ReleaseTierTests
     [Theory]
     [InlineData("src/FoundationHost/Program.cs", "foundation-transport")]
     [InlineData("src/PlcWorker/Program.cs", "foundation-approval")]
-    [InlineData("src/Engine/Program.cs", "plc-responses")]
+    [InlineData("src/PlcWorker/Program.cs", "plc-responses")]
     [InlineData("src/Studio/Gui/App.xaml.cs", "gui-tests")]
     [InlineData("scripts/checks/Snapshot-ToolResponses.py", "responses-self-test")]
     [InlineData("build-tools/release/SwallowedExceptions.cs", "swallowedexceptions-self-test")]
@@ -70,7 +70,7 @@ public sealed class ReleaseTierTests
     {
         var plan = ReleaseCheckPolicy.Load(Root).Select("quick", [path]);
         Assert.Contains(expected, plan.SelectedChecks);
-        if ((path.StartsWith("src/Engine/") || path.StartsWith("src/PlcWorker/"))) Assert.Contains("plc-stability", plan.SelectedChecks);
+        if (path.StartsWith("src/PlcWorker/")) Assert.Contains("plc-stability", plan.SelectedChecks);
         else Assert.Contains("plc-stability", plan.SkippedChecks);
     }
 
@@ -81,7 +81,7 @@ public sealed class ReleaseTierTests
         Assert.Equal(policy.Always.Order(), policy.Select("quick", ["docs/development/validation.md"]).SelectedChecks.Order());
         Assert.Empty(policy.Select("full", []).SkippedChecks);
         Assert.Throws<ReleaseException>(() => policy.ValidatePlan(policy.Select("full", []) with { SkippedChecks = ["plc-stability"] }));
-        var quick = policy.Select("quick", ["src/Engine/Program.cs"]);
+        var quick = policy.Select("quick", ["src/PlcWorker/Program.cs"]);
         Assert.Throws<ReleaseException>(() => policy.ValidatePlan(quick with {
             SelectedChecks = quick.SelectedChecks.Where(check => check != "plc-approval").ToArray(),
             SkippedChecks = [.. quick.SkippedChecks, "plc-approval"] }));

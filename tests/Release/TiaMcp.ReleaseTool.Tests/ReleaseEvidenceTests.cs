@@ -531,10 +531,10 @@ public sealed class ReleaseEvidenceTests
     [Trait("Category", "ReleaseParity")]
     public void AdoptedSuiteCountsKeepTheReleaseSuiteGate()
     {
-        var adoption = Adoption(("offline", 303, 0, 0), ("kept-code", 10, 0, 1), ("updater", 0, 0, 0));
+        var adoption = Adoption(("kept-code", 5155, 0, 0), ("kept-code-v20", 10, 0, 1), ("updater", 0, 0, 0));
 
-        Assert.Equal(303, ReleaseEvidence.SuitePassed(adoption, "offline"));
-        Assert.Contains("did not meet", Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "kept-code")).Message);
+        Assert.Equal(5155, ReleaseEvidence.SuitePassed(adoption, "kept-code"));
+        Assert.Contains("did not meet", Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "kept-code-v20")).Message);
         Assert.Contains("did not meet", Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "updater")).Message);
         Assert.Contains("no result", Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "write-guard")).Message);
     }
@@ -569,7 +569,7 @@ public sealed class ReleaseEvidenceTests
         {
             File.WriteAllText(path, new JsonObject { ["schema"] = "other" }.ToJsonString());
             Assert.Contains("invalid", Assert.Throws<ReleaseException>(() => ReleaseEvidence.LoadAdoption(_ => path)).Message);
-            File.WriteAllText(path, Adoption(("offline", 1, 0, 0)).ToJsonString());
+            File.WriteAllText(path, Adoption(("kept-code", 1, 0, 0)).ToJsonString());
             Assert.NotNull(ReleaseEvidence.LoadAdoption(name => name == ReleaseEvidence.AdoptionVariable ? path : null));
         }
         finally { File.Delete(path); }

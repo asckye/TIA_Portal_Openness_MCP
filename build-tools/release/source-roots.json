@@ -2,30 +2,6 @@
   "schemaVersion": 1,
   "roots": [
     {
-      "path": "src/Engine",
-      "inventories": [
-        "engine",
-        "multi",
-        "validation"
-      ],
-      "checks": [
-        "offline-suites",
-        "native-coverage",
-        "native-diagnostics",
-        "http-concurrency",
-        "resource-discovery",
-        "prompt-registration",
-        "plc-functional",
-        "plc-worker-isolation",
-        "plc-approval",
-        "plc-ecosystem",
-        "plc-stability",
-        "plc-isolated-stability",
-        "plc-contracts",
-        "plc-responses"
-      ]
-    },
-    {
       "path": "src/FoundationHost",
       "inventories": [
         "engine",
@@ -550,7 +526,6 @@
         "swallowedexceptions-self-test",
         "toolslist-self-test",
         "nativecallorder-self-test",
-        "sharednativepaths-self-test",
         "responseenvelopes-self-test",
         "domaintools-self-test",
         "dotnetsuites-self-test",
@@ -904,7 +879,6 @@
         "swallowedexceptions-self-test",
         "toolslist-self-test",
         "nativecallorder-self-test",
-        "sharednativepaths-self-test",
         "responseenvelopes-self-test",
         "domaintools-self-test",
         "dotnetsuites-self-test",
@@ -988,7 +962,6 @@
         "swallowedexceptions-self-test",
         "toolslist-self-test",
         "nativecallorder-self-test",
-        "sharednativepaths-self-test",
         "responseenvelopes-self-test",
         "domaintools-self-test",
         "dotnetsuites-self-test",
@@ -1060,135 +1033,82 @@
     },
     {
       "path": "src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "adapter contracts"
     },
     {
       "path": "src/Adapters.Contracts/packages.lock.json",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "adapter contracts lock"
     },
     {
       "path": "src/OnlineChannels/TiaMcp.OnlineChannels.csproj",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "runtime channel source"
     },
     {
       "path": "src/OnlineChannels/S7LiveReader.cs",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "runtime channel source"
     },
     {
       "path": "src/OnlineChannels/OpcUaLiveReader.cs",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "runtime channel source"
     },
     {
       "path": "src/OnlineChannels/S7WebApiChannel.cs",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "runtime channel source"
     },
     {
       "path": "src/OnlineChannels/UnifiedOpenPipeChannel.cs",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "runtime channel source"
     },
     {
       "path": "src/Adapters/Native/Plc/PlcServices.cs",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "engine adapter wiring"
     },
     {
       "path": "tests/Engine/TiaMcp.Engine.Harness/AdapterIntegrationChecks.cs",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "engine adapter checks"
     },
     {
       "path": "src/Shared/BundleLayout.cs",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "bundle layout"
     },
     {
       "path": "build-tools/release/ReleaseTiers.cs",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "release tier policy"
     },
     {
       "path": "build-tools/release/ReleaseCandidateChecks.cs",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "release tier policy"
     },
     {
       "path": "build-tools/release/BuildOutputCache.cs",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "release tier policy"
     },
     {
       "path": "build-tools/release/BranchGate.cs",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "release tier policy"
     },
     {
       "path": "build-tools/release/release-checks.json",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "release tier policy"
     },
     {
       "path": "scripts/checks/Test-ReleaseSmoke.py",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "release smoke check"
     },
     {
@@ -1200,272 +1120,162 @@
     },
     {
       "path": "tests/Release/TiaMcp.ReleaseTool.Tests/BuildOutputCacheTests.cs",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "build cache tests"
     },
     {
       "path": "build-tools/release/BundleLayoutChecks.cs",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "bundle layout check"
     },
     {
       "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/BundleLayoutTests.cs",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "bundle layout tests"
     },
     {
       "path": "src/Updater/TiaMcp.Updater.csproj",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "updater source"
     },
     {
       "path": "src/Updater/Program.cs",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "updater source"
     },
     {
       "path": "src/Updater/Updater.cs",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "updater source"
     },
     {
       "path": "src/Updater/UpdaterText.cs",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "updater source"
     },
     {
       "path": "src/Updater/UpdaterMessages.resx",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "updater source"
     },
     {
       "path": "src/Updater/app.manifest",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "updater source"
     },
     {
       "path": "src/Updater/App.config",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "updater source"
     },
     {
       "path": "tests/Updater/TiaMcp.Updater.Tests/TiaMcp.Updater.Tests.csproj",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "updater tests"
     },
     {
       "path": "tests/Updater/TiaMcp.Updater.Tests/UpdaterTests.cs",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "updater tests"
     },
     {
       "path": "src/WorkerChannel/ChannelMessage.cs",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "worker channel source"
     },
     {
       "path": "src/WorkerChannel/LineFraming.cs",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "worker channel source"
     },
     {
       "path": "src/WorkerChannel/ChannelCodec.cs",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "worker channel source"
     },
     {
       "path": "src/WorkerChannel/ChannelClient.cs",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "worker channel source"
     },
     {
       "path": "src/WorkerChannel/ChannelServer.cs",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "worker channel source"
     },
     {
       "path": "src/WorkerChannel/TiaMcp.WorkerChannel.csproj",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "worker channel source"
     },
     {
       "path": "src/WorkerChannel/packages.lock.json",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "worker channel source"
     },
     {
       "path": "src/Studio/Core/Rpc/BridgeChannel.cs",
-      "consumers": [
-        "repository",
-        "package"
-      ],
+      "consumers": ["repository", "package"],
       "repositoryLabel": "Studio channel codec"
     },
     {
       "path": "src/Studio/Launcher/Launcher.cs",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "GUI entry"
     },
     {
       "path": "src/Studio/Gui/Themes/Primer.xaml",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "GUI entry"
     },
     {
       "path": "src/Studio/Gui/Themes/Shell.xaml",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "GUI entry"
     },
     {
       "path": "src/Studio/Gui/Themes/Approvals.xaml",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "GUI entry"
     },
     {
       "path": "src/Studio/Gui/Themes/Pages.xaml",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "GUI entry"
     },
     {
       "path": "src/Studio/Gui/Themes/Palette.HighContrast.xaml",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "GUI entry"
     },
     {
       "path": "src/Studio/Gui/Themes/Palette.Light.xaml",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "GUI entry"
     },
     {
       "path": "src/Studio/Gui/Themes/Palette.Dark.xaml",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "GUI entry"
     },
     {
       "path": "src/Studio/Gui/Controls/WorkbenchLogView.cs",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "GUI entry"
     },
     {
       "path": "src/Studio/Gui/Controls/WorkbenchMessageBox.cs",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "GUI entry"
     },
     {
       "path": "src/Studio/Gui/Controls/ResultPresentation.cs",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "GUI entry"
     },
     {
       "path": "src/Studio/Gui/Controls/LogTailView.cs",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "GUI entry"
     },
     {
@@ -1540,47 +1350,27 @@
     },
     {
       "path": ".editorconfig",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "C# analyzer configuration"
     },
     {
       "path": "Directory.Build.props",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "C# analyzer configuration"
     },
     {
       "path": "src/Shared/CodeAnalysis.props",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "C# analyzer configuration"
     },
     {
       "path": "src/Shared/DependencyVersions.props",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": ".NET dependency versions"
     },
     {
       "path": "src/Shared/ReproducibleBuild.props",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
+      "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": "deterministic compiler configuration"
     }
   ]

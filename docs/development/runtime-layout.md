@@ -4,8 +4,8 @@
 
 [重构计划](refactor-plan.md) · [引擎拆分设计](engine-decomposition.md) · [响应与异常设计](response-and-errors.md) · [验证分层](validation.md)
 
-本页记录 G7（运行时与仓库布局解耦）的现行实现和 P2-05（历史注释、`*Leftovers` 与用户可见文案语言）的清理规则。路径缩写：`E/` =
-`src/Engine/`，`L/` = `src/Logic/`，`S/` = `src/Studio/`。
+本页记录 G7（运行时与仓库布局解耦）的现行实现和 P2-05（历史注释、`*Leftovers` 与用户可见文案语言）的清理规则。历史路径缩写：`E/` 指已删除的 `src/Engine/`（提交 `ab5a89af`）；
+`L/` = `src/Logic/`，`S/` = `src/Studio/`。
 P2-05 的初始统计取自 2026-10-03，完成情况另行标明。
 
 ## V20/V21 服务在 Openness 未就绪时启动（P6-54）
@@ -29,7 +29,7 @@ V20/V21 宿主在 TIA 缺失、版本不匹配或 Openness 环境未就绪时仍
 | V21 | 512 | 84 |
 <!-- generated:tool-counts:end -->
 
-交付包不再包含引擎：`TiaMcp.Engine.V20.exe`、`TiaMcp.Engine.V21.exe`、它们的 worker 文件和 `tool-catalog.json` 已从 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 的必需文件移入 `exclude` 与 `legacyCleanup` 规则，多版本打包器断言 `runtime/` 下没有引擎文件。引擎只作为私有兼容副本构建到 `bin-build/engine-compat`，供仓库交叉检查使用，直到 P8-04l 删除引擎。宿主在任何发布键上都以退出码 64 拒绝 `--engine-worker`、`--engine-catalog` 等 `--engine-*` 选项；只有仓库检查脚本把 `TIA_MCP_ENGINE_CROSS_CHECK_DIRECTORY` 设为该 checkout 的 `bin-build/engine-compat`、宿主从该 checkout 的源码构建或私有输出运行、且两个引擎文件都在私有输出中时才接受（[`HostOptions.cs`](../../src/FoundationHost/HostOptions.cs)），该变量不是对外选项。引擎原有的 stdio/HTTP 宿主与隔离 supervisor 早已退役。发布记录为 `manifest/multi-version-build.json`，引擎交叉检查的记录原样保存在其 `engineCompatibility` 段；`manifest/release-build.json` 不再交付。
+交付包不再包含引擎：`TiaMcp.Engine.V20.exe`、`TiaMcp.Engine.V21.exe`、它们的 worker 文件和 `tool-catalog.json` 已从 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 的必需文件移入 `exclude` 与 `legacyCleanup` 规则，多版本打包器断言 `runtime/` 下没有引擎文件。引擎程序和私有交叉检查路线已退役；Q2 删除了剩余的非编译 `src/Engine` 源码和引擎专属检查。宿主继续以退出码 64 拒绝 `--engine-*` 选项。发布记录为 `manifest/multi-version-build.json`；`manifest/release-build.json` 作为历史记录保留，不再交付。
 
 每个 MCP 会话拥有一个独立 worker（八版相同）：stdio 为一个会话、一个 worker；HTTP 的 N 个同时存活会话对应 N 个 worker，不另设会话数量上限，部署时需按 worker 内存和 TIA 实例数限制客户端并发。HTTP 启动校验使用的短期 probe 在监听前退出，每个 worker 都绑定宿主 job object，会话结束、超时或宿主退出时终止。Disconnect 只结束当前会话的原生连接，RestartOpennessWorker 只重启调用方 worker；新 HTTP 会话从未绑定状态开始。工具桥接、审批/故障键、预演计划、暂存归属和导出句柄访问按会话隔离；导出内容仍共用进程内的 32 句柄/8,000,000 字符容量限制，避免 HTTP 并发扩大缓存上限。`/mcp/health` 无需鉴权，含 fileVersion、releaseKey 和 profile 名（V20/V21 仍为 `full-engine`，P8-04n 统一对外呈现前保持不变）；`/mcp/ready` 与 MCP 调用使用相同 Bearer 鉴权，只证明宿主已就绪。
 
@@ -140,9 +140,9 @@ P6-37 起 Foundation 宿主及其命令行子命令都接受 `--bundle-root <abs
 | 包根 | 自身含 `manifest/package-manifest.json` 的目录 |
 | MCP 安装输出 | `runtime/v14sp1`、`runtime/v15.1`、`runtime/v16`–`runtime/v21` |
 | PLC worker 开发输出 | `src/PlcWorker/bin/<发布键>/<configuration>/net48` |
-| 引擎开发输出（兼容副本，P8-04l 删除） | `src/Engine/bin-v20/<configuration>/net48`、`src/Engine/bin/<configuration>/net48` |
+| 引擎开发输出（历史） | 已退役；Q2 删除 `src/Engine` 残余目录 |
 | Foundation 开发输出 | `src/FoundationHost/bin/<configuration>/net10.0` |
-| 引擎测试宿主输出 | `tests/Engine/TiaMcp.Engine.Harness/bin/<configuration>/net48`；`tests/FoundationHost/TiaMcp.FoundationHost.Tests/bin/<configuration>/net10.0`；`tests/Engine/TiaMcp.Engine.Tests/bin/<configuration>/net10.0` |
+| PLC Harness 与离线测试输出 | `tests/Engine/TiaMcp.Engine.Harness/bin/<configuration>/net48`；`tests/FoundationHost/TiaMcp.FoundationHost.Tests/bin/<configuration>/net10.0`；`tests/KeptCode/TiaMcp.KeptCode.Tests/bin/<configuration>/net10.0` |
 | Studio 安装输出（既有） | `runtime/studio`、`runtime/studio/bridge` |
 | 随包独立工具 | `runtime/tools`；apphost 先找 `../dotnet`，再找 `DOTNET_ROOT` 和已安装 .NET |
 | Studio 开发输出（既有） | `src/Studio/Gui/bin/<configuration>/net10.0-windows` 及其 `bridge` 子目录；`src/Studio/Bridge/bin/<configuration>/net48` |
@@ -274,8 +274,8 @@ HMI 模板还要求 `--hmi-template-directory <absolute-directory>`，组件目�
 仓库模式核对代码表与跟踪文件；包模式从仓库运行校验器，按交付规则检查资源而不要求包内源码。
 检查器不证明运行时返回值、二进制完整性或西门子行为；`dotnet run --project build-tools/release -- check-repository -NoBinaries` 同时运行此检查。
 布局矩阵及调用方差分测试位于保留代码套件的 [BundleLayoutTests.cs](../../tests/KeptCode/TiaMcp.KeptCode.Tests/BundleLayoutTests.cs)、
-[EcosystemTests.cs](../../tests/KeptCode/TiaMcp.KeptCode.Tests/EcosystemTests.cs)，引擎套件的
-[EngineBundleLayoutTests.cs](../../tests/Engine/TiaMcp.Engine.Tests/EngineBundleLayoutTests.cs) 和 Studio 的
+[EcosystemTests.cs](../../tests/KeptCode/TiaMcp.KeptCode.Tests/EcosystemTests.cs)，已退役引擎套件的历史
+[EngineBundleLayoutTests.cs](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/ab5a89af/tests/Engine/TiaMcp.Engine.Tests/EngineBundleLayoutTests.cs) 和 Studio 的
 [Core 布局测试](../../tests/Studio/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs)、
 [GUI 布局测试](../../tests/Studio/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs)，覆盖安装、开发输出、worktree、CI、仅 runtime、嵌套暂存、
 空格/中文/尾分隔符、缺文件及显式覆盖。

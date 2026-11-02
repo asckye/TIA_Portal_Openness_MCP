@@ -13,6 +13,10 @@ using TiaMcp.Logic.V4.Hmi;
 using TiaMcpServer.ModelContextProtocol;
 using TiaMcpServer.Siemens;
 using Xunit;
+using AdapterHmiObject = TiaMcp.Adapters.Native.Hmi.HmiObject;
+using AdapterRequestValues = TiaMcp.Adapters.Native.Hmi.UnifiedRequestValues;
+using AdapterMultilingualText = TiaMcp.Adapters.Native.Hmi.UnifiedMultilingualText;
+using TiaMcpServer.Siemens.Services;
 
 namespace TiaMcp.Engine.Tests
 {
@@ -280,6 +284,64 @@ namespace TiaMcp.Engine.Tests
         [InlineData(5001, false)]
         public void AmlTotalItemBudgetMatchesCurrentParser(int count, bool accepted) => CheckAmlBudget(
             new JsonArray(Enumerable.Range(0, count).Select(i => (JsonNode)new JsonObject { ["name"] = "I" + i, ["builtIn"] = true }).ToArray()), accepted);
+
+        [Theory]
+        [InlineData("Text")]
+        [InlineData("Button")]
+        [InlineData("IOField")]
+        [InlineData("Rectangle")]
+        public void UnifiedAdapterPreservesExistingTemplateBuilderDesign(string control)
+        {
+            // HmiTemplateDesignJsonBuilder.cs:28-109 -> UnifiedHmiService.cs:1154-1240.
+            var item = new JsonObject { ["Type"] = control, ["Name"] = "A", ["Left"] = 1, ["Top"] = 2, ["Width"] = 120, ["Height"] = 40 };
+            if (control == "Text" || control == "Button")
+            {
+                item["Text"] = new JsonObject { ["zh-CN"] = "Start" };
+                item["Properties"] = new JsonObject { ["FontSize"] = 12, ["ForeColor"] = "0xFF123456" };
+            }
+            var template = new JsonObject { ["Screen"] = new JsonObject { ["Width"] = 800, ["Height"] = 480,
+                ["Properties"] = new JsonObject { ["Name"] = "S", ["Width"] = 800, ["Height"] = 480, ["BackColor"] = "0xFF123456" } }, ["Items"] = new JsonArray(item) };
+            var legacy = HmiTemplateDesignJsonBuilder.BuildApplyDesign(template, 800, 480);
+            var canonical = new JsonObject { ["screen"] = new JsonObject { ["name"] = "S", ["width"] = 800, ["height"] = 480,
+                ["properties"] = new JsonObject { ["BackColor"] = "0xFF123456" } }, ["items"] = legacy["items"]!.DeepClone() };
+            var dto = V4Json.Deserialize<UnifiedScreenSpec>(canonical.ToJsonString());
+            // width/height at the old root are template metadata, ignored by Apply.
+            legacy.Remove("width"); legacy.Remove("height");
+            Assert.Equal(Sorted(legacy), Sorted(dto.ToBuilderInput()));
+            Assert.Equal(ReadUnifiedText(legacy["items"]![0]!.AsObject(), out var oldText),
+                ReadUnifiedText(dto.ToBuilderInput()["items"]![0]!.AsObject(), out var newText));
+            Assert.Equal(oldText, newText);
+        }
+
+        [Theory]
+        [InlineData("null", false)]
+        [InlineData("123", false)]
+        [InlineData("{}", false)]
+        [InlineData("\"\"", true)]
+        [InlineData("\"Start\"", true)]
+        public void UnifiedTextParserDecisionsArePreserved(string textJson, bool accepted)
+        {
+            // UnifiedMultilingualText.cs:15-23 is the current parser called before native writes.
+            string json = "{\"type\":\"Text\",\"name\":\"A\",\"text\":" + textJson + "}";
+            if (accepted)
+            {
+                var dto = V4Json.Deserialize<UnifiedScreenItem>(json);
+                Assert.True(ReadUnifiedText(JsonNode.Parse(json)!.AsObject(), out var oldText));
+                Assert.True(ReadUnifiedText(dto.ToBuilderInput(), out var newText));
+                Assert.Equal(oldText, newText);
+            }
+            else
+            {
+                Assert.Throws<InvalidOperationException>(() => ReadUnifiedText(JsonNode.Parse(json)!.AsObject(), out _));
+                Assert.ThrowsAny<Exception>(() => V4Json.Deserialize<UnifiedScreenItem>(json));
+            }
+        }
+
+        private static bool ReadUnifiedText(JsonObject input, out string text)
+        {
+            var value = UnifiedInputCodec.Decode(JsonSerializer.SerializeToElement(input));
+            return AdapterMultilingualText.ReadRequest((AdapterHmiObject)AdapterRequestValues.Decode(value)!, out text);
+        }
 
         private static void CheckAmlBudget(JsonArray items, bool accepted)
         {

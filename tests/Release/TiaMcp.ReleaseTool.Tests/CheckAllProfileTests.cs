@@ -76,7 +76,7 @@ public sealed class CheckAllProfileTests
             Assert.True(CheckAllProfiles.RunsSeparately(name, "nightly", plan));
             Assert.Equal(!plan.Mappings.ContainsKey(name), CheckAllProfiles.RunsSeparately(name, "merge", plan));
         }
-        foreach (var name in new[] { "offline", "offline-v20", "compile-candidate", "compile-candidate-no-safety", "fallback-vci-modern",
+        foreach (var name in new[] { "compile-candidate", "compile-candidate-no-safety", "fallback-vci-modern",
             "fallback-vci-initial", "fallback-vci-classic", "plc-exchange-worker-v20", "plc-exchange-worker-v21" })
             Assert.True(CheckAllProfiles.RunsSeparately(name, "merge", plan));
         Assert.Equal(new[] { "nightly" }, CheckAllProfiles.Profiles("foundation-shard-0", plan));

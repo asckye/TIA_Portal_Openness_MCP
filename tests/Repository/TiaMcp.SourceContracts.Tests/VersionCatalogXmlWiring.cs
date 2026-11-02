@@ -22,12 +22,14 @@ public sealed partial class VersionCatalogWiring
         Assert.Contains("TiaOpenness.Configuration.Tests.csproj", build); Assert.Contains("build-configurator", build);
         Assert.DoesNotContain("/main:TiaMcpConfigurator.Tests", build);
         Assert.Contains("Logic/Siemens/TiaVersionCatalog.cs", Read(Path.Combine(ROOT, "build-tools/Package-Release.py")));
-        var project = XDocument.Load(Path.Combine(ROOT, "tests/Engine/TiaMcp.Engine.Tests/TiaMcp.Engine.Tests.csproj"));
+        var project = XDocument.Load(Path.Combine(ROOT, "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj"));
         var linked = project.Descendants("Compile").Select(n => (n.Attribute("Include")?.Value ?? "").Replace('\\', '/')).ToArray();
-        var references = project.Descendants("ProjectReference").Select(n => (n.Attribute("Include")?.Value ?? "").Replace('\\', '/')).ToArray();
+        var fixture = XDocument.Load(Path.Combine(ROOT, "tests/Fixtures/TiaMcp.Offline.Fixtures/OfflineFixtureSources.props"));
+        var references = project.Descendants("ProjectReference").Concat(fixture.Descendants("ProjectReference"))
+            .Select(n => (n.Attribute("Include")?.Value ?? "").Replace('\\', '/')).ToArray();
         Assert.Contains(references, p => p.EndsWith("/Logic/TiaMcp.Logic.csproj", StringComparison.Ordinal));
         foreach (var suffix in new[] { "Siemens/TiaVersionCatalog.cs", "Siemens/Capability.cs", "CliOptions.cs" })
         { Assert.DoesNotContain(linked, p => p.EndsWith(suffix, StringComparison.Ordinal)); Assert.True(File.Exists(Path.Combine(LOGIC, suffix)), suffix); }
-        Assert.Contains("CheckSuite.Run(nameof(TiaVersionCatalogTests), TiaVersionCatalogTests.Run)", Read(Path.Combine(ROOT, "tests/Engine/TiaMcp.Engine.Tests/OfflineChecks.cs")));
+        Assert.Contains("CheckSuite.Run(nameof(TiaVersionCatalogTests), Run)", Read(Path.Combine(ROOT, "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaVersionCatalogTests.cs")));
     }
 }

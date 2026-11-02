@@ -275,7 +275,7 @@
       "kind": "other-literal",
       "fingerprint": "125f0bc7c8ab5987b315e191a268c2a7cd684f9e722059b608e7c2376cd507c6",
       "path": "src/Adapters/Native/Hmi/UnifiedHmiAdapter.cs",
-      "line": 472,
+      "line": 237,
       "cjk": 2,
       "literal": "\"启动 (Start)\"",
       "reason": "Existing bilingual button caption in generated HMI screen data.",
@@ -323,7 +323,7 @@
       "kind": "other-literal",
       "fingerprint": "1531cfd512c885763ec9e8f8ab8dc4923b499896e493576e3841862e1ea3f2e8",
       "path": "src/Adapters/Native/Hmi/UnifiedHmiAdapter.cs",
-      "line": 2127,
+      "line": 1322,
       "cjk": 2,
       "literal": "\"内部\"",
       "reason": "Chinese TIA internal-connection input recognition keyword.",
@@ -473,7 +473,7 @@
       "kind": "other-literal",
       "fingerprint": "21dc3e140a5a50028b06e25af3fc7cb904376f9abac30fb12f1f940c2f78e43c",
       "path": "src/Adapters/Native/Hmi/UnifiedHmiAdapter.cs",
-      "line": 487,
+      "line": 252,
       "cjk": 2,
       "literal": "\"停止 (Stop)\"",
       "reason": "Existing bilingual button caption in generated HMI screen data.",
@@ -668,16 +668,6 @@
       "literal": "\"只切换画面，不写 PLC。\"",
       "reason": "Existing bilingual HMI component/action tables and generated catalog report data.",
       "dataCategory": "bilingual-table"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "296802b049b4e2c0fecf9588fe4f23e61dbcba4bf14b355d4a68d75369ce408c",
-      "path": "src/Adapters/Native/Hmi/UnifiedHmiAdapter.cs",
-      "line": 2512,
-      "cjk": 2,
-      "literal": "\"通信\"",
-      "reason": "Chinese TIA communication-service input recognition keyword.",
-      "dataCategory": "project-content"
     },
     {
       "kind": "other-literal",
@@ -1329,16 +1319,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "519d82e907ca3a7983717a7d4d4b43aeb21ea82b9706887ca1f84d92b75d56ed",
-      "path": "src/Engine/ModelContextProtocol/Tools/SessionTools.cs",
-      "line": 70,
-      "cjk": 31,
-      "literal": "\"当前用户尚未加入本机“Siemens TIA Openness”组。请添加该用户，注销并重新登录，然后重启 MCP 客户端。\"",
-      "reason": "P6-56 Chinese readiness guidance carried only in recommendedFixZh/FixZh fields.",
-      "dataCategory": "bilingual-table"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "51e488ac670734308aec447019acaaae0023b0dc95872500022ec861940b94db",
       "path": "src/Logic/ModelContextProtocol/Builders/HmiComponentCatalogAnalyzer.cs",
       "line": 26,
@@ -1401,7 +1381,7 @@
       "kind": "other-literal",
       "fingerprint": "599e3417273dc35b0ec2606ce3f446d0bea98116f3a1af9d2dbe1523e1d47977",
       "path": "src/Logic/ModelContextProtocol/Builders/ClassicHmiScreenXmlBuilder.cs",
-      "line": 322,
+      "line": 324,
       "cjk": 2,
       "literal": "\"宋体\"",
       "reason": "Existing TIA XML font-family data (SimSun Chinese font name).",
@@ -1851,7 +1831,7 @@
       "kind": "other-literal",
       "fingerprint": "7532c06cdc582eae068dcd372447e9773825512f198de51343448b3d4afea775",
       "path": "src/Adapters/Native/Hmi/UnifiedHmiAdapter.cs",
-      "line": 455,
+      "line": 220,
       "cjk": 7,
       "literal": "\"MCP 验证 · 起停与状态\"",
       "reason": "Existing generated HMI screen title data.",
@@ -2107,7 +2087,7 @@
       "kind": "other-literal",
       "fingerprint": "87b2a350dfa5350f3afa79d05ffa1c07278c64c6e1d22ad0e7d2ebf9a543b9d3",
       "path": "src/Logic/ModelContextProtocol/ToolMetadata.cs",
-      "line": 2797,
+      "line": 2807,
       "cjk": 2,
       "literal": "\"mojibake/乱码\"",
       "reason": "Preserved Chinese/English discovery alias for the SCL source tool; search data, not MCP prose.",
@@ -2483,16 +2463,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "a2854e35303fc949f94a9adb707a56754c838032a130d63ee2f7f3ba19b154ff",
-      "path": "src/Engine/ModelContextProtocol/Tools/SessionTools.cs",
-      "line": 112,
-      "cjk": 15,
-      "literal": "\"请安装 TIA Portal 和 Openness 组件，并确认 TiaPortalLocation 指向安装目录。\"",
-      "reason": "P6-56 Chinese readiness guidance carried only in recommendedFixZh/FixZh fields.",
-      "dataCategory": "bilingual-table"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "a2b05c820d0a4f3e654c1329e7c05c0bfde9d8325526f93100af7738400a50a3",
       "path": "src/Shared/Host/OfflineReleaseValidationSuite.cs",
       "line": 242,
@@ -2683,16 +2653,6 @@
     },
     {
       "kind": "other-literal",
-      "fingerprint": "b2c848ccacf535a4a019ddc31aba8097bd101c3ea65e381a32175d5f51ffa733",
-      "path": "src/Engine/Siemens/PlcBlockLookup.cs",
-      "line": 18,
-      "cjk": 3,
-      "literal": "\"程序块\"",
-      "reason": "Quoted PLC/project symbols, built-in TIA object names or report notation; data remains in its original language.",
-      "dataCategory": "project-content"
-    },
-    {
-      "kind": "other-literal",
       "fingerprint": "b2e3a28fd16754d929681fffb01f3d42e6059d7bf1f3bb17552b4cd9bd5104ea",
       "path": "src/Logic/ModelContextProtocol/Builders/FlgNetCallXmlBuilder.cs",
       "line": 102,
@@ -2750,16 +2710,6 @@
       "literal": "\"tia doctor —— 环境体检\"",
       "reason": "Existing localized CLI console/doctor output; not MCP response text.",
       "dataCategory": "cli-console"
-    },
-    {
-      "kind": "other-literal",
-      "fingerprint": "b617cf6880b040815e6fc6d149b2e51a3a708c82fcbb0256b40a7132614e4ca8",
-      "path": "src/Engine/ModelContextProtocol/Tools/SessionTools.cs",
-      "line": 77,
-      "cjk": 20,
-      "literal": "\"未检测到 TIA Portal。请安装受支持的版本，并设置 TiaPortalLocation 环境变量。\"",
-      "reason": "P6-56 Chinese readiness guidance carried only in recommendedFixZh/FixZh fields.",
-      "dataCategory": "bilingual-table"
     },
     {
       "kind": "other-literal",
@@ -2908,16 +2858,6 @@
       "dataCategory": "bilingual-table"
     },
     {
-      "kind": "description",
-      "fingerprint": "c7a856cf8c4d76277234858023e449a7e5619175126e19903dfb9f60e8855d66",
-      "path": "src/Shared/UnifiedHmiTools.cs",
-      "line": 35,
-      "cjk": 5,
-      "literal": "\"tagTableName: target HMI tag table name (default '默认变量表')\"",
-      "reason": "Quoted PLC/project symbols, built-in TIA object names or report notation; data remains in its original language.",
-      "dataCategory": "project-content"
-    },
-    {
       "kind": "other-literal",
       "fingerprint": "c7d13f0158917717925a196a35e360d832578101de84a47764cf307f6aae92fb",
       "path": "src/Logic/ModelContextProtocol/Builders/ReleaseReadinessGateBuilder.cs",
@@ -3051,7 +2991,7 @@
       "kind": "description",
       "fingerprint": "ccda1bac67b8f4ad9f423fb711bc5620e3f7d22cae92ec7ec2d38db182106f14",
       "path": "src/Shared/PlcReadModifyTools.cs",
-      "line": 318,
+      "line": 320,
       "cjk": 1,
       "literal": "\"softwarePath: PLC software path, e.g. '5T车' or 'PLC_1' (from GetProjectTree)\"",
       "reason": "Quoted PLC/project symbols, built-in TIA object names or report notation; data remains in its original language.",
@@ -3171,7 +3111,7 @@
       "kind": "exception",
       "fingerprint": "d5207c63e523e251016614a464639038a4ea9768377faf7fa7b520958729fb0f",
       "path": "src/Adapters/Native/Security/HardwareSecurityAdapter.cs",
-      "line": 232,
+      "line": 255,
       "cjk": 2,
       "literal": "\"'; give the CPU item path (e.g. [\\\"导轨_0\\\",\\\"PLC_1\\\"]).\"",
       "reason": "Quoted PLC/project symbols, built-in TIA object names or report notation; data remains in its original language.",
@@ -3491,7 +3431,7 @@
       "kind": "message",
       "fingerprint": "e9db4f5755648e978e9843c3703cb9a0ed377f080161b81f77bd7a049d1894af",
       "path": "src/Shared/PlcReadModifyTools.cs",
-      "line": 353,
+      "line": 355,
       "cjk": 2,
       "literal": [
         "$",

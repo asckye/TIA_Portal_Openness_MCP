@@ -19,7 +19,6 @@
   <ItemGroup><PackageReference Include="System.Text.Json" Version="$(TiaMcpDotnetPackageVersion)" IncludeAssets="compile;buildTransitive" /></ItemGroup>
   <ItemGroup><None Update="Golden/*.txt" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
   <ItemGroup><Compile Include="../TiaMcp.Engine.Tests/HmiScreenTraversalTests.cs" Link="HmiScreenTraversalTests.cs" /></ItemGroup>
-  <ItemGroup><Compile Include="../TiaMcp.Engine.Tests/OfflineContractChecks.cs" Link="OfflineContractChecks.cs" /></ItemGroup>
   <Import Project="../../Shared/HostDomainBuild.targets" />
   <ItemGroup><ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" /></ItemGroup>
   <!-- The PLC harness entry reflects over the kept net48 Logic. Its build goes to plc-logic/ and is loaded

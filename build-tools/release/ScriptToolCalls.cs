@@ -24,8 +24,6 @@ internal static class ScriptToolCalls
     internal static HashSet<string> Registrations(string root)
     {
         var names = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var path in SourceCheck.Files(Path.Combine(root, "src/Engine")).Where(p => p.EndsWith(".cs", StringComparison.Ordinal)))
-            foreach (Match match in Regex.Matches(Repository.ReadSource(path), "McpServerTool\\(Name\\s*=\\s*\"([^\"]+)\"")) names.Add(match.Groups[1].Value);
         var catalog = XDocument.Load(Path.Combine(root, "src/Logic/ModelContextProtocol/ToolProfiles.resx")).Descendants("data").Single(n => n.Attribute("name")?.Value == "Catalog").Element("value")!.Value;
         foreach (var release in JsonNode.Parse(catalog)!["releases"]!.AsObject()) foreach (var row in release.Value!.AsArray()) names.Add(row!["name"]!.GetValue<string>());
         return names;

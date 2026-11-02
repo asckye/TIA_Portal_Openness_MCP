@@ -1,5 +1,8 @@
 using TiaMcpServer;
 using System;
+using System.Collections.Generic;
+using TiaMcp.Engine.Tests.Shared;
+using Xunit;
 using System.Linq;
 using System.Text.Json;
 using TiaMcp.Logic.V4.Inputs;
@@ -8,8 +11,18 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcp.Engine.Tests
 {
-    internal static class TiaVersionCatalogTests
+    public sealed class TiaVersionCatalogTests
     {
+        [CheckTheory]
+        [MemberData(nameof(Rows), DisableDiscoveryEnumeration = true)]
+        public void Check(CheckRow row) => row.Verify();
+
+        public static IEnumerable<object[]> Rows()
+        {
+            ToolBridgeFixture.Configure();
+            foreach (var row in CheckSuite.Run(nameof(TiaVersionCatalogTests), Run)) yield return row;
+        }
+
         private sealed class FileBoundaryFixture
         {
             public string Export(string path, bool option) => "legacy-string";
@@ -76,7 +89,7 @@ namespace TiaMcp.Engine.Tests
                 check(ToolVersionPolicy.CallProblem("21", "ImportLibraryTypeDocuments", key => key == "importOptions" ? option : null).Length == 0, "V21 library option retains native validation " + option);
             }
             TiaMcpServer.ModelContextProtocol.ToolBridgeProbes.VersionProbeCalls = 0;
-            bool isV20 = EngineRouter.CompiledTiaMajorVersion == 20;
+            bool isV20 = TiaMcpServer.Siemens.EngineRouter.CompiledTiaMajorVersion == 20;
             var preflight = TiaMcpServer.ModelContextProtocol.McpServer.PreflightToolCall("ManageDcbLibraries", "{\"action\":\"import\"}");
             check(preflight.Meta?["ok"]?.GetValue<bool?>() == true, "preflight agrees with compiled adapter action gate");
             var imported = TiaMcpServer.ModelContextProtocol.McpServer.CallTool("ManageDcbLibraries", new ToolArguments(JsonSerializer.Deserialize<JsonElement>("{\"action\":\"import\"}")));

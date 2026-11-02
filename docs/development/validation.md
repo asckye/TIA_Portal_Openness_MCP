@@ -29,7 +29,7 @@
 其他确定性、哈希和语义断言仍执行。移除开关，审查每个 diff，再正常运行同一套件验证；默认运行不写文件。
 
 本机离线全集可用 `check-all` 执行。它先按顺序生成嵌入目录、工具用法和文档数量块，再构建两个 solution 的项目、八版 PLC worker、
-V20/V21 生产及 SDK fixture 引擎、Harness、Studio 两种路径模式和全部套件，后续测试使用对应程序集直接执行 VSTest，保留注册的过滤表达式；其他工程入口使用 `--no-build --no-restore`。
+V20/V21 SDK fixture、Harness、Studio 两种路径模式和全部保留套件，后续测试使用对应程序集直接执行 VSTest，保留注册的过滤表达式；其他工程入口使用 `--no-build --no-restore`。
 SDK 仅传入 `foundation-api` 与两个 PLC exchange 套件；其余独立执行的注册套件清除 SDK 环境变量，继续执行 clean-checkout 门槛。
 
 解码器运行时是必需交付文件。`check-all` 的 `prepare-decoder-python` 作业在构建前运行一次，不能被 affected/nightly 缓存省略。与发布和测试打包命令一致，使用显式 `-Python <absolute-pinned-python.exe>`，或设置 `TIA_MCP_DECODER_PYTHON` 指向完整 CPython 3.12.10 x64 安装（含标准库与匹配许可证）；解释器及核心 DLL 哈希见 [生态工具说明](../reference/ecosystem-tools.md#decodeplcsimaticml-runtime)。缺少配置或固定解释器时明确失败，不跳过。`-CompanionPython` 仍独立配置 PLC Tools 伴随环境。updater/package 与离线就绪夹具调用同一正式准备命令并验证后复用本轮产物。
@@ -123,7 +123,7 @@ check-all 的合并和 nightly 构建统一设置 `TiaCheckBuild=true` 与固定
 
 | Workflow / job（含矩阵） | 对应 check-all 作业 / 套件 | 分工与差异 |
 |---|---|---|
-| offline-checks / offline-tests，Ubuntu，Shards=4 | repository-self-tests、suite-runner-self-tests；offline、offline-v20、kept-code、kept-code-v20、version-policy、generation-model、generation-planning、workbench-control-protocol | Linux 的平台通过/跳过门槛、管道身份、代码页与路径语义不等价于 Windows；不采纳 |
+| offline-checks / offline-tests，Ubuntu，Shards=4 | repository-self-tests、suite-runner-self-tests；kept-code、kept-code-v20、version-policy、generation-model、generation-planning、workbench-control-protocol | Linux 的平台通过/跳过门槛、管道身份、代码页与路径语义不等价于 Windows；不采纳 |
 | offline-checks / source-contracts，Ubuntu | 四个 drift、tools-list-self-tests/tools-list、script-calls、campaign-runner-self-tests、dead-references、repository/repository-self-tests、source-contracts、adapter-boundary、domain-source、contract-self-tests/contract-verify/response-verify | 纯生成/roster/快照 verify 命令相同，尚无该 job 的分工收据，仍本机执行；其余检查的 Linux 进程、代码页、路径状态不等价于本机 Windows；文件程序/analyzer 仅为部分构建输入 |
 | offline-checks / studio-tests，shared-adapter-paths=false、true，Windows | studio-core-false/true、studio-gui-false/true | 同项目与路径模式，使用注册套件门禁；true 的 studio-true profile 另出 CI 收据，false 保留本机；Studio 构建也不替代本机输出对等性 |
 | offline-checks / foundation-suites，runner=0、1、2、3，Windows，Shards=8、RunnerCount=4 | foundation、engine-host、shared-lifecycle-plc、worker-progress-foundation、prompt-registration、software-read、special-export-shape、device-add、hardware-catalog、diagnostic-membership、adapter-contracts、worker-channel、compile-candidate、compile-candidate-no-safety、fallback-vci-modern/initial/classic、workbench-control-protocol | 各 runner 只证明分片；必须由下一行覆盖全部分片的门禁合并，不单独采纳任一 runner |
@@ -309,8 +309,8 @@ CommentHygiene、McpText 和 Inventory-ResponseEnvelopes；下表也列出它们
 `check-script-tool-calls`；V4 解码和诊断客户端断言已进入 `source-contracts`，
 `validate.yml` 不重复执行。
 
-按成员验证的引擎检查使用 [EngineSources.cs](../../build-tools/common/TiaMcp.BuildCommon/EngineSources.cs)，
-跨 `src/Engine/**/*.cs` 按成员名查找，显式以 UTF-8 读取，
+按成员验证的源码检查使用 [EngineSources.cs](../../build-tools/common/TiaMcp.BuildCommon/EngineSources.cs)，
+跨 `src/EngineHost`、`src/Shared` 及显式选择的适配器目录按成员名查找，显式以 UTF-8 读取，
 排除生成和构建文件；重载通过签名、所属类型或 MCP 属性区分，缺失或歧义直接失败。
 词法器保留完整方法体，不依赖相邻成员或迁移前文件路径。它是源码契约检查，不替代 C# 编译或原生验收。
 
@@ -338,9 +338,6 @@ OfflineBlockComposition、OfflineXmlBuilder、OfflineComposition、OfflineLadder
 另外两项仅用本地 MSBuild 求值八版编译常量，无需构建、还原或加载 Siemens，并在 validate-bundle CI 中运行。
 
 ```powershell
-dotnet run scripts/checks/Test-HmiImportSafety.cs
-dotnet run scripts/checks/Test-TechnologyImportSafety.cs
-dotnet run scripts/checks/Test-ExternalSourceDispatch.cs -- -WorkDir bin-build/external-source-dispatch
 dotnet run --project build-tools/release -- test-suites -Suite source-contracts
 dotnet run --project build-tools/release -- check-tia-features
 ```
@@ -363,7 +360,7 @@ dotnet run --project build-tools/release -- check-bundle-layout -SelfTest
 dotnet run --project build-tools/release -- check-bundle-layout
 dotnet run --project build-tools/release -- validate-bundle -Strict
 dotnet run --project build-tools/release -- test-suites -SelfTest
-dotnet run --project build-tools/release -- test-suites -Suite offline -Suite offline-v20 -Suite kept-code -Suite kept-code-v20 -Suite version-policy
+dotnet run --project build-tools/release -- test-suites -Suite kept-code -Suite kept-code-v20 -Suite version-policy
 dotnet run --project build-tools/release -- test-suites -Suite foundation -Suite prompt-registration -Suite software-read -Suite special-export-shape -Suite device-add -Suite hardware-catalog -Suite diagnostic-membership
 dotnet run --project tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj -c Release
 dotnet run --project build-tools/release -- build-configurator -Test
@@ -431,8 +428,9 @@ operationSuccess/apiCallSuccess/dataComplete，异常文本、状态和 success 
 本阶段构造器尚未接入现有调用点，POCO 和引擎返回保持原样。
 
 已迁移的套件使用 xunit，每个原有 Check 对应一条结果；
-[最低数量表](../../tests/test-suites.json)要求 offline、offline-v20 各至少 303 项通过（Linux 302），
-kept-code、kept-code-v20 各至少 4854 项通过，version-policy 至少 10 项通过，均不允许跳过。
+[最低数量表](../../tests/test-suites.json)要求 kept-code、kept-code-v20 各至少 5155 项通过，
+version-policy 至少 10 项通过，均不允许跳过。Q2 退役 offline/offline-v20；KeptCode 新接收版本目录的
+292 条检查和两组 HMI 理论的 9 行，原有 4854 项门槛精确增加 301。source-contracts 删除 8 个引擎专属用例，门槛从 148 调整为 140。
 每版 residue + kept-code 的下限仍为 5157（Linux 5156）；仅 Windows apartment 检查仍在 residue 的 OfficialWorkflowTests。
 kept-code 的数据行数量没有平台差异；平台专用实现的测试保留行身份，使用跨平台夹具或测试平台回退。
 `splitFrom` 注册字段记录拆分来源；CI 的 TRX 门禁自检拒绝 CI 工作流或 release 执行清单遗漏任何拆分子套件。
@@ -711,7 +709,7 @@ HTTP 可达、工具枚举、程序构建或公开发布都不等于工程语义
 
 ## V4 脚本调用与 campaign 输入
 
-CI 使用 `dotnet run --project build-tools/release -- check-script-tool-calls` 检查 C#、Python、PowerShell、shell 和 JSON 计划中的工具调用；注册工具名来自引擎注册和版本目录。历史映射、冻结的 v3.3.0 写入守卫清单和精确的未知工具负例具有显式例外。C# 客户端复用 `McpResults`；尚未迁移的 Python 检查暂用 `mcp_results.py`。两者与 TiaMcp.Engine.Harness 的 `DeveloperChecks` 读取 V4 `ok/data/error/meta`，批次读取 `data.items`；3.x 的 `message/meta.success` 不能作为成功结果。
+CI 使用 `dotnet run --project build-tools/release -- check-script-tool-calls` 检查 C#、Python、PowerShell、shell 和 JSON 计划中的工具调用；注册工具名来自 `ToolProfiles.resx` 的八版目录。历史映射、冻结的 v3.3.0 写入守卫清单和精确的未知工具负例具有显式例外。C# 客户端复用 `McpResults`；尚未迁移的 Python 检查暂用 `mcp_results.py`。两者与 TiaMcp.Engine.Harness 的 `DeveloperChecks` 读取 V4 `ok/data/error/meta`，批次读取 `data.items`；3.x 的 `message/meta.success` 不能作为成功结果。
 
 ```powershell
 dotnet run --project build-tools/release -- check-script-tool-calls -SelfTest

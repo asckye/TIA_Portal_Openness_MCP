@@ -18,20 +18,9 @@ public sealed class ReadOnlySourceContracts
     [Fact]
     public void DiagnosticMembershipPreservesReadinessAndNoFixRouting()
     {
-        var bootstrap = Sources.Member("Bootstrap", tool: false, owner: "SessionTools");
-        var bootstrapGroup = Sources.Member("ReadBootstrapOpennessGroup", tool: false, owner: "SessionTools");
-        var bootstrapPortal = Sources.Member("ReadBootstrapPortal", tool: false, owner: "SessionTools");
         var doctor = Sources.Member("Doctor", tool: false, owner: "McpServer");
         var doctorGroup = Sources.Member("ReadOpennessGroup", tool: false, owner: "McpServer");
-        var selftest = Sources.Member("RunCapabilitySelfTest", tool: false, owner: "DiagnosticsTools");
         var logic = Sources.Member("Run", tool: false, owner: "CapabilitySelfTestLogic");
-        Contains(bootstrap, "ReadBootstrapOpennessGroup()", "else if (OpennessReadiness.Ready)", "ReadBootstrapPortal()", "OpennessReadiness.Ready ? ReadBootstrapPortal()");
-        Excludes(bootstrap, "Siemens.Openness.", "Siemens.Portal");
-        Count(bootstrapGroup, "Siemens.Openness.IsUserInGroupNoFix()", 1);
-        var bootstrapSource = Sources.TypeText("SessionTools");
-        Assert.Matches(@"\[MethodImpl\(MethodImplOptions\.NoInlining\)\]\s+private static bool ReadBootstrapOpennessGroup", bootstrapSource);
-        Assert.Matches(@"\[MethodImpl\(MethodImplOptions\.NoInlining\)\]\s+private static BootstrapPortal ReadBootstrapPortal", bootstrapSource);
-        Contains(bootstrapPortal, "EngineServices.Get<IEngineeringSession>()");
         Contains(doctor, "if (!Runtime.OpennessReadiness.Ready)", "ReadPortalState()", "ReadOpennessGroup(fix: true)", "ReadOpennessGroup(fix: false)");
         Excludes(doctor, "Siemens.Openness.", "Siemens.Portal");
         var tokens = new CSharpLexer(doctor).Scan().Tokens;
@@ -59,23 +48,9 @@ public sealed class ReadOnlySourceContracts
         Excludes(doctorSource, "EngineServices.", "Siemens.Portal");
         Assert.Matches(@"\[MethodImpl\(MethodImplOptions\.NoInlining\)\]\s+private static Task<bool> ReadOpennessGroup", doctorSource);
         Contains(Read("src/FoundationHost/EngineWorkerClient.cs"), "channel!.CallAsync(\"engine.observe\"");
-        Contains(Read("src/Engine/WorkerMode/EngineWorkerHost.cs"), "request.Method == \"engine.observe\"");
-        var observations = Sources.Member("Read", tool: false, owner: "HostObservations");
-        Contains(EngineSources.BlockAfter(observations, "if (operation == \"group\" || operation == \"group.fix\")"), "Assembly.GetType(\"TiaMcpServer.Siemens.Openness\")", "GetMethod(operation == \"group\" ? \"IsUserInGroupNoFix\" : \"IsUserInGroup\")", ".Invoke(null, null)", "task.GetAwaiter().GetResult()");
-        Excludes(observations, "Siemens.Openness.", "global::Siemens.");
-        Count(selftest, "Siemens.Openness.IsUserInGroupNoFix", 1);
-        Contains(selftest, "CapabilitySelfTestLogic.Run(Siemens.Openness.IsUserInGroupNoFix,", "_session.GetState, _session.ConnectPortal, _session.ValidateAutomationContext, _session.GetProjectTree", "bool connectIfNeeded = false");
         Count(logic, "opennessOk = group();", 1);
-        foreach (var text in new[] { selftest, logic }) Assert.DoesNotMatch(@"(?:IsUserInGroup|AddUserToGroupAsync|EnsureOpennessUserGroup)\s*\(", text);
-        Assert.Matches(@"catch\s*(?:/\*\s*swallow\(env-probe\):\s*[^*]+\*/\s*)?\{\s*env\.OpennessGroupOk = false;\s*\}", bootstrap);
-        Contains(bootstrap, "nextTool = \"EnsureOpennessUserGroup\";");
         Contains(logic, "catch (Exception ex)", "\"fail\", ex.Message", "if (!isConnected && connectIfNeeded)", "isConnected = connect();");
         Contains(Sources.Member("EnsureOpennessUserGroup", tool: false, owner: "ProjectLifecycleSessionTools"), "_service.EnsureGroup()");
-        var membership = Sources.Member("EnsureMembership", tool: false, owner: "OpennessGroup");
-        Contains(membership, "Api.Global.Openness().IsUserInGroup()", "await Api.Global.Openness().AddUserToGroupAsync()");
-        Count(membership, "Api.Global.Openness().IsUserInGroup()", 1);
-        Count(membership, "Api.Global.Openness().AddUserToGroupAsync()", 1);
-        Assert.Matches(@"\A\s*\{\s*return Api\.Global\.Openness\(\)\.IsUserInGroup\(\);\s*\}\s*\z", Sources.Member("IsUserInGroupNoFix", bodyOnly: true));
     }
     [Fact]
     public void DiagnosticStartupKeepsWorkerAvailableAndNonWorkerExitExplicit()
@@ -239,11 +214,6 @@ public sealed class ReadOnlySourceContracts
         var navigator = Read("src/Adapters/Native/Studio/PlcNavigator.cs");
         Contains(navigator, Uses + "Walk(project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, _ => { })");
         Excludes(navigator, "project.Devices.SafeEnumerate()");
-        var engine = Read("src/Engine/Siemens/Portal/Portal.Helpers.cs");
-        Contains(engine, Uses + "FindDevice(_project.Devices, _project.DeviceGroups, _project.UngroupedDevicesGroup, devicePath)",
-            Uses + "Devices(_project.Devices, _project.DeviceGroups, _project.UngroupedDevicesGroup)",
-            Uses + "FindItem(_project.Devices, _project.DeviceGroups, _project.UngroupedDevicesGroup, deviceItemPath)");
-        Contains(Read("src/Engine/Siemens/Portal/Portal.SessionResolvers.cs"), Uses + "UngroupedSegment");
     }
 
     [Fact]
@@ -277,29 +247,6 @@ public sealed class ReadOnlySourceContracts
             "foreach (var device in group.Devices) Device(device, groups, exact + \"/devices\");",
             "foreach (var child in item.DeviceItems) Item(child, device, groups, exact, depth + 1);",
             "var selected = PlcReadPathPolicy.Select(values, path);", "return selected.Value;");
-    }
-
-    [Fact]
-    public void EnginePlcDiscoveryFindsGroupedAndUngroupedDevices()
-    {
-        // V20/V21 engine (the default there until P8-04j2): GetAllPlcSoftware walked the root devices and user groups only.
-        var discovery = EngineSources.BlockAfter(Read("src/Engine/Siemens/Portal/Portal.Software.cs"), "public List<PlcSoftware> GetAllPlcSoftware()");
-        Contains(discovery, "ProjectDeviceWalk.Walk(_project.Devices, _project.DeviceGroups, _project.UngroupedDevicesGroup, _ => { })",
-            "Collect(located.Device.DeviceItems)");
-        Excludes(discovery, "WalkDevices(", "WalkGroups(");
-    }
-
-    [Fact]
-    public void EngineExactSoftwareLookupFindsGroupedAndUngroupedDevices()
-    {
-        // The exact container enumeration and the direct lookup's first level missed UngroupedDevicesGroup.
-        var source = Read("src/Engine/Siemens/Portal/Portal.SoftwareLookup.cs");
-        var enumeration = EngineSources.BlockAfter(source, "private IEnumerable<SoftwareContainer> EnumerateSoftwareContainersForExactLookup()");
-        Contains(enumeration, "foreach (var device in EnumerateAllDevices())", "if (++count > 100000)", "foreach (var sc in Items(device.DeviceItems)) yield return sc;");
-        Excludes(enumeration, "new Stack<DeviceUserGroup>(_project.DeviceGroups)", "Devices(_project.Devices)");
-        var lookup = EngineSources.BlockAfter(source, "private SoftwareContainer? ResolveSoftwareLookup(string name, bool plcOnly)");
-        Contains(lookup, "var ungrouped = _project.UngroupedDevicesGroup;",
-            ".Concat(ungrouped == null ? Enumerable.Empty<object>() : ungrouped.Devices.Cast<object>())", "EnumerateSoftwareContainersForExactLookup()");
     }
 
     [Fact]
