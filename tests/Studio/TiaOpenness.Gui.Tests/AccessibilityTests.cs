@@ -97,6 +97,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
             foreach (string surface in new[] { "bg", "card", "input", "cardSel", "pill", "pillHover" })
                 foreach (string text in new[] { "text", "textMuted" }) Check(text, surface, 4.5);
             Check("primaryText", "primaryBg", 4.5); Check("warningText", "warn", 4.5);
+            Check("destructiveText", "pill", 4.5); Check("destructiveText", "pillHover", 4.5);
             Check("warn", "countWarningBg", 4.5); Check("onAccent", "accent", 4.5);
             Check("inputBorder", "input", 3); Check("checkBorder", "card", 3);
             Check("focusOuter", "focusInner", 3); Check("accent", "cardSel", 3);

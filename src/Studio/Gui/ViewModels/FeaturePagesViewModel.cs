@@ -28,6 +28,9 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     private IReadOnlyList<AuditEvent>? _verifiedEvents;
     private long? _auditSelection;
     private readonly ObservableCollection<ApprovalRow> _requests = [];
+    private readonly ObservableCollection<ApprovalRow> _visibleRequests = [];
+    private ApprovalRow? _selectedRequest;
+    private bool _handledRequests;
     private readonly ObservableCollection<CallRow> _calls = [];
     private readonly ObservableCollection<AuditRow> _auditRows = [];
     private readonly Dictionary<string, CallRow> _callCache = new(StringComparer.Ordinal);
@@ -95,7 +98,11 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public string ConnectionJson => _connectionJson;
     public string ApprovalSetting => Approvals.Enabled ? Loc.Current.T("Calls.ApprovalOn", Approvals.TimeoutSeconds) : Loc.Current["Shell.ApprovalOff"];
     public IReadOnlyList<ApprovalRow> Requests => _requests;
-    public bool RequestsEmpty => Requests.Count == 0;
+    public IReadOnlyList<ApprovalRow> VisibleRequests => _visibleRequests;
+    public ApprovalRow? SelectedRequest { get => _selectedRequest; set => Set(ref _selectedRequest, value); }
+    public bool HandledRequests { get => _handledRequests; set { if (Set(ref _handledRequests, value)) FilterRequests(); } }
+    public string WaitingLabel => Loc.Current.T("Approval.Waiting", Approvals.PendingCount);
+    public bool RequestsEmpty => VisibleRequests.Count == 0;
     public string PendingCount => Loc.Current.T("Feature.Count", Approvals.PendingCount);
     public string PendingSummary => Approvals.Requests.FirstOrDefault(r => r.State == ApprovalState.Pending) is { } request
         ? Loc.Current.T("Calls.PendingSummary", ActorDisplay.Client(request.Actor), request.Operations.Count, Remaining(request)) : Loc
@@ -108,7 +115,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public void Decide(ApprovalRow row, bool approve) => Run(() =>
     {
         bool accepted = approve ? Approvals.Approve(row.Request.Id) : Approvals.Deny(row.Request.Id);
-        return accepted ? LocalizedText.Empty : LocalizedText.Key("Approval.NoLongerPending");
+        return accepted ? approve ? LocalizedText.Key("Approval.ApprovedToast") : LocalizedText.Key("Approval.RejectedToast", row.Summary)
+            : LocalizedText.Key("Approval.NoLongerPending");
     });
 
     public IReadOnlyList<AuditRow> AuditRows => _auditRows;
@@ -244,7 +252,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
                 if (_callsVisible || _detailVisible) RefreshCalls();
                 Notify(nameof(PendingSummary));
             }
-            if (Changed(Approvals, nameof(IApprovalService.PendingCount))) Notify(nameof(PendingCount), nameof(CallsCount), nameof(PendingSummary));
+            if (Changed(Approvals, nameof(IApprovalService.PendingCount)))
+                Notify(nameof(PendingCount), nameof(CallsCount), nameof(PendingSummary), nameof(WaitingLabel));
             if (Changed(Approvals, nameof(IApprovalService.Enabled), nameof(IApprovalService.TimeoutSeconds))) Raise(nameof(ApprovalSetting));
             UpdateTimer();
         }
@@ -286,7 +295,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         RefreshCalls(); RefreshAudit(languageChanged: true);
         Notify(nameof(EnvironmentGroups), nameof(EnvironmentSummary), nameof(EnvironmentTone), nameof(EnvironmentNeedsAction), nameof(EnvironmentAttention),
                 nameof(EnvironmentAttentionCount), nameof(PendingSummary), nameof(ApprovalSetting),
-            nameof(PendingCount), nameof(AuditCount), nameof(Coverage), nameof(FollowLabel), nameof(ReleaseFilter));
+            nameof(PendingCount), nameof(WaitingLabel), nameof(AuditCount), nameof(Coverage), nameof(FollowLabel), nameof(ReleaseFilter));
         NotifyVerification();
     });
     private void Dispatch(Action action)
@@ -341,7 +350,14 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
             if (previous.TryGetValue(r.Id, out var row)) { row.Update(r); return row; }
             return new ApprovalRow(r, this);
         }).ToArray();
-        Sync(_requests, next); Notify(nameof(RequestsEmpty));
+        Sync(_requests, next); FilterRequests();
+    }
+    private void FilterRequests()
+    {
+        var selected = SelectedRequest;
+        Sync(_visibleRequests, _requests.Where(r => r.Pending != HandledRequests).ToArray());
+        SelectedRequest = selected != null && _visibleRequests.Contains(selected) ? selected : _visibleRequests.FirstOrDefault();
+        Notify(nameof(RequestsEmpty), nameof(WaitingLabel));
     }
     private void RefreshAudit(bool languageChanged = false)
     {
@@ -375,11 +391,13 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     {
         if (Approvals.PendingCount > 0 && (_callsVisible || _drawerVisible)) _timer.Start(); else _timer.Stop();
     }
-    private void OnTick(object? sender, EventArgs e)
+    internal void RefreshApprovalCountdowns()
     {
+        Approvals.Refresh();
         if (_drawerVisible) foreach (var row in _requests.Where(r => r.Pending)) row.RefreshCountdown();
         if (_callsVisible) Raise(nameof(PendingSummary));
     }
+    private void OnTick(object? sender, EventArgs e) => RefreshApprovalCountdowns();
     public void Dispose()
     {
         _disposed = true; _timer.Stop(); _timer.Tick -= OnTick;
@@ -457,15 +475,48 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
     private bool _jsonOpen;
     private bool _planOpen;
     private string? _parameters;
+    private int _lastRemaining = owner.Remaining(request);
+    private bool _announced30, _announced10;
     public ApprovalRequest Request { get; private set; } = request;
     public string Actor => ActorDisplay.Name(Request.Actor);
     public string Client => ActorDisplay.Client(Request.Actor);
+    public string UnverifiedClient => Loc.Current.T("Approval.UnverifiedClient", Client);
+    public bool Destructive => Request.Risk == ApprovalRisk.Destructive;
+    public string Risk => Loc.Current[Destructive ? "Approval.RiskDestructive" : "Approval.RiskWrite"];
+    public string RiskIcon => Destructive ? "!" : "↑";
+    public string Summary => Request.Operations.Count == 1
+        ? Loc.Current.T("Approval.Summary", Request.Operations[0].Action.Resolve()
+            + (Request.Operations[0].Object.Length == 0 ? "" : " · " + Request.Operations[0].Object), Request.Project.Length == 0 ? "—" : Request.Project)
+        : Loc.Current.T("Approval.BatchSummary", Request.Operations.Count, Request.Project.Length == 0 ? "—" : Request.Project,
+            string.Join(" / ", Request.Operations.Select(op => op.Action.Resolve()).Distinct(StringComparer.Ordinal).Take(3)
+                .Select(text => text.Length > 64 ? text[..64] + "…" : text)) + (Request.Operations.Count > 3 ? "…" : ""));
+    public string AccessibleSummary => Summary + " · " + Risk + " · " + UnverifiedClient;
+    public string ApproveLabel => Loc.Current[!Destructive ? "Approval.Approve" : Request.RiskAction switch
+        { "delete" => "Approval.ApproveDelete", "online" => "Approval.ApproveOnline", _ => "Approval.ApproveDestructive" }];
+    public string ConfirmationTitle => Loc.Current[Request.RiskAction == "delete" ? "Approval.ConfirmDeleteTitle" : "Approval.ConfirmTitle"];
+    public string ConfirmationAction => Loc.Current[Request.RiskAction == "delete" ? "Approval.ConfirmDeleteAction" : "Approval.ConfirmAction"];
+    public string ConfirmationAccessible => Loc.Current[Request.RiskAction == "delete" ? "Approval.ConfirmDeleteAccessible" : "Approval.ConfirmAccessible"];
+    public string ConfirmationConsequence => Loc.Current
+        .T(Request.RiskAction == "delete" ? "Approval.DeleteConsequence" : "Approval.OnlineConsequence", Request.Project);
+    public string HostVersion => Request.Host + " · " + Request.Release;
+    public event EventHandler<int>? CountdownThreshold;
     public bool Pending => Request.State == ApprovalState.Pending;
     public bool CanDecide => Pending && owner.Approvals.CanDecide(Request.Id);
     public int Remaining => owner.Remaining(Request);
     public string RemainingText => Loc.Current.T("Common.Seconds", Remaining);
     public double Percent => 100.0 * Remaining / Request.TimeoutSeconds;
-    public FeatureTone CountdownTone => Remaining < 20 ? FeatureTone.Warning : FeatureTone.Accent;
+    public FeatureTone CountdownTone => Remaining < 30 ? FeatureTone.Warning : FeatureTone.Accent;
+    public System.Windows.Media.Geometry CountdownArc
+    {
+        get
+        {
+            double fraction = Math.Clamp(Percent / 100, 0, .99999), angle = fraction * 2 * Math.PI;
+            var figure = new System.Windows.Media.PathFigure { StartPoint = new System.Windows.Point(32, 1.5) };
+            figure.Segments.Add(new System.Windows.Media.ArcSegment(new System.Windows.Point(32 + 30.5 * Math.Sin(angle), 32 - 30.5 * Math.Cos(angle)),
+                new System.Windows.Size(30.5, 30.5), 0, fraction > .5, System.Windows.Media.SweepDirection.Clockwise, true));
+            var geometry = new System.Windows.Media.PathGeometry([figure]); geometry.Freeze(); return geometry;
+        }
+    }
     public bool JsonOpen { get => _jsonOpen; set => Set(ref _jsonOpen, value); }
     public string Parameters => _parameters ??= FeatureJson.Redact(Request.ParametersJson);
     public bool IsGenerationPlan => Request.GenerationPlan != null;
@@ -528,14 +579,28 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
     internal void RefreshLanguage()
     {
         foreach (string name in new[] {
-                nameof(Actor), nameof(Client), nameof(Pending), nameof(CanDecide), nameof(Tone), nameof(State), nameof(Note), nameof(HasNote),
-                    nameof(IsGenerationPlan), nameof(IsToolRequest), nameof(GenerationDifferences), nameof(GenerationSteps), nameof(CompletePlan)
+                nameof(Actor), nameof(Client), nameof(UnverifiedClient), nameof(Risk), nameof(Destructive), nameof(RiskIcon), nameof(Summary),
+                    nameof(AccessibleSummary), nameof(ApproveLabel), nameof(ConfirmationTitle), nameof(ConfirmationAction), nameof(ConfirmationAccessible),
+                    nameof(ConfirmationConsequence), nameof(HostVersion), nameof(Pending), nameof(CanDecide), nameof(Tone), nameof(State), nameof(Note),
+                    nameof(HasNote), nameof(IsGenerationPlan), nameof(IsToolRequest), nameof(GenerationDifferences), nameof(GenerationSteps),
+                    nameof(CompletePlan)
             })
             Raise(name);
     }
     public void RefreshCountdown()
     {
-        foreach (string name in new[] { nameof(Remaining), nameof(RemainingText), nameof(Percent), nameof(CountdownTone), nameof(CanDecide) }) Raise(name);
+        int remaining = Remaining;
+        if (Pending && remaining > 0)
+        {
+            if (!_announced10 && _lastRemaining > 10 && remaining <= 10)
+            { _announced30 = _announced10 = true; CountdownThreshold?.Invoke(this, 10); }
+            else if (!_announced30 && _lastRemaining > 30 && remaining <= 30)
+            { _announced30 = true; CountdownThreshold?.Invoke(this, 30); }
+        }
+        _lastRemaining = remaining;
+        foreach (string name in new[] {
+                nameof(Remaining), nameof(RemainingText), nameof(Percent), nameof(CountdownArc), nameof(CountdownTone), nameof(CanDecide) })
+            Raise(name);
     }
 }
 

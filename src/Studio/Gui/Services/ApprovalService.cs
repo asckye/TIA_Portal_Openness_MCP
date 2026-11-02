@@ -27,14 +27,16 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
     private readonly CancellationTokenSource stop = new();
     private readonly string settingsPath, pipeName, sid;
     private readonly AuditLog? audit;
+    private readonly Func<DateTimeOffset> now;
     private NamedPipeServerStream? listener;
     private ApprovalSettings settings;
     private bool disposed;
 
     public ApprovalService() : this(ApprovalSettings.SettingsPath, ApprovalPipe.CurrentName) { }
-    internal ApprovalService(string settingsPath, string pipeName, AuditLog? audit = null)
+    internal ApprovalService(string settingsPath, string pipeName, AuditLog? audit = null, Func<DateTimeOffset>? now = null)
     {
         this.settingsPath = settingsPath; this.pipeName = pipeName; this.audit = audit;
+        this.now = now ?? (() => DateTimeOffset.UtcNow);
         sid = ApprovalPipe.CurrentSid; settings = ApprovalSettings.Load(settingsPath);
         expiry = new Timer(_ => Refresh(), null, Timeout.Infinite, Timeout.Infinite);
         try { listener = ApprovalPipe.CreateServer(pipeName, sid, true); _ = Listen(); }
@@ -69,7 +71,9 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
     public IReadOnlyList<ApprovalRequest> Requests { get { lock (sync) return published; } }
     public event EventHandler<ApprovalRequest>? NewRequest;
     public bool CanDecide(string id) {
-        lock (sync) return pending.TryGetValue(id, out var item) && !item.Decision.Task.IsCompleted && item.Request.Deadline > DateTimeOffset.UtcNow; }
+        lock (sync) return pending.TryGetValue(id, out var item) && !item.Decision.Task.IsCompleted && item.Request.Deadline > now()
+        && !requests.Any(r => r.State is ApprovalState.Approved or ApprovalState.Executing)
+        && requests.FirstOrDefault(r => r.State == ApprovalState.Pending)?.Id == id; }
     public bool Approve(string id) => Decide(id, true);
     public bool Deny(string id) => Decide(id, false);
     private bool Decide(string id, bool approve)
@@ -132,12 +136,16 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
                 {
                     if (disposed || seen.ContainsKey(id) || pending.Count >= 50) throw new InvalidDataException("Duplicate or excess approval request.");
                     seen.Add(id, item.ArgumentDigest);
-                    row =
-                        new ApprovalRequest(id, item.EffectiveActor == ActorScope.Workbench ? "Workbench" : "MCP", "MCP", item.Host, item.ReleaseKey, item
-                            .ProjectIdentity, "",
-                        item.Operations.Select(op => new ApprovalOperation(LocalizedText.Literal(op.Action), op.Target, op.Tool)).ToArray(), [],
+                    row = new ApprovalRequest(id, item.EffectiveActor == ActorScope.Workbench ? "Workbench" : "MCP", "MCP", item.Host, item.ReleaseKey,
+                        DisplayField(item.ProjectIdentity, "projectPath", "projectFile", "projectName", "requested:projectFile", "requested:projectPath"),
+                        DisplayField(item.ParametersJson, "plc", "plcName", "softwarePath"),
+                        item.Operations.Select(op => new ApprovalOperation(LocalizedText.Literal(op.Action), op.Target, op.Tool)).ToArray(),
+                        item.OverwritesExisting ? [LocalizedText.Key("Approval.OverwritesExisting")] : [],
                         item.PlanHash, item.TimeoutSeconds, item.Deadline, ApprovalState.Pending, item.ParametersJson)
-                    { Actor = item.EffectiveActor, OperatorCallId = item.OperatorCallId, GenerationPlan = item.PlanJson };
+                    {
+                        Risk = item.Risk == "destructive" ? ApprovalRisk.Destructive : ApprovalRisk.Write, RiskAction = item.RiskAction, ProjectIdentity = item
+                            .ProjectIdentity,
+                        Actor = item.EffectiveActor, OperatorCallId = item.OperatorCallId, GenerationPlan = item.PlanJson };
                     pending.Add(id, new Pending(item, decision)); requests.Add(row);
                     while (requests.Count > 1024 && requests[0].State != ApprovalState.Pending) requests.RemoveAt(0);
                 }
@@ -158,7 +166,21 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
     }
     private void SetState(string id, ApprovalState state)
     { int index = requests.FindIndex(r => r.Id == id); if (index >= 0) requests[index] = requests[index] with { State = state }; }
-    private void SetStateSafe(string id, ApprovalState state) { lock (sync) SetState(id, state); Changed(); }
+    private static string DisplayField(string json, params string[] names)
+    {
+        using var document = System.Text.Json.JsonDocument.Parse(json);
+        foreach (string name in names)
+            foreach (var field in document.RootElement.EnumerateObject())
+                if (field.Name.Equals(name, StringComparison.OrdinalIgnoreCase) && field.Value.ValueKind == System.Text.Json.JsonValueKind.String)
+                    return field.Value.GetString() ?? "—";
+        return "—";
+    }
+    private void SetStateSafe(string id, ApprovalState state)
+    {
+        lock (sync)
+            if (requests.FirstOrDefault(r => r.Id == id)?.State is ApprovalState.Pending or ApprovalState.Approved) SetState(id, state);
+        Changed();
+    }
     private void Changed()
     {
         bool countChanged, rowsChanged;
@@ -168,10 +190,10 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
             if (rowsChanged) published = requests.ToArray();
             int count = requests.Count(r => r.State == ApprovalState.Pending);
             countChanged = pendingCount != count; pendingCount = count;
-            var deadline = requests.Where(r => r.State == ApprovalState.Approved).Select(r => r.Deadline.AddMinutes(2)).DefaultIfEmpty(DateTimeOffset.MaxValue)
-                .Min();
+            var deadline = requests.Where(r => r.State is ApprovalState.Pending or ApprovalState.Approved)
+                .Select(r => r.State == ApprovalState.Pending ? r.Deadline : r.Deadline.AddMinutes(2)).DefaultIfEmpty(DateTimeOffset.MaxValue).Min();
             if (!disposed) expiry.Change(deadline == DateTimeOffset.MaxValue ? Timeout.InfiniteTimeSpan
-                : TimeSpan.FromMilliseconds(Math.Max(1, (deadline - DateTimeOffset.UtcNow).TotalMilliseconds)), Timeout.InfiniteTimeSpan);
+                : TimeSpan.FromMilliseconds(Math.Max(1, (deadline - now()).TotalMilliseconds)), Timeout.InfiniteTimeSpan);
         }
         if (rowsChanged) Raise(nameof(Requests)); if (countChanged) Raise(nameof(PendingCount));
     }
@@ -180,9 +202,9 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
         bool changed = false;
         lock (sync)
         {
-            foreach (var row in requests.Where(r => r.State == ApprovalState.Pending && r.Deadline <= DateTimeOffset.UtcNow).ToArray())
+            foreach (var row in requests.Where(r => r.State == ApprovalState.Pending && r.Deadline <= now()).ToArray())
             { SetState(row.Id, ApprovalState.TimedOut); changed = true; }
-            foreach (var row in requests.Where(r => r.State == ApprovalState.Approved && r.Deadline.AddMinutes(2) <= DateTimeOffset.UtcNow).ToArray())
+            foreach (var row in requests.Where(r => r.State == ApprovalState.Approved && r.Deadline.AddMinutes(2) <= now()).ToArray())
             { SetState(row.Id, ApprovalState.Unknown); changed = true; }
         }
         if (changed) Changed();

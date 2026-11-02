@@ -6,6 +6,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using TiaOpenness.Gui.Common;
 using TiaOpenness.Gui.ControlChannel;
 using TiaOpenness.Gui.Services;
@@ -192,6 +193,9 @@ public sealed class WorkbenchMcpPrefillTests(WpfContext wpf)
                 Assert.True(command!.IsRunning); Assert.Equal(0, host.ExecutedWrites);
                 Assert.Equal("workbench", Assert.Single(approvals.Requests).Actor);
                 Assert.Equal(Visibility.Visible, ((FrameworkElement)window!.FindName("ApprovalsContent")).Visibility);
+                WpfContext.Drain();
+                Assert.True(((RadioButton)window.FindName("RailApprovals")).IsChecked);
+                Assert.Same(((Views.ApprovalsDrawer)window.FindName("ApprovalsContent")).FindName("RequestTitle"), Keyboard.FocusedElement);
                 var calls = host.Calls.Where(c => c.Name == (form == 3 ? "OpenProject" : form == 4 ? "ExportPlcBlock" : "ImportPlcBlock")).ToArray();
                 Assert.Equal(new[] { true, false }, calls.Select(c => (bool)c.Arguments["dryRun"]!));
                 if (form == 3) Assert.All(calls, c => Assert.Equal(@"D:\Projects\Other.als21", (string?)c.Arguments["path"]));

@@ -10,6 +10,32 @@ using Xunit;
 public sealed class ApprovalHostTests
 {
     [Theory]
+    [InlineData("DownloadPlc", "{}", "destructive")]
+    [InlineData("DeletePlcBlock", "{}", "destructive")]
+    [InlineData("ImportPlcBlock", "{\"confirmDelete\":true}", "destructive")]
+    [InlineData("ImportPlcBlock", "{\"deleteAtTarget\":true}", "destructive")]
+    [InlineData("ImportPlcBlock", "{\"overwrite\":true}", "write")]
+    [InlineData("ImportPlcBlock", "{\"confirmDelete\":false,\"deleteAtTarget\":false}", "write")]
+    [InlineData("SetPlcBlockAttribute", "{}", "write")]
+    public async Task Host_assigns_narrow_risk_and_the_private_frame_preserves_it(string tool, string arguments, string expected)
+    {
+        var pending = PendingApproval.Create("foundation", "21", tool, arguments, null, 120);
+        Assert.Equal(expected, pending.Risk);
+        Assert.Equal(expected == "write" ? "execute" : tool == "DownloadPlc" ? "online" : "delete", pending.RiskAction);
+        using var frame = new MemoryStream();
+        await ApprovalFrames.Write(frame, pending, CancellationToken.None);
+        frame.Position = 0;
+        var received = await ApprovalFrames.Read<PendingApproval>(frame, CancellationToken.None);
+        received.Validate();
+        Assert.Equal(expected, received.Risk); Assert.Equal(pending.ArgumentDigest, received.ArgumentDigest);
+        received.Risk = "unknown";
+        Assert.Throws<InvalidDataException>(received.Validate);
+        var missingRisk = JsonSerializer.SerializeToNode(pending)!.AsObject(); missingRisk.Remove("Risk");
+        using var legacy = new MemoryStream();
+        await ApprovalFrames.Write(legacy, missingRisk, CancellationToken.None); legacy.Position = 0;
+        await Assert.ThrowsAsync<InvalidDataException>(() => ApprovalFrames.Read<PendingApproval>(legacy, CancellationToken.None));
+    }
+    [Theory]
     [InlineData(false)] [InlineData(true)]
     public async Task Foundation_call_carries_transport_actor_through_approval_journal_and_audit(bool human)
     {

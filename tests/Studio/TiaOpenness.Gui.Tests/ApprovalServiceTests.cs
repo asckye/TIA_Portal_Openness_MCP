@@ -12,6 +12,50 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class ApprovalServiceTests
 {
     private static string Scratch() => Path.GetFullPath(Path.Combine("bin-build", "P6-44", "gui-approval", Guid.NewGuid().ToString("N")));
+    [Theory]
+    [InlineData("DeletePlcBlock", "{}", ApprovalRisk.Destructive)]
+    [InlineData("DownloadPlc", "{}", ApprovalRisk.Destructive)]
+    [InlineData("ImportPlcBlock", "{\"overwrite\":true}", ApprovalRisk.Write)]
+    public async Task Real_pipe_transfers_host_risk_and_expired_requests_cannot_be_approved(string tool, string arguments, ApprovalRisk expected)
+    {
+        string root = Scratch(), pipe = "tia-gui-approval-" + Guid.NewGuid().ToString("N");
+        var now = DateTimeOffset.UtcNow;
+        using var service = new ApprovalService(Path.Combine(root, "approval.settings"), pipe, now: () => now);
+        var arrived = new TaskCompletionSource<ApprovalRequest>(TaskCreationOptions.RunContinuationsAsynchronously);
+        service.NewRequest += (_, row) => arrived.TrySetResult(row);
+        var request = PendingApproval.Create("foundation", "21", tool, arguments, null, 120);
+        var call = ApprovalClient.Wait(request, new ApprovalSettings(true, 120), CancellationToken.None, pipe);
+        var row = await arrived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(expected, row.Risk);
+        if (tool == "ImportPlcBlock") Assert.Single(row.Risks);
+        now = request.Deadline; service.Refresh();
+        Assert.Equal(ApprovalState.TimedOut, service.Requests.Single().State);
+        Assert.False(service.Approve(row.Id)); Assert.Equal(0, service.PendingCount);
+        service.Dispose();
+        Assert.NotNull((await call.WaitAsync(TimeSpan.FromSeconds(5))).Reason);
+        Assert.Equal(ApprovalState.TimedOut, service.Requests.Single().State);
+    }
+
+    [Fact]
+    public async Task Real_queue_allows_only_the_first_request_and_waits_for_its_execution_outcome()
+    {
+        string root = Scratch(), pipe = "tia-gui-approval-" + Guid.NewGuid().ToString("N");
+        using var service = new ApprovalService(Path.Combine(root, "approval.settings"), pipe);
+        var first = new TaskCompletionSource<ApprovalRequest>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var second = new TaskCompletionSource<ApprovalRequest>(TaskCreationOptions.RunContinuationsAsynchronously);
+        service.NewRequest += (_, row) => { if (!first.TrySetResult(row)) second.TrySetResult(row); };
+        var call1 = ApprovalClient.Wait(PendingApproval.Create("foundation", "21", "WriteFixture", "{}", null, 120), new ApprovalSettings(), CancellationToken.None, pipe);
+        var row1 = await first.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var call2 = ApprovalClient.Wait(PendingApproval.Create("foundation", "21", "WriteFixture", "{}", null, 120), new ApprovalSettings(), CancellationToken.None, pipe);
+        var row2 = await second.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.False(service.Approve(row2.Id)); Assert.False(service.Deny(row2.Id));
+        Assert.True(service.Approve(row1.Id));
+        var approved = await call1.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.False(service.CanDecide(row2.Id)); Assert.False(service.Deny(row2.Id));
+        await ApprovalClient.Complete(approved, "succeeded", pipe);
+        await Eventually(service, () => service.Requests.First().State == ApprovalState.Completed);
+        Assert.True(service.Deny(row2.Id)); Assert.Equal("denied", (await call2.WaitAsync(TimeSpan.FromSeconds(5))).Reason);
+    }
     [Fact]
     public async Task Workbench_v2_write_stays_pending_until_the_same_approval_card_is_decided()
     {
@@ -30,7 +74,7 @@ public sealed class ApprovalServiceTests
         Assert.True(service.Approve(row.Id));
         var result = await call.WaitAsync(TimeSpan.FromSeconds(5)); Assert.Null(result.Reason);
         await ApprovalClient.Complete(result, "succeeded", pipe);
-        await Eventually(() => service.Requests.Single().State == ApprovalState.Completed);
+        await Eventually(service, () => service.Requests.Single().State == ApprovalState.Completed);
         Assert.Equal("workbench", Assert.Single(audit.Read()).Actor); Assert.True(audit.Verify().Passed);
     }
     [Theory]
@@ -54,7 +98,7 @@ public sealed class ApprovalServiceTests
         if (approve)
         {
             await ApprovalClient.Complete(result, "partial", pipe);
-            await Eventually(() => service.Requests.Single().State == ApprovalState.Partial);
+            await Eventually(service, () => service.Requests.Single().State == ApprovalState.Partial);
         }
         else Assert.Equal(ApprovalState.Rejected, service.Requests.Single().State);
         Assert.True(audit.Verify().Passed);
@@ -88,6 +132,12 @@ public sealed class ApprovalServiceTests
         { Assert.False(service.Enabled); Assert.Equal(300, service.TimeoutSeconds); service.Enabled = true; }
         Assert.Equal(2, audit.Read().Count(r => r.Event == "approval-switch"));
     }
-    private static async Task Eventually(Func<bool> check)
-    { for (int i = 0; i < 100 && !check(); i++) await Task.Delay(20); Assert.True(check()); }
+    private static async Task Eventually(ApprovalService service, Func<bool> check)
+    {
+        var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        void Changed(object? sender, System.ComponentModel.PropertyChangedEventArgs e) { if (check()) ready.TrySetResult(); }
+        service.PropertyChanged += Changed;
+        try { if (check()) ready.TrySetResult(); await ready.Task.WaitAsync(TimeSpan.FromSeconds(2)); Assert.True(check()); }
+        finally { service.PropertyChanged -= Changed; }
+    }
 }

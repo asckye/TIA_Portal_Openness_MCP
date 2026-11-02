@@ -687,25 +687,43 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
         window.RaiseEvent(args);
     }
 
-    [Fact]
-    public void Actual_decision_button_is_protected_by_root_preview_handlers()
+    [Theory]
+    [InlineData("ApproveRequest", false)] [InlineData("ApproveRequest", true)]
+    [InlineData("DenyRequest", false)] [InlineData("DenyRequest", true)] [InlineData("ConfirmDestructive", true)]
+    public void Actual_decision_button_is_protected_by_root_preview_handlers(string name, bool destructive)
     {
         wpf.Run(() =>
         {
             var (window, _, _) = Window();
             try
             {
-                var pending = FeaturePageFixtures.Request(CallId) with { Deadline = DateTimeOffset.UtcNow.AddSeconds(120) };
+                var pending = FeaturePageFixtures.Request(CallId) with { Deadline = DateTimeOffset.UtcNow.AddSeconds(120),
+                    Risk = destructive ? Services.ApprovalRisk.Destructive : Services.ApprovalRisk.Write };
                 ((ApprovalServiceStub)window.Approvals).Receive(pending);
-                window.ApplyControl(Request());
+                Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request()).Status);
                 window.Features.OpenApprovals(); WpfContext.Drain(); window.UpdateLayout();
-                var button = Descendants<Button>(window).First(item => item.Name == "ApproveRequest");
+                var button = Descendants<Button>(window).First(item => item.Name == name);
+                if (name == "ConfirmDestructive")
+                {
+                    var now = TestNow.AddMilliseconds(500);
+                    window.ControlGuard = new(() => now);
+                    UnifiedDesktopTests.ClickControl(Descendants<Button>(window).First(item => item.Name == "ApproveRequest"));
+                    WpfContext.Drain();
+                    Assert.Equal(Visibility.Visible, ((Grid)((Views.ApprovalsDrawer)window.FindName("ApprovalsContent")).FindName("ConfirmationSheet")).Visibility);
+                    window.ControlGuard.UiChanged();
+                    Assert.True(AccessKeyManager.IsKeyRegistered(PresentationSource.FromVisual(button), "a"));
+                    AccessKeyManager.ProcessKey(PresentationSource.FromVisual(button), "a", false);
+                    Assert.Equal(ApprovalState.Pending, window.Approvals.Requests.Single().State);
+                }
                 var mouse = new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left)
                     { RoutedEvent = UIElement.PreviewMouseDownEvent, Source = button };
                 button.RaiseEvent(mouse); Assert.True(mouse.Handled);
                 var key = new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(window), 0, Key.Enter)
                     { RoutedEvent = Keyboard.PreviewKeyDownEvent, Source = button };
                 button.RaiseEvent(key); Assert.True(key.Handled);
+                var space = new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(window), 0, Key.Space)
+                    { RoutedEvent = Keyboard.PreviewKeyDownEvent, Source = button };
+                button.RaiseEvent(space); Assert.True(space.Handled);
                 Assert.Equal(ApprovalState.Pending, window.Approvals.Requests.Single().State);
             }
             finally { window.Close(); }

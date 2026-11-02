@@ -10,6 +10,7 @@
   <SolidColorBrush x:Key="Primer.inputBorder" Color="#8E8E93"/>
   <SolidColorBrush x:Key="Primer.pill" Color="#3A3A3C"/>
   <SolidColorBrush x:Key="Primer.pillHover" Color="#3A3A3C"/>
+  <SolidColorBrush x:Key="Primer.destructiveText" Color="#FF827A"/>
   <SolidColorBrush x:Key="Primer.menuBg" Color="#1C1C1E"/>
   <SolidColorBrush x:Key="Primer.text" Color="#F5F5F7"/>
   <SolidColorBrush x:Key="Primer.textMuted" Color="#AEAEB2"/>

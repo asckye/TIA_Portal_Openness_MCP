@@ -34,6 +34,7 @@ public sealed class StagedGenerationTests
         internal readonly PlanningFixture Planner;
         internal readonly Session Session;
         internal int Approvals, StepWaits;
+        internal PendingApproval? LastApproval;
         internal string? Mutation, Failure;
         internal bool ApprovalDisabled = true, Stale, ExtraEffect, PreviewRefused, ReadFailure, Cancelled;
         internal string? ApprovalReason;
@@ -61,7 +62,7 @@ public sealed class StagedGenerationTests
             }
             Worker = new Worker(this);
             Session = new Session(() => Root, Call, name => catalog.Find(name) ?? Ordinary(name), (pending, _, _) => {
-                Approvals++; pending.Validate(); OnApproval?.Invoke();
+                Approvals++; pending.Validate(); LastApproval = pending; OnApproval?.Invoke();
                 return Task.FromResult(new ApprovalOutcome(pending, ApprovalDisabled, ApprovalReason));
             }, () => Time, () => Cancelled, maximumSteps: maximumSteps);
             ConfigureWorker();
@@ -275,10 +276,27 @@ public sealed class StagedGenerationTests
     }
 
     [Theory, MemberData(nameof(Releases))]
+    public void Plan_risk_is_the_highest_selected_step_before_any_write(string release)
+    {
+        using var f = new Fixture(release) { ApprovalReason = "denied", ApprovalDisabled = false };
+        f.Apply();
+        Assert.Equal("destructive", f.LastApproval!.Risk);
+        Assert.Contains(f.LastApproval.Operations, op => op.Tool.StartsWith("Delete", StringComparison.Ordinal));
+        Assert.Equal(0, f.Worker.Writes);
+        using var projectOnly = new Fixture(release, newProject: true) { ApprovalReason = "denied", ApprovalDisabled = false };
+        projectOnly.Apply(phases: ["project"]);
+        Assert.Equal("write", projectOnly.LastApproval!.Risk);
+        Assert.DoesNotContain(projectOnly.LastApproval.Operations, op => op.Tool.StartsWith("Delete", StringComparison.Ordinal));
+        Assert.Equal(0, projectOnly.Worker.Writes);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
     public void StatefulPoliciesExecuteOnceWithFactsAndOnePlanApproval(string release)
     {
         using var f = new Fixture(release); var result = f.Apply();
         Assert.True((bool?)result["ok"], result.ToJsonString()); Assert.Equal(1, f.Approvals);
+        Assert.Equal("destructive", f.LastApproval!.Risk);
+        Assert.Contains(f.LastApproval.Operations, op => op.Tool.StartsWith("Delete", StringComparison.Ordinal));
         Assert.True(f.Worker.Generations > 0); Assert.Empty(f.Worker.Sources); Assert.Equal(f.Worker.Generations * 3, f.Worker.Writes);
         Assert.Contains(result["data"]!["events"]!.AsArray(), e => (string?)e!["event"] == "fact");
     }

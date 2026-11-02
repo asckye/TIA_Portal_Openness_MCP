@@ -10,6 +10,7 @@
   <SolidColorBrush x:Key="Primer.inputBorder" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
   <SolidColorBrush x:Key="Primer.pill" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
   <SolidColorBrush x:Key="Primer.pillHover" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
+  <SolidColorBrush x:Key="Primer.destructiveText" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
   <SolidColorBrush x:Key="Primer.menuBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
   <SolidColorBrush x:Key="Primer.text" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
   <SolidColorBrush x:Key="Primer.textMuted" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>

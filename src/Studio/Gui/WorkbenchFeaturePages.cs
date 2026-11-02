@@ -69,7 +69,8 @@ public partial class MainWindow
         if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(() => OnNewApproval(sender, request)); return; }
         if (_featuresDisposed) return;
         _approvalToast = request;
-        if (request.Actor == "workbench" && request.OperatorCallId != null && _model.Panel?.Attached == true) OpenDrawer("Approvals");
+        if (request.Actor == "workbench" && request.OperatorCallId != null && _model.Panel?.Attached == true)
+        { OpenDrawer("Approvals"); ApprovalsContent.FocusRequest(request.Id); }
         UpdateFeatureToast(); Toast.Visibility = Visibility.Visible;
         System.Windows.Automation.AutomationProperties.SetLiveSetting(ToastTitle, System.Windows.Automation.AutomationLiveSetting.Assertive);
         Controls.AccessibleStatus.Announce(ToastTitle);
@@ -78,7 +79,10 @@ public partial class MainWindow
             try {
                 _approvalNotification
                     .Show(ToastTitle.Text, ToastMessage.Text, () => Dispatcher
-                        .Invoke(() => { if (_featuresDisposed) return; WindowState = WindowState.Normal; Activate(); OpenDrawer("Approvals"); }));
+                        .Invoke(() => {
+                            if (_featuresDisposed) return; WindowState = WindowState.Normal; Activate(); OpenDrawer("Approvals"); ApprovalsContent
+                                .FocusRequest(request.Id);
+                        }));
             }
             catch (Exception ex) { System.Diagnostics.Trace.TraceWarning("Approval notification failed: {0}", ex.Message); }
         }

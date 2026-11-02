@@ -632,6 +632,16 @@ namespace TiaMcpServer.ModelContextProtocol
             var pending = PendingApproval
                 .Create("foundation", plan.Target.Release, "ApplyGenerationPlan", summary.ToJsonString(), binding, settings.TimeoutSeconds, id);
             pending.Kind = "plan"; pending.PlanHash = plan.PlanHash; pending.PlanJson = GenerationDocuments.Canonical(plan);
+            foreach (var step in selected)
+            {
+                var arguments = JsonSerializer.SerializeToNode(step.Arguments)!.AsObject();
+                if (PendingApproval.ClassifyRisk(step.Tool, arguments) == "destructive")
+                {
+                    pending.Risk = "destructive";
+                    if (pending.RiskAction != "delete") pending.RiskAction = PendingApproval.Deletes(step.Tool, arguments) ? "delete" : "online";
+                }
+                pending.OverwritesExisting |= PendingApproval.Flag(arguments, "overwrite");
+            }
             pending.Operations = selected.Select(s => new ApprovalAction { Tool = s.Tool, Action = s.Phase + "/" + s.Op, Target = s.Key }).ToArray();
             return pending;
         }

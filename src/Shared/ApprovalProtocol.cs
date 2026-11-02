@@ -29,6 +29,9 @@ namespace TiaOpenness.Shared
         public string Host { get; set; } = "";
         public string ReleaseKey { get; set; } = "";
         public string Tool { get; set; } = "";
+        public string Risk { get; set; } = "write";
+        public string RiskAction { get; set; } = "execute";
+        public bool OverwritesExisting { get; set; }
         public string PlanHash { get; set; } = "";
         public string ArgumentDigest { get; set; } = "";
         public string ProjectIdentity { get; set; } = "{}";
@@ -61,8 +64,11 @@ namespace TiaOpenness.Shared
             var display = Display(original, tool);
             var objects = display.Where(p => p.Key.EndsWith("Path", StringComparison.Ordinal) || p.Key.EndsWith("Name", StringComparison.Ordinal)
                 || p.Key == "plc" || p.Key == "target").Select(p => p.Key + "=" + p.Value?.ToJsonString()).ToArray();
+            string risk = ClassifyRisk(tool, original);
             return new PendingApproval { RequestId = requestId ?? Guid.NewGuid().ToString("N"), Host = host, ReleaseKey = release,
-                Tool = tool, PlanHash = plan ?? digest, ArgumentDigest = digest, ProjectIdentity = Display(target, "identity").ToJsonString(),
+                Tool = tool, Risk = risk, RiskAction = risk == "write" ? "execute" : Deletes(tool, original) ? "delete" : "online",
+                OverwritesExisting = Flag(original, "overwrite"), PlanHash = plan ?? digest, ArgumentDigest = digest, ProjectIdentity =
+                    Display(target, "identity").ToJsonString(),
                 ParametersJson = display.ToJsonString(), TimeoutSeconds = seconds,
                 InvocationArgumentsDigest = Hash(Canonical(args)),
                 Version = ActorScope.Actor == ActorScope.Workbench ? 2 : 1,
@@ -72,6 +78,21 @@ namespace TiaOpenness.Shared
                 Operations = new[] { new ApprovalAction { Tool = tool, Action = display["action"]?.ToString() ?? tool,
                     Target = string.Join(" · ", objects) } } };
         }
+        // This is host policy, independent of MCP destructiveHint (which also covers ordinary overwrites).
+        internal static string ClassifyRisk(string tool, JsonObject arguments)
+        {
+#if TIA_GENERATION_PLANNER
+            var operation = TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(tool, null).Operation;
+#else
+            var operation = PlcRendering::TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(tool, null).Operation;
+#endif
+            return operation == "ONLINE-WRITE" || Deletes(tool, arguments)
+                ? "destructive" : "write";
+        }
+        internal static bool Deletes(string tool, JsonObject arguments) => tool.StartsWith("Delete", StringComparison.OrdinalIgnoreCase)
+            || Flag(arguments, "confirmDelete") || Flag(arguments, "deleteAtTarget");
+        internal static bool Flag(JsonObject arguments, string name) => arguments.Any(p => p.Key.Equals(name, StringComparison.OrdinalIgnoreCase)
+            && p.Value is JsonValue flag && flag.TryGetValue<bool>(out var enabled) && enabled);
         // The digest above binds the redacted arguments. Human review never carries
         // file contents, and every display is bounded independently of the transport.
         private static JsonObject Display(JsonObject args, string tool)
@@ -132,7 +153,8 @@ namespace TiaOpenness.Shared
             ValidateAttribution();
             if (string.IsNullOrWhiteSpace(RequestId) || string.IsNullOrWhiteSpace(Host)
                 || string.IsNullOrWhiteSpace(ReleaseKey) || string.IsNullOrWhiteSpace(Tool)
-                || !IsHash(PlanHash) || !IsHash(ArgumentDigest)
+                || !IsHash(PlanHash) || !IsHash(ArgumentDigest) || Risk is not ("write" or "destructive")
+                || RiskAction is not ("execute" or "delete" or "online")
                 || TimeoutSeconds < 1 || TimeoutSeconds > 3600 || Deadline <= DateTimeOffset.UtcNow
                 || Deadline > DateTimeOffset.UtcNow.AddSeconds(TimeoutSeconds + 5) || Operations.Length == 0 || Operations
                     .Length > (Kind == "plan" ? 10000 : 50)
@@ -319,7 +341,7 @@ namespace TiaOpenness.Shared
                 string[] required = typeof(T) == typeof(ApprovalDecision)
                     ? new[] { "Version", "RequestId", "PlanHash", "ArgumentDigest", "Decision" }
                     : new[] {
-                        "Version", "Kind", "RequestId", "Host", "ReleaseKey", "Tool", "PlanHash", "ArgumentDigest", "ProjectIdentity", "ParametersJson",
+                        "Version", "Kind", "RequestId", "Host", "ReleaseKey", "Tool", "Risk", "PlanHash", "ArgumentDigest", "ProjectIdentity", "ParametersJson",
                             "Operations", "TimeoutSeconds", "Deadline"
                     };
                 if (required.Any(field => !fields.Contains(field))) throw new InvalidDataException("Missing approval field.");

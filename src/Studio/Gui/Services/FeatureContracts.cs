@@ -6,6 +6,7 @@ using TiaOpenness.Gui.Localization;
 namespace TiaOpenness.Gui.Services;
 
 public enum ApprovalState { Pending, Approved, Executing, Completed, Failed, Partial, Unknown, Rejected, TimedOut, Disconnected }
+public enum ApprovalRisk { Write, Destructive }
 public enum CallResult { Success, Rejected, Failed, Partial, Unknown, Pending, Approved, Executing }
 public enum AuditEventType { Request, Approve, Reject, Timeout, Start, End, Toggle }
 public enum CheckStatus { Pass, Warn, Fail, Checking, Unchecked }
@@ -16,6 +17,9 @@ public sealed record ApprovalRequest(string Id, string Client, string Transport,
     string Project, string Plc, IReadOnlyList<ApprovalOperation> Operations, IReadOnlyList<LocalizedText> Risks,
     string PlanHash, int TimeoutSeconds, DateTimeOffset Deadline, ApprovalState State, string ParametersJson)
 {
+    public ApprovalRisk Risk { get; init; } = ApprovalRisk.Write;
+    public string RiskAction { get; init; } = "execute";
+    public string ProjectIdentity { get; init; } = "";
     public string Actor { get; init; } = "mcp";
     public string? OperatorCallId { get; init; }
     public string? GenerationPlan { get; init; }

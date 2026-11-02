@@ -140,7 +140,7 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                 using var model = new FeaturePagesViewModel(FeaturePageFixtures.Approvals(), new FeaturePageFixtures.Journal(),
                     new FeaturePageFixtures.Audit(), new FeaturePageFixtures.Environment(), new FeaturePageFixtures.Diagnostics(), () => FeaturePageFixtures.Now);
                 var view = new ApprovalsDrawer { DataContext = model };
-                var host = new Border { Child = view, Width = Math.Min(width - 32, 480) };
+                var host = new Border { Child = view, Width = width - (width < 1200 ? 64 : 232) };
                 host.SetResourceReference(TextElement.FontFamilyProperty, "Ui.Font");
                 Typography.SetStandardLigatures(host, false);
                 Typography.SetContextualLigatures(host, false);
@@ -223,9 +223,11 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                             var title = (TextBlock)window.FindName("BrandTitle");
                             Assert.Equal(Loc.Current["Shell.Brand"], title.Text);
                             AssertSingleLine(title, context);
-                            var version = (Border)window.FindName("BrandVersion");
+                            var version = (TextBlock)window.FindName("BrandVersion");
                             Assert.Equal(Visibility.Visible, version.Visibility);
-                            AssertSingleLine((TextBlock)window.FindName("RailVersion"), context);
+                            string versionText = new TextRange(version.ContentStart, version.ContentEnd).Text;
+                            Assert.Equal(((Run)window.FindName("RailVersion")).Text, versionText);
+                            AssertSingleLine(version, context, versionText);
                             Assert.True(version.TranslatePoint(new Point(0, version.ActualHeight), host).Y <= 56, context);
                             for (int i = 0; i < clients.Count; i++)
                             {
@@ -277,9 +279,16 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                             window.Navigate(page); Layout(host, width, height);
                             Assert.Same(Application.Current.FindResource("Primer.bg"), ((Grid)window.FindName("Root")).Background);
                             string context = page + " " + suffix;
-                            AssertSingleLine((TextBlock)window.FindName("BrandTitle"), context);
-                            AssertWholeWords(Descendants<TextBlock>((DependencyObject)window.FindName("RailEnvironment"))
-                                .Single(text => text.Text == Loc.Current["Shell.Environment"]), context);
+                            var brand = (TextBlock)window.FindName("BrandTitle");
+                            var environmentItem = (RadioButton)window.FindName("RailEnvironment");
+                            var environmentLabel = Descendants<TextBlock>(environmentItem).Single(text => text.Text == Loc.Current["Shell.Environment"]);
+                            if (width < 1200)
+                            {
+                                Assert.Equal(Visibility.Collapsed, brand.Visibility);
+                                Assert.False(environmentLabel.IsVisible);
+                                Assert.Equal(Loc.Current["Shell.Environment"], System.Windows.Automation.AutomationProperties.GetName(environmentItem));
+                            }
+                            else { AssertSingleLine(brand, context); AssertWholeWords(environmentLabel, context); }
                             if (page == "Mcp")
                             {
                                 AssertWholeWords((TextBlock)window.Configuration!.FindName("PageSubtitle"), context);
@@ -356,12 +365,13 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
         return probe;
     }
 
-    private static void AssertSingleLine(TextBlock text, string context)
+    private static void AssertSingleLine(TextBlock text, string context, string? inlineText = null)
     {
         Assert.Equal(Visibility.Visible, text.Visibility);
-        Assert.False(string.IsNullOrWhiteSpace(text.Text));
+        Assert.False(string.IsNullOrWhiteSpace(inlineText ?? text.Text));
         Assert.Equal(TextWrapping.NoWrap, text.TextWrapping);
         var probe = Probe(text);
+        if (inlineText != null) probe.Text = inlineText;
         TextOptions.SetTextFormattingMode(probe, TextOptions.GetTextFormattingMode(text));
         probe.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
         Assert.True(probe.DesiredSize.Width <= text.ActualWidth,
