@@ -13,6 +13,7 @@
 - `ListPlcBlocks` adds limit/cursor paging in stable group-qualified path order and reads full attributes only for the selected page; changed inventories reject stale cursors. Each item includes the exact path accepted by block read/export tools.
 - `FindTools` requires all capability words to match with a minimum relevance score; exact registered names rank first. Large direct/`CallTool` results include an executable `GetExportContent` continuation in their own result text.
 - `DecodePlcSimaticMl` uses an isolated CPython standard-library runtime included in delivery, with the original Python license. No user Python installation, pip download or ecosystem environment is required for decoding.
+- Block pages default to four items, preserve cursor paging through `CallTool`, and reject malformed worker pages. Single-word tool searches retain description matches; usage guidance preserves the generic no-replay warning. Export rendering retains completed content during cache eviction. Decoder delivery pins CPython 3.12.10 and its hashes, copies only traced dependencies, validates its receipt, and reports missing runtime prerequisites without installation paths.
 
 ## [4.0.0-beta.3] - 2026-11-01
 

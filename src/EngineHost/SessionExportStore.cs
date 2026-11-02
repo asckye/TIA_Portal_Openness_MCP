@@ -48,6 +48,15 @@ namespace TiaMcp.FoundationHost
             owner.Record(result.id);
             return result;
         }
+        internal static (ExportEntry entry, ExportSlice head) PutAndSliceEntry(string tool, string target, string content, int length)
+        {
+            var owner = Current;
+            var result = ExportStore.PutAndSliceEntry(tool, target, content, length);
+            owner.Record(result.entry.Id);
+            return result;
+        }
+        internal static ExportSlice SliceRetained(ExportEntry entry, int offset, int length)
+            => ExportStore.SliceRetained(entry, offset, length);
         internal static ExportEntry? Get(string? id) => id != null && Current.Handles.ContainsKey(id) ? ExportStore.Get(id) : null;
         internal static ExportSlice Slice(string? id, int offset, int length) => id != null && Current.Handles.ContainsKey(id)
             ? ExportStore.Slice(id, offset, length) : new ExportSlice { Id = id ?? "", Error = "unknown",

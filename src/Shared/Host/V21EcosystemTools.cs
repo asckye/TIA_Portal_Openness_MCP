@@ -73,8 +73,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (timeoutSeconds < 1 || timeoutSeconds > 60) throw new ArgumentException("timeoutSeconds 1..60 required.");
                 var root = EcosystemFiles.RepositoryRoot();
                 var bridge = TiaOpenness.Shared.BundleLayout.RequirePath(root, "scripts/ecosystem/simaticml_decode_bridge.py");
-                var python = Path.Combine(root, "runtime", "decoder-python", "python.exe");
-                if (!File.Exists(python)) throw new TiaOpenness.Shared.DataLocationIOException(python, "Bundled Python executable is unavailable");
+                var python = TiaMcp.Logic.ModelContextProtocol.DecoderRuntime.Require(root);
                 var run = await EcosystemFiles.Run(python, new[] { "-I", "-S", "-B", "-X", "utf8", bridge }, root, new JsonObject { ["filePath"] = filePath }.ToJsonString(), timeoutSeconds).ConfigureAwait(false);
                 meta["exitCode"] = run["exitCode"]!.DeepClone(); meta["timedOut"] = run["timedOut"]!.DeepClone();
                 if (run["timedOut"]!.GetValue<bool>() || run["outputTruncated"]!.GetValue<bool>()) throw new InvalidOperationException("Decoder timed out or exceeded response budget; no complete analysis returned.");
@@ -84,7 +83,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 // envelope: legacy-independent-verdicts
                 meta["success"] = ok; meta["operationSuccess"] = ok;
                 return new ResponseMessage { Message = ok ? "Analysis-only decoded logic; do not import this output." : "Decode refused or failed; inspect data.error.", Meta = meta };
-            } catch (TiaOpenness.Shared.BundleResourceUnavailableException) { throw; }
+            } catch (TiaMcp.Logic.ModelContextProtocol.DecoderRuntimeException) { throw; }
+            catch (TiaOpenness.Shared.BundleResourceUnavailableException) { throw; }
             catch (TiaOpenness.Shared.DataLocationIOException) { throw; }
             catch (Exception ex) { meta["error"] = ex.Message; return new ResponseMessage { Message = "Decode failed: " + ex.Message, Meta = meta }; }
         }

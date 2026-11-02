@@ -38,10 +38,10 @@ namespace TiaMcpServer.ModelContextProtocol
             if (offset > entry.Length) return PlcExchangeContract.Reject(tool, InvalidInput("offset"), current: false);
             if (limit == 0) limit = ResolvedMaxResponseChars();
             limit = limit <= 0 ? ExportStore.MaxSliceChars : Math.Min(limit, ExportStore.MaxSliceChars);
-            var slice = ExportStore.Slice(exportId, offset, limit);
+            var slice = ExportStore.SliceRetained(entry, offset, limit);
             if (slice.Error != null) return Missing(tool, exportId);
             var export = Describe(entry);
-            return ResponseGuardTool.FitTextPage(slice, length => ExportStore.Slice(exportId, offset, length), page =>
+            return ResponseGuardTool.FitTextPage(slice, length => ExportStore.SliceRetained(entry, offset, length), page =>
                 page.Error != null ? Missing(tool, exportId) : PlcExchangeContract.Result(tool,
                     new JsonObject { ["export"] = export.DeepClone(), ["returned"] = page.Returned, ["text"] = page.Text },
                     paging: new Paging(PagingMode.Offset, offset, limit, page.NextOffset, null, null,

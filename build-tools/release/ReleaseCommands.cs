@@ -608,6 +608,11 @@ internal static partial class ReleaseCommands
         var errors = new List<string>();
         var noBinaries = options.Has("NoBinaries");
         var strict = options.Has("Strict");
+        if (!noBinaries || Directory.Exists(Path.Combine(root, TiaMcp.Logic.ModelContextProtocol.DecoderRuntime.RelativeDirectory)))
+        {
+            try { TiaMcp.Logic.ModelContextProtocol.DecoderRuntime.Require(root); }
+            catch (TiaMcp.Logic.ModelContextProtocol.DecoderRuntimeException error) { errors.Add(error.Message); }
+        }
         var deliveryRulesPath = Path.Combine(root, "scripts/operations/delivery-files.json");
         JsonDocument? rules = null;
         try

@@ -79,7 +79,7 @@ internal static class FoundationTools
         new("CompileAndDiagnosePlc","CompileSoftware","[v17-compile-safe-v1] Actual counts plus error/warning/info diagnostics, preserving summary lines in raw messages. Preview by default; exact project confirmation required for execution.",new[]{S("softwarePath"),new Argument("password","string",false,""),Dry()},"Compile")
     };
     internal static readonly Definition PagedBlocks =
-        new("GetBlocks", TiaMcp.PlcWorker.WorkerOperations.BlockPage, "List ordinary user-group blocks in stable ordinal group-qualified path order; path is usable by GetPlcBlockInfo/ExportPlcBlock. Reads details for this page only. limit 1..100 (default 20); pass meta.paging.nextCursor as cursor with the same softwarePath/regexName. Inventory changes invalidate the cursor; restart with empty cursor. System blocks and software units excluded.", new[]{S("softwarePath"),new Argument("regexName","string",false,""),new Argument("limit","integer",false,20,"Maximum blocks per page, 1..100."),new Argument("cursor","string",false,"","Opaque meta.paging.nextCursor from the previous page; empty starts a listing.")}, "BlockPage");
+        new("GetBlocks", TiaMcp.PlcWorker.WorkerOperations.BlockPage, "List ordinary user-group blocks in stable ordinal group-qualified path order; path is usable by GetPlcBlockInfo/ExportPlcBlock. Reads details for this page only. limit 1..100 (default 4); pass meta.paging.nextCursor as cursor with the same softwarePath/regexName. Inventory changes invalidate the cursor; restart with empty cursor. System blocks and software units excluded.", new[]{S("softwarePath"),new Argument("regexName","string",false,""),new Argument("limit","integer",false,4,"Maximum blocks per page, 1..100."),new Argument("cursor","string",false,"","Opaque meta.paging.nextCursor from the previous page; empty starts a listing.")}, "BlockPage");
     internal static bool Available(Definition definition, string releaseKey)
     {
         var major = TiaMcp.Versioning.TiaVersionCatalog.Get(releaseKey).MajorVersion;
@@ -357,6 +357,7 @@ internal sealed partial class FoundationTool : McpServerTool
             else if(definition.ResponseMember is "Mutation" or "ExportFile") result=V17MutationEnvelope.Wrap(definition.Name,definition.ResponseMember,result,values["dryRun"]!.GetValue<bool>());
             else if(definition.ResponseMember=="RuntimeQuery") result=RuntimeQueryContract.Validate(definition.Name,result,values["processId"]?.GetValue<int>());
             else if(definition.ResponseMember=="Declarations") result=DeclarationReadContract.Validate(definition.Name,values["table"]!.GetValue<string>(),result,(string?)values["unitName"] ?? "",(bool?)values["includeUnits"] ?? false);
+            else if(definition.ResponseMember=="BlockPage") result=FoundationV4Result.ValidateBlockPage(result,values);
             else if(definition.ResponseMember=="SupplementaryRead") result=SupplementaryReadContract.Wrap(definition.Name,result,McpJsonUtilities.DefaultOptions);
             else if(definition.ResponseMember=="SoftwareRead") result=SoftwareReadContract.Wrap(definition.Name,result,McpJsonUtilities.DefaultOptions);
             else if(definition.ResponseMember!=null && definition.ResponseMember!="BlockPage") result=V17ReadEnvelope.Wrap(definition.Name,definition.ResponseMember,result);

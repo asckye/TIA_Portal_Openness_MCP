@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using System.Text;
 using System.Text.Json.Nodes;
+using TiaMcp.Logic.ModelContextProtocol;
 
 namespace TiaMcp.ReleaseTool;
 
@@ -9,57 +10,81 @@ internal static partial class ReleaseCommands
     // Build a relocatable, isolated stdlib-only runtime from the explicitly selected
     // release-machine CPython. Never copy a venv or any site-packages into delivery.
     internal static int PrepareDecoderPython(Options options)
+        => PrepareDecoderPython(options, Root);
+
+    internal static int PrepareDecoderPython(Options options, string bundleRoot)
     {
         EnsureWindows("prepare-decoder-python");
-        var python = options.Get("Python", Py);
-        var probe = ProcessRunner.Run(python, ["-I", "-S", "-c",
-            "import sys,json,struct; print(json.dumps(dict(root=sys.base_prefix,version=list(sys.version_info[:3]),bits=struct.calcsize('P')*8)))"], Root);
+        string? python = options.Get("Python");
+        if (string.IsNullOrEmpty(python) || !Path.IsPathFullyQualified(python) || !File.Exists(python))
+            throw new ReleaseException("Specify -Python as the absolute path to pinned CPython " + DecoderRuntime.Version + ".");
+        if (DecoderRuntime.Hash(python) != DecoderRuntime.InterpreterSha256)
+            throw new ReleaseException("Decoder interpreter SHA-256 does not match the pinned CPython release.");
+        var probe = ProcessRunner.Run(python, ["-I", "-S", "-X", "utf8", "-c",
+            "import sys,json; print(json.dumps(dict(root=sys.base_prefix,version=list(sys.version_info[:3]),bits=64 if sys.maxsize>2**32 else 32)))"], bundleRoot);
         ProcessRunner.RequireSuccess(probe, "CPython runtime probe failed");
         var info = JsonNode.Parse(probe.StandardOutput)!.AsObject();
         var version = info["version"]!.AsArray().Select(v => v!.GetValue<int>()).ToArray();
-        if (version[0] != 3 || version[1] < 11 || info["bits"]!.GetValue<int>() != 64)
-            throw new ReleaseException("Decoder delivery requires 64-bit CPython 3.11+.");
+        if (string.Join(".", version) != DecoderRuntime.Version || info["bits"]!.GetValue<int>() != 64)
+            throw new ReleaseException("Decoder delivery requires pinned 64-bit CPython " + DecoderRuntime.Version + ".");
         string source = Path.GetFullPath((string)info["root"]!);
-        string target = Path.Combine(Root, "runtime/decoder-python");
-        if (source.StartsWith(target, StringComparison.OrdinalIgnoreCase)) throw new ReleaseException("Use the release-machine CPython, not a previous decoder runtime.");
+        string target = Path.GetFullPath(Path.Combine(bundleRoot, DecoderRuntime.RelativeDirectory));
+        string root = Path.GetFullPath(bundleRoot).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        if (!target.StartsWith(root, StringComparison.OrdinalIgnoreCase) || source.Equals(target, StringComparison.OrdinalIgnoreCase)
+            || source.StartsWith(target + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+            throw new ReleaseException("Use the release-machine CPython outside the decoder output directory.");
         string tag = "python" + version[0] + version[1];
-        foreach (string required in new[] { "python.exe", tag + ".dll", "LICENSE.txt", "Doc/html/license.html", "Lib/encodings/__init__.py" })
-            if (!File.Exists(Path.Combine(source, required))) throw new ReleaseException("Incomplete CPython installation: " + required);
-        // Refuse mixed interpreter versions rather than retaining stale DLLs from a previous build.
+        string Binary(string name) => File.Exists(Path.Combine(source, name)) ? Path.Combine(source, name) : Path.Combine(source, "DLLs", name);
+        var inputs = DecoderRuntime.BinaryFiles.Select(Binary)
+            .Concat(DecoderRuntime.StandardLibraryFiles.Select(name => Path.Combine(source, "Lib", name)))
+            .Concat(new[] { Path.Combine(source, "LICENSE.txt"), Path.Combine(source, "Doc/html/license.html") });
+        foreach (string input in inputs)
+            if (!File.Exists(input)) throw new ReleaseException("Incomplete pinned CPython installation: " + Path.GetFileName(input));
+        if (DecoderRuntime.Hash(Binary("python312.dll")) != DecoderRuntime.CoreSha256)
+            throw new ReleaseException("Decoder core SHA-256 does not match the pinned CPython release.");
         string receipt = Path.Combine(target, "runtime.json");
-        if (File.Exists(receipt) && (string?)JsonNode.Parse(File.ReadAllText(receipt))!["tag"] != tag)
-            throw new ReleaseException("Decoder CPython version changed; use a fresh worktree runtime directory.");
+        // Verify this exact worktree output, including every directory, before recursive cleanup.
+        if (Directory.Exists(Path.GetDirectoryName(target))
+            && (File.GetAttributes(Path.GetDirectoryName(target)!) & FileAttributes.ReparsePoint) != 0)
+            throw new ReleaseException("Decoder output parent must not be a directory link.");
+        if (Directory.Exists(target))
+        {
+            var pending = new Stack<string>();
+            pending.Push(target);
+            while (pending.TryPop(out string? directory))
+            {
+                if ((File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0)
+                    throw new ReleaseException("Decoder output must not contain directory links.");
+                foreach (string child in Directory.EnumerateDirectories(directory)) pending.Push(child);
+            }
+            Directory.Delete(target, true);
+        }
         Directory.CreateDirectory(target);
-        foreach (string file in Directory.EnumerateFiles(source).Where(p => Path.GetExtension(p) == ".dll"
-            || Path.GetFileName(p) is "python.exe" or "LICENSE.txt"))
-            File.Copy(file, Path.Combine(target, Path.GetFileName(file)), true);
-        foreach (string file in Directory.EnumerateFiles(Path.Combine(source, "DLLs")))
-            if (Path.GetExtension(file) is ".dll" or ".pyd" || Path.GetFileName(file).Contains("LICENSE", StringComparison.OrdinalIgnoreCase))
-                File.Copy(file, Path.Combine(target, Path.GetFileName(file)), true);
+        foreach (string name in DecoderRuntime.BinaryFiles) File.Copy(Binary(name), Path.Combine(target, name));
+        File.Copy(Path.Combine(source, "LICENSE.txt"), Path.Combine(target, "LICENSE.txt"));
         File.Copy(Path.Combine(source, "Doc/html/license.html"), Path.Combine(target, "THIRD-PARTY-LICENSES.html"), true);
         string archivePath = Path.Combine(target, "stdlib.zip");
         using (var output = File.Create(archivePath))
         using (var archive = new ZipArchive(output, ZipArchiveMode.Create))
         {
             string library = Path.Combine(source, "Lib");
-            foreach (string file in Directory.EnumerateFiles(library, "*.py", SearchOption.AllDirectories).Order(StringComparer.Ordinal))
+            foreach (string relative in DecoderRuntime.StandardLibraryFiles)
             {
-                string relative = Path.GetRelativePath(library, file).Replace('\\', '/');
-                if (relative.Split('/').Any(part => part is "site-packages" or "__pycache__" or "test" or "tests" or "idlelib" or "tkinter" or "turtledemo" or "ensurepip")) continue;
                 var entry = archive.CreateEntry(relative, CompressionLevel.Optimal);
                 entry.LastWriteTime = new DateTimeOffset(2000, 1, 1, 0, 0, 0, TimeSpan.Zero);
-                using var input = File.OpenRead(file);
+                using var input = File.OpenRead(Path.Combine(library, relative));
                 using var destination = entry.Open();
                 input.CopyTo(destination);
             }
         }
         File.WriteAllText(Path.Combine(target, "python._pth"), ".\nstdlib.zip\n", new UTF8Encoding(false));
-        var smoke = ProcessRunner.Run(Path.Combine(target, "python.exe"), ["-I", "-S", "-B", "-c",
-            "import json,xml.etree.ElementTree,ctypes,pathlib; print('decoder-runtime-ok')"], target);
-        ProcessRunner.RequireSuccess(smoke, "Relocatable decoder runtime smoke failed");
         WriteJson(receipt, new JsonObject { ["tag"] = tag, ["version"] = string.Join(".", version), ["architecture"] = "x64",
-            ["license"] = "LICENSE.txt", ["files"] = new JsonObject(Directory.EnumerateFiles(target).Where(p => p != receipt)
+            ["license"] = "LICENSE.txt", ["interpreterSha256"] = DecoderRuntime.InterpreterSha256,
+            ["files"] = new JsonObject(Directory.EnumerateFiles(target).Where(p => p != receipt)
                 .Order(StringComparer.Ordinal).Select(p => new KeyValuePair<string, JsonNode?>(Path.GetFileName(p), JsonValue.Create(ReleaseRecords.HashFile(p))))) });
+        var smoke = ProcessRunner.Run(DecoderRuntime.Require(bundleRoot), ["-I", "-S", "-B", "-X", "utf8", "-c",
+            "import json,xml.etree.ElementTree,pathlib; print('decoder-runtime-ok')"], target);
+        ProcessRunner.RequireSuccess(smoke, "Relocatable decoder runtime smoke failed");
         Console.WriteLine("Prepared isolated decoder CPython " + string.Join(".", version) + " with its original license at " + target);
         return 0;
     }

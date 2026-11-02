@@ -11,6 +11,7 @@ using Xunit;
 using Foundation = foundationhost::TiaMcp.FoundationHost;
 using Operations = foundationhost::TiaMcp.PlcWorker.WorkerOperations;
 
+[Collection(WorkerDataDirectoryCollection.Name)]
 public sealed class PlcWorkerRobustnessTests
 {
     private static readonly IReadOnlyDictionary<string, string> PlcCategories = new Dictionary<string, string>(StringComparer.Ordinal)

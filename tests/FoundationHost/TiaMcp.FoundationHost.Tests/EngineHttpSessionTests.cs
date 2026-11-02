@@ -9,7 +9,9 @@ using TiaMcp.Logic.V4;
 using TiaOpenness.Shared;
 using Xunit;
 
+[Collection(WorkerDataDirectoryCollection.Name)]
 public sealed class EngineHttpSessionTests : EngineHttpSessionTestsCases { protected override bool PlcWorker => false; }
+[Collection(WorkerDataDirectoryCollection.Name)]
 public sealed class EngineHttpSessionTestsPlc : EngineHttpSessionTestsCases { protected override bool PlcWorker => true; }
 
 public abstract class EngineHttpSessionTestsCases

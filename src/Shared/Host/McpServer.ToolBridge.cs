@@ -150,7 +150,7 @@ namespace TiaMcpServer.ModelContextProtocol
 #if !TIA_ENGINE_PORTED
         [McpServerTool(Name = "FindTools"), Description("[L0][Meta][READ] Search the full version-gated catalog, including tools outside lite. Returns names, signatures, descriptions and examples. Use CallTool with an arguments object to invoke a match.")]
         public static CallToolResult FindToolsV4(
-            [Description("All capability words must match; incidental description hits below the relevance threshold are excluded. Empty browses the catalog.")] string query = "",
+            [Description("All capability words must match. Single words also match descriptions, ranked below tool names and aliases. Empty browses the catalog.")] string query = "",
             [Description("Positive page size; default 12.")] int limit = 12,
             [Description("Optional category key from ListToolCategories.")] string category = "",
             [Description("Optional exact domain tag from ListToolCategories.")] string domain = "",
@@ -222,11 +222,11 @@ namespace TiaMcpServer.ModelContextProtocol
                         score += weight;
                         if (weight > 0) matched++;
                     }
-                    // Require every capability word and enough evidence to exclude a lone
-                    // incidental description reference. Exact registered names always win.
+                    // Single words retain description recall; multi-word queries require
+                    // every capability word. Exact registered names always win.
                     bool exact = string.Equals(kv.Key, query?.Trim(), StringComparison.OrdinalIgnoreCase);
                     if (exact) score = int.MaxValue;
-                    if (terms.Length == 0 || exact || matched == terms.Length && score >= 6)
+                    if (terms.Length == 0 || exact || matched == terms.Length && score >= (terms.Length == 1 ? 3 : 6))
                         scored.Add(new KeyValuePair<int, string>(score, kv.Key));
                 }
 

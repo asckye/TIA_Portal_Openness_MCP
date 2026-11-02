@@ -428,6 +428,17 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | PLC 原生交叉引用 | 有 V21 退出历史。2026-10-30 决定：V14 SP1–V20 在 API 可用时默认允许；V21 保留人工会话开关或环境变量 opt-in，真机确认 pending / NOT RUN。编译成功不能保证查询稳定。离线引用分析仅覆盖成功导出且可索引的输入。 |
 | HMI 深层快照 | 有 getter / 句柄失效记录；部分属性暂停读取。必须查看完整性字段，[诊断说明](../troubleshooting/hmi-snapshots.md)。 |
 
+## DES-5 分页与解码器验收
+
+以下项目在 V14 SP1、V15.1、V16、V17、V18、V19、V20、V21 均为 **NOT RUN**。离线夹具、构建和导入跟踪不代替现场验收。
+
+| 待验收项目 | 状态 | 需要保留的证据 |
+|---|---|---|
+| 130 块工程的分页大小与耗时 | NOT RUN | 逐版本记录默认四项及显式页大小的序列化字节数、首尾页和总耗时，直接调用及 CallTool 的 nextCursor 连续读取。 |
+| 转义的组限定块路径 | NOT RUN | 含分隔符、百分号和 Unicode 的实际块路径被 GetPlcBlockInfo、ExportPlcBlock 原样接受；无遗漏或重复。 |
+| 重绑、关闭和重开后的游标 | NOT RUN | 原游标按会话、绑定及查询失效，新游标从首项重启；实际工程对象与读回结果。 |
+| 无 Python / VC++ 安装的干净 Windows | NOT RUN | 交付包中固定 CPython 运行时的启动、FC/FB 解码、未知指令及不支持版本拒绝；安装环境与依赖诊断。 |
+
 ## 保留的历史记录
 
 [原逐工具台账](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/reference/real-machine-ledger.md)保留早期 V21 测试工程、设备、工具行和现场修复过程。该台账主要对应 2.7.39–2.7.62；旧汇总中“调用过”“前置条件拒绝”“环境拒绝”与真实成功分列，不能将总行数称为全部验收通过。

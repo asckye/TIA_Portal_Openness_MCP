@@ -173,7 +173,7 @@ internal static class FoundationV4Result
     internal static CallToolResult Worker(string release, Definition definition, string id, JsonObject args, JsonNode? raw, JsonNode? validated)
     {
         string name = FoundationV4Tool.Name(definition.Name);
-        var data = Object(raw);
+        var data = definition.ResponseMember == "BlockPage" ? ValidateBlockPage(raw, args) : Object(raw);
         HostBehavior.ExportPreview(data);
         if (definition.ResponseMember == "BlockPage")
         {
@@ -256,6 +256,36 @@ internal static class FoundationV4Result
         return Wire(release, name, id, data, outcome, Execute(outcome, mutation && Flag(data, "executed") != false),
             outcome == Outcome.Unknown ? Completeness.Unknown : incomplete ? Completeness.Partial : Completeness.Complete,
             error, true, reset || outcome == Outcome.Unknown);
+    }
+
+    internal static JsonObject ValidateBlockPage(JsonNode? raw, JsonObject args)
+    {
+        var data = Object(raw);
+        bool Integer(string key, out int value)
+        {
+            value = 0;
+            return data[key] is JsonValue scalar && scalar.TryGetValue(out value);
+        }
+        bool String(JsonNode? node, out string? value)
+        {
+            value = null;
+            return node is JsonValue scalar && scalar.TryGetValue(out value);
+        }
+        int limit = args["limit"]!.GetValue<int>();
+        if (raw is not JsonObject || data["items"] is not JsonArray items
+            || !Integer("offset", out int offset) || !Integer("total", out int total)
+            || offset < 0 || total < offset || items.Count > limit || items.Count > total - offset
+            || !data.ContainsKey("nextCursor")) throw new InvalidDataException("Worker returned an invalid block page.");
+        bool more = offset + items.Count < total;
+        if (data["nextCursor"] != null && (!String(data["nextCursor"], out var cursor) || string.IsNullOrEmpty(cursor) || cursor.Length > 100)
+            || more != (data["nextCursor"] != null) || more && items.Count == 0
+            || string.IsNullOrEmpty((string?)args["cursor"]) && offset != 0)
+            throw new InvalidDataException("Worker returned inconsistent block page totals or continuation.");
+        var paths = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var item in items)
+            if (item is not JsonObject row || !String(row["path"], out var path) || string.IsNullOrEmpty(path) || !paths.Add(path))
+                throw new InvalidDataException("Worker returned invalid block page items.");
+        return data;
     }
 
     internal static CallToolResult Host(string release, string name, string id, JsonNode? raw, bool candidate, bool isError = false,

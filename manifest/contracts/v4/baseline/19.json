@@ -186916,7 +186916,7 @@
           },
           "query": {
             "default": "",
-            "description": "All capability words must match; incidental description hits below the relevance threshold are excluded. Empty browses the catalog.",
+            "description": "All capability words must match. Single words also match descriptions, ranked below tool names and aliases. Empty browses the catalog.",
             "examples": [
               "watch table"
             ],
@@ -370134,7 +370134,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "b4eddfd97f7f788e307d147a57f9149113c01d4007f0dbed21158e738e937e64",
+      "descriptionSha256": "663e02b96defcc439a0e753163deafa6b5f93d32efd55fcff9eaa6cfd664e2d4",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -370144,7 +370144,7 @@
             "type": "string"
           },
           "limit": {
-            "default": 20,
+            "default": 4,
             "description": "Maximum blocks per page, 1..100.",
             "type": "integer"
           },

@@ -52,7 +52,7 @@ F28 迁移后的 V19/V20/V21 PLC worker 也使用下表的 Esprima 3.0.5 和 Yam
 | PLC Tools 的八个 Python 包及根 CLI | core-engineering/siemens-plc-tools `887eea1ea3495832648f47e42759320141952717` | MIT；[许可证](../../third_party/siemens-plc-tools/LICENSE)、[改动记录](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/siemens-plc-tools/UPSTREAM.json)。以独立 Python 进程运行，安装环境和依赖不随源码入库。 |
 | SimaticML Decoder 0.2.3 | Czarnak/simaticml-decoder `2f100023c2d6f4e7a4df02cbd04975de48f5d207` | MIT，© 2026 Łukasz Czarnacki；[许可证](../../third_party/simaticml-decoder/LICENSE)、[来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/simaticml-decoder/UPSTREAM.json)。原样源码、独立 Python 进程、只读分析；输出不可回编译或导入。上游测试语料不随本项目分发。 |
 
-`TiaUtilities` 和 `tia-linter` 的 GPL 源码未复制。布尔别名/报警生成、XML 模板展开及通用工程质量规则为独立实现。Repsay 客户端和 Czarnak MCP 的功能需求通过本项目现有 API 与新批量协议实现，未复制其源代码。解码器交付另含 CPython 标准库运行时：原始 PSF 及其附属第三方条款保存在包内 `runtime/decoder-python/LICENSE.txt` 与 `THIRD-PARTY-LICENSES.html`；版本、架构和文件哈希由 `runtime.json` 记录。PLC Tools 的 Python 依赖由安装脚本单独还原，包括可选 PDF 审计报告使用的 ReportLab；安装环境不打包进交付仓库。
+`TiaUtilities` 和 `tia-linter` 的 GPL 源码未复制。布尔别名/报警生成、XML 模板展开及通用工程质量规则为独立实现。Repsay 客户端和 Czarnak MCP 的功能需求通过本项目现有 API 与新批量协议实现，未复制其源代码。解码器交付固定为 CPython 3.12.10 x64，解释器 SHA-256 为 `4d6f5f81a4bca11191c4c7c6b43632694d0a4ce74e068619d8fdc161d469859a`。导入跟踪覆盖 FC、FB、未知指令、V20 拒绝和 XXE 拒绝；交付仅含解释器、核心 DLL、Microsoft VC runtime、`_elementtree.pyd`、`pyexpat.pyd` 及其使用的 59 个标准库文件。Tcl/Tk、测试扩展、MSI、winsound、SQLite、OpenSSL 和 libffi 不交付。原始 PSF 许可、Microsoft 可再分发代码条款及附属 Expat、zlib 和标准库第三方条款原样保存在包内 `runtime/decoder-python/LICENSE.txt` 与 `THIRD-PARTY-LICENSES.html`；版本、架构和各文件哈希由 `runtime.json` 记录，启动解码器及验包时校验。PLC Tools 的 Python 依赖由安装脚本单独还原，包括可选 PDF 审计报告使用的 ReportLab；安装环境不打包进交付仓库。
 
 ## 关于 Siemens.Collaboration.Net 条款的说明
 

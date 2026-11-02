@@ -199,6 +199,11 @@ namespace TiaMcpServer.ModelContextProtocol
         /// <summary>超阈值就寄存并只回头部；其余情况原样返回同一个对象。</summary>
         internal static CallToolResult Shrink(CallToolResult? result, string toolName, string target, bool force = false)
         {
+            // Item cursor paging is the tool's continuation contract. Never replace
+            // it with text-offset paging, including when invoked through CallTool.
+            if (result?.StructuredContent is JsonNode pageResult
+                && (string?)pageResult["meta"]?["tool"] == "ListPlcBlocks"
+                && (string?)pageResult["meta"]?["paging"]?["mode"] == "cursor") return result;
             if (result == null) return result!;
             if (!force && result.StructuredContent is JsonObject structured && structured["data"] is JsonObject parkedData
                 && parkedData["export"] is JsonObject parkedExport && parkedExport["id"] != null && structured["meta"] is JsonObject parkedMeta && parkedMeta["paging"] != null)
@@ -224,15 +229,15 @@ namespace TiaMcpServer.ModelContextProtocol
             // 原子：寄存 + 取头部在同一把锁里完成。分成两步的话，中间别的线程 Put 时
             // 的淘汰可能把我们刚存的挤掉，Slice 就拿到 Error != null、Text=""，
             // 于是模型收到一份「成功但空」的响应 —— 原文既不在上下文也不在句柄里。
-            var (id, head) = ExportStore.PutAndSlice(toolName, target, full, limit);
+            var (entry, head) = ExportStore.PutAndSliceEntry(toolName, target, full, limit);
+            var id = entry.Id;
             // fail-open：头部都取不到就原样放行完整响应。多花上下文可以接受，丢内容不行。
             if (head.Error != null) return result;
 
             if (JsonNode.Parse(full) is JsonObject envelope && envelope["schemaVersion"]?.GetValue<int?>() == 4)
             {
                 var original = V4Json.Deserialize<Envelope>(full);
-                var entry = ExportStore.Get(id);
-                var export = PlcExchangeContract.DescribeExport(entry!);
+                var export = PlcExchangeContract.DescribeExport(entry);
                 CallToolResult Render(ExportSlice page)
                 {
                     if (page.Error != null) throw new InvalidOperationException(page.Message);
@@ -250,7 +255,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
                         Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
                 }
-                return FitTextPage(head, length => ExportStore.Slice(id, 0, length), Render);
+                return FitTextPage(head, length => ExportStore.SliceRetained(entry, 0, length), Render);
             }
 
             var meta = new JsonObject

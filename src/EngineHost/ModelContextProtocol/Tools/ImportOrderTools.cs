@@ -103,8 +103,11 @@ namespace TiaMcpServer.ModelContextProtocol
         private static CallToolResult Failure(string tool, Exception error, bool writes, bool current)
         {
             var cause = error.InnerException ?? error;
-            if (cause is DataLocationIOException io)
-                return Result(tool, null, new Error(io.Message, new IoFailedDetails("ecosystem-python", io.TargetPath)),
+            if (cause is TiaMcp.Logic.ModelContextProtocol.DecoderRuntimeException)
+                return Result(tool, null, new Error(cause.Message, new IoFailedDetails("decoder-runtime", TiaMcp.Logic.ModelContextProtocol.DecoderRuntime.RelativeDirectory)),
+                    Outcome.RejectedBeforeOperation, Completeness.None, current);
+            if (cause is DataLocationIOException)
+                return Result(tool, null, new Error("The local tool dependency is unavailable.", new IoFailedDetails("local-tool-dependency", null)),
                     Outcome.RejectedBeforeOperation, Completeness.None, current);
             if (cause is BundleResourceUnavailableException resource)
                 return Result(tool, null, new Error(resource.Message, new ResourceUnavailableDetails(resource.Resource)),

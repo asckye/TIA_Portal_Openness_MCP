@@ -4965,7 +4965,7 @@
           "query": {
             "type": "string",
             "default": "\"\"",
-            "description": "All capability words must match; incidental description hits below the relevance threshold are excluded. Empty browses the catalog.",
+            "description": "All capability words must match. Single words also match descriptions, ranked below tool names and aliases. Empty browses the catalog.",
             "value": ""
           },
           "limit": {
@@ -24358,7 +24358,7 @@
           "query": {
             "type": "string",
             "default": "\"\"",
-            "description": "All capability words must match; incidental description hits below the relevance threshold are excluded. Empty browses the catalog.",
+            "description": "All capability words must match. Single words also match descriptions, ranked below tool names and aliases. Empty browses the catalog.",
             "value": ""
           },
           "limit": {

@@ -125,10 +125,20 @@ namespace TiaMcpServer.ModelContextProtocol
         public static (string id, ExportSlice head) PutAndSlice(
             string tool, string target, string? content, int headLength)
         {
+            var retained = PutAndSliceEntry(tool, target, content, headLength);
+            return (retained.entry.Id, retained.head);
+        }
+
+        // Retain the exact entry while holding the insertion lock. Fitting a wire
+        // page may run after eviction; it must still slice this completed result.
+        public static (ExportEntry entry, ExportSlice head) PutAndSliceEntry(
+            string tool, string target, string? content, int headLength)
+        {
             lock (_lock)
             {
                 var id = PutLocked(tool, target, content);
-                return (id, SliceLocked(id, 0, headLength, NowUtc()));
+                var entry = _entries[id];
+                return (entry, SliceLocked(id, 0, headLength, NowUtc()));
             }
         }
 
@@ -172,6 +182,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
 
             entry.LastTouchUtc = now;      // LRU：读过就不算「最久没用」
+            return SliceRetained(entry, offset, length);
+        }
+
+        public static ExportSlice SliceRetained(ExportEntry entry, int offset, int length)
+        {
             int total = entry.Content.Length;
             if (offset < 0) offset = 0;
             if (offset > total) offset = total;

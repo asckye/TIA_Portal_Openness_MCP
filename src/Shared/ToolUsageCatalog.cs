@@ -292,7 +292,7 @@ namespace TiaOpenness.Shared
                 ["officialReference"] = mapping,
                 ["operations"] = operations, ["parameterSources"] = origins,
                 ["resultContract"] = resultContract?.DeepClone() ?? call?["resultContract"]?.DeepClone() ?? new JsonObject { ["description"] = "Result structure and operation-specific fields are described in the exact tool description above." },
-                ["resultReading"] = call?["resultReading"]?.DeepClone() ?? (Data.Value["resultReading"]?[(string?)resultContract?["type"] ?? "default"] ?? Data.Value["resultReading"]!["default"])!.DeepClone(),
+                ["resultReading"] = Reading(resultContract, call),
                 ["examples"] = Examples(release, profile, available, toolName: name)["examples"]!.DeepClone()
             };
             if (call?["execution"] != null) response["example"]!["execution"] = call["execution"]!.DeepClone();
@@ -303,6 +303,14 @@ namespace TiaOpenness.Shared
             if (call?["releaseNotes"]?[release] != null) response["example"]!["releaseNote"] = call["releaseNotes"]![release]!.DeepClone();
             if (Data.Value["toolNotes"]?[name] is JsonNode notes && (notes["profile"] == null || (string?)notes["profile"] == profile)) response["interpretation"] = notes.DeepClone();
             return response;
+        }
+
+        private static JsonArray Reading(JsonObject? contract, JsonObject? call)
+        {
+            var defaults = (Data.Value["resultReading"]?[(string?)contract?["type"] ?? "default"]
+                ?? Data.Value["resultReading"]!["default"])!.AsArray();
+            return new JsonArray(defaults.Concat(call?["resultReading"] as JsonArray ?? new JsonArray())
+                .Select(value => value?.DeepClone()).ToArray());
         }
 
         private static JsonNode? ExampleValue(string name, JsonObject property)
