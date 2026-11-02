@@ -9,6 +9,7 @@ namespace TiaMcp.ReleaseTool;
 internal static class PackageDependencies
 {
     private static readonly Lazy<HashSet<string>> Framework = new(FrameworkAssemblies);
+    private static readonly string[] BundledRuntimePrefixes = ["runtime/dotnet/", "runtime/decoder-python/"];
 
     internal static IReadOnlyList<string> Check(string root, Func<string, bool> delivered)
     {
@@ -20,7 +21,7 @@ internal static class PackageDependencies
             .Where(delivered).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var framework = Framework.Value;
         foreach (var program in files.Where(path => path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) &&
-                     !path.StartsWith("runtime/dotnet/", StringComparison.OrdinalIgnoreCase)).Order(StringComparer.Ordinal))
+                     !BundledRuntimePrefixes.Any(prefix => path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))).Order(StringComparer.Ordinal))
         {
             try { CheckProgram(root, program, files, framework, errors); }
             catch (Exception ex) { errors.Add($"Dependency closure: {program}: {ex.Message}"); }

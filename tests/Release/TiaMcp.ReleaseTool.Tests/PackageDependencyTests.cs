@@ -223,6 +223,27 @@ public sealed class PackageDependencyTests
     }
 
     [Fact]
+    public void BundledNativeDecoderIsExcludedButNativeToolsStillRequireAnEntryAssembly()
+    {
+        using var fixture = new OfflineFixtures();
+        const string decoder = "runtime/decoder-python/python.exe";
+        byte[] native = AssemblyBytes(decoder, [], null);
+        using (var pe = new PEReader(new MemoryStream(native, writable: false)))
+        {
+            int directories = pe.PEHeaders.PEHeaderStartOffset + (pe.PEHeaders.PEHeader!.Magic == PEMagic.PE32Plus ? 112 : 96);
+            Array.Clear(native, directories + 14 * 8, 8);
+        }
+        using (var pe = new PEReader(new MemoryStream(native, writable: false))) Assert.False(pe.HasMetadata);
+        Directory.CreateDirectory(Path.Combine(fixture.DirectoryPath, "runtime/decoder-python"));
+        File.WriteAllBytes(Path.Combine(fixture.DirectoryPath, decoder), native);
+        Assert.Empty(PackageDependencies.Check(fixture.DirectoryPath, _ => true));
+        Directory.CreateDirectory(Path.Combine(fixture.DirectoryPath, "runtime/tools"));
+        File.WriteAllBytes(Path.Combine(fixture.DirectoryPath, "runtime/tools/python.exe"), native);
+        Assert.Equal("Dependency closure: runtime/tools/python.exe: missing entry assembly runtime/tools/python.dll",
+            Assert.Single(PackageDependencies.Check(fixture.DirectoryPath, _ => true)));
+    }
+
+    [Fact]
     public void PluginLauncherDeliveryIncludesModernEntryAssemblyAndDependencyMetadata()
     {
         using var fixture = new OfflineFixtures();
