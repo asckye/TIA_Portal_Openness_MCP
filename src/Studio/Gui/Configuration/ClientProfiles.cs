@@ -327,7 +327,8 @@ namespace TiaMcpConfigurator
         public static ClientConfigurationChange PrepareSave(ClientProfile profile, bool remote, string address, int port, string key, string engine,
                 string version, string tia)
         {
-            var entry = Entry(profile, remote, address, port, key, engine, version, tia);
+            // Invalid remote configuration must be reported before relay lookup; keep local launch validation first.
+            var entry = remote ? null : Entry(profile, false, address, port, key, engine, version, tia);
             string name = ServerName(profile, remote);
             byte[] original = File.Exists(profile.Path) ? File.ReadAllBytes(profile.Path) : null;
             string text = "";
@@ -347,6 +348,7 @@ namespace TiaMcpConfigurator
             object raw;
             var servers = root.TryGetValue(rootKey, out raw) ? raw as Dictionary<string, object> : new Dictionary<string, object>();
             if (servers == null) throw new InvalidDataException(Loc.Current.T("Config.InvalidServerMap", rootKey));
+            entry ??= Entry(profile, remote, address, port, key, engine, version, tia);
             bool migrate = false;
             if (remote && servers.TryGetValue(name, out var oldRemote))
             {

@@ -112,12 +112,18 @@ public sealed class StudioBundleLayoutTests(WpfContext wpf) : IDisposable
                 string oldEngine = At(scratch, "runtime/v" + release.Key + "/" + "TiaMcp" + "Server.exe");
                 string path = At(scratch, "clients/" + profile.Id + "-" + release.Key + (profile.Client == "codex" ? ".toml" : ".json"));
                 var target = new ClientProfile(profile.Id, profile.Name, path, "", profile.Client);
-                var remote = ClientProfiles.Entry(target, true, "127.0.0.1", 8123, "fixture-key", null!, release.Key, null!);
+                var remote = ClientProfiles.Entry(target, true, "127.0.0.1", 8123, "fixture-key", engine, release.Key, null!);
                 var local = ClientProfiles.Entry(target, false, null!, 0, null!, engine, release.Key, "TIA 中文");
                 Assert.Equal("tia-portal", ClientProfiles.ServerName(target, false));
                 Assert.Equal("tia-portal-vm", ClientProfiles.ServerName(target, true));
-                Assert.Equal("http://127.0.0.1:8123/mcp", remote[ClientProfiles.UrlKey(target)]);
-                Assert.Equal("Bearer fixture-key", ((Dictionary<string, object>)remote["headers"])["Authorization"]);
+                string[] relay = target.Client == "opencode" ? ((string[])remote["command"]).Skip(1).ToArray() : (string[])remote["args"];
+                Assert.Equal(new[] { "--bundle-root", scratch, "--relay", "http://127.0.0.1:8123/mcp" }, relay);
+                Assert.Equal(engine, target.Client == "opencode" ? ((string[])remote["command"])[0] : remote["command"]);
+                Assert.DoesNotContain("fixture-key", ConfigCore.Json().Serialize(remote));
+                Assert.False(remote.ContainsKey("headers"));
+                if (target.Client == "opencode") { Assert.Equal("local", remote["type"]); Assert.Equal(true, remote["enabled"]); }
+                else if (target.Client is "claude-code" or "vscode" or "cursor" or "codebuddy") Assert.Equal("stdio", remote["type"]);
+                else Assert.False(remote.ContainsKey("type"));
                 string[] arguments = target.Client == "opencode" ? ((string[])local["command"]).Skip(1).ToArray() : (string[])local["args"];
                 Assert.Equal(new[] { "--bundle-root", scratch, BundleLayout.GetProduct(release.Key).VersionOption, release.Key, "--tia-portal-location", "TIA 中文" }, arguments);
                 Assert.Equal(engine, target.Client == "opencode" ? ((string[])local["command"])[0] : local["command"]);

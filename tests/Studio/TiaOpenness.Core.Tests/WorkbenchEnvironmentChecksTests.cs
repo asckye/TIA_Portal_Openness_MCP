@@ -58,6 +58,7 @@ public sealed class WorkbenchEnvironmentChecksTests
         else if (id == "port") fixture.Sources.PortOwners = _ => ["127.0.0.1:8765 PID=12 expected-host"];
         else if (id == "url") fixture.Sources.UrlReserved = _ => false;
         else if (id == "firewall") fixture.Sources.FirewallAllowed = _ => false;
+        else if (id == "proxy-remote") fixture.Sources.ProxyConnection = _ => new(id, EnvironmentFindingStatus.Fail, "Fail");
         else if (id == "openness-allowlist") fixture.Sources.AllowListEntry = _ => null;
         Assert.Equal(EnvironmentFindingStatus.Fail, fixture.Check(id).Status);
     }
@@ -73,6 +74,7 @@ public sealed class WorkbenchEnvironmentChecksTests
         else if (id == "port") fixture.Sources.PortOwners = _ => throw new UnauthorizedAccessException("denied");
         else if (id == "url") fixture.Sources.UrlReserved = _ => null;
         else if (id == "firewall") fixture.Sources.FirewallAllowed = _ => null;
+        else if (id == "proxy-remote") fixture.Sources.ProxyConnection = _ => throw new UnauthorizedAccessException("denied");
         else if (id == "openness-allowlist") fixture.Sources.AllowListEntry = _ => throw new UnauthorizedAccessException("denied");
         Assert.Equal(EnvironmentFindingStatus.Unknown, fixture.Check(id).Status);
     }
@@ -239,6 +241,7 @@ public sealed class WorkbenchEnvironmentChecksTests
         {
             BundleRoot = Path.GetFullPath("fake-bundle"), DataRoot = Path.GetFullPath("user-data"),
             ConfigDirectory = Path.GetFullPath("actual-config"), LogsDirectory = Path.GetFullPath("actual-logs"), HttpPrefix = "http://127.0.0.1:8765/",
+            RemoteEndpoints = ["http://127.0.0.1:8765/mcp"],
         };
         public EnvironmentProbeSources Sources { get; }
         public ProbeFixture() => Sources = new()
@@ -246,6 +249,7 @@ public sealed class WorkbenchEnvironmentChecksTests
             Doctor = () => Report, ListedGroupMember = () => false, FileExists = _ => true,
             Directories = directory => [Path.Combine(directory, "10.0.12")], Writable = _ => true,
             PortOwners = _ => [], UrlReserved = _ => true, FirewallAllowed = _ => true,
+            ProxyConnection = endpoints => new("proxy-remote", EnvironmentFindingStatus.Pass, "Pass", string.Join("\n", endpoints)),
             FileIdentity = path => new(Modified, Hash(path)),
             AllowListEntry = name => OpennessAllowList.Expected(Workers().Single(w => Path.GetFileName(w) == name), Modified, Hash(Workers().Single(w => Path.GetFileName(w) == name))),
         };
