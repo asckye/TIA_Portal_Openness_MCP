@@ -205,23 +205,25 @@ public sealed class McpPanelTests(WpfContext wpf)
         await Task.WhenAll(detaching, disposing).WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Equal(1, owner.WaitCalls); Assert.True(owner.Disposed); Assert.False(owner.Forced);
     }
-    [Fact]
+    [Fact(Timeout = 5000)]
     public async Task Owned_session_forces_only_after_the_shutdown_timeout_and_traces_it()
     {
         await using var host = new McpOperatorFixture();
         var owner = new McpOperatorFixture.FakeOwnedHost(host.Host.Pid) { AutoExit = false };
-        await using var client = host.Client(owner); await client.CreateAsync("19");
+        var timing = HostLifecycleTests.ShortTiming;
+        await using var client = host.Client(owner, timing); await client.CreateAsync("19");
         using var trace = new OwnedHostTrace(); Trace.Listeners.Add(trace);
         try
         {
             var closing = client.DetachAsync();
             await owner.Waiting.Task.WaitAsync(TimeSpan.FromSeconds(5));
-            await Task.Delay(TimeSpan.FromSeconds(10.1));
+            await Task.Delay(TimeSpan.FromTicks(timing.Grace.Ticks * 101 / 200));
             Assert.False(owner.Forced); Assert.False(owner.Disposed); Assert.False(closing.IsCompleted);
             await closing.WaitAsync(TimeSpan.FromSeconds(15));
             Assert.True(owner.Forced); Assert.True(owner.Disposed);
             Assert.True(McpSessionClient.OwnedHostExitTimeout > TimeSpan.FromSeconds(10));
-            Assert.True(owner.ForcedAfter >= TimeSpan.FromSeconds(19.8), owner.ForcedAfter.ToString());
+            // Keep the original 19.8 / 20 lower bound with the injected grace.
+            Assert.True(owner.ForcedAfter >= TimeSpan.FromTicks(timing.Grace.Ticks * 99 / 100), owner.ForcedAfter.ToString());
             Assert.Contains(trace.Lines, line => line.Contains("Forced termination of owned operator host " + owner.Id));
         }
         finally { Trace.Listeners.Remove(trace); }

@@ -15,6 +15,12 @@ using TiaOpenness.Shared;
 
 namespace TiaOpenness.Gui.Services;
 
+internal sealed record HostLifecycleTiming(TimeSpan Grace, TimeSpan PollInterval, TimeSpan ConfirmationWait)
+{
+    internal static readonly HostLifecycleTiming Default = new(McpSessionClient.OwnedHostExitTimeout,
+        McpSessionClient.RegistrationPollInterval, Timeout.InfiniteTimeSpan);
+}
+
 internal sealed record VisibleHost(int Pid, long StartTicks, string ReleaseKey, string ImagePath, string BundleRoot,
     string Transport, string? HttpPrefix, string? Version, bool WorkbenchStarted, bool OlderVersion,
     string? PipeName = null, bool CallInProgress = false, string? RegistrationPath = null)
@@ -166,19 +172,21 @@ internal sealed class HostLifecycleService(string dataRoot, string currentVersio
             throw new IOException(response.Error ?? "Host shutdown was refused.");
         }
     }
-    internal static async Task Stop(VisibleHost host, Func<VisibleHost, Task>? requestShutdown = null, Func<VisibleHost, Task<bool>>? confirmForce = null)
+    internal static async Task Stop(VisibleHost host, Func<VisibleHost, Task>? requestShutdown = null,
+        Func<VisibleHost, Task<bool>>? confirmForce = null, HostLifecycleTiming? timing = null)
     {
         if (ReportedBusy(host)) throw new InvalidOperationException("A host call is in progress. Wait for it to finish before Stop or Restart.");
         using var process = VerifiedProcess(host);
+        var settings = timing ?? HostLifecycleTiming.Default;
         try { await (requestShutdown ?? RequestShutdown)(host).ConfigureAwait(false); }
         catch (Exception error) when (error is IOException or TimeoutException or OperationCanceledException)
         { Trace.TraceWarning("Graceful host shutdown request failed: {0}", error.GetType().Name); }
-        using var deadline = new CancellationTokenSource(McpSessionClient.OwnedHostExitTimeout);
+        using var deadline = new CancellationTokenSource(settings.Grace);
         try { await process.WaitForExitAsync(deadline.Token).ConfigureAwait(false); return; }
         catch (OperationCanceledException) when (deadline.IsCancellationRequested) /* swallow(teardown): only an explicit human confirmation may force termination after the grace period */ { }
         if (process.HasExited) return;
         if (ReportedBusy(host)) throw new InvalidOperationException("A host call is in progress. Wait for it to finish before Stop or Restart.");
-        if (confirmForce == null || !await confirmForce(host).ConfigureAwait(false))
+        if (confirmForce == null || !await confirmForce(host).WaitAsync(settings.ConfirmationWait).ConfigureAwait(false))
             throw new TimeoutException("The host did not stop gracefully. TIA may need a restart if the host is forcibly terminated.");
         if (ReportedBusy(host)) throw new InvalidOperationException("A host call is in progress. Wait for it to finish before Stop or Restart.");
         using var force = VerifiedProcess(host);
@@ -186,11 +194,11 @@ internal sealed class HostLifecycleService(string dataRoot, string currentVersio
         await force.WaitForExitAsync().ConfigureAwait(false);
     }
     internal static async Task<Process> Restart(VisibleHost host, ProcessStartInfo start,
-        Func<VisibleHost, Task>? requestShutdown = null, Func<VisibleHost, Task<bool>>? confirmForce = null)
+        Func<VisibleHost, Task>? requestShutdown = null, Func<VisibleHost, Task<bool>>? confirmForce = null, HostLifecycleTiming? timing = null)
     {
         if (host.Transport != "http" || start.UseShellExecute || !Path.IsPathFullyQualified(start.FileName) || !File.Exists(start.FileName))
             throw new InvalidOperationException("A verified HTTP restart configuration is required.");
-        await Stop(host, requestShutdown, confirmForce).ConfigureAwait(false);
+        await Stop(host, requestShutdown, confirmForce, timing).ConfigureAwait(false);
         return Process.Start(start) ?? throw new IOException("Host restart did not start a process.");
     }
 }

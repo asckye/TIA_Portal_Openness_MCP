@@ -67,8 +67,8 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
             catch (IOException) when (attempt < 100) { Thread.Sleep(10); }
         }
     }
-    internal McpSessionClient Client(FakeOwnedHost? owner = null) => new(RepositoryRoot, Root, Connect, start =>
-    { Start = start; return Owner = owner ?? new FakeOwnedHost(Host.Pid); });
+    internal McpSessionClient Client(FakeOwnedHost? owner = null, HostLifecycleTiming? timing = null) => new(RepositoryRoot, Root, Connect, start =>
+    { Start = start; return Owner = owner ?? new FakeOwnedHost(Host.Pid); }, timing);
     private Task<Stream> Connect(OperatorHost host, CancellationToken token)
     {
         var left = new Pipe(); var right = new Pipe();

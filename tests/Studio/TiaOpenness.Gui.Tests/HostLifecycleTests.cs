@@ -12,6 +12,25 @@ namespace TiaOpenness.Gui.Tests;
 
 public sealed class HostLifecycleTests
 {
+    internal static readonly HostLifecycleTiming ShortTiming = new(TimeSpan.FromMilliseconds(400), TimeSpan.FromMilliseconds(20), TimeSpan.FromSeconds(2));
+    private static Task Stop(VisibleHost host, Func<VisibleHost, Task>? requestShutdown = null, Func<VisibleHost, Task<bool>>? confirmForce = null)
+        => HostLifecycleService.Stop(host, requestShutdown, confirmForce, ShortTiming);
+    private static Task<Process> Restart(VisibleHost host, ProcessStartInfo start, Func<VisibleHost, Task>? requestShutdown = null,
+        Func<VisibleHost, Task<bool>>? confirmForce = null) => HostLifecycleService.Restart(host, start, requestShutdown, confirmForce, ShortTiming);
+
+    [Fact(Timeout = 5000)]
+    public async Task Production_shutdown_timing_preserves_the_existing_defaults()
+    {
+        Assert.Equal(TimeSpan.FromSeconds(20), McpSessionClient.OwnedHostExitTimeout);
+        Assert.Equal(TimeSpan.FromMilliseconds(500), McpSessionClient.RegistrationPollInterval);
+        Assert.Equal(McpSessionClient.OwnedHostExitTimeout, HostLifecycleTiming.Default.Grace);
+        Assert.Equal(McpSessionClient.RegistrationPollInterval, HostLifecycleTiming.Default.PollInterval);
+        Assert.Equal(System.Threading.Timeout.InfiniteTimeSpan, HostLifecycleTiming.Default.ConfirmationWait);
+        await using var fixture = new McpOperatorFixture();
+        await using var client = fixture.Client();
+        Assert.Same(HostLifecycleTiming.Default, client.ShutdownTiming);
+    }
+
     private sealed class SyntheticHost : IAsyncDisposable
     {
         internal readonly string Root = McpOperatorFixture.RepositoryRoot;
@@ -36,16 +55,16 @@ public sealed class HostLifecycleTests
             for (int attempt = 0; attempt < 100 && !Process.HasExited; attempt++)
             {
                 if (service.Discover().Any(host => host.Pid == Process.Id)) break;
-                await Task.Delay(50);
+                await Task.Delay(ShortTiming.PollInterval);
             }
             Assert.Contains(service.Discover(), host => host.Pid == Process.Id);
         }
-        private async Task Shutdown(VisibleHost _) { await Process.StandardInput.WriteLineAsync("tiamcp.host-control/1 shutdown"); await Process.StandardInput.FlushAsync(); }
+        internal async Task Shutdown(VisibleHost _) { await Process.StandardInput.WriteLineAsync("tiamcp.host-control/1 shutdown"); await Process.StandardInput.FlushAsync(); }
         public async ValueTask DisposeAsync()
         {
             try
             {
-                if (!Process.HasExited) await HostLifecycleService.Stop(Identity, Shutdown, _ => Task.FromResult(true));
+                if (!Process.HasExited) await Stop(Identity, Shutdown, _ => Task.FromResult(true));
             }
             finally
             {
@@ -56,9 +75,10 @@ public sealed class HostLifecycleTests
         }
     }
 
-    [Fact]
-    public void Client_and_Workbench_hosts_share_leases_when_bundle_data_is_read_only()
+    [Fact(Timeout = 5000)]
+    public async Task Client_and_Workbench_hosts_share_leases_when_bundle_data_is_read_only()
     {
+        await Task.CompletedTask;
         string root = Path.Combine(McpOperatorFixture.RepositoryRoot, "bin-build", "fix-r1-data-" + Guid.NewGuid().ToString("N"));
         string bundle = Path.Combine(root, "bundle"), local = Path.Combine(root, "local"), temp = Path.Combine(root, "temp");
         string output = Path.Combine(bundle, "runtime", "v21");
@@ -86,11 +106,12 @@ public sealed class HostLifecycleTests
         }
     }
 
-    [Theory]
+    [Theory(Timeout = 5000)]
     [InlineData("pid")] [InlineData("startTicks")] [InlineData("imagePath")] [InlineData("bundleRoot")]
     [InlineData("releaseKey")] [InlineData("transport")]
-    public void A_malformed_registration_is_reported_without_hiding_valid_hosts(string missing)
+    public async Task A_malformed_registration_is_reported_without_hiding_valid_hosts(string missing)
     {
+        await Task.CompletedTask;
         string root = Path.Combine(McpOperatorFixture.RepositoryRoot, "bin-build", "fix-r1-registration-" + Guid.NewGuid().ToString("N"));
         string directory = Path.Combine(root, "run", "hosts"); Directory.CreateDirectory(directory);
         using var process = Process.GetCurrentProcess();
@@ -116,20 +137,20 @@ public sealed class HostLifecycleTests
         }
     }
 
-    [Fact]
+    [Fact(Timeout = 5000)]
     public async Task Busy_host_refuses_stop_and_restart_before_sending_a_shutdown_request()
     {
         await using var fixture = new SyntheticHost(); await fixture.Ready();
         int requests = 0;
         var host = fixture.Identity with { CallInProgress = true };
         Task Request(VisibleHost _) { requests++; return Task.CompletedTask; }
-        await Assert.ThrowsAsync<InvalidOperationException>(() => HostLifecycleService.Stop(host, Request));
-        await Assert.ThrowsAsync<InvalidOperationException>(() => HostLifecycleService.Restart(host,
+        await Assert.ThrowsAsync<InvalidOperationException>(() => Stop(host, Request));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => Restart(host,
             new ProcessStartInfo(host.ImagePath) { UseShellExecute = false }, Request));
         Assert.Equal(0, requests); Assert.False(fixture.Process.HasExited);
     }
 
-    [Fact]
+    [Fact(Timeout = 5000)]
     public async Task A_call_started_after_discovery_still_blocks_the_stop_request()
     {
         await using var fixture = new SyntheticHost(); await fixture.Ready();
@@ -139,11 +160,11 @@ public sealed class HostLifecycleTests
         record["sessions"] = new JsonArray(new JsonObject { ["callInProgress"] = true });
         File.WriteAllText(host.RegistrationPath, record.ToJsonString());
         int requests = 0;
-        await Assert.ThrowsAsync<InvalidOperationException>(() => HostLifecycleService.Stop(host, _ => { requests++; return Task.CompletedTask; }));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => Stop(host, _ => { requests++; return Task.CompletedTask; }));
         Assert.Equal(0, requests);
     }
 
-    [Theory] [InlineData(false)] [InlineData(true)]
+    [Theory(Timeout = 5000)] [InlineData(false)] [InlineData(true)]
     public async Task Unresponsive_synthetic_host_is_killed_only_after_the_existing_grace_and_explicit_confirmation(bool force)
     {
         string root = McpOperatorFixture.RepositoryRoot;
@@ -156,58 +177,102 @@ public sealed class HostLifecycleTests
         using var process = Process.Start(start) ?? throw new IOException("Synthetic host did not start");
         var identity = new VisibleHost(process.Id, process.StartTime.ToUniversalTime().Ticks, "21", image, root, "http", null, null, true, false);
         async Task Graceful(VisibleHost _) { await process.StandardInput.WriteLineAsync("tiamcp.host-control/1 shutdown"); await process.StandardInput.FlushAsync(); }
+        var confirmationRequested = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var confirmation = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         try
         {
             var service = new HostLifecycleService(data, "4.0.0-beta.2");
             for (int attempt = 0; attempt < 100 && !process.HasExited; attempt++)
             {
                 if (service.Discover().Any(host => host.Pid == process.Id)) break;
-                await Task.Delay(50);
+                await Task.Delay(ShortTiming.PollInterval);
             }
             Assert.Contains(service.Discover(), host => host.Pid == process.Id);
-            int confirmations = 0; var elapsed = Stopwatch.StartNew();
-            var stopping = HostLifecycleService.Stop(identity, _ => Task.CompletedTask, _ => {
+            int requests = 0, confirmations = 0; var elapsed = Stopwatch.StartNew();
+            var stopping = Stop(identity, _ => { requests++; return Task.CompletedTask; }, async _ => {
                 confirmations++;
-                Assert.True(elapsed.Elapsed >= McpSessionClient.OwnedHostExitTimeout);
-                return Task.FromResult(force);
+                Assert.Equal(1, requests);
+                Assert.True(elapsed.Elapsed >= ShortTiming.Grace);
+                Assert.False(process.HasExited);
+                confirmationRequested.TrySetResult(true);
+                return await confirmation.Task;
             });
+            await confirmationRequested.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.False(stopping.IsCompleted); Assert.False(process.HasExited);
+            await Task.Delay(ShortTiming.PollInterval);
+            Assert.False(stopping.IsCompleted); Assert.False(process.HasExited);
+            confirmation.TrySetResult(force);
             if (force) { await stopping; Assert.True(process.HasExited); Assert.NotEqual(0, process.ExitCode); }
             else { await Assert.ThrowsAsync<TimeoutException>(() => stopping); Assert.False(process.HasExited); }
             Assert.Equal(1, confirmations);
         }
         finally
         {
-            if (!process.HasExited) await HostLifecycleService.Stop(identity, Graceful);
+            confirmation.TrySetResult(false);
+            if (!process.HasExited) await Stop(identity, Graceful);
             Assert.StartsWith(Path.Combine(root, "bin-build") + Path.DirectorySeparatorChar, Path.GetFullPath(data), StringComparison.OrdinalIgnoreCase);
             if (Directory.Exists(data)) Directory.Delete(data, true);
         }
     }
 
-    [Fact]
+    [Fact(Timeout = 5000)]
     public async Task A_call_reported_during_force_confirmation_still_prevents_termination()
     {
         await using var fixture = new SyntheticHost(); await fixture.Ready();
         var host = Assert.Single(new HostLifecycleService(fixture.Data, "4.0.0-beta.2").Discover());
         int confirmations = 0;
-        await Assert.ThrowsAsync<InvalidOperationException>(() => HostLifecycleService.Stop(host, _ => Task.CompletedTask, _ => {
+        await Assert.ThrowsAsync<InvalidOperationException>(() => Stop(host, _ => Task.CompletedTask, async _ => {
             confirmations++;
             var record = JsonNode.Parse(File.ReadAllText(host.RegistrationPath!))!.AsObject();
             record["sessions"] = new JsonArray(new JsonObject { ["callInProgress"] = true });
             File.WriteAllText(host.RegistrationPath!, record.ToJsonString());
-            return Task.FromResult(true);
+            await Task.Delay(ShortTiming.PollInterval);
+            Assert.False(fixture.Process.HasExited);
+            return true;
         }));
         Assert.Equal(1, confirmations); Assert.False(fixture.Process.HasExited);
     }
 
-    [Theory]
+    [Fact(Timeout = 5000)]
+    public async Task An_unanswered_force_confirmation_never_terminates_the_host()
+    {
+        await using var fixture = new SyntheticHost(); await fixture.Ready();
+        var confirmation = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        int confirmations = 0;
+        await Assert.ThrowsAsync<TimeoutException>(() => HostLifecycleService.Stop(fixture.Identity, _ => Task.CompletedTask,
+            _ => { confirmations++; return confirmation.Task; }, ShortTiming with { ConfirmationWait = TimeSpan.FromMilliseconds(80) }));
+        Assert.Equal(1, confirmations); Assert.False(fixture.Process.HasExited);
+    }
+
+    [Fact(Timeout = 5000)]
+    public async Task A_host_exiting_during_force_confirmation_is_reverified_before_termination()
+    {
+        await using var fixture = new SyntheticHost(); await fixture.Ready();
+        int confirmations = 0;
+        var error = await Record.ExceptionAsync(() => Stop(fixture.Identity, _ => Task.CompletedTask, async host => {
+            confirmations++;
+            await fixture.Shutdown(host);
+            while (!fixture.Process.HasExited) await Task.Delay(ShortTiming.PollInterval);
+            return true;
+        }));
+        Assert.True(error is ArgumentException or UnauthorizedAccessException, error?.ToString());
+        Assert.Equal(1, confirmations); Assert.True(fixture.Process.HasExited);
+        Assert.Equal(0, fixture.Process.ExitCode);
+    }
+
+    [Theory(Timeout = 5000)]
     [InlineData(null, true)] [InlineData("4.0.0-beta.1", true)]
     [InlineData("4.0.0-beta.2", false)] [InlineData("4.0.0", false)]
-    public void Older_and_legacy_hosts_are_flagged(string? version, bool expected)
-        => Assert.Equal(expected, HostLifecycleService.IsOlder(version, "v4.0.0-beta.2"));
-
-    [Fact]
-    public void Process_identity_must_match_before_any_stop()
+    public async Task Older_and_legacy_hosts_are_flagged(string? version, bool expected)
     {
+        await Task.CompletedTask;
+        Assert.Equal(expected, HostLifecycleService.IsOlder(version, "v4.0.0-beta.2"));
+    }
+
+    [Fact(Timeout = 5000)]
+    public async Task Process_identity_must_match_before_any_stop()
+    {
+        await Task.CompletedTask;
         using var process = Process.GetCurrentProcess();
         var host = new VisibleHost(process.Id, process.StartTime.ToUniversalTime().Ticks + 1, "21", process.MainModule!.FileName,
             "unused", "http", null, null, false, true);
@@ -216,7 +281,7 @@ public sealed class HostLifecycleTests
         Assert.Throws<UnauthorizedAccessException>(() => HostLifecycleService.VerifiedProcess(host));
     }
 
-    [Fact]
+    [Fact(Timeout = 5000)]
     public async Task Real_local_http_host_without_sessions_can_be_restarted_and_stopped_after_identity_verification()
     {
         string root = McpOperatorFixture.RepositoryRoot;
@@ -248,7 +313,7 @@ public sealed class HostLifecycleTests
             {
                 host = service.Discover().SingleOrDefault(candidate => candidate.Pid == process.Id);
                 if (host != null) break;
-                await Task.Delay(50);
+                await Task.Delay(ShortTiming.PollInterval);
             }
             Assert.NotNull(host);
             Assert.Equal(expected.StartTicks, host.StartTicks);
@@ -264,7 +329,7 @@ public sealed class HostLifecycleTests
             {
                 legacy = service.Discover().Single(candidate => candidate.Pid == process.Id);
                 if (legacy.HttpPrefix != null) break;
-                await Task.Delay(50);
+                await Task.Delay(ShortTiming.PollInterval);
             }
             Assert.NotNull(legacy);
             Assert.True(legacy.OlderVersion);
@@ -272,24 +337,24 @@ public sealed class HostLifecycleTests
             Assert.NotNull(endpoint);
             Assert.Equal("127.0.0.1", endpoint.Host);
             Assert.InRange(endpoint.Port, 1, 65535);
-            replacement = await HostLifecycleService.Restart(host, start, RequestShutdown);
+            replacement = await Restart(host, start, RequestShutdown);
             replacementIdentity = expected with { Pid = replacement.Id, StartTicks = replacement.StartTime.ToUniversalTime().Ticks };
             Assert.True(process.HasExited);
             Assert.Equal(0, process.ExitCode);
             for (int attempt = 0; attempt < 100 && !replacement.HasExited; attempt++)
             {
                 if (service.Discover().Any(candidate => candidate.Pid == replacement.Id)) break;
-                await Task.Delay(50);
+                await Task.Delay(ShortTiming.PollInterval);
             }
             Assert.Contains(service.Discover(), candidate => candidate.Pid == replacement.Id);
-            await HostLifecycleService.Stop(replacementIdentity, RequestShutdown);
+            await Stop(replacementIdentity, RequestShutdown);
             Assert.Equal(0, replacement.ExitCode);
             Assert.Empty(service.Discover());
         }
         finally
         {
-            if (!process.HasExited) await HostLifecycleService.Stop(expected, RequestShutdown);
-            if (replacement != null && !replacement.HasExited && replacementIdentity != null) await HostLifecycleService.Stop(replacementIdentity, RequestShutdown);
+            if (!process.HasExited) await Stop(expected, RequestShutdown);
+            if (replacement != null && !replacement.HasExited && replacementIdentity != null) await Stop(replacementIdentity, RequestShutdown);
             replacement?.Dispose();
             Assert.StartsWith(Path.Combine(root, "bin-build") + Path.DirectorySeparatorChar, Path.GetFullPath(data), StringComparison.OrdinalIgnoreCase);
             if (Directory.Exists(data)) Directory.Delete(data, true);

@@ -18,6 +18,8 @@ namespace TiaOpenness.Gui.Services;
 public sealed class McpSessionClient : IMcpSessionClient, IHumanCrossReferenceSettings
 {
     internal static readonly TimeSpan OwnedHostExitTimeout = TimeSpan.FromSeconds(20);
+    internal static readonly TimeSpan RegistrationPollInterval = TimeSpan.FromMilliseconds(500);
+    internal HostLifecycleTiming ShutdownTiming { get; }
     private readonly string root, dataRoot;
     private readonly Func<OperatorHost, CancellationToken, Task<Stream>> connect;
     private readonly object sync = new();
@@ -45,9 +47,10 @@ public sealed class McpSessionClient : IMcpSessionClient, IHumanCrossReferenceSe
 
     public McpSessionClient() : this(BundleLayout.RequireWorkbenchRoot(AppContext.BaseDirectory), DataLocations.Current.WorkbenchDataDirectory) { }
     internal McpSessionClient(string root, string dataRoot, Func<OperatorHost, CancellationToken, Task<Stream>>? connect = null,
-        Func<ProcessStartInfo, IOwnedOperatorHost>? startHost = null)
+        Func<ProcessStartInfo, IOwnedOperatorHost>? startHost = null, HostLifecycleTiming? timing = null)
     {
         this.root = Path.GetFullPath(root); this.dataRoot = Path.GetFullPath(dataRoot); this.connect = connect ?? ConnectVerified;
+        ShutdownTiming = timing ?? HostLifecycleTiming.Default;
         this.startHost = startHost ?? (start => new OwnedOperatorHost(Process.Start(start) ?? throw new IOException("Unable to start the operator host.")));
     }
 
@@ -200,7 +203,7 @@ public sealed class McpSessionClient : IMcpSessionClient, IHumanCrossReferenceSe
         {
             while (!token.IsCancellationRequested)
             {
-                await Task.Delay(500, token).ConfigureAwait(false);
+                await Task.Delay(ShutdownTiming.PollInterval, token).ConfigureAwait(false);
                 if (!Alive(host)) break;
                 var record = await ReadRegistration(host.RegistrationPath, token).ConfigureAwait(false);
                 if (record == null) continue;
@@ -303,13 +306,13 @@ public sealed class McpSessionClient : IMcpSessionClient, IHumanCrossReferenceSe
         try
         {
             // The stream is closed first. Allow the host's 10 s detach/release budget and a margin before any kill.
-            using var deadline = new CancellationTokenSource(OwnedHostExitTimeout);
+            using var deadline = new CancellationTokenSource(ShutdownTiming.Grace);
             try { await host.WaitForExitAsync(deadline.Token).ConfigureAwait(false); }
             catch (OperationCanceledException) when (deadline.IsCancellationRequested)
             {
                 if (!host.HasExited)
                 {
-                    Trace.TraceWarning("Forced termination of owned operator host {0} after {1} seconds waiting for shutdown.", host.Id, OwnedHostExitTimeout.TotalSeconds);
+                    Trace.TraceWarning("Forced termination of owned operator host {0} after {1} seconds waiting for shutdown.", host.Id, ShutdownTiming.Grace.TotalSeconds);
                     host.Terminate();
                 }
             }
