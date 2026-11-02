@@ -11,7 +11,7 @@ internal static class RuntimeQueryContract
         try
         {
             if(result is not JsonObject o || !Releases.Contains(Text(o,"ReleaseKey"),StringComparer.Ordinal)) throw new InvalidDataException();
-            if(tool=="GetState")
+            if(tool=="GetSessionState")
             {
                 Keys(o,"ReleaseKey","IsAttached","ProcessId","ProjectFile","OwnsProject","IsLocalSession","IdentityStatus","RuntimeConnectionStatus");
                 var attached=Bool(o,"IsAttached"); var owns=Bool(o,"OwnsProject"); var local=Bool(o,"IsLocalSession");
@@ -27,7 +27,7 @@ internal static class RuntimeQueryContract
                 var ids=new HashSet<int>();
                 foreach(var row in rows) { var p=Process(row); if(!ids.Add(p)) throw new InvalidDataException(); }
             }
-            else if(tool=="DiagnosePortalConnectReadiness")
+            else if(tool=="GetPortalConnectionReadiness")
             {
                 Keys(o,"ReleaseKey","ProcessId","ProcessFound","Readiness","PermissionStatus","Reason","Process");
                 var pid=Pid(o,"ProcessId"); var found=Bool(o,"ProcessFound");

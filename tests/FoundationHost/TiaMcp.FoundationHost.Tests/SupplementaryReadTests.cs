@@ -63,26 +63,26 @@ internal static class SupplementaryReadTests
         Reject(()=>PlcSupplementaryReadPolicy.Technologies(root,BrokenRows,g=>g.Children,g=>g.Name),"No partial technology result");
         var watchRoot=new FakeGroup {Name="root",Children=new[]{new FakeGroup{Name="G/1"}}};
         check(PlcSupplementaryReadPolicy.WatchPaths(watchRoot,g=>new[]{"A"},g=>g.Children,g=>g.Name).Contains("G%2F1/A"),"Watch recursive canonical path");
-        foreach(var pair in new[]{("GetPlcWatchTables","ReadWatchTableNames"),("GetTechnologyObjects","ReadTechnologyObjects")})
+        foreach(var pair in new[]{("ListPlcWatchTables","ReadWatchTableNames"),("ListTechnologyObjects","ReadTechnologyObjects")})
         {
             var def=FoundationTools.Definitions.Single(d=>d.Name==pair.Item1);
             check(WorkerOperations.Names.Contains(pair.Item2) && def.Arguments.Length==1 && def.Arguments[0].Name=="softwarePath","Exact tool schema and operation");
             var request=new RequestContext<CallToolRequestParams>(server) {Params=new() {Name=pair.Item1,Arguments=new Dictionary<string,JsonElement> { ["softwarePath"]=JsonSerializer.SerializeToElement("devices/D/CPU") } } };
-            JsonObject Payload(JsonArray items)=>new() { ["SoftwarePath"]="devices/D/CPU",["ReleaseKey"]="20",["Scope"]=pair.Item1=="GetPlcWatchTables"?SupplementaryReadContract.WatchScope:SupplementaryReadContract.TechnologyScope,["Items"]=items };
-            var items=pair.Item1=="GetPlcWatchTables"?new JsonArray("A"):new JsonArray(JsonSerializer.SerializeToNode(Row()));
+            JsonObject Payload(JsonArray items)=>new() { ["SoftwarePath"]="devices/D/CPU",["ReleaseKey"]="20",["Scope"]=pair.Item1=="ListPlcWatchTables"?SupplementaryReadContract.WatchScope:SupplementaryReadContract.TechnologyScope,["Items"]=items };
+            var items=pair.Item1=="ListPlcWatchTables"?new JsonArray("A"):new JsonArray(JsonSerializer.SerializeToNode(Row()));
             var reader=new FakeReader(Payload(items));
             var result=await new FoundationTool(def,reader).InvokeAsync(request);
             string Wire(string name)=>McpJsonUtilities.DefaultOptions.PropertyNamingPolicy?.ConvertName(name)??name;
             var actual=JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)!;
             check(reader.Calls==1 && actual[Wire("Items")] is JsonArray a && a.Count==1,"Actual MCP invoke and nonempty response");
             check(actual[Wire("Meta")]!["nativeAcceptance"]!.GetValue<string>()=="NOT RUN","No native acceptance inflation");
-            if(pair.Item1=="GetTechnologyObjects") check(actual[Wire("Ok")]!.GetValue<bool>() && actual[Wire("Count")]!.GetValue<int>()==1,"Technology response fields");
+            if(pair.Item1=="ListTechnologyObjects") check(actual[Wire("Ok")]!.GetValue<bool>() && actual[Wire("Count")]!.GetValue<int>()==1,"Technology response fields");
             foreach(var malformed in new JsonNode?[]{null,new JsonArray(),new JsonObject(),Payload(new JsonArray(123)),Payload(new JsonArray(items[0]!.DeepClone(),items[0]!.DeepClone()))})
             {
                 try { await new FoundationTool(def,new FakeReader(malformed)).InvokeAsync(request); throw new Exception("Malformed supplementary payload accepted"); }
                 catch(McpException ex) {check(ex.ErrorCode==McpErrorCode.InternalError,"Malformed worker response fails MCP");}
             }
-            if(pair.Item1=="GetPlcWatchTables")
+            if(pair.Item1=="ListPlcWatchTables")
             {
                 foreach(var invalid in new[]{"G//A","../A","G%2f1/A","A%","G/ ",new string('A',4097)}) Reject(()=>SupplementaryReadContract.Wrap(pair.Item1,Payload(new JsonArray(invalid)),McpJsonUtilities.DefaultOptions),"Noncanonical/oversized watch path rejected");
             }

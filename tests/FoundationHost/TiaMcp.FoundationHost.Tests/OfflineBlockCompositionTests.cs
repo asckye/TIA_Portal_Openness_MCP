@@ -15,7 +15,7 @@ internal static class OfflineBlockCompositionTests
         const string basic = "{\"blockName\":\"Test\",\"blockNumber\":1,\"inputs\":[],\"outputs\":[],\"structuredText\":{\"operations\":[{\"op\":\"assignment\",\"target\":\"#Ready\",\"value\":\"TRUE\"}]}}";
         foreach (var tool in OfflineBlockCompositionTools.Create())
         {
-            bool fb = tool.ProtocolTool.Name == "ComposePlcFbBlockXml";
+            bool fb = tool.ProtocolTool.Name == "BuildPlcFbBlock";
             string parameter = fb ? "fbBlockJson" : "fcBlockJson";
             var name = tool.ProtocolTool.Name;
             Dictionary<string, JsonElement> Args(string json, string release = "21") => new() { [parameter] = JsonSerializer.SerializeToElement(json), ["outputReleaseKey"] = JsonSerializer.SerializeToElement(release) };

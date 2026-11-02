@@ -39,9 +39,9 @@ public sealed class ApprovalHostTests
     [Theory]
     [InlineData("SaveProject", "{}")]
     [InlineData("CloseProject", "{}")]
-    [InlineData("CompileSoftware", "{\"softwarePath\":\"PLC\"}")]
+    [InlineData("CompilePlcSoftware", "{\"softwarePath\":\"PLC\"}")]
     [InlineData("ImportPlcExternalSource", "{\"sourceName\":\"fixture.scl\",\"filePath\":\"C:/fixture.scl\"}")]
-    [InlineData("AttachToOpenProject", "{\"processId\":1,\"processStartUtc\":\"2026-10-05T00:00:00Z\",\"projectPath\":\"C:/fixture.ap19\"}")]
+    [InlineData("AttachOpenProject", "{\"processId\":1,\"processStartUtc\":\"2026-10-05T00:00:00Z\",\"projectPath\":\"C:/fixture.ap19\"}")]
     public async Task Candidate_apply_runs_its_own_preview_before_requesting_approval(string source, string json)
     {
         var worker = new Worker(); var definition = FoundationTools.Definitions.Single(d => d.Name == source);
@@ -82,8 +82,8 @@ public sealed class ApprovalHostTests
     }
 
     [Theory]
-    [InlineData("Connect", "{\"processId\":123}")]
-    [InlineData("Disconnect", "{}")]
+    [InlineData("ConnectPortal", "{\"processId\":123}")]
+    [InlineData("DisconnectPortal", "{}")]
     public async Task Foundation_connect_and_disconnect_remain_ungated(string source, string arguments)
     {
         var worker = new Worker(); var definition = FoundationTools.Definitions.Single(d => d.Name == source);
@@ -278,7 +278,7 @@ public sealed class ApprovalHostTests
     [InlineData(false)]
     public async Task Write_is_refused_without_workbench_before_any_worker_call(bool dryRun)
     {
-        var worker = new Worker(); var definition = FoundationTools.Definitions.Single(d => d.Name == "ImportBlock");
+        var worker = new Worker(); var definition = FoundationTools.Definitions.Single(d => d.Name == "ImportPlcBlock");
         var tool = new FoundationV4Tool(new FoundationTool(definition, worker), "19", null, () => new ApprovalSettings(true, 1));
         var result = await tool.InvokeAsync(Request("ImportPlcBlock", "{\"softwarePath\":\"PLC\",\"groupPath\":\"\",\"importPath\":\"C:\\\\fixture.xml\",\"dryRun\":" + dryRun.ToString().ToLowerInvariant() + "}"));
         var body = result.StructuredContent!;
@@ -298,7 +298,7 @@ public sealed class ApprovalHostTests
     [Fact]
     public async Task Invalid_input_retains_its_admission_error_before_approval()
     {
-        var worker = new Worker(); var definition = FoundationTools.Definitions.Single(d => d.Name == "ImportBlock");
+        var worker = new Worker(); var definition = FoundationTools.Definitions.Single(d => d.Name == "ImportPlcBlock");
         var tool = new FoundationV4Tool(new FoundationTool(definition, worker), "19", null, () => new ApprovalSettings(true, 1));
         var result = await tool.InvokeAsync(Request("ImportPlcBlock", "{\"unexpected\":true}"));
         Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);

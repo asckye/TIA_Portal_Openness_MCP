@@ -17,7 +17,6 @@ internal static class CatalogGenerator
             ["3"] = "failed", ["4"] = "partial", ["5"] = "outcome unknown", ["64"] = "syntax error", ["70"] = "runtime resources unavailable" };
     }
     internal const string Resource = "src/Logic/ModelContextProtocol/ToolProfiles.resx";
-    internal const string Rejections = "tests/Engine/TiaMcp.Engine.Tests/FullEngineRejections.json";
     internal static Dictionary<string, string> Generate(string root, bool legacyNames = false, Action<Dictionary<string, string>>? prepareSources = null)
     {
         var data = new CatalogData(root); var tools = data.Archives.ToDictionary(p => p.Key, p => (JsonObject)p.Value.DeepClone());
@@ -40,7 +39,7 @@ internal static class CatalogGenerator
         Require(Set(tools["20"].Select(p => p.Key)).SetEquals(currentNames.Keys.Where(n => !only21.Contains(n) && !only21.Contains(currentNames[n]) && !unavailable20.Contains(currentNames[n]))), "V20 admission policy differs");
         Require(Set(Strings(Read(root, "manifest/history/contracts-v3/baseline/20.json")["liteTools"])).SetEquals(Strings(Read(root, "manifest/history/contracts-v3/baseline/21.json")["liteTools"])), "Frozen engine lite rosters differ");
         Require(Source(root, "src/Shared/ToolUsageCatalog.cs").Contains("GuideSelection(string topic)", StringComparison.Ordinal) && Source(root, "src/Logic/ModelContextProtocol/ToolRecipes.cs").Contains("ToolUsageCatalog.Sequences(", StringComparison.Ordinal) && Source(root, "src/EngineHost/ModelContextProtocol/Tools/ToolUsageTools.cs").Contains("ToolUsageCatalog.Examples(", StringComparison.Ordinal) && Source(root, "src/EngineHost/ModelContextProtocol/Tools/ToolUsageTools.cs").Contains("exampleId", StringComparison.Ordinal), "Guide merge proof differs");
-        var calls = Read(root, "reference/tool-examples/calls.json")["profiles"]!; var sourceExamples = Read(root, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceExamples.json");
+        var calls = Read(root, "reference/tool-examples/calls.json")["profiles"]!; var sourceExamples = Read(root, "reference/tool-catalog/EngineSourceExamples.json");
         foreach (var key in Keys) Require(data.Rosters[key].All(calls[key is "20" or "21" ? "full-engine" : "plc-foundation"]!.AsObject().ContainsKey), "Missing call examples: " + key);
         var foundation = string.Join('\n', Directory.GetFiles(Path.Combine(root, "src/FoundationHost"), "*.cs").Order(StringComparer.Ordinal).Select(Repository.ReadSource));
         var foundationCurrent = Keys.Take(6).ToDictionary(k => k, k => CatalogData.Resolve(tools[k].Select(p => p.Key), Set(data.Rosters[k].Except(data.HostOnly.Keys)), data.Renames));
@@ -50,7 +49,7 @@ internal static class CatalogGenerator
             Require(foundation.Contains('"' + foundationCurrent[key][old] + '"', StringComparison.Ordinal), "Missing Foundation registration: " + old);
             foreach (var p in row!["inputSchema"]!["properties"]!.AsObject()) Require(foundation.Contains('"' + p.Key + '"', StringComparison.Ordinal), "Missing Foundation parameter: " + old + "/" + p.Key);
         }
-        var signatures = currentNames.Where(p => !CatalogData.Merged.Contains(p.Key)).ToDictionary(p => p.Key, p => Signature(data.Engine, data.Registrations[p.Value].Method));
+        var signatures = currentNames.Where(p => !CatalogData.Merged.Contains(p.Key)).ToDictionary(p => p.Key, p => Text(data.EngineSource["registrations"]![p.Value]!["signature"]));
         var typed = new Dictionary<string, Dictionary<string, HashSet<string>>>();
         foreach (var key in Keys) foreach (var (name, row) in tools[key]) foreach (var p in row!["inputSchema"]!["properties"]!.AsObject())
             if (p.Key.EndsWith("Json", StringComparison.Ordinal) || name == "PlcBuildAndImport" && p.Key == "json") { if (!typed.TryGetValue(name, out var entry)) typed[name] = entry = []; if (!entry.TryGetValue(p.Key, out var supported)) entry[p.Key] = supported = []; supported.Add(key); }
@@ -95,9 +94,8 @@ internal static class CatalogGenerator
         }
         Require(lite["20"].SetEquals(lite["21"]), "Engine lite proposals differ");
         var ledger = Source(root, "docs/reference/real-machine-ledger.md"); var policies = BehaviorRecords(ledger); var entries = new JsonArray();
-        var files = Repository.GitFiles(root, "src/Engine", "src/Shared").Where(p => p.EndsWith(".cs", StringComparison.Ordinal) && File.Exists(Path.Combine(root, p)));
-        var candidateSource = string.Join('\n', files.Select(p => Source(root, p)));
-        var candidates = Regex.Matches(candidateSource, "\\[BehaviorCandidate\\(\"([^\"\\n]+)\",\\s*\"([^\"\\n]+)\"").Select(m => (Entry: m.Groups[1].Value, Family: m.Groups[2].Value)).Distinct().OrderBy(p => p.Entry, PythonStringComparer.Instance).ThenBy(p => p.Family, PythonStringComparer.Instance);
+        var candidates = data.EngineSource["behaviorCandidates"]!.AsArray().Select(row => (Entry: Text(row!["entry"]), Family: Text(row["family"])))
+            .Distinct().OrderBy(p => p.Entry, PythonStringComparer.Instance).ThenBy(p => p.Family, PythonStringComparer.Instance);
         var behaviorExamples = Read(root, "reference/tool-catalog/behavior-examples.json");
         JsonNode Example(string key, string entry, string family) => Copy(behaviorExamples[key]![entry + "/" + family] ?? throw new ReleaseException("Missing reviewed candidate example: " + entry + "/" + family));
         foreach (var key in Keys) foreach (var candidate in candidates)
@@ -165,28 +163,12 @@ internal static class CatalogGenerator
             servedEngineReleases[key] = new JsonArray(rows!.AsArray().Select(row => { var copy = row!.DeepClone(); var name = Text(copy["currentName"]);
                 copy["arguments"] = CurrentArguments(name, copy["arguments"]!.AsObject(), calls["full-engine"]?[name]?["arguments"] as JsonObject, sourceKeys: true); return (JsonNode?)copy; }).ToArray());
         var runtime = new JsonObject { ["schemaVersion"] = 1, ["contractVersion"] = 4, ["foundationLite"] = true, ["behaviorPolicies"] = policies, ["behaviorEntries"] = entries, ["releases"] = releases, ["engineSourceReleases"] = servedEngineReleases };
-        var rejections = new JsonObject { ["contractVersion"] = 4, ["releases"] = new JsonObject() };
-        var defaultSources = string.Join('\n', Repository.GitFiles(root, "src/Engine", "src/Logic")
-            .Where(p => p.EndsWith(".cs", StringComparison.Ordinal) && File.Exists(Path.Combine(root, p)))
-            .Select(p => Source(root, p))
-            .Concat(Directory.GetFiles(Path.Combine(root, "src/Shared"), "*.cs").Select(Repository.ReadSource))
-            .Concat(Directory.GetFiles(Path.Combine(root, "src/Adapters.Contracts"), "*.cs").Select(Repository.ReadSource)));
         foreach (var key in Keys.Skip(6))
         {
-            var rows = new JsonArray(); var typedCount = 0;
-            foreach (var row in engineReleases[key]!.AsArray())
-            {
-                var old = Text(row!["sourceName"]); var declarations = Parameters(signatures[old]); var source = Source(root, data.Registrations[currentNames[old]].Path);
-                var aliases = Regex.Matches(source, @"^using (\w+) = ([\w.]+);", RegexOptions.Multiline).ToDictionary(m => m.Groups[1].Value, m => m.Groups[2].Value);
-                foreach (var declaration in declarations.Select(p => p.Value!)) { declaration["type"] = Regex.Replace(Text(declaration["type"]), @"\b\w+\b", m => aliases.GetValueOrDefault(m.Value, m.Value)); if (declaration["default"] is not null) declaration["value"] = DefaultValue(Text(declaration["default"]), defaultSources); }
-                var typedParameters = new JsonObject(); foreach (var p in Sorted(typed.GetValueOrDefault(old, []).Where(p => p.Value.Contains(key)).Select(p => p.Key))) typedParameters[p] = p == "json" ? "spec" : p[..^4];
-                typedCount += typedParameters.Count;
-                rows.Add(new JsonObject { ["name"] = Copy(row["currentName"]!), ["parameters"] = declarations, ["arguments"] = Copy(row["arguments"]!), ["renamedFrom"] = new JsonArray(Sorted(tools[key].Select(p => p.Key).Where(n => data.Renames[n] == Text(row["name"]) && n != Text(row["currentName"]))).Select(n => (JsonNode?)JsonValue.Create(n)).ToArray()), ["typedParameters"] = typedParameters });
-            }
+            var typedCount = engineReleases[key]!.AsArray().Sum(row => typed.GetValueOrDefault(Text(row!["sourceName"]), []).Count(p => p.Value.Contains(key)));
             Require(typedCount == typed.Where(p => tools[key].ContainsKey(p.Key)).Sum(p => p.Value.Count(p => p.Value.Contains(key))), "Typed rejection coverage differs");
-            rejections["releases"]![key] = rows;
         }
-        var outputs = VersionOutputs(data, legacyNames); outputs[Resource] = ResourceText(runtime); outputs[Rejections] = Encode(rejections);
+        var outputs = VersionOutputs(data, legacyNames); outputs[Resource] = ResourceText(runtime);
         // A new host tool needs these source catalogs to compile the tools-list capturer.
         // Publish that validated preparation first; the unchanged roster/count gate still runs below.
         prepareSources?.Invoke(outputs);
@@ -230,11 +212,6 @@ internal static class CatalogGenerator
         return arguments;
     }
 
-    internal static string Signature(EngineSources engine, string method)
-    {
-        var member = engine.Member(method, tool: true); var (tokens, _) = new CSharpLexer(member).Scan(); var pairs = MatchingPairs.Find(tokens);
-        var opening = Enumerable.Range(1, tokens.Count - 1).First(i => tokens[i].Value == "(" && tokens[i - 1].Value == method); return member[..tokens[pairs[opening]].OffsetEnd];
-    }
     internal static JsonObject Parameters(string signature)
     {
         var (tokens, _) = new CSharpLexer(signature).Scan(); var pairs = MatchingPairs.Find(tokens); var opening = Enumerable.Range(0, tokens.Count).First(i => tokens[i].Value == "(");
@@ -268,12 +245,6 @@ internal static class CatalogGenerator
         if (parameter == "packageJson") return "ClassicPackageSpec"; if (parameter == "tableJson") return "ClassicTagTableSpec";
         var family = parameter == "json" ? "B" : name == "RunPlcCompanionTool" && parameter == "argumentsJson" || parameter == "harmonizeOptionsJson" ? "S" : name == "PatchPlcBlockDocument" && parameter == "changesJson" ? "D" : shapes["families"]!.AsObject().First(p => Text(p.Value).Split(' ').Select(s => s + "Json").Contains(parameter)).Key;
         var result = Text(shapes["parameterShapes"]![parameter] ?? shapes["shapes"]![family]); Require(result is not "BuilderSpec" and not "HmiDesign" and not "DomainSpec" and not "DomainSelection", "Missing reviewed parameter shape: " + name + "/" + parameter); return result;
-    }
-    private static JsonNode? DefaultValue(string value, string sources)
-    {
-        if (value is "null!" or "default") return null;
-        try { return JsonNode.Parse(value); } catch (System.Text.Json.JsonException) { }
-        var symbol = value.Split('.').Last(); var constants = Matches(sources, "\\bconst\\s+\\w+\\s+" + Regex.Escape(symbol) + "\\s*=\\s*(@\"(?:[^\"]|\"\")*\"|\"(?:\\\\.|[^\"\\\\])*\")\\s*;").Distinct().ToArray(); Require(constants.Length == 1, "Ambiguous or missing default constant: " + value); return constants[0].StartsWith("@\"", StringComparison.Ordinal) ? JsonValue.Create(constants[0][2..^1].Replace("\"\"", "\"", StringComparison.Ordinal)) : JsonNode.Parse(constants[0]);
     }
     internal static JsonArray BehaviorRecords(string ledger)
     {

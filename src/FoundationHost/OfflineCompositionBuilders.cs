@@ -18,14 +18,14 @@ internal static class OfflineCompositionBuilders
 
     internal static JsonObject Build(string name, string outputReleaseKey, string json, bool innerOnly = false)
     {
-        var format = name == "BuildPlcGlobalDbXml" ? PlcDeclarationXmlFormat.ForRelease(outputReleaseKey) : null;
+        var format = name == "BuildPlcGlobalDb" ? PlcDeclarationXmlFormat.ForRelease(outputReleaseKey) : null;
         if (format == null && outputReleaseKey != "21") throw new ArgumentException("Explicit outputReleaseKey 21 required.");
         if (string.IsNullOrWhiteSpace(json) || json.Length > MaxJsonCharacters) throw new ArgumentException("Invalid JSON size.");
         using var document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 16 });
         var root = document.RootElement;
         string xml, mode, scope;
         JsonObject summary;
-        if (name == "BuildPlcGlobalDbXml")
+        if (name == "BuildPlcGlobalDb")
         {
             if (innerOnly) throw new ArgumentException("GlobalDB does not support innerOnly.");
             Properties(root, "dbName", "name", "dbNumber", "number", "staticMembers", "members");
@@ -48,7 +48,7 @@ internal static class OfflineCompositionBuilders
             scope = "bounded input and complete document XML well-formedness only";
             summary = new JsonObject { ["dbName"] = dbName, ["dbNumber"] = number, ["memberCount"] = members.Length };
         }
-        else if (name == "BuildStructuredTextXml")
+        else if (name == "BuildStructuredText")
         {
             Properties(root, "firstUid", "operations");
             // Leave enough headroom for every node allowed by the bounded input, avoiding helper integer rollover.
@@ -148,7 +148,7 @@ internal static class OfflineCompositionBuilders
             DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = MaxXmlCharacters + 256
         });
         var parsed = XDocument.Load(reader);
-        if (name == "BuildPlcGlobalDbXml")
+        if (name == "BuildPlcGlobalDb")
         {
             if (parsed.Root?.Name != "Document" || (string?)parsed.Root.Element("Engineering")?.Attribute("version") != format!.EngineeringVersion) throw new InvalidOperationException("Unexpected document format.");
         }

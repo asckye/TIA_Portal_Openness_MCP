@@ -11,8 +11,8 @@ internal static class OfflineCompositionTools
 {
     internal static IList<McpServerTool> Create() => new McpServerTool[]
     {
-        new OfflineCompositionTool("BuildPlcGlobalDbXml", "globalDbJson", false),
-        new OfflineCompositionTool("BuildStructuredTextXml", "structuredTextJson", true)
+        new OfflineCompositionTool("BuildPlcGlobalDb", "globalDbJson", false),
+        new OfflineCompositionTool("BuildStructuredText", "structuredTextJson", true)
     };
 }
 

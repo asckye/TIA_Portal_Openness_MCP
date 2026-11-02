@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- Freeze engine source catalog inputs and declare final V4 tool names without runtime rewriting; remove the stale documentation coverage copy.
+
 ## [4.0.0-beta.3] - 2026-11-0X
 <!-- set on release day -->
 

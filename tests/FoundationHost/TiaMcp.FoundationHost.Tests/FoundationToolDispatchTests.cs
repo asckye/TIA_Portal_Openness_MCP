@@ -21,8 +21,8 @@ internal static class FoundationToolDispatchTests
             Check(!tool.ProtocolTool.InputSchema.GetProperty("additionalProperties").GetBoolean(),"Closed schema");
             Check(tool.ProtocolTool.Description!.Contains("native unverified"),"No unsupported acceptance claim");
             var args=def.Arguments.Where(a=>a.Required).ToDictionary(a=>a.Name,a=>a.Type=="integer" ? JsonSerializer.SerializeToElement(123) : JsonSerializer.SerializeToElement("exact/path"));
-            if(def.Name=="ImportBlocksFromDocuments") args["fileNamesWithoutExtension"]=JsonSerializer.SerializeToElement(new[]{"Demo"});
-            if(def.Name=="AddDeviceWithFallback") { args["preferredMlfb"]=JsonSerializer.SerializeToElement("6ES7513-1AM03-0AB0");args["preferredVersion"]=JsonSerializer.SerializeToElement("V3.0");args["deviceName"]=JsonSerializer.SerializeToElement("PLC_2"); }
+            if(def.Name=="ImportPlcBlocksDocuments") args["fileNamesWithoutExtension"]=JsonSerializer.SerializeToElement(new[]{"Demo"});
+            if(def.Name=="CreateHardwareDevice") { args["preferredMlfb"]=JsonSerializer.SerializeToElement("6ES7513-1AM03-0AB0");args["preferredVersion"]=JsonSerializer.SerializeToElement("V3.0");args["deviceName"]=JsonSerializer.SerializeToElement("PLC_2"); }
             if(def.Name=="DeletePlcExternalSource") { args["groupPath"]=JsonSerializer.SerializeToElement("");args["externalSourceName"]=JsonSerializer.SerializeToElement("Pump.scl"); }
             if(def.Name=="PlanPlcExternalSourceImport") { args["groupPath"]=JsonSerializer.SerializeToElement(""); args["filePath"]=args["allowedFilePath"]=JsonSerializer.SerializeToElement(@"C:\Sources\Pump.scl"); }
             if(def.Name=="ImportPlcExternalSource") { args["groupPath"]=JsonSerializer.SerializeToElement(""); args["filePath"]=JsonSerializer.SerializeToElement(@"C:\Sources\Pump.scl"); }

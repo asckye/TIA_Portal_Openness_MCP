@@ -221,7 +221,7 @@ internal static class FoundationPassiveDiagnostics
         if (names.Any(name => name.Length > 128)) throw new InvalidOperationException();
         bool unique = names.Distinct(StringComparer.Ordinal).Count() == names.Length;
         bool schemas = tools.All(t => ObjectSchema(t.ProtocolTool.InputSchema));
-        bool mappings = FoundationTools.Definitions.Where(d => FoundationTools.Available(d, releaseKey)).All(d => names.Contains(FoundationV4Tool.Name(d.Name), StringComparer.Ordinal) && (d.ResponseMember == "ImportStaging" || sourceOperations.Contains(d.Operation)))
+        bool mappings = FoundationTools.Definitions.Where(d => FoundationTools.Available(d, releaseKey)).All(d => names.Contains(d.Name, StringComparer.Ordinal) && (d.ResponseMember == "ImportStaging" || sourceOperations.Contains(d.Operation)))
             && families.SelectMany(family => family.Tools.Where(name => TiaMcp.Adapters.Contracts.PortedFamilies.Available(releaseKey, name)))
                 .All(name => names.Contains(name, StringComparer.Ordinal) && PortedToolContract.WiredOperations(name).All(sourceOperations.Contains));
         var roster = new JsonArray();
@@ -229,7 +229,7 @@ internal static class FoundationPassiveDiagnostics
         foreach (var tool in tools.OrderBy(t => t.ProtocolTool.Name, StringComparer.Ordinal).Skip(offset).Take(limit))
         {
             var name = tool.ProtocolTool.Name;
-            var definition = FoundationTools.Definitions.SingleOrDefault(d => FoundationV4Tool.Name(d.Name) == name);
+            var definition = FoundationTools.Definitions.SingleOrDefault(d => d.Name == name);
             bool ported = TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(name)
                 && !TiaMcp.Adapters.Contracts.PortedFamilies.UsesFoundationCandidate(name);
             var operations = ported ? PortedToolContract.WiredOperations(name) : null;
@@ -272,8 +272,8 @@ internal static class LegacyHostToolRegistry
     {
         TiaVersionCatalog.Get(releaseKey);
         var tools = FoundationTools.Create(worker, releaseKey).Concat(PortedToolContract.Create(worker, releaseKey)).Concat(OfflineXmlTools.Create()).Concat(OfflineCompositionTools.Create()).Concat(OfflineBlockCompositionTools.Create()).Concat(OfflineSymbolManifestTools.Create()).Concat(OfflineLadderTools.Create()).ToList();
-        tools.RemoveAll(t => TiaMcp.Adapters.Contracts.PortedFamilies.Contains(FoundationV4Tool.Name(t.ProtocolTool.Name))
-            && !TiaMcp.Adapters.Contracts.PortedFamilies.Available(releaseKey, FoundationV4Tool.Name(t.ProtocolTool.Name)));
+        tools.RemoveAll(t => TiaMcp.Adapters.Contracts.PortedFamilies.Contains(t.ProtocolTool.Name)
+            && !TiaMcp.Adapters.Contracts.PortedFamilies.Available(releaseKey, t.ProtocolTool.Name));
         tools.Add(PlcCrossReferenceAnalysis.Create(worker, releaseKey));
         tools.Add(new ImportOrderTool());
         tools.AddRange(WorkbenchControlTools.Create(worker, releaseKey));

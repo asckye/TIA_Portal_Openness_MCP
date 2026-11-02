@@ -53,7 +53,7 @@ internal static class ExchangeContractTests
             catch(AdapterPreconditionException ex) { check(ex.ParamName=="importPath","DTD rejected as an importPath precondition before native import"); }
             File.WriteAllText(xml,"<WrongRoot />");
             Reject(()=>PlcFoundationPolicy.XmlInput(xml),"Wrong XML root refused");
-            foreach(var tool in new[]{"ImportBlock","ImportType","ImportPlcTagTable","ExportBlock","ExportType","ExportPlcTagTable"})
+            foreach(var tool in new[]{"ImportPlcBlock","ImportPlcType","ImportPlcTagTable","ExportPlcBlock","ExportPlcType","ExportPlcTagTable"})
             {
                 var def=FoundationTools.Definitions.Single(d=>d.Name==tool);
                 check(def.Arguments[0].Name=="softwarePath","V17 softwarePath preserved "+tool);
@@ -65,9 +65,9 @@ internal static class ExchangeContractTests
             var preview=V17MutationEnvelope.Wrap("ExportPlcTagTable","ExportFile",payload,true);
             check(!preview[Wire("Meta")]!["executed"]!.GetValue<bool>() && preview[Wire("Message")]!.GetValue<string>().Contains("no operation executed"),"Preview never claims execution");
             check(preview[Wire("ExportPath")]!.GetValue<string>()==@"C:\Exports\P.xml","V17 ExportPath returned");
-            try { V17MutationEnvelope.Wrap("ImportBlock","Mutation",payload,false); throw new Exception("Wrong execution outcome accepted"); } catch(InvalidDataException) { check(true,"Execution outcome mismatch rejected"); }
+            try { V17MutationEnvelope.Wrap("ImportPlcBlock","Mutation",payload,false); throw new Exception("Wrong execution outcome accepted"); } catch(InvalidDataException) { check(true,"Execution outcome mismatch rejected"); }
             payload["Executed"]=true;
-            check(V17MutationEnvelope.Wrap("ImportBlock","Mutation",payload,false)[Wire("Meta")]!["executed"]!.GetValue<bool>(),"Verified execution reported");
+            check(V17MutationEnvelope.Wrap("ImportPlcBlock","Mutation",payload,false)[Wire("Meta")]!["executed"]!.GetValue<bool>(),"Verified execution reported");
             var arguments=new JsonObject { ["dryRun"]=false,["expectedProjectFile"]=@"C:\Projects\P.ap17" };
             WorkerProtocol.ValidateExchangeResult("ImportBlocks",arguments,payload);
             check(true,"Result identity and requested execution agree");
@@ -75,7 +75,7 @@ internal static class ExchangeContractTests
             try { WorkerProtocol.ValidateExchangeResult("ImportBlocks",arguments,payload); throw new Exception("Mismatched output identity accepted"); }
             catch(IOException ex) { check(WorkerProtocol.RequiresSessionReset(true,ex),"Mismatched result poisons session before releasing worker lock"); }
             payload.Remove("ProjectFile");
-            try { V17MutationEnvelope.Wrap("ImportBlock","Mutation",payload,false); throw new Exception("Missing identity accepted"); } catch(InvalidDataException) { check(true,"Missing result project identity rejected"); }
+            try { V17MutationEnvelope.Wrap("ImportPlcBlock","Mutation",payload,false); throw new Exception("Missing identity accepted"); } catch(InvalidDataException) { check(true,"Missing result project identity rejected"); }
         }
         finally
         {

@@ -18,7 +18,7 @@ internal static class OfflineLadderTests
         foreach (var tool in OfflineLadderTools.Create())
         {
             var name = tool.ProtocolTool.Name;
-            bool compose = name == "ComposePlcLadFcBlockXml";
+            bool compose = name == "BuildPlcLadFcBlock";
             var parameter = compose ? "ladFcBlockJson" : "flgNetJson";
             string Input(string call) => compose ? Wrap(call) : call;
             Dictionary<string, JsonElement> Args(string json, string release = "21") => new() { [parameter] = JsonSerializer.SerializeToElement(json), ["outputReleaseKey"] = JsonSerializer.SerializeToElement(release) };

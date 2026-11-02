@@ -40,14 +40,14 @@ public sealed class ApprovalPrecheckTests
     {
         "CreatePlcTag" => JsonNode.Parse("{\"plc\":\"PLC_1\",\"table\":\"T\",\"name\":\"Ready\",\"dataType\":\"Bool\",\"address\":\"%M0.0\"}")!.AsObject(),
         "ImportPlcTagTable" => JsonNode.Parse("{\"softwarePath\":\"PLC_1\",\"folderPath\":\"\",\"importPath\":\"C:/T.xml\",\"overwrite\":false}")!.AsObject(),
-        "ExportBlock" => JsonNode.Parse("{\"softwarePath\":\"PLC_1\",\"blockPath\":\"B\",\"exportPath\":\"C:/Output\"}")!.AsObject(),
+        "ExportPlcBlock" => JsonNode.Parse("{\"softwarePath\":\"PLC_1\",\"blockPath\":\"B\",\"exportPath\":\"C:/Output\"}")!.AsObject(),
         _ => new()
     };
     public static IEnumerable<object[]> PreviewWriteTools => FoundationTools.Definitions.Where(d=>d.Arguments.Any(a=>a.Name=="dryRun")
         && new FoundationTool(d,new Worker()).IsNative && new FoundationTool(d,new Worker()).IsWrite).Select(d=>new object[]{d.Name});
 
     public static IEnumerable<object[]> WriteFamilies => FoundationTools.Definitions
-        .Where(d => new FoundationTool(d, new Worker()).IsWrite || TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(FoundationV4Tool.Name(d.Name))?.Operation
+        .Where(d => new FoundationTool(d, new Worker()).IsWrite || TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(d.Name)?.Operation
             is "FILE" or "EXECUTE" or "SESSION").Select(d => new object[] { d.Name, d.ResponseMember ?? "session" });
 
     [Theory]
@@ -86,7 +86,7 @@ public sealed class ApprovalPrecheckTests
     [Theory]
     [InlineData("CreatePlcTag", "plc")][InlineData("CreatePlcTag", "table")][InlineData("CreatePlcTag", "name")]
     [InlineData("ImportPlcTagTable", "overwrite")][InlineData("ImportPlcTagTable", "importPath")]
-    [InlineData("CloseProject", "ownership")][InlineData("ExportBlock", "exportPath")]
+    [InlineData("CloseProject", "ownership")][InlineData("ExportPlcBlock", "exportPath")]
     [InlineData("CreatePlcTag", "expectedProjectFile")]
     public async Task Invalid_write_has_only_request_and_end_without_approval(string source, string condition)
     {
@@ -96,11 +96,11 @@ public sealed class ApprovalPrecheckTests
             var audit = new AuditLog(Path.GetFullPath(Path.Combine("bin-build/P6-60/audit", Guid.NewGuid().ToString("N"))));
             using var scope = AuditInvocation.UseLog(audit);
             int waits = 0;
-            var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source), worker), release, source == "ExportBlock" ? _ => TiaMcp.Logic.V4.BehaviorPolicy.SafeV4 : null,
+            var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source), worker), release, source == "ExportPlcBlock" ? _ => TiaMcp.Logic.V4.BehaviorPolicy.SafeV4 : null,
                 () => new(true, 1), (pending, _, _) => { waits++; return Task.FromResult(new ApprovalOutcome(pending, false, null)); });
             var args = Arguments(source); args["dryRun"] = false; args["confirm"] = true;
             if (condition != "expectedProjectFile") args["expectedProjectFile"] = "C:/Test.ap19";
-            if (source == "ExportBlock") { args.Remove("dryRun"); args["mode"] = "apply"; args["expectedPlanHash"] = new string('a', 64); }
+            if (source == "ExportPlcBlock") { args.Remove("dryRun"); args["mode"] = "apply"; args["expectedPlanHash"] = new string('a', 64); }
             var result = await tool.InvokeAsync(Request(tool.ProtocolTool.Name, args));
             var body = result.StructuredContent!;
             _ = TiaMcp.Logic.V4.V4Json.Deserialize<TiaMcp.Logic.V4.Envelope>(body.ToJsonString());
@@ -186,9 +186,9 @@ public sealed class ApprovalPrecheckTests
             () => new(true, 1), (pending, _, _) => { waits++; return Task.FromResult(new ApprovalOutcome(pending, false, null)); });
         var args = Arguments("CreatePlcTag"); args["dryRun"] = false; args["confirm"] = true; args["expectedProjectFile"] = "C:/Test.ap19";
         var first = await Tool("CreatePlcTag").InvokeAsync(Request("CreatePlcTag", args)); Assert.Equal("OUTCOME_UNKNOWN", (string?)first.StructuredContent?["error"]?["code"]);
-        foreach (var source in new[] { "CreatePlcTag", "GetProject", "Connect" })
+        foreach (var source in new[] { "CreatePlcTag", "GetProjectInfo", "ConnectPortal" })
         {
-            var tool = Tool(source); var result = await tool.InvokeAsync(Request(tool.ProtocolTool.Name, source == "CreatePlcTag" ? args : source == "Connect" ? new JsonObject { ["processId"] = 1 } : new()));
+            var tool = Tool(source); var result = await tool.InvokeAsync(Request(tool.ProtocolTool.Name, source == "CreatePlcTag" ? args : source == "ConnectPortal" ? new JsonObject { ["processId"] = 1 } : new()));
             Assert.Equal("SESSION_RESET_REQUIRED", (string?)result.StructuredContent?["error"]?["code"]);
             Assert.Equal("previous-outcome-unknown", (string?)result.StructuredContent?["error"]?["details"]?["reason"]);
             Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);

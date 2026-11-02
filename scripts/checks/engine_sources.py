@@ -10,7 +10,7 @@ import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
-ENGINE = Path('src/Engine')
+ENGINE = Path('src/EngineHost')
 spec = importlib.util.spec_from_file_location('source_contract_lexer',
                                             Path(__file__).with_name('Check-SwallowedExceptions.py'))
 lexer = importlib.util.module_from_spec(spec)
@@ -34,7 +34,7 @@ class EngineSources:
         self.directory = root / ENGINE
         self.sources = {}
         self.parsed = {}
-        for directory in (self.directory, root / 'src/EngineHost'):
+        for directory in (self.directory,):
             for path in sorted(directory.rglob('*.cs')):
                 relative = path.relative_to(directory)
                 if any(part.lower() in lexer.SKIP_DIRS for part in relative.parts):

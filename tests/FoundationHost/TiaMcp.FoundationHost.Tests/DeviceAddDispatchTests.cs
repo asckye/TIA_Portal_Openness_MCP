@@ -15,9 +15,9 @@ internal static class DeviceAddDispatchTests
     }
     internal static async Task Run(IMcpServer server,Action<bool,string> check)
     {
-        var worker=new FakeWorker();var tool=FoundationTools.Create(worker).Single(t=>t.ProtocolTool.Name=="AddDeviceWithFallback");
+        var worker=new FakeWorker();var tool=FoundationTools.Create(worker).Single(t=>t.ProtocolTool.Name=="CreateHardwareDevice");
         var args=new Dictionary<string,JsonElement> { ["preferredMlfb"]=JsonSerializer.SerializeToElement("6ES7513-1AM03-0AB0"),["preferredVersion"]=JsonSerializer.SerializeToElement("V3.0"),["deviceName"]=JsonSerializer.SerializeToElement("PLC_2") };
-        RequestContext<CallToolRequestParams> Request()=>new(server){Params=new(){Name="AddDeviceWithFallback",Arguments=args}};
+        RequestContext<CallToolRequestParams> Request()=>new(server){Params=new(){Name="CreateHardwareDevice",Arguments=args}};
         var response=await tool.InvokeAsync(Request());check(response.IsError!=true && worker.Calls==1,"Device addition actual MCP preview dispatch");
         var planned=Payload(worker.Arguments!);check(worker.Arguments!["dryRun"]!.GetValue<bool>(),"Device add defaults preview");
         args["dryRun"]=JsonSerializer.SerializeToElement(false);int calls=worker.Calls;bool rejected=false;try{await tool.InvokeAsync(Request());}catch(McpException){rejected=true;}check(rejected&&worker.Calls==calls,"Device add confirmation required before worker");

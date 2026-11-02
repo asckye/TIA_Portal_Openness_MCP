@@ -11,6 +11,9 @@ using Xunit;
 
 public sealed class FoundationV4ContractsTests
 {
+    private static readonly HashSet<string> LegacyNames = JsonNode.Parse(File.ReadAllText(Path.Combine(
+        TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), "reference/tool-catalog/v3-v4-renames.json")))!.AsObject()
+        .Where(pair => pair.Key != pair.Value!.GetValue<string>()).Select(pair => pair.Key).ToHashSet(StringComparer.Ordinal);
     private static RequestContext<CallToolRequestParams> Request(string name, string json = "{}") =>
         new(DispatchProxy.Create<IMcpServer, ServerProxy>()) { Params = new() { Name = name,
             Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json) } };
@@ -95,7 +98,7 @@ public sealed class FoundationV4ContractsTests
         var roster = LegacyHostToolRegistry.Create(worker, release, false);
         Assert.Equal(count, roster.Count);
         Assert.Equal(count, roster.Select(t => t.ProtocolTool.Name).Distinct().Count());
-        Assert.DoesNotContain(roster, t => FoundationV4Tool.Names.ContainsKey(t.ProtocolTool.Name));
+        Assert.DoesNotContain(roster, t => LegacyNames.Contains(t.ProtocolTool.Name));
         Assert.Contains(roster, t => t.ProtocolTool.Name == "CallTool");
         foreach (var tool in roster)
         {
@@ -235,7 +238,7 @@ public sealed class FoundationV4ContractsTests
     [Fact]
     public void BatchRetainsKnownSuccessUnknownFailureAndNotExecutedInOrder()
     {
-        var definition = FoundationTools.Definitions.Single(d => d.Name == "ImportBlocksFromDirectory");
+        var definition = FoundationTools.Definitions.Single(d => d.Name == "ImportPlcBlocksFromDirectory");
         var raw = JsonNode.Parse("{\"Executed\":true,\"RequiresSessionReset\":true,\"Items\":[{\"RelativePath\":\"a.xml\",\"Status\":\"imported\",\"Attempted\":true},{\"RelativePath\":\"b.xml\",\"Status\":\"failed\",\"Attempted\":true,\"Failure\":\"native-outcome-uncertain\"},{\"RelativePath\":\"c.xml\",\"Status\":\"not-attempted\"}]}")!;
         var result = Body(FoundationV4Result.Worker("19", definition, "batch", new JsonObject { ["dryRun"] = false }, raw, raw));
         Assert.Equal("unknown", (string?)result["meta"]!["outcome"]);
@@ -257,7 +260,7 @@ public sealed class FoundationV4ContractsTests
     {
         var result = Body(FoundationV4Result.Failure("19", "ImportPlcBlock", "x", true, true, null));
         Assert.Equal("unknown", (string?)result["meta"]!["outcome"]);
-        var definition = FoundationTools.Definitions.Single(d => d.Name == "CompileSoftware");
+        var definition = FoundationTools.Definitions.Single(d => d.Name == "CompilePlcSoftware");
         var raw = JsonNode.Parse("{\"Executed\":true,\"ErrorCount\":0,\"State\":\"Success\",\"Errors\":[\"nested error\"]}")!;
         result = Body(FoundationV4Result.Worker("19", definition, "x", new JsonObject { ["dryRun"] = false }, raw, raw));
         Assert.Equal("failed", (string?)result["meta"]!["outcome"]);
@@ -315,6 +318,6 @@ public sealed class FoundationV4ContractsTests
         var steps = result["data"]!["examples"]![0]!["steps"]!.AsArray();
         Assert.Equal("GetSessionState", (string?)steps[0]!["tool"]);
         Assert.Contains(steps, s => (string?)s!["tool"] == "CompilePlcDiagnostics");
-        Assert.DoesNotContain(steps, s => FoundationV4Tool.Names.ContainsKey((string)s!["tool"]!));
+        Assert.DoesNotContain(steps, s => LegacyNames.Contains((string)s!["tool"]!));
     }
 }

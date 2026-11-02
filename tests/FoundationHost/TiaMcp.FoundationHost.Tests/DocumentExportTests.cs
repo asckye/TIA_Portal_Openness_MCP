@@ -23,10 +23,10 @@ internal static class DocumentExportTests
     private static void Dispatch(PlcDocumentExportResult plan,Action<bool,string> check)
     {
         var worker=new PreviewWorker(JsonSerializer.SerializeToNode(plan)!.AsObject());
-        var tool=FoundationTools.Create(worker).Single(t=>t.ProtocolTool.Name=="ExportAsDocuments");
+        var tool=FoundationTools.Create(worker).Single(t=>t.ProtocolTool.Name=="ExportPlcBlockDocuments");
         var server=System.Reflection.DispatchProxy.Create<ModelContextProtocol.Server.IMcpServer,ServerProxy>();
         var args=new Dictionary<string,JsonElement> { ["softwarePath"]=JsonSerializer.SerializeToElement(plan.SoftwarePath),["blockPath"]=JsonSerializer.SerializeToElement(plan.BlockPath),["exportPath"]=JsonSerializer.SerializeToElement(plan.OutputDirectory) };
-        ModelContextProtocol.Server.RequestContext<ModelContextProtocol.Protocol.CallToolRequestParams> Request()=>new(server) { Params=new() { Name="ExportAsDocuments",Arguments=args } };
+        ModelContextProtocol.Server.RequestContext<ModelContextProtocol.Protocol.CallToolRequestParams> Request()=>new(server) { Params=new() { Name="ExportPlcBlockDocuments",Arguments=args } };
         var preview=tool.InvokeAsync(Request()).AsTask().GetAwaiter().GetResult();
         check(preview.IsError!=true && worker.Calls==1,"Document MCP default preview uses dedicated result envelope");
         void Refuse(string label) { bool refused=false; try {refused=tool.InvokeAsync(Request()).AsTask().GetAwaiter().GetResult().IsError==true;} catch(ModelContextProtocol.McpException){refused=true;} check(refused && worker.Calls==1,label); }
@@ -96,7 +96,7 @@ internal static class DocumentExportTests
             var bad=Wire(plan);bad["Language"]="SCL";Reject(()=>DocumentExportContract.Validate(bad,true),"Document forged language rejected");
             bad=Wire(plan);bad["Executed"]=true;Reject(()=>DocumentExportContract.Validate(bad,true),"Document forged execution rejected");
             request["blockPath"]="different";Reject(()=>DocumentExportContract.ValidateRequest(request,Wire(plan)),"Document wrong response identity rejected");
-            var definition=FoundationTools.Definitions.Single(d=>d.Name=="ExportAsDocuments");
+            var definition=FoundationTools.Definitions.Single(d=>d.Name=="ExportPlcBlockDocuments");
             check(definition.ResponseMember=="DocumentExport" && TiaMcp.PlcWorker.WorkerOperations.Names.Contains("ExportAsDocuments"),"Document tool and worker operation explicitly registered");
             check(calls==1,"Only valid injected pair invokes test export once; preflight refusals have no callback");
             var refusedPath=Path.Combine(root,"policy-refused");var refusedPlan=Run(refusedPath);

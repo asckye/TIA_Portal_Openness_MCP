@@ -172,7 +172,7 @@ internal static class FoundationV4Result
 
     internal static CallToolResult Worker(string release, Definition definition, string id, JsonObject args, JsonNode? raw, JsonNode? validated)
     {
-        string name = FoundationV4Tool.Name(definition.Name);
+        string name = definition.Name;
         var data = definition.ResponseMember == "BlockPage" ? ValidateBlockPage(raw, args) : Object(raw);
         HostBehavior.ExportPreview(data);
         if (definition.ResponseMember == "BlockPage")

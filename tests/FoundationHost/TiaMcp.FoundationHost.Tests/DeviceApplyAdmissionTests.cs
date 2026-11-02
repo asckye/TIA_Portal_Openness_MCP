@@ -55,18 +55,18 @@ public sealed class DeviceApplyAdmissionTests
             return (await tool.InvokeAsync(request)).StructuredContent!;
         }
         var args=new JsonObject { ["preferredMlfb"]="6ES7 513-1AM03-0AB0",["preferredVersion"]="V3.1",["deviceName"]="PLC_2",["family"]="S7-1500",["dryRun"]=true };
-        var preview=await Call("AddDeviceWithFallback",args); Assert.True((bool?)preview["ok"]);
+        var preview=await Call("CreateHardwareDevice",args); Assert.True((bool?)preview["ok"]);
         args["expectedPlanHash"]=preview["data"]!["planHash"]!.DeepClone();args["expectedProjectFile"]="C:/fixture.ap19";args["confirm"]=true;args["dryRun"]=false;
-        if (scenario=="duplicate") Assert.True((bool?)(await Call("AddDeviceWithFallback",args))["ok"]);
+        if (scenario=="duplicate") Assert.True((bool?)(await Call("CreateHardwareDevice",args))["ok"]);
         if (scenario=="stale") worker.Items.Add(new PlcDeviceAddItem { Name="Other",Identity="other",ParentIdentity="root",ParentVerified=true });
         if (scenario=="catalog") args["preferredVersion"]="V1.7";
-        var body=await Call("AddDeviceWithFallback",args);
+        var body=await Call("CreateHardwareDevice",args);
         Assert.Equal(code,(string?)body["error"]?["code"]);Assert.Equal(parameter,(string?)body["error"]?["details"]?["parameter"]);
         if (scenario == "catalog") Assert.Equal(new[] { "preferredMlfb", "preferredVersion" }, body["error"]!["details"]!["parameters"]!.AsArray().Select(value => (string)value!));
         Assert.Equal("rejected-before-operation",(string?)body["meta"]?["outcome"]);Assert.Equal("not-started",(string?)body["meta"]?["execution"]);
         Assert.False((bool?)body["meta"]?["requiresSessionReset"]);Assert.Equal(scenario=="duplicate" ? 1 : 0,worker.Creates);
         Assert.Contains(body["meta"]!["warnings"]!.AsArray(),w=>(string?)w?["code"]=="APPROVAL_DISABLED");
         Assert.DoesNotContain(body["meta"]!["warnings"]!.AsArray(),w=>(string?)w?["code"]=="APPROVAL_PRECHECK_REFUSED");
-        Assert.True((bool?)(await Call("ReadPlcTags",new JsonObject { ["plc"]="PLC_1",["table"]="T" }))["ok"]);
+        Assert.True((bool?)(await Call("ListPlcTags",new JsonObject { ["plc"]="PLC_1",["table"]="T" }))["ok"]);
     }
 }

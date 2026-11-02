@@ -17,7 +17,7 @@ internal static class DeclarationReadContract
     }
     internal static JsonArray Validate(string tool,string table,JsonNode? result,string unitName="",bool includeUnits=false)
     {
-        string kind=tool switch { "ReadPlcTags"=>"tag", "ReadPlcUserConstants"=>"user-constant", "ReadPlcSystemConstants"=>"system-constant", _=>throw new InvalidDataException("Unknown declaration reader.") };
+        string kind=tool switch { "ListPlcTags"=>"tag", "ListPlcUserConstants"=>"user-constant", "ListPlcSystemConstants"=>"system-constant", _=>throw new InvalidDataException("Unknown declaration reader.") };
         if(result is not JsonArray rows) throw new InvalidDataException("Worker returned an invalid declaration list for "+tool);
         var paths=new HashSet<string>(StringComparer.Ordinal);
         // The table may be the exact encoded path or (P6-55) a unique raw single-segment name, which the worker

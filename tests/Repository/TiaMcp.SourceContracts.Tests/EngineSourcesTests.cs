@@ -16,7 +16,7 @@ public sealed class EngineSourcesTests : IDisposable
     public void Dispose() => scratch.Dispose();
     private string Add(string relative, string text)
     {
-        var path = Path.Combine(scratch.DirectoryPath, "src/Engine", relative);
+        var path = Path.Combine(scratch.DirectoryPath, "src/EngineHost", relative);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, text, new UTF8Encoding(true));
         return path;
@@ -29,7 +29,7 @@ public sealed class EngineSourcesTests : IDisposable
         var before = Sources().Member("Read", signature: "string text");
         var moved = Path.Combine(scratch.DirectoryPath, "src/EngineHost/ModelContextProtocol/Tools/Renamed.cs");
         Directory.CreateDirectory(Path.GetDirectoryName(moved)!);
-        File.Move(Path.Combine(scratch.DirectoryPath, "src/Engine/Original.cs"), moved);
+        File.Move(Path.Combine(scratch.DirectoryPath, "src/EngineHost/Original.cs"), moved);
         Assert.Equal(before, Sources().Member("Read", signature: "string text"));
         Assert.EndsWith("return text;\n    }", before);
         Add("Utf8.cs", "class Utf8 { public string Label() => \"中文\"; }");

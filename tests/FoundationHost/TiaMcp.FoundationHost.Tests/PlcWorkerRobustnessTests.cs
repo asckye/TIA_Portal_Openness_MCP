@@ -100,7 +100,7 @@ public sealed class PlcFixtureWorkerRobustnessTests
     public async Task Plc_faults_keep_the_V4_unknown_outcome_and_session_reset(string release, string mode)
     {
         using var scope = new Scope(release, mode);
-        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(definition => definition.Name == "GetBlocks"), scope.Worker),
+        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(definition => definition.Name == "ListPlcBlocks"), scope.Worker),
             release, null, () => new(false, 1), readinessForTest: () => {
                 scope.Arm("plc-paging.ReadBlockPage").GetAwaiter().GetResult();
                 return new JsonObject { ["ready"] = true };
@@ -121,7 +121,7 @@ public sealed class PlcFixtureWorkerRobustnessTests
     public async Task Prechecks_and_other_invocations_do_not_consume_the_V4_fault(string release, string mode)
     {
         using var scope = new Scope(release, mode);
-        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(definition => definition.Name == "GetBlocks"), scope.Worker),
+        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(definition => definition.Name == "ListPlcBlocks"), scope.Worker),
             release, null, () => new(false, 1), readinessForTest: () => {
                 scope.Arm("plc-paging.ReadBlockPage").GetAwaiter().GetResult();
                 scope.Prechecks(release).GetAwaiter().GetResult();

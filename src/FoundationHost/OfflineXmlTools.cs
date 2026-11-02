@@ -11,8 +11,8 @@ internal static class OfflineXmlTools
 {
     internal static IList<McpServerTool> Create() => new McpServerTool[]
     {
-        new OfflineXmlTool("BuildPlcUdtXml", "udtJson"),
-        new OfflineXmlTool("BuildPlcTagTableXml", "tagTableJson")
+        new OfflineXmlTool("BuildPlcUdt", "udtJson"),
+        new OfflineXmlTool("BuildPlcTagTable", "tagTableJson")
     };
 }
 
@@ -31,7 +31,7 @@ internal sealed class OfflineXmlTool : McpServerTool
         this.servingRelease = servingRelease;
         if (servingRelease != null) PlcDeclarationXmlFormat.ForRelease(servingRelease);
         this.jsonParameter = jsonParameter;
-        var declaration = name == "BuildPlcUdtXml";
+        var declaration = name == "BuildPlcUdt";
         tool = new Tool
         {
             Name = name,

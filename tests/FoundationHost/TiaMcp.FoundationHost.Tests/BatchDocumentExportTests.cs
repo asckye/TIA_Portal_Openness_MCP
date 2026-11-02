@@ -20,10 +20,10 @@ internal static class BatchDocumentExportTests
     private static void Dispatch(PlcBatchDocumentExportResult plan,Action<bool,string> check)
     {
         var worker=new PreviewWorker(JsonSerializer.SerializeToNode(plan)!.AsObject());
-        var tool=FoundationTools.Create(worker).Single(t=>t.ProtocolTool.Name=="ExportBlocksAsDocuments");
+        var tool=FoundationTools.Create(worker).Single(t=>t.ProtocolTool.Name=="ExportPlcBlocksDocuments");
         var server=System.Reflection.DispatchProxy.Create<ModelContextProtocol.Server.IMcpServer,ServerProxy>();
         var args=new Dictionary<string,JsonElement>{["softwarePath"]=JsonSerializer.SerializeToElement(plan.SoftwarePath),["groupPath"]=JsonSerializer.SerializeToElement(plan.GroupPath),["exportPath"]=JsonSerializer.SerializeToElement(plan.OutputDirectory)};
-        ModelContextProtocol.Server.RequestContext<ModelContextProtocol.Protocol.CallToolRequestParams> Request()=>new(server){Params=new(){Name="ExportBlocksAsDocuments",Arguments=args}};
+        ModelContextProtocol.Server.RequestContext<ModelContextProtocol.Protocol.CallToolRequestParams> Request()=>new(server){Params=new(){Name="ExportPlcBlocksDocuments",Arguments=args}};
         check(tool.InvokeAsync(Request()).AsTask().GetAwaiter().GetResult().IsError!=true && worker.Calls==1,"Batch document MCP default preview reaches dedicated contract");
         void Refuse(string label){bool refused=false;try{refused=tool.InvokeAsync(Request()).AsTask().GetAwaiter().GetResult().IsError==true;}catch(ModelContextProtocol.McpException){refused=true;}check(refused && worker.Calls==1,label);}
         args["dryRun"]=JsonSerializer.SerializeToElement(false);Refuse("Batch document unconfirmed apply blocked before dispatch");
@@ -124,7 +124,7 @@ internal static class BatchDocumentExportTests
             var malformed=Wire(plan);malformed["Unexpected"]=true;Reject(()=>BatchDocumentExportContract.Validate(malformed,Request(plan)),"Batch document extra envelope field rejected");
             malformed=Wire(success);malformed["Items"]![0]!["Status"]="staged";Reject(()=>BatchDocumentExportContract.Validate(malformed,Request(success,false)),"Batch document false all-success rejected");
             malformed=Wire(plan);malformed["Items"]![0]!["BlockPath"]="group/Z";Reject(()=>BatchDocumentExportContract.Validate(malformed,Request(plan)),"Batch document unordered forged inventory rejected");
-            check(FoundationTools.Definitions.Single(d=>d.Name=="ExportBlocksAsDocuments").ResponseMember=="BatchDocumentExport" && TiaMcp.PlcWorker.WorkerOperations.Names.Contains("ExportBlocksAsDocuments"),"Batch document host/worker explicit registration");
+            check(FoundationTools.Definitions.Single(d=>d.Name=="ExportPlcBlocksDocuments").ResponseMember=="BatchDocumentExport" && TiaMcp.PlcWorker.WorkerOperations.Names.Contains("ExportBlocksAsDocuments"),"Batch document host/worker explicit registration");
             var refusedPath=Path.Combine(root,"policy-refused");
             var refusedSources=new[]{Source("group/A",callback:(_,_)=>throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Block eligibility changed after preview.","export-plan",false))};
             var refusedPlan=Run(refusedPath,refusedSources);

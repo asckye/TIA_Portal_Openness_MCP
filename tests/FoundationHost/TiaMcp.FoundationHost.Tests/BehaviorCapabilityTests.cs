@@ -92,7 +92,7 @@ public sealed class BehaviorCapabilityTests
             var implementation = hostPort ? LegacyHostToolRegistry.Create(worker, release, false).Single(t => t.ProtocolTool.Name == name)
                 : TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(name)
                 ? PortedToolContract.Create(worker, release).Single(t => t.ProtocolTool.Name == name)
-                : new FoundationTool(FoundationTools.Definitions.Single(d => FoundationV4Tool.Name(d.Name) == name), worker);
+                : new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == name), worker);
             var tool = hostPort ? implementation : new FoundationV4Tool(implementation, release);
             Assert.Contains("behaviorPolicy=current", tool.ProtocolTool.Description);
             Assert.Contains("V4 native acceptance is pending", tool.ProtocolTool.Description);

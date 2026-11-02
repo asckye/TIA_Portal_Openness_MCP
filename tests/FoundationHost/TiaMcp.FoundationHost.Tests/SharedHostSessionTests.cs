@@ -202,7 +202,7 @@ public sealed class SharedHostSessionTests
         worker.SessionLocked = () => pipeline.SessionLocked;
         worker.StagingProvider = () => { using var context = pipeline.EnterSession(); return enginehost::TiaMcpServer.ModelContextProtocol.McpServer.SharedStagingOwner; };
         using var context = pipeline.EnterSession();
-        var definition = TiaMcp.FoundationHost.FoundationTools.Definitions.Single(d => d.Name == "GetState");
+        var definition = TiaMcp.FoundationHost.FoundationTools.Definitions.Single(d => d.Name == "GetSessionState");
         TiaMcp.FoundationHost.FoundationV4Tool Tool(string operation) => new(new TiaMcp.FoundationHost.FoundationTool(definition with { Operation = operation }, worker), release, null, sharedSession: true);
         ModelContextProtocol.Server.RequestContext<ModelContextProtocol.Protocol.CallToolRequestParams> Request() => new(
             System.Reflection.DispatchProxy.Create<ModelContextProtocol.Server.IMcpServer, ApprovalPrecheckTests.ServerProxy>()) {

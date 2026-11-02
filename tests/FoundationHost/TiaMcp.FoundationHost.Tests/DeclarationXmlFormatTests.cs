@@ -28,8 +28,8 @@ internal static class DeclarationXmlFormatTests
         foreach (var kind in new[] { "UDT", "GlobalDB" })
         {
             var result = kind == "UDT"
-                ? OfflineXmlBuilders.Build("BuildPlcUdtXml", release.Key, udtJson)
-                : OfflineCompositionBuilders.Build("BuildPlcGlobalDbXml", release.Key, dbJson);
+                ? OfflineXmlBuilders.Build("BuildPlcUdt", release.Key, udtJson)
+                : OfflineCompositionBuilders.Build("BuildPlcGlobalDb", release.Key, dbJson);
             var xml = result["Xml"]!.GetValue<string>();
             var document = XDocument.Parse(xml);
             var label = release.Key + " " + kind;

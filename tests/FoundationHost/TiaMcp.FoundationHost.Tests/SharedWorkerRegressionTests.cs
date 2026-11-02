@@ -45,7 +45,7 @@ public sealed class SharedWorkerRegressionTests
         var services = FoundationHostPorts.CreateServices(worker, release, () => new JsonObject { ["ready"] = true }, AppContext.BaseDirectory);
         using var pipeline = new Pipeline(release, services, Array.Empty<McpServerTool>());
         using var context = pipeline.EnterSession();
-        var next = await new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "GetState"), worker), release)
+        var next = await new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "GetSessionState"), worker), release)
             .InvokeAsync(Request("GetSessionState"));
         Assert.Equal("PRECONDITION_FAILED", (string?)next.StructuredContent?["error"]?["code"]);
         Assert.False((bool?)worker.OperatorSnapshot()["sessionLocked"]);

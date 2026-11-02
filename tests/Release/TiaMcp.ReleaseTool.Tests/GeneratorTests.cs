@@ -348,7 +348,7 @@ public sealed class GeneratorTests
     [InlineData("SetUnifiedRuntimeSettings", "previewToken", "expectedToken")]
     public void SourceBindingHintsCannotDetachFromRenamedParameters(string name, string current, string old)
     {
-        var examples = Read(Root, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceExamples.json");
+        var examples = Read(Root, "reference/tool-catalog/EngineSourceExamples.json");
         var hints = examples[name]!["parameters"]!.AsObject();
         Assert.True(hints[current]!["requiresBinding"]!.GetValue<bool>());
         ToolUsageGenerator.ValidateSourceHints(Root, examples);

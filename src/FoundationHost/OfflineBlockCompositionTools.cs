@@ -10,8 +10,8 @@ internal static class OfflineBlockCompositionTools
 {
     internal static IList<McpServerTool> Create() => new McpServerTool[]
     {
-        new OfflineBlockCompositionTool("ComposePlcFcBlockXml", "fcBlockJson"),
-        new OfflineBlockCompositionTool("ComposePlcFbBlockXml", "fbBlockJson")
+        new OfflineBlockCompositionTool("BuildPlcFcBlock", "fcBlockJson"),
+        new OfflineBlockCompositionTool("BuildPlcFbBlock", "fbBlockJson")
     };
 }
 

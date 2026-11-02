@@ -33,14 +33,14 @@ internal static class RuntimeQueryTests
         var query=new PlcProcessQuery {ReleaseKey="17",Processes=new[]{Row()}};
         check(PlcRuntimeQueryPolicy.Diagnose(query,123).Readiness=="unknown","Process found is not readiness permission");
         check(PlcRuntimeQueryPolicy.Diagnose(query,456).Readiness=="not-found","Missing exact process never auto-selects");
-        foreach(var name in new[]{"GetState","ListPortalProcessProjects","DiagnosePortalConnectReadiness"})
+        foreach(var name in new[]{"GetSessionState","ListPortalProcessProjects","GetPortalConnectionReadiness"})
         {
             var def=FoundationTools.Definitions.Single(d=>d.Name==name);
             check(WorkerOperations.Names.Contains(def.Operation),"Runtime query allowlist "+name);
             var payload=Payload(def.Operation);
             var reader=new Reader(payload);
             var tool=FoundationTools.Create(reader).Single(t=>t.ProtocolTool.Name==name);
-            var args=name=="DiagnosePortalConnectReadiness"?new Dictionary<string,JsonElement>{{"processId",JsonSerializer.SerializeToElement(123)}}:new();
+            var args=name=="GetPortalConnectionReadiness"?new Dictionary<string,JsonElement>{{"processId",JsonSerializer.SerializeToElement(123)}}:new();
             var request=new RequestContext<CallToolRequestParams>(server){Params=new(){Name=name,Arguments=args}};
             var response=await tool.InvokeAsync(request);
             var actual=JsonNode.Parse(response.Content.OfType<TextContentBlock>().Single().Text);
@@ -58,25 +58,25 @@ internal static class RuntimeQueryTests
             try {await tool.InvokeAsync(request);check(false,"Unknown argument accepted");}
             catch(McpException e){check(e.ErrorCode==McpErrorCode.InvalidParams && reader.Calls==1,"Runtime exact closed args "+name);}
             args.Remove("unexpected");
-            if(name=="DiagnosePortalConnectReadiness") foreach(var badPid in new[]{0,-1})
+            if(name=="GetPortalConnectionReadiness") foreach(var badPid in new[]{0,-1})
             {
                 args["processId"]=JsonSerializer.SerializeToElement(badPid);
                 try {await tool.InvokeAsync(request);check(false,"Nonpositive PID accepted");}
                 catch(McpException e){check(e.ErrorCode==McpErrorCode.InvalidParams && reader.Calls==1,"PID rejected before worker");}
             }
         }
-        var wrongPidTool=FoundationTools.Create(new Reader(Payload("ReadPortalConnectReadiness"))).Single(t=>t.ProtocolTool.Name=="DiagnosePortalConnectReadiness");
-        var wrongPidRequest=new RequestContext<CallToolRequestParams>(server){Params=new(){Name="DiagnosePortalConnectReadiness",Arguments=new Dictionary<string,JsonElement>{{"processId",JsonSerializer.SerializeToElement(456)}}}};
+        var wrongPidTool=FoundationTools.Create(new Reader(Payload("ReadPortalConnectReadiness"))).Single(t=>t.ProtocolTool.Name=="GetPortalConnectionReadiness");
+        var wrongPidRequest=new RequestContext<CallToolRequestParams>(server){Params=new(){Name="GetPortalConnectionReadiness",Arguments=new Dictionary<string,JsonElement>{{"processId",JsonSerializer.SerializeToElement(456)}}}};
         try{await wrongPidTool.InvokeAsync(wrongPidRequest);check(false,"Different requested PID accepted");}catch(McpException e){check(e.ErrorCode==McpErrorCode.InternalError,"Readiness response bound to exact requested PID");}
         foreach(var bound in new[]{false,true})
         {
             var cached=new PlcRuntimeState {ReleaseKey="17",IsAttached=true,ProcessId=123,ProjectFile=bound?@"C:\Projects\Example.ap17":null,OwnsProject=bound};
             var node=JsonNode.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(cached));
-            check(JsonNode.DeepEquals(node,RuntimeQueryContract.Validate("GetState",node)),"Attached and bound cached state preserves exact fields");
+            check(JsonNode.DeepEquals(node,RuntimeQueryContract.Validate("GetSessionState",node)),"Attached and bound cached state preserves exact fields");
         }
         var absent=PlcRuntimeQueryPolicy.Diagnose(query,456);
         var absentNode=JsonNode.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(absent));
-        check(JsonNode.DeepEquals(absentNode,RuntimeQueryContract.Validate("DiagnosePortalConnectReadiness",absentNode,456)),"Absent explicit process has null metadata and not-found shape");
+        check(JsonNode.DeepEquals(absentNode,RuntimeQueryContract.Validate("GetPortalConnectionReadiness",absentNode,456)),"Absent explicit process has null metadata and not-found shape");
         var bounded=Payload("ReadPortalProcessProjects"); var boundedRows=(JsonArray)bounded["Processes"]!;boundedRows.Clear();
         for(var i=1;i<=1024;i++){var item=JsonNode.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(Row()))!;item["ProcessId"]=i;boundedRows.Add(item);}
         check(RuntimeQueryContract.Validate("ListPortalProcessProjects",bounded)!=null,"1024 process bound allowed");
@@ -99,8 +99,8 @@ internal static class RuntimeQueryTests
         var readErrorRequest=new RequestContext<CallToolRequestParams>(server){Params=new(){Name="ListPortalProcessProjects",Arguments=new Dictionary<string,JsonElement>()}};
         try{await readErrorTool.InvokeAsync(readErrorRequest);check(false,"Read failure became success");}catch(McpException e){check(e.ErrorCode==McpErrorCode.InternalError,"Runtime worker read failures propagate");}
         var readiness=Payload("ReadPortalConnectReadiness"); readiness["Readiness"]="ready";
-        try{RuntimeQueryContract.Validate("DiagnosePortalConnectReadiness",readiness);check(false,"Unproven ready accepted");}catch(InvalidDataException){check(true,"Unproven ready rejected");}
+        try{RuntimeQueryContract.Validate("GetPortalConnectionReadiness",readiness);check(false,"Unproven ready accepted");}catch(InvalidDataException){check(true,"Unproven ready rejected");}
         var state=Payload("ReadState");state["IsAttached"]=true;
-        try{RuntimeQueryContract.Validate("GetState",state);check(false,"Missing cached PID accepted");}catch(InvalidDataException){check(true,"Missing cached PID rejected");}
+        try{RuntimeQueryContract.Validate("GetSessionState",state);check(false,"Missing cached PID accepted");}catch(InvalidDataException){check(true,"Missing cached PID rejected");}
     }
 }

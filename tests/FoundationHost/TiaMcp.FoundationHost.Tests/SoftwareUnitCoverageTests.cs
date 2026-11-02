@@ -159,11 +159,11 @@ public sealed class SoftwareUnitCoverageTests
     {
         JsonObject Row(string prefix) => new() { ["Name"]="Same",["Path"]=prefix+"/Same",["Kind"]="tag",["DataType"]="Bool",["Value"]="%M0.0" };
         var rows = new JsonArray(Row("root/tag-tables/Tags"), Row("units/A/tag-tables/Tags"), Row("units/B/tag-tables/Tags"));
-        Assert.Equal(3, DeclarationReadContract.Validate("ReadPlcTags", "Tags", rows, includeUnits:true).Count);
-        Assert.Single(DeclarationReadContract.Validate("ReadPlcTags", "Tags", new JsonArray(Row("units/A/tag-tables/Tags")), "A"));
-        Assert.Throws<InvalidDataException>(() => DeclarationReadContract.Validate("ReadPlcTags", "Tags", rows, "A"));
-        Assert.Throws<InvalidDataException>(() => DeclarationReadContract.Validate("ReadPlcTags", "Tags", new JsonArray(Row("units/A/tag-tables/Tags"),Row("units/A/tag-tables/Tags")), includeUnits:true));
-        Assert.Throws<InvalidDataException>(() => DeclarationReadContract.Validate("ReadPlcTags", "", new JsonArray(Row("units/A/tag-tables/../Other")), includeUnits:true));
+        Assert.Equal(3, DeclarationReadContract.Validate("ListPlcTags", "Tags", rows, includeUnits:true).Count);
+        Assert.Single(DeclarationReadContract.Validate("ListPlcTags", "Tags", new JsonArray(Row("units/A/tag-tables/Tags")), "A"));
+        Assert.Throws<InvalidDataException>(() => DeclarationReadContract.Validate("ListPlcTags", "Tags", rows, "A"));
+        Assert.Throws<InvalidDataException>(() => DeclarationReadContract.Validate("ListPlcTags", "Tags", new JsonArray(Row("units/A/tag-tables/Tags"),Row("units/A/tag-tables/Tags")), includeUnits:true));
+        Assert.Throws<InvalidDataException>(() => DeclarationReadContract.Validate("ListPlcTags", "", new JsonArray(Row("units/A/tag-tables/../Other")), includeUnits:true));
     }
 
     [Fact]
@@ -187,10 +187,10 @@ public sealed class SoftwareUnitCoverageTests
     {
         var payload = new JsonObject { ["Executed"]=false,["ProjectFile"]=@"C:\Fixture.ap21",["UnitName"]="A",["OutputFile"]=@"C:\export.xml" };
         JsonObject Meta(JsonObject result) => result.Single(field => string.Equals(field.Key,"meta",StringComparison.OrdinalIgnoreCase)).Value!.AsObject();
-        var scoped = Meta(V17MutationEnvelope.Wrap("ExportBlock", "Mutation", payload, true));
+        var scoped = Meta(V17MutationEnvelope.Wrap("ExportPlcBlock", "Mutation", payload, true));
         Assert.Equal("A", scoped.Single(field => string.Equals(field.Key,"unitName",StringComparison.OrdinalIgnoreCase)).Value!.GetValue<string>());
         payload["UnitName"] = "";
-        var root = Meta(V17MutationEnvelope.Wrap("ExportBlock", "Mutation", payload, true));
+        var root = Meta(V17MutationEnvelope.Wrap("ExportPlcBlock", "Mutation", payload, true));
         Assert.DoesNotContain(root, field => string.Equals(field.Key,"unitName",StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(root, field => string.Equals(field.Key,"swImportOptions",StringComparison.OrdinalIgnoreCase));
     }

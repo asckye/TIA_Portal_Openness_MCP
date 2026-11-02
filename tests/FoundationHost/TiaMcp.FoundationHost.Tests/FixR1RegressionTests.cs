@@ -184,7 +184,7 @@ public sealed class FixR1RegressionTests
         Assert.Equal("read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
         Assert.True((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
         Assert.True((bool?)SharedSessionState.For(worker).Snapshot("21")["requiresSessionReset"]);
-        var next = new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "GetBlocks"), worker);
+        var next = new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "ListPlcBlocks"), worker);
         var refusal = await next.InvokeV4Async(new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>()) {
             Params = new() { Name = "ListPlcBlocks", Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>("{\"softwarePath\":\"PLC\"}") } }, "21", "next", CancellationToken.None);
         Assert.Equal("SESSION_RESET_REQUIRED", (string?)refusal.StructuredContent?["error"]?["code"]);

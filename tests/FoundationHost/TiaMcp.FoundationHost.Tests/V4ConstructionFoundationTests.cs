@@ -26,14 +26,14 @@ public sealed class V4ConstructionFoundationTests
     {
         var result = kind switch
         {
-            "udt" => OfflineXmlBuilders.Build("BuildPlcUdtXml", release, json),
-            "tagtable" => OfflineXmlBuilders.Build("BuildPlcTagTableXml", release, json),
-            "globaldb" => OfflineCompositionBuilders.Build("BuildPlcGlobalDbXml", release, json),
-            "st" => OfflineCompositionBuilders.Build("BuildStructuredTextXml", release, json, innerOnly),
-            "fc" => OfflineBlockCompositionBuilders.Build("ComposePlcFcBlockXml", release, json),
-            "fb" => OfflineBlockCompositionBuilders.Build("ComposePlcFbBlockXml", release, json),
-            "call" => OfflineLadderBuilders.Build("BuildFlgNetCallXml", release, json),
-            "lad" => OfflineLadderBuilders.Build("ComposePlcLadFcBlockXml", release, json),
+            "udt" => OfflineXmlBuilders.Build("BuildPlcUdt", release, json),
+            "tagtable" => OfflineXmlBuilders.Build("BuildPlcTagTable", release, json),
+            "globaldb" => OfflineCompositionBuilders.Build("BuildPlcGlobalDb", release, json),
+            "st" => OfflineCompositionBuilders.Build("BuildStructuredText", release, json, innerOnly),
+            "fc" => OfflineBlockCompositionBuilders.Build("BuildPlcFcBlock", release, json),
+            "fb" => OfflineBlockCompositionBuilders.Build("BuildPlcFbBlock", release, json),
+            "call" => OfflineLadderBuilders.Build("BuildFlgNetCall", release, json),
+            "lad" => OfflineLadderBuilders.Build("BuildPlcLadFcBlock", release, json),
             _ => throw new ArgumentException(kind)
         };
         return result["Xml"]!.GetValue<string>();
