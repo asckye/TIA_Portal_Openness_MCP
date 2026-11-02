@@ -87,20 +87,20 @@ internal static class CompileContractTests
         check(result.ErrorCount==7 && result.WarningCount==3,"Native aggregate counts not replaced by detail-list counts");
         string Wire(string name)=>McpJsonUtilities.DefaultOptions.PropertyNamingPolicy?.ConvertName(name)??name;
         var payload=JsonSerializer.SerializeToNode(result)!;
-        var output=V17CompileEnvelope.Wrap("CompileAndDiagnosePlc",payload,false);
+        var output=V17CompileEnvelope.Wrap("CompilePlcDiagnostics",payload,false);
         check(output[Wire("ErrorCount")]!.GetValue<int>()==7 && !output[Wire("Meta")]!["success"]!.GetValue<bool>(),"Compiler errors cannot be reported as successful compile");
         check((string?)output[Wire("Meta")]!["offlineStateNotExposedByDevices"]![0]=="HMI_1","Compile output reports devices whose online state was not exposed");
         check(((JsonArray)output[Wire("RawMessages")]!).Count==6 && ((JsonArray)output[Wire("Errors")]!).Count==1,"V17 diagnostic fields preserved");
-        output=V17CompileEnvelope.Wrap("CompileSoftware",payload,false);
+        output=V17CompileEnvelope.Wrap("CompilePlcSoftware",payload,false);
         check(output[Wire("Messages")] is JsonArray && !output.ContainsKey(Wire("RawMessages")),"Basic compile response uses Messages");
         var preview=JsonSerializer.SerializeToNode(new PlcCompileResult { ProjectFile=@"C:\Projects\P.ap17" })!;
-        output=V17CompileEnvelope.Wrap("CompileSoftware",preview,true);
+        output=V17CompileEnvelope.Wrap("CompilePlcSoftware",preview,true);
         check(output[Wire("ErrorCount")]==null && output[Wire("State")]==null && !output[Wire("Meta")]!["executed"]!.GetValue<bool>(),"Preview never fabricates zero errors or successful compilation state");
         preview["ErrorCount"]=0;
         try { V17CompileEnvelope.Validate(preview,true); throw new Exception("Fabricated preview count accepted"); } catch(IOException) { check(true,"Preview fake counts rejected"); }
         payload["WarningCount"]=-1;
         try { V17CompileEnvelope.Validate(payload,false); throw new Exception("Negative count accepted"); } catch(IOException ex) { check(WorkerProtocol.RequiresSessionReset(true,ex),"Invalid actual compiler outcome stops session"); }
-        foreach(var name in new[]{"CompileSoftware","CompileAndDiagnosePlc"})
+        foreach(var name in new[]{"CompilePlcSoftware","CompilePlcDiagnostics"})
         {
             var def=FoundationTools.Definitions.Single(d=>d.Name==name);
             check(def.Arguments.Select(a=>a.Name).SequenceEqual(new[]{"softwarePath","password","dryRun"}),"V17 compile parameters plus preview "+name);

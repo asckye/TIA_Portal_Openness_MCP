@@ -37,7 +37,7 @@ internal static class V17ContractTests
     }
     internal static async Task Run(IMcpServer server,Action<bool,string> check)
     {
-        foreach(var pair in new[]{("GetBlockInfo","BlockInfo","blockPath"),("GetTypeInfo","TypeInfo","typePath")})
+        foreach(var pair in new[]{("GetPlcBlockInfo","BlockInfo","blockPath"),("GetPlcTypeInfo","TypeInfo","typePath")})
         {
             var definition=FoundationTools.Definitions.Single(d=>d.Name==pair.Item1);
             check(definition.Arguments.Select(a=>a.Name).SequenceEqual(new[]{"softwarePath",pair.Item3}),"Exact single-object argument contract");
@@ -69,18 +69,18 @@ internal static class V17ContractTests
                 catch(InvalidDataException) { check(true,"Malformed detail is not fabricated success"); }
             }
         }
-        foreach(var name in new[]{"GetBlocks","GetTypes","GetBlocksWithHierarchy","GetPlcTagTables","GetPlcExternalSources"})
+        foreach(var name in new[]{"ListPlcBlocks","ListPlcTypes","GetPlcBlockHierarchy","ListPlcTagTables","ListPlcExternalSources"})
         {
             var def=FoundationTools.Definitions.Single(d=>d.Name==name);
             check(def.Arguments[0].Name=="softwarePath" && def.Arguments[0].Required,"V17 required softwarePath");
-            bool filtered=name is "GetBlocks" or "GetTypes";
+            bool filtered=name is "ListPlcBlocks" or "ListPlcTypes";
             check(def.Arguments.Length==(filtered?2:1),"V17 exact argument count");
             if(filtered) check(def.Arguments[1] is { Name:"regexName",Type:"string",Required:false,Default:"" },"V17 regex default");
         }
         var example=new BlockExample();
         var payload=new JsonArray(JsonSerializer.SerializeToNode(example));
-        var tool=new FoundationTool(FoundationTools.Definitions.Single(d=>d.Name=="GetBlocks"),new PayloadWorker(payload));
-        var request=new RequestContext<CallToolRequestParams>(server) { Params=new CallToolRequestParams { Name="GetBlocks",Arguments=new Dictionary<string,JsonElement> { ["softwarePath"]=JsonSerializer.SerializeToElement("devices/PLC/CPU") } } };
+        var tool=new FoundationTool(FoundationTools.Definitions.Single(d=>d.Name=="ListPlcBlocks"),new PayloadWorker(payload));
+        var request=new RequestContext<CallToolRequestParams>(server) { Params=new CallToolRequestParams { Name="ListPlcBlocks",Arguments=new Dictionary<string,JsonElement> { ["softwarePath"]=JsonSerializer.SerializeToElement("devices/PLC/CPU") } } };
         var response=await tool.InvokeAsync(request);
         var json=JsonNode.Parse(response.Content.OfType<TextContentBlock>().Single().Text)!;
         string Wire(string s)=>McpJsonUtilities.DefaultOptions.PropertyNamingPolicy?.ConvertName(s)??s;
@@ -95,38 +95,38 @@ internal static class V17ContractTests
             var roundtrip=Newtonsoft.Json.JsonConvert.DeserializeObject<BlockExample>(workerJson)!;
             check(roundtrip.ModifiedDate.Kind==kind && roundtrip.ModifiedDate.Ticks==rawDate.Ticks,"Actual worker Newtonsoft serializer preserves timestamp ticks and Kind "+kind);
             var dated=JsonNode.Parse(workerJson)!;
-            var datedResult=V17ReadEnvelope.Wrap("GetBlockInfo","BlockInfo",dated);
+            var datedResult=V17ReadEnvelope.Wrap("GetPlcBlockInfo","BlockInfo",dated);
             check(datedResult[Wire("ModifiedDate")]!.ToJsonString()==dated["ModifiedDate"]!.ToJsonString(),"Read envelope preserves native timestamp representation without timezone coercion "+kind);
         }
-        var tags=V17ReadEnvelope.Wrap("GetPlcTagTables","Items",new JsonArray("Table_A","Table_B"));
+        var tags=V17ReadEnvelope.Wrap("ListPlcTagTables","Items",new JsonArray("Table_A","Table_B"));
         check(tags[Wire("Items")]![1]!.GetValue<string>()=="Table_B","Tag list contains strings, not foundation DTOs");
         foreach(var names in new[]{new JsonArray(),new JsonArray("Source.scl","source.scl","UDT_1.udt")})
         {
-            var sourceResult=V17ReadEnvelope.Wrap("GetPlcExternalSources","Items",names);
+            var sourceResult=V17ReadEnvelope.Wrap("ListPlcExternalSources","Items",names);
             check(sourceResult[Wire("Meta")]?["manualReconciliation"]?.GetValue<string>()=="closed-ordinary-plc" && sourceResult[Wire("Meta")]?["manualScope"]?.GetValue<string>()?.Contains("root external-source names only")==true,"External source manual closure has exact root-read scope");
             check(JsonNode.DeepEquals(sourceResult[Wire("Items")],names),"External source names preserve native order, spelling, case and genuine empty collection");
         }
         foreach(var bad in new JsonNode?[]{null,new JsonObject(),new JsonArray(1),new JsonArray((JsonNode?)null),new JsonArray(""),new JsonArray("valid.scl",new JsonObject())})
         {
-            try { V17ReadEnvelope.Wrap("GetPlcExternalSources","Items",bad); throw new Exception("Malformed name list accepted"); }
+            try { V17ReadEnvelope.Wrap("ListPlcExternalSources","Items",bad); throw new Exception("Malformed name list accepted"); }
             catch(InvalidDataException) { check(true,"External source malformed/mixed list cannot claim empty success"); }
         }
-        var sourceRequest=new RequestContext<CallToolRequestParams>(server) { Params=new CallToolRequestParams { Name="GetPlcExternalSources",Arguments=new Dictionary<string,JsonElement> { ["softwarePath"]=JsonSerializer.SerializeToElement("devices/PLC/CPU") } } };
-        var sourceTool=new FoundationTool(FoundationTools.Definitions.Single(d=>d.Name=="GetPlcExternalSources"),new PayloadWorker(new JsonArray("Source.scl")));
+        var sourceRequest=new RequestContext<CallToolRequestParams>(server) { Params=new CallToolRequestParams { Name="ListPlcExternalSources",Arguments=new Dictionary<string,JsonElement> { ["softwarePath"]=JsonSerializer.SerializeToElement("devices/PLC/CPU") } } };
+        var sourceTool=new FoundationTool(FoundationTools.Definitions.Single(d=>d.Name=="ListPlcExternalSources"),new PayloadWorker(new JsonArray("Source.scl")));
         var sourceResponse=await sourceTool.InvokeAsync(sourceRequest);
         check(JsonNode.Parse(sourceResponse.Content.OfType<TextContentBlock>().Single().Text)![Wire("Items")]![0]!.GetValue<string>()=="Source.scl","External source actual MCP SDK envelope preserves V17 Items strings");
-        sourceTool=new FoundationTool(FoundationTools.Definitions.Single(d=>d.Name=="GetPlcExternalSources"),new ErrorWorker(-32603));
+        sourceTool=new FoundationTool(FoundationTools.Definitions.Single(d=>d.Name=="ListPlcExternalSources"),new ErrorWorker(-32603));
         try { await sourceTool.InvokeAsync(sourceRequest); throw new Exception("Read failure swallowed"); }
         catch(McpException ex) { check(ex.ErrorCode==McpErrorCode.InternalError,"External source failure is explicit MCP error"); }
         check(!WorkerProtocol.RequiresSessionReset(true,new WorkerOperationException("read failed",-32603,"read-failed")),"Known external-source read failure need not poison session");
-        var hierarchy=V17ReadEnvelope.Wrap("GetBlocksWithHierarchy","Root",new JsonObject { ["Name"]="Root",["Blocks"]=new JsonArray(),["Groups"]=new JsonArray(new JsonObject { ["Name"]="Empty",["Blocks"]=new JsonArray(),["Groups"]=new JsonArray() }) });
+        var hierarchy=V17ReadEnvelope.Wrap("GetPlcBlockHierarchy","Root",new JsonObject { ["Name"]="Root",["Blocks"]=new JsonArray(),["Groups"]=new JsonArray(new JsonObject { ["Name"]="Empty",["Blocks"]=new JsonArray(),["Groups"]=new JsonArray() }) });
         check(hierarchy[Wire("Root")]![Wire("Groups")]![0]![Wire("Name")]!.GetValue<string>()=="Empty","Empty hierarchy groups retained");
-        tool=new FoundationTool(FoundationTools.Definitions.Single(d=>d.Name=="GetBlocks"),new PayloadWorker(new JsonObject()));
+        tool=new FoundationTool(FoundationTools.Definitions.Single(d=>d.Name=="ListPlcBlocks"),new PayloadWorker(new JsonObject()));
         try { await tool.InvokeAsync(request); throw new Exception("Bad DTO accepted"); }
         catch(McpException ex) { check(ex.ErrorCode==McpErrorCode.InternalError,"Bad backend shape maps to InternalError"); }
         foreach(var code in new[]{-32602,-32603})
         {
-            tool=new FoundationTool(FoundationTools.Definitions.Single(d=>d.Name=="GetBlocks"),new ErrorWorker(code));
+            tool=new FoundationTool(FoundationTools.Definitions.Single(d=>d.Name=="ListPlcBlocks"),new ErrorWorker(code));
             try { await tool.InvokeAsync(request); throw new Exception("Worker failure accepted"); }
             catch(McpException ex) { check((int)ex.ErrorCode==code && ex.Message=="native read failure","Classified worker failure preserved through MCP boundary"); }
         }

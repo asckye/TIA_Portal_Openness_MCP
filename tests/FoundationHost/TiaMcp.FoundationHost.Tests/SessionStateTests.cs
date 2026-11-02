@@ -184,7 +184,7 @@ public sealed class SessionStateTests
         using var worker = new CachedWorker();
         var state = SharedSessionState.For(worker);
         state.HumanCrossReferences = () => enabled;
-        var query = new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "GetState"), worker);
+        var query = new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "GetSessionState"), worker);
         var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>()) {
             Params = new() { Name = "GetSessionState", Arguments = new Dictionary<string, JsonElement>() } };
         var result = await query.InvokeV4Async(request, "21", "state", CancellationToken.None);

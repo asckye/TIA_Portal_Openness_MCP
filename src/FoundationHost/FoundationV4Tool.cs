@@ -25,36 +25,6 @@ namespace TiaMcp.FoundationHost;
 // worker protocol and bounded parsers; legacy names are not callable aliases.
 internal sealed class FoundationV4Tool : McpServerTool
 {
-    internal static readonly IReadOnlyDictionary<string, string> Names = new Dictionary<string, string>(StringComparer.Ordinal)
-    {
-        ["AddDeviceWithFallback"] = "CreateHardwareDevice", ["AttachToOpenProject"] = "AttachOpenProject",
-        ["Bootstrap"] = "InitializeEnvironment", ["Connect"] = "ConnectPortal", ["Disconnect"] = "DisconnectPortal",
-        ["DiagnosePortalConnectReadiness"] = "GetPortalConnectionReadiness", ["GetState"] = "GetSessionState",
-        ["GetProject"] = "GetProjectInfo", ["CompileSoftware"] = "CompilePlcSoftware", ["CompileAndDiagnosePlc"] = "CompilePlcDiagnostics",
-        ["GetBlocks"] = "ListPlcBlocks", ["GetBlockInfo"] = "GetPlcBlockInfo", ["GetBlocksWithHierarchy"] = "GetPlcBlockHierarchy",
-        ["GetTypes"] = "ListPlcTypes", ["GetTypeInfo"] = "GetPlcTypeInfo", ["GetPlcTagTables"] = "ListPlcTagTables",
-        ["GetPlcWatchTables"] = "ListPlcWatchTables", ["GetPlcExternalSources"] = "ListPlcExternalSources",
-        ["GetTechnologyObjects"] = "ListTechnologyObjects", ["ReadPlcTags"] = "ListPlcTags",
-        ["ReadPlcUserConstants"] = "ListPlcUserConstants", ["ReadPlcSystemConstants"] = "ListPlcSystemConstants",
-        ["ExportBlock"] = "ExportPlcBlock", ["ExportBlocks"] = "ExportPlcBlocks", ["ExportType"] = "ExportPlcType",
-        ["ExportTypes"] = "ExportPlcTypes", ["ImportBlock"] = "ImportPlcBlock", ["ImportType"] = "ImportPlcType",
-        ["ImportBlocksFromDirectory"] = "ImportPlcBlocksFromDirectory",
-        ["BuildPlcUdtXml"] = "BuildPlcUdt", ["BuildPlcTagTableXml"] = "BuildPlcTagTable",
-        ["BuildPlcGlobalDbXml"] = "BuildPlcGlobalDb", ["BuildStructuredTextXml"] = "BuildStructuredText",
-        ["BuildFlgNetCallXml"] = "BuildFlgNetCall", ["ComposePlcFcBlockXml"] = "BuildPlcFcBlock",
-        ["ComposePlcFbBlockXml"] = "BuildPlcFbBlock", ["ComposePlcLadFcBlockXml"] = "BuildPlcLadFcBlock",
-        ["BuildPlcSymbolManifestFromXmlPath"] = "BuildPlcSymbolManifestFromPath",
-        ["ExportAsDocuments"] = "ExportPlcBlockDocuments", ["ExportBlocksAsDocuments"] = "ExportPlcBlocksDocuments",
-        ["ImportFromDocuments"] = "ImportPlcBlockDocuments", ["ImportBlocksFromDocuments"] = "ImportPlcBlocksDocuments"
-    };
-    internal static string Name(string source) => Names.TryGetValue(source, out var name) ? name : source;
-    internal static string Guidance(string text)
-    {
-        foreach (var pair in Names.OrderByDescending(p => p.Key.Length))
-            text = System.Text.RegularExpressions.Regex.Replace(text, @"\b" + pair.Key + @"\b", pair.Value);
-        return text.Replace("Returns the existing PascalCase array", "Returns declarations in V4 data.items");
-    }
-
     private readonly McpServerTool inner;
     private readonly string release;
     private readonly Tool tool;
@@ -83,7 +53,7 @@ internal sealed class FoundationV4Tool : McpServerTool
     {
         if (inner is OfflineXmlTool xmlTool) inner = xmlTool.ForRelease(release);
         else if (inner is OfflineCompositionTool compositionTool) inner = compositionTool.ForRelease(release);
-        if (inner is FoundationTool blocks && inner.ProtocolTool.Name == "GetBlocks") inner = blocks.ForBlockPaging();
+        if (inner is FoundationTool blocks && inner.ProtocolTool.Name == "ListPlcBlocks") inner = blocks.ForBlockPaging();
         this.inner = inner; this.release = release;
         this.approvalSettings = approvalSettings;
         this.approvalWait = approvalWait;
@@ -91,22 +61,22 @@ internal sealed class FoundationV4Tool : McpServerTool
         this.sharedSession = sharedSession || inner is FoundationTool { SharedWorker: true };
         var source = inner.ProtocolTool;
         if (inner is WorkbenchControlTool) { tool = source; return; }
-        deviceCandidate = source.Name == "AddDeviceWithFallback" && (release is "18" or "19")
+        deviceCandidate = source.Name == "CreateHardwareDevice" && (release is "18" or "19")
             && (policyForTest?.Invoke("P6-DEVICE") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-DEVICE")) == BehaviorPolicy.SafeV4;
-        importCandidate = PlcImportContract.Entries.Contains(Name(source.Name), StringComparer.Ordinal)
+        importCandidate = PlcImportContract.Entries.Contains(source.Name, StringComparer.Ordinal)
             && (policyForTest?.Invoke("P6-IMPORT") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-IMPORT")) == BehaviorPolicy.SafeV4;
-        exportCandidate = PlcExportContract.Entries.Contains(Name(source.Name), StringComparer.Ordinal)
+        exportCandidate = PlcExportContract.Entries.Contains(source.Name, StringComparer.Ordinal)
             && (policyForTest?.Invoke("P6-EXPORT") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-EXPORT")) == BehaviorPolicy.SafeV4;
-        sessionCandidate = SessionCandidateContract.Entries.Contains(Name(source.Name), StringComparer.Ordinal)
+        sessionCandidate = SessionCandidateContract.Entries.Contains(source.Name, StringComparer.Ordinal)
             && (policyForTest?.Invoke("P6-SESSION") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-SESSION")) == BehaviorPolicy.SafeV4;
-        saveCloseCandidate = SaveCloseContract.Entries.Contains(Name(source.Name), StringComparer.Ordinal)
+        saveCloseCandidate = SaveCloseContract.Entries.Contains(source.Name, StringComparer.Ordinal)
             && (policyForTest?.Invoke("P6-CLOSE") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-CLOSE")) == BehaviorPolicy.SafeV4;
-        sourceCandidate = SourceContract.Entries.Contains(Name(source.Name), StringComparer.Ordinal)
+        sourceCandidate = SourceContract.Entries.Contains(source.Name, StringComparer.Ordinal)
             && (policyForTest?.Invoke("P6-SOURCE") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-SOURCE")) == BehaviorPolicy.SafeV4;
-        compileCandidate = CompileContract.Entries.Contains(Name(source.Name), StringComparer.Ordinal)
+        compileCandidate = CompileContract.Entries.Contains(source.Name, StringComparer.Ordinal)
             && (policyForTest?.Invoke("P6-COMPILE") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-COMPILE")) == BehaviorPolicy.SafeV4;
         var schema = JsonNode.Parse(source.InputSchema.GetRawText())!.AsObject();
-        PlcSoftwareUnitSchema.Apply(schema, Name(source.Name), release);
+        PlcSoftwareUnitSchema.Apply(schema, source.Name, release);
         if (inner is FoundationTool { Ported: true } && !importCandidate && !sourceCandidate && !compileCandidate)
         {
             tool = new Tool { Name = source.Name, Title = source.Title,
@@ -126,14 +96,14 @@ internal sealed class FoundationV4Tool : McpServerTool
         }
         switch (source.Name)
         {
-            case "BuildPlcUdtXml": Construction<UdtSpec>("udt"); break;
-            case "BuildPlcTagTableXml": Construction<PlcTagTableSpec>("tagTable"); break;
-            case "BuildPlcGlobalDbXml": Construction<GlobalDbSpec>("globalDb"); break;
-            case "BuildStructuredTextXml": Construction<StructuredTextSpec>("structuredText"); break;
-            case "BuildFlgNetCallXml": Construction<FlgNetCallSpec>("flgNet"); break;
-            case "ComposePlcFcBlockXml": Construction<FcBlockSpec>("fcBlock"); break;
-            case "ComposePlcFbBlockXml": Construction<FbBlockSpec>("fbBlock"); break;
-            case "ComposePlcLadFcBlockXml": Construction<LadFcBlockSpec>("ladFcBlock"); break;
+            case "BuildPlcUdt": Construction<UdtSpec>("udt"); break;
+            case "BuildPlcTagTable": Construction<PlcTagTableSpec>("tagTable"); break;
+            case "BuildPlcGlobalDb": Construction<GlobalDbSpec>("globalDb"); break;
+            case "BuildStructuredText": Construction<StructuredTextSpec>("structuredText"); break;
+            case "BuildFlgNetCall": Construction<FlgNetCallSpec>("flgNet"); break;
+            case "BuildPlcFcBlock": Construction<FcBlockSpec>("fcBlock"); break;
+            case "BuildPlcFbBlock": Construction<FbBlockSpec>("fbBlock"); break;
+            case "BuildPlcLadFcBlock": Construction<LadFcBlockSpec>("ladFcBlock"); break;
             case "PlanArtifactImportOrder":
                 parameter = "artifacts";
                 var contract = DomainValidation.Contract<Artifact[]>();
@@ -150,7 +120,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             for (int i = 0; i < required.Count; i++)
                 if (required[i]!.GetValue<string>() == parameter + "Json") required[i] = parameter;
         }
-        string description = Guidance(source.Description ?? "");
+        string description = source.Description ?? "";
         if (parameter != null) description = description.Replace(parameter + "Json", parameter)
             + " Supply a typed object/array with exact camelCase fields, never a JSON string. Existing Foundation budgets and output-release limits apply.";
         if (parameter == "artifacts") description = "Offline dependency-first import planning. artifacts is a typed array of {id, target?, priority?, dependencies?}; 1..256 unique IDs, no missing or cyclic dependencies. No worker or file operations.";
@@ -163,27 +133,27 @@ internal sealed class FoundationV4Tool : McpServerTool
         }
         if (importCandidate)
         {
-            schema = JsonNode.Parse(PlcImportContract.Schema(Name(source.Name), release).GetRawText())!.AsObject();
+            schema = JsonNode.Parse(PlcImportContract.Schema(source.Name, release).GetRawText())!.AsObject();
             description = "[PLC foundation][WRITE] Same-release PLC import candidate. Optional unitName V16–V21 selects a unit root. Explicit swImportOptions: IgnoreStructuralChanges / IgnoreMissingReferencedObjects V15.1–V21, IgnoreUnitAttributes V16–V21 (blocks/types only); importOptions SkipInactiveCultures OR ActivateInactiveCultures V19–V21. Both arrays default empty; preview shows the opt-ins; unsupported combinations refuse. Preview returns original file hashes, exact target groups, complete inventory, overwrite capability and plan. Apply requires confirmation, expectedPlanHash and expectedProjectFile. Directory importOrder is explicit. One import per item with content readback; stop on first failure, unknown requires session reset. No source rewrite, compile, save, retry or rollback. Test/accepted behaviorPolicy=safe-v4.";
         }
         if (exportCandidate)
         {
-            schema = JsonNode.Parse(PlcExportContract.Schema(Name(source.Name), release).GetRawText())!.AsObject();
+            schema = JsonNode.Parse(PlcExportContract.Schema(source.Name, release).GetRawText())!.AsObject();
             description = "[PLC foundation][WRITE] Reviewed export candidate. Optional exact unitName V16–V21 selects a unit root; paths are relative to it. Default preview lists objects and destination identities without writes. Apply requires confirmation, expectedPlanHash and expectedProjectFile. One export per item in synchronous worker dispatch, sibling staging then host publication, content/path readback. Stop and retain staging on failure; unknown requires session reset. No scope expansion. Test/accepted behaviorPolicy=safe-v4.";
         }
         if (sessionCandidate)
         {
-            schema = JsonNode.Parse(SessionCandidateContract.Schema(Name(source.Name)).GetRawText())!.AsObject();
+            schema = JsonNode.Parse(SessionCandidateContract.Schema(source.Name).GetRawText())!.AsObject();
             description = SessionCandidateContract.Description;
         }
         if (saveCloseCandidate)
         {
-            schema = JsonNode.Parse(SaveCloseContract.Schema(Name(source.Name)).GetRawText())!.AsObject();
+            schema = JsonNode.Parse(SaveCloseContract.Schema(source.Name).GetRawText())!.AsObject();
             description = SaveCloseContract.Description;
         }
-        if (compileCandidate) { schema = JsonNode.Parse(CompileContract.Schema(Name(source.Name)).GetRawText())!.AsObject(); description = CompileContract.Description; }
-        if (sourceCandidate) { schema = JsonNode.Parse(SourceContract.Schema(Name(source.Name)).GetRawText())!.AsObject(); description = SourceContract.Description; }
-        tool = new Tool { Name = Name(source.Name), Description = description
+        if (compileCandidate) { schema = JsonNode.Parse(CompileContract.Schema(source.Name).GetRawText())!.AsObject(); description = CompileContract.Description; }
+        if (sourceCandidate) { schema = JsonNode.Parse(SourceContract.Schema(source.Name).GetRawText())!.AsObject(); description = SourceContract.Description; }
+        tool = new Tool { Name = source.Name, Description = description
             + (inner is FoundationTool { IsNative: true } && !deviceCandidate && !importCandidate && !exportCandidate && !sessionCandidate && !saveCloseCandidate && !sourceCandidate && !compileCandidate ? " Native behaviorPolicy=current; V4 native acceptance is pending." : ""),
             InputSchema = JsonSerializer.SerializeToElement(schema), OutputSchema = FoundationV4Result.Schema };
     }

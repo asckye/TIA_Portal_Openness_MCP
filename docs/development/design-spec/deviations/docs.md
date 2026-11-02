@@ -338,7 +338,7 @@
 ### DOC-33 生成文档的说明行与语言不统一
 
 - 规则：规范 12 [项目]。
-- 现状：`tool-matrix.md` 是中文表头，含“生成时间：2026-10-10 20:53:05”和“产品文件版本：3.3.0.0”；`version-tool-catalog.md`、`v4.0.0-tool-migration.md` 是英文，说明行措辞各不相同；`real-machine-ledger.md` 的嵌入块用 `<!-- …capabilities:begin/end -->` 标记；`tool-usage-coverage.json` 没有说明。
+- 现状：`tool-matrix.md` 是中文表头，含“生成时间：2026-10-10 20:53:05”和“产品文件版本：3.3.0.0”；`version-tool-catalog.md`、`v4.0.0-tool-migration.md` 是英文，说明行措辞各不相同；`real-machine-ledger.md` 的嵌入块用 `<!-- …capabilities:begin/end -->` 标记；`manifest/tool-usage-coverage.json` 没有说明。
 - 建议：**4.0 后修改**生成器输出格式（统一说明行、去掉时间戳、统一语言与标记）；4.0 前只需保证发布候选重新生成这些文件。
 - 状态：4.0 后
 

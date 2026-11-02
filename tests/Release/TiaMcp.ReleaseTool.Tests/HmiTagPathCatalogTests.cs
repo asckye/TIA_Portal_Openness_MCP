@@ -65,7 +65,7 @@ public sealed class HmiTagPathCatalogTests
         // GetToolUsage serves the engine-source rows on 20/21: they keep the frozen parameter set (the engine
         // schema) and take every value the maintained call library has (real-machine V21 test 2026-10-31: frozen
         // engine values were wrong examples), while the frozen fixture stays byte-equal comparison and rejection evidence.
-        var fixture = CatalogJson.Read(root, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceExamples.json");
+        var fixture = CatalogJson.Read(root, "reference/tool-catalog/EngineSourceExamples.json");
         var frozen = fixture["DeleteHmiTag"]!["arguments"]!.AsObject();
         var calls = CatalogJson.Read(root, "reference/tool-examples/calls.json")["profiles"]!["full-engine"]!.AsObject();
         string pattern = TiaMcpServer.ModelContextProtocol.ToolMetadata.Parameter("DeleteHmiTag", "tagTablePath")!.Pattern!;

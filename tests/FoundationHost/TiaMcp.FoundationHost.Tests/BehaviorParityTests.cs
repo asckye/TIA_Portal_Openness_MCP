@@ -67,7 +67,7 @@ public sealed class BehaviorParityTests
                 {
                     Exception cause = new AdapterPreconditionException(message, parameter, argument);
                     if (wrapped) cause = new InvalidOperationException("Private wrapper diagnostic.", cause);
-                    var source = tool == "AttachOpenProject" ? "AttachToOpenProject" : tool == "ImportPlcBlocksFromDirectory" ? "ImportBlocksFromDirectory" : tool;
+                    var source = tool;
                     var target = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source), new PreconditionWorker(cause)), release);
                     var body = (await target.InvokeAsync(Request(tool, args))).StructuredContent!;
                     Assert.Equal((string?)engine["error"]?["message"], (string?)body["error"]?["message"]);
@@ -217,14 +217,14 @@ public sealed class BehaviorParityTests
             async Task<JsonObject> Call(string source, JsonObject args)
             {
                 if (scenario is "single-legacy-group-missing" or "single-type-group-missing" or "single-table-group-missing") { args["dryRun"] = false; args["confirm"] = true; args["expectedProjectFile"] = "C:/fixture.ap19"; }
-                if (source == "CompileSoftware") { args["confirm"] = true; args["expectedProjectFile"] = "C:/fixture.ap19"; }
+                if (source == "CompilePlcSoftware") { args["confirm"] = true; args["expectedProjectFile"] = "C:/fixture.ap19"; }
                 var tool = Tool(source);
                 var body = (await tool.InvokeAsync(Request(tool.ProtocolTool.Name, args))).StructuredContent!;
-                if (source == "CompileSoftware") Assert.True((string?)body["error"]?["code"] == "COMPILE_ERRORS", body.ToJsonString());
+                if (source == "CompilePlcSoftware") Assert.True((string?)body["error"]?["code"] == "COMPILE_ERRORS", body.ToJsonString());
                 return BehaviorParityCases.Project(body);
             }
-            var results = new JsonArray(await Call(scenario=="single-type-group-missing" ? "ImportType" : scenario=="single-table-group-missing" ? "ImportPlcTagTable" : scenario == "single-legacy-group-missing" ? "ImportBlock" : scenario.StartsWith("compile-", StringComparison.Ordinal) ? "CompileSoftware" : scenario == "native-read" ? "ReadPlcTags"
-                : scenario == "missing-directory" || scenario.StartsWith("batch-", StringComparison.Ordinal) && scenario != "batch-alias" ? "ImportBlocksFromDirectory" : scenario == "missing-file" ? "ImportPlcExternalSource" : "CreatePlcTag", BehaviorParityCases.Arguments(scenario)));
+            var results = new JsonArray(await Call(scenario=="single-type-group-missing" ? "ImportPlcType" : scenario=="single-table-group-missing" ? "ImportPlcTagTable" : scenario == "single-legacy-group-missing" ? "ImportPlcBlock" : scenario.StartsWith("compile-", StringComparison.Ordinal) ? "CompilePlcSoftware" : scenario == "native-read" ? "ListPlcTags"
+                : scenario == "missing-directory" || scenario.StartsWith("batch-", StringComparison.Ordinal) && scenario != "batch-alias" ? "ImportPlcBlocksFromDirectory" : scenario == "missing-file" ? "ImportPlcExternalSource" : "CreatePlcTag", BehaviorParityCases.Arguments(scenario)));
             Assert.Equal(code, (string?)results[0]?["code"]); Assert.Equal(outcome, (string?)results[0]?["outcome"]); Assert.Equal(execution, (string?)results[0]?["execution"]);
             if (scenario == "single-import-failed") Assert.True((bool?)results[0]?["reset"]);
             if (enabled && scenario is ("argument" or "single-group-missing" or "single-legacy-group-missing" or "batch-inconsistent"))
@@ -241,13 +241,13 @@ public sealed class BehaviorParityTests
             if (scenario.StartsWith("blocked-export", StringComparison.Ordinal) || scenario == "typed-export-refusal")
             {
                 worker.Followup = true;
-                results.Add(await Call("ReadPlcTags", new JsonObject { ["plc"] = "PLC_1", ["table"] = "T" }));
+                results.Add(await Call("ListPlcTags", new JsonObject { ["plc"] = "PLC_1", ["table"] = "T" }));
                 results.Add(await Call("CreatePlcTag", BehaviorParityCases.Arguments("followup")));
                 Assert.All(results.Skip(1), row => { Assert.Equal("", (string?)row?["code"]); Assert.False((bool?)row?["reset"]); });
             }
             if (scenario == "unknown")
             {
-                results.Add(await Call("ReadPlcTags", new JsonObject { ["plc"] = "PLC_1", ["table"] = "T" }));
+                results.Add(await Call("ListPlcTags", new JsonObject { ["plc"] = "PLC_1", ["table"] = "T" }));
                 results.Add(await Call("CreatePlcTag", BehaviorParityCases.Arguments(scenario)));
                 Assert.All(results.Skip(1), row => { Assert.Equal("SESSION_RESET_REQUIRED", (string?)row?["code"]); Assert.Equal("not-started", (string?)row?["execution"]); });
             }
@@ -289,13 +289,13 @@ public sealed class BehaviorParityTests
                     ()=>new(false,1),(pending,current,_)=> { Assert.False(current.Enabled);return Task.FromResult(new ApprovalOutcome(pending,true,null)); });
                 return (await tool.InvokeAsync(Request(tool.ProtocolTool.Name,args))).StructuredContent!;
             }
-            var body=await Call(program ? "ImportPlcProgramFromDirectory" : "ImportBlocksFromDirectory",fixture.Arguments());
+            var body=await Call(program ? "ImportPlcProgramFromDirectory" : "ImportPlcBlocksFromDirectory",fixture.Arguments());
             Assert.Equal(code,(string?)body["error"]?["code"]);Assert.Equal("rejected-before-operation",(string?)body["meta"]?["outcome"]);Assert.Equal("not-started",(string?)body["meta"]?["execution"]);
             Assert.False((bool?)body["meta"]?["requiresSessionReset"]);Assert.DoesNotContain(body["meta"]!["warnings"]!.AsArray(),w=>(string?)w?["code"]=="APPROVAL_PRECHECK_REFUSED");
             Assert.Contains(body["meta"]!["warnings"]!.AsArray(),w=>(string?)w?["code"]=="APPROVAL_DISABLED");
             Assert.Equal(value.EndsWith("backup-io",StringComparison.Ordinal) ? new[]{"directory","backup"} : value.Substring(program ? 17 : 15)=="recheck-io" ? new[]{"directory"} : Array.Empty<string>(),fixture.Calls);
             var results=new JsonArray(BehaviorParityCases.Project(body));
-            results.Add(BehaviorParityCases.Project(await Call("ReadPlcTags",new JsonObject { ["plc"]="PLC_1",["table"]="T" })));
+            results.Add(BehaviorParityCases.Project(await Call("ListPlcTags",new JsonObject { ["plc"]="PLC_1",["table"]="T" })));
             results.Add(BehaviorParityCases.Project(await Call("CreatePlcTag",BehaviorParityCases.Arguments("followup"))));
             Assert.All(results.Skip(1),row=> { Assert.Equal("",(string?)row?["code"]);Assert.False((bool?)row?["reset"]); });
             var foundation=new JsonObject { ["results"]=results,["calls"]=JsonSerializer.SerializeToNode(fixture.Calls) };

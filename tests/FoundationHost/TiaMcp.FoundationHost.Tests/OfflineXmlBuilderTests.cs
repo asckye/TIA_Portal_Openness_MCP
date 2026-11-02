@@ -14,14 +14,14 @@ internal static class OfflineXmlBuilderTests
         string Wire(string key) => McpJsonUtilities.DefaultOptions.PropertyNamingPolicy?.ConvertName(key) ?? key;
         foreach(var spec in new[]
         {
-            (Name:"BuildPlcUdtXml", Arg:"udtJson", Json:"{\"name\":\"UDT<&\\\"\",\"members\":[{\"name\":\"Ready\",\"datatype\":\"Bool\",\"externalWritable\":true,\"comment\":\"<tag>&中文\"}]}"),
-            (Name:"BuildPlcTagTableXml", Arg:"tagTableJson", Json:"{\"tableName\":\"Tags<&\",\"tags\":[{\"name\":\"Run\",\"dataTypeName\":\"Bool\",\"logicalAddress\":\"%Q0.0\"}]}")
+            (Name:"BuildPlcUdt", Arg:"udtJson", Json:"{\"name\":\"UDT<&\\\"\",\"members\":[{\"name\":\"Ready\",\"datatype\":\"Bool\",\"externalWritable\":true,\"comment\":\"<tag>&中文\"}]}"),
+            (Name:"BuildPlcTagTable", Arg:"tagTableJson", Json:"{\"tableName\":\"Tags<&\",\"tags\":[{\"name\":\"Run\",\"dataTypeName\":\"Bool\",\"logicalAddress\":\"%Q0.0\"}]}")
         })
         {
             var tool = OfflineXmlTools.Create().Single(t=>t.ProtocolTool.Name==spec.Name);
             var schema = tool.ProtocolTool.InputSchema;
             check(schema.GetProperty("required").GetArrayLength()==2, spec.Name+" requires explicit output format");
-            check(schema.GetProperty("properties").GetProperty("outputReleaseKey").GetProperty("enum").GetArrayLength()==(spec.Name=="BuildPlcUdtXml"?8:1), spec.Name+" explicit supported output versions");
+            check(schema.GetProperty("properties").GetProperty("outputReleaseKey").GetProperty("enum").GetArrayLength()==(spec.Name=="BuildPlcUdt"?8:1), spec.Name+" explicit supported output versions");
             check(!schema.GetProperty("additionalProperties").GetBoolean(),spec.Name+" closed schema");
             RequestContext<CallToolRequestParams> Request(Dictionary<string,JsonElement> args) => new(server) { Params=new() {Name=spec.Name,Arguments=args} };
             var args = new Dictionary<string,JsonElement>
@@ -53,7 +53,7 @@ internal static class OfflineXmlBuilderTests
             foreach(var version in new[]{"14sp1","15.1","16","17","18","19","20","V21","21 ","","22"})
             {
                 var bad=new Dictionary<string,JsonElement>(args) { ["outputReleaseKey"]=JsonSerializer.SerializeToElement(version) };
-                if (spec.Name=="BuildPlcUdtXml" && TiaMcpServer.ModelContextProtocol.PlcDeclarationXmlFormat.ReleaseKeys.Contains(version))
+                if (spec.Name=="BuildPlcUdt" && TiaMcpServer.ModelContextProtocol.PlcDeclarationXmlFormat.ReleaseKeys.Contains(version))
                 {
                     var generated = await tool.InvokeAsync(Request(bad));
                     var generatedPayload = JsonNode.Parse(((TextContentBlock)generated.Content.Single()).Text)!;
@@ -73,7 +73,7 @@ internal static class OfflineXmlBuilderTests
             foreach(var malformed in new[]{"", "null", "[]", "true", "{", "{\"name\":\"A\",\"name\":\"B\"}", new string('x',OfflineXmlBuilders.MaxJsonCharacters+1)})
                 await Invalid(new(args) { [spec.Arg]=JsonSerializer.SerializeToElement(malformed) },"malformed JSON");
             const string secret = "SECRET-example-token-9f781";
-            var sensitiveInputs = spec.Name == "BuildPlcUdtXml"
+            var sensitiveInputs = spec.Name == "BuildPlcUdt"
                 ? new[] { "{\"name\":\"A\",\"members\":[],\"" + secret + "\":true}",
                     "{\"name\":\"A\",\"members\":[{\"name\":\"" + secret + "\",\"datatype\":\"Bool\"},{\"name\":\"" + secret + "\",\"datatype\":\"Bool\"}]}" }
                 : new[] { "{\"tableName\":\"A\",\"tags\":[],\"" + secret + "\":true}",
@@ -97,7 +97,7 @@ internal static class OfflineXmlBuilderTests
             try { OfflineXmlBuilders.Build(name,"21",json); throw new Exception("Accepted "+why); }
             catch(Exception ex) when(ex is ArgumentException or JsonException or System.Xml.XmlException) { check(true,why); }
         }
-        const string U="BuildPlcUdtXml", T="BuildPlcTagTableXml";
+        const string U="BuildPlcUdt", T="BuildPlcTagTable";
         foreach(var json in new[]
         {
             "{\"name\":\"A\",\"members\":[]}",

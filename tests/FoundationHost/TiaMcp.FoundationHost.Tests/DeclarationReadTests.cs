@@ -25,7 +25,7 @@ internal static class DeclarationReadTests
     internal static async Task Run(IMcpServer server,Action<bool,string> check)
     {
         const string table="Group%2F1/Table%20A";
-        foreach(var entry in new[]{("ReadPlcTags","ListTags","tag"),("ReadPlcUserConstants","ListUserConstants","user-constant"),("ReadPlcSystemConstants","ListSystemConstants","system-constant")})
+        foreach(var entry in new[]{("ListPlcTags","ListTags","tag"),("ListPlcUserConstants","ListUserConstants","user-constant"),("ListPlcSystemConstants","ListSystemConstants","system-constant")})
         {
             var definition=FoundationTools.Definitions.Single(d=>d.Name==entry.Item1);
             var request=new RequestContext<CallToolRequestParams>(server) { Params=new() { Name=entry.Item1,Arguments=new Dictionary<string,JsonElement> { ["plc"]=JsonSerializer.SerializeToElement("devices/PLC/CPU"),["table"]=JsonSerializer.SerializeToElement(table) } } };

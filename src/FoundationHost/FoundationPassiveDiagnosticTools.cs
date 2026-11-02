@@ -10,7 +10,7 @@ internal static class FoundationPassiveDiagnosticTools
 {
     internal static IEnumerable<McpServerTool> Create(string release, bool nativeSessionConfigured, Func<IReadOnlyList<McpServerTool>> registry,
         Func<JsonObject>? readinessProvider = null) => new McpServerTool[] {
-        new PassiveDiagnosticTool("Bootstrap", release, nativeSessionConfigured, registry, readinessProvider),
+        new PassiveDiagnosticTool("InitializeEnvironment", release, nativeSessionConfigured, registry, readinessProvider),
         new PassiveDiagnosticTool("RunCapabilitySelfTest", release, nativeSessionConfigured, registry, readinessProvider)
     };
 }
@@ -31,7 +31,7 @@ internal sealed class PassiveDiagnosticTool : McpServerTool
         properties["offset"] = new JsonObject { ["type"] = "integer", ["default"] = 0, ["minimum"] = 0, ["description"] = "First registered-tool row to return, in ordinal name order." };
         properties["limit"] = new JsonObject { ["type"] = "integer", ["default"] = FoundationPassiveDiagnostics.RosterPageLimit, ["minimum"] = 1, ["maximum"] = FoundationPassiveDiagnostics.RosterPageLimit, ["description"] = "Maximum registered-tool rows per page. Follow meta.paging.nextOffset; a page may contain fewer rows to keep the report bounded." };
         if (name == "RunCapabilitySelfTest") foreach (var flag in Flags) properties[flag] = new JsonObject { ["type"] = "boolean", ["default"] = false, ["enum"] = new JsonArray(false), ["description"] = "Only false is supported. Native checks/attach are unavailable in this passive host contract." };
-        string description = name == "Bootstrap"
+        string description = name == "InitializeEnvironment"
             ? "[read-only Foundation readiness] Reports the exact selected TIA release installation and matching Openness API, current Siemens TIA Openness group membership, readiness cause and fix, plus managed host registration diagnostics. No worker call, TIA launch, attach, repair or persistent settings change."
             : "[passive host candidate; upstream response incompatible] Managed registration/schema/source-protocol diagnostics only. No worker call, launch, attach, group inspection/repair, filesystem or persistent settings. Installed API/SDK, permission and native readiness remain not-probed. Native flags and automation-context options are unsupported.";
         tool = new Tool { Name = name, Description = description + " Structural checks cover the entire registered catalog; registeredTools contains one bounded page. Retrieve the full roster using offset/limit and meta.paging.nextOffset.", InputSchema = JsonSerializer.SerializeToElement(new JsonObject { ["type"] = "object", ["properties"] = properties, ["additionalProperties"] = false, ["required"] = new JsonArray() }) };
@@ -58,7 +58,7 @@ internal sealed class PassiveDiagnosticTool : McpServerTool
             var tools = registry();
             if (offset > tools.Count) return ValueTask.FromException<CallToolResult>(new McpException("Passive diagnostic offset exceeds the registered-tool count.", null, McpErrorCode.InvalidParams));
             var result = FoundationPassiveDiagnostics.Inspect(release, nativeSessionConfigured, tools, offset: offset, limit: limit);
-            if (tool.Name == "Bootstrap") FoundationPassiveDiagnostics.AddReadiness(result, readinessProvider?.Invoke() ?? FoundationPassiveDiagnostics.Readiness(release));
+            if (tool.Name == "InitializeEnvironment") FoundationPassiveDiagnostics.AddReadiness(result, readinessProvider?.Invoke() ?? FoundationPassiveDiagnostics.Readiness(release));
             else result["recommendedNextTool"] = null;
             return ValueTask.FromResult(new CallToolResult { IsError = !result["checks"]!["passed"]!.GetValue<bool>(), Content = new List<ContentBlock> { new TextContentBlock { Text = result.ToJsonString() } } });
         }

@@ -23,7 +23,7 @@
 | 入口说明 | `README.md`、`README.zh-CN.md` | 是 | 新用户 | 英文、中文各一份 |
 | 用户文档 | `docs/README.md`、`docs/getting-started`、`docs/guides`、`docs/troubleshooting`、`docs/reference`（`real-machine-ledger.md` 除外） | 是 | 使用者、AI 客户端操作者 | 中文（见第 2 节） |
 | 发布记录 | `CHANGELOG.md`、`docs/releases/*.md` | 是 | 使用者、集成者 | 英文 |
-| 生成文档 | `docs/reference/tool-matrix.md`、`docs/reference/version-tool-catalog.md`、`docs/releases/v4.0.0-tool-migration.md`、`docs/reference/real-machine-ledger.md` 的标记块、`docs/reference/tool-usage-coverage.json` | 部分 | 使用者、维护者 | 随生成器 |
+| 生成文档 | `docs/reference/tool-matrix.md`、`docs/reference/version-tool-catalog.md`、`docs/releases/v4.0.0-tool-migration.md`、`docs/reference/real-machine-ledger.md` 的标记块、`manifest/tool-usage-coverage.json` | 部分 | 使用者、维护者 | 随生成器 |
 | 开发文档 | `docs/development/*.md`、`docs/reference/real-machine-ledger.md`、`scripts/README.md`、`src/**/README.md` | 否 | 维护者、实现代理 | 中文 |
 | 设计规范 | `docs/development/design-spec/` | 否 | 维护者、实现代理 | 中文 |
 | 设计记录与决策 | `docs/development/design/`、`docs/development/decisions/`（见第 14 节） | 否 | 维护者 | 中文 |

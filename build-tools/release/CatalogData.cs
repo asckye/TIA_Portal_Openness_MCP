@@ -41,7 +41,7 @@ internal static class CatalogJson
 internal sealed class CatalogData
 {
     internal readonly string Root;
-    internal readonly EngineSources Engine;
+    internal readonly JsonObject EngineSource;
     internal readonly JsonObject Additions;
     internal readonly Dictionary<string, string> Renames;
     internal readonly Dictionary<string, string> HostOnly;
@@ -53,7 +53,6 @@ internal sealed class CatalogData
     internal readonly Dictionary<string, HashSet<string>> Rosters = [];
     internal readonly Dictionary<string, string> Mapping;
     internal readonly Dictionary<string, string> Definitions = [];
-    internal readonly Dictionary<string, string> HostMap;
     internal readonly HashSet<string> Removed;
     internal readonly HashSet<string> Bridge;
     internal readonly Dictionary<string, (string Path, string Method, string Domain)> Registrations = [];
@@ -61,7 +60,7 @@ internal sealed class CatalogData
 
     internal CatalogData(string root)
     {
-        Root = root; Engine = new EngineSources(root);
+        Root = root; EngineSource = CatalogJson.Read(root, "reference/tool-catalog/engine-source.json").AsObject();
         Additions = CatalogJson.Read(root, "reference/tool-catalog/new-v4-tools.json").AsObject();
         Renames = CatalogJson.Read(root, "reference/tool-catalog/v3-v4-renames.json").AsObject().ToDictionary(p => p.Key, p => CatalogJson.Text(p.Value));
         Families = PortedFamilies.Load(root);
@@ -89,16 +88,8 @@ internal sealed class CatalogData
         CatalogJson.Require(xref.Keys.SequenceEqual(new[] { "AnalyzePlcCrossReferences" }) &&
             CatalogJson.Source(root, "src/FoundationHost/PlcCrossReferenceAnalysis.cs").Contains("new(\"AnalyzePlcCrossReferences\"", StringComparison.Ordinal), "Closed XREF roster differs");
         foreach (var p in xref) HostOnly.Add(p.Key, p.Value);
-        foreach (var (path, source) in Engine.Sources)
-            foreach (Match m in Regex.Matches(source, "\\[McpServerTool\\(Name\\s*=\\s*\"([^\"]+)\""))
-            {
-                var tail = source[(m.Index + m.Length)..];
-                var decl = Regex.Match(tail, @"^\s*public\s+(?:static\s+)?(?:async\s+)?[\w<>?,\[\] .]+?\s+(\w+)\s*\(", RegexOptions.Multiline);
-                var description = Regex.Match(tail, "\\)\\s*,\\s*Description\\(\\s*\"([^\"\\n]*)");
-                var tags = Regex.Match(description.Groups[1].Value, @"\[L\d\]\[([^\]]+)\]");
-                CatalogJson.Require(decl.Success && description.Success && tags.Success, "Missing declaration/description/domain: " + m.Groups[1].Value);
-                CatalogJson.Require(Registrations.TryAdd(m.Groups[1].Value, (Path.GetRelativePath(root, path).Replace('\\', '/'), decl.Groups[1].Value, tags.Groups[1].Value.Replace("Category:", "", StringComparison.Ordinal))), "Duplicate source registration");
-            }
+        foreach (var (name, row) in EngineSource["registrations"]!.AsObject())
+            Registrations.Add(name, (CatalogJson.Text(row!["path"]), CatalogJson.Text(row["method"]), CatalogJson.Text(row["domain"])));
         var full = CatalogJson.Set(Registrations.Keys.Except(HostOnly.Keys));
         var historical = CatalogJson.Keys.ToDictionary(k => k, k => CatalogJson.Set(Archives[k].Select(p => p.Key)));
         foreach (var (name, row) in Additions)
@@ -113,13 +104,12 @@ internal sealed class CatalogData
         }
         var helpers = CatalogJson.Set(sources.Where(p => p.Key != "FoundationTools.cs").SelectMany(p => Regex.Matches(p.Value, "new (?:Offline\\w+Tool|PassiveDiagnosticTool|GenerationTool)\\(\"([^\"]+)\"|\\bName\\s*=\\s*\"([^\"]+)\"").Select(m => m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Value)));
         helpers.IntersectWith(Renames.Keys.Concat(Renames.Values)); helpers.ExceptWith(HostOnly.Keys);
-        HostMap = sources.Values.Any(s => s.Contains("new FoundationV4Tool(", StringComparison.Ordinal)) ? Regex.Matches(sources.GetValueOrDefault("FoundationV4Tool.cs", "").Split("internal static string Name", 2)[0], "\\[\"([^\"]+)\"\\]\\s*=\\s*\"([^\"]+)\"").ToDictionary(m => m.Groups[1].Value, m => m.Groups[2].Value) : [];
-        CatalogJson.Require(HostMap.All(p => Renames[p.Key] == p.Value), "Foundation names differ from reviewed rename data");
+        CatalogJson.Require(Definitions.Keys.Concat(helpers).All(name => !Renames.TryGetValue(name, out var target) || name == target), "Foundation names differ from reviewed rename data");
         foreach (var key in CatalogJson.Keys.Take(6))
         {
             var major = key == "14sp1" ? 14 : int.Parse(key.Split('.')[0], System.Globalization.CultureInfo.InvariantCulture);
-            var accepted = Definitions.Where(p => !(p.Value is "HardwareCatalog" or "DeviceAdd" && major < 18) && !(p.Value == "SpecialExport" && major < (p.Key == "ExportPlcWatchTable" ? 15 : 16)) && !(p.Value is "DocumentExport" or "BatchDocumentExport" or "DocumentImport" or "BatchDocumentImport" && major < 20) && !(p.Key is "GetPlcWatchTables" or "ListPlcWatchTables" && key == "14sp1")).Select(p => p.Key);
-            var registered = CatalogJson.Set(accepted.Concat(helpers).Select(n => HostMap.GetValueOrDefault(n, n)).Concat(Reviewed[key]));
+            var accepted = Definitions.Where(p => !(p.Value is "HardwareCatalog" or "DeviceAdd" && major < 18) && !(p.Value == "SpecialExport" && major < (p.Key == "ExportPlcWatchTable" ? 15 : 16)) && !(p.Value is "DocumentExport" or "BatchDocumentExport" or "DocumentImport" or "BatchDocumentImport" && major < 20) && !(p.Key == "ListPlcWatchTables" && key == "14sp1")).Select(p => p.Key);
+            var registered = CatalogJson.Set(accepted.Concat(helpers).Concat(Reviewed[key]));
             var withheld = PortedFamilies.Withheld(Families, key);
             registered.ExceptWith(withheld);
             foreach (var n in Reviewed[key]) Renames.TryAdd(n, n);
@@ -129,7 +119,7 @@ internal sealed class CatalogData
         var policy = CatalogJson.Source(root, "src/EngineHost/SharedToolCatalog.cs");
         Removed = CatalogJson.Set(CatalogJson.Matches(policy.Split("Removed =", 2)[1].Split("};", 2)[0], "\"(\\w+)\""));
         Bridge = CatalogJson.Set(CatalogJson.Matches(policy.Split("Bridge =", 2)[1].Split("};", 2)[0], "\"(\\w+)\""));
-        var extras = Definitions.Where(p => p.Value is "DocumentExport" or "BatchDocumentExport" or "DocumentImport" or "BatchDocumentImport").Select(p => HostMap.GetValueOrDefault(p.Key, p.Key));
+        var extras = Definitions.Where(p => p.Value is "DocumentExport" or "BatchDocumentExport" or "DocumentImport" or "BatchDocumentImport").Select(p => p.Key);
         foreach (var key in new[] { "20", "21" }) { Rosters[key].ExceptWith(Removed); Rosters[key].UnionWith(Rosters["19"]); Rosters[key].UnionWith(extras); Rosters[key].ExceptWith(PortedFamilies.Withheld(Families, key)); }
         foreach (var roster in Rosters.Values) roster.UnionWith(HostOnly.Keys);
         foreach (var key in CatalogJson.Keys) Rosters[key].ExceptWith(PortedFamilies.Withheld(Families, key));

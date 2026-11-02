@@ -26,14 +26,14 @@ internal static class OfflineLadderBuilders
         JsonObject summary;
         string mode;
         int parameterCount = 0;
-        if (toolName == "BuildFlgNetCallXml")
+        if (toolName == "BuildFlgNetCall")
         {
             var call = Call(root, ref parameterCount);
             document = new XDocument(new XDeclaration("1.0", "utf-8", null), call);
             summary = new JsonObject { ["callName"] = (string?)call.Descendants(Ns + "CallInfo").Single().Attribute("Name"), ["parameterCount"] = parameterCount };
             mode = "plc-build-flgnet-call-xml";
         }
-        else if (toolName == "ComposePlcLadFcBlockXml")
+        else if (toolName == "BuildPlcLadFcBlock")
         {
             Properties(root, "blockName", "name", "blockNumber", "number", "inputs", "outputs", "networks", "commentZhCn", "blockCommentZhCn", "comment", "titleZhCn", "blockTitleZhCn", "title");
             var blockName = Identifier(Text(root, true, "blockName", "name"));
@@ -72,7 +72,7 @@ internal static class OfflineLadderBuilders
         if (xml.Length > OfflineCompositionBuilders.MaxXmlCharacters) throw new ArgumentException("Output limit exceeded.");
         using var reader = XmlReader.Create(new StringReader(xml), new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = OfflineCompositionBuilders.MaxXmlCharacters });
         var verified = XDocument.Load(reader, LoadOptions.PreserveWhitespace);
-        if (toolName == "BuildFlgNetCallXml")
+        if (toolName == "BuildFlgNetCall")
         {
             if (verified.Root?.Name != Ns + "FlgNet") throw new InvalidOperationException("Unexpected helper root.");
         }

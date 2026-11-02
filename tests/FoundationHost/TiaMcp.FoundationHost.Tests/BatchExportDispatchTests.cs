@@ -38,7 +38,7 @@ internal static class BatchExportDispatchTests
         var root=Path.Combine(Path.GetTempPath(),"tia-batch-dispatch-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(root);
         try
         {
-            foreach(var name in new[]{"ExportBlocks","ExportTypes"})
+            foreach(var name in new[]{"ExportPlcBlocks","ExportPlcTypes"})
             {
                 Dictionary<string,JsonElement> Args()=>new() { ["softwarePath"]=JsonSerializer.SerializeToElement("devices/PLC"),["groupPath"]=JsonSerializer.SerializeToElement(""),["exportPath"]=JsonSerializer.SerializeToElement(root) };
                 RequestContext<CallToolRequestParams> Request(Dictionary<string,JsonElement> args)=>new(server) {Params=new(){Name=name,Arguments=args}};

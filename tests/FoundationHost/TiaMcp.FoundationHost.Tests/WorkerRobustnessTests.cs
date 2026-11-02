@@ -150,8 +150,8 @@ public sealed class WorkerRobustnessTests
                 : Host.WrapTools(new[] { Host.ToolInvoker.CreateTool(catalog.All[SessionFixtureTool.Name]) }).Single();
             // Spill checks exercise the original unpaged read. BlockPage deliberately
             // preserves its cursor and is covered by Round2BlockPageTests instead.
-            var spillRead = Foundation.FoundationTools.Definitions.Single(d => d.Name == "GetBlocks")
-                with { Name = "GetBlocksWithHierarchy", Operation = "ReadBlocks", ResponseMember = "Items" };
+            var spillRead = Foundation.FoundationTools.Definitions.Single(d => d.Name == "ListPlcBlocks")
+                with { Name = "GetPlcBlockHierarchy", Operation = "ReadBlocks", ResponseMember = "Items" };
             shared = new Foundation.FoundationV4Tool(new Foundation.FoundationTool(spillRead, Worker),
                 release, null, () => new(false, 1), readinessForTest: () => new JsonObject { ["ready"] = true });
             Worker.SessionLocked = () => Host.SessionPrecheckRefusal("GetSessionState") != null;

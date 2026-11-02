@@ -14,8 +14,8 @@ internal static class OfflineBlockCompositionBuilders
     internal static JsonObject Build(string toolName, string release, string json)
     {
         if (release != "21") throw new ArgumentException("Explicit output release 21 required.");
-        bool fb = toolName == "ComposePlcFbBlockXml";
-        if (!fb && toolName != "ComposePlcFcBlockXml") throw new ArgumentException("Unknown composer.");
+        bool fb = toolName == "BuildPlcFbBlock";
+        if (!fb && toolName != "BuildPlcFcBlock") throw new ArgumentException("Unknown composer.");
         if (string.IsNullOrWhiteSpace(json) || json.Length > OfflineCompositionBuilders.MaxJsonCharacters) throw new ArgumentException("Invalid JSON size.");
         using var parsed = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 16 });
         var root = parsed.RootElement;
@@ -52,7 +52,7 @@ internal static class OfflineBlockCompositionBuilders
         var temps = fb ? Members(false, "temps", "tempMembers", "temp") : Array.Empty<PlcBlockMemberDefinition>();
         var content = Alias(root, true, "structuredText")!.Value;
         if (content.ValueKind != JsonValueKind.Object) throw new ArgumentException("Structured operation object required.");
-        var inner = OfflineCompositionBuilders.Build("BuildStructuredTextXml", "21", content.GetRawText(), true)["Xml"]!.GetValue<string>();
+        var inner = OfflineCompositionBuilders.Build("BuildStructuredText", "21", content.GetRawText(), true)["Xml"]!.GetValue<string>();
         var commentText = Text(root, false, "commentZhCn", "blockCommentZhCn", "comment");
         var title = Text(root, false, "titleZhCn", "blockTitleZhCn", "title");
         var networkComment = Text(root, false, "networkCommentZhCn", "networkComment");

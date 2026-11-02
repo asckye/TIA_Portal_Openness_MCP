@@ -8,8 +8,8 @@ internal static class V17ReadEnvelope
 {
     // Worker DTOs use CLR field casing. The MCP SDK's actual serializer policy
     // determines wire casing, exactly as it does for the original response DTOs.
-    private static string ManualStatus(string name) => name is "GetBlocks" or "GetTypes" or "GetBlocksWithHierarchy" or "GetPlcTagTables" or "GetBlockInfo" or "GetTypeInfo" or "GetPlcExternalSources" ? "closed-ordinary-plc" : "partial";
-    private static string ManualScope(string name) => name == "GetPlcExternalSources" ? "Ordinary PLC root external-source names only; source contents, generation, software units and multiuser-specific semantics excluded. Native acceptance NOT RUN." : "Ordinary PLC root/user groups only; software units, system groups and multiuser-specific semantics are outside this closure. Native acceptance NOT RUN.";
+    private static string ManualStatus(string name) => name is "ListPlcBlocks" or "ListPlcTypes" or "GetPlcBlockHierarchy" or "ListPlcTagTables" or "GetPlcBlockInfo" or "GetPlcTypeInfo" or "ListPlcExternalSources" ? "closed-ordinary-plc" : "partial";
+    private static string ManualScope(string name) => name == "ListPlcExternalSources" ? "Ordinary PLC root external-source names only; source contents, generation, software units and multiuser-specific semantics excluded. Native acceptance NOT RUN." : "Ordinary PLC root/user groups only; software units, system groups and multiuser-specific semantics are outside this closure. Native acceptance NOT RUN.";
     private static string Wire(string name) => McpJsonUtilities.DefaultOptions.PropertyNamingPolicy?.ConvertName(name) ?? name;
     private static JsonNode? Fields(JsonNode? node)
     {
@@ -39,7 +39,7 @@ internal static class V17ReadEnvelope
         }
         if(member=="Items" && result is not JsonArray || member=="Root" && result is not JsonObject)
             throw new InvalidDataException("Worker returned an invalid V17 response payload for "+name);
-        if(name is "GetPlcExternalSources" or "GetPlcTagTables")
+        if(name is "ListPlcExternalSources" or "ListPlcTagTables")
         {
             if(result is not JsonArray names || names.Any(item=>item is not JsonValue value || !value.TryGetValue<string>(out var text) || string.IsNullOrWhiteSpace(text)))
                 throw new InvalidDataException("Worker returned an invalid name list for "+name);

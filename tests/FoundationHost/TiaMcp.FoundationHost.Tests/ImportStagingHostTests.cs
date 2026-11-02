@@ -93,7 +93,7 @@ public sealed class ImportStagingHostTests : IDisposable
         var stage = await Tool("StageImportFiles").InvokeAsync(Request("StageImportFiles", Args()));
         Assert.True((bool?)stage.StructuredContent?["ok"]);
         var args = new JsonObject { ["softwarePath"] = "PLC", ["groupPath"] = "", ["dir"] = stage.StructuredContent!["data"]!["directory"]!.DeepClone() };
-        var import = new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "ImportBlocksFromDirectory"), worker);
+        var import = new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "ImportPlcBlocksFromDirectory"), worker);
         var preview = await import.InvokeAsync(Request("ImportBlocksFromDirectory", args)); Assert.NotEqual(true, preview.IsError); Assert.Equal(0, worker.Imports);
         var body = JsonNode.Parse(((TextContentBlock)preview.Content.Single()).Text)!;
         args["dryRun"] = false; args["confirm"] = true; args["expectedProjectFile"] = "C:/P.ap17";

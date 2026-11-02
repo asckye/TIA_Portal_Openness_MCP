@@ -67,6 +67,6 @@ var overflow=Encoding.ASCII.GetBytes(code.Replace("-12","18446744073709551616"))
 var cleanup=PlcDocumentImportPolicy.Run(r,()=>files,_=>new DisposeFailureStream(input),()=>Array.Empty<string>(),_=>false,()=>{},Native);
 Check(cleanup.Status=="unknown" && cleanup.RequiresSessionReset && cleanup.Attempted && cleanup.MayHaveChanged && !cleanup.ExistsVerified,"Post-native cleanup failure returns poisoned uncertain result");
 var fakeEvidence=Wire(valid);fakeEvidence["TargetIdentity"]="different-target";Reject(()=>DocumentImportContract.Validate(fakeEvidence,request),"Plan hash recomputed against response evidence");
-var definition=FoundationTools.Definitions.Single(x=>x.Name=="ImportFromDocuments");Check(definition.ResponseMember=="DocumentImport"&&TiaMcp.PlcWorker.WorkerOperations.Names.Contains("ImportFromDocuments"),"Document route explicitly registered");
+var definition=FoundationTools.Definitions.Single(x=>x.Name=="ImportPlcBlockDocuments");Check(definition.ResponseMember=="DocumentImport"&&TiaMcp.PlcWorker.WorkerOperations.Names.Contains("ImportFromDocuments"),"Document route explicitly registered");
     }
 }

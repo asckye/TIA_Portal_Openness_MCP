@@ -33,7 +33,7 @@ internal static class V17CompileEnvelope
         meta["offlineCheckScope"]="All project OnlineProvider/RHOnlineProvider states must be Offline; the selected PLC requires a provider. Devices without an exposed state are listed, not asserted Offline. Siemens requires all devices offline before compilation.";
         meta["offlineStateNotExposedByDevices"]=result["OfflineStateNotExposedByDevices"]?.DeepClone() ?? new JsonArray();
         foreach(var name in new[]{"State","ErrorCount","WarningCount"}) envelope[Wire(name)]=result[name]?.DeepClone();
-        if(tool=="CompileSoftware") envelope[Wire("Messages")]=result["Messages"]!.DeepClone();
+        if(tool=="CompilePlcSoftware") envelope[Wire("Messages")]=result["Messages"]!.DeepClone();
         else
         {
             foreach(var name in new[]{"Errors","Warnings","Info"}) envelope[Wire(name)]=result[name]!.DeepClone();

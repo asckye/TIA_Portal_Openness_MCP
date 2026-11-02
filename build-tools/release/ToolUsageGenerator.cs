@@ -96,10 +96,10 @@ internal static class ToolUsageGenerator
         }
         var meta = Read(root, "reference/tool-examples/metadata.json"); var calls = Read(root, "reference/tool-examples/calls.json"); var sequences = Read(root, "reference/tool-examples/sequences.json").AsArray();
         ValidateCoverage(data.Rosters, calls, data.Families["F00"].Tools); ValidateFoundation(calls, sequences); ValidateRetest(root, calls, sequences, meta);
-        ValidateSourceHints(root, Read(root, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceExamples.json"));
+        ValidateSourceHints(root, Read(root, "reference/tool-catalog/EngineSourceExamples.json"));
         // The frozen engine examples stay comparison evidence; the served copy follows the same rule as the catalog examples:
         // it uses the maintained call-library arguments when they exist, and every declared input pattern must hold.
-        var engineSourceCalls = Read(root, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceExamples.json");
+        var engineSourceCalls = Read(root, "reference/tool-catalog/EngineSourceExamples.json");
         foreach (var (name, row) in engineSourceCalls.AsObject().ToList())
         {
             if (row?["arguments"] is JsonObject sourceArguments)
@@ -110,10 +110,25 @@ internal static class ToolUsageGenerator
         var result = new JsonObject { ["schemaVersion"] = 2, ["scope"] = "Pinned Siemens source documents and project-authored MCP/programming examples. Per-release contracts are read from the running engine. Templates, complete sources and fragments are distinguished; native acceptance is separate.",
             ["sources"] = sources, ["documents"] = documents, ["tools"] = mappings,
             ["languages"] = Copy(library["languages"]!), ["examples"] = Copy(library["examples"]!),
-            ["engineSourceCalls"] = engineSourceCalls, ["engineSourceSequences"] = Read(root, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceSequences.json"),
+            ["engineSourceCalls"] = engineSourceCalls, ["engineSourceSequences"] = Read(root, "reference/tool-catalog/EngineSourceSequences.json"),
             ["calls"] = calls, ["sequences"] = sequences };
-        foreach (var p in meta.AsObject().Where(p => p.Key != "schemaVersion")) result[p.Key] = p.Value?.DeepClone();
+        var guidanceRenames = Strings(data.EngineSource["foundationSourceNames"]).ToDictionary(name => name, name => data.Renames[name]);
+        foreach (var p in meta.AsObject().Where(p => p.Key != "schemaVersion"))
+        {
+            var value = p.Value!.DeepClone();
+            if (p.Key == "parameterSources") value = V4Guidance(value, guidanceRenames);
+            else if (p.Key == "toolNotes")
+                foreach (var note in value.AsObject().ToList()) value[note.Key] = V4Guidance(note.Value!, guidanceRenames);
+            result[p.Key] = value;
+        }
         return result;
+    }
+    private static JsonNode V4Guidance(JsonNode node, Dictionary<string, string> renames)
+    {
+        var text = node.ToJsonString();
+        foreach (var (old, name) in renames.OrderByDescending(p => p.Key.Length))
+            text = Regex.Replace(text, @"\b" + old + @"\b", name);
+        return JsonNode.Parse(text.Replace("Returns the existing PascalCase array", "Returns declarations in V4 data.items", StringComparison.Ordinal))!;
     }
     private static int ComparePath(string a, string b)
     {
@@ -129,11 +144,10 @@ internal static class ToolUsageGenerator
     }
     internal static void ValidateSourceHints(string root, JsonNode examples)
     {
-        var releases = Read(root, "tests/Engine/TiaMcp.Engine.Tests/FullEngineRejections.json")["releases"]!.AsObject();
-        foreach (var release in releases)
-            foreach (var tool in release.Value!.AsArray())
-                if (examples[Text(tool!["name"])] is JsonObject example)
-                    ValidateHints(example, tool["parameters"]!.AsObject().Select(p => p.Key), "engine-source/" + release.Key + "/" + Text(tool["name"]));
+        var registrations = Read(root, "reference/tool-catalog/engine-source.json")["registrations"]!.AsObject();
+        foreach (var (name, tool) in registrations)
+            if (examples[name] is JsonObject example)
+                ValidateHints(example, tool!["parameters"]!.AsObject().Select(p => p.Key), "engine-source/" + name);
     }
     private static string[] SplitLines(string text) => text.Length == 0 ? [] : Regex.Split(text.TrimEnd('\n'), "\\r\\n|[\\n\\r\\v\\f\\x1c-\\x1e\\x85\\u2028\\u2029]");
     internal static void ValidateCoverage(Dictionary<string, HashSet<string>> rosters, JsonNode calls, IEnumerable<string>? sharedFoundation = null)

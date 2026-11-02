@@ -45,7 +45,7 @@ public sealed class PlcImportBoundaryTests
     public static IEnumerable<object[]> States()
     {
         foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19" })
-            foreach (string name in new[] { "ImportBlock", "ImportType", "ImportPlcTagTable", "ImportBlocksFromDirectory", "ImportPlcProgramFromDirectory" })
+            foreach (string name in new[] { "ImportPlcBlock", "ImportPlcType", "ImportPlcTagTable", "ImportPlcBlocksFromDirectory", "ImportPlcProgramFromDirectory" })
                 foreach (bool safe in new[] { false, true }) yield return new object[] { release, name, safe };
     }
     [Theory, MemberData(nameof(States))]
@@ -60,7 +60,7 @@ public sealed class PlcImportBoundaryTests
         Assert.Equal(safe ? BehaviorPolicy.SafeV4 : BehaviorPolicy.Current, result.Meta.BehaviorPolicy); Assert.Equal(0, worker.Calls);
     }
     [Theory]
-    [InlineData("ImportBlock", "blockGroupPath")] [InlineData("ImportType", "typeGroupPath")] [InlineData("ImportPlcTagTable", "tagFolderPath")]
+    [InlineData("ImportPlcBlock", "blockGroupPath")] [InlineData("ImportPlcType", "typeGroupPath")] [InlineData("ImportPlcTagTable", "tagFolderPath")]
     public async Task SingleImportMapsOnlyToNewCandidateOperation(string entry, string group)
     {
         var worker = new CandidateWorkerFixture { MissingProject = true }; var args = new JsonObject { ["softwarePath"] = "devices/PLC/CPU", [entry == "ImportPlcTagTable" ? "folderPath" : "groupPath"] = "Group", ["importPath"] = @"C:\input.xml" };
@@ -75,7 +75,7 @@ public sealed class PlcImportBoundaryTests
     {
         using var approval = new DisabledApprovalState();
         var worker = new CandidateWorkerFixture();
-        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "ImportBlock"), worker), "19",
+        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "ImportPlcBlock"), worker), "19",
             family => family == "P6-IMPORT" ? BehaviorPolicy.SafeV4 : BehaviorPolicy.Current, approval.Load);
         var args = new JsonObject { ["softwarePath"] = "PLC", ["groupPath"] = "", ["importPath"] = worker.InputPath };
         var preview = Body(await tool.InvokeAsync(Request(args))); Assert.True(preview.Ok); Assert.Equal(0, worker.Import.Calls);
@@ -100,7 +100,7 @@ public sealed class PlcImportBoundaryTests
     {
         using var approval = new DisabledApprovalState();
         var worker = new CandidateWorkerFixture();
-        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "ImportBlock"), worker), "19",
+        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "ImportPlcBlock"), worker), "19",
             family => family == "P6-IMPORT" ? BehaviorPolicy.SafeV4 : BehaviorPolicy.Current, approval.Load);
         var args = new JsonObject { ["softwarePath"] = "PLC", ["groupPath"] = "", ["importPath"] = worker.InputPath };
         var preview = Body(await tool.InvokeAsync(Request(args))); Assert.True(preview.Ok);

@@ -770,23 +770,12 @@ def validate_output(tool):
 
 
 def current_parameters(root):
-    from engine_sources import EngineSources, lexer
-    params = {}
-    sources = EngineSources(root)
-    for path, text in sources.sources.items():
-        tokens, pairs, masked, starts = sources._parse(path)
-        for match in re.finditer(r'\[McpServerTool\(Name\s*=\s*"([^"\n]+)"', text):
-            declaration = re.search(r'\bpublic\s+[\w<>?,.\[\] ]+?\s+\w+\s*\(', masked[match.end():])
-            if not declaration: raise ValueError('Cannot find current method: ' + match[1])
-            opening = starts[match.end() + declaration.end() - 1]
-            closing = pairs[opening]
-            args = text[tokens[opening].end:tokens[closing].start]
-            args = re.sub(r'\[Description\((?:\s*"(?:\\.|[^"\\])*"\s*\+?)+\)\s*\]', '', args)
-            fields = re.findall(r'(?:^|,)\s*[\w<>?.\[\]]+\s+(\w+)(?:\s*=\s*("(?:\\.|[^"\\])*"|true|false|-?\d+|null))?', args)
-            params[('full-engine', match[1])] = {name: json.loads(default) if default else None for name, default in fields}
+    frozen = json.loads((root / 'reference/tool-catalog/engine-source.json').read_text(encoding='utf-8'))
+    renames = json.loads((root / 'reference/tool-catalog/v3-v4-renames.json').read_text(encoding='utf-8'))
+    params = {('full-engine', renames.get(name, name)): {key: row.get('value') for key, row in tool['parameters'].items()}
+              for name, tool in frozen['registrations'].items()}
     text = (root / 'src/FoundationHost/FoundationTools.cs').read_text(encoding='utf-8-sig')
     wrapper = (root / 'src/FoundationHost/FoundationV4Tool.cs').read_text(encoding='utf-8-sig')
-    renames = dict(re.findall(r'\["([^"\n]+)"\] = "([^"\n]+)"', wrapper))
     construction_parameters = dict(re.findall(r'case "([^"\n]+)": Construction<\w+>\("([^"\n]+)"\)', wrapper))
     for line in text.splitlines():
         match = re.match(r'\s*new\("([^"\n]+)"', line)
@@ -796,7 +785,7 @@ def current_parameters(root):
             fields[name] = [] if default == 'Array.Empty<string>()' else json.loads(default)
         if 'Dry()' in line:
             fields.update(dryRun=True, confirm=False, expectedProjectFile='')
-        params[('plc-foundation', renames.get(match[1], match[1]))] = fields
+        params[('plc-foundation', match[1])] = fields
     for path in (root / 'src/FoundationHost').glob('Offline*Tools.cs'):
         text = path.read_text(encoding='utf-8-sig')
         registrations = re.findall(r'new Offline\w+Tool\("([^"\n]+)",\s*"([^"\n]+)"(?:,\s*(true|false))?\)', text)
@@ -812,7 +801,7 @@ def current_parameters(root):
             declared = dict(fields, **{construction_parameters.get(name, parameter): None})
             if supports_inner_only == 'false':
                 declared.pop('innerOnly', None)
-            params[('plc-foundation', renames.get(name, name))] = declared
+            params[('plc-foundation', name)] = declared
     import ported_families
     for family in ported_families.families(root).values():
         for name in family['tools']:
@@ -828,11 +817,9 @@ def foundation_registered_names(root, parameters=None, releases=RELEASES):
     names = {name for (profile, name) in parameters if profile == 'plc-foundation'}
     import ported_families
     names.difference_update(FOUNDATION_UNAVAILABLE_BELOW_20)
-    wrapper = (root / 'src/FoundationHost/FoundationV4Tool.cs').read_text(encoding='utf-8-sig')
-    renames = dict(re.findall(r'\["([^"\n]+)"\]\s*=\s*"([^"\n]+)"', wrapper))
     for path in (root / 'src/FoundationHost').glob('*.cs'):
         text = path.read_text(encoding='utf-8-sig')
-        names.update(renames.get(name, name) for name in re.findall(
+        names.update(name for name in re.findall(
             r'new\s+(?:Offline\w+Tool|PassiveDiagnosticTool|GenerationTool)\("([^"\n]+)"', text))
         # Host tools declared by a static Definition (XREF AnalyzePlcCrossReferences).
         names.update(re.findall(r'Definition\s+Definition\s*=\s*new\("([^"\n]+)"', text))
@@ -843,7 +830,7 @@ def foundation_registered_names(root, parameters=None, releases=RELEASES):
         names.difference_update(set(family['tools']) - enabled)
     for filename in ('ToolUsageTool.cs', 'ImportOrderTool.cs', 'OfflineSymbolManifestTools.cs'):
         text = (root / 'src/FoundationHost' / filename).read_text(encoding='utf-8-sig')
-        names.update(renames.get(name, name) for name in re.findall(r'\bName\s*=\s*"([^"\n]+)"', text))
+        names.update(name for name in re.findall(r'\bName\s*=\s*"([^"\n]+)"', text))
     control = (root / 'src/FoundationHost/WorkbenchControlTools.cs').read_text('utf-8-sig')
     names.update(re.findall(r'"([A-Za-z0-9]+)"', control.split('string[] Names = {', 1)[1].split('};', 1)[0]))
     return names

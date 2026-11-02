@@ -16,7 +16,7 @@ public sealed class DeviceCreationBoundaryTests
         Params = new() { Name = "CreateHardwareDevice", Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json) } };
     private static FoundationV4Tool Tool(CandidateWorkerFixture worker, bool safe, string release = "19",
         Func<ApprovalSettings>? approvalSettings = null) => new(
-        new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "AddDeviceWithFallback"), worker), release,
+        new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "CreateHardwareDevice"), worker), release,
         _ => safe ? BehaviorPolicy.SafeV4 : BehaviorPolicy.Current, approvalSettings);
     private static void AssertApprovalDisabled(Envelope envelope)
         => Assert.Single(envelope.Meta.Warnings, warning => warning.Code == WarningCode.ApprovalDisabled);

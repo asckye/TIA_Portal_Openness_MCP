@@ -15,12 +15,12 @@ internal static class OfflineCompositionTests
         const string st = "{\"firstUid\":100,\"operations\":[{\"op\":\"if\",\"condition\":\"#Ready\"},{\"op\":\"assignment\",\"target\":\"#Counter\",\"value\":\"1<&\",\"indent\":2},{\"op\":\"else\"},{\"op\":\"assignment\",\"target\":\"#Counter\",\"source\":\"#Other\"},{\"op\":\"endif\"}]}";
         string Wire(string key) => McpJsonUtilities.DefaultOptions.PropertyNamingPolicy?.ConvertName(key) ?? key;
         var tools = OfflineCompositionTools.Create();
-        foreach (var spec in new[] { (Name:"BuildPlcGlobalDbXml", Arg:"globalDbJson", Json:db), (Name:"BuildStructuredTextXml", Arg:"structuredTextJson", Json:st) })
+        foreach (var spec in new[] { (Name:"BuildPlcGlobalDb", Arg:"globalDbJson", Json:db), (Name:"BuildStructuredText", Arg:"structuredTextJson", Json:st) })
         {
             var tool = tools.Single(t => t.ProtocolTool.Name == spec.Name);
             var schema = tool.ProtocolTool.InputSchema;
             check(schema.GetProperty("required").GetArrayLength() == 2 && !schema.GetProperty("additionalProperties").GetBoolean(), spec.Name + " closed explicit schema");
-            check(schema.GetProperty("properties").GetProperty("outputReleaseKey").GetProperty("enum").GetArrayLength() == (spec.Name == "BuildPlcGlobalDbXml" ? 8 : 1), spec.Name + " explicit supported output versions");
+            check(schema.GetProperty("properties").GetProperty("outputReleaseKey").GetProperty("enum").GetArrayLength() == (spec.Name == "BuildPlcGlobalDb" ? 8 : 1), spec.Name + " explicit supported output versions");
             RequestContext<CallToolRequestParams> Request(Dictionary<string, JsonElement> arguments) => new(server) { Params = new() { Name = spec.Name, Arguments = arguments } };
             Dictionary<string, JsonElement> Args(string json) => new() { [spec.Arg] = JsonSerializer.SerializeToElement(json), ["outputReleaseKey"] = JsonSerializer.SerializeToElement("21") };
             async Task<JsonNode> Invoke(Dictionary<string, JsonElement> args)
@@ -49,7 +49,7 @@ internal static class OfflineCompositionTests
             foreach (var release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "V21", "21 ", "22", "" })
             {
                 var args = Args(spec.Json); args["outputReleaseKey"] = JsonSerializer.SerializeToElement(release);
-                if (spec.Name == "BuildPlcGlobalDbXml" && PlcDeclarationXmlFormat.ReleaseKeys.Contains(release))
+                if (spec.Name == "BuildPlcGlobalDb" && PlcDeclarationXmlFormat.ReleaseKeys.Contains(release))
                 {
                     var generated = await Invoke(args);
                     check(generated[Wire("Data")]!["outputReleaseKey"]!.GetValue<string>() == release, spec.Name + " MCP accepts target format " + release);
@@ -67,7 +67,7 @@ internal static class OfflineCompositionTests
             try { await tool.InvokeAsync(Request(Args(spec.Json)), cts.Token); } catch (OperationCanceledException) { canceled = true; }
             check(canceled, spec.Name + " cancellation honored");
 
-            if (spec.Name == "BuildPlcGlobalDbXml")
+            if (spec.Name == "BuildPlcGlobalDb")
             {
                 var parsed = XDocument.Parse(xml);
                 XNamespace ns = "http://www.siemens.com/automation/Openness/SW/Interface/v5";

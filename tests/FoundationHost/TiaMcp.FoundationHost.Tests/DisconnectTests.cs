@@ -81,8 +81,8 @@ internal static class DisconnectTests
             catch(OperationCanceledException) { check(true,"Pre-send cancellation has no disconnect outcome"); }
             DisconnectContract.Validate(await worker.Call("Disconnect",new JsonObject(),CancellationToken.None),false,null,true);
         }
-        var fake=new FakeWorker();var tool=FoundationTools.Create(fake).Single(t=>t.ProtocolTool.Name=="Disconnect");
-        var request=new RequestContext<CallToolRequestParams>(server) { Params=new CallToolRequestParams{Name="Disconnect",Arguments=new Dictionary<string,JsonElement>()} };
+        var fake=new FakeWorker();var tool=FoundationTools.Create(fake).Single(t=>t.ProtocolTool.Name=="DisconnectPortal");
+        var request=new RequestContext<CallToolRequestParams>(server) { Params=new CallToolRequestParams{Name="DisconnectPortal",Arguments=new Dictionary<string,JsonElement>()} };
         await tool.InvokeAsync(request);
         check(fake.Operation=="Disconnect" && fake.Arguments!.Count==0,"Public Disconnect requires no project or dryRun");
     }

@@ -84,7 +84,7 @@ public sealed class SharedPipelineTests
             var catalog = new Catalog();
             Host.ConfigureToolBridge(catalog, new enginehost::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, Worker, lifetime), () => false, new HashSet<string>());
         }
-        internal FoundationV4Tool Foundation(string source) => new(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source || FoundationV4Tool.Name(d.Name) == source), Worker), "21", null, () => new(false, 1));
+        internal FoundationV4Tool Foundation(string source) => new(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source), Worker), "21", null, () => new(false, 1));
         internal void RegisterShared(FoundationV4Tool tool)
         {
             var catalog = new Catalog();

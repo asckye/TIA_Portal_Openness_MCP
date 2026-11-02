@@ -69,8 +69,6 @@ internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpSer
                     (JsonObject)JsonNode.Parse(target.InputSchema.GetRawText())!, operation: operation, roster: all.Select(t => t.ProtocolTool.Name));
                 usage["outputSchema"] = target.OutputSchema.HasValue ? JsonNode.Parse(target.OutputSchema.Value.GetRawText()) : null;
                 usage["resultContract"] = new JsonObject { ["type"] = "Envelope", ["schemaVersion"] = 4 };
-                foreach (var key in new[] { "parameterSources", "interpretation" })
-                    if (usage[key] != null) usage[key] = JsonNode.Parse(FoundationV4Tool.Guidance(usage[key]!.ToJsonString()));
                 usage["examples"] = ToolUsageCatalog.Examples(releaseKey, Profile(name), all.Select(t => t.ProtocolTool.Name), language, exampleId, target.Name, exampleKind)["examples"]!.DeepClone();
             }
             else if (language.Length > 0 || exampleId.Length > 0 || exampleKind != "all")

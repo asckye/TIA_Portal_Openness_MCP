@@ -105,7 +105,7 @@ internal static class PassiveHostDiagnosticsTests
             var actual = LegacyHostToolRegistry.Create(worker, release.Key, true);
             var large = actual.Concat(Enumerable.Range(0, 1024 - actual.Count)
                 .Select(index => (McpServerTool)new RosterTool("Roster" + index.ToString("D4") + new string('\u96ea', 118)))).ToArray();
-            foreach (var name in new[] { "Bootstrap", "RunCapabilitySelfTest" })
+            foreach (var name in new[] { "InitializeEnvironment", "RunCapabilitySelfTest" })
             {
                 var tool = new FoundationV4Tool(new PassiveDiagnosticTool(name, release.Key, true, () => large,
                     () => FoundationPassiveDiagnostics.Readiness(release.Key, _ => null, () => false)), release.Key);
@@ -221,11 +221,11 @@ internal static class PassiveHostDiagnosticsTests
             try { await guarded[1].InvokeAsync(Request("RunCapabilitySelfTest", json)); check(false, "unsupported args must fail"); }
             catch (McpException ex) { check(ex.ErrorCode == McpErrorCode.InvalidParams && !ex.Message.Contains("SECRET"), "unsupported options rejected redacted"); }
         }
-        try { await guarded[0].InvokeAsync(Request("Bootstrap", "{\"connectIfNeeded\":false}")); check(false,"bootstrap args must fail"); }
+        try { await guarded[0].InvokeAsync(Request("InitializeEnvironment", "{\"connectIfNeeded\":false}")); check(false,"bootstrap args must fail"); }
         catch (McpException ex) { check(ex.ErrorCode == McpErrorCode.InvalidParams,"bootstrap has no arguments"); }
         check(reads == 0,"unsupported flags rejected before even registry inspection");
         var secretRegistry = FoundationPassiveDiagnosticTools.Create("17", false, () => throw new McpException("SECRET_REGISTRY", null, McpErrorCode.InvalidParams)).First();
-        try { await secretRegistry.InvokeAsync(Request("Bootstrap")); check(false, "registry errors must be redacted"); }
+        try { await secretRegistry.InvokeAsync(Request("InitializeEnvironment")); check(false, "registry errors must be redacted"); }
         catch (McpException ex) { check(ex.ErrorCode == McpErrorCode.InternalError && !ex.Message.Contains("SECRET"), "registry exception code and content remain private"); }
         foreach (var tool in guarded)
         foreach (var json in new[] { "{\"offset\":-1}", "{\"offset\":1.5}", "{\"offset\":null}", "{\"limit\":0}", "{\"limit\":51}", "{\"limit\":\"1\"}" })

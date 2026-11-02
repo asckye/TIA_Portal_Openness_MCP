@@ -109,7 +109,7 @@ internal static class ExportPublicationTests
             check(!PlcBlockXmlPolicy.Import("14sp1",current.FullName).ImportAllowed,"V14 SP1 unknown block format rejected");
             var result=new PlcMutationResult { Executed=false,ProjectFile=@"C:\Projects\P.ap14" };
             PlcBlockXmlPolicy.Export("14sp1","SCL").Apply(result);
-            var preview=V17MutationEnvelope.Wrap("ExportBlock","Mutation",JsonSerializer.SerializeToNode(result),true);
+            var preview=V17MutationEnvelope.Wrap("ExportPlcBlock","Mutation",JsonSerializer.SerializeToNode(result),true);
             string Wire(string name)=>McpJsonUtilities.DefaultOptions.PropertyNamingPolicy?.ConvertName(name)??name;
             var meta=preview[Wire("Meta")]!;
             check(meta[Wire("XmlContent")]!.GetValue<string>()=="interface-only" && !meta[Wire("FullProgramRestoreSupported")]!.GetValue<bool>(),"MCP preview exposes interface-only and no-full-restore capability");

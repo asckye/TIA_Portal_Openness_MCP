@@ -17,7 +17,7 @@ internal static class OfflineXmlBuilders
 
     internal static JsonObject Build(string toolName, string outputReleaseKey, string json, bool servingDefault = false)
     {
-        var format = toolName == "BuildPlcUdtXml" ? PlcDeclarationXmlFormat.ForRelease(outputReleaseKey) : null;
+        var format = toolName == "BuildPlcUdt" ? PlcDeclarationXmlFormat.ForRelease(outputReleaseKey) : null;
         if (format == null && !servingDefault && outputReleaseKey != "21")
             throw new ArgumentException("Only explicit outputReleaseKey='21' candidate output is implemented. Other output releases are unavailable; no version rewriting is performed.");
         if (string.IsNullOrWhiteSpace(json) || json.Length > MaxJsonCharacters)
@@ -26,7 +26,7 @@ internal static class OfflineXmlBuilders
         var root = document.RootElement;
         string xml, mode;
         JsonObject summary;
-        if (toolName == "BuildPlcUdtXml")
+        if (toolName == "BuildPlcUdt")
         {
             Properties(root, "name", "udtName", "members");
             var name = Text(root, true, "name", "udtName");
@@ -41,7 +41,7 @@ internal static class OfflineXmlBuilders
             mode = "plc-build-udt-xml";
             summary = new JsonObject { ["udtName"] = name, ["memberCount"] = members.Length };
         }
-        else if (toolName == "BuildPlcTagTableXml")
+        else if (toolName == "BuildPlcTagTable")
         {
             Properties(root, "tableName", "name", "tags");
             var name = Text(root, true, "tableName", "name");
@@ -80,7 +80,7 @@ internal static class OfflineXmlBuilders
             {
                 ["success"] = true, ["offlineOnly"] = true, ["outputReleaseKey"] = outputReleaseKey,
                 ["schemaValidated"] = false, ["importValidated"] = false, ["nativeAcceptance"] = "NOT RUN",
-                ["provenance"] = toolName == "BuildPlcUdtXml" ? "Flat UDT generation with the target release interface schema and object attributes; not an XML converter" : "Flat tag-table generation with the target release Engineering header; no version conversion",
+                ["provenance"] = toolName == "BuildPlcUdt" ? "Flat UDT generation with the target release interface schema and object attributes; not an XML converter" : "Flat tag-table generation with the target release Engineering header; no version conversion",
                 ["validationScope"] = "bounded input and XML well-formedness only"
             },
             ["Ok"] = true, ["Data"] = data, ["Errors"] = null, ["Warnings"] = new JsonArray(format != null ? PlcDeclarationXmlFormat.Warning : servingDefault ? "Candidate tag-table XML only. Runtime XSD validation and native TIA import have NOT RUN. Not import-ready." : Warning),

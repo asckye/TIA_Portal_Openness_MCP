@@ -32,11 +32,11 @@ internal static class BatchImportDispatchTests
         try
         {
             foreach(var name in new[]{"A","B","C"})File.WriteAllText(Path.Combine(root,name+".xml"),BatchImportTests.Xml(name));
-            foreach(var name in new[]{"ImportBlocksFromDirectory","ImportPlcProgramFromDirectory"})
+            foreach(var name in new[]{"ImportPlcBlocksFromDirectory","ImportPlcProgramFromDirectory"})
             {
                 var worker=new Worker(root);var tool=FoundationTools.Create(worker).Single(t=>t.ProtocolTool.Name==name);
-                var args=new Dictionary<string,JsonElement> {["softwarePath"]=JsonSerializer.SerializeToElement("devices/PLC"),[name=="ImportBlocksFromDirectory" ? "dir" : "sourceDir"]=JsonSerializer.SerializeToElement(root)};
-                if(name=="ImportBlocksFromDirectory") args["groupPath"]=JsonSerializer.SerializeToElement("");
+                var args=new Dictionary<string,JsonElement> {["softwarePath"]=JsonSerializer.SerializeToElement("devices/PLC"),[name=="ImportPlcBlocksFromDirectory" ? "dir" : "sourceDir"]=JsonSerializer.SerializeToElement(root)};
+                if(name=="ImportPlcBlocksFromDirectory") args["groupPath"]=JsonSerializer.SerializeToElement("");
                 RequestContext<CallToolRequestParams> Request()=>new(server){Params=new(){Name=name,Arguments=args}};
                 async Task Reject(string reason)
                 {try{await tool.InvokeAsync(Request());throw new Exception("Accepted "+reason);}catch(McpException){check(true,name+": "+reason);}}

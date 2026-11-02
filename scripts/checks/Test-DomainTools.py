@@ -1179,8 +1179,14 @@ PORTED_DOMAIN_TOOLS = {
 def check_coverage(domains):
     from engine_sources import EngineSources
     sources = EngineSources()
+    frozen = json.loads((Path(__file__).resolve().parents[2] / 'reference/tool-catalog/engine-source.json').read_text(encoding='utf-8'))
     def declarations(type_name):
-        return set(re.findall(r'\[McpServerTool\(Name\s*=\s*"(\w+)"', sources.type_text(type_name)))
+        names = {name for name, row in frozen['registrations'].items()
+                 if row['owner'] == type_name and row['path'].startswith('src/Engine/')}
+        if any(re.search(r'\b(?:class|struct|interface)\s+' + re.escape(type_name) + r'\b', text)
+               for text in sources.sources.values()):
+            names.update(re.findall(r'\[McpServerTool\(Name\s*=\s*"(\w+)"', sources.type_text(type_name)))
+        return names
 
     ported = {}
     for types in PORTED_DOMAIN_TOOLS.values():

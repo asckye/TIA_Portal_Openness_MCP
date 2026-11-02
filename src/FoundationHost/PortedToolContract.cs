@@ -175,7 +175,7 @@ internal static class PortedToolContract
             // Retain their admitted schemas and policies while the raw engine
             // callbacks use the new document port.
             if (PortedFamilies.ForTool(name).Name == "F10" && FoundationTools.Definitions.Any(d =>
-                FoundationTools.Available(d, release) && FoundationV4Tool.Name(d.Name) == name)) continue;
+                FoundationTools.Available(d, release) && d.Name == name)) continue;
             if (PortedFamilies.ForTool(name).Name == "F04" && method.DeclaringType!.Name != "PlcSimAdvancedTools") continue;
             if (Families(release).Any(family => family.Tools.Contains(name, StringComparer.Ordinal))) yield return new FoundationTool(worker, release, method, name);
         }
