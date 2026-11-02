@@ -10,6 +10,17 @@ internal static class ScriptToolCalls
     internal static readonly string[] DataAllowlist = ["scripts/diagnostics/campaign/historical_tool_names.json", "scripts/checks/write-guard-operations-v3.3.0.json"];
     private static readonly string[] Helpers = ["call", "call_raw", "call_guide_tool", "S", "Call", "invoke_tool", "CallTool", "InvokeTool", "CallRaw", "CallGuideTool", "InvokeToolAsync", "CallToolAsync"];
     private static readonly string[] Protocol = ["initialize", "notifications/initialized", "tools/list", "tools/call", "ping", "resources/list", "resources/read", "prompts/list", "prompts/get"];
+    private static readonly Dictionary<string, string> NegativeCalls = new(StringComparer.Ordinal)
+    {
+        ["scripts/checks/Test-LocalStability.py"] = "__soak_unknown__",
+        ["scripts/checks/Snapshot-ToolResponses.py"] = "__contract_unknown_tool__"
+    };
+    private static bool ToolLiteral(string name)
+    {
+        if (name.Length == 0 || name.Contains("::", StringComparison.Ordinal) || Protocol.Contains(name)) return false;
+        try { JsonNode.Parse(name); return false; }
+        catch (System.Text.Json.JsonException) { return true; }
+    }
     internal static HashSet<string> Registrations(string root)
     {
         var names = new HashSet<string>(StringComparer.Ordinal);
@@ -37,6 +48,14 @@ internal static class ScriptToolCalls
             Walk(JsonNode.Parse(source));
             return calls;
         }
+        if (path.EndsWith(".py", StringComparison.Ordinal)) return PythonScriptCalls.Calls(source, Helpers.Contains, ToolLiteral);
+        if (Path.GetExtension(path) is ".ps1" or ".cmd" or ".bat" or ".sh")
+        {
+            foreach (var pattern in new[] { """\bCall\s+['"]([^'"\r\n]+)['"]""", """(?<![$?A-Za-z_])name\s*=\s*['"]([^'"\r\n]+)['"]""",
+                @"(?<!\S)--tool\s+([A-Za-z_][A-Za-z0-9_]*)\b", @"(?:\.exe|\$[A-Za-z_]+)\s+(?:call|bridge)\s+([A-Za-z_][A-Za-z0-9_]*)\b" })
+                calls.AddRange(Regex.Matches(source, pattern).Select(match => (SourceCheck.Line(source, match.Index), match.Groups[1].Value)));
+            return calls;
+        }
         if (!path.EndsWith(".cs", StringComparison.Ordinal)) return calls;
         void Visit(IReadOnlyList<Token> tokens)
         {
@@ -57,9 +76,7 @@ internal static class ScriptToolCalls
                 if (i + 2 < tokens.Count && token.Kind == "identifier" && Helpers.Contains(token.Value) && tokens[i + 1].Value == "(" && tokens[i + 2].Kind == "literal")
                 {
                     var name = McpText.LiteralParts(tokens[i + 2]).Text;
-                    var payload = false;
-                    try { JsonNode.Parse(name); payload = true; } catch (System.Text.Json.JsonException) { }
-                    if (name.Length > 0 && !name.Contains("::", StringComparison.Ordinal) && !Protocol.Contains(name) && !payload && !(token.Value == "Call" && name.Contains('.') && NativeCallback(i))) calls.Add((SourceCheck.Line(source, token.OffsetStart), name));
+                    if (ToolLiteral(name) && !(token.Value == "Call" && name.Contains('.') && NativeCallback(i))) calls.Add((SourceCheck.Line(source, token.OffsetStart), name));
                 }
                 if (token.Value != "{" || !pairs.TryGetValue(i, out var end)) continue;
                 var fields = new Dictionary<string, (Token Value, int Index)>();
@@ -77,12 +94,13 @@ internal static class ScriptToolCalls
         Visit(new CSharpLexer(source).Scan().Tokens);
         return calls;
     }
-    internal static List<(int Line, string Name)> Check(string path, string source, ISet<string> registered) => DataAllowlist.Contains(path) ? [] : Calls(path, source).Where(c => !registered.Contains(c.Name)).Distinct().ToList();
+    internal static List<(int Line, string Name)> Check(string path, string source, ISet<string> registered) => DataAllowlist.Contains(path) ? [] : Calls(path, source)
+        .Where(c => !registered.Contains(c.Name) && (!NegativeCalls.TryGetValue(path, out var allowed) || allowed != c.Name)).Distinct().ToList();
     internal static int Run(string root)
     {
         var names = Registrations(root);
         var errors = new List<string>(); var count = 0;
-        foreach (var path in SourceCheck.Files(Path.Combine(root, "scripts")).Where(p => Path.GetExtension(p) is ".cs" or ".json").Order(StringComparer.Ordinal))
+        foreach (var path in SourceCheck.Files(Path.Combine(root, "scripts")).Where(p => Path.GetExtension(p) is ".cs" or ".json" or ".py" or ".ps1" or ".cmd" or ".bat" or ".sh").Order(StringComparer.Ordinal))
         {
             var relative = Path.GetRelativePath(root, path).Replace('\\', '/'); count++;
             errors.AddRange(Check(relative, Repository.ReadSource(path), names).Select(c => $"{relative}:{c.Line}: unregistered tool {c.Name}"));

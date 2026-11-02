@@ -76,7 +76,7 @@ meta 的构造方式共 13 种：内联 `{timestamp, success}`（B1）；先取�
 | E1 | TiaMcp.Engine.Harness 在织入后的 V20/V21 EXE 中，用 4 种序列化选项写出样例对象，保存真实字节 |
 | E2 | 每个构造器变体与从调用点复制的字面初始化器在固定时钟下逐字节相同 |
 | E3 | TiaMcp.Engine.Harness 用反射调用真实二进制中的执行器，传入合成动作（成功、失败、各类异常、阻断），改动前在 master 录制，改动后 0 差异 |
-| E4 | `Check-EnvelopeRewrite.py --base <sha>`：每个改动片段必须匹配封闭的旧→新模板，其余行不变 |
+| E4 | `dotnet run --project build-tools/release -- check-envelope-rewrite -Base <sha>`：每个改动片段必须匹配封闭的旧→新模板，其余行不变 |
 | E5 | 织入清单中**全部类别**的成员多重集合（按声明方法归并 lambda）不变，比只看西门子成员更严 |
 | E6 | P0-06 增加格式 3：解码前记录每个文本块的原始 SHA-256，只屏蔽已列明的时间戳路径；从改动前的 master 重录基线 |
 
@@ -88,7 +88,7 @@ E2–E6 全部 0 差异，不满足的调用点保持手写，不另设构建开
 | 任务 | 内容 |
 |---|---|
 | P2-01a（T0） | E1 黄金样本；E6 快照格式 3 并重录基线；本页族规则写入工具开发文档 |
-| P2-01b（T1） | `Inventory-ResponseEnvelopes.py` 计数并作为只减不增的检查 |
+| P2-01b（T1） | `dotnet run --project build-tools/release -- check-ratchet -Kind envelopes` 计数并作为只减不增的检查 |
 | P2-01c（T2） | `ResponseMeta`/`ResponseClock` 与 E2 测试 |
 | P2-01d（T3） | 执行器与 meta 工厂（B4–B6）原位改用构造器，不改名；E3/E5/E6 0 差异 |
 | P2-01e…（T4…） | 阶段 3 已完成；e0 提供 E4 检查器与反射/生态/Git/用法试点，e1–e3 按领域转换内联调用点 |
@@ -97,9 +97,9 @@ T0–T3 已完成；执行器保留 `RunHmiStepTool` 等原名，内联转换不
 
 ### E4 内联模板与复跑（P2-01e0–e3）
 
-`scripts/checks/Check-EnvelopeRewrite.py --base <sha> [paths...]` 比较基线与当前 worktree，包含已跟踪和未跟踪的
+`dotnet run --project build-tools/release -- check-envelope-rewrite -Base <sha> [-Path <path> ...]` 比较基线与当前 worktree，包含已跟踪和未跟踪的
 C# 改动；新增、删除、非模板改动均拒绝。省略路径时检查所有改动的 C# 文件，不豁免构造器或测试文件。
-构造器及 E2 测试单独审查，调用点检查显式传本任务的工具/服务文件。CI `source-contracts` 运行 `--self-test`，不依赖 master 的父提交。
+构造器及 E2 测试单独审查，调用点检查用 `-Path` 显式传本任务的工具/服务文件。CI `source-contracts` 运行 `-SelfTest`，不依赖 master 的父提交。
 
 封闭模板如下；`s`、`v` 和键的次序、表达式 token、字面量拼写必须原样保留，不能省键、加转换或自动 `ToString()`。
 `t` 只接受原有 `DateTime.Now/UtcNow` 或 `ResponseClock.Now/UtcNow`，不能互换或提前存入变量。
@@ -120,14 +120,14 @@ C# 改动；新增、删除、非模板改动均拒绝。省略路径时检查�
 
 每个领域任务先记录基线 SHA，构建并保留 V20/V21 EXE、依赖和全类别 weave 清单；然后只转换可匹配的调用点：
 
-1. 运行检查器 `--self-test`、`--base <sha> <本任务调用点路径…>`；临时在一个转换处插入额外语句，确认非零退出后恢复。
+1. 运行检查器 `-SelfTest`、`-Base <sha> -Path <本任务调用点路径…>`（多个路径重复 `-Path`）；临时在一个转换处插入额外语句，确认非零退出后恢复。
 2. E2 跑 `dotnet run --project build-tools/release -- test-suites -Suite offline -Suite kept-code -Suite version-policy`（检查 TRX 下限）；E3 两版
    TiaMcp.Engine.Harness `response-golden-only` 各 124 项。新增模板需覆盖键序、CLR 类型、节点归属和时钟取值位置。
 3. E5 对两版 weave `sites` 按声明方法归并 lambda/异步状态机，比较 **全部 category + opcode + member** 多重集合；
    只允许本次初始化器的 `JsonObject::.ctor` 移到不织入的 Logic，并逐方法列出减少数；其余类别及西门子调用顺序不变。
 4. E6 两版 `Snapshot-ToolResponses.py capture/compare` 要求 `changed=0 rawChanged=0`；工具契约要求 0/0/0。
    跑 `Test-DomainTools.py` 的已登记领域，试点其余工具另跑 `Test-PilotTools.py`，以及两版 TiaMcp.Engine.Harness 离线模式。
-   最后跑吞异常、注释、MCP 文本、仓库与 bundle 门禁；用 `Inventory-ResponseEnvelopes.py --update-baseline` 收紧基线。
+   最后跑吞异常、注释、MCP 文本、仓库与 bundle 门禁；用 `dotnet run --project build-tools/release -- check-ratchet -Kind envelopes -UpdateBaseline` 收紧基线。
 
 ## P2-03 吞异常治理
 
@@ -158,7 +158,7 @@ C# 改动；新增、删除、非模板改动均拒绝。省略路径时检查�
   未开启时引擎只在 `ILogger` Debug 级别（类别 `TiaMcpServer.Swallowed`）记录，已开启调试日志时可见。永远不写入 `calls-*.jsonl`、`InvocationJournal` 计数器或任何 meta 字段。
 - 每个保留的 `catch` 在同一行标注 `/* swallow(<类别>): <原因> */`，类别取自封闭清单：cleanup / teardown / logging-failure /
   probe-optional / enumerate-optional / native-fallback / parse-fallback / env-probe / ui / fail-open-guard / privacy。
-- `scripts/checks/Check-SwallowedExceptions.py` 检查标注，基线 `scripts/checks/swallowed-exceptions-baseline.json` 只许减少，
+- `dotnet run --project build-tools/release -- check-ratchet -Kind swallowed` 检查标注，基线 `scripts/checks/swallowed-exceptions-baseline.json` 只许减少，
   指纹与路径无关（阶段 3 搬文件无需改基线），接入仓库检查和离线流程；第 A 步已删除预览协议及其豁免。
 
 ### 任务

@@ -439,14 +439,12 @@ internal static partial class ReleaseCommands
 
     private static readonly (string Name, string Script, string[] Args)[] ReleasePythonTests =
     [
-        ("python-script-self-tests", "scripts/checks/Check-ScriptToolCalls.py", ["--self-test"]),
         ("campaign-runner-self-tests", "scripts/checks/Test-CampaignInputs.py", ["--self-test"]),
         ("check-all-speedup-self-tests", "scripts/checks/Test-CheckAllSpeedups.py", []),
         ("plc-script-self-tests", "scripts/checks/Test-PlcScriptSuccessors.py", []),
         ("plc-harness-self-tests", "scripts/checks/Test-PlcHarnessSuccessors.py", []),
         ("campaign-validator-self-tests", "scripts/checks/Test-CampaignInputs.py", ["--validator-self-test"]),
         ("domain-source", "scripts/checks/Test-DomainTools.py", ["--source-only"]),
-        ("python-script-calls", "scripts/checks/Check-ScriptToolCalls.py", []),
         ("contract-verify", "scripts/checks/Snapshot-ToolContracts.py", ["verify"]),
         ("response-verify", "scripts/checks/Snapshot-ToolResponses.py", ["verify"])
     ];

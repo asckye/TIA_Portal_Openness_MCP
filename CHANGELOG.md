@@ -11,6 +11,7 @@
 - 发布诊断新增 `release -TestStageOnly [-Only <作业名,...>]`，复用已暂存产物执行测试，不绑定发布记录或生成发布包。
 
 - Freeze engine source catalog inputs and declare final V4 tool names without runtime rewriting; remove the stale documentation coverage copy.
+- **开发检查**：删除已有 C# 实现的 10 个 Python 检查及重复作业；打包复用 C# 仓库检查，C# 工具调用检查同时覆盖 Python、PowerShell 和 JSON 计划。
 
 ## [4.0.0-beta.3] - 2026-11-03
 

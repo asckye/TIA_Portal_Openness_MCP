@@ -151,21 +151,20 @@ internal static partial class ReleaseCommands
     internal static bool CheckAllSourceOnly(string name) => name is
         "catalog-drift" or "tool-counts-drift" or "usage-drift" or "migration-drift" or
         "tools-list" or "script-calls" or "dead-references" or "adapter-boundary" or "tia-features" or
-        "release-documentation" or "python-script-self-tests" or "check-all-speedup-self-tests" or
-        "python-script-calls" or "domain-source" or "contract-self-tests" or "contract-verify" or "response-verify";
+        "release-documentation" or "check-all-speedup-self-tests" or "domain-source" or "contract-self-tests" or "contract-verify" or "response-verify";
 
-    internal static bool CheckAllEarly(string name) => CheckAllSourceOnly(name) || name is "bundle" or "python-repository";
+    internal static bool CheckAllEarly(string name) => CheckAllSourceOnly(name) || name is "bundle";
 
     internal static CheckJob CheckAllEarlyDependencies(CheckJob job) => job with
     {
-        Dependencies = job.Name is "bundle" or "python-repository" ? [.. job.Dependencies, "analyzer-warnings"]
+        Dependencies = job.Name == "bundle" ? [.. job.Dependencies, "analyzer-warnings"]
             : job.Name == "migration-drift" ? ["generate-release-migration"] : job.Dependencies
     };
 
     internal static List<CheckJob> CheckAllRuntimeDependencies(IEnumerable<CheckJob> jobs) => jobs.Select(job =>
         job with
         {
-            Dependencies = job.Name is "bundle" or "python-repository" or "repository"
+            Dependencies = job.Name is "bundle" or "repository"
                 ? [.. job.Dependencies, "build-once", "analyzer-warnings"]
                 : job.Dependencies.Length == 0 ? ["build-once"] : job.Dependencies,
             AllowFailedDependencies = job.Dependencies.Length == 0 || job.AllowFailedDependencies
@@ -197,9 +196,6 @@ internal static partial class ReleaseCommands
         add("preflight", () => tool("preflight", ["preflight", "-NoBuild", "-MaxParallelism", parallelism.ToString(), "-Shards", shards.ToString()]), null, true);
         add("production-compile-only", () => tool("production-compile-only", ["build-release", "-CompileOnly", "-NoBuild", "-NuGetConfig", nuget,
             "-V20ReferenceRoot", ResolveReleaseApi(null, api, 20), "-V21ReferenceRoot", ResolveReleaseApi(null, api, 21)]), null, false);
-        Python("python-repository", "scripts/checks/Check-Repository.py", "--no-binaries");
-        Python("python-script-self-tests", "scripts/checks/Check-ScriptToolCalls.py", "--self-test");
-        Python("python-script-calls", "scripts/checks/Check-ScriptToolCalls.py");
         Python("campaign-runner-self-tests", "scripts/checks/Test-CampaignInputs.py", "--self-test");
         Python("check-all-speedup-self-tests", "scripts/checks/Test-CheckAllSpeedups.py");
         Python("plc-script-self-tests", "scripts/checks/Test-PlcScriptSuccessors.py");
@@ -214,19 +210,6 @@ internal static partial class ReleaseCommands
         Python("native-mcp-session", "scripts/checks/Test-NativeMcpSession.py", "--self-test");
         Python("approval-self-tests", "scripts/checks/Test-ReleaseApprovalGate.py", "--self-test");
         Python("relocation-self-tests", "scripts/checks/Test-RelocatedBundle.py", "--self-test");
-        add("static-python-csharp-parity", () =>
-        {
-            var directory = Path.Combine(Root, "bin-build/p", Guid.NewGuid().ToString("N")[..8]);
-            var result = isolated("static-python-csharp-parity", dotnet,
-                [Path.Combine(Root, "bin-build/check-scripts/Test-StaticCheckParity/Test-StaticCheckParity.dll"), "-Python", Py, "-NoBuild", "-ReleaseTool", typeof(ReleaseCommands).Assembly.Location, "-Output", directory], true);
-            if (Directory.Exists(directory))
-                foreach (var path in Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories))
-                {
-                    var destination = Path.Combine(output, "static-parity", Path.GetRelativePath(directory, path));
-                    Directory.CreateDirectory(Path.GetDirectoryName(destination)!); File.Copy(path, destination, true);
-                }
-            return result;
-        }, null, false);
         add("match-plc-name-source", () => isolated("match-plc-name-source", dotnet,
             [Path.Combine(Root, "bin-build/check-scripts/Test-MatchPlcName/Test-MatchPlcName.dll"), "-SourceOnly"], true), null, false);
         // This console project isn't a registered xUnit suite; dotnet test would

@@ -64,6 +64,6 @@
   - 文档规范更新前，新写的开发文档已按本决定使用中文。
   - 开发目录不随包的样例测试加入仓库检查（只收紧）。
 - 验证方式：
-  - 每个批次运行 `python scripts/checks/Check-Repository.py --no-binaries` 与文档方案列出的文档关卡，链接和锚点全部通过。
+  - 每个批次运行 `dotnet run --project build-tools/release -- check-repository -NoBinaries` 与文档方案列出的文档关卡，链接和锚点全部通过。
   - 纯搬迁提交用 `git diff -M` 确认 100% 相似。
   - 交付规则不包含新开发目录，由样例测试证明。

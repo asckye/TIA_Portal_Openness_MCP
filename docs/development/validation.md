@@ -126,9 +126,8 @@ check-all 的合并和 nightly 构建统一设置 `TiaCheckBuild=true` 与固定
 
 | Workflow / job（含矩阵） | 对应 check-all 作业 / 套件 | 分工与差异 |
 |---|---|---|
-| offline-checks / py-cs-parity，ubuntu-latest、windows-latest | static-python-csharp-parity、catalog-drift、usage-drift、migration-drift、tool-counts-drift、tools-list；文件程序构建与 analyzer-warnings 的部分输入 | 生成器字节检查与 tools-list 命令相同，但该 job 尚无分工收据，仍本机执行；parity 的 Python 版本、编译模式与路径环境不同，CI analyzer 未用本机完整 SDK 构建清单，不等价 |
 | offline-checks / offline-tests，Ubuntu，Shards=4 | repository-self-tests、suite-runner-self-tests；offline、kept-code、version-policy、generation-model、generation-planning、workbench-control-protocol | Linux 的平台通过/跳过门槛、管道身份、代码页与路径语义不等价于 Windows；不采纳 |
-| offline-checks / source-contracts，Ubuntu | 四个 drift、tools-list-self-tests/tools-list、python-script-self-tests/python-script-calls/script-calls、campaign-runner-self-tests、dead-references、repository/repository-self-tests、source-contracts、adapter-boundary、domain-source、contract-self-tests/contract-verify/response-verify | 纯生成/roster/快照 verify 命令相同，尚无该 job 的分工收据，仍本机执行；其余检查的 Linux 进程、代码页、路径状态不等价于本机 Windows；文件程序/analyzer 仅为部分构建输入 |
+| offline-checks / source-contracts，Ubuntu | 四个 drift、tools-list-self-tests/tools-list、script-calls、campaign-runner-self-tests、dead-references、repository/repository-self-tests、source-contracts、adapter-boundary、domain-source、contract-self-tests/contract-verify/response-verify | 纯生成/roster/快照 verify 命令相同，尚无该 job 的分工收据，仍本机执行；其余检查的 Linux 进程、代码页、路径状态不等价于本机 Windows；文件程序/analyzer 仅为部分构建输入 |
 | offline-checks / studio-tests，Windows、交付默认 false 配置 | studio-core、studio-gui | 同项目与交付配置，使用完整注册套件门禁；studio profile 出具 CI 收据，仍核对本机 SDK 和运行时投影 |
 | offline-checks / foundation-suites，runner=0、1、2、3，Windows，Shards=8、RunnerCount=4 | foundation、engine-host、shared-lifecycle-plc、worker-progress-foundation、prompt-registration、software-read、special-export-shape、device-add、hardware-catalog、diagnostic-membership、adapter-contracts、worker-channel、compile-candidate、fallback-vci-modern/initial/classic、workbench-control-protocol | 各 runner 只证明分片；必须由下一行覆盖全部分片的门禁合并，不单独采纳任一 runner |
 | offline-checks / foundation-suites-gate，Windows，Shards=8、GateOnly | 上述 17 套件的全部本机 shard 与 gate | foundation profile 可采纳；沿用注册过滤/属性/最低通过数/最大跳过数，验证四个 runner 的分片并集且每片恰一次；本机可能用计时历史产生不同分片，但都覆盖完整同一套件；不包含 foundation-api |
@@ -308,7 +307,7 @@ CommentHygiene、McpText 和 Inventory-ResponseEnvelopes；下表也列出它们
 `dotnet run --project build-tools/release -- generate-tool-usage -Check` 和
 `dotnet run --project build-tools/release -- generate-release-migration -Check`，并运行 `check-tools-list` 及其 `-SelfTest`；静态检查自检统一使用
 `dotnet run --project build-tools/release -- check-repository -SelfTest`，也在 `offline-tests` job 运行。CFC 已包含在上述全领域检查中。V4 脚本调用检查仅由本 job 执行：
-`check-script-tool-calls`、`Check-ScriptToolCalls.py --self-test` 和 `Check-ScriptToolCalls.py`；V4 解码和诊断客户端断言已进入 `source-contracts`，
+`check-script-tool-calls`；V4 解码和诊断客户端断言已进入 `source-contracts`，
 `validate.yml` 不重复执行。
 
 按成员验证的引擎检查使用 [EngineSources.cs](../../build-tools/common/TiaMcp.BuildCommon/EngineSources.cs)，
@@ -316,8 +315,7 @@ CommentHygiene、McpText 和 Inventory-ResponseEnvelopes；下表也列出它们
 排除生成和构建文件；重载通过签名、所属类型或 MCP 属性区分，缺失或歧义直接失败。
 词法器保留完整方法体，不依赖相邻成员或迁移前文件路径。它是源码契约检查，不替代 C# 编译或原生验收。
 
-过渡期 `py-cs-parity` job 在 Windows 与 Ubuntu 比较四个棘轮的完整指纹与基线字节、TIA 常量捕获和死引用修复。
-Python 副本为后续批次依赖与对拍保留；批 8 删除临时 job。
+四个棘轮、TIA 常量和死引用检查统一使用 C# 命令；Python 源码契约检查通过 `csharp_lexer.py` 复用原有词法器。
 
 ### 手动补充检查
 
@@ -715,11 +713,11 @@ HTTP 可达、工具枚举、程序构建或公开发布都不等于工程语义
 
 ## V4 脚本调用与 campaign 输入
 
-CI 使用 `check-script-tool-calls` 检查 C# 与 JSON 计划，并暂时保留 `Check-ScriptToolCalls.py` 检查 Python、shell 和 JSON 计划中的工具调用；注册工具名来自引擎注册和版本目录。历史映射、冻结的 v3.3.0 写入守卫清单和精确的未知工具负例具有显式例外。C# 客户端复用 `McpResults`；尚未迁移的 Python 检查暂用 `mcp_results.py`。两者与 TiaMcp.Engine.Harness 的 `DeveloperChecks` 读取 V4 `ok/data/error/meta`，批次读取 `data.items`；3.x 的 `message/meta.success` 不能作为成功结果。
+CI 使用 `dotnet run --project build-tools/release -- check-script-tool-calls` 检查 C#、Python、PowerShell、shell 和 JSON 计划中的工具调用；注册工具名来自引擎注册和版本目录。历史映射、冻结的 v3.3.0 写入守卫清单和精确的未知工具负例具有显式例外。C# 客户端复用 `McpResults`；尚未迁移的 Python 检查暂用 `mcp_results.py`。两者与 TiaMcp.Engine.Harness 的 `DeveloperChecks` 读取 V4 `ok/data/error/meta`，批次读取 `data.items`；3.x 的 `message/meta.success` 不能作为成功结果。
 
 ```powershell
-python scripts/checks/Check-ScriptToolCalls.py --self-test
-python scripts/checks/Check-ScriptToolCalls.py
+dotnet run --project build-tools/release -- check-script-tool-calls -SelfTest
+dotnet run --project build-tools/release -- check-script-tool-calls
 dotnet run --project build-tools/release -- test-suites -Suite source-contracts
 python scripts/checks/Test-CampaignInputs.py --exe runtime/v21/TiaMcp.FoundationHost.exe --public-api <V21-net48-SDK> --plc-worker bin-build/plc-worker-fixtures/sdk/bin/21/Release/net48/TiaMcp.PlcWorker.21.exe --major 21 --output bin-build/campaign-inputs
 ```

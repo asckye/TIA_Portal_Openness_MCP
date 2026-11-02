@@ -101,7 +101,7 @@
 - 运行二进制、本地 SDK、用户项目、设计交接和密钥不进 Git。
 - 不手改测试哈希、`manifest/*.json` 中的哈希和生成文件。
 - 构建与发布自动化只在 `build-tools/release` 中用 C# 维护；仓库拒绝新增 PowerShell、batch 和 cmd 文件。
-- 文档改动核对链接、路径、工具适用版本和引用，并运行 `python scripts/checks/Check-Repository.py --no-binaries`。
+- 文档改动核对链接、路径、工具适用版本和引用，并运行 `dotnet run --project build-tools/release -- check-repository -NoBinaries`。
 
 ## 6 发布衔接
 

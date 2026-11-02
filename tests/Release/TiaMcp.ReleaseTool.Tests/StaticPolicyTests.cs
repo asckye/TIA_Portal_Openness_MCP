@@ -29,7 +29,7 @@ internal sealed class StaticTree : IDisposable
 public sealed class StaticPolicyTests
 {
     [Fact]
-    public void PythonAndCSharpFeatureCasesDeduplicateExactConfigurationsAndKeepDifferentProperties()
+    public void CSharpFeatureCasesDeduplicateExactConfigurationsAndKeepDifferentProperties()
     {
         using var tree = new StaticTree();
         Directory.CreateDirectory(Path.Combine(tree.Root, "src/Adapters")); Directory.CreateDirectory(Path.Combine(tree.Root, "src/Studio/Openness"));
@@ -45,34 +45,6 @@ public sealed class StaticPolicyTests
         Assert.Equal(2, actual.Count(row => row.Project == project));
         Assert.Contains(actual, row => row.Project == project && row.Properties.Count == 0);
         Assert.Contains(actual, row => row.Project == project && row.Properties.GetValueOrDefault("DefineConstants") == "TIA_V20");
-        var code = "import importlib.util,json,sys; from pathlib import Path; s=importlib.util.spec_from_file_location('features',sys.argv[1]); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(json.dumps([dict(project=p,properties=v) for p,v in m.project_cases(Path(sys.argv[2]))]))";
-        var result = ProcessRunner.Run(OperatingSystem.IsWindows() ? "python" : "python3", ["-c", code, Path.Combine(StaticCheckVectorTests.Root, "scripts/checks/Check-TiaFeatures.py"), tree.Root], tree.Root);
-        Assert.True(result.ExitCode == 0, result.StandardError);
-        var expected = System.Text.Json.JsonSerializer.SerializeToNode(actual.Select(row => new { project = row.Project, properties = row.Properties }));
-        Assert.True(JsonNode.DeepEquals(expected, JsonNode.Parse(result.StandardOutput)));
-    }
-
-    [Fact]
-    public void PythonDocumentWalkNeverOpensIgnoredMutableCheckDirectories()
-    {
-        using var tree = new StaticTree();
-        tree.Write("README.md", "root"); tree.Write("docs/a.md", "guide");
-        tree.Write("bin-build/ecosystem-assembly-fixture/held.md", "scratch"); tree.Write("tests/unit/bin/Release/hidden.md", "binary output");
-        var code = """
-            import importlib.util,sys,os
-            from pathlib import Path
-            from unittest.mock import patch
-            s=importlib.util.spec_from_file_location('repository',sys.argv[1]); m=importlib.util.module_from_spec(s); s.loader.exec_module(m)
-            root=Path(sys.argv[2]); original=os.scandir
-            def guarded(path):
-                assert not m.SKIP.intersection(Path(path).relative_to(root).parts), 'opened an ignored mutable directory: '+str(path)
-                return original(path)
-            with patch('os.scandir',guarded):
-                assert sorted(p.relative_to(root).as_posix() for p in m.documents(root))==['README.md','docs/a.md']
-            print('document pruning passed')
-            """;
-        var result = ProcessRunner.Run(OperatingSystem.IsWindows() ? "python" : "python3", ["-c", code, Path.Combine(StaticCheckVectorTests.Root, "scripts/checks/Check-Repository.py"), tree.Root], tree.Root);
-        Assert.True(result.ExitCode == 0, result.StandardOutput + result.StandardError);
     }
 
     [Fact]
@@ -376,6 +348,66 @@ public sealed class StaticPolicyTests
     [InlineData("Call(\"{\\\"jsonrpc\\\":\\\"2.0\\\"}\", args);", 0)]
     [InlineData("// Call(\"missing\", args);\nCall(\"known\", args);", 0)]
     public void CSharpScriptCallsRejectLiteralUnknownTools(string source, int count) => Assert.Equal(count, ScriptToolCalls.Check("scripts/example.cs", source, new HashSet<string> { "known" }).Count);
+    [Theory]
+    [InlineData("call('RemovedTool', {})")]
+    [InlineData("call('removedtool', {})")]
+    [InlineData("call('Removed-Tool', {})")]
+    [InlineData("S('RemovedTool', x=1)")]
+    [InlineData("p.rpc('tools/call', {'name': 'known', 'arguments': {'name': 'RemovedTool', 'arguments': {}}})")]
+    [InlineData("cases = [('RemovedTool', 'probe', {})]")]
+    [InlineData("cases = [('probe', 'RemovedTool', {}, 'ok')]")]
+    [InlineData("calls = {'RemovedTool': {}}")]
+    [InlineData("TOOLS = ['RemovedTool']\nfor name in TOOLS: call(name, {})")]
+    [InlineData("TOOLS = ['RemovedTool']\nfor name in TOOLS:\n    client.call(name, {})")]
+    [InlineData("call('Removed\\u0054ool', {})")]
+    [InlineData("call('Removed' 'Tool', {})")]
+    public void PythonScriptCallsRejectUnknownToolsAcrossHelpersRequestsAndTables(string source) =>
+        Assert.Contains(ScriptToolCalls.Check("scripts/example.py", source, new HashSet<string> { "known" }), call => call.Name.Contains("ool", StringComparison.Ordinal));
+
+    [Theory]
+    [InlineData("call('known', {'methodName': 'GetCrossReferences'}) # call('RemovedTool')")]
+    [InlineData("call('\\x6bno\\167n', {})")]
+    [InlineData("call('Siemens::Read()')\ncall('{\"fixture\":true}')")]
+    [InlineData("'''call('RemovedTool')'''\n# call('RemovedTool')\ncall('tools/list', {})")]
+    [InlineData("TOOLS = ['RemovedTool']\nfor name in TOOLS:\n    print(name)\ncall('known', {})")]
+    [InlineData("call(f'{name}', {})\ncall(b'RemovedTool', {})")]
+    [InlineData("call('System.Void ' + name + '::.ctor()', 2, 'System.Void', 'newobj')")]
+    [InlineData("OPEN = '('\nDATA = ['Label', 'RemovedTool', '{']\ncall('known', {})")]
+    [InlineData("{'name': prefix + 'RemovedTool', 'arguments': {}}")]
+    public void PythonScriptCallsIgnorePayloadsCommentsAndUndispatchedTables(string source) =>
+        Assert.Empty(ScriptToolCalls.Check("scripts/example.py", source, new HashSet<string> { "known" }));
+
+    [Theory]
+    [InlineData("scripts/checks/Test-LocalStability.py", "__soak_unknown__")]
+    [InlineData("scripts/checks/Snapshot-ToolResponses.py", "__contract_unknown_tool__")]
+    public void ScriptNegativeCallExceptionsAreLimitedToTheirReviewedPathAndName(string path, string name)
+    {
+        Assert.Empty(ScriptToolCalls.Check(path, $"call('{name}', {{}})", new HashSet<string>()));
+        Assert.Single(ScriptToolCalls.Check("scripts/example.py", $"call('{name}', {{}})", new HashSet<string>()));
+        Assert.Single(ScriptToolCalls.Check(path, "call('RemovedTool', {})", new HashSet<string>()));
+    }
+
+    [Theory]
+    [InlineData("Call 'RemovedTool' @{calls=@(@{name='RemovedNested';arguments=@{}})}", 2)]
+    [InlineData("client.exe call RemovedTool", 1)]
+    [InlineData("$client bridge RemovedTool", 1)]
+    [InlineData("python probe.py --tool RemovedTool", 1)]
+    [InlineData("$url + '?name=' + [Uri]::EscapeDataString($name)", 0)]
+    public void PowerShellScriptCallsRejectUnknownTools(string source, int count) =>
+        Assert.Equal(count, ScriptToolCalls.Check("scripts/example.ps1", source, new HashSet<string>()).Count);
+
+    [Theory]
+    [InlineData("py", "call('RemovedTool', {})")]
+    [InlineData("ps1", "Call 'RemovedTool' @{}")]
+    public void ScriptCallCommandScansPythonAndPowerShellFiles(string extension, string source)
+    {
+        using var tree = new StaticTree();
+        tree.Copy("src/Logic/ModelContextProtocol/ToolProfiles.resx");
+        tree.Write("scripts/probe." + extension, source);
+        Assert.Equal(1, ScriptToolCalls.Run(tree.Root));
+        tree.Write("scripts/probe." + extension, source.Replace("RemovedTool", "GetSessionState", StringComparison.Ordinal));
+        Assert.Equal(0, ScriptToolCalls.Run(tree.Root));
+    }
     [Fact]
     public void ScriptJsonPlansAndHistoricalAllowlist()
     {
@@ -414,7 +446,7 @@ public sealed class StaticPolicyTests
         ReleaseCheckPolicy Policy(ReleaseSelfTest test) => new(["review"], ["review"], [new("docs/", ["review"])], [test]);
         Policy(new("review", "build-tools/release/RepositoryChecks.cs", Command: ["check-repository", "-SelfTest"])).Validate();
         Policy(new("review", "build-tools/release/DotnetSuites.cs", Command: ["test-suites", "-SelfTest"])).Validate();
-        Policy(new("review", "scripts/checks/Check-Repository.py", ["--self-test"])).Validate();
+        Policy(new("review", "scripts/checks/Test-CampaignInputs.py", ["--self-test"])).Validate();
         foreach (var command in new[] { System.Array.Empty<string>(), new[] { "release" }, new[] { "check-unknown" }, new[] { "dotnet" } }) Assert.Throws<ReleaseException>(() => Policy(new("review", "build-tools/release/RepositoryChecks.cs", Command: command)).Validate());
         Assert.Throws<ReleaseException>(() => Policy(new("review", "../outside.cs", Command: ["check-repository"])).Validate());
         using var tree = new StaticTree();

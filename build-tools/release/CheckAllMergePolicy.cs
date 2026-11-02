@@ -10,11 +10,7 @@ internal sealed class CheckAllMergePolicy(string[] changes, string? fallback)
     internal bool Includes(string job, string profile)
     {
         if (profile != "merge" || fallback != null) return true;
-        Func<string, bool>? condition = job switch
-        {
-            "static-python-csharp-parity" => path => ExpandScripts(StaticParityInputs).Any(input => CheckAllInputClosure.Covers(input, path)),
-            _ => SelfTestInputs(job) is { } inputs ? path => ExpandScripts(inputs).Any(input => CheckAllInputClosure.Covers(input, path)) : null
-        };
+        Func<string, bool>? condition = SelfTestInputs(job) is { } inputs ? path => ExpandScripts(inputs).Any(input => CheckAllInputClosure.Covers(input, path)) : null;
         if (condition == null || changes.Any(condition)) return true;
         Excluded[job] = "merge tier: no changed input matched the approved rule; nightly/baseline/release retain the full check";
         return false;
@@ -28,17 +24,6 @@ internal sealed class CheckAllMergePolicy(string[] changes, string? fallback)
         return all.Where(job => !removed.Contains(job.Name)).Select(job => job with
             { Dependencies = job.Dependencies.Where(dep => !removed.Contains(dep)).ToArray() }).ToArray();
     }
-
-    internal static readonly string[] StaticParityInputs = ["scripts/checks/Test-StaticCheckParity.cs", "build-tools/common",
-        "build-tools/release/StaticChecks.cs", "build-tools/release/SourceCheck.cs", "build-tools/release/RatchetChecks.cs",
-        "build-tools/release/SwallowedExceptions.cs", "build-tools/release/ResponseEnvelopes.cs", "build-tools/release/CommentHygiene.cs",
-        "build-tools/release/McpText.cs", "build-tools/release/DeadToolReferences.cs", "build-tools/release/TiaFeatures.cs",
-        "build-tools/release/SourceRoots.cs", "build-tools/release/CatalogData.cs", "build-tools/release/dead-reference-policy.json", "build-tools/release/source-roots.json",
-        "scripts/checks/Check-SwallowedExceptions.py", "scripts/checks/Inventory-ResponseEnvelopes.py",
-        "scripts/checks/Check-CommentHygiene.py", "scripts/checks/Check-McpText.py", "scripts/checks/Check-DeadToolReferences.py",
-        "scripts/checks/Check-TiaFeatures.py", "scripts/checks/source_scan.py",
-        "scripts/checks/swallowed-exceptions-baseline.json", "scripts/checks/response-envelope-baseline.json",
-        "scripts/checks/comment-hygiene-baseline.json", "scripts/checks/mcp-text-baseline.json"];
 
     private static IEnumerable<string> ExpandScripts(IEnumerable<string> inputs) => inputs.SelectMany(input => input.EndsWith(".py", StringComparison.Ordinal)
         ? CheckAllScriptInputs.Closure(input) : new[] { input });
@@ -58,7 +43,7 @@ internal sealed class CheckAllMergePolicy(string[] changes, string? fallback)
         var subjects = category switch
         {
             "Generators" => new[] { "CatalogData", "CatalogGenerator", "CatalogAudits", "ToolUsageGenerator", "ToolCountGenerator", "ReleaseMigrationGenerator", "PrereleaseNotes", "GeneratorCommands", "SourceRoots" },
-            "StaticChecks" => new[] { "StaticChecks", "AnalyzerWarnings", "AdapterBoundary", "BundleLayoutChecks", "CommentHygiene", "DeadToolReferences", "EnvelopeRewrite", "McpText", "RatchetChecks", "RepositoryChecks", "ResponseEnvelopes", "ScriptToolCalls", "SourceCheck", "SourceRoots", "SwallowedExceptions", "TiaFeatures", "CheckAllAnalyzerResult" },
+            "StaticChecks" => new[] { "StaticChecks", "AnalyzerWarnings", "AdapterBoundary", "BundleLayoutChecks", "CommentHygiene", "DeadToolReferences", "EnvelopeRewrite", "McpText", "PythonScriptCalls", "RatchetChecks", "RepositoryChecks", "ResponseEnvelopes", "ScriptToolCalls", "SourceCheck", "SourceRoots", "SwallowedExceptions", "TiaFeatures", "CheckAllAnalyzerResult" },
             "BundleParity" => new[] { "ReleaseValidation", "ReleaseRecords", "ReleaseVersions", "ReleaseRecordSnapshot", "ReleaseAdoption", "SourceRoots", "BundleLayoutChecks", "BundleManifestRequirements", "PackageDependencies" },
             _ => Array.Empty<string>()
         };
@@ -74,7 +59,6 @@ internal sealed class CheckAllMergePolicy(string[] changes, string? fallback)
         "suite-runner-self-tests" => ["build-tools/release/DotnetSuites.cs", "build-tools/release/DotnetSuiteSelfTests.cs", "build-tools/release/SuiteRunners.cs", "build-tools/release/SuiteSharding.cs", "build-tools/release/FastSuites.cs", "build-tools/release/CheckScheduler.cs"],
         "bundle-self-tests" => ["build-tools/release/BundleLayoutChecks.cs", "build-tools/release/BundleManifestRequirements.cs", "build-tools/release/PackageDependencies.cs"],
         "contract-self-tests" => ["scripts/checks/Snapshot-ToolContracts.py"],
-        "python-script-self-tests" => ["scripts/checks/Check-ScriptToolCalls.py"],
         "campaign-runner-self-tests" or "campaign-validator-self-tests" => ["scripts/checks/Test-CampaignInputs.py", "scripts/checks/Test-CampaignInputs.cs"],
         "check-all-speedup-self-tests" => ["scripts/checks/Test-CheckAllSpeedups.py", "scripts/checks/call_latency.py", "scripts/checks/Test-FoundationTransport.py", "scripts/checks/Snapshot-ToolResponses.py"],
         "plc-script-self-tests" => ["scripts/checks/Test-PlcScriptSuccessors.py", "build-tools/release/CheckAll.cs", "build-tools/release/CheckAllInventory.cs"],

@@ -26,7 +26,7 @@ MCP 响应不引入本地化层，以保持快照和确定性；本地化仅用�
 `TryCanonicalizeEnumArgument` 解析的拒绝文本、快照标记、`Test-LocalStability` 使用的 stderr 和
 FindTools 检索关键词具有功能意义，在阶段 6 引入错误码之前不得改动。
 
-[Check-McpText.py](../../scripts/checks/Check-McpText.py)约束中文字面量只减不增；
+`dotnet run --project build-tools/release -- check-ratchet -Kind mcp-text`约束中文字面量只减不增；
 [基线中的 allowlist](../../scripts/checks/mcp-text-baseline.json)逐条保存双语表、报告、TIA 数据及 CLI 输出的理由。
 豁免是既有字面量及其出现次数，不是对文件的豁免；新增中文数据须单独审查并记录理由。
 XML/报告构造器里的异常和消息仍受检查。只减不增门禁不授权修改已有响应字节，兼容快照仍须通过。
@@ -41,7 +41,7 @@ XML/报告构造器里的异常和消息仍受检查。只减不增门禁不授�
 - 生成脚本字符串中的 `TODO`、注释及中文属于响应数据，不能当作 C# 注释清理。
 - `*Leftovers*` 随阶段 3 的领域迁移逐步消解，不先单独改名；步骤 15 结束时文件数应为 0。
 
-[Check-CommentHygiene.py](../../scripts/checks/Check-CommentHygiene.py)按工程和类别报告候选，
+`dotnet run --project build-tools/release -- check-ratchet -Kind comments`按工程和类别报告候选，
 [注释基线](../../scripts/checks/comment-hygiene-baseline.json)按内容及重复次数守护，文件移动不会增加额度。
 具体计数口径、自检及基线收缩命令见[验证分层](validation.md#注释与-mcp-中文门禁)。
 

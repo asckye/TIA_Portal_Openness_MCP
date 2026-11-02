@@ -20,9 +20,6 @@ internal static class CheckAllJobInputs
     private const string ReleaseTool = "build-tools/release/TiaMcp.ReleaseTool.csproj";
     private static readonly Dictionary<string, string> Scripts = new(StringComparer.Ordinal)
     {
-        ["python-repository"] = "Check-Repository.py --no-binaries",
-        ["python-script-self-tests"] = "Check-ScriptToolCalls.py --self-test",
-        ["python-script-calls"] = "Check-ScriptToolCalls.py",
         ["campaign-runner-self-tests"] = "Test-CampaignInputs.py --self-test",
         ["check-all-speedup-self-tests"] = "Test-CheckAllSpeedups.py",
         ["plc-script-self-tests"] = "Test-PlcScriptSuccessors.py",
@@ -41,7 +38,7 @@ internal static class CheckAllJobInputs
         "analyzer-warnings", "tracked-tree-drift", "catalog-drift", "tool-counts-drift", "usage-drift", "migration-drift",
         "tools-list-self-tests", "tools-list", "script-calls", "dead-references", "repository", "repository-self-tests", "suite-runner-self-tests",
         "adapter-boundary", "tia-features", "bundle", "bundle-self-tests", "release-documentation", "release-dry-run", "preflight",
-        "production-compile-only", "static-python-csharp-parity", "match-plc-name-source", "configuration-page", "affected-inputs-self-test"];
+        "production-compile-only", "match-plc-name-source", "configuration-page", "affected-inputs-self-test"];
 
     internal static CheckJobInputs? Find(CheckJob job, JsonObject catalog)
     {
@@ -61,12 +58,10 @@ internal static class CheckAllJobInputs
         if (ToolJobs.Contains(job.Name))
             return new("release-tool", ["build-tools/release", "scripts", "src", "tests", "reference", "manifest", "templates", "catalog", "third_party"],
                 job.Name == "configuration-page" ? ["tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj"]
-                : job.Name == "static-python-csharp-parity" ? ["scripts/checks/Test-StaticCheckParity.cs"]
                 : job.Name == "match-plc-name-source" ? ["scripts/checks/Test-MatchPlcName.cs"] : [], job.Name, [],
                 Aggregate: job.Name is "preflight" or "build-once",
-                BinaryRoots: job.Name == "static-python-csharp-parity" ? ["bin-build/check-scripts/Test-StaticCheckParity"]
-                    : job.Name == "match-plc-name-source" ? ["bin-build/check-scripts/Test-MatchPlcName"] : null,
-                SourceOnly: ReleaseCommands.CheckAllSourceOnly(job.Name), DefaultPython: job.Name == "static-python-csharp-parity");
+                BinaryRoots: job.Name == "match-plc-name-source" ? ["bin-build/check-scripts/Test-MatchPlcName"] : null,
+                SourceOnly: ReleaseCommands.CheckAllSourceOnly(job.Name));
         if (job.Name == "usage-audit-plc")
             return new("scripts/checks/Test-ToolUsage.py", [.. CheckAllScriptInputs.Closure("scripts/checks/Test-ToolUsage.py"), .. CheckAllScriptInputs.Data("usage"), "manifest/tool-usage-coverage.json"], [Host, Worker],
                 "coverage; CatalogAudits.Usage; exact manifest bytes", [], Aggregate: true);
@@ -135,9 +130,7 @@ internal static class CheckAllJobInputs
     private static string[] ScriptData(string name) => name switch
     {
         // These checks intentionally scan repository-wide source or documentation.
-        "python-repository" => ["src", "tests", "scripts", "build-tools", "docs", "reference", "manifest", "templates", "catalog", "third_party", "README.md", "CHANGELOG.md"],
-        "python-script-calls" => ["scripts", "src/Engine", "src/Logic/ModelContextProtocol/ToolProfiles.resx"],
-        "python-script-self-tests" or "check-all-speedup-self-tests" => [],
+        "check-all-speedup-self-tests" => [],
         "contract-self-tests" => ["src/Engine", "src/EngineHost", "src/FoundationHost", "src/Logic/V4", "src/Logic/ModelContextProtocol/ToolProfiles.resx", "src/Adapters.Contracts/PortedFamilies.cs", "manifest/contracts/v4/baseline"],
         "domain-source" => ["src", "tests", "reference"],
         "contract-verify" or "response-verify" => ["src", "reference", "manifest/contracts/v4"],
@@ -163,8 +156,8 @@ internal static class CheckAllJobInputs
 
     internal static bool AlwaysRun(string name) => name.StartsWith("generate-", StringComparison.Ordinal) || name is "prepare-decoder-python" or
         "catalog-drift" or "tool-counts-drift" or "usage-drift" or "migration-drift" or "tracked-tree-drift" or "repository" or
-        "dead-references" or "script-calls" or "python-script-calls" or "adapter-boundary" or "domain-source" or "release-documentation" or
-        "analyzer-warnings" or "tools-list" or "contract-verify" or "response-verify" or "bundle" or "python-repository" or
+        "dead-references" or "script-calls" or "adapter-boundary" or "domain-source" or "release-documentation" or
+        "analyzer-warnings" or "tools-list" or "contract-verify" or "response-verify" or "bundle" or
         "build-once" or "affected-inputs-self-test";
     internal static bool NightlyOnly(string name) => name.StartsWith("stability-", StringComparison.Ordinal) && name.Contains("-c16-", StringComparison.Ordinal);
 }

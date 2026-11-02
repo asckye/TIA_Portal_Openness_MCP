@@ -286,8 +286,8 @@ public sealed class CheckAllCpuLayoutTests(ITestOutputHelper output)
         var checks = report["checks"]!.AsArray();
         Assert.Equal(new[] { "generate-catalogs", "prepare-decoder-python", "generate-tool-usage", "generate-release-migration", "build-once", "analyzer-warnings",
             "catalog-drift", "tool-counts-drift", "usage-drift", "migration-drift", "tools-list", "script-calls", "dead-references",
-            "adapter-boundary", "tia-features", "bundle", "release-documentation", "python-repository", "python-script-self-tests",
-            "python-script-calls", "check-all-speedup-self-tests", "domain-source", "contract-self-tests", "contract-verify", "response-verify", "tracked-tree-drift" }, checks.Select(row => (string)row!["Name"]!));
+            "adapter-boundary", "tia-features", "bundle", "release-documentation",
+            "check-all-speedup-self-tests", "domain-source", "contract-self-tests", "contract-verify", "response-verify", "tracked-tree-drift" }, checks.Select(row => (string)row!["Name"]!));
         var selection = JsonNode.Parse(File.ReadAllText(Path.Combine(runDirectory, "merge-tier-selection.json")))!;
         Assert.StartsWith("Cannot resolve merge-base", (string?)selection["fallback"]);
         Assert.Equal("failed", (string)checks[4]!["Status"]!);

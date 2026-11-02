@@ -59,9 +59,9 @@ Python 桥接所用两个第三方项目只交付 `src`、PLC Tools 的八个 `p
 其他构建证据和 `RELEASE_STATUS.txt`、`release-file-hashes.json` 不进入新 ZIP。
 
 - 仓库模式：`dotnet run --project build-tools/release -- validate-bundle -Strict` 保留源码、构建输入哈希、版本和本地 IL 校验；日常检查可用
-  `-NoBinaries -SkipSourceHashes`。`Check-Repository.py` 运行源码门禁与 BundleLayout 表校验。
+  `-NoBinaries -SkipSourceHashes`。`dotnet run --project build-tools/release -- check-repository` 运行源码门禁与 BundleLayout 表校验。
 - 包模式：从仓库执行 `dotnet run --project build-tools/release -- validate-bundle -BundleRoot <解包根> -PackageMode -Strict` 与
-  `Check-Repository.py --root <解包根> --package-mode`。没有 `Version.props` 时也自动识别包模式。
+  `dotnet run --project build-tools/release -- check-repository -Root <解包根> -PackageMode`。没有 `Version.props` 时也自动识别包模式。
   检查交付资源、用户文档链接、许可证、构建记录、运行文件版本/哈希；不读取源文件或调用包内 IL 验证器。
   生成的旧 package/blueprint 元数据中的 `scripts/checks/validate-bundle` 条目仅属仓库说明，包模式明确忽略该单项。
   新增资源必须纳入规则，不能以源码缺失为由跳过其他必需项。
@@ -75,14 +75,14 @@ PLC worker 的 `ProjectGroupRuntime` 嵌入程序集按既有加载器规则解�
 
 发布链将正在执行的 release tool 程序集路径通过 `Package-Release.py --release-tool <assembly>` 传给打包器。
 子校验直接运行该程序集，不执行会重新构建项目的 `dotnet run`，也不假设普通 `bin/Release` 布局。
-独立打包和 CI 未传路径时先在 `bin-build/package-runners/` 的唯一目录构建一次，再复用该工具完成两次校验；
-链中的 `build-tool` 检查同样使用唯一输出目录，保留完整构建检查。
+独立打包和 CI 未传路径时先在 `bin-build/package-runners/` 的唯一目录构建一次，再复用该工具完成仓库和暂存包校验；
+预览模式用 `check-repository -NoBinaries` 执行源码门禁后列出投影。链中的 `build-tool` 检查同样使用唯一输出目录，保留完整构建检查。
 
 无发布构建时可查看当前文件投影，不执行 Release 或生成可发布资产：
 
 ```powershell
 python build-tools/Package-Release.py --dry-run --include-untracked --stage-directory bin-build/delivery-preview
-python scripts/checks/Check-Repository.py --root bin-build/delivery-preview --no-binaries
+dotnet run --project build-tools/release -- check-repository -Root bin-build/delivery-preview -NoBinaries
 dotnet run --project build-tools/release -- validate-bundle -BundleRoot bin-build/delivery-preview -PackageMode -Strict -NoBinaries
 ```
 

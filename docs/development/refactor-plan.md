@@ -51,7 +51,7 @@ worktree 中实现全部新代码；维护者负责决策点、真机授权和�
 
 | 层 | 内容 | 何时 |
 |---|---|---|
-| L0 | `Check-Repository.py --no-binaries`、`Check-DeadToolReferences.py` | 每个任务 |
+| L0 | `dotnet run --project build-tools/release -- check-repository -NoBinaries`、`dotnet run --project build-tools/release -- check-dead-tool-references` | 每个任务 |
 | L1 | 离线控制台套件（`dotnet run`，迁移后为 `dotnet test`）及受影响工程的测试 | 每个任务 |
 | L2 | 用 V20/V21 PublicAPI 编译完整引擎；受影响的 Foundation/Studio 适配器编译 | 改动 C# 的任务 |
 | L3 | `dotnet run --project build-tools/release -- build-multi-version -Test` 完整八版本构建 | 阶段结束、发布前 |
