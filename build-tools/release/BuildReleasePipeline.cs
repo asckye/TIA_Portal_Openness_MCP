@@ -68,6 +68,7 @@ internal static partial class ReleaseCommands
         // the V20/V21 checks run on the PLC workers in build-multi-version (PlcReleaseChecks).
         var sourceFiles = ReleaseRecords.GetSources(Root, "engine");
         var validationInputs = ReleaseRecords.GetValidationInputs(Root, "engine");
+        PrepareDecoderPython(DecoderPythonOptions(options));
         var common = RunBuildReleaseCommon(options, dotnet, python, nuget, v20Api, apiRoot, outputDirectory, runTemp, cliHome);
 
         RunShippedRuntimeChecks(dotnet, apiRoot, package, outputDirectory, runTemp, cliHome);

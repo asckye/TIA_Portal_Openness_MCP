@@ -32,6 +32,8 @@
 V20/V21 生产及 SDK fixture 引擎、Harness、Studio 两种路径模式和全部套件，后续测试使用对应程序集直接执行 VSTest，保留注册的过滤表达式；其他工程入口使用 `--no-build --no-restore`。
 SDK 仅传入 `foundation-api` 与两个 PLC exchange 套件；其余独立执行的注册套件清除 SDK 环境变量，继续执行 clean-checkout 门槛。
 
+解码器运行时是必需交付文件。`check-all` 的 `prepare-decoder-python` 作业在构建前运行一次，不能被 affected/nightly 缓存省略。与发布和测试打包命令一致，使用显式 `-Python <absolute-pinned-python.exe>`，或设置 `TIA_MCP_DECODER_PYTHON` 指向完整 CPython 3.12.10 x64 安装（含标准库与匹配许可证）；解释器及核心 DLL 哈希见 [生态工具说明](../reference/ecosystem-tools.md#decodeplcsimaticml-runtime)。缺少配置或固定解释器时明确失败，不跳过。`-CompanionPython` 仍独立配置 PLC Tools 伴随环境。updater/package 与离线就绪夹具调用同一正式准备命令并验证后复用本轮产物。
+
 日常合并使用 `check-all -Affected [-Base origin/master]`：快门禁始终执行，其余作业按 merge-base 到 HEAD 加上未提交的
 已跟踪/未跟踪路径选择。选择使用构建输入闭包、ProjectReference 依赖和脚本输入声明；未映射路径、发布工具、套件注册表、
 全局构建规则、NuGet 或 SDK 改动回退完整 merge。未选作业只有与本机最近一次**成功 nightly** 的作业身份和产物哈希相同才复用，

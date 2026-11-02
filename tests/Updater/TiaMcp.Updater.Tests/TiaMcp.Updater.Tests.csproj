@@ -7,6 +7,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../Shared/DecoderRuntimeFixture.cs" Link="Shared/DecoderRuntimeFixture.cs" />
     <Compile Include="../../../src/Updater/Updater.cs" Link="Updater/Updater.cs" />
     <Compile Include="../../../src/Shared/BundleLayout.cs" Link="Shared/BundleLayout.cs" />
     <Compile Include="../../../src/Shared/ProductReleaseVersion.cs" Link="Shared/ProductReleaseVersion.cs" />

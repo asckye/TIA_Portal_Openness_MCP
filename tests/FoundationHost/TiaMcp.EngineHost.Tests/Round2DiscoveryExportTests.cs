@@ -7,6 +7,23 @@ using Xunit;
 
 public sealed partial class PipelineTests
 {
+    [Theory]
+    [InlineData("SaveProject", "project")]
+    [InlineData("WritePlcSclSourceFile", "mojibake")]
+    public void Multiple_description_words_need_a_name_or_alias_hit(string name, string capability)
+    {
+        using var fixture = new Fixture(all: true);
+        var descriptor = fixture.Catalog.All[name];
+        const string description = "uniqueincidentalneedle secondneedle";
+        descriptor.Tool.Description = description;
+        ((IDictionary<string, ToolDescriptor>)fixture.Catalog.All)[descriptor.Name] = new ToolDescriptor(descriptor.Name,
+            description, descriptor.Tool, descriptor.Classification, descriptor.Signature, descriptor.Parameters,
+            descriptor.DryRun, descriptor.CandidateFamily, descriptor.Execution);
+        Assert.Single(McpServer.FindTools("uniqueincidentalneedle").Items!.Where((_, i) => i % 3 == 0));
+        Assert.Empty(McpServer.FindTools(description).Items ?? Array.Empty<string>());
+        Assert.Single(McpServer.FindTools(capability + " uniqueincidentalneedle").Items!.Where((_, i) => i % 3 == 0));
+    }
+
     [Fact]
     public void Single_word_name_matches_rank_above_description_matches()
     {

@@ -12,6 +12,8 @@
 - DES-1：宿主工具、生成规划与工作台操作端统一读取 worker 缓存的会话身份、worker 代次和重置要求，修复已附着工程仍被生成规划判为未连接的问题。`GetSessionState` 报告当前会话的原生交叉引用生效来源和只读审批状态。
 - 工作台 MCP 页列出同一数据目录的宿主 PID、版本、启动时间、传输与 HTTP 端点，标记旧版或未知版本；人工确认后可停止宿主或按已保存配置重启 HTTP 宿主。stdio 宿主由所属 MCP 客户端重启；AI 工具与管道没有服务启停入口。
 - SU-1：PLC XML 导入导出和目录导入支持精确 `unitName`（V16–V21）；默认根范围不变。新增显式 `swImportOptions`（V15.1–V21，IgnoreUnitAttributes 从 V16）和文化 `importOptions`（V19–V21），默认关闭、预览可见，不支持的成员/组合返回 UNSUPPORTED_CAPABILITY。软件树包含单元与四类组，变量/常量读取支持单元或全部标准单元，离线交叉引用分析可选择单元。复用 V16–V21 的 WRITE 发布工具 SetPlcUnitObjectAccess（预览、审批、回读）；真实 TIA 确认仍为 NOT RUN。
+- Check builds and updater/package fixtures prepare the pinned decoder runtime through the release command, with explicit interpreter configuration and receipt-checked reuse. Multi-word tool discovery requires a name or search-alias hit while retaining single-word description recall.
+
 - `ListPlcBlocks` adds limit/cursor paging in stable group-qualified path order and reads full attributes only for the selected page; changed inventories reject stale cursors. Each item includes the exact path accepted by block read/export tools.
 - `FindTools` requires all capability words to match with a minimum relevance score; exact registered names rank first. Large direct/`CallTool` results include an executable `GetExportContent` continuation in their own result text.
 - `DecodePlcSimaticMl` uses an isolated CPython standard-library runtime included in delivery, with the original Python license. No user Python installation, pip download or ecosystem environment is required for decoding.

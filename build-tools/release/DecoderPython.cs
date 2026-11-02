@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
 using TiaMcp.Logic.ModelContextProtocol;
@@ -7,6 +8,16 @@ namespace TiaMcp.ReleaseTool;
 
 internal static partial class ReleaseCommands
 {
+    internal const string DecoderPythonVariable = "TIA_MCP_DECODER_PYTHON";
+
+    internal static Options DecoderPythonOptions(Options options, Func<string, string?>? environment = null)
+    {
+        string? python = options.Get("Python") ?? (environment ?? Environment.GetEnvironmentVariable)(DecoderPythonVariable);
+        if (string.IsNullOrWhiteSpace(python))
+            throw new ReleaseException("Pinned decoder CPython " + DecoderRuntime.Version + " x64 is required. Pass -Python <absolute-python.exe> or set " + DecoderPythonVariable + ". No PATH fallback is used.");
+        return Options.Parse([.. options.Arguments(), "-Python=" + python], new HashSet<string>());
+    }
+
     // Build a relocatable, isolated stdlib-only runtime from the explicitly selected
     // release-machine CPython. Never copy a venv or any site-packages into delivery.
     internal static int PrepareDecoderPython(Options options)
@@ -20,6 +31,31 @@ internal static partial class ReleaseCommands
             throw new ReleaseException("Specify -Python as the absolute path to pinned CPython " + DecoderRuntime.Version + ".");
         if (DecoderRuntime.Hash(python) != DecoderRuntime.InterpreterSha256)
             throw new ReleaseException("Decoder interpreter SHA-256 does not match the pinned CPython release.");
+        // Standalone fixture processes can share a checkout. Only one may publish
+        // its runtime; a fixture reuses the complete, validated build prerequisite.
+        string identity = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Path.GetFullPath(bundleRoot).ToUpperInvariant())));
+        using var preparation = new Mutex(false, "Local\\TiaMcp.DecoderRuntime." + identity);
+        try { preparation.WaitOne(); }
+        catch (AbandonedMutexException) { }
+        try
+        {
+            if (options.Has("Reuse"))
+            {
+                try
+                {
+                    DecoderRuntime.Require(bundleRoot);
+                    Console.WriteLine("Verified existing isolated decoder CPython " + DecoderRuntime.Version + ".");
+                    return 0;
+                }
+                catch (DecoderRuntimeException) { }
+            }
+            return PrepareDecoderPythonPayload(python, bundleRoot);
+        }
+        finally { preparation.ReleaseMutex(); }
+    }
+
+    private static int PrepareDecoderPythonPayload(string python, string bundleRoot)
+    {
         var probe = ProcessRunner.Run(python, ["-I", "-S", "-X", "utf8", "-c",
             "import sys,json; print(json.dumps(dict(root=sys.base_prefix,version=list(sys.version_info[:3]),bits=64 if sys.maxsize>2**32 else 32)))"], bundleRoot);
         ProcessRunner.RequireSuccess(probe, "CPython runtime probe failed");

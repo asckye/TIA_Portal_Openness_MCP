@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.BuildCommon;
+using TiaMcp.Logic.ModelContextProtocol;
 
 namespace TiaMcp.ReleaseTool;
 
@@ -101,6 +102,7 @@ internal static partial class ReleaseCommands
     // The product outputs a test package needs; each must exist and be newer than every product source.
     internal static IReadOnlyList<string> TestPackageProducts() =>
     [
+        .. DecoderRuntime.RequiredFiles.Append("runtime.json").Select(file => DecoderRuntime.RelativeDirectory + "/" + file),
         .. TestPackageKeys.SelectMany(key => new[]
         {
             $"runtime/v{key}/TiaMcp.FoundationHost.exe", $"runtime/v{key}/TiaMcp.FoundationHost.dll",
@@ -128,6 +130,8 @@ internal static partial class ReleaseCommands
                 problems.Add($"stale: {relative} ({built.ToLocalTime():yyyy-MM-dd HH:mm:ss}) is older than {source.Path} ({source.Time.ToLocalTime():yyyy-MM-dd HH:mm:ss})");
         }
         problems.AddRange(BundledRuntimeProblems(root));
+        try { DecoderRuntime.Require(root); }
+        catch (DecoderRuntimeException error) { problems.Add(error.Message); }
         return problems;
     }
 
@@ -385,6 +389,7 @@ internal static partial class ReleaseCommands
         }
         string[] NuGetArguments() => string.IsNullOrWhiteSpace(nuget) ? [] : ["-NuGetConfig", nuget];
 
+        Step("decoder Python runtime", () => PrepareDecoderPython(DecoderPythonOptions(options)));
         Step("native call weaver", () => ProcessRunner.RequireSuccess(RunLoggedProcess(dotnet,
             ["build", "build-tools/native-call-weaver/NativeCallWeaver.csproj", "-c", "Release", "-v:q", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false", "-p:NuGetAudit=false"],
             logs, "weaver.log", nuget), "Native weaver build failed; see " + Path.Combine(logs, "weaver.log")));

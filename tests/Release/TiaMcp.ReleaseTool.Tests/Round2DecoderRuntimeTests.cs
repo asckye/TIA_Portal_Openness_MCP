@@ -14,7 +14,7 @@ public sealed class Round2DecoderRuntimeTests
     [Fact]
     public void Delivered_runtime_contains_only_traced_imports_and_original_licenses()
     {
-        string directory = Path.Combine(Repository.FindRoot(), DecoderRuntime.RelativeDirectory);
+        string directory = TiaMcp.Engine.Tests.Shared.DecoderRuntimeFixture.Ensure();
         Assert.Equal(DecoderRuntime.RequiredFiles.Append("runtime.json").Order(), Directory.EnumerateFileSystemEntries(directory).Select(Path.GetFileName).Order());
         using var archive = ZipFile.OpenRead(Path.Combine(directory, "stdlib.zip"));
         Assert.Equal(DecoderRuntime.StandardLibraryFiles, archive.Entries.Select(e => e.FullName));
@@ -62,7 +62,7 @@ public sealed class Round2DecoderRuntimeTests
         Directory.CreateDirectory(source); Directory.CreateDirectory(bundle);
         try
         {
-            string installed = Path.Combine(Repository.FindRoot(), DecoderRuntime.RelativeDirectory);
+            string installed = TiaMcp.Engine.Tests.Shared.DecoderRuntimeFixture.Ensure();
             foreach (string file in Directory.EnumerateFiles(installed)) File.Copy(file, Path.Combine(source, Path.GetFileName(file)));
             Directory.CreateDirectory(Path.Combine(source, "Doc/html"));
             File.Copy(Path.Combine(source, "THIRD-PARTY-LICENSES.html"), Path.Combine(source, "Doc/html/license.html"));

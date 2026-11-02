@@ -44,7 +44,7 @@ internal static partial class ReleaseCommands
         "build-solutions" => BuildSolutions(options),
         "build-file-programs" => BuildFilePrograms(options),
         "prepare-delivery" => PrepareDelivery(options),
-        "prepare-decoder-python" => PrepareDecoderPython(options),
+        "prepare-decoder-python" => PrepareDecoderPython(DecoderPythonOptions(options)),
         "build-release" => BuildRelease(options),
         "build-multi-version" => BuildMultiVersion(options),
         "compare-release-records" => CompareReleaseRecords(options),
@@ -1264,7 +1264,7 @@ internal static partial class ReleaseCommands
         EnsureWindows("build-multi-version");
         var api = Path.GetFullPath(options.Get("PublicApiRoot") ?? throw new ReleaseException("-PublicApiRoot is required"));
         if (!Directory.Exists(api)) throw new ReleaseException("PublicApiRoot does not exist: " + api);
-        if (!options.Has("CompleteOnly")) PrepareDecoderPython(options);
+        if (!options.Has("CompleteOnly")) PrepareDecoderPython(DecoderPythonOptions(options));
         var releaseVersion = ReleaseVersions.ReadVersionProps(Root);
         var release = releaseVersion.Label;
         var releaseFileVersion = releaseVersion.FileVersion;

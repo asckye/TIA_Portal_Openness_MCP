@@ -215,18 +215,21 @@ namespace TiaMcpServer.ModelContextProtocol
                     string desc = (ToolDescription(kv.Value) + " " + ToolMetadata.SearchAliases(kv.Key)).ToLowerInvariant();
                     int score = terms.Length == 0 ? 1 : 0;
                     int matched = 0;
+                    bool capabilityHit = false;
                     string aliases = ToolMetadata.SearchAliases(kv.Key).ToLowerInvariant();
                     foreach (var t in terms)
                     {
                         int weight = lname.Contains(t) ? 20 : aliases.Contains(t) ? 12 : desc.Contains(t) ? 3 : 0;
                         score += weight;
                         if (weight > 0) matched++;
+                        if (weight >= 12) capabilityHit = true;
                     }
                     // Single words retain description recall; multi-word queries require
-                    // every capability word. Exact registered names always win.
+                    // every word and a name/alias hit. Exact registered names always win.
                     bool exact = string.Equals(kv.Key, query?.Trim(), StringComparison.OrdinalIgnoreCase);
                     if (exact) score = int.MaxValue;
-                    if (terms.Length == 0 || exact || matched == terms.Length && score >= (terms.Length == 1 ? 3 : 6))
+                    if (terms.Length == 0 || exact || matched == terms.Length && score >= (terms.Length == 1 ? 3 : 6)
+                        && (terms.Length == 1 || capabilityHit))
                         scored.Add(new KeyValuePair<int, string>(score, kv.Key));
                 }
 

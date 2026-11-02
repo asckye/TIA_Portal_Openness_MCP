@@ -48,6 +48,7 @@ public sealed class OfflineReadinessTests
     [Theory, MemberData(nameof(Cases))]
     public async Task Every_registered_offline_tool_runs_without_SDK_or_readiness(string release, string name)
     {
+        if (name == "DecodePlcSimaticMl") TiaMcp.Engine.Tests.Shared.DecoderRuntimeFixture.Ensure();
         Assert.True(TiaMcpServer.ModelContextProtocol.ToolTaxonomy.IsSafeWithoutTia(name), name);
         Assert.DoesNotContain(typeof(Host.McpServer).Assembly.GetReferencedAssemblies(), a => a.Name!.StartsWith("Siemens."));
         using var fixture = new Files();

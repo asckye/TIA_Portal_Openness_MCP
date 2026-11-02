@@ -35,7 +35,7 @@ internal static class CheckAllJobInputs
         ["approval-self-tests"] = "Test-ReleaseApprovalGate.py --self-test",
         ["relocation-self-tests"] = "Test-RelocatedBundle.py --self-test"
     };
-    internal static readonly string[] ToolJobs = ["generate-catalogs", "generate-tool-usage", "generate-release-migration", "build-once",
+    internal static readonly string[] ToolJobs = ["generate-catalogs", "generate-tool-usage", "generate-release-migration", "prepare-decoder-python", "build-once",
         "analyzer-warnings", "suite-output-parity", "tracked-tree-drift", "catalog-drift", "tool-counts-drift", "usage-drift", "migration-drift",
         "tools-list-self-tests", "tools-list", "script-calls", "dead-references", "repository", "repository-self-tests", "suite-runner-self-tests",
         "adapter-boundary", "tia-features", "bundle", "bundle-self-tests", "release-documentation", "release-dry-run", "preflight",
@@ -121,7 +121,7 @@ internal static class CheckAllJobInputs
             string.Join("\n", missing.Select(name => "Undeclared job (always run): " + name)));
     }
 
-    internal static bool AlwaysRun(string name) => name.StartsWith("generate-", StringComparison.Ordinal) || name is
+    internal static bool AlwaysRun(string name) => name.StartsWith("generate-", StringComparison.Ordinal) || name is "prepare-decoder-python" or
         "catalog-drift" or "tool-counts-drift" or "usage-drift" or "migration-drift" or "tracked-tree-drift" or "repository" or
         "dead-references" or "script-calls" or "python-script-calls" or "adapter-boundary" or "domain-source" or "release-documentation" or
         "analyzer-warnings" or "tools-list" or "contract-verify" or "response-verify" or "bundle" or "python-repository" or

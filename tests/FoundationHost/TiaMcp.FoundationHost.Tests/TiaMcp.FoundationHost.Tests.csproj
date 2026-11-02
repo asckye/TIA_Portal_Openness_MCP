@@ -6,6 +6,7 @@
     <!-- The worker fault fixtures are outside the solutions; keep this build's configuration so they reach the bin/Release paths the tests open. -->
     <ShouldUnsetParentConfigurationAndPlatform>false</ShouldUnsetParentConfigurationAndPlatform></PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../Shared/DecoderRuntimeFixture.cs" Link="Shared/DecoderRuntimeFixture.cs" />
     <Compile Include="../../../src/Adapters/Native/Optional/OptionalAssemblyAdmission.cs" Link="OptionalAssemblyAdmission.cs" />
     <Compile Include="../../Generation/TiaMcp.Generation.Planning.Tests/PlanningFixture.cs" Link="Generation/PlanningFixture.cs" />
     <Compile Include="../../../src/FoundationHost/GenerationTool.cs" Link="GenerationTool.cs" />

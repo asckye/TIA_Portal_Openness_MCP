@@ -14,6 +14,19 @@ namespace TiaMcp.Updater.Tests
 {
     public sealed class UpdaterTests
     {
+        [Fact]
+        public void Decoder_runtime_bytes_are_installed_and_removed_on_rollback()
+        {
+            using var fixture = new Fixture();
+            string runtime = TiaMcp.Engine.Tests.Shared.DecoderRuntimeFixture.Ensure();
+            Assert.Equal(0, fixture.Run());
+            foreach (string file in Directory.EnumerateFiles(runtime))
+                Assert.Equal(File.ReadAllBytes(file), fixture.Read("runtime/decoder-python/" + Path.GetFileName(file)));
+            Assert.Equal(0, fixture.Run(rollback: true));
+            foreach (string file in Directory.EnumerateFiles(runtime))
+                Assert.False(fixture.Exists("runtime/decoder-python/" + Path.GetFileName(file)));
+        }
+
         private static void PreviousEngineLayout(Fixture fixture, bool oldRecordOnly)
         {
             fixture.Write("manifest/delivery.json", "{\"release\":\"4.0.0\",\"package\":\"TIA_MCP_Delivery_v4.0.0_pre_engine\",\"engineRelease\":\"4.0.0\"}");
@@ -298,7 +311,7 @@ namespace TiaMcp.Updater.Tests
             }
         }
 
-        internal static void AddDeliveryLayout(Action<string, string> add)
+        internal static void AddDeliveryLayout(Action<string, string> add, Action<string, string> addFile)
         {
             string rules = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "scripts/operations/delivery-files.json"));
             add("scripts/operations/delivery-files.json", rules);
@@ -312,6 +325,8 @@ namespace TiaMcp.Updater.Tests
                 else if (path.StartsWith("runtime/studio/", StringComparison.Ordinal)) add(path, "fixture-studio");
                 else if (path.StartsWith("runtime/tools/TiaMcp.PluginLauncher", StringComparison.Ordinal)) add(path, "fixture-plugin-launcher");
             }
+            foreach (string file in Directory.EnumerateFiles(TiaMcp.Engine.Tests.Shared.DecoderRuntimeFixture.Ensure()))
+                addFile("runtime/decoder-python/" + Path.GetFileName(file), file);
         }
 
         internal static void WriteLocalPackage(string source, string updater, string updaterConfig)
@@ -325,7 +340,8 @@ namespace TiaMcp.Updater.Tests
                 AddText(archive, package + "/TiaOpenness.exe", "new-launcher");
                 AddFile(archive, package + "/runtime/tools/TiaMcp.Updater.exe", updater);
                 AddFile(archive, package + "/runtime/tools/TiaMcp.Updater.exe.config", updaterConfig);
-                AddDeliveryLayout((path, content) => AddText(archive, package + "/" + path, content));
+                AddDeliveryLayout((path, content) => AddText(archive, package + "/" + path, content),
+                    (path, file) => AddFile(archive, package + "/" + path, file));
             }
             byte[] bytes = File.ReadAllBytes(zipPath);
             using (var sha = SHA256.Create()) File.WriteAllText(Path.Combine(source, package + ".sha256"), BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant() + "  " + package + ".zip\n", new UTF8Encoding(false));
@@ -410,7 +426,8 @@ namespace TiaMcp.Updater.Tests
                     Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/manifest/delivery.json", "{\"release\":\"4.0.0\",\"package\":\"TIA_MCP_Delivery_v4.0.0_20261006\",\"engineRelease\":\"4.0.0\"}");
                     Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/manifest/package-manifest.json", "{}");
                     Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/TiaOpenness.exe", "new-launcher"); Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/runtime/tools/TiaMcp.Updater.exe", "new-updater"); Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/runtime/tools/TiaMcp.Updater.exe.config", "new-config");
-                    Fixture.AddDeliveryLayout((path, content) => Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/" + path, content));
+                    Fixture.AddDeliveryLayout((path, content) => Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/" + path, content),
+                        (path, file) => { using var input = File.OpenRead(file); using var output = zip.CreateEntry("TIA_MCP_Delivery_v4.0.0_20261006/" + path).Open(); input.CopyTo(output); });
                 }
                 return memory.ToArray();
             }

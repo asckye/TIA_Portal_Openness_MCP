@@ -229,6 +229,11 @@ public sealed class TestPackageTests
         File.SetLastWriteTimeUtc(tree.Write("Version.props", "<Project />"), Built.AddHours(-2));
         File.SetLastWriteTimeUtc(Path.Combine(tree.Root, "build-tools/bundled-dotnet.json"), Built.AddHours(-2));
         foreach (var product in ReleaseCommands.TestPackageProducts()) File.SetLastWriteTimeUtc(tree.Write(product, product), Built);
+        foreach (string file in Directory.EnumerateFiles(TiaMcp.Engine.Tests.Shared.DecoderRuntimeFixture.Ensure()))
+        {
+            string target = Path.Combine(tree.Root, "runtime/decoder-python", Path.GetFileName(file));
+            File.Copy(file, target, true); File.SetLastWriteTimeUtc(target, Built);
+        }
         var version = RuntimeVersion();
         foreach (var framework in new[] { "Microsoft.NETCore.App", "Microsoft.AspNetCore.App", "Microsoft.WindowsDesktop.App" })
             tree.Write($"runtime/dotnet/shared/{framework}/{version}/{framework}.deps.json", "{}");

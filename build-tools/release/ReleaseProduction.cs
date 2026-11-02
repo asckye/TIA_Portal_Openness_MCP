@@ -27,7 +27,7 @@ internal static partial class ReleaseCommands
         ReleaseEvidence.RequireNormalizedWorkingBytes(Root, git);
         Environment.SetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON", companion);
         NightlyRuns.RequireRelease(Root, git);
-        var python = options.Get("Python", Py);
+        var python = options.Get("Python") ?? Environment.GetEnvironmentVariable(DecoderPythonVariable) ?? Py;
         var parallelism = GetMaxParallelism(options).ToString(System.Globalization.CultureInfo.InvariantCulture);
         var publicApiRoot = ResolveReleaseApiRoot(options);
         var nugetConfig = options.Get("NuGetConfig") ?? Environment.GetEnvironmentVariable("TIA_MCP_OFFLINE_NUGET_CONFIG") ?? Environment.GetEnvironmentVariable("RestoreConfigFile");

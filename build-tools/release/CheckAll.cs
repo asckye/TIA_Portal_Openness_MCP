@@ -154,6 +154,8 @@ internal static partial class ReleaseCommands
             environment["PYTHONIOENCODING"] = "utf-8";
             environment["TIA_MCP_CHECK_NO_BUILD"] = "1";
             environment["TIA_MCP_PLC_TOOLS_PYTHON"] = companionPython;
+            environment[DecoderPythonVariable] = options.Get("Python") ?? Environment.GetEnvironmentVariable(DecoderPythonVariable);
+            environment["TIA_MCP_TEST_DECODER_PREPARE_TOOL"] = typeof(ReleaseCommands).Assembly.Location;
             environment["TIA_MCP_ANALYZER_REPORT_DIRECTORY"] = null;
         }
         SuiteProcess SuiteProcessFor(string name) => (executable, arguments, cwd, environment) =>
@@ -184,6 +186,7 @@ internal static partial class ReleaseCommands
         // Generation is an ordered prerequisite of compilation/capture. -Check is
         // also retained below, so regeneration never hides source drift.
         Add("generate-catalogs", () => Tool("generate-catalogs", "generate-catalogs"));
+        Add("prepare-decoder-python", () => Tool("prepare-decoder-python", "prepare-decoder-python"));
         Add("generate-tool-usage", () =>
         {
             var usage = Tool("generate-tool-usage", "generate-tool-usage");
@@ -223,7 +226,7 @@ internal static partial class ReleaseCommands
         {
             parity = new("suite-output-parity", () => CheckAllLayout.Verify(Root, builds, dotnet, nuget, api,
                 Path.Combine(output, "suite-output-parity"), runtimeManifest, buildParallelism, independent: true,
-                awaitRuntime: () => CheckScheduler.AwaitRuntime(runtimeReady.Task)), ["generate-tool-usage", "generate-release-migration"]);
+                awaitRuntime: () => CheckScheduler.AwaitRuntime(runtimeReady.Task)), ["generate-tool-usage", "generate-release-migration", "prepare-decoder-python"]);
             parity = parity with { Priority = 2, Affinity = layout.General, EstimatedSeconds = CheckAllJobCost(parity, costs), Timeout = CheckScheduler.JobTimeout(parity, costs) };
             if (!packing.CanAdmit(parity, layout.General, [])) throw new ReleaseException("Parity exceeds the available check CPU/memory budget.");
             parityTask = CheckScheduler.Start(parity, Path.Combine(output, "logs"));
@@ -249,7 +252,7 @@ internal static partial class ReleaseCommands
         }, ["build-once"]);
         if (!options.Has("BuildOnly")) jobs.AddRange(staticJobs.Where(job => Early(job.Name))
             .Select(CheckAllEarlyDependencies).Select(job => BindEarly(job with { Priority = 1, Affinity = layout.General })));
-        try { Wave(["generate-tool-usage"]); }
+        try { Wave(["generate-tool-usage", "prepare-decoder-python"]); }
         finally { runtimeReady.TrySetResult(new(1, "", "Build wave did not publish runtime outputs.")); }
         if (!CheckAllPrerequisitesPassed(timings.Where(row => row.Name is "generate-catalogs" or "generate-tool-usage" or "build-once")))
         {
