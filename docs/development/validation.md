@@ -123,9 +123,8 @@ check-all 的合并和 nightly 构建统一设置 `TiaCheckBuild=true` 与固定
 
 | Workflow / job（含矩阵） | 对应 check-all 作业 / 套件 | 分工与差异 |
 |---|---|---|
-| offline-checks / py-cs-parity，ubuntu-latest、windows-latest | static-python-csharp-parity、catalog-drift、usage-drift、migration-drift、tool-counts-drift、tools-list；文件程序构建与 analyzer-warnings 的部分输入 | 生成器字节检查与 tools-list 命令相同，但该 job 尚无分工收据，仍本机执行；parity 的 Python 版本、编译模式与路径环境不同，CI analyzer 未用本机完整 SDK 构建清单，不等价 |
 | offline-checks / offline-tests，Ubuntu，Shards=4 | repository-self-tests、suite-runner-self-tests；offline、offline-v20、kept-code、kept-code-v20、version-policy、generation-model、generation-planning、workbench-control-protocol | Linux 的平台通过/跳过门槛、管道身份、代码页与路径语义不等价于 Windows；不采纳 |
-| offline-checks / source-contracts，Ubuntu | 四个 drift、tools-list-self-tests/tools-list、python-script-self-tests/python-script-calls/script-calls、campaign-runner-self-tests、dead-references、repository/repository-self-tests、source-contracts、adapter-boundary、domain-source、contract-self-tests/contract-verify/response-verify | 纯生成/roster/快照 verify 命令相同，尚无该 job 的分工收据，仍本机执行；其余检查的 Linux 进程、代码页、路径状态不等价于本机 Windows；文件程序/analyzer 仅为部分构建输入 |
+| offline-checks / source-contracts，Ubuntu | 四个 drift、tools-list-self-tests/tools-list、script-calls、campaign-runner-self-tests、dead-references、repository/repository-self-tests、source-contracts、adapter-boundary、domain-source、contract-self-tests/contract-verify/response-verify | 纯生成/roster/快照 verify 命令相同，尚无该 job 的分工收据，仍本机执行；其余检查的 Linux 进程、代码页、路径状态不等价于本机 Windows；文件程序/analyzer 仅为部分构建输入 |
 | offline-checks / studio-tests，shared-adapter-paths=false、true，Windows | studio-core-false/true、studio-gui-false/true | 同项目与路径模式，使用注册套件门禁；true 的 studio-true profile 另出 CI 收据，false 保留本机；Studio 构建也不替代本机输出对等性 |
 | offline-checks / foundation-suites，runner=0、1、2、3，Windows，Shards=8、RunnerCount=4 | foundation、engine-host、shared-lifecycle-plc、worker-progress-foundation、prompt-registration、software-read、special-export-shape、device-add、hardware-catalog、diagnostic-membership、adapter-contracts、worker-channel、compile-candidate、compile-candidate-no-safety、fallback-vci-modern/initial/classic、workbench-control-protocol | 各 runner 只证明分片；必须由下一行覆盖全部分片的门禁合并，不单独采纳任一 runner |
 | offline-checks / foundation-suites-gate，Windows，Shards=8、GateOnly | 上述 18 套件的全部本机 shard 与 gate | foundation profile 可采纳；沿用注册过滤/属性/最低通过数/最大跳过数，验证四个 runner 的分片并集且每片恰一次；本机可能用计时历史产生不同分片，但都覆盖完整同一套件；不包含 foundation-api |
@@ -144,7 +143,7 @@ CI 命令仍执行全部检查；本机分片数量无需等于 CI，但 CI 的 
 check-all 默认 `-SensitiveParallelism 3`。核心足够时，三条敏感通道各至少两个逻辑核，并按完整物理核分配；第三条通道不会挤掉原压测预留。默认三条放不下时，保留原两条通道的核心布局及既有降级规则。显式 `-SensitiveCores`、`-StabilityCores` 大小仍严格保留，`-SensitiveParallelism` 显式值继续生效，实际 worker 数受完整核心分区限制。敏感分片按成本分配到 worker，各 worker 内部串行；Foundation 及 Foundation-API 等复用同一 Foundation 测试程序集的注册套件按分片分配，允许不同敏感 worker 并行。构建仍只执行一次；每条敏感 worker 从准确 runtime manifest 复制逐字节相同的程序集输出及三个 worker fixture，普通 Foundation 分片各用独立副本。全部复制和 SHA-256 校验在启动测试前完成，suite-worker-copies.json 记录源/副本哈希、worker、测试程序集和结果目录；副本位于本轮 checkout 的短 bin-build/w 目录，避免 -Clean 回到原 worktree。程序集旁 adapter 身份、审计/数据及 fixture 身份写入各自副本，TEMP、配置、管道 scope 和 TRX 继续按进程/分片隔离。源码、SDK 和资源仅共享读取，带 GUID 的仓库临时目录各自独立；同一 worker 内仍串行且独占完整核心。尚未审计并隔离的其他程序集继续整组固定在一个 worker，独立 test-suites 入口保留原分组。report.json、cpu-plan.json、comparison.md 和控制台记录请求/实际 worker 数及不足原因。独立 test-suites 入口保留原两条、每条四核 worker 默认；check-all 按实际组和需求配置。
 可用 CPU 无法按完整物理核同时容纳敏感、压测和普通队列时，仍依次尝试调整默认大小、不保留敏感队列、压测共用普通队列、单物理核共用全部 CPU。显式大小保持严格拒绝规则。report.json、cpu-plan.json 和 comparison.md 记录 cpuIsolation 及原因；三十分钟门槛照常决定退出状态。
 普通队列默认上限仍为 32 项，`-MaxParallelism` 或优先的 `-CpuParallelism` 可设更小值。有命令资源历史时逐项核算：普通作业的 CPU 秒 / wall 秒需求之和不超过本次掩码的逻辑核数；所有运行作业（含保留通道）的内存预算之和不超过可用物理内存与 commit 余量较小值的一半。每项内存预算取自身历史峰值且至少 256 MiB，不再对所有小作业统一按较重作业的第 95 百分位限流。未知作业仍用历史加权 CPU 需求和第 95 百分位内存，无历史内存按 512 MiB；生成与构建波次继续使用原统一预算及独立的 MSBuild 并发，运行时波次才逐项预留；构建的多条顺序命令峰值之和不作为单条运行时检查的内存需求。完全没有资源历史时保留原统一预算计算。单项超预算命令仅在无其他运行作业时允许前进，单个超核需求命令可独自使用普通通道；这些例外不增加并发上限。新记录 check-resources.json 使用每个命令自有内核 job 的 CPU 累计和峰值 committed memory，不把同期 runner CPU 全算给每项。旧报告只有共享采样时按重叠 job-seconds 分摊并明确标注估算，后续以实际归属计量替换；CPU 采样仍用于外部负载诊断。
-suite-output-parity 在生成完成后就于本 worktree 的 bin-build/p 内复制相同源码，与 build-once 并行构建普通布局；它保留同一个原有整项 deadline，完成 ordinary baseline 后再等待 build-once 发布准确的 runtime manifest，最后执行原文件清单比较。ordinary baseline 不写测试正在发现的输出目录；最后一波接续已启动的 parity，只收集一次真实计时。phases.json 记录 baseline、等待与比较的分段耗时。bundle 与 python-repository 等待读取 analyzer-warnings 成功后登记的本轮报告。-Clean 的 harness 仅接受自身快照中的可执行文件；证据还可写到环境及 owner 标记共同证明的原 worktree，其他 worktree 和兄弟快照均拒绝。
+suite-output-parity 在生成完成后就于本 worktree 的 bin-build/p 内复制相同源码，与 build-once 并行构建普通布局；它保留同一个原有整项 deadline，完成 ordinary baseline 后再等待 build-once 发布准确的 runtime manifest，最后执行原文件清单比较。ordinary baseline 不写测试正在发现的输出目录；最后一波接续已启动的 parity，只收集一次真实计时。phases.json 记录 baseline、等待与比较的分段耗时。bundle 等待读取 analyzer-warnings 成功后登记的本轮报告。-Clean 的 harness 仅接受自身快照中的可执行文件；证据还可写到环境及 owner 标记共同证明的原 worktree，其他 worktree 和兄弟快照均拒绝。
 check-all 为每个注册套件分片保存独立的 VSTest Info 级诊断日志及 host/collector 子日志，供核对进程 PID、退出与收集器原因；原五分钟 hang timeout、mini dump 要求和失败门禁不变。PLC harness 显式接收本轮 runtime manifest 中构建的 release-tool DLL 和同一 runtime manifest，内部 engine-host 套件仍执行完整注册门禁；不会依赖 -Clean 快照中未投影的普通 release-tool 目录。
 cpu-plan.json 记录核掩码、队列容量、依赖、预测成本、每项 CPU/内存预算及 companion Python。就绪作业保留通道、空闲保留通道的输入和原优先级仍优先，同一通道及优先级内按实测整项耗时从长到短启动，名称打破同耗时平局；实测排序不再把子孙作业的成本加到短父项上。待执行图完全没有实测排序记录时，保留原依赖成本排序，让 catalog/capture 等前置图维持原行为。check-order-costs.json 保存最近成功运行的整项耗时，-BaselineReport 的成功结果覆盖排序历史；无记录时回退当前分片估计。已隔离的 Foundation 分片及其余未拆分的敏感组按同一实测成本平衡到 worker；汇总仍依赖全部分片。check-costs.json 继续保存历史最大成本，和原分片估计一起计算原 deadline；排序历史不改变 deadline。`-CompanionPython` 优先于 TIA_MCP_PLC_TOOLS_PYTHON；未指定时查询 worktree 或 SDK 所属仓库的 TiaMcp_Output/ecosystem-python 环境，传给所有隔离子进程，保留 PDF 和伴随命令检查。
 每个进程在系统临时目录下使用独立的短 TEMP，数据及配置位于该 TEMP 内，避免 Git 与安装目录检查误认源码 checkout；Harness 使用独立引擎副本和套件结果目录。
@@ -307,7 +306,7 @@ CommentHygiene、McpText 和 Inventory-ResponseEnvelopes；下表也列出它们
 `dotnet run --project build-tools/release -- generate-tool-usage -Check` 和
 `dotnet run --project build-tools/release -- generate-release-migration -Check`，并运行 `check-tools-list` 及其 `-SelfTest`；静态检查自检统一使用
 `dotnet run --project build-tools/release -- check-repository -SelfTest`，也在 `offline-tests` job 运行。CFC 已包含在上述全领域检查中。V4 脚本调用检查仅由本 job 执行：
-`check-script-tool-calls`、`Check-ScriptToolCalls.py --self-test` 和 `Check-ScriptToolCalls.py`；V4 解码和诊断客户端断言已进入 `source-contracts`，
+`check-script-tool-calls`；V4 解码和诊断客户端断言已进入 `source-contracts`，
 `validate.yml` 不重复执行。
 
 按成员验证的引擎检查使用 [EngineSources.cs](../../build-tools/common/TiaMcp.BuildCommon/EngineSources.cs)，
@@ -315,8 +314,7 @@ CommentHygiene、McpText 和 Inventory-ResponseEnvelopes；下表也列出它们
 排除生成和构建文件；重载通过签名、所属类型或 MCP 属性区分，缺失或歧义直接失败。
 词法器保留完整方法体，不依赖相邻成员或迁移前文件路径。它是源码契约检查，不替代 C# 编译或原生验收。
 
-过渡期 `py-cs-parity` job 在 Windows 与 Ubuntu 比较四个棘轮的完整指纹与基线字节、TIA 常量捕获和死引用修复。
-Python 副本为后续批次依赖与对拍保留；批 8 删除临时 job。
+四个棘轮、TIA 常量和死引用检查统一使用 C# 命令；Python 源码契约检查通过 `csharp_lexer.py` 复用原有词法器。
 
 ### 手动补充检查
 
@@ -713,11 +711,11 @@ HTTP 可达、工具枚举、程序构建或公开发布都不等于工程语义
 
 ## V4 脚本调用与 campaign 输入
 
-CI 使用 `check-script-tool-calls` 检查 C# 与 JSON 计划，并暂时保留 `Check-ScriptToolCalls.py` 检查 Python、shell 和 JSON 计划中的工具调用；注册工具名来自引擎注册和版本目录。历史映射、冻结的 v3.3.0 写入守卫清单和精确的未知工具负例具有显式例外。C# 客户端复用 `McpResults`；尚未迁移的 Python 检查暂用 `mcp_results.py`。两者与 TiaMcp.Engine.Harness 的 `DeveloperChecks` 读取 V4 `ok/data/error/meta`，批次读取 `data.items`；3.x 的 `message/meta.success` 不能作为成功结果。
+CI 使用 `dotnet run --project build-tools/release -- check-script-tool-calls` 检查 C#、Python、PowerShell、shell 和 JSON 计划中的工具调用；注册工具名来自引擎注册和版本目录。历史映射、冻结的 v3.3.0 写入守卫清单和精确的未知工具负例具有显式例外。C# 客户端复用 `McpResults`；尚未迁移的 Python 检查暂用 `mcp_results.py`。两者与 TiaMcp.Engine.Harness 的 `DeveloperChecks` 读取 V4 `ok/data/error/meta`，批次读取 `data.items`；3.x 的 `message/meta.success` 不能作为成功结果。
 
 ```powershell
-python scripts/checks/Check-ScriptToolCalls.py --self-test
-python scripts/checks/Check-ScriptToolCalls.py
+dotnet run --project build-tools/release -- check-script-tool-calls -SelfTest
+dotnet run --project build-tools/release -- check-script-tool-calls
 dotnet run --project build-tools/release -- test-suites -Suite source-contracts
 python scripts/checks/Test-CampaignInputs.py --exe runtime/v21/TiaMcp.FoundationHost.exe --public-api <V21-net48-SDK> --plc-worker bin-build/plc-worker-fixtures/sdk/bin/21/Release/net48/TiaMcp.PlcWorker.21.exe --major 21 --output bin-build/campaign-inputs
 ```

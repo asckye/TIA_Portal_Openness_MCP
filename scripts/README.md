@@ -38,6 +38,8 @@
 | 操作 | [vci-watch](operations/vci-watch/README.md) | `dotnet run --project build-tools/release -- publish-vci-watch` 发布 WinExe；`bin-build/vci-watch/watch.exe --register-task [--interval-minutes 10]` 注册当前用户任务，`--remove` 删除 |
 | 操作 | `runtime/tools/TiaMcp.Updater.exe` | 在已解压的交付包里更新或回滚；手动运行时从包根传入 `-InstallRoot .`；支持 `-Check`、`-Version`、`-Force`、`-Repository`、`-TimeoutSeconds`、`-WaitForPid`、`-Rollback` 和 `-RelaunchConfigurator`；不连接 TIA、不结束进程，保留用户数据及未归更新器所有的文件 |
 | 手动检查 | [Test-CampaignInputs.py](checks/Test-CampaignInputs.py)、[Test-ExternalSourceDispatch.cs](checks/Test-ExternalSourceDispatch.cs)、[Test-HmiImportSafety.cs](checks/Test-HmiImportSafety.cs)、[Test-PilotTools.py](checks/Test-PilotTools.py)、[Test-PlcEditingMcp.py](checks/Test-PlcEditingMcp.py)、[Test-TechnologyImportSafety.cs](checks/Test-TechnologyImportSafety.cs)、[Test-SharedNativeIlReader.py](checks/Test-SharedNativeIlReader.py)、[Test-SharedNativeMigration.cs](checks/Test-SharedNativeMigration.cs) | 改动对应输入、派发、导入安全、工具或共享原生路径后按验证说明选择运行；默认 CI/发布链不执行，不使用 live 分支 |
-| 检查 | `dotnet run --project build-tools/release -- check-ratchet -Kind swallowed\|comments\|mcp-text\|envelopes`、`check-envelope-rewrite -Base <commit>`、`check-adapter-boundary`、`check-tia-features`、`check-script-tool-calls` | C# 静态门禁；`-SelfTest` 执行移植自检，基线更新使用 `-UpdateBaseline` |
+| 检查 | `dotnet run --project build-tools/release -- check-ratchet -Kind swallowed\|comments\|mcp-text\|envelopes`、`check-envelope-rewrite -Base <commit>`、`check-adapter-boundary`、`check-tia-features`、`check-script-tool-calls` | C# 静态门禁；工具调用检查覆盖 C#、Python、PowerShell、shell 与 JSON；`-SelfTest` 执行移植自检，基线更新使用 `-UpdateBaseline` |
 
 详见 [验证说明](../docs/development/validation.md) 和 [发布流程](../docs/development/release-workflow.md)。PowerShell、batch、cmd 构建发布入口已由 .NET release tool 替代并删除。
+
+Python 源码契约检查通过 `checks/csharp_lexer.py` 复用词法器。`checks/Check-BundleLayout.py` 仍由打包与发布资产验证脚本导入，待发布链迁入 C# 后再删除。

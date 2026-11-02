@@ -115,7 +115,7 @@ internal sealed class CheckAllResultCache
     }
 
     internal static bool ReusableStatic(string name) => name is "catalog-drift" or "tool-counts-drift" or "usage-drift" or "migration-drift" or
-        "tools-list" or "script-calls" or "dead-references" or "adapter-boundary" or "python-script-calls" or "python-script-self-tests";
+        "tools-list" or "script-calls" or "dead-references" or "adapter-boundary";
 
     internal static bool AlwaysRun(string name) => new[] { "stability", "soak", "timing", "budget", "network", "sensitive" }
         .Any(word => name.Contains(word, StringComparison.OrdinalIgnoreCase));

@@ -241,7 +241,7 @@ MCP 工具入口方法（带 `[McpServerTool]`）是一个独立表面：C# 方�
 | U-23 | MUST | 线上、日志、持久化时间戳用 `DateTimeOffset.UtcNow`（V4 `Meta` 已如此）；时长用 `Stopwatch`；`DateTime.Now` 只用于面向用户的本地显示或文件名。冻结的旧 meta 时间戳编码在旧族移除前不改（棘轮 `timestamp_now_assignments` 只减不增）。 | 时区与夏令时无关。 | [DateTime 与 DateTimeOffset 的选择](https://learn.microsoft.com/dotnet/standard/datetime/choosing-between-datetime) | 项目棘轮 `ratchet -Kind envelopes`（只覆盖手写赋值） |
 | U-24 | SHOULD NOT | 引入可变静态状态。必需的进程级配置钩子只在启动时设置一次并说明线程安全；可变静态字段按 N-08 命名 `s_`。 | 多会话宿主中的竞争与测试隔离。 | [托管线程最佳实践](https://learn.microsoft.com/dotnet/standard/threading/managed-threading-best-practices) | CA2211：warning（仅可见字段） |
 | U-25 | MUST | 自定义特性以 `Attribute` 结尾、`sealed`、标注 `[AttributeUsage]`。 | 查找性能与正确使用。 | [FDG 特性](https://learn.microsoft.com/dotnet/standard/design-guidelines/attributes) | CA1018：warning；CA1813：suggestion |
-| U-26 | MUST [P] | 版本条件编译只使用 [`TiaFeatures.props`](../../../src/Shared/TiaFeatures.props) 中的特性符号、SDK 框架符号（`NET`、`NETFRAMEWORK`、`NET48`）和文档化的构建角色符号；不新增临时版本宏。 | 单一特性表，由 `Check-TiaFeatures.py` 核对。 | [unified-version-framework：编译器特性表](../unified-version-framework.md#compiler-feature-table) | `Check-TiaFeatures.py` |
+| U-26 | MUST [P] | 版本条件编译只使用 [`TiaFeatures.props`](../../../src/Shared/TiaFeatures.props) 中的特性符号、SDK 框架符号（`NET`、`NETFRAMEWORK`、`NET48`）和文档化的构建角色符号；不新增临时版本宏。 | 单一特性表，由 `dotnet run --project build-tools/release -- check-tia-features` 核对。 | [unified-version-framework：编译器特性表](../unified-version-framework.md#compiler-feature-table) | `dotnet run --project build-tools/release -- check-tia-features` |
 | U-27 | SHOULD | `HttpClient` 长期复用（或通过工厂），不在每次调用中新建并释放。 | 套接字耗尽与 DNS 刷新。 | [HttpClient 使用准则](https://learn.microsoft.com/dotnet/fundamentals/networking/http/httpclient-guidelines) | 无 |
 
 ---
@@ -320,7 +320,7 @@ Microsoft 基础：[托管与非托管线程（单元）](https://learn.microsof
 | B-02 | MUST NOT | 新增受跟踪的 PowerShell、batch、cmd 文件；构建、发布和检查自动化维护在 `build-tools/release`（C#），用 `dotnet run --project build-tools/release -- <command>` 调用。 | CLAUDE.md、AGENTS.md | `RepositoryChecks` |
 | B-03 | MUST NOT | 手改生成文件（`manifest/*.json` 哈希、`manifest/tools-list.json`、`src/Shared/ToolUsageData.json`、`docs/reference/tool-matrix.md`、嵌入目录等）；按 `generate-catalogs` → `generate-tool-usage` 顺序生成，再构建与捕获。 | AGENTS.md | 生成器 `-Check` 逐字节检查 |
 | B-04 | MUST NOT | 删除、跳过、过滤、放宽或重设任何检查、断言、阈值与门禁；棘轮基线只减不增；功能按设计改变时用正式工具重新生成基线并逐项报告差异。 | AGENTS.md | 各棘轮与套件下限 |
-| B-05 | MUST | 移动或重命名源文件时同步更新所有 `<Compile Include>` 链接、测试工程与文档路径；增删文件后运行 `validate-bundle -Strict -NoBinaries -SkipSourceHashes` 与 `Check-Repository.py --no-binaries`。 | AGENTS.md | 两个检查的必需文件清单 |
+| B-05 | MUST | 移动或重命名源文件时同步更新所有 `<Compile Include>` 链接、测试工程与文档路径；增删文件后运行 `validate-bundle -Strict -NoBinaries -SkipSourceHashes` 与 `dotnet run --project build-tools/release -- check-repository -NoBinaries`。 | AGENTS.md | 两个检查的必需文件清单 |
 | B-06 | MUST | 契约程序集不引用 Siemens 或 JSON 库；`TiaMcp.Logic` 不引用 Siemens 或 MCP SDK；Siemens 引用只出现在适配器、引擎和 worker 中。 | repository-layout、契约工程中的引用禁止目标 | MSBuild 目标 `RejectNativeAndJsonDependencies` |
 | B-07 | MUST | 共享构建设置以显式导入的 props 提供（与 `TiaPublicApi.props`、`TiaFeatures.props` 一致），不使用隐式的全仓库导入。注意：`src/Engine`、`src/Studio`、`src/PlcWorker` 各有自己的 `Directory.Build.props`，它们不会继承根目录的同名文件。 | unified-version-framework | 无 |
 | B-08 | MUST | 第三方源码保留原样式与许可证，不受本规范约束；`.editorconfig` 中对 `third_party/**`、`reference/**` 关闭全部诊断。 | CLAUDE.md | editorconfig |
@@ -364,7 +364,7 @@ Microsoft 基础：[托管与非托管线程（单元）](https://learn.microsof
 
 - 2026-10-11 的快照中没有任何工程设置 `TreatWarningsAsErrors`、`AnalysisLevel` 或 `NoWarn`，也没有 `.editorconfig`。面向 net10 的工程已经在运行 SDK 默认启用的分析器（如 CA1416、CA2200、CA2013 等默认 warning），但现有警告数需要完整构建才能得出（编写本规范时没有构建）；启用前先用一次完整构建记录警告基线。
 - IDE0005 要在构建中报告，需要 `GenerateDocumentationFile=true`，这会同时触发 CS1591（缺少 XML 注释），需另行 `NoWarn`。建议 IDE0005 只在 IDE 与 `dotnet format` 中使用。
-- 新增的根 `.editorconfig` 和 props 是受跟踪文件：按 B-05 运行 `validate-bundle` 与 `Check-Repository.py`，并把它们加入发布源码清单（`build-tools/release/source-roots.json`，2026-10-11 决定）。
+- 新增的根 `.editorconfig` 和 props 是受跟踪文件：按 B-05 运行 `validate-bundle` 与 `dotnet run --project build-tools/release -- check-repository`，并把它们加入发布源码清单（`build-tools/release/source-roots.json`，2026-10-11 决定）。
 - 有 `InternalsVisibleTo` 的程序集（Contracts、Logic、EngineHost、Studio Core 等）中，CA1852 不报告。
 - 规则严重性只在 `.editorconfig` 中维护，不在各工程中散布 `NoWarn`。
 

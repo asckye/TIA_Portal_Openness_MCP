@@ -159,7 +159,7 @@ LegacyHost 旧 `WorkerProtocol.Decode` 无生产调用方，已删除。逐处�
 | `SupplementaryReadTests` | 以宿主异常连接脱敏策略和 MCP 边界，保留全部断言；不再声称调用旧解码器 |
 
 foundation / foundation-api 的最低数量各减少上述 **10** 项；offline / offline-v20 不变。
-`Check-TiaFeatures.py` 的动态工程 glob 与 expectation、三份必需文件/发布清单、Build 脚本及 test-suites
+`dotnet run --project build-tools/release -- check-tia-features` 的动态工程 glob 与 expectation、三份必需文件/发布清单、Build 脚本及 test-suites
 均没有预览工程显式条目，无需改写。三个源码门禁的预览豁免已删除，原基线不含预览条目。
 
 ## JSON（P2-04 的输入）

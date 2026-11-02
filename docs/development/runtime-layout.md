@@ -272,7 +272,7 @@ HMI 模板还要求 `--hmi-template-directory <absolute-directory>`，组件目�
 - C# 5 Launcher 的唯一相对候选与解析器的 Studio 安装锚点、GUI 工程的输出 EXE 名称一致。
 
 仓库模式核对代码表与跟踪文件；包模式从仓库运行校验器，按交付规则检查资源而不要求包内源码。
-检查器不证明运行时返回值、二进制完整性或西门子行为；`Check-Repository.py --no-binaries` 同时运行此检查。
+检查器不证明运行时返回值、二进制完整性或西门子行为；`dotnet run --project build-tools/release -- check-repository -NoBinaries` 同时运行此检查。
 布局矩阵及调用方差分测试位于保留代码套件的 [BundleLayoutTests.cs](../../tests/KeptCode/TiaMcp.KeptCode.Tests/BundleLayoutTests.cs)、
 [EcosystemTests.cs](../../tests/KeptCode/TiaMcp.KeptCode.Tests/EcosystemTests.cs)，引擎套件的
 [EngineBundleLayoutTests.cs](../../tests/Engine/TiaMcp.Engine.Tests/EngineBundleLayoutTests.cs) 和 Studio 的
@@ -291,13 +291,13 @@ G7-5 比较了 1,921 份 Studio 重定位结果；G7-6 在 V20/V21 各完成 75 
 
 1. 将交付资源放入受版本管理的包内路径，在 `BundleResource` 与 `ResourcePaths` 增加一项。
    目录资源同步调整 `FindResource` 的目录判断；编译生成的 EXE/DLL 继续由构建与交付清单管理。
-2. 同步 `delivery-files.json` 和 C# `BundleManifestRequirements`；核对 `Check-Repository.py` 和 `Package-Release.py` 的必需文件清单，
+2. 同步 `delivery-files.json` 和 C# `BundleManifestRequirements`；核对 `dotnet run --project build-tools/release -- check-repository` 和 `Package-Release.py` 的必需文件清单，
    按资源用途补齐。清单与源码哈希由对应构建生成器更新，不手工改 manifest 哈希。
 3. 调用方复用解析器和版本目录表；需要新输出布局时显式扩充锚点。既有调用方保持覆盖优先级、路径拼写和错误语义，
    不增加新的仓库探测。仅限单个程序集使用的固定数据可按生态目录模式直接嵌入，并保留唯一可编辑源。
 4. 补充受影响资源/调用方的布局测试，验证缺文件、显式覆盖与仓库外重定位；运行
    `python scripts/checks/Check-BundleLayout.py --self-test`、`python scripts/checks/Check-BundleLayout.py`、
-   `python scripts/checks/Check-Repository.py --no-binaries` 和
+   `dotnet run --project build-tools/release -- check-repository -NoBinaries` 和
    `dotnet run --project build-tools/release -- validate-bundle -Strict -NoBinaries -SkipSourceHashes`。
    C# 变更继续按[验证分层](validation.md)执行受影响套件、构建与兼容快照。
 

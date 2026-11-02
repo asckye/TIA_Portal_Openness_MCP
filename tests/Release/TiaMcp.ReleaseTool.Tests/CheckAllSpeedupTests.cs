@@ -71,13 +71,13 @@ public sealed class CheckAllSpeedupTests
     public static IEnumerable<object[]> TierCases => new[]
     {
         ("suite-output-parity", "src/Logic/Logic.cs", "src/Logic/TiaMcp.Logic.csproj"),
-        ("static-python-csharp-parity", "src/Logic/Logic.cs", "build-tools/release/ResponseEnvelopes.cs"),
+        ("repository-self-tests", "src/Logic/Logic.cs", "build-tools/release/PythonScriptCalls.cs"),
         ("studio-gui-true-shard-0", "src/Studio/Gui/MainWindow.xaml", "src/Studio/Core/Session.cs"),
         ("studio-gui-true-gate", "src/Studio/Gui/MainWindow.xaml", "src/Adapters/Native/Adapter.cs"),
         ("studio-gui-true", "src/Studio/Gui/MainWindow.xaml", "src/Studio/Bridge/RpcDispatcher.cs")
     }.Select(row => new object[] { row.Item1, row.Item2, row.Item3 }).Concat(
         new[] { "tools-list-self-tests", "repository-self-tests", "suite-runner-self-tests", "bundle-self-tests", "contract-self-tests",
-            "python-script-self-tests", "check-all-speedup-self-tests", "campaign-runner-self-tests", "campaign-validator-self-tests", "plc-script-self-tests",
+            "check-all-speedup-self-tests", "campaign-runner-self-tests", "campaign-validator-self-tests", "plc-script-self-tests",
             "plc-harness-self-tests", "approval-self-tests", "relocation-self-tests", "native-lifecycle", "native-mcp-session" }
             .Select(name => new object[] { name, "src/Logic/Logic.cs", CheckAllMergePolicy.SelfTestInputs(name)![0] }));
 
@@ -90,6 +90,12 @@ public sealed class CheckAllSpeedupTests
         Assert.True(new CheckAllMergePolicy([], null).Includes(name, "nightly"));
         Assert.True(new CheckAllMergePolicy([], "unknown change set").Includes(name, "merge"));
     }
+
+    [Theory]
+    [InlineData("scripts/checks/Snapshot-ToolContracts.py")]
+    [InlineData("scripts/checks/Test-DomainTools.py")]
+    public void SourceContractInputsIncludeTheExtractedLexer(string script) =>
+        Assert.Contains("scripts/checks/csharp_lexer.py", CheckAllScriptInputs.Closure(script));
 
     [Fact]
     public void TierSelectionPrunesEarlyDependenciesAndCannotCarryMergeExclusionsIntoNightly()
@@ -237,7 +243,7 @@ public sealed class CheckAllSpeedupTests
         CheckAllProfiles.AddStudio(jobs, Root, catalog, Path.Combine(output, "suites"), "dotnet", "merge", null);
         CheckAllProfiles.AddDerived(jobs, catalog, Path.Combine(output, "suites"), derivations);
         foreach (var name in ReleaseCommands.CheckAllPlcScriptJobs().Concat(ReleaseCommands.CheckAllPlcHarnessJobs())
-            .Concat(CheckAllJobInputs.ToolJobs).Concat(new[] { "contract-verify", "response-verify", "python-repository" }).Distinct())
+            .Concat(CheckAllJobInputs.ToolJobs).Concat(new[] { "contract-verify", "response-verify" }).Distinct())
             if (!jobs.Any(job => job.Name == name)) jobs.Add(Job(name));
         const string wide = "src/Logic/V4/ResponseEnvelope.cs";
         var units = catalog.Select(pair => new AffectedUnit(pair.Key, (string)pair.Value!["project"]!, [wide]))

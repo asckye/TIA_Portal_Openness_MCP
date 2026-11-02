@@ -4,18 +4,12 @@ This is a lexical source-check helper, not a C# compiler. Reuse the repository's
 lexer so comments, literals and conditional branches cannot truncate a member.
 Missing or ambiguous declarations fail closed; callers must identify overloads.
 """
-import importlib.util
+import csharp_lexer as lexer
 from pathlib import Path
 import re
-import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 ENGINE = Path('src/EngineHost')
-spec = importlib.util.spec_from_file_location('source_contract_lexer',
-                                            Path(__file__).with_name('Check-SwallowedExceptions.py'))
-lexer = importlib.util.module_from_spec(spec)
-sys.modules[spec.name] = lexer
-spec.loader.exec_module(lexer)
 
 
 def block_after(source, marker):

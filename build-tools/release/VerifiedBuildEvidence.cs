@@ -41,7 +41,7 @@ internal static class VerifiedBuildEvidence
         if (cache["failures"] is not JsonArray failures || failures.Count != 0) problems.Add("build cache has failures or an incomplete report");
         var units = cache["units"]?.Deserialize<CheckUnitEvidence[]>(new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }) ?? [];
         var scripts = cache["scripts"]?.Deserialize<CheckUnitEvidence[]>(new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }) ?? [];
-        var expectedScripts = new[] { "Test-StaticCheckParity", "Test-MatchPlcName" }
+        var expectedScripts = new[] { "Test-MatchPlcName" }
             .Where(name => File.Exists(Path.Combine(full, "scripts/checks/" + name + ".cs"))).Select(name => "file-program:" + name).Order(StringComparer.Ordinal);
         if (!expectedScripts.SequenceEqual(scripts.Select(unit => unit.Unit).Order(StringComparer.Ordinal))) problems.Add("file program build unit coverage is incomplete");
         if (units.Length == 0) problems.Add("build cache has no unit evidence");

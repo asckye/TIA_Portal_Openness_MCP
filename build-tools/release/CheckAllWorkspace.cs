@@ -267,7 +267,7 @@ internal static partial class ReleaseCommands
             result = new(scripts.ExitCode, result.StandardOutput + scripts.StandardOutput, result.StandardError + scripts.StandardError);
         }
         if (result.ExitCode == 0)
-            foreach (var name in new[] { "Test-StaticCheckParity", "Test-MatchPlcName" })
+            foreach (var name in new[] { "Test-MatchPlcName" })
             {
                 var script = CheckAllScriptBuild(name, output, dotnet, nuget);
                 result = new(result.ExitCode == 0 ? script.ExitCode : result.ExitCode, result.StandardOutput + script.StandardOutput, result.StandardError + script.StandardError);

@@ -243,7 +243,7 @@ F01–F03 保持已有格式分段；F08/F09/F11/F17/F18–F21 的本次调整�
 | I10 | 原生调用诊断与织入 | `InvocationJournal`、`NativeCallDiagnostics`、`NativeCallWeaver` verify | 全部适配器代码 | 已为八版适配器强制；新文件加入 `Adapter.Sources.props` 白名单 |
 | I11 | 第三方 | TiaGitAddIn.Core（`RenderPlcVisualDiff`）、SiemensOpcUaModelled（F15）、Esprima/YamlDotNet（F28、Unified 脚本）、Sharp7/S7 WebAPI/Workstation.UaClient（`src/OnlineChannels`，F04/F12）、PLCSIM Adv API（运行时定位）、siemens-plc-tools Python（`RunPlcCompanionTool`） | F01–F04、F12、F15、F28 | 只放宿主或 Siemens 无关库；不得进入适配器（边界检查） |
 | I12 | 工具描述符与目录 | V20/V21 目录由引擎 `--write-tool-catalog` 生成并经 `EngineCatalog` 校验执行所有权；`ToolMetadata`、`ToolExecution`、`BehaviorCapabilities`、`GetToolUsage` 示例 | 全部 | P8-02 须先给描述符一个不依赖引擎的来源（见第 5 节），否则 P8-04 无法退役引擎 |
-| I13 | DTO/JSON 边界 | 引擎服务直接返回 `JsonObject`/`ResponseMessage`；适配器禁止引用 Logic/JSON 库（`scripts/checks/Check-AdapterBoundary.py`） | 全部 Openness 族 | 每族在 `src/Adapters.Contracts` 定义类型化 DTO，worker 用 `WorkerJson` 序列化，宿主映射为与基线一致的 V4 JSON |
+| I13 | DTO/JSON 边界 | 引擎服务直接返回 `JsonObject`/`ResponseMessage`；适配器禁止引用 Logic/JSON 库（`dotnet run --project build-tools/release -- check-adapter-boundary`） | 全部 Openness 族 | 每族在 `src/Adapters.Contracts` 定义类型化 DTO，worker 用 `WorkerJson` 序列化，宿主映射为与基线一致的 V4 JSON |
 
 I9 崩溃隔离补充（P7-07b，证据：V20 VM .129、包 c975ca39，2026-10-09 第二轮发现 44/45）：
 
@@ -378,7 +378,7 @@ F19 原生比较：核心加被内联的三个共享调用点为 V20 32、V21 34
 | G4 实现归属与删除 | `ToolExecution` 所有者变更；引擎中该族声明、服务、Portal partial 删除；`EngineCatalog` 所有权检查通过 | 引擎源码不再包含该族工具名的实现 |
 | G5 原生调用清单守恒 | 用 `NativeCallWeaver` 的 inventory/verify：该族 Siemens 成员引用多重集“原引擎 = 新适配器”（V20/V21）；旧版适配器只增该族成员 | 与 `src/Adapters/README.md` Studio 迁移相同的逐站点比较，无未解释差异 |
 | G6 单元与夹具 | Policy 纯逻辑测试（net10）、DTO golden JSON（`TiaMcp.Adapters.Contracts.Tests`）、worker 白名单/分发、两类主机一致性用例（P6-65）、每个版本差异分支至少一例 | `Test-DotnetSuites.py` 最低数只升不降（`tests/test-suites.json`） |
-| G7 八版编译与边界 | 8 个 `Adapter.<key>.csproj` 逐版编译；`Test-AdapterInputs.cs`、`Test-WorkerIsolation.cs`；`Check-AdapterBoundary.py` | 全部通过；V21 新增程序集引用须有精确强名称 |
+| G7 八版编译与边界 | 8 个 `Adapter.<key>.csproj` 逐版编译；`Test-AdapterInputs.cs`、`Test-WorkerIsolation.cs`；`dotnet run --project build-tools/release -- check-adapter-boundary` | 全部通过；V21 新增程序集引用须有精确强名称 |
 | G8 示例与用法 | `reference/tool-examples` 补启用版本的示例并生成嵌入目录 | 八版检索与功能检查通过 |
 | G9 V20/V21 真机复验（L5） | 迁移前在同一测试工程录制该族脚本（读取、dryRun 预览、一次确认写、典型拒绝）；迁移后重放，规范化易变字段后比较 `data`/`error`/`meta.outcome` | 无未评审差异；记入真机台账 |
 | G10 旧版启用验收（L5） | 按逐工具实现决定注册：至少一个动作可用；无可用动作不注册，桥接/批次返回本版未注册拒绝；在该版 VM 验证可用动作与 partial 动作的原生调用前拒绝；同步更新 `openness-coverage.md` 与 `reference/version-feature-matrix.json` | 每个启用版本一条台账；注册、发现、用法和被动诊断名单一致；未验收版本保持 `current / NOT RUN` |

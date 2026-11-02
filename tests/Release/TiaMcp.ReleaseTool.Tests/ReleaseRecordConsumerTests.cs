@@ -636,11 +636,35 @@ public sealed class ReleaseRecordConsumerTests
         Assert.Equal(1, ReleaseCommands.DryRunRecordComparison(options));
     }
 
+    [Fact]
+    public void PackagePreviewRunsCSharpRepositoryCheckUsingTheSuppliedAssembly()
+    {
+        var root = TiaMcp.BuildCommon.Repository.FindRoot();
+        var code = """
+            import importlib.util,os,sys
+            from pathlib import Path
+            from unittest.mock import patch
+            root=Path(sys.argv[1]);assembly=Path(sys.argv[2]).resolve()
+            spec=importlib.util.spec_from_file_location('package',root/'build-tools/Package-Release.py')
+            p=importlib.util.module_from_spec(spec);spec.loader.exec_module(p)
+            with patch.object(sys,'argv',['package','--dry-run','--release-tool',str(assembly)]), \
+                 patch.object(p.subprocess,'check_output',return_value=b'README.md\0'), \
+                 patch.object(p.subprocess,'run') as run, patch.object(p,'preview') as preview:
+                p.main()
+                run.assert_called_once_with([os.environ.get('DOTNET_EXE','dotnet'),str(assembly),'check-repository','-NoBinaries'],cwd=root,check=True)
+                preview.assert_called_once()
+            print('PASS package preview invokes the C# repository check without rebuilding the supplied tool')
+            """;
+        var result = ProcessRunner.Run(OperatingSystem.IsWindows() ? "python" : "python3",
+            ["-X", "utf8", "-c", code, root, typeof(ReleaseCommands).Assembly.Location], root,
+            new Dictionary<string, string?> { ["PYTHONDONTWRITEBYTECODE"] = "1" });
+        Assert.True(result.ExitCode == 0, result.StandardOutput + result.StandardError);
+    }
+
     [Theory]
     [InlineData("build-tools/Package-Release.py")]
     [InlineData("build-tools/Package-MultiVersion.py")]
     [InlineData("scripts/checks/Check-BundleLayout.py")]
-    [InlineData("scripts/checks/Check-Repository.py")]
     [InlineData("scripts/checks/Verify-ReleaseAsset.py")]
     public void PythonConsumersRunTheirCompleteSyntheticSelfTests(string script)
     {

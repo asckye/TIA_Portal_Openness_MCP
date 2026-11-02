@@ -20,7 +20,7 @@
 - 替换代码路径时补对等测试；新命令至少真实运行一次；夹具使用真实格式的数据。
 - 已迁移套件以 `tests/test-suites.json` 注册表为准，用 `dotnet run --project build-tools/release -- test-suites -Suite <name>` 执行并检查注册的 trx 最低通过数和最大跳过数；开发时可直接用 `dotnet test <csproj> -c Release`。未注册的控制台工程仍用 `dotnet run --project <csproj> -c Release`，`dotnet test` 不执行其断言。
 - 删除、移动或新增文件的任务都要运行 `dotnet run --project build-tools/release -- validate-bundle -Strict -NoBinaries -SkipSourceHashes` 与
-  `Check-Repository.py --no-binaries`；两者含必需文件清单，`Package-Release.py` 另有一份同类清单。
+  `dotnet run --project build-tools/release -- check-repository -NoBinaries`；两者含必需文件清单，`Package-Release.py` 另有一份同类清单。
 
 ## 代码
 

@@ -37,7 +37,7 @@ def preview(root, tracked, rules, stage=None):
     excluded = Counter(name.split('/')[0] for name in tracked if name not in selected_set)
     for name in selected:
         print(name)
-    print(f'Dry run: {len(selected)} delivery files; {sum(excluded.values())} excluded files; no binaries built or ZIP published')
+    print(f'Dry run: {len(selected)} delivery files; {sum(excluded.values())} excluded files; no product binaries built or ZIP published')
     print('Excluded top-level groups: ' + json.dumps(dict(sorted(excluded.items())), ensure_ascii=False))
     if stage:
         stage = stage.resolve()
@@ -279,7 +279,7 @@ def validator_command(root, release_tool=None):
         release_tool = output / 'TiaMcp.ReleaseTool.dll'
     release_tool = release_tool.resolve()
     require(release_tool.is_file(), 'Built release tool is missing: ' + str(release_tool))
-    return [dotnet, str(release_tool), 'validate-bundle']
+    return [dotnet, str(release_tool)]
 
 
 def main():
@@ -290,7 +290,7 @@ def main():
     parser.add_argument('--candidate-results', type=Path, help='Reuse this run\'s candidate ZIP after exact comparison with final inputs')
     parser.add_argument('--output-directory', type=Path, help='Optional new local output directory; existing archives/stages are never overwritten')
     parser.add_argument('--local', action='store_true', help='Build a review-only bundle from this worktree without committing; all binary and validation gates still apply')
-    parser.add_argument('--dry-run', action='store_true', help='List the filtered working tree without build outputs, clean-tree checks or publication')
+    parser.add_argument('--dry-run', action='store_true', help='Check repository sources and list the filtered tree without product build outputs, clean-tree checks or publication')
     parser.add_argument('--include-untracked', action='store_true', help='Dry run only: also preview new, non-ignored files awaiting review')
     parser.add_argument('--stage-directory', type=Path, help='Dry run only: copy the filtered tree into a new worktree-local directory')
     args = parser.parse_args()
@@ -305,13 +305,15 @@ def main():
     tracked = [name for name in git('ls-files', '-z').decode('utf-8').split('\0') if name and (root / name).is_file()]
     if args.local:
         tracked += [name for name in git('ls-files', '--others', '--exclude-standard', '-z').decode('utf-8').split('\0') if name and (root / name).is_file()]
+    validator = validator_command(root, args.release_tool)
     if args.dry_run:
+        subprocess.run([*validator, 'check-repository', '-NoBinaries'], cwd=root, check=True)
         if args.include_untracked:
             tracked += [name for name in git('ls-files', '--others', '--exclude-standard', '-z').decode('utf-8').split('\0') if name and (root / name).is_file()]
         preview(root, tracked, rules, args.stage_directory)
         return
     require(not args.include_untracked and args.stage_directory is None, 'Preview options require --dry-run')
-    subprocess.run([sys.executable, str(CHECKS / 'Check-Repository.py')], check=True)
+    subprocess.run([*validator, 'check-repository'], cwd=root, check=True)
     require(args.local or not git('status', '--porcelain', '--untracked-files=normal').strip(),
             'Review and commit the source and manifests before packaging')
     commit = git('rev-parse', 'HEAD').decode().strip()
@@ -482,8 +484,7 @@ def main():
     require(any(n.startswith('templates/plc/') for n in files) and any(n.startswith('templates/hmi/') for n in files), 'PLC/HMI templates missing')
     # Validate compiler inputs and release-only IL verifier in the repository before
     # projecting the delivery set. Source/build evidence never enters the ZIP.
-    validator = validator_command(root, args.release_tool)
-    subprocess.run([*validator, '-BundleRoot', str(root), '-Strict'], cwd=root, check=True)
+    subprocess.run([*validator, 'validate-bundle', '-BundleRoot', str(root), '-Strict'], cwd=root, check=True)
     files = {name: data for name, data in files.items() if layout.delivered(name, rules)}
     require(all(name in files for name in required_exes), 'Delivery rules exclude a required executable/license')
     require(all(layout.delivered(row['path'], rules) or row['path'].startswith('runtime/verification/')
@@ -498,8 +499,8 @@ def main():
         path.write_bytes(data)
     # The validator checks configuration launcher targets, blueprints, JSON, tool roster,
     # exact binary versions and build hashes in the actual delivery directory.
-    subprocess.run([*validator, '-BundleRoot', str(stage), '-Strict', '-PackageMode'], cwd=root, check=True)
-    subprocess.run([sys.executable, str(CHECKS / 'Check-Repository.py'), '--root', str(stage), '--package-mode'], check=True)
+    subprocess.run([*validator, 'validate-bundle', '-BundleRoot', str(stage), '-Strict', '-PackageMode'], cwd=root, check=True)
+    subprocess.run([*validator, 'check-repository', '-Root', str(stage), '-PackageMode'], cwd=root, check=True)
     if args.candidate_results:
         require(args.candidate_results.resolve().is_relative_to(root), 'Candidate package result must belong to this worktree')
     package_decision = package_archive(archive, package, files, args.candidate_results)

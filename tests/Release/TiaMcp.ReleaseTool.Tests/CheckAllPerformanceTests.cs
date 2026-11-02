@@ -395,7 +395,7 @@ public sealed class CheckAllPerformanceTests
         Assert.Equal(new[] { "build-once", "analyzer-warnings" }, plan[2].Dependencies);
         var rows = CheckScheduler.Run(plan, 2, fixture.DirectoryPath, prerequisites: [new("build-once", "passed", 0, 1, null), new("analyzer-warnings", "passed", 0, 1, null)]);
         Assert.All(rows, row => Assert.True(CheckTiming.Passed(row), row.Error));
-        foreach (var name in new[] { "bundle", "python-repository" })
+        foreach (var name in new[] { "bundle" })
         {
             Assert.False(ReleaseCommands.CheckAllSourceOnly(name));
             var job = ReleaseCommands.CheckAllEarlyDependencies(new(name, Passed, []));
