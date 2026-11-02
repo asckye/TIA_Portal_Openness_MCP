@@ -212,6 +212,53 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
         });
     }
 
+    [Theory]
+    [InlineData("Light")]
+    [InlineData("Dark")]
+    public void Primary_buttons_and_text_selection_use_the_solid_fill_and_white_text(string theme)
+    {
+        wpf.Run(() =>
+        {
+            var previous = ThemeManager.Current.Theme;
+            var previousContrast = ThemeManager.Current.HighContrastOverride;
+            ThemeManager.Current.HighContrastOverride = false;
+            ThemeManager.Current.Theme = theme == "Dark" ? AppTheme.Dark : AppTheme.Light;
+            try
+            {
+                Color Token(string key) => ((SolidColorBrush)Application.Current.FindResource("Primer." + key)).Color;
+                void Check(Brush foregroundBrush, Brush backgroundBrush)
+                {
+                    var foreground = ((SolidColorBrush)foregroundBrush).Color;
+                    var background = ((SolidColorBrush)backgroundBrush).Color;
+                    Assert.Equal(Token("onAccent"), foreground);
+                    Assert.Equal(Token("primaryBg"), background);
+                    Assert.NotEqual(Token("accent"), background);
+                    double first = Luminance(foreground), second = Luminance(background);
+                    double ratio = (Math.Max(first, second) + .05) / (Math.Min(first, second) + .05);
+                    Assert.True(ratio >= 4.5, $"{theme}: solid primary contrast {ratio:F2} < 4.5");
+                }
+                Assert.Equal(Colors.White, Token("onAccent"));
+                foreach (string key in new[] { "Primary", "Run" })
+                {
+                    var button = new Button { Content = "Action", Style = (Style)Application.Current.FindResource("Primer." + key) };
+                    button.ApplyTemplate();
+                    Check(button.Foreground, button.Background);
+                }
+                foreach (string key in new[] { "Input", "MonoInput" })
+                {
+                    var input = new TextBox { Style = (Style)Application.Current.FindResource("Primer." + key) };
+                    input.ApplyTemplate();
+                    Check(input.SelectionTextBrush, input.SelectionBrush);
+                }
+            }
+            finally
+            {
+                ThemeManager.Current.HighContrastOverride = previousContrast;
+                ThemeManager.Current.Theme = previous;
+            }
+        });
+    }
+
     internal static Color Composite(Color foreground, Color background)
     {
         double alpha = foreground.A / 255.0;

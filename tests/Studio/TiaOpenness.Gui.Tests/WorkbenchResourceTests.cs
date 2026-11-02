@@ -10,6 +10,17 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class WorkbenchResourceTests(WpfContext wpf)
 {
+    [Fact]
+    public void Row_and_control_sizes_follow_the_maintainer_scale()
+    {
+        wpf.Run(() =>
+        {
+            Assert.Equal(36d, Assert.IsType<double>(Application.Current.FindResource("Ui.RowHeight")));
+            Assert.Equal(32d, Assert.IsType<double>(Application.Current.FindResource("Ui.ControlHeight")));
+            Assert.Equal(44d, Assert.IsType<double>(Application.Current.FindResource("Ui.ControlHeight.Large")));
+        });
+    }
+
     [Theory]
     [InlineData(400, "Regular")]
     // The Chinese fallback resolves to installed real weights, including medium requests.

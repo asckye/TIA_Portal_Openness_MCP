@@ -85,11 +85,13 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                     if (state.Name == "mcp-zh-light")
                     {
                         var metrics = new List<string>();
+                        double rowHeight = Assert.IsType<double>(Application.Current.FindResource("Ui.RowHeight"));
+                        Assert.Equal(36, rowHeight);
                         foreach (string name in new[] { "RailMcp", "RailEngineering", "RailCalls", "RailAudit", "RailEnvironment", "RailLog" })
                         {
                             var element = (FrameworkElement)window.FindName(name);
                             var point = element.TransformToAncestor(host).Transform(new Point());
-                            Assert.Equal(36, element.ActualHeight);
+                            Assert.Equal(rowHeight, element.ActualHeight);
                             Assert.Equal(5, point.X);
                             metrics.Add($"{name}: {point.X},{point.Y} {element.ActualWidth}x{element.ActualHeight}");
                         }

@@ -1361,6 +1361,42 @@
       "repositoryLabel": "GUI entry"
     },
     {
+      "path": "src/Studio/Gui/Themes/Shell.xaml",
+      "consumers": [
+        "repository",
+        "bundle",
+        "package"
+      ],
+      "repositoryLabel": "GUI entry"
+    },
+    {
+      "path": "src/Studio/Gui/Themes/Approvals.xaml",
+      "consumers": [
+        "repository",
+        "bundle",
+        "package"
+      ],
+      "repositoryLabel": "GUI entry"
+    },
+    {
+      "path": "src/Studio/Gui/Themes/Pages.xaml",
+      "consumers": [
+        "repository",
+        "bundle",
+        "package"
+      ],
+      "repositoryLabel": "GUI entry"
+    },
+    {
+      "path": "src/Studio/Gui/Themes/Palette.HighContrast.xaml",
+      "consumers": [
+        "repository",
+        "bundle",
+        "package"
+      ],
+      "repositoryLabel": "GUI entry"
+    },
+    {
       "path": "src/Studio/Gui/Themes/Palette.Light.xaml",
       "consumers": [
         "repository",
@@ -1407,42 +1443,6 @@
     },
     {
       "path": "src/Studio/Gui/Controls/LogTailView.cs",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
-      "repositoryLabel": "GUI entry"
-    },
-    {
-      "path": "src/Studio/Gui/Fonts/MapleMono-CN-Regular.ttf",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
-      "repositoryLabel": "GUI entry"
-    },
-    {
-      "path": "src/Studio/Gui/Fonts/MapleMono-CN-SemiBold.ttf",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
-      "repositoryLabel": "GUI entry"
-    },
-    {
-      "path": "src/Studio/Gui/Fonts/LICENSE.txt",
-      "consumers": [
-        "repository",
-        "bundle",
-        "package"
-      ],
-      "repositoryLabel": "GUI entry"
-    },
-    {
-      "path": "src/Studio/Gui/Fonts/SOURCES.txt",
       "consumers": [
         "repository",
         "bundle",
