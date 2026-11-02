@@ -34,6 +34,65 @@ public sealed class Round3DecoderBuildTests
     }
 
     [Fact]
+    public void Check_jobs_receive_the_absolute_prepared_runtime_and_selected_pin()
+    {
+        string root = Repository.FindRoot();
+        var environment = new Dictionary<string, string?> { ["TIA_MCP_TEST_PUBLIC_API_ROOT"] = "suite-sdk" };
+        ReleaseCommands.ConfigureDecoderTestEnvironment(environment, root, Args("-Python", "selected-python.exe"));
+        Assert.Equal(DecoderRuntimeFixture.RuntimeVariable, ReleaseCommands.DecoderRuntimeVariable);
+        Assert.Equal(Path.GetFullPath(Path.Combine(root, DecoderRuntime.RelativeDirectory)), environment[DecoderRuntimeFixture.RuntimeVariable]);
+        Assert.Equal("selected-python.exe", environment[ReleaseCommands.DecoderPythonVariable]);
+        Assert.Equal(typeof(ReleaseCommands).Assembly.Location, environment["TIA_MCP_TEST_DECODER_PREPARE_TOOL"]);
+        Assert.Equal("suite-sdk", environment["TIA_MCP_TEST_PUBLIC_API_ROOT"]);
+    }
+
+    [Fact]
+    public void Prepared_fixture_verifies_the_receipt_without_starting_a_release_tool()
+    {
+        using var tree = new StaticTree();
+        string directory = Path.GetFullPath(Path.Combine(tree.Root, DecoderRuntime.RelativeDirectory));
+        Directory.CreateDirectory(directory);
+        foreach (string file in Directory.EnumerateFiles(DecoderRuntimeFixture.Ensure())) File.Copy(file, Path.Combine(directory, Path.GetFileName(file)));
+        string missingTool = Path.Combine(tree.Root, "not-built.dll");
+        Assert.False(File.Exists(missingTool));
+        Assert.Equal(directory, DecoderRuntimeFixture.Prepare(tree.Root, directory, missingTool));
+        File.WriteAllText(Path.Combine(directory, "runtime.json"), "{}");
+        var error = Assert.Throws<InvalidOperationException>(() => DecoderRuntimeFixture.Prepare(tree.Root, directory, missingTool));
+        Assert.Contains(DecoderRuntimeFixture.RuntimeVariable, error.Message);
+        Assert.IsType<DecoderRuntimeException>(error.InnerException);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("runtime/decoder-python")]
+    public void Configured_fixture_runtime_must_be_absolute_and_never_falls_back(string directory)
+    {
+        var error = Assert.Throws<InvalidOperationException>(() => DecoderRuntimeFixture.Prepare(Repository.FindRoot(), directory, typeof(ReleaseCommands).Assembly.Location));
+        Assert.Contains(DecoderRuntimeFixture.RuntimeVariable, error.Message);
+        Assert.Contains("absolute", error.Message);
+    }
+
+    [Fact]
+    public void Standalone_fixture_names_the_preparation_command_when_the_tool_is_not_built()
+    {
+        using var tree = new StaticTree();
+        var error = Assert.Throws<InvalidOperationException>(() => DecoderRuntimeFixture.Prepare(tree.Root, null, null));
+        Assert.Contains("dotnet run --project build-tools/release -- prepare-decoder-python -Python", error.Message);
+        Assert.Contains(DecoderRuntimeFixture.RuntimeVariable, error.Message);
+    }
+
+    [Fact]
+    public void Standalone_fixture_uses_an_existing_assembly_without_rebuilding_it()
+    {
+        string tool = typeof(ReleaseCommands).Assembly.Location;
+        string hash = ReleaseRecords.HashFile(tool);
+        var written = File.GetLastWriteTimeUtc(tool);
+        Assert.Equal(Path.GetFullPath(Path.Combine(Repository.FindRoot(), DecoderRuntime.RelativeDirectory)), DecoderRuntimeFixture.Prepare(Repository.FindRoot(), null, tool));
+        Assert.Equal(hash, ReleaseRecords.HashFile(tool));
+        Assert.Equal(written, File.GetLastWriteTimeUtc(tool));
+    }
+
+    [Fact]
     public void Fixture_reuse_validates_the_pin_and_receipt_and_repairs_incomplete_outputs()
     {
         string prepared = DecoderRuntimeFixture.Ensure();

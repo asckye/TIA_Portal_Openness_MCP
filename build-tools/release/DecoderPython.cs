@@ -9,6 +9,14 @@ namespace TiaMcp.ReleaseTool;
 internal static partial class ReleaseCommands
 {
     internal const string DecoderPythonVariable = "TIA_MCP_DECODER_PYTHON";
+    internal const string DecoderRuntimeVariable = "TIA_MCP_DECODER_RUNTIME";
+
+    internal static void ConfigureDecoderTestEnvironment(IDictionary<string, string?> environment, string root, Options options)
+    {
+        environment[DecoderRuntimeVariable] = Path.GetFullPath(Path.Combine(root, DecoderRuntime.RelativeDirectory));
+        environment[DecoderPythonVariable] = options.Get("Python") ?? Environment.GetEnvironmentVariable(DecoderPythonVariable);
+        environment["TIA_MCP_TEST_DECODER_PREPARE_TOOL"] = typeof(ReleaseCommands).Assembly.Location;
+    }
 
     internal static Options DecoderPythonOptions(Options options, Func<string, string?>? environment = null)
     {

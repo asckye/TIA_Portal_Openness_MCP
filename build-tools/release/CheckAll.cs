@@ -154,13 +154,13 @@ internal static partial class ReleaseCommands
             environment["PYTHONIOENCODING"] = "utf-8";
             environment["TIA_MCP_CHECK_NO_BUILD"] = "1";
             environment["TIA_MCP_PLC_TOOLS_PYTHON"] = companionPython;
-            environment[DecoderPythonVariable] = options.Get("Python") ?? Environment.GetEnvironmentVariable(DecoderPythonVariable);
-            environment["TIA_MCP_TEST_DECODER_PREPARE_TOOL"] = typeof(ReleaseCommands).Assembly.Location;
+            ConfigureDecoderTestEnvironment(environment, Root, options);
             environment["TIA_MCP_ANALYZER_REPORT_DIRECTORY"] = null;
         }
         SuiteProcess SuiteProcessFor(string name) => (executable, arguments, cwd, environment) =>
         {
             CheckAllProfiles.ApplyEnvironment(derivations.Executions[name], environment!, CheckAllProfiles.StudioSuites.Contains(name));
+            ConfigureDecoderTestEnvironment(environment!, Root, options);
             return DotnetSuites.RunProcess(executable, arguments, cwd, environment);
         };
         void Add(string name, Func<CommandResult> run, string[]? depends = null, bool exclusive = false)
