@@ -35,7 +35,7 @@ public sealed class DisplayValueConverter : IValueConverter, IMultiValueConverte
             "logLevel" => AccessibleNameConverter.Level((LogLevel)value),
             "group" => GroupPath(value.ToString() ?? ""),
             "version" => value.ToString()!.Replace("TIA V", "V"),
-            "export" => (bool)value ? Loc.Current["Primer.ExportSource"] : Loc.Current["Primer.ExportXml"],
+            "export" => (bool)value ? Loc.Current["Pages.ExportSource"] : Loc.Current["Pages.ExportXml"],
             "consistent" => (bool)value ? Loc.Current["Primer.Yes"] : Loc.Current["Primer.No"],
             "protected" => (bool)value ? Loc.Current["Primer.Protected"] : "—",
             "compare" => (VcCompareState)value switch
@@ -69,7 +69,7 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
     private readonly Dictionary<string, object?> _resultValues = new();
     private static readonly System.Reflection.PropertyInfo[] ResultProperties = new[]
     {
-        nameof(LogCount), nameof(HasCompile), nameof(HasInspection), nameof(CompileCardHeight), nameof(InspectionCardHeight), nameof(CompileBadge),
+        nameof(LogCount), nameof(HasCompile), nameof(HasInspection), nameof(CompileTime), nameof(CompileBadge),
         nameof(InspectionDisplay), nameof(CompileOperationState), nameof(InspectionOperationState), nameof(CompileSummary), nameof(Errors), nameof(Warnings),
         nameof(CompileState), nameof(InspectionTime), nameof(InspectionSummary), nameof(Mapped), nameof(Unsupported), nameof(Failed),
         nameof(MappingSummary), nameof(SyncSummary), nameof(Diagnostics), nameof(Rules)
@@ -104,8 +104,6 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
     public bool HasSelection => CanOperate && model.Engineering.Blocks.Any(b => b.Selected);
     public bool HasWorkspace => model.VersionControl.SelectedWorkspace != null;
     public double WorkspaceOpacity => HasWorkspace ? 1 : .45;
-    public double CompileCardHeight => HasCompile ? 240 : Loc.Current.Language == AppLanguage.Chinese ? 89 : 104;
-    public double InspectionCardHeight => HasInspection ? 148 : 85;
     public string CompileBadge => HasCompile ? CompileState : Loc.Current["Pages.NotCompiled"];
     public string InspectionDisplay => HasInspection ? InspectionSummary : Loc.Current["Pages.NotInspected"];
     public sealed record LogRow(string Time, string Message, LogLevel Level = LogLevel.Default);
@@ -144,6 +142,7 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
     public string Errors { get; private set; } = "—";
     public string Warnings { get; private set; } = "—";
     public string CompileState { get; private set; } = "";
+    public string CompileTime { get; private set; } = "";
     public string InspectionTime { get; private set; } = "";
     public string InspectionSummary { get; private set; } = "";
     public string Mapped { get; private set; } = "—";
@@ -206,7 +205,7 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
     {
         string notRun = Loc.Current["Primer.NotRun"];
         Errors = Warnings = Mapped = Unsupported = Failed = "—";
-        InspectionTime = "";
+        CompileTime = InspectionTime = "";
         CompileState = InspectionSummary = MappingSummary = SyncSummary = notRun;
         var diagnostics = new List<Diagnostic>();
         var pendingDiagnostics = new List<Diagnostic>();
@@ -220,6 +219,7 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
             switch (entry.Key)
             {
                 case "Status.CompileResult":
+                    CompileTime = Loc.Current.T("Pages.LastRun", entry.Time);
                     Errors = Arg(1); Warnings = Arg(2);
                     CompileState = Convert.ToInt32(entry.Arguments[1], CultureInfo.InvariantCulture) != 0 ? Loc.Current["Primer.CompileErrors"]
                         : Convert.ToInt32(entry.Arguments[2], CultureInfo.InvariantCulture) != 0 ? Loc.Current["Primer.CompileWarnings"] : Loc

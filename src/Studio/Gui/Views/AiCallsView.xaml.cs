@@ -56,7 +56,9 @@ public partial class AiCallsView : UserControl
         System.Windows.Data.BindingOperations.GetBindingExpression(AllFilter, System.Windows.Controls.Primitives.ToggleButton.IsCheckedProperty)?
             .UpdateTarget();
     }
-    private void OnApprovals(object sender, RoutedEventArgs e) => Model.OpenApprovals();
-    private void OnCall(object sender, RoutedEventArgs e) => Model.OpenCall((CallRow)((Button)sender).DataContext);
-    private void OnCopyConnection(object sender, RoutedEventArgs e) => Model.Copy(Model.ConnectionJson);
+    private void OnCall(object sender, RoutedEventArgs e)
+    {
+        var row = (CallRow)((Button)sender).DataContext;
+        if (row.Pending) Model.OpenApprovals(); else Model.OpenCall(row);
+    }
 }

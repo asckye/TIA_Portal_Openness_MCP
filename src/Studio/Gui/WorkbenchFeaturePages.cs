@@ -40,6 +40,8 @@ public partial class MainWindow
         Features = new FeaturePagesViewModel(Approvals, journal, audit, environment, _diagnostics, now) { Release = _model.SelectedReleaseKey };
         DrawerHeading.DataContext = CallsContent.DataContext = AuditContent.DataContext = EnvironmentContent.DataContext = ApprovalsContent.DataContext =
             CallDetailContent.DataContext = Features;
+        OperationsContent.SetFeatures(Features, () => Navigate("Environment"));
+        LogContent.SetFeatures(Features);
         Features.DrawerRequested += OnFeatureDrawer;
         Features.Feedback += OnFeatureFeedback;
         Features.SetVisibility(_page == "Calls", _page == "Audit", _page == "Approvals", _drawer == "CallDetail");
@@ -95,6 +97,8 @@ public partial class MainWindow
         Features.Feedback -= OnFeatureFeedback;
         DrawerHeading.DataContext = CallsContent.DataContext = AuditContent.DataContext = EnvironmentContent.DataContext = ApprovalsContent.DataContext =
             CallDetailContent.DataContext = null;
+        OperationsContent.SetFeatures(null, null);
+        LogContent.SetFeatures(null);
         Features.Dispose(); (Features.Journal as IDisposable)?.Dispose(); (Features.Audit as IDisposable)?.Dispose(); _approvalNotification.Dispose();
     }
 }

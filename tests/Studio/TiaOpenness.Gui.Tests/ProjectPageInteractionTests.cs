@@ -19,14 +19,47 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class ProjectPageInteractionTests(WpfContext wpf)
 {
+    [Theory]
+    [InlineData(1024)]
+    [InlineData(1366)]
+    public void Long_compile_results_keep_inspection_actions_reachable(int width)
+    {
+        wpf.Run(() =>
+        {
+            var model = ProjectPageTestSupport.Model(results: true);
+            for (int i = 0; i < 50; i++) model.Activity.AppendDiagnostic("Block_" + i, "Compile warning with local diagnostic evidence", Services.WorkbenchActivity.Severity.Warning);
+            model.Activity.AppendLocalized("Status.CompileResult", "Warning", 0, 50, "1.4");
+            var window = new MainWindow(model, false);
+            try
+            {
+                window.Navigate("Engineering");
+                var host = WorkbenchRenderTests.CreateHost(window, width, 640);
+                var side = (EngineeringSideView)window.FindName("EngineeringSideContent");
+                var scroll = (ScrollViewer)side.FindName("ResultScroll");
+                var inspect = (Button)side.FindName("InspectButton");
+                inspect.BringIntoView(); WpfContext.Drain(); host.UpdateLayout(); WpfContext.Drain();
+                Assert.True(inspect.IsEnabled);
+                Assert.InRange(inspect.TranslatePoint(new Point(), scroll).Y, 0, scroll.ActualHeight);
+                Assert.InRange(inspect.TranslatePoint(new Point(0, inspect.ActualHeight), scroll).Y, 0, scroll.ActualHeight);
+                Assert.Equal(double.NaN, ((Border)side.FindName("CompileCard")).Height);
+                Assert.Equal(double.NaN, ((Border)side.FindName("InspectionCard")).Height);
+            }
+            finally { window.Close(); }
+        });
+    }
+
     [Fact]
-    public void Environment_card_navigates_to_the_existing_shell_page()
+    public void Environment_warning_navigates_to_the_existing_shell_page()
     {
         wpf.Run(() =>
         {
             var window = new MainWindow(ProjectPageTestSupport.Model(), false);
             try
             {
+                window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit(), new FeaturePageFixtures.Environment());
+                WpfContext.Drain();
+                var banner = (Border)ProjectPageTestSupport.Find(window, "EnvironmentBanner");
+                Assert.Equal(Visibility.Visible, banner.Visibility);
                 var button = (Button)ProjectPageTestSupport.Find(window, "RunEnvironmentButton");
                 Assert.True(button.IsEnabled);
                 UnifiedDesktopTests.ClickControl(button);

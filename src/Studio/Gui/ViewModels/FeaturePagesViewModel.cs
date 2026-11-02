@@ -40,6 +40,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     private string _connectionJson = "{}", _connectionSource = "";
     public long RefreshCount { get; private set; }
     private EnvironmentGroupRow[] _groups = [];
+    private EnvironmentRow? _selectedEnvironment;
 
     public FeaturePagesViewModel(IApprovalService approvals, ICallJournalService journal, IAuditLogService audit,
         IEnvironmentCheckService environment, IDiagnosticBundleService diagnostics, Func<DateTimeOffset>? now = null)
@@ -52,6 +53,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         _timer = new DispatcherTimer(DispatcherPriority.Background, _dispatcher) { Interval = TimeSpan.FromSeconds(1) };
         _timer.Tick += OnTick;
         _groups = Environment.Groups.Select(g => new EnvironmentGroupRow(g)).ToArray();
+        RefreshEnvironmentSelection();
         RefreshCalls(); RefreshRequests(); RefreshAudit(); RefreshConnection(); UpdateTimer();
     }
 
@@ -160,10 +162,20 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     }
 
     public IReadOnlyList<EnvironmentGroupRow> EnvironmentGroups => _groups;
+    public IReadOnlyList<EnvironmentRow> AttentionChecks => _groups.SelectMany(g => g.Rows).Where(r => r.Check.Status != CheckStatus.Pass).ToArray();
+    public IReadOnlyList<EnvironmentRow> PassedChecks => _groups.SelectMany(g => g.Rows).Where(r => r.Check.Status == CheckStatus.Pass).ToArray();
+    public EnvironmentRow? SelectedEnvironment { get => _selectedEnvironment; set { if (value != null) Set(ref _selectedEnvironment, value); } }
+    private void RefreshEnvironmentSelection()
+    {
+        string? id = _selectedEnvironment?.Check.Id;
+        _selectedEnvironment = _groups.SelectMany(g => g.Rows).FirstOrDefault(r => r.Check.Id == id)
+            ?? AttentionChecks.FirstOrDefault(row => row.Warning) ?? AttentionChecks.FirstOrDefault() ?? PassedChecks.FirstOrDefault();
+        Notify(nameof(AttentionChecks), nameof(PassedChecks), nameof(SelectedEnvironment));
+    }
     public string EnvironmentSummary => CheckSummary(Environment.Groups.SelectMany(g => g.Rows).ToArray());
     public FeatureTone EnvironmentTone => CheckTone(Environment.Groups.SelectMany(g => g.Rows).ToArray());
     /// <summary>Shows the warning Alert above the groups while any check warns or fails.</summary>
-    public bool EnvironmentNeedsAction => EnvironmentTone == FeatureTone.Warning;
+    public bool EnvironmentNeedsAction => EnvironmentAttentionCount > 0;
     /// <summary>The menu badge: checks that warn or fail.</summary>
     public int EnvironmentAttentionCount => Environment.Groups.SelectMany(g => g.Rows).Count(r => r.Status is CheckStatus.Warn or CheckStatus.Fail);
     /// <summary>The Alert description: each check that needs action with its result.</summary>
@@ -241,9 +253,9 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
             if (Changed(Journal, nameof(ICallJournalService.Calls))) RefreshCalls();
             if (Changed(Journal, nameof(ICallJournalService.Connection))) RefreshConnection();
         }
-        if (_dirty.ContainsKey(Audit) && _auditVisible)
+        if (_dirty.ContainsKey(Audit))
         {
-            if (Changed(Audit, nameof(IAuditLogService.Events)))
+            if (_auditVisible && Changed(Audit, nameof(IAuditLogService.Events)))
             {
                 if (_verification != null && !ReferenceEquals(_verifiedEvents, Audit.Events)) { _verification = null; NotifyVerification(); }
                 RefreshAudit();
@@ -255,6 +267,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         if (_dirty.ContainsKey(Environment))
         {
             _groups = Environment.Groups.Select(g => new EnvironmentGroupRow(g)).ToArray();
+            RefreshEnvironmentSelection();
             Notify(nameof(EnvironmentGroups), nameof(EnvironmentSummary), nameof(EnvironmentTone), nameof(EnvironmentNeedsAction), nameof(EnvironmentAttention),
                     nameof(EnvironmentAttentionCount), nameof(LogTail));
         }
@@ -269,6 +282,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         foreach (var row in _callCache.Values) row.RefreshLanguage();
         foreach (var row in _requests) row.RefreshLanguage();
         _groups = Environment.Groups.Select(g => new EnvironmentGroupRow(g)).ToArray();
+        RefreshEnvironmentSelection();
         RefreshCalls(); RefreshAudit(languageChanged: true);
         Notify(nameof(EnvironmentGroups), nameof(EnvironmentSummary), nameof(EnvironmentTone), nameof(EnvironmentNeedsAction), nameof(EnvironmentAttention),
                 nameof(EnvironmentAttentionCount), nameof(PendingSummary), nameof(ApprovalSetting),

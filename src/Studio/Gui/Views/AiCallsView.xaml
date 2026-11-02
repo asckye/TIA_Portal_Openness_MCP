@@ -1,10 +1,6 @@
 <UserControl xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" x:Class="TiaOpenness.Gui.Views.AiCallsView">
-  <Grid ux:ResponsiveLayout.Enabled="True" ux:ResponsiveLayout.ScrollWholePage="True">
-    <Grid.ColumnDefinitions>
-      <ColumnDefinition/>
-      <ColumnDefinition Width="16"/>
-      <ColumnDefinition Width="300"/>
-    </Grid.ColumnDefinitions>
+  <Grid>
+
     <Grid>
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto"/>
@@ -16,7 +12,6 @@
         <StackPanel>
           <ux:PageHeadPanel MinHeight="32">
             <StackPanel Orientation="Horizontal">
-              <TextBlock Text="{l:Tr Shell.Calls}" Style="{StaticResource Primer.PageTitle}"/>
               <TextBlock Text="{Binding CallsCount}" Style="{StaticResource Primer.Muted}" Margin="12,0,0,0"/>
             </StackPanel>
             <ToggleButton AutomationProperties.Name="{Binding FollowLabel}" x:Name="FollowButton" Content="{Binding FollowLabel}" IsChecked="{Binding FollowLatest,Mode=OneWay}" Style="{StaticResource Primer.Switch}" VerticalAlignment="Center" Click="OnFollow"/>
@@ -60,7 +55,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
           </Grid.RowDefinitions>
-          <!-- Filter bar: a Segmented of the existing filters (全部 clears them), the release select and the search. -->
+          <!-- Filter bar: a Segmented of the existing filters (All clears them), the release select and the search. -->
           <!-- The search group follows the Segmented on the same line when it fits and wraps below it otherwise. -->
           <WrapPanel Margin="16,12">
             <Border Padding="3" Margin="0,0,16,0" Style="{StaticResource Primer.SegmentGroup}">
@@ -74,12 +69,12 @@
             </Border>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,0,4">
               <Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=ReleaseFilter}" x:Name="ReleaseLabel" Content="{l:Tr Calls.ReleaseScope}" Target="{Binding ElementName=ReleaseFilter}" Style="{StaticResource Primer.FormLabel}" Visibility="Collapsed"/>
-              <ComboBox AutomationProperties.LabeledBy="{Binding ElementName=ReleaseLabel}" AutomationProperties.Name="{l:Tr Calls.ReleaseScope}" x:Name="ReleaseFilter" Style="{StaticResource Primer.Select}" MinWidth="130" Height="30" SelectedIndex="{Binding ReleaseChoice}" ToolTip="{l:Tr Calls.ReleaseScope}" Margin="0,0,8,0">
+              <ComboBox AutomationProperties.LabeledBy="{Binding ElementName=ReleaseLabel}" AutomationProperties.Name="{l:Tr Calls.ReleaseScope}" x:Name="ReleaseFilter" Style="{StaticResource Primer.Select}" MinWidth="130" Height="32" SelectedIndex="{Binding ReleaseChoice}" ToolTip="{l:Tr Calls.ReleaseScope}" Margin="0,0,8,0">
                 <ComboBoxItem AutomationProperties.Name="{l:Tr Calls.AllReleases}" Content="{l:Tr Calls.AllReleases}"/>
                 <ComboBoxItem AutomationProperties.Name="{Binding ReleaseFilter}" Content="{Binding ReleaseFilter}"/>
               </ComboBox>
               <Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=SearchBox}" x:Name="AccessibleLabel1" Content="{l:Tr Calls.Search}" Target="{Binding ElementName=SearchBox}" Style="{StaticResource Primer.FormLabel}" Visibility="Collapsed"/>
-              <TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}" AutomationProperties.Name="{l:Tr Calls.Search}" x:Name="SearchBox" MinWidth="220" Height="30" Style="{StaticResource Primer.Input}" Tag="{l:Tr Calls.Search}" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"/>
+              <TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}" AutomationProperties.Name="{l:Tr Calls.Search}" x:Name="SearchBox" MinWidth="220" Height="32" Style="{StaticResource Primer.Input}" Tag="{l:Tr Calls.Search}" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"/>
             </StackPanel>
           </WrapPanel>
           <Border Grid.Row="1" Style="{StaticResource Primer.ColumnHeaderStrip}">
@@ -154,54 +149,6 @@
             <TextBlock Text="{l:Tr Calls.EmptyHelp}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,12,0,0"/>
           </StackPanel>
         </Grid>
-      </Border>
-    </Grid>
-    <Grid Grid.Column="2">
-      <Grid.RowDefinitions>
-        <RowDefinition Height="Auto"/>
-        <RowDefinition Height="14"/>
-        <RowDefinition/>
-      </Grid.RowDefinitions>
-      <Border Style="{StaticResource Primer.Container}">
-        <StackPanel>
-          <TextBlock Text="{l:Tr Feature.Connection}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,0,0,12"/>
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="74"/>
-              <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-              <RowDefinition Height="Auto" MinHeight="26"/>
-              <RowDefinition Height="Auto" MinHeight="26"/>
-              <RowDefinition Height="Auto" MinHeight="26"/>
-            </Grid.RowDefinitions>
-            <TextBlock Text="{l:Tr Feature.Address}" Style="{StaticResource Primer.Muted}"/>
-            <TextBlock Grid.Column="1" Text="{Binding Address}" Style="{StaticResource Primer.ListMonoValue}" ToolTip="{Binding Address}"/>
-            <TextBlock Grid.Row="1" Text="{l:Tr Feature.Transport}" Style="{StaticResource Primer.Muted}"/>
-            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Transport}" Style="{StaticResource Primer.ListValue}"/>
-            <TextBlock Grid.Row="2" Text="{l:Tr Settings.Approval}" Style="{StaticResource Primer.Muted}"/>
-            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ApprovalSetting}" Style="{StaticResource Primer.ListValue}"/>
-          </Grid>
-          <Border Padding="12,10" Margin="0,8,0,12" Style="{StaticResource Primer.CodeBlock}">
-            <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
-              <TextBlock x:Name="ConnectionCode" Text="{Binding ConnectionJson}" Style="{StaticResource Primer.CodeText}"/>
-            </ScrollViewer>
-          </Border>
-          <Button AutomationProperties.Name="{l:Tr Calls.CopyConnection}" Content="{l:Tr Calls.CopyConnection}" Style="{StaticResource Primer.Secondary}" Click="OnCopyConnection"/>
-          <TextBlock Text="{l:Tr Calls.SecretPlaceholder}" Style="{StaticResource Primer.Muted.textFaint}" Margin="0,12,0,0"/>
-        </StackPanel>
-      </Border>
-      <Border Grid.Row="2" Style="{StaticResource Primer.Container}">
-        <StackPanel>
-          <DockPanel>
-            <Border DockPanel.Dock="Right" Style="{StaticResource Primer.PendingCountBadge}" Tag="{Binding Approvals.PendingCount}">
-              <TextBlock Text="{Binding PendingCount}" Style="{StaticResource Primer.CountText}"/>
-            </Border>
-            <TextBlock Text="{l:Tr Shell.PendingTitle}" Style="{StaticResource Primer.ContainerTitle}"/>
-          </DockPanel>
-          <TextBlock Text="{Binding PendingSummary}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}" TextWrapping="Wrap" Margin="0,10,0,12"/>
-          <Button AutomationProperties.Name="{l:Tr Calls.OpenPending}" Content="{l:Tr Calls.OpenPending}" Style="{StaticResource Primer.Secondary}" Tag="" Click="OnApprovals"/>
-        </StackPanel>
       </Border>
     </Grid>
   </Grid>

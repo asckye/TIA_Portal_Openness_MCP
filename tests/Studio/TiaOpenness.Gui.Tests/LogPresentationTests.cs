@@ -12,6 +12,42 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class LogPresentationTests(WpfContext wpf)
 {
+    [Fact]
+    public void Log_filters_compose_and_clear_requires_confirmation()
+    {
+        wpf.Run(() =>
+        {
+            var model = ProjectPageTestSupport.Model();
+            var window = new MainWindow(model, false);
+            try
+            {
+                model.Activity.ClearLog();
+                model.Activity.Append("PLC ready", Services.WorkbenchActivity.Severity.Info);
+                model.Activity.Append("PLC warning", Services.WorkbenchActivity.Severity.Warning);
+                model.Activity.Append("Import failed", Services.WorkbenchActivity.Severity.Error);
+                window.Navigate("Log");
+                var view = (LogView)window.FindName("LogContent");
+                var rows = Assert.IsAssignableFrom<System.ComponentModel.ICollectionView>(view.LogRows);
+                Assert.Equal(3, rows.Cast<object>().Count());
+                UnifiedDesktopTests.ClickControl((RadioButton)view.FindName("WarningsOnly"));
+                Assert.Equal("PLC warning", Assert.Single(rows.Cast<ResultPresentation.LogRow>()).Message);
+                ((TextBox)view.FindName("LogSearch")).Text = "import";
+                Assert.Empty(rows.Cast<object>());
+                UnifiedDesktopTests.ClickControl((RadioButton)view.FindName("ErrorsOnly"));
+                Assert.Equal("Import failed", Assert.Single(rows.Cast<ResultPresentation.LogRow>()).Message);
+                var clear = (Button)view.FindName("ClearLogButton");
+                view.ConfirmClear = () => false;
+                UnifiedDesktopTests.ClickControl(clear);
+                Assert.Equal(3, model.Activity.Entries.Count);
+                view.ConfirmClear = () => true;
+                UnifiedDesktopTests.ClickControl(clear);
+                Assert.Empty(model.Activity.Entries);
+                Assert.Empty(rows.Cast<object>());
+            }
+            finally { window.Close(); }
+        });
+    }
+
     [Theory]
     [InlineData(53)]
     [InlineData(121)]

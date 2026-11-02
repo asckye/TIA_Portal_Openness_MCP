@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using TiaOpenness.Contracts.Models;
+using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.Services;
 using TiaOpenness.Gui.Services.Stubs;
 using TiaOpenness.Gui.ViewModels;
@@ -15,6 +16,49 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class VciPanelTests(WpfContext wpf)
 {
+    [Fact]
+    public void Sync_default_previews_both_directions_and_run_keeps_overwrite_confirmation()
+    {
+        wpf.Run(() =>
+        {
+            var client = new FakeProjectClient { AttachedProject = new ProjectInfo { Name = "Line", Path = @"D:\Line.ap21" } };
+            var dialogs = new FakeDialogService();
+            var model = new MainViewModel(client, dialogs) { SelectedReleaseKey = "21" };
+            var window = new MainWindow(model, false);
+            try
+            {
+                model.Session.Connect.Execute(null);
+                window.Navigate("VersionControl"); WpfContext.Complete(model.VersionControl.VcRefreshAsync());
+                var host = WorkbenchRenderTests.CreateHost(window);
+                var view = (Views.VersionControlView)window.FindName("VersionControlContent");
+                var buttons = WorkbenchRenderFeaturePagesTests.Descendants<Button>(view).ToArray();
+                var preview = buttons.Single(button => Equals(button.Content, Localization.Loc.Current["Pages.PreviewSync"]));
+                var run = buttons.Single(button => Equals(button.Content, Localization.Loc.Current["Pages.RunSync"]));
+                Assert.True(preview.IsDefault); Assert.False(run.IsDefault);
+                client.Calls.Clear();
+                UnifiedDesktopTests.ClickControl(preview); WpfContext.Drain();
+                var call = Assert.Single(client.Calls, call => call.Name == "VcSync");
+                Assert.Equal(SyncDirection.ProjectToWorkspace, call.Arguments[1]); Assert.Equal(true, call.Arguments[2]);
+                client.Calls.Clear();
+                UnifiedDesktopTests.ClickControl(run); WpfContext.Drain();
+                Assert.Equal(false, Assert.Single(client.Calls, call => call.Name == "VcSync").Arguments[2]);
+                UnifiedDesktopTests.ClickControl((RadioButton)view.FindName("ToProject")); WpfContext.Drain(); host.UpdateLayout();
+                client.Calls.Clear();
+                UnifiedDesktopTests.ClickControl(preview); WpfContext.Drain();
+                call = Assert.Single(client.Calls, call => call.Name == "VcSync");
+                Assert.Equal(SyncDirection.WorkspaceToProject, call.Arguments[1]); Assert.Equal(true, call.Arguments[2]);
+                client.Calls.Clear();
+                UnifiedDesktopTests.ClickControl(run); WpfContext.Drain();
+                Assert.DoesNotContain(client.Calls, call => call.Name == "VcSync");
+                Assert.NotEmpty(dialogs.Messages);
+                dialogs.Result = DialogResult.OK;
+                UnifiedDesktopTests.ClickControl(run); WpfContext.Drain();
+                Assert.Equal(false, Assert.Single(client.Calls, call => call.Name == "VcSync").Arguments[2]);
+            }
+            finally { window.Close(); }
+        });
+    }
+
     [Theory]
     [InlineData("16", false)][InlineData("17", false)][InlineData("18", false)][InlineData("19", false)]
     [InlineData("16", true)][InlineData("17", true)][InlineData("18", true)][InlineData("19", true)]
@@ -184,14 +228,18 @@ public sealed class VciPanelTests(WpfContext wpf)
     }
 
     [Theory, InlineData("14sp1"), InlineData("15.1")]
-    public void Absent_API_hides_VCI_navigation(string release) => wpf.Run(() =>
+    public void Absent_API_disables_VCI_navigation_with_a_reason(string release) => wpf.Run(() =>
     {
         var (window, model, _) = WorkbenchControlTests.Window(connected: false);
         try
         {
             model.SelectedReleaseKey = release; model.Session.Connect.Execute(null); WpfContext.Drain();
-            Assert.Equal(Visibility.Collapsed, ((RadioButton)window.FindName("RailVersionControl")).Visibility);
+            var navigation = (RadioButton)window.FindName("RailVersionControl");
+            Assert.Equal(Visibility.Visible, navigation.Visibility);
+            Assert.False(navigation.IsEnabled);
+            Assert.Equal(Loc.Current["Shell.VersionControlUnavailable"], navigation.ToolTip);
             window.Navigate("VersionControl"); Assert.False(model.IsVcTab);
+            Assert.Equal(Loc.Current["Shell.VersionControlUnavailable"], ((TextBlock)window.FindName("ToastMessage")).Text);
         }
         finally { window.Close(); }
     });

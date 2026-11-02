@@ -15,7 +15,7 @@
         <StackPanel>
           <ux:PageHeadPanel MinHeight="32">
             <StackPanel Orientation="Horizontal">
-              <TextBlock Text="{l:Tr Shell.Audit}" FontSize="{DynamicResource Ui.FontSize.Title}" FontWeight="SemiBold" VerticalAlignment="Center" AutomationProperties.HeadingLevel="Level1"/>
+              <TextBlock Text="{l:Tr Pages.AuditPurpose}" FontSize="{DynamicResource Ui.FontSize.Body}" FontWeight="SemiBold" VerticalAlignment="Center" AutomationProperties.HeadingLevel="Level1"/>
               <TextBlock Text="{Binding AuditCount}" Style="{StaticResource Primer.Muted}" Margin="12,0,0,0"/>
             </StackPanel>
             <Button AutomationProperties.Name="{l:Tr Audit.Verify}" x:Name="VerifyButton" Content="{l:Tr Audit.Verify}" Style="{StaticResource Primer.OutlinedAccent}" Click="OnVerify"/>
@@ -69,7 +69,7 @@
           <ListBox AutomationProperties.Name="{l:Tr Shell.Audit}" x:Name="AuditList" Grid.Row="1" Style="{StaticResource Primer.VirtualList}" ItemsSource="{Binding AuditRows}">
             <ListBox.ItemTemplate>
               <DataTemplate>
-                <Border Padding="10,0" Height="34" Style="{StaticResource Primer.AuditSelectionRow}">
+                <Border Padding="10,0" Height="{DynamicResource Ui.RowHeight}" Style="{StaticResource Primer.AuditSelectionRow}">
                   <Grid>
                     <Grid.ColumnDefinitions>
                       <ColumnDefinition Width="62"/>
@@ -105,41 +105,6 @@
         <RowDefinition Height="14"/>
         <RowDefinition/>
       </Grid.RowDefinitions>
-      <Border Style="{StaticResource Primer.Container}">
-        <StackPanel>
-          <TextBlock Text="{l:Tr Audit.Retention}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,0,0,12"/>
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="74"/>
-              <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-              <RowDefinition Height="Auto" MinHeight="38"/>
-              <RowDefinition Height="Auto" MinHeight="38"/>
-              <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <TextBlock Text="{l:Tr Audit.FileSize}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" TextTrimming="None"/>
-            <Border Grid.Column="1" Padding="3" HorizontalAlignment="Left" VerticalAlignment="Center" Style="{StaticResource Primer.SegmentGroup}">
-              <StackPanel Orientation="Horizontal">
-                <RadioButton AutomationProperties.Name="{l:Tr Audit.Size5}" x:Name="Size5" Tag="5" Content="{l:Tr Audit.Size5}" Style="{StaticResource Primer.Segment}" Padding="6,0" GroupName="AuditSize" Click="OnSize"/>
-                <RadioButton AutomationProperties.Name="{l:Tr Audit.Size10}" x:Name="Size10" Tag="10" Content="{l:Tr Audit.Size10}" Style="{StaticResource Primer.Segment}" Padding="6,0" GroupName="AuditSize" Click="OnSize"/>
-                <RadioButton AutomationProperties.Name="{l:Tr Audit.Size50}" x:Name="Size50" Tag="50" Content="{l:Tr Audit.Size50}" Style="{StaticResource Primer.Segment}" Padding="6,0" GroupName="AuditSize" Click="OnSize"/>
-              </StackPanel>
-            </Border>
-            <TextBlock Grid.Row="1" Text="{l:Tr Audit.Copies}" Style="{StaticResource Primer.Muted}"/>
-            <Border Grid.Row="1" Grid.Column="1" Padding="3" HorizontalAlignment="Left" VerticalAlignment="Center" Style="{StaticResource Primer.SegmentGroup}">
-              <StackPanel Orientation="Horizontal">
-                <RadioButton AutomationProperties.Name="3" x:Name="Copies3" Tag="3" Content="3" Style="{StaticResource Primer.Segment}" Padding="6,0" GroupName="AuditCopies" Click="OnCopies"/>
-                <RadioButton AutomationProperties.Name="5" x:Name="Copies5" Tag="5" Content="5" Style="{StaticResource Primer.Segment}" Padding="6,0" GroupName="AuditCopies" Click="OnCopies"/>
-                <RadioButton AutomationProperties.Name="10" x:Name="Copies10" Tag="10" Content="10" Style="{StaticResource Primer.Segment}" Padding="6,0" GroupName="AuditCopies" Click="OnCopies"/>
-              </StackPanel>
-            </Border>
-            <TextBlock Grid.Row="2" Text="{l:Tr Audit.Coverage}" Style="{StaticResource Primer.Muted}"/>
-            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Coverage}" TextWrapping="Wrap" Style="{StaticResource Primer.ListValue}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
-          </Grid>
-          <Button AutomationProperties.Name="{l:Tr Audit.OpenFolder}" Content="{l:Tr Audit.OpenFolder}" Style="{StaticResource Primer.Secondary}" Margin="0,4,0,0" Click="OnOpenFolder"/>
-        </StackPanel>
-      </Border>
       <Border Grid.Row="2" Style="{StaticResource Primer.Container}">
         <StackPanel>
           <TextBlock Text="{l:Tr Audit.About}" Style="{StaticResource Primer.ContainerTitle}"/>

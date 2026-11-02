@@ -48,14 +48,16 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                 var window = new MainWindow(new MainViewModel(new FakeProjectClient(), new FakeDialogService()), false, approvals: approvals, preview: preview);
                 try
                 {
+                    // Measure the MCP page before navigating to each shell page for the final capture.
                     window.ShowConfiguration(false);
+                    ((Expander)window.Configuration!.FindName("ConfigurationActivity")).IsExpanded = true;
                     var host = CreateHost(window);
                     Assert.Equal(!state.Local, ((RadioButton)window.Configuration!.FindName("RemoteNav")).IsChecked);
                     Assert.Equal(state.Local, ((RadioButton)window.Configuration.FindName("LocalNav")).IsChecked);
                     Assert.False(window.Configuration.HasRunningServer);
                     var installationState = (ContentControl)window.Configuration.FindName("DetectionChip");
                     var serviceState = (ContentControl)window.Configuration.FindName("ServiceStateChip");
-                    Assert.InRange(Math.Abs(installationState.TranslatePoint(new Point(), host).Y - serviceState.TranslatePoint(new Point(), host).Y), 0, 1);
+                    Assert.True(installationState.TranslatePoint(new Point(), host).Y < serviceState.TranslatePoint(new Point(), host).Y);
                     var start = (Button)window.Configuration.FindName(state.Running ? "StopServer" : "StartServer");
                     Assert.True(serviceState.TranslatePoint(new Point(), host).Y + serviceState.ActualHeight < start.TranslatePoint(new Point(), host).Y);
                     foreach (var chip in new[] { installationState, serviceState })
@@ -73,12 +75,17 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         Assert.Equal(TextAlignment.Right, value.TextAlignment);
                     }
                     Assert.Equal(window.Features.Calls.Count == 0 ? Visibility.Collapsed : Visibility.Visible, ((Border)window.FindName("CallsCountBadge")).Visibility);
-                    if (state.Page == "Mcp") Assert.Equal(598, ((FrameworkElement)window.Configuration.FindName("ClientPane")).ActualWidth);
+                    if (state.Page == "Mcp") Assert.Equal(360, ((FrameworkElement)window.Configuration.FindName("ClientPane")).ActualWidth);
+                    string serviceStatus = state.Local ? Loc.Current["Pages.ServiceOnDemand"] : Loc.Current[state.Running ? "Config.Running" : "Config.Idle"];
+                    Assert.Equal(Loc.Current.T("Shell.McpStatus", serviceStatus), ((TextBlock)window.FindName("McpStatusText")).Text);
+                    var release = TiaMcp.Versioning.TiaVersionCatalog.Get(((MainViewModel)window.DataContext).SelectedReleaseKey).DisplayName;
+                    Assert.Equal(Loc.Current.T("Shell.ProjectStatus", release, Loc.Current["Blocks.Empty.Title"]), ((TextBlock)window.FindName("SessionStatus")).Text);
                     Assert.Equal(state.Pending ? Visibility.Visible : Visibility.Collapsed, ((FrameworkElement)window.FindName("PendingBadge")).Visibility);
                     Assert.Equal(state.Pending ? Visibility.Visible : Visibility.Collapsed, ((FrameworkElement)window.FindName("ApprovalOffPill")).Visibility);
                     if (state.Name == "mcp-zh-light")
                     {
                         var metrics = new List<string>();
+                        metrics.Add($"ClientPane: {((FrameworkElement)window.Configuration.FindName("ClientPane")).ActualWidth}");
                         foreach (string name in new[] { "RailMcp", "RailEngineering", "RailCalls", "RailAudit", "RailEnvironment", "RailLog" })
                         {
                             var element = (FrameworkElement)window.FindName(name);
@@ -94,6 +101,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         foreach (string name in new[] { "MinimizeWindowButton", "MaximizeWindowButton", "CloseWindowButton" })
                             Assert.Equal(28, ((FrameworkElement)window.FindName(name)).ActualWidth);
                         var log = (TiaOpenness.Gui.Controls.WorkbenchLogView)window.Configuration.FindName("ActivityLog");
+                        log.BringIntoView(); WpfContext.Drain(); host.UpdateLayout(); WpfContext.Drain();
                         metrics.Add($"Log: {log.ActualWidth}, padding {log.Padding}, document padding {log.Document.PagePadding}, page width {log.Document.PageWidth}");
                         Assert.Equal(new Thickness(0), log.Document.PagePadding);
                         var table = (System.Windows.Documents.Table)log.Document.Blocks.FirstBlock;
@@ -103,18 +111,23 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         Assert.Equal(12, table.RowGroups[0].Rows[0].Cells[0].Padding.Right);
                         double textHeight = message.ContentEnd.GetCharacterRect(LogicalDirection.Backward).Bottom
                             - message.ContentStart.GetCharacterRect(LogicalDirection.Forward).Top;
-                        const int expectedMessageLines = 3;
+                        const int expectedMessageLines = 2;
                         Assert.Equal(12, log.FontSize);
                         Assert.Equal(17, message.LineHeight);
                         Assert.Equal(new Thickness(0, 9, 14, 9), messageCell.Padding);
                         Assert.Equal(new Thickness(0), message.Margin);
                         int renderedLines = 0;
                         for (TextPointer? line = message.ContentStart.GetLineStartPosition(0);
-                            line != null && line.CompareTo(message.ContentEnd) < 0; line = line.GetLineStartPosition(1))
+                            line != null && line.CompareTo(message.ContentEnd) < 0;)
+                        {
+                            Assert.True(renderedLines <= expectedMessageLines, "Line traversal must terminate within the expected layout.");
                             renderedLines++;
+                            var next = line.GetLineStartPosition(1);
+                            Assert.True(next == null || next.CompareTo(line) > 0, "Formatted line traversal must advance.");
+                            line = next;
+                        }
                         Assert.Equal(expectedMessageLines, renderedLines);
-                        // Three 17 epx lines plus the existing 9 + 9 epx cell padding: 69 epx per row.
-                        // Character rectangles exclude cell padding, so their strict bound is 69 - 18 = 51 epx.
+                        // Character rectangles exclude the 9 + 9 epx cell padding from the two-line row height.
                         double verticalPadding = messageCell.Padding.Top + messageCell.Padding.Bottom;
                         double maximumRowHeight = message.LineHeight * expectedMessageLines + verticalPadding;
                         double maximumTextHeight = maximumRowHeight - verticalPadding;
@@ -134,9 +147,9 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         File.WriteAllLines(Path.Combine(output, "layout.txt"), metrics);
                     }
                     window.Navigate(state.Page); WpfContext.Drain(); host.UpdateLayout(); WpfContext.Drain(); host.UpdateLayout();
-                    if (state.Page == "Approvals")
+                    if (state.Page is "Approvals" or "Settings")
                     {
-                        Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("ApprovalsContent")).Visibility);
+                        Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName(state.Page == "Approvals" ? "ApprovalsContent" : "SettingsContent")).Visibility);
                         Assert.Equal(Visibility.Collapsed, ((FrameworkElement)window.FindName("DrawerOverlay")).Visibility);
                     }
                     if (state.Page == "Engineering") Assert.False(((MainViewModel)window.DataContext).Session.IsConnected);

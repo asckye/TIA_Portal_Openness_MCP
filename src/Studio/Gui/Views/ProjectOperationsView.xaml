@@ -1,6 +1,12 @@
 <UserControl xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:views="clr-namespace:TiaOpenness.Gui.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:vm="clr-namespace:TiaOpenness.Gui.ViewModels" x:Name="PageRoot" x:Class="TiaOpenness.Gui.Views.ProjectOperationsView">
   <!-- 项目 page head: the project title and tags, its release and path, and the software, save and disconnect actions. -->
   <DockPanel>
+    <Border x:Name="EnvironmentBanner" DockPanel.Dock="Top" Style="{StaticResource Primer.Alert.Warning}" Margin="0,0,0,12" Visibility="{Binding EnvironmentNeedsAction,Converter={StaticResource BoolToVisibility}}">
+      <ux:PageHeadPanel Spacing="12">
+        <TextBlock Text="{Binding EnvironmentAttention}" Style="{StaticResource Primer.Text}" TextWrapping="Wrap"/>
+        <Button x:Name="RunEnvironmentButton" Content="{l:Tr Pages.ViewEnvironment}" AutomationProperties.Name="{l:Tr Pages.ViewEnvironment}" Click="OnEnvironment" Style="{StaticResource Primer.Secondary}"/>
+      </ux:PageHeadPanel>
+    </Border>
     <!-- The options pane covers the whole 项目 page, not only this head: a zero-height canvas lets it overflow downwards. -->
     <Canvas DockPanel.Dock="Top" Height="0" Panel.ZIndex="1">
       <views:EngineeringOptionsView x:Name="Options" Width="{Binding ActualWidth,RelativeSource={RelativeSource AncestorType=Grid}}" Height="{Binding ActualHeight,RelativeSource={RelativeSource AncestorType=Grid}}"/>

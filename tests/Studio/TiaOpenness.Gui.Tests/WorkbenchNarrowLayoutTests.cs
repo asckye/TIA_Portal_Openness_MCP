@@ -188,7 +188,7 @@ public sealed class WorkbenchNarrowLayoutTests(WpfContext wpf)
     }
 
     [Fact]
-    public void English_client_names_use_two_lines_at_1200_px_and_keep_equal_card_heights()
+    public void English_client_switch_names_wrap_without_truncation_and_keep_equal_row_heights()
     {
         foreach (var theme in new[] { AppTheme.Light, AppTheme.Dark })
             wpf.RunWithLanguage(AppLanguage.English, () =>
@@ -217,14 +217,18 @@ public sealed class WorkbenchNarrowLayoutTests(WpfContext wpf)
                         var name = Descendants<TextBlock>(row).Single(text => text.Name == "ClientName");
                         Assert.Equal(((ClientProfile)row.DataContext).DisplayName, name.Text);
                         Assert.Equal(TextWrapping.Wrap, name.TextWrapping);
-                        Assert.Equal(TextTrimming.CharacterEllipsis, name.TextTrimming);
-                        Assert.Equal(36, name.MaxHeight);
-                        // TextPointer also visits formatted lines hidden by trimming: measure the visible line boxes.
-                        Assert.InRange(name.ActualHeight, name.LineHeight, name.MaxHeight);
+                        Assert.Equal(TextTrimming.None, name.TextTrimming);
+                        Assert.Equal(double.PositiveInfinity, name.MaxHeight);
+                        // Compare the visible name with an unbounded wrapping probe, so every line must fit.
+                        Assert.InRange(name.ActualHeight, name.LineHeight, name.LineHeight * 4);
+                        var fullName = new TextBlock { Text = name.Text, FontFamily = name.FontFamily, FontSize = name.FontSize,
+                            TextWrapping = TextWrapping.Wrap, LineHeight = name.LineHeight, LineStackingStrategy = name.LineStackingStrategy };
+                        fullName.Measure(new Size(name.ActualWidth, double.PositiveInfinity));
+                        Assert.InRange(Math.Abs(name.ActualHeight - fullName.DesiredSize.Height), 0, 1);
                         int lines = (int)Math.Round(name.ActualHeight / name.LineHeight);
-                        Assert.InRange(lines, 1, 2);
-                        if (name.Text == "VS Code · Copilot") Assert.Equal(2, lines);
-                        if (lines == 2) wrapped++;
+                        Assert.InRange(lines, 1, 4);
+                        if (name.Text == "VS Code · Copilot") Assert.Equal(1, lines);
+                        if (lines > 1) wrapped++;
                         var content = Assert.IsType<Grid>(VisualTreeHelper.GetParent(name));
                         // Three em leaves a usable word-sized name column beside the English detection badge.
                         Assert.InRange(name.ActualWidth, name.FontSize * 3, row.ActualWidth);
@@ -234,7 +238,7 @@ public sealed class WorkbenchNarrowLayoutTests(WpfContext wpf)
                         var tile = Assert.IsType<Border>(row.Template.FindName("Tile", row));
                         Assert.True(tile.ActualHeight >= name.ActualHeight + tile.BorderThickness.Top + tile.BorderThickness.Bottom);
                     }
-                    Assert.True(wrapped > 0, "The 1200 px fixture must actually render a two-line name.");
+                    Assert.True(wrapped > 0, "The long-name fixture must actually wrap without truncation.");
                     foreach (var group in rows.GroupBy(row => Math.Round(row.TranslatePoint(new Point(), list).Y)))
                         Assert.InRange(group.Max(row => row.ActualHeight) - group.Min(row => row.ActualHeight), 0, 0.5);
                 }
@@ -414,7 +418,8 @@ public sealed class WorkbenchNarrowLayoutTests(WpfContext wpf)
         foreach (string name in new[] { "InstallationCard", "ServerPane" })
         {
             double actual = ((FrameworkElement)form.FindName(name)).ActualHeight;
-            Assert.True(Math.Abs(actual - 162) < 1, $"{context}: {name} is {actual} px high, not 162");
+            Assert.Equal(double.NaN, ((FrameworkElement)form.FindName(name)).Height);
+            Assert.True(actual >= 156, $"{context}: {name} sizes to its numbered header, fields and actions");
         }
         double client = ((FrameworkElement)form.FindName("ClientPane")).ActualHeight;
         if (height >= 780) Assert.True(client > 300, $"{context}: the client card is {client} px high");

@@ -21,7 +21,7 @@ internal static partial class Strings
                 "请先在此保存远程地址和访问密钥，再以中继模式写入所选客户端。"),
         ("Config.MigrationConfirmationRequired", "Confirm the client configuration change in the Workbench before writing an existing file.",
                 "请先在工作台确认客户端配置变更，再写入已有文件。"),
-        ("Config.TargetEngineUnavailable", "The selected engine is missing. Client configuration was not changed.", "所选引擎缺失，客户端配置未改动。"),
+        ("Config.TargetEngineUnavailable", "The selected service is missing. Client configuration was not changed.", "所选服务缺失，客户端配置未改动。"),
         ("Config.ClientChangedBeforeWrite", "The client configuration changed after preview. Review it again before saving.", "预览后客户端配置已变化，请重新审查后保存。"),
         ("Config.MigrateClientsPrompt",
                 "Migrate these entries to the bundled launcher or remote relay? A timestamped backup will be saved first. Relay migration removes the target " +

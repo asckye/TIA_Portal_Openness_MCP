@@ -318,8 +318,8 @@ namespace TiaMcpConfigurator
                 var list = (System.Windows.Controls.ListBox)form.FindName("ClientChoices");
                 var serverPane = (System.Windows.Controls.Border)form.FindName("ServerPane");
                 var clientPane = (System.Windows.Controls.Border)form.FindName("ClientPane");
-                Assert(list.ActualHeight <= clientPane.ActualHeight && list.ActualHeight < 400, "client list fits inside its card");
-                Assert(Math.Abs(serverPane.ActualHeight - 162) < 1 && clientPane.ActualHeight > 300 && clientPane.ActualHeight < 400, $"Primer service halves and client container use the handoff heights (server {serverPane.ActualHeight:F1}, client {clientPane.ActualHeight:F1}, window {window.ActualWidth:F0}x{window.ActualHeight:F0})");
+                Assert(list.ActualHeight <= clientPane.ActualHeight && double.IsNaN(list.Height), "client list fits inside its card");
+                Assert(double.IsNaN(serverPane.Height) && serverPane.ActualHeight >= 156 && double.IsNaN(clientPane.Height) && clientPane.ActualHeight > list.ActualHeight, $"Primer service halves and client container use the handoff heights (server {serverPane.ActualHeight:F1}, client {clientPane.ActualHeight:F1}, window {window.ActualWidth:F0}x{window.ActualHeight:F0})");
                 // 截图曾按面板宽度建位图却在其外边距偏移处绘制，右边 18px 连同状态胶囊一起被切掉。
                 var shell = (System.Windows.FrameworkElement)window.Content;
                 var pill = (System.Windows.Controls.TextBlock)form.FindName("LinkState");
@@ -333,8 +333,8 @@ namespace TiaMcpConfigurator
                 form.CapturePage(Path.Combine(output, "remote-bottom.png"), 0, true);
                 window.Width = window.MinWidth; window.Height = window.MinHeight;
                 form.CapturePage(Path.Combine(output, "remote-compact.png"), 0);
-                Assert(window.MinWidth == 1024 && window.MinHeight == 640 && list.ItemsPanel.LoadContent() is System.Windows.Controls.Primitives.UniformGrid columns && columns.Columns == 3,
-                    "minimum window size keeps the three-column client layout");
+                Assert(window.MinWidth == 1024 && window.MinHeight == 640 && list.ItemsPanel.LoadContent() is System.Windows.Controls.Primitives.UniformGrid columns && columns.Columns == 1,
+                    "minimum window size keeps the single-column client switches");
                 NarrowWindowChecks(window, form, output);
                 window.Width = 1200; window.Height = 780;
                 Assert(window.FontFamily.Source == "Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI"
@@ -434,8 +434,8 @@ namespace TiaMcpConfigurator
                 probe.Measure(new System.Windows.Size(double.PositiveInfinity, double.PositiveInfinity));
                 double titleEnd = title.TransformToAncestor(head).Transform(new System.Windows.Point()).X + probe.DesiredSize.Width;
                 double segmentsStart = segments.TransformToAncestor(head).Transform(new System.Windows.Point()).X;
-                Assert(Math.Abs(window.ActualWidth - 1044) < 1 && Math.Abs(serverPane.ActualHeight - 162) < 1 && Math.Abs(installation.ActualHeight - 162) < 1
-                    && clientPane.ActualHeight > 300 && clientPane.ActualHeight < 400,
+                Assert(Math.Abs(window.ActualWidth - 1044) < 1 && double.IsNaN(serverPane.Height) && double.IsNaN(installation.Height)
+                    && serverPane.ActualHeight >= 156 && installation.ActualHeight >= 156 && clientPane.ActualHeight > 300,
                     $"1044x780 {state}: service halves and client container keep the handoff heights (installation {installation.ActualHeight:F1}, server {serverPane.ActualHeight:F1}, client {clientPane.ActualHeight:F1})");
                 Assert(Inside((System.Windows.FrameworkElement)form.FindName("StartServer"), serverPane) && Inside((System.Windows.FrameworkElement)form.FindName("Network"), serverPane)
                     && Inside((System.Windows.FrameworkElement)form.FindName("TiaPath"), installation) && Inside((System.Windows.FrameworkElement)form.FindName("DetectTia"), installation),

@@ -17,6 +17,52 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
 {
+    [Fact]
+    public void Render_redesigned_pages_at_both_review_sizes_in_all_languages_and_themes()
+    {
+        string? output = Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR");
+        if (output != null) Directory.CreateDirectory(Path.Combine(output, "UI-2d"));
+        foreach (var language in new[] { AppLanguage.Chinese, AppLanguage.English })
+        foreach (var size in new[] { (Width: 1024, Height: 640), (Width: 1366, Height: 860) })
+            wpf.RunWithLanguage(language, () =>
+            {
+                var previous = ThemeManager.Current.Theme;
+                var contrast = ThemeManager.Current.HighContrastOverride;
+                var preview = new TiaMcpConfigurator.ConfigurationPreview("21", @"C:\fixture\Portal V21", "127.0.0.1", false, false, true, "fixture-private-key", "09:41:02  Ready\n",
+                    new[] { "Claude Code", "Codex", "Gemini CLI", "VS Code · Copilot" }.Select((name, i) =>
+                        new TiaMcpConfigurator.ClientProfile("fixture-" + i, name, @"C:\fixture\client-" + i + ".json", "Offline client fixture") { Detected = i < 2 }).ToList());
+                var diagnostics = new FeaturePageFixtures.Diagnostics(); diagnostics.Complete();
+                var window = new MainWindow(ProjectPageTestSupport.Model(results: true, release: "21"), false, FeaturePageFixtures.Approvals(), diagnostics, preview);
+                try
+                {
+                    window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit(), new FeaturePageFixtures.Environment());
+                    window.ShowConfiguration(false);
+                    var host = WorkbenchRenderTests.CreateHost(window, size.Width, size.Height);
+                    foreach (string theme in new[] { "light", "dark", "high-contrast" })
+                    {
+                        ThemeManager.Current.HighContrastOverride = theme == "high-contrast";
+                        ThemeManager.Current.Theme = theme == "dark" ? AppTheme.Dark : AppTheme.Light;
+                        WorkbenchRenderTests.ApplyCurrentPalette(host);
+                        foreach (string page in new[] { "Engineering", "Environment", "Log", "Mcp", "VersionControl", "Calls", "Audit" })
+                        {
+                            using var trace = new BindingPathTests.BindingTrace();
+                            window.Navigate(page);
+                            WpfContext.Drain(); host.UpdateLayout(); WpfContext.Drain(); host.UpdateLayout();
+                            Assert.True(string.IsNullOrWhiteSpace(trace.Text), page + ": " + trace.Text);
+                            Assert.DoesNotContain(WorkbenchRenderFeaturePagesTests.Descendants<TextBlock>(host), text => text.Text.Contains("fixture-private-key", StringComparison.Ordinal));
+                            Assert.Equal(36d, Application.Current.FindResource("Ui.RowHeight"));
+                            if (output != null)
+                            {
+                                string file = $"{page}-{size.Width}x{size.Height}-{(language == AppLanguage.Chinese ? "zh" : "en")}-{theme}.png";
+                                WorkbenchRenderTests.SaveRender(host, Path.Combine(output, "UI-2d", file), size.Width, size.Height);
+                            }
+                        }
+                    }
+                }
+                finally { window.Close(); ThemeManager.Current.HighContrastOverride = contrast; ThemeManager.Current.Theme = previous; }
+            });
+    }
+
     private sealed class AtlasFixture(string state) : IAtlasService
     {
         public Task<AtlasResult> GenerateAsync(AtlasRequest request, IProgress<AtlasProgress> progress, CancellationToken cancellationToken)
@@ -98,13 +144,10 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
                     if (state.Item2 is "Engineering" or "Blocks")
                     {
                         Assert.Equal(300, ((FrameworkElement)window.FindName("EngineeringSideContent")).ActualWidth);
-                        var tail = (Controls.LogTailView)((EngineeringSideView)window.FindName("EngineeringSideContent")).FindName("LogTail");
-                        if (tail.Items.Count > 0 && tail.ActualHeight >= 24)
-                        {
-                            var last = (ListBoxItem)tail.ItemContainerGenerator.ContainerFromIndex(tail.Items.Count - 1);
-                            Assert.NotNull(last);
-                            Assert.InRange(last.TranslatePoint(new Point(), tail).Y, 0, tail.ActualHeight - last.ActualHeight);
-                        }
+                        var side = (EngineeringSideView)window.FindName("EngineeringSideContent");
+                        Assert.Null(side.FindName("EnvironmentCard"));
+                        Assert.Null(side.FindName("BlocksLogCard"));
+                        Assert.True(((Button)side.FindName("CompileButton")).IsDefault);
                     }
                 }
                 finally { window.Close(); ThemeManager.Current.Theme = previous; }

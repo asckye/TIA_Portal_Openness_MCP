@@ -65,6 +65,7 @@ namespace TiaMcpConfigurator
         private string lastTestResult;
         private bool lastTestFailed;
         private bool busy, closing;
+        private bool updatingClientSwitch;
         private T Find<T>(string name) where T : FrameworkElement {
             return (T)(FindName(name) ?? Window.FindName(name) ?? ((TiaOpenness.Gui.Views.SettingsView)Window.FindName("SettingsContent")).FindName(name)); }
         private string Text(string name) { return Find<TextBox>(name).Text.Trim(); }
@@ -103,6 +104,8 @@ namespace TiaMcpConfigurator
                     .T("Config.ClientDetection", string
                         .Join(Loc.Current["Config.ClientListSeparator"], cards.Select(x => x.DisplayName + (x.Detected ? " ✓" : " –")))));
             choices.SelectionChanged += delegate { UpdateInstructions(); };
+            choices.AddHandler(System.Windows.Controls.Primitives.ToggleButton.CheckedEvent, new RoutedEventHandler(OnClientSwitch));
+            choices.AddHandler(System.Windows.Controls.Primitives.ToggleButton.UncheckedEvent, new RoutedEventHandler(OnClientSwitch));
             Find<TextBlock>("ClientSelection").MouseLeftButtonUp += delegate {
                 TiaOpenness.Gui.Controls.WorkbenchMessageBox
                     .Show(Window, clientInstructions, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information);
@@ -193,7 +196,6 @@ namespace TiaMcpConfigurator
         private void OnLanguageChanged(object? sender, EventArgs e) { UpdateLanguage(); }
         private void UpdateLanguage()
         {
-            Language = System.Windows.Markup.XmlLanguage.GetLanguage(Loc.Current.IsChinese ? "zh-CN" : "en-US");
             Mode(Remote); UpdateInstructions(); UpdateDetectionLabel(); UpdateLastTest(); UpdateLogCount();
             foreach (var update in localizedText.Values) update();
         }
@@ -274,6 +276,52 @@ namespace TiaMcpConfigurator
             TiaOpenness.Gui.Controls.WorkbenchMessageBox
                 .Show(Window, (string)ClientSelection.ToolTip, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage
                     .Information);
+            e.Handled = true;
+        }
+        internal Func<ClientProfile, bool>? ConfirmClientSelection { get; set; }
+        internal bool PreviewClientSelection(ClientProfile profile)
+        {
+            if (ConfirmClientSelection != null) return ConfirmClientSelection(profile);
+            string message = Loc.Current["Pages.ClientWritePreview"] + "\n\n" + profile.DisplayName + "\n" + profile.Path
+                + "\n" + Loc.Current.T("Pages.ClientBackupPreview", profile.Path)
+                + "\n\n" + Loc.Current["Config.Transport"] + ": " + (Remote ? "HTTP" : "stdio")
+                + "\n" + ServiceEndpoint + "\n" + Loc.Current["Calls.SecretPlaceholder"];
+            return WorkbenchMessageBox
+                .Show(Window, message, Loc.Current["Pages.ClientEnable"], MessageBoxButton.OKCancel, MessageBoxImage.Information) == MessageBoxResult.OK;
+        }
+        internal bool SetClientSelected(ClientProfile profile, bool selected)
+        {
+            if (ClientChoices.SelectedItems.Contains(profile) == selected) return true;
+            if (selected && !PreviewClientSelection(profile)) return false;
+            if (selected) ClientChoices.SelectedItems.Add(profile); else ClientChoices.SelectedItems.Remove(profile);
+            return true;
+        }
+        private void OnClientSwitch(object sender, RoutedEventArgs e)
+        {
+            if (updatingClientSwitch || e.OriginalSource is not System.Windows.Controls.Primitives.ToggleButton toggle
+                || toggle.DataContext is not ClientProfile profile) return;
+            updatingClientSwitch = true;
+            try
+            {
+                SetClientSelected(profile, toggle.IsChecked == true);
+                toggle.GetBindingExpression(System.Windows.Controls.Primitives.ToggleButton.IsCheckedProperty)?.UpdateTarget();
+            }
+            finally { updatingClientSwitch = false; }
+        }
+        private void OnClientPreviewMouse(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            var item = ItemsControl.ContainerFromElement(ClientChoices, e.OriginalSource as DependencyObject) as ListBoxItem;
+            if (item?.DataContext is not ClientProfile profile) return;
+            SetClientSelected(profile, !item.IsSelected);
+            item.Focus();
+            e.Handled = true;
+        }
+        private void OnClientPreviewKey(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key is not (System.Windows.Input.Key.Space or System.Windows.Input.Key.Enter)) return;
+            var item = ItemsControl.ContainerFromElement(ClientChoices, System.Windows.Input.Keyboard.FocusedElement as DependencyObject) as ListBoxItem;
+            if (item?.DataContext is not ClientProfile profile) return;
+            SetClientSelected(profile, !item.IsSelected);
             e.Handled = true;
         }
         private void UpdateLink()
@@ -425,7 +473,8 @@ namespace TiaMcpConfigurator
             var targets = selected.GroupBy(x => x.Path, StringComparer.OrdinalIgnoreCase)
                 .Select(g => new { Profile = g.First(), Names = string.Join(" / ", g.Select(x => x.Name)),
                     Change = ClientProfiles.PrepareSave(g.First(), remote, ip, port, secret, engine, SelectedVersion, Text("TiaPath")) }).ToList();
-            string message = Loc.Current["Config.WriteClientsPrompt"] + string.Join("\n", targets.Select(x => x.Names + "\n" + x.Profile.Path));
+            string message = Loc.Current["Config.WriteClientsPrompt"] + string.Join("\n", targets.Select(x => x.Names + "\n" + x.Profile.Path
+                + "\n" + Loc.Current.T("Pages.ClientBackupPreview", x.Profile.Path)));
             if (remote) message += "\n\n" + Loc.Current["Config.RelayMode"];
             if (targets.Any(x => x.Change.RequiresMigration))
                 message += "\n\n" + Loc.Current["Config.MigrateClientsPrompt"] + "\n" + string

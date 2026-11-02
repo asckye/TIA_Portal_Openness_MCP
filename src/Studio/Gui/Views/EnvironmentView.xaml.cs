@@ -18,8 +18,7 @@ public partial class EnvironmentView : UserControl
     }
     private FeaturePagesViewModel Model => (FeaturePagesViewModel)DataContext;
     private void OnRecheck(object sender, RoutedEventArgs e) => Model.Run(Model.Environment.Recheck);
-    private void OnGenerate(object sender, RoutedEventArgs e) => Model.Export();
-    private void OnOpenFolder(object sender, RoutedEventArgs e) => Model.Run(Model.Diagnostics.OpenFolder);
+    private void OnLogs(object sender, RoutedEventArgs e) => (Window.GetWindow(this) as MainWindow)?.Navigate("Log");
     private void OnFix(object sender, RoutedEventArgs e)
     {
         e.Handled = true;

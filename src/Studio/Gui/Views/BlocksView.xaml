@@ -40,13 +40,13 @@
             <DockPanel VerticalAlignment="Center" Margin="0,0,8,4">
               <Path DockPanel.Dock="Left" Style="{StaticResource Primer.AlertIcon.Info}" Margin="0,0,8,0" Visibility="{Binding Tag.HasSelection,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"/>
               <Path DockPanel.Dock="Left" Style="{StaticResource Primer.AlertIcon.Warning}" Margin="0,0,8,0" Visibility="{Binding Tag.HasSelection,ElementName=PageRoot,Converter={StaticResource NotBoolToVisibility}}"/>
-              <Button DockPanel.Dock="Right" AutomationProperties.Name="{l:Tr Primer.Clear}" Content="{l:Tr Primer.Clear}" Click="OnSelectNone" Style="{StaticResource Primer.Link}" Padding="4,0" MinHeight="24"/>
-              <Button DockPanel.Dock="Right" AutomationProperties.Name="{l:Tr Primer.SelectAll}" Content="{l:Tr Primer.SelectAll}" Click="OnSelectAll" Style="{StaticResource Primer.Link}" Padding="4,0" MinHeight="24"/>
+              <Button DockPanel.Dock="Right" AutomationProperties.Name="{l:Tr Pages.ClearSelection}" Content="{l:Tr Pages.ClearSelection}" Click="OnSelectNone" Style="{StaticResource Primer.Link}" Padding="4,0" MinHeight="32"/>
+              <Button DockPanel.Dock="Right" AutomationProperties.Name="{l:Tr Primer.SelectAll}" Content="{l:Tr Primer.SelectAll}" Click="OnSelectAll" Style="{StaticResource Primer.Link}" Padding="4,0" MinHeight="32"/>
               <TextBlock Text="{Binding Tag.SelectedSummary,ElementName=PageRoot}" Style="{StaticResource Primer.Text}" Visibility="{Binding Tag.HasSelection,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"/>
               <TextBlock Text="{l:Tr Pages.NoSelection}" Style="{StaticResource Primer.Text}" TextWrapping="Wrap" Visibility="{Binding Tag.HasSelection,ElementName=PageRoot,Converter={StaticResource NotBoolToVisibility}}"/>
             </DockPanel>
             <WrapPanel Grid.Row="1" Grid.ColumnSpan="2">
-              <Button AutomationProperties.Name="{l:Tr Blocks.Export}" x:Name="ExportButton" Click="OnExport" IsEnabled="{Binding Tag.HasSelection,ElementName=PageRoot}" Style="{StaticResource Primer.Small}" Margin="0,4,8,0">
+              <Button AutomationProperties.Name="{l:Tr Blocks.Export}" x:Name="ExportButton" Click="OnExport" IsEnabled="{Binding Tag.HasSelection,ElementName=PageRoot}" Style="{StaticResource Primer.Secondary}" Margin="0,4,8,0">
                 <Button.Content>
                   <MultiBinding Converter="{StaticResource Primer.Value}" ConverterParameter="export">
                     <Binding Path="Engineering.SourceFormat"/>
@@ -54,11 +54,9 @@
                   </MultiBinding>
                 </Button.Content>
               </Button>
-              <Button AutomationProperties.Name="{l:Tr Pages.Import}" Content="{l:Tr Pages.Import}" ToolTip="{l:Tr Pages.TransferDescription}" Command="{Binding Engineering.Import}" Style="{StaticResource Primer.Small}" Margin="0,4,8,0"/>
-              <Button AutomationProperties.Name="{l:Tr Pages.ViewLadder}" x:Name="ViewLadderButton" Content="{l:Tr Pages.ViewLadder}" Click="OnViewLadder" IsEnabled="{Binding Atlas.CanViewBlock,ElementName=PageRoot}" Style="{StaticResource Primer.Small}" Margin="0,4,8,0"/>
-              <Button AutomationProperties.Name="{l:Tr Pages.GenerateAtlas}" x:Name="GenerateAtlasButton" Content="{l:Tr Pages.GenerateAtlas}" Click="OnGenerateAtlas" IsEnabled="{Binding Atlas.CanGenerate,ElementName=PageRoot}" Style="{StaticResource Primer.Small}" Margin="0,4,8,0"/>
-              <Button AutomationProperties.Name="{l:Tr Toolbar.Inspect}" Content="{l:Tr Toolbar.Inspect}" ToolTip="{l:Tr Pages.InspectDescription}" Command="{Binding Engineering.Inspect}" IsEnabled="{Binding Tag.CanOperate,ElementName=PageRoot}" Style="{StaticResource Primer.Small}" Margin="0,4,8,0"/>
-              <Button AutomationProperties.Name="{l:Tr Primer.CompileSoftware}" Content="{l:Tr Primer.CompileSoftware}" ToolTip="Ctrl+B" AutomationProperties.AcceleratorKey="Ctrl+B" Command="{Binding Engineering.Compile}" Style="{StaticResource Primer.Run.Small}" Margin="0,4,0,0"/>
+              <Button AutomationProperties.Name="{l:Tr Pages.Import}" Content="{l:Tr Pages.Import}" ToolTip="{l:Tr Pages.TransferDescription}" Command="{Binding Engineering.Import}" Style="{StaticResource Primer.Secondary}" Margin="0,4,8,0"/>
+              <Button AutomationProperties.Name="{l:Tr Pages.ViewLadder}" x:Name="ViewLadderButton" Content="{l:Tr Pages.ViewLadder}" Click="OnViewLadder" IsEnabled="{Binding Atlas.CanViewBlock,ElementName=PageRoot}" Style="{StaticResource Primer.Secondary}" Margin="0,4,8,0"/>
+              <Button AutomationProperties.Name="{l:Tr Pages.GenerateAtlas}" x:Name="GenerateAtlasButton" Content="{l:Tr Pages.GenerateAtlas}" Click="OnGenerateAtlas" IsEnabled="{Binding Atlas.CanGenerate,ElementName=PageRoot}" Style="{StaticResource Primer.Secondary}" Margin="0,4,8,0"/>
             </WrapPanel>
           </Grid>
         </Border>
@@ -142,9 +140,9 @@
               <Ellipse Width="8" Height="8" Fill="{Binding Path=(TextElement.Foreground),RelativeSource={RelativeSource AncestorType=Border}}"/>
               <TextBlock Grid.Column="1" AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding Atlas.Label,ElementName=PageRoot}" Text="{Binding Atlas.Label,ElementName=PageRoot}" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold" Margin="12,0" VerticalAlignment="Center"/>
               <TextBlock Grid.Column="2" Text="{Binding Atlas.Detail,ElementName=PageRoot}" ToolTip="{Binding Atlas.Detail,ElementName=PageRoot}" Style="{StaticResource Primer.Mono}"/>
-              <Button Grid.Column="3" Content="{l:Tr Session.Cancel}" AutomationProperties.Name="{l:Tr Session.Cancel}" Click="OnCancelAtlas" Style="{StaticResource Primer.Small}" Visibility="{Binding Atlas.Running,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"/>
+              <Button Grid.Column="3" Content="{l:Tr Session.Cancel}" AutomationProperties.Name="{l:Tr Session.Cancel}" Click="OnCancelAtlas" Style="{StaticResource Primer.Secondary}" Visibility="{Binding Atlas.Running,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"/>
               <ProgressBar Grid.Column="2" IsIndeterminate="{Binding Atlas.Indeterminate,ElementName=PageRoot}" Width="120" Height="4" Maximum="100" Value="{Binding Atlas.Percent,ElementName=PageRoot,Mode=OneWay}" Margin="12,0,0,0" Visibility="{Binding Atlas.Running,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"/>
-              <Button AutomationProperties.Name="{l:Tr Common.Open}" Grid.Column="3" Content="{l:Tr Common.Open}" Click="OnOpenAtlas" Style="{StaticResource Primer.Small}" Margin="12,0,0,0" Visibility="{Binding Atlas.Done,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"/>
+              <Button AutomationProperties.Name="{l:Tr Common.Open}" Grid.Column="3" Content="{l:Tr Common.Open}" Click="OnOpenAtlas" Style="{StaticResource Primer.Secondary}" Margin="12,0,0,0" Visibility="{Binding Atlas.Done,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"/>
             </Grid>
           </Border>
         </Border>

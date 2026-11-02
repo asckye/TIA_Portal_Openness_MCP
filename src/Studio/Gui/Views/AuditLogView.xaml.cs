@@ -9,22 +9,8 @@ namespace TiaOpenness.Gui.Views;
 
 public partial class AuditLogView : UserControl
 {
-    public AuditLogView() { InitializeComponent(); DataContext = null; DataContextChanged += OnModelChanged; }
+    public AuditLogView() { InitializeComponent(); DataContext = null; }
     private FeaturePagesViewModel Model => (FeaturePagesViewModel)DataContext;
-    private void OnModelChanged(object sender, DependencyPropertyChangedEventArgs e)
-    {
-        if (e.OldValue is FeaturePagesViewModel old) old.PropertyChanged -= OnChanged;
-        if (e.NewValue is FeaturePagesViewModel model) { model.PropertyChanged += OnChanged; UpdateRetention(); }
-    }
-    private void OnChanged(object? sender, PropertyChangedEventArgs e)
-    { if (e.PropertyName is nameof(Model.RetentionSize) or nameof(Model.RetentionCopies)) UpdateRetention(); }
-    private void UpdateRetention()
-    {
-        foreach (var button in new[] { Size50, Size5, Size10 }) button.IsChecked = int
-            .Parse((string)button.Tag, System.Globalization.CultureInfo.InvariantCulture) == Model.Audit.FileSizeMb;
-        foreach (var button in new[] { Copies3, Copies5, Copies10 }) button.IsChecked = int
-            .Parse((string)button.Tag, System.Globalization.CultureInfo.InvariantCulture) == Model.Audit.Copies;
-    }
     private void OnVerify(object sender, RoutedEventArgs e) => Model.Verify();
     private void OnJump(object sender, RoutedEventArgs e)
     {
@@ -33,9 +19,4 @@ public partial class AuditLogView : UserControl
     }
     private async void OnOlder(object sender, RoutedEventArgs e) { if (Model.Audit is Services.AuditLogService audit) await audit.OlderAsync(); }
     private async void OnLatest(object sender, RoutedEventArgs e) { if (Model.Audit is Services.AuditLogService audit) await audit.LatestAsync(); }
-    private void OnSize(object sender, RoutedEventArgs e) => Model
-        .SetRetention(int.Parse((string)((RadioButton)sender).Tag, System.Globalization.CultureInfo.InvariantCulture), true);
-    private void OnCopies(object sender, RoutedEventArgs e) => Model
-        .SetRetention(int.Parse((string)((RadioButton)sender).Tag, System.Globalization.CultureInfo.InvariantCulture), false);
-    private void OnOpenFolder(object sender, RoutedEventArgs e) => Model.Run(Model.Audit.OpenFolder);
 }

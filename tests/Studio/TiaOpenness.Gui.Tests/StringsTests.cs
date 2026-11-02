@@ -29,6 +29,23 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public class StringsTests(WpfContext wpf)
 {
+    [Fact]
+    public void Redesigned_pages_keep_terminology_keys_and_use_service_wording()
+    {
+        Assert.Equal("Service worker", Strings.English["Calls.WorkerDispatched"]);
+        Assert.Equal("服务 worker", Strings.Chinese["Calls.WorkerDispatched"]);
+        foreach (string key in new[] { "Config.EngineOutsideBundle", "Config.EngineNotFound", "Config.TargetEngineUnavailable", "Env.OpennessReadiness", "Env.Engines", "Env.ReleaseFiles", "Env.NotReady", "Env.FixOpennessReadiness", "Pages.EnvironmentDescription" })
+        {
+            Assert.Contains("service", Strings.English[key], StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("服务", Strings.Chinese[key]);
+        }
+        foreach (string key in new[] { "Env.FixPort", "Env.FixUrl", "Env.FixFirewall" })
+        {
+            Assert.Contains("MCP & clients", Strings.English[key]);
+            Assert.Contains("MCP 与客户端", Strings.Chinese[key]);
+        }
+    }
+
     private static readonly Regex Placeholder = new(@"\{(\d+)[^}]*\}", RegexOptions.Compiled);
 
     public static TheoryData<string, string, string> Entries()
@@ -120,7 +137,7 @@ public class StringsTests(WpfContext wpf)
             "App.Title", "App.Monogram", "Badge.NoVersion", "Badge.Version",
             "Lang.English", "Lang.Chinese", "Status.Working", "Settings.English", "Settings.Chinese", "Settings.EngineVersion", "Settings.Releases", "Config.Local",
             // Product names, protocol identifiers and units stay the same in both languages.
-            "Shell.McpStatus", "Shell.SessionStatus", "Audit.Size5", "Audit.Size10", "Audit.Size50", "Actor.AI",
+            "Shell.McpStatus", "Audit.Size5", "Audit.Size10", "Audit.Size50", "Actor.AI",
             "Common.Plc", // Standard abbreviation: programmable logic controller.
             "Common.Id", // Standard abbreviation: identifier.
             "Common.PortalName", // Product name: Siemens TIA Portal.
@@ -313,7 +330,7 @@ public class StringsTests(WpfContext wpf)
                 Assert.Equal(Loc.Current.T("Status.VcSyncApplied", 2, 1, 3), results.SyncSummary);
                 Assert.Equal(history, model.Activity.Log);
                 var converter = new DisplayValueConverter();
-                Assert.Equal(language == AppLanguage.English ? "Export · Source text" : "导出 · 源文本", converter.Convert(true, typeof(string), "export", CultureInfo.InvariantCulture));
+                Assert.Equal(language == AppLanguage.English ? "Export source (_E)" : "导出源文件（_E）", converter.Convert(true, typeof(string), "export", CultureInfo.InvariantCulture));
                 Assert.Equal(language == AppLanguage.English ? "Differs" : "有差异", converter.Convert(VcCompareState.Unequal, typeof(string), "compare", CultureInfo.InvariantCulture));
             }
         });

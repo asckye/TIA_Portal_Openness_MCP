@@ -131,8 +131,15 @@ public class PrimerViewTests(WpfContext wpf)
                 host.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.ContextIdle);
                 host.UpdateLayout();
                 Assert.Equal(theme, ThemeManager.Current.Theme);
-                string[] cards = log ? new[] { "LogCard" } : vci ? new[] { "WorkspaceCard", "VciStatusCard", "SyncCard", "MappedObjectsCard", "DiffCard" } : new[] { "BlocksHeaderCard", "BlocksCard", "CompileCard", "InspectionCard", "BlocksLogCard" };
-                DesktopCapture.AssertCards(host, theme, cards.Where(name => name != "DiffCard").Select(name => (Border)ProjectPageTestSupport.Find(window, name)).ToArray());
+                string[] cards = log ? new[] { "LogCard" } : vci ? new[] { "WorkspaceCard", "VciStatusCard", "SyncCard", "MappedObjectsCard", "DiffCard" } : new[] { "BlocksHeaderCard", "BlocksCard", "CompileCard", "InspectionCard" };
+                var checkedCards = cards.Where(name => name != "DiffCard").Select(name => (Border)ProjectPageTestSupport.Find(window, name)).ToArray();
+                // Compact pages scroll as a whole; expose each card before checking its full rendered surface.
+                foreach (var card in checkedCards)
+                {
+                    card.BringIntoView(); WpfContext.Drain(); host.UpdateLayout();
+                    DesktopCapture.AssertCards(host, theme, card);
+                }
+                checkedCards[0].BringIntoView(); WpfContext.Drain(); host.UpdateLayout();
                 var bitmap = new RenderTargetBitmap(1200,780,96,96,PixelFormats.Pbgra32);bitmap.Render(host);
                 string? output = Environment.GetEnvironmentVariable("TIA_PRIMER_SCREENSHOTS");
                 if (!string.IsNullOrEmpty(output))

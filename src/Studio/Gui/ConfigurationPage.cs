@@ -80,12 +80,12 @@ public partial class MainWindow
         UpdateMcpStatus();
     }
     private void OnMcpLanguageChanged(object? sender, EventArgs e) => UpdateMcpStatus();
-    /// <summary>The MCP service state stays visible on both pages, the way a service host shows its engine state.</summary>
+    /// <summary>The shell shows service and project state; connection details belong to MCP &amp; clients.</summary>
     private void UpdateMcpStatus()
     {
         var state = Configuration?.ServiceStateKey ?? "Config.Idle";
         var version = TiaMcp.Versioning.TiaVersionCatalog.Get(_model.SelectedReleaseKey).DisplayName;
-        var status = state == "Config.Local" ? "stdio" : Loc.Current[state];
+        var status = state == "Config.Local" ? Loc.Current["Pages.ServiceOnDemand"] : Loc.Current[state];
         McpStatusText.Text = Loc.Current.T("Shell.McpStatus", status);
         SessionStatus.Text = Loc.Current.T("Shell.ProjectStatus", version, HasProject ? _model.Session.ProjectName : Loc.Current["Blocks.Empty.Title"]);
         McpStatusText.ToolTip = McpStatusText.Text;

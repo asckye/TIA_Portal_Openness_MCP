@@ -13,6 +13,13 @@ public partial class ProjectOperationsView : UserControl
         Options.ClearPrefillRequested += (_, form) => ClearPrefillRequested?.Invoke(this, form);
     }
     internal bool OptionsOpen => Options.IsOpen;
+    private Action? _environmentRequested;
+    internal void SetFeatures(FeaturePagesViewModel? features, Action? environmentRequested)
+    {
+        EnvironmentBanner.DataContext = features;
+        _environmentRequested = environmentRequested;
+    }
+    private void OnEnvironment(object sender, RoutedEventArgs e) => _environmentRequested?.Invoke();
     internal event EventHandler<string>? ClearPrefillRequested;
     private MainViewModel Model => (MainViewModel)DataContext;
     internal void ShowProjectOptions() => Options.Show("Project");

@@ -1,139 +1,50 @@
-<UserControl xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:controls="clr-namespace:TiaOpenness.Gui.Controls" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" x:Class="TiaOpenness.Gui.Views.EnvironmentView">
-  <Grid ux:ResponsiveLayout.Enabled="True" ux:ResponsiveLayout.ScrollWholePage="True">
-    <Grid.ColumnDefinitions>
-      <ColumnDefinition/>
-      <ColumnDefinition Width="16"/>
-      <ColumnDefinition Width="300"/>
-    </Grid.ColumnDefinitions>
-    <Grid>
-      <Grid.RowDefinitions>
-        <RowDefinition Height="Auto"/>
-        <RowDefinition Height="0"/>
-        <RowDefinition/>
-      </Grid.RowDefinitions>
-      <Border Style="{StaticResource Primer.PageHead}">
+<UserControl xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" x:Class="TiaOpenness.Gui.Views.EnvironmentView">
+  <DockPanel>
+    <Border DockPanel.Dock="Top" Style="{StaticResource Primer.PageHead}">
+      <ux:PageHeadPanel>
         <StackPanel>
-          <ux:PageHeadPanel>
-            <StackPanel>
-              <TextBlock Text="{l:Tr Shell.Environment}" Style="{StaticResource Primer.PageTitle}"/>
-              <ContentControl Style="{StaticResource Primer.StatusChip}" Tag="{Binding EnvironmentTone}" HorizontalAlignment="Left" Margin="0,4,0,0">
-                <TextBlock Text="{Binding EnvironmentSummary}" Style="{StaticResource Primer.StatusText}"/>
-              </ContentControl>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-              <Button AutomationProperties.Name="{l:Tr Env.Recheck}" x:Name="RecheckButton" Content="{l:Tr Env.Recheck}" ux:Ux.Icon="{DynamicResource Icon.Reload}" Style="{StaticResource Primer.Secondary}" Click="OnRecheck"/>
-              <Button AutomationProperties.Name="{l:Tr Env.Generate}" x:Name="GenerateButton" Content="{l:Tr Env.Generate}" ux:Ux.Icon="{DynamicResource Icon.Download}" Style="{StaticResource Primer.Run}" Margin="8,0,0,0" Click="OnGenerate" IsEnabled="{Binding DiagnosticCanStart}"/>
-            </StackPanel>
-          </ux:PageHeadPanel>
-          <!-- Ant Alert (warning, with description) while any check needs action. -->
-          <Border x:Name="AttentionAlert" Style="{StaticResource Primer.Alert.Warning}" Margin="0,16,0,0" Padding="16,12" Visibility="{Binding EnvironmentNeedsAction, Converter={StaticResource BoolToVisibility}}">
-            <DockPanel>
-              <Path DockPanel.Dock="Left" Style="{StaticResource Primer.AlertIcon.Warning}" Width="16" Height="16" VerticalAlignment="Top" Margin="0,2,12,0"/>
-              <StackPanel>
-                <TextBlock Text="{Binding EnvironmentSummary}" Style="{StaticResource Primer.Text}" FontSize="{DynamicResource Ui.FontSize.Large}"/>
-                <TextBlock Text="{Binding EnvironmentAttention}" Style="{StaticResource Primer.Text}" TextWrapping="Wrap" Margin="0,4,0,0"/>
-              </StackPanel>
-            </DockPanel>
-          </Border>
+          <TextBlock Text="{l:Tr Pages.EnvironmentDescription}" Style="{StaticResource Primer.PageSubtitle}" TextWrapping="Wrap"/>
+          <ContentControl Style="{StaticResource Primer.StatusChip}" Tag="{Binding EnvironmentTone}" HorizontalAlignment="Left" Margin="0,8,0,0">
+            <TextBlock Text="{Binding EnvironmentSummary}" Style="{StaticResource Primer.StatusText}"/>
+          </ContentControl>
         </StackPanel>
-      </Border>
-      <ScrollViewer x:Name="GroupsScroll" Grid.Row="2" Style="{StaticResource Primer.PageListScroll}" HorizontalScrollBarVisibility="Disabled">
-        <ItemsControl x:Name="GroupList" ItemsSource="{Binding EnvironmentGroups}">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <Border Style="{StaticResource Primer.TableContainer}" Margin="0,0,0,12">
-                <Expander AutomationProperties.Name="{Binding Name}" Style="{StaticResource Primer.Collapse}">
-                  <Expander.Header>
-                    <DockPanel>
-                      <ContentControl DockPanel.Dock="Right" Style="{StaticResource Primer.StatusChip}" Tag="{Binding Tone}">
-                        <TextBlock Text="{Binding Summary}" Style="{StaticResource Primer.StatusText}"/>
-                      </ContentControl>
-                      <TextBlock Text="{Binding Name}" Style="{StaticResource Primer.ContainerTitle}" FontSize="{DynamicResource Ui.FontSize.Control}"/>
-                    </DockPanel>
-                  </Expander.Header>
-                  <ItemsControl ItemsSource="{Binding Rows}">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate>
-                        <Border Style="{StaticResource Primer.EnvironmentRow}">
-                          <Expander AutomationProperties.Name="{Binding Name}" Style="{StaticResource Primer.Expander}">
-                            <Expander.Header>
-                              <Grid MinHeight="52">
-                                <Grid.ColumnDefinitions>
-                                  <ColumnDefinition Width="38"/>
-                                  <ColumnDefinition Width="*"/>
-                                  <ColumnDefinition Width="Auto"/>
-                                  <ColumnDefinition Width="28"/>
-                                </Grid.ColumnDefinitions>
-                                <Path Style="{StaticResource Primer.ToneIcon}" Tag="{Binding Tone}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="16,10,0,0"/>
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,6,12,6">
-                                  <TextBlock Text="{Binding Name}" Style="{StaticResource Primer.Text}" ToolTip="{Binding Name}"/>
-                                  <TextBlock Text="{Binding Result}" Style="{StaticResource Primer.ToneText}" Tag="{Binding ResultTone}" ToolTip="{Binding Result}" Margin="0,2,0,0"/>
-                                </StackPanel>
-                                <Button AutomationProperties.Name="{Binding Fix}" Grid.Column="2" Content="{Binding Fix}" Style="{StaticResource Primer.Run.Small}" VerticalAlignment="Center" Visibility="{Binding HasFix, Converter={StaticResource BoolToVisibility}}" Click="OnFix"/>
-                                <Path Grid.Column="3" VerticalAlignment="Center" HorizontalAlignment="Center" Style="{StaticResource Primer.ExpanderChevron.textFaint}"/>
-                              </Grid>
-                            </Expander.Header>
-                            <TextBlock Text="{Binding Detail}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
-                          </Expander>
-                        </Border>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
-                </Expander>
-              </Border>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </ScrollViewer>
-    </Grid>
-    <Grid Grid.Column="2">
-      <Grid.RowDefinitions>
-        <RowDefinition Height="Auto"/>
-        <RowDefinition Height="14"/>
-        <RowDefinition Height="Auto"/>
-        <RowDefinition Height="14"/>
-        <RowDefinition/>
-      </Grid.RowDefinitions>
-      <Border Style="{StaticResource Primer.Container}">
-        <StackPanel>
-          <ux:PageHeadPanel Margin="0,0,0,10" Spacing="8">
-            <TextBlock Text="{l:Tr Env.Diagnostics}" Style="{StaticResource Primer.ContainerTitle}"/>
-            <ContentControl Style="{StaticResource Primer.StatusChip}" Tag="{Binding DiagnosticTone}">
-              <TextBlock Text="{Binding DiagnosticLabel}" Style="{StaticResource Primer.StatusText}"/>
-            </ContentControl>
-          </ux:PageHeadPanel>
-          <TextBlock Text="{l:Tr Env.DiagnosticHelp}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}" TextWrapping="Wrap" Visibility="{Binding DiagnosticIdle, Converter={StaticResource BoolToVisibility}}"/>
-          <TextBlock Text="{Binding DiagnosticStep}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Visibility="{Binding DiagnosticIdle, Converter={StaticResource BoolToVisibility}}"/>
-          <StackPanel Visibility="{Binding DiagnosticRunning, Converter={StaticResource BoolToVisibility}}">
-            <DockPanel>
-              <TextBlock DockPanel.Dock="Right" Text="{Binding DiagnosticPercent, StringFormat={}{0}%}" Style="{StaticResource Primer.Mono}"/>
-              <TextBlock AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding DiagnosticStep}" Text="{Binding DiagnosticStep}" Style="{StaticResource Primer.Muted}"/>
-            </DockPanel>
-            <ProgressBar Style="{StaticResource Primer.Progress}" Height="5" Value="{Binding DiagnosticPercent, Mode=OneWay}" Margin="0,12,0,0"/>
+        <Button x:Name="RecheckButton" Content="{l:Tr Env.Recheck}" AutomationProperties.Name="{l:Tr Env.Recheck}" Style="{StaticResource Primer.Run}" IsDefault="True" Click="OnRecheck"/>
+      </ux:PageHeadPanel>
+    </Border>
+    <Grid ux:ResponsiveLayout.Enabled="True" ux:ResponsiveLayout.ScrollWholePage="True">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="320"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+      <Border Style="{StaticResource Primer.TableContainer}">
+        <ScrollViewer x:Name="GroupsScroll" Style="{StaticResource Primer.PageListScroll}" HorizontalScrollBarVisibility="Disabled">
+          <StackPanel x:Name="GroupList">
+            <TextBlock Text="{l:Tr Env.AttentionGroup}" Style="{StaticResource Primer.ContainerTitle}" Margin="12"/>
+            <ListBox x:Name="AttentionList" AutomationProperties.Name="{l:Tr Env.AttentionGroup}" ItemsSource="{Binding AttentionChecks}" SelectedItem="{Binding SelectedEnvironment}" Style="{StaticResource Primer.List}" ItemTemplate="{StaticResource Pages.EnvironmentCheck}"/>
+            <TextBlock Text="{l:Tr Env.Passed}" Style="{StaticResource Primer.ContainerTitle}" Margin="12"/>
+            <ListBox x:Name="PassedList" AutomationProperties.Name="{l:Tr Env.Passed}" ItemsSource="{Binding PassedChecks}" SelectedItem="{Binding SelectedEnvironment}" Style="{StaticResource Primer.List}" ItemTemplate="{StaticResource Pages.EnvironmentCheck}"/>
           </StackPanel>
-          <StackPanel Visibility="{Binding DiagnosticDone, Converter={StaticResource BoolToVisibility}}">
-            <TextBlock AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding DiagnosticPath}" Text="{Binding DiagnosticPath}" Style="{StaticResource Primer.Mono}" TextWrapping="Wrap"/>
-            <Button AutomationProperties.Name="{l:Tr Feature.OpenFolder}" Content="{l:Tr Feature.OpenFolder}" Style="{StaticResource Primer.Secondary}" Margin="0,10,0,8" Click="OnOpenFolder"/>
-            <TextBlock Text="{l:Tr Env.Redacted}" Style="{StaticResource Primer.Muted.ok}"/>
+        </ScrollViewer>
+      </Border>
+      <StackPanel Grid.Column="2">
+        <Border x:Name="CheckDetail" Style="{StaticResource Primer.Container}" DataContext="{Binding SelectedEnvironment}">
+          <StackPanel>
+            <TextBlock Text="{Binding Name}" Style="{StaticResource Primer.ContainerTitle}" TextWrapping="Wrap"/>
+            <DockPanel Margin="0,12,0,12">
+              <Path DockPanel.Dock="Left" Style="{StaticResource Primer.ToneIcon}" Tag="{Binding Tone}" Margin="0,0,8,0"/>
+              <TextBlock Text="{Binding Result}" Style="{StaticResource Primer.Text}" TextWrapping="Wrap"/>
+            </DockPanel>
+            <Expander AutomationProperties.Name="{l:Tr Env.ManualButton}" Header="{l:Tr Env.ManualButton}" Style="{StaticResource Primer.Expander}" IsExpanded="True">
+              <TextBlock Text="{Binding Detail}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
+            </Expander>
+            <Button x:Name="FixButton" AutomationProperties.Name="{Binding Fix}" Content="{Binding Fix}" Visibility="{Binding HasFix,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.Secondary}" Click="OnFix" HorizontalAlignment="Left" Margin="0,12,0,0"/>
           </StackPanel>
-        </StackPanel>
-      </Border>
-      <Border Grid.Row="2" Style="{StaticResource Primer.Container}">
-        <StackPanel>
-          <TextBlock Text="{l:Tr Env.FirstConnection}" Style="{StaticResource Primer.ContainerTitle}"/>
-          <TextBlock Text="{l:Tr Env.FirstConnectionHelp}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}" TextWrapping="Wrap" Margin="0,10,0,0"/>
-        </StackPanel>
-      </Border>
-      <Border Grid.Row="4" Style="{StaticResource Primer.Container}">
-        <Grid>
-          <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" MinHeight="28"/>
-            <RowDefinition Height="*"/>
-          </Grid.RowDefinitions>
-          <TextBlock Text="{l:Tr Tab.Log}" Style="{StaticResource Primer.ContainerTitle}"/>
-          <controls:LogTailView AutomationProperties.Name="{l:Tr Log.Title}" x:Name="LogTail" Grid.Row="1" Style="{StaticResource Primer.LogTail}" LogText="{Binding LogTail}"/>
-        </Grid>
-      </Border>
+        </Border>
+        <Border Style="{StaticResource Primer.Container}" Margin="0,16,0,0">
+          <StackPanel>
+            <TextBlock Text="{l:Tr Env.FirstConnection}" Style="{StaticResource Primer.ContainerTitle}"/>
+            <TextBlock Text="{l:Tr Env.FirstConnectionHelp}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+            <Button x:Name="DiagnosticsLink" Content="{l:Tr Env.DiagnosticsLink}" AutomationProperties.Name="{l:Tr Env.DiagnosticsLink}" Style="{StaticResource Primer.Link}" Click="OnLogs" HorizontalAlignment="Left" Margin="0,12,0,0"/>
+          </StackPanel>
+        </Border>
+      </StackPanel>
     </Grid>
-  </Grid>
+  </DockPanel>
 </UserControl>

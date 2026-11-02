@@ -87,7 +87,7 @@ internal static class FeaturePageFixtures
             new(LocalizedText.Key("Env.Runtime"),
             [Row("framework", CheckStatus.Pass, LocalizedText.Literal(".NET Framework 4.8"), "4.8.09032", "4.8.09032"), Row("runtime", CheckStatus.Pass, LocalizedText.Literal(".NET Runtime"), "Bundled .NET runtime 10.0.12", "随包 .NET 运行时 10.0.12")]),
             new(LocalizedText.Key("Env.Application"),
-            [Row("engines", CheckStatus.Pass, LocalizedText.Literal("Engine · worker"), "v14 / v17 workers ready", "v14 / v17 worker 就绪"), Row("data", CheckStatus.Pass, LocalizedText.Key("Env.Data"), @"<bundle>\data is writable", @"<bundle>\data 可写")]),
+            [Row("engines", CheckStatus.Pass, LocalizedText.Key("Env.Engines"), "v14 / v17 workers ready", "v14 / v17 worker 就绪"), Row("data", CheckStatus.Pass, LocalizedText.Key("Env.Data"), @"<bundle>\data is writable", @"<bundle>\data 可写")]),
             new(LocalizedText.Key("Env.Network"),
             [Row("port", CheckStatus.Pass, LocalizedText.Key("Env.Port"), "8765 available", "8765 空闲"), Row("url", CheckStatus.Warn, LocalizedText.Key("Env.Url"), "URL reservation missing", "尚未配置 URL 保留", "Configure network", "配置网络"), Row("firewall", CheckStatus.Fail, LocalizedText.Key("Env.Firewall"), "Inbound rule missing", "缺少入站规则", "View instructions", "查看说明")]),
         ];

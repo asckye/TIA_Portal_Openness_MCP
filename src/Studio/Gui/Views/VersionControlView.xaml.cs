@@ -30,12 +30,13 @@ public partial class VersionControlView : UserControl
         (TiaOpenness.Contracts.Models.MappedObjectInfo)((Button)sender).Tag;
     private void OnMappedFilter(object sender, RoutedEventArgs e)
     {
-        string state = (string)((Button)sender).Tag;
+        string state = (string)((FrameworkElement)sender).Tag;
         MappedList.Items.Filter = item => ((TiaOpenness.Contracts.Models.MappedObjectInfo)item).CompareState.ToString() == state;
     }
     private void OnMappedAll(object sender, RoutedEventArgs e)
     {
         MappedList.Items.Filter = null;
+        Model.VersionControl.VcShowAll = true;
         if (Model.VersionControl.VcStatus.CanExecute(null)) Model.VersionControl.VcStatus.Execute(null);
     }
     private void OnPreview(object sender, RoutedEventArgs e) => Model.VersionControl.VcDryRun = true;

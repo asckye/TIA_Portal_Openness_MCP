@@ -16,6 +16,63 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class FeaturePageTests(WpfContext wpf)
 {
     [Fact]
+    public void Environment_selection_survives_recheck_and_diagnostics_and_retention_live_on_logs()
+    {
+        wpf.Run(() =>
+        {
+            var environment = new FeaturePageFixtures.Environment();
+            var audit = new FeaturePageFixtures.Audit();
+            var diagnostics = new FeaturePageFixtures.Diagnostics();
+            var window = new MainWindow(new MainViewModel(new FakeProjectClient(), new FakeDialogService()), false, diagnostics: diagnostics);
+            try
+            {
+                window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), audit, environment);
+                var features = window.Features;
+                Assert.All(features.AttentionChecks, row => Assert.NotEqual(CheckStatus.Pass, row.Check.Status));
+                Assert.All(features.PassedChecks, row => Assert.Equal(CheckStatus.Pass, row.Check.Status));
+                features.SelectedEnvironment = features.AttentionChecks.Single(row => row.Check.Id == "membership");
+                environment.Replace(environment.Groups.ToArray()); WpfContext.Drain();
+                Assert.Equal("membership", features.SelectedEnvironment!.Check.Id);
+                window.Navigate("Log");
+                var log = (Views.LogView)window.FindName("LogContent");
+                var host = Detach(window); Layout(host);
+                UnifiedDesktopTests.ClickControl((Button)log.FindName("GenerateButton")); WpfContext.Drain();
+                Assert.True(features.DiagnosticRunning);
+                Assert.False(((Button)log.FindName("GenerateButton")).IsEnabled);
+                diagnostics.Complete(); WpfContext.Drain();
+                Assert.True(features.DiagnosticDone);
+                UnifiedDesktopTests.ClickControl(Descendants<Button>(log).Single(button => Equals(button.Content, Loc.Current["Feature.OpenFolder"])));
+                Assert.Equal(1, diagnostics.OpenCount);
+                WpfContext.Complete(features.SetRetentionAsync(50, true)); WpfContext.Drain();
+                Assert.True(((RadioButton)log.FindName("Size50")).IsChecked);
+                WpfContext.Complete(features.SetRetentionAsync(10, false)); WpfContext.Drain();
+                Assert.True(((RadioButton)log.FindName("Copies10")).IsChecked);
+                Assert.Null(((Views.EnvironmentView)window.FindName("EnvironmentContent")).FindName("GenerateButton"));
+                Assert.Null(((Views.AuditLogView)window.FindName("AuditContent")).FindName("Size50"));
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Pending_call_rows_use_the_existing_approval_navigation()
+    {
+        wpf.Run(() =>
+        {
+            var window = new MainWindow(new MainViewModel(new FakeProjectClient(), new FakeDialogService()), false, FeaturePageFixtures.Approvals());
+            try
+            {
+                window.Navigate("Calls"); var host = Detach(window); Layout(host);
+                var view = (Views.AiCallsView)window.FindName("CallsContent");
+                UnifiedDesktopTests.ClickControl(Descendants<Button>(view).Single(button => button.DataContext is CallRow { Pending: true }));
+                Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("ApprovalsContent")).Visibility);
+                Assert.Null(view.FindName("ConnectionCode"));
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
     public void Product_stubs_do_not_fabricate_history_checks_or_exports()
     {
         var approval = new ApprovalServiceStub();
@@ -257,6 +314,8 @@ public sealed class FeaturePageTests(WpfContext wpf)
                 Assert.Equal(532, Assert.Single(window.Features.AuditRows, r => r.Selected).Record.Index);
                 window.Navigate("Environment"); Layout(host);
                 var envView = (Views.EnvironmentView)window.FindName("EnvironmentContent");
+                window.Features.SelectedEnvironment = window.Features.AttentionChecks.Single(row => row.Check.Id == "membership");
+                Layout(host);
                 var expander = Descendants<Expander>(envView).First(); expander.IsExpanded = true;
                 diagnostics.Export(); Layout(host); Assert.True(expander.IsExpanded); Assert.Contains(expander, Descendants<Expander>(envView));
                 UnifiedDesktopTests.ClickControl(Descendants<Button>(envView).Single(b => b.DataContext is EnvironmentRow row && row.Check.Id == "membership"));

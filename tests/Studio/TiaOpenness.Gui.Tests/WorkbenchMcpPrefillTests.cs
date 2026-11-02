@@ -19,6 +19,51 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class WorkbenchMcpPrefillTests(WpfContext wpf)
 {
+    [Fact]
+    public void Client_switch_requires_preview_and_never_writes_configuration_on_selection()
+    {
+        wpf.Run(() =>
+        {
+            string path = Path.Combine(Path.GetTempPath(), "ui2d-client-" + Guid.NewGuid().ToString("N") + ".json");
+            var profiles = new List<TiaMcpConfigurator.ClientProfile>
+            {
+                new("fixture-one", "First client", path + ".one", "Offline fixture"),
+                new("fixture-two", "Second client", path, "Offline fixture")
+            };
+            var preview = new TiaMcpConfigurator.ConfigurationPreview("21", @"C:\fixture\Portal V21", "127.0.0.1", false, false, true, "fixture-secret", "", profiles);
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false, preview: preview);
+            try
+            {
+                window.ShowConfiguration(false);
+                var configuration = window.Configuration!;
+                var choices = (ListBox)configuration.FindName("ClientChoices");
+                var host = WorkbenchRenderTests.CreateHost(window);
+                var row = (ListBoxItem)choices.ItemContainerGenerator.ContainerFromIndex(1);
+                var toggle = WorkbenchRenderFeaturePagesTests.Descendants<System.Windows.Controls.Primitives.ToggleButton>(row).Single();
+                var peer = new System.Windows.Automation.Peers.ToggleButtonAutomationPeer(toggle);
+                var provider = Assert.IsAssignableFrom<System.Windows.Automation.Provider.IToggleProvider>(peer.GetPattern(System.Windows.Automation.Peers.PatternInterface.Toggle));
+                int previews = 0;
+                configuration.ConfirmClientSelection = profile => { Assert.Same(profiles[1], profile); previews++; return false; };
+                provider.Toggle(); WpfContext.Drain(); host.UpdateLayout();
+                Assert.False(toggle.IsChecked);
+                Assert.Equal(System.Windows.Automation.ToggleState.Off, provider.ToggleState);
+                Assert.DoesNotContain(profiles[1], choices.SelectedItems.Cast<TiaMcpConfigurator.ClientProfile>());
+                configuration.ConfirmClientSelection = _ => { previews++; return true; };
+                provider.Toggle(); WpfContext.Drain(); host.UpdateLayout();
+                Assert.True(toggle.IsChecked);
+                Assert.Contains(profiles[1], choices.SelectedItems.Cast<TiaMcpConfigurator.ClientProfile>());
+                provider.Toggle(); WpfContext.Drain(); host.UpdateLayout();
+                Assert.False(toggle.IsChecked);
+                Assert.Equal(2, previews);
+                Assert.False(File.Exists(path));
+                Assert.Empty(Directory.GetFiles(Path.GetDirectoryName(path)!, Path.GetFileName(path) + ".bak_*"));
+                Assert.True(((Button)configuration.FindName("SaveBoth")).IsDefault);
+                Assert.Equal(DependencyProperty.UnsetValue, configuration.ReadLocalValue(FrameworkElement.LanguageProperty));
+            }
+            finally { window.Close(); }
+        });
+    }
+
     private static WorkbenchPrefillArguments Form(int form, bool clear = false) => new()
     {
         Form = (WorkbenchPrefillForm)form, Mode = clear ? WorkbenchPrefillMode.Clear : WorkbenchPrefillMode.Set,
