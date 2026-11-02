@@ -293,7 +293,7 @@ internal static class ReleaseEvidence
     {
         var registry = SuiteRegistry(root);
         var jobs = registry.Keys.Select(suite => (suite + "-gate", true)).ToList();
-        jobs.AddRange(CheckAllProfiles.Derived.Where(pair => registry.ContainsKey(pair.Key) && registry.ContainsKey(pair.Value))
+        jobs.AddRange(CheckAllProfiles.Derived.Where(pair => pair.Key != "foundation" && registry.ContainsKey(pair.Key) && registry.ContainsKey(pair.Value))
             .Select(pair => (pair.Key + "-coverage-proof", true)));
         jobs.AddRange(StudioJobs.Select(name => (name, true)));
         foreach (var key in CatalogJson.Keys)
@@ -343,7 +343,7 @@ internal static class ReleaseEvidence
         var mode = evidence["mode"] as JsonObject ?? new JsonObject();
         if (Bool(mode["quick"]) || Bool(mode["affected"])) problems.Add("quick/affected runs cannot supply release evidence");
         if (mode["profile"] != null && Text(mode["profile"]) != "nightly")
-            problems.Add("release evidence requires the full nightly profile; merge profile cannot supply keptCodeV20Passed");
+            problems.Add("release evidence requires the full nightly profile; merge profile cannot supply release counts");
         // check-all exits 1 for a failed job or for the time gate; only the latter can be excepted, never a failed job.
         bool timeGateExcepted = !string.IsNullOrWhiteSpace(inputs.TimeGateException) && !Bool(result["underThirtyMinutes"])
             && Int(result["failed"]) == 0 && Int(result["exitCode"]) == 1;
@@ -608,7 +608,7 @@ internal static class ReleaseEvidence
     {
         var profile = adoption["record"]?["evidence"]?["profile"];
         if (profile != null && Text(profile) is not ("nightly" or "full"))
-            throw new ReleaseException("Release record counts require full nightly evidence; merge cannot claim keptCodeV20Passed");
+            throw new ReleaseException("Release record counts require full nightly evidence; merge cannot claim release counts");
     }
 
     // The same gate as a suite the release runs itself (ReadSuitePassed): passes, no failure and no skip.

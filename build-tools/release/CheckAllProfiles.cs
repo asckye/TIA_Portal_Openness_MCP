@@ -24,8 +24,7 @@ internal static class CheckAllProfiles
         ["workbench-control-host"] = "foundation-api", ["shared-pipeline"] = "foundation-api", ["shared-lifecycle-plc"] = "foundation-api",
         ["workbench-control"] = "studio-gui-false", ["mcp-panel"] = "studio-gui-false",
         ["workbench-vci-prefill"] = "studio-gui-false", ["crash-evidence"] = "studio-gui-false",
-        ["vci-read-only-binding"] = "studio-core-false", ["shared-lifecycle"] = "shared-session",
-        ["kept-code-v20"] = "kept-code"
+        ["vci-read-only-binding"] = "studio-core-false", ["shared-lifecycle"] = "shared-session"
     };
 
     internal static readonly string[] StudioSuites = ["studio-core-false", "studio-core-true", "studio-gui-false", "studio-gui-true"];
@@ -77,11 +76,6 @@ internal static class CheckAllProfiles
         arguments[filter + 1] = string.Join('|', terms.Distinct(StringComparer.Ordinal));
     }
 
-    private static bool ApprovedCompileVariant(string name, string source, CheckBuild target, CheckBuild parent) =>
-        name == "kept-code-v20" && source == "kept-code" &&
-        target.Project == "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj" && target.Project == parent.Project &&
-        target.Properties.SequenceEqual(new[] { "-p:DefineConstants=TIA_V20" }) && parent.Properties.Length == 0;
-
     internal static DerivationPlan ValidatePlan(JsonObject catalog, IReadOnlyDictionary<string, SuiteExecution> executions)
     {
         var accepted = new Dictionary<string, string>(StringComparer.Ordinal); var rejected = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -100,7 +94,7 @@ internal static class CheckAllProfiles
             !executions.TryGetValue(name, out var target) || !executions.TryGetValue(source, out var parent)) return "missing suite execution";
         bool SameUnit(CheckBuild left, CheckBuild right) => left.Project == right.Project && left.Variant == right.Variant &&
             left.Properties.Order(StringComparer.Ordinal).SequenceEqual(right.Properties.Order(StringComparer.Ordinal));
-        if (!SameUnit(target.Unit, CheckAllBuild.Suite(subset)) || !SameUnit(parent.Unit, CheckAllBuild.Suite(superset)) || (!SameUnit(target.Unit, parent.Unit) && !ApprovedCompileVariant(name, source, target.Unit, parent.Unit)))
+        if (!SameUnit(target.Unit, CheckAllBuild.Suite(subset)) || !SameUnit(parent.Unit, CheckAllBuild.Suite(superset)) || !SameUnit(target.Unit, parent.Unit))
             return "different project, variant or build unit";
         if (target.Executable != parent.Executable || target.Runner != parent.Runner || target.Runner != "FastSuites.RunShard" || target.Approval != parent.Approval || target.Approval != "enabled=true;timeoutSeconds=120")
             return "different runner or configuration";
@@ -145,7 +139,7 @@ internal static class CheckAllProfiles
     }
 
     internal static bool RunsSeparately(string name, string profile, DerivationPlan plan) => !StudioSuites.Contains(name) &&
-        (profile == "nightly" || !plan.Mappings.ContainsKey(name));
+        (profile == "nightly" && name != "foundation" || !plan.Mappings.ContainsKey(name));
 
     // GUI uses Foundation MCP clients after P8-21, and has no direct reference to SessionFactoryLoader, BridgeChannel or
     // RpcDispatcher. Core's true suite exercises those variant-specific types. Keep the GUI session/control integration
@@ -167,7 +161,9 @@ internal static class CheckAllProfiles
         return selected;
     }
 
-    internal static string[] Profiles(string job, DerivationPlan plan) => CheckAllJobInputs.NightlyOnly(job) || job.EndsWith("-coverage-proof", StringComparison.Ordinal) ? ["nightly"] : plan.Mappings.Keys.Any(name => job.StartsWith(name + "-shard-", StringComparison.Ordinal)
+    internal static string[] Profiles(string job, DerivationPlan plan) => plan.Mappings.ContainsKey("foundation") &&
+        (job.StartsWith("foundation-shard-", StringComparison.Ordinal) || job is "foundation-sequential" or "foundation-coverage-proof") ? [] :
+        CheckAllJobInputs.NightlyOnly(job) || job.EndsWith("-coverage-proof", StringComparison.Ordinal) ? ["nightly"] : plan.Mappings.Keys.Any(name => job.StartsWith(name + "-shard-", StringComparison.Ordinal)
         || job == name + "-sequential") ? ["nightly"] : ["merge", "nightly"];
 
     internal static void WriteInventory(JsonObject catalog, string output, string profile, DerivationPlan plan)
@@ -175,8 +171,8 @@ internal static class CheckAllProfiles
         var rows = catalog.Select(pair => new
         {
             name = pair.Key, buildProfiles = new[] { "merge", "nightly" },
-            processProfiles = plan.Mappings.ContainsKey(pair.Key) ? new[] { "nightly" } : new[] { "merge", "nightly" },
-            fullProfiles = plan.Mappings.ContainsKey(pair.Key) || pair.Key == "studio-gui-true" ? new[] { "nightly" } : new[] { "merge", "nightly" },
+            processProfiles = plan.Mappings.ContainsKey(pair.Key) ? pair.Key == "foundation" ? [] : new[] { "nightly" } : new[] { "merge", "nightly" },
+            fullProfiles = plan.Mappings.ContainsKey(pair.Key) && pair.Key != "foundation" || pair.Key == "studio-gui-true" ? new[] { "nightly" } : new[] { "merge", "nightly" },
             mergeDerivedFrom = plan.Mappings.GetValueOrDefault(pair.Key),
             fallbackReason = plan.Fallbacks.GetValueOrDefault(pair.Key),
             mergeClasses = pair.Key == "studio-gui-true" ? SharedGuiClasses : null,
@@ -187,9 +183,9 @@ internal static class CheckAllProfiles
             new JsonSerializerOptions { WriteIndented = true }) + "\n");
     }
 
-    internal static void AddDerived(List<CheckJob> jobs, JsonObject catalog, string output, DerivationPlan plan)
+    internal static void AddDerived(List<CheckJob> jobs, JsonObject catalog, string output, DerivationPlan plan, string profile = "merge")
     {
-        foreach (var (name, source) in plan.Mappings)
+        foreach (var (name, source) in plan.Mappings.Where(pair => profile == "merge" || pair.Key == "foundation"))
         {
             var suite = catalog[name]!.AsObject();
             jobs.Add(new(name + "-gate", () => DerivedSuiteGates.Evaluate(name, suite, Path.Combine(output, source + ".trx"),
@@ -199,7 +195,7 @@ internal static class CheckAllProfiles
 
     internal static void AddNightlyProofs(List<CheckJob> jobs, JsonObject catalog, string output)
     {
-        foreach (var (name, source) in Derived)
+        foreach (var (name, source) in Derived.Where(pair => pair.Key != "foundation"))
         {
             var suite = catalog[name]!.AsObject();
             jobs.Add(new(name + "-coverage-proof", () => DerivedSuiteGates.CompareSameRun(name, suite,

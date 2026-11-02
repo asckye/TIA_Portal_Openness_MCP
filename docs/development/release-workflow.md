@@ -244,7 +244,7 @@ dotnet run --project build-tools/release -- release -Version 4.0.0-beta.2 -DryRu
 dotnet run --project build-tools/release -- release -Version 4.0.0-beta.2 -Summary "..." -AdoptEvidence bin-build/check-all/beta2/release-evidence.json -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -Python <python.exe>
 ```
 
-- Profile：只有 `-Profile nightly` 的完整运行可采纳；默认 `merge` 的派生门禁和选择的 GUI 类不能作为发布证据。`keptCodeV20Passed` 保留，来自所采纳完整运行的 V20 套件。旧格式未记录 profile 时仍表示当时的全集。
+- Profile：只有 `-Profile nightly` 的完整运行可采纳；默认 `merge` 的派生门禁和选择的 GUI 类不能作为发布证据。保留套件的计数来自所采纳完整运行；kept-code-v20 及其计数字段已退役。旧格式未记录 profile 时仍表示当时的全集。
 - 证据：每次 check-all 结束时都写 `release-evidence.json`，是否可采纳由发布判断。它在任何生成之前记录提交、Git tree id、开始时的
   `git status`（含未跟踪文件）、全部跟踪及未忽略文件的 SHA-256 清单，PublicAPI 目录全部文件的长度与 SHA-256 摘要、离线 NuGet 配置的
   SHA-256、`dotnet --version`、`python --version`、伴随 Python 可执行文件的 SHA-256 和机器标识（无法取得的值记为 unavailable，

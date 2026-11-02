@@ -1017,19 +1017,6 @@
     ]
   },
   {
-    "project": "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj",
-    "properties": {
-      "DefineConstants": "TIA_V20"
-    },
-    "targetFramework": "net10.0",
-    "defineConstants": [
-      "RELEASE",
-      "TIA_ADAPTER_INTERNAL_VERSIONING",
-      "TIA_V20",
-      "TRACE"
-    ]
-  },
-  {
     "project": "tests/WorkerChannel/TiaMcp.FoundationProgress.Tests/TiaMcp.FoundationProgress.Tests.csproj",
     "properties": {},
     "targetFramework": "net10.0",

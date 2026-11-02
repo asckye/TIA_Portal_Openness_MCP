@@ -792,7 +792,7 @@ public sealed class ReleaseRecordConsumerTests
         plan = plan with { SkippedChecks = policy.Checks.Except(plan.SelectedChecks, StringComparer.Ordinal).ToArray() };
         var validation = new JsonObject
         {
-            ["keptCodePassed"] = 5155, ["keptCodeV20Passed"] = 5155, ["versionPolicySdkPassed"] = 10,
+            ["keptCodePassed"] = 5155, ["versionPolicySdkPassed"] = 10,
             ["writeGuardPassed"] = 8, ["crashEvidencePassed"] = 7, ["updaterPassed"] = 33, ["nativeMcpSafetyPassed"] = 8
         };
         var record = new JsonObject
@@ -808,6 +808,9 @@ public sealed class ReleaseRecordConsumerTests
             return ReleaseRecords.EngineReuseReason(tree.Root, "4.0.0", parsed.RootElement, ReleaseRecords.GetSources(tree.Root, "engine"), "quick");
         }
         Assert.Equal("", Reason());
+        validation["keptCodeV20Passed"] = 5155; // Historical records may still carry the retired count.
+        Assert.Equal("", Reason());
+        validation.Remove("keptCodeV20Passed");
         // The release-wide native MCP safety count replaced each engine runtime's sessionStability gate.
         validation["nativeMcpSafetyPassed"] = 7;
         Assert.Equal("offline validation missing", Reason());

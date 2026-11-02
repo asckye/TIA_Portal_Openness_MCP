@@ -18,11 +18,35 @@ public sealed class CheckAllProfileTests
         "shared-lifecycle-plc" => "PlcSharedLifecycleTests", "shared-lifecycle" => "SharedLifecycleTests",
         "workbench-control" => "TiaOpenness.Gui.Tests.WorkbenchControlTests", "mcp-panel" => "TiaOpenness.Gui.Tests.McpPanelTests",
         "workbench-vci-prefill" => "TiaOpenness.Gui.Tests.VciPanelTests", "crash-evidence" => "TiaOpenness.Gui.Tests.CrashEvidencePortTests",
-        "vci-read-only-binding" => "TiaOpenness.Core.Tests.VciReadOnlyBindingTests", "kept-code-v20" => "KeptCodeTests",
+        "vci-read-only-binding" => "TiaOpenness.Core.Tests.VciReadOnlyBindingTests",
         _ => throw new InvalidOperationException(name)
     };
 
     private static DerivationPlan Plan(JsonObject? catalog = null) => CheckAllProfiles.Plan(catalog ?? Catalog, "api-root", "offline.config", "companion.exe", "dotnet");
+
+    [Theory]
+    [InlineData("merge")]
+    [InlineData("nightly")]
+    public void FoundationUsesOnlyApiProcessesInBothProfiles(string profile)
+    {
+        using var temp = new OfflineFixtures(); var catalog = Catalog; var plan = Plan(catalog);
+        var jobs = new List<CheckJob>();
+        foreach (var (name, node) in catalog)
+            if (CheckAllProfiles.RunsSeparately(name, profile, plan))
+                FastSuites.AddJobs(jobs, Root, name, node!.AsObject(), temp.DirectoryPath, "dotnet",
+                    (int)node["minimumPassed"]! >= 100 ? 8 : 1, null, []);
+        CheckAllProfiles.AddStudio(jobs, Root, catalog, temp.DirectoryPath, "dotnet", profile, null);
+        CheckAllProfiles.AddDerived(jobs, catalog, temp.DirectoryPath, plan, profile);
+        if (profile == "nightly") CheckAllProfiles.AddNightlyProofs(jobs, catalog, temp.DirectoryPath);
+        string output = Path.Combine(Root, "bin-build/refactor/Q4-plans"); Directory.CreateDirectory(output);
+        File.WriteAllText(Path.Combine(output, profile + ".json"), new JsonArray(jobs.Select(job => JsonValue.Create(job.Name)).ToArray()).ToJsonString());
+        Assert.DoesNotContain(jobs, job => job.Name.StartsWith("foundation-shard-", StringComparison.Ordinal) ||
+            job.Name is "foundation-sequential" or "foundation-coverage-proof" || job.Name.StartsWith("kept-code-v20", StringComparison.Ordinal));
+        Assert.Contains(jobs, job => job.Name == "foundation-gate" && job.Dependencies.SequenceEqual(new[] { "foundation-api-gate" }));
+        Assert.Contains(jobs, job => job.Name.StartsWith("foundation-api-shard-", StringComparison.Ordinal));
+        Assert.Contains(("foundation-gate", true), ReleaseEvidence.RequiredJobs(Root));
+        Assert.DoesNotContain(("foundation-coverage-proof", true), ReleaseEvidence.RequiredJobs(Root));
+    }
 
     [Theory]
     [MemberData(nameof(DerivedSuites))]
@@ -62,39 +86,46 @@ public sealed class CheckAllProfileTests
     }
 
     [Fact]
-    public void ProfilesKeepEveryOriginalProcessInNightlyAndFallBackWhenProofPreconditionsFail()
+    public void ProfilesKeepOtherOriginalProcessesInNightlyAndFallBackWhenProofPreconditionsFail()
     {
         var catalog = Catalog; var plan = Plan(catalog);
         Assert.Equal("merge", CheckAllProfiles.Parse(Options.Parse([], new HashSet<string>())));
         Assert.Equal("nightly", CheckAllProfiles.Parse(Options.Parse(["-Profile", "nightly"], new HashSet<string>())));
         Assert.Throws<ReleaseException>(() => CheckAllProfiles.Parse(Options.Parse(["-Profile", "quick"], new HashSet<string>())));
-        Assert.Equal(12, CheckAllProfiles.Derived.Count);
+        Assert.Equal(11, CheckAllProfiles.Derived.Count);
         Assert.Empty(plan.Fallbacks);
-        Assert.Equal(12, plan.Mappings.Count);
+        Assert.Equal(11, plan.Mappings.Count);
         foreach (var name in catalog.Select(pair => pair.Key).Except(CheckAllProfiles.StudioSuites))
         {
-            Assert.True(CheckAllProfiles.RunsSeparately(name, "nightly", plan));
+            Assert.Equal(name != "foundation", CheckAllProfiles.RunsSeparately(name, "nightly", plan));
             Assert.Equal(!plan.Mappings.ContainsKey(name), CheckAllProfiles.RunsSeparately(name, "merge", plan));
         }
         foreach (var name in new[] { "compile-candidate", "compile-candidate-no-safety", "fallback-vci-modern",
             "fallback-vci-initial", "fallback-vci-classic", "plc-exchange-worker-v20", "plc-exchange-worker-v21" })
             Assert.True(CheckAllProfiles.RunsSeparately(name, "merge", plan));
-        Assert.Equal(new[] { "nightly" }, CheckAllProfiles.Profiles("foundation-shard-0", plan));
-        Assert.Equal(new[] { "nightly" }, CheckAllProfiles.Profiles("kept-code-v20-shard-0", plan));
+        Assert.Empty(CheckAllProfiles.Profiles("foundation-shard-0", plan));
+        Assert.Empty(CheckAllProfiles.Profiles("foundation-sequential", plan));
+        Assert.Empty(CheckAllProfiles.Profiles("foundation-coverage-proof", plan));
+        Assert.Equal(new[] { "merge", "nightly" }, CheckAllProfiles.Profiles("foundation-gate", plan));
+        Assert.Equal(new[] { "nightly" }, CheckAllProfiles.Profiles("worker-robustness-shard-0", plan));
         var jobs = new List<CheckJob>(); using var temp = new OfflineFixtures();
         CheckAllProfiles.AddDerived(jobs, catalog, temp.DirectoryPath, plan);
-        Assert.Equal(12, jobs.Count);
+        Assert.Equal(11, jobs.Count);
         Assert.All(jobs, job => { Assert.Null(job.ResultInputs); Assert.True(job.AllowFailedDependencies); });
         CheckAllProfiles.AddNightlyProofs(jobs = [], catalog, temp.DirectoryPath);
-        Assert.Equal(12, jobs.Count);
-        foreach (var (name, source) in CheckAllProfiles.Derived)
+        Assert.Equal(10, jobs.Count);
+        foreach (var (name, source) in CheckAllProfiles.Derived.Where(pair => pair.Key != "foundation"))
         {
             Assert.Equal(new[] { name + "-gate", source + "-gate" }, jobs.Single(job => job.Name == name + "-coverage-proof").Dependencies);
             Assert.Contains((name + "-coverage-proof", true), ReleaseEvidence.RequiredJobs(Root));
         }
         CheckAllProfiles.WriteInventory(catalog, temp.DirectoryPath, "merge", plan);
         var inventory = JsonNode.Parse(File.ReadAllText(Path.Combine(temp.DirectoryPath, "profile-inventory.json")))!;
-        Assert.Contains(inventory["suites"]!.AsArray(), row => (string?)row!["name"] == "kept-code-v20" && row["fallbackReason"] == null && (string?)row["mergeDerivedFrom"] == "kept-code");
+        var foundation = Assert.Single(inventory["suites"]!.AsArray(), row => (string?)row!["name"] == "foundation")!;
+        Assert.Null(foundation["fallbackReason"]); Assert.Equal("foundation-api", (string?)foundation["mergeDerivedFrom"]);
+        Assert.Empty(foundation["processProfiles"]!.AsArray());
+        Assert.Equal(new[] { "merge", "nightly" }, foundation["fullProfiles"]!.AsArray().Select(value => (string?)value));
+        Assert.DoesNotContain(inventory["suites"]!.AsArray(), row => (string?)row!["name"] == "kept-code-v20");
     }
 
     [Theory]

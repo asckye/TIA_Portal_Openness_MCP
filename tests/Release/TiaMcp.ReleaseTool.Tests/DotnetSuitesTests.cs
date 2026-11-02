@@ -17,12 +17,13 @@ public class DotnetSuitesTests
     }
 
     [Fact]
-    public void KeptSuiteVariantsKeepTheirDefineAndPlatformGates()
+    public void KeptSuiteKeepsItsDefineAndPlatformGates()
     {
         var root = Repository.FindRoot();
         var windows = DotnetSuites.LoadCatalog(Path.Combine(root, "tests/test-suites.json"), root, "windows");
         var linux = DotnetSuites.LoadCatalog(Path.Combine(root, "tests/test-suites.json"), root, "linux");
         var features = TiaFeatures.ProjectCases(root);
+        Assert.Equal(new[] { "kept-code" }, ReleaseCommandTable.OfflineSuites);
         foreach (var name in ReleaseCommandTable.OfflineSuites)
         {
             int Minimum(JsonObject catalog, string name) => catalog[name]!["minimumPassed"]!.GetValue<int>();
@@ -32,7 +33,7 @@ public class DotnetSuitesTests
             Assert.Equal(0, windows[name]!["maximumSkipped"]!.GetValue<int>());
             Assert.Equal(0, linux[name]!["maximumSkipped"]!.GetValue<int>());
             Assert.Contains(features, row => row.Project == (string?)windows[name]!["project"] &&
-                row.Properties.GetValueOrDefault("DefineConstants") == (name.EndsWith("-v20", StringComparison.Ordinal) ? "TIA_V20" : null));
+                row.Properties.GetValueOrDefault("DefineConstants") == null);
         }
         Assert.True(TimeSensitiveTests.ReserveShard((string)windows["kept-code"]!["project"]!));
     }
@@ -46,7 +47,7 @@ public class DotnetSuitesTests
         Assert.Equal(identities.Length, identities.Distinct().Count());
         const string project = "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj";
         Assert.Single(cases, row => row.Project == project && row.Properties.Count == 0);
-        Assert.Single(cases, row => row.Project == project && row.Properties.Count == 1 && row.Properties.GetValueOrDefault("DefineConstants") == "TIA_V20");
+        Assert.DoesNotContain(cases, row => row.Project == project && row.Properties.GetValueOrDefault("DefineConstants") == "TIA_V20");
     }
 
     [Fact]
@@ -119,8 +120,8 @@ public class DotnetSuitesTests
     {
         Assert.Contains("test-suites", CommandLine.Commands);
         Assert.Contains("host-parity", CommandLine.Commands);
-        var options = Options.Parse(["--suite", "kept-code", "-Suite", "kept-code-v20", "--no-restore", "--dotnet-arg=--no-build", "--results-directory", "results"], new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "NoRestore" });
-        Assert.Equal(new[] { "kept-code", "kept-code-v20" }, options.All("Suite"));
+        var options = Options.Parse(["--suite", "kept-code", "-Suite", "version-policy", "--no-restore", "--dotnet-arg=--no-build", "--results-directory", "results"], new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "NoRestore" });
+        Assert.Equal(new[] { "kept-code", "version-policy" }, options.All("Suite"));
         Assert.True(options.Has("NoRestore"));
         Assert.Equal("--no-build", options.Get("DotnetArg"));
         Assert.Equal("results", options.Get("ResultsDirectory"));

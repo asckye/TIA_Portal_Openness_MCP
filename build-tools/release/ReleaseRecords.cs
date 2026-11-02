@@ -536,7 +536,7 @@ internal static class ReleaseRecords
         {
             if (!record.TryGetProperty("validation", out var validation)) return "validation record missing";
             if (includes("offline-suites") && (GetInt(validation, "versionPolicySdkPassed") <= 0 ||
-                GetInt(validation, "keptCodePassed") <= 0 || GetInt(validation, "keptCodeV20Passed") <= 0 ||
+                GetInt(validation, "keptCodePassed") <= 0 ||
                 GetInt(validation, "writeGuardPassed") < 3 || GetInt(validation, "crashEvidencePassed") < 7 || GetInt(validation, "updaterPassed") < 20 ||
                 // Formerly each engine runtime's sessionStability gate; the native MCP safety checks are release-wide.
                 GetInt(validation, "nativeMcpSafetyPassed") < 8))

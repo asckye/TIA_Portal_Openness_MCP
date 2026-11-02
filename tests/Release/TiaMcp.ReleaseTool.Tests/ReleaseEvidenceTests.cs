@@ -65,7 +65,7 @@ public sealed class ReleaseEvidenceTests
     }
 
     [Fact]
-    public void MergeCannotBecomeReleaseEvidenceOrSupplyKeptCodeV20RecordCounts()
+    public void MergeCannotBecomeReleaseEvidenceOrSupplyKeptCodeRecordCounts()
     {
         using var fixture = new EvidenceFixture();
         var adoption = fixture.Verify();
@@ -73,13 +73,13 @@ public sealed class ReleaseEvidenceTests
         fixture.Edit(evidence => evidence["mode"]!["profile"] = "merge");
         Assert.Contains("full nightly profile", Assert.Throws<ReleaseException>(fixture.Verify).Message);
         adoption["record"]!["evidence"]!["profile"] = "merge";
-        adoption["record"]!["suites"]!["kept-code-v20"] = new JsonObject { ["passed"] = 4908, ["failed"] = 0, ["skipped"] = 0 };
-        Assert.Contains("keptCodeV20Passed", Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "kept-code-v20")).Message);
-        Assert.Throws<ReleaseException>(() => ReleaseEvidence.AnnotateRecord(new JsonObject { ["test"] = false, ["validation"] = new JsonObject() }, adoption, ["kept-code-v20"]));
+        adoption["record"]!["suites"]!["kept-code"] = new JsonObject { ["passed"] = 4908, ["failed"] = 0, ["skipped"] = 0 };
+        Assert.Contains("full nightly evidence", Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "kept-code")).Message);
+        Assert.Throws<ReleaseException>(() => ReleaseEvidence.AnnotateRecord(new JsonObject { ["test"] = false, ["validation"] = new JsonObject() }, adoption, ["kept-code"]));
         adoption["record"]!["evidence"]!["profile"] = "nightly";
-        Assert.Equal(4908, ReleaseEvidence.SuitePassed(adoption, "kept-code-v20"));
-        adoption["record"]!["suites"]!["kept-code-v20"]!["execution"] = "derived";
-        Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "kept-code-v20"));
+        Assert.Equal(4908, ReleaseEvidence.SuitePassed(adoption, "kept-code"));
+        adoption["record"]!["suites"]!["kept-code"]!["execution"] = "derived";
+        Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "kept-code"));
     }
 
     [Fact]
@@ -531,10 +531,10 @@ public sealed class ReleaseEvidenceTests
     [Trait("Category", "ReleaseParity")]
     public void AdoptedSuiteCountsKeepTheReleaseSuiteGate()
     {
-        var adoption = Adoption(("kept-code", 5155, 0, 0), ("kept-code-v20", 10, 0, 1), ("updater", 0, 0, 0));
+        var adoption = Adoption(("kept-code", 5155, 0, 0), ("version-policy", 10, 0, 1), ("updater", 0, 0, 0));
 
         Assert.Equal(5155, ReleaseEvidence.SuitePassed(adoption, "kept-code"));
-        Assert.Contains("did not meet", Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "kept-code-v20")).Message);
+        Assert.Contains("did not meet", Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "version-policy")).Message);
         Assert.Contains("did not meet", Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "updater")).Message);
         Assert.Contains("no result", Assert.Throws<ReleaseException>(() => ReleaseEvidence.SuitePassed(adoption, "write-guard")).Message);
     }

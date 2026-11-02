@@ -158,7 +158,7 @@ LegacyHost 旧 `WorkerProtocol.Decode` 无生产调用方，已删除。逐处�
 | `RuntimeQueryTests`、`SoftwareReadDispatchTests` | 直接把 worker 的 Newtonsoft DTO 文本传入 JsonNode，与现行 WorkerClient 的结果边界相同；保留全部业务/日期/nullable 断言 |
 | `SupplementaryReadTests` | 以宿主异常连接脱敏策略和 MCP 边界，保留全部断言；不再声称调用旧解码器 |
 
-foundation / foundation-api 的最低数量各减少上述 **10** 项；offline / offline-v20 不变。
+foundation / foundation-api 的最低数量各减少上述 **10** 项；保留代码的 kept-code 门槛不变。offline / offline-v20 已退役。
 `dotnet run --project build-tools/release -- check-tia-features` 的动态工程 glob 与 expectation、三份必需文件/发布清单、Build 脚本及 test-suites
 均没有预览工程显式条目，无需改写。三个源码门禁的预览豁免已删除，原基线不含预览条目。
 

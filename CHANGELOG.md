@@ -6,6 +6,8 @@
 
 ## [Unreleased]
 
+- Deduplicate host foundation checks through foundation-api in both profiles and retire the kept-code-v20 suite and release count.
+
 - Remove unshipped residual engine sources and engine-only tests, fixtures and scripts; retain kept-code coverage and published contract bytes.
 
 - Freeze engine source catalog inputs and declare final V4 tool names without runtime rewriting; remove the stale documentation coverage copy.

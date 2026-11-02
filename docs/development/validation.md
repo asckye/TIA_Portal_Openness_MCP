@@ -65,16 +65,16 @@ dotnet run --project build-tools/release -- check-all -PublicApiRoot <SDK-root> 
 该检查做保守的逻辑包含证明，不能证明时记录 `fallbackReason` 并独立执行原套件，不能仅凭已经返回的行推断没有漏例。
 当前 foundation 从 foundation-api 派生；四个 GUI 子集从 studio-gui-false、vci-read-only-binding 从 studio-core-false、
 shared-lifecycle 从 shared-session 派生。Studio 子集显式使用与超集相同的 false 构建属性。
-worker-robustness、workbench-control-host、shared-pipeline、shared-lifecycle-plc 的过滤器不能逻辑保证排除 Operator，
-kept-code-v20 则具有不同的编译变体，故这五项在 merge 中回退为独立进程。两种 kept-code 构建仍保留。
-FoundationChecks 仅归一化 producer 行号；额外的 16 条 API XSD 行有精确识别规则。无 SDK 的原配置继续在 nightly 和 CI 运行。
+foundation-api 的过滤器显式包含 worker-robustness、workbench-control-host、shared-pipeline、shared-lifecycle-plc 的注册过滤器，
+使这些子集可在 merge 中派生。主机的 merge 和 nightly 均只执行 foundation-api，foundation 保留同轮派生门禁；kept-code 只执行一次。
+FoundationChecks 仅归一化 producer 行号；额外的 16 条 API XSD 行有精确识别规则。无 SDK 的 foundation 配置继续在 CI 运行，Linux/macOS 门槛保留。
 
 merge 的 studio-gui-true 使用 [SharedGuiClasses](../../build-tools/release/CheckAllProfiles.cs) 中已接受的 14 个类，
 要求每类至少一例通过且零失败、零跳过，不固定总数量；全量 studio-core-true 继续检查 Core 的共享适配器分支。
 GUI 使用实测类耗时做 LPT 三分片，缺失计时时使用估值和确定性类分配。计时条目过期、增加或重命名不导致门禁失败。
 测试显示窗口并检查键盘焦点，因此三片保持同一独占通道并顺序执行；累计时间仍按原未分片作业的预算判定。
 
-`-Profile nightly` 完整执行去重前的每个原套件和两种完整 GUI 变体，还执行全部 12 项 `*-coverage-proof`：
+`-Profile nightly` 完整执行其余原套件和两种完整 GUI 变体，foundation 仍从 foundation-api 派生，不再独立执行或生成 foundation-coverage-proof；kept-code-v20 已退役。其余 10 项 `*-coverage-proof` 保留：
 将该轮独立子集的身份多重集与同轮超集派生结果比较，保留类名、方法、规范化显示名和重数。缺失、重复、替换会失败并列出差异类。
 新增或重命名测试在两边同步出现即可通过，无需提交用例基线或先运行另一轮 nightly。完整 GUI true 另检查全部 14 个选定类仍存在；
 类名重命名必须同步审查清单。注册数量、跳过和失败门禁仍独立判定，nightly 证明失败会阻止发布采纳。
@@ -82,7 +82,7 @@ nightly 禁用结果缓存，确实启动本轮测试进程；它需要本机同
 
 `report.json`、`cpu-plan.json` 和发布证据记录 profile；`profile-inventory.json` 列出各套件的构建/进程/全量适用 profile、
 派生来源、回退原因与 GUI 类清单。nightly 仍受原三十分钟门槛约束。发布只采纳完整 nightly（或旧格式原全集）；merge 不能提供
-发布证据或 `keptCodeV20Passed`。该字段继续取所采纳的同提交完整运行结果，不借用其他提交的 nightly。
+发布证据。发布计数取所采纳的同提交完整运行结果，不再要求已退役的 kept-code-v20 计数，不借用其他提交的 nightly。
 
 ```powershell
 dotnet run --project build-tools/release -- check-all -Profile nightly -Clean -NoBuildCache -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <python.exe> -OutputDirectory bin-build/check-all/nightly-1
@@ -123,7 +123,7 @@ check-all 的合并和 nightly 构建统一设置 `TiaCheckBuild=true` 与固定
 
 | Workflow / job（含矩阵） | 对应 check-all 作业 / 套件 | 分工与差异 |
 |---|---|---|
-| offline-checks / offline-tests，Ubuntu，Shards=4 | repository-self-tests、suite-runner-self-tests；kept-code、kept-code-v20、version-policy、generation-model、generation-planning、workbench-control-protocol | Linux 的平台通过/跳过门槛、管道身份、代码页与路径语义不等价于 Windows；不采纳 |
+| offline-checks / offline-tests，Ubuntu，Shards=4 | repository-self-tests、suite-runner-self-tests；kept-code、version-policy、generation-model、generation-planning、workbench-control-protocol | Linux 的平台通过/跳过门槛、管道身份、代码页与路径语义不等价于 Windows；不采纳 |
 | offline-checks / source-contracts，Ubuntu | 四个 drift、tools-list-self-tests/tools-list、script-calls、campaign-runner-self-tests、dead-references、repository/repository-self-tests、source-contracts、adapter-boundary、domain-source、contract-self-tests/contract-verify/response-verify | 纯生成/roster/快照 verify 命令相同，尚无该 job 的分工收据，仍本机执行；其余检查的 Linux 进程、代码页、路径状态不等价于本机 Windows；文件程序/analyzer 仅为部分构建输入 |
 | offline-checks / studio-tests，shared-adapter-paths=false、true，Windows | studio-core-false/true、studio-gui-false/true | 同项目与路径模式，使用注册套件门禁；true 的 studio-true profile 另出 CI 收据，false 保留本机；Studio 构建也不替代本机输出对等性 |
 | offline-checks / foundation-suites，runner=0、1、2、3，Windows，Shards=8、RunnerCount=4 | foundation、engine-host、shared-lifecycle-plc、worker-progress-foundation、prompt-registration、software-read、special-export-shape、device-add、hardware-catalog、diagnostic-membership、adapter-contracts、worker-channel、compile-candidate、compile-candidate-no-safety、fallback-vci-modern/initial/classic、workbench-control-protocol | 各 runner 只证明分片；必须由下一行覆盖全部分片的门禁合并，不单独采纳任一 runner |
@@ -360,7 +360,7 @@ dotnet run --project build-tools/release -- check-bundle-layout -SelfTest
 dotnet run --project build-tools/release -- check-bundle-layout
 dotnet run --project build-tools/release -- validate-bundle -Strict
 dotnet run --project build-tools/release -- test-suites -SelfTest
-dotnet run --project build-tools/release -- test-suites -Suite kept-code -Suite kept-code-v20 -Suite version-policy
+dotnet run --project build-tools/release -- test-suites -Suite kept-code -Suite version-policy
 dotnet run --project build-tools/release -- test-suites -Suite foundation -Suite prompt-registration -Suite software-read -Suite special-export-shape -Suite device-add -Suite hardware-catalog -Suite diagnostic-membership
 dotnet run --project tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj -c Release
 dotnet run --project build-tools/release -- build-configurator -Test
@@ -371,7 +371,7 @@ dotnet run --project build-tools/release -- build-configurator -Test
 读取并校验资源代码表，用 `git ls-files` 验证文件或目录内文件受版本管理，并确认路径在 `validate-bundle`
 实际执行的资源清单中；还核对 C# 5 Launcher 的唯一相对候选与 Studio 安装锚点、GUI 输出文件名一致。
 检查使用 .NET 10，但不依赖 `runtime/` 构建产物。布局矩阵通过临时目录分别验证 Logic/引擎调用方
-（kept-code/kept-code-v20）与 Studio Core/GUI，覆盖安装、开发输出、worktree、CI、runtime-only、嵌套暂存
+（kept-code）与 Studio Core/GUI，覆盖安装、开发输出、worktree、CI、runtime-only、嵌套暂存
 和中文/空格/尾分隔符路径。解析器不借用祖先仓库的缺失资源，调用方仍保留到 4.0 的兼容探测；
 仓库外完整交付包的重定位检查用于排除这种回退掩盖缺文件。实际解析顺序、嵌入生态目录和证据边界见
 [运行时布局](runtime-layout.md)。Markdown 本地链接及入口路径统一由
@@ -419,7 +419,7 @@ B8 识别没有 Meta 且字面消息含失败/拒绝提示的 `ResponseMessage`�
 中央 `TiaMcpServer.ModelContextProtocol.ResponseMeta` 类型自身仍出现在清点中，但不计作手写调用点；此识别与路径无关。
 任一总数增长即失败，减少允许且报告；`-UpdateBaseline` 仅收缩上限，首次经审查建立基线才使用 `-AllowGrowth`。
 
-`ResponseMetaTests` 已迁至 kept-code/kept-code-v20，每版保留 421 项 E1/E2 检查。每种构造器与注明文件/行号的原初始化器
+`ResponseMetaTests` 已迁至 kept-code，保留 421 项 E1/E2 检查。每种构造器与注明文件/行号的原初始化器
 在同一固定时钟下比较四条序列化路径的 UTF-8 字节；测试的选项与 POCO 替身另对照 TiaMcp.Engine.Harness/Golden 中
 V20/V21 的全部 36 项 E1 序列化记录。覆盖键追加、success 原位覆盖、null Meta、Local/UTC、数值 CLR 类型及异步时钟隔离。
 `ResponseClock.Pin` 仅在当前执行上下文生效，可嵌套并在释放时恢复；测试进程临时固定 +08:00 时区并恢复 BCL 缓存。
@@ -428,7 +428,7 @@ operationSuccess/apiCallSuccess/dataComplete，异常文本、状态和 success 
 本阶段构造器尚未接入现有调用点，POCO 和引擎返回保持原样。
 
 已迁移的套件使用 xunit，每个原有 Check 对应一条结果；
-[最低数量表](../../tests/test-suites.json)要求 kept-code、kept-code-v20 各至少 5155 项通过，
+[最低数量表](../../tests/test-suites.json)要求 kept-code 至少 5155 项通过，
 version-policy 至少 10 项通过，均不允许跳过。Q2 退役 offline/offline-v20；KeptCode 新接收版本目录的
 292 条检查和两组 HMI 理论的 9 行，原有 4854 项门槛精确增加 301。source-contracts 删除 8 个引擎专属用例，门槛从 148 调整为 140。
 每版 residue + kept-code 的下限仍为 5157（Linux 5156）；仅 Windows apartment 检查仍在 residue 的 OfficialWorkflowTests。
@@ -436,7 +436,7 @@ kept-code 的数据行数量没有平台差异；平台专用实现的测试保�
 `splitFrom` 注册字段记录拆分来源；CI 的 TRX 门禁自检拒绝 CI 工作流或 release 执行清单遗漏任何拆分子套件。
 ImportSelection 的 10 项已并入 offline；BindingSnapshot、ExternalSourcePlan、ExternalSourceDelete 的 199 项已并入 foundation。
 foundation 至少 29000 项通过、最多 1 项跳过；foundation-api 至少 30000 项通过、最多 1 项跳过。PromptRegistration、SoftwareRead、SpecialExportShape、DeviceAdd、HardwareCatalog、DiagnosticMembership 分别要求 195、258、12、175、57、4 项通过，均不允许跳过。
-门禁按请求顺序执行（两种编译符号共享输出目录），拒绝失败、数量不足、超限跳过、零执行及缺失或不一致的 trx；
+门禁按请求顺序执行，拒绝失败、数量不足、超限跳过、零执行及缺失或不一致的 trx；
 每次清除同名旧结果，在 `bin-build/test-results/` 写入 `<suite>.trx` 和按测试类/方法统计的 `<suite>.json`，失败时也保存诊断。
 可用 `--results-directory <dir>`、`--dotnet <path>`、`--no-restore` 或重复的 `--dotnet-arg=<arg>` 定制执行。
 开发时可直接运行 `dotnet test <csproj> -c Release`（V20 加 `-p:DefineConstants=TIA_V20`），正式门禁仍用脚本核对数量。
