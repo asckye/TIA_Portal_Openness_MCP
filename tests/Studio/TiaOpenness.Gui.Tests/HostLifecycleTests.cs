@@ -20,6 +20,16 @@ public sealed class HostLifecycleTests
     private static Task<Process> Restart(VisibleHost host, ProcessStartInfo start, Func<VisibleHost, Task>? requestShutdown = null,
         Func<VisibleHost, Task<bool>>? confirmForce = null) => HostLifecycleService.Restart(host, start, requestShutdown, confirmForce, CooperativeTiming);
 
+    private static async Task KillLeakedHost(Process process, VisibleHost identity)
+    {
+        if (process.HasExited) return;
+        Assert.Equal(process.Id, identity.Pid);
+        Assert.StartsWith(McpOperatorFixture.RepositoryRoot + Path.DirectorySeparatorChar, Path.GetFullPath(identity.ImagePath), StringComparison.OrdinalIgnoreCase);
+        using var verified = HostLifecycleService.VerifiedProcess(identity);
+        verified.Kill(entireProcessTree: true);
+        await process.WaitForExitAsync();
+    }
+
     [Fact]
     public async Task Production_shutdown_timing_preserves_the_existing_defaults()
     {
@@ -74,9 +84,13 @@ public sealed class HostLifecycleTests
             }
             finally
             {
-                Process.Dispose();
-                Assert.StartsWith(Path.Combine(Root, "bin-build") + Path.DirectorySeparatorChar, Path.GetFullPath(Data), StringComparison.OrdinalIgnoreCase);
-                if (Directory.Exists(Data)) Directory.Delete(Data, true);
+                try { await KillLeakedHost(Process, Identity); }
+                finally
+                {
+                    Process.Dispose();
+                    Assert.StartsWith(Path.Combine(Root, "bin-build") + Path.DirectorySeparatorChar, Path.GetFullPath(Data), StringComparison.OrdinalIgnoreCase);
+                    if (Directory.Exists(Data)) Directory.Delete(Data, true);
+                }
             }
         }
     }
@@ -224,9 +238,13 @@ public sealed class HostLifecycleTests
         finally
         {
             confirmation.TrySetResult(false);
-            if (!process.HasExited) await Stop(identity, Graceful);
-            Assert.StartsWith(Path.Combine(root, "bin-build") + Path.DirectorySeparatorChar, Path.GetFullPath(data), StringComparison.OrdinalIgnoreCase);
-            if (Directory.Exists(data)) Directory.Delete(data, true);
+            try { if (!process.HasExited) await Stop(identity, Graceful); }
+            finally
+            {
+                await KillLeakedHost(process, identity);
+                Assert.StartsWith(Path.Combine(root, "bin-build") + Path.DirectorySeparatorChar, Path.GetFullPath(data), StringComparison.OrdinalIgnoreCase);
+                if (Directory.Exists(data)) Directory.Delete(data, true);
+            }
         }
     }
 
@@ -368,11 +386,28 @@ public sealed class HostLifecycleTests
         }
         finally
         {
-            if (!process.HasExited) await Stop(expected, RequestShutdown);
-            if (replacement != null && !replacement.HasExited && replacementIdentity != null) await Stop(replacementIdentity, RequestShutdown);
-            replacement?.Dispose();
-            Assert.StartsWith(Path.Combine(root, "bin-build") + Path.DirectorySeparatorChar, Path.GetFullPath(data), StringComparison.OrdinalIgnoreCase);
-            if (Directory.Exists(data)) Directory.Delete(data, true);
+            try
+            {
+                try { if (!process.HasExited) await Stop(expected, RequestShutdown); }
+                finally { await KillLeakedHost(process, expected); }
+            }
+            finally
+            {
+                try
+                {
+                    if (replacement != null && !replacement.HasExited && replacementIdentity != null) await Stop(replacementIdentity, RequestShutdown);
+                }
+                finally
+                {
+                    try { if (replacement != null && replacementIdentity != null) await KillLeakedHost(replacement, replacementIdentity); }
+                    finally
+                    {
+                        replacement?.Dispose();
+                        Assert.StartsWith(Path.Combine(root, "bin-build") + Path.DirectorySeparatorChar, Path.GetFullPath(data), StringComparison.OrdinalIgnoreCase);
+                        if (Directory.Exists(data)) Directory.Delete(data, true);
+                    }
+                }
+            }
         }
     }
 }

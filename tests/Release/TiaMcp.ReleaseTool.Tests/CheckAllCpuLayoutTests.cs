@@ -248,7 +248,7 @@ public sealed class CheckAllCpuLayoutTests(ITestOutputHelper output)
     {
         using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;
         File.WriteAllText(Path.Combine(root, "fake.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>");
-        File.WriteAllText(Path.Combine(root, "Program.cs"), "using System.IO; if (args[0] == \"--version\") { System.Console.WriteLine(\"fixture-sdk\"); return 0; } if (args[0] == \"msbuild\") return 1; if (args.Length > 1 && (args[1].StartsWith(\"generate-\") || args[1] is \"check-tools-list\" or \"check-script-tool-calls\" or \"check-dead-tool-references\" or \"check-adapter-boundary\" or \"check-tia-features\" or \"validate-bundle\" || args[1] == \"release\" && System.Array.IndexOf(args, \"-DocumentationOnly\") >= 0)) return 0; File.WriteAllText(\"unexpected-check\", string.Join(\"|\", args)); return 2;");
+        File.WriteAllText(Path.Combine(root, "Program.cs"), "using System.IO; if (args[0] == \"--version\") { System.Console.WriteLine(\"fixture-sdk\"); return 0; } if (args.Length > 2 && args[0] == \"-X\" && args[1] == \"utf8\" && args[2].Replace('\\\\', '/').Contains(\"/scripts/checks/\")) return 0; if (args[0] == \"msbuild\") return 1; if (args.Length > 1 && (args[1].StartsWith(\"generate-\") || args[1] is \"check-tools-list\" or \"check-script-tool-calls\" or \"check-dead-tool-references\" or \"check-adapter-boundary\" or \"check-tia-features\" or \"validate-bundle\" || args[1] == \"release\" && System.Array.IndexOf(args, \"-DocumentationOnly\") >= 0)) return 0; File.WriteAllText(\"unexpected-check\", string.Join(\"|\", args)); return 2;");
         File.WriteAllText(Path.Combine(root, "offline.config"), "<configuration><packageSources><clear /></packageSources></configuration>");
         var dotnet = Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") ?? "dotnet";
         ProcessRunner.RequireSuccess(ProcessRunner.Run(dotnet, ["build", Path.Combine(root, "fake.csproj"), "-c", "Release", "-m:1", "-nodeReuse:false",
@@ -264,7 +264,8 @@ public sealed class CheckAllCpuLayoutTests(ITestOutputHelper output)
         using (CheckAffinity.Enter(mask))
             result = ProcessRunner.Run(dotnet, [typeof(ReleaseCommands).Assembly.Location, "check-all", "-PublicApiRoot", root,
                 "-NuGetConfig", Path.Combine(root, "offline.config"), "-Dotnet", Path.Combine(root, "bin/Release/net10.0/fake.exe"),
-                "-CompanionPython", Path.Combine(root, "bin/Release/net10.0/fake.exe"), "-BuildParallelism", "1", "-MaxParallelism", "16", "-Profile", profile, "-OutputDirectory", runDirectory], Repository.FindRoot());
+                "-CompanionPython", Path.Combine(root, "bin/Release/net10.0/fake.exe"), "-Python", Path.Combine(root, "bin/Release/net10.0/fake.exe"),
+                "-BuildParallelism", "1", "-MaxParallelism", "16", "-Profile", profile, "-OutputDirectory", runDirectory], Repository.FindRoot());
         output.WriteLine("Degraded fake build: available mask={0:X}, check-all mask={1:X}", available, mask);
         output.WriteLine(result.StandardOutput + result.StandardError);
         // The failed fake build, not a CPU refusal (exit 64), ends the run.

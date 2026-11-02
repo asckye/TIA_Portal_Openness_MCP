@@ -8,7 +8,7 @@
     <Compile Include="../../../src/Studio/Launcher/Launcher.cs" Link="Launcher.cs" />
     <Compile Include="../../KeptCode/TiaMcp.KeptCode.Tests/DataLocationsTests.cs" Link="DataLocationsTests.cs" />
     <ProjectReference Include="../../../src/Studio/Gui/TiaOpenness.Gui.csproj" />
-    <ProjectReference Include="../../../src/FoundationHost/TiaMcp.FoundationHost.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../../../src/FoundationHost/TiaMcp.FoundationHost.csproj" ReferenceOutputAssembly="false" OutputItemType="LifecycleHostOutput" />
     <ProjectReference Include="../../../src/Logic/TiaMcp.Logic.csproj" Aliases="PlcRendering" />
     <EmbeddedResource Include="../../../src/Studio/Gui/**/*.xaml;../../../src/Studio/Gui/**/*.cs"
       Exclude="../../../src/Studio/Gui/bin/**;../../../src/Studio/Gui/obj/**" LinkBase="Source" WithCulture="false" />
@@ -18,13 +18,16 @@
     <Copy SourceFiles="@(BridgePayload)" DestinationFolder="$(TargetDir)bridge" SkipUnchangedFiles="true" />
     <Delete Files="$(TargetDir)bridge/Newtonsoft.Json.dll" Condition="!Exists('../../../src/Studio/Bridge/bin/$(Configuration)/$(StudioOutputSubdirectory)net48/Newtonsoft.Json.dll')" />
   </Target>
+  <!-- Copy from the output the project reference actually built: a separate GetTargetPath call inherits this project's
+       global properties (check-all's per-node output identity) and resolves a directory that was never built. -->
   <Target Name="CopyHostForLifecycleTests" AfterTargets="Build">
-    <MSBuild Projects="../../../src/FoundationHost/TiaMcp.FoundationHost.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration)" BuildInParallel="false">
-      <Output TaskParameter="TargetOutputs" ItemName="LifecycleHostTarget" />
-    </MSBuild>
-    <PropertyGroup><LifecycleHostDirectory>@(LifecycleHostTarget->'%(RootDir)%(Directory)')</LifecycleHostDirectory></PropertyGroup>
+    <PropertyGroup><LifecycleHostDirectory>@(LifecycleHostOutput->'%(RootDir)%(Directory)')</LifecycleHostDirectory></PropertyGroup>
+    <Error Condition="'$(LifecycleHostDirectory)' == '' or !Exists('$(LifecycleHostDirectory)TiaMcp.FoundationHost.exe')"
+           Text="Lifecycle host outputs were not found next to the referenced TiaMcp.FoundationHost build." />
     <ItemGroup><LifecycleHostPayload Include="$(LifecycleHostDirectory)**/*" /></ItemGroup>
-    <Copy SourceFiles="@(LifecycleHostPayload)" DestinationFiles="@(LifecycleHostPayload->'$(TargetDir)host-lifecycle/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(LifecycleHostPayload)" DestinationFiles="@(LifecycleHostPayload->'$(TargetDir)host-lifecycle/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true">
+      <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
+    </Copy>
   </Target>
   <ItemGroup>
     <Compile Include="../V4Fixtures.cs" Link="V4Fixtures.cs" />
