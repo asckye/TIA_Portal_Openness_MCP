@@ -654,6 +654,23 @@ JSON 对象键排序、数组保序，仅屏蔽脚本列明的生成时间路径
 compare 报告每版 changed/added/removed 数及变化调用的首个差异路径；摘要变化报告哈希路径和字节数增减，任何差异（含新增和元数据）返回 1。两次独立 capture 的八版文件逐字节相同。
 source-contracts 同时运行 `Snapshot-ToolContracts.py verify` 和 `Snapshot-ToolResponses.py verify`：每类恰好八个发布键文件、release 与文件名一致、名称唯一、full/lite 与 ToolProfiles.resx 一致、Foundation 无 lite，并按现有捕获规则核对响应覆盖和调用记录。此步骤不构建/运行引擎，不扩展快照格式；P6-35 补充行为能力、最终 P6-41 冻结格式和刷新基线。默认 HTTP harness 两版仍在各 16 项检查通过后因 `HttpListener` 的 `PlatformNotSupportedException` 停止。以上均为离线证据，不代表原生 TIA 验收。
 
+## 测试夹具退出码
+
+测试夹具共享 `tests/Shared/FixtureCrashGuard.cs`：主线程逃逸异常和任何线程的终止性未捕获异常写入一行
+`FIXTURE_UNHANDLED_EXCEPTION <完整类型名>: <消息首行，最多 500 字符>`，刷新 stderr 后以 **86** 退出。
+聚合和反射包装异常逐层取第一个内部异常。调用方将 86 显示为
+`fixture crashed with an unhandled exception (exit 86): <诊断行>`；其他退出码仍附带 stderr 尾部。
+这只适用于测试程序，不修改交付宿主、worker、桥接或工作台，也不修改 WER、注册表、进程错误模式或机器策略。
+PlcWorker 夹具的 `background-tia-exit` 保留 net48 `legacyUnhandledExceptionPolicy` 的非终止行为和
+`PlcWorker background exception; terminating=False` 日志。不可由托管守卫可靠拦截的栈溢出、原生进程损坏和显式
+`FailFast` 不改为 86，需要维护者另行决定。
+
+既有退出码保持原义：0 正常，1 已捕获失败，2 用法错误，7 本地进程输出夹具，23 abrupt，72 crash，73 broken pipe，
+74 truncated，98/99 插件等待/用法夹具；桥接保留 64/70。86 专用于夹具未捕获异常，不用于产品错误语义。
+
+`check-all` 在构建前检查 worktree 根路径长度，上限为 55（31 字符基准加既有 24 字符余量）；
+`-Clean` 同时检查实际快照根目录。超限信息列出根路径、长度、上限，并要求使用更短的 worktree 路径。
+
 ## 压力与故障检查
 
 Release 构建中的每个宿主检查都使用该次运行 temp 目录下独立的 `TIA_MCP_DATA_DIRECTORY`，明确写入 `config/approval.settings`，并隔离 diagnostics、`LOCALAPPDATA` 和临时文件。功能检查关闭审批；成功后删除数据根，失败时保留供检查。读取 V4 结果的检查允许关闭审批的写入结果带唯一的 `APPROVAL_DISABLED` warning。每个 Engine 版本及六个 Foundation 发布键还单独运行默认开启审批的检查：无 Workbench 时写入必须以 `CONFIRMATION_REQUIRED` / `workbench-unavailable` 在派发前拒绝，读取仍成功。Foundation V4 冻结目录不包含 `CallTool`，因此该检查记录工具目录证明和直接调用结果，不扩展公共接口。

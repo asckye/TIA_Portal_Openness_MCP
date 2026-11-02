@@ -5,6 +5,8 @@ import importlib.util
 import io
 import hashlib
 import json
+import os
+import shutil
 from pathlib import Path
 import unittest
 import urllib.request
@@ -62,6 +64,14 @@ class PlcHarnessSuccessorTests(unittest.TestCase):
              redirect_stdout(io.StringIO()) as output:
             harness.execute(self.args)
         return child, output.getvalue()
+
+    def check_transport_caller_exit_diagnostics(self):
+        transport = harness.load('Test-FoundationTransport')
+        line = 'FIXTURE_UNHANDLED_EXCEPTION System.InvalidOperationException: forced'
+        self.assertEqual(transport.fixture_exit_description(86, 'before\n' + line + '\nafter'),
+                         'fixture crashed with an unhandled exception (exit 86): ' + line)
+        self.assertEqual(transport.fixture_exit_description(7, 'tail'), 'exit 7: tail')
+        self.assertEqual(transport.fixture_exit_description(0), 'exit 0')
 
     def test_native_modes_launch_only_plc_subject(self):
         for mode in ('hmi-only', 'hmi-snapshot-only', 'native-export-only', 'global-script-only', 'graphic-selection-only',
@@ -256,6 +266,25 @@ class PlcHarnessSuccessorTests(unittest.TestCase):
         runner.assert_not_called()
         self.assertIn(f"COMPLETE: {summary['passed']} engine-host checks passed", output.getvalue())
         self.assertEqual(json.loads((self.args.output / 'engine-host-reference.json').read_text()), proof)
+        self.check_transport_caller_exit_diagnostics()
+        self.check_shared_engine_host_binary_beyond_max_path(proof)
+
+    def check_shared_engine_host_binary_beyond_max_path(self, proof):
+        binary = self.root / ('deep-' + 'x' * 90) / ('nested-' + 'y' * 90) / 'engine.dll'
+        self.assertGreater(len(str(binary.resolve())), 260)
+        access = Path('\\\\?\\' + str(binary.resolve())) if os.name == 'nt' else binary
+        try:
+            access.parent.mkdir(parents=True)
+            access.write_bytes(b'long binary')
+            proof['binaries'] = [dict(path=str(binary.resolve()), sha256=hashlib.sha256(b'long binary').hexdigest())]
+            self.args.engine_host_results.write_text(json.dumps(proof), encoding='utf-8')
+            with redirect_stdout(io.StringIO()):
+                harness.suites(self.args)
+            access.write_bytes(b'changed long binary')
+            with self.assertRaisesRegex(AssertionError, 'stale'):
+                harness.suites(self.args)
+        finally:
+            shutil.rmtree(access.parent.parent)
 
     def test_shared_engine_host_missing_failed_or_stale_results_fail_without_rerunning(self):
         proof, summary = self.reference_fixture()

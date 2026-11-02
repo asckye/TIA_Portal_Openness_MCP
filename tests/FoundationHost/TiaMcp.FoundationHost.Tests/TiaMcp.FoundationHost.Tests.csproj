@@ -134,4 +134,8 @@
     <Compile Include="../../../src/Studio/Gui/Services/DoctorFixCommand.cs" Link="Workbench/DoctorFixCommand.cs" />
     <Compile Include="../../../src/Shared/WindowsOpennessGroup.cs" Link="Shared/WindowsOpennessGroup.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../Shared/FixtureCrashGuard.cs" Link="Shared/FixtureCrashGuard.cs" />
+    <Compile Include="../../Shared/FixtureExit.cs" Link="Shared/FixtureExit.cs" />
+  </ItemGroup>
 </Project>

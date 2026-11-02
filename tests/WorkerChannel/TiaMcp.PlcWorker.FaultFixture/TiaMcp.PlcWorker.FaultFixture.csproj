@@ -16,4 +16,8 @@
       <_Parameter1>TiaReleaseKey</_Parameter1><_Parameter2>19</_Parameter2>
     </AssemblyAttribute>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../Shared/FixtureCrashGuard.cs" Link="Shared/FixtureCrashGuard.cs" />
+    <Compile Include="../../Shared/FixtureExit.cs" Link="Shared/FixtureExit.cs" />
+  </ItemGroup>
 </Project>

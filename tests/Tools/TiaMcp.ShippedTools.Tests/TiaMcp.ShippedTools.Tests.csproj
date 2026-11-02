@@ -43,4 +43,5 @@
     </AssemblyAttribute>
     <Compile Include="../../Shared/XunitDefaults.cs" Link="Shared/XunitDefaults.cs" />
   </ItemGroup>
+  <ItemGroup><Compile Include="../../Shared/FixtureExit.cs" Link="Shared/FixtureExit.cs" /></ItemGroup>
 </Project>

@@ -89,17 +89,42 @@ public sealed partial class PipelineTests
     }
 
     [Fact]
+    public async Task ConcurrentAuditFixtureLeavesNoOutputOrBinBuildFolders()
+    {
+        string binBuild = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), "bin-build");
+        string root = await RunConcurrentAuditFixture();
+        Assert.Equal(Path.GetFullPath(binBuild), Path.GetDirectoryName(Path.GetFullPath(root)));
+        Assert.False(Directory.Exists(root));
+    }
+
+    [Fact]
     public async Task ConcurrentAuditWritersPreserveRotatedChainAndRefuseInterruptedTail()
     {
-        var root = Path.Combine(AppContext.BaseDirectory, "audit-concurrency-" + Guid.NewGuid().ToString("N"));
-        var logs = new[] { new AuditLog(root, 1024), new AuditLog(root, 1024) };
-        await Task.WhenAll(Enumerable.Range(0, 4).Select(i => Task.Run(() => {
-            for (int j = 0; j < 20; j++) logs[i % 2].Append("start", "fixture", "engine", "21", "SaveProject");
-        })));
-        var verified = logs[0].Verify(); Assert.True(verified.Passed); Assert.Equal(80, verified.Count);
-        var tail = Directory.GetFiles(root, "audit-*.jsonl").Order().Last();
-        var bytes = File.ReadAllBytes(tail); bytes[^1] = (byte)' '; File.WriteAllBytes(tail, bytes);
-        Assert.ThrowsAny<Exception>(() => logs[0].Append("start", "fixture", "engine", "21", "SaveProject"));
+        string root = await RunConcurrentAuditFixture();
+        Assert.False(Directory.Exists(root));
+    }
+
+    private static async Task<string> RunConcurrentAuditFixture()
+    {
+        string parent = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), "bin-build");
+        var root = Path.Combine(parent, "audit-concurrency-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var logs = new[] { new AuditLog(root, 1024), new AuditLog(root, 1024) };
+            await Task.WhenAll(Enumerable.Range(0, 4).Select(i => Task.Run(() => {
+                for (int j = 0; j < 20; j++) logs[i % 2].Append("start", "fixture", "engine", "21", "SaveProject");
+            })));
+            var verified = logs[0].Verify(); Assert.True(verified.Passed); Assert.Equal(80, verified.Count);
+            var tail = Directory.GetFiles(root, "audit-*.jsonl").Order().Last();
+            var bytes = File.ReadAllBytes(tail); bytes[^1] = (byte)' '; File.WriteAllBytes(tail, bytes);
+            Assert.ThrowsAny<Exception>(() => logs[0].Append("start", "fixture", "engine", "21", "SaveProject"));
+        }
+        finally
+        {
+            Assert.Equal(Path.GetFullPath(parent), Path.GetDirectoryName(Path.GetFullPath(root)));
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+        return root;
     }
 
     [Theory]

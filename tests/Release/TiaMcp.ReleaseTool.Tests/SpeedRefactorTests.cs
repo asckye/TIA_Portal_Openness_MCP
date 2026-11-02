@@ -7,6 +7,18 @@ namespace TiaMcp.ReleaseTool.Tests;
 
 public sealed class SpeedRefactorTests
 {
+    [Fact]
+    public void DeepWorktreeIsRejectedBeforeBuildWithAnActionableLengthBudget()
+    {
+        string prefix = Path.GetPathRoot(Repository.FindRoot())!;
+        string At(int length) => prefix + new string('x', length - prefix.Length);
+        ReleaseCommands.RequireCheckAllWorktreeRootHeadroom(At(55));
+        var error = Assert.Throws<ReleaseException>(() => ReleaseCommands.RequireCheckAllWorktreeRootHeadroom(At(56)));
+        Assert.Contains("56", error.Message); Assert.Contains("55", error.Message);
+        Assert.Contains("shorter worktree path", error.Message); Assert.Contains(At(56), error.Message);
+        Assert.Equal(64, error.ExitCode);
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
@@ -184,6 +196,11 @@ public sealed class SpeedRefactorTests
         tree.Write("tests/test-suites.json", new JsonObject { ["engine-host"] = suite }.ToJsonString());
         var assembly = tree.Write("built/engine.dll", "binary");
         var directory = Path.GetDirectoryName(assembly)!;
+        tree.Write("built/engine.deps.json", "{}"); tree.Write("built/engine.runtimeconfig.json", "{}");
+        tree.Write("built/engine.pdb", "symbols"); tree.Write("built/dependency.dll", "dependency");
+        tree.Write("built/audit-concurrency-planted/audit.jsonl", "runtime log");
+        tree.Write("built/audit-concurrency-planted/planted.dll", "not a build output");
+        tree.Write("built/unrelated.json", "runtime data");
         var manifest = tree.Write("runtime.tsv", string.Join('\t', Path.Combine(tree.Root, project), "default", directory, directory, assembly));
         var output = Path.Combine(tree.Root, "run");
         tree.Write("run/suites/engine-host.json", "{}"); tree.Write("run/suites/engine-host.trx", "trx");
@@ -199,7 +216,9 @@ public sealed class SpeedRefactorTests
         Assert.Equal(0, jobs[1].Run().ExitCode);
         var proof = JsonNode.Parse(File.ReadAllText(path))!;
         Assert.Equal(ReleaseRecords.HashFile(manifest), (string)proof["runtimeManifestSha256"]!);
-        Assert.Equal(ReleaseRecords.HashFile(assembly), (string)proof["binaries"]![0]!["sha256"]!);
+        Assert.Equal(ReleaseRecords.HashFile(assembly), (string)proof["binaries"]!.AsArray().Single(binary => Path.GetFullPath((string)binary!["path"]!) == Path.GetFullPath(assembly))!["sha256"]!);
+        Assert.Equal(new[] { "dependency.dll", "engine.deps.json", "engine.dll", "engine.pdb", "engine.runtimeconfig.json" },
+            proof["binaries"]!.AsArray().Select(binary => Path.GetFileName((string)binary!["path"]!)).Order());
         code = 1; Assert.Equal(1, jobs[0].Run().ExitCode); Assert.False(File.Exists(path));
     }
 }

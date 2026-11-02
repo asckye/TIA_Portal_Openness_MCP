@@ -31,6 +31,18 @@ resources = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(resources)
 
 
+def fixture_exit_description(exit_code, stderr_tail=''):
+    if exit_code == 86:
+        line = next((line for line in stderr_tail.splitlines() if line.startswith('FIXTURE_UNHANDLED_EXCEPTION ')), stderr_tail)
+        return 'fixture crashed with an unhandled exception (exit 86): ' + line
+    return f'exit {exit_code}' + (': ' + stderr_tail if stderr_tail else '')
+
+
+def log_tail(log):
+    log.flush()
+    return Path(log.name).read_text('utf-8', errors='replace')[-4000:]
+
+
 class Stdio:
     def __init__(self, command, env, log):
         self.p = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=log, text=True, encoding='utf-8', env=env)
@@ -40,6 +52,7 @@ class Stdio:
                 self.lines.put(line)
         threading.Thread(target=read, daemon=True).start()
         self.seq = 0
+        self.log = log
 
     def call(self, method, params):
         self.seq += 1
@@ -54,7 +67,7 @@ class Stdio:
     def close(self):
         self.p.stdin.close()
         self.p.wait(timeout=15)
-        assert self.p.returncode == 0
+        assert self.p.returncode == 0, fixture_exit_description(self.p.returncode, log_tail(self.log))
 
 
 class Http:
@@ -260,7 +273,7 @@ def plc_transports(args, temp, counts):
             done = subprocess.run([str(worker), '--native-session', key, str(api.resolve()), '0' * 64],
                                   input=b'', capture_output=True, timeout=120,
                                   env=dict(os.environ, **env, TIA_MCP_PLC_WORKER_SDK_READY='0'))
-            assert done.returncode == 0, (key, done.returncode, done.stderr.decode('utf-8', 'replace')[-2000:])
+            assert done.returncode == 0, (key, fixture_exit_description(done.returncode, done.stderr.decode('utf-8', 'replace')[-2000:]))
         # Retain the no-TIA readiness assertion, then also exercise SDK-ready dispatch.
         # Old releases keep their original launch: no TIA installation location reaches the synthetic worker.
         portal = api if full else None
@@ -269,10 +282,10 @@ def plc_transports(args, temp, counts):
             with resources.server(host, portal, key, 'stdio', 'full', public_api=api, plc_worker=worker,
                                   sdk_ready=ready, env_overrides=env, evidence_directory=args.output,
                                   rpc_timeout=15, startup_timeout=60, stdio_exit_timeout=15,
-                                  process_observer=owned.append, sdk_installation=full) as (rpc, _, _):
+                                  process_observer=owned.append, sdk_installation=full) as (rpc, _, stderr_lines):
                 client = SharedStdio(rpc)
                 counts[key] = exercise_engine(client, key, ready=ready) if full else exercise(client, key, logfile, 0)
-            assert owned[0].returncode == 0
+            assert owned[0].returncode == 0, fixture_exit_description(owned[0].returncode, '\n'.join(stderr_lines))
         if full:
             evidence[key] = resources.plc_fixture_evidence(worker, host)
         else:
@@ -430,7 +443,7 @@ def main():
                             if p.poll() is not None or time.monotonic() >= deadline:
                                 stderr.flush()
                                 log = (args.output / f'http-{key}.log').read_text('utf-8', errors='replace')[-4000:]
-                                raise AssertionError(f'HTTP host not listening (exit={p.poll()}): {log}')
+                                raise AssertionError('HTTP host not listening: ' + fixture_exit_description(p.poll(), log))
                             time.sleep(.1)
                     try:
                         first.request('/mcp/ready', auth=False)

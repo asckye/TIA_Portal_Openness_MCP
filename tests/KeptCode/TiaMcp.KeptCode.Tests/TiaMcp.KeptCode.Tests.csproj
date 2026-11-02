@@ -89,4 +89,8 @@
     <EmbeddedResource Include="../../Engine/TiaMcp.Engine.Harness/Golden/response-bytes-v20.txt" LogicalName="ResponseGolden.v20.txt" />
     <EmbeddedResource Include="../../Engine/TiaMcp.Engine.Harness/Golden/response-bytes-v21.txt" LogicalName="ResponseGolden.v21.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../Shared/FixtureCrashGuard.cs" Link="Shared/FixtureCrashGuard.cs" />
+    <Compile Include="../../Shared/FixtureExit.cs" Link="Shared/FixtureExit.cs" />
+  </ItemGroup>
 </Project>

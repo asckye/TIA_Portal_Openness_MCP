@@ -42,4 +42,8 @@
     <Copy SourceFiles="@(PlcLogicPayload)" DestinationFolder="$(TargetDir)plc-logic" SkipUnchangedFiles="true" />
     <Error Condition="!Exists('$(TargetDir)plc-logic/TiaMcp.Logic.dll')" Text="The net48 Logic build was not copied to plc-logic." />
   </Target>
+  <ItemGroup>
+    <Compile Include="../../Shared/FixtureCrashGuard.cs" Link="Shared/FixtureCrashGuard.cs" />
+    <Compile Include="../../Shared/FixtureExit.cs" Link="Shared/FixtureExit.cs" />
+  </ItemGroup>
 </Project>

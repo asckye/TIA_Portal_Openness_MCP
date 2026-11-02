@@ -2,10 +2,16 @@ extern alias foundationhost;
 extern alias enginehost;
 internal static class Program
 {
-    private static int Main(string[] args)
+    private static int Main(string[] args) => TiaMcp.Engine.Tests.Shared.FixtureCrashGuard.Run(() => Run(args));
+
+    private static int Run(string[] args)
     {
         if (args.FirstOrDefault() == "--foundation-http-fixture")
         {
+            int faultAt = Array.IndexOf(args, "--fixture-fault");
+            string? fault = faultAt < 0 ? null : args[faultAt + 1];
+            if (faultAt >= 0) args = args.Where((_, i) => i != faultAt && i != faultAt + 1).ToArray();
+            if (fault == "startup") throw new InvalidOperationException("Forced fixture fault (startup)");
             foundationhost::TiaMcp.FoundationHost.LocalStabilityTelemetry.StartupStage("fixture.begin");
             using var stopping = new CancellationTokenSource();
             // Select the bundle like src/FoundationHost/Program.cs does; the test output layout has no bundle anchor under check-all.
@@ -31,6 +37,8 @@ internal static class Program
                 // Any other line, or the end of input, stops the host as before.
                 while (Console.In.ReadLine() is { } line)
                 {
+                    if (line == "fixture-fault-background" && fault == "background")
+                        throw new InvalidOperationException("Forced fixture fault (background)");
                     if (line == FixtureStartupPressure.ReleaseCommand && pressure != null) { pressure.ReleaseCatalog(); continue; }
                     if (scaled == null || line is not (FixtureHostWorkerBudgets.Command + "scaled" or FixtureHostWorkerBudgets.Command + "production")) break;
                     Console.Out.WriteLine(FixtureHostWorkerBudgets.Apply(line.EndsWith("scaled", StringComparison.Ordinal) ? scaled : production));

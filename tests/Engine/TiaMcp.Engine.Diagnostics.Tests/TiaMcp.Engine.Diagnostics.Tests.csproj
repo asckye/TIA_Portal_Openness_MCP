@@ -27,4 +27,8 @@
   <ItemGroup>
     <Compile Include="../../../src/Shared/CallJournalPayload.cs" Link="Journal/CallJournalPayload.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../Shared/FixtureCrashGuard.cs" Link="Shared/FixtureCrashGuard.cs" />
+    <Compile Include="../../Shared/FixtureExit.cs" Link="Shared/FixtureExit.cs" />
+  </ItemGroup>
 </Project>

@@ -19,4 +19,8 @@
     <ProjectReference Include="../../../src/Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
   </ItemGroup>
   <ItemGroup><Compile Include="../../../src/Shared/InvocationJournal.cs" Link="Shared/InvocationJournal.cs" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../Shared/FixtureCrashGuard.cs" Link="Shared/FixtureCrashGuard.cs" />
+    <Compile Include="../../Shared/FixtureExit.cs" Link="Shared/FixtureExit.cs" />
+  </ItemGroup>
 </Project>

@@ -325,9 +325,10 @@ def reference_engine_host(args):
     """Accept only this run's complete, binary-bound registered gate."""
     def checked(path, digest=None):
         path = Path(path).resolve()
-        resources.require(owns_evidence(path) and path.is_file(), 'Referenced engine-host result missing or foreign: ' + str(path))
+        access = Path('\\\\?\\' + str(path)) if os.name == 'nt' else path
+        resources.require(owns_evidence(path) and access.is_file(), 'Referenced engine-host result missing or foreign: ' + str(path))
         if digest is not None:
-            resources.require(hashlib.sha256(path.read_bytes()).hexdigest() == digest, 'Referenced engine-host result stale: ' + str(path))
+            resources.require(hashlib.sha256(access.read_bytes()).hexdigest() == digest, 'Referenced engine-host result stale: ' + str(path))
         return path
     reference = checked(args.engine_host_results)
     proof = json.loads(reference.read_text(encoding='utf-8'))

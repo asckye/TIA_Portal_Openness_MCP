@@ -6,6 +6,15 @@ namespace TiaMcp.ReleaseTool;
 internal static partial class ReleaseCommands
 {
     internal const int CheckAllCleanRootMargin = 24;
+    internal const int CheckAllWorktreeRootLimit = 31 + CheckAllCleanRootMargin;
+
+    internal static void RequireCheckAllWorktreeRootHeadroom(string worktree)
+    {
+        string root = Path.GetFullPath(worktree).TrimEnd('\\', '/');
+        if (root.Length > CheckAllWorktreeRootLimit)
+            throw new ReleaseException("Worktree root length " + root.Length + " exceeds the check-all limit " + CheckAllWorktreeRootLimit
+                + ": " + root + ". Use a shorter worktree path.", 64);
+    }
 
     internal static string CheckAllSnapshotPath(string original, string id)
     {
@@ -32,6 +41,7 @@ internal static partial class ReleaseCommands
         var snapshotBase = CheckAllSnapshotBase(original, Environment.GetEnvironmentVariable("TIA_MCP_NIGHTLY_MANAGED"),
             Environment.GetEnvironmentVariable("TIA_MCP_CHECK_ORIGINAL_ROOT"));
         var snapshot = CheckAllSnapshotPath(snapshotBase, Guid.NewGuid().ToString("N")[..8]);
+        RequireCheckAllWorktreeRootHeadroom(snapshot);
         var output = Path.GetFullPath(options.Get("OutputDirectory", Path.Combine(original, "bin-build/check-all/clean-" + Guid.NewGuid().ToString("N"))));
         Directory.CreateDirectory(Path.GetDirectoryName(snapshot)!);
         WriteCheckAllSnapshotOwner(snapshotBase, snapshot);

@@ -24,7 +24,10 @@ internal static partial class ReleaseCommands
         {
             var suite = DotnetSuites.LoadCatalog(Path.Combine(root, "tests/test-suites.json"), root)["engine-host"]!.AsObject();
             var assembly = CheckAllBuild.TestAssembly(root, CheckAllBuild.Suite(suite), manifest, "engine-host")!;
-            var binaries = Directory.GetFiles(Path.GetDirectoryName(assembly)!, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal)
+            var binaries = Directory.GetFiles(Path.GetDirectoryName(assembly)!, "*", SearchOption.TopDirectoryOnly)
+                .Where(path => path.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
+                    || path.EndsWith(".pdb", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".deps.json", StringComparison.OrdinalIgnoreCase)
+                    || path.EndsWith(".runtimeconfig.json", StringComparison.OrdinalIgnoreCase)).Order(StringComparer.Ordinal)
                 .Select(path => new { path, sha256 = ReleaseRecords.HashFile(path) }).ToArray();
             var summary = Path.Combine(output, "suites/engine-host.json");
             var trx = Path.Combine(output, "suites/engine-host.trx");

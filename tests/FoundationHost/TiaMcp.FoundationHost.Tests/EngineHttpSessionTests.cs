@@ -8,6 +8,7 @@ using System.Text.Json.Nodes;
 using TiaMcp.Logic.V4;
 using TiaOpenness.Shared;
 using Xunit;
+using TiaMcp.Engine.Tests.Shared;
 
 [Collection(WorkerDataDirectoryCollection.Name)]
 public sealed class EngineHttpSessionTests : EngineHttpSessionTestsCases { protected override bool PlcWorker => false; }
@@ -17,6 +18,17 @@ public sealed class EngineHttpSessionTestsPlc : EngineHttpSessionTestsCases { pr
 public abstract class EngineHttpSessionTestsCases
 {
     protected abstract bool PlcWorker { get; }
+    [Theory, InlineData("startup"), InlineData("background")]
+    public async Task Fixture_fault_exits_without_runtime_crash_handling(string mode)
+    {
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => Fixture.Start(PlcWorker, "21", fault: mode));
+        Assert.Equal(86, error.Data["fixtureExitCode"]);
+        string stderr = Assert.IsType<string>(error.Data["fixtureStderr"]);
+        string expected = "FIXTURE_UNHANDLED_EXCEPTION System.InvalidOperationException: Forced fixture fault (" + mode + ")";
+        Assert.Single(stderr.Split('\n'), line => line == expected);
+        Assert.Contains("fixture crashed with an unhandled exception (exit 86): " + expected, error.Message);
+    }
+
     [Theory, InlineData("20"), InlineData("21")]
     public async Task Http_listens_under_cpu_pressure_before_constructing_session_tools(string release)
     {
@@ -280,6 +292,7 @@ public abstract class EngineHttpSessionTestsCases
         private readonly Task exited = process.WaitForExitAsync();
         internal TimeSpan StartupElapsed => startup.Elapsed;
         internal string StartupDiagnostics() => $"Fixture host startup after {startup.Elapsed.TotalMilliseconds:F0} ms (pid={process.Id}, url={Url}).\n"
+            + (process.HasExited ? FixtureExit.Describe(process.ExitCode, LogTail(Path.Combine(directory, "host-error.log"))) + "\n" : "")
             + string.Join("\n", new[] { "host.log", "host-error.log", "host-telemetry.jsonl.startup" }.Select(name =>
                 name + ":\n" + LogTail(Path.Combine(directory, name))));
         private static string LogTail(string path)
@@ -307,7 +320,7 @@ public abstract class EngineHttpSessionTestsCases
         }
         internal string Url { get; private set; } = url;
         internal string DataDirectory => directory;
-        internal static async Task<Fixture> Start(bool plcWorker, string release, bool shortTimeout = false, bool gracefulShutdown = false, bool invalidCatalog = false, bool startupPressure = false)
+        internal static async Task<Fixture> Start(bool plcWorker, string release, bool shortTimeout = false, bool gracefulShutdown = false, bool invalidCatalog = false, bool startupPressure = false, string? fault = null)
         {
             string root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
             string directory = Path.Combine(root, "bin-build", "P7-07a-tests", Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
@@ -332,6 +345,7 @@ public abstract class EngineHttpSessionTestsCases
             var start = new ProcessStartInfo(exe) {
                 WorkingDirectory = directory, UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true, RedirectStandardInput = true };
             start.ArgumentList.Add("--foundation-http-fixture");
+            if (fault != null) { start.ArgumentList.Add("--fixture-fault"); start.ArgumentList.Add(fault); }
             if (startupPressure)
             {
                 start.ArgumentList.Add("--fixture-startup-pressure");
@@ -378,6 +392,7 @@ public abstract class EngineHttpSessionTestsCases
             try
             {
                 using var client = new HttpClient(new HttpClientHandler { UseProxy = false }) { Timeout = TimeSpan.FromSeconds(1) };
+                bool faultSent = false;
                 for (int attempt = 0; attempt < 200; attempt++)
                 {
                     await fixture.RequireRunning();
@@ -388,7 +403,15 @@ public abstract class EngineHttpSessionTestsCases
                         var health = client.GetAsync(fixture.Url + "/mcp/health");
                         if (await Task.WhenAny(health, fixture.exited) == fixture.exited) await fixture.RequireRunning();
                         using var response = await health;
-                        if (response.IsSuccessStatusCode) { startup.Stop(); return fixture; }
+                        if (response.IsSuccessStatusCode)
+                        {
+                            if (fault != "background") { startup.Stop(); return fixture; }
+                            if (!faultSent)
+                            {
+                                await process.StandardInput.WriteLineAsync("fixture-fault-background");
+                                await process.StandardInput.FlushAsync(); faultSent = true;
+                            }
+                        }
                     }
                     catch (Exception error) when (error is HttpRequestException or TaskCanceledException) { }
                     await Task.Delay(50);
@@ -401,7 +424,10 @@ public abstract class EngineHttpSessionTestsCases
         {
             if (!process.HasExited) return;
             await exited.WaitAsync(TimeSpan.FromSeconds(5)); // Drain redirected stderr before reporting the startup error.
-            throw new InvalidOperationException("Fixture host exited " + process.ExitCode + ": " + StartupDiagnostics());
+            string stderr = LogTail(Path.Combine(directory, "host-error.log"));
+            var error = new InvalidOperationException("Fixture host " + FixtureExit.Describe(process.ExitCode, stderr) + ": " + StartupDiagnostics());
+            error.Data["fixtureExitCode"] = process.ExitCode; error.Data["fixtureStderr"] = stderr;
+            throw error;
         }
         internal void Stop() => process.StandardInput.Close();
         internal async Task<bool> WaitForExit(TimeSpan timeout)

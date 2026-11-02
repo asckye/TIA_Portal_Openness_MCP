@@ -17,4 +17,8 @@
     <None Update="Fixtures/EngineSource21.json" Link="Catalog/21.json" TargetPath="Catalog/21.json" CopyToOutputDirectory="Always" />
     <None Update="Fixtures/EngineCatalog*.json" CopyToOutputDirectory="Always" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../Shared/FixtureCrashGuard.cs" Link="Shared/FixtureCrashGuard.cs" />
+    <Compile Include="../../Shared/FixtureExit.cs" Link="Shared/FixtureExit.cs" />
+  </ItemGroup>
 </Project>

@@ -44,9 +44,9 @@ namespace TiaMcp.Engine.Tests
                 var fixture = typeof(McpLocalProcessTests).Assembly.Location;
                 var output = await TiaOpenness.Shared.LocalProcess.Run("dotnet", new[] { fixture, "--local-process-fixture", "output" }, root, null, 30, 32);
                 check(output.ExitCode == 7 && output.Stdout == new string('o', 32) && output.Stderr == new string('e', 32)
-                    && output.OutputTruncated && !output.DataComplete, "shared runner drains both full pipes and reports truncated output");
+                    && output.OutputTruncated && !output.DataComplete, "shared runner drains both full pipes and reports truncated output: " + Shared.FixtureExit.Describe(output.ExitCode, output.Stderr));
                 var timeout = await TiaOpenness.Shared.LocalProcess.Run("dotnet", new[] { fixture, "--local-process-fixture", "sleep" }, root, null, 1);
-                check(timeout.TimedOut && !timeout.Success && !timeout.DataComplete, "shared runner terminates its timed-out child and reports incomplete execution");
+                check(timeout.TimedOut && !timeout.Success && !timeout.DataComplete, "shared runner terminates its timed-out child and reports incomplete execution: " + Shared.FixtureExit.Describe(timeout.ExitCode, timeout.Stderr));
                 var fail = await EcosystemFiles.Run("git", new[] { "show", "refs/heads/does-not-exist" }, root, null, 30);
                 check(!fail["success"]!.GetValue<bool>() && fail["exitCode"]!.GetValue<int>() != 0 && fail["stderr"]!.GetValue<string>().Length > 0,
                     "shared runner preserves a real command failure and its error text");

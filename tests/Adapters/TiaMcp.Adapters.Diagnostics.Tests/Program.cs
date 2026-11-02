@@ -4,6 +4,8 @@ using System.Reflection.PortableExecutable;
 using System.Text.Json.Nodes;
 using TiaMcpServer.ModelContextProtocol;
 
+return TiaMcp.Engine.Tests.Shared.FixtureCrashGuard.Run(() =>
+{
 // Runs only our API-independent diagnostic runtime. Workers and Siemens modules
 // are inspected as PE files; they are never loaded or executed.
 try {
@@ -90,4 +92,6 @@ foreach(string key in new[]{"14sp1","15.1","16","17","18","19","20","21"}){
 Console.WriteLine($"PASS: {checks} portable diagnostics and PE isolation checks; native NOT RUN.");
 return 0;
 } catch(Exception ex) { Console.Error.WriteLine("FAIL: "+ex); return 1; }
+});
+
 internal sealed class ExplosiveToString { public int Calls; public override string ToString(){Calls++;throw new Exception("Must never be called");} }

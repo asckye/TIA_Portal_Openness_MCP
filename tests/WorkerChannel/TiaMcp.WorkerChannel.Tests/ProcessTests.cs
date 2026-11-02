@@ -3,12 +3,23 @@ using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using TiaMcp.WorkerChannel;
 using Xunit;
+using TiaMcp.Engine.Tests.Shared;
 using static TiaMcp.WorkerChannel.Tests.ProtocolTests;
 
 namespace TiaMcp.WorkerChannel.Tests;
 
 public sealed class ProcessTests
 {
+    [Fact]
+    public async Task UnhandledFixtureFaultHasDocumentedExitAndOneDiagnosticLine()
+    {
+        using var fixture = new Fixture("unhandled");
+        await fixture.Process.WaitForExitAsync().WaitAsync(Budget);
+        string stderr = await fixture.diagnostics;
+        Assert.True(fixture.Process.ExitCode == 86, FixtureExit.Describe(fixture.Process.ExitCode, stderr));
+        Assert.Equal("FIXTURE_UNHANDLED_EXCEPTION System.InvalidOperationException: Forced transport fixture fault", stderr.TrimEnd('\r', '\n'));
+    }
+
     [Fact]
     public async Task DuplicateHelloTerminal()
     {
@@ -119,10 +130,13 @@ public sealed class ProcessTests
         internal readonly ChannelClient Client;
         private readonly string log=Path.Combine(Path.GetTempPath(),"tia-channel-"+Guid.NewGuid().ToString("N")+".jsonl");
         private bool disposed;
-        private readonly Task<string> diagnostics;
+        internal readonly Task<string> diagnostics;
+        private readonly string image;
+        private readonly bool expectedCrash;
         internal Fixture(string mode,[CallerFilePath] string source="")
         {
             string exe=Path.GetFullPath(Path.Combine(Path.GetDirectoryName(source)!,"../TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture"+(OperatingSystem.IsWindows()?".exe":"")));
+            image=exe; expectedCrash=mode=="unhandled";
             string adapter=Path.Combine(Path.GetDirectoryName(exe)!,"TiaMcp.Adapter.19.dll");
             string Hash(string path) { using var stream=File.OpenRead(path); return Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant(); }
             string nonce=Convert.ToHexString(RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
@@ -147,8 +161,15 @@ public sealed class ProcessTests
             if(disposed) return; disposed=true;
             Client.Dispose();
             // Only this synthetic child is terminated. Production ChannelClient never kills a worker.
-            if(!Process.WaitForExit(1000)) { Process.Kill(); Process.WaitForExit(); }
-            _=diagnostics.GetAwaiter().GetResult(); Process.Dispose(); File.Delete(log);
+            if(!Process.WaitForExit(1000))
+            {
+                Assert.Equal(Path.GetFullPath(image), Path.GetFullPath(Process.MainModule!.FileName),
+                    OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+                Process.Kill(); Process.WaitForExit();
+            }
+            string stderr=diagnostics.GetAwaiter().GetResult();
+            try { if(!expectedCrash) Assert.True(Process.ExitCode!=86,FixtureExit.Describe(Process.ExitCode,stderr)); }
+            finally { Process.Dispose(); File.Delete(log); }
         }
     }
 }

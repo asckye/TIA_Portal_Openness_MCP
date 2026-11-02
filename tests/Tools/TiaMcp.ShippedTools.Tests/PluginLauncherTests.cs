@@ -4,6 +4,7 @@ using System.Runtime.Versioning;
 using TiaMcp.PluginLauncher;
 using TiaOpenness.Shared;
 using Xunit;
+using TiaMcp.Engine.Tests.Shared;
 
 namespace TiaMcp.ShippedTools.Tests;
 
@@ -102,7 +103,7 @@ public sealed class PluginLauncherTests
         using var process = fixture.Start(null, null); process.StandardInput.Close();
         string error = await process.StandardError.ReadToEndAsync();
         await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(15));
-        Assert.Equal(0, process.ExitCode);
+        Assert.True(process.ExitCode == 0, FixtureExit.Describe(process.ExitCode, error)); Assert.Equal(0, process.ExitCode);
         using var receipt = JsonDocument.Parse(error);
         Assert.Equal(new[] { "--release-key", expected }, receipt.RootElement.GetProperty("args").EnumerateArray().Select(a => a.GetString()));
     }
@@ -119,7 +120,7 @@ public sealed class PluginLauncherTests
         using var output = new MemoryStream(); await process.StandardOutput.BaseStream.CopyToAsync(output);
         string error = await process.StandardError.ReadToEndAsync();
         await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(15));
-        Assert.Equal(0, process.ExitCode); Assert.Equal(payload, output.ToArray());
+        Assert.True(process.ExitCode == 0, FixtureExit.Describe(process.ExitCode, error)); Assert.Equal(0, process.ExitCode); Assert.Equal(payload, output.ToArray());
         using var receipt = JsonDocument.Parse(error);
         Assert.Equal(new[] { "--release-key", "19" }.Concat(extra), receipt.RootElement.GetProperty("args").EnumerateArray().Select(a => a.GetString()));
         Assert.Equal(installed, receipt.RootElement.GetProperty("root").GetString());
@@ -134,10 +135,23 @@ public sealed class PluginLauncherTests
         process.StandardInput.Close();
         string error = await process.StandardError.ReadToEndAsync();
         await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(15));
-        Assert.Equal(exitCode, process.ExitCode);
+        Assert.True(process.ExitCode == exitCode, FixtureExit.Describe(process.ExitCode, error)); Assert.Equal(exitCode, process.ExitCode);
         using var receipt = JsonDocument.Parse(error);
         Assert.Equal(fixture.Bundle, receipt.RootElement.GetProperty("root").GetString());
         Assert.Equal("", await process.StandardOutput.ReadToEndAsync());
+    }
+
+    [Fact]
+    public async Task Unhandled_async_host_fixture_fault_is_forwarded_with_its_diagnostic()
+    {
+        using var fixture = new LauncherFixture();
+        using var process = fixture.Start(null, "19", "--fixture-exit-code", "invalid");
+        process.StandardInput.Close();
+        string error = await process.StandardError.ReadToEndAsync();
+        await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(15));
+        Assert.True(process.ExitCode == 86, FixtureExit.Describe(process.ExitCode, error));
+        Assert.Equal(86, process.ExitCode);
+        Assert.Single(error.Split('\n'), line => line.StartsWith("FIXTURE_UNHANDLED_EXCEPTION System.FormatException: ", StringComparison.Ordinal));
     }
 
     [Fact]

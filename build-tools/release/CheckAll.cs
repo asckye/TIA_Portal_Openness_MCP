@@ -31,6 +31,7 @@ internal static partial class ReleaseCommands
             var result = ProcessRunner.Run(Dotnet, [typeof(ReleaseCommands).Assembly.Location, "check-all", .. options.Arguments()], worktree, forwardOutput: true);
             return result.ExitCode;
         }
+        RequireCheckAllWorktreeRootHeadroom(worktree);
         // -NoBuildCache: no verified file-app or build cache reuse, and with it no result cache (a release may adopt only such a run).
         if (options.Has("NoBuildCache")) Environment.SetEnvironmentVariable("TIA_MCP_BUILD_CACHE_DISABLED", "1");
         int parallelism;

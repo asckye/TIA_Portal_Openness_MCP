@@ -11,6 +11,22 @@ public sealed class CheckAllRound3Tests(ITestOutputHelper output)
 {
     private static CommandResult Passed() => new(0, "passed\n", "");
 
+    private const string FixturePrefix = "r3-";
+
+    [Fact]
+    public void RoundThreeStageCopyFitsMaxPathFromASeventyThreeCharacterWorktree()
+    {
+        string repository = Repository.FindRoot();
+        // Model the copied file depth without nesting another worktree below an already-deep checkout.
+        int simulatedRootLength = Math.Max(73, repository.Length);
+        using var fixture = new OfflineFixtures(FixturePrefix + new string('x', simulatedRootLength - repository.Length));
+        int suffixLength = Path.Combine("bin-build", FixturePrefix + new string('0', 32)).Length + 1;
+        Assert.Equal(simulatedRootLength, fixture.DirectoryPath.Length - suffixLength);
+        VerifyTransitiveRestore(fixture.DirectoryPath, verifyInvalidation: true);
+        var staged = Directory.GetFiles(fixture.DirectoryPath, "TiaMcp.CheckBuild.dll", SearchOption.AllDirectories);
+        Assert.NotEmpty(staged); Assert.All(staged, path => Assert.True(path.Length < 260, path));
+    }
+
     [Fact]
     public void IsolatedLanesOverlapEvenWhenGeneralWorkIsExclusive()
     {
@@ -213,7 +229,7 @@ public sealed class CheckAllRound3Tests(ITestOutputHelper output)
     [Fact]
     public void ActualTraversalIsolatesGlobalPropertyVariantsOfSharedDependencies()
     {
-        using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath; var repo = Repository.FindRoot();
+        using var fixture = new OfflineFixtures(FixturePrefix); var root = fixture.DirectoryPath; var repo = Repository.FindRoot();
         void Write(string relative, string content) { var path = Path.Combine(root, relative); Directory.CreateDirectory(Path.GetDirectoryName(path)!); File.WriteAllText(path, content); }
         foreach (var file in new[] { "CheckAll.Build.props", "CheckAll.Build.targets", "check-build/TiaMcp.CheckBuild.csproj", "check-build/CheckBuildTasks.cs" })
             Write("build-tools/release/" + file, File.ReadAllText(Path.Combine(repo, "build-tools/release", file)));
@@ -241,15 +257,15 @@ public sealed class CheckAllRound3Tests(ITestOutputHelper output)
     [Fact]
     public void RestoreCoversTransitiveReferencesAfterLocalGlobalPropertyOverrides()
     {
-        using var fixture = new OfflineFixtures();
+        using var fixture = new OfflineFixtures(FixturePrefix);
         VerifyTransitiveRestore(fixture.DirectoryPath);
     }
 
     [Fact]
     public void LongCleanLayoutKeepsGeneratedInputsIncremental()
     {
-        var ordinary = Path.Combine(Repository.FindRoot(), "bin-build", "restore-long-" + new string('0', 32));
-        using var fixture = new OfflineFixtures("restore-long-" + new string('x', Math.Max(0, 118 - ordinary.Length)));
+        var ordinary = Path.Combine(Repository.FindRoot(), "bin-build", FixturePrefix + new string('0', 32));
+        using var fixture = new OfflineFixtures(FixturePrefix + new string('x', Math.Max(0, 118 - ordinary.Length)));
         Assert.True(fixture.DirectoryPath.Length >= 118);
         VerifyTransitiveRestore(fixture.DirectoryPath, verifyInvalidation: true);
     }

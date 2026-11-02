@@ -7,6 +7,7 @@ using TiaMcp.WorkerChannel;
 using TiaMcpServer.Siemens;
 using TiaOpenness.Shared;
 using Xunit;
+using TiaMcp.Engine.Tests.Shared;
 
 public sealed class FoundationProcessLeaseTests
 {
@@ -266,7 +267,7 @@ public sealed class FoundationProcessLeaseTests
         using var session = new Session(); using var host = Start("shutdown", session.Root, session.Pid.ToString(), release, plcWorker.ToString());
         using var worker = Process.GetProcessById(int.Parse((await Line(host))!));
         host.StandardInput.WriteLine("exit");
-        Assert.True(host.WaitForExit(10000)); Assert.Equal(0, host.ExitCode); Assert.True(worker.WaitForExit(10000));
+        Assert.True(host.WaitForExit(10000)); Assert.True(host.ExitCode == 0, FixtureExit.Describe(host.ExitCode, host.StandardError.ReadToEnd())); Assert.Equal(0, host.ExitCode); Assert.True(worker.WaitForExit(10000));
         Assert.Equal("RELEASED\n", File.ReadAllText(Path.Combine(session.Root, session.Pid + "-1.lease")));
     }
 
@@ -310,10 +311,16 @@ public sealed class FoundationProcessLeaseTests
         start.ArgumentList.Add("--process-lease-fixture"); foreach (var arg in args) start.ArgumentList.Add(arg);
         return Process.Start(start)!;
     }
-    private static async Task<string?> Line(Process process) => await process.StandardOutput.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(10));
+    private static async Task<string?> Line(Process process)
+    {
+        string? line = await process.StandardOutput.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        if (line == null && process.HasExited)
+            throw new InvalidOperationException(FixtureExit.Describe(process.ExitCode, await process.StandardError.ReadToEndAsync()));
+        return line;
+    }
     private static async Task<string?> Command(Process process, string command) { process.StandardInput.WriteLine(command); return await Line(process); }
     private static async Task Stop(Process process)
-    { process.StandardInput.Close(); await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(10)); Assert.Equal(0, process.ExitCode); }
+    { process.StandardInput.Close(); await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(10)); Assert.True(process.ExitCode == 0, FixtureExit.Describe(process.ExitCode, await process.StandardError.ReadToEndAsync())); Assert.Equal(0, process.ExitCode); }
 
     internal static int RunFixture(string[] args)
     {

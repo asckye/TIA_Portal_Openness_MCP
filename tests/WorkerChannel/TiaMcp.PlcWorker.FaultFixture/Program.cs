@@ -13,7 +13,9 @@ using TiaMcpServer.Siemens;
 
 internal static class Program
 {
-    private static int Main(string[] args)
+    private static int Main(string[] args) => TiaMcp.Engine.Tests.Shared.FixtureCrashGuard.Run(() => Run(args));
+
+    private static int Run(string[] args)
     {
         var options = WorkerLaunchOptions.Parse(args);
         if (options.TiaPortalLocation != null) Environment.SetEnvironmentVariable("TiaPortalLocation", options.TiaPortalLocation);

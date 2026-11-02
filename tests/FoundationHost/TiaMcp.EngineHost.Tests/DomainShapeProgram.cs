@@ -12,7 +12,9 @@ using TiaMcpServer.ModelContextProtocol;
 // The normal registered test runner still executes every test in this assembly.
 internal static class DomainShapeProgram
 {
-    private static int Main(string[] args)
+    private static int Main(string[] args) => TiaMcp.Engine.Tests.Shared.FixtureCrashGuard.Run(() => Run(args));
+
+    private static int Run(string[] args)
     {
         if (args.Length != 1 || args[0] is not ("--domain-shape" or "--runtime-channel-shape")) throw new ArgumentException("Expected a domain shape mode.");
         var results = new List<object>();

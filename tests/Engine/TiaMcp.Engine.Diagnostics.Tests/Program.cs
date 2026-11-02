@@ -20,7 +20,9 @@ internal static class Program
         private sealed class Row { public T Value = default!; }
         internal T Filter(T value) => new[] { new Row { Value = value } }.Where(x => x != null).Select(x => x.Value).Single();
     }
-    private static int Main(string[] args)
+    private static int Main(string[] args) => TiaMcp.Engine.Tests.Shared.FixtureCrashGuard.Run(() => Run(args));
+
+    private static int Run(string[] args)
     {
         try
         {

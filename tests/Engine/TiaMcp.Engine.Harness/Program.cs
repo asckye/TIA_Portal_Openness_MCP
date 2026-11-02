@@ -151,7 +151,9 @@ internal static partial class Program
     private static async Task Test(string label, Func<Task> test)
     { await test(); Passed++; Console.WriteLine("PASS " + label); }
 
-    private static async Task<int> Main(string[] args)
+    private static Task<int> Main(string[] args) => TiaMcp.Engine.Tests.Shared.FixtureCrashGuard.RunAsync(() => Run(args));
+
+    private static async Task<int> Run(string[] args)
     {
         // Mirror the engine's startup (Program.cs): .NET Framework writes child stdin with Console.InputEncoding,
         // which emits a UTF-8 BOM when the console code page is 65001 and the engine has not replaced it.

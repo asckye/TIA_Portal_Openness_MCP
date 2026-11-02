@@ -4,54 +4,59 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.WorkerChannel;
 
-// Synthetic worker: no Siemens references, native loading or network operations.
-Console.InputEncoding = new UTF8Encoding(false);
-Console.OutputEncoding = new UTF8Encoding(false);
-var log = Environment.GetEnvironmentVariable("TIA_FIXTURE_LOG") ?? throw new ArgumentException("Fixture log required");
-var fault = Environment.GetEnvironmentVariable("TIA_FIXTURE_FAULT") ?? "";
-void Record(object value) => File.AppendAllText(log, JsonSerializer.Serialize(value) + "\n", new UTF8Encoding(false));
-Record(new { stage = "start", pid = Environment.ProcessId, args });
-if (args.Length != 4 || args[0] != "--native-session") throw new ArgumentException("Protocol 2 launch arguments required.");
-string Hash(string path) { using var file=File.OpenRead(path); return Convert.ToHexString(SHA256.HashData(file)).ToLowerInvariant(); }
-var identity = new ChannelIdentity(args[1], Hash(Environment.ProcessPath!),
-    Hash(Path.Combine(AppContext.BaseDirectory,"TiaMcp.Adapter."+args[1]+".dll")), Environment.ProcessId, args[3]);
-int? attached = null;
-long epoch = 0;
-using var output = new FaultOutput(Console.OpenStandardOutput(), fault);
-var server = new ChannelServer(Console.OpenStandardInput(), output, identity, () => new ChannelBinding(epoch, attached.HasValue), request =>
+return TiaMcp.Engine.Tests.Shared.FixtureCrashGuard.Run(() =>
 {
-    var operation = request.Method.Substring("adapter.".Length);
-    var values = JsonNode.Parse(request.ArgumentsJson)!;
-    Record(new { stage = "call", pid = Environment.ProcessId, operation, request.Id, request.Method });
-    if (fault == "delay") Thread.Sleep(values["fixtureDelayMilliseconds"]?.GetValue<int>() ?? 0);
-    if (fault == "broken-pipe") Environment.Exit(0);
-    if (fault == "timeout" || fault == "timeout-attach" && operation == "Attach") Thread.Sleep(10000);
-    if (fault == "read-failed") return ChannelResponse.Error(new ChannelFailureException("Fixture read failed", -32603, ChannelOutcome.ReadFailed, "{\"inputFile\":\"生产线\"}"));
-    if (fault == "rejected") return ChannelResponse.Error(new ChannelFailureException("Fixture rejected", -32602, ChannelOutcome.RejectedBeforeNative));
-    if (fault == "session-fault") return ChannelResponse.Error(new ChannelFailureException("Fixture outcome unknown", -32603, ChannelOutcome.Unknown));
-    if (fault == "progress") { request.Progress(10); request.Progress(100); }
-    JsonNode? result;
-    switch (operation)
+    // Synthetic worker: no Siemens references, native loading or network operations.
+    Console.InputEncoding = new UTF8Encoding(false);
+    Console.OutputEncoding = new UTF8Encoding(false);
+    var log = Environment.GetEnvironmentVariable("TIA_FIXTURE_LOG") ?? throw new ArgumentException("Fixture log required");
+    var fault = Environment.GetEnvironmentVariable("TIA_FIXTURE_FAULT") ?? "";
+    if (fault == "unhandled") throw new InvalidOperationException("Forced transport fixture fault");
+    void Record(object value) => File.AppendAllText(log, JsonSerializer.Serialize(value) + "\n", new UTF8Encoding(false));
+    Record(new { stage = "start", pid = Environment.ProcessId, args });
+    if (args.Length != 4 || args[0] != "--native-session") throw new ArgumentException("Protocol 2 launch arguments required.");
+    string Hash(string path) { using var file=File.OpenRead(path); return Convert.ToHexString(SHA256.HashData(file)).ToLowerInvariant(); }
+    var identity = new ChannelIdentity(args[1], Hash(Environment.ProcessPath!),
+        Hash(Path.Combine(AppContext.BaseDirectory,"TiaMcp.Adapter."+args[1]+".dll")), Environment.ProcessId, args[3]);
+    int? attached = null;
+    long epoch = 0;
+    using var output = new FaultOutput(Console.OpenStandardOutput(), fault);
+    var server = new ChannelServer(Console.OpenStandardInput(), output, identity, () => new ChannelBinding(epoch, attached.HasValue), request =>
     {
-        case "Attach":
-            attached = values["processId"]!.GetValue<int>(); epoch++;
-            result = new JsonObject { ["Stage"]="attached", ["OwnsPortal"]=false, ["AttemptedPids"]=new JsonArray(attached.Value), ["Strategy"]="non-owning-attachment-only", ["LaunchMode"]="never" };
-            break;
-        case "ReadState": result = new JsonObject { ["IsAttached"]=attached.HasValue, ["ProcessId"]=attached, ["diagnosticsDirectory"]=Environment.GetEnvironmentVariable("TIA_MCP_DIAGNOSTICS_DIRECTORY") }; break;
-        case "ReadProjectTree": result = JsonValue.Create("生产线 / PLC_测试 / 程序块"); break;
-        case "Disconnect":
-            result = new JsonObject { ["Stage"]="disconnected", ["SessionState"]="terminal", ["Strategy"]="non-owning-attachment-only", ["WorkerAcknowledged"]=true, ["Detached"]=attached.HasValue, ["ProcessId"]=attached, ["SavedProject"]=false, ["ClosedProject"]=false, ["LaunchMode"]="never" };
-            if (attached.HasValue) epoch++;
-            attached = null;
-            break;
-        default: result = fault == "delay" && values["fixtureReply"] != null ? values["fixtureReply"] : values; break;
-    }
-    return ChannelResponse.Success(result?.ToJsonString() ?? "null");
+        var operation = request.Method.Substring("adapter.".Length);
+        var values = JsonNode.Parse(request.ArgumentsJson)!;
+        Record(new { stage = "call", pid = Environment.ProcessId, operation, request.Id, request.Method });
+        if (fault == "delay") Thread.Sleep(values["fixtureDelayMilliseconds"]?.GetValue<int>() ?? 0);
+        if (fault == "broken-pipe") Environment.Exit(0);
+        if (fault == "timeout" || fault == "timeout-attach" && operation == "Attach") Thread.Sleep(10000);
+        if (fault == "read-failed") return ChannelResponse.Error(new ChannelFailureException("Fixture read failed", -32603, ChannelOutcome.ReadFailed, "{\"inputFile\":\"生产线\"}"));
+        if (fault == "rejected") return ChannelResponse.Error(new ChannelFailureException("Fixture rejected", -32602, ChannelOutcome.RejectedBeforeNative));
+        if (fault == "session-fault") return ChannelResponse.Error(new ChannelFailureException("Fixture outcome unknown", -32603, ChannelOutcome.Unknown));
+        if (fault == "progress") { request.Progress(10); request.Progress(100); }
+        JsonNode? result;
+        switch (operation)
+        {
+            case "Attach":
+                attached = values["processId"]!.GetValue<int>(); epoch++;
+                result = new JsonObject { ["Stage"]="attached", ["OwnsPortal"]=false, ["AttemptedPids"]=new JsonArray(attached.Value), ["Strategy"]="non-owning-attachment-only", ["LaunchMode"]="never" };
+                break;
+            case "ReadState": result = new JsonObject { ["IsAttached"]=attached.HasValue, ["ProcessId"]=attached, ["diagnosticsDirectory"]=Environment.GetEnvironmentVariable("TIA_MCP_DIAGNOSTICS_DIRECTORY") }; break;
+            case "ReadProjectTree": result = JsonValue.Create("生产线 / PLC_测试 / 程序块"); break;
+            case "Disconnect":
+                result = new JsonObject { ["Stage"]="disconnected", ["SessionState"]="terminal", ["Strategy"]="non-owning-attachment-only", ["WorkerAcknowledged"]=true, ["Detached"]=attached.HasValue, ["ProcessId"]=attached, ["SavedProject"]=false, ["ClosedProject"]=false, ["LaunchMode"]="never" };
+                if (attached.HasValue) epoch++;
+                attached = null;
+                break;
+            default: result = fault == "delay" && values["fixtureReply"] != null ? values["fixtureReply"] : values; break;
+        }
+        return ChannelResponse.Success(result?.ToJsonString() ?? "null");
+    });
+    try { server.Run(); }
+    catch (ChannelFaultException error) { Console.Error.WriteLine(error.Message); return 1; }
+    finally { Record(new { stage = "exit", pid = Environment.ProcessId }); }
+    return 0;
+
 });
-try { server.Run(); }
-catch (ChannelFaultException error) { Console.Error.WriteLine(error.Message); return 1; }
-finally { Record(new { stage = "exit", pid = Environment.ProcessId }); }
-return 0;
 
 internal sealed class FaultOutput(Stream stream, string fault) : Stream
 {

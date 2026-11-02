@@ -94,7 +94,7 @@ internal static class PlcWorkerFixtures
             if (fault == null && environmentFault == null) result += "\n" + diagnostics;
             if (fault == "background-tia-exit" && !diagnostics.Contains("terminating=False", StringComparison.Ordinal))
                 throw new ReleaseException("Missing CLR non-terminating background exception evidence: " + diagnostics);
-            if (fault == null && process.ExitCode != 0) throw new ReleaseException("PlcWorker smoke exit " + process.ExitCode + ": " + diagnostics);
+            if (process.ExitCode == 86 || fault == null && process.ExitCode != 0) throw new ReleaseException("PlcWorker smoke " + TiaMcp.Engine.Tests.Shared.FixtureExit.Describe(process.ExitCode, diagnostics));
         }
         catch (Exception cleanup) { failure = failure == null ? cleanup : new AggregateException(failure, cleanup); }
         if (failure != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
