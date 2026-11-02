@@ -42,7 +42,7 @@ public partial class MainWindow
             CallDetailContent.DataContext = Features;
         Features.DrawerRequested += OnFeatureDrawer;
         Features.Feedback += OnFeatureFeedback;
-        Features.SetVisibility(_page == "Calls", _page == "Audit", _drawer == "Approvals", _drawer == "CallDetail");
+        Features.SetVisibility(_page == "Calls", _page == "Audit", _page == "Approvals", _drawer == "CallDetail");
         if (ControlSurface != null) { HookControlFeatures(); QueueControlSnapshot(); }
     }
 

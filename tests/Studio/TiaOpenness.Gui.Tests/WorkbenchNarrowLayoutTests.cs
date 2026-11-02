@@ -25,7 +25,7 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class WorkbenchNarrowLayoutTests(WpfContext wpf)
 {
-    private static readonly string[] Pages = ["Mcp", "Engineering", "VersionControl", "Calls", "Audit", "Environment", "Log"];
+    private static readonly string[] Pages = ["Approvals", "Mcp", "Engineering", "VersionControl", "Calls", "Audit", "Environment", "Log", "Settings"];
     // The screenshot set the maintainer reviews: MCP & clients, Project, Environment and AI calls.
     private static readonly string[] CapturedPages = ["Mcp", "Engineering", "Environment", "Calls"];
 
@@ -43,22 +43,22 @@ public sealed class WorkbenchNarrowLayoutTests(WpfContext wpf)
                 try
                 {
                     var host = WorkbenchRenderTests.CreateHost(window);
-                    var sider = (FrameworkElement)window.FindName("SiderMenu");
+                    var sider = (FrameworkElement)window.FindName("Sider");
                     void Selected(string page)
                     {
                         Settle(host, 1200, 780);
                         var selected = Assert.Single(Descendants<RadioButton>(sider),
                             item => Shown(item, sider) && item.IsChecked == true);
-                        Assert.Equal("Rail" + (page == "Blocks" ? "Engineering" : page), selected.Name);
+                        Assert.Equal(page == "Settings" ? "SettingsButton" : "Rail" + page, selected.Name);
                     }
-                    foreach (string page in new[] { "Mcp", "Engineering", "Blocks", "Calls", "Audit", "Environment", "Log" })
+                    foreach (string page in new[] { "Approvals", "Mcp", "Engineering", "Calls", "Audit", "Environment", "Log", "Settings" })
                     {
                         window.Navigate("VersionControl"); Selected("VersionControl");
                         window.Navigate(page); Selected(page);
 
                         UnifiedDesktopTests.ClickControl((RadioButton)window.FindName("RailVersionControl"));
                         Selected("VersionControl");
-                        UnifiedDesktopTests.ClickControl((RadioButton)window.FindName("Rail" + page));
+                        UnifiedDesktopTests.ClickControl((RadioButton)window.FindName(page == "Settings" ? "SettingsButton" : "Rail" + page));
                         Selected(page);
 
                         var shortcut = window.InputBindings.OfType<KeyBinding>().Single(binding => Equals(binding.CommandParameter, page));
@@ -69,10 +69,10 @@ public sealed class WorkbenchNarrowLayoutTests(WpfContext wpf)
 
                         window.Navigate("VersionControl");
                         window.OpenSettings();
-                        var drawer = (FrameworkElement)window.FindName("DrawerPanel");
-                        UnifiedDesktopTests.ClickControl(Descendants<Button>(drawer)
-                            .Single(button => AutomationProperties.GetName(button) == Loc.Current["Access.CloseDrawer"]));
-                        Selected("VersionControl");
+                        Selected("Settings");
+                        Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("SettingsContent")).Visibility);
+                        window.Navigate("Approvals"); Selected("Approvals");
+                        Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("ApprovalsContent")).Visibility);
                         window.Navigate(page); Selected(page);
                     }
                 }
@@ -280,6 +280,17 @@ public sealed class WorkbenchNarrowLayoutTests(WpfContext wpf)
                         AssertHeadsKeepTheirTitle(root, host, context);
                         AssertNothingClipped(root, host, context);
                         if (page == "Mcp") AssertConfigurationCards(window, height, context);
+                        if (page == "Settings")
+                        {
+                            var settings = (Views.SettingsView)window.FindName("SettingsContent");
+                            foreach (string section in new[] { "Service", "AI", "Appearance" })
+                            {
+                                settings.ShowSection(section); Settle(host, width, height);
+                                AssertHeadsKeepTheirTitle(root, host, context + " " + section);
+                                AssertNothingClipped(root, host, context + " " + section);
+                            }
+                        }
+
                         string errors = Unexpected(trace.Text, page, height);
                         Assert.True(string.IsNullOrWhiteSpace(errors), context + ": " + errors);
                         if (output != null && CapturedPages.Contains(page))
@@ -313,6 +324,8 @@ public sealed class WorkbenchNarrowLayoutTests(WpfContext wpf)
     private static FrameworkElement PageRoot(MainWindow window, string page) => page switch
     {
         "Mcp" => window.Configuration!,
+        "Settings" => (FrameworkElement)window.FindName("SettingsContent"),
+        "Approvals" => (FrameworkElement)window.FindName("ApprovalsContent"),
         "Engineering" => (FrameworkElement)window.FindName("EngineeringPage"),
         "VersionControl" => (FrameworkElement)window.FindName("VersionControlContent"),
         "Log" => (FrameworkElement)window.FindName("LogContent"),

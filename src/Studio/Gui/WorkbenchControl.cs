@@ -32,6 +32,7 @@ public partial class MainWindow
     private string? _controlProjectPath;
     private WorkbenchControlRequest? _lastControl;
     private DateTimeOffset _lastControlUtc;
+    internal Func<DateTimeOffset> ControlNow { get; set; } = () => DateTimeOffset.UtcNow;
     private INotifyPropertyChanged? _controlFeatures, _controlJournal;
     private string? _controlDetailRequestId;
 
@@ -183,7 +184,7 @@ public partial class MainWindow
         if (request.Operation is WorkbenchControlOperation.ReadState or WorkbenchControlOperation.ReadSelection)
             return ControlResponse.Done(request, ControlSurface.Snapshot.Read(request.Arguments));
         if (!App.Settings.WorkbenchControlEnabled) return ControlResponse.Refuse(request, "workbench-control-disabled");
-        if (!IsEnabled || _drawer is "Settings" or "Approvals" || ConfirmOverlay.Visibility == Visibility.Visible
+        if (!IsEnabled || _page is "Settings" or "Approvals" || _drawer != null || ConfirmOverlay.Visibility == Visibility.Visible
             || OwnedWindows.OfType<Window>().Any(window => window.IsVisible))
             return ControlResponse.Refuse(request, "workbench-modal-open");
         if (ControlGuard.HumanActive) return ControlResponse.Refuse(request, "workbench-user-active");
@@ -192,6 +193,8 @@ public partial class MainWindow
         switch (request.Arguments)
         {
             case WorkbenchDisplayPageArguments page:
+                if (!Enum.IsDefined(page.Page))
+                    return ControlResponse.Refuse(request, "workbench-operation", WorkbenchControlError.InvalidArgument);
                 if (page.Page == WorkbenchPage.VersionControl && !_model.VersionControlPageVisible)
                     return ControlResponse.Refuse(request, "vci-api-unavailable", WorkbenchControlError.UnsupportedCapability);
                 if (page.Page is WorkbenchPage.Blocks or WorkbenchPage.VersionControl && !HasProject)
@@ -245,11 +248,10 @@ public partial class MainWindow
         }
         if (response.Status == WorkbenchControlStatus.Done)
         {
-            ControlGuard.UiChanged(); _lastControl = request; _lastControlUtc = DateTimeOffset.UtcNow;
+            ControlGuard.UiChanged(); _lastControl = request; _lastControlUtc = ControlNow();
             _controlHintTimer.Start(); UpdateControlHint();
-            Controls.AccessibleStatus.Announce(ControlStatus);
-            if (Keyboard.FocusedElement is not UIElement { IsVisible: true }
-                && DrawerOverlay.Visibility != Visibility.Visible && !OperationsContent.OptionsOpen) CurrentPageTitle.Focus();
+            if (ControlStatus.Visibility == Visibility.Visible) Controls.AccessibleStatus.Announce(ControlStatus);
+            if (DrawerOverlay.Visibility != Visibility.Visible && !OperationsContent.OptionsOpen) CurrentPageTitle.Focus();
             ControlSurface.Publish(CaptureControlSnapshot());
         }
         return response;
@@ -367,7 +369,7 @@ public partial class MainWindow
     }
     private void UpdateControlPrefill()
     {
-        ControlPrefillHint.Visibility = _prefills.Latest != null ? Visibility.Visible : Visibility.Collapsed;
+        UpdateSafetyBanner();
         ControlPrefillHint.ToolTip = _prefills.Latest is { } pending
             ? pending.Form + " · " + string.Join(", ", PrefillRegistry.Targets.Single(target => target.Form == pending.Form).Fields) : null;
         BlocksContent.SetControlPrefillMarker(_prefills.Contains(WorkbenchPrefillForm.BlockFilter), _prefills.Contains(WorkbenchPrefillForm.BlockSelection));
@@ -410,13 +412,30 @@ public partial class MainWindow
     }
     private void OnControlHintTick(object? sender, EventArgs e) => UpdateControlHint();
     private void OnControlLanguageChanged(object? sender, EventArgs e) { UpdateControlHint(); UpdateControlPrefill(); UpdateControlDetail(); }
-    private void UpdateControlHint()
+    private void UpdateControlHint() => UpdateSafetyBanner();
+    private void UpdateSafetyBanner()
     {
-        var text = _controlUnavailable ? Loc.Current["Control.Unavailable"] : _lastControl == null ? ""
-            : Loc.Current.T("Control.Activity", ControlTool(_lastControl.Operation), _lastControl.Origin.ClientName,
-                Math.Max(0, (int)(DateTimeOffset.UtcNow - _lastControlUtc).TotalSeconds));
-        // The age changes each second; only the operation itself needs a live announcement.
-        ControlStatus.Text = text;
+        bool approvalOff = !Approvals.Enabled;
+        bool unavailable = !approvalOff && _controlUnavailable;
+        bool prefill = !approvalOff && !unavailable && _prefills.Latest != null;
+        int age = Math.Max(0, (int)(ControlNow() - _lastControlUtc).TotalSeconds);
+        bool activity = !approvalOff && !unavailable && !prefill && _lastControl != null && age < 10;
+        var approvalVisibility = approvalOff ? Visibility.Visible : Visibility.Collapsed;
+        var prefillVisibility = prefill ? Visibility.Visible : Visibility.Collapsed;
+        bool announceApprovalOff = ApprovalOffPill.Visibility != approvalVisibility && approvalOff;
+        bool announcePrefill = ControlPrefillHint.Visibility != prefillVisibility && prefill;
+        bool announceUnavailable = unavailable && (ControlStatus.Visibility != Visibility.Visible || ControlStatus.Text != Loc.Current["Control.Unavailable"]);
+        SafetyBanner.Tag = approvalOff || unavailable ? "Warning" : "Information";
+        SafetyBanner.Visibility = approvalOff || unavailable || prefill || activity ? Visibility.Visible : Visibility.Collapsed;
+        ApprovalOffPill.Visibility = approvalVisibility;
+        ControlPrefillHint.Visibility = prefillVisibility;
+        ControlStatus.Text = _controlUnavailable ? Loc.Current["Control.Unavailable"] : _lastControl != null && age < 10
+            ? Loc.Current.T("Control.Activity", ControlTool(_lastControl.Operation), _lastControl.Origin.ClientName, age) : "";
+        ControlStatus.Visibility = unavailable || activity ? Visibility.Visible : Visibility.Collapsed;
+        if (announceApprovalOff) Controls.AccessibleStatus.Announce(ApprovalOffText);
+        if (announcePrefill) Controls.AccessibleStatus.Announce(ControlPrefillText);
+        if (announceUnavailable) Controls.AccessibleStatus.Announce(ControlStatus);
+        if (_lastControl != null && age >= 10) _controlHintTimer.Stop();
     }
     private static string ControlTool(WorkbenchControlOperation operation) => operation switch
     {

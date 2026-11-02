@@ -98,7 +98,7 @@ public partial class MainWindow : Window
             && e.Key is System.Windows.Input.Key.O or System.Windows.Input.Key.S or System.Windows.Input.Key.B
                 or System.Windows.Input.Key.D1 or System.Windows.Input.Key.D2 or System.Windows.Input.Key.D3
                 or System.Windows.Input.Key.D4 or System.Windows.Input.Key.D5 or System.Windows.Input.Key.D6
-                or System.Windows.Input.Key.D7 or System.Windows.Input.Key.D8) e.Handled = true;
+                or System.Windows.Input.Key.D7 or System.Windows.Input.Key.D8 or System.Windows.Input.Key.OemComma) e.Handled = true;
         if (!modal && e.Key == System.Windows.Input.Key.Escape && Toast.Visibility == Visibility.Visible)
         { Toast.Visibility = Visibility.Collapsed; e.Handled = true; }
     }

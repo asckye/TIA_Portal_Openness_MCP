@@ -129,6 +129,56 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
         });
     }
 
+    [Theory]
+    [InlineData("Approvals", 0)]
+    [InlineData("Approvals", 7)]
+    [InlineData("Settings", 0)]
+    [InlineData("Settings", 7)]
+    [InlineData("CallDetail", 0)]
+    [InlineData("CallDetail", 7)]
+    public void Human_only_pages_and_all_drawers_refuse_AI_changes(string page, int operation)
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, client) = Window();
+            try
+            {
+                if (page == "CallDetail") window.Features.OpenCall(window.Features.Calls[0]);
+                else window.Navigate(page);
+                Assert.Equal("workbench-modal-open", window.ApplyControl(Request((WorkbenchControlOperation)operation)).Refusal?.Condition);
+                Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request(WorkbenchControlOperation.ReadState)).Status);
+                Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request(WorkbenchControlOperation.ReadSelection)).Status);
+                Assert.Empty(client.Calls);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void AI_page_whitelist_is_the_unchanged_protocol_enum_and_Blocks_aliases_Project()
+    {
+        Assert.Equal(new[] { "Overview", "Blocks", "VersionControl", "Calls", "Audit", "Environment", "Log" }, Enum.GetNames<WorkbenchPage>());
+        wpf.Run(() =>
+        {
+            var (window, _, client) = Window();
+            try
+            {
+                foreach (var page in Enum.GetValues<WorkbenchPage>())
+                {
+                    Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request(arguments: new WorkbenchDisplayPageArguments { Page = page })).Status);
+                    Assert.Same(window.FindName("CurrentPageTitle"), Keyboard.FocusedElement);
+                }
+                Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request(arguments: new WorkbenchDisplayPageArguments { Page = WorkbenchPage.Blocks })).Status);
+                Assert.True(((RadioButton)window.FindName("RailEngineering")).IsChecked);
+                Assert.Null(window.FindName("RailBlocks")); Assert.Null(window.FindName("RailOverview"));
+                Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("EngineeringPage")).Visibility);
+                Assert.Equal("workbench-operation", window.ApplyControl(Request(arguments: new WorkbenchDisplayPageArguments { Page = (WorkbenchPage)999 })).Refusal?.Condition);
+                Assert.Empty(client.Calls);
+            }
+            finally { window.Close(); }
+        });
+    }
+
     [Fact]
     public void Modal_owner_window_refuses_control()
     {
@@ -137,6 +187,61 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
             var (window, _, _) = Window(); var modal = new System.Windows.Window { Owner = window, Width = 200, Height = 100 };
             try { modal.Show(); Assert.Equal("workbench-modal-open", window.ApplyControl(Request()).Refusal?.Condition); }
             finally { modal.Close(); window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Safety_banner_uses_one_priority_message_without_hiding_pending_approvals()
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = Window();
+            var now = TestNow;
+            window.ControlNow = () => now;
+            var announcements = new System.Collections.Generic.List<FrameworkElement>();
+            void Announced(FrameworkElement element) => announcements.Add(element);
+            Controls.AccessibleStatus.Announced += Announced;
+            try
+            {
+                var status = (TextBlock)window.FindName("ControlStatus");
+                var prefill = (FrameworkElement)window.FindName("ControlPrefillHint");
+                var off = (FrameworkElement)window.FindName("ApprovalOffPill");
+                Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request(WorkbenchControlOperation.PrefillForm)).Status);
+                Assert.Equal(Visibility.Visible, prefill.Visibility);
+                Assert.Equal(Visibility.Collapsed, status.Visibility);
+                Assert.Contains(window.FindName("ControlPrefillText"), announcements);
+                ((ApprovalServiceStub)window.Approvals).Receive(FeaturePageFixtures.Request(CallId) with { Deadline = DateTimeOffset.UtcNow.AddSeconds(120) });
+                WpfContext.Drain();
+                var badge = (Button)window.FindName("PendingBadge");
+                Assert.Equal(Visibility.Visible, badge.Visibility);
+                Assert.Equal(Loc.Current.T("Shell.Pending", 1), System.Windows.Automation.AutomationProperties.GetName(badge));
+                window.Approvals.Enabled = false; WpfContext.Drain();
+                Assert.Equal(Visibility.Visible, off.Visibility);
+                Assert.Equal(Visibility.Collapsed, prefill.Visibility);
+                Assert.Equal(Visibility.Collapsed, status.Visibility);
+                Assert.Contains(window.FindName("ApprovalOffText"), announcements);
+                typeof(MainWindow).GetField("_controlUnavailable", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(window, true);
+                window.Approvals.Enabled = true; WpfContext.Drain();
+                Assert.Equal(Visibility.Visible, status.Visibility);
+                Assert.Equal(Loc.Current["Control.Unavailable"], status.Text);
+                Assert.Equal(Visibility.Collapsed, prefill.Visibility);
+                typeof(MainWindow).GetField("_controlUnavailable", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(window, false);
+                Refresh();
+                Assert.Equal(Visibility.Visible, prefill.Visibility);
+                UnifiedDesktopTests.ClickControl(DesktopCapture.Descendants<Button>(prefill).Single(button => Equals(button.Content, Loc.Current["Control.Confirm"])));
+                Assert.Equal(Visibility.Collapsed, prefill.Visibility);
+                Assert.Equal(Visibility.Visible, status.Visibility);
+                Assert.Contains("PrefillWorkbenchForm", status.Text);
+                Assert.Contains("fixture", status.Text);
+                now = now.AddSeconds(9); Refresh();
+                Assert.Equal(Visibility.Visible, status.Visibility);
+                now = now.AddSeconds(1); Refresh();
+                Assert.Equal(Visibility.Collapsed, status.Visibility);
+                Assert.Equal(Visibility.Collapsed, ((FrameworkElement)window.FindName("SafetyBanner")).Visibility);
+                Assert.Equal(Visibility.Visible, badge.Visibility);
+                void Refresh() => typeof(MainWindow).GetMethod("UpdateControlHint", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(window, null);
+            }
+            finally { Controls.AccessibleStatus.Announced -= Announced; window.Close(); }
         });
     }
 
@@ -165,7 +270,7 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
     }
 
     [Fact]
-    public void Locating_does_not_change_checks_or_keyboard_focus()
+    public void Locating_keeps_checks_and_places_focus_on_the_page_title()
     {
         wpf.Run(() =>
         {
@@ -173,9 +278,9 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
             try
             {
                 model.Engineering.Blocks[0].Selected = true;
-                var focus = Keyboard.FocusedElement;
+                ((RadioButton)window.FindName("RailEngineering")).Focus();
                 Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request(WorkbenchControlOperation.DisplayBlock)).Status);
-                Assert.True(model.Engineering.Blocks[0].Selected); Assert.Same(focus, Keyboard.FocusedElement);
+                Assert.True(model.Engineering.Blocks[0].Selected); Assert.Same(window.FindName("CurrentPageTitle"), Keyboard.FocusedElement);
                 Assert.True(window.ControlGuard.ClickGuardActive);
             }
             finally { window.Close(); }

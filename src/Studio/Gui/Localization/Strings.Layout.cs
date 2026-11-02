@@ -2,12 +2,25 @@ namespace TiaOpenness.Gui.Localization;
 
 internal static partial class Strings
 {
-    // The Ant layout (P8-80): side menu groups and trigger, header actions and the 项目 selection bar.
+    // Workbench shell navigation and page sections.
     internal static (string Key, string En, string Zh)[] LayoutCatalogue =>
     [
-        ("Shell.GroupEngineering", "Engineering", "工程"),
+        ("Shell.Approvals", "Approvals", "审批"),
+        ("Shell.Logs", "Logs & diagnostics", "日志与诊断"),
+        ("Shell.NoProject", "Open a project first.", "请先打开项目。"),
+        ("Shell.OfflineUnavailable", "Unavailable in offline demo mode.", "离线演示模式下不可用。"),
+        ("Shell.VersionControlUnavailable", "Version control is unavailable for this TIA Portal release.", "此 TIA Portal 版本不支持版本控制。"),
+        ("Shell.PageUnavailable", "Page unavailable", "页面不可用"),
+        ("Shell.ProjectStatus", "TIA Portal {0} · {1}", "TIA Portal {0} · 项目：{1}"),
+        ("Shell.ApprovalOnStatus", "Write approval on", "写操作审批已开"),
+        ("Shell.ApprovalOffStatus", "Write approval off", "写操作审批已关"),
+        ("Settings.Sections", "Settings sections", "设置分区"),
+        ("Settings.HumanOnly", "Human only", "仅限人工操作"),
+        ("Settings.Folders", "Folders", "目录"),
+        ("Settings.DataDirectory", "Data folder", "数据目录"),
+        ("Shell.GroupEngineering", "Project", "项目"),
         ("Shell.GroupAi", "AI collaboration", "AI 协作"),
-        ("Shell.GroupOperations", "Operations", "运维"),
+        ("Shell.GroupOperations", "Operations", "运行"),
         ("Shell.GroupConnection", "Connection & settings", "连接与设置"),
         ("Shell.CollapseMenu", "Collapse menu", "收起菜单"),
         ("Shell.ExpandMenu", "Expand menu", "展开菜单"),

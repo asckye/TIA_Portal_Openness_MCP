@@ -241,17 +241,19 @@ namespace TiaMcpConfigurator
                 Assert(installedItem.Text == ExpectedInstalled(), "English settings name the installed engine version from the delivery manifest");
                 void AssertShellLabels(bool chinese)
                 {
+                    Assert(window.FindName("ExportDiagnostics") == null, "diagnostics export has moved out of the toolbar");
+                    Assert(((System.Windows.Controls.ListBox)settings.FindName("SectionList")).Items.Count == 3, "settings is a page with three sections");
                     string Content(string name) => ((System.Windows.Controls.ContentControl)(window.FindName(name) ?? settings.FindName(name))).Content.ToString();
                     var labels = new (Func<string> Read, string En, string Zh)[] {
                         (() => Content("RailEngineering"), "Project", "项目"),
                         (() => Content("RailMcp"), "MCP & clients", "MCP 与客户端"),
-                        (() => Content("SettingsButton"), "Engine settings", "引擎设置"),
+                        (() => Content("SettingsButton"), "Settings", "设置"),
                         (() => Content("CheckUpdate"), "Check updates", "检查更新"),
-                        (() => Content("RunUpdate"), "Update engine…", "更新引擎…"),
+                        (() => Content("RunUpdate"), "Update service…", "更新服务…"),
                         (() => Content("OpenReleases"), "Open", "打开"),
-                        (() => Content("ExportDiagnostics"), "Export diagnostics", "导出诊断包"),
+                        (() => Content("OpenData"), "Open", "打开"),
                         (() => Content("OpenProjectPage"), "Open", "打开"),
-                        (() => Content("RailLog"), "Log", "日志")
+                        (() => Content("RailLog"), "Logs & diagnostics", "日志与诊断")
                     };
                     Assert(((System.Windows.Controls.Button)form.FindName("SaveBoth")).Content.ToString() == Loc.Current["Config.SaveBoth"],
                         (chinese ? "Chinese" : "English") + " save both label");
@@ -324,7 +326,7 @@ namespace TiaMcpConfigurator
                 double pillRight = pill.TransformToAncestor(shell).Transform(new System.Windows.Point(pill.ActualWidth, 0)).X;
                 Assert(pillRight < shell.ActualWidth, "status pill stays inside the panel");
                 var caption = (System.Windows.FrameworkElement)window.FindName("CaptionBar");
-                Assert(caption.ActualHeight == 56 && caption.TransformToAncestor(shell).Transform(new System.Windows.Point(0, 0)).Y == 1, "title bar occupies 56 pixels inside the frame");
+                Assert(caption.ActualHeight == 64 && caption.TransformToAncestor(shell).Transform(new System.Windows.Point(0, 0)).Y == 1, "title bar occupies 64 pixels inside the frame");
                 using (var png = File.OpenRead(Path.Combine(output, "remote.png")))
                     Assert(System.Windows.Media.Imaging.BitmapFrame.Create(png, System.Windows.Media.Imaging.BitmapCreateOptions.None, System.Windows.Media.Imaging.BitmapCacheOption.OnLoad).PixelWidth
                         >= shell.ActualWidth + shell.Margin.Left + shell.Margin.Right - 1, "capture covers the full window, margins included");

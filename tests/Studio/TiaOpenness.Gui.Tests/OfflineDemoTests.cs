@@ -24,10 +24,13 @@ public sealed class OfflineDemoTests(WpfContext wpf)
             window.Show(); WpfContext.Complete(model.ApplyStartupAsync([flag, "--project", @"D:\NeverOpened.ap21"]));
             Assert.False(model.HasMcpPanel); Assert.False(model.Session.IsConnected);
             Assert.False(model.VersionControlPageVisible);
-            Assert.Equal(Visibility.Collapsed, ((RadioButton)window.FindName("RailMcp")).Visibility);
-            Assert.Equal(Visibility.Collapsed, ((RadioButton)window.FindName("RailEngineering")).Visibility);
+            Assert.Equal(Visibility.Visible, ((RadioButton)window.FindName("RailMcp")).Visibility);
+            Assert.False(((RadioButton)window.FindName("RailMcp")).IsEnabled);
+            Assert.Equal(Visibility.Visible, ((RadioButton)window.FindName("RailEngineering")).Visibility);
+            Assert.False(((RadioButton)window.FindName("RailEngineering")).IsEnabled);
             window.ShowConfiguration(); Assert.Null(window.Configuration);
-            Assert.Equal(Visibility.Collapsed, ((Button)window.FindName("SettingsButton")).Visibility);
+            Assert.Equal(Visibility.Visible, ((RadioButton)window.FindName("SettingsButton")).Visibility);
+            Assert.False(((RadioButton)window.FindName("SettingsButton")).IsEnabled);
             window.OpenSettings(); Assert.Equal(Visibility.Collapsed, ((FrameworkElement)window.FindName("DrawerOverlay")).Visibility);
             foreach (string page in new[] { "Calls", "Audit", "Environment", "Log" }) window.Navigate(page);
             window.Navigate("Engineering");

@@ -70,15 +70,23 @@ public sealed partial class UnifiedDesktopTests
                 Assert.Null(window.FindName("MenuBar"));
                 Assert.Null(window.FindName("SidebarCard"));
                 Assert.Null(window.FindName("RailCard"));
-                Assert.Equal(38, ((RadioButton)window.FindName("RailOverview")).Height);
-                var pages = new[] { "Mcp", "Engineering", "Blocks", "VersionControl", "Calls", "Audit", "Environment", "Log" };
+                Assert.Equal(36, ((RadioButton)window.FindName("RailEngineering")).Height);
+                var pages = new[] { "Approvals", "Engineering", "VersionControl", "Calls", "Audit", "Environment", "Log", "Mcp" };
                 for (int i = 0; i < pages.Length; i++)
                 {
                     var shortcut = window.InputBindings.OfType<KeyBinding>().Single(x => x.Key == Key.D1 + i);
                     Assert.Equal(pages[i], shortcut.CommandParameter);
                     Assert.Same(WorkbenchCommands.Navigate, shortcut.Command);
                     var rail = (RadioButton)window.FindName("Rail" + pages[i]);
-                    if (pages[i] is "Blocks" or "VersionControl") { Assert.False(rail.IsEnabled); continue; }
+                    if (pages[i] == "VersionControl")
+                    {
+                        Assert.False(rail.IsEnabled);
+                        Assert.True(WorkbenchCommands.Navigate.CanExecute(pages[i], window));
+                        WorkbenchCommands.Navigate.Execute(pages[i], window);
+                        Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("Toast")).Visibility);
+                        Assert.Equal(rail.ToolTip, ((TextBlock)window.FindName("ToastMessage")).Text);
+                        continue;
+                    }
                     WorkbenchCommands.Navigate.Execute(pages[i], window);
                     Assert.True(rail.IsChecked);
                     Assert.True(WorkbenchCommands.Open.CanExecute(null, window));
@@ -86,9 +94,12 @@ public sealed partial class UnifiedDesktopTests
                 WorkbenchCommands.Open.Execute(null, window);
                 Assert.Equal(Visibility.Visible, ((FrameworkElement)ProjectPageTestSupport.Find(window, "OptionsOverlay")).Visibility);
                 window.OpenSettings();
-                Assert.Equal(400, ((Border)window.FindName("DrawerPanel")).Width);
+                Assert.Equal(Visibility.Collapsed, ((Grid)window.FindName("DrawerOverlay")).Visibility);
                 var settings = (TiaOpenness.Gui.Views.SettingsView)window.FindName("SettingsContent");
-                foreach (string name in new[] { "CheckUpdate", "RunUpdate", "OpenReleases", "OpenProjectPage", "OpenConfig", "OpenLog" })
+                Assert.Equal(Visibility.Visible, settings.Visibility);
+                Assert.Equal(3, ((ListBox)settings.FindName("SectionList")).Items.Count);
+                Assert.Equal(320, ((Grid)settings.Content).ColumnDefinitions[0].Width.Value);
+                foreach (string name in new[] { "CheckUpdate", "RunUpdate", "OpenReleases", "OpenProjectPage", "OpenConfig", "OpenData" })
                     Assert.IsType<Button>(settings.FindName(name));
                 ClickControl((RadioButton)settings.FindName("Chinese"));
                 Assert.Equal(AppLanguage.Chinese, Loc.Current.Language);
@@ -99,6 +110,16 @@ public sealed partial class UnifiedDesktopTests
                 ClickControl((RadioButton)settings.FindName("Light"));
                 Assert.Equal(AppTheme.Light, ThemeManager.Current.Theme);
                 Assert.Same(window.Configuration, ((ContentControl)window.FindName("ConfigurationHost")).Content);
+                var settingsShortcut = window.InputBindings.OfType<KeyBinding>().Single(binding => binding.Key == Key.OemComma);
+                Assert.Equal(ModifierKeys.Control, settingsShortcut.Modifiers);
+                Assert.Equal("Settings", settingsShortcut.CommandParameter);
+                ClickControl((Button)window.FindName("McpStatusButton")); AssertPage(window, true);
+                ClickControl((Button)window.FindName("SessionStatusButton")); AssertPage(window, false);
+                ClickControl((Button)window.FindName("ApprovalStatusButton"));
+                Assert.True(((RadioButton)window.FindName("SettingsButton")).IsChecked);
+                Assert.Equal(Visibility.Visible, ((FrameworkElement)settings.FindName("AiPanel")).Visibility);
+                Assert.Same(settings.FindName("AiSection"), ((ListBox)settings.FindName("SectionList")).SelectedItem);
+
             }
             finally { window.Close(); ThemeManager.Current.Theme = previous; }
             Assert.True(string.IsNullOrWhiteSpace(trace.Text), trace.Text);
@@ -106,7 +127,7 @@ public sealed partial class UnifiedDesktopTests
     }
 
     [Fact]
-    public void Approval_off_requires_confirmation_and_diagnostics_button_starts_export()
+    public void Approval_off_requires_confirmation_and_diagnostics_export_remains_available()
     {
         wpf.Run(() =>
         {
@@ -116,6 +137,7 @@ public sealed partial class UnifiedDesktopTests
             {
                 window.OpenSettings();
                 var settings = (TiaOpenness.Gui.Views.SettingsView)window.FindName("SettingsContent");
+                settings.ShowSection("AI");
                 Assert.Equal(0, window.Approvals.PendingCount);
                 Assert.Equal(120, window.Approvals.TimeoutSeconds);
                 ClickControl((RadioButton)settings.FindName("ApprovalOff"));
@@ -131,7 +153,8 @@ public sealed partial class UnifiedDesktopTests
                 Assert.Equal(300, window.Approvals.TimeoutSeconds);
                 ClickApprovalControl((RadioButton)settings.FindName("ApprovalOn"), window.Approvals, nameof(window.Approvals.Enabled));
                 Assert.True(window.Approvals.Enabled);
-                ClickControl((Button)window.FindName("ExportDiagnostics"));
+                Assert.Null(window.FindName("ExportDiagnostics"));
+                window.Features.Export();
                 Assert.Equal(DiagnosticState.Running, diagnostics.Progress.State);
                 Assert.True(window.Features.DiagnosticRunning);
             }

@@ -191,10 +191,25 @@ public sealed class FeaturePageTests(WpfContext wpf)
                 approvals.Receive(FeaturePageFixtures.Request("normal")); WpfContext.Drain();
                 Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("PendingBadge")).Visibility);
                 Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("Toast")).Visibility); Assert.Equal(0, notification.Count);
+                UnifiedDesktopTests.ClickControl((Button)window.FindName("ToastAction"));
+                AssertApprovalsPage();
+                window.Navigate("Calls");
+                UnifiedDesktopTests.ClickControl((Button)window.FindName("PendingBadge"));
+                AssertApprovalsPage();
+                window.Navigate("Calls");
+                Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("ApprovalsButton")).Visibility);
+                UnifiedDesktopTests.ClickControl((Button)window.FindName("ApprovalsButton"));
+                AssertApprovalsPage();
                 window.WindowState = WindowState.Minimized;
                 approvals.Receive(FeaturePageFixtures.Request("minimized")); Assert.Equal(1, notification.Count);
                 notification.Activate!(); Assert.Equal(WindowState.Normal, window.WindowState);
                 Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("ApprovalsContent")).Visibility);
+                void AssertApprovalsPage()
+                {
+                    Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("ApprovalsContent")).Visibility);
+                    Assert.Equal(Visibility.Collapsed, ((FrameworkElement)window.FindName("DrawerOverlay")).Visibility);
+                    Assert.True(((RadioButton)window.FindName("RailApprovals")).IsChecked);
+                }
             }
             finally { window.Close(); }
             approvals.Receive(FeaturePageFixtures.Request("after-close")); Assert.Equal(1, notification.Count);

@@ -23,6 +23,7 @@ public partial class SettingsView : UserControl
     public SettingsView()
     {
         InitializeComponent();
+        ShowSection("Appearance");
         VersionText.Text = Loc.Current.T("Common.WorkbenchVersion", MainViewModel.AppVersion).TrimStart('v');
     }
 
@@ -40,7 +41,24 @@ public partial class SettingsView : UserControl
     internal void LoadPaths()
     {
         ConfigPath.Text = DataLocations.Current.ConfigDirectory;
-        LogPath.Text = DataLocations.Current.LogsDirectory;
+        DataPath.Text = DataLocations.Current.WorkbenchDataDirectory;
+    }
+
+    internal void ShowSection(string section)
+    {
+        SectionList.SelectedItem = section switch { "Service" => ServiceSection, "AI" => AiSection, _ => AppearanceSection };
+    }
+
+    private void OnSectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (SectionList.SelectedItem is not ListBoxItem item) return;
+        string section = (string)item.Tag;
+        AppearancePanel.Visibility = section == "Appearance" ? Visibility.Visible : Visibility.Collapsed;
+        ServicePanel.Visibility = section == "Service" ? Visibility.Visible : Visibility.Collapsed;
+        AiPanel.Visibility = section == "AI" ? Visibility.Visible : Visibility.Collapsed;
+        SectionTitle.SetBinding(TextBlock.TextProperty, TrExtension.CreateBinding(section switch
+            { "Service" => "Settings.Engine", "AI" => "Control.Section", _ => "Settings.Appearance" }));
+        DetailScroll.ScrollToTop();
     }
 
     internal static string ReadPackageName(string bundleRoot)
@@ -133,7 +151,7 @@ public partial class SettingsView : UserControl
 
     private void OnOpenPath(object sender, RoutedEventArgs e)
     {
-        string path = sender == OpenConfig ? ConfigPath.Text : LogPath.Text;
+        string path = sender == OpenConfig ? ConfigPath.Text : DataPath.Text;
         try
         {
             if (!Directory.Exists(path)) throw new DirectoryNotFoundException(Loc.Current.T("Settings.PathMissing", path));

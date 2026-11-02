@@ -14,11 +14,20 @@ namespace TiaOpenness.Gui.Controls;
 public static class ResponsiveLayout
 {
     /// <summary>
-    /// Ant's xl breakpoint: a 1200 px window less the 2 px frame, the 216 px side menu and the 2 x 24 px content
-    /// padding leaves 934 px for the page. Narrower pages stack the context column below the content, so the
-    /// content column never gets less width than it has in the approved 1200 px window.
+    /// Standalone pages retain their original content breakpoint. The shell supplies its window width so
+    /// its 232/64 side menu and a manual collapse cannot change the 1200 epx context breakpoint.
     /// </summary>
     public const double StackBelowWidth = 934;
+
+    public static readonly DependencyProperty WindowWidthProperty = DependencyProperty.RegisterAttached(
+        "WindowWidth", typeof(double), typeof(ResponsiveLayout),
+        new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.Inherits, WindowWidthChanged));
+    public static double GetWindowWidth(DependencyObject element) => (double)element.GetValue(WindowWidthProperty);
+    public static void SetWindowWidth(DependencyObject element, double value) => element.SetValue(WindowWidthProperty, value);
+    private static void WindowWidthChanged(DependencyObject element, DependencyPropertyChangedEventArgs e)
+    {
+        if (element.GetValue(StateProperty) is State state) state.Queue();
+    }
 
     public static readonly DependencyProperty EnabledProperty = DependencyProperty.RegisterAttached(
         "Enabled", typeof(bool), typeof(ResponsiveLayout), new PropertyMetadata(false, Changed));
@@ -86,12 +95,14 @@ public static class ResponsiveLayout
         internal void Apply()
         {
             // Half a pixel absorbs layout rounding, so a 1200 px window stays side by side at any DPI.
-            bool narrow = grid.ActualWidth > 0 && grid.ActualWidth < StackBelowWidth - 0.5;
+            double windowWidth = GetWindowWidth(grid);
+            bool narrow = windowWidth > 0 ? windowWidth < 1200 - 0.5
+                : grid.ActualWidth > 0 && grid.ActualWidth < StackBelowWidth - 0.5;
             EnsureContextToggle();
             if (narrow && _collapsed) CollapseContext(false);
             if (_toggle != null) _toggle.Visibility = !narrow && grid.ActualWidth < 1232
                 && (_collapsed || _side?.Visibility == Visibility.Visible) ? Visibility.Visible : Visibility.Collapsed;
-            if (GetScrollWholePage(grid) && grid.ActualWidth <= StackBelowWidth + 0.5)
+            if (GetScrollWholePage(grid) && (windowWidth > 0 ? windowWidth <= 1200 + 0.5 : grid.ActualWidth <= StackBelowWidth + 0.5))
             {
                 grid.SetValue(IsPageScrollingPropertyKey, true);
                 ScrollPage(narrow);

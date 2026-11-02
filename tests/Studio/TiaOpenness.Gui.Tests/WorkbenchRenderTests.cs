@@ -49,10 +49,6 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                 try
                 {
                     window.ShowConfiguration(false);
-                    window.Navigate(state.Page);
-                    if (state.Drawer == "Settings") window.OpenSettings();
-                    if (state.Drawer == "Approvals")
-                        UnifiedDesktopTests.ClickControl((Button)window.FindName("PendingBadge"));
                     var host = CreateHost(window);
                     Assert.Equal(!state.Local, ((RadioButton)window.Configuration!.FindName("RemoteNav")).IsChecked);
                     Assert.Equal(state.Local, ((RadioButton)window.Configuration.FindName("LocalNav")).IsChecked);
@@ -77,11 +73,9 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         Assert.Equal(TextAlignment.Right, value.TextAlignment);
                     }
                     Assert.Equal(window.Features.Calls.Count == 0 ? Visibility.Collapsed : Visibility.Visible, ((Border)window.FindName("CallsCountBadge")).Visibility);
-                    if (state.Page == "Mcp") Assert.Equal(614, ((FrameworkElement)window.Configuration.FindName("ClientPane")).ActualWidth);
+                    if (state.Page == "Mcp") Assert.Equal(598, ((FrameworkElement)window.Configuration.FindName("ClientPane")).ActualWidth);
                     Assert.Equal(state.Pending ? Visibility.Visible : Visibility.Collapsed, ((FrameworkElement)window.FindName("PendingBadge")).Visibility);
                     Assert.Equal(state.Pending ? Visibility.Visible : Visibility.Collapsed, ((FrameworkElement)window.FindName("ApprovalOffPill")).Visibility);
-                    if (state.Drawer == "Approvals") Assert.Equal(480, ((Border)window.FindName("DrawerPanel")).Width);
-                    if (state.Page == "Engineering") Assert.False(((MainViewModel)window.DataContext).Session.IsConnected);
                     if (state.Name == "mcp-zh-light")
                     {
                         var metrics = new List<string>();
@@ -89,7 +83,12 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         {
                             var element = (FrameworkElement)window.FindName(name);
                             var point = element.TransformToAncestor(host).Transform(new Point());
-                            Assert.Equal(5, point.X);
+                            Assert.Equal(9, point.X);
+                            Assert.Equal(36, element.ActualHeight);
+                            var item = (RadioButton)element;
+                            var icon = (Border)item.Template.FindName("GlyphBox", item);
+                            Assert.Equal(18, icon.ActualWidth);
+                            Assert.Equal(18, icon.ActualHeight);
                             metrics.Add($"{name}: {point.X},{point.Y} {element.ActualWidth}x{element.ActualHeight}");
                         }
                         foreach (string name in new[] { "MinimizeWindowButton", "MaximizeWindowButton", "CloseWindowButton" })
@@ -134,6 +133,13 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         }
                         File.WriteAllLines(Path.Combine(output, "layout.txt"), metrics);
                     }
+                    window.Navigate(state.Page); WpfContext.Drain(); host.UpdateLayout(); WpfContext.Drain(); host.UpdateLayout();
+                    if (state.Page == "Approvals")
+                    {
+                        Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("ApprovalsContent")).Visibility);
+                        Assert.Equal(Visibility.Collapsed, ((FrameworkElement)window.FindName("DrawerOverlay")).Visibility);
+                    }
+                    if (state.Page == "Engineering") Assert.False(((MainViewModel)window.DataContext).Session.IsConnected);
                     SaveRender(host, Path.Combine(output, state.Name + ".png"));
                 }
                 finally { window.Close(); ThemeManager.Current.Theme = previous; }
@@ -160,7 +166,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         window.Navigate("Calls");
                         var host = CreateHost(window, 960, 700);
                         var sider = (Border)window.FindName("Sider");
-                        Assert.Equal(56, sider.ActualWidth);
+                        Assert.Equal(64, sider.ActualWidth);
                         Assert.Equal(Visibility.Collapsed, ((FrameworkElement)window.FindName("BrandTitle")).Visibility);
                         var toggle = (Button)window.FindName("SiderToggle");
                         Assert.Equal(Loc.Current["Shell.ExpandMenu"], System.Windows.Automation.AutomationProperties.GetName(toggle));
@@ -178,9 +184,20 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         SaveRender(host, Path.Combine(output, "sider-collapsed-" + suffix + ".png"), 960, 700);
                         // The trigger expands it below the breakpoint, and the label returns.
                         UnifiedDesktopTests.ClickControl(toggle); host.UpdateLayout(); WpfContext.Drain(); host.UpdateLayout();
-                        Assert.Equal(216, sider.ActualWidth);
+                        Assert.Equal(232, sider.ActualWidth);
                         Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("BrandTitle")).Visibility);
                         SaveRender(host, Path.Combine(output, "sider-expanded-" + suffix + ".png"), 960, 700);
+                        Resize(1200); Assert.Equal(232, sider.ActualWidth);
+                        UnifiedDesktopTests.ClickControl(toggle); host.UpdateLayout();
+                        Assert.Equal(64, sider.ActualWidth);
+                        Resize(1199); Assert.Equal(64, sider.ActualWidth);
+                        Resize(1200); Assert.Equal(232, sider.ActualWidth);
+                        void Resize(double width)
+                        {
+                            host.Width = width; host.Measure(new Size(width, 700)); host.Arrange(new Rect(0, 0, width, 700));
+                            host.UpdateLayout(); WpfContext.Drain(); host.UpdateLayout();
+                        }
+
                     }
                     finally { window.Close(); ThemeManager.Current.Theme = previous; }
                     Assert.True(string.IsNullOrWhiteSpace(trace.Text), trace.Text);
@@ -245,10 +262,101 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                 yield return new("mcp-" + suffix, language, theme);
                 yield return new("mcp-local-" + suffix, language, theme, Local: true);
                 yield return new("mcp-running-" + suffix, language, theme, Running: true);
-                yield return new("settings-" + suffix, language, theme, Drawer: "Settings");
+                yield return new("settings-" + suffix, language, theme, Page: "Settings");
                 yield return new("approval-badges-" + suffix, language, theme, Pending: true);
-                yield return new("approvals-empty-" + suffix, language, theme, Drawer: "Approvals");
+                yield return new("approvals-empty-" + suffix, language, theme, Page: "Approvals");
             }
+    }
+
+    [Fact]
+    public void Shell_pages_status_lines_and_settings_render_at_all_handoff_sizes()
+    {
+        string? render = Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR");
+        string? output = string.IsNullOrWhiteSpace(render) ? null : Path.Combine(Path.GetFullPath(render), "shell");
+        if (output != null) Directory.CreateDirectory(output);
+        foreach (var language in new[] { AppLanguage.English, AppLanguage.Chinese })
+        foreach (var size in new[] { (Width: 1024, Height: 640), (Width: 1200, Height: 780), (Width: 1366, Height: 860) })
+        foreach (string theme in new[] { "Light", "Dark", "HighContrast" })
+            wpf.RunWithLanguage(language, () =>
+            {
+                using var trace = new BindingPathTests.BindingTrace();
+                var previousTheme = ThemeManager.Current.Theme;
+                var previousContrast = ThemeManager.Current.HighContrastOverride;
+                ThemeManager.Current.HighContrastOverride = theme == "HighContrast";
+                ThemeManager.Current.Theme = theme == "Dark" ? AppTheme.Dark : AppTheme.Light;
+                var window = new MainWindow(ProjectPageTestSupport.Model(release: "21"), false,
+                    FeaturePageFixtures.Approvals(), new FeaturePageFixtures.Diagnostics());
+                try
+                {
+                    window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit(),
+                        new FeaturePageFixtures.Environment(), new FeaturePageFixtures.Notification(), () => FeaturePageFixtures.Now);
+                    var host = CreateHost(window, size.Width, size.Height);
+                    var sider = (Border)window.FindName("Sider");
+                    Assert.Equal(size.Width < 1200 ? 64 : 232, sider.ActualWidth);
+                    foreach (string name in new[] { "RailApprovals", "RailEngineering", "RailVersionControl", "RailCalls", "RailAudit", "RailEnvironment", "RailLog", "RailMcp", "SettingsButton" })
+                    {
+                        var item = (RadioButton)window.FindName(name);
+                        Assert.Equal(36, item.ActualHeight);
+                        var surface = (Border)item.Template.FindName("Surface", item);
+                        if (item.IsChecked != true) Assert.Equal(0, ((SolidColorBrush)surface.Background).Color.A);
+                        else
+                        {
+                            var bar = (Border)item.Template.FindName("Bar", item);
+                            Assert.Equal(3, bar.Width); Assert.Equal(Visibility.Visible, bar.Visibility);
+                            Assert.Equal(FontWeights.SemiBold, item.FontWeight);
+                            if (theme == "HighContrast") Assert.Equal(SystemColors.HighlightTextColor, ((SolidColorBrush)bar.Background).Color);
+                        }
+                        Assert.Equal(System.Windows.Automation.AutomationProperties.GetName(item), item.ToolTip);
+                        var label = (ContentPresenter)item.Template.FindName("Label", item);
+                        if (size.Width < 1200) Assert.Equal(Visibility.Collapsed, label.Visibility);
+                        else
+                        {
+                            foreach (var text in DesktopCapture.Descendants<TextBlock>(label))
+                            {
+                                Assert.Equal(TextWrapping.NoWrap, text.TextWrapping);
+                                var probe = new TextBlock { Text = text.Text, FontFamily = text.FontFamily, FontSize = text.FontSize, FontWeight = text.FontWeight };
+                                probe.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                                Assert.True(probe.DesiredSize.Width <= text.ActualWidth + 1, $"{language}: '{text.Text}' is truncated");
+                            }
+                        }
+                    }
+                    foreach (string name in new[] { "McpStatusButton", "SessionStatusButton", "ApprovalStatusButton" })
+                    {
+                        var button = (Button)window.FindName(name);
+                        string fullText = System.Windows.Automation.AutomationProperties.GetName(button);
+                        Assert.False(string.IsNullOrWhiteSpace(fullText));
+                        Assert.Equal(fullText, button.ToolTip);
+                        var text = DesktopCapture.Descendants<TextBlock>(button).Single();
+                        Assert.Equal(TextWrapping.NoWrap, text.TextWrapping);
+                        Assert.Equal(TextTrimming.CharacterEllipsis, text.TextTrimming);
+                        Assert.Equal(size.Width < 1200 ? Visibility.Collapsed : Visibility.Visible, text.Visibility);
+                        var dot = DesktopCapture.Descendants<System.Windows.Shapes.Ellipse>(button).Single();
+                        Assert.Equal(fullText, System.Windows.Automation.AutomationProperties.GetName(dot));
+                        Assert.Equal(fullText, dot.ToolTip);
+                        var origin = button.TransformToAncestor(host).Transform(new Point());
+                        Assert.InRange(origin.Y + button.ActualHeight, 0, size.Height);
+                    }
+                    foreach (string page in new[] { "Engineering", "Approvals", "Settings" })
+                    {
+                        window.Navigate(page); Settle();
+                        var title = (TextBlock)window.FindName("CurrentPageTitle");
+                        Assert.Equal(28, title.FontSize); Assert.Equal(FontWeights.Bold, title.FontWeight);
+                        Assert.Equal(title.Text + " – " + Loc.Current["App.Title"], window.Title);
+                        Save(page);
+                    }
+                    var settings = (Views.SettingsView)window.FindName("SettingsContent");
+                    foreach (string section in new[] { "Service", "AI" }) { settings.ShowSection(section); Settle(); Save("Settings-" + section); }
+                    UnifiedDesktopTests.ClickControl((RadioButton)settings.FindName("ApprovalOff")); Settle(); Save("ApprovalOffSheet");
+                    UnifiedDesktopTests.ClickControl((Button)window.FindName("CancelApprovalOff"));
+                    Assert.True(string.IsNullOrWhiteSpace(trace.Text), trace.Text);
+                    void Settle() { WpfContext.Drain(); host.UpdateLayout(); WpfContext.Drain(); host.UpdateLayout(); }
+                    void Save(string page)
+                    {
+                        if (output != null) SaveRender(host, Path.Combine(output, $"{page}-{language}-{theme}-{size.Width}x{size.Height}.png"), size.Width, size.Height);
+                    }
+                }
+                finally { window.Close(); ThemeManager.Current.HighContrastOverride = previousContrast; ThemeManager.Current.Theme = previousTheme; }
+            });
     }
 
     internal static Border CreateHost(MainWindow window) => CreateHost(window, 1200, 780);
@@ -292,7 +400,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
     }
 
     private sealed record RenderState(string Name, AppLanguage Language, AppTheme Theme,
-        bool Local = false, bool Running = false, string? Drawer = null, bool Pending = false, string Page = "Mcp");
+        bool Local = false, bool Running = false, bool Pending = false, string Page = "Mcp");
 
     private static List<ClientProfile> Clients()
     {

@@ -85,12 +85,11 @@ public partial class MainWindow
     {
         var state = Configuration?.ServiceStateKey ?? "Config.Idle";
         var version = TiaMcp.Versioning.TiaVersionCatalog.Get(_model.SelectedReleaseKey).DisplayName;
-        var endpoint = Configuration?.ServiceEndpoint ?? Loc.Current["Config.NoAddress"];
         var status = state == "Config.Local" ? "stdio" : Loc.Current[state];
         McpStatusText.Text = Loc.Current.T("Shell.McpStatus", status);
-        SessionStatus.Text = Loc.Current.T("Shell.SessionStatus", version, endpoint, HasProject ? " · " + _model.Session.ProjectName : "");
-        McpStatusText.ToolTip = Loc.Current.T("Shell.Status", status, version, endpoint);
-        SessionStatus.ToolTip = SessionStatus.Text + " · " + (Approvals.Enabled ? Loc.Current["Approval.EnabledStatus"] : Loc.Current["Shell.ApprovalOff"]);
+        SessionStatus.Text = Loc.Current.T("Shell.ProjectStatus", version, HasProject ? _model.Session.ProjectName : Loc.Current["Blocks.Empty.Title"]);
+        McpStatusText.ToolTip = McpStatusText.Text;
+        SessionStatus.ToolTip = SessionStatus.Text;
         McpStatusDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, state == "Config.Running" ? "Primer.accent" : "Primer.textMuted");
     }
     private void OnDesktopModelChanged(object? sender, PropertyChangedEventArgs e)
