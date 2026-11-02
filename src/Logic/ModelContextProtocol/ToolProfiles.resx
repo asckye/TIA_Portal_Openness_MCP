@@ -28021,7 +28021,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "folderPath": "",
-          "dir": "C:\\Examples\\exports"
+          "dir": "C:\\Examples\\exports",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -37062,7 +37063,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "folderPath": "",
-          "dir": "C:\\Examples\\exports"
+          "dir": "C:\\Examples\\exports",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
