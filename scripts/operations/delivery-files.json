@@ -44,8 +44,7 @@
       "runtime/tools/TiaMcp.PluginLauncher.exe",
       "runtime/tools/TiaMcp.PluginLauncher.dll",
       "runtime/tools/TiaMcp.PluginLauncher.deps.json",
-      "runtime/tools/TiaMcp.PluginLauncher.runtimeconfig.json",
-      "docs/licenses/MapleMono-CN-OFL.txt"
+      "runtime/tools/TiaMcp.PluginLauncher.runtimeconfig.json"
     ],
     "prefixes": [
       "runtime/",
@@ -221,13 +220,15 @@
       "runtime/studio/Fonts/JetBrainsMono-OFL.txt",
       "runtime/studio/Fonts/NotoSansSC-Regular.otf",
       "runtime/studio/Fonts/NotoSansSC-Bold.otf",
-      "runtime/studio/Fonts/NotoSansSC-OFL.txt"
+      "runtime/studio/Fonts/NotoSansSC-OFL.txt",
+      "docs/licenses/MapleMono-CN-OFL.txt"
     ],
     "prefixes": [
       "runtime/verification/",
       "scripts/operations/vci-watch/",
       "runtime/v20/plc-worker/",
-      "runtime/v21/plc-worker/"
+      "runtime/v21/plc-worker/",
+      "runtime/studio/Fonts/"
     ]
   },
   "legacyCleanup": {
@@ -377,9 +378,6 @@
     "runtime/v21/release-key.txt",
     "runtime/v21/worker/TiaMcp.Adapter.21.dll",
     "runtime/studio/TiaOpenness.exe",
-    "runtime/studio/Fonts/MapleMono-CN-Regular.ttf",
-    "runtime/studio/Fonts/MapleMono-CN-SemiBold.ttf",
-    "runtime/studio/Fonts/LICENSE.txt",
     "runtime/studio/bridge/TiaOpenness.Bridge.exe",
     "runtime/tools/TiaMcp.PluginLauncher.exe",
     "runtime/tools/TiaMcp.PluginLauncher.dll",

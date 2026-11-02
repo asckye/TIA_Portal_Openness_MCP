@@ -230,20 +230,33 @@ public sealed class StaticPolicyTests
     [InlineData("third_party/SiemensOpcUaModelled/LICENSE.md", "SiemensOpcUaModelled-LICENSE.md")]
     [InlineData("third_party/eido-import-planner/LICENSE", "Eido-LICENSE.txt")]
     [InlineData("third_party/tia-openness-studio/LICENSE", "TiaOpennessStudio-LICENSE.txt")]
-    [InlineData("src/Studio/Gui/Fonts/LICENSE.txt", "MapleMono-CN-OFL.txt")]
     [InlineData("reference/siemens-code-snippets/LICENSE.md", "SiemensCodeSnippets-LICENSE.md")]
     public void ShippedLicensesMatchSources(string source, string copy) => Assert.Equal(Source(source), Source("docs/licenses/" + copy));
     [Fact]
-    public void PrimerAndRetainedFontsAreRequiredByAllConsumers()
+    public void RetiredWorkbenchFontLicenceIsAbsentAndExcluded()
     {
-        string[] names = ["Themes/Primer.xaml", "Themes/Palette.Light.xaml", "Themes/Palette.Dark.xaml", "Controls/WorkbenchLogView.cs", "Controls/WorkbenchMessageBox.cs", "Controls/ResultPresentation.cs", "Controls/LogTailView.cs", "Fonts/MapleMono-CN-Regular.ttf", "Fonts/MapleMono-CN-SemiBold.ttf", "Fonts/LICENSE.txt"];
+        const string licence = "docs/licenses/MapleMono-CN-OFL.txt";
+        Assert.False(File.Exists(Path.Combine(Root, licence)));
+        var rules = DeliveryRules.Load(Root);
+        Assert.False(rules.Delivered(licence));
+        Assert.DoesNotContain(licence, DeliveryRules.Strings(rules.Data["include"]!["files"]));
+        Assert.Contains(licence, DeliveryRules.Strings(rules.Data["exclude"]!["files"]));
+    }
+
+    [Fact]
+    public void SharedThemeDictionariesAreRequiredWithoutPrivateFonts()
+    {
+        string[] names = ["Themes/Primer.xaml", "Themes/Shell.xaml", "Themes/Approvals.xaml", "Themes/Pages.xaml", "Themes/Palette.HighContrast.xaml", "Themes/Palette.Light.xaml", "Themes/Palette.Dark.xaml", "Controls/WorkbenchLogView.cs", "Controls/WorkbenchMessageBox.cs", "Controls/ResultPresentation.cs", "Controls/LogTailView.cs"];
         var policy = SourceRoots.Load(Root);
         foreach (var name in names)
         {
             Assert.True(File.Exists(Path.Combine(Root, "src/Studio/Gui", name)));
             foreach (var consumer in new[] { "bundle", "package", "repository" }) Assert.Contains("src/Studio/Gui/" + name, policy.RequiredPaths(consumer));
         }
-        Assert.Equal(new[] { "MapleMono-CN-Regular.ttf", "MapleMono-CN-SemiBold.ttf" }, Directory.EnumerateFiles(Path.Combine(Root, "src/Studio/Gui/Fonts")).Where(p => Path.GetExtension(p) is ".ttf" or ".otf").Select(Path.GetFileName).Order(StringComparer.Ordinal));
+        Assert.False(Directory.Exists(Path.Combine(Root, "src/Studio/Gui/Fonts"))
+            && Directory.EnumerateFiles(Path.Combine(Root, "src/Studio/Gui/Fonts")).Any());
+        Assert.DoesNotContain(policy.RequiredFiles, row => row.Path.StartsWith("src/Studio/Gui/Fonts/", StringComparison.Ordinal));
+        Assert.False(File.Exists(Path.Combine(Root, "docs/licenses/MapleMono-CN-OFL.txt")));
         Assert.False(File.Exists(Path.Combine(Root, "docs/licenses/Manrope-OFL.txt")));
     }
     [Theory]

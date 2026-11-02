@@ -56,7 +56,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
             brushes.Select(b => (string)b.Attribute(x + "Key")!).Order());
         Assert.All(brushes, b => Assert.StartsWith("{DynamicResource {x:Static SystemColors.", (string)b.Attribute("Color")!));
         Assert.DoesNotContain("#", source);
-        var templates = SourceScan.Markup.Single(f => f.Name.EndsWith(".Themes.Primer.xaml", StringComparison.Ordinal)).Text;
+        var templates = string.Join(Environment.NewLine, SourceScan.Vocabulary.Select(file => file.Text));
         Assert.DoesNotMatch(@"#[\da-fA-F]{3,8}\b|\b(?:Colors|Brushes)\.(?!Transparent\b)\w+|\bColor\.From\w+", templates);
         wpf.Run(() =>
         {
@@ -125,8 +125,8 @@ public sealed class AccessibilityTests(WpfContext wpf)
                     double first = ThemeSurfaceTests.Luminance(fg), second = ThemeSurfaceTests.Luminance(bg);
                     Assert.True((Math.Max(first, second) + .05) / (Math.Min(first, second) + .05) >= 4.5, style);
                 }
-                var source = SourceScan.Markup.Single(f => f.Name.EndsWith(".Themes.Primer.xaml", StringComparison.Ordinal)).Text;
-                var pressed = XDocument.Parse(source).Descendants().Where(e => e.Name.LocalName == "Trigger"
+                var pressed = SourceScan.Vocabulary.SelectMany(file => XDocument.Parse(file.Text).Descendants())
+                    .Where(e => e.Name.LocalName == "Trigger"
                     && (string?)e.Attribute("Property") == "IsPressed");
                 Assert.DoesNotContain(pressed.SelectMany(e => e.Elements()), e => (string?)e.Attribute("Property") == "Opacity");
             }

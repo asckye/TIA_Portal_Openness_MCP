@@ -33,18 +33,23 @@ public sealed class ReleaseRecordParityTests
 
     [Fact]
     [Trait("Category", "ReleaseParity")]
-    public void RuntimeInventoryRecordsTheWorkbenchFontPayload()
+    public void RuntimeInventoryExcludesPrivateWorkbenchFonts()
     {
-        // delivery-files.json requires runtime/studio/Fonts/*.ttf, and packaging takes runtime files only from the inventory.
+        // Stale private font files must not re-enter a package through its runtime inventory.
         using var tree = new StaticTree();
         tree.Write("runtime/studio/Fonts/MapleMono-CN-Regular.ttf", "font");
+        tree.Write("runtime/studio/Fonts/MapleMono-CN-SemiBold.ttf", "font");
+        tree.Write("runtime/studio/Fonts/other.otf", "font");
         tree.Write("runtime/studio/Fonts/LICENSE.txt", "licence");
         tree.Write("runtime/studio/Fonts/notes.md", "not a payload");
         foreach (var prepared in new[] { true, false })
         {
             var files = ReleaseRecords.GetRuntimeFiles(tree.Root, prepared).Select(row => row.Path).ToArray();
-            Assert.Contains("runtime/studio/Fonts/MapleMono-CN-Regular.ttf", files);
-            Assert.Contains("runtime/studio/Fonts/LICENSE.txt", files);
+            Assert.DoesNotContain("runtime/studio/Fonts/MapleMono-CN-Regular.ttf", files);
+            Assert.DoesNotContain("runtime/studio/Fonts/MapleMono-CN-SemiBold.ttf", files);
+            Assert.DoesNotContain("runtime/studio/Fonts/other.otf", files);
+            Assert.DoesNotContain("runtime/studio/Fonts/LICENSE.txt", files);
+            Assert.Empty(files.Where(path => path.StartsWith("runtime/studio/Fonts/", StringComparison.Ordinal)));
             Assert.DoesNotContain("runtime/studio/Fonts/notes.md", files);
         }
     }

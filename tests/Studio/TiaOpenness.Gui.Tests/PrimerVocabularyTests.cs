@@ -31,12 +31,14 @@ public sealed class PrimerVocabularyTests
     }
 
     [Fact]
-    public void Only_Primer_and_the_active_palette_define_the_vocabulary()
+    public void Shared_dictionaries_and_the_active_palette_define_the_vocabulary()
     {
         var app = SourceScan.Markup.Single(f => f.Name.EndsWith(".App.xaml", StringComparison.Ordinal)).Text;
         Assert.Contains("Themes/Primer.xaml", app);
-        Assert.DoesNotMatch(@"Themes/(?:Glass|Controls\.|FeaturePages|Shell|Typography|Window)", app);
-        var vocabulary = SourceScan.Markup.Single(f => f.Name.EndsWith(".Themes.Primer.xaml", StringComparison.Ordinal)).Text;
+        Assert.DoesNotMatch(@"Themes/(?:Glass|Controls\.|FeaturePages|Typography|Window)", app);
+        foreach (string name in new[] { "Shell", "Approvals", "Pages" }) Assert.Contains("Themes/" + name + ".xaml", app);
+        Assert.Equal(4, SourceScan.Vocabulary.Count());
+        var vocabulary = string.Join(Environment.NewLine, SourceScan.Vocabulary.Select(file => file.Text));
         foreach (string key in new[] { "Container", "HeaderStrip", "FooterStrip", "SectionLabel", "ListRow", "TableItem", "TableButton", "ClientRow", "Secondary", "Primary", "Run", "OutlinedAccent", "SegmentGroup", "Segment", "Chip", "CountBadge", "WarningBadge", "Input", "InputLabel", "MonoInput", "CodeBlock", "Note", "Checkbox", "Drawer", "Toast", "Dialog" })
             Assert.Contains("x:Key=\"Primer." + key + "\"", vocabulary);
         Assert.DoesNotMatch(@"(?:DropShadow|Blur)Effect|(?:Linear|Radial)GradientBrush|Manrope", vocabulary);

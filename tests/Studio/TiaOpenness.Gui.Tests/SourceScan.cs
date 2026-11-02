@@ -25,6 +25,10 @@ internal static class SourceScan
     public static IEnumerable<SourceFile> Code
         => Files.Value.Where(f => f.Name.EndsWith(".cs", StringComparison.OrdinalIgnoreCase));
 
+    /// <summary>The shared vocabulary and the three independently owned style dictionaries.</summary>
+    public static IEnumerable<SourceFile> Vocabulary => Markup.Where(file => new[] { "Primer", "Shell", "Approvals", "Pages" }
+        .Any(name => file.Name.EndsWith(".Themes." + name + ".xaml", StringComparison.Ordinal)));
+
     private static IReadOnlyList<SourceFile> Load()
     {
         var assembly = Assembly.GetExecutingAssembly();

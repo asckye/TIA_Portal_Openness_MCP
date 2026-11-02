@@ -20,20 +20,20 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class WorkbenchFontStyleTests(WpfContext wpf)
 {
     [Fact]
-    public void Bundled_font_tokens_use_the_private_folder_and_explicit_fallbacks()
+    public void Font_tokens_use_only_the_system_chains()
     {
         wpf.Run(() =>
         {
             var resources = new ResourceDictionary();
-            Assert.True(WorkbenchFonts.Apply(resources, AppContext.BaseDirectory));
+            Assert.False(WorkbenchFonts.Apply(resources, AppContext.BaseDirectory));
             foreach (var (key, fallback) in new[] { ("Ui.Font", WorkbenchFonts.UiFallback), ("Ui.FontMono", WorkbenchFonts.MonoFallback) })
             {
                 var family = Assert.IsType<FontFamily>(resources[key]);
-                Assert.Equal("./#Maple Mono CN, " + fallback, family.Source);
-                Assert.Equal(Path.Combine(AppContext.BaseDirectory, "Fonts") + Path.DirectorySeparatorChar, family.BaseUri.LocalPath);
+                Assert.Equal(fallback, family.Source);
+                Assert.Null(family.BaseUri);
                 Assert.Equal(family.Source, ((FontFamily)Application.Current.FindResource(key)).Source);
             }
-            Assert.True(File.Exists(Path.Combine(AppContext.BaseDirectory, "Fonts", "LICENSE.txt")));
+            Assert.DoesNotContain("Maple", ((FontFamily)resources["Ui.Font"]).Source);
         });
     }
 
@@ -60,16 +60,16 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
     [Theory]
     [InlineData(400, "Regular")]
     [InlineData(600, "SemiBold")]
-    public void Maple_faces_resolve_to_the_unmodified_private_files_without_synthetic_weight(int weight, string face)
+    public void System_faces_resolve_to_installed_files_without_synthetic_weight(int weight, string face)
     {
         wpf.Run(() =>
         {
-            var folder = new Uri(Path.Combine(AppContext.BaseDirectory, "Fonts") + Path.DirectorySeparatorChar);
-            var family = new FontFamily(folder, "./#Maple Mono CN");
+            var family = Fonts.SystemFontFamilies.First(font => font.Source is "Segoe UI Variable Text" or "Segoe UI");
             var typeface = new Typeface(family, FontStyles.Normal, FontWeight.FromOpenTypeWeight(weight), FontStretches.Normal);
             Assert.True(typeface.TryGetGlyphTypeface(out var glyph));
-            Assert.Equal(Path.Combine(folder.LocalPath, "MapleMono-CN-" + face + ".ttf"), glyph.FontUri.LocalPath, ignoreCase: true);
-            Assert.Contains((int)'中', glyph.CharacterToGlyphMap.Keys);
+            Assert.True(File.Exists(glyph.FontUri.LocalPath), face);
+            Assert.Equal(weight, glyph.Weight.ToOpenTypeWeight());
+            Assert.True(glyph.FamilyNames.Values.Any(name => name is "Segoe UI Variable Text" or "Segoe UI"));
             Assert.Contains((int)'A', glyph.CharacterToGlyphMap.Keys);
             Assert.False(typeface.IsBoldSimulated);
             Assert.False(typeface.IsObliqueSimulated);

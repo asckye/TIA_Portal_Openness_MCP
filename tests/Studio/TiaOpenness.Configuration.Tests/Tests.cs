@@ -326,14 +326,13 @@ namespace TiaMcpConfigurator
                     "minimum window size keeps the three-column client layout");
                 NarrowWindowChecks(window, form, output);
                 window.Width = 1200; window.Height = 780;
-                var font = new System.Windows.Media.FontFamily(new Uri(Path.Combine(AppContext.BaseDirectory, "Fonts") + Path.DirectorySeparatorChar), "./#Maple Mono CN");
-                System.Windows.Media.GlyphTypeface glyph;
-                Assert(new System.Windows.Media.Typeface(font, System.Windows.FontStyles.Normal, System.Windows.FontWeights.Normal, System.Windows.FontStretches.Normal).TryGetGlyphTypeface(out glyph)
-                    && glyph.FontUri.ToString().ToLowerInvariant().Contains("maplemono-cn-regular.ttf"), "Maple Mono CN Regular is loaded from the bundled Fonts directory");
+                Assert(window.FontFamily.Source == "Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI"
+                    && window.FontFamily.Source == ((System.Windows.Media.FontFamily)System.Windows.Application.Current.FindResource("Ui.Font")).Source,
+                    "configuration window uses the system Ui.Font chain");
                 ThemeManager.Current.Theme = AppTheme.Dark;
                 Assert(((System.Windows.Media.SolidColorBrush)((System.Windows.Controls.Grid)window.FindName("Root")).Background).Color.ToString() == "#FF000000", "dark palette switches live");
                 ThemeManager.Current.Theme = AppTheme.Light;
-                Assert(((System.Windows.Media.SolidColorBrush)((System.Windows.Controls.Grid)window.FindName("Root")).Background).Color.ToString() == "#FFF5F5F5", "light palette switches live");
+                Assert(((System.Windows.Media.SolidColorBrush)((System.Windows.Controls.Grid)window.FindName("Root")).Background).Color.ToString() == "#FFF2F2F7", "light palette switches live");
                 string preservedSecret = "language-switch-fixture";
                 password.Password = preservedSecret;
                 Loc.Current.Language = AppLanguage.Chinese;

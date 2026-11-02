@@ -12,23 +12,23 @@ public sealed class WorkbenchResourceTests(WpfContext wpf)
 {
     [Theory]
     [InlineData(400, "Regular")]
-    // Maple Mono CN ships Regular and SemiBold; WPF resolves medium (500) to the heavier real face, never a simulated one.
+    // The Chinese fallback resolves to installed real weights, including medium requests.
     [InlineData(500, "SemiBold")]
     [InlineData(600, "SemiBold")]
-    public void Chinese_faces_resolve_to_the_bundled_font(int weight, string face)
+    public void Chinese_faces_resolve_to_the_installed_system_fallback(int weight, string face)
     {
         wpf.Run(() =>
         {
-            var folder = new Uri(Path.Combine(AppContext.BaseDirectory, "Fonts") + Path.DirectorySeparatorChar);
-            var family = new FontFamily(folder, "./#Maple Mono CN");
+            var family = new FontFamily("Microsoft YaHei UI");
             var typeface = new Typeface(family, FontStyles.Normal, FontWeight.FromOpenTypeWeight(weight), FontStretches.Normal);
             Assert.True(typeface.TryGetGlyphTypeface(out var glyph));
-            Assert.EndsWith("maplemono-cn-" + face.ToLowerInvariant() + ".ttf", glyph.FontUri.ToString().ToLowerInvariant());
+            Assert.True(File.Exists(glyph.FontUri.LocalPath), face);
+            Assert.Contains("Microsoft YaHei UI", glyph.FamilyNames.Values);
             Assert.Contains((int)'中', glyph.CharacterToGlyphMap.Keys);
             Assert.False(typeface.IsBoldSimulated);
             string chain = ((FontFamily)Application.Current.FindResource("Ui.Font")).Source;
-            Assert.Equal("./#Maple Mono CN, Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI", chain);
-            Assert.True(File.Exists(Path.Combine(AppContext.BaseDirectory, "Fonts", "LICENSE.txt")));
+            Assert.Equal("Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI", chain);
+            Assert.False(typeface.IsObliqueSimulated);
         });
     }
 

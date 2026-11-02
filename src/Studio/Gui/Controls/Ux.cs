@@ -30,7 +30,7 @@ public static class Ux
 
     /// <summary>
     /// Per-instance corner rounding. The button template reads it with a TemplateBinding, which is
-    /// what lets one template serve the 6px buttons and the 4px small buttons without a second copy.
+    /// what lets one template serve the 8px buttons and the 6px small buttons without a second copy.
     /// </summary>
     public static readonly DependencyProperty CornerRadiusProperty =
         DependencyProperty.RegisterAttached(
@@ -41,7 +41,7 @@ public static class Ux
     public static void SetCornerRadius(DependencyObject d, CornerRadius value) => d.SetValue(CornerRadiusProperty, value);
 
     /// <summary>
-    /// The Ant button type the shared button template draws: an empty value is the default
+    /// The legacy variant the shared button template draws: an empty value is the default
     /// button, otherwise Primary, Outlined, Danger, DangerSolid, Dashed, Text, Link, Segment, Tag
     /// or Badge. It is separate from <c>Tag</c> because segments and filters carry data there.
     /// </summary>
@@ -52,6 +52,15 @@ public static class Ux
     public static string GetVariant(DependencyObject d) => (string)d.GetValue(VariantProperty);
 
     public static void SetVariant(DependencyObject d, string value) => d.SetValue(VariantProperty, value);
+
+    /// <summary>Inherited by labels and text actions drawn on a spotlight notification surface.</summary>
+    public static readonly DependencyProperty OnSpotlightProperty = DependencyProperty.RegisterAttached(
+        "OnSpotlight", typeof(bool), typeof(Ux),
+        new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.Inherits));
+
+    public static bool GetOnSpotlight(DependencyObject d) => (bool)d.GetValue(OnSpotlightProperty);
+
+    public static void SetOnSpotlight(DependencyObject d, bool value) => d.SetValue(OnSpotlightProperty, value);
 
     /// <summary>A glyph from Icons.xaml that a menu item or icon button draws beside or instead of its text.</summary>
     public static readonly DependencyProperty IconProperty =

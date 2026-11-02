@@ -85,6 +85,10 @@ public class ThemeTests(WpfContext wpf)
     {
         wpf.Run(() =>
         {
+            string[] vocabulary = ["Primer", "Shell", "Approvals", "Pages"];
+            Assert.Equal(vocabulary, Application.Current.Resources.MergedDictionaries
+                .Where(dictionary => vocabulary.Any(name => dictionary.Source?.OriginalString.EndsWith("/" + name + ".xaml", StringComparison.Ordinal) == true))
+                .Select(dictionary => System.IO.Path.GetFileNameWithoutExtension(dictionary.Source.OriginalString)));
             var seen = new Dictionary<string, string>(StringComparer.Ordinal);
             var clashes = new SortedSet<string>(StringComparer.Ordinal);
 

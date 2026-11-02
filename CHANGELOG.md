@@ -14,6 +14,7 @@
 - `FindTools` requires all capability words to match with a minimum relevance score; exact registered names rank first. Large direct/`CallTool` results include an executable `GetExportContent` continuation in their own result text.
 - `DecodePlcSimaticMl` uses an isolated CPython standard-library runtime included in delivery, with the original Python license. No user Python installation, pip download or ecosystem environment is required for decoding.
 - Block pages default to four items, preserve cursor paging through `CallTool`, and reject malformed worker pages. Single-word tool searches retain description matches; usage guidance preserves the generic no-replay warning. Export rendering retains completed content during cache eviction. Decoder delivery pins CPython 3.12.10 and its hashes, copies only traced dependencies, validates its receipt, and reports missing runtime prerequisites without installation paths.
+- 工作台共享主题改用 EplanMcp 设计系统的颜色、字号、圆角和系统字体；补齐高对比度轮廓与键盘焦点环，移除随包 Maple Mono CN 字体，并预留独立的外壳、审批和页面样式字典。
 
 ## [4.0.0-beta.3] - 2026-11-01
 

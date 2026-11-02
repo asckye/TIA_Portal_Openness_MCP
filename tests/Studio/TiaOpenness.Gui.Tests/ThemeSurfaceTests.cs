@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using TiaOpenness.Gui.Themes;
 using Xunit;
@@ -16,7 +17,7 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
     {
         var literal = new Regex(@"#[\da-fA-F]{3,8}\b|\b(?:Colors|Brushes)\.(?!Transparent\b)\w+|\bColor\.From\w+");
         // The warning-count colour stays exact; its brush is defined in the light palette.
-        const string countVariant = "<SolidColorBrush x:Key=\"Primer.countWarningBg\" Color=\"#FFFBE6\"/>";
+        const string countVariant = "<SolidColorBrush x:Key=\"Primer.countWarningBg\" Color=\"#FFF4E5\"/>";
         var lightPalette = SourceScan.Markup.Single(file => file.Name.EndsWith(".Themes.Palette.Light.xaml", StringComparison.Ordinal));
         Assert.Single(Regex.Matches(lightPalette.Text, Regex.Escape(countVariant)));
         var brushesOutsidePalettes = SourceScan.Markup
@@ -33,8 +34,8 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
     }
 
     [Theory]
-    [InlineData("Light", "#F5F5F5 #FFFFFF #FAFAFA #E6F4FF #F0F0F0 #0F050505 #FFFFFF #8C8C8C #FFFFFF #F5F5F5 #FFFFFF #E0000000 #A6000000 #A6000000 #8C8C8C #0958D9 #FFFFFF #0958D9 #874D00 #FFFBE6 #237804 #F6FFED #E6F4FF #91CAFF #0958D9 #F5F5F5 #E0000000 #237804 #CF1322 #FFFFFF #FFFFFF #FFFBE6 #1677FF #FFFFFF #E0000000 #E0000000 #1677FF #003EB3 #002C8C #003EB3 #BAE0FF #FFFFFF #D9D9D9 #D9363E #FFF2F0 #FFCCC7 #D9363E #CF1322 #A8071A #FFE58F #B7EB8F #0F000000 #0A000000 #40000000 #73000000 #D9000000 #FFFFFF #1F000000 #14000000 #0D000000")]
-    [InlineData("Dark", "#000000 #141414 #1D1D1D #111A2C #303030 #1FFDFDFD #141414 #737373 #141414 #262626 #1F1F1F #D9FFFFFF #A6FFFFFF #A6FFFFFF #737373 #3C89E8 #141414 #1668DC #D89614 #2B2111 #49AA19 #162312 #111A2C #15325B #3C89E8 #1F1F1F #D9FFFFFF #49AA19 #E86E6B #FFFFFF #141414 #2B2111 #3C89E8 #141414 #D9FFFFFF #D9FFFFFF #1668DC #1554AD #15417E #65A9F3 #112545 #FFFFFF #424242 #E86E6B #2C1618 #5B2526 #AD393A #7E2E2F #5B2526 #594214 #274916 #1FFFFFFF #14FFFFFF #40FFFFFF #73000000 #424242 #FFFFFF #1F000000 #14000000 #0D000000")]
+    [InlineData("Light", "#F2F2F7 #FFFFFF #F2F2F7 #E3E3E8 #D1D1D6 #D1D1D6 #F2F2F7 #86868B #E5E5EA #E3E3E8 #FFFFFF #1D1D1F #636366 #636366 #86868B #0066CC #FFFFFF #0071E3 #B25000 #FFF4E5 #1A7431 #E9F7EE #E8F1FC #0066CC #0066CC #F2F2F7 #1D1D1F #1A7431 #D70015 #FFFFFF #FFFFFF #FFF4E5 #0071E3 #FFFFFF #1D1D1F #1D1D1F #0071E3 #0063C7 #0055AB #0055AB #E3E3E8 #FFFFFF #D1D1D6 #D70015 #FDECEC #D70015 #D70015 #BD0012 #A30010 #994500 #16632A #E5E5EA #F2F2F7 #8E8E93 #40000000 #F01E1E1E #FFFFFF #1F000000 #38000000 Transparent")]
+    [InlineData("Dark", "#000000 #1C1C1E #2C2C2E #3A3A3C #38383A #38383A #2C2C2E #8E8E93 #3A3A3C #3A3A3C #1C1C1E #F5F5F7 #AEAEB2 #AEAEB2 #8E8E93 #409CFF #FFFFFF #0071E3 #FFB340 #3A2A12 #30D158 #12301B #0A2540 #409CFF #409CFF #2C2C2E #F5F5F7 #30D158 #FF6961 #FFFFFF #1E1E1E #3A2A12 #409CFF #1E1E1E #F5F5F7 #F5F5F7 #0071E3 #0063C7 #0055AB #4095F0 #3A3A3C #FFFFFF #38383A #FF6961 #3B1517 #FF6961 #D70015 #BD0012 #A30010 #994500 #16632A #3A3A3C #2C2C2E #8E8E93 #80000000 #F53A3A3C #FFFFFF #1FFFFFFF #99000000 Transparent")]
     public void Handoff_surface_text_and_semantic_tokens_are_preserved(string theme, string colors)
     {
         wpf.Run(() =>
@@ -42,7 +43,10 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
             var palette = new ResourceDictionary { Source = new Uri(ThemeManager.PackPrefix + "Palette." + theme + ".xaml") };
             string[] keys = ["bg", "card", "cardSoft", "cardSel", "cardBorder", "divider", "input", "inputBorder", "pill", "pillHover", "menuBg", "text", "textMuted", "textFaint", "checkBorder", "accent", "onAccent", "primaryBg", "warn", "warnBg", "ok", "okBg", "noteBg", "noteBorder", "noteAccent", "codeBg", "codeText", "diffGreen", "diffRed", "primaryText", "warningText", "countWarningBg", "focusOuter", "focusInner", "selectedText", "hoverText", "Ant.colorPrimary", "Ant.colorPrimaryHover", "Ant.colorPrimaryActive", "Ant.colorLinkHover", "Ant.controlItemBgActiveHover", "Ant.colorWhite", "Ant.colorBorder", "Ant.colorError", "Ant.colorErrorBg", "Ant.colorErrorBorder", "Ant.colorErrorSolid", "Ant.colorErrorSolidHover", "Ant.colorErrorSolidActive", "Ant.colorWarningBorder", "Ant.colorSuccessBorder", "Ant.colorFillSecondary", "Ant.colorBgContainerDisabled", "Ant.colorTextDisabled", "Ant.colorBgMask", "Ant.colorBgSpotlight", "Ant.colorTextLightSolid", "Ant.boxShadowKey", "Ant.boxShadowUmbra", "Ant.boxShadowAmbient"];
             string[] expected = colors.Split(' ');
-            Assert.Equal(keys.Length, palette.Count);
+            Assert.Equal(keys.Length + 3, palette.Count);
+            Assert.Equal(theme == "Light" ? "#FFFFFFFF" : "#FF1E1E1E", ((SolidColorBrush)palette["Primer.window"]).Color.ToString());
+            Assert.Equal(theme == "Light" ? "#FFEBEBED" : "#FF2A2A2C", ((SolidColorBrush)palette["Primer.sidebar"]).Color.ToString());
+            Assert.Equal(0, ((SolidColorBrush)palette["Primer.hcOutline"]).Color.A);
             for (int i = 0; i < keys.Length; i++)
                 Assert.Equal((Color)ColorConverter.ConvertFromString(expected[i]), ((SolidColorBrush)palette[keys[i].StartsWith("Ant.", StringComparison.Ordinal) ? keys[i] : "Primer." + keys[i]]).Color);
         });
@@ -77,6 +81,134 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
             Check("warn", "warnBg", 4.5);
             Check("text", "cardSel");
             Check("onAccent", "accent");
+        });
+    }
+
+    [Theory]
+    [InlineData("Light")]
+    [InlineData("Dark")]
+    [InlineData("HighContrast")]
+    public void Control_boundaries_and_focus_contrast_on_all_shared_grounds(string theme)
+    {
+        wpf.Run(() =>
+        {
+            var palette = new ResourceDictionary { Source = new Uri(ThemeManager.PackPrefix + "Palette." + theme + ".xaml") };
+            Color Token(string key) => ((SolidColorBrush)palette["Primer." + key]).Color;
+            foreach (string surface in new[] { "window", "bg", "sidebar", "card" })
+            foreach (string boundary in new[] { "inputBorder", "focusOuter" })
+            {
+                var background = Composite(Token(surface), Token("window"));
+                var foreground = Composite(Token(boundary), background);
+                double first = Luminance(foreground), second = Luminance(background);
+                double ratio = (Math.Max(first, second) + .05) / (Math.Min(first, second) + .05);
+                Assert.True(ratio >= 3, $"{theme}: {boundary} on {surface} = {ratio:F2}, expected 3");
+            }
+            if (theme != "HighContrast") Assert.Equal(0, Token("hcOutline").A);
+            else Assert.Equal(SystemColors.WindowTextColor, Token("hcOutline"));
+        });
+    }
+
+    [Theory]
+    [InlineData("Light")]
+    [InlineData("Dark")]
+    [InlineData("HighContrast")]
+    public void Toast_text_and_actions_contrast_with_the_spotlight_surface(string theme)
+    {
+        wpf.Run(() =>
+        {
+            var previous = ThemeManager.Current.Theme;
+            var previousContrast = ThemeManager.Current.HighContrastOverride;
+            ThemeManager.Current.HighContrastOverride = theme == "HighContrast";
+            ThemeManager.Current.Theme = theme == "Dark" ? AppTheme.Dark : AppTheme.Light;
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false);
+            try
+            {
+                var toast = (Border)window.FindName("Toast");
+                toast.Visibility = Visibility.Visible;
+                ((TextBlock)window.FindName("ToastTitle")).Text = "Title";
+                ((TextBlock)window.FindName("ToastMessage")).Text = "Message";
+                toast.Measure(new Size(320, double.PositiveInfinity));
+                toast.Arrange(new Rect(0, 0, 320, 200));
+                var ground = ((SolidColorBrush)Application.Current.FindResource("Primer.window")).Color;
+                var background = Composite(((SolidColorBrush)toast.Background).Color, ground);
+                var foregrounds = new[] { "ToastTitle", "ToastMessage" }
+                    .Select(name => ((TextBlock)window.FindName(name)).Foreground)
+                    .Concat(DesktopCapture.Descendants<Button>(toast).Select(button => button.Foreground)).ToArray();
+                Assert.True(foregrounds.Length >= 4);
+                foreach (var brush in foregrounds)
+                {
+                    var foreground = Composite(((SolidColorBrush)brush).Color, background);
+                    double first = Luminance(foreground), second = Luminance(background);
+                    double ratio = (Math.Max(first, second) + .05) / (Math.Min(first, second) + .05);
+                    Assert.True(ratio >= 4.5, $"{theme}: toast contrast {ratio:F2} < 4.5");
+                }
+            }
+            finally
+            {
+                window.Close();
+                ThemeManager.Current.HighContrastOverride = previousContrast;
+                ThemeManager.Current.Theme = previous;
+            }
+        });
+    }
+
+    [Theory]
+    [InlineData("Light")]
+    [InlineData("Dark")]
+    [InlineData("HighContrast")]
+    public void Default_actions_selected_navigation_and_info_tags_keep_AA_text(string theme)
+    {
+        wpf.Run(() =>
+        {
+            var previous = ThemeManager.Current.Theme;
+            var previousContrast = ThemeManager.Current.HighContrastOverride;
+            ThemeManager.Current.HighContrastOverride = theme == "HighContrast";
+            ThemeManager.Current.Theme = theme == "Dark" ? AppTheme.Dark : AppTheme.Light;
+            try
+            {
+                var ground = ((SolidColorBrush)Application.Current.FindResource("Primer.window")).Color;
+                void Check(Brush foregroundBrush, Brush backgroundBrush, string role)
+                {
+                    var background = Composite(((SolidColorBrush)backgroundBrush).Color, ground);
+                    var foreground = Composite(((SolidColorBrush)foregroundBrush).Color, background);
+                    double first = Luminance(foreground), second = Luminance(background);
+                    double ratio = (Math.Max(first, second) + .05) / (Math.Min(first, second) + .05);
+                    Assert.True(ratio >= 4.5, $"{theme}: {role} contrast {ratio:F2} < 4.5");
+                }
+                foreach (string key in new[] { "Run", "Primary", "WarningAction", "Secondary", "OutlinedAccent", "Danger" })
+                {
+                    var button = new Button { Content = "Action", Style = (Style)Application.Current.FindResource("Primer." + key) };
+                    button.ApplyTemplate();
+                    Check(button.Foreground, button.Background, key);
+                }
+                var navigation = new RadioButton { Content = "Page", IsChecked = true,
+                    Style = (Style)Application.Current.FindResource("Primer.NavItem") };
+                navigation.ApplyTemplate();
+                var surface = (Border)navigation.Template.FindName("Surface", navigation);
+                Check(navigation.Foreground, surface.Background, "selected navigation");
+                var blockText = new TextBlock { Text = "Block", Style = (Style)Application.Current.FindResource("Primer.Text") };
+                var block = new ListBoxItem { DataContext = new { Selected = true }, Content = blockText,
+                    Style = (Style)Application.Current.FindResource("Primer.BlockItem") };
+                block.ApplyTemplate();
+                block.Measure(new Size(160, 40)); block.Arrange(new Rect(0, 0, 160, 40));
+                Check(blockText.Foreground, block.Background, "checked block row");
+                if (theme == "HighContrast")
+                {
+                    Assert.Equal(SystemColors.HighlightColor, ((SolidColorBrush)block.Background).Color);
+                    Assert.Equal(SystemColors.HighlightTextColor, ((SolidColorBrush)blockText.Foreground).Color);
+                }
+                var label = new TextBlock { Text = "Info", Tag = ViewModels.FeatureTone.Accent,
+                    Style = (Style)Application.Current.FindResource("Primer.ToneText") };
+                var tag = new Border { Tag = ViewModels.FeatureTone.Accent, Child = label,
+                    Style = (Style)Application.Current.FindResource("Primer.ToneChip") };
+                tag.Measure(new Size(160, 40)); tag.Arrange(new Rect(0, 0, 160, 40));
+                Check(label.Foreground, tag.Background, "info tag");
+            }
+            finally
+            {
+                ThemeManager.Current.HighContrastOverride = previousContrast;
+                ThemeManager.Current.Theme = previous;
+            }
         });
     }
 

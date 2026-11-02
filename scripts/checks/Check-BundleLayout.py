@@ -629,24 +629,31 @@ class LayoutChecks(unittest.TestCase):
                 ('third_party/SiemensOpcUaModelled/LICENSE.md', 'SiemensOpcUaModelled-LICENSE.md'),
                 ('third_party/eido-import-planner/LICENSE', 'Eido-LICENSE.txt'),
                 ('third_party/tia-openness-studio/LICENSE', 'TiaOpennessStudio-LICENSE.txt'),
-                ('src/Studio/Gui/Fonts/LICENSE.txt', 'MapleMono-CN-OFL.txt'),
                 ('reference/siemens-code-snippets/LICENSE.md', 'SiemensCodeSnippets-LICENSE.md')):
             with self.subTest(source=source):
                 self.assertEqual((ROOT / source).read_text(encoding='utf-8-sig'),
                                  (ROOT / 'docs/licenses' / copy).read_text(encoding='utf-8-sig'))
 
-    def test_primer_sources_and_retained_fonts_stay_in_all_required_lists(self):
+    def test_retired_workbench_font_licence_is_absent_and_excluded(self):
+        path = 'docs/licenses/MapleMono-CN-OFL.txt'
+        self.assertFalse((ROOT / path).exists())
+        rules = load_delivery(ROOT)
+        self.assertFalse(delivered(path, rules))
+        self.assertNotIn(path, rules['include']['files'])
+        self.assertIn(path, rules['exclude']['files'])
+
+    def test_shared_theme_sources_are_required_without_private_fonts(self):
         gui = 'src/Studio/Gui/'
-        required = ('Themes/Primer.xaml', 'Themes/Palette.Light.xaml', 'Themes/Palette.Dark.xaml',
-                    'Controls/WorkbenchLogView.cs', 'Controls/WorkbenchMessageBox.cs', 'Controls/ResultPresentation.cs', 'Controls/LogTailView.cs',
-                    'Fonts/MapleMono-CN-Regular.ttf', 'Fonts/MapleMono-CN-SemiBold.ttf', 'Fonts/LICENSE.txt')
+        required = ('Themes/Primer.xaml', 'Themes/Shell.xaml', 'Themes/Approvals.xaml', 'Themes/Pages.xaml', 'Themes/Palette.HighContrast.xaml', 'Themes/Palette.Light.xaml', 'Themes/Palette.Dark.xaml',
+                    'Controls/WorkbenchLogView.cs', 'Controls/WorkbenchMessageBox.cs', 'Controls/ResultPresentation.cs', 'Controls/LogTailView.cs')
         for path in required:
             with self.subTest(path=path):
                 self.assertTrue((ROOT / gui / path).is_file())
                 for consumer in ('bundle', 'package', 'repository'):
                     self.assertIn(gui + path, required_sources(ROOT, consumer))
-        self.assertEqual({p.name for p in (ROOT / gui / 'Fonts').iterdir() if p.suffix in ('.ttf', '.otf')},
-                         {'MapleMono-CN-Regular.ttf', 'MapleMono-CN-SemiBold.ttf'})
+        self.assertEqual([], list((ROOT / gui / 'Fonts').glob('*')))
+        for consumer in ('bundle', 'package', 'repository'):
+            self.assertEqual([], [path for path in required_sources(ROOT, consumer) if path.startswith(gui + 'Fonts/')])
         self.assertFalse((ROOT / 'docs/licenses/Manrope-OFL.txt').exists())
 
     def test_delivery_includes_runtime_resources_and_plugin(self):

@@ -89,7 +89,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         {
                             var element = (FrameworkElement)window.FindName(name);
                             var point = element.TransformToAncestor(host).Transform(new Point());
-                            Assert.Equal(40, element.ActualHeight);
+                            Assert.Equal(36, element.ActualHeight);
                             Assert.Equal(5, point.X);
                             metrics.Add($"{name}: {point.X},{point.Y} {element.ActualWidth}x{element.ActualHeight}");
                         }
@@ -186,6 +186,40 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                     finally { window.Close(); ThemeManager.Current.Theme = previous; }
                     Assert.True(string.IsNullOrWhiteSpace(trace.Text), trace.Text);
                 });
+    }
+
+    [WorkbenchRenderFact]
+    public void Render_shared_themes_in_both_languages()
+    {
+        string output = Path.Combine(Path.GetFullPath(Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR")!), "shared-themes");
+        Directory.CreateDirectory(output);
+        foreach (var language in new[] { AppLanguage.Chinese, AppLanguage.English })
+        foreach (string theme in new[] { "Light", "Dark", "HighContrast" })
+            wpf.RunWithLanguage(language, () =>
+            {
+                using var trace = new BindingPathTests.BindingTrace();
+                var previous = ThemeManager.Current.Theme;
+                var previousContrast = ThemeManager.Current.HighContrastOverride;
+                ThemeManager.Current.HighContrastOverride = theme == "HighContrast";
+                ThemeManager.Current.Theme = theme == "Dark" ? AppTheme.Dark : AppTheme.Light;
+                var window = new MainWindow(ProjectPageTestSupport.Model(results: true, release: "21"), false,
+                    FeaturePageFixtures.Approvals(), new FeaturePageFixtures.Diagnostics());
+                try
+                {
+                    window.ShowConfiguration(false);
+                    window.Navigate("Engineering");
+                    var host = CreateHost(window, 1366, 860);
+                    string suffix = (language == AppLanguage.Chinese ? "zh" : "en") + "-" + theme.ToLowerInvariant();
+                    SaveRender(host, Path.Combine(output, suffix + ".png"), 1366, 860);
+                    Assert.True(string.IsNullOrWhiteSpace(trace.Text), trace.Text);
+                }
+                finally
+                {
+                    window.Close();
+                    ThemeManager.Current.HighContrastOverride = previousContrast;
+                    ThemeManager.Current.Theme = previous;
+                }
+            });
     }
 
     private static System.Collections.Generic.IEnumerable<RenderState> States()
