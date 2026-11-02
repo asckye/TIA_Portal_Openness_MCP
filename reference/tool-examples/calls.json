@@ -1432,7 +1432,7 @@
           "Read ok, error and meta.outcome/execution/completeness first. If outcome is unknown, inspect the target and reset the session when required before further writes; do not replay automatically.",
           "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance.",
           "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
-          "List pages in ordinal exact group-qualified path order: default limit=20, range 1..100. Pass meta.paging.nextCursor as cursor with the same softwarePath and regexName until complete=true. Each data.items[].path is accepted by GetPlcBlockInfo/ExportPlcBlock. A stale cursor requires restarting with an empty cursor; page details are live observations."
+          "List pages in ordinal exact group-qualified path order: default limit=4, range 1..100. Pass meta.paging.nextCursor as cursor with the same softwarePath and regexName until complete=true. Each data.items[].path is accepted by GetPlcBlockInfo/ExportPlcBlock. A stale cursor requires restarting with an empty cursor; page details are live observations."
         ]
       },
       "GetPlcBlockHierarchy": {
@@ -23773,7 +23773,7 @@
           "Read ok, error and meta.outcome/execution/completeness first. If outcome is unknown, inspect the target and reset the session when required before further writes; do not replay automatically.",
           "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance.",
           "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
-          "List pages in ordinal exact group-qualified path order: default limit=20, range 1..100. Pass meta.paging.nextCursor as cursor with the same softwarePath and regexName until complete=true. Each data.items[].path is accepted by GetPlcBlockInfo/ExportPlcBlock. A stale cursor requires restarting with an empty cursor; page details are live observations."
+          "List pages in ordinal exact group-qualified path order: default limit=4, range 1..100. Pass meta.paging.nextCursor as cursor with the same softwarePath and regexName until complete=true. Each data.items[].path is accepted by GetPlcBlockInfo/ExportPlcBlock. A stale cursor requires restarting with an empty cursor; page details are live observations."
         ]
       },
       "ListPlcForceTables": {

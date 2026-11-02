@@ -4,38 +4,75 @@
 
 ## [Unreleased]
 
-- 内部检查：测试夹具未捕获异常统一记录 stderr 并以 86 退出，避免进入 Windows 错误报告；修复深路径夹具、审计目录清理与测试产物证据绑定。
+## [4.0.0-beta.3] - 2026-11-0X
+<!-- set on release day -->
 
-- VMFIX-1：修复 L2 PLC 回复校验及硬件原语参数绑定；保留失败的原生异常类型与脱敏消息，使失败读取的重置标志与会话状态一致。超时预算不变，空闲可响应的 worker 在所属线程分离；忙碌或失联时保持终止与显式重启指引。
-- 设备创建移除示例 CPU 和 family 白名单；仍要求同一目录行的精确 OrderNumber、重名检查、预览哈希、确认、工程文件身份和创建后回读，支持 TIA 放入未分组系统组的设备。
-- expectedProject 明确为工程名称并提前拒绝路径；修复共享绑定的状态投影，补齐覆盖 PLC 块可能丢失库类型链接的预览警告，提前拒绝不支持的 Unified 标签绑定。
-- DES-1：宿主工具、生成规划与工作台操作端统一读取 worker 缓存的会话身份、worker 代次和重置要求，修复已附着工程仍被生成规划判为未连接的问题。`GetSessionState` 报告当前会话的原生交叉引用生效来源和只读审批状态。
-- 工作台 MCP 页列出同一数据目录的宿主 PID、版本、启动时间、传输与 HTTP 端点，标记旧版或未知版本；人工确认后可停止宿主或按已保存配置重启 HTTP 宿主。stdio 宿主由所属 MCP 客户端重启；AI 工具与管道没有服务启停入口。
-- SU-1：PLC XML 导入导出和目录导入支持精确 `unitName`（V16–V21）；默认根范围不变。新增显式 `swImportOptions`（V15.1–V21，IgnoreUnitAttributes 从 V16）和文化 `importOptions`（V19–V21），默认关闭、预览可见，不支持的成员/组合返回 UNSUPPORTED_CAPABILITY。软件树包含单元与四类组，变量/常量读取支持单元或全部标准单元，离线交叉引用分析可选择单元。复用 V16–V21 的 WRITE 发布工具 SetPlcUnitObjectAccess（预览、审批、回读）；真实 TIA 确认仍为 NOT RUN。
-- Check builds and updater/package fixtures prepare the pinned decoder runtime through the release command, with explicit interpreter configuration and receipt-checked reuse. Multi-word tool discovery requires a name or search-alias hit while retaining single-word description recall.
+4.0 的第三个预发布版本，同样在 GitHub 上标为预发布、不设为最新版，3.3 的更新器和工作台更新检查不会提示它。产品对外名称改为“自动化工程工作台（Automation Engineering Workbench，原 TIA Portal Openness MCP）”；程序文件名、插件 ID、MCP 服务名 `tia-portal`、交付包名和仓库地址不变。beta.2 在 V21 虚拟机上做过一轮真机测试，本版修复了其中的发现；这些修复和本版新功能尚未在真实 TIA Portal 上复验。说明见 [v4.0.0-beta.3](docs/releases/v4.0.0-beta.3.md)。
 
-- `ListPlcBlocks` adds limit/cursor paging in stable group-qualified path order and reads full attributes only for the selected page; changed inventories reject stale cursors. Each item includes the exact path accepted by block read/export tools.
-- `FindTools` requires all capability words to match with a minimum relevance score; exact registered names rank first. Large direct/`CallTool` results include an executable `GetExportContent` continuation in their own result text.
-- `DecodePlcSimaticMl` uses an isolated CPython standard-library runtime included in delivery, with the original Python license. No user Python installation, pip download or ecosystem environment is required for decoding.
-- Block pages default to four items, preserve cursor paging through `CallTool`, and reject malformed worker pages. Single-word tool searches retain description matches; usage guidance preserves the generic no-replay warning. Export rendering retains completed content during cache eviction. Decoder delivery pins CPython 3.12.10 and its hashes, copies only traced dependencies, validates its receipt, and reports missing runtime prerequisites without installation paths.
-- 工作台共享主题改用 EplanMcp 设计系统的颜色、字号、圆角和系统字体；补齐高对比度轮廓与键盘焦点环，移除随包 Maple Mono CN 字体，并预留独立的外壳、审批和页面样式字典。
-- 将 Microsoft.Extensions.*、System.Text.Json 及 preview.4 配套依赖统一升级到与随包运行时一致的 10.0.12 正式版；MCP SDK 保持 0.3.0-preview.4。
+### 行为变化（测试者须知）
 
-## [4.0.0-beta.3] - 2026-11-01
+- 设备白名单已移除：设备创建不再只限两颗示例 CPU 和 S7-1200/S7-1500 系列，同一次目录读取中的任何精确目录行都可以创建，精确 OrderNumber、版本、重名检查、预览哈希、确认、工程文件身份和创建后回读照旧。
+- `expectedProject` 是工程名称（`Project.Name`），不是文件路径；像路径的值在任何 TIA 调用前以 INVALID_ARGUMENT 拒绝，需要文件身份的工具继续使用 `expectedProjectFile`（绝对路径）。
+- `ListPlcBlocks` 默认分页：每页 4 项（`limit` 1–100），把返回的 `meta.paging.nextCursor` 作为 `cursor` 传入直到 `complete` 为真，块清单变化后旧游标被拒绝、须从空游标重新开始。
+- `FindTools` 的多词查询要求每个能力词都匹配并达到最低相关度，结果按相关度排序、精确注册名优先，单词查询仍匹配描述，因此宽泛的多词查询返回的工具可能比 beta.2 少。
+- 软件单元参数 `unitName`、`includeUnits` 只出现在 V16–V21 的工具定义中，`swImportOptions` 从 V15.1 起用于块和类型导入（标签表导入不接受），文化 `importOptions` 只在 V19–V21 提供。
+- 工作台换用新的配色、系统字体、高对比度描边和键盘焦点环，页面布局、导航和审批抽屉在 beta.3 中保持不变。
+- 工作台停止或重启 MCP 宿主前要求人工确认，先请求宿主正常退出（最多等待 20 秒），仍未退出时须再次确认才强制结束，并提示 TIA Portal 可能需要重启。
+- 旧 `EnsureUnifiedHmi*`、`ApplyUnifiedHmi*`、`BindUnifiedHmi*` 工具默认 `dryRun=true`，只返回计划；显式 `false` 才写入，审批照旧。
 
-4.0 的第三个预发布版本，同样在 GitHub 上标为预发布、不设为最新版，3.3 的更新器和工作台更新检查不会提示它。产品对外名称改为“自动化工程工作台（Automation Engineering Workbench，原 TIA Portal Openness MCP）”；程序文件名、插件 ID、MCP 服务名 `tia-portal`、交付包名和仓库地址不变。本版仍未在真实 TIA Portal 上验收。
+### 测试者会注意到的变化
 
 - 对外名称改为自动化工程工作台（窗口标题、工作台内英文简称 AE Workbench、README、NOTICE、插件描述），说明项目来源并补充维护者版权行与西门子商标声明。
 - 新增 3.3 到 4.0 的手动迁移指南、按版本的真机核对清单、缺陷/真机结果/功能建议问题表单和测试者反馈台账。
-- 内部检查与发布：重复工作只做一次、合并只跑受影响的检查、每日完整 nightly（失败阻止下一次发布）、失败即停、恢复并行构建；未删除或放宽任何检查。
-- 发布前统一检查并传递生态/伴随 Python 路径；发布、证据采纳和独立证据核验提前拒绝 Git 规范化与工作字节不同的跟踪文件，列出路径和修复方法。
-- 主机注册文件发布遇到共享冲突时短暂重试，失败记日志；工作台读取允许原子替换，文件暂时缺失、不完整或被占用时在下一轮重试。
-- 原生交叉引用：V14 SP1–V20 在 API 可用时恢复默认允许；V21 保留 opt-in，新增仅人工可改的工作台会话开关（en / zh-CN），环境变量仍可替代。首次查询前保存工程；一致性、反射拒绝和退出后不重试的保护不变，V21 真机确认待完成。
+- 工作台 MCP 页列出同一数据目录的宿主 PID、版本、启动时间、传输与 HTTP 端点，标记旧版或未知版本；人工确认后可停止宿主或按已保存配置重启 HTTP 宿主。stdio 宿主由所属 MCP 客户端重启；AI 工具与管道没有服务启停入口。
+- `DecodePlcSimaticMl` 使用随包的隔离 CPython 3.12.10 标准库运行时（固定版本与哈希，附原始 Python 许可），干净安装即可使用，不再需要用户自己的 Python、pip 下载或生态环境；缺少运行前提时报告原因，不暴露安装路径。
+
+### beta.2 真机测试发现的修复
+
+- worker 超时：读取超时后如实报告 `requiresSessionReset=true` 并给出恢复步骤，不再报“无需重置”。超时预算不变；可响应的 worker 在所属线程分离 TIA，忙碌或失联时仍终止，可能仍需重启 TIA Portal。
+- 失败的读取（DCC/Startdrive、库和工程比较、SiVArc、Safety 等）报告的重置要求与之后的会话状态一致，不再让下一次调用意外收到 SESSION_RESET_REQUIRED。
+- 旧 L2 PLC 工具（CreatePlcBlockGroup、MovePlcBlockToGroup、RepairAndReimportPlcBlock、ImportPlcTagTablesFromDirectory 等）修复回复校验与参数绑定；CreateDevice 和 CreateHardwareCatalogDevice 改走同一条精确硬件创建路径，支持 TIA 放入未分组系统组的设备。
+- 原生失败在结果中保留脱敏后的异常类型和消息，不再只写在服务器日志里。
+- 主机工具、生成规划与工作台操作端读取同一份会话状态（worker 缓存的会话身份、worker 代次和重置要求），修复已附着工程仍被 `PlanProjectGeneration` 判为未连接的问题。`GetWorkbenchState.data.session` 描述发起请求的 MCP 会话，`selectedSession` 是工作台当前选择。
+- `EnsureUnifiedHmiTag` 在创建标签前检查绑定是否支持；已确认创建但绑定失败时报告 partial 和重置要求，不再报结果未知。
+- 覆盖导入库类型实例块时，预览与执行都提示类型链接可能断开；预览的恢复状态为 `not-attempted-preview`，执行报告实际备份结果。
+- V20/V21 改用维护的调用示例，不再使用冻结的引擎值：Unified 路径从 `ScreenGroups`/`Screens` 开始，画面与变量表用绝对路径，`softwarePath`/`blockPath` 提示写明分组站点和带组路径。
+- 大结果：直接调用和 `CallTool` 的大结果在结果文字中给出可执行的 `GetExportContent` 续读调用；缓存淘汰时保留已生成的导出内容，`CallTool` 转发的块分页保留游标，格式错误的 worker 分页被拒绝。
+
+### 新工具与新参数
+
+- 八版注册工具数：<!-- count -->。
 - 新增八版 READ 工具 `AnalyzePlcCrossReferences`：一次有界普通 PLC/块组 XML 导出后离线分析每块调用者、被调用者和引用位置，文件保留在会话输出目录，无原生 CrossReferenceService 调用。明确报告导出范围、失败和索引缺口；部分/未查询/空结果不等于没有引用。
-- HMI beta.3 复核（HMI-B3）：对象路径支持按 `PropertyName` 选择面板接口项；接口 `Value` 按现值的运行时类型转换并回读，无法确定类型时拒绝。
-- 旧 `EnsureUnifiedHmi*`、`ApplyUnifiedHmi*`、`BindUnifiedHmi*` 工具默认 `dryRun=true`，返回计划；显式 `false` 继续走原审批门禁。画面设计拒绝重命名和同名异类冲突，几何、属性及变量动态化保留逐项写入结果与回读；变量表核对父目录。
-- HMI 类别、动作与路径在原生调用前校验；组与 Plant 路径统一为绝对 `/Group/Sub/Name`，错误路径带改正写法。面板追溯从实例的库版本服务取得身份，`typePath/version` 变为可选核对条件；Classic 面板库类型按类型名及继承关系匹配并返回版本。
-- 新增八版 HMI 示例离线自检，核对维护的调用及操作示例的必填参数、对象路径、绝对路径和控件类型目录。原生行为仍待真实 TIA 确认。
+- 原生交叉引用：V14 SP1–V20 在 API 可用时恢复默认允许；V21 保留 opt-in，新增仅人工可改的工作台会话开关（en / zh-CN），环境变量仍可替代。首次查询前保存工程；一致性、反射拒绝和退出后不重试的保护不变。`GetSessionState` 报告当前会话交叉引用的生效来源和只读审批状态。
+- HMI：对象路径支持按 `PropertyName` 选择面板接口项；接口 `Value` 按现值的运行时类型转换并回读，无法确定类型时拒绝。面板追溯从实例的库版本服务取得身份，`typePath/version` 变为可选核对条件；Classic 面板库类型按类型名及继承关系匹配并返回版本。
+- 软件单元（V16–V21）：PLC XML 导入导出和目录导入支持精确 `unitName`，默认根范围不变。新增显式 `swImportOptions`（V15.1–V21，IgnoreUnitAttributes 从 V16）和文化 `importOptions`（V19–V21），默认关闭、预览可见，不支持的成员或组合返回 UNSUPPORTED_CAPABILITY。软件树包含单元与四类组，变量和常量读取可选单元或全部标准单元（`unitName`、`includeUnits`），`AnalyzePlcCrossReferences` 可选单元。发布单元对象使用已有的 V16–V21 WRITE 工具 `SetPlcUnitObjectAccess`（预览、审批、回读）。
+- `ListPlcBlocks` 新增 `limit` 与 `cursor`，按稳定的带组路径顺序分页，只读取当前页的完整属性；每项带可直接用于 `GetPlcBlockInfo` 和 `ExportPlcBlock` 的精确路径。
+
+### 安全与审批
+
+- 旧 HMI 写入工具默认预览后，画面设计拒绝重命名和同名异类冲突，几何、属性及变量动态化保留逐项写入结果与回读；变量表核对父目录。
+- HMI 类别、动作与路径在原生调用前校验；组与 Plant 路径统一为绝对 `/Group/Sub/Name`，错误路径带改正写法。
+- 设备创建去掉白名单后仍保留全部真实保护；Unified 面板版本必须与 Portal 主版本一致。V18/V19 的可选 safe-v4 候选使用同一选择规则。
+- 宿主停止与重启只能由人在工作台确认；没有 MCP、操作端或工作台控制入口。强制结束只在正常退出超时且再次确认后进行。
+
+### 工作台外观（ADR 0028）
+
+- 共享主题改用 EplanMcp 设计系统：强调色 #0071E3、系统字体 Segoe UI Variable / Segoe UI / Microsoft YaHei UI、新的字号、尺寸与圆角；高对比度主题给控件加描边，键盘焦点环 2 px，所有使用中的前景/背景组合对比度不低于 4.5:1。移除随包 Maple Mono CN 字体。布局重新设计与审批页在后续预发布版本中提供。
+
+### 文档
+
+- 新增 ADR 0022–0029（引擎退役与八版统一、4.0 最终标准、CI 不阻塞合并、nightly 与已验证构建单元的发布证据、文档结构与语言、架构图、工作台视觉设计、权威会话状态），修订 ADR 0020，并以 `docs/status/release-plan.md` 作为各版本唯一计划；交接与路线图同步更新，用户文档改用“服务”“项目”用词。
+- 新增安全、测试、MCP 工具设计标准、开发流程和工具规格模板。
+
+### 构建与发布（内部）
+
+- 重复工作只做一次、合并只跑受影响的检查、每日完整 nightly（失败阻止下一次发布）、失败即停、恢复并行构建；未删除或放宽任何检查。
+- 发布前统一检查并传递生态/伴随 Python 路径；发布、证据采纳和独立证据核验提前拒绝 Git 规范化与工作字节不同的跟踪文件。主机注册文件遇到共享冲突时短暂重试，工作台读取容忍原子替换。
+- 可复现构建，共享库只编译一次，只恢复已验证的构建单元；合并时准备发布，发布按哈希发布已封存的候选（SPD-3、SPD-5）。
+- 新增八版 HMI 示例离线自检，核对维护的调用及操作示例的必填参数、对象路径、绝对路径和控件类型目录。
+- 宿主注册信息每次工具调用只发布一次（此前三次，每次调用约多 8 ms）；宿主生命周期测试注入停止计时，生产环境的 20 秒宽限、轮询间隔和确认等待不变。
+- 测试夹具未捕获异常统一记录 stderr 并以 86 退出，避免进入 Windows 错误报告；修复深路径夹具、审计目录清理与测试产物证据绑定，过深的工作树根目录提前报错。
+- 将 Microsoft.Extensions.*、System.Text.Json 及 preview.4 配套依赖统一升级到与随包运行时一致的 10.0.12 正式版，net48 worker 随附对应正式版程序集；八版契约和响应逐字节不变，MCP SDK 保持 0.3.0-preview.4。
 
 ## [4.0.0-beta.2] - 2026-10-27
 
