@@ -202,11 +202,16 @@ internal sealed class HostSession : IHostSession
             if (disposed || hostStopping) throw new InvalidOperationException("The host session has ended; initialize a new session.");
             activeCalls++;
         }
-        Changed();
-        try { return await InvokeCore(inner, request, workbench, token).ConfigureAwait(false); }
-        finally { lock (sync) activeCalls--; Changed(); }
+        bool recorded = false;
+        try { return await InvokeCore(inner, request, workbench, token, () => recorded = true).ConfigureAwait(false); }
+        finally
+        {
+            // Setup can fail before InvokeCore enters its call-record finally.
+            if (!recorded) { lock (sync) activeCalls--; Changed(); }
+        }
     }
-    private async ValueTask<CallToolResult> InvokeCore(McpServerTool inner, RequestContext<CallToolRequestParams> request, bool workbench, CancellationToken token)
+    private async ValueTask<CallToolResult> InvokeCore(McpServerTool inner, RequestContext<CallToolRequestParams> request,
+        bool workbench, CancellationToken token, Action markRecorded)
     {
         if (!workbench) BindAi(request.Server);
         string id = Guid.NewGuid().ToString("N"), actor = workbench ? ActorScope.Workbench : ActorScope.Mcp;
@@ -223,6 +228,7 @@ internal sealed class HostSession : IHostSession
                 calls.Enqueue(new JsonObject { ["requestId"] = (string?)result?.StructuredContent?["meta"]?["requestId"] ?? id,
                     ["tool"] = inner.ProtocolTool.Name, ["actor"] = actor, ["outcome"] = (string?)result?.StructuredContent?["meta"]?["outcome"] ?? "unknown", ["ms"] = elapsed.ElapsedMilliseconds });
                 while (calls.Count > 20) calls.Dequeue();
+                activeCalls--; markRecorded();
             }
             Changed();
         }

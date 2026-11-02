@@ -1,4 +1,5 @@
 extern alias enginehost;
+extern alias foundationhost;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -10,10 +11,103 @@ using TiaMcp.Logic.Generation;
 using Xunit;
 using Host = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
 using GenerationSession = enginehost::TiaMcpServer.ModelContextProtocol.GenerationExecutionSession;
+using Session = foundationhost::TiaMcp.FoundationHost.HostSession;
 
 [Collection(BundleSelectionCollection.Name)]
 public sealed class SessionStateTests
 {
+    [Fact]
+    public async Task Host_tool_call_publishes_registration_once_and_ends_idle()
+    {
+        using var fixture = new OperatorSessionTests.Fixture("21"); using var registration = fixture.Register();
+        var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        bool block = false;
+        var tool = new HostOnlyTool(async token => {
+            if (block) { entered.TrySetResult(true); await release.Task.WaitAsync(token); }
+            return new CallToolResult { Content = [], StructuredContent = new JsonObject { ["schemaVersion"] = 4,
+                ["ok"] = true, ["data"] = new JsonObject(), ["error"] = null, ["meta"] = new JsonObject { ["outcome"] = "succeeded" } } };
+        });
+        using var session = new Session("21", "host-only fixture", false, [tool], [], () => new JsonObject(), () => { }, fixture.DirectoryPath);
+        using var member = registration.Register(session);
+        await using var ai = await OperatorSessionTests.Peer.Ai(session);
+        int changes = 0;
+        var published = new List<JsonObject>();
+        void Capture()
+        {
+            changes++;
+            published.Add(JsonNode.Parse(File.ReadAllText(registration.FilePath))!["sessions"]!.AsArray().Single()!.AsObject());
+        }
+        session.StateChanged += Capture;
+        try
+        {
+            const int count = 4;
+            for (int call = 1; call <= count; call++)
+            {
+                await ai.Tool(tool.ProtocolTool.Name);
+                Assert.Equal(call, changes); Assert.Equal(call, published.Count);
+                Assert.False((bool?)published[^1]["callInProgress"]);
+                Assert.Equal("idle", (string?)published[^1]["worker"]?["state"]);
+                Assert.Equal(call, published[^1]["recentCalls"]!.AsArray().Count);
+            }
+            block = true;
+            var pending = ai.Tool(tool.ProtocolTool.Name);
+            try
+            {
+                await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                Assert.False(pending.IsCompleted);
+                Assert.False(session.TryBeginHostShutdown()); Assert.False(registration.TryBeginShutdown());
+                Assert.True((bool?)session.Snapshot()["callInProgress"]);
+                Assert.Equal("busy", (string?)session.Snapshot()["worker"]?["state"]);
+                Assert.Equal(count, changes); Assert.Equal(count, published.Count);
+            }
+            finally { release.TrySetResult(true); await pending.WaitAsync(TimeSpan.FromSeconds(5)); }
+            Assert.Equal(count + 1, changes); Assert.Equal(count + 1, published.Count);
+            Assert.All(published, state => {
+                Assert.False((bool?)state["callInProgress"]);
+                Assert.Equal("idle", (string?)state["worker"]?["state"]);
+            });
+            Assert.Equal(count + 1, published[^1]["recentCalls"]!.AsArray().Count);
+            Assert.True(registration.TryBeginShutdown()); registration.CancelShutdown();
+        }
+        finally { session.StateChanged -= Capture; release.TrySetResult(true); }
+    }
+
+    [Theory, InlineData(false), InlineData(true)]
+    public async Task Host_tool_call_failure_publishes_once_and_releases_shutdown_admission(bool setupFailure)
+    {
+        using var fixture = new OperatorSessionTests.Fixture("21"); using var registration = fixture.Register();
+        bool invoked = false;
+        var tool = new HostOnlyTool(_ => { invoked = true; throw new InvalidOperationException("Fixture host-only failure."); });
+        using var session = new Session("21", "host-only fixture", setupFailure, [tool], [tool], () => new JsonObject(), () => { }, fixture.DirectoryPath);
+        using var member = registration.Register(session);
+        int changes = 0;
+        void Count() => changes++;
+        session.StateChanged += Count;
+        try
+        {
+            var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>()) {
+                Params = new() { Name = tool.ProtocolTool.Name, Arguments = new Dictionary<string, JsonElement>() } };
+            var observed = setupFailure ? session.Tools.Single() : session.OperatorTools.Single();
+            var error = await Assert.ThrowsAsync<InvalidOperationException>(() => observed.InvokeAsync(request).AsTask());
+            Assert.Equal(setupFailure ? "AI clients cannot join an operator-owned session." : "Fixture host-only failure.", error.Message);
+            Assert.Equal(!setupFailure, invoked); Assert.Equal(1, changes);
+            var state = JsonNode.Parse(File.ReadAllText(registration.FilePath))!["sessions"]!.AsArray().Single()!;
+            Assert.False((bool?)state["callInProgress"]); Assert.Equal("idle", (string?)state["worker"]?["state"]);
+            Assert.Equal(setupFailure ? 0 : 1, state["recentCalls"]!.AsArray().Count);
+            Assert.True(session.TryBeginHostShutdown()); session.CancelHostShutdown();
+        }
+        finally { session.StateChanged -= Count; }
+    }
+
+    private sealed class HostOnlyTool(Func<CancellationToken, ValueTask<CallToolResult>> invoke) : McpServerTool
+    {
+        public override Tool ProtocolTool { get; } = new() { Name = "FixtureHostOnly",
+            InputSchema = JsonSerializer.SerializeToElement(new { type = "object" }) };
+        public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken token = default)
+            => invoke(token);
+    }
+
     [Theory] [InlineData("14sp1")] [InlineData("15.1")] [InlineData("16")]
     [InlineData("17")] [InlineData("18")] [InlineData("19")]
     public void Legacy_projections_preserve_cached_unbinding_instead_of_the_previous_approval_target(string release)
