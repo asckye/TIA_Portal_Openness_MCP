@@ -35,9 +35,11 @@ public sealed class StaticPolicyTests
         Directory.CreateDirectory(Path.Combine(tree.Root, "src/Adapters")); Directory.CreateDirectory(Path.Combine(tree.Root, "src/Studio/Openness"));
         const string project = "tests/unit/unit.csproj";
         tree.Write(project, "<Project><PropertyGroup><DefineConstants>FIXTURE</DefineConstants></PropertyGroup></Project>");
-        var suites = new JsonObject();
-        foreach (var name in ReleaseCommandTable.OfflineSuites)
-            suites[name] = new JsonObject { ["project"] = project, ["arguments"] = name.EndsWith("-v20", StringComparison.Ordinal) ? new JsonArray("-p:DefineConstants=TIA_V20") : new JsonArray() };
+        var suites = new JsonObject
+        {
+            ["offline"] = new JsonObject { ["project"] = project, ["arguments"] = new JsonArray() },
+            ["kept-code"] = new JsonObject { ["project"] = project, ["arguments"] = new JsonArray("-p:DefineConstants=TIA_V20") }
+        };
         tree.Write("tests/test-suites.json", suites.ToJsonString());
         var actual = TiaFeatures.ProjectCases(tree.Root);
         Assert.Equal(2, actual.Count(row => row.Project == project));
