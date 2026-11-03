@@ -65,8 +65,8 @@
     <Compile Include="../../../src/FoundationHost/OfflineCompositionTools.cs" Link="OfflineCompositionTools.cs" />
     <Compile Include="../../../src/FoundationHost/SupplementaryReadContract.cs" Link="SupplementaryReadContract.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcSupplementaryReadPolicy.cs" Link="PlcSupplementaryReadPolicy.cs" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="ModelContextProtocol" />
     <Compile Include="../../../src/FoundationHost/WorkbenchControlClient.cs" Link="WorkbenchControlClient.cs" />
     <Compile Include="../../../src/FoundationHost/WorkbenchControlSession.cs" Link="WorkbenchControlSession.cs" />
     <Compile Include="../../../src/FoundationHost/WorkbenchControlTools.cs" Link="WorkbenchControlTools.cs" />

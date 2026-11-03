@@ -1,7 +1,7 @@
 <Project>
   <ItemGroup>
-    <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(TiaMcpDotnetPackageVersion)" />
+    <PackageReference Include="ModelContextProtocol" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)../../../src/Logic/TiaMcp.Logic.csproj" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../src/Adapters/Native/Plc/PlcBatchImportPolicy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../src/EngineHost/ModelContextProtocol/InvocationJournal.cs" />

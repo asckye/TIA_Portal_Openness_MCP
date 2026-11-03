@@ -73,6 +73,18 @@ public sealed class SourceRootsTests
                 Assert.NotEqual(previous, ReleaseRecords.GetSources(root, kind).Single(row => row.Path == name).Sha256);
                 Assert.NotEqual(previous, ReleaseRecords.GetValidationInputs(root, kind).Single(row => row.Path == name).Sha256);
             }
+            const string packages = "Directory.Packages.props";
+            var packagesPath = Path.Combine(root, packages);
+            File.WriteAllText(packagesPath, "first");
+            var packagesHash = ReleaseRecords.GetSources(root, kind).Single(row => row.Path == packages).Sha256;
+            Assert.Contains(ReleaseRecords.GetValidationInputs(root, kind), row => row.Path == packages && row.Sha256 == packagesHash);
+            Assert.Contains(packages, policy.RequiredPaths("repository"));
+            Assert.DoesNotContain(packages, policy.RequiredPaths("bundle"));
+            Assert.DoesNotContain(packages, policy.RequiredPaths("package"));
+            Assert.DoesNotContain(delivery["include"]!["files"]!.AsArray(), row => (string?)row == packages);
+            File.WriteAllText(packagesPath, "second");
+            Assert.NotEqual(packagesHash, ReleaseRecords.GetSources(root, kind).Single(row => row.Path == packages).Sha256);
+            Assert.NotEqual(packagesHash, ReleaseRecords.GetValidationInputs(root, kind).Single(row => row.Path == packages).Sha256);
         }
         finally { Directory.Delete(root, true); }
     }
@@ -83,7 +95,7 @@ public sealed class SourceRootsTests
         var root = Scratch();
         try
         {
-            var names = new[] { "Version.props", "tests/test-suites.json", "src/EngineHost/Host.cs", "src/Updater/app.manifest",
+            var names = new[] { "Version.props", "Directory.Packages.props", "tests/test-suites.json", "src/EngineHost/Host.cs", "src/Updater/app.manifest",
                 "src/Tools/WriteGuard/Guard.resx", "src/EngineHost/readme.md", "src/Studio/Gui/View.xaml" };
             foreach (var name in names)
             {

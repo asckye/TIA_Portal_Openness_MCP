@@ -34,7 +34,7 @@
     <Compile Include="../../../src/Logic/Siemens/TiaVersionCatalog.cs" Link="TiaVersionCatalog.cs" />
     <Reference Include="$(CoreApiName)"><HintPath>$(SiemensEngineeringDirectory)/$(CoreApiName).dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Siemens.Engineering.Step7" Condition="'$(TiaReleaseKey)' == '21'"><HintPath>$(SiemensEngineeringDirectory)/Siemens.Engineering.Step7.dll</HintPath><Private>false</Private></Reference>
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net48' and '$(UseReferenceAssemblyPackage)' == 'true'" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net48' and '$(UseReferenceAssemblyPackage)' == 'true'" />
   </ItemGroup>
   <Target Name="ValidateSelectedApi" BeforeTargets="ResolveReferences">
     <Error Condition="'$(TargetFramework)' != '$(ExpectedTargetFramework)'" Text="Do not substitute a different target framework for this API compile check." />

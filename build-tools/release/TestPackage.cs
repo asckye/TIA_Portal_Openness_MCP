@@ -24,7 +24,7 @@ internal static partial class ReleaseCommands
     internal static readonly string[] TestPackageBuiltFiles = ["TiaOpenness.exe"];
     // A superset of what the product outputs are compiled from; bin/obj folders and Markdown are not inputs.
     internal static readonly string[] TestPackageSourceRoots =
-        ["src", "third_party/SiemensOpcUaModelled", "build-tools/native-call-weaver", "Version.props", "Directory.Build.props", "global.json"];
+        ["src", "third_party/SiemensOpcUaModelled", "build-tools/native-call-weaver", "Version.props", "Directory.Build.props", "Directory.Packages.props", "global.json"];
     private const string TestPackageWork = "bin-build/test-package-work";
 
     private static int PackageTest(Options options)

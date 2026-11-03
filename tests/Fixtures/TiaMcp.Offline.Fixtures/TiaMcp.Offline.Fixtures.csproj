@@ -9,6 +9,6 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit" />
   </ItemGroup>
 </Project>

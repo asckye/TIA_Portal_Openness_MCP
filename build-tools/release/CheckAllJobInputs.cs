@@ -12,7 +12,7 @@ internal sealed record CheckJobInputs(string Driver, string[] Paths, string[] Pr
 // script helpers and data directories are intentionally conservative closures.
 internal static class CheckAllJobInputs
 {
-    internal static readonly string[] Controls = ["Version.props", "Directory.Build.props", "Directory.Build.targets", "global.json", ".editorconfig", "NuGet.Config"];
+    internal static readonly string[] Controls = ["Version.props", "Directory.Build.props", "Directory.Build.targets", "Directory.Packages.props", "global.json", ".editorconfig", "NuGet.Config"];
     private const string Host = "src/FoundationHost/TiaMcp.FoundationHost.csproj";
     private const string Worker = "src/PlcWorker/TiaMcp.PlcWorker.csproj";
     private const string Harness = "tests/Engine/TiaMcp.Engine.Harness/TiaMcp.Engine.Harness.csproj";

@@ -66,6 +66,7 @@ Siemens PublicAPI 是本机构建输入，默认查找仓库根目录下的八�
 `src/Studio/Directory.Build.props` 保留 Studio 公共构建设置；
 `tests/Studio/Directory.Build.props` 显式导入它，保持原先的导入顺序及测试包引用。
 `tests/Shared` 保留 xunit 共享适配器。源码与工具导航集中在上表，仓库不再保留根目录 `tools/`。release tool 将构建日志写入 `bin-build/releases/v<Version>/`。
+NuGet 包版本统一在根目录 `Directory.Packages.props` 管理；.NET 运行时对齐值保留在 `src/Shared/DependencyVersions.props`。
 
 ## 辅助构建与测试工程
 

@@ -6,6 +6,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../src/WorkerChannel/TiaMcp.WorkerChannel.csproj" />
-    <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
+    <PackageReference Include="ModelContextProtocol" />
   </ItemGroup>
 </Project>

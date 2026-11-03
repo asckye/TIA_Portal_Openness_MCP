@@ -12,14 +12,14 @@
     <ProjectReference Include="../WorkerChannel/TiaMcp.WorkerChannel.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <ProjectReference Include="../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.4" />
+    <PackageReference Include="ModelContextProtocol.AspNetCore" />
     <Compile Include="../Adapters/Native/Session/MutationIdentityPolicy.cs" Link="MutationIdentityPolicy.cs" />
 
     <Compile Include="../PlcWorker/WorkerOperations.cs" Link="WorkerOperations.cs" />
     <Compile Include="../PlcWorker/WorkerLaunchOptions.cs" Link="WorkerLaunchOptions.cs" />
 
-    <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="$(TiaMcpDotnetPackageVersion)" />
+    <PackageReference Include="ModelContextProtocol" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../EngineHost/TiaMcp.EngineHost.csproj" />

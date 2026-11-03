@@ -45,8 +45,8 @@
     <Compile Include="../../../src/PlcWorker/WorkerOperationModule.cs" Link="WorkerOperationModule.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAddressingPolicy.cs" Link="HardwareAddressingPolicy.cs" />
     <Compile Include="../../../src/Adapters/Policy/StudioThreadGuard.cs" Link="StudioThreadGuard.cs" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="ModelContextProtocol" />
     <None Update="GoldenWire.json" CopyToOutputDirectory="PreserveNewest" />
     <None Update="StudioGoldenWire.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

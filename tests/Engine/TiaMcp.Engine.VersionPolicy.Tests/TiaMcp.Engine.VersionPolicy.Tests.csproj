@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable><ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
+    <PackageReference Include="ModelContextProtocol" />
     <Compile Include="../../../src/EngineHost/ModelContextProtocol/Tools/McpServer.VersionPolicy.cs" Link="McpServer.VersionPolicy.cs" />
   </ItemGroup>
 </Project>

@@ -1011,6 +1011,15 @@
       ]
     },
     {
+      "path": "Directory.Packages.props",
+      "inventories": [
+        "engine",
+        "multi",
+        "validation",
+        "validationMulti"
+      ]
+    },
+    {
       "path": "src/Shared/ReproducibleBuild.props",
       "inventories": [
         "engine",
@@ -1367,6 +1376,11 @@
       "path": "src/Shared/DependencyVersions.props",
       "consumers": ["repository", "bundle", "package"],
       "repositoryLabel": ".NET dependency versions"
+    },
+    {
+      "path": "Directory.Packages.props",
+      "consumers": ["repository"],
+      "repositoryLabel": "central NuGet package versions"
     },
     {
       "path": "src/Shared/ReproducibleBuild.props",

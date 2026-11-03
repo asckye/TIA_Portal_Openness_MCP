@@ -57,7 +57,7 @@ internal sealed class CheckAllAffected(string[] changes, AffectedUnit[] units, s
         }
     }
 
-    internal static bool Wide(string path) => Path.GetFileName(path).StartsWith("Directory.Build.", StringComparison.OrdinalIgnoreCase) || Path.GetFileName(path).Equals("global.json", StringComparison.OrdinalIgnoreCase) ||
+    internal static bool Wide(string path) => Path.GetFileName(path).StartsWith("Directory.Build.", StringComparison.OrdinalIgnoreCase) || Path.GetFileName(path).Equals("Directory.Packages.props", StringComparison.OrdinalIgnoreCase) || Path.GetFileName(path).Equals("global.json", StringComparison.OrdinalIgnoreCase) ||
         Path.GetFileName(path).Contains("nuget", StringComparison.OrdinalIgnoreCase) && path.EndsWith(".config", StringComparison.OrdinalIgnoreCase) ||
         CheckAllInputClosure.Covers("sdk", path);
 

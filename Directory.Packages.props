@@ -1,0 +1,26 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)src/Shared/DependencyVersions.props" Condition="'$(TiaMcpDependencyVersionsImported)' != 'true'" />
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Esprima" Version="3.0.5" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(TiaMcpDotnetPackageVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="$(TiaMcpDotnetPackageVersion)" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageVersion Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3" />
+    <PackageVersion Include="ModelContextProtocol" Version="0.3.0-preview.4" />
+    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.4" />
+    <PackageVersion Include="ModelContextProtocol.Core" Version="0.3.0-preview.4" />
+    <PackageVersion Include="Mono.Cecil" Version="0.11.6" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageVersion Include="Sharp7" Version="1.1.84" />
+    <PackageVersion Include="Siemens.Simatic.S7.Webserver.API" Version="3.3.76" />
+    <PackageVersion Include="System.Net.ServerSentEvents" Version="$(TiaMcpDotnetPackageVersion)" />
+    <PackageVersion Include="System.Text.Json" Version="$(TiaMcpDotnetPackageVersion)" />
+    <PackageVersion Include="Workstation.UaClient" Version="3.2.3" />
+    <PackageVersion Include="xunit" Version="2.9.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageVersion Include="YamlDotNet" Version="13.7.1" />
+  </ItemGroup>
+</Project>

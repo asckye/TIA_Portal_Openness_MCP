@@ -12,10 +12,10 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Preserve the engine dependency version when resolving the OPC UA client independently. -->
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(TiaMcpDotnetPackageVersion)" />
-    <PackageReference Include="Sharp7" Version="1.1.84" />
-    <PackageReference Include="Workstation.UaClient" Version="3.2.3" />
-    <PackageReference Include="Siemens.Simatic.S7.Webserver.API" Version="3.3.76" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Sharp7" />
+    <PackageReference Include="Workstation.UaClient" />
+    <PackageReference Include="Siemens.Simatic.S7.Webserver.API" />
     <ProjectReference Include="../Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
   </ItemGroup>
   <!-- The protocol clients run without Openness. The PLCSIM runtime loader belongs to the net48 worker. -->

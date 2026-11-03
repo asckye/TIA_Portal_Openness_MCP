@@ -9,5 +9,5 @@
     <DebugType>none</DebugType>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
-  <ItemGroup><PackageReference Include="Mono.Cecil" Version="0.11.6" /></ItemGroup>
+  <ItemGroup><PackageReference Include="Mono.Cecil" /></ItemGroup>
 </Project>

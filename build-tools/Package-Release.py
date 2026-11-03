@@ -450,7 +450,7 @@ def main():
                   (n.startswith(desktop_projects) and Path(n).suffix in ('.cs', '.xaml', '.csproj')) or
                   (n.startswith('tests/Studio/TiaOpenness.Configuration.Tests/') and Path(n).suffix in ('.cs', '.csproj')) or
                   (n.startswith('build-tools/release/') and Path(n).suffix == '.cs')} | {
-        'Version.props',
+        'Version.props', 'Directory.Packages.props',
         studio + 'Launcher/Launcher.cs',
         studio + 'Directory.Build.props', 'tests/Studio/Directory.Build.props',
         'src/Logic/Siemens/TiaVersionCatalog.cs',

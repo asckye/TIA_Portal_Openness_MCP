@@ -10,9 +10,9 @@
   <ItemGroup>
     <ProjectReference Include="../Logic/TiaMcp.Logic.csproj" />
     <ProjectReference Include="../OnlineChannels/TiaMcp.OnlineChannels.csproj" />
-    <PackageReference Include="Sharp7" Version="1.1.84" />
-    <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="$(TiaMcpDotnetPackageVersion)" />
+    <PackageReference Include="Sharp7" />
+    <PackageReference Include="ModelContextProtocol" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
     <Compile Include="../Shared/InvocationJournal.cs" Link="Shared/InvocationJournal.cs" />
     <Compile Include="../Shared/CallJournalPayload.cs" Link="Shared/CallJournalPayload.cs" />
     <Compile Include="../Shared/ImportDependencyPlanner.cs" Link="Shared/ImportDependencyPlanner.cs" />

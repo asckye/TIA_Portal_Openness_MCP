@@ -1069,7 +1069,7 @@ internal static partial class ReleaseCommands
             }
             var testsFolder = Path.Combine(Root, "tests/Studio/TiaOpenness.Configuration.Tests");
             foreach (var file in Directory.EnumerateFiles(testsFolder, "*", SearchOption.TopDirectoryOnly).Where(file => Path.GetExtension(file) is ".cs" or ".csproj")) inputs.Add(file);
-            foreach (var relative in new[] { "src/Studio/Launcher/Launcher.cs", "Version.props", "src/Studio/Directory.Build.props", "tests/Studio/Directory.Build.props", "src/Shared/LocalProcess.cs", "src/Logic/Siemens/TiaVersionCatalog.cs", "src/Shared/ProcessArguments.cs", "src/Shared/OpennessEnvironment.cs", "src/Shared/BundleLayout.cs" })
+            foreach (var relative in new[] { "src/Studio/Launcher/Launcher.cs", "Version.props", "Directory.Packages.props", "src/Studio/Directory.Build.props", "tests/Studio/Directory.Build.props", "src/Shared/LocalProcess.cs", "src/Logic/Siemens/TiaVersionCatalog.cs", "src/Shared/ProcessArguments.cs", "src/Shared/OpennessEnvironment.cs", "src/Shared/BundleLayout.cs" })
                 if (File.Exists(Path.Combine(Root, relative))) inputs.Add(Path.Combine(Root, relative));
             var fonts = Path.Combine(Root, "src/Studio/Gui/Fonts");
             if (Directory.Exists(fonts)) foreach (var file in Directory.EnumerateFiles(fonts, "*", SearchOption.AllDirectories)) inputs.Add(file);

@@ -168,6 +168,7 @@ public sealed class AffectedNightlyTests
 
     [Theory]
     [InlineData("Directory.Build.props")]
+    [InlineData("Directory.Packages.props")]
     [InlineData("src/Directory.Build.targets")]
     [InlineData("global.json")]
     [InlineData("NuGet.Config")]
@@ -177,6 +178,7 @@ public sealed class AffectedNightlyTests
         var selection = new CheckAllAffected([path], [], null, false);
         selection.Map([Job("usage-v20-plc")], Catalog);
         Assert.NotNull(selection.Fallback);
+        Assert.Contains("Wide input", selection.Fallback);
         Assert.True(selection.Selected(Job("usage-v21-plc"), CheckAllJobInputs.Find(Job("usage-v21-plc"), Catalog)));
     }
 

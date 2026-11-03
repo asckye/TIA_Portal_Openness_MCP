@@ -7,8 +7,8 @@
     <AssemblyName>TiaMcp.Adapters.Diagnostics.Tests</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="System.Text.Json" Version="$(TiaMcpDotnetPackageVersion)" />
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="System.Text.Json" />
     <Compile Include="../../Engine/TiaMcp.Engine.Diagnostics.Tests/InvocationJournalGoldenTests.cs" Link="InvocationJournalGoldenTests.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="../../../src/Adapters/Diagnostics/InvocationJournal.cs" Link="InvocationJournal.cs" />

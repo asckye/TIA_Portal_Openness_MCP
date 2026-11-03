@@ -14,9 +14,9 @@
   <ItemGroup><Reference Include="System.Web.Extensions" /></ItemGroup>
   <!-- Compile-only SDK/JSON types; runtime dependencies resolve beside the loaded EXE.
        Keep transitive build targets so net48 uses its inbox System.ValueTuple. -->
-  <ItemGroup><PackageReference Include="ModelContextProtocol.Core" Version="0.3.0-preview.4" IncludeAssets="compile" /></ItemGroup>
-  <ItemGroup><PackageReference Include="System.Net.ServerSentEvents" Version="$(TiaMcpDotnetPackageVersion)" IncludeAssets="compile" /></ItemGroup>
-  <ItemGroup><PackageReference Include="System.Text.Json" Version="$(TiaMcpDotnetPackageVersion)" IncludeAssets="compile;buildTransitive" /></ItemGroup>
+  <ItemGroup><PackageReference Include="ModelContextProtocol.Core" IncludeAssets="compile" /></ItemGroup>
+  <ItemGroup><PackageReference Include="System.Net.ServerSentEvents" IncludeAssets="compile" /></ItemGroup>
+  <ItemGroup><PackageReference Include="System.Text.Json" IncludeAssets="compile;buildTransitive" /></ItemGroup>
   <ItemGroup><None Update="Golden/*.txt" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
   <ItemGroup><Compile Include="../TiaMcp.Engine.Tests/HmiScreenTraversalTests.cs" Link="HmiScreenTraversalTests.cs" /></ItemGroup>
   <Import Project="../../Shared/HostDomainBuild.targets" />

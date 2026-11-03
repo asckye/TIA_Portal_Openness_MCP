@@ -4,9 +4,9 @@
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="xunit" Version="2.9.2" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <Compile Include="$(MSBuildThisFileDirectory)CheckSuite.cs" Link="Shared/CheckSuite.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CheckTheory.cs" Link="Shared/CheckTheory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)XunitDefaults.cs" Link="Shared/XunitDefaults.cs" />

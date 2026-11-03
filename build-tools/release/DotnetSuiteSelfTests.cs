@@ -194,13 +194,16 @@ internal static class DotnetSuiteSelfTests
         var config = Path.Combine(directory, "nuget.config");
         File.WriteAllText(config, "<configuration><packageSources><clear /></packageSources></configuration>");
         File.WriteAllText(project, """
-            <Project Sdk="Microsoft.NET.Sdk">
+            <Project>
+              <PropertyGroup><ImportDirectoryPackagesProps>false</ImportDirectoryPackagesProps></PropertyGroup>
+              <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
               <PropertyGroup><TargetFramework>net10.0</TargetFramework><IsTestProject>true</IsTestProject>
                 <ImportDirectoryBuildProps>false</ImportDirectoryBuildProps><ImportDirectoryBuildTargets>false</ImportDirectoryBuildTargets>
                 <NuGetAudit>false</NuGetAudit></PropertyGroup>
               <ItemGroup><PackageReference Include="xunit" Version="2.9.2" />
                 <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
                 <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" /></ItemGroup>
+              <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
             </Project>
             """);
         File.WriteAllText(Path.Combine(directory, "Tests.cs"), """

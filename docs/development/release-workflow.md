@@ -174,7 +174,7 @@ dotnet run --project build-tools/release -- package-test -Build -PublicApiRoot <
 ```
 
 - 不带 `-Build` 时，八个宿主、八个 PlcWorker、工作台、根启动器、更新器、写保护、插件启动器或捆绑 .NET 缺失，或早于最新的产品源码
-  （`src/`、`third_party/SiemensOpcUaModelled`、原生织入器、`Version.props`、`Directory.Build.props`、`global.json`，不含 bin/obj 与 Markdown）时拒绝，并列出文件和较新的源码。
+  （`src/`、`third_party/SiemensOpcUaModelled`、原生织入器、`Version.props`、`Directory.Build.props`、`Directory.Packages.props`、`global.json`，不含 bin/obj 与 Markdown）时拒绝，并列出文件和较新的源码。
 - `-Build` 复用发布链的构建步骤：原生织入器、`get-bundled-dotnet -Offline`、`build-plc-workers`、`build-studio -NoRecord`（含根启动器，不改写
   `manifest/configurator-build.json`）、Foundation 宿主发布并按八个发布键安装、工作台 apphost、写保护、插件启动器和更新器，最后确认宿主与工作台加载捆绑 .NET。
   不运行测试，不改版本或记录；默认使用 MSBuild 增量构建，`-BuildCacheDirectory` 启用构建缓存。构建前后比较全部跟踪文件，有改写即失败。

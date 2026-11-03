@@ -5,8 +5,8 @@
   <ItemGroup>
     <Compile Remove="Fixture/**/*.cs;OptionalDependency/**/*.cs" />
     <Compile Include="../../../src/EngineHost/ModelContextProtocol/McpPrompts.cs" Link="McpPrompts.cs" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(TiaMcpDotnetPackageVersion)" />
-    <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="ModelContextProtocol" />
     <ProjectReference Include="Fixture/Fixture.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
   <Target Name="CopyFixture" AfterTargets="Build">
