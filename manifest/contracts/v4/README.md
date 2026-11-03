@@ -5,22 +5,31 @@ These files freeze the contracts exposed by the built products. The release key 
 one `<releaseKey>.json` for each key. Foundation snapshots cover 14sp1–19. Full-engine snapshots
 cover 20–21 and include the lite roster.
 
-## Contract baseline format 1
+## Contract baseline format 2
 
 `baseline/<releaseKey>.json` has these fields:
 
-- All releases: `formatVersion` (integer `1`), `release`, `profile` (`plc-foundation` or
-  `full-engine`), `tools`, and `behaviorCapabilities`.
+- All releases: `formatVersion` (integer `2`), `release`, `profile` (`plc-foundation` or
+  `full-engine`), `tools`, `behaviorCapabilities`, and `schemas`.
 - V20/V21 only: `liteTools`, a sorted list of names in the advertised lite profile.
-- Each `tools` item has exactly `name`, `inputSchema`, `outputSchema`, and `descriptionSha256`.
-  Schemas are the built product's complete MCP schemas; an absent MCP output schema is recorded
-  explicitly as `null`. `descriptionSha256` is SHA-256 of the exact UTF-8 description text.
+- Each `tools` item has exactly `name`, `inputSchema`, `outputSchemaSha256`, `annotations`, and
+  `descriptionSha256`. `inputSchema` is the built product's complete MCP input schema;
+  `outputSchemaSha256` references its complete output schema in `schemas`, or is explicitly `null`
+  when the product exposes no output schema. `annotations` contains the four explicit boolean hints
+  `readOnlyHint`, `destructiveHint`, `idempotentHint`, and `openWorldHint`.
+  `descriptionSha256` is SHA-256 of the exact UTF-8 description text.
+- `schemas` maps lowercase SHA-256 hex keys to schema objects. Each hash is computed over
+  `json.dumps(schema, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode('utf-8')`.
+  Each referenced schema is stored once per file; dangling references, hash mismatches and
+  unreferenced entries are rejected. Each release file remains self-contained.
 - Each `behaviorCapabilities` item has exactly `family`, `state`, `l5`, and `entries`. The table
   is copied from the built product and its entries are sorted.
 
 Tool records are sorted by name. JSON object keys are sorted, UTF-8 is used without a BOM, output
 uses two-space indentation and ends with LF. Schemas and descriptions are not inferred from a
 proposal or normalized beyond the MCP product output.
+`load_snapshots` resolves references back to `outputSchema` in memory. Capture writes format 2;
+capture-to-baseline comparisons remain byte-exact, and a changed output schema remains breaking.
 
 ## Response snapshot format 3
 

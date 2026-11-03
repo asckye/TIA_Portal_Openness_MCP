@@ -621,8 +621,9 @@ PLC Tools 功能检查需要现有伴随 Python 环境；可用 `TIA_MCP_PLC_TOO
 
 ## 工具契约兼容检查
 
-[重构计划](refactor-plan.md)的当前 V4 基线位于 `manifest/contracts/v4/baseline`，守护八版工具名称、输入 schema
-及 V20/V21 lite 名单。3.2.0 的 16 份原始快照已逐字节迁至 [只读归档](../../manifest/history/contracts-v3/README.md)，由 provenance.json 与 check-repository 校验清单/字节并拒绝旧目录重建；改动 C# 并重新构建运行目录后执行：
+[重构计划](refactor-plan.md)的当前 V4 基线位于 `manifest/contracts/v4/baseline`，守护八版工具名称、输入与输出 schema、注解、描述哈希、行为能力及 V20/V21 lite 名单。
+契约格式 2 在每个文件的 `schemas` 表中保存输出 schema，由工具的 `outputSchemaSha256` 引用；
+加载时还原完整输出 schema，捕获文件与基线仍逐字节比较。3.2.0 的 16 份原始快照已逐字节迁至 [只读归档](../../manifest/history/contracts-v3/README.md)，由 provenance.json 与 check-repository 校验清单/字节并拒绝旧目录重建；改动 C# 并重新构建运行目录后执行：
 
 ```powershell
 python scripts/checks/Snapshot-ToolContracts.py capture --repo-root . --harness tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe --output bin-build/contracts
@@ -630,7 +631,7 @@ python scripts/checks/Snapshot-ToolContracts.py compare --baseline manifest/cont
 ```
 
 删除工具或 lite 条目、删除参数、新增必填、类型/枚举/默认值变化等破坏性变化返回 1；新增工具或可选参数
-只报告。基线只检查输入契约，不检查返回结构或原生语义。基础宿主优先加载 `runtime/dotnet` 中的随包运行时；
+只报告。输出 schema 或注解变化也视为破坏性变化；契约基线不验证实际响应内容或原生语义。基础宿主优先加载 `runtime/dotnet` 中的随包运行时；
 只用开发输出且本机缺少 ASP.NET Core 10 时，抓取前把 `DOTNET_ROOT`/`DOTNET_ROOT_X64` 指向私有运行时。
 
 返回结构另用当前 V4 的 `manifest/contracts/v4/responses` 守护。SLIM-1 后只自动捕获/比较 V20/V21，六个旧版本的响应文件保留为历史记录，静态格式验证继续执行。P8-04j2 起 V20/V21 与其他六版一样经 FoundationHost 抓取：先构建 Release 的

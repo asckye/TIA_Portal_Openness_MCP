@@ -162,7 +162,7 @@ def engine_host_server(args, release, portal_root, profile, env_overrides):
 
 
 RELEASES = ('14sp1', '15.1', '16', '17', '18', '19', '20', '21')
-FORMAT_VERSION = 1
+FORMAT_VERSION = 2
 CONTRACT_FIELDS = {'formatVersion', 'release', 'profile', 'tools', 'behaviorCapabilities'}
 ENGINE_CONTRACT_FIELDS = CONTRACT_FIELDS | {'liteTools'}
 TOOL_FIELDS = {'name', 'inputSchema', 'outputSchema', 'descriptionSha256', 'annotations'}
@@ -171,6 +171,58 @@ FOUNDATION_UNAVAILABLE_BELOW_20 = {
     'ExportPlcBlockDocuments', 'ExportPlcBlocksDocuments',
     'ImportPlcBlockDocuments', 'ImportPlcBlocksDocuments',
 }
+
+
+def encode_contract(snapshot):
+    schemas = {}
+    tools = []
+    for tool in snapshot['tools']:
+        record = {key: value for key, value in tool.items() if key != 'outputSchema'}
+        schema = tool['outputSchema']
+        digest = None
+        if schema is not None:
+            digest = hashlib.sha256(json.dumps(schema, sort_keys=True, separators=(',', ':'),
+                                               ensure_ascii=False).encode('utf-8')).hexdigest()
+            schemas[digest] = schema
+        record['outputSchemaSha256'] = digest
+        tools.append(record)
+    return {**snapshot, 'formatVersion': FORMAT_VERSION, 'tools': tools, 'schemas': schemas}
+
+
+def decode_contract(raw, path):
+    expected_fields = (ENGINE_CONTRACT_FIELDS if raw.get('release') in ('20', '21') else CONTRACT_FIELDS) | {'schemas'}
+    if set(raw) != expected_fields:
+        raise ValueError(f'{path}: contract fields differ; missing={sorted(expected_fields - set(raw))}, '
+                         f'unknown={sorted(set(raw) - expected_fields)}')
+    if type(raw['formatVersion']) is not int or raw['formatVersion'] != FORMAT_VERSION:
+        raise ValueError(f'{path}: expected contract formatVersion {FORMAT_VERSION}')
+    schemas = raw['schemas']
+    if not isinstance(schemas, dict):
+        raise ValueError(f'{path}: schemas must be an object')
+    for digest, schema in schemas.items():
+        if not isinstance(schema, dict) or digest != hashlib.sha256(json.dumps(
+                schema, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode('utf-8')).hexdigest():
+            raise ValueError(f'{path}: schema key must be the lowercase SHA-256 of its schema object')
+    if not isinstance(raw['tools'], list):
+        raise ValueError(f'{path}: tools must be an array')
+    tool_fields = (TOOL_FIELDS - {'outputSchema'}) | {'outputSchemaSha256'}
+    tools, referenced = [], set()
+    for tool in raw['tools']:
+        actual = set(tool) if isinstance(tool, dict) else set()
+        if actual != tool_fields:
+            raise ValueError(f'{path}: tool fields differ; missing={sorted(tool_fields - actual)}, '
+                             f'unknown={sorted(actual - tool_fields)}')
+        digest = tool['outputSchemaSha256']
+        if digest is not None and (not isinstance(digest, str) or digest not in schemas):
+            raise ValueError(f'{path}: outputSchemaSha256 must be null or a key in schemas')
+        record = {key: value for key, value in tool.items() if key != 'outputSchemaSha256'}
+        record['outputSchema'] = schemas[digest] if digest is not None else None
+        if digest is not None:
+            referenced.add(digest)
+        tools.append(record)
+    if referenced != set(schemas):
+        raise ValueError(f'{path}: unreferenced schemas: {sorted(set(schemas) - referenced)}')
+    return {**{key: value for key, value in raw.items() if key != 'schemas'}, 'tools': tools}
 
 
 def validate_contract_snapshot(snapshot, path):
@@ -363,7 +415,7 @@ def capture(args):
     args.output.mkdir(parents=True, exist_ok=True)
     for release, snapshot in snapshots.items():
         (args.output / (release + '.json')).write_text(
-            json.dumps(snapshot, ensure_ascii=False, sort_keys=True, indent=2) + '\n',
+            json.dumps(encode_contract(snapshot), ensure_ascii=False, sort_keys=True, indent=2) + '\n',
             encoding='utf-8', newline='\n')
     return 0
 
@@ -430,7 +482,7 @@ def schema_changes(old, new, path='$'):
 def load_snapshots(directory):
     snapshots = {}
     for path in sorted(directory.glob('*.json')):
-        snapshot = json.loads(path.read_text(encoding='utf-8'))
+        snapshot = decode_contract(json.loads(path.read_text(encoding='utf-8')), path)
         release = snapshot['release']
         if path.stem != release or release in snapshots:
             raise ValueError(f'Invalid release file: {path}')
@@ -852,13 +904,14 @@ def check_current_schemas(snapshot, contracts, root=Path(__file__).resolve().par
 
 def self_test(args):
     import copy
+    from unittest.mock import patch
     root = ROOT
     import ported_families
     availability = (root / 'src/Adapters.Contracts/PortedFamilies.cs').read_text(encoding='utf-8-sig')
     parsed = ported_families.parse(availability)
     assert parsed['F20']['tool_releases']['ListCommunicationConnections'] == ['21']
-    snapshot = load_snapshots(root / 'manifest/contracts/v4/baseline')['21']
-    snapshot['formatVersion'] = FORMAT_VERSION
+    snapshots = load_snapshots(root / 'manifest/contracts/v4/baseline')
+    snapshot = snapshots['21']
     contracts = current_parameters(root)
     # The inventory table itself must not be able to bless a candidate parameter.
     if 'behaviorCapabilities' not in snapshot:
@@ -871,20 +924,24 @@ def self_test(args):
     scratch = root / 'bin-build' / ('p6-35-contract-selftest-' + uuid.uuid4().hex)
     scratch.mkdir(parents=True)
     try:
-        for path in (root / 'manifest/contracts/v4/baseline').glob('*.json'):
-            source = json.loads(path.read_text(encoding='utf-8'))
-            source['formatVersion'] = FORMAT_VERSION
-            (scratch / path.name).write_text(json.dumps(source, ensure_ascii=False, sort_keys=True, indent=2) + '\n',
-                                             encoding='utf-8', newline='\n')
+        for release, source in snapshots.items():
+            (scratch / (release + '.json')).write_text(
+                json.dumps(encode_contract(source), ensure_ascii=False, sort_keys=True, indent=2) + '\n',
+                encoding='utf-8', newline='\n')
         verified_contracts(scratch, root, contracts)
-        baseline21 = json.loads((root / 'manifest/contracts/v4/baseline/21.json').read_text(encoding='utf-8'))
-        baseline21['formatVersion'] = FORMAT_VERSION
+        baseline21 = encode_contract(snapshot)
         for field in ('behaviorCapabilities', 'outputSchema'):
-            current = copy.deepcopy(load_snapshots(scratch)['21'])
-            if field == 'outputSchema': current['tools'][0].pop(field)
-            else: current[field][0]['state'] = 'safe-v4'
-            (scratch / '21.json').write_text(json.dumps(current), encoding='utf-8')
-            try: verified_contracts(scratch, root, contracts)
+            current = copy.deepcopy(load_snapshots(scratch))
+            if field == 'outputSchema': current['21']['tools'][0].pop(field)
+            else: current['21'][field][0]['state'] = 'safe-v4'
+            try:
+                if field == 'outputSchema':
+                    # Exercise the missing field after decoding, before any encoder can require it.
+                    with patch.dict(verified_contracts.__globals__, {'load_snapshots': lambda directory: current}):
+                        verified_contracts(scratch, root, contracts)
+                else:
+                    (scratch / '21.json').write_text(json.dumps(encode_contract(current['21'])), encoding='utf-8')
+                    verified_contracts(scratch, root, contracts)
             except ValueError: count += 1
             else: raise AssertionError('Invalid capability/output snapshot accepted')
             (scratch / '21.json').write_text(json.dumps(baseline21, ensure_ascii=False, sort_keys=True, indent=2) + '\n',
@@ -908,11 +965,30 @@ def self_test(args):
         try: validate_contract_snapshot(invalid, 'negative.json')
         except ValueError: count += 1
         else: raise AssertionError('Invalid frozen contract format accepted: ' + field)
-    invalid = copy.deepcopy(snapshot)
-    invalid['tools'][0].pop('outputSchema')
-    try: validate_contract_snapshot(invalid, 'negative.json')
+    invalid = encode_contract(snapshot)
+    invalid['tools'][0].pop('outputSchemaSha256')
+    try: decode_contract(invalid, 'negative.json')
     except ValueError: count += 1
-    else: raise AssertionError('Missing contract field accepted: outputSchema')
+    else: raise AssertionError('Missing contract field accepted: outputSchemaSha256')
+    for change in ('schema-key', 'dangling-schema', 'orphan-schema', 'format-version-1'):
+        invalid = encode_contract(snapshot)
+        if change == 'schema-key':
+            invalid['schemas']['0' * 64] = invalid['schemas'].pop(next(iter(invalid['schemas'])))
+        elif change == 'dangling-schema':
+            invalid['tools'][0]['outputSchemaSha256'] = '0' * 64
+        elif change == 'orphan-schema':
+            schema = {'type': 'null'}
+            digest = hashlib.sha256(json.dumps(schema, sort_keys=True, separators=(',', ':'),
+                                               ensure_ascii=False).encode('utf-8')).hexdigest()
+            invalid['schemas'][digest] = schema
+        else:
+            invalid['formatVersion'] = 1
+        try: decode_contract(invalid, 'negative.json')
+        except ValueError: count += 1
+        else: raise AssertionError('Invalid format-2 contract accepted: ' + change)
+    nullable = copy.deepcopy(snapshot)
+    nullable['tools'][0]['outputSchema'] = None
+    assert decode_contract(encode_contract(nullable), 'nullable.json') == nullable
     from phase6_groups import P7_04B_DESCRIPTIONS
     after = {t['name']: copy.deepcopy(t) for t in snapshot['tools'] if t['name'] in P7_04B_DESCRIPTIONS}
     before = copy.deepcopy(after)
