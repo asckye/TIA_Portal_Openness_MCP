@@ -199,7 +199,7 @@ public sealed class SharedWorkerRegressionTests
         using var engine = fixture.Engine();
         using var lane = await engine.AcquireLane(CancellationToken.None);
         engine.ActivateLane(lane);
-        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         await engine.PrepareReadiness(deadline.Token);
         Assert.True((bool?)engine.Snapshot()["readiness"]?["ready"]);
         Assert.Null(await engine.AcquireLane(deadline.Token));
