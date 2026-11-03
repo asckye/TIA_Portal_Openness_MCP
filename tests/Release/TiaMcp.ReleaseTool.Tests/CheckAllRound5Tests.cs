@@ -492,7 +492,7 @@ public sealed class CheckAllRound5Tests
         Assert.Equal("false", (string?)document.Descendants("ShouldUnsetParentConfigurationAndPlatform").Single());
         var references = document.Descendants("ProjectReference")
             .Where(reference => (string?)reference.Attribute("ReferenceOutputAssembly") == "false").ToArray();
-        Assert.Equal(3, references.Length);
+        Assert.Equal(2, references.Length); // Q3 deleted the engine worker fault fixture (approved 2026-11-02).
         var receipts = new List<string>();
         var expected = new List<(string Path, string Content)>();
         foreach (var reference in references)
