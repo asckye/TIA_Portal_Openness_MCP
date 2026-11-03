@@ -7,21 +7,13 @@ using View = enginehost::TiaMcpServer.ModelContextProtocol.IToolCatalogView;
 using Descriptor = enginehost::TiaMcpServer.ModelContextProtocol.ToolDescriptor;
 using Parameter = enginehost::TiaMcpServer.ModelContextProtocol.ToolParameterDescriptor;
 
-// This descriptor lives only in the test assembly. Production EngineCatalog rejects
-// it; the internal test entry adds it after the real catalog has been validated.
+// This descriptor lives only in the test assembly; the internal test entry replaces
+// the registered tool after the production registry has been built.
 internal static class SessionFixtureTool
 {
     // Retain a registered name for generated V4 annotations; only the test seam
-    // replaces its descriptor/schema/owner. File catalogs still require foundation.
+    // replaces its descriptor/schema/owner.
     internal const string Name = "ListTestSuiteCases";
-    internal static View Add(View source) => new Catalog(source);
-    internal static void WriteCatalog(string path, string release, string worker)
-        => File.WriteAllText(path, new JsonObject { ["formatVersion"] = 1, ["release"] = release,
-            ["workerSha256"] = foundationhost::TiaMcp.FoundationHost.EngineWorkerClient.Hash(worker),
-            ["behaviorCapabilities"] = TiaMcp.Logic.V4.BehaviorCapabilities.Table(typeof(TiaMcp.Logic.V4.BehaviorCapabilities).Assembly, release),
-            ["tools"] = new JsonArray(), ["descriptors"] = new JsonArray(), ["liteTools"] = new JsonArray(),
-            ["serverInstructions"] = "Offline session fixture." }.ToJsonString());
-
     internal static IReadOnlyList<global::ModelContextProtocol.Server.McpServerTool> PlcTools(
         foundationhost::TiaMcp.FoundationHost.IFoundationSessionWorker worker,
         IReadOnlyList<global::ModelContextProtocol.Server.McpServerTool> tools)

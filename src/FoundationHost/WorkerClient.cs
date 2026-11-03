@@ -122,7 +122,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             ? ResponseGuardTool.Shrink(result, name, "worker", force: true) : result;
     private readonly WorkerTimeoutPolicy timeouts = new(defaultTimeoutSeconds, timeoutConfig,
         Environment.GetEnvironmentVariable("TIA_MCP_WORKER_TIMEOUTS"));
-    // Same test seam as EngineWorkerClient's spills directory: the process data location is cached at its first use, so
+    // The process data location is cached at its first use, so
     // parallel test processes could share it. Production always uses the data location.
     internal string? SpillsDirectoryForTest { get; init; }
     private string SpillsDirectory => SpillsDirectoryForTest ?? TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory;

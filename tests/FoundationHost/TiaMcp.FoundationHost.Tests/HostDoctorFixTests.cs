@@ -54,10 +54,8 @@ public sealed class HostDoctorFixTests : IDisposable
         { "ElevationDeclined", "ElevationDeclined", "OPENNESS_GROUP_ELEVATION_DECLINED", 2, DoctorFixState.Failed },
         { "MissingGroup", "MissingGroup", "OPENNESS_GROUP_MISSING", 2, DoctorFixState.Failed },
         { "AddFailed", "AddFailed", "OPENNESS_GROUP_ADD_FAILED", 2, DoctorFixState.Failed },
-        // A failure without a result code, and the engine helper's bool.
+        // A failure without a result code.
         { "worker-refusal", "Unknown", null, 2, DoctorFixState.Failed },
-        { "engine-true", "Unknown", null, 0, DoctorFixState.Ready },
-        { "engine-false", "Unknown", null, 2, DoctorFixState.Failed },
     };
 
     [Theory, MemberData(nameof(Outcomes))]
@@ -80,11 +78,11 @@ public sealed class HostDoctorFixTests : IDisposable
         Assert.Equal(new[] { "ok", "outcome", "code", "message" }, group.Select(property => property.Key));
         Assert.Equal(outcome, (string?)group["outcome"]);
         Assert.Equal(code, (string?)group["code"]);
-        Assert.Equal(scenario is "Ready" or "engine-true", (bool)group["ok"]!);
+        Assert.Equal(scenario == "Ready", (bool)group["ok"]!);
         string? message = (string?)group["message"];
         if (code != null) Assert.StartsWith(code + ": ", message);
         if (scenario == "worker-refusal") Assert.Equal("HostObserve only accepts read-only observations.", message);
-        if (scenario is "Ready" or "engine-true" or "engine-false") Assert.Null(message);
+        if (scenario == "Ready") Assert.Null(message);
         else Assert.Contains("  [FAIL] Openness user group: check failed: " + message, text.Output);
         // Without --json the same report is the output; with --json the object carries it line for line.
         Assert.Equal(Lines(text.Output), report["report"]!.AsArray().Select(line => (string)line!));
@@ -122,16 +120,16 @@ public sealed class HostDoctorFixTests : IDisposable
         foreach (var outcome in Enum.GetValues<WindowsOpennessGroup.Outcome>().Where(o => o != WindowsOpennessGroup.Outcome.Ready))
         {
             string message = new WindowsOpennessGroup.Result(outcome, false, outcome == WindowsOpennessGroup.Outcome.MissingGroup ? null : false, 5).Message;
-            var (name, code) = HostDoctorGroupOutcome.Classify(true, false, message, true);
+            var (name, code) = HostDoctorGroupOutcome.Classify(true, false, message);
             Assert.Equal(outcome.ToString(), name);
             Assert.StartsWith(code + ": ", message);
-            Assert.Equal<(string?, string?)>(("Unknown", null), HostDoctorGroupOutcome.Classify(true, false, "worker: " + message.Replace(":", "", StringComparison.Ordinal), true));
-            Assert.Equal<(string?, string?)>((outcome.ToString(), code), HostDoctorGroupOutcome.Classify(true, false, "worker: " + message, true));
+            Assert.Equal<(string?, string?)>(("Unknown", null), HostDoctorGroupOutcome.Classify(true, false, "worker: " + message.Replace(":", "", StringComparison.Ordinal)));
+            Assert.Equal<(string?, string?)>((outcome.ToString(), code), HostDoctorGroupOutcome.Classify(true, false, "worker: " + message));
         }
         Assert.Equal(5, HostDoctorGroupOutcome.Codes.Count);
-        Assert.Equal<(string?, string?)>((null, null), HostDoctorGroupOutcome.Classify(false, false, "OPENNESS_GROUP_MISSING: x", true));
-        Assert.Equal<(string?, string?)>(("Ready", null), HostDoctorGroupOutcome.Classify(true, true, null, true));
-        Assert.Equal<(string?, string?)>(("Unknown", null), HostDoctorGroupOutcome.Classify(true, true, null, false));
+        Assert.Equal<(string?, string?)>((null, null), HostDoctorGroupOutcome.Classify(false, false, "OPENNESS_GROUP_MISSING: x"));
+        Assert.Equal<(string?, string?)>(("Ready", null), HostDoctorGroupOutcome.Classify(true, true, null));
+        Assert.Equal<(string?, string?)>(("Unknown", null), HostDoctorGroupOutcome.Classify(true, false, null));
     }
 
     [Fact]
@@ -266,19 +264,16 @@ public sealed class HostDoctorFixTests : IDisposable
 
     private static FakeProbe Probe(string scenario) => scenario switch
     {
-        "worker-refusal" => new FakeProbe(_ => throw new ArgumentException("HostObserve only accepts read-only observations."), true),
-        "engine-true" => new FakeProbe(_ => true, false),
-        "engine-false" => new FakeProbe(_ => false, false),
+        "worker-refusal" => new FakeProbe(_ => throw new ArgumentException("HostObserve only accepts read-only observations.")),
         _ => new FakeProbe(fix => fix
             ? WindowsOpennessGroup.RequireEffectiveMembership(WindowsOpennessGroup.EnsureMembership(new FakePlatform(Enum.Parse<WindowsOpennessGroup.Outcome>(scenario))))
-            : false, true),
+            : false),
     };
 
-    private sealed class FakeProbe(Func<bool, bool> group, bool reportsOutcome) : IHostDoctorProbe
+    private sealed class FakeProbe(Func<bool, bool> group) : IHostDoctorProbe
     {
         public string ReleaseKey => "19";
         public int? DetectedMajor => 19;
-        public bool FixReportsOutcome => reportsOutcome;
         public string LogDirectory() => @"C:\fixture\data\logs\19";
         public string DiagnosticsDirectory() => @"C:\fixture\data\diagnostics";
         public List<EnvironmentDoctor.Check> Checks() => new()

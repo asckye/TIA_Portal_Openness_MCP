@@ -102,7 +102,7 @@ public sealed class Round2BlockPageTests
     [Fact]
     public void Timeout_environment_writers_and_HTTP_fixtures_share_a_nonparallel_collection()
     {
-        var types = new[] { typeof(PlcWorkerRobustnessTests), typeof(EngineHttpSessionTests), typeof(EngineHttpSessionTestsPlc) };
+        var types = new[] { typeof(PlcWorkerRobustnessTests), typeof(EngineHttpSessionTestsPlc) };
         Assert.All(types, type => Assert.Equal(WorkerDataDirectoryCollection.Name,
             type.CustomAttributes.SingleOrDefault(a => a.AttributeType == typeof(CollectionAttribute))?.ConstructorArguments.Single().Value));
         Assert.True(typeof(WorkerDataDirectoryCollection).GetCustomAttribute<CollectionDefinitionAttribute>()!.DisableParallelization);

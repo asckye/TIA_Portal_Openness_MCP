@@ -11,7 +11,7 @@ Original V14/V15 are excluded; service/minor keys are not numeric major-version 
 All eight MCP/worker and Studio adapter targets have compiled against their matching
 PublicAPI inputs. Current build evidence is in
 [the multi-version record](../../manifest/multi-version-build.json); its `engineCompatibility` section keeps
-the engine cross-check record, [the engine record](../../manifest/release-build.json), which is no longer delivered. New native acceptance is
+the historical engine cross-check record, [the engine record](../../manifest/release-build.json), which is no longer delivered. The cross-check route is retired; Q3 removes its host client, frozen catalog and dead compile symbols. All sessions use WorkerClient. New native acceptance is
 **NOT RUN**; older candidate notes saying references or Windows compilation were
 unavailable do not describe the current build.
 

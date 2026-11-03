@@ -11,21 +11,17 @@ using Siemens.Engineering.Compiler;
 using Siemens.Engineering.SW.Blocks;
 using Siemens.Engineering.SW.Tags;
 using Siemens.Engineering.SW.Types;
-#if PLC_SAFETY || TIA_ENGINE_LOCAL_PRIMITIVES
+#if PLC_SAFETY
 using Siemens.Engineering.Safety;
 #endif
-#if STUDIO_VCI_MODERN || TIA_ENGINE_LOCAL_PRIMITIVES
+#if STUDIO_VCI_MODERN
 using Siemens.Engineering.CrossReference;
 using Siemens.Engineering.Online;
 using Siemens.Engineering.SW.ExternalSources;
 using Siemens.Engineering.SW.WatchAndForceTables;
 #endif
 
-#if TIA_ENGINE_LOCAL_PRIMITIVES
-namespace TiaMcpServer.Siemens.LocalPlcBlocks
-#else
 namespace TiaMcp.Adapters.Native.Plc
-#endif
 {
     // Raw native operations; callers retain selection, options, guards and thread ownership.
     public static class PlcBlockPrimitives
@@ -64,13 +60,13 @@ namespace TiaMcp.Adapters.Native.Plc
         public static int ErrorCount(CompilerResultMessage value) => value.ErrorCount;
         public static int WarningCount(CompilerResultMessage value) => value.WarningCount;
         public static DateTime DateTime(CompilerResultMessage value) => value.DateTime;
-#if PLC_SAFETY || TIA_ENGINE_LOCAL_PRIMITIVES
+#if PLC_SAFETY
         public static SafetyAdministration SafetyOrNull(DeviceItem value) => value?.GetService<SafetyAdministration>();
         public static bool IsLoggedOn(SafetyAdministration value) => value.IsLoggedOnToSafetyOfflineProgram;
         public static void Login(SafetyAdministration value, SecureString password) => value.LoginToSafetyOfflineProgram(password);
 #endif
 
-#if STUDIO_VCI_MODERN || TIA_ENGINE_LOCAL_PRIMITIVES
+#if STUDIO_VCI_MODERN
         public static PlcBlockComposition BlocksOrNull(PlcBlockGroup value) => value?.Blocks;
         public static IEngineeringObject Parent(PlcBlock value) => value.Parent;
         public static string Name(PlcTypeGroup value) => value.Name;

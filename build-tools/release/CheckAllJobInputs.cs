@@ -108,7 +108,6 @@ internal static class CheckAllJobInputs
         if (family == "harness" && job.Name.Contains("native-diagnostics-only", StringComparison.Ordinal))
         {
             projects.AddRange(["tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj", Transport,
-                "tests/WorkerChannel/TiaMcp.EngineWorker.FaultFixture/TiaMcp.EngineWorker.FaultFixture.csproj",
                 "tests/WorkerChannel/TiaMcp.PlcWorker.FaultFixture/TiaMcp.PlcWorker.FaultFixture.csproj"]);
             paths.AddRange(["src", "tests"]);
         }

@@ -22,11 +22,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 meta[side + "Source"] = new JsonObject { ["mode"] = "file", ["path"] = filePath };
                 return filePath;
             }
-#if TIA_ENGINE_PORTED
-            var export = EngineServices.Get<Siemens.Portal>().ExportBlockDocumentForAnalysis(softwarePath, blockPath);
-#else
             var export = HostToolServices.ExportBlockDocument(softwarePath, blockPath);
-#endif
             tempDir = export.TempDir;
             meta[side + "Source"] = new JsonObject { ["mode"] = "block", ["softwarePath"] = softwarePath, ["blockPath"] = blockPath, ["tempExportDeleted"] = true };
             return export.XmlPath;

@@ -123,9 +123,6 @@
     <DefineConstants Condition="$([System.String]::Copy('|16|17|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);STUDIO_VCI_INITIAL</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);STUDIO_VCI_MODERN</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Engine'">
-    <DefineConstants Condition="'$(TiaReleaseKey)' == '20'">$(DefineConstants);TIA_V20</DefineConstants>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Adapter' and '$(TiaReleaseKey)' == '20'"><DefineConstants>$(DefineConstants);PLC_B5_V20_PLUS</DefineConstants></PropertyGroup>
   <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Adapter'">
 

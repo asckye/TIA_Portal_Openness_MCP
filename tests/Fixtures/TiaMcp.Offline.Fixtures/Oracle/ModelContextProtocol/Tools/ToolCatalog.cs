@@ -230,10 +230,6 @@ namespace TiaMcpServer.ModelContextProtocol
                     var attribute = method.GetCustomAttribute<McpServerToolAttribute>();
                     if (attribute == null) continue;
                     var name = attribute.Name ?? method.Name;
-#if TIA_ENGINE_PORTED
-                    if (TiaMcp.Adapters.Contracts.PortedFamilies.All.Any(f => (f.Name == "F01" || f.Name == "F02" || f.Name == "F03") && f.Tools.Contains(name, StringComparer.Ordinal)))
-                        throw new InvalidOperationException("A host-owned tool is still registered in the engine: " + name);
-#endif
                     if (methods.TryGetValue(name, out var previous))
                         throw new InvalidOperationException("Duplicate MCP tool name '" + name + "': "
                             + previous.DeclaringType!.FullName + "." + previous.Name + " and "

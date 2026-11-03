@@ -5,6 +5,7 @@ using Xunit;
 using Options = foundationhost::TiaMcp.FoundationHost.HostOptions;
 using Host = foundationhost::TiaMcp.FoundationHost.SharedReleaseHost;
 using Profile = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
+using SessionTests = OperatorSessionTestsPlc;
 
 [Collection(BundleSelectionCollection.Name)]
 public sealed class SharedHostSessionTests
@@ -12,12 +13,12 @@ public sealed class SharedHostSessionTests
     [Theory] [InlineData("20")] [InlineData("21")]
     public async Task Operator_cold_worker_fault_is_dispatched_and_locks_the_same_session(string release)
     {
-        using var fixture = new OperatorSessionTests.Fixture(release);
+        using var fixture = new SessionTests.Fixture(release);
         using var session = await fixture.Create();
-        await using var ai = await OperatorSessionTests.Peer.Ai(session);
+        await using var ai = await SessionTests.Peer.Ai(session);
         using var registration = fixture.Register();
         using var membership = registration.Register(session);
-        await using var panel = await OperatorSessionTests.Peer.Operator(registration, session.SessionKey);
+        await using var panel = await SessionTests.Peer.Operator(registration, session.SessionKey);
         var fault = await panel.Tool(SessionFixtureTool.Name, new() { ["fault"] = true }, false);
         Assert.True((string?)fault["meta"]?["outcome"] == "unknown", fault.ToJsonString());
         Assert.True((bool?)session.Snapshot()["sessionLocked"], session.Snapshot().ToJsonString());
@@ -36,8 +37,6 @@ public sealed class SharedHostSessionTests
         if (plc) arguments.Add("--plc-worker");
         var options = Options.Parse(arguments.ToArray(), root);
         var data = Profile.Releases[release];
-        Assert.Null(options.EngineWorkerExe);
-        Assert.True(options.PlcWorker);
         using var session = await Host.CreateHostSession(options, false);
         Assert.Equal(data.Instructions, session.Instructions);
         Assert.NotEmpty(session.Tools);

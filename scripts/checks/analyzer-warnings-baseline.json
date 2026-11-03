@@ -207,24 +207,6 @@
     },
     {
       "rule": "CA1068",
-      "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerRobustnessTests.cs",
-      "line": 115,
-      "column": 39,
-      "endLine": 115,
-      "endColumn": 43,
-      "message": "Method \u0027WorkerRobustnessTests.Scope.Call(bool, System.Threading.CancellationToken, string?, bool)\u0027 should take CancellationToken as the last parameter",
-      "member": "WorkerRobustnessTests/Scope/Call( bool foundation , CancellationToken token = default , string ? payload = null , bool progress = false )",
-      "anchor": "Call ",
-      "fingerprint": "ceb5ae7a984774a4ab57336da467bcfe7558423e08551b9074f7d278b25b02f9",
-      "reason": "existing-cancellation-order",
-      "retirement": "",
-      "contexts": [
-        "ordinary|tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_FOUNDATION_TEST_HOST,TRACE",
-        "variants|tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_FOUNDATION_TEST_HOST,TRACE"
-      ]
-    },
-    {
-      "rule": "CA1068",
       "path": "tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/ProcessTests.cs",
       "line": 136,
       "column": 31,

@@ -8,6 +8,7 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaMcp.Adapters.Contracts;
 using TiaMcpServer.ModelContextProtocol;
+using TiaMcpServer.Siemens;
 using TiaOpenness.Shared;
 
 namespace TiaMcp.FoundationHost;
@@ -77,8 +78,8 @@ internal static class HostToolsListWriter
             ["generatedAt"] = options.CatalogGeneratedAt ?? DateTimeOffset.UtcNow.ToString("o"),
             ["source"] = "FoundationHost V" + release + " full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
             ["fileVersion"] = FileVersionInfo.GetVersionInfo(Environment.ProcessPath!).FileVersion,
-            ["exeSha256"] = EngineCatalog.Hash(Environment.ProcessPath!),
-            ["workerSha256"] = EngineCatalog.Hash(options.EngineWorkerExe ?? options.WorkerExe),
+            ["exeSha256"] = ArgumentRules.HashFile(Environment.ProcessPath!, FileShare.Read),
+            ["workerSha256"] = ArgumentRules.HashFile(options.WorkerExe, FileShare.Read),
             ["toolCount"] = rows.Count,
             ["note"] = "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
             ["callDiscipline"] = new JsonObject

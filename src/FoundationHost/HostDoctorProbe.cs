@@ -12,8 +12,6 @@ internal interface IHostDoctorProbe
 {
     public string ReleaseKey { get; }
     public int? DetectedMajor { get; }
-    // True when a successful repair means effective membership (PlcWorker); the engine helper returns only a bool.
-    public bool FixReportsOutcome { get; }
     public string LogDirectory();
     public string DiagnosticsDirectory();
     public List<EnvironmentDoctor.Check> Checks();
@@ -29,7 +27,6 @@ internal sealed class HostDoctorProbe : IHostDoctorProbe, IDisposable
     internal HostOptions Options { get; }
     public int? DetectedMajor { get; }
     public string ReleaseKey => Options.ReleaseKey;
-    public bool FixReportsOutcome => Options.EngineWorkerExe == null;
     private readonly TiaVersionDescriptor release;
     private readonly (bool Ok, string? InstallPath, string? ResolvedDll, string? Problem) assemblies;
     private readonly string apiDirectory;
@@ -85,7 +82,7 @@ internal sealed class HostDoctorProbe : IHostDoctorProbe, IDisposable
                     ["recommendedFixZh"] = "请修复所选版本的 worker 与 Openness 安装，然后重新运行 `tia doctor`。" };
             }
         }
-        string executable = Options.EngineWorkerExe ?? Options.WorkerExe;
+        string executable = Options.WorkerExe;
         return EnvironmentDoctor.RunHost(Options.ReleaseKey, DetectedMajor, assemblies,
             new[] { AppContext.BaseDirectory, Path.GetDirectoryName(executable)! }, startup);
     }
@@ -99,7 +96,7 @@ internal sealed class HostDoctorProbe : IHostDoctorProbe, IDisposable
     private JsonNode? Repair()
     {
         Start();
-        return call != null ? call(PlcWorkerGroupRepair) : observe!("group.fix");
+        return call!(PlcWorkerGroupRepair);
     }
 
     private JsonNode? Observe(string operation)
@@ -112,20 +109,11 @@ internal sealed class HostDoctorProbe : IHostDoctorProbe, IDisposable
     {
         if (observe != null) return;
         if (!Options.NativeEnabled) throw new InvalidOperationException("Worker observations are unavailable with --offline; rerun doctor without --offline for --fix.");
-        if (Options.EngineWorkerExe != null)
-        {
-            var engine = new EngineWorkerClient(Options, File.Exists(Options.EngineWorkerExe) ? EngineCatalog.Hash(Options.EngineWorkerExe) : "");
-            worker = engine;
-            observe = name => engine.Observe(name, new JsonObject(), CancellationToken.None).GetAwaiter().GetResult();
-        }
-        else
-        {
-            var plc = new WorkerClient(Options.ReleaseKey, Options.WorkerExe, apiDirectory, true, Options.EngineTimeoutSeconds, Options.WorkerTimeoutConfig)
-                { Bundled = Options.BundledWorker, TiaPortalLocation = Options.TiaPortalLocation };
-            worker = plc;
-            observe = name => plc.Observe(name, new JsonObject(), CancellationToken.None).GetAwaiter().GetResult();
-            call = name => plc.Call(name, new JsonObject(), CancellationToken.None).GetAwaiter().GetResult();
-        }
+        var plc = new WorkerClient(Options.ReleaseKey, Options.WorkerExe, apiDirectory, true, Options.EngineTimeoutSeconds, Options.WorkerTimeoutConfig)
+            { Bundled = Options.BundledWorker, TiaPortalLocation = Options.TiaPortalLocation };
+        worker = plc;
+        observe = name => plc.Observe(name, new JsonObject(), CancellationToken.None).GetAwaiter().GetResult();
+        call = name => plc.Call(name, new JsonObject(), CancellationToken.None).GetAwaiter().GetResult();
     }
 
     public void Dispose() => worker?.Dispose();
@@ -144,12 +132,11 @@ internal static class HostDoctorGroupOutcome
         ["OPENNESS_GROUP_ADD_FAILED"] = "AddFailed",
     };
 
-    // Null without --fix. "Unknown" is a failure without a result code, or the engine helper's bool, which cannot tell an
-    // effective membership from one that waits for a new logon.
-    internal static (string? Outcome, string? Code) Classify(bool fix, bool ok, string? failure, bool reportsOutcome)
+    // Null without --fix. "Unknown" is a failure without a result code.
+    internal static (string? Outcome, string? Code) Classify(bool fix, bool ok, string? failure)
     {
         if (!fix) return (null, null);
-        if (failure == null) return (ok && reportsOutcome ? "Ready" : "Unknown", null);
+        if (failure == null) return (ok ? "Ready" : "Unknown", null);
         var code = Regex.Match(failure, "OPENNESS_GROUP_[A-Z_]+(?=:)");
         return code.Success && Codes.TryGetValue(code.Value, out var outcome) ? (outcome, code.Value) : ("Unknown", null);
     }

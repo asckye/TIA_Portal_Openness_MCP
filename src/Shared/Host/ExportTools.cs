@@ -21,7 +21,6 @@ using ExportStore = TiaMcp.FoundationHost.SessionExportStore;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-#if !TIA_ENGINE_PORTED
     [McpServerToolType]
     internal sealed class ExportTools
     {
@@ -135,7 +134,6 @@ namespace TiaMcpServer.ModelContextProtocol
             return ResponseGuardTool.UnwrapPayload(content, out unwrapped);
         }
     }
-#endif
 
 
     // This adapter belongs only to the PLC exchange group. Native methods retain

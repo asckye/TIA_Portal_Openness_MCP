@@ -95,11 +95,9 @@ namespace TiaMcpServer.ModelContextProtocol
             return "";
         }
 
-#if !TIA_ENGINE_PORTED
         [McpServerTool(Name = "ListToolCategories"), Description("[L0][Meta][READ] List the tool taxonomy, layers and current full-catalog counts. Use FindTools to browse a category or domain.")]
         public static CallToolResult ListToolCategoriesV4()
             => InfrastructureResult("ListToolCategories", ListToolCategories());
-#endif
 
         [Description(
             "[L0][Meta][READ] The tool taxonomy: 7 categories (session, project, plc, plc-online, hardware, hmi, runtime), " +
@@ -147,7 +145,6 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-#if !TIA_ENGINE_PORTED
         [McpServerTool(Name = "FindTools"), Description("[L0][Meta][READ] Search the full version-gated catalog, including tools outside lite. Returns names, signatures, descriptions and examples. Use CallTool with an arguments object to invoke a match.")]
         public static CallToolResult FindToolsV4(
             [Description("All capability words must match. Single words also match descriptions, ranked below tool names and aliases. Empty browses the catalog.")] string query = "",
@@ -166,7 +163,6 @@ namespace TiaMcpServer.ModelContextProtocol
             response.Items = lines.Skip(offset * 3L > int.MaxValue ? int.MaxValue : offset * 3).Take(limit > int.MaxValue / 3 ? int.MaxValue : limit * 3).ToArray();
             return InfrastructureResult("FindTools", response, OffsetPage(offset, limit, count));
         }
-#endif
 
         [Description(
             "[L0][Meta][READ] Search the FULL tool roster, including tools not listed in this session. " +
@@ -276,14 +272,12 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-#if !TIA_ENGINE_PORTED
         [McpServerTool(Name = "CallTool"), Description("[L0][Meta] Invoke a tool in the full version-gated catalog. arguments must be an object matching the target inputSchema. Large results return data.text, data.export and data.continuation; follow GetExportContent with meta.paging.nextOffset and concatenate text before parsing. Dispatch failures use the V4 envelope. Nested orchestration is refused.")]
         [AsyncDispatch(nameof(CallToolAsync))]
         public static CallToolResult CallTool(
             [Description("Exact currently registered tool name from FindTools.")] string name,
             [Description("Target arguments as an object. Omit for a tool with no arguments; strings and null are invalid.")] ToolArguments? arguments = null)
             => CallToolAsync(name, arguments).GetAwaiter().GetResult();
-#endif
 
         internal static Task<CallToolResult> CallToolAsync(string name, ToolArguments? arguments = null)
             => CallToolCoreAsync(name, arguments);
@@ -507,7 +501,6 @@ namespace TiaMcpServer.ModelContextProtocol
         // PreflightLogic builds the report (pure, offline-tested); only session state comes from the engine,
         // through a partial method the offline suite does not implement.
 
-#if !TIA_ENGINE_PORTED
         [McpServerTool(Name = "PreviewToolCall"), Description("[L0][Meta][SESSION] Validate a planned call against the target inputSchema and version gates without executing it. Returns signature, prerequisites and a worked example. No native calls.")]
         [AsyncDispatch(nameof(PreviewToolCallAsync))]
         public static CallToolResult PreviewToolCall(
@@ -536,7 +529,6 @@ namespace TiaMcpServer.ModelContextProtocol
             report.Meta!["success"] = true;
             return InfrastructureResult("PreviewToolCall", report);
         }
-#endif
 
         public static ResponseStringList PreflightToolCall(string name, string argumentsJson)
             => PreflightToolCallAsync(name, argumentsJson).GetAwaiter().GetResult();
@@ -746,11 +738,9 @@ namespace TiaMcpServer.ModelContextProtocol
             if (name == "CallTool" || name == "PreviewToolCall")
                 return ToolInvoker.Bind((string)arguments["name"]!, arguments["arguments"] == null ? EmptyArguments()
                     : new ToolArguments(JsonSerializer.SerializeToElement(arguments["arguments"])), out _);
-#if !TIA_ENGINE_PORTED
             if (name == "RunReadOnlyToolBatch" || name == "PreviewToolBatch")
                 return ValidateBatch(JsonSerializer.Deserialize<ToolCall[]>(arguments["operations"]!.ToJsonString(), V4BindingJson)!, name == "PreviewToolBatch", out _);
 
-#endif
             return null;
         }
 

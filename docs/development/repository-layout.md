@@ -12,7 +12,7 @@
 | `TiaPortalOpenness.Offline.slnx` | 53 个不需要 Siemens 程序集的工程，包含 CI 离线套件和 Studio 客户端；完整构建需要 Windows/.NET 10 SDK |
 | `src/Shared/TiaPublicApi.props` | 按精确版本查找本机 PublicAPI 的共享路径表；由需要 SDK 的工程显式导入并由 .NET release tool 收录源码哈希 |
 | `Version.props` | 产品发布版本的唯一来源；引擎、基础宿主、Studio 显式导入，配置器构建脚本读取 |
-| `src/FoundationHost`、`src/PlcWorker` | 八版 FoundationHost 宿主（含命令行）和 PLC worker；`src/Engine` 残余源码已在 Q2 删除 |
+| `src/FoundationHost`、`src/PlcWorker` | 八版 FoundationHost 宿主（含命令行）和 PLC worker；会话只使用 `WorkerClient`，Q2/Q3 已删除引擎残余源码、客户端与目录交叉检查 |
 | `src/EngineHost` | 八版共享的宿主包装链代码；历史名称保留，宿主实现和链接源集中在这里 |
 | `src/Adapters`、`src/Adapters.Contracts`、`src/OnlineChannels`、`src/WorkerChannel` | 类型化适配器、契约、运行通道与进程通道 |
 | `src/Logic` | net48/net10.0 纯逻辑库；共享 XML/JSON Builders、MCP 策略和运行通道数据转换，不引用 Siemens 或 MCP SDK |
@@ -103,7 +103,7 @@ Siemens PublicAPI 是本机构建输入，默认查找仓库根目录下的八�
 
 ## 工具与原生实现
 
-`src/Engine` 的非编译残余源码和只验证它的测试已按维护者 2026-11-02 的决定删除。
+`src/Engine` 的非编译残余源码和只验证它的测试已按维护者 2026-11-02 的决定删除；Q3 同时移除宿主引擎客户端、冻结目录夹具和 `TIA_ENGINE_PORTED`、`TIA_ENGINE_LOCAL_PRIMITIVES` 死分支。`TIA_ENGINE_HOST` 仍用于编译共享宿主层。
 历史源码引用固定到提交 `ab5a89af`。工具声明与响应映射在 `src/Shared`，宿主工具在
 `src/Shared/Host`，原生调用在 `src/Adapters/Native`，纯算法在 `src/Logic`。
 新增原生能力应同时检查工具声明、类型化调用、版本策略、示例及有意义的功能验证。

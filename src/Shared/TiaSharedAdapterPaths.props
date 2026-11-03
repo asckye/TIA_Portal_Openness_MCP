@@ -4,14 +4,6 @@
     <TiaSharedAdapterPaths Condition="'$(TiaSharedAdapterPaths)' == ''">false</TiaSharedAdapterPaths>
     <DefineConstants Condition="'$(TiaSharedAdapterPaths)' == 'true'">$(DefineConstants);TIA_SHARED_ADAPTER_PATHS</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Engine' and '$(TiaSharedAdapterPaths)' != 'true'">
-    <DefineConstants>$(DefineConstants);TIA_ENGINE_LOCAL_PRIMITIVES</DefineConstants>
-  </PropertyGroup>
-  <!-- Each domain explicitly lists its primitives; only this dedicated folder is imported. -->
-  <Import Project="$(MSBuildThisFileDirectory)shared-native/*.props" Condition="'$(TiaFeatureProfile)' == 'Engine' and '$(TiaSharedAdapterPaths)' != 'true'" />
-  <ItemGroup Condition="'$(TiaFeatureProfile)' == 'Engine' and '$(TiaSharedAdapterPaths)' != 'true'">
-    <Compile Include="@(TiaSharedNativePrimitive)" />
-  </ItemGroup>
   <Target Name="ReportSharedAdapterPaths" BeforeTargets="CoreCompile">
     <Message Importance="high" Text="$(MSBuildProjectName): TiaSharedAdapterPaths=$(TiaSharedAdapterPaths)" />
   </Target>

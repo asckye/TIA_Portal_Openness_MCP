@@ -1,8 +1,4 @@
 #nullable disable
-#if TIA_ENGINE_LOCAL_PRIMITIVES
-#define STUDIO_VCI
-#define STUDIO_VCI_MODERN
-#endif
 #if STUDIO_VCI
 using System.Collections.Generic;
 using System.IO;
@@ -18,11 +14,7 @@ using MappedObject = global::Siemens.Engineering.VersionControl.WorkspaceMapping
 #endif
 #endif
 
-#if TIA_ENGINE_LOCAL_PRIMITIVES
-namespace TiaMcpServer.Siemens.LocalVci
-#else
 namespace TiaOpenness.Openness
-#endif
 {
 #if STUDIO_VCI
     // Raw VCI operations shared by the engine and Studio. This layer has no session,

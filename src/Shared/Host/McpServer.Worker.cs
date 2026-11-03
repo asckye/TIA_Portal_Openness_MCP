@@ -1,4 +1,3 @@
-#if !TIA_ENGINE_PORTED
 using ModelContextProtocol.Protocol;
 using TiaMcp.Logic.V4.Inputs;
 using System.ComponentModel;
@@ -62,5 +61,3 @@ namespace TiaMcpServer.ModelContextProtocol
         }
     }
 }
-
-#endif

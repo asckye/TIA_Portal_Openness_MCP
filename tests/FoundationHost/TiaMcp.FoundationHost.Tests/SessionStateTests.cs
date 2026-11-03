@@ -12,6 +12,7 @@ using Xunit;
 using Host = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
 using GenerationSession = enginehost::TiaMcpServer.ModelContextProtocol.GenerationExecutionSession;
 using Session = foundationhost::TiaMcp.FoundationHost.HostSession;
+using SessionTests = OperatorSessionTestsPlc;
 
 [Collection(BundleSelectionCollection.Name)]
 public sealed class SessionStateTests
@@ -19,7 +20,7 @@ public sealed class SessionStateTests
     [Fact]
     public async Task Host_tool_call_publishes_registration_once_and_ends_idle()
     {
-        using var fixture = new OperatorSessionTests.Fixture("21"); using var registration = fixture.Register();
+        using var fixture = new SessionTests.Fixture("21"); using var registration = fixture.Register();
         var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         bool block = false;
@@ -30,7 +31,7 @@ public sealed class SessionStateTests
         });
         using var session = new Session("21", "host-only fixture", false, [tool], [], () => new JsonObject(), () => { }, fixture.DirectoryPath);
         using var member = registration.Register(session);
-        await using var ai = await OperatorSessionTests.Peer.Ai(session);
+        await using var ai = await SessionTests.Peer.Ai(session);
         int changes = 0;
         var published = new List<JsonObject>();
         void Capture()
@@ -76,7 +77,7 @@ public sealed class SessionStateTests
     [Theory, InlineData(false), InlineData(true)]
     public async Task Host_tool_call_failure_publishes_once_and_releases_shutdown_admission(bool setupFailure)
     {
-        using var fixture = new OperatorSessionTests.Fixture("21"); using var registration = fixture.Register();
+        using var fixture = new SessionTests.Fixture("21"); using var registration = fixture.Register();
         bool invoked = false;
         var tool = new HostOnlyTool(_ => { invoked = true; throw new InvalidOperationException("Fixture host-only failure."); });
         using var session = new Session("21", "host-only fixture", setupFailure, [tool], [tool], () => new JsonObject(), () => { }, fixture.DirectoryPath);

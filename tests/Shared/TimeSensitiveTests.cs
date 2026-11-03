@@ -14,8 +14,7 @@ namespace TiaMcp.Engine.Tests.Shared
     {
         public static readonly IReadOnlyDictionary<string, string> Classes = new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            ["EngineHttpSessionTests"] = "Worker startup with scaled deadlines; bounded HTTP readiness/shutdown.",
-            ["EngineHttpSessionTestsPlc"] = "PlcWorker variant of EngineHttpSessionTests: worker startup with scaled deadlines; bounded HTTP readiness/shutdown.",
+            ["EngineHttpSessionTestsPlc"] = "Worker startup with scaled deadlines; bounded HTTP readiness/shutdown.",
             ["WorkerRobustnessTests"] ="Scaled worker budgets, dispatch cancellation and real timeout measurements.",
             ["PlcWorkerRobustnessTests"] = "One-second startup/default budgets and 1.3-second synthetic native calls.",
             ["PlcFixtureWorkerRobustnessTests"] = "Two-second worker startup/default budget and injected fault deadlines.",
@@ -30,8 +29,7 @@ namespace TiaMcp.Engine.Tests.Shared
             ["PipelineTests"] = "Local tool p95 below 100 ms during a sixty-second worker call.",
             ["ConcurrencyTests"] = "Two-second queued worker lane acquisition.",
             ["OperatorProtocolTests"] = "One-second pipe connect and three-second graceful shutdown measurements.",
-            ["OperatorSessionTests"] = "Bounded worker dispatch and MCP shutdown.",
-            ["OperatorSessionTestsPlc"] = "PlcWorker variant of OperatorSessionTests: bounded worker dispatch and MCP shutdown.",
+            ["OperatorSessionTestsPlc"] = "Bounded worker dispatch and MCP shutdown.",
             ["SaveCloseCandidateTests"] ="Synthetic channel connect within three seconds.",
             ["TiaMcp.FoundationHost.Tests.SessionCandidateTests"] = "Synthetic channel connect within three seconds.",
             ["WorkbenchControlHostTests"] = "Pipe connect/response deadlines and bounded request deadline assertions.",
@@ -71,23 +69,8 @@ namespace TiaMcp.Engine.Tests.Shared
 
         public static readonly IReadOnlyDictionary<string, string[]> Methods = new Dictionary<string, string[]>(StringComparer.Ordinal)
         {
-            ["EngineHttpSessionTests"] = new[] {
-                "Http_listens_under_cpu_pressure_before_constructing_session_tools",
-                "Production_catalog_rejects_fixture_tools_and_startup_reports_stderr",
-                "Unknown_outcome_can_disconnect_and_a_new_session_can_acquire_the_same_lease",
-                "Http_session_end_without_disconnect_releases_its_attached_worker",
-                "Idle_attached_restart_detaches_before_starting_the_next_generation",
-                "Busy_or_timed_out_disconnect_terminates_the_worker_and_keeps_the_lease_busy",
-                "Restart_after_a_timeout_reports_a_dirty_lease",
-                "Http_sessions_own_workers_disconnect_restart_and_teardown",
-                "Session_fault_and_bridge_staging_owner_do_not_escape_the_session",
-                "Authored_lease_refusal_is_sanitised_and_internal_exception_text_is_hidden",
-                "Health_has_file_version_and_readiness_requires_authentication",
-                "Shutdown_drains_an_open_http_request_and_stops_its_session_worker"
-            },
             ["EngineHttpSessionTestsPlc"] = new[] {
                 "Http_listens_under_cpu_pressure_before_constructing_session_tools",
-                "Production_catalog_rejects_fixture_tools_and_startup_reports_stderr",
                 "Unknown_outcome_can_disconnect_and_a_new_session_can_acquire_the_same_lease",
                 "Http_session_end_without_disconnect_releases_its_attached_worker",
                 "Idle_attached_restart_detaches_before_starting_the_next_generation",
@@ -106,7 +89,6 @@ namespace TiaMcp.Engine.Tests.Shared
                 "First_attach_has_a_longer_deadline_and_the_access_confirmation_hint",
                 "Restart_clears_an_adopted_binding_and_refuses_a_busy_lane",
                 "Worker_inherits_host_diagnostics_directory",
-                "Progress_requires_a_token_and_preserves_it",
                 "Cancellation_before_dispatch_is_a_queue_refusal"
             },
             ["PlcFixtureWorkerRobustnessTests"] = new[] {
@@ -173,18 +155,6 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Slow_owned_session_shutdown_precedes_endpoint_exit_and_http_keeps_serving",
                 "Owner_creates_a_private_session_and_pipe_close_releases_it",
                 "Windows_peer_process_token_and_exact_image_are_checked_before_read"
-            },
-            ["OperatorSessionTests"] = new[] {
-                "Operator_stream_shares_one_existing_worker_and_disconnect_state",
-                "Ai_disconnect_and_operator_detach_have_distinct_lifetimes",
-                "Lock_and_restart_belong_to_the_attached_session",
-                "Actual_worker_lane_orders_operator_and_ai_and_cancels_only_queued_call",
-                "Operator_write_uses_existing_approval_frame_and_cannot_spoof_actor",
-                "Queued_ai_refusal_does_not_replace_the_operator_who_ended_the_session",
-                "Engine_operator_view_does_not_forge_or_accept_another_ai_session_id",
-                "Attached_panel_and_ai_share_generation_fence_before_approval",
-                "Host_shutdown_releases_active_generation_fence",
-                "A_write_approved_before_fence_acquisition_is_rechecked_before_dispatch"
             },
             ["OperatorSessionTestsPlc"] = new[] {
                 "Operator_stream_shares_one_existing_worker_and_disconnect_state",

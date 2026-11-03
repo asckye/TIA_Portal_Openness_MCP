@@ -296,7 +296,7 @@ I10 同步要求：宿主显式把配置的 diagnostics directory 传给 engine 
 ### 3.3 现有候选与行为族约束
 
 V20/V21 基线的 `behaviorCapabilities` 中已有包含独有工具的行为族，迁移后表格须逐字节不变：P6-DEVICE（F18 `CreateDevice`/`CreateGsdDevice`/`CreateHardwareCatalogDevice`）、P6-IMPORT/P6-EXPORT（F10 文档工具、F09 `ImportPlcTagTablesFromDirectory`）、P6-SESSION（F05 `ConnectIsolatedPortal`）、P6-CLOSE（F05 `SaveProjectCopy`）、P6-SOURCE（F11 `ManagePlcExternalSources`）、P6-COMPILE（F17）、P6-FALLBACK（F22 `DownloadPlc`/`DownloadPlcToFolder`、F10 文档、F33 VCI 五个工具）。
-P6-FALLBACK 已有适配器侧先例：`src/Adapters/Native/Vci/VciFallbackAdapter.cs`（16–21 编译进适配器，也以 `TIA_ENGINE_LOCAL_PRIMITIVES` 编进引擎）、`src/Adapters.Contracts/FallbackDelegateAdapter.cs`；`PlcDocumentPrimitives`、`WatchTechnologyPrimitives`、`HardwarePrimitives`、`PlcBlockPrimitives` 已通过 `src/Shared/shared-native/*.props` 同时编进八版适配器与引擎。这是“共用逻辑 + 版本差异”的现成写法。
+P6-FALLBACK 已有适配器侧先例：`src/Adapters/Native/Vci/VciFallbackAdapter.cs`（16–21 编译进适配器）、`src/Adapters.Contracts/FallbackDelegateAdapter.cs`；`PlcDocumentPrimitives`、`WatchTechnologyPrimitives`、`HardwarePrimitives`、`PlcBlockPrimitives` 通过 `src/Shared/shared-native/*.props` 编进对应适配器。原引擎共用路径已退役，Q3 删除其本地原语符号与导入；版本 API 差异继续由适配器特性符号表达。
 
 ## 4. 迁移批次建议
 

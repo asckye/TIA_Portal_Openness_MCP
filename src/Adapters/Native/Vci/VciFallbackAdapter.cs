@@ -1,7 +1,3 @@
-#if TIA_ENGINE_LOCAL_PRIMITIVES
-#define STUDIO_VCI
-#define STUDIO_VCI_MODERN
-#endif
 #if STUDIO_VCI
 using System;
 using System.Collections.Generic;
@@ -14,17 +10,9 @@ using TiaMcp.Adapters.Contracts.Candidates;
 #if !STUDIO_VCI_MODERN
 using MappedObject = Siemens.Engineering.VersionControl.WorkspaceMapping;
 #endif
-#if TIA_ENGINE_LOCAL_PRIMITIVES
-using NativeVci = TiaMcpServer.Siemens.LocalVci.VersionControlPrimitives;
-#else
 using NativeVci = TiaOpenness.Openness.VersionControlPrimitives;
-#endif
 
-#if TIA_ENGINE_LOCAL_PRIMITIVES
-namespace TiaMcpServer.Siemens.LocalVciFallback
-#else
 namespace TiaMcp.Adapters.Native.Vci
-#endif
 {
     public sealed class VciMappingTarget
     {

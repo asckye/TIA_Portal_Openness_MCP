@@ -10,8 +10,6 @@ using ModelContextProtocol.Server;
 using TiaMcp.FoundationHost;
 using TiaMcp.WorkerChannel;
 using Xunit;
-using EngineClient = foundationhost::TiaMcp.FoundationHost.EngineWorkerClient;
-using EngineOptions = foundationhost::TiaMcp.FoundationHost.HostOptions;
 using Pipeline = enginehost::TiaMcp.FoundationHost.EngineHostPipeline;
 using Server = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
 
@@ -52,25 +50,25 @@ public sealed class SharedWorkerRegressionTests
         Assert.Null(Server.SessionPrecheckRefusal("CompileDevice"));
         if (release is "20" or "21")
         {
-            using var engine = fixture.Engine();
-            await engine.Status(CancellationToken.None);
-            var engineChild = Field<Process>(engine, "process");
-            var engineChannel = Field<ChannelClient>(engine, "channel");
-            Task<string>? enginePending = null;
+            using var production = fixture.ProductionWorker();
+            await production.Status(CancellationToken.None);
+            var productionChild = Field<Process>(production.Client, "process");
+            var productionChannel = Field<ChannelClient>(production.Client, "channel");
+            Task<string>? productionPending = null;
             if (busy)
             {
                 fixture.ClearBusy();
-                enginePending = engineChannel.CallAsync("adapter.FixtureHang", "{}", BindingChange.None, true, TimeSpan.FromSeconds(20), CancellationToken.None);
+                productionPending = productionChannel.CallAsync("adapter.FixtureHang", "{}", BindingChange.None, true, TimeSpan.FromSeconds(20), CancellationToken.None);
                 await fixture.WaitBusy();
             }
-            else { WorkerShutdown.KillOwned(engineChild); Assert.True(engineChild.WaitForExit(5000)); }
-            await engine.Call("Disconnect", new(), CancellationToken.None);
-            if (enginePending != null) await Assert.ThrowsAnyAsync<Exception>(() => enginePending);
-            var error = await Assert.ThrowsAnyAsync<Exception>(() => engine.Call("ReadState", new(), CancellationToken.None));
+            else { WorkerShutdown.KillOwned(productionChild); Assert.True(productionChild.WaitForExit(5000)); }
+            await production.Call("Disconnect", new(), CancellationToken.None);
+            if (productionPending != null) await Assert.ThrowsAnyAsync<Exception>(() => productionPending);
+            var error = await Assert.ThrowsAnyAsync<Exception>(() => production.Call("ReadState", new(), CancellationToken.None));
             var expected = FoundationV4Result.Failure(release, "GetSessionState", "compare", false, false, null, error).StructuredContent!;
             Assert.True(JsonNode.DeepEquals(expected["error"], next.StructuredContent?["error"]));
-            Assert.Equal((string?)engine.Snapshot()["state"], (string?)services.Snapshot()["state"]);
-            Assert.Equal(engine.OperatorSnapshot().ToJsonString(), worker.OperatorSnapshot().ToJsonString());
+            Assert.Equal((string?)production.Snapshot()["state"], (string?)services.Snapshot()["state"]);
+            Assert.Equal(((foundationhost::TiaMcp.FoundationHost.IFoundationWorkerSupervisor)production.Client).OperatorSnapshot().ToJsonString(), worker.OperatorSnapshot().ToJsonString());
             Assert.Null(services.Snapshot()["fault"]);
         }
         else
@@ -193,33 +191,33 @@ public sealed class SharedWorkerRegressionTests
     }
 
     [Theory, InlineData("20"), InlineData("21")]
-    public async Task Engine_readiness_probe_uses_the_owned_candidate_lane(string release)
+    public async Task Worker_readiness_probe_uses_the_owned_candidate_lane(string release)
     {
         using var fixture = new Fixture(release);
-        using var engine = fixture.Engine();
-        using var lane = await engine.AcquireLane(CancellationToken.None);
-        engine.ActivateLane(lane);
+        var worker = fixture.Worker;
+        using var lane = await worker.AcquireLane(CancellationToken.None);
+        WorkerClient.ActivateLane(lane);
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-        await engine.PrepareReadiness(deadline.Token);
-        Assert.True((bool?)engine.Snapshot()["readiness"]?["ready"]);
-        Assert.Null(await engine.AcquireLane(deadline.Token));
+        await worker.PrepareReadiness(deadline.Token);
+        Assert.True((bool?)worker.SharedStatus?["readiness"]?["ready"]);
+        Assert.Null(await worker.AcquireLane(deadline.Token));
         lane?.Dispose();
-        Assert.Equal("Ready", (string?)engine.Snapshot()["state"]);
+        Assert.Equal("Ready", (string?)worker.SupervisorSnapshot(new JsonObject { ["ready"] = false })["state"]);
     }
 
     [Theory, InlineData("20"), InlineData("21")]
     public async Task CallTool_compile_wrapper_observes_cold_readiness_inside_the_target_lane(string release)
     {
         using var fixture = new Fixture(release);
-        using var engine = fixture.Engine();
-        var inner = foundationhost::TiaMcp.FoundationHost.PortedToolContract.Create(engine, release)
-            .OfType<foundationhost::TiaMcp.FoundationHost.FoundationTool>().Single(t => t.ProtocolTool.Name == "CompileDevice");
-        var target = new foundationhost::TiaMcp.FoundationHost.FoundationV4Tool(inner, release, null,
+        var worker = fixture.Worker;
+        var inner = PortedToolContract.Create(worker, release)
+            .OfType<FoundationTool>().Single(t => t.ProtocolTool.Name == "CompileDevice");
+        var target = new FoundationV4Tool(inner, release, null,
             readinessForTest: () => new JsonObject { ["ready"] = true });
-        var services = foundationhost::TiaMcp.FoundationHost.FoundationHostPorts.CreateServices(engine, release,
+        var services = FoundationHostPorts.CreateServices(worker, release,
             () => new JsonObject { ["ready"] = true }, AppContext.BaseDirectory);
         using var pipeline = new Pipeline(release, services, new McpServerTool[] { target });
-        Assert.Null(engine.OperatorSnapshot()["pid"]);
+        Assert.Null(worker.OperatorSnapshot()["pid"]);
         var arguments = new JsonObject { ["devicePath"] = new JsonArray("PLC1") };
         var properties = target.ProtocolTool.InputSchema.GetProperty("properties");
         if (properties.TryGetProperty("mode", out _)) arguments["mode"] = "preview";
@@ -234,9 +232,9 @@ public sealed class SharedWorkerRegressionTests
             return await Server.CallToolAsync("CompileDevice", new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.SerializeToElement(arguments)));
         });
         Assert.False(deadline.IsCancellationRequested, "deadlinePool=" + Volatile.Read(ref deadlinePool) + "; returnedPool=" + PoolState()
-            + "; elapsedMs=" + elapsed.Elapsed.TotalMilliseconds + "; worker=" + engine.Snapshot().ToJsonString());
+            + "; elapsedMs=" + elapsed.Elapsed.TotalMilliseconds + "; worker=" + worker.SupervisorSnapshot(new JsonObject { ["ready"] = false }).ToJsonString());
         Assert.NotEqual("CANCELLED", (string?)result.StructuredContent?["error"]?["code"]);
-        Assert.True((bool?)engine.Snapshot()["readiness"]?["ready"], result.StructuredContent?.ToJsonString());
+        Assert.True((bool?)worker.SharedStatus?["readiness"]?["ready"], result.StructuredContent?.ToJsonString());
     }
 
     private static string PoolState()
@@ -285,15 +283,15 @@ public sealed class SharedWorkerRegressionTests
         ThreadPool.GetMaxThreads(out int maximum, out _);
         Assert.Equal(4, maximum);
         using var fixture = new Fixture(release);
-        using var engine = fixture.Engine();
-        var inner = foundationhost::TiaMcp.FoundationHost.PortedToolContract.Create(engine, release)
-            .OfType<foundationhost::TiaMcp.FoundationHost.FoundationTool>().Single(t => t.ProtocolTool.Name == "CompileDevice");
-        var target = new foundationhost::TiaMcp.FoundationHost.FoundationV4Tool(inner, release, null,
+        var worker = fixture.Worker;
+        var inner = PortedToolContract.Create(worker, release)
+            .OfType<FoundationTool>().Single(t => t.ProtocolTool.Name == "CompileDevice");
+        var target = new FoundationV4Tool(inner, release, null,
             readinessForTest: () => new JsonObject { ["ready"] = true });
-        var services = foundationhost::TiaMcp.FoundationHost.FoundationHostPorts.CreateServices(engine, release,
+        var services = FoundationHostPorts.CreateServices(worker, release,
             () => new JsonObject { ["ready"] = true }, AppContext.BaseDirectory);
         using var pipeline = new Pipeline(release, services, new McpServerTool[] { target });
-        Assert.Null(engine.OperatorSnapshot()["pid"]);
+        Assert.Null(worker.OperatorSnapshot()["pid"]);
         var arguments = new JsonObject { ["devicePath"] = new JsonArray("PLC1") };
         var properties = target.ProtocolTool.InputSchema.GetProperty("properties");
         if (properties.TryGetProperty("mode", out _)) arguments["mode"] = "preview";
@@ -304,7 +302,7 @@ public sealed class SharedWorkerRegressionTests
                 new JsonObject { ["name"] = "CompileDevice", ["arguments"] = arguments }.ToJsonString()) };
             return await pipeline.AllTools.Single(t => t.ProtocolTool.Name == "CallTool").InvokeAsync(request);
         });
-        Console.WriteLine(new JsonObject { ["maximumWorkers"] = maximum, ["ready"] = engine.Snapshot()["readiness"]?["ready"]?.DeepClone(),
+        Console.WriteLine(new JsonObject { ["maximumWorkers"] = maximum, ["ready"] = worker.SharedStatus?["readiness"]?["ready"]?.DeepClone(),
             ["result"] = result.StructuredContent?.DeepClone() }.ToJsonString());
         return 0;
     }
@@ -418,16 +416,13 @@ public sealed class SharedWorkerRegressionTests
         }
     }
 
-    [Theory, InlineData("14sp1", false), InlineData("15.1", false), InlineData("16", false), InlineData("17", false),
-        InlineData("18", false), InlineData("19", false), InlineData("20", false), InlineData("21", false),
-        InlineData("20", true), InlineData("21", true)]
-    public async Task Restart_and_dispose_do_not_replace_or_lose_a_worker_after_identity_refusal(string release, bool engineBackend)
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"),
+        InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task Restart_and_dispose_do_not_replace_or_lose_a_worker_after_identity_refusal(string release)
     {
         using var fixture = new Fixture(release);
-        using var engine = engineBackend ? fixture.Engine() : null;
-        object worker = (object?)engine ?? fixture.Worker;
-        if (engine != null) await engine.Status(CancellationToken.None);
-        else await fixture.Worker.Call("ReadState", new(), CancellationToken.None);
+        var worker = fixture.Worker;
+        await worker.Call("ReadState", new(), CancellationToken.None);
         var child = Field<Process>(worker, "process");
         var channel = Field<ChannelClient>(worker, "channel");
         var pending = channel.CallAsync("adapter.FixtureHang", "{}", BindingChange.None, true, TimeSpan.FromSeconds(20), CancellationToken.None);
@@ -437,16 +432,15 @@ public sealed class SharedWorkerRegressionTests
         try
         {
             var error = await Record.ExceptionAsync(async () => {
-                if (engine != null) await engine.Restart(true, CancellationToken.None);
-                else await fixture.Worker.RestartHostWorker(true, CancellationToken.None);
+                await worker.RestartHostWorker(true, CancellationToken.None);
             });
             Assert.NotNull(error);
             Assert.Equal("WorkerTerminationException", error.GetType().Name);
             Assert.Same(child, Field<Process>(worker, "process"));
             Assert.False(child.HasExited);
-            var snapshot = engine?.Snapshot() ?? fixture.Worker.SupervisorSnapshot(new JsonObject { ["ready"] = true });
+            var snapshot = worker.SupervisorSnapshot(new JsonObject { ["ready"] = true });
             Assert.True((bool?)snapshot["sessionLocked"]);
-            Assert.Equal(1, (long?)(engine?.OperatorSnapshot() ?? fixture.Worker.OperatorSnapshot())["generation"]);
+            Assert.Equal(1, (long?)worker.OperatorSnapshot()["generation"]);
             Assert.Null(Field<object?>(worker, "disconnectAcknowledgement"));
             ((IDisposable)worker).Dispose();
             Assert.Same(child, Field<Process>(worker, "process"));
@@ -477,11 +471,11 @@ public sealed class SharedWorkerRegressionTests
             Worker = new(release, Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe"), AppContext.BaseDirectory, true)
                 { Bundled = false, SharedSession = release is "20" or "21" };
         }
-        internal EngineClient Engine()
+        internal WorkerBackendFixture ProductionWorker()
         {
             string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
-            return new(new EngineOptions { ReleaseKey = release, WorkerExe = exe, EngineWorkerExe = exe,
-                ApiDirectory = AppContext.BaseDirectory, BundleRoot = AppContext.BaseDirectory, NativeEnabled = true, BundledWorker = false }, EngineClient.Hash(exe));
+            return new(new foundationhost::TiaMcp.FoundationHost.HostOptions { ReleaseKey = release, WorkerExe = exe,
+                ApiDirectory = AppContext.BaseDirectory, BundleRoot = AppContext.BaseDirectory, NativeEnabled = true, BundledWorker = false });
         }
         internal void ClearBusy() => File.Delete(Path.Combine(root, "busy"));
         internal async Task WaitBusy()

@@ -13,17 +13,11 @@ using Session = foundationhost::TiaMcp.FoundationHost.HostSession;
 using Registration = foundationhost::TiaMcp.FoundationHost.HostRegistration;
 using Connection = foundationhost::TiaMcp.FoundationHost.OperatorConnection;
 using Options = foundationhost::TiaMcp.FoundationHost.HostOptions;
-using EngineHost = foundationhost::TiaMcp.FoundationHost.EngineReleaseHost;
+using EngineHost = foundationhost::TiaMcp.FoundationHost.SharedReleaseHost;
 
 [Collection(BundleSelectionCollection.Name)]
-public sealed class OperatorSessionTests : OperatorSessionTestsCases { protected override bool PlcWorker => false; }
-// The PlcWorker variant selects the same process-wide bundle root, so it joins the same collection.
-[Collection(BundleSelectionCollection.Name)]
-public sealed class OperatorSessionTestsPlc : OperatorSessionTestsCases { protected override bool PlcWorker => true; }
-
-public abstract class OperatorSessionTestsCases
+public sealed class OperatorSessionTestsPlc
 {
-    protected abstract bool PlcWorker { get; }
     // Another shard's host or worker hashes the shared adapter identity while this fixture starts and ends: ArgumentRules.HashFile
     // and the worker open it for reading with FileShare.Read. Barrier: hold that read handle across the whole fixture lifetime.
     // The fixture must neither rewrite nor remove the identity under it (P8-stab-1).
@@ -33,13 +27,13 @@ public abstract class OperatorSessionTestsCases
         string adapter = Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter.20.dll");
         TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(adapter, "offline session fixture");
         using (new FileStream(adapter, FileMode.Open, FileAccess.Read, FileShare.Read))
-        using (new Fixture("20", PlcWorker)) { }
+        using (new Fixture("20")) { }
         Assert.Equal("offline session fixture", File.ReadAllText(adapter));
     }
     [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public async Task Operator_stream_shares_one_existing_worker_and_disconnect_state(string release)
     {
-        using var fixture = new Fixture(release, PlcWorker);
+        using var fixture = new Fixture(release);
         using var a = await fixture.Create(); using var b = await fixture.Create();
         await using var ai = await Peer.Ai(a); await using var other = await Peer.Ai(b);
         await ai.Tool("ConnectPortal", new() { ["processId"] = 101 });
@@ -69,7 +63,7 @@ public abstract class OperatorSessionTestsCases
     [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public async Task Ai_disconnect_and_operator_detach_have_distinct_lifetimes(string release)
     {
-        using var fixture = new Fixture(release, PlcWorker); using var session = await fixture.Create();
+        using var fixture = new Fixture(release); using var session = await fixture.Create();
         await using var ai = await Peer.Ai(session); await ai.Tool("ConnectPortal", new() { ["processId"] = 103 });
         using var registration = fixture.Register(); using var membership = registration.Register(session);
         var panel = await Peer.Operator(registration, session.SessionKey);
@@ -93,7 +87,7 @@ public abstract class OperatorSessionTestsCases
     [Theory, InlineData("20"), InlineData("21")]
     public async Task Lock_and_restart_belong_to_the_attached_session(string release)
     {
-        using var fixture = new Fixture(release, PlcWorker); using var session = await fixture.Create(); using var other = await fixture.Create();
+        using var fixture = new Fixture(release); using var session = await fixture.Create(); using var other = await fixture.Create();
         using var approval = new DisabledApproval(fixture.Options.BundleRoot);
         await using var ai = await Peer.Ai(session); await using var separate = await Peer.Ai(other);
         using var registration = fixture.Register(); using var membership = registration.Register(session);
@@ -114,7 +108,7 @@ public abstract class OperatorSessionTestsCases
     [Fact]
     public async Task Actual_worker_lane_orders_operator_and_ai_and_cancels_only_queued_call()
     {
-        using var fixture = new Fixture("21", PlcWorker); using var session = await fixture.Create();
+        using var fixture = new Fixture("21"); using var session = await fixture.Create();
         await using var ai = await Peer.Ai(session);
         using var registration = fixture.Register(); using var membership = registration.Register(session);
         await using var panel = await Peer.Operator(registration, session.SessionKey);
@@ -161,7 +155,7 @@ public abstract class OperatorSessionTestsCases
     [Theory, InlineData("20"), InlineData("21")]
     public async Task Queued_ai_refusal_does_not_replace_the_operator_who_ended_the_session(string release)
     {
-        using var fixture = new Fixture(release, PlcWorker); using var session = await fixture.Create();
+        using var fixture = new Fixture(release); using var session = await fixture.Create();
         await using var ai = await Peer.Ai(session);
         using var registration = fixture.Register(); using var membership = registration.Register(session);
         await using var panel = await Peer.Operator(registration, session.SessionKey);
@@ -179,10 +173,9 @@ public abstract class OperatorSessionTestsCases
     [Fact]
     public async Task Engine_operator_view_does_not_forge_or_accept_another_ai_session_id()
     {
-        using var fixture = new Fixture("21", PlcWorker);
+        using var fixture = new Fixture("21");
         enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
-        using var worker = new WorkerBackendFixture(PlcWorker, fixture.Options,
-            foundationhost::TiaMcp.FoundationHost.EngineWorkerClient.Hash(fixture.Options.WorkerExe));
+        using var worker = new WorkerBackendFixture(fixture.Options);
         var shared = foundationhost::TiaMcp.FoundationHost.LegacyHostToolRegistry.Create(worker, "21", true, hostPorts: false);
         using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
         // Same staging-owner wiring as the served host session (SharedReleaseHost.CreateSession).
@@ -219,26 +212,24 @@ public abstract class OperatorSessionTestsCases
         internal readonly Options Options;
         private readonly string previousEngineRelease = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
         private readonly string? priorLease = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT");
-        internal Fixture(string release, bool plcWorker = false)
+        internal Fixture(string release)
         {
             Directory.CreateDirectory(DirectoryPath); Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", DirectoryPath);
             string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
             // Parallel shards share this output directory and hash the identity while their workers start: install it atomically and
             // leave it in place. Truncating, restoring or deleting it here refused or killed another shard's worker (P8-stab-1).
             TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
-            string catalog = Path.Combine(DirectoryPath, "catalog.json");
-            SessionFixtureTool.WriteCatalog(catalog, release, exe);
             Options = new Options { ReleaseKey = release, WorkerExe = exe, ApiDirectory = AppContext.BaseDirectory, BundledWorker = false,
                 BundleRoot = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), NativeEnabled = true,
-                PlcWorker = plcWorker, EngineWorkerExe = !plcWorker && (release is "20" or "21") ? exe : null, EngineCatalog = catalog, Profile = "full" };
+                Profile = "full" };
             BundleLayout.Initialize(AppContext.BaseDirectory, Options.BundleRoot);
         }
         // BundleLayout.Initialize selects the bundle process-wide (AppDomain data and TIA_MCP_BUNDLE_ROOT); restore both.
         private readonly object? previousBundle = AppDomain.CurrentDomain.GetData("TiaOpenness.Shared.BundleLayout.v4");
         private readonly string? previousRootVariable = Environment.GetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT");
-        internal async Task<Session> Create(bool owned = false, CancellationToken token = default) => Options.EngineWorkerExe == null && Options.ReleaseKey is not ("20" or "21")
-            ? Session.Legacy(Options, "fixture", owned) : await EngineHost.CreateHostSessionForTest(Options, owned, Options.PlcWorker ? source => source : SessionFixtureTool.Add, token,
-                Options.PlcWorker ? SessionFixtureTool.PlcTools : null).WaitAsync(Peer.RequestBudget, token);
+        internal async Task<Session> Create(bool owned = false, CancellationToken token = default) => Options.ReleaseKey is not ("20" or "21")
+            ? Session.Legacy(Options, "fixture", owned) : await EngineHost.CreateHostSessionForTest(Options, owned, source => source, token,
+                SessionFixtureTool.PlcTools).WaitAsync(Peer.RequestBudget, token);
         internal Registration Register() => new(Options, "S-1-5-21-1-2-3-1001", DirectoryPath, error => throw error);
         public void Dispose()
         {
@@ -387,7 +378,7 @@ public abstract class OperatorSessionTestsCases
     [Theory, InlineData("19"), InlineData("20"), InlineData("21")]
     public async Task Attached_panel_and_ai_share_generation_fence_before_approval(string release)
     {
-        using var fixture = new Fixture(release, PlcWorker); var worker = new GenerationFenceWorker(release); int approvals = 0;
+        using var fixture = new Fixture(release); var worker = new GenerationFenceWorker(release); int approvals = 0;
         var tools = TiaMcp.FoundationHost.FoundationTools.Create(worker, release).Select(t => (McpServerTool)new TiaMcp.FoundationHost.FoundationV4Tool(t, release, null,
             () => new ApprovalSettings(false, 1), (pending, _, _) => { approvals++; return Task.FromResult(new ApprovalOutcome(pending, true, null)); })).ToArray();
         using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, tools);
