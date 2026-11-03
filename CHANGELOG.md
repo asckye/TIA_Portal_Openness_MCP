@@ -4,9 +4,6 @@
 
 ## [Unreleased]
 
-- 修复扩展族 worker 回复校验：报警、OPC UA、SiVArc、Startdrive/DCC、Safety 等正常拒绝或失败不再因回复形状被误判而锁定会话，错误保留原生原因。
-- 修复 Unified 分页读取的结构化输入故障，保留事件脚本正文；设备探测支持分组设备名称及项目树路径，未找到时返回目标；HMI 运行状态快捷操作报告原生失败原因。
-
 ## [4.0.0-beta.3] - 2026-11-0X
 <!-- set on release day -->
 
@@ -41,6 +38,8 @@
 - 覆盖导入库类型实例块时，预览与执行都提示类型链接可能断开；预览的恢复状态为 `not-attempted-preview`，执行报告实际备份结果。
 - V20/V21 改用维护的调用示例，不再使用冻结的引擎值：Unified 路径从 `ScreenGroups`/`Screens` 开始，画面与变量表用绝对路径，`softwarePath`/`blockPath` 提示写明分组站点和带组路径。
 - 大结果：直接调用和 `CallTool` 的大结果在结果文字中给出可执行的 `GetExportContent` 续读调用；缓存淘汰时保留已生成的导出内容，`CallTool` 转发的块分页保留游标，格式错误的 worker 分页被拒绝。
+- 修复扩展族 worker 回复校验：报警、OPC UA、SiVArc、Startdrive/DCC、Safety 等正常拒绝或失败不再因回复形状被误判而锁定会话，错误保留原生原因。
+- 修复 Unified 分页读取的结构化输入故障，保留事件脚本正文；设备探测支持分组设备名称及项目树路径，未找到时返回目标；HMI 运行状态快捷操作报告原生失败原因。
 
 ### 新工具与新参数
 
