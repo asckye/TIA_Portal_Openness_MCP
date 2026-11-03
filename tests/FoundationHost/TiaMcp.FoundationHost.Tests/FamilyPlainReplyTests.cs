@@ -1,6 +1,8 @@
 extern alias enginehost;
 using System.Text.Json.Nodes;
+using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
+using TiaMcp.PlcWorker;
 using Xunit;
 using EngineeringServicesPortService = enginehost::TiaMcpServer.Siemens.Services.EngineeringServicesPortService;
 using ProjectLifecyclePortService = enginehost::TiaMcpServer.Siemens.Services.ProjectLifecyclePortService;
@@ -91,6 +93,10 @@ public sealed class FamilyPlainReplyTests
     private const string Contract = "{\"Value\":{\"State\":\"Online\"},\"Failure\":null,\"MayHaveChanged\":false,\"RequiresSessionReset\":false,\"BlockReadsAfterUncertain\":true}";
     private const string Hmi = "{\"Value\":[1],\"Notes\":null,\"Failure\":null,\"MayHaveChanged\":true,\"RequiresSessionReset\":false,\"BlockReadsAfterUncertain\":true}";
 
+    private static string SecurityReply() => WorkerJson.Serialize(new SecurityResult {
+        Message = "m", Meta = new() { ["success"] = true }
+    });
+
     public static TheoryData<string, string, string> AcceptedWithRequest() => new()
     {
         { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "GetPlcPutGetAccess"), "{\"found\":false,\"message\":\"No project open.\"}" },
@@ -100,7 +106,8 @@ public sealed class FamilyPlainReplyTests
         { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "SetPlcPutGetAccess"), "{\"ok\":false,\"failureCode\":\"UNSUPPORTED_CAPABILITY\",\"device\":\"PLC_1\",\"message\":\"m\"}" },
         { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "SetPlcPutGetAccess"), "{\"ok\":false,\"mayHaveChanged\":true,\"writeOutcomeKnown\":false,\"device\":\"PLC_1\",\"attributeName\":\"a\",\"message\":\"m\"}" },
         { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "SetPlcPutGetAccess"), "{\"ok\":false,\"mayHaveChanged\":true,\"writeOutcomeKnown\":false,\"device\":\"PLC_1\",\"deviceItem\":\"CPU\",\"attributeName\":\"a\",\"before\":\"\",\"after\":\"\",\"note\":\"n\"}" },
-        { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "ManagePlcProtection"), "{\"Message\":\"m\",\"Meta\":{\"success\":true},\"RequiresSessionReset\":false}" },
+        { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "ManagePlcProtection"), SecurityReply() },
+        { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "ManageWatchForceTableWebAccess"), SecurityReply() },
         { "project-lifecycle.ExecuteProjectScaffoldPrimitive", KindRequest.Replace("KIND", "save"), "{\"Message\":\"Local project saved\",\"Meta\":{\"success\":true}}" },
         { "project-lifecycle.ExecuteProjectScaffoldPrimitive", KindRequest.Replace("KIND", "addDevice"), "{\"Ok\":false,\"DeviceName\":\"PLC_1\",\"Family\":\"f\",\"MlfbUsed\":null,\"VersionUsed\":null,\"Attempts\":null,\"Error\":\"e\",\"Message\":\"m\",\"Meta\":{\"success\":false}}" },
         { "project-lifecycle.ExecuteProjectScaffoldPrimitive", KindRequest.Replace("KIND", "compile"), "{\"State\":\"Error\",\"ErrorCount\":null,\"WarningCount\":2,\"Errors\":[\"e\"],\"Warnings\":[],\"Info\":[],\"RawMessages\":[],\"Message\":\"m\",\"Meta\":{}}" },
@@ -139,7 +146,8 @@ public sealed class FamilyPlainReplyTests
         { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "SetPlcPutGetAccess"), "{\"ok\":true,\"mayHaveChanged\":false,\"writeOutcomeKnown\":true,\"device\":\"PLC_1\",\"deviceItem\":\"CPU\",\"attributeName\":\"a\",\"before\":\"\",\"after\":\"\",\"note\":\"n\"}" },
         { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "SetPlcPutGetAccess"), "{\"found\":false,\"message\":\"m\"}" },
         { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "ManagePlcProtection"), "{\"found\":false,\"message\":\"m\"}" },
-        { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "Unknown"), "{\"Message\":\"m\",\"Meta\":{\"success\":true},\"RequiresSessionReset\":false}" },
+        { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "ManageWatchForceTableWebAccess"), "{\"found\":false,\"message\":\"m\"}" },
+        { "project-security.ExecuteHardwareSecurity", SecurityRequest.Replace("OP", "Unknown"), SecurityReply() },
         { "project-security.ExecuteHardwareSecurity", "{}", "{\"found\":false,\"message\":\"m\"}" },
         // A scaffold primitive reply without its Meta, with another kind's members, or for no or an unknown kind.
         { "project-lifecycle.ExecuteProjectScaffoldPrimitive", KindRequest.Replace("KIND", "connect"), "{\"Message\":\"m\"}" },
