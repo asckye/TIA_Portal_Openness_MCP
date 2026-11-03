@@ -4,8 +4,7 @@
 
 ## [Unreleased]
 
-## [4.0.0-beta.3] - 2026-11-0X
-<!-- set on release day -->
+## [4.0.0-beta.3] - 2026-11-03
 
 4.0 的第三个预发布版本，同样在 GitHub 上标为预发布、不设为最新版，3.3 的更新器和工作台更新检查不会提示它。产品对外名称改为“自动化工程工作台（Automation Engineering Workbench，原 TIA Portal Openness MCP）”；程序文件名、插件 ID、MCP 服务名 `tia-portal`、交付包名和仓库地址不变。beta.2 在 V21 虚拟机上做过一轮真机测试，本版修复了其中的发现；这些修复和本版新功能尚未在真实 TIA Portal 上复验。说明见 [v4.0.0-beta.3](docs/releases/v4.0.0-beta.3.md)。
 
