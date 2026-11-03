@@ -2,9 +2,9 @@
 
 状态：现行 · 最后核对：2026-11-01，master `902a86fe`
 
-[文档目录](../README.md) · [验证分层](../development/validation.md) · [发布流程](../development/release-workflow.md) · [测试策略](../standards/testing.md) · [当前交接](../development/handoff.md)
+[文档目录](../README.md) · [验证分层](validation.md) · [发布流程](release.md) · [测试策略](../standards/development.md) · [当前交接](../plan/progress.md)
 
-本文说明一项改动从提出到进入 master 的过程：谁做什么、改动需要哪些设计产物、合并前后运行哪一档检查。命令细节见 [验证分层](../development/validation.md)，发布步骤见 [发布流程](../development/release-workflow.md)。
+本文说明一项改动从提出到进入 master 的过程：谁做什么、改动需要哪些设计产物、合并前后运行哪一档检查。命令细节见 [验证分层](validation.md)，发布步骤见 [发布流程](release.md)。
 
 本文描述的三档验证、机器级重型作业锁、`regen-all` 和 Codex 沙箱可跑子集已于 2026-11-01 决定，由 RULES-1 实现，尚未全部落地；第 4 节逐项写明现状。
 
@@ -16,25 +16,25 @@
 | Claude | 研究与诊断；写任务说明和 ADR 草稿；审查 diff；在主机上运行检查；提交、变基并推送到 master；更新交接与计划 | 不写新功能代码（合并时的一行变基修正、文档笔误除外） |
 | Codex | 在独立 worktree 的沙箱中按任务说明实现代码和测试，构建并列出需要在主机上运行的检查 | 不执行 `git add`、`git commit`、`git stash`、推送或合并；不连接 TIA、PLC、虚拟机或外部网络服务 |
 
-依据：[重构计划](../development/refactor-plan.md)“任务流程”、[AGENTS.md](../../AGENTS.md)、ADR 待办 B37（见 [架构决策记录](../development/decisions/README.md)）。
+依据：[重构计划](../plan/plan.md)“任务流程”、[AGENTS.md](../../AGENTS.md)、ADR 待办 B37（见 [架构决策记录](../standards/decisions/README.md)）。
 
 ## 2 任务生命周期
 
-1. 记录：维护者提出或审查中发现的事项，当天写入任务表（[重构计划](../development/refactor-plan.md)）或 ADR。
+1. 记录：维护者提出或审查中发现的事项，当天写入任务表（[重构计划](../plan/plan.md)）或 ADR。
 2. 诊断与任务说明：Claude 先定位原因，再写任务说明。任务说明写明根因、涉及的文件和函数、预期设计、允许修改的路径、修改前失败而修改后通过的测试、验证命令和时间预算。
 3. 实现：从当前 master 建 worktree 和 `refactor/<任务 ID>` 分支，Codex 实现并构建，改动留在 worktree 中。
 4. 审查：Claude 审查 diff，在 worktree 中运行任务涉及的检查。检查失败时先定位原因，再带具体问题退回同一 Codex 会话，不反复重跑完整门禁。断言、阈值或检查的改变先请维护者批准。
 5. 提交与合并：Claude 用明确的 `git add` 路径在任务分支上提交，变基到 master，运行合并门（第 4.1 节），通过后快进推送到 master，删除任务分支。
-6. 收尾：更新任务状态和 [当前交接](../development/handoff.md)；GitHub CI 的失败按缺陷处理，在 master 上向前修复。
+6. 收尾：更新任务状态和 [当前交接](../plan/progress.md)；GitHub CI 的失败按缺陷处理，在 master 上向前修复。
 
 ## 3 变更级别与设计产物
 
 | 级别 | 典型改动 | 需要的产物 |
 |---|---|---|
-| L0 | 文档措辞、笔误、注释 | 无；按 [文档写作规范](../development/design-spec/documentation-style.md) 写 |
+| L0 | 文档措辞、笔误、注释 | 无；按 [文档写作规范](../standards/documentation.md) 写 |
 | L1 | 不改变 MCP 契约的缺陷修复、重构、测试补充 | 任务说明 |
-| L2 | 新工具、契约变化（工具名、参数、返回结构、错误语义）、新功能 | 任务说明，加 [工具规格](../templates/tool-spec.md) 或设计文档（`docs/development/design/`） |
-| L3 | 改变进程或部署结构、MCP 契约政策、安全或数据完整性边界、发布与质量门禁规则、外部基线；推翻已有 ADR | 以上产物，加 ADR（[文档写作规范](../development/design-spec/documentation-style.md) 第 14.1 节） |
+| L2 | 新工具、契约变化（工具名、参数、返回结构、错误语义）、新功能 | 任务说明，加 [工具规格](workflow.md) 或设计文档（`docs/archive/development/design/`） |
+| L3 | 改变进程或部署结构、MCP 契约政策、安全或数据完整性边界、发布与质量门禁规则、外部基线；推翻已有 ADR | 以上产物，加 ADR（[文档写作规范](../standards/documentation.md) 第 14.1 节） |
 
 ### 3.1 开始条件（DoR）
 
@@ -44,7 +44,7 @@
 
 ### 3.2 完成条件（DoD）
 
-- 代码、测试、生成文件和文档在同一个任务中更新；生成文件只由正式写入方产生（[测试策略](../standards/testing.md) 第 4 节）。
+- 代码、测试、生成文件和文档在同一个任务中更新；生成文件只由正式写入方产生（[测试策略](../standards/development.md) 第 4 节）。
 - 合并门通过，任务涉及的检查通过。
 - MCP 契约变化的差异已逐项解释；破坏性变化写入发布说明和迁移表。
 - 新增 MCP 文本为英文；用户可见的变化写入 `CHANGELOG.md` 的 `[Unreleased]` 段或版本说明草稿。版本条目只由 `release` 命令在发布提交中写入，最新版本条目必须等于 `Version.props` 的版本。
@@ -106,8 +106,8 @@
 ## 6 发布衔接
 
 - 每次发布前由维护者确认；发布期间不改代码。
-- 4.0 的版本以 GitHub 预发布 `v4.0.0-beta.N` 交给测试者，不设为最新版（[ADR 0020](../development/decisions/0020-prereleases-tested-by-users.md)）。
-- 发布命令与步骤见 [发布流程](../development/release-workflow.md)；发布后更新交接与 `manifest/publication-v<版本>.json`。
+- 4.0 的版本以 GitHub 预发布 `v4.0.0-beta.N` 交给测试者，不设为最新版（[ADR 0020](../standards/decisions/0020-prereleases-tested-by-users.md)）。
+- 发布命令与步骤见 [发布流程](release.md)；发布后更新交接与 `manifest/publication-v<版本>.json`。
 - 4.0 正式版的放行条件由维护者 2026-10-30 决定（ADR 0023，随 S0 文档批次合并）。
 
 ## 7 并行与资源

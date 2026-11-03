@@ -4,7 +4,7 @@
 - 日期：2026-10-20；修订 2026-11-01
 - 决策者：维护者
 - 置信度：中
-- 相关：取代 [ADR 0013](0013-release-4-0-after-phases-7-and-8.md) 中“真机验收最后集中进行一次”的部分；[ADR 0002](0002-native-behavior-by-family-acceptance.md)、[0023](0023-release-4-0-final-criteria.md)；[重构计划](../refactor-plan.md) P8-04、P8-90；[发布计划](../../status/release-plan.md)；[预发布真机验证清单](../../guides/beta-tester-checklist.md)；[测试者反馈台账](../tester-feedback.md)；[真机台账](../../reference/real-machine-ledger.md)；[发布流程](../release-workflow.md)
+- 相关：取代 [ADR 0013](0013-release-4-0-after-phases-7-and-8.md) 中“真机验收最后集中进行一次”的部分；[ADR 0002](0002-native-behavior-by-family-acceptance.md)、[0023](0023-release-4-0-final-criteria.md)；[重构计划](../../plan/plan.md) P8-04、P8-90；[发布计划](../../plan/plan.md)；[预发布真机验证清单](../../guides/beta-tester-checklist.md)；[测试者反馈台账](../../plan/progress.md)；[真机台账](../../reference/real-machine-ledger.md)；[发布流程](../../manuals/release.md)
 
 ## 背景
 
@@ -26,7 +26,7 @@ ADR 0013 定下：4.0 在阶段 7 与阶段 8 完成后发布，并在最后对�
 - 包以 GitHub 预发布发布，版本号形如 `v4.0.0-beta.N`：标为预发布，且不设为最新版。3.3 的三条更新路径都只查询最新版，因此不会向现有用户提示。
 - 预发布说明附 “Not verified on a real TIA Portal” 清单，由真机台账与审计虚拟机清单生成。
 - 我们在 VM 上按[预发布真机验证清单](../../guides/beta-tester-checklist.md)做回归：先 V21，再其他已安装的版本；每批修复合并后在 VM 上复测对应项。只用一次性测试工程，导出写到 `<包根>/exports/<run>`；审批仍由维护者决定（批准或由维护者关闭）；端点令牌不打印、不复制。
-- 测试者报告和我们的 VM 结果都先记在[测试者反馈台账](../tester-feedback.md)，复核后才写入真机台账。
+- 测试者报告和我们的 VM 结果都先记在[测试者反馈台账](../../plan/progress.md)，复核后才写入真机台账。
 - 每次发布到 GitHub 前由维护者确认。
 - 构建、离线套件、check-all 与 GitHub CI 照常执行，所有检查保留（合并门与 CI 的角色见 ADR 0024）。
 
@@ -37,7 +37,7 @@ ADR 0013 定下：4.0 在阶段 7 与阶段 8 完成后发布，并在最后对�
   - VM 回归只覆盖安装了的版本和清单中的项目，V14 SP1–V20 中未安装的版本仍依赖测试者。
   - V20/V21 切换到 PlcWorker 时没有引擎基线可对照。
   - 按 ADR 0002，D1 行为族在没有真机验收时保持 `current`。
-- 后续工作：beta.2 VM 发现登记进反馈台账并在修复后复测（[发布计划](../../status/release-plan.md) FB-VM）；4.0 正式版的条件见 ADR 0023。
+- 后续工作：beta.2 VM 发现登记进反馈台账并在修复后复测（[发布计划](../../plan/plan.md) FB-VM）；4.0 正式版的条件见 ADR 0023。
 - 验证方式：
   - 发布工具测试证明预发布带 prerelease=true 且 make_latest="false"。
   - 更新器测试证明正式安装不会被提示预发布。

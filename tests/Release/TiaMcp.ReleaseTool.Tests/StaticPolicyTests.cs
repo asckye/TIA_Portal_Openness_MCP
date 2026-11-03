@@ -184,7 +184,7 @@ public sealed class StaticPolicyTests
     [InlineData("TiaMcp.Updater.exe", false)]
     [InlineData("TiaMcp.Updater.exe.config", false)]
     [InlineData("src/Engine/Program.cs", false)]
-    [InlineData("docs/development/runtime-layout.md", false)]
+    [InlineData("docs/standards/design.md", false)]
     [InlineData("build-tools/release/TiaMcp.ReleaseTool.csproj", false)]
     [InlineData("reference/tool-examples/README.md", false)]
     [InlineData("manifest/contracts/tools.json", false)]

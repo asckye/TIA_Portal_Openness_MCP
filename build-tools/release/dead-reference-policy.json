@@ -124,7 +124,7 @@
   "HISTORY_SKIP_FILES": [
     "CHANGELOG.md",
     "bin-build/P6-40b/report.md",
-    "docs/development/phase6-review.md",
+    "docs/archive/development/phase6-review.md",
     "docs/reference/tool-matrix.md",
     "docs/reference/version-tool-catalog.md"
   ],
@@ -139,8 +139,8 @@
     ]
   },
   "ARCHITECTURE_MEMBER_RECORDS": [
-    "docs/development/adapter-merge.md",
-    "docs/development/engine-decomposition.md"
+    "docs/archive/development/adapter-merge.md",
+    "docs/archive/development/engine-decomposition.md"
   ],
   "CLI_COMMANDS": {
     "doctor": "CLI subcommand (`tia doctor`), not an MCP tool name",

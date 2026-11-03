@@ -27,4 +27,4 @@ Each live HTTP session owns a separate worker. Separate sessions must use separa
 
 The host remains available for diagnostics when TIA or its Openness environment is unavailable. `InitializeEnvironment` reports repair steps; TIA-dependent operations are refused before native dispatch. Read the selected release's schema rather than assuming every diagnostic tool exists on every release.
 
-[Native-call diagnostics](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/native-call-diagnostics.md) explain the journal. Review private paths before sharing logs. Offline worker and transport fixtures establish their tested protocol behavior; current native acceptance is recorded in [capabilities](../reference/capabilities.md).
+[Native-call diagnostics](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/real-machine-testing.md) explain the journal. Review private paths before sharing logs. Offline worker and transport fixtures establish their tested protocol behavior; current native acceptance is recorded in [capabilities](../reference/capabilities.md).

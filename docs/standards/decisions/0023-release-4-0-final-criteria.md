@@ -4,7 +4,7 @@
 - 日期：2026-10-30
 - 决策者：维护者
 - 置信度：高
-- 相关：取代 [ADR 0013](0013-release-4-0-after-phases-7-and-8.md) 的放行部分；[ADR 0020](0020-prereleases-tested-by-users.md)、[0024](0024-ci-does-not-block-merges.md)、[0025](0025-release-evidence-nightly-and-verified-build-units.md)；[发布计划](../../status/release-plan.md)；[发布流程](../release-workflow.md)
+- 相关：取代 [ADR 0013](0013-release-4-0-after-phases-7-and-8.md) 的放行部分；[ADR 0020](0020-prereleases-tested-by-users.md)、[0024](0024-ci-does-not-block-merges.md)、[0025](0025-release-evidence-nightly-and-verified-build-units.md)；[发布计划](../../plan/plan.md)；[发布流程](../../manuals/release.md)
 
 ## 背景
 
@@ -19,7 +19,7 @@ ADR 0013 规定 4.0 在阶段 7、8 全部完成后发布。之后阶段 8 的 P
 
 采用选项 2（维护者 2026-10-30：“公测期取消，不需要，测试全部通过反馈来，我们只需要复制打包程序即可”）。4.0 正式版的条件：
 
-- [发布计划](../../status/release-plan.md)中列为 4.0 范围的任务全部合并（包括修完 beta.2 真机测试发现的 VMFIX-1 和 DES-1..5）；
+- [发布计划](../../plan/plan.md)中列为 4.0 范围的任务全部合并（包括修完 beta.2 真机测试发现的 VMFIX-1 和 DES-1..5）；
 - 离线检查（check-all）与 GitHub CI 在发布提交上通过；
 - 用完整发布链生成 rc；
 - 维护者确认后发布。

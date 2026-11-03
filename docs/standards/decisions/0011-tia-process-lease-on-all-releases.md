@@ -4,7 +4,7 @@
 - 日期：2026-10-08
 - 决策者：维护者
 - 置信度：高
-- 相关：[工作台控制设计](../phase8-workbench-control.md)“维护者决定（2026-10-08）”；[运行时布局](../runtime-layout.md)“TIA 进程租约”；[4.0 发布说明草稿](../../releases/v4.0.0.md)；[重构计划](../refactor-plan.md) P8-21；[架构概览](../design-spec/architecture.md) 第 6.2 节
+- 相关：[工作台控制设计](../../archive/development/design/workbench-control-and-shared-session.md)“维护者决定（2026-10-08）”；[运行时布局](../design.md)“TIA 进程租约”；[4.0 发布说明草稿](../../releases/v4.0.0.md)；[重构计划](../../plan/plan.md) P8-21；[架构概览](../design.md) 第 6.2 节
 
 回溯记录（写于 2026-10-11）。
 

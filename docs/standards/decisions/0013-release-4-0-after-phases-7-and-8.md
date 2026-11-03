@@ -4,7 +4,7 @@
 - 日期：2026-10-09
 - 决策者：维护者
 - 置信度：高
-- 相关：[交接](../handoff.md)；[路线图](../roadmap.md) 开头的维护者决定；[重构计划](../refactor-plan.md) 阶段 8 的“2026-10-09 更新”；[真机台账](../../reference/real-machine-ledger.md)；[ADR 0002](0002-native-behavior-by-family-acceptance.md)、[0009](0009-port-v20-v21-tools-to-foundation-adapters.md)
+- 相关：[交接](../../plan/progress.md)；[路线图](../../plan/plan.md) 开头的维护者决定；[重构计划](../../plan/plan.md) 阶段 8 的“2026-10-09 更新”；[真机台账](../../reference/real-machine-ledger.md)；[ADR 0002](0002-native-behavior-by-family-acceptance.md)、[0009](0009-port-v20-v21-tools-to-foundation-adapters.md)
 
 回溯记录（写于 2026-10-11）。本决定取代 2026-10-08 的并行计划（该计划没有单独的 ADR）。
 

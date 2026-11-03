@@ -4,7 +4,7 @@
 - 日期：2026-10-03
 - 决策者：维护者
 - 置信度：高
-- 相关：[阶段 6 契约规范](../phase6-review.md) 第 4 节与第 6 节（决策 4、10）；[响应与错误](../response-and-errors.md)“V4 D1 行为能力披露”；[真机台账](../../reference/real-machine-ledger.md)；[V4 工具协议规范](../design-spec/v4-protocol.md) 第 3 节与第 9.3 节；[ADR 0013](0013-release-4-0-after-phases-7-and-8.md)
+- 相关：[阶段 6 契约规范](../../archive/development/phase6-review.md) 第 4 节与第 6 节（决策 4、10）；[响应与错误](../design.md)“V4 D1 行为能力披露”；[真机台账](../../reference/real-machine-ledger.md)；[V4 工具协议规范](../design.md) 第 3 节与第 9.3 节；[ADR 0013](0013-release-4-0-after-phases-7-and-8.md)
 
 回溯记录（写于 2026-10-11）。
 

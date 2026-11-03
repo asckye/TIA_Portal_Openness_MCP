@@ -2,9 +2,9 @@
 
 状态：现行 · 最后核对：2026-11-01，master `27675208`（4.0.0-beta.3 准备提交，尚未发布）
 
-[当前交接](../development/handoff.md) · [路线图](../development/roadmap.md) · [重构计划](../development/refactor-plan.md) · [架构决策记录](../development/decisions/README.md) · [测试者反馈台账](../development/tester-feedback.md)
+[当前交接](progress.md) · [路线图](plan.md) · [重构计划](plan.md) · [架构决策记录](../standards/decisions/README.md) · [测试者反馈台账](progress.md)
 
-本页按版本记录范围、任务状态和放行门槛，是 2026-10-22 之后新任务的唯一计划。阶段 0–8 的任务表留在[重构计划](../development/refactor-plan.md)，4.0 正式版后归档；当前源码事实和正在进行的分支见[当前交接](../development/handoff.md)；方向见[路线图](../development/roadmap.md)。`bin-build/refactor/tasks/followups.md`（不入库）只是收件箱：其中的条目在决定当天转写到本页或写成 ADR，任务说明只引用本页的编号。
+本页按版本记录范围、任务状态和放行门槛，是 2026-10-22 之后新任务的唯一计划。阶段 0–8 的任务表留在[重构计划](plan.md)，4.0 正式版后归档；当前源码事实和正在进行的分支见[当前交接](progress.md)；方向见[路线图](plan.md)。`bin-build/refactor/tasks/followups.md`（不入库）只是收件箱：其中的条目在决定当天转写到本页或写成 ADR，任务说明只引用本页的编号。
 
 状态：已合并（带提交号）· 进行中（有分支或正在实施）· 排队（已有任务说明，等待前置任务）· 未开始。
 
@@ -12,10 +12,10 @@
 
 | 发布 | 门槛 | 依据 |
 |---|---|---|
-| 预发布 `4.0.0-beta.N` | GitHub 预发布，不设为最新版，3.3 更新器不提示；说明附 “Not verified on a real TIA Portal” 清单；每次发布前维护者确认；测试者按[预发布真机验证清单](../guides/beta-tester-checklist.md)报告，我们在 VM 上按同一清单做回归 | [ADR 0020](../development/decisions/0020-prereleases-tested-by-users.md) |
-| 合并 | 本机 `check-all -Affected` 加受影响的检查通过；GitHub CI 不阻塞合并 | [ADR 0024](../development/decisions/0024-ci-does-not-block-merges.md) |
-| 发布证据 | 最近一次通过的 nightly 加已验证的增量构建单元；nightly 门槛 45 分钟，失败或超时阻止下一次发布；发布不等 CI（`-NoWait`） | [ADR 0025](../development/decisions/0025-release-evidence-nightly-and-verified-build-units.md)、[ADR 0024](../development/decisions/0024-ci-does-not-block-merges.md)；实现见 RULES-1 |
-| 4.0 正式版 | 全部 4.0 任务合并；check-all 通过，CI 结果在维护者确认前另行核对；由发布链生成 rc；维护者确认。不设公测期，不要求连续 20 次通过；起初不向 3.3 更新器提供 | [ADR 0023](../development/decisions/0023-release-4-0-final-criteria.md) |
+| 预发布 `4.0.0-beta.N` | GitHub 预发布，不设为最新版，3.3 更新器不提示；说明附 “Not verified on a real TIA Portal” 清单；每次发布前维护者确认；测试者按[预发布真机验证清单](../guides/beta-tester-checklist.md)报告，我们在 VM 上按同一清单做回归 | [ADR 0020](../standards/decisions/0020-prereleases-tested-by-users.md) |
+| 合并 | 本机 `check-all -Affected` 加受影响的检查通过；GitHub CI 不阻塞合并 | [ADR 0024](../standards/decisions/0024-ci-does-not-block-merges.md) |
+| 发布证据 | 最近一次通过的 nightly 加已验证的增量构建单元；nightly 门槛 45 分钟，失败或超时阻止下一次发布；发布不等 CI（`-NoWait`） | [ADR 0025](../standards/decisions/0025-release-evidence-nightly-and-verified-build-units.md)、[ADR 0024](../standards/decisions/0024-ci-does-not-block-merges.md)；实现见 RULES-1 |
+| 4.0 正式版 | 全部 4.0 任务合并；check-all 通过，CI 结果在维护者确认前另行核对；由发布链生成 rc；维护者确认。不设公测期，不要求连续 20 次通过；起初不向 3.3 更新器提供 | [ADR 0023](../standards/decisions/0023-release-4-0-final-criteria.md) |
 
 ## 4.0.0-beta.3（未发布）
 
@@ -55,7 +55,7 @@
 | P8-04n | 八版统一对外呈现：精简清单默认启用、服务器说明、提示词与资源、档案名、包装与审批路径、行为披露 | 未开始 | 2026-10-13 |
 | P8-21f | 删除工作台重复的 TIA 适配代码（含 VCI 平铺工作区与 MCP `UngroupedDevices` 对齐） | 未开始 | 2026-10-08 |
 | P8-84 | 工作台 TIA 进程选择器：多个 TIA 进程时由用户选择，按 PID 精确附着 | 未开始 | 2026-10-21 |
-| FB-VM | beta.2 VM 发现登记进[测试者反馈台账](../development/tester-feedback.md)，修复后在 VM 复测 | 未开始 | 2026-11-01 |
+| FB-VM | beta.2 VM 发现登记进[测试者反馈台账](progress.md)，修复后在 VM 复测 | 未开始 | 2026-11-01 |
 
 SPD-3d 的 P-C 已于 2026-11-01 批准：合并和 nightly 的 check 构建统一使用固定 `check` 修订标记，构建单元及 parity 键不包含 HEAD；输入闭包、输出逐文件哈希、冷构建抽查和 deadline 均保留。release 构建仍写入提交号，独立构建发布二进制，不能把 check 输出当作 release 二进制。P-A（parity 派生自 build-once 的已验证节点键）作为后续优化评估，须覆盖普通布局专有 import。
 

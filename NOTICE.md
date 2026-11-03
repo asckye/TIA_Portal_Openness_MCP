@@ -40,6 +40,6 @@ Siemens 2025-2026, pinned at `4a8cc79d0666633e524e52f3335d99ff993f8830`.
 Source code is MIT under section 2 of the complete retained
 [Siemens license](docs/licenses/SiemensCodeSnippets-LICENSE.md).
 The files are reference data, not compiled dependencies; Siemens SDK binaries and
-sample engineering archives are excluded. See [scope and provenance](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/official-tool-usage.md).
+sample engineering archives are excluded. See [scope and provenance](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/real-machine-testing.md).
 
 The .NET 10 extension packages, System.Text.Json and preview.4 companion dependencies use stable 10.0.12, aligned with the bundled runtime. The MCP SDK remains at 0.3.0-preview.4; license terms are unchanged. See [the third-party notices](docs/licenses/THIRD-PARTY-NOTICES.md).

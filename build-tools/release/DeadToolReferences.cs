@@ -71,7 +71,7 @@ internal static class DeadToolReferences
     }
     internal static Dictionary<string, string> MigrationNames(string root)
     {
-        var document = Repository.ReadSource(Path.Combine(root, "docs/development/phase6-review.md"));
+        var document = Repository.ReadSource(Path.Combine(root, "docs/archive/development/phase6-review.md"));
         var a = document.IndexOf("A. ", StringComparison.Ordinal); if (a >= 0) document = document[(a + 3)..];
         var b = document.IndexOf("B. ", StringComparison.Ordinal); if (b >= 0) document = document[..b];
         return Regex.Matches(document, @"^\| `([^`]+)` \| `([^`]+)` \|", RegexOptions.Multiline).ToDictionary(m => m.Groups[1].Value, m => m.Groups[2].Value);

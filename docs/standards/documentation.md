@@ -2,9 +2,9 @@
 
 状态：现行 · 最后核对：2026-11-01，master `27675208`（术语表“引擎”“服务”“项目”行、第 14.4 节与附录 B）；其余为 2026-10-11，master `3a227657`
 
-[设计规范索引](README.md) · [文档偏差清单](deviations/docs.md)
+[设计规范索引](design.md) · [文档偏差清单](documentation.md)
 
-本规范是自动化工程工作台（原名 TIA Portal Openness MCP）项目全部文字材料的写作标准。维护者于 2026-10-11 决定以 Microsoft 设计规范为基线：英文按 [Microsoft Writing Style Guide](https://learn.microsoft.com/en-us/style-guide/welcome/)，中文按 Microsoft 发布的 [Chinese (Simplified) Localization Style Guide](https://aka.ms/chinese-simplified-styleguide)（以下简称“zh-CN 指南”，PDF，2024 年版，58 页）。新写和改写的文档必须符合本规范；现有材料与本规范不一致之处逐条列在 [文档偏差清单](deviations/docs.md)，每条的状态（4.0 前修改、4.0 后修改或有意偏差）已按 2026-10-11 的决定登记，4.0 前的修改由 P8-63 与 P7-11b 一起完成。基线决定见 [ADR 0015](../decisions/0015-microsoft-design-spec-baseline.md)。
+本规范是自动化工程工作台（原名 TIA Portal Openness MCP）项目全部文字材料的写作标准。维护者于 2026-10-11 决定以 Microsoft 设计规范为基线：英文按 [Microsoft Writing Style Guide](https://learn.microsoft.com/en-us/style-guide/welcome/)，中文按 Microsoft 发布的 [Chinese (Simplified) Localization Style Guide](https://aka.ms/chinese-simplified-styleguide)（以下简称“zh-CN 指南”，PDF，2024 年版，58 页）。新写和改写的文档必须符合本规范；现有材料与本规范不一致之处逐条列在 [文档偏差清单](documentation.md)，每条的状态（4.0 前修改、4.0 后修改或有意偏差）已按 2026-10-11 的决定登记，4.0 前的修改由 P8-63 与 P7-11b 一起完成。基线决定见 [ADR 0015](decisions/0015-microsoft-design-spec-baseline.md)。
 
 ## 0 规范用语与引用方式
 
@@ -25,11 +25,11 @@
 | 发布记录 | `CHANGELOG.md`、`docs/releases/*.md` | 是 | 使用者、集成者 | 英文 |
 | 生成文档 | `docs/reference/tool-matrix.md`、`docs/reference/version-tool-catalog.md`、`docs/releases/v4.0.0-tool-migration.md`、`docs/reference/real-machine-ledger.md` 的标记块、`manifest/tool-usage-coverage.json` | 部分 | 使用者、维护者 | 随生成器 |
 | 开发文档 | `docs/development/*.md`、`docs/reference/real-machine-ledger.md`、`scripts/README.md`、`src/**/README.md` | 否 | 维护者、实现代理 | 中文 |
-| 设计规范 | `docs/development/design-spec/` | 否 | 维护者、实现代理 | 中文 |
-| 设计记录与决策 | `docs/development/design/`、`docs/development/decisions/`（见第 14 节） | 否 | 维护者 | 中文 |
+| 设计规范 | `docs/standards/design.md` | 否 | 维护者、实现代理 | 中文 |
+| 设计记录与决策 | `docs/archive/development/design/`、`docs/standards/decisions/`（见第 14 节） | 否 | 维护者 | 中文 |
 | 代理说明 | `CLAUDE.md`、`AGENTS.md`、`plugin/skill/SKILL.md` | `SKILL.md` 随插件分发 | AI 编码与使用代理 | `CLAUDE.md`、`AGENTS.md` 中文；`SKILL.md` 英文 |
 
-MCP 工具描述、参数说明和错误消息不属于本规范，它们的语言政策见 `docs/development/runtime-layout.md`“用户可见文案语言”（新增 MCP 文本一律英文）及协议设计规范。工作台界面文字的措辞规则在工作台设计规范中定义，但用户文档引用界面文字时遵守本规范第 6 节。
+MCP 工具描述、参数说明和错误消息不属于本规范，它们的语言政策见 `docs/standards/design.md`“用户可见文案语言”（新增 MCP 文本一律英文）及协议设计规范。工作台界面文字的措辞规则在工作台设计规范中定义，但用户文档引用界面文字时遵守本规范第 6 节。
 
 ## 2 语言策略
 
@@ -46,7 +46,7 @@ MCP 工具描述、参数说明和错误消息不属于本规范，它们的语�
 - SHOULD：用短句和常用词；一句只表达一件事。中文避免多层定语堆叠，长修饰语拆成两句。[MS: [Use simple words, concise sentences](https://learn.microsoft.com/en-us/style-guide/word-choice/use-simple-words-concise-sentences)；zh-CN §4.1.9、§2.1.4]
 - SHOULD：中文能省略主语时省略；需要称呼读者时用“你”，不用“您”。英文用第二人称 you。[zh-CN §4.1.12；MS: [Person](https://learn.microsoft.com/en-us/style-guide/grammar/person)]
 - MUST：用户文档不出现内部任务编号（如 P6-44、P8-03x）、阶段名、代理名称和评审过程；这些只出现在开发文档和设计记录中。[MS: [Headings](https://learn.microsoft.com/en-us/style-guide/scannable-content/headings) 要求关注读者要做什么；项目]
-- MUST：限制和未验收状态写一次、写清楚，并链接到权威页面（[能力与验收边界](../../reference/capabilities.md)、真机台账），不在每段重复免责声明。[MS: Top 10 tips“Get to the point fast”]
+- MUST：限制和未验收状态写一次、写清楚，并链接到权威页面（[能力与验收边界](../reference/capabilities.md)、真机台账），不在每段重复免责声明。[MS: Top 10 tips“Get to the point fast”]
 - SHOULD：避免带偏见或军事化的措辞；描述进程时用“结束”“停止”而不是“杀掉”。[MS: [Bias-free communication](https://learn.microsoft.com/en-us/style-guide/bias-free-communication)、[Militaristic language](https://learn.microsoft.com/en-us/style-guide/militaristic-language)]
 - MUST：描述用户操作用与输入方式无关的动词：中文用“选择”（按钮、菜单、选项卡、复选框），不用“点击”或“单击”；英文用 select，不用 click。[zh-CN §3.2；MS: [Describing interactions with the UI](https://learn.microsoft.com/en-us/style-guide/procedures-instructions/describing-interactions-with-ui)]
 - MUST：文档描述当前代码的行为。已删除的功能、开关、入口或旧版本状态不得写成“当前可用”；历史内容移入发布记录或 Git 历史。[项目，参见 MS: [Content planning](https://learn.microsoft.com/en-us/style-guide/content-planning)]
@@ -78,7 +78,7 @@ MCP 工具描述、参数说明和错误消息不属于本规范，它们的语�
 
 - MUST：开发文档、设计记录在一级标题下第一行写状态行：`状态：现行 | 部分过时（第 x 节）| 历史记录`，以及“最后核对：日期 + 提交”。[项目]
 - SHOULD：用户文档在标题下用一两句话说明本页适用的版本范围和读者要完成的任务。[MS: [Writing step-by-step instructions](https://learn.microsoft.com/en-us/style-guide/procedures-instructions/writing-step-by-step-instructions)“Scannability”]
-- MAY：导航行（`[文档目录](../../README.md) · […]`）放在状态行之后；最多五个链接。[项目]
+- MAY：导航行（`[文档目录](../README.md) · […]`）放在状态行之后；最多五个链接。[项目]
 
 ## 5 操作步骤
 
@@ -141,7 +141,7 @@ MCP 工具描述、参数说明和错误消息不属于本规范，它们的语�
 - 有意偏差：日期统一用 ISO 8601 `YYYY-MM-DD`（如 2026-10-11），中英文一致；需要时间时用 UTC 并写明。MS 要求英文日期写成“month day, year”，本项目的日期主要出现在决策和证据记录中，需要可排序且不受地区格式影响（MS Numbers 的 Global tip 所担心的歧义 ISO 格式同样避免）。见 DOC-30。
 - 有意偏差：范围统一用 en dash（–），前后不加空格：`V14 SP1–V19`、`10–180 秒`、`P6-01–P6-41`。zh-CN 指南对中文数字范围使用波浪线（§4.1.13 Wave dash），但本项目的版本范围在英文文档、MCP 文本和中文文档中是同一个写法，统一更利于检索。不使用全角“～”。见 DOC-29。
 - MUST：TIA Portal 版本写作 V14 SP1、V15.1、V16、V17、V18、V19、V20、V21；不写 V14SP1、“V14”（指 V14 SP1 时）或“V15”（指 V15.1 时）。发布键写作代码样式 `14sp1`、`15.1`、`16`–`21`。[项目]
-- MUST：工具数量、测试数量等会随代码变化的数字不手写在正文中。需要时引用生成文档（如[生成的工具目录](../../reference/version-tool-catalog.md)）或契约基线，写明“以运行时 `tools/list` 为准”。必须出现数字时（如发布说明的版本表）由生成器写入或在发布提交中从契约基线核对。[项目，MS: Numbers“Be consistent”]
+- MUST：工具数量、测试数量等会随代码变化的数字不手写在正文中。需要时引用生成文档（如[生成的工具目录](../reference/version-tool-catalog.md)）或契约基线，写明“以运行时 `tools/list` 为准”。必须出现数字时（如发布说明的版本表）由生成器写入或在发布提交中从契约基线核对。[项目，MS: Numbers“Be consistent”]
 
 ## 10 项目术语表
 
@@ -163,7 +163,7 @@ MCP 工具描述、参数说明和错误消息不属于本规范，它们的语�
 | worker | worker（总称） | worker | 不适用 | 工作进程、子进程（作术语时） | 由宿主为每个 MCP 会话启动的 net48 进程 |
 | PLC worker | PLC worker | PLC worker | `runtime/v<发布键>/worker/TiaMcp.PlcWorker.<发布键>.exe` | 基础 worker、Foundation worker（混用） | 八个版本；V14 SP1–V19 为 STA 线程，V20/V21 为 MTA 线程 |
 | 引擎 worker | 引擎 worker | engine worker | `TiaMcp.Engine.V20.exe --engine-worker`（V21 同理） | 完整引擎（指运行形态时）、full engine、引擎宿主 | 已退役：P8-04j2 起 V20/V21 也使用 PLC worker，交付包不含引擎；只在历史记录或仓库交叉检查中出现 |
-| 引擎 | 引擎（只作历史名词） | engine | `TiaMcp.Engine.V20.exe`、`TiaMcp.Engine.V21.exe` | 完整引擎；用“引擎”指当前产品、MCP 宿主或其 worker | 只指这两个已退役的程序：P8-04l 第 1 阶段已删除引擎程序和构建路线，`src/Engine` 剩余源码由 P8-04l2 删除（[ADR 0022](../decisions/0022-engine-retirement-and-eight-release-unification.md)）；只在历史记录中出现 |
+| 引擎 | 引擎（只作历史名词） | engine | `TiaMcp.Engine.V20.exe`、`TiaMcp.Engine.V21.exe` | 完整引擎；用“引擎”指当前产品、MCP 宿主或其 worker | 只指这两个已退役的程序：P8-04l 第 1 阶段已删除引擎程序和构建路线，`src/Engine` 剩余源码由 P8-04l2 删除（[ADR 0022](decisions/0022-engine-retirement-and-eight-release-unification.md)）；只在历史记录中出现 |
 | 服务（界面用语） | 服务、MCP 服务 | service、MCP service | 不适用 | 引擎、MCP 引擎、引擎设置 | 工作台界面和用户文档对 MCP 宿主及其 worker 的总称（维护者 2026-11-01 决定；工作台界面字符串在后续代码任务中修改）；开发文档按对象写宿主、FoundationHost 或 worker |
 | V20/V21 专有工具 | V20/V21 专有工具 | V20/V21-only tools | 不适用 | 完整引擎工具 | 35 个能力族已移入 Foundation 适配器，原生调用在 PLC worker 中执行 |
 | Foundation 适配器 | Foundation 适配器 | Foundation adapters | `TiaMcp.Adapter.<发布键>.dll`、`src/Adapters` | 共享适配器、Foundation 代码（混用） | 按发布键编译八次 |
@@ -190,7 +190,7 @@ MCP 工具描述、参数说明和错误消息不属于本规范，它们的语�
 | 机器描述 | 机器描述 | machine description | `MachineDescription` | 设备清单（作文件名时） | 生成的唯一结构化输入 |
 | 生成计划 / 生成运行 | 生成计划、生成运行 | generation plan、generation run | `tiamcp.plan/1`、`tiamcp.run/1` | 方案、执行记录（混用） | 一次 Apply 审批一次 |
 | 暂存 | 导入暂存 | import staging | `<包根>/staging/<会话>/<批次>/` | 上传目录 | 不在数据根下 |
-| V4 会话 | V4 会话；上下文清楚时简称会话 | V4 session | 不适用 | 连接（指会话状态时） | 宿主为一个 MCP 会话维护的全部状态（worker、租约、绑定、会话锁、计划、句柄等），4.0 中由 MCP 传输会话承载，定义见 [V4 工具协议规范](v4-protocol.md) 第 0.4 节 |
+| V4 会话 | V4 会话；上下文清楚时简称会话 | V4 session | 不适用 | 连接（指会话状态时） | 宿主为一个 MCP 会话维护的全部状态（worker、租约、绑定、会话锁、计划、句柄等），4.0 中由 MCP 传输会话承载，定义见 [V4 工具协议规范](design.md) 第 0.4 节 |
 | worker 代次 | worker 代次 | worker generation | 不适用 | worker 代（混用） | 一次 worker 进程的生命周期；故障后经 `RestartOpennessWorker` 或 `DisconnectPortal` 开始新代次 |
 | TIA 项目 | 项目 | project | `.ap<主版本>` 文件 | 工程（新文档中指 TIA Portal 项目时） | 跟随 TIA Portal 中文界面写“项目”（维护者 2026-11-01 决定，取代原“统一写工程”的规定）；现有文档的“工程”在文档重组时逐步改写，工作台界面字符串在后续代码任务中统一 |
 | 写栅栏 | 生成写栅栏 | generation write fence | `generation-run-active` | 围栏 | 生成运行期间拒绝同一会话中不属于该运行的写调用 |
@@ -236,7 +236,7 @@ MCP 工具描述、参数说明和错误消息不属于本规范，它们的语�
 
 ## 14 设计记录与架构决策记录（ADR）
 
-维护者于 2026-10-11 决定用架构决策记录（Architecture Decision Record，ADR）记录设计决策：一页只记一个决策。参考 Microsoft Azure Well-Architected Framework 的 [Maintain an architecture decision record (ADR)](https://learn.microsoft.com/en-us/azure/well-architected/architect-role/architecture-decision-record) 与 Michael Nygard 的 [Documenting Architecture Decisions](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions)（常见的 Nygard 模板）。ADR 索引与待补写清单见 [架构决策记录](../decisions/README.md)，模板文件为 [0000-template.md](../decisions/0000-template.md)。
+维护者于 2026-10-11 决定用架构决策记录（Architecture Decision Record，ADR）记录设计决策：一页只记一个决策。参考 Microsoft Azure Well-Architected Framework 的 [Maintain an architecture decision record (ADR)](https://learn.microsoft.com/en-us/azure/well-architected/architect-role/architecture-decision-record) 与 Michael Nygard 的 [Documenting Architecture Decisions](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions)（常见的 Nygard 模板）。ADR 索引与待补写清单见 [架构决策记录](decisions/README.md)，模板文件为 [0000-template.md](decisions/0000-template.md)。
 
 ### 14.1 何时必须写 ADR
 
@@ -253,7 +253,7 @@ MCP 工具描述、参数说明和错误消息不属于本规范，它们的语�
 
 ### 14.2 文件与编号
 
-- 位置：`docs/development/decisions/NNNN-<短标题>.md`，`NNNN` 为四位递增序号（`0001` 起），短标题用小写英文和连字符，例如 `0007-one-worker-per-mcp-session.md`。[项目]
+- 位置：`docs/standards/decisions/NNNN-<短标题>.md`，`NNNN` 为四位递增序号（`0001` 起），短标题用小写英文和连字符，例如 `0007-one-worker-per-mcp-session.md`。[项目]
 - 目录下的 `README.md` 列出全部 ADR：编号、标题、状态、日期，按编号排序。[项目]
 - 语言：中文（与开发文档一致）。标题用陈述句写出决定本身。[项目]
 - ADR 是只追加的日志：已采纳的 ADR 不改写正文（只允许修正笔误和补链接）；决定改变时写新的 ADR，并在两边互相链接，旧 ADR 状态改为“已被 NNNN 取代”。[Azure WAF ADR“append-only log”]
@@ -271,14 +271,14 @@ MCP 工具描述、参数说明和错误消息不属于本规范，它们的语�
 
 ### 14.4 模板
 
-新 ADR 从 [ADR 模板](../decisions/0000-template.md) 开始；模板只在该文件中维护。
+新 ADR 从 [ADR 模板](decisions/0000-template.md) 开始；模板只在该文件中维护。
 
 模板结合了 Nygard 模板的“背景、决定、状态、后果”与 Azure WAF 建议的“备选方案、取舍、置信度”。详细推导写在设计文档中并从“相关”链接，ADR 本身必须能独立读懂。
 
 ### 14.5 设计文档
 
-- MUST：设计文档放在 `docs/development/design/`，开头有第 4.3 节的状态行；维护者的决定同时写成 ADR，设计文档链接 ADR，而不是在文末维护“维护者决定”小节。[项目]
-- MUST：`bin-build/` 下的设计草稿不是正式记录；被采纳的设计在合并对应实现时移入 `docs/development/design/`，文档不得链接 `bin-build/` 路径。[项目；CLAUDE.md：设计交接不纳入发布]
+- MUST：设计文档放在 `docs/archive/development/design/`，开头有第 4.3 节的状态行；维护者的决定同时写成 ADR，设计文档链接 ADR，而不是在文末维护“维护者决定”小节。[项目]
+- MUST：`bin-build/` 下的设计草稿不是正式记录；被采纳的设计在合并对应实现时移入 `docs/archive/development/design/`，文档不得链接 `bin-build/` 路径。[项目；CLAUDE.md：设计交接不纳入发布]
 - SHOULD：实施完成的设计文档改为“历史记录”状态，或把仍有效的结论并入现行文档后删除，由 Git 历史保留原文。[项目；repository-layout.md 的现行做法]
 
 ## 15 代理说明文件
@@ -326,4 +326,4 @@ MCP 工具描述、参数说明和错误消息不属于本规范，它们的语�
 
 ## 附录 B 与基线的有意偏差
 
-有意偏差只在 [文档偏差清单](deviations/docs.md) 中维护（状态为“有意偏差（已接受）”的条目），本规范不再重复汇总。
+有意偏差只在 [文档偏差清单](documentation.md) 中维护（状态为“有意偏差（已接受）”的条目），本规范不再重复汇总。

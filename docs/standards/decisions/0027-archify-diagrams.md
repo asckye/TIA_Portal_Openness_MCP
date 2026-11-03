@@ -4,7 +4,7 @@
 - 日期：2026-10-22（维护者批准文档重组方案的全部 15 项决定）；回溯记录（写于 2026-11-01）
 - 决策者：维护者
 - 置信度：中
-- 相关：[ADR 0026](0026-documentation-structure-and-language.md)；[文档写作规范](../design-spec/documentation-style.md) 第 11.1 节；任务 DOCS（批次 D4a、D4b）
+- 相关：[ADR 0026](0026-documentation-structure-and-language.md)；[文档写作规范](../documentation.md) 第 11.1 节；任务 DOCS（批次 D4a、D4b）
 
 ## 背景
 

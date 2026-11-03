@@ -22,7 +22,7 @@ Do not attach customer projects or credentials. Use the smallest reproducible sa
 4. For actual import/compile acceptance, report the selected test project/PLC, imported identities, compile error/warning counts and readback. A build or successful method return does not establish engineering success.
 5. Update affected docs and add user-visible changes to `CHANGELOG.md` using the existing format. Keep dates and versions accurate.
 
-Build outputs are not committed. Siemens SDKs come from a licensed local installation and are not distributed. `dotnet run --project build-tools/release -- build-release` builds the full engines/configurator; `dotnet run --project build-tools/release -- build-multi-version` builds and validates the other runtimes and Studio adapters. Formal packaging runs both required stages and verifies their manifests. Follow [validation](../docs/development/validation.md) and the [release workflow](../docs/development/release-workflow.md); source or test changes require refreshed matching evidence.
+Build outputs are not committed. Siemens SDKs come from a licensed local installation and are not distributed. `dotnet run --project build-tools/release -- build-release` builds the full engines/configurator; `dotnet run --project build-tools/release -- build-multi-version` builds and validates the other runtimes and Studio adapters. Formal packaging runs both required stages and verifies their manifests. Follow [validation](../docs/manuals/validation.md) and the [release workflow](../docs/manuals/release.md); source or test changes require refreshed matching evidence.
 
 Repository checks include:
 
@@ -56,7 +56,7 @@ file therefore needs no new allowance, while copying or changing an unmarked cat
 `dotnet run --project build-tools/release -- check-ratchet -Kind swallowed -UpdateBaseline` after resolving catches to
 remove old entries; routine updates must not use `-AllowGrowth` (reserved for reviewed initialization).
 
-The [P2-03 logging policy](../docs/development/response-and-errors.md#日志与检查) specifies the planned
+The [P2-03 logging policy](../docs/standards/design.md) specifies the planned
 `SwallowedExceptions.Note(string site, Exception ex)` helper: record only the site, exception type's
 full name and `HResult`, never `Message` or `ToString()`. Log the first occurrence per site per process
 and only count later occurrences; the helper must never throw or recursively log its own failures.

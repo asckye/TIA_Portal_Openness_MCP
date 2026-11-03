@@ -1,6 +1,6 @@
 # 给 Codex 的执行规则
 
-通用开发规范见[《工程开发手册》](docs/standards/engineering-handbook.html)（最小必做清单、代码质量、注释、测试和完成定义）及本项目的[采用说明](docs/standards/README.md)；仓库通用规则见 [CLAUDE.md](CLAUDE.md)，范围、任务状态和放行门槛见[发布计划](docs/status/release-plan.md)。每次执行完成任务说明中的全部内容；一份说明可以包含多个计划编号。
+通用开发规范见[《工程开发手册》](docs/standards/engineering-handbook.html)（最小必做清单、代码质量、注释、测试和完成定义）及本项目的[采用说明](docs/standards/README.md)；仓库通用规则见 [CLAUDE.md](CLAUDE.md)，范围、任务状态和放行门槛见[发布计划](docs/plan/plan.md)。每次执行完成任务说明中的全部内容；一份说明可以包含多个计划编号。
 
 ## 范围
 

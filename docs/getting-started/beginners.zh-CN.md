@@ -201,7 +201,7 @@ V14 SP1 的生成 API 不返回生成对象列表，因此应查看导入前后�
 
 - [配置指南](configuration.md)：两种连接模式、客户端配置、升级和故障处理。
 - [逐版本工具](../reference/version-tools.md)：所选版本实际提供的工具及差异。
-- [统一工具示例说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/official-tool-usage.md)：让 AI 使用 `GetToolUsage` 获取参数、语言示例、调用序列和结果解释。
+- [统一工具示例说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/real-machine-testing.md)：让 AI 使用 `GetToolUsage` 获取参数、语言示例、调用序列和结果解释。
 - [命令行指南](cli.md)：八版宿主的 `doctor`、`audit verify`、`config` 等命令。
 - [工作台说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/Studio/README.md)：桌面工具的工作流和支持范围。
 - [文档目录](../README.md)：PLC、HMI、硬件和其他专题。

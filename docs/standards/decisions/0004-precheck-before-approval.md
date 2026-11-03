@@ -4,7 +4,7 @@
 - 日期：2026-10-06
 - 决策者：维护者
 - 置信度：高
-- 相关：[重构计划](../refactor-plan.md) P6-60、P6-65；[4.0 发布说明草稿](../../releases/v4.0.0.md)“Changes”；[架构概览](../design-spec/architecture.md) 第 5.2 节；[V4 工具协议规范](../design-spec/v4-protocol.md) 第 9.4 节与第 10.2 节；[ADR 0003](0003-workbench-approval-for-mcp-writes.md)
+- 相关：[重构计划](../../plan/plan.md) P6-60、P6-65；[4.0 发布说明草稿](../../releases/v4.0.0.md)“Changes”；[架构概览](../design.md) 第 5.2 节；[V4 工具协议规范](../design.md) 第 9.4 节与第 10.2 节；[ADR 0003](0003-workbench-approval-for-mcp-writes.md)
 
 回溯记录（写于 2026-10-11）。日期取 P6-60 的登记日期。
 

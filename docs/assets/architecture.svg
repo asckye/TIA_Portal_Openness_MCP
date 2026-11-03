@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 450" role="img" aria-labelledby="title desc">
   <title id="title">Automation Engineering Workbench 4.0 components</title>
   <desc id="desc">AI clients and the Workbench Engineering page share a FoundationHost session. Each session owns a version-matched worker: PLC worker on V14 SP1 through V19, engine worker on V20 and V21. The worker alone calls TIA Openness.</desc>
-  <!-- Editable vector source. Relationships match docs/development/design-spec/architecture.md. -->
+  <!-- Editable vector source. Relationships match docs/standards/design.md. -->
   <defs>
     <style>text{font-family:Segoe UI,Arial,sans-serif;fill:#172b4d} .heading{font-size:19px;font-weight:600} .body{font-size:15px} .box{fill:#f6f8fa;stroke:#8799b0;stroke-width:1.5} .arrow{stroke:#405778;stroke-width:2;fill:none}</style>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#405778"/></marker>

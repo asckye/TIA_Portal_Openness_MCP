@@ -9,7 +9,7 @@ STDIO and a locally created HTTP fixture service.
 
 The names below correspond to assertion texts found with `git grep` in the
 preview tests. The preview projects were deleted in step A; the final audit and LegacyHost
-assertion disposition are recorded in [adapter-merge.md](../../../docs/development/adapter-merge.md#第-a-步最终规则核对).
+assertion disposition are recorded in [adapter-merge.md](../../../docs/archive/development/adapter-merge.md#第-a-步最终规则核对).
 `ProtocolTests` uses controlled byte streams; `ServerTests` observes dispatch
 counts and thread ownership; `ProcessTests` exercises real OS pipes.
 

@@ -4,7 +4,7 @@
 - 日期：2026-10-08
 - 决策者：维护者
 - 置信度：高
-- 相关：[重构计划](../refactor-plan.md) 阶段 7 与 P7-01、P7-04；[阶段 7 设计](../design/p7-host-worker-split.md)；[架构概览](../design-spec/architecture.md)；[ADR 0006](0006-engine-exe-as-v20-v21-worker.md)、[0007](0007-one-worker-per-mcp-session.md)、[0008](0008-worker-timeouts-and-faults.md)、[0009](0009-port-v20-v21-tools-to-foundation-adapters.md)
+- 相关：[重构计划](../../plan/plan.md) 阶段 7 与 P7-01、P7-04；[阶段 7 设计](../../archive/development/design/p7-host-worker-split.md)；[架构概览](../design.md)；[ADR 0006](0006-engine-exe-as-v20-v21-worker.md)、[0007](0007-one-worker-per-mcp-session.md)、[0008](0008-worker-timeouts-and-faults.md)、[0009](0009-port-v20-v21-tools-to-foundation-adapters.md)
 
 回溯记录（写于 2026-10-11）。
 

@@ -2,9 +2,9 @@
 
 状态：现行 · 最后核对：2026-11-01，master `27675208`
 
-[设计规范索引](../design-spec/README.md) · [文档写作规范](../design-spec/documentation-style.md) · [ADR 模板](0000-template.md) · [当前交接](../handoff.md) · [发布计划](../../status/release-plan.md)
+[设计规范索引](../design.md) · [文档写作规范](../documentation.md) · [ADR 模板](0000-template.md) · [当前交接](../../plan/progress.md) · [发布计划](../../plan/plan.md)
 
-本目录用架构决策记录（ADR）记录影响结构、契约、安全边界、发布规则或外部基线的决定，一页一个决定，只追加不改写（[ADR 0016](0016-architecture-decision-records.md)）。何时必须写 ADR、文件命名、状态值和模板见 [文档写作规范](../design-spec/documentation-style.md) 第 14 节；新 ADR 从 [模板](0000-template.md) 开始，写好后在下表登记。
+本目录用架构决策记录（ADR）记录影响结构、契约、安全边界、发布规则或外部基线的决定，一页一个决定，只追加不改写（[ADR 0016](0016-architecture-decision-records.md)）。何时必须写 ADR、文件命名、状态值和模板见 [文档写作规范](../documentation.md) 第 14 节；新 ADR 从 [模板](0000-template.md) 开始，写好后在下表登记。
 
 ## 已写入的 ADR
 
@@ -44,7 +44,7 @@
 
 ## 待补写的决定
 
-以下决定已经做出（B27 除外），但还没有 ADR。2026-11-01 起，“4.0 前”为“是”的条目随文档重组补写（[发布计划](../../status/release-plan.md) DOCS）。“现记录位置”列出今天能找到该决定的地方；只有协调记录的，补写时以维护者确认为准。被后续决定修改的仍建议回溯记录，以保留方向变化的原因。
+以下决定已经做出（B27 除外），但还没有 ADR。2026-11-01 起，“4.0 前”为“是”的条目随文档重组补写（[发布计划](../../plan/plan.md) DOCS）。“现记录位置”列出今天能找到该决定的地方；只有协调记录的，补写时以维护者确认为准。被后续决定修改的仍建议回溯记录，以保留方向变化的原因。
 
 | 待办编号 | 日期 | 决定 | 现记录位置 | 建议状态 | 4.0 前 |
 |---|---|---|---|---|---|
@@ -57,11 +57,11 @@
 | B17 | 2026-10-08 | 新开与审批管道分开的工作台控制通道，提供显示、读取、预填三类共 8 个宿主工具；通道上不提供审批、审批开关、服务启停；“允许 AI 控制界面”默认开启，人正在操作时优先 | `phase8-workbench-control.md` §0、§4 与“维护者决定（2026-10-08）”；`runtime-layout.md`“工作台控制通道” | 已采纳 | 是 |
 | B18 | 2026-10-08 | 工程操作页改为共享 MCP 会话的操作面板：默认附着 AI 正在使用的会话；没有 AI 会话时只在工作台启动的宿主中自建会话；面板发起的写仍须审批；“人/AI”由传输决定 | `phase8-workbench-control.md` §5 与“维护者决定”；`refactor-plan.md` P8-21 | 已采纳 | 是 |
 | B20 | 2026-10-08 | 审计链只记录写调用与审批；工作台控制调用只进调用日志与工作台控制日志；迁移期 V16–V19 版本控制页经 Studio 桥接只读 VCI；`--mock` 演示只显示离线页面 | `phase8-workbench-control.md`“维护者决定”与 §5.6 | 已采纳 | 否 |
-| B22 | 2026-10-08 | 生成框架用可替换的标准包（JSON 清单与分部文件、zip 分发、JSON Schema 2020-12 校验、声明式规则不执行包内代码）；规范 JSON 机器描述是唯一生成输入；编排器在宿主内；已有工程只补缺 | [生成框架设计入口](../phase8-generation-framework.md)（正文在 `design/project-generation-framework.md`）“维护者决定（2026-10-08）”；`roadmap.md` | 已采纳 | 是 |
+| B22 | 2026-10-08 | 生成框架用可替换的标准包（JSON 清单与分部文件、zip 分发、JSON Schema 2020-12 校验、声明式规则不执行包内代码）；规范 JSON 机器描述是唯一生成输入；编排器在宿主内；已有工程只补缺 | [生成框架设计入口](../../archive/development/design/project-generation-framework.md)（正文在 `design/project-generation-framework.md`）“维护者决定（2026-10-08）”；`roadmap.md` | 已采纳 | 是 |
 | B23 | 2026-10-08 | 首批标准包为中性基础包 `tiamcp.basic` 与自写的状态模型包；专有标准不入库，只能由用户自备 | `phase8-generation-framework.md`“维护者决定”§5 | 已采纳 | 否 |
 | B24 | 2026-10-08 | 生成写入每次执行审批一次：审批绑定计划哈希与全部步骤，之后逐步执行、逐步审计，失败即停 | `phase8-generation-framework.md`“维护者决定”与 §6.6 | 已采纳（由 B26 细化） | 是 |
 | B25 | 2026-10-07 | 宿主机上的 AI 经导入暂存把文本源发到 TIA 电脑；目录导入支持 `overwrite: true`，替换前导出备份，失败时按依赖顺序恢复 | `refactor-plan.md` P6-67；`configuration.md`“Import staging on the TIA machine”；`v4.0.0.md` | 已采纳 | 是 |
-| B26 | 2026-10-10 | 完整工程生成采用分阶段执行 D3（工具预览比对、写栅栏、运行事实链、效果核对、发散即停、同次运行换绑），Q5–Q14 按推荐 | [分阶段生成执行设计](../design/p8-31-staged-generation.md) 第 4–11 节；实现 `b0f0eda9`、`6127d939` | 已采纳 | 是 |
+| B26 | 2026-10-10 | 完整工程生成采用分阶段执行 D3（工具预览比对、写栅栏、运行事实链、效果核对、发散即停、同次运行换绑），Q5–Q14 按推荐 | [分阶段生成执行设计](../../archive/development/design/p8-31-staged-generation.md) 第 4–11 节；实现 `b0f0eda9`、`6127d939` | 已采纳 | 是 |
 | B27 | 未决 | 维护者自用的编程规范是否作为第一个企业标准包试点、是否入库 | `phase8-generation-framework.md`“维护者决定”末条 | 提议（待决定后再写） | 否 |
 | B29 | 2026-10-03 | 包根与数据根：包根由 `--bundle-root`、`TIA_MCP_BUNDLE_ROOT` 或已知安装锚点决定，显式根无效立即报错；软件自身数据优先写 `<包根>/data`，不可写时按用途回退到用户目录 | `phase6-review.md` §5、§6 决策 9；`runtime-layout.md` 决策记录 D-G7-2、D-G7-6 | 已采纳 | 是 |
 | B30 | 2026-10-06 | 构建、发布与检查自动化只用 C#（`build-tools/release`），仓库拒绝新增 PowerShell、batch、cmd 文件；2026-10-08 起自有 Python 也分批改为 C# | `CLAUDE.md`；`refactor-plan.md` P6-50–P6-53、P8-10；`phase8-python-plan.md` | 已采纳 | 否 |

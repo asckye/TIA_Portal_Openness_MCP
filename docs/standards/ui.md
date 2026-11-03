@@ -2,12 +2,12 @@
 
 状态：现行（v0.4）· 最后核对：2026-11-01，master `27675208`（按 2026-11-01 设计与界面审查删去过细规则、视觉规则改为 Ant 值、“状态栏”改为“顶栏状态区”）；其余为 2026-10-22，P8-80d
 
-[设计规范索引](README.md) · [工作台偏差清单](deviations/workbench.md)
+[设计规范索引](design.md) · [工作台偏差清单](ui.md)
 
-> **2026-11-01 维护者决定**：工作台按已采用的 [EplanMcp 工作台设计系统](https://claude.ai/artifact/Kbjk7iPWb7cMGxdVLbaQsg)重新设计，随 4.0.0-beta.3 实施（发布计划 UI-v2）。该设计系统以 Apple HIG 为基础：强调色 #0071E3，字体 Segoe UI 加 Microsoft YaHei UI，字号 28/22/17/14/13/12，4 px 网格，侧栏 232 / 列表 320 / 详情三栏。它取代本规范中规定 Ant Design 颜色、Maple Mono 字体、Ant 字号阶梯与圆角、Ant 外框尺寸的部分（§2 的控件外观行与 PLT-01、§3.3 外框、LAY-08、§4 的 TYP-01、TYP-02、TYP-10、TYP-11、§5.1 颜色 token、COL-07、附录 A.2、A.3），也取代 [ADR 0018](../decisions/0018-workbench-ant-design.md)、[ADR 0021](../decisions/0021-workbench-eplanmcp-font-and-style.md) 的视觉部分；这些段落标有“正由新设计系统替换”。新规范由 UI 设计代理起草，本页暂不整体改写。审批与 AI 控制红线（§11，含 APR-04 两个按钮等权重）、键盘与焦点、高对比主题、无障碍和本地化规则继续有效；与设计系统冲突时以这些规则为准。
+> **2026-11-01 维护者决定**：工作台按已采用的 [EplanMcp 工作台设计系统](https://claude.ai/artifact/Kbjk7iPWb7cMGxdVLbaQsg)重新设计，随 4.0.0-beta.3 实施（发布计划 UI-v2）。该设计系统以 Apple HIG 为基础：强调色 #0071E3，字体 Segoe UI 加 Microsoft YaHei UI，字号 28/22/17/14/13/12，4 px 网格，侧栏 232 / 列表 320 / 详情三栏。它取代本规范中规定 Ant Design 颜色、Maple Mono 字体、Ant 字号阶梯与圆角、Ant 外框尺寸的部分（§2 的控件外观行与 PLT-01、§3.3 外框、LAY-08、§4 的 TYP-01、TYP-02、TYP-10、TYP-11、§5.1 颜色 token、COL-07、附录 A.2、A.3），也取代 [ADR 0018](decisions/0018-workbench-ant-design.md)、[ADR 0021](decisions/0021-workbench-eplanmcp-font-and-style.md) 的视觉部分；这些段落标有“正由新设计系统替换”。新规范由 UI 设计代理起草，本页暂不整体改写。审批与 AI 控制红线（§11，含 APR-04 两个按钮等权重）、键盘与焦点、高对比主题、无障碍和本地化规则继续有效；与设计系统冲突时以这些规则为准。
 
 - 适用范围：`src/Studio/Gui`（`TiaOpenness.exe`，WPF，.NET 10，`net10.0-windows`）的全部界面：主窗口与标题栏、页签、工程操作 / 程序块 / 版本控制 / AI 调用 / 审计 / 环境 / 日志页、MCP 与客户端（Configuration）页、设置 / 审批 / 调用详情抽屉、选项侧栏、确认层、消息框、toast 与系统通知、`--mock` 离线演示。测试位于 `tests/Studio/TiaOpenness.Gui.Tests`。
-- 配套文件：[工作台偏差清单](deviations/workbench.md) 逐项列出现状与本规范的差异（UI-nn）及处理状态；4.0 前的修改由 P8-61 实施。
+- 配套文件：[工作台偏差清单](ui.md) 逐项列出现状与本规范的差异（UI-nn）及处理状态；4.0 前的修改由 P8-61 实施。
 
 ## 0 如何使用本规范
 
@@ -15,7 +15,7 @@
 
 冲突时按下列顺序取上位：
 
-1. **项目红线**：审批与“AI 控制工作台界面”的规则，来源 [工作台控制设计](../design/workbench-control-and-shared-session.md)（§2.7、§3.3、§3.4、§4、§5.2–5.3 及 2026-10-08 维护者决定）。本文 §11 原样收录，标注“项目规则”。
+1. **项目红线**：审批与“AI 控制工作台界面”的规则，来源 [工作台控制设计](../archive/development/design/workbench-control-and-shared-session.md)（§2.7、§3.3、§3.4、§4、§5.2–5.3 及 2026-10-08 维护者决定）。本文 §11 原样收录，标注“项目规则”。
 2. **WCAG 2.2 AA（可量化的无障碍底线，2026-10-11 维护者决定）**：[WCAG 2.2](https://www.w3.org/TR/WCAG22/) 的 A 级与 AA 级成功准则，按 W3C [WCAG2ICT（2025-12-11 Group Note）](https://www.w3.org/TR/wcag2ict-22/) 对非 Web 软件的解释应用到 WPF 桌面程序。逐条适用性、工作台解释、验证方法与 Microsoft 对应条目见 §15。
 3. **Microsoft Windows 应用设计指南**：learn.microsoft.com/windows/apps/design（Fluent、布局、字体、颜色、命令、控件、对话框、无障碍、键盘、全球化、写作）。
 4. **WPF 与 Windows 桌面专项指南**：WPF 焦点与 UI Automation 文档、.NET《Accessibility Best Practices》、Win32 高 DPI 指南；新版指南缺少对应条目时才引用 Windows 7 时期的 Win32 UX Guide（`win32/uxguide`，在 Microsoft Learn 上仍在维护，但示例外观已过时）。
@@ -37,7 +37,7 @@
 
 ### 0.4 4.0 前必须达到的要求（维护者决定 2026-10-11）
 
-下列要求在 4.0 发布前完成（任务 P8-61），对应条目的现状与证据见 [工作台偏差清单](deviations/workbench.md)：
+下列要求在 4.0 发布前完成（任务 P8-61），对应条目的现状与证据见 [工作台偏差清单](ui.md)：
 
 | 要求 | 规则 | 偏差 |
 |---|---|---|
@@ -67,7 +67,7 @@ Microsoft 新版设计指南以 WinUI 控件为例。下表说明工作台（WPF
 
 | Microsoft 概念 | WinUI 做法 | 工作台（WPF）做法 | 相关规则 |
 |---|---|---|---|
-| Fluent 控件外观 | 默认 | .NET 9+ 可用 `ThemeMode`（System/Light/Dark）或 `PresentationFramework.Fluent` 资源字典；工作台按 Ant Design v5 自绘模板（Aero2 为基底，[ADR 0018](../decisions/0018-workbench-ant-design.md)） | PLT-01 |
+| Fluent 控件外观 | 默认 | .NET 9+ 可用 `ThemeMode`（System/Light/Dark）或 `PresentationFramework.Fluent` 资源字典；工作台按 Ant Design v5 自绘模板（Aero2 为基底，[ADR 0018](decisions/0018-workbench-ant-design.md)） | PLT-01 |
 | 系统强调色 | 主题资源 | `SystemColors.AccentColor*`（.NET 9+，有无 Fluent 主题都可用） | COL-07 |
 | ContentDialog | WinUI 专有 | 统一的 `WorkbenchDialog`：带 Owner 的模态 `Window`（`ShowDialog`），或满足 DLG-02 的窗口内模态层 | DLG-01 |
 | InfoBar | WinUI 专有 | 自建 Banner 组件（严重级别图标 + 标题 + 正文 + 操作 + 关闭） | STS-06 |
@@ -126,7 +126,7 @@ Microsoft 新版设计指南以 WinUI 控件为例。下表说明工作台（WPF
 
 > **正由新设计系统替换（2026-11-01）**：本节规定的 Ant 取值或 Maple Mono 字体将由 [EplanMcp 工作台设计系统](https://claude.ai/artifact/Kbjk7iPWb7cMGxdVLbaQsg) 取代，新规则由 UI 设计代理起草。替换完成前，现有实现仍按本节检查。
 
-- **TYP-01 · MUST** 界面文字与等宽文字统一使用 Maple Mono CN v7.9，只随包带 Regular 与 SemiBold（SIL OFL 1.1）。字体原样放在 Workbench 可执行文件旁的 `Fonts/`，以文件夹 base URI 私有加载，不安装、不作为 WPF Resource 嵌入。`Ui.Font` 回退为 Segoe UI Variable Text、Segoe UI、Microsoft YaHei UI；`Ui.FontMono` 回退为 Cascadia Mono、Consolas、Microsoft YaHei UI。目录缺失或未找到该字体时使用上述系统回退。理由：与 EplanMCP Workbench 的字体和观感一致，显式中文回退避免日文字形。依据：[ADR 0021](../decisions/0021-workbench-eplanmcp-font-and-style.md)；EplanMCP ADR-0017 第 4 条及 TYP-01。
+- **TYP-01 · MUST** 界面文字与等宽文字统一使用 Maple Mono CN v7.9，只随包带 Regular 与 SemiBold（SIL OFL 1.1）。字体原样放在 Workbench 可执行文件旁的 `Fonts/`，以文件夹 base URI 私有加载，不安装、不作为 WPF Resource 嵌入。`Ui.Font` 回退为 Segoe UI Variable Text、Segoe UI、Microsoft YaHei UI；`Ui.FontMono` 回退为 Cascadia Mono、Consolas、Microsoft YaHei UI。目录缺失或未找到该字体时使用上述系统回退。理由：与 EplanMCP Workbench 的字体和观感一致，显式中文回退避免日文字形。依据：[ADR 0021](decisions/0021-workbench-eplanmcp-font-and-style.md)；EplanMCP ADR-0017 第 4 条及 TYP-01。
 - **TYP-02 · MUST** 只使用下表的字号层级（附录 A.3 给出 token 名）。理由：清楚的层级帮助扫读；token 是文字缩放的接入点。依据：Typography in Windows › Type ramp [B-01]。
 
   | 层级（Ant） | 字号（epx） | 行高（epx） | 字重 | token（`Themes/Primer.xaml`） | 工作台用途 |
@@ -150,8 +150,8 @@ Microsoft 新版设计指南以 WinUI 控件为例。下表说明工作台（WPF
 - **TYP-07**（2026-11-01 删除：每行字符数无法测试，等宽字体也改变了前提；段落与对话框宽度按 LOC-04 的不截断要求处理）
 - **TYP-08 · MUST** 技术标识（MCP 工具名、V4 错误码、路径、哈希、请求 ID、参数名）用 Code 层级显示，原样不翻译。理由：用户要据此对照日志与文档。依据：Writing style › Style conventions（Abbreviations） [B-27]；项目规则。
 - **TYP-09 · SHOULD** 根元素的 `FrameworkElement.Language` 跟随界面语言（zh-CN / en-US）并在切换语言时更新，使中日韩字形选择与断行正确。理由：WPF 的字形选择与默认格式化依赖该属性。依据：Globalization › Display text and fonts correctly [B-26]；另见 LOC-05。
-- **TYP-10 · MUST** 布局按 Maple Mono 的等宽拉丁字形留余量。文字控件用 `MinWidth` 替代会截断内容的固定 `Width`；页头动作、卡片、侧栏项、按钮、表头和 MCP 与客户端卡片可随可用宽度换行或增高。在 1024、1044×780、1200 与 1366 epx 下检查中英两种语言及浅深主题。现有布局断言不因换字体而放宽；冲突记录实测值交维护者决定。理由：原比例字体的宽度假设不再成立。依据：[ADR 0021](../decisions/0021-workbench-eplanmcp-font-and-style.md)；EplanMCP TYP-10。
-- **TYP-11 · MUST** 主窗口与全部 Workbench 窗口、对话框关闭 `Typography.StandardLigatures`、`Typography.ContextualLigatures` 和 `Typography.ContextualAlternates`。理由：`->`、`!=` 等技术文本必须按输入的字符显示。依据：[ADR 0021](../decisions/0021-workbench-eplanmcp-font-and-style.md)；EplanMCP TYP-11。
+- **TYP-10 · MUST** 布局按 Maple Mono 的等宽拉丁字形留余量。文字控件用 `MinWidth` 替代会截断内容的固定 `Width`；页头动作、卡片、侧栏项、按钮、表头和 MCP 与客户端卡片可随可用宽度换行或增高。在 1024、1044×780、1200 与 1366 epx 下检查中英两种语言及浅深主题。现有布局断言不因换字体而放宽；冲突记录实测值交维护者决定。理由：原比例字体的宽度假设不再成立。依据：[ADR 0021](decisions/0021-workbench-eplanmcp-font-and-style.md)；EplanMCP TYP-10。
+- **TYP-11 · MUST** 主窗口与全部 Workbench 窗口、对话框关闭 `Typography.StandardLigatures`、`Typography.ContextualLigatures` 和 `Typography.ContextualAlternates`。理由：`->`、`!=` 等技术文本必须按输入的字符显示。依据：[ADR 0021](decisions/0021-workbench-eplanmcp-font-and-style.md)；EplanMCP TYP-11。
 
 ## 5 颜色与主题
 
@@ -159,7 +159,7 @@ Microsoft 新版设计指南以 WinUI 控件为例。下表说明工作台（WPF
 
 > **正由新设计系统替换（2026-11-01）**：本节规定的 Ant 取值或 Maple Mono 字体将由 [EplanMcp 工作台设计系统](https://claude.ai/artifact/Kbjk7iPWb7cMGxdVLbaQsg) 取代，新规则由 UI 设计代理起草。替换完成前，现有实现仍按本节检查。
 
-视觉规范自 2026-10-18 起为 **Ant Design v5**（维护者决定，P8-80）：WPF 保留，只替换视觉层；浅色调色板对应 Ant 默认算法，深色对应 Ant 暗色算法，高对比继续使用 Windows 系统色。WCAG 2.2 AA 与本规范的对比条款（COL-04、COL-05）优先于 Ant 默认值，下表“取值”列已按此调整，调整理由见[偏差清单 C.0](deviations/workbench.md#c0-ant-design-v5-视觉规范)。
+视觉规范自 2026-10-18 起为 **Ant Design v5**（维护者决定，P8-80）：WPF 保留，只替换视觉层；浅色调色板对应 Ant 默认算法，深色对应 Ant 暗色算法，高对比继续使用 Windows 系统色。WCAG 2.2 AA 与本规范的对比条款（COL-04、COL-05）优先于 Ant 默认值，下表“取值”列已按此调整，调整理由见[偏差清单 C.0](ui.md)。
 
 视图只引用语义 token；`Primer.*` 键名保留为实现名，Ant 独有的 token 用 `Ant.*` 键（与 Ant token 同名）。每个键必须对应下表的一个语义角色，并在三个主题中都有值（`ThemeTests`、`ThemeSurfaceTests` 与 `AccessibilityTests` 检查键集一致、取值与对比）。
 
@@ -192,7 +192,7 @@ Microsoft 新版设计指南以 WinUI 控件为例。下表说明工作台（WPF
 | Tooltip | `Ant.colorBgSpotlight` / `Ant.colorTextLightSolid` | colorBgSpotlight | 黑 85% + 白（15.3:1） | #424242 + 白（10.1:1） | `InfoColorKey` / `InfoTextColorKey` | 工具提示 | ≥ 4.5:1 |
 | Focus.Outer / Focus.Inner | `Primer.focusOuter` / `Primer.focusInner` | （2 px colorPrimary 环，代替 4 px #91CAFF 轮廓） | #1677FF / #FFFFFF（4.1:1） | #3C89E8 / #141414（5.2:1） | `WindowTextColorKey` / `WindowColorKey` | 焦点视觉（KEY-03） | 与相邻色 ≥ 3:1 |
 
-非颜色 token 在 `Themes/Primer.xaml`：字号 `Ui.FontSize.*`（12 / 14 / 16，标题 38 / 30 / 24 / 20 / 16）、行高 `Ui.LineHeight*`（22 / 20 / 24）、控件高度 `Ui.ControlHeight*`（32 / 24 / 40）、圆角 `Ui.Radius*`（6 / 2 / 4 / 8）、间距 `Ui.Space*`（4 / 8 / 12 / 16 / 20 / 24 / 32）。字体 token `Ui.Font` 与 `Ui.FontMono` 都私有加载 Maple Mono CN，回退与交付要求见 TYP-01；原 UI-37 由 [ADR 0021](../decisions/0021-workbench-eplanmcp-font-and-style.md) 取代。
+非颜色 token 在 `Themes/Primer.xaml`：字号 `Ui.FontSize.*`（12 / 14 / 16，标题 38 / 30 / 24 / 20 / 16）、行高 `Ui.LineHeight*`（22 / 20 / 24）、控件高度 `Ui.ControlHeight*`（32 / 24 / 40）、圆角 `Ui.Radius*`（6 / 2 / 4 / 8）、间距 `Ui.Space*`（4 / 8 / 12 / 16 / 20 / 24 / 32）。字体 token `Ui.Font` 与 `Ui.FontMono` 都私有加载 Maple Mono CN，回退与交付要求见 TYP-01；原 UI-37 由 [ADR 0021](decisions/0021-workbench-eplanmcp-font-and-style.md) 取代。
 
 ### 5.2 规则
 
@@ -232,7 +232,7 @@ Microsoft 新版设计指南以 WinUI 控件为例。下表说明工作台（WPF
 
 - **CMD-01 · MUST** 按钮文字是动词（加对象），英文不超过两三个短词，中文宜在 6 个汉字以内；不加句号；只有在执行前还需要用户补充信息时才加省略号（“选项…”）。理由：按钮文字要一眼看懂动作。依据：Buttons › Button text [B-09]；Writing style › Buttons [B-27]。
 - **CMD-02 · MUST** 每个面（卡片、对话框、抽屉中的一节）最多一个强调按钮，全应用只用一种强调色；破坏性操作不用强调样式，警告样式只用于确认对话框里的提交按钮。理由：强调色要少用，主操作才能突出。依据：Buttons › Recommendations [B-09]；Color in Windows › Accent color [B-02]。
-- **CMD-03 · SHOULD** 位置：页面级命令在页头右侧；卡片命令在卡片底部，与内容左对齐；对话框按钮在底部右对齐，按显示顺序取消在左、确认（执行）在右（[ADR 0018](../decisions/0018-workbench-ant-design.md)）。理由：位置一致便于寻找。依据：Buttons › Recommended single-button layout [B-09]；Dialog controls › General guidelines [B-13]。
+- **CMD-03 · SHOULD** 位置：页面级命令在页头右侧；卡片命令在卡片底部，与内容左对齐；对话框按钮在底部右对齐，按显示顺序取消在左、确认（执行）在右（[ADR 0018](decisions/0018-workbench-ant-design.md)）。理由：位置一致便于寻找。依据：Buttons › Recommended single-button layout [B-09]；Dialog controls › General guidelines [B-13]。
 - **CMD-04 · MUST** 因状态不可用的命令，在原因不明显时说明原因（HelpText / ToolTip）；不隐藏用户预期存在的命令。理由：禁用而不说明会让用户卡住。依据：Commanding basics › Provide command feedback [B-08]。
 - **CMD-05 · MUST** 常用命令的快捷键写在 ToolTip（如“保存项目 (Ctrl+S)”）与 `AutomationProperties.AcceleratorKey` 中，并与 Windows 常用快捷键一致；文档中的快捷键表与代码一致。理由：快捷键要可发现、可被读屏告知。依据：Keyboard interactions › Accelerators / Common keyboard shortcuts [B-18]；Keyboard accessibility › Keyboard shortcuts [B-20]。
 - **CMD-06 · MUST NOT** 为“批准执行”“拒绝”“关闭审批”设置全局快捷键或访问键以外的快捷方式；批准只能通过点击或聚焦后按 Enter / Space。理由：防止盲批与误触；与项目红线一致。依据：项目规则；Keyboard interactions › Initial focus [B-18]（不要让可能造成严重后果的元素轻易被触发）。
@@ -260,7 +260,7 @@ Microsoft 新版设计指南以 WinUI 控件为例。下表说明工作台（WPF
 - **DLG-02 · MUST** 模态语义：打开时焦点移到第一个可聚焦内容或安全按钮；Tab 只在对话框内循环；背景不可交互（`IsEnabled=False` 或独立焦点范围）；Esc 等同安全按钮；关闭后焦点回到触发元素。理由：WCAG 2.4.3、2.4.11；Esc 应取消临时界面。依据：Keyboard interactions › Esc key [B-18]；Dialog controls › CloseButton [B-13]。
 - **DLG-03 · MUST** 每个对话框都有一个安全、无破坏性的按钮（取消 / 关闭），设为 `IsCancel`。理由：用户必须能放心退出。依据：Dialog controls › Provide a safe action [B-13]。
 - **DLG-04 · MUST** 有风险的确认：默认按钮（Enter）是安全选项；提交按钮用具体动词（“保存项目”“断开并结束会话”“覆盖块”“关闭审批”），不用“确定 / 取消”；原因不明显时可用“是 / 否”迫使用户读问题。理由：风险操作的默认选择应是“不继续”。依据：Confirmations › Commit buttons / Default values [B-29]；Dialog controls › Confirmation dialogs [B-13]。
-- **DLG-05 · SHOULD** 按钮顺序：取消（安全按钮）在左，确认（执行）在右，均右对齐在对话框底部（[ADR 0018](../decisions/0018-workbench-ant-design.md)）；风险确认的默认按钮仍是取消（DLG-04）。理由：与 Ant Design 布局和现有确认层一致。依据：Dialog controls › General guidelines / The three dialog buttons [B-13]；Buttons › Recommendations [B-09]。
+- **DLG-05 · SHOULD** 按钮顺序：取消（安全按钮）在左，确认（执行）在右，均右对齐在对话框底部（[ADR 0018](decisions/0018-workbench-ant-design.md)）；风险确认的默认按钮仍是取消（DLG-04）。理由：与 Ant Design 布局和现有确认层一致。依据：Dialog controls › General guidelines / The three dialog buttons [B-13]；Buttons › Recommendations [B-09]。
 - **DLG-06 · MUST** 标题是简短的主指令或问题（“关闭写操作审批？”）；正文补充后果或细节，不换说法重复标题；首行点明问题。理由：用户读完标题就应能作答。依据：Dialog controls › General guidelines [B-13]；Writing style › Dialogs [B-27]。
 - **DLG-07 · MUST** 风险确认与错误对话框显示对应图标（警告 / 错误）并配文字；正文使用常规文字色，不把整段正文染成红色。理由：严重程度不能只靠颜色。依据：Confirmations › Icons [B-29]；Color in Windows › Usability [B-02]。
 - **DLG-08 · MUST NOT** 用对话框报告与某个字段相关的验证错误（改为内联，见 ERR-03）。理由：上下文错误应在原位显示。依据：Dialog controls › General guidelines [B-13]。
@@ -269,14 +269,14 @@ Microsoft 新版设计指南以 WinUI 控件为例。下表说明工作台（WPF
 
 ## 11 审批与 AI 控制红线（项目规则）
 
-本节规则来源于 `docs/development/design/workbench-control-and-shared-session.md`，优先级高于本文其他章节。其中“依据”标注的 Microsoft / W3C 条目只用于说明实现方式。
+本节规则来源于 `docs/archive/development/design/workbench-control-and-shared-session.md`，优先级高于本文其他章节。其中“依据”标注的 Microsoft / W3C 条目只用于说明实现方式。
 
 ### 11.1 审批
 
 - **APR-01 · MUST** 每个写请求单独批准；没有“全部批准”或批量批准。理由：每次写入都要人看过目标与操作。依据：项目规则（`Shell.NoPendingDescription` 文案；phase8 §5.3、维护者决定 3）。
 - **APR-02 · MUST** 面板（人）发起的写请求自动打开对应审批卡，但仍须人单独点击“批准执行”；自动打开时焦点放在卡片标题，**MUST NOT** 放在“批准执行”或“拒绝”上。理由：同一条批准路径，没有第二条；避免回车即批。依据：项目规则（维护者决定 2026-10-08）；Keyboard interactions › Initial focus [B-18]。
 - **APR-03 · MUST** 审批卡显示：客户端名（标注“未验证”）、传输方式、宿主 / 版本、目标项目、PLC、操作列表（动作 / 对象 / 工具）、风险标签（文字）、人 / AI 来源、剩余时间（文字 + 进度条），并可展开脱敏参数或生成计划。密码、密钥、凭据和令牌按调用日志的共用规则替换为固定占位符后，才计算参数和长文本摘要；卡片不携带这些原值或其无盐哈希。仅更换敏感值不改变审批绑定；实际操作仍使用原值。理由：人需要足够的信息作决定。依据：项目规则（phase8 §1.1、§5.3）；Confirmations › Provide all the information [B-29]。
-- **APR-04 · MUST** “批准执行”与“拒绝”使用相同的默认（secondary）样式，不用主要或危险样式；纯文本标签，不识别访问键；都不是默认或取消按钮（`IsDefault=False`、`IsCancel=False`）。两者并列放在等宽单元格，长标签换行，行高由较高者决定、两者一起增高；都受控制通道输入守卫保护（AI-02）。理由：两个选择视觉平等，避免误批。依据：[ADR 0021](../decisions/0021-workbench-eplanmcp-font-and-style.md)；EplanMCP ADR-0017 第 5 条与 APR-02。本文 APR-02 的自动打开与焦点规则照旧。
+- **APR-04 · MUST** “批准执行”与“拒绝”使用相同的默认（secondary）样式，不用主要或危险样式；纯文本标签，不识别访问键；都不是默认或取消按钮（`IsDefault=False`、`IsCancel=False`）。两者并列放在等宽单元格，长标签换行，行高由较高者决定、两者一起增高；都受控制通道输入守卫保护（AI-02）。理由：两个选择视觉平等，避免误批。依据：[ADR 0021](decisions/0021-workbench-eplanmcp-font-and-style.md)；EplanMCP ADR-0017 第 5 条与 APR-02。本文 APR-02 的自动打开与焦点规则照旧。
 - **APR-05 · MUST** 关闭审批：入口只在设置抽屉（顶栏状态区的副本入口若保留，必须走同一确认）；确认对话框符合 DLG-02/03/04（标题“关闭写操作审批？”，提交按钮“关闭审批”，取消为默认并响应 Esc）；审批关闭期间顶栏状态区持续显示带图标与文字的“审批已关”，变化时以 live region 播报。理由：关闭审批会让 AI 写入直接执行。依据：项目规则（phase8 §1.1 “关闭需确认覆盖层”、§4）；Confirmations › Default values [B-29]。
 - **APR-06 · MUST** 审批超时自动拒绝：剩余时间以文字显示，只在固定阈值（例如 30 秒、10 秒）播报，不逐秒播报；超时可在设置中调整（现为 60/120/300 秒）。超时属于安全设计中的时间限制，按 WCAG 2.2.1 的“必要”例外处理（见偏差清单）。理由：AI 客户端的调用本身有时限，延长会使请求失效。依据：项目规则；WCAG 2.2 › 2.2.1 Timing Adjustable [B-36]。
 - **APR-07 · MUST** 新的待批请求：窗口最小化时发系统通知；窗口可见时显示应用内提示并以 live region 播报；点击或按 Enter 打开审批抽屉；通知文字本地化。理由：请求会超时，人必须及时知道。依据：项目规则（phase8 §1.2）；WCAG 2.2 › 4.1.3 Status Messages [B-36]。
@@ -370,7 +370,7 @@ Microsoft 新版设计指南以 WinUI 控件为例。下表说明工作台（WPF
 
 ### 15.2 WCAG 2.2 A / AA 成功准则在工作台中的应用
 
-适用性按 [WCAG2ICT](https://www.w3.org/TR/wcag2ict-22/) 对非 Web 软件的解释（多数准则“如原文适用”或“作词替换后适用”：网页 → 软件、页面 → 软件中的一组界面）。各准则的现状不在本表维护，见 [工作台偏差清单](deviations/workbench.md) 与 A11Y 验证结果。
+适用性按 [WCAG2ICT](https://www.w3.org/TR/wcag2ict-22/) 对非 Web 软件的解释（多数准则“如原文适用”或“作词替换后适用”：网页 → 软件、页面 → 软件中的一组界面）。各准则的现状不在本表维护，见 [工作台偏差清单](ui.md) 与 A11Y 验证结果。
 
 | 准则 | 级别 | 对 WPF 桌面的适用性 | 工作台中的解释 / 要求 | 验证方式 | 对应 Microsoft 指南 |
 |---|---|---|---|---|---|
@@ -537,4 +537,4 @@ Microsoft 新版设计指南以 WinUI 控件为例。下表说明工作台（WPF
 | B-35 | AutomationProperties.HeadingLevelProperty / IsDialogProperty | https://learn.microsoft.com/en-us/dotnet/api/system.windows.automation.automationproperties.headinglevelproperty ；https://learn.microsoft.com/en-us/dotnet/api/system.windows.automation.automationproperties.isdialogproperty |
 | B-36 | WCAG 2.2 | https://www.w3.org/TR/WCAG22/ |
 | B-37 | WCAG2ICT（2025-12-11 Group Note） | https://www.w3.org/TR/wcag2ict-22/ |
-| B-38 | 项目红线 | `docs/development/design/workbench-control-and-shared-session.md` |
+| B-38 | 项目红线 | `docs/archive/development/design/workbench-control-and-shared-session.md` |

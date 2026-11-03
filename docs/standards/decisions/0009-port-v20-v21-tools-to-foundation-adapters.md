@@ -4,7 +4,7 @@
 - 日期：2026-10-08
 - 决策者：维护者
 - 置信度：高
-- 相关：[路线图](../roadmap.md)“阶段 8”；[重构计划](../refactor-plan.md) P8-02–P8-04；[阶段 8 迁移方案](../phase8-port-plan.md)；[ADR 0005](0005-v20-v21-on-foundation-host.md)、[0006](0006-engine-exe-as-v20-v21-worker.md)、[0012](0012-old-release-tool-registration.md)、[0014](0014-tool-counts-follow-official-api.md)
+- 相关：[路线图](../../plan/plan.md)“阶段 8”；[重构计划](../../plan/plan.md) P8-02–P8-04；[阶段 8 迁移方案](../../archive/development/phase8-port-plan.md)；[ADR 0005](0005-v20-v21-on-foundation-host.md)、[0006](0006-engine-exe-as-v20-v21-worker.md)、[0012](0012-old-release-tool-registration.md)、[0014](0014-tool-counts-follow-official-api.md)
 
 回溯记录（写于 2026-10-11）。
 
@@ -30,5 +30,5 @@ ADR 0006 之后，V20/V21 专有工具仍由引擎代码在引擎 worker 中执�
 
 - 正面：八个版本最终使用同一套写法；旧版获得其官方 API 支持的能力。
 - 负面与取舍：迁移期间两条执行路径并存；每批需要真机复验，新启用的旧版能力在验收前为 `current / NOT RUN`。
-- 后续工作：批次与闸门见迁移方案；当前进度见 [架构概览](../design-spec/architecture.md) 第 9 节。
+- 后续工作：批次与闸门见迁移方案；当前进度见 [架构概览](../design.md) 第 9 节。
 - 验证方式：每族的契约与响应零差异门禁；`PortedFamilies` 逐工具、逐版表；各批次的真机复验并入最终验收（ADR 0013）。

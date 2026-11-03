@@ -4,7 +4,7 @@
 - 日期：2026-10-08
 - 决策者：主导者受维护者委托
 - 置信度：高
-- 相关：[阶段 7 设计](../design/p7-host-worker-split.md) 第 0、2、3 节；[重构计划](../refactor-plan.md) P7-01、P7-08；[4.0 发布说明草稿](../../releases/v4.0.0.md)“Product and bundle layout”；[ADR 0005](0005-v20-v21-on-foundation-host.md)、[0009](0009-port-v20-v21-tools-to-foundation-adapters.md)
+- 相关：[阶段 7 设计](../../archive/development/design/p7-host-worker-split.md) 第 0、2、3 节；[重构计划](../../plan/plan.md) P7-01、P7-08；[4.0 发布说明草稿](../../releases/v4.0.0.md)“Product and bundle layout”；[ADR 0005](0005-v20-v21-on-foundation-host.md)、[0009](0009-port-v20-v21-tools-to-foundation-adapters.md)
 
 回溯记录（写于 2026-10-11）。
 

@@ -12,7 +12,7 @@ internal static class ToolCountGenerator
     [
         "README.md", "README.zh-CN.md", "docs/getting-started/configuration.md",
         "docs/getting-started/beginners.zh-CN.md", "docs/reference/version-tools.md",
-        "docs/releases/v4.0.0.md", "docs/development/runtime-layout.md"
+        "docs/releases/v4.0.0.md", "docs/standards/design.md"
     ];
 
     internal static Dictionary<string, string> Generate(string root)
@@ -34,7 +34,7 @@ internal static class ToolCountGenerator
         }
         return Targets.ToDictionary(path => path, path => Replace(CatalogJson.Source(root, path),
             Render(data, lite, path.EndsWith(".zh-CN.md", StringComparison.Ordinal) ||
-                path is "docs/getting-started/configuration.md" or "docs/development/runtime-layout.md",
+                path is "docs/getting-started/configuration.md" or "docs/standards/design.md",
                 path == "docs/releases/v4.0.0.md"), path));
     }
 

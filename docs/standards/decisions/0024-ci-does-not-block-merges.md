@@ -4,7 +4,7 @@
 - 日期：2026-10-30（合并门与 CI 角色）；2026-11-01（写成 ADR）
 - 决策者：维护者
 - 置信度：高
-- 相关：[ADR 0019](0019-incremental-check-all.md)、[0023](0023-release-4-0-final-criteria.md)、[0025](0025-release-evidence-nightly-and-verified-build-units.md)；[验证分层](../validation.md)；[发布流程](../release-workflow.md)；任务 SPD-4、RULES-1
+- 相关：[ADR 0019](0019-incremental-check-all.md)、[0023](0023-release-4-0-final-criteria.md)、[0025](0025-release-evidence-nightly-and-verified-build-units.md)；[验证分层](../../manuals/validation.md)；[发布流程](../../manuals/release.md)；任务 SPD-4、RULES-1
 
 ## 背景
 

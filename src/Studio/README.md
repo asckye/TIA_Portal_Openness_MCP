@@ -24,7 +24,7 @@ The [provenance record](../../third_party/tia-openness-studio/UPSTREAM.json) ret
 
 For a first installation and a step-by-step desktop walkthrough, see the [beginner guide (Chinese)](../../docs/getting-started/beginners.zh-CN.md).
 
-工程操作和版本控制页经操作端管道附着 MCP 会话，共用工具、审批和审计。旧桥接与适配器代码保留到清理任务；下文涉及直接桥接的内容为历史实现。现行调用路径见[架构规范](../../docs/development/design-spec/architecture.md)。
+工程操作和版本控制页经操作端管道附着 MCP 会话，共用工具、审批和审计。旧桥接与适配器代码保留到清理任务；下文涉及直接桥接的内容为历史实现。现行调用路径见[架构规范](../../docs/standards/design.md)。
 
 ## Build and run
 
@@ -207,4 +207,4 @@ session. WPF tests render and inspect the actual controls. Native adapters compi
 official eight-release SDKs locally; CI runs the bridge/client/WPF checks without Siemens DLLs.
 
 Live 4.0 TIA project acceptance remains pending. `dotnet run --project build-tools/release -- build-multi-version` deploys the desktop to `runtime/studio`; the formal release pipeline includes Studio and all eight adapters through `Package-Release.py`. `Package-MultiVersion.py` remains available for local development archives. Full audit findings are in
-[the shared version framework](../../docs/development/unified-version-framework.md).
+[the shared version framework](../../docs/standards/design.md).

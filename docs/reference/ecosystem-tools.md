@@ -39,7 +39,7 @@ MCP 的 `WRITE` / `ONLINE-WRITE` 调用默认先由 工作台 审批再派发；
 | `ManageUnifiedCwcPackage` | 检查 CWC 文件夹并打包新 ZIP；不执行 JavaScript、不部署到 TIA、不认证运行行为。CWC 与面板库类型不同。 |
 | `GetV21EcosystemCatalog` | V20/V21 V20/V21查询嵌入的 V21 生态快照，包含版本证据、许可元数据及集成状态；不是在线搜索。 |
 
-V14 SP1–V21 的全部八个发布版本都提供 `RunReadOnlyToolBatch`、`PreviewToolBatch` 和 `ApplyToolBatch`。八版使用相同的审核分类：只读批次要求目标的 `BatchRead: true`，预览批次要求 `BatchWrite: true` 且带布尔 `dryRun` 参数。`READ` 类别本身不保证批次准入。准入标准见[协议规范第 11 节](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/design-spec/v4-protocol.md#11-批次与桥接)，工具的版本可用性见[版本工具目录](version-tool-catalog.md)。
+V14 SP1–V21 的全部八个发布版本都提供 `RunReadOnlyToolBatch`、`PreviewToolBatch` 和 `ApplyToolBatch`。八版使用相同的审核分类：只读批次要求目标的 `BatchRead: true`，预览批次要求 `BatchWrite: true` 且带布尔 `dryRun` 参数。`READ` 类别本身不保证批次准入。准入标准见[协议规范第 11 节](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/design.md#11-批次与桥接)，工具的版本可用性见[版本工具目录](version-tool-catalog.md)。
 
 `ApplyToolBatch` 失败可能保留先前修改，不提供原子回滚。原生 `RunToolTransaction` 只支持自身声明的同步编辑白名单。不能把编译、保存、在线、文件或嵌套编排塞入事务。
 
@@ -47,13 +47,13 @@ V14 SP1–V21 的全部八个发布版本都提供 `RunReadOnlyToolBatch`、`Pre
 
 `GetPlcBlockEditCapabilities` 检查实际文档的语言、文本、标量初始值和库绑定。`PatchPlcBlockDocument` 只修改存在且匹配的目标并写入新文件。`ImportPlcBlockVerified` 按精确工程、对象和预览令牌导入后读回；库连接块、实例 DB、Safety 等有明确排除范围。
 
-`AnalyzePlcReferences` 仅分析输入 SimaticML 的调用和全局符号，不能替代完整原生交叉引用。遗漏文件、未知调用和歧义需随结果一起报告。编辑工具不会自动保存工程，编译选项必须按实际 schema 指定；导入成功、内容核对成功、编译成功分别判断。完整示例统一见[调用示例库](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/official-tool-usage.md)。
+`AnalyzePlcReferences` 仅分析输入 SimaticML 的调用和全局符号，不能替代完整原生交叉引用。遗漏文件、未知调用和歧义需随结果一起报告。编辑工具不会自动保存工程，编译选项必须按实际 schema 指定；导入成功、内容核对成功、编译成功分别判断。完整示例统一见[调用示例库](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/real-machine-testing.md)。
 
 ## PLC Tools 环境
 
 在运行 MCP 的电脑上，按 [伴随工具说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/siemens-plc-tools/README.md)准备 Python 环境，并通过 `TIA_MCP_PLC_TOOLS_PYTHON` 指向其解释器。Python 环境不是发布 ZIP 的内置运行时。
 
-V20/V21 V20/V21通过安装布局解析器定位包根，再读取 `reference/siemens-openness` 中的指南以及 `scripts/ecosystem` 中的 Python 桥接；完整交付包可在仓库外运行。包根可用 `--bundle-root` 或 `TIA_MCP_BUNDLE_ROOT` 显式指定，具体校验和默认 Python 路径见[运行时布局](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/runtime-layout.md)。此覆盖不影响嵌入的生态目录，也不扩展 Foundation 的工具范围。
+V20/V21 V20/V21通过安装布局解析器定位包根，再读取 `reference/siemens-openness` 中的指南以及 `scripts/ecosystem` 中的 Python 桥接；完整交付包可在仓库外运行。包根可用 `--bundle-root` 或 `TIA_MCP_BUNDLE_ROOT` 显式指定，具体校验和默认 Python 路径见[运行时布局](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/design.md)。此覆盖不影响嵌入的生态目录，也不扩展 Foundation 的工具范围。
 
 `code` 提供代码分析、测试、文档与差异；`iol` 提供 I/O 与标签交换；`net`、`sim`、`sup`、`trace` 按各自配置处理网络、仿真、监督及跟踪。部分命令执行项目 Python、访问设备或抓包，不应把所有伴随命令当作离线只读检查。上游 PDF 文档命令所需的 pandoc/TeX 等环境与本项目 ReportLab 审计报告是不同路线。
 

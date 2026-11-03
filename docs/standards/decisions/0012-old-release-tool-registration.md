@@ -4,7 +4,7 @@
 - 日期：2026-10-09
 - 决策者：维护者
 - 置信度：高
-- 相关：[阶段 8 迁移方案](../phase8-port-plan.md)“维护者决定：旧版注册规则”；[4.0 源码版本范围](../../reference/version-tools.md)；[官方 API 覆盖与逐版缺口](../../reference/openness-coverage.md)；[交接](../handoff.md)；[ADR 0009](0009-port-v20-v21-tools-to-foundation-adapters.md)、[0014](0014-tool-counts-follow-official-api.md)
+- 相关：[阶段 8 迁移方案](../../archive/development/phase8-port-plan.md)“维护者决定：旧版注册规则”；[4.0 源码版本范围](../../reference/version-tools.md)；[官方 API 覆盖与逐版缺口](../../reference/openness-coverage.md)；[交接](../../plan/progress.md)；[ADR 0009](0009-port-v20-v21-tools-to-foundation-adapters.md)、[0014](0014-tool-counts-follow-official-api.md)
 
 回溯记录（写于 2026-10-11）。
 

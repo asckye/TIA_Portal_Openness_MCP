@@ -55,7 +55,7 @@ public sealed class GeneratorTests
         {
             var expected = Source(root, p.Key);
             if (p.Key == "docs/reference/version-tool-catalog.md" || p.Key == "docs/reference/real-machine-ledger.md") expected = expected.Replace("`generate-catalogs`", "`Generate-Phase6Plan.py`", StringComparison.Ordinal);
-            if (p.Key == ReleaseMigrationGenerator.Output) expected = expected.Replace("reference/tool-catalog/v3-v4-renames.json.", "docs/development/phase6-review.md.", StringComparison.Ordinal);
+            if (p.Key == ReleaseMigrationGenerator.Output) expected = expected.Replace("reference/tool-catalog/v3-v4-renames.json.", "docs/archive/development/phase6-review.md.", StringComparison.Ordinal);
             Assert.Equal(expected, p.Value);
         }
     }

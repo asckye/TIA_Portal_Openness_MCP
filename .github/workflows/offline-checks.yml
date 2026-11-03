@@ -39,7 +39,7 @@ jobs:
 
   source-contracts:
     # Source contracts: .NET 10 and Python, without Siemens SDKs or TIA.
-    # Keep the inventory in docs/development/validation.md in sync with these steps.
+    # Keep the inventory in docs/manuals/validation.md in sync with these steps.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

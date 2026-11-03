@@ -1111,7 +1111,7 @@ value = adapter.read_value(path)  # changed by Li 2026-03-01
 <h3 id="docs-status">20.5 交接、计划与变更记录</h3>
 <ul class="rules">
 <li><span class="pill must">MUST</span><b class="rid">DOC-06</b>用户可见的变化当次写入 <code>CHANGELOG.md</code> 的 <code>Unreleased</code>（Keep a Changelog 格式，英文）。<span class="rl">发布时补写 CHANGELOG 会遗漏变化。</span></li>
-<li><span class="pill should">SHOULD</span><b class="rid">DOC-11</b><span class="tier">M+</span><code>docs/status/handoff.md</code> 记当前事实（主干提交、进行中的任务、阻塞项）；发布计划记范围、任务状态和放行条件；临时收件箱里的决定当天转写到计划或 ADR。机器地址和进程号从当前环境确认，不从旧文档推断。</li>
+<li><span class="pill should">SHOULD</span><b class="rid">DOC-11</b><span class="tier">M+</span><code>docs/plan/handoff.md</code> 记当前事实（主干提交、进行中的任务、阻塞项）；发布计划记范围、任务状态和放行条件；临时收件箱里的决定当天转写到计划或 ADR。机器地址和进程号从当前环境确认，不从旧文档推断。</li>
 </ul>
 
 
@@ -1839,7 +1839,7 @@ value = adapter.read_value(path)  # changed by Li 2026-03-01
 <h3 id="tpl-agents">T.8 项目的 CLAUDE.md / AGENTS.md</h3>
 <pre><code># 给 AI 编码代理
 - 本项目遵守《工程开发规范》1.1：等级 M；领域 A、C；语言附录 L1。规则冲突时以规范和本文件为准。
-- 先读 docs/status/handoff.md；决定见 docs/adr/；术语见 docs/standards/glossary.md。
+- 先读 docs/plan/handoff.md；决定见 docs/adr/；术语见 docs/standards/glossary.md。
 - 构建与合并门：&lt;唯一入口命令&gt;；修改示例或目录后先运行生成器。
 - 项目特有：&lt;只在 scratch 项目上写入目标；目标版本键表的位置；禁用 API 列表&gt;。
 - 不改系统设置；下载先问；只结束自己启动的进程。

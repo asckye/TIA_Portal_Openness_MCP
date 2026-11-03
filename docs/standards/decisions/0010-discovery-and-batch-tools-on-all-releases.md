@@ -4,7 +4,7 @@
 - 日期：2026-10-08
 - 决策者：维护者（决定编号 U8）
 - 置信度：高
-- 相关：[阶段 8 迁移方案](../phase8-port-plan.md)“B1 迁移状态”；[4.0 源码版本范围](../../reference/version-tools.md)；[交接](../handoff.md)；[ADR 0009](0009-port-v20-v21-tools-to-foundation-adapters.md)、[0012](0012-old-release-tool-registration.md)
+- 相关：[阶段 8 迁移方案](../../archive/development/phase8-port-plan.md)“B1 迁移状态”；[4.0 源码版本范围](../../reference/version-tools.md)；[交接](../../plan/progress.md)；[ADR 0009](0009-port-v20-v21-tools-to-foundation-adapters.md)、[0012](0012-old-release-tool-registration.md)
 
 回溯记录（写于 2026-10-11）。
 

@@ -4,7 +4,7 @@
 - 日期：2026-10-10
 - 决策者：维护者
 - 置信度：高
-- 相关：[ADR 0012](0012-old-release-tool-registration.md)；[阶段 8 迁移方案](../phase8-port-plan.md)；[官方 API 覆盖与逐版缺口](../../reference/openness-coverage.md)；[重构计划](../refactor-plan.md) P8-04；[文档偏差清单](../design-spec/deviations/docs.md) DOC-02
+- 相关：[ADR 0012](0012-old-release-tool-registration.md)；[阶段 8 迁移方案](../../archive/development/phase8-port-plan.md)；[官方 API 覆盖与逐版缺口](../../reference/openness-coverage.md)；[重构计划](../../plan/plan.md) P8-04；[文档偏差清单](../documentation.md) DOC-02
 
 回溯记录（写于 2026-10-11）。此前仓库内没有本决定的书面记录。
 

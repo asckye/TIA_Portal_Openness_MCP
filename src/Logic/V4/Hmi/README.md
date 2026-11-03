@@ -58,7 +58,7 @@ code. They are not replaced by schema validation. Schema comments describe the
 cross-field/runtime checks. Standard JSON Schema integer semantics also cannot
 express System.Text.Json's rejection of fractional lexical spellings for Int32.
 
-Budget provenance matters: H entries in [phase6-review.md](../../../../docs/development/phase6-review.md)
+Budget provenance matters: H entries in [phase6-review.md](../../../../docs/archive/development/phase6-review.md)
 appendix B1 have **no character or string-length limit**. The 262144-character,
 4096-string and depth-16 budgets are Foundation PLC construction limits, not H
 limits. The shared input budget retains JSON depth 64 and reports excess depth as

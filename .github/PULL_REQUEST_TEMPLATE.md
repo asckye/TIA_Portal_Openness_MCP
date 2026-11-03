@@ -14,7 +14,7 @@
 
 ## Validation
 
-<!-- Report checks actually run and their results. Source/test changes require refreshed matching build evidence; see docs/development/release-workflow.md. -->
+<!-- Report checks actually run and their results. Source/test changes require refreshed matching build evidence; see docs/manuals/release.md. -->
 
 - Affected release keys:
 - Functional / protocol / SDK checks:

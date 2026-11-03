@@ -4,7 +4,7 @@
 - 日期：2026-10-08
 - 决策者：维护者
 - 置信度：高
-- 相关：[重构计划](../refactor-plan.md) P7-07a；[架构概览](../design-spec/architecture.md) 第 3 节；[运行时布局](../runtime-layout.md)；[4.0 发布说明草稿](../../releases/v4.0.0.md)；[V4 工具协议规范](../design-spec/v4-protocol.md) 第 0.4 节；[阶段 7 设计](../design/p7-host-worker-split.md)
+- 相关：[重构计划](../../plan/plan.md) P7-07a；[架构概览](../design.md) 第 3 节；[运行时布局](../design.md)；[4.0 发布说明草稿](../../releases/v4.0.0.md)；[V4 工具协议规范](../design.md) 第 0.4 节；[阶段 7 设计](../../archive/development/design/p7-host-worker-split.md)
 
 回溯记录（写于 2026-10-11）。本决定修改了阶段 7 设计中的“每个宿主进程一个共享 worker”。
 

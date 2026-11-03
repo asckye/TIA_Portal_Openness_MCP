@@ -1,6 +1,6 @@
 # NNNN 决定的标题（陈述句）
 
-> 使用说明：复制本文件为 `NNNN-<短标题>.md`（`NNNN` 取下一个序号，短标题用小写英文和连字符），填写后删除本段，并在 [ADR 索引](README.md) 中登记。规则见 [文档写作规范](../design-spec/documentation-style.md) 第 14 节。
+> 使用说明：复制本文件为 `NNNN-<短标题>.md`（`NNNN` 取下一个序号，短标题用小写英文和连字符），填写后删除本段，并在 [ADR 索引](README.md) 中登记。规则见 [文档写作规范](../documentation.md) 第 14 节。
 
 - 状态：提议 | 已采纳 | 已拒绝 | 已被 NNNN 取代 | 已废弃
 - 日期：YYYY-MM-DD（决定日期）

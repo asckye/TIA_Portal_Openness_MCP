@@ -4,7 +4,7 @@
 - 日期：2026-11-01
 - 决策者：维护者（提出者：4.0 项目评审报告 3 与 4.1 界面重新设计笔记）
 - 置信度：高
-- 相关：取代 [ADR 0018](0018-workbench-ant-design.md) 与 [ADR 0021](0021-workbench-eplanmcp-font-and-style.md) 的视觉部分；保留 [ADR 0003](0003-workbench-approval-for-mcp-writes.md) 及[工作台界面设计规范](../design-spec/workbench-ui.md) §11 的审批与 AI 控制红线；共用设计系统“EplanMcp Workbench 设计规范”（https://claude.ai/artifact/Kbjk7iPWb7cMGxdVLbaQsg）；原型 https://claude.ai/artifact/CheYfH18JmAd38q9dkxfvR ；任务 UI-2a…UI-2d
+- 相关：取代 [ADR 0018](0018-workbench-ant-design.md) 与 [ADR 0021](0021-workbench-eplanmcp-font-and-style.md) 的视觉部分；保留 [ADR 0003](0003-workbench-approval-for-mcp-writes.md) 及[工作台界面设计规范](../ui.md) §11 的审批与 AI 控制红线；共用设计系统“EplanMcp Workbench 设计规范”（https://claude.ai/artifact/Kbjk7iPWb7cMGxdVLbaQsg）；原型 https://claude.ai/artifact/CheYfH18JmAd38q9dkxfvR ；任务 UI-2a…UI-2d
 
 ## 背景
 

@@ -8,7 +8,7 @@
 - [配置指南](getting-started/configuration.md)：客户端、连接方式、升级和排错。
 - [Claude Code 插件安装](getting-started/plugin.md)：安装插件、共用工作台交付包和选择 TIA 版本。
 - [从 3.3 迁移到 4.0](guides/migrate-3.3-to-4.0.md)：并排安装、客户端和插件配置、数据位置、写入审批、工具改名和回退。
-- [预发布真机验证清单](guides/beta-tester-checklist.md)：在各 TIA 版本上要试的项目、证据和报告方式；收到的报告记在[测试者反馈台账](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/tester-feedback.md)。
+- [预发布真机验证清单](guides/beta-tester-checklist.md)：在各 TIA 版本上要试的项目、证据和报告方式；收到的报告记在[测试者反馈台账](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/plan/progress.md)。
 - [CLI 指南](getting-started/cli.md)：八版宿主的诊断、配置、审计校验和伴随环境命令，以及已退役工程命令的替代入口。
 - [Studio](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/Studio/README.md)：共享 MCP 会话的工程操作页。
 
@@ -17,8 +17,8 @@
 当前 4.0 产品入口为根 `TiaOpenness.exe` 和八版 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`；八版宿主都为每个 MCP 会话启动 `worker/` 子目录中的 PLC worker，V20/V21 的完整工具目录也由该 worker 执行。当前能力页说明 V4 结果、写入审批、审计位置和原生验收边界。
 
 - [4.0 源码版本范围](reference/version-tools.md)（英文） · [生成的工具目录](reference/version-tool-catalog.md)（英文） · [生成的工具矩阵](reference/tool-matrix.md)
-- [当前能力与验收边界](reference/capabilities.md) · [运行时布局、日志和审计目录](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/runtime-layout.md)
-- [统一工具和语言示例](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/official-tool-usage.md)：`GetToolUsage` 的参数、完整编程文件、调用序列和官方来源。
+- [当前能力与验收边界](reference/capabilities.md) · [运行时布局、日志和审计目录](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/design.md)
+- [统一工具和语言示例](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/real-machine-testing.md)：`GetToolUsage` 的参数、完整编程文件、调用序列和官方来源。
 - [官方 API 覆盖与逐版功能缺口](reference/openness-coverage.md)（英文） · [真实工程验收记录](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md)
 - [已接入生态工具](reference/ecosystem-tools.md)
 
@@ -32,11 +32,11 @@
 ## 排错和维护
 
 - [错误解释](troubleshooting/errors.md) · [Openness 限制和已知问题](troubleshooting/openness-limitations.md) · [HMI 快照](troubleshooting/hmi-snapshots.md)
-- [源码结构](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/repository-layout.md) · [构建验证](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/validation.md) · [发布](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/release-workflow.md) · [当前交接](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/handoff.md) · [发布计划](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/status/release-plan.md) · [路线图](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/roadmap.md)
-- [设计规范](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/design-spec/README.md) · [架构决策记录](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/decisions/README.md) · [设计记录](https://github.com/asckye/TIA_Portal_Openness_MCP/tree/master/docs/development/design) · [历史设计索引](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/archive/development/README.md)
+- [源码结构](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/development.md) · [构建验证](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/validation.md) · [发布](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/release.md) · [当前交接](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/plan/progress.md) · [发布计划](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/plan/plan.md) · [路线图](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/plan/plan.md)
+- [设计规范](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/design.md) · [架构决策记录](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/decisions/README.md) · [设计记录](https://github.com/asckye/TIA_Portal_Openness_MCP/tree/master/docs/archive/development/design) · [历史设计索引](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/archive/development/README.md)
 - [工程开发手册](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/engineering-handbook.html) · [本项目采用说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/README.md)
-- [安全标准与威胁模型](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/security.md) · [测试策略](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/testing.md) · [MCP 工具设计规范](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/mcp-tool-design.md) · [开发流程](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/process/development-workflow.md) · [工具规格模板](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/templates/tool-spec.md) · [参考资料与落地对照](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/references.md)
-- [多版本架构](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/unified-version-framework.md) · [调用诊断](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/native-call-diagnostics.md) · [原生生命周期测试](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/native-lifecycle-tests.md) · [原生 MCP 测试](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/native-mcp-session-tests.md)
+- [安全标准与威胁模型](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/security.md) · [测试策略](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/development.md) · [MCP 工具设计规范](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/design.md) · [开发流程](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/workflow.md) · [工具规格模板](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/workflow.md) · [参考资料与落地对照](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/README.md)
+- [多版本架构](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/design.md) · [调用诊断](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/real-machine-testing.md) · [原生生命周期测试](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/real-machine-testing.md) · [原生 MCP 测试](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/real-machine-testing.md)
 - [脚本](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/scripts/README.md) · [清单](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/manifest/README.md) · [模板](../templates/README.md) · [贡献](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/.github/CONTRIBUTING.md) · [支持](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/.github/SUPPORT.md)
 - [当前版本说明](releases/v4.0.0-beta.3.md) · [变更记录](../CHANGELOG.md) · [历次 GitHub Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases) · [许可证](licenses/THIRD-PARTY-NOTICES.md)
 

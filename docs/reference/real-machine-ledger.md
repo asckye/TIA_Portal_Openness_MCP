@@ -6,7 +6,7 @@
 
 维护者决定（2026-10-20，2026-11-01 修订）：预发布（`X.Y.Z-beta.N`、`X.Y.Z-rc.N`）交给测试者测试，维护方在虚拟机上按[预发布真机验证清单](../guides/beta-tester-checklist.md)回归。下文“发布前必须在真机上完成”
 “失败即停止发布”等真机门槛不约束预发布；预发布说明必须带由本台账与[官方 API 审计 VM 核对清单](api-audit-vm-checklist.md)生成的
-“Not verified on a real TIA Portal”清单（`generate-prerelease-notes`）。正式版本 `X.Y.Z` 的放行条件见 [ADR 0023](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/decisions/0023-release-4-0-final-criteria.md)：本台账列出需要真机确认的项目，由 VM 回归按 [ADR 0020](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/decisions/0020-prereleases-tested-by-users.md) 覆盖。
+“Not verified on a real TIA Portal”清单（`generate-prerelease-notes`）。正式版本 `X.Y.Z` 的放行条件见 [ADR 0023](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/decisions/0023-release-4-0-final-criteria.md)：本台账列出需要真机确认的项目，由 VM 回归按 [ADR 0020](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/decisions/0020-prereleases-tested-by-users.md) 覆盖。
 
 ## 未发布改动的验收边界
 
@@ -98,7 +98,7 @@ The current release property remains `workerIsolation.enabledByDefault=false` fo
 
 ## 4.0 安全策略验收计划（P6-R2）
 
-以下为[4.0 规范](../development/phase6-review.md)的新增验收项目，**全部 NOT RUN**，仅登记计划，不授权连接 TIA、PLC、VM 或网络。
+以下为[4.0 规范](../archive/development/phase6-review.md)的新增验收项目，**全部 NOT RUN**，仅登记计划，不授权连接 TIA、PLC、VM 或网络。
 每行按实际广告能力逐版本记录，八个发布键为 14sp1、15.1、16、17、18、19、20、21；无该能力的版本记录 N/A 并附目录证据，不能跳过而标记通过。
 原生行为只有该版本/族的基线与候选回放均通过才可切换为 safe-v4；未验收族保持 current，且不解除上文阶段 4 的发布限制。
 共用证据要求：精确 SDK/TIA 补丁、工程副本/目标身份、宿主/worker/adapter 哈希、前后调用顺序及参数、MTA/STA 所属线程、关联 ID、预览哈希、故障后实际状态、回读/编译及是否显式保存。
@@ -454,7 +454,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 
 记录服务（FoundationHost 与 worker）版本和文件哈希、TIA 版本/已知补丁、精确工程与 PLC、工具参数（排除凭据）、预览与实际结果、读回内容、编译错误/警告以及是否保存。失败或结果不确定时保留对应日志，先确认工程实际状态，再决定下一步。最新构建不会覆盖上述历史证据。
 
-预发布测试者的报告先登记在[测试者反馈台账](../development/tester-feedback.md)；复核后满足上述要求的通过结果再写入本台账，并注明反馈编号。
+预发布测试者的报告先登记在[测试者反馈台账](../plan/progress.md)；复核后满足上述要求的通过结果再写入本台账，并注明反馈编号。
 
 ### VMFIX-1 待复验（2026-11-01）
 

@@ -85,7 +85,7 @@ TIA Portal、Openness 组件和许可证仍需单独安装。工作台和宿主�
 - 交付目录不可写时（例如放在 `C:\Program Files` 下），4.0 回退到各用途原有的用户目录：设置在 `%LOCALAPPDATA%\TiaPortalMcp`，日志在 `%TEMP%\TiaMcp\logs\<发布键>`，审计在 `%LOCALAPPDATA%\TiaMcp\logs\audit`。
 - 用绝对路径环境变量 `TIA_MCP_DATA_DIRECTORY` 可指定另一个数据根；该目录不可写时启动报错，不会回退。
 
-完整规则见[运行时布局](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/runtime-layout.md#软件自身的数据目录)。
+完整规则见[运行时布局](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/design.md#软件自身的数据目录)。
 
 ## 写入审批
 

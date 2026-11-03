@@ -4,7 +4,7 @@
 - 日期：2026-10-05
 - 决策者：维护者
 - 置信度：高
-- 相关：[阶段 6 契约规范](../phase6-review.md) 第 6 节（决策 12、13）与第 8 节；[重构计划](../refactor-plan.md) P6-44–P6-49；[运行时布局](../runtime-layout.md)“MCP 写操作审批”；[架构概览](../design-spec/architecture.md) 第 5.2 节；[ADR 0004](0004-precheck-before-approval.md)
+- 相关：[阶段 6 契约规范](../../archive/development/phase6-review.md) 第 6 节（决策 12、13）与第 8 节；[重构计划](../../plan/plan.md) P6-44–P6-49；[运行时布局](../design.md)“MCP 写操作审批”；[架构概览](../design.md) 第 5.2 节；[ADR 0004](0004-precheck-before-approval.md)
 
 回溯记录（写于 2026-10-11）。
 
@@ -25,5 +25,5 @@ AI 客户端经 MCP 工具直接写 TIA 工程，写入无法回滚，而客户�
 
 - 正面：人在环中由服务器强制执行；审批请求、决定和结果进入审计链。
 - 负面与取舍：写调用在等待审批期间阻塞 `tools/call`（MCP-05、MCP-06）；工作台未运行时写调用被拒绝。威胁模型只覆盖“AI 经 MCP 工具越权写入”，不防同一 Windows 用户下的恶意本机进程。审批不使用 MCP 自身的确认或 elicitation，记为有意偏差 MCP-13。
-- 后续工作：审批界面的无障碍、焦点和默认取消要求见 [工作台界面设计规范](../design-spec/workbench-ui.md) 第 0.4 节与第 11 节（P8-61）。
+- 后续工作：审批界面的无障碍、焦点和默认取消要求见 [工作台界面设计规范](../ui.md) 第 0.4 节与第 11 节（P8-61）。
 - 验证方式：审批管道与审计链测试；`tia audit verify`；审批关闭时结果带 `APPROVAL_DISABLED` 警告。

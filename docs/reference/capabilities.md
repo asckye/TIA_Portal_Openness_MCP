@@ -29,7 +29,7 @@
 - 文件应放在 MCP 服务所在电脑；虚拟机场景中，宿主机路径不会自动映射为虚拟机路径。
 - 先明确目标工程、PLC 和对象，再使用示例中的参数。导入、生成、编译、保存、下载分别对应不同操作。
 
-[统一示例说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/official-tool-usage.md)区分官方源代码、项目封装示例、离线验证及原生验收。示例帮助正确调用，不保证所有设备、补丁和选件都已通过真实工程测试。
+[统一示例说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/real-machine-testing.md)区分官方源代码、项目封装示例、离线验证及原生验收。示例帮助正确调用，不保证所有设备、补丁和选件都已通过真实工程测试。
 
 ## 主要工作流
 

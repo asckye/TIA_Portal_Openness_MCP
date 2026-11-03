@@ -4,7 +4,7 @@
 - 日期：2026-10-22
 - 决策者：维护者
 - 置信度：高
-- 相关：[ADR 0018](0018-workbench-ant-design.md)；[工作台规范](../design-spec/workbench-ui.md)；P8-80d；EplanMCP ADR-0017（`docs/adr/0017-workbench-wpf-tia-theme.md`，第 4、5 条）及其 `docs/standards/workbench-ui.md` 的 TYP-01、TYP-10、TYP-11、NAV-03、APR-02
+- 相关：[ADR 0018](0018-workbench-ant-design.md)；[工作台规范](../ui.md)；P8-80d；EplanMCP ADR-0017（`docs/adr/0017-workbench-wpf-tia-theme.md`，第 4、5 条）及其 `docs/standards/workbench-ui.md` 的 TYP-01、TYP-10、TYP-11、NAV-03、APR-02
 
 ## 背景
 

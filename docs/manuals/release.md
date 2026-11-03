@@ -4,7 +4,7 @@
 
 发布默认不等待 CI。准备阶段完成构建和全部检查；发布阶段验证同一个候选包，然后打 tag 和上传。CI 结果在发布后读取。
 
-现行做法（[ADR 0024](decisions/0024-ci-does-not-block-merges.md)）：发布不等待发布提交和发布后核验的 CI；CI 照常运行，失败按缺陷处理。`release -Version` 按 NATIVE-1a 直接完成冷构建与一次完整测试阶段，不要求 nightly，也不采纳先前的验证证据。`release-prepare` 与 `-FromCandidate` 是另一个封存候选工作流，见下文。新的发布检出需要 `bin-build/cache/dotnet-10.0.12/` 中的随包 .NET 运行时压缩包（下载已关闭），缺少时从已有检出复制。
+现行做法（[ADR 0024](../standards/decisions/0024-ci-does-not-block-merges.md)）：发布不等待发布提交和发布后核验的 CI；CI 照常运行，失败按缺陷处理。`release -Version` 按 NATIVE-1a 直接完成冷构建与一次完整测试阶段，不要求 nightly，也不采纳先前的验证证据。`release-prepare` 与 `-FromCandidate` 是另一个封存候选工作流，见下文。新的发布检出需要 `bin-build/cache/dotnet-10.0.12/` 中的随包 .NET 运行时压缩包（下载已关闭），缺少时从已有检出复制。
 
 交付包 `TIA_MCP_Delivery_v<版本>_<YYYYMMDD>.zip` 包含 V14 SP1、V15.1、V16–V21 MCP 运行文件、工作台、Studio 及八版原生适配器，以及运行资源、用户文档、模板、插件和许可证。自 3.3.0 之后的下一个版本起，交付 ZIP 不再携带开发源码及构建工具。各发布键的工具范围不同，见[版本矩阵](../reference/version-tools.md)。每次发布同时上传 .sha256；GitHub 自动生成的源码压缩包不含运行二进制。
 
@@ -329,7 +329,7 @@ dotnet run --project build-tools/release -- check-all -Profile merge -Clean -NoB
 
 ## 预发布（beta / rc）
 
-维护者决定（2026-10-20，2026-11-01 修订，[ADR 0020](decisions/0020-prereleases-tested-by-users.md)）：4.0 先以 GitHub 预发布交给测试者，我们在 VM 上按预发布真机验证清单回归。版本写作 `X.Y.Z-beta.N` 或 `X.Y.Z-rc.N`
+维护者决定（2026-10-20，2026-11-01 修订，[ADR 0020](../standards/decisions/0020-prereleases-tested-by-users.md)）：4.0 先以 GitHub 预发布交给测试者，我们在 VM 上按预发布真机验证清单回归。版本写作 `X.Y.Z-beta.N` 或 `X.Y.Z-rc.N`
 （语义化版本，不接受其他后缀），例如：
 
 ```powershell

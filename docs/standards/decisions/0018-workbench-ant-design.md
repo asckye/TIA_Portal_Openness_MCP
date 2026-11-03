@@ -4,7 +4,7 @@
 - 日期：2026-10-18
 - 决策者：维护者
 - 置信度：高
-- 相关：[ADR 0015](0015-microsoft-design-spec-baseline.md)（视觉部分被本决定取代）；[工作台界面设计规范](../design-spec/workbench-ui.md)；[工作台偏差清单](../design-spec/deviations/workbench.md) C.0；[重构计划](../refactor-plan.md) P8-80
+- 相关：[ADR 0015](0015-microsoft-design-spec-baseline.md)（视觉部分被本决定取代）；[工作台界面设计规范](../ui.md)；[工作台偏差清单](../ui.md) C.0；[重构计划](../../plan/plan.md) P8-80
 
 ## 背景
 

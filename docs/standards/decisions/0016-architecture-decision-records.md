@@ -4,7 +4,7 @@
 - 日期：2026-10-11
 - 决策者：维护者
 - 置信度：高
-- 相关：[文档写作规范](../design-spec/documentation-style.md) 第 14 节；[ADR 索引](README.md)；[ADR 模板](0000-template.md)；[ADR 0015](0015-microsoft-design-spec-baseline.md)
+- 相关：[文档写作规范](../documentation.md) 第 14 节；[ADR 索引](README.md)；[ADR 模板](0000-template.md)；[ADR 0015](0015-microsoft-design-spec-baseline.md)
 
 ## 背景
 

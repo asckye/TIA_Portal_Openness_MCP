@@ -4,7 +4,7 @@
 - 日期：2026-10-18
 - 决策者：维护者
 - 置信度：高
-- 相关：[ADR 0009](0009-port-v20-v21-tools-to-foundation-adapters.md)；[P8-04 引擎退役设计](../design/p8-04-engine-retirement.md)；[第三方声明](../../licenses/THIRD-PARTY-NOTICES.md)；[重构计划](../refactor-plan.md) P8-76、P8-04l
+- 相关：[ADR 0009](0009-port-v20-v21-tools-to-foundation-adapters.md)；[P8-04 引擎退役设计](../../archive/development/design/p8-04-engine-retirement.md)；[第三方声明](../../licenses/THIRD-PARTY-NOTICES.md)；[重构计划](../../plan/plan.md) P8-76、P8-04l
 
 ## 背景
 

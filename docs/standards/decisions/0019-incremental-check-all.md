@@ -3,7 +3,7 @@
 - 状态：已采纳
 - 日期：2026-10-18
 - 决策者：维护者
-- 相关：[ADR 0016](0016-architecture-decision-records.md)；[验证说明](../validation.md)；[重构计划](../refactor-plan.md) P8-72、P8-77
+- 相关：[ADR 0016](0016-architecture-decision-records.md)；[验证说明](../../manuals/validation.md)；[重构计划](../../plan/plan.md) P8-72、P8-77
 
 ## 背景
 
